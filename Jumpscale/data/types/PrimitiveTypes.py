@@ -2,6 +2,7 @@
 """
 from Jumpscale import j
 import base64
+import ast
 
 class String():
 
@@ -42,7 +43,7 @@ class String():
         if value is None:
             value = ""
         value = str(value)
-        return value.strip()  # .strip("'").strip("\"").strip()
+        return value.strip().strip("'").strip("\"").strip()
 
     def python_code_get(self, value):
         """
