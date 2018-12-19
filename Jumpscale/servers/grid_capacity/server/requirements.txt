@@ -1,6 +1,6 @@
-requests==2.18.4
+requests==2.20.0
 python_jose==1.4.0
-Flask==0.12.2
+Flask==0.12.3
 jsonschema==2.6.0
 six==1.11.0
 python_dateutil==2.7.3
