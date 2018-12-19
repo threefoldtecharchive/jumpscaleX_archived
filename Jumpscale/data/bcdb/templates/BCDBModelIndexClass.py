@@ -5,7 +5,7 @@ from Jumpscale import j
 class {{BASENAME}}:
 
     def _init_index(self):
-        pass #to make sure works if no index
+        self.index = None
         {%- if index.active %}
         self._logger.info("init index:%s"%self.schema.url)
 

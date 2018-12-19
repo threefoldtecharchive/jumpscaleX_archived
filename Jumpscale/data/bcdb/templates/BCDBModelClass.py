@@ -17,4 +17,4 @@ class {{BASENAME}}(Index_CLASS,MODEL_CLASS):
         MODEL_CLASS.__init__(self, bcdb=bcdb,schema=schema,reset=reset)
         self.write_once = False
         self._init()
-        
+
