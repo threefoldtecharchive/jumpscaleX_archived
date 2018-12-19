@@ -14,6 +14,9 @@
 - this is not intended to ever be used in production
 - only support ubuntu 18.04 for now
 - can be used to build components or servers
+- when a server then we need the client created as well
+    - client uses new config manager
+    - there needs to be a way to go from the server to the client
 
 ## relation to production
 

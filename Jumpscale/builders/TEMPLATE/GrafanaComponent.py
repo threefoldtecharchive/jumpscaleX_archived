@@ -75,6 +75,10 @@ class GrafanaComponent(j.application.JSBaseConfigClass):
         #make connection
         #some test
 
+    @property
+    def client(self):
+        #return the client
+        pass
 
 
 
