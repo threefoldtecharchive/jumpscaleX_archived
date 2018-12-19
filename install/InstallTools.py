@@ -1124,7 +1124,7 @@ class UbuntuInstall():
                 "click>=6.6",
                 "colored-traceback>=0.2.2",
                 "colorlog>=2.10.0",
-                "credis",
+                # "credis",
                 "cryptocompare",
                 "cryptography>=2.2.0",
                 "dnslib",

@@ -13,9 +13,13 @@ class RedisCoreClient(j.application.JSFactoryBaseClass):
 
         self._client_fallback =  j.clients.redis.core_get()
 
-        from credis import Connection
-        self._client =  Connection(path="/sandbox/var/redis.sock")
-        self._client.connect()
+        try:
+            from credis import Connection
+            self._client =  Connection(path="/sandbox/var/redis.sock")
+            self._client.connect()
+        except Exception as e:
+            self._client = j.clients.redis.core_get()
+        j.shell()
         assert self._client.execute(b"PING")==b'PONG'
 
     def execute(self,*args):
