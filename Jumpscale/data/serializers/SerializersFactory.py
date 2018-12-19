@@ -18,6 +18,7 @@ class SerializersFactory(j.application.JSFactoryBaseClass):
     _blosc = None
     _snappy = None
     _dumper = None
+    _toml = None
 
     @property
     def yaml(self):

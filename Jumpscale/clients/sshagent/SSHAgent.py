@@ -1,4 +1,5 @@
 from Jumpscale import j
+from Jumpscale.core.InstallTools import Tools
 
 import os
 
@@ -101,9 +102,12 @@ class SSHAgent(j.application.JSFactoryBaseClass):
         if "SSH_AUTH_SOCK" in os.environ:
             return(os.environ["SSH_AUTH_SOCK"])
 
-        socketpath =  j.tools.core.text_replace("{DIR_VAR}/sshagent_socket")
+        socketpath =  Tools.text_replace("{DIR_VAR}/sshagent_socket")
         os.environ['SSH_AUTH_SOCK'] = socketpath
         return socketpath
+
+    def sshagent_start(self):
+        j.sal.process.execute('ssh-agent -a {}'.format(os.environ['SSH_AUTH_SOCK']), showout=False, die=True, timeout=1)
 
     def check(self):
         """
