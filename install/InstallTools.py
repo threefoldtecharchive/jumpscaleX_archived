@@ -816,7 +816,7 @@ class Tools():
         """
         args={}
         args["REPO_DIR"]= path
-        rc = Tools.execute(S,showout=False,die=False, args=args)
+        rc,out,err = Tools.execute(S,showout=False,die=False, args=args)
         return rc>0
 
     @staticmethod
@@ -835,6 +835,7 @@ class Tools():
 
 
         git_on_system = Tools.cmd_installed("git")
+
 
         if git_on_system and MyEnv.config["USEGIT"] and MyEnv.sshagent_active_check() and ((exists and foundgit) or not exists):
             #there is ssh-key loaded
@@ -863,7 +864,7 @@ class Tools():
                     set -x
                     cd {REPO_DIR}
                     git add . -A
-                    git commit -m "{GITMESSAGE}"
+                    git commit -m "{MESSAGE}"
                     git pull
 
                     """
@@ -874,7 +875,7 @@ class Tools():
 
             def getbranch(args):
                 cmd = "cd {REPO_DIR}; git branch | grep \* | cut -d ' ' -f2"
-                stdout = Tools.execute(cmd, die=False, args=args, interactive=False)
+                rc,stdout,err = Tools.execute(cmd, die=False, args=args, interactive=False)
                 current_branch = stdout[1].strip()
                 Tools.log("Found branch: %s" % current_branch)
                 return current_branch
@@ -896,7 +897,7 @@ class Tools():
                     exit 999
                     """
                     args["BRANCH"]=branch_item
-                    rc = Tools.execute(script,die=False, args=args,showout=True,interactive=False)
+                    rc,out,err = Tools.execute(script,die=False, args=args,showout=True,interactive=False)
                     if rc==999 or rc==231:
                         ok=True
                 else:
@@ -1029,6 +1030,14 @@ class Tools():
             executor.file_write(path,out)
         else:
             Tools.file_write(path,out)
+
+
+class OSXInstall():
+
+    @staticmethod
+    def do_all():
+        Tools.log("installing OSX version")
+        UbuntuInstall.pips_install()
 
 
 class UbuntuInstall():
@@ -1283,9 +1292,9 @@ class MyEnv():
                 config["INSYSTEM"] = False
         else:
             if MyEnv.platform()=="linux":
-                config["INSYSTEM"] = False
+                config["INSYSTEM"] = True
             else:
-                config["INSYSTEM"] = False
+                config["INSYSTEM"] = True
 
         return config
 
@@ -1383,8 +1392,10 @@ class MyEnv():
             if MyEnv.config["INSYSTEM"]:
 
                 #DONT USE THE SANDBOX
-
-                UbuntuInstall.do_all()
+                if MyEnv.platform() == "linux":
+                    UbuntuInstall.do_all()
+                else:
+                    OSXInstall.do_all()
 
                 Tools.code_github_get(repo="sandbox_base", branch=["master"])
 
@@ -1405,8 +1416,6 @@ class MyEnv():
 
                 """
                 Tools.execute(script,interactive=True)
-
-
 
             else:
 
@@ -1456,11 +1465,14 @@ class MyEnv():
 
     @staticmethod
     def sshagent_active_check():
-        try:
-            check_output(["pidof", "ssh-agent"])
-        except Exception as e:
-            return False
-        return True
+        if MyEnv._sshagent_active is None:
+            MyEnv._sshagent_active = len(Tools.execute("ssh-add -L",die=False,showout=False)[1])>40
+        return MyEnv._sshagent_active
+        # try:
+        #     check_output(["pidof", "ssh-agent"])
+        # except Exception as e:
+        #     return False
+        # return True
 
     @staticmethod
     def config_load():
@@ -1528,7 +1540,7 @@ class JumpscaleInstaller():
 
         Tools.file_touch(os.path.join(MyEnv.config["DIR_BASE"], "lib/jumpscale/__init__.py"))
 
-        self._jumpscale_repos = ["jumpscaleX", "jumpscale_lib", "digital_me", "jumpscale_prefab"]
+        self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
         self.repos_get()
         self.repos_link()
@@ -1544,14 +1556,14 @@ class JumpscaleInstaller():
 
     def repos_get(self,force=False):
 
-        for item in self._jumpscale_repos:
+        for sourceName,destName in self._jumpscale_repos:
             if MyEnv.sandbox_python_active:
                 pull=True
             else:
                 pull=False
-            if force or not MyEnv.state_exists("jumpscale_repoget_%s"%item):
-                Tools.code_github_get(repo=item, account=self.account, branch=self.branch, pull=pull)
-                MyEnv.state_set("jumpscale_repoget_%s"%item)
+            if force or not MyEnv.state_exists("jumpscale_repoget_%s"%sourceName):
+                Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
+                MyEnv.state_set("jumpscale_repoget_%s"%sourceName)
 
     def repos_link(self):
         """
@@ -1559,7 +1571,7 @@ class JumpscaleInstaller():
         :return:
         """
 
-        for item in self._jumpscale_repos:
+        for item,alias in self._jumpscale_repos:
             script="""
             set -e
             mkdir -p {DIR_BASE}/lib/jumpscale
@@ -1573,28 +1585,14 @@ class JumpscaleInstaller():
                 raise RuntimeError("did not find:%s"%loc)
 
 
-            splits = item.split("_")
-            if len(splits)!=2:
-                raise RuntimeError("splits should be 2")
-            alias = splits[0][0].upper()+splits[0][1:]+splits[1][0].upper()+splits[1][1:]
-            alias = alias.replace("Core","")
-            alias = alias.replace("DigitalMe","DigitalMeLib")
-
-            destpath = "/sanbox/lib/jumpscale/alias"
-            if os.path.exists(destpath):
-                continue
+            # destpath = "/sandbox/lib/jumpscale/{ALIAS}"
+            # if os.path.exists(destpath):
+            #     continue
 
             args={"NAME":item,"LOC":loc,"ALIAS":alias}
             Tools.log(Tools.text_strip("link {LOC}/{ALIAS} to {ALIAS}",args=args))
             Tools.execute(script,args=args)
 
-            if alias == "JumpscalePrefab":
-                script="""
-                set -ex
-                rm -f {DIR_BASE}/lib/jumpscale/prefab_modules
-                ln -s {LOC}/prefab_modules {DIR_BASE}/lib/jumpscale/prefab_modules
-                """
-                Tools.execute(script,args=args)
 
 
 
