@@ -1,0 +1,63 @@
+#! /usr/bin/env python3
+import os
+import sys
+import click
+
+@click.group()
+def cli():
+    pass
+
+
+#WILL MAKE SURE THAT THE GENERATED FILE IS REMOVED SO IT CAN GET REGENERATED
+os.environ["JSRELOAD"]="1"
+os.environ["JSGENERATE_DEBUG"]="0"
+
+try:
+    from Jumpscale import j
+except:
+    for item in ["{DIR_HOME}/code/github/threefoldtech/jumpscale_core/Jumpscale",
+                 "/opt/code/github/threefoldtech/jumpscale_core/Jumpscale"]:
+        item = item.replace("$HOME",os.environ["HOME"])
+        if os.path.exists(item) and item not in sys.path:
+            sys.path.append(item)
+    from Jumpscale import j
+
+
+
+get_help = 'find issues with code and potentially even fix.'
+
+
+@click.command()
+@click.option('--path', '-p', help='path to scane', default=None)
+def scan(path=None):
+    """
+    find files which can be fixed
+    and print
+    """
+    j.tools.fixer.find_changes(path=path)
+
+
+@click.command()
+@click.option('--path', '-p', help='path to scane', default=None)
+def fix(path=None):
+    """
+    fix broken files, best to do a scan first so you know what will be changed.
+    """
+    j.tools.fixer.write_changes(path=path)
+
+
+@click.command()
+def generate():
+    """
+    generate the loader file, important to do when new modules added
+    """
+    #is done automatically
+    pass
+
+
+cli.add_command(scan)
+cli.add_command(fix)
+cli.add_command(generate)
+
+if __name__ == '__main__':
+    cli()

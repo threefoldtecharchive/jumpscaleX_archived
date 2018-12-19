@@ -1,0 +1,43 @@
+from Jumpscale import j
+JSBASE = j.application.JSBaseClass
+
+from .ExecutorSSH import *
+from .ExecutorLocal import *
+from .ExecutorSerial import ExecutorSerial
+
+JSBASE = j.application.JSBaseClass
+
+
+class ExecutorFactory(JSBASE):
+
+    _executors = {}
+
+    def __init__(self):
+        self.__jslocation__ = "j.tools.executor"
+        JSBASE.__init__(self)
+
+    def local_get(self):
+        """
+        @param executor is localhost or $hostname:$port or
+                        $ipaddr:$port or $hostname or $ipaddr
+
+        for ssh only root access is allowed !
+
+        """
+        if 'localhost' not in self._executors:
+            self._executors['localhost'] = ExecutorLocal()
+        return self._executors['localhost']
+
+    def ssh_get(self, sshclient):
+        if j.data.types.string.check(sshclient):
+            sshclient = j.clients.ssh.get(instance=sshclient)
+        key = '%s:%s:%s' % (sshclient.addr,
+                            sshclient.port, sshclient.login)
+        if key not in self._executors or self._executors[key].sshclient is None:
+            self._executors[key] = ExecutorSSH(sshclient=sshclient)
+        return self._executors[key]
+
+    def serial_get(self, device, baudrate=9600, type="serial", parity="N", stopbits=1, bytesize=8, timeout=1):
+        return ExecutorSerial(device, baudrate=baudrate, type=type, parity=parity, stopbits=stopbits, bytesize=bytesize, timeout=timeout)
+
+

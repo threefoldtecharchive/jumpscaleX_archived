@@ -1,0 +1,103 @@
+#! /usr/bin/env python3
+from Jumpscale import j
+
+import click
+
+@click.group()
+def cli():
+    pass
+
+HELP="""
+
+# sync tool to sync local code directories to remote zos container
+
+## sync existing jumpscale dirs
+
+do
+
+```js_sync sync```
+
+will sync following code dirs
+
+```
+"{DIR_CODE}/github/threefoldtech/jumpscale_lib",
+"{DIR_CODE}/github/threefoldtech/jumpscale_prefab",
+"{DIR_CODE}/github/threefoldtech/digital_me",
+"{DIR_CODE}/github/threefoldtech/0-robot",
+```
+
+## 1 specific directory
+
+can also sync one specific directory e.g.
+   
+```js_sync sync -p install/:/tmp/install/```
+
+## you can use the jumpscale dir variables
+
+
+e.g.  "{DIR_CODE}/github/threefoldtech/0-robot:{DIR_TEMP}/0-robot" 
+
+would sync code dir to tmpdir/0-robot
+ 
+
+the tool can deal with relative paths, the relative install subdir will be synced to /tmp/
+
+## reload
+
+if a new container was created, don't forget to call js_sync reload because caching is used inside js_sync
+
+"""
+
+
+@click.command()
+@click.option('--instance', '-i', default="", help="name of the container, std empty")
+@click.option('--paths', '-p', default=None, help=HELP)
+def sync(instance="", reload=False,paths=None):
+
+    if paths is None:
+        paths=["{DIR_CODE}/github/threefoldtech/jumpscale_core",
+                                "{DIR_CODE}/github/threefoldtech/jumpscale_lib",
+                                "{DIR_CODE}/github/threefoldtech/jumpscale_prefab",
+                                "{DIR_CODE}/github/threefoldtech/digital_me",
+                                # "{DIR_CODE}/github/threefoldtech/0-robot",
+               ]
+    else:
+        paths2=[]
+        for item in paths.split(","):
+            item=item.strip()
+            if not item.startswith("/"):
+                item=j.sal.fs.getcwd()+"/"+item
+            item = item.replace("//","/")
+            paths2.append(item)
+        paths=paths2
+
+    print('Sync following paths %s' % paths)
+
+    zos = j.tools.zos.zos_get()
+    print(zos.container_list_hr)
+
+    c = zos.container_get(name=instance)
+
+
+    c.sync(monitor=True,paths=paths)
+
+@click.command()
+def reload():
+    """
+    reload the cache, makes sure all info is read from zos again
+    :return:
+    """
+    j.tools.zos.cache_reset()
+
+@click.command()
+def help():
+    print(HELP)
+
+cli.add_command(sync)
+cli.add_command(reload)
+cli.add_command(help)
+
+if __name__ == '__main__':
+    cli()
+
+

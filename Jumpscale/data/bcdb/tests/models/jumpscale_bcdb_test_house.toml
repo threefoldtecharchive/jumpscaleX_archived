@@ -1,0 +1,10 @@
+@url = jumpscale.bcdb.test.house
+name** = "" (S)
+active** = "" (B)
+cost** = (N)
+room = (LO) !jumpscale.bcdb.test.room
+
+@url = jumpscale.bcdb.test.room
+name = "" (S)
+active = "" (B)
+colors = []

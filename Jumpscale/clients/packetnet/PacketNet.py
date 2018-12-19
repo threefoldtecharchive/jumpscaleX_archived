@@ -1,0 +1,359 @@
+from Jumpscale import j
+
+import packet
+import time
+
+
+TEMPLATE = """
+auth_token_ = ""
+project_name = ""
+"""
+
+
+class PacketNet(JSConfigClient):
+
+    def __init__(self, instance, data={}, parent=None, interactive=False):
+        JSConfigClient.__init__(self, instance=instance,
+                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
+        self._client = None
+        self._plans = None
+        self._facilities = None
+        self._oses = None
+        self._projects = None
+        self._projectid = None
+        self._devices = None
+        self.projectname = self.config.data['project_name']
+
+    @property
+    def client(self):
+        if not self._client:
+            if not self.config.data['auth_token_']:
+                raise RuntimeError(
+                    "please configure your auth_token, do: 'js_config configure -l j.clients.packetnet -i {}'".format(instance))
+            self._client = packet.Manager(auth_token=self.config.data["auth_token_"])
+        return self._client
+
+    @property
+    def projectid(self):
+        if self._projectid is None:
+            if self.projectname is not "":
+                for item in self.projects:
+                    if item.name == self.projectname:
+                        self._projectid = item.id
+                        return self._projectid
+                raise RuntimeError(
+                    "did not find project with name:%s" % self.projectname)
+            else:
+                res = [item[0] for key, item in self.getProjects().items()]
+                if len(res) == 1:
+                    self._projectid = res[0]
+                else:
+                    raise RuntimeError("found more than 1 project")
+        return self._projectid
+
+    @property
+    def plans(self):
+        if self._plans is None:
+            self._plans = self.client.list_plans()
+            self._logger.debug("plans:%s" % self._plans)
+        return self._plans
+
+    @property
+    def facilities(self):
+        if self._facilities is None:
+            self._facilities = self.client.list_facilities()
+            self._logger.debug("facilities:%s" % self._facilities)
+        return self._facilities
+
+    @property
+    def operatingsystems(self):
+        if self._oses is None:
+            self._oses = self.client.list_operating_systems()
+            self._logger.debug("operatingsystems:%s" % self._oses)
+        return self._oses
+
+    @property
+    def projects(self):
+        if self._projects is None:
+            self._projects = self.client.list_projects()
+            self._logger.debug("projects:%s" % self._projects)
+        return self._projects
+
+    @property
+    def devices(self):
+        if self._devices is None:
+            self._devices = self.client.list_devices(self.projectid)
+            self._logger.debug("devices:%s" % self._devices)
+        return self._devices
+
+    def getPlans(self):
+        res = {}
+        for plan in self.plans:
+            res[plan.slug] = (plan.name, plan.specs)
+        return res
+
+    def getFacilities(self):
+        res = {}
+        for item in self.facilities:
+            res[item.code] = item.name
+        return res
+
+    def getOperatingSystems(self):
+        res = {}
+        for item in self.operatingsystems:
+            res[item.slug] = (item.name, item.distro,
+                              item.version, item.provisionable_on)
+        return res
+
+    def getProjects(self):
+        res = {}
+        for item in self.projects:
+            res[item.name] = (item.id, item.devices)
+        return res
+
+    def getDevices(self):
+        res = {}
+        for item in self.devices:
+            res[item.hostname] = item
+        return res
+
+    def getDevice(self, name, id=None, die=False):
+        if id is None:
+            if name in [item for item in self.getDevices()]:
+                return self.getDevices()[name]
+            if die is False:
+                return None
+        else:
+            return self.client.get_device(id)
+
+        raise RuntimeError("could not find device:%s" % name)
+
+    def removeDevice(self, name):
+        res = self.getDevice(name)
+        if res is not None:
+            self._devices = None
+            self._logger.debug("found machine, remove:%s" % name)
+            res.delete()
+        j.tools.nodemgr.delete(instance=name)
+
+    def startDevice(self, hostname="removeMe", plan='baremetal_0', facility='ams1', os='ubuntu_17_04',
+                    ipxeUrl=None, wait=True, remove=False, sshkey=""):
+        """
+        will delete if it exists when remove=True, otherwise will check if it exists, if yes will return device object
+        if not will create
+
+        example ipxeUrl = https://bootstrap.grid.tf/ipxe/zero-os-master-generic
+        """
+        self._logger.info("start device:%s plan:%s os:%s facility:%s wait:%s" % (hostname, plan, os, facility, wait))
+        if ipxeUrl is None:
+            zerotierId = ""
+        else:
+            zerotierId = ipxeUrl.split('/')[-1]
+        return self._startDevice(hostname=hostname, plan=plan, facility=facility, os=os,
+                                 wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=False, sshkey=sshkey)
+
+    def startZeroOS(self, hostname="removeMe", plan='baremetal_0', facility='ams1', zerotierId="",
+                    zerotierAPI="", wait=True, remove=False, params=None, branch='master'):
+        """
+        return (zero-os-client,pubIpAddress,zerotierIpAddress)
+
+        @param development: If True, development argument will be added to the ipxe command
+        """
+        self._logger.info(
+            "start device:%s plan:%s facility:%s zerotierId:%s wait:%s" % (hostname, plan, facility, zerotierId, wait)
+        )
+        if zerotierId.strip() == "" or zerotierId is None:
+            raise RuntimeError("zerotierId needs to be specified")
+        if zerotierAPI.strip() == "" or zerotierAPI is None:
+            raise RuntimeError("zerotierAPI needs to be specified")
+        ipxeUrl = "http://unsecure.bootstrap.grid.tf/ipxe/{}/{}".format(branch, zerotierId)
+
+
+        if params is not None:
+            pstring = '%20'.join(params)
+            ipxeUrl = ipxeUrl + '/' + pstring
+
+        node = self._startDevice(hostname=hostname, plan=plan, facility=facility, os="",
+                                 wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=True)
+
+        # data = {'token_': zerotierAPI, 'networkID_': zerotierId}
+        data = {'token_': zerotierAPI}
+        zerotierClient = j.clients.zerotier.get(self.instance, data=data)
+
+
+        public_ip = node.addr
+        if not public_ip:
+            ipaddr = [netinfo['address']
+                      for netinfo in node.pubconfig['netinfo'] if netinfo['public'] and netinfo['address_family'] == 4]
+            public_ip = ipaddr[0]
+
+        while True:
+            try:
+                network = zerotierClient.network_get(network_id=zerotierId)
+                member = network.member_get(public_ip=public_ip)
+                member.authorize()
+                ipaddr_priv = member.private_ip
+                break
+            except RuntimeError as e:
+                # case where we don't find the member in zerotier
+                self._logger.info("[-] %s" % e)
+                time.sleep(5)
+
+        self._logger.info("[+] zerotier IP: %s" % ipaddr_priv)
+        data = {'host': ipaddr_priv, 'timeout': 10, 'port': 6379, 'password_': '', 'db': 0, 'ssl': True}
+        zosclient = j.clients.zero_os.get(ipaddr_priv, data=data)
+        return zosclient, node, ipaddr_priv
+
+  #TODO: IS THIS STILL RELEVANT?
+    
+  # def zero_node_packetnet_install(self, packetnetClient, zerotierClient, project_name,
+  #                                   plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.grid.tf/ipxe/master'):
+  #       """
+  #       packetnetClient = j.clients.packetnet.get('TOKEN')
+  #       zerotierClient = j.clients.zerotier.get(instance='main', data={'token': 'TOKEN'})
+  #       project_name = packet.net project
+  #       plan_type: one of "Type 0", "Type 1", "Type 2" ,"Type 2A", "Type 3", "Type S"
+  #       location: one of "Amsterdam", "Tokyo", "Synnuvale", "Parsippany"
+  #       server_name: name of the server that is going to be created
+  #       zerotierNetworkID: zertotier network id
+  #       ipxe_base: change this to the version you want, use master branch by default
+  #       """
+  #
+  #       valid_plan_types = ("Type 0", "Type 1", "Type 2",
+  #                           "Type 2A", "Type 3", "Type S")  # FIXME
+  #       if plan_type not in valid_plan_types:
+  #           j.exceptions.Input("bad plan type %s. Valid plan type are %s" % (
+  #               plan_type, ','.join(valid_plan_types)))
+  #
+  #       if zerotierNetworkID:
+  #           ipxe_url = "%s/%s" % (ipxe_base, zerotierNetworkID)
+  #       else:
+  #           ipxe_url = None
+  #
+  #       hostname = server_name
+  #
+  #       # find project id
+  #       project_ids = [project.id for project in packetnetClient.projects if project.name == project_name]
+  #       if not project_ids:
+  #           raise j.exceptions.NotFound(
+  #               'No projects found with name %s' % project_name)
+  #       project_id = project_ids[0]
+  #       packetnetClient.project_id = project_id
+  #
+  #       packetnetClient.startDevice(hostname=server_name, plan=plan_type, facility=location, os='ubuntu_17_04',
+  #                                   ipxeUrl=ipxe_url, wait=True, remove=False)
+  #
+  #       device = packetnetClient.getDevice(server_name)
+  #       ip_pub = [netinfo['address'] for netinfo in device.ip_addresses if netinfo['public'] and netinfo['address_family'] == 4]
+  #
+  #       while True:
+  #           try:
+  #               network = zerotierClient.get_network(network_id=zerotierNetworkID)
+  #               member = network.member_get(public_ip=ip_pub[0])
+  #               ipaddr_priv = member.private_ip
+  #               break
+  #           except RuntimeError as e:
+  #               # case where we don't find the member in zerotier
+  #               logger.error(e)
+  #               time.sleep(1)
+  #           except IndexError as e:
+  #               # case were we the member doesn't have a private ip
+  #               logger.error("please authorize the server with the public ip %s in the zerotier network" % ip_pub[0])
+  #               time.sleep(1)
+  #
+  #       logger.debug("server found: %s" % device.id)
+  #       logger.debug("zerotier IP: %s" % ipaddr_priv)
+  #
+  #       return ip_pub, ipaddr_priv
+  #
+
+    def _startDevice(self, hostname="removeMe", plan='baremetal_0', facility='ams1',
+                     os='ubuntu_17_04', wait=True, remove=True, ipxeUrl=None, zerotierId="", always_pxe=False,
+                     sshkey=""):
+        """
+        will delete if it exists when remove=True, otherwise will check if it exists, if yes will return device object
+        if not will create
+
+        example ipxeUrl = https://bootstrap.grid.tf/ipxe/zero-os-master-generic
+        """
+
+        if ipxeUrl is None:
+            ipxeUrl = ""
+        if remove:
+            self.removeDevice(hostname)
+
+        if sshkey:
+            sshkey = j.clients.sshkey.get(instance=sshkey)
+
+        device = self.getDevice(hostname, die=False)
+        if device is None:
+            if sshkey:
+                self.addSSHKey(sshkey, hostname)
+
+            device = self.client.create_device(project_id=self.projectid,
+                                               hostname=hostname,
+                                               plan=plan,
+                                               facility=facility,
+                                               operating_system=os,
+                                               ipxe_script_url=ipxeUrl,
+                                               always_pxe=False)
+            self._devices = None
+
+        res = device.update()
+        while res["state"] not in ["active"]:
+            res = device.update()
+            time.sleep(1)
+            self._logger.debug(res["state"])
+
+        ipaddr = [netinfo['address']
+                  for netinfo in res["ip_addresses"] if netinfo['public'] and netinfo['address_family'] == 4]
+
+        ipaddr = ipaddr[0]
+
+        self._logger.info("ipaddress found = %s" % ipaddr)
+
+        sshinstance = ""
+        if zerotierId == "":
+            j.sal.nettools.waitConnectionTest(ipaddr, 22, 60)
+
+            if not sshkey:
+                sshclient = j.clients.ssh.new(instance=hostname, addr=ipaddr)
+            else:
+                self.addSSHKey(sshkey, hostname)
+                sshclient = j.clients.ssh.get(instance=sshkey.instance,
+                                              data={'addr': ipaddr, 'login': 'root', 'sshkey': sshkey.instance})
+            sshclient.connect()
+            sshinstance = sshclient.instance
+
+        conf = {}
+        conf["facility"] = facility
+        conf["netinfo"] = res["ip_addresses"]
+        conf["plan"] = plan
+        conf["hostname"] = hostname
+        conf["project_id"] = self.projectid
+        conf["os"] = os
+        conf["ipxeUrl"] = ipxeUrl
+        node = j.tools.nodemgr.set(name=hostname,
+                                   sshclient=sshinstance,
+                                   cat='packet',
+                                   description='',
+                                   selected=True,
+                                   clienttype="j.clients.packetnet")
+
+        j.tools.executor.reset()
+
+        node.client = self
+        node.pubconfig = conf
+
+        return node
+
+    def addSSHKey(self, sshkey, label):
+        if j.data.types.string.check(sshkey):
+            sshkey = j.clients.sshkey.get(instance=sshkey)
+
+        ssh_keys = self.client.list_ssh_keys()
+        for ssh_key in ssh_keys:
+            if ssh_key.key == sshkey.pubkey:
+                return ssh_key.owner
+
+        self.client.create_ssh_key(label, sshkey.pubkey)

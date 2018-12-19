@@ -1,0 +1,59 @@
+#%RAML 1.0
+title: nbd-ardb-gateway
+version: 1.0
+
+securitySchemes:
+  jwt:
+    description: |
+      This API supports ItYouOnline JWT Authentication.
+    type: Pass Through
+    describedBy:
+      headers:
+        Authorization:
+          type: string
+
+/exists:
+  displayName: exists
+  post:
+    description: Check existance of a list of keys on the remote storage
+    body:
+      application/json:
+        type: array
+        example: |
+          ["key1", "key2"]
+    queryParameters:
+        rootkey:
+            displayName: rootkey
+            type: string
+            description: Optional root key which defines which HSET to use
+            required: false
+    responses:
+        200:
+            description: Return a JSON array of not-existing keys
+        400:
+            description: JSON parsing failed
+
+/insert:
+  displayName: insert
+  put:
+    description: Upload key/value to the remote storage
+    body:
+      multipart/form-data:
+        properties:
+            files[]:
+                description: List of files to be uploaded, filename is the key
+                required: true
+                type: file
+    queryParameters:
+        rootkey:
+            displayName: rootkey
+            type: string
+            description: Optional root key which defines which HSET to use
+            required: false
+    responses:
+        200:
+            description: All data inserted successfully
+        400:
+            description: Files uploaded missunderstood
+        401:
+            description: You try to overwrite an existing keys, this is denied

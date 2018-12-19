@@ -1,0 +1,2 @@
+class GitaToken(object):
+    pass

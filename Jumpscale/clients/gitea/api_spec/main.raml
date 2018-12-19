@@ -1,0 +1,4233 @@
+#%RAML 1.0
+title: Gitea API.
+version: 1.1.1
+baseUri: http://example.com/api/v1
+baseUriParameters: {}
+documentation:
+- title: Gitea API.
+  content: This documentation describes the Gitea API.
+securitySchemes:
+  basicauth:
+    type: Basic Authentication
+  token:
+    type: Pass Through
+    describedBy:
+      headers:
+        Authorization:
+          description: your access token from gitea preceeded by the word token i.e "token ACCESS_TOKEN"
+      queryParameters:
+        access_token:
+          description: your access token
+        token:
+          description: your access token
+types:
+  AddCollaboratorOption:
+    displayName: AddCollaboratorOption
+    description: AddCollaboratorOption options when adding a user as a collaborator of a repository
+    type: object
+    properties:
+      permission:
+        required: false
+        displayName: permission
+        type: string
+  AddTimeOption:
+    displayName: AddTimeOption
+    description: AddTimeOption options for adding time to an issue
+    type: object
+    properties:
+      time:
+        required: true
+        displayName: time
+        description: time in seconds
+        type: integer
+        format: int64
+  Branch:
+    displayName: Branch
+    description: Branch represents a repository branch
+    type: object
+    properties:
+      commit:
+        required: false
+        displayName: commit
+        description: PayloadCommit represents a commit
+        type: PayloadCommit
+      name:
+        required: false
+        displayName: name
+        type: string
+  PayloadCommit:
+    displayName: PayloadCommit
+    description: PayloadCommit represents a commit
+    type: object
+    properties:
+      author:
+        required: false
+        displayName: author
+        description: PayloadUser represents the author or committer of a commit
+        type: PayloadUser
+      committer:
+        required: false
+        displayName: committer
+        description: PayloadUser represents the author or committer of a commit
+        type: PayloadUser
+      id:
+        required: false
+        displayName: id
+        description: sha1 hash of the commit
+        type: string
+      message:
+        required: false
+        displayName: message
+        type: string
+      timestamp:
+        required: false
+        displayName: timestamp
+        type: datetime
+      url:
+        required: false
+        displayName: url
+        type: string
+      verification:
+        required: false
+        displayName: verification
+        description: PayloadCommitVerification represents the GPG verification of a commit
+        type: PayloadCommitVerification
+  PayloadUser:
+    displayName: PayloadUser
+    description: PayloadUser represents the author or committer of a commit
+    type: object
+    properties:
+      email:
+        required: false
+        displayName: email
+        type: string
+      name:
+        required: false
+        displayName: name
+        description: Full name of the commit author
+        type: string
+      username:
+        required: false
+        displayName: username
+        type: string
+  PayloadCommitVerification:
+    displayName: PayloadCommitVerification
+    description: PayloadCommitVerification represents the GPG verification of a commit
+    type: object
+    properties:
+      payload:
+        required: false
+        displayName: payload
+        type: string
+      reason:
+        required: false
+        displayName: reason
+        type: string
+      signature:
+        required: false
+        displayName: signature
+        type: string
+      verified:
+        required: false
+        displayName: verified
+        type: boolean
+  Comment:
+    displayName: Comment
+    description: Comment represents a comment on a commit or issue
+    type: object
+    properties:
+      body:
+        required: false
+        displayName: body
+        type: string
+      created_at:
+        required: false
+        displayName: created_at
+        type: datetime
+      html_url:
+        required: false
+        displayName: html_url
+        type: string
+      id:
+        required: false
+        displayName: id
+        type: integer
+        format: int64
+      issue_url:
+        required: false
+        displayName: issue_url
+        type: string
+      pull_request_url:
+        required: false
+        displayName: pull_request_url
+        type: string
+      updated_at:
+        required: false
+        displayName: updated_at
+        type: datetime
+      user:
+        required: false
+        displayName: user
+        description: User represents a user
+        type: User
+  User:
+    displayName: User
+    description: User represents a user
+    type: object
+    properties:
+      avatar_url:
+        required: false
+        displayName: avatar_url
+        description: URL to the user's avatar
+        type: string
+      email:
+        required: false
+        displayName: email
+        type: string
+      full_name:
+        required: false
+        displayName: full_name
+        description: the user's full name
+        type: string
+      id:
+        required: false
+        displayName: id
+        description: the user's id
+        type: integer
+        format: int64
+      login:
+        required: false
+        displayName: login
+        description: the user's username
+        type: string
+  CreateEmailOption:
+    displayName: CreateEmailOption
+    description: CreateEmailOption options when creating email addresses
+    type: object
+    properties:
+      emails:
+        required: false
+        displayName: emails
+        description: email addresses to add
+        type: array
+        items:
+          type: string
+  CreateForkOption:
+    displayName: CreateForkOption
+    description: CreateForkOption options for creating a fork
+    type: object
+    properties:
+      organization:
+        required: false
+        displayName: organization
+        description: organization name, if forking into an organization
+        type: string
+  CreateGPGKeyOption:
+    displayName: CreateGPGKeyOption
+    description: CreateGPGKeyOption options create user GPG key
+    type: object
+    properties:
+      armored_public_key:
+        required: true
+        displayName: armored_public_key
+        description: An armored GPG key to add
+        type: string
+  CreateHookOption:
+    displayName: CreateHookOption
+    description: CreateHookOption options when create a hook
+    type: object
+    properties:
+      config:
+        required: true
+        displayName: config
+        type: object
+        additionalProperties: true
+        properties: {}
+      type:
+        required: true
+        displayName: type
+        type: string
+        enum:
+        - gitea
+        - gogs
+        - slack
+        - discord
+      active:
+        required: false
+        default: false
+        displayName: active
+        type: boolean
+      events:
+        required: false
+        displayName: events
+        type: array
+        items:
+          type: string
+  CreateIssueCommentOption:
+    displayName: CreateIssueCommentOption
+    description: CreateIssueCommentOption options for creating a comment on an issue
+    type: object
+    properties:
+      body:
+        required: true
+        displayName: body
+        type: string
+  CreateIssueOption:
+    displayName: CreateIssueOption
+    description: CreateIssueOption options to create one issue
+    type: object
+    properties:
+      title:
+        required: true
+        displayName: title
+        type: string
+      assignee:
+        required: false
+        displayName: assignee
+        description: username of assignee
+        type: string
+      body:
+        required: false
+        displayName: body
+        type: string
+      closed:
+        required: false
+        displayName: closed
+        type: boolean
+      labels:
+        required: false
+        displayName: labels
+        description: list of label ids
+        type: array
+        items:
+          type: integer
+          format: int64
+      milestone:
+        required: false
+        displayName: milestone
+        description: milestone id
+        type: integer
+        format: int64
+  CreateKeyOption:
+    displayName: CreateKeyOption
+    description: CreateKeyOption options when creating a key
+    type: object
+    properties:
+      key:
+        required: true
+        displayName: key
+        description: An armored SSH key to add
+        type: string
+      title:
+        required: true
+        displayName: title
+        description: Title of the key to add
+        type: string
+  CreateLabelOption:
+    displayName: CreateLabelOption
+    description: CreateLabelOption options for creating a label
+    type: object
+    properties:
+      color:
+        required: true
+        displayName: color
+        type: string
+      name:
+        required: true
+        displayName: name
+        type: string
+  CreateMilestoneOption:
+    displayName: CreateMilestoneOption
+    description: CreateMilestoneOption options for creating a milestone
+    type: object
+    properties:
+      description:
+        required: false
+        displayName: description
+        type: string
+      due_on:
+        required: false
+        displayName: due_on
+        type: datetime
+      title:
+        required: false
+        displayName: title
+        type: string
+  CreateOrgOption:
+    displayName: CreateOrgOption
+    description: CreateOrgOption options for creating an organization
+    type: object
+    properties:
+      username:
+        required: true
+        displayName: username
+        type: string
+      description:
+        required: false
+        displayName: description
+        type: string
+      full_name:
+        required: false
+        displayName: full_name
+        type: string
+      location:
+        required: false
+        displayName: location
+        type: string
+      website:
+        required: false
+        displayName: website
+        type: string
+  CreatePullRequestOption:
+    displayName: CreatePullRequestOption
+    description: CreatePullRequestOption options when creating a pull request
+    type: object
+    properties:
+      assignee:
+        required: false
+        displayName: assignee
+        type: string
+      base:
+        required: false
+        displayName: base
+        type: string
+      body:
+        required: false
+        displayName: body
+        type: string
+      head:
+        required: false
+        displayName: head
+        type: string
+      labels:
+        required: false
+        displayName: labels
+        type: array
+        items:
+          type: integer
+          format: int64
+      milestone:
+        required: false
+        displayName: milestone
+        type: integer
+        format: int64
+      title:
+        required: false
+        displayName: title
+        type: string
+  CreateReleaseOption:
+    displayName: CreateReleaseOption
+    description: CreateReleaseOption options when creating a release
+    type: object
+    properties:
+      tag_name:
+        required: true
+        displayName: tag_name
+        type: string
+      body:
+        required: false
+        displayName: body
+        type: string
+      draft:
+        required: false
+        displayName: draft
+        type: boolean
+      name:
+        required: false
+        displayName: name
+        type: string
+      prerelease:
+        required: false
+        displayName: prerelease
+        type: boolean
+      target_commitish:
+        required: false
+        displayName: target_commitish
+        type: string
+  CreateRepoOption:
+    displayName: CreateRepoOption
+    description: CreateRepoOption options when creating repository
+    type: object
+    properties:
+      name:
+        required: true
+        displayName: name
+        description: Name of the repository to create
+        type: string
+      auto_init:
+        required: false
+        displayName: auto_init
+        description: Whether the repository should be auto-intialized?
+        type: boolean
+      description:
+        required: false
+        displayName: description
+        description: Description of the repository to create
+        type: string
+      gitignores:
+        required: false
+        displayName: gitignores
+        description: Gitignores to use
+        type: string
+      license:
+        required: false
+        displayName: license
+        description: License to use
+        type: string
+      private:
+        required: false
+        displayName: private
+        description: Whether the repository is private
+        type: boolean
+      readme:
+        required: false
+        displayName: readme
+        description: Readme of the repository to create
+        type: string
+  CreateStatusOption:
+    displayName: CreateStatusOption
+    description: CreateStatusOption holds the information needed to create a new Status for a Commit
+    type: object
+    properties:
+      context:
+        required: false
+        displayName: context
+        type: string
+      description:
+        required: false
+        displayName: description
+        type: string
+      state:
+        required: false
+        displayName: state
+        description: |
+          StatusState holds the state of a Status
+
+          It can be "pending", "success", "error", "failure", and "warning"
+        type: string
+      target_url:
+        required: false
+        displayName: target_url
+        type: string
+  CreateTeamOption:
+    displayName: CreateTeamOption
+    description: CreateTeamOption options for creating a team
+    type: object
+    properties:
+      name:
+        required: true
+        displayName: name
+        type: string
+      description:
+        required: false
+        displayName: description
+        type: string
+      permission:
+        required: false
+        displayName: permission
+        type: string
+        enum:
+        - read
+        - write
+        - admin
+  CreateUserOption:
+    displayName: CreateUserOption
+    description: CreateUserOption create user options
+    type: object
+    properties:
+      email:
+        required: true
+        displayName: email
+        type: string
+      password:
+        required: true
+        displayName: password
+        type: string
+      username:
+        required: true
+        displayName: username
+        type: string
+      full_name:
+        required: false
+        displayName: full_name
+        type: string
+      login_name:
+        required: false
+        displayName: login_name
+        type: string
+      send_notify:
+        required: false
+        displayName: send_notify
+        type: boolean
+      source_id:
+        required: false
+        displayName: source_id
+        type: integer
+        format: int64
+  DeleteEmailOption:
+    displayName: DeleteEmailOption
+    description: DeleteEmailOption options when deleting email addresses
+    type: object
+    properties:
+      emails:
+        required: false
+        displayName: emails
+        description: email addresses to delete
+        type: array
+        items:
+          type: string
+  DeployKey:
+    displayName: DeployKey
+    description: DeployKey a deploy key
+    type: object
+    properties:
+      created_at:
+        required: false
+        displayName: created_at
+        type: datetime
+      id:
+        required: false
+        displayName: id
+        type: integer
+        format: int64
+      key:
+        required: false
+        displayName: key
+        type: string
+      read_only:
+        required: false
+        displayName: read_only
+        type: boolean
+      title:
+        required: false
+        displayName: title
+        type: string
+      url:
+        required: false
+        displayName: url
+        type: string
+  EditHookOption:
+    displayName: EditHookOption
+    description: EditHookOption options when modify one hook
+    type: object
+    properties:
+      active:
+        required: false
+        displayName: active
+        type: boolean
+      config:
+        required: false
+        displayName: config
+        type: object
+        additionalProperties: true
+        properties: {}
+      events:
+        required: false
+        displayName: events
+        type: array
+        items:
+          type: string
+  EditIssueCommentOption:
+    displayName: EditIssueCommentOption
+    description: EditIssueCommentOption options for editing a comment
+    type: object
+    properties:
+      body:
+        required: true
+        displayName: body
+        type: string
+  EditIssueOption:
+    displayName: EditIssueOption
+    description: EditIssueOption options for editing an issue
+    type: object
+    properties:
+      assignee:
+        required: false
+        displayName: assignee
+        type: string
+      body:
+        required: false
+        displayName: body
+        type: string
+      milestone:
+        required: false
+        displayName: milestone
+        type: integer
+        format: int64
+      state:
+        required: false
+        displayName: state
+        type: string
+      title:
+        required: false
+        displayName: title
+        type: string
+  EditLabelOption:
+    displayName: EditLabelOption
+    description: EditLabelOption options for editing a label
+    type: object
+    properties:
+      color:
+        required: false
+        displayName: color
+        type: string
+      name:
+        required: false
+        displayName: name
+        type: string
+  EditMilestoneOption:
+    displayName: EditMilestoneOption
+    description: EditMilestoneOption options for editing a milestone
+    type: object
+    properties:
+      description:
+        required: false
+        displayName: description
+        type: string
+      due_on:
+        required: false
+        displayName: due_on
+        type: datetime
+      state:
+        required: false
+        displayName: state
+        type: string
+      title:
+        required: false
+        displayName: title
+        type: string
+  EditOrgOption:
+    displayName: EditOrgOption
+    description: EditOrgOption options for editing an organization
+    type: object
+    properties:
+      description:
+        required: false
+        displayName: description
+        type: string
+      full_name:
+        required: false
+        displayName: full_name
+        type: string
+      location:
+        required: false
+        displayName: location
+        type: string
+      website:
+        required: false
+        displayName: website
+        type: string
+  EditPullRequestOption:
+    displayName: EditPullRequestOption
+    description: EditPullRequestOption options when modify pull request
+    type: object
+    properties:
+      assignee:
+        required: false
+        displayName: assignee
+        type: string
+      body:
+        required: false
+        displayName: body
+        type: string
+      labels:
+        required: false
+        displayName: labels
+        type: array
+        items:
+          type: integer
+          format: int64
+      milestone:
+        required: false
+        displayName: milestone
+        type: integer
+        format: int64
+      state:
+        required: false
+        displayName: state
+        type: string
+      title:
+        required: false
+        displayName: title
+        type: string
+  EditReleaseOption:
+    displayName: EditReleaseOption
+    description: EditReleaseOption options when editing a release
+    type: object
+    properties:
+      body:
+        required: false
+        displayName: body
+        type: string
+      draft:
+        required: false
+        displayName: draft
+        type: boolean
+      name:
+        required: false
+        displayName: name
+        type: string
+      prerelease:
+        required: false
+        displayName: prerelease
+        type: boolean
+      tag_name:
+        required: false
+        displayName: tag_name
+        type: string
+      target_commitish:
+        required: false
+        displayName: target_commitish
+        type: string
+  EditTeamOption:
+    displayName: EditTeamOption
+    description: EditTeamOption options for editing a team
+    type: object
+    properties:
+      name:
+        required: true
+        displayName: name
+        type: string
+      description:
+        required: false
+        displayName: description
+        type: string
+      permission:
+        required: false
+        displayName: permission
+        type: string
+        enum:
+        - read
+        - write
+        - admin
+  EditUserOption:
+    displayName: EditUserOption
+    description: EditUserOption edit user options
+    type: object
+    properties:
+      email:
+        required: true
+        displayName: email
+        type: string
+      active:
+        required: false
+        displayName: active
+        type: boolean
+      admin:
+        required: false
+        displayName: admin
+        type: boolean
+      allow_git_hook:
+        required: false
+        displayName: allow_git_hook
+        type: boolean
+      allow_import_local:
+        required: false
+        displayName: allow_import_local
+        type: boolean
+      full_name:
+        required: false
+        displayName: full_name
+        type: string
+      location:
+        required: false
+        displayName: location
+        type: string
+      login_name:
+        required: false
+        displayName: login_name
+        type: string
+      max_repo_creation:
+        required: false
+        displayName: max_repo_creation
+        type: integer
+        format: int64
+      password:
+        required: false
+        displayName: password
+        type: string
+      source_id:
+        required: false
+        displayName: source_id
+        type: integer
+        format: int64
+      website:
+        required: false
+        displayName: website
+        type: string
+  Email:
+    displayName: Email
+    description: Email an email address belonging to a user
+    type: object
+    properties:
+      email:
+        required: false
+        displayName: email
+        type: string
+      primary:
+        required: false
+        displayName: primary
+        type: boolean
+      verified:
+        required: false
+        displayName: verified
+        type: boolean
+  GPGKey:
+    displayName: GPGKey
+    description: GPGKey a user GPG key to sign commit and tag in repository
+    type: object
+    properties:
+      can_certify:
+        required: false
+        displayName: can_certify
+        type: boolean
+      can_encrypt_comms:
+        required: false
+        displayName: can_encrypt_comms
+        type: boolean
+      can_encrypt_storage:
+        required: false
+        displayName: can_encrypt_storage
+        type: boolean
+      can_sign:
+        required: false
+        displayName: can_sign
+        type: boolean
+      created_at:
+        required: false
+        displayName: created_at
+        type: datetime
+      emails:
+        required: false
+        displayName: emails
+        type: array
+        items:
+          type: GPGKeyEmail
+      expires_at:
+        required: false
+        displayName: expires_at
+        type: datetime
+      id:
+        required: false
+        displayName: id
+        type: integer
+        format: int64
+      key_id:
+        required: false
+        displayName: key_id
+        type: string
+      primary_key_id:
+        required: false
+        displayName: primary_key_id
+        type: string
+      public_key:
+        required: false
+        displayName: public_key
+        type: string
+  GPGKeyEmail:
+    displayName: GPGKeyEmail
+    description: GPGKeyEmail an email attached to a GPGKey
+    type: object
+    properties:
+      email:
+        required: false
+        displayName: email
+        type: string
+      verified:
+        required: false
+        displayName: verified
+        type: boolean
+  Issue:
+    displayName: Issue
+    description: Issue represents an issue in a repository
+    type: object
+    properties:
+      assignee:
+        required: false
+        displayName: assignee
+        description: User represents a user
+        type: User
+      body:
+        required: false
+        displayName: body
+        type: string
+      comments:
+        required: false
+        displayName: comments
+        type: integer
+        format: int64
+      created_at:
+        required: false
+        displayName: created_at
+        type: datetime
+      id:
+        required: false
+        displayName: id
+        type: integer
+        format: int64
+      labels:
+        required: false
+        displayName: labels
+        type: array
+        items:
+          type: Label
+      milestone:
+        required: false
+        displayName: milestone
+        description: Milestone milestone is a collection of issues on one repository
+        type: Milestone
+      number:
+        required: false
+        displayName: number
+        type: integer
+        format: int64
+      pull_request:
+        required: false
+        displayName: pull_request
+        description: PullRequestMeta PR info if an issue is a PR
+        type: PullRequestMeta
+      state:
+        required: false
+        displayName: state
+        description: StateType issue state type
+        type: string
+      title:
+        required: false
+        displayName: title
+        type: string
+      updated_at:
+        required: false
+        displayName: updated_at
+        type: datetime
+      url:
+        required: false
+        displayName: url
+        type: string
+      user:
+        required: false
+        displayName: user
+        description: User represents a user
+        type: User
+  Label:
+    displayName: Label
+    description: Label a label to an issue or a pr
+    type: object
+    properties:
+      color:
+        required: false
+        displayName: color
+        type: string
+      id:
+        required: false
+        displayName: id
+        type: integer
+        format: int64
+      name:
+        required: false
+        displayName: name
+        type: string
+      url:
+        required: false
+        displayName: url
+        type: string
+  Milestone:
+    displayName: Milestone
+    description: Milestone milestone is a collection of issues on one repository
+    type: object
+    properties:
+      closed_at:
+        required: false
+        displayName: closed_at
+        type: datetime
+      closed_issues:
+        required: false
+        displayName: closed_issues
+        type: integer
+        format: int64
+      description:
+        required: false
+        displayName: description
+        type: string
+      due_on:
+        required: false
+        displayName: due_on
+        type: datetime
+      id:
+        required: false
+        displayName: id
+        type: integer
+        format: int64
+      open_issues:
+        required: false
+        displayName: open_issues
+        type: integer
+        format: int64
+      state:
+        required: false
+        displayName: state
+        description: StateType issue state type
+        type: string
+      title:
+        required: false
+        displayName: title
+        type: string
+  PullRequestMeta:
+    displayName: PullRequestMeta
+    description: PullRequestMeta PR info if an issue is a PR
+    type: object
+    properties:
+      merged:
+        required: false
+        displayName: merged
+        type: boolean
+      merged_at:
+        required: false
+        displayName: merged_at
+        type: datetime
+  IssueLabelsOption:
+    displayName: IssueLabelsOption
+    description: IssueLabelsOption a collection of labels
+    type: object
+    properties:
+      labels:
+        required: false
+        displayName: labels
+        description: list of label IDs
+        type: array
+        items:
+          type: integer
+          format: int64
+  MarkdownOption:
+    displayName: MarkdownOption
+    description: MarkdownOption markdown options
+    type: object
+    properties:
+      Context:
+        required: false
+        displayName: Context
+        description: |
+          Context to render
+
+
+          in: body
+        type: string
+      Mode:
+        required: false
+        displayName: Mode
+        description: |
+          Mode to render
+
+
+          in: body
+        type: string
+      Text:
+        required: false
+        displayName: Text
+        description: |
+          Text markdown to render
+
+
+          in: body
+        type: string
+      Wiki:
+        required: false
+        displayName: Wiki
+        description: |
+          Is it a wiki page ?
+
+
+          in: body
+        type: boolean
+  MigrateRepoForm:
+    displayName: MigrateRepoForm
+    description: MigrateRepoForm form for migrating repository
+    type: object
+    properties:
+      clone_addr:
+        required: true
+        displayName: clone_addr
+        type: string
+      repo_name:
+        required: true
+        displayName: repo_name
+        type: string
+      uid:
+        required: true
+        displayName: uid
+        type: integer
+        format: int64
+      auth_password:
+        required: false
+        displayName: auth_password
+        type: string
+      auth_username:
+        required: false
+        displayName: auth_username
+        type: string
+      description:
+        required: false
+        displayName: description
+        type: string
+      mirror:
+        required: false
+        displayName: mirror
+        type: boolean
+      private:
+        required: false
+        displayName: private
+        type: boolean
+  Organization:
+    displayName: Organization
+    description: Organization represents an organization
+    type: object
+    properties:
+      avatar_url:
+        required: false
+        displayName: avatar_url
+        type: string
+      description:
+        required: false
+        displayName: description
+        type: string
+      full_name:
+        required: false
+        displayName: full_name
+        type: string
+      id:
+        required: false
+        displayName: id
+        type: integer
+        format: int64
+      location:
+        required: false
+        displayName: location
+        type: string
+      username:
+        required: false
+        displayName: username
+        type: string
+      website:
+        required: false
+        displayName: website
+        type: string
+  PRBranchInfo:
+    displayName: PRBranchInfo
+    description: PRBranchInfo information about a branch
+    type: object
+    properties:
+      label:
+        required: false
+        displayName: label
+        type: string
+      ref:
+        required: false
+        displayName: ref
+        type: string
+      repo:
+        required: false
+        displayName: repo
+        description: Repository represents a repository
+        type: Repository
+      repo_id:
+        required: false
+        displayName: repo_id
+        type: integer
+        format: int64
+      sha:
+        required: false
+        displayName: sha
+        type: string
+  Repository:
+    displayName: Repository
+    description: Repository represents a repository
+    type: object
+    properties:
+      clone_url:
+        required: false
+        displayName: clone_url
+        type: string
+      created_at:
+        required: false
+        displayName: created_at
+        type: datetime
+      default_branch:
+        required: false
+        displayName: default_branch
+        type: string
+      description:
+        required: false
+        displayName: description
+        type: string
+      empty:
+        required: false
+        displayName: empty
+        type: boolean
+      fork:
+        required: false
+        displayName: fork
+        type: boolean
+      forks_count:
+        required: false
+        displayName: forks_count
+        type: integer
+        format: int64
+      full_name:
+        required: false
+        displayName: full_name
+        type: string
+      html_url:
+        required: false
+        displayName: html_url
+        type: string
+      id:
+        required: false
+        displayName: id
+        type: integer
+        format: int64
+      mirror:
+        required: false
+        displayName: mirror
+        type: boolean
+      name:
+        required: false
+        displayName: name
+        type: string
+      open_issues_count:
+        required: false
+        displayName: open_issues_count
+        type: integer
+        format: int64
+      owner:
+        required: false
+        displayName: owner
+        description: User represents a user
+        type: User
+  Permission52:
+    displayName: Permission52
+    description: Permission represents a set of permissions
+    type: object
+    properties:
+      admin:
+        required: false
+        displayName: admin
+        type: boolean
+      pull:
+        required: false
+        displayName: pull
+        type: boolean
+      push:
+        required: false
+        displayName: push
+        type: boolean
+  PublicKey:
+    displayName: PublicKey
+    description: PublicKey publickey is a user key to push code to repository
+    type: object
+    properties:
+      created_at:
+        required: false
+        displayName: created_at
+        type: datetime
+      fingerprint:
+        required: false
+        displayName: fingerprint
+        type: string
+      id:
+        required: false
+        displayName: id
+        type: integer
+        format: int64
+      key:
+        required: false
+        displayName: key
+        type: string
+      title:
+        required: false
+        displayName: title
+        type: string
+      url:
+        required: false
+        displayName: url
+        type: string
+  PullRequest:
+    displayName: PullRequest
+    description: PullRequest represents a pull request
+    type: object
+    properties:
+      assignee:
+        required: false
+        displayName: assignee
+        description: User represents a user
+        type: User
+      base:
+        required: false
+        displayName: base
+        description: PRBranchInfo information about a branch
+        type: PRBranchInfo
+      body:
+        required: false
+        displayName: body
+        type: string
+      comments:
+        required: false
+        displayName: comments
+        type: integer
+        format: int64
+      created_at:
+        required: false
+        displayName: created_at
+        type: datetime
+      diff_url:
+        required: false
+        displayName: diff_url
+        type: string
+      head:
+        required: false
+        displayName: head
+        description: PRBranchInfo information about a branch
+        type: PRBranchInfo
+      html_url:
+        required: false
+        displayName: html_url
+        type: string
+      id:
+        required: false
+        displayName: id
+        type: integer
+        format: int64
+      labels:
+        required: false
+        displayName: labels
+        type: array
+        items:
+          type: Label
+      merge_base:
+        required: false
+        displayName: merge_base
+        type: string
+      merge_commit_sha:
+        required: false
+        displayName: merge_commit_sha
+        type: string
+      mergeable:
+        required: false
+        displayName: mergeable
+        type: boolean
+      merged:
+        required: false
+        displayName: merged
+        type: boolean
+      merged_at:
+        required: false
+        displayName: merged_at
+        type: datetime
+      merged_by:
+        required: false
+        displayName: merged_by
+        description: User represents a user
+        type: User
+      milestone:
+        required: false
+        displayName: milestone
+        description: Milestone milestone is a collection of issues on one repository
+        type: Milestone
+      number:
+        required: false
+        displayName: number
+        type: integer
+        format: int64
+      patch_url:
+        required: false
+        displayName: patch_url
+        type: string
+      state:
+        required: false
+        displayName: state
+        description: StateType issue state type
+        type: string
+      title:
+        required: false
+        displayName: title
+        type: string
+      updated_at:
+        required: false
+        displayName: updated_at
+        type: datetime
+      url:
+        required: false
+        displayName: url
+        type: string
+      user:
+        required: false
+        displayName: user
+        description: User represents a user
+        type: User
+  Release:
+    displayName: Release
+    description: Release represents a repository release
+    type: object
+    properties:
+      author:
+        required: false
+        displayName: author
+        description: User represents a user
+        type: User
+      body:
+        required: false
+        displayName: body
+        type: string
+      created_at:
+        required: false
+        displayName: created_at
+        type: datetime
+      draft:
+        required: false
+        displayName: draft
+        type: boolean
+      id:
+        required: false
+        displayName: id
+        type: integer
+        format: int64
+      name:
+        required: false
+        displayName: name
+        type: string
+      prerelease:
+        required: false
+        displayName: prerelease
+        type: boolean
+      published_at:
+        required: false
+        displayName: published_at
+        type: datetime
+      tag_name:
+        required: false
+        displayName: tag_name
+        type: string
+      tarball_url:
+        required: false
+        displayName: tarball_url
+        type: string
+      target_commitish:
+        required: false
+        displayName: target_commitish
+        type: string
+      url:
+        required: false
+        displayName: url
+        type: string
+      zipball_url:
+        required: false
+        displayName: zipball_url
+        type: string
+  SearchResults:
+    displayName: SearchResults
+    description: SearchResults results of a successful search
+    type: object
+    properties:
+      data:
+        required: false
+        displayName: data
+        type: array
+        items:
+          type: Repository
+      ok:
+        required: false
+        displayName: ok
+        type: boolean
+  ServerVersion:
+    displayName: ServerVersion
+    description: ServerVersion wraps the version of the server
+    type: object
+    properties:
+      version:
+        required: false
+        displayName: version
+        type: string
+  Status:
+    displayName: Status
+    description: Status holds a single Status of a single Commit
+    type: object
+    properties:
+      context:
+        required: false
+        displayName: context
+        type: string
+      created_at:
+        required: false
+        displayName: created_at
+        type: datetime
+      creator:
+        required: false
+        displayName: creator
+        description: User represents a user
+        type: User
+      description:
+        required: false
+        displayName: description
+        type: string
+      id:
+        required: false
+        displayName: id
+        type: integer
+        format: int64
+      status:
+        required: false
+        displayName: status
+        description: |
+          StatusState holds the state of a Status
+
+          It can be "pending", "success", "error", "failure", and "warning"
+        type: string
+      target_url:
+        required: false
+        displayName: target_url
+        type: string
+      updated_at:
+        required: false
+        displayName: updated_at
+        type: datetime
+      url:
+        required: false
+        displayName: url
+        type: string
+  Team:
+    displayName: Team
+    description: Team represents a team in an organization
+    type: object
+    properties:
+      description:
+        required: false
+        displayName: description
+        type: string
+      id:
+        required: false
+        displayName: id
+        type: integer
+        format: int64
+      name:
+        required: false
+        displayName: name
+        type: string
+      permission:
+        required: false
+        displayName: permission
+        type: string
+        enum:
+        - none
+        - read
+        - write
+        - admin
+        - owner
+  TrackedTime:
+    displayName: TrackedTime
+    description: TrackedTime worked time for an issue / pr
+    type: object
+    properties:
+      created:
+        required: false
+        displayName: created
+        type: datetime
+      id:
+        required: false
+        displayName: id
+        type: integer
+        format: int64
+      issue_id:
+        required: false
+        displayName: issue_id
+        type: integer
+        format: int64
+      time:
+        required: false
+        displayName: time
+        description: Time in seconds
+        type: integer
+        format: int64
+      user_id:
+        required: false
+        displayName: user_id
+        type: integer
+        format: int64
+  WatchInfo:
+    displayName: WatchInfo
+    description: WatchInfo represents an API watch status of one repository
+    type: object
+    properties:
+      created_at:
+        required: false
+        displayName: created_at
+        type: datetime
+      ignored:
+        required: false
+        displayName: ignored
+        type: boolean
+      reason:
+        required: false
+        displayName: reason
+        type: object
+      repository_url:
+        required: false
+        displayName: repository_url
+        type: string
+      subscribed:
+        required: false
+        displayName: subscribed
+        type: boolean
+      url:
+        required: false
+        displayName: url
+        type: string
+/markdown:
+  post:
+    displayName: renderMarkdown
+    description: Render a markdown document as HTML
+    body:
+      text/plain:
+        displayName: body
+        type: MarkdownOption
+    securedBy:
+    - basicauth
+    - token
+    responses:
+      422:
+        description: APIValidationError is error format response related to input validation
+        body: {}
+  /raw:
+    post:
+      displayName: renderMarkdownRaw
+      description: Render raw markdown as HTML
+      body:
+        text/plain:
+          displayName: body
+          type: string
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        422:
+          description: APIValidationError is error format response related to input validation
+          body: {}
+/org:
+  /{org}/repos:
+    uriParameters:
+      org:
+        required: true
+        displayName: org
+        description: name of organization
+        type: string
+    post:
+      displayName: createOrgRepo
+      description: Create a repository in an organization
+      body:
+        application/json:
+          displayName: body
+          type: CreateRepoOption
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        201:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: Repository
+        403:
+          description: APIForbiddenError is a forbidden error response
+          body: {}
+        422:
+          description: APIValidationError is error format response related to input validation
+          body: {}
+
+/repositories:
+  /{id}:
+    uriParameters:
+      id:
+        required: true
+        displayName: id
+        description: id of the repo to get
+        type: integer
+        format: int32
+    get:
+      displayName: repoGetByID
+      description: Get a repository by id
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: Repository
+/user:
+  get:
+    displayName: userGetCurrent
+    description: Get the authenticated user
+    securedBy:
+    - basicauth
+    - token
+    responses:
+      200:
+        description: Success
+        body:
+          application/json:
+            displayName: response
+            type: User
+  /emails:
+    get:
+      displayName: userListEmails
+      description: List the authenticated user's email addresses
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: array
+              items:
+                type: Email
+    post:
+      displayName: userAddEmail
+      description: Add email addresses
+      body:
+        application/json:
+          displayName: body
+          type: CreateEmailOption
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        201:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: array
+              items:
+                type: Email
+    delete:
+      displayName: userDeleteEmail
+      description: Delete email addresses
+      body:
+        text/plain:
+          displayName: body
+          type: DeleteEmailOption
+      securedBy:
+      - basicauth
+      - token
+  /followers:
+    get:
+      displayName: userCurrentListFollowers
+      description: List the authenticated user's followers
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: array
+              items:
+                type: User
+  /following:
+    get:
+      displayName: userCurrentListFollowing
+      description: List the users that the authenticated user is following
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: array
+              items:
+                type: User
+    /{followee}:
+      uriParameters:
+        followee:
+          required: true
+          displayName: followee
+          description: username of followed user
+          type: string
+      get:
+        displayName: userCurrentCheckFollowing
+        description: Check whether a user is followed by the authenticated user
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          404:
+            description: APINotFound is a not found empty response
+            body: {}
+    /{username}:
+      uriParameters:
+        username:
+          required: true
+          displayName: username
+          description: username of user to follow
+          type: string
+      put:
+        displayName: userCurrentPutFollow
+        description: Follow a user
+        securedBy:
+        - basicauth
+        - token
+      delete:
+        displayName: userCurrentDeleteFollow
+        description: Unfollow a user
+        securedBy:
+        - basicauth
+        - token
+  /gpg_keys:
+    get:
+      displayName: userCurrentListGPGKeys
+      description: List the authenticated user's GPG keys
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: array
+              items:
+                type: GPGKey
+    post:
+      displayName: userCurrentPostGPGKey
+      description: Create a GPG key
+      body:
+        application/json:
+          displayName: Form
+          type: CreateGPGKeyOption
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        201:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: GPGKey
+        422:
+          description: APIValidationError is error format response related to input validation
+          body: {}
+    /{id}:
+      uriParameters:
+        id:
+          required: true
+          displayName: id
+          description: id of key to get
+          type: integer
+          format: int32
+      get:
+        displayName: userCurrentGetGPGKey
+        description: Get a GPG key
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: GPGKey
+          404:
+            description: APINotFound is a not found empty response
+            body: {}
+      delete:
+        displayName: userCurrentDeleteGPGKey
+        description: Remove a GPG key
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          403:
+            description: APIForbiddenError is a forbidden error response
+            body: {}
+  /keys:
+    get:
+      displayName: userCurrentListKeys
+      description: List the authenticated user's public keys
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: array
+              items:
+                type: PublicKey
+    post:
+      displayName: userCurrentPostKey
+      description: Create a public key
+      body:
+        application/json:
+          displayName: body
+          type: CreateKeyOption
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        201:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: PublicKey
+        422:
+          description: APIValidationError is error format response related to input validation
+          body: {}
+    /{id}:
+      uriParameters:
+        id:
+          required: true
+          displayName: id
+          description: id of key to get
+          type: integer
+          format: int32
+      get:
+        displayName: userCurrentGetKey
+        description: Get a public key
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: PublicKey
+          404:
+            description: APINotFound is a not found empty response
+            body: {}
+      delete:
+        displayName: userCurrentDeleteKey
+        description: Delete a public key
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          403:
+            description: APIForbiddenError is a forbidden error response
+            body: {}
+          404:
+            description: APINotFound is a not found empty response
+            body: {}
+  /orgs:
+    get:
+      displayName: orgListCurrentUserOrgs
+      description: List the current user's organizations
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: array
+              items:
+                type: Organization
+  /repos:
+    get:
+      displayName: userCurrentListRepos
+      description: List the repos that the authenticated user owns or has access to
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: array
+              items:
+                type: Repository
+    post:
+      displayName: createCurrentUserRepo
+      description: Create a repository
+      body:
+        application/json:
+          displayName: body
+          type: CreateRepoOption
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        201:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: Repository
+  /starred:
+    get:
+      displayName: userCurrentListStarred
+      description: The repos that the authenticated user has starred
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: array
+              items:
+                type: Repository
+    /{owner}/{repo}:
+      uriParameters:
+        owner:
+          required: true
+          displayName: owner
+          description: owner of the repo
+          type: string
+        repo:
+          required: true
+          displayName: repo
+          description: name of the repo
+          type: string
+      get:
+        displayName: userCurrentCheckStarring
+        description: Whether the authenticated is starring the repo
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          404:
+            description: APINotFound is a not found empty response
+            body: {}
+      put:
+        displayName: userCurrentPutStar
+        description: Star the given repo
+        securedBy:
+        - basicauth
+        - token
+      delete:
+        displayName: userCurrentDeleteStar
+        description: Unstar the given repo
+        securedBy:
+        - basicauth
+        - token
+  /subscriptions:
+    get:
+      displayName: userCurrentListSubscriptions
+      description: List repositories watched by the authenticated user
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: array
+              items:
+                type: Repository
+  /times:
+    get:
+      displayName: userCurrentTrackedTimes
+      description: List the current user's tracked times
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: array
+              items:
+                type: TrackedTime
+  /{username}/orgs:
+    uriParameters:
+      username:
+        required: true
+        displayName: username
+        description: username of user
+        type: string
+    get:
+      displayName: orgListUserOrgs
+      description: List a user's organizations
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: array
+              items:
+                type: Organization
+/version:
+  get:
+    displayName: getVersion
+    description: Returns the version of the Gitea application
+    securedBy:
+    - basicauth
+    - token
+    responses:
+      200:
+        description: Success
+        body:
+          application/json:
+            displayName: response
+            type: ServerVersion
+/admin:
+  /users:
+    post:
+      displayName: adminCreateUser
+      description: Create a user
+      body:
+        application/json:
+          displayName: body
+          type: CreateUserOption
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        201:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: User
+        403:
+          description: APIForbiddenError is a forbidden error response
+          body: {}
+        422:
+          description: APIValidationError is error format response related to input validation
+          body: {}
+    /{username}:
+      uriParameters:
+        username:
+          required: true
+          displayName: username
+          description: username of user to delete
+          type: string
+      patch:
+        displayName: adminEditUser
+        description: Edit an existing user
+        body:
+          application/json:
+            displayName: body
+            type: EditUserOption
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: User
+          403:
+            description: APIForbiddenError is a forbidden error response
+            body: {}
+          422:
+            description: APIValidationError is error format response related to input validation
+            body: {}
+      delete:
+        displayName: adminDeleteUser
+        description: Delete a user
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          403:
+            description: APIForbiddenError is a forbidden error response
+            body: {}
+          422:
+            description: APIValidationError is error format response related to input validation
+            body: {}
+      /keys:
+        post:
+          displayName: adminCreatePublicKey
+          description: Add a public key on behalf of a user
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            201:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: PublicKey
+            403:
+              description: APIForbiddenError is a forbidden error response
+              body: {}
+            422:
+              description: APIValidationError is error format response related to input validation
+              body: {}
+        /{id}:
+          uriParameters:
+            id:
+              required: true
+              displayName: id
+              description: id of the key to delete
+              type: integer
+              format: int32
+          delete:
+            displayName: adminDeleteUserPublicKey
+            description: Delete a user's public key
+            securedBy:
+            - basicauth
+            - token
+            responses:
+              403:
+                description: APIForbiddenError is a forbidden error response
+                body: {}
+              404:
+                description: APINotFound is a not found empty response
+                body: {}
+      /orgs:
+        post:
+          displayName: adminCreateOrg
+          description: Create an organization
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            201:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: Organization
+            403:
+              description: APIForbiddenError is a forbidden error response
+              body: {}
+            422:
+              description: APIValidationError is error format response related to input validation
+              body: {}
+      /repos:
+        post:
+          displayName: adminCreateRepo
+          description: Create a repository on behalf a user
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            201:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: Repository
+            403:
+              description: APIForbiddenError is a forbidden error response
+              body: {}
+            422:
+              description: APIValidationError is error format response related to input validation
+              body: {}
+/orgs:
+  /{org}:
+    uriParameters:
+      org:
+        required: true
+        displayName: org
+        description: name of the organization to get
+        type: string
+    get:
+      displayName: orgGet
+      description: Get an organization
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: Organization
+    patch:
+      displayName: orgEdit
+      description: Edit an organization
+      body:
+        application/json:
+          displayName: body
+          type: EditOrgOption
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: Organization
+    /hooks:
+      get:
+        displayName: orgListHooks
+        description: List an organization's webhooks
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: array
+                items:
+                  type: Branch
+      /:
+        post:
+          displayName: orgCreateHook
+          description: Create a hook
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            201:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: Branch
+      /{id}:
+        uriParameters:
+          id:
+            required: true
+            displayName: id
+            type: string
+        get:
+          displayName: orgGetHook
+          description: Get a hook
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: Branch
+        patch:
+          displayName: orgEditHook
+          description: Update a hook
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: Branch
+        delete:
+          displayName: orgDeleteHook
+          description: Delete a hook
+          securedBy:
+          - basicauth
+          - token
+    /members:
+      get:
+        displayName: orgListMembers
+        description: List an organization's members
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: array
+                items:
+                  type: User
+      /{username}:
+        uriParameters:
+          username:
+            required: true
+            displayName: username
+            description: username of the user
+            type: string
+        get:
+          displayName: orgIsMember
+          description: Check if a user is a member of an organization
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            204:
+              description: user is a member
+              body:
+                text/plain:
+                  displayName: response
+                  description: user is a member
+                  type: any
+            404:
+              description: user is not a member
+              body: {}
+        delete:
+          displayName: orgDeleteMember
+          description: Remove a member from an organization
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            204:
+              description: member removed
+              body:
+                text/plain:
+                  displayName: response
+                  description: member removed
+                  type: any
+    /public_members:
+      get:
+        displayName: orgListPublicMembers
+        description: List an organization's public members
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: array
+                items:
+                  type: User
+      /{username}:
+        uriParameters:
+          username:
+            required: true
+            displayName: username
+            description: username of the user
+            type: string
+        get:
+          displayName: orgIsPublicMember
+          description: Check if a user is a public member of an organization
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            204:
+              description: user is a public member
+              body:
+                text/plain:
+                  displayName: response
+                  description: user is a public member
+                  type: any
+            404:
+              description: user is not a public member
+              body: {}
+        put:
+          displayName: orgPublicizeMember
+          description: Publicize a user's membership
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            204:
+              description: membership publicized
+              body:
+                text/plain:
+                  displayName: response
+                  description: membership publicized
+                  type: any
+        delete:
+          displayName: orgConcealMember
+          description: Conceal a user's membership
+          securedBy:
+          - basicauth
+          - token
+    /repos:
+      get:
+        displayName: orgListRepos
+        description: List an organization's repos
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: array
+                items:
+                  type: Repository
+    /teams:
+      get:
+        displayName: orgListTeams
+        description: List an organization's teams
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: array
+                items:
+                  type: Team
+      post:
+        displayName: orgCreateTeam
+        description: Create a team
+        body:
+          application/json:
+            displayName: body
+            type: CreateTeamOption
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          201:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: Team
+/repos:
+  /migrate:
+    post:
+      displayName: repoMigrate
+      description: Migrate a remote git repository
+      body:
+        application/json:
+          displayName: body
+          type: MigrateRepoForm
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        201:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: Repository
+  /search:
+    get:
+      displayName: repoSearch
+      description: Search for repositories
+      securedBy:
+      - basicauth
+      - token
+      queryParameters:
+        q:
+          required: false
+          displayName: q
+          description: keyword
+          type: string
+        uid:
+          required: false
+          displayName: uid
+          description: search only for repos that the user with the given id owns or contributes to
+          type: integer
+          format: int32
+        page:
+          required: false
+          displayName: page
+          description: page number of results to return (1-based)
+          type: integer
+          format: int32
+        limit:
+          required: false
+          displayName: limit
+          description: page size of results, maximum page size is 50
+          type: integer
+          format: int32
+        mode:
+          required: false
+          displayName: mode
+          description: type of repository to search for. Supported values are "fork", "source", "mirror" and "collaborative"
+          type: string
+        exclusive:
+          required: false
+          displayName: exclusive
+          description: if `uid` is given, search only for repos that the user owns
+          type: boolean
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: SearchResults
+        422:
+          description: APIValidationError is error format response related to input validation
+          body: {}
+  /{user}/{repo}/hooks/{id}:
+    uriParameters:
+      repo:
+        required: true
+        displayName: repo
+        description: name of the repo
+        type: string
+      id:
+        required: true
+        displayName: id
+        description: id of the hook to delete
+        type: integer
+        format: int32
+      user:
+        required: true
+        displayName: user
+        type: string
+    delete:
+      displayName: repoDeleteHook
+      description: Delete a hook in a repository
+      securedBy:
+      - basicauth
+      - token
+      queryParameters:
+        owner:
+          required: true
+          displayName: owner
+          description: owner of the repo
+          type: string
+      responses:
+        404:
+          description: APINotFound is a not found empty response
+          body: {}
+  /{owner}:
+    uriParameters:
+      owner:
+        required: true
+        displayName: owner
+        description: owner of the repo
+        type: string
+    /{repo}:
+      uriParameters:
+        repo:
+          required: true
+          displayName: repo
+          description: name of the repo
+          type: string
+      get:
+        displayName: repoGet
+        description: Get a repository
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: Repository
+      delete:
+        displayName: repoDelete
+        description: Delete a repository
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          403:
+            description: APIForbiddenError is a forbidden error response
+            body: {}
+      /archive/{filepath}:
+        uriParameters:
+          filepath:
+            required: true
+            displayName: filepath
+            type: string
+        get:
+          displayName: repoGetArchive
+          description: Get an archive of a repository
+          securedBy:
+          - basicauth
+          - token
+          queryParameters:
+            archive:
+              required: true
+              displayName: archive
+              description: archive to download, consisting of a git reference and archive
+              type: string
+      /branches:
+        get:
+          displayName: repoListBranches
+          description: List a repository's branches
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: Branch
+        /{branch}:
+          uriParameters:
+            branch:
+              required: true
+              displayName: branch
+              description: branch to get
+              type: string
+          get:
+            displayName: repoGetBranch
+            description: List a repository's branches
+            securedBy:
+            - basicauth
+            - token
+            responses:
+              200:
+                description: Success
+                body:
+                  application/json:
+                    displayName: response
+                    type: Branch
+      /collaborators:
+        get:
+          displayName: repoListCollaborators
+          description: List a repository's collaborators
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: User
+        /{collaborator}:
+          uriParameters:
+            collaborator:
+              required: true
+              displayName: collaborator
+              description: username of the collaborator
+              type: string
+          get:
+            displayName: repoCheckCollaborator
+            description: Check if a user is a collaborator of a repository
+            securedBy:
+            - basicauth
+            - token
+            responses:
+              404:
+                description: APIEmpty is an empty response
+                body: {}
+          put:
+            displayName: repoAddCollaborator
+            description: Add a collaborator to a repository
+            body:
+              text/plain:
+                displayName: body
+                type: AddCollaboratorOption
+            securedBy:
+            - basicauth
+            - token
+          delete:
+            displayName: repoDeleteCollaborator
+            description: Delete a collaborator from a repository
+            securedBy:
+            - basicauth
+            - token
+      /commits/{ref}/statuses:
+        uriParameters:
+          ref:
+            required: true
+            displayName: ref
+            description: name of branch/tag/commit
+            type: string
+        get:
+          displayName: repoGetCombinedStatusByRef
+          description: Get a commit's combined status, by branch/tag/commit reference
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: Status
+      /editorconfig/{filepath}:
+        uriParameters:
+          filepath:
+            required: true
+            displayName: filepath
+            description: filepath of file to get
+            type: string
+        get:
+          displayName: repoGetEditorConfig
+          description: Get the EditorConfig definitions of a file in a repository
+          securedBy:
+          - basicauth
+          - token
+      /forks:
+        get:
+          displayName: listForks
+          description: List a repository's forks
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: Repository
+        post:
+          displayName: createFork
+          description: Fork a repository
+          body:
+            application/json:
+              displayName: body
+              type: CreateForkOption
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            202:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: Repository
+      /hooks:
+        get:
+          displayName: repoListHooks
+          description: List the hooks in a repository
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: Branch
+        post:
+          displayName: repoCreateHook
+          description: Create a hook
+          body:
+            application/json:
+              displayName: body
+              type: CreateHookOption
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            201:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: Branch
+        /{id}:
+          uriParameters:
+            id:
+              required: true
+              displayName: id
+              description: id of the hook to get
+              type: integer
+              format: int32
+          get:
+            displayName: repoGetHook
+            description: Get a hook
+            securedBy:
+            - basicauth
+            - token
+            responses:
+              200:
+                description: Success
+                body:
+                  application/json:
+                    displayName: response
+                    type: array
+                    items:
+                      type: Branch
+          patch:
+            displayName: repoEditHook
+            description: Edit a hook in a repository
+            body:
+              application/json:
+                displayName: body
+                type: EditHookOption
+            securedBy:
+            - basicauth
+            - token
+            responses:
+              200:
+                description: Success
+                body:
+                  application/json:
+                    displayName: response
+                    type: array
+                    items:
+                      type: Branch
+      /issues:
+        get:
+          displayName: issueListIssues
+          description: List a repository's issues
+          securedBy:
+          - basicauth
+          - token
+          queryParameters:
+            state:
+              required: false
+              displayName: state
+              description: whether issue is open or closed
+              type: string
+            page:
+              required: false
+              displayName: page
+              description: page number of requested issues
+              type: integer
+              format: int32
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: Issue
+        post:
+          displayName: issueCreateIssue
+          description: Create an issue
+          body:
+            application/json:
+              displayName: body
+              type: CreateIssueOption
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            201:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: Issue
+        /comments:
+          get:
+            displayName: issueGetRepoComments
+            description: List all comments in a repository
+            securedBy:
+            - basicauth
+            - token
+            queryParameters:
+              string:
+                required: false
+                displayName: string
+                description: if provided, only comments updated since the provided time are returned.
+                type: string
+            responses:
+              200:
+                description: Success
+                body:
+                  application/json:
+                    displayName: response
+                    type: array
+                    items:
+                      type: Comment
+          /{id}:
+            uriParameters:
+              id:
+                required: true
+                displayName: id
+                description: id of comment to delete
+                type: integer
+                format: int32
+            patch:
+              displayName: issueEditComment
+              description: Edit a comment
+              body:
+                application/json:
+                  displayName: body
+                  type: EditIssueCommentOption
+              securedBy:
+              - basicauth
+              - token
+              responses:
+                200:
+                  description: Success
+                  body:
+                    application/json:
+                      displayName: response
+                      type: Comment
+            delete:
+              displayName: issueDeleteComment
+              description: Delete a comment
+              securedBy:
+              - basicauth
+              - token
+        /{id}:
+          uriParameters:
+            id:
+              required: true
+              displayName: id
+              description: id of the issue to get
+              type: integer
+              format: int32
+          get:
+            displayName: issueGetIssue
+            description: Get an issue by id
+            securedBy:
+            - basicauth
+            - token
+            responses:
+              200:
+                description: Success
+                body:
+                  application/json:
+                    displayName: response
+                    type: Issue
+          patch:
+            displayName: issueEditIssue
+            description: Edit an issue
+            body:
+              application/json:
+                displayName: body
+                type: EditIssueOption
+            securedBy:
+            - basicauth
+            - token
+            responses:
+              201:
+                description: Success
+                body:
+                  application/json:
+                    displayName: response
+                    type: Issue
+        /{index}:
+          uriParameters:
+            index:
+              required: true
+              displayName: index
+              description: this parameter is ignored
+              type: integer
+              format: int32
+          /comments:
+            get:
+              displayName: issueGetComments
+              description: List all comments on an issue
+              securedBy:
+              - basicauth
+              - token
+              queryParameters:
+                id:
+                  required: true
+                  displayName: id
+                  description: index of the issue
+                  type: integer
+                  format: int32
+                string:
+                  required: false
+                  displayName: string
+                  description: if provided, only comments updated since the specified time are returned.
+                  type: string
+              responses:
+                200:
+                  description: Success
+                  body:
+                    application/json:
+                      displayName: response
+                      type: array
+                      items:
+                        type: Comment
+            post:
+              displayName: issueCreateComment
+              description: Add a comment to an issue
+              body:
+                application/json:
+                  displayName: body
+                  type: CreateIssueOption
+              securedBy:
+              - basicauth
+              - token
+              queryParameters:
+                id:
+                  required: true
+                  displayName: id
+                  description: index of the issue
+                  type: integer
+                  format: int32
+              responses:
+                201:
+                  description: Success
+                  body:
+                    application/json:
+                      displayName: response
+                      type: Comment
+            /{id}:
+              uriParameters:
+                id:
+                  required: true
+                  displayName: id
+                  description: id of comment to delete
+                  type: integer
+                  format: int32
+              patch:
+                displayName: issueEditCommentDeprecated
+                description: Edit a comment
+                body:
+                  application/json:
+                    displayName: body
+                    type: EditIssueCommentOption
+                securedBy:
+                - basicauth
+                - token
+                responses:
+                  200:
+                    description: Success
+                    body:
+                      application/json:
+                        displayName: response
+                        type: Comment
+              delete:
+                displayName: issueDeleteCommentDeprecated
+                description: Delete a comment
+                securedBy:
+                - basicauth
+                - token
+          /labels:
+            get:
+              displayName: issueGetLabels
+              description: Get an issue's labels
+              securedBy:
+              - basicauth
+              - token
+              responses:
+                200:
+                  description: Success
+                  body:
+                    application/json:
+                      displayName: response
+                      type: array
+                      items:
+                        type: Label
+                404:
+                  description: APINotFound is a not found empty response
+                  body: {}
+            put:
+              displayName: issueReplaceLabels
+              description: Replace an issue's labels
+              body:
+                application/json:
+                  displayName: body
+                  type: IssueLabelsOption
+              securedBy:
+              - basicauth
+              - token
+              responses:
+                200:
+                  description: Success
+                  body:
+                    application/json:
+                      displayName: response
+                      type: array
+                      items:
+                        type: Label
+            post:
+              displayName: issueAddLabel
+              description: Add a label to an issue
+              body:
+                application/json:
+                  displayName: body
+                  type: IssueLabelsOption
+              securedBy:
+              - basicauth
+              - token
+              responses:
+                200:
+                  description: Success
+                  body:
+                    application/json:
+                      displayName: response
+                      type: array
+                      items:
+                        type: Label
+            delete:
+              displayName: issueClearLabels
+              description: Remove all labels from an issue
+              securedBy:
+              - basicauth
+              - token
+            /{id}:
+              uriParameters:
+                id:
+                  required: true
+                  displayName: id
+                  description: id of the label to remove
+                  type: integer
+                  format: int32
+              delete:
+                displayName: issueRemoveLabel
+                description: Remove a label from an issue
+                securedBy:
+                - basicauth
+                - token
+          /times:
+            get:
+              displayName: issueTrackedTimes
+              description: List an issue's tracked times
+              securedBy:
+              - basicauth
+              - token
+              responses:
+                200:
+                  description: Success
+                  body:
+                    application/json:
+                      displayName: response
+                      type: array
+                      items:
+                        type: TrackedTime
+            post:
+              displayName: issueAddTime
+              description: Add a tracked time to a issue
+              body:
+                application/json:
+                  displayName: body
+                  type: AddTimeOption
+              securedBy:
+              - basicauth
+              - token
+              queryParameters:
+                id:
+                  required: true
+                  displayName: id
+                  description: index of the issue to add tracked time to
+                  type: integer
+                  format: int32
+              responses:
+                200:
+                  description: Success
+                  body:
+                    application/json:
+                      displayName: response
+                      type: TrackedTime
+                400:
+                  description: APIError is error format response
+                  body: {}
+                403:
+                  description: APIError is error format response
+                  body: {}
+      /keys:
+        get:
+          displayName: repoListKeys
+          description: List a repository's keys
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: DeployKey
+        post:
+          displayName: repoCreateKey
+          description: Add a key to a repository
+          body:
+            application/json:
+              displayName: body
+              type: CreateKeyOption
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            201:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: DeployKey
+        /{id}:
+          uriParameters:
+            id:
+              required: true
+              displayName: id
+              description: id of the key to get
+              type: integer
+              format: int32
+          get:
+            displayName: repoGetKey
+            description: Get a repository's key by id
+            securedBy:
+            - basicauth
+            - token
+            responses:
+              200:
+                description: Success
+                body:
+                  application/json:
+                    displayName: response
+                    type: DeployKey
+          delete:
+            displayName: repoDeleteKey
+            description: Delete a key from a repository
+            securedBy:
+            - basicauth
+            - token
+      /labels:
+        get:
+          displayName: issueListLabels
+          description: Get all of a repository's labels
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: Label
+        post:
+          displayName: issueCreateLabel
+          description: Create a label
+          body:
+            application/json:
+              displayName: body
+              type: CreateLabelOption
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            201:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: Label
+        /{id}:
+          uriParameters:
+            id:
+              required: true
+              displayName: id
+              description: id of the label to get
+              type: integer
+              format: int32
+          get:
+            displayName: issueGetLabel
+            description: Get a single label
+            securedBy:
+            - basicauth
+            - token
+            responses:
+              200:
+                description: Success
+                body:
+                  application/json:
+                    displayName: response
+                    type: Label
+          patch:
+            displayName: issueEditLabel
+            description: Update a label
+            body:
+              application/json:
+                displayName: body
+                type: EditLabelOption
+            securedBy:
+            - basicauth
+            - token
+            responses:
+              200:
+                description: Success
+                body:
+                  application/json:
+                    displayName: response
+                    type: Label
+          delete:
+            displayName: issueDeleteLabel
+            description: Delete a label
+            securedBy:
+            - basicauth
+            - token
+      /milestones:
+        get:
+          displayName: issueGetMilestones
+          description: Get all of a repository's milestones
+          securedBy:
+          - basicauth
+          - token
+          queryParameters:
+            id:
+              required: true
+              displayName: id
+              description: id of the milestone to get
+              type: integer
+              format: int32
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: Milestone
+        post:
+          displayName: issueCreateMilestone
+          description: Create a milestone
+          body:
+            application/json:
+              displayName: body
+              type: CreateMilestoneOption
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            201:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: Milestone
+        /{id}:
+          uriParameters:
+            id:
+              required: true
+              displayName: id
+              type: string
+          get:
+            displayName: issueGetMilestone
+            description: Get a milestone
+            securedBy:
+            - basicauth
+            - token
+            responses:
+              200:
+                description: Success
+                body:
+                  application/json:
+                    displayName: response
+                    type: Milestone
+          patch:
+            displayName: issueEditMilestone
+            description: Update a milestone
+            body:
+              application/json:
+                displayName: body
+                type: EditMilestoneOption
+            securedBy:
+            - basicauth
+            - token
+            responses:
+              200:
+                description: Success
+                body:
+                  application/json:
+                    displayName: response
+                    type: Milestone
+          delete:
+            displayName: issueDeleteMilestone
+            description: Delete a milestone
+            securedBy:
+            - basicauth
+            - token
+            queryParameters:
+              body:
+                required: true
+                displayName: body
+                description: id of the milestone to delete
+                type: integer
+                format: int32
+      /mirror-sync:
+        post:
+          displayName: repoMirrorSync
+          description: Sync a mirrored repository
+          securedBy:
+          - basicauth
+          - token
+      /pulls:
+        get:
+          displayName: repoListPullRequests
+          description: List a repo's pull requests
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: PullRequest
+        post:
+          displayName: repoCreatePullRequest
+          description: Create a pull request
+          body:
+            application/json:
+              displayName: body
+              type: CreatePullRequestOption
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            201:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: PullRequest
+        /{index}:
+          uriParameters:
+            index:
+              required: true
+              displayName: index
+              description: index of the pull request to get
+              type: integer
+              format: int32
+          get:
+            displayName: repoGetPullRequest
+            description: Get a pull request
+            securedBy:
+            - basicauth
+            - token
+            responses:
+              200:
+                description: Success
+                body:
+                  application/json:
+                    displayName: response
+                    type: PullRequest
+          patch:
+            displayName: repoEditPullRequest
+            description: Update a pull request
+            body:
+              application/json:
+                displayName: body
+                type: EditPullRequestOption
+            securedBy:
+            - basicauth
+            - token
+            responses:
+              201:
+                description: Success
+                body:
+                  application/json:
+                    displayName: response
+                    type: PullRequest
+          /merge:
+            get:
+              displayName: repoPullRequestIsMerged
+              description: Check if a pull request has been merged
+              securedBy:
+              - basicauth
+              - token
+              responses:
+                204:
+                  description: pull request has been merged
+                  body:
+                    text/plain:
+                      displayName: response
+                      description: pull request has been merged
+                      type: any
+                404:
+                  description: pull request has not been merged
+                  body: {}
+            post:
+              displayName: repoMergePullRequest
+              description: Merge a pull request
+              securedBy:
+              - basicauth
+              - token
+              responses:
+                405:
+                  description: APIEmpty is an empty response
+                  body: {}
+      /raw/{filepath}:
+        uriParameters:
+          filepath:
+            required: true
+            displayName: filepath
+            description: filepath of the file to get
+            type: string
+        get:
+          displayName: repoGetRawFile
+          description: Get a file from a repository
+          securedBy:
+          - basicauth
+          - token
+      /releases:
+        get:
+          displayName: repoCreateRelease
+          description: Create a release
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            201:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: Release
+        /{id}:
+          uriParameters:
+            id:
+              required: true
+              displayName: id
+              description: id of the release to delete
+              type: integer
+              format: int32
+          patch:
+            displayName: repoEditRelease
+            description: Update a release
+            body:
+              application/json:
+                displayName: body
+                type: EditReleaseOption
+            securedBy:
+            - basicauth
+            - token
+            responses:
+              200:
+                description: Success
+                body:
+                  application/json:
+                    displayName: response
+                    type: Release
+          delete:
+            displayName: repoDeleteRelease
+            description: Delete a release
+            securedBy:
+            - basicauth
+            - token
+      /stargazers:
+        get:
+          displayName: repoListStargazers
+          description: List a repo's stargazers
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: User
+      /statuses/{sha}:
+        uriParameters:
+          sha:
+            required: true
+            displayName: sha
+            description: sha of the commit
+            type: string
+        get:
+          displayName: repoListStatuses
+          description: Get a commit's statuses
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: Status
+        post:
+          displayName: repoCreateStatus
+          description: Create a commit status
+          body:
+            application/json:
+              displayName: body
+              type: CreateStatusOption
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: Status
+      /subscribers:
+        get:
+          displayName: repoListSubscribers
+          description: List a repo's watchers
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: User
+      /subscription:
+        get:
+          displayName: userCurrentCheckSubscription
+          description: Check if the current user is watching a repo
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: WatchInfo
+        put:
+          displayName: userCurrentPutSubscription
+          description: Watch a repo
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: WatchInfo
+        delete:
+          displayName: userCurrentDeleteSubscription
+          description: Unwatch a repo
+          securedBy:
+          - basicauth
+          - token
+      /times:
+        get:
+          displayName: repoTrackedTimes
+          description: List a repo's tracked times
+          securedBy:
+          - basicauth
+          - token
+          responses:
+            200:
+              description: Success
+              body:
+                application/json:
+                  displayName: response
+                  type: array
+                  items:
+                    type: TrackedTime
+        /{tracker}:
+          uriParameters:
+            tracker:
+              required: true
+              displayName: tracker
+              type: string
+          get:
+            displayName: userTrackedTimes
+            description: List a user's tracked times in a repo
+            securedBy:
+            - basicauth
+            - token
+            queryParameters:
+              user:
+                required: true
+                displayName: user
+                description: username of user
+                type: string
+            responses:
+              200:
+                description: Success
+                body:
+                  application/json:
+                    displayName: response
+                    type: array
+                    items:
+                      type: TrackedTime
+/teams:
+  /{id}:
+    uriParameters:
+      id:
+        required: true
+        displayName: id
+        description: id of the team to get
+        type: integer
+        format: int32
+    get:
+      displayName: orgGetTeam
+      description: Get a team
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: Team
+    patch:
+      displayName: orgEditTeam
+      description: Edit a team
+      body:
+        application/json:
+          displayName: body
+          type: EditTeamOption
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: Team
+    delete:
+      displayName: orgDeleteTeam
+      description: Delete a team
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        204:
+          description: team deleted
+          body:
+            text/plain:
+              displayName: response
+              description: team deleted
+              type: any
+    /members:
+      get:
+        displayName: orgListTeamMembers
+        description: List a team's members
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: array
+                items:
+                  type: User
+      /{username}:
+        uriParameters:
+          username:
+            required: true
+            displayName: username
+            description: username of the user to add
+            type: string
+        put:
+          displayName: orgAddTeamMember
+          description: Add a team member
+          securedBy:
+          - basicauth
+          - token
+        delete:
+          displayName: orgAddTeamMember
+          description: Remove a team member
+          securedBy:
+          - basicauth
+          - token
+    /repos:
+      get:
+        displayName: orgListTeamRepos
+        description: List a team's repos
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: array
+                items:
+                  type: Repository
+      /{org}/{repo}:
+        uriParameters:
+          org:
+            required: true
+            displayName: org
+            description: organization that owns the repo to add
+            type: string
+          repo:
+            required: true
+            displayName: repo
+            description: name of the repo to add
+            type: string
+        put:
+          displayName: orgAddTeamMember
+          description: Add a repository to a team
+          securedBy:
+          - basicauth
+          - token
+        delete:
+          displayName: orgAddTeamMember
+          description: This does not delete the repository, it only removes the repository from the team.
+          securedBy:
+          - basicauth
+          - token
+/users:
+  /search:
+    get:
+      displayName: userSearch
+      description: Search for users
+      securedBy:
+      - basicauth
+      - token
+      queryParameters:
+        q:
+          required: false
+          displayName: q
+          description: keyword
+          type: string
+        limit:
+          required: false
+          displayName: limit
+          description: maximum number of users to return
+          type: integer
+          format: int32
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: array
+              items:
+                type: User
+  /{follower}/following/{followee}:
+    uriParameters:
+      follower:
+        required: true
+        displayName: follower
+        description: username of following user
+        type: string
+      followee:
+        required: true
+        displayName: followee
+        description: username of followed user
+        type: string
+    get:
+      displayName: userCheckFollowing
+      description: Check if one user is following another user
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        404:
+          description: APINotFound is a not found empty response
+          body: {}
+  /{username}:
+    uriParameters:
+      username:
+        required: true
+        displayName: username
+        description: username of user to get
+        type: string
+    get:
+      displayName: userGet
+      description: Get a user
+      securedBy:
+      - basicauth
+      - token
+      responses:
+        200:
+          description: Success
+          body:
+            application/json:
+              displayName: response
+              type: User
+        404:
+          description: APINotFound is a not found empty response
+          body: {}
+    /followers:
+      get:
+        displayName: userListFollowers
+        description: List the given user's followers
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: array
+                items:
+                  type: User
+    /following:
+      get:
+        displayName: userListFollowing
+        description: List the users that the given user is following
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: array
+                items:
+                  type: User
+    /gpg_keys:
+      get:
+        displayName: userListGPGKeys
+        description: List the given user's GPG keys
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: array
+                items:
+                  type: GPGKey
+    /keys:
+      get:
+        displayName: userListKeys
+        description: List the given user's public keys
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: array
+                items:
+                  type: PublicKey
+    /repos:
+      get:
+        displayName: userListRepos
+        description: List the repos owned by the given user
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: array
+                items:
+                  type: Repository
+    /starred:
+      get:
+        displayName: userListStarred
+        description: The repos that the given user has starred
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: array
+                items:
+                  type: Repository
+    /subscriptions:
+      get:
+        displayName: userListSubscriptions
+        description: List the repositories watched by a user
+        securedBy:
+        - basicauth
+        - token
+        responses:
+          200:
+            description: Success
+            body:
+              application/json:
+                displayName: response
+                type: array
+                items:
+                  type: Repository
+    /tokens:
+      get:
+        displayName: userGetTokens
+        description: List the authenticated user's access tokens
+        securedBy:
+        - basicauth
+        - token
+      post:
+        displayName: userCreateToken
+        description: Create an access token
+        securedBy:
+        - basicauth
+        - token
+        queryParameters:
+          name:
+            required: false
+            displayName: name
+            type: string
