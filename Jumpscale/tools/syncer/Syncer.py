@@ -30,9 +30,7 @@ class Syncer(j.application.JSBaseConfigClass):
         if self._executor == None:
             sshkey = j.clients.sshkey.get()
             sshclient = j.clients.ssh.get("syncer_%s"%self.name,addr=self.addr,port=self.port,sshkey_name=sshkey.name)
-            print("TODO: call executor, ")
-            j.shell()
-            self._executor
+            self._executor = j.tools.executor.ssh_get(sshclient)
         return self._executor
 
     def sync(self, monitor=False,paths=None):
@@ -56,9 +54,12 @@ class Syncer(j.application.JSBaseConfigClass):
                 dest=item[1]
                 source = j.core.tools.text_replace(source)
                 dest = self.executor.replace(dest)
-
-            self.executor.upload(source, dest, recursive=True,createdir=True,
-                   rsyncdelete=True, ignoredir=self.IGNOREDIR, ignorefiles=None)
+            else:
+                source = j.core.tools.text_replace(item)
+                dest = source
+            
+            self.executor.upload(source, dest, recursive=True, createdir=True,
+                rsyncdelete=True, ignoredir=self.IGNOREDIR, ignorefiles=None)
 
         if monitor:
             self._monitor()

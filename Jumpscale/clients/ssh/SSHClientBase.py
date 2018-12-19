@@ -78,7 +78,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         """
         if self.sshkey_name in [None,""]:
             raise RuntimeError("sshkeyname needs to be specified")
-        return j.clients.sshkey.key_get(name=self.sshkey_name)
+        return j.clients.sshkey.get(name=self.sshkey_name)
 
     @property
     def isconnected(self):
