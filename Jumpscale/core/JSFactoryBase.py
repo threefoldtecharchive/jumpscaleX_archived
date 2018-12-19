@@ -11,13 +11,13 @@ class JSFactoryBase(JSBase):
     _CHILDCLASS = None
     _children = {}
 
-    def get(self,name="default",child_class=None, **kwargs):
+    def get(self,id=None, name="default",child_class=None, **kwargs):
         if name not in JSFactoryBase._children:
             if child_class is None:
                 if self.__class__._CHILDCLASS is None:
                     raise RuntimeError("__class__._CHILDCLASS should be set")
                 child_class = self.__class__._CHILDCLASS
-            o = child_class(name=name)
+            o = child_class(id=id,name=name)
             o.data_update(**kwargs)
             JSFactoryBase._children[name]=o
         return JSFactoryBase._children[name]
