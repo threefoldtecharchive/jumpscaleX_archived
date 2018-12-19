@@ -19,8 +19,7 @@ class JSFactoryBase(JSBase):
                 child_class = self.__class__._CHILDCLASS
             o = child_class(name=name)
             o.data_update(**kwargs)
-            m = self._get_model(child_class=child_class)
-            JSFactoryBase._children[name]=m
+            JSFactoryBase._children[name]=o
         return JSFactoryBase._children[name]
 
     def count(self,child_class=None):
