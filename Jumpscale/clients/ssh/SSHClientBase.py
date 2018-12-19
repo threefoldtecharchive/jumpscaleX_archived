@@ -10,14 +10,14 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         port = 22
         addr_priv = ""
         port_priv = 22
-        login = ""
+        login = "root"
         passwd = ""
-        sshkey = ""
+        sshkey_name = ""
         clienttype = ""
         proxy = ""
         timeout = 60
-        forward_agent = true
-        allow_agent = true
+        forward_agent = True (B)
+        allow_agent = True (B)
         stdout = true    
         """
 
@@ -50,17 +50,17 @@ class SSHClientBase(j.application.JSBaseConfigClass):
     @property
     def addr_variable(self):
         if self.isprivate:
-            return self.config.data["addr_priv"]
+            return self.addr_priv
         else:
-            return self.config.data["addr"]
+            return self.addr
 
 
     @property
     def port_variable(self):
         if self.isprivate:
-            return self.config.data["port_priv"]
+            return self.port_priv
         else:
-            return self.config.data["port"]
+            return self.port
 
 
     # @property
@@ -72,13 +72,13 @@ class SSHClientBase(j.application.JSBaseConfigClass):
 
 
     @property
-    def sshkey(self):
+    def sshkey_obj(self):
         """
         return right sshkey
         """
-        if not self.sshkey:
-            return None
-        return j.clients.sshkey.get(self.sshkey)
+        if self.sshkey_name in [None,""]:
+            raise RuntimeError("sshkeyname needs to be specified")
+        return j.clients.sshkey.key_get(name=self.sshkey_name)
 
     @property
     def isconnected(self):
@@ -89,20 +89,18 @@ class SSHClientBase(j.application.JSBaseConfigClass):
             self._ftpclient = None
         return self._connected
 
-    def ssh_authorize(self, user, key=None, pubkey=None):
+    def ssh_authorize(self, user, pubkey=None):
         """add key to authorized users, if key is specified will get public key from sshkey client,
         or can directly specify the public key. If both are specified key name instance will override public key.
 
         :param user: user to authorize
         :type user: str
-        :param key: name of sshkey instance to use, defaults to None
-        :param key: str, optional
         :param pubkey: public key to authorize, defaults to None
         :param pubkey: str, optional
         """
-        if key:
-            sshkey = j.clients.sshkey.get(key)
-            pubkey = sshkey.pubkey
+        if not pubkey:
+            pubkey = self.sshkey_obj.pubkey
         if pubkey in [None,""]:
             raise RuntimeError("pubkey not given")
+        j.shell()
         self.prefab.system.ssh.authorize(user=user, key=pubkey)

@@ -7,27 +7,29 @@ class RedisCoreClient(j.application.JSFactoryBaseClass):
 
     __jslocation__ = "j.clients.credis_core"
 
-    def __init__(self):
-
-        j.application.JSFactoryBaseClass.__init__(self)
+    def _init(self):
 
         self._client_fallback =  j.clients.redis.core_get()
 
         try:
+            self._credis = True
             from credis import Connection
             self._client =  Connection(path="/sandbox/var/redis.sock")
             self._client.connect()
         except Exception as e:
+            self._credis = False
             self._client = j.clients.redis.core_get()
-        j.shell()
-        assert self._client.execute(b"PING")==b'PONG'
+
+        if self._credis:
+            assert self.execute("PING")==b'PONG'
+        else:
+            assert self.execute("PING")
 
     def execute(self,*args):
-        try:
-            print(args)
+        if self._credis:
             return self._client.execute(*args)
-        except Exception as e:
-            raise RuntimeError("Could not execute redis execute:\nargs:%s\nerror:%s"%(args,e))
+        else:
+            return self._client.execute_command(*args)
 
     def get(self,*args):
         return self.execute("GET",*args)

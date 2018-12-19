@@ -166,6 +166,7 @@ class RedisFactory(JSBASE):
 
         nr=0
         while True:
+            self._logger.info("try to connect to redis of unixsocket:%s or tcp port 6379"%self.unix_socket_path)
             if self.core_running():
                 return self.get(ipaddr="",port=0,unixsocket=self.unix_socket_path)
             if nr>200:
@@ -266,6 +267,7 @@ class RedisFactory(JSBASE):
         else:
             tmpdir = "/tmp"
         cmd = "mkdir -p /sandbox/var;redis-server --unixsocket /sandbox/var/redis.sock " \
+              "--port 6379 " \
               "--maxmemory 100000000 --daemonize yes"
         self._logger.info(cmd)
         j.sal.process.execute(cmd)

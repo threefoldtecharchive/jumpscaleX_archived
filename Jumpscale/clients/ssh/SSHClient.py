@@ -15,10 +15,10 @@ class SSHClient(SSHClientBase):
 
     @property
     def client(self):
-        pkey = self.sshkey.path if (self.sshkey and self.sshkey.path) else None
+        pkey = self.sshkey_obj.path if (self.sshkey_obj and self.sshkey_obj.path) else None
         passwd = self.passwd
         if pkey:
-            passwd = self.sshkey.passphrase
+            passwd = self.sshkey_obj.passphrase
 
         from pssh.ssh2_client import SSHClient as PSSHClient
         PSSHClient = functools.partial(PSSHClient, retry_delay=1)

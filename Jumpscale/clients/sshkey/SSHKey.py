@@ -10,11 +10,8 @@ class SSHKey(j.application.JSBaseConfigClass):
         passphrase = "" (S)
         privkey = "" (S)
         duration = 86400 (I)
-        path = "" (S)
+        path = "" (S) #path of the private key
         """
-
-    def _init(self):
-        self._agent = None
 
     def _init_new(self):
 
@@ -30,7 +27,7 @@ class SSHKey(j.application.JSBaseConfigClass):
                 # means we are in directory where keys dir is found
                 self.path = keyspath
             elif j.sal.fs.exists(keyspath_system):
-                self.path = keyspath
+                self.path = keyspath_system
 
         if not self.pubkey:
             path = '%s.pub' % (self.path)
@@ -45,20 +42,6 @@ class SSHKey(j.application.JSBaseConfigClass):
         self.save()
         self.data.autosave = True #means every write will be saved (is optional to set)
 
-    @property
-    def agent(self):
-
-        def getagent(name):
-            for item in j.clients.sshkey.sshagent.get_keys():
-                if j.sal.fs.getBaseName(item.keyname) == name:
-                    return item
-            raise RuntimeError("Could not find agent for key with name:%s" % name)
-
-        if self._agent is None:
-            if not j.clients.sshkey.exists(self.name):
-                self.load()
-            self._agent = getagent(self.name)
-        return self._agent
 
 
     def delete(self):
@@ -66,8 +49,8 @@ class SSHKey(j.application.JSBaseConfigClass):
         will delete from ~/.ssh dir as well as from config
         """
         self._logger.debug("delete:%s" % self.name)
-        self.config.delete()
-        self.delete_from_sshdir()
+        self.data.delete()
+        # self.delete_from_sshdir()
 
     def delete_from_sshdir(self):
         j.sal.fs.remove("%s.pub" % self.path)
@@ -99,9 +82,8 @@ class SSHKey(j.application.JSBaseConfigClass):
         """
         load ssh key in ssh-agent, if no ssh-agent is found, new ssh-agent will be started
         """
-        # self.generate()
         self._logger.debug("load sshkey: %s for duration:%s" % (self.name, duration))
-        j.clients.sshkey.key_load(self.path, passphrase=self.passphrase, returnObj=False, duration=duration)
+        j.clients.sshagent.key_load(self.path, passphrase=self.passphrase, duration=duration)
 
     def unload(self):
         cmd = "ssh-add -d %s " % (self.path)

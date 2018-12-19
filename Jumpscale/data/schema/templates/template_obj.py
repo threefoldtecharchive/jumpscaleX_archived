@@ -17,21 +17,23 @@ class ModelOBJ():
         self._key = None
         self.load_from_data(data=data, capnpbin=capnpbin, keepid=False, keepacl=False)
 
-    def load_from_data(self,data=None, capnpbin=None, keepid=True, keepacl=True):
+    def load_from_data(self,data=None, capnpbin=None, keepid=True, keepacl=True,reset=True):
 
         if self.readonly:
             raise RuntimeError("cannot load from data, obj is readonly.\n%s"%self)
 
-        if capnpbin != None:
-            self._cobj_ = self._capnp_schema.from_bytes_packed(capnpbin)
-            set_default = False
-        else:
-            self._cobj_ = self._capnp_schema.new_message()
-            set_default = True
+        if reset:
 
-        self._reset()
-        if set_default:
-            self._defaults_set()
+            if capnpbin != None:
+                self._cobj_ = self._capnp_schema.from_bytes_packed(capnpbin)
+                set_default = False
+            else:
+                self._cobj_ = self._capnp_schema.new_message()
+                set_default = True
+
+            self._reset()
+            if set_default:
+                self._defaults_set()
 
         if not keepid:
             #means we are overwriting id, need to remove from cache

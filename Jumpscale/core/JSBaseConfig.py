@@ -59,7 +59,12 @@ class JSBaseConfig(JSBase):
     def save(self):
         self.data.save()
 
+    def delete(self):
+        self.data.model.delete(self.data)
 
+    def data_update(self,**kwargs):
+        self.data.load_from_data(data=kwargs,reset=False)
+        self.data.save()
 
     def _init_new(self):
         self._isnew=True
@@ -82,9 +87,9 @@ class JSBaseConfig(JSBase):
 
     def __setattr__(self, key, value):
         if "data" in self.__dict__ and key in self.__class__._MODEL.schema.properties_list:
-            if value != self.data.__getattribute__(key):
-                self._logger.debug("SET:%s:%s"%(key,value))
-                self.__dict__["data"].__setattr__(key,value)
+            # if value != self.data.__getattribute__(key):
+            self._logger.debug("SET:%s:%s"%(key,value))
+            self.__dict__["data"].__setattr__(key,value)
 
         self.__dict__[key]=value
 
