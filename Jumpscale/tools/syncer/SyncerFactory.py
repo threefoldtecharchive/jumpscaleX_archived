@@ -5,22 +5,24 @@ class SyncerFactory(j.application.JSFactoryBaseClass):
 
     __jslocation__ = "j.tools.syncer"
 
-    Syncer=Syncer
+    _CHILDCLASS = Syncer
 
     def _init(self):
         self.syncers = {}
 
-    def get(self,name,**kwargs):
-        if name not in self.syncers:
-            s = Syncer(name=name)
-            s.data_update(**kwargs)
-            self.syncers[name] = s
-        return self.syncers[name]
+    #SHOULD BE AUTOMATIC
+    # def get(self,name,**kwargs):
+    #     if name not in self.syncers:
+    #         s = Syncer(name=name)
+    #         s.data_update(**kwargs)
+    #         self.syncers[name] = s
+    #     return self.syncers[name]
 
     def sync(self):
         """
         execute to sync all syncers
 
+        will push default code directories to remove ssh host
 
         """
         j.shell()
