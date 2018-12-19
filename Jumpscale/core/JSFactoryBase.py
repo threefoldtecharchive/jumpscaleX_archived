@@ -8,6 +8,52 @@ class JSFactoryBase(JSBase):
     _location = None
     _test_runs = {}
     _test_runs_error = {}
+    _CHILDCLASS = None
+    _children = {}
+
+    def get(self,name="default",child_class=None, **kwargs):
+        if name not in JSFactoryBase._children:
+            if child_class is None:
+                if self.__class__._CHILDCLASS is None:
+                    raise RuntimeError("__class__._CHILDCLASS should be set")
+                child_class = self.__class__._CHILDCLASS
+            o = child_class(name=name)
+            o.data_update(**kwargs)
+            m = self._get_model(child_class=child_class)
+            JSFactoryBase._children[name]=m
+        return JSFactoryBase._children[name]
+
+    def count(self,child_class=None):
+        return self._count(child_class=child_class)
+
+    def find(self,child_class=None,**kwargs):
+        """
+
+        :param child_class: optional, if not given then will use __class__._CHILDCLASS
+        :param kwargs: e.g. color="red",...
+        :return: list of the objects
+        """
+        if child_class is None:
+            if self.__class__._CHILDCLASS is None:
+                raise RuntimeError("__class__._CHILDCLASS should be set")
+            child_class = self.__class__._CHILDCLASS
+
+        if len(args)==1:
+            kwargs["name"]=args[0] #if only one then will be the name
+        m = self._get_model(child_class)
+        propnames = [i for i in kwargs.keys()]
+        propnames_keys_in_schema = [item.name for item in m.schema.index_key_properties if item.name in propnames]
+
+        if len(propnames_keys_in_schema)>0:
+            #we can try to find this config
+            res = m.get_from_keys(**kwargs)
+
+        res2 = []
+        for item in res:
+            res2.append(child_class(id=item.id))
+
+        return res2
+
 
 
     def _load(self,klass):
@@ -41,7 +87,9 @@ class JSFactoryBase(JSBase):
 
     def _get_model(self,child_class=None):
         if child_class is None:
-            child_class = self._CHILDCLASS
+            if self.__class__._CHILDCLASS is None:
+                raise RuntimeError("__class__._CHILDCLASS should be set")
+            child_class = self.__class__._CHILDCLASS
         if child_class._SCHEMATEXT is not None:
             if "_MODEL" not in child_class.__dict__ or child_class._MODEL is None:
                 child_class._MODEL = j.application.bcdb_system.model_get_from_schema(child_class._SCHEMATEXT)

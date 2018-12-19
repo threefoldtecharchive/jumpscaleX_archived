@@ -6,10 +6,10 @@ class JSBaseConfig(JSBase):
     _SCHEMATEXT = None
     _MODEL = None
 
-    def __init__(self,data={},**kwargs):
+    def __init__(self,id=None,data={},**kwargs):
         JSBase.__init__(self,init=False)
 
-        self._id_ = None
+        self._id_ = id
         #lets get the schema attached to class
         if self.__class__._SCHEMATEXT is not None:
             if self.__class__._MODEL is None:
@@ -19,20 +19,23 @@ class JSBaseConfig(JSBase):
 
         self._logger_enable()
 
-        if len(kwargs.values())>0:
-            propnames = [i for i in kwargs.keys()]
-            propnames_keys_in_schema = [item.name for item in m.schema.index_key_properties if item.name in propnames]
+        if id is not None:
+            res = m.get(id)
+        else:
+            if len(kwargs.values())>0:
+                propnames = [i for i in kwargs.keys()]
+                propnames_keys_in_schema = [item.name for item in m.schema.index_key_properties if item.name in propnames]
 
-            if len(propnames_keys_in_schema)>0:
-                #we can try to find this config
-                res = m.get_from_keys(**kwargs)
-                if len(res)>1:
-                    raise RuntimeError("found too many items for :%s, args:\n%s\n%s"%(self.__class__.__name__,kwargs,res))
-                elif len(res)==1:
-                    res = res[0]
-                    self._logger.debug("existing obj:%s"%res)
-                else:
-                    res=None
+                if len(propnames_keys_in_schema)>0:
+                    #we can try to find this config
+                    res = m.get_from_keys(**kwargs)
+                    if len(res)>1:
+                        raise RuntimeError("found too many items for :%s, args:\n%s\n%s"%(self.__class__.__name__,kwargs,res))
+                    elif len(res)==1:
+                        res = res[0]
+                        self._logger.debug("existing obj:%s"%res)
+                    else:
+                        res=None
 
 
         if res is None:
