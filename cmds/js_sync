@@ -55,7 +55,7 @@ if a new container was created, don't forget to call js_sync reload because cach
 def sync(instance="", reload=False,paths=None):
 
     if paths is None:
-        paths=["{DIR_CODE}/github/threefoldtech/jumpscale_core",
+        paths=["{DIR_CODE}/github/threefoldtech/jumpscaleX",
                                 "{DIR_CODE}/github/threefoldtech/jumpscale_lib",
                                 "{DIR_CODE}/github/threefoldtech/jumpscale_prefab",
                                 "{DIR_CODE}/github/threefoldtech/digital_me",

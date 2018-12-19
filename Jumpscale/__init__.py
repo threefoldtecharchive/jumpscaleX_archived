@@ -43,7 +43,7 @@ class Core():
     def __init__(self,j):
         self._db = None
         self._dir_home = None
-        self._dir_jumpscale_core = None
+        self._dir_jumpscaleX = None
         self._isSandbox = None
 
 
@@ -73,15 +73,15 @@ class Core():
         self._db = None
 
     @property
-    def dir_jumpscale_core(self):
-        if self._dir_jumpscale_core is None:
-            self._dir_jumpscale_core = os.path.dirname(os.path.dirname(__file__))
-        return self._dir_jumpscale_core
+    def dir_jumpscaleX(self):
+        if self._dir_jumpscaleX is None:
+            self._dir_jumpscaleX = os.path.dirname(os.path.dirname(__file__))
+        return self._dir_jumpscaleX
 
     @property
     def isSandbox(self):
         if self._isSandbox is None:
-            if self.dir_jumpscale_core.startswith("/sandbox"):
+            if self.dir_jumpscaleX.startswith("/sandbox"):
                 self._isSandbox = True
             else:
                 self._isSandbox = False

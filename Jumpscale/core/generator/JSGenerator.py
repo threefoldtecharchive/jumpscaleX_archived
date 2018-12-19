@@ -41,7 +41,7 @@ class JSGenerator():
         if path:
             rootDir = path
         else:
-            rootDir = os.path.dirname( self._j.core.dir_jumpscale_core.rstrip("/"))
+            rootDir = os.path.dirname( self._j.core.dir_jumpscaleX.rstrip("/"))
 
         p = Path(rootDir)
         for dpath in p.iterdir():

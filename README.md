@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/threefoldtech/jumpscale_core.svg?branch=development)](https://travis-ci.org/threefoldtech/jumpscale_core)
+[![Build Status](https://travis-ci.org/threefoldtech/jumpscaleX.svg?branch=development)](https://travis-ci.org/threefoldtech/jumpscaleX)
 
 # Jumpscale
 

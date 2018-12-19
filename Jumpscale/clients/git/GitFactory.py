@@ -481,9 +481,9 @@ class GitFactory(JSBASE):
 
         example Input
         - https://github.com/threefoldtech/jumpscale_/NOS/blob/master/specs/NOS_1.0.0.md
-        - https://github.com/threefoldtech/jumpscale_/jumpscale_core/blob/8.1.2/lib/Jumpscale/tools/docsite/macros/dot.py
-        - https://github.com/threefoldtech/jumpscale_/jumpscale_core/tree/8.2.0/lib/Jumpscale/tools/docsite/macros
-        - https://github.com/threefoldtech/jumpscale_/jumpscale_core/tree/master/lib/Jumpscale/tools/docsite/macros
+        - https://github.com/threefoldtech/jumpscale_/jumpscaleX/blob/8.1.2/lib/Jumpscale/tools/docsite/macros/dot.py
+        - https://github.com/threefoldtech/jumpscale_/jumpscaleX/tree/8.2.0/lib/Jumpscale/tools/docsite/macros
+        - https://github.com/threefoldtech/jumpscale_/jumpscaleX/tree/master/lib/Jumpscale/tools/docsite/macros
 
         """
         url = url.strip()
@@ -544,9 +544,9 @@ class GitFactory(JSBASE):
 
         example Input
         - https://github.com/threefoldtech/jumpscale_/NOS/blob/master/specs/NOS_1.0.0.md
-        - https://github.com/threefoldtech/jumpscale_/jumpscale_core/blob/8.1.2/lib/Jumpscale/tools/docsite/macros/dot.py
-        - https://github.com/threefoldtech/jumpscale_/jumpscale_core/tree/8.2.0/lib/Jumpscale/tools/docsite/macros
-        - https://github.com/threefoldtech/jumpscale_/jumpscale_core/tree/master/lib/Jumpscale/tools/docsite/macros
+        - https://github.com/threefoldtech/jumpscale_/jumpscaleX/blob/8.1.2/lib/Jumpscale/tools/docsite/macros/dot.py
+        - https://github.com/threefoldtech/jumpscale_/jumpscaleX/tree/8.2.0/lib/Jumpscale/tools/docsite/macros
+        - https://github.com/threefoldtech/jumpscale_/jumpscaleX/tree/master/lib/Jumpscale/tools/docsite/macros
 
         """
         url = url.strip()
@@ -569,9 +569,9 @@ class GitFactory(JSBASE):
 
         example Input
         - https://github.com/threefoldtech/jumpscale_/NOS/blob/master/specs/NOS_1.0.0.md
-        - https://github.com/threefoldtech/jumpscale_/jumpscale_core/blob/8.1.2/lib/Jumpscale/tools/docsite/macros/dot.py
-        - https://github.com/threefoldtech/jumpscale_/jumpscale_core/tree/8.2.0/lib/Jumpscale/tools/docsite/macros
-        - https://github.com/threefoldtech/jumpscale_/jumpscale_core/tree/master/lib/Jumpscale/tools/docsite/macros
+        - https://github.com/threefoldtech/jumpscale_/jumpscaleX/blob/8.1.2/lib/Jumpscale/tools/docsite/macros/dot.py
+        - https://github.com/threefoldtech/jumpscale_/jumpscaleX/tree/8.2.0/lib/Jumpscale/tools/docsite/macros
+        - https://github.com/threefoldtech/jumpscale_/jumpscaleX/tree/master/lib/Jumpscale/tools/docsite/macros
 
         """
         if not j.sal.fs.exists(urlOrPath, followlinks=True):
@@ -593,9 +593,9 @@ class GitFactory(JSBASE):
 
         example Input
         - https://github.com/threefoldtech/jumpscale_/NOS/blob/master/specs/NOS_1.0.0.md
-        - https://github.com/threefoldtech/jumpscale_/jumpscale_core/blob/8.1.2/lib/Jumpscale/tools/docsite/macros/dot.py
-        - https://github.com/threefoldtech/jumpscale_/jumpscale_core/tree/8.2.0/lib/Jumpscale/tools/docsite/macros
-        - https://github.com/threefoldtech/jumpscale_/jumpscale_core/tree/master/lib/Jumpscale/tools/docsite/macros
+        - https://github.com/threefoldtech/jumpscale_/jumpscaleX/blob/8.1.2/lib/Jumpscale/tools/docsite/macros/dot.py
+        - https://github.com/threefoldtech/jumpscale_/jumpscaleX/tree/8.2.0/lib/Jumpscale/tools/docsite/macros
+        - https://github.com/threefoldtech/jumpscale_/jumpscaleX/tree/master/lib/Jumpscale/tools/docsite/macros
 
         """
         if j.sal.fs.exists(urlOrPath, followlinks=True):

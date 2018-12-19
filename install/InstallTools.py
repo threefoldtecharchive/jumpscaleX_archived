@@ -1524,11 +1524,11 @@ class JumpscaleInstaller():
         MyEnv.install()
 
         self.account = "threefoldtech"
-        self.branch = ["development_961"]
+        self.branch = ["master"]
 
         Tools.file_touch(os.path.join(MyEnv.config["DIR_BASE"], "lib/jumpscale/__init__.py"))
 
-        self._jumpscale_repos = ["jumpscale_core", "jumpscale_lib", "digital_me", "jumpscale_prefab"]
+        self._jumpscale_repos = ["jumpscaleX", "jumpscale_lib", "digital_me", "jumpscale_prefab"]
 
         self.repos_get()
         self.repos_link()
@@ -1538,7 +1538,7 @@ class JumpscaleInstaller():
         set -e
         cd {DIR_BASE}
         source env.sh
-        js_shell 'j.tools.console.echo("JUMPSCALE IS OK.")'
+        js_shell 'j.tools.console.echo("JumpscaleX IS OK.")'
         """
         Tools.execute(script,interactive=True)
 
@@ -1600,7 +1600,7 @@ class JumpscaleInstaller():
 
     def cmds_link(self):
 
-        exists,_,_,_,loc=Tools._code_location_get(repo="jumpscale_core",account=self.account)
+        exists,_,_,_,loc=Tools._code_location_get(repo="jumpscaleX",account=self.account)
         for src in os.listdir("%s/cmds" % loc):
             src2=os.path.join(loc,"cmds",src)
             dest="%s/bin/%s" % (MyEnv.config["DIR_BASE"], src)

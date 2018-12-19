@@ -13,7 +13,7 @@ rootdir = os.path.dirname(os.path.abspath(__file__))
 path = os.path.join(rootdir, "InstallTools.py")
 
 if not os.path.exists(path):
-    cmd = "cd %s;rm -f InstallTools.py;curl https://raw.githubusercontent.com/threefoldtech/jumpscale_core/development_961/install/InstallTools.py?$RANDOM > InstallTools.py"%rootdir
+    cmd = "cd %s;rm -f InstallTools.py;curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/InstallTools.py?$RANDOM > InstallTools.py"%rootdir
     subprocess.call(cmd, shell=True)
 
 spec = util.spec_from_file_location("IT", path)
@@ -28,7 +28,7 @@ IT.JumpscaleInstaller()
 
 """
 #TO TEST:
-python3 /sandbox/code/github/threefoldtech/jumpscale_core/install/install.py
+python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py
 """
 
 

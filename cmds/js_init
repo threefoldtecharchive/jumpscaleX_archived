@@ -15,8 +15,8 @@ os.environ["JSGENERATE_DEBUG"]="0"
 try:
     from Jumpscale import j
 except:
-    for item in ["{DIR_HOME}/code/github/threefoldtech/jumpscale_core/Jumpscale",
-                 "/opt/code/github/threefoldtech/jumpscale_core/Jumpscale"]:
+    for item in ["{DIR_HOME}/code/github/threefoldtech/jumpscaleX/Jumpscale",
+                 "/opt/code/github/threefoldtech/jumpscaleX/Jumpscale"]:
         item = item.replace("$HOME",os.environ["HOME"])
         if os.path.exists(item) and item not in sys.path:
             sys.path.append(item)

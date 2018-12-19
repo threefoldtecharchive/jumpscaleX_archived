@@ -5,8 +5,8 @@ import sys
 # try:
 from Jumpscale import j
 # except:
-#     for item in ["{DIR_HOME}/code/github/threefoldtech/jumpscale_core/Jumpscale",
-#                  "/opt/code/github/threefoldtech/jumpscale_core/Jumpscale"]:
+#     for item in ["{DIR_HOME}/code/github/threefoldtech/jumpscaleX/Jumpscale",
+#                  "/opt/code/github/threefoldtech/jumpscaleX/Jumpscale"]:
 #         item = j.core.tools.text_replace(item)
 #         if os.path.exists(item) and item not in sys.path:
 #             sys.path.append(item)

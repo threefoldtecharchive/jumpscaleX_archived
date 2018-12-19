@@ -1,5 +1,5 @@
 Details
-The extension is located under jumpscale_core/lib/Jumpscale/lib/kvm
+The extension is located under jumpscaleX/lib/Jumpscale/lib/kvm
 Images under /mnt/vmstor/kvm/images, and
 VMs to be created under /mnt/vmstor/kvm
 a fabric module responsible for configuring the vm after creation (pushing ssh keys, configure network, etc), in libvirt contains basic info name, description, etc and most importantly IP address of the VM, login credentials and a fabric module which contains network configuration logic which varies by os type, thus more flexibility installing/configuring network on the created VM. 
