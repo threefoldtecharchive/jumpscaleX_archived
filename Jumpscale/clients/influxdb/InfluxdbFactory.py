@@ -57,6 +57,7 @@ class InfluxdbFactory(JSConfigFactory):
         #deploy influxdb
 
 
+#TODO: move to separate file
 class InfluxClient(JSConfigClient, influxdb.InfluxDBClient):
 
     def __init__(self, instance, data={}, parent=None, interactive=False):

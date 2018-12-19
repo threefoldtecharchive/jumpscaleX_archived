@@ -45,8 +45,7 @@ class GrafanaFactory(j.application.JSFactoryBaseClass):
         :return:
         """
         s = self.get(name)
-        #client = j.clients.grafana.get(name=name, addr=s....)
-        return client
+        return s.client
 
     def test(self):
         """

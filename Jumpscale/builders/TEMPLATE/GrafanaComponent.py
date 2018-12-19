@@ -77,8 +77,9 @@ class GrafanaComponent(j.application.JSBaseConfigClass):
 
     @property
     def client(self):
-        #return the client
+        #return the client using j.clients.... using arguments from this server
         pass
+        #client = j.clients.grafana.get(name=name, addr=s....)
 
 
 
