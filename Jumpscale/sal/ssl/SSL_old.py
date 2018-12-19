@@ -32,7 +32,7 @@ class Empty(JSBASE):
 #     def getSSLHandler(self, keyvaluestor=None):
 #         """
 #         default keyvaluestor=j.data.kvs.getFSStore("sslkeys", serializers=[])  #make sure to use no serializers
-#         pass another keyvaluestor if required (first do 'import JumpscaleLib.JumpscaleLib.data.key_value_store')
+#         pass another keyvaluestor if required (first do 'import data.key_value_store')
 #         """
 #         if keyvaluestor is None:
 #             keyvaluestor = j.data.kvs.getFSStore("sslkeys", serializers=[])

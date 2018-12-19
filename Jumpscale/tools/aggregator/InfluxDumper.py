@@ -1,5 +1,5 @@
 from Jumpscale import j
-import JumpscaleLib.tools.aggregator.Dumper as Dumper
+import tools.aggregator.Dumper as Dumper
 
 JSBASE = j.application.JSBaseClass
 

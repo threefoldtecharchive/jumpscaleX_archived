@@ -1,4 +1,4 @@
-from JumpscaleLib.data.capnp.ModelBase import ModelBase
+from data.capnp.ModelBase import ModelBase
 
 
 class ACIModel(ModelBase):

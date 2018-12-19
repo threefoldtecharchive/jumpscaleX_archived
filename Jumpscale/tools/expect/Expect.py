@@ -163,7 +163,7 @@ class ExpectTool(JSBASE):
         @type cmd: string
 
         @returns: Expect session
-        @rtype JumpscaleLib.cmdline.Expect.Expect
+        @rtype cmdline.Expect.Expect
         '''
         return Expect(cmd=cmd or '')
 

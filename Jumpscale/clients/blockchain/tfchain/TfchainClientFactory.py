@@ -7,20 +7,20 @@ from Jumpscale import j
 import sys
 import requests
 
-from JumpscaleLib.clients.blockchain.rivine import utils
-from JumpscaleLib.clients.blockchain.tfchain.TfchainClient import TfchainClient
-from JumpscaleLib.clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
-from JumpscaleLib.clients.blockchain.tfchain.errors import NoExplorerNetworkAddresses
-from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError
-from JumpscaleLib.clients.blockchain.tfchain.TfchainThreeBotClient import TfchainThreeBotClient
-from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory
-from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
+from clients.blockchain.rivine import utils
+from clients.blockchain.tfchain.TfchainClient import TfchainClient
+from clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
+from clients.blockchain.tfchain.errors import NoExplorerNetworkAddresses
+from clients.blockchain.rivine.errors import RESTAPIError
+from clients.blockchain.tfchain.TfchainThreeBotClient import TfchainThreeBotClient
+from clients.blockchain.rivine.types.transaction import TransactionFactory
+from clients.blockchain.rivine.types.transaction import TransactionFactory,\
         TransactionV128, TransactionV129, TransactionSummary, FlatMoneyTransaction
-from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockHashCondition,\
+from clients.blockchain.rivine.types.unlockconditions import UnlockHashCondition,\
         LockTimeCondition, MultiSignatureCondition, UnlockCondtionFactory
-from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
+from clients.blockchain.rivine.types.unlockhash import UnlockHash
 
-from JumpscaleLib.clients.blockchain.rivine.errors import WalletAlreadyExistsException
+from clients.blockchain.rivine.errors import WalletAlreadyExistsException
 
 JSConfigBaseFactory = j.application.JSFactoryBaseClass
 

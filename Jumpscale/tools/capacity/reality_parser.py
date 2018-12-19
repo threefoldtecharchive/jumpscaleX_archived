@@ -3,7 +3,7 @@ this module contain the logic of parsing the actual usage of the ressource unit 
 """
 
 from .units import GiB
-from JumpscaleLib.sal_zos.disks.Disks import StorageType
+from sal_zos.disks.Disks import StorageType
 
 
 class RealityParser():

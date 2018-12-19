@@ -4,8 +4,8 @@ This modules defines types related to 3Bots
 
 import datetime
 
-from JumpscaleLib.clients.blockchain.tfchain.types import signatures as tftsig
-from JumpscaleLib.clients.blockchain.tfchain.types import network as tftnet
+from clients.blockchain.tfchain.types import signatures as tftsig
+from clients.blockchain.tfchain.types import network as tftnet
 
 class ThreeBotRecord:
     """

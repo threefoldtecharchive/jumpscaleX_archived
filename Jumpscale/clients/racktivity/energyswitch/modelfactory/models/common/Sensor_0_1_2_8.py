@@ -1,7 +1,7 @@
-from JumpscaleLib.clients.racktivity.energyswitch.common import convert
-from JumpscaleLib.clients.racktivity.energyswitch.common.GUIDTable import Value
+from clients.racktivity.energyswitch.common import convert
+from clients.racktivity.energyswitch.common.GUIDTable import Value
 from copy import copy
-from JumpscaleLib.clients.racktivity.energyswitch.modelfactory.models.common.Sensor import Sensor
+from clients.racktivity.energyswitch.modelfactory.models.common.Sensor import Sensor
 
 
 class Model(Sensor):

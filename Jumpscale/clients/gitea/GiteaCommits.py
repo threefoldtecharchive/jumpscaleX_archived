@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 
-from JumpscaleLib.clients.gitea.GiteaCommit import GiteaCommit
+from clients.gitea.GiteaCommit import GiteaCommit
 
 JSBASE = j.application.JSBaseClass
 

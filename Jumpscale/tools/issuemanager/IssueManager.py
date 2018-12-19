@@ -1,16 +1,16 @@
 
 from Jumpscale import j
 
-from JumpscaleLib.tools.issuemanager.models.IssueModel import IssueModel
-from JumpscaleLib.tools.issuemanager.models.IssueCollection import IssueCollection
-from JumpscaleLib.tools.issuemanager.models.userModel import UserModel
-from JumpscaleLib.tools.issuemanager.models.userCollection import UserCollection
-from JumpscaleLib.tools.issuemanager.models.repoModel import RepoModel
-from JumpscaleLib.tools.issuemanager.models.repoCollection import RepoCollection
-from JumpscaleLib.tools.issuemanager.models.orgModel import OrgModel
-from JumpscaleLib.tools.issuemanager.models.orgCollection import OrgCollection
+from tools.issuemanager.models.IssueModel import IssueModel
+from tools.issuemanager.models.IssueCollection import IssueCollection
+from tools.issuemanager.models.userModel import UserModel
+from tools.issuemanager.models.userCollection import UserCollection
+from tools.issuemanager.models.repoModel import RepoModel
+from tools.issuemanager.models.repoCollection import RepoCollection
+from tools.issuemanager.models.orgModel import OrgModel
+from tools.issuemanager.models.orgCollection import OrgCollection
 import capnp
-from JumpscaleLib.tools.issuemanager import model_capnp as ModelCapnp
+from tools.issuemanager import model_capnp as ModelCapnp
 from peewee import *
 from playhouse.sqlite_ext import SqliteExtDatabase
 

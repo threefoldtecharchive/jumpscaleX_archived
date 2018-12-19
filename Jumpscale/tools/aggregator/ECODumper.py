@@ -1,4 +1,4 @@
-import JumpscaleLib.tools.aggregator.Dumper as Dumper
+import tools.aggregator.Dumper as Dumper
 from Jumpscale import j
 
 

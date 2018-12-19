@@ -1,20 +1,20 @@
 """
 Module contianing all transaction types
 """
-from JumpscaleLib.clients.blockchain.rivine.types.signatures import Ed25519PublicKey
-from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition,\
+from clients.blockchain.rivine.types.signatures import Ed25519PublicKey
+from clients.blockchain.rivine.types.unlockconditions import SingleSignatureFulfillment, UnlockHashCondition,\
  LockTimeCondition, AtomicSwapCondition, AtomicSwapFulfillment, MultiSignatureCondition, FulfillmentFactory, UnlockCondtionFactory, MultiSignatureFulfillment
-from JumpscaleLib.clients.blockchain.rivine.encoding import binary
+from clients.blockchain.rivine.encoding import binary
 
-from JumpscaleLib.clients.blockchain.rivine.utils import hash
-from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
-from JumpscaleLib.clients.blockchain.rivine.secrets import token_bytes
-from JumpscaleLib.clients.blockchain.rivine.const import HASTINGS_TFT_VALUE
+from clients.blockchain.rivine.utils import hash
+from clients.blockchain.rivine.types.unlockhash import UnlockHash
+from clients.blockchain.rivine.secrets import token_bytes
+from clients.blockchain.rivine.const import HASTINGS_TFT_VALUE
 
-from JumpscaleLib.clients.blockchain.tfchain.encoding import binary as tfbinary
-from JumpscaleLib.clients.blockchain.tfchain.types import network as tftnet
-from JumpscaleLib.clients.blockchain.tfchain.types import signatures as tftsig
-from JumpscaleLib.clients.blockchain.tfchain import const as tfconst
+from clients.blockchain.tfchain.encoding import binary as tfbinary
+from clients.blockchain.tfchain.types import network as tftnet
+from clients.blockchain.tfchain.types import signatures as tftsig
+from clients.blockchain.tfchain import const as tfconst
 
 from enum import Enum
 import base64

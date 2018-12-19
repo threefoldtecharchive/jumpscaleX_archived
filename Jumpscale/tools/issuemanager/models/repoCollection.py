@@ -1,7 +1,7 @@
 from Jumpscale import j
 from functools import reduce
 
-from JumpscaleLib.data.capnp.ModelBaseCollection import ModelBaseCollection
+from data.capnp.ModelBaseCollection import ModelBaseCollection
 
 from peewee import *
 import peewee

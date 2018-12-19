@@ -1,7 +1,7 @@
 
 from Jumpscale import j
 
-from JumpscaleLib.data.capnp.ModelBase import ModelBase
+from data.capnp.ModelBase import ModelBase
 
 
 class DirModel(ModelBase):

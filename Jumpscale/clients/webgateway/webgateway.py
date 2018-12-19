@@ -71,7 +71,7 @@ class WebGateway(JSConfigBase):
         :type name: str
         :raises ServiceExistError: raised if  service with the same name already exists
         :return: service object
-        :rtype: JumpscaleLib.sal.webgateway.service.Service
+        :rtype: sal.webgateway.service.Service
         """
         if name in [s.name for s in self.services]:
             raise ServiceExistError("a service with name %s already exist. maybe you are looking for `service_get(%s)`" % (name, name))
@@ -88,7 +88,7 @@ class WebGateway(JSConfigBase):
         :type name: str
         :raises ServiceNotFoundError: raised when not service with the name provided is found
         :return: service object
-        :rtype: JumpscaleLib.sal.webgateway.service.Service
+        :rtype: sal.webgateway.service.Service
         """
 
         for service in self.services:

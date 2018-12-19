@@ -1,5 +1,5 @@
 from Jumpscale import j
-# import JumpscaleLib.baselib.remote
+# import baselib.remote
 
 JSBASE = j.application.JSBaseClass
 

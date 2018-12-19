@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .GiteaOrg import GiteaOrg
 
-from JumpscaleLib.clients.gitea.client import Client
+from clients.gitea.client import Client
 
 
 TEMPLATE = """

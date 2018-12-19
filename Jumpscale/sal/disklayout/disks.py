@@ -1,8 +1,8 @@
 import re
 
 from Jumpscale import j
-import JumpscaleLib.sal.disklayout.mount as mount
-import JumpscaleLib.sal.disklayout.lsblk as lsblk
+import sal.disklayout.mount as mount
+import sal.disklayout.lsblk as lsblk
 
 
 _formatters = {

@@ -1,5 +1,5 @@
 from Jumpscale import j
-from JumpscaleLib.servers.grid_capacity.server.models import Farmer, Location, Capacity, Resources
+from servers.grid_capacity.server.models import Farmer, Location, Capacity, Resources
 # connect to mongodb
 j.clients.mongoengine.get('capacity', interactive=False)
 

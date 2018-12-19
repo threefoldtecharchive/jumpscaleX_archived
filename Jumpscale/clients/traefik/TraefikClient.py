@@ -38,7 +38,7 @@ class TraefikClient(JSConfigBase):
         :param name: name of your proxy, it needs to be unique inside the etcd cluster
         :type name: string
         :return: Proxy object
-        :rtype: JumpscaleLib.sal.traefik.TraefikClient.Proxy
+        :rtype: sal.traefik.TraefikClient.Proxy
         """
         if name in self.proxies:
             raise ProxyNameConflictError("a proxy named %s already exists")
@@ -69,7 +69,7 @@ class Proxy:
         :param domain: domain name
         :type domain: str
         :return: return a frontend object on which you can fine tune the frontend routing rules
-        :rtype: JumpscaleLib.sal.traefik.types.Frontend
+        :rtype: sal.traefik.types.Frontend
         """
 
         # remove previous frontend if any
@@ -88,7 +88,7 @@ class Proxy:
         :param endpoints: if provided, a list of url to the backend servers
         :type endpoints: list
         :return: return a backend object on which you can configure more backend server
-        :rtype: JumpscaleLib.sal.traefik.types.Backend
+        :rtype: sal.traefik.types.Backend
         """
         # remove previous backend if any
         if self.backend:

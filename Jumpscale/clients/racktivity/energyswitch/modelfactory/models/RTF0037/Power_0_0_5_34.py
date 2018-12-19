@@ -1,9 +1,9 @@
-from JumpscaleLib.clients.racktivity.energyswitch.common import convert
-from JumpscaleLib.clients.racktivity.energyswitch.common.GUIDTable import Value
+from clients.racktivity.energyswitch.common import convert
+from clients.racktivity.energyswitch.common.GUIDTable import Value
 from copy import copy
 import struct
 import time
-from JumpscaleLib.clients.racktivity.energyswitch.modelfactory.models.common.BaseModule import BaseModule
+from clients.racktivity.energyswitch.modelfactory.models.common.BaseModule import BaseModule
 
 
 class Model(BaseModule):

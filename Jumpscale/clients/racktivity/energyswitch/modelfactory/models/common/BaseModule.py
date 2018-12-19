@@ -1,4 +1,4 @@
-from JumpscaleLib.clients.racktivity.energyswitch.common import convert
+from clients.racktivity.energyswitch.common import convert
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass

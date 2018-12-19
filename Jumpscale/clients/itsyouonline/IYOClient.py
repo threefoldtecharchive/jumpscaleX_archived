@@ -2,7 +2,7 @@ import urllib
 import requests
 
 from Jumpscale import j
-from JumpscaleLib.clients.itsyouonline.generated.client import Client
+from clients.itsyouonline.generated.client import Client
 
 TEMPLATE = """
 baseurl = "https://itsyou.online/api"

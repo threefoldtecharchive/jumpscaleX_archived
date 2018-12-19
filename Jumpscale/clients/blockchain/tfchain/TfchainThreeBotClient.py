@@ -3,13 +3,13 @@ from Jumpscale import j
 import re
 import requests
 
-from JumpscaleLib.clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
-from JumpscaleLib.clients.blockchain.tfchain.errors import NoExplorerNetworkAddresses
-from JumpscaleLib.clients.blockchain.tfchain.types import signatures as tftsig
-from JumpscaleLib.clients.blockchain.tfchain.types import threebot as tftbot
-from JumpscaleLib.clients.blockchain.rivine.errors import RESTAPIError
-from JumpscaleLib.clients.blockchain.rivine.types import transaction
-from JumpscaleLib.clients.blockchain.rivine import RivineWallet
+from clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
+from clients.blockchain.tfchain.errors import NoExplorerNetworkAddresses
+from clients.blockchain.tfchain.types import signatures as tftsig
+from clients.blockchain.tfchain.types import threebot as tftbot
+from clients.blockchain.rivine.errors import RESTAPIError
+from clients.blockchain.rivine.types import transaction
+from clients.blockchain.rivine import RivineWallet
 
 class TfchainThreeBotClient():
     """

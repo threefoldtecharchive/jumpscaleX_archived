@@ -103,7 +103,7 @@ class OVCClient(JSConfigBase):
         origcall = api.__call__
 
         def patch_call(that, *args, **kwargs):
-            from JumpscaleLib.clients.portal.PortalClient import ApiError
+            from clients.portal.PortalClient import ApiError
             try:
                 return origcall(that, *args, **kwargs)
             except ApiError as e:

@@ -28,7 +28,7 @@ class InifileTool(JSBASE):
         @raises RuntimeError: When the provided filename doesn't exist
 
         @returns: Opened INI file object
-        @rtype: JumpscaleLib.inifile.IniFile.IniFile
+        @rtype: inifile.IniFile.IniFile
         '''
         if isinstance(filename, str) and not j.sal.fs.exists(filename):
             if createIfNonExisting:
@@ -47,7 +47,7 @@ class InifileTool(JSBASE):
         @raises RuntimeError: When the provided filename exists
 
         @returns: New INI file object
-        @rtype: JumpscaleLib.inifile.IniFile.IniFile
+        @rtype: inifile.IniFile.IniFile
         '''
         if isinstance(filename, str) and j.sal.fs.exists(filename):
             raise j.exceptions.RuntimeError('Attempt to create existing INI file %s as a new file' % filename)

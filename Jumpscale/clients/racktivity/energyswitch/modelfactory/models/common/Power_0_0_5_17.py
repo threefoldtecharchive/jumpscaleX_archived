@@ -1,8 +1,8 @@
-from JumpscaleLib.clients.racktivity.energyswitch.common import convert
-from JumpscaleLib.clients.racktivity.energyswitch.common.GUIDTable import Value
-from JumpscaleLib.clients.racktivity.energyswitch.common import calculate
+from clients.racktivity.energyswitch.common import convert
+from clients.racktivity.energyswitch.common.GUIDTable import Value
+from clients.racktivity.energyswitch.common import calculate
 from copy import copy
-from JumpscaleLib.clients.racktivity.energyswitch.modelfactory.models.common.Power_0_0_5_4 import Model as Power
+from clients.racktivity.energyswitch.modelfactory.models.common.Power_0_0_5_4 import Model as Power
 import struct
 import time
 

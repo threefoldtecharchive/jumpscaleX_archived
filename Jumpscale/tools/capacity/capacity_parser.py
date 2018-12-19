@@ -4,7 +4,7 @@ from enum import Enum
 
 import requests
 
-from JumpscaleLib.sal_zos.disks.Disks import StorageType
+from sal_zos.disks.Disks import StorageType
 
 from .units import GB, GiB
 

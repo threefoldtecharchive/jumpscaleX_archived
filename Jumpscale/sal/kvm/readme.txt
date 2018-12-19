@@ -55,19 +55,19 @@ ifconfig brmgmt up
 
 or in jshell
 
-import JumpscaleLib.lib.kvm
+import lib.kvm
 j.sal.kvm.initPhysicalBridges(pubinterface="<pubinterface_name_on_host>")
 
 
 Creating vnetworks in libvirt
 
-import JumpscaleLib.lib.kvm
+import lib.kvm
 j.sal.kvm.initLibvirtNetwork()
 
 
 Sample code
 
-import JumpscaleLib.lib.kvm
+import lib.kvm
 j.sal.kvm.create('test-ubuntu', 'ubuntu1404')
 
 where ‘test-ubuntu’ is your VM name, and ‘ubuntu1404’ is the image name

@@ -29,11 +29,11 @@ if j.core.platformtype.myplatform.isWindows:
     # from win32shell import shell
     from win32com.shell import shellcon
     import winreg as reg
-    from JumpscaleLib.core.enumerators.WinRegHiveType import WinRegHiveType
-    from JumpscaleLib.core.enumerators.WinRegValueType import WinRegValueType
+    from core.enumerators.WinRegHiveType import WinRegHiveType
+    from core.enumerators.WinRegValueType import WinRegValueType
 
     from Jumpscale import j
-    # from JumpscaleLib.core.inifile.IniFile import IniFile
+    # from core.inifile.IniFile import IniFile
     import shutil
 
 JSBASE = j.application.JSBaseClass

@@ -1,5 +1,5 @@
 from Jumpscale import j
-from JumpscaleLib.tools.capacity.registration import Capacity, Location
+from tools.capacity.registration import Capacity, Location
 import random
 
 continents = ["Europe", "Africa", "Asia", "America", "Oceania"]

@@ -15,13 +15,13 @@ class TestOpencCloudClientFactory(unittest.TestCase):
             del sys.modules[module]
 
     @pytest.mark.ssh_factory
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Account')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.image_find_id')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.size_find_id')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.machines')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.configure_machine')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Account')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.image_find_id')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.size_find_id')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.machines')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.configure_machine')
     def test_machine_create_name_empty(self, account, a, b, c, d):
-        from JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory import Space
+        from clients.openvcloud.OpenvCloudClientFactory import Space
 
         try:
             model = dict()
@@ -33,13 +33,13 @@ class TestOpencCloudClientFactory(unittest.TestCase):
             assert True
 
     @pytest.mark.ssh_factory
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Account')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.image_find_id')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.size_find_id')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.machines')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.configure_machine')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Account')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.image_find_id')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.size_find_id')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.machines')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.configure_machine')
     def test_machine_create_image_find_id_called(self, account, a, b, c, d):
-        from JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory import Space
+        from clients.openvcloud.OpenvCloudClientFactory import Space
 
         model = dict()
         model["id"] = 123
@@ -49,13 +49,13 @@ class TestOpencCloudClientFactory(unittest.TestCase):
         space.image_find_id.assert_called_with("imageName")
 
     @pytest.mark.ssh_factory
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Account')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.image_find_id')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.size_find_id')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.machines')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.configure_machine')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Account')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.image_find_id')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.size_find_id')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.machines')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.configure_machine')
     def test_machine_create_size_id(self, account, a, b, c, d):
-        from JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory import Space
+        from clients.openvcloud.OpenvCloudClientFactory import Space
 
         model = dict()
         model["id"] = 123
@@ -65,13 +65,13 @@ class TestOpencCloudClientFactory(unittest.TestCase):
         space.size_find_id.assert_called_with(5, 5)
 
     @pytest.mark.ssh_factory
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Account')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.image_find_id')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.size_find_id')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.machines')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.configure_machine')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Account')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.image_find_id')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.size_find_id')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.machines')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.configure_machine')
     def test_machine_create_configure_machine(self, account, a, b, c, d):
-        from JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory import Space
+        from clients.openvcloud.OpenvCloudClientFactory import Space
 
         model = dict()
         model["id"] = 123
@@ -82,14 +82,14 @@ class TestOpencCloudClientFactory(unittest.TestCase):
             machine=space.machines['dummy'], name='dummy', sshkeyname='auto_0', sshkey_path='auto_0Path')
 
     @pytest.mark.ssh_factory
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Account')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.image_find_id')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.size_find_id')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.machines')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.createPortForward')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space._authorizeSSH')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Account')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.image_find_id')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.size_find_id')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.machines')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.createPortForward')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space._authorizeSSH')
     def test_machine_create_create_port_forward(self, account, a, b, c, e, d):
-        from JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory import Space
+        from clients.openvcloud.OpenvCloudClientFactory import Space
 
         model = dict()
         model["id"] = 123
@@ -100,14 +100,14 @@ class TestOpencCloudClientFactory(unittest.TestCase):
         space.createPortForward.assert_called_with(machine)
 
     @pytest.mark.ssh_factory
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Account')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.image_find_id')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.size_find_id')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.machines')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space.createPortForward')
-    @mock.patch('JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory.Space._authorizeSSH')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Account')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.image_find_id')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.size_find_id')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.machines')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space.createPortForward')
+    @mock.patch('clients.openvcloud.OpenvCloudClientFactory.Space._authorizeSSH')
     def test_machine_create_authorize_ssh(self, account, a, b, c, e, d):
-        from JumpscaleLib.clients.openvcloud.OpenvCloudClientFactory import Space
+        from clients.openvcloud.OpenvCloudClientFactory import Space
 
         model = dict()
         model["id"] = 123

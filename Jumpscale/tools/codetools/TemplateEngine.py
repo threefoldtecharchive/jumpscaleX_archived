@@ -1,4 +1,4 @@
-# from JumpscaleLib.core.System import System
+# from core.System import System
 from Jumpscale import j
 from urllib import parse as urllib_parse
 

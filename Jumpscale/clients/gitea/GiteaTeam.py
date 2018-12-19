@@ -1,7 +1,7 @@
 import json
 from Jumpscale import j
 
-from JumpscaleLib.clients.gitea import GiteaRepos
+from clients.gitea import GiteaRepos
 
 JSBASE = j.application.JSBaseClass
 

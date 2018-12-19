@@ -4,8 +4,8 @@ Jumpscale client module that define a client for electrum wallet
 
 from Jumpscale import j
 
-from JumpscaleLib.clients.blockchain.electrum.ElectrumWallet import ElectrumWallet
-from JumpscaleLib.clients.blockchain.electrum.ElectrumAtomicswap import ElectrumAtomicswap
+from clients.blockchain.electrum.ElectrumWallet import ElectrumWallet
+from clients.blockchain.electrum.ElectrumAtomicswap import ElectrumAtomicswap
 
 
 TEMPLATE = """

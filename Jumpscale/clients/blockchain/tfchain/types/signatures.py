@@ -2,11 +2,11 @@
 This modules defines types related to signatures
 """
 
-from JumpscaleLib.clients.blockchain.rivine.encoding import binary as rbinary
-from JumpscaleLib.clients.blockchain.tfchain.encoding import binary
-from JumpscaleLib.clients.blockchain.rivine.types import signatures
-from JumpscaleLib.clients.blockchain.rivine import utils
-from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY
+from clients.blockchain.rivine.encoding import binary as rbinary
+from clients.blockchain.tfchain.encoding import binary
+from clients.blockchain.rivine.types import signatures
+from clients.blockchain.rivine import utils
+from clients.blockchain.rivine.types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY
 
 from enum import IntEnum
 

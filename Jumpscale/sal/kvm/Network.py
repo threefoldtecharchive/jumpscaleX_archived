@@ -1,6 +1,6 @@
 from xml.etree import ElementTree
 import libvirt
-from JumpscaleLib.sal.kvm.BaseKVMComponent import BaseKVMComponent
+from sal.kvm.BaseKVMComponent import BaseKVMComponent
 
 
 class Network(BaseKVMComponent):

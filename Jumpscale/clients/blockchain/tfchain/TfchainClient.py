@@ -5,9 +5,9 @@ Tfchain Client
 from Jumpscale import j
 from json import dumps
 
-from JumpscaleLib.clients.blockchain.tfchain.errors import InvalidTfchainNetwork, NoExplorerNetworkAddresses
-from JumpscaleLib.clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
-from JumpscaleLib.clients.blockchain.rivine.RivineWallet import RivineWallet
+from clients.blockchain.tfchain.errors import InvalidTfchainNetwork, NoExplorerNetworkAddresses
+from clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
+from clients.blockchain.rivine.RivineWallet import RivineWallet
 
 TEMPLATE = """
 network = "{}"

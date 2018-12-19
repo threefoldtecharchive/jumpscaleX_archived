@@ -58,5 +58,6 @@ class SSHClientFactory(j.application.JSFactoryBaseClass):
         '''
 
         #TODO: need to test, test that SSH-agent is being used
-        self.get("test",addr="a.b.c.d",port=1053,sshkey_name="kds")
+        self.get("test",addr="a.b.c.d", port=1053,sshkey_name="test")
+        self.get("test2",addr="a.b.c.e", port=1054, sshkey_name="test2", passwd="passwd")
         #will have to change test later to start a local zos and test against that one

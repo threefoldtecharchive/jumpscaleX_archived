@@ -7,8 +7,8 @@ TODO: remove/deprecate this file ASAP
 import time
 import json
 from Jumpscale import j
-from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory
-from JumpscaleLib.clients.blockchain.rivine.const import \
+from clients.blockchain.rivine.types.transaction import TransactionFactory
+from clients.blockchain.rivine.const import \
     MINER_PAYOUT_MATURITY_WINDOW, TIMELOCK_CONDITION_HEIGHT_LIMIT, NIL_UNLOCK_HASH
 
 logger = j.logger.get(__name__)

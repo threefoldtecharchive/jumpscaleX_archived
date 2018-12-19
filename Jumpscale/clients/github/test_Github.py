@@ -16,7 +16,7 @@ class TestGuthubClient(unittest.TestCase):
             del sys.modules[module]
 
     @pytest.mark.github_client
-    @mock.patch('JumpscaleLib.clients.github.Github.github.Github')
+    @mock.patch('clients.github.Github.github.Github')
     def test_organizations_get(self, mock_github):
         """
         check if organizations_get working
@@ -27,7 +27,7 @@ class TestGuthubClient(unittest.TestCase):
         githubclient.api.get_user().get_orgs.assert_called_with()
 
     @pytest.mark.github_client
-    @mock.patch('JumpscaleLib.clients.github.Github.github.Github')
+    @mock.patch('clients.github.Github.github.Github')
     def test_repos_get(self, mock_github):
         """
         check if repos_get working
@@ -47,7 +47,7 @@ class TestGuthubClient(unittest.TestCase):
             githubclient.api.get_user().get_orgs.assert_called_with()
 
     @pytest.mark.github_client
-    @mock.patch('JumpscaleLib.clients.github.Github.github.Github')
+    @mock.patch('clients.github.Github.github.Github')
     def test_repo_get(self, mock_github):
         """
         check if repo_get working
@@ -58,7 +58,7 @@ class TestGuthubClient(unittest.TestCase):
         githubclient.api.get_user().get_repo.assert_called_with("repo")
 
     @pytest.mark.github_client
-    @mock.patch('JumpscaleLib.clients.github.Github.github.Github')
+    @mock.patch('clients.github.Github.github.Github')
     def test_repo_create(self, mock_github):
         """
         check if repo_create working
@@ -70,8 +70,8 @@ class TestGuthubClient(unittest.TestCase):
                     has_downloads=NotSet, auto_init=NotSet, gitignore_template=NotSet)
     
     @pytest.mark.github_client
-    @mock.patch('JumpscaleLib.clients.github.Github.github.Github')
-    @mock.patch('JumpscaleLib.clients.github.Github.github.Repository')
+    @mock.patch('clients.github.Github.github.Github')
+    @mock.patch('clients.github.Github.github.Repository')
     def test_repo_delete(self, mock_github, mock_repository):
         """
         check if repo_delete working

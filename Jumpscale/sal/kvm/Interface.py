@@ -1,7 +1,7 @@
 from Jumpscale import j
 import libvirt
 from xml.etree import ElementTree
-from JumpscaleLib.sal.kvm.BaseKVMComponent import BaseKVMComponent
+from sal.kvm.BaseKVMComponent import BaseKVMComponent
 import random
 import re
 

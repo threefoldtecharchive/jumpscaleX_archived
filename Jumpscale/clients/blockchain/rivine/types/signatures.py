@@ -2,7 +2,7 @@
 This modules defines types related to signatures
 """
 
-from JumpscaleLib.clients.blockchain.rivine.encoding import binary
+from clients.blockchain.rivine.encoding import binary
 
 SIGEd25519 = 'ed25519'
 SPECIFIER_SIZE = 16

@@ -638,7 +638,7 @@ In[2]: j.clients.tfchain.threebot.create_record(wallet, names=['example.threebot
 [Fri09 09:34] - RivineWallet.py   :200 :in.rivine.rivinewallet - INFO     - Current chain height is: 327
 [Fri09 09:34] - RivineWallet.py   :586 :in.rivine.rivinewallet - INFO     - Signing Transaction
 [Fri09 09:34] - utils.py          :247 :lockchain.rivine.utils - INFO     - Transaction committed successfully
-Out[2]: <JumpscaleLib.clients.blockchain.rivine.types.transaction.TransactionV144 at 0x7fd27e262eb8>
+Out[2]: <clients.blockchain.rivine.types.transaction.TransactionV144 at 0x7fd27e262eb8>
 ```
 
 The network is defined here by the given wallet. It can work with any version-up-to-date (tfchain) network,
@@ -669,7 +669,7 @@ In[2]: j.clients.tfchain.threebot.update_record(wallet,
 [Fri09 09:47] - RivineWallet.py   :200 :in.rivine.rivinewallet - INFO     - Current chain height is: 392
 [Fri09 09:47] - RivineWallet.py   :586 :in.rivine.rivinewallet - INFO     - Signing Transaction
 [Fri09 09:47] - utils.py          :247 :lockchain.rivine.utils - INFO     - Transaction committed successfully
-Out[2]: <JumpscaleLib.clients.blockchain.rivine.types.transaction.TransactionV145 at 0x7fd27e2abc50>
+Out[2]: <clients.blockchain.rivine.types.transaction.TransactionV145 at 0x7fd27e2abc50>
 ```
 
 The network is defined here by the given wallet. It can work with any version-up-to-date (tfchain) network,

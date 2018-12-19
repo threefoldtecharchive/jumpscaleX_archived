@@ -2,8 +2,8 @@ from xml.etree import ElementTree
 from Jumpscale import j
 import libvirt
 import yaml
-from JumpscaleLib.sal.kvm.BaseKVMComponent import BaseKVMComponent
-from JumpscaleLib.sal.kvm.MachineSnapshot import MachineSnapshot
+from sal.kvm.BaseKVMComponent import BaseKVMComponent
+from sal.kvm.MachineSnapshot import MachineSnapshot
 from time import sleep
 
 

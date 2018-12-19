@@ -32,7 +32,7 @@ class BCDB(JSBASE):
 
         if zdbclient is not None:
             if not isinstance(zdbclient, ZDBClientBase):
-                raise RuntimeError("zdbclient needs to be type: JumpscaleLib.clients.zdb.ZDBClientBase")
+                raise RuntimeError("zdbclient needs to be type: clients.zdb.ZDBClientBase")
 
         self.name = name
         self._sqlclient = None

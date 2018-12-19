@@ -200,7 +200,7 @@ class ObjectInspector(JSBASE):
         self.__jslocation__ = "j.tools.objectinspector"
         JSBASE.__init__(self)
         self.apiFileLocation = j.sal.fs.joinPaths(
-            j.dirs.CFGDIR, "codecompletionapi", "JumpscaleLib.api")
+            j.dirs.CFGDIR, "codecompletionapi", "api")
         # j.sal.fs.createDir(j.sal.fs.joinPaths(j.dirs.JSCFGDIR, "codecompletionapi"))
         self.classDocs = {}
         self.visited = []
@@ -225,7 +225,7 @@ class ObjectInspector(JSBASE):
             path = "%s/%s" % (base, item)
             for modname in j.sal.fs.listDirsInDir(path, False, True, True):
                 if modname not in ignore:
-                    toexec = "import JumpscaleLib.%s.%s" % (item, modname)
+                    toexec = "import %s.%s" % (item, modname)
                     try:
                         exec(toexec)
                     except Exception as e:
@@ -256,7 +256,7 @@ class ObjectInspector(JSBASE):
 
         """
         self.dest = dest
-        self.apiFileLocation = "%s/JumpscaleLib.api" % self.dest
+        self.apiFileLocation = "%s/api" % self.dest
         j.sal.fs.writeFile("%s/errors.md" % dest, "")
         j.sal.fs.createDir(self.dest)
         self.errors = self.importAllLibs(ignore=ignore)

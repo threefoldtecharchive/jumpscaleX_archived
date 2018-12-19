@@ -9,7 +9,7 @@ import math
 
 from Jumpscale import j
 from Jumpscale.data.time.TimeInterval import TimeInterval as TimeIntervalUnit
-#from JumpscaleLib.core.decorators import deprecated
+#from core.decorators import deprecated
 
 # TODO: *3 fix, move to other sal's
 
@@ -280,7 +280,7 @@ class UnixSystem(JSBASE):
         @raises RuntimeError: If /bin/su is not available on the system
         @raises ValueError: When the provided username can't be resolved
 
-        @see: JumpscaleLib.system.process.SystemProcess.execute
+        @see: system.process.SystemProcess.execute
         '''
         command = self._prepareCommand(command, username)
 
@@ -313,7 +313,7 @@ class UnixSystem(JSBASE):
         @raises RuntimeError: If /bin/su is not available on the system
         @raises ValueError: When the provided username can't be resolved
 
-        @see: JumpscaleLib.system.process.runDaemon
+        @see: system.process.runDaemon
         '''
 
         command = self._prepareCommand(command, username)

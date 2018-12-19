@@ -12,7 +12,7 @@ import copy
 # from htmllib import HTMLParser
 # from formatter import AbstractFormatter, DumbWriter
 # from io import StringIO
-# import JumpscaleLib.lib.html
+# import lib.html
 
 
 JSConfigFactory = j.application.JSFactoryBaseClass

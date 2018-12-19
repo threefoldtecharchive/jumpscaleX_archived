@@ -1,5 +1,5 @@
 
-# from JumpscaleLib.baselib.codeexecutor.CodeExecutor import CodeExecutor
+# from baselib.codeexecutor.CodeExecutor import CodeExecutor
 import inspect
 from Jumpscale import j
 
@@ -301,7 +301,7 @@ class CodeTools(JSBASE):
                         data[key] = todict(value, {}, ignoreKeys)
                 return data
             else:
-                #from JumpscaleLib.core.Shell import ipshellDebug,ipshell
+                #from core.Shell import ipshellDebug,ipshell
                 # self._logger.debug "DEBUG NOW Can only convert object to dict with properties basic types or inherited of ClassBase"
                 # ipshell()
                 if dieOnUnknown:

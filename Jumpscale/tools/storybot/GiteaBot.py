@@ -291,7 +291,7 @@ class GiteaBot:
         """Tries to parse a html page url for a Gitea issue
         
         Arguments:
-            issue JumpscaleLib.clients.gitea.client.Issue.Issue -- Gitea Issue
+            issue clients.gitea.client.Issue.Issue -- Gitea Issue
             owner str -- repo owner
             repo str -- repo name
             iss_number int/str -- issue number of repo

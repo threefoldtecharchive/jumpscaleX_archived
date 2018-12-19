@@ -1,6 +1,6 @@
 from Jumpscale import j
 
-from JumpscaleLib.data.capnp.ModelBase import ModelBaseCollection
+from data.capnp.ModelBase import ModelBaseCollection
 
 
 class UserGroupCollection(ModelBaseCollection):

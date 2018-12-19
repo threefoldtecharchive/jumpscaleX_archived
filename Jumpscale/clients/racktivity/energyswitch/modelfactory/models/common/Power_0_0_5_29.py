@@ -1,5 +1,5 @@
-from JumpscaleLib.clients.racktivity.energyswitch.common.GUIDTable import Value
-from JumpscaleLib.clients.racktivity.energyswitch.modelfactory.models.common.Power_0_0_5_20 import Model as Power
+from clients.racktivity.energyswitch.common.GUIDTable import Value
+from clients.racktivity.energyswitch.modelfactory.models.common.Power_0_0_5_20 import Model as Power
 import struct
 import time
 

@@ -1,6 +1,6 @@
 from Jumpscale import j
 
-from JumpscaleLib.data.capnp.ModelBaseCollection import ModelBaseCollection
+from data.capnp.ModelBaseCollection import ModelBaseCollection
 
 
 class DirCollection(ModelBaseCollection):

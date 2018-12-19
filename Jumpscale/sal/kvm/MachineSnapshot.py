@@ -1,6 +1,6 @@
 from xml.etree import ElementTree
 from Jumpscale import j
-from JumpscaleLib.sal.kvm.BaseKVMComponent import BaseKVMComponent
+from sal.kvm.BaseKVMComponent import BaseKVMComponent
 
 
 class MachineSnapshot(BaseKVMComponent):

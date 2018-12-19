@@ -3,8 +3,8 @@ Modules defines the unlockhash types
 """
 
 from pyblake2 import blake2b
-from JumpscaleLib.clients.blockchain.rivine import utils
-from JumpscaleLib.clients.blockchain.rivine.encoding import binary
+from clients.blockchain.rivine import utils
+from clients.blockchain.rivine.encoding import binary
 
 UNLOCK_TYPE_PUBKEY = bytearray([1])
 UNLOCK_TYPE_ATOMICSWAP = bytearray([2])

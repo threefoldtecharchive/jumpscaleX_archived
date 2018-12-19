@@ -24,16 +24,16 @@ from .types.signatures import Ed25519PublicKey, SPECIFIER_SIZE
 from .types.unlockhash import UnlockHash, UNLOCK_TYPE_PUBKEY, UNLOCKHASH_SIZE, UNLOCKHASH_CHECKSUM_SIZE
 
 from Jumpscale import j
-from JumpscaleLib.clients.blockchain.rivine import utils, txutils
-from JumpscaleLib.clients.blockchain.rivine.atomicswap.atomicswap import AtomicSwapManager
-from JumpscaleLib.clients.blockchain.rivine.types.transaction import TransactionFactory,\
+from clients.blockchain.rivine import utils, txutils
+from clients.blockchain.rivine.atomicswap.atomicswap import AtomicSwapManager
+from clients.blockchain.rivine.types.transaction import TransactionFactory,\
         DEFAULT_TRANSACTION_VERSION, CoinOutput, DEFAULT_MINERFEE, sign_bot_transaction, FlatMoneyTransaction
-from JumpscaleLib.clients.blockchain.rivine.types.unlockhash import UnlockHash
-from JumpscaleLib.clients.blockchain.rivine.types.unlockconditions import UnlockCondtionFactory,\
+from clients.blockchain.rivine.types.unlockhash import UnlockHash
+from clients.blockchain.rivine.types.unlockconditions import UnlockCondtionFactory,\
         MULTISIG_CONDITION_TYPE, MultiSignatureFulfillment, SingleSignatureFulfillment
 
-from JumpscaleLib.clients.blockchain.tfchain.TfchainThreeBotClient import TfchainThreeBotClient
-from JumpscaleLib.clients.blockchain.tfchain.types import signatures as tftsig
+from clients.blockchain.tfchain.TfchainThreeBotClient import TfchainThreeBotClient
+from clients.blockchain.tfchain.types import signatures as tftsig
 
 from .const import MINER_PAYOUT_MATURITY_WINDOW, WALLET_ADDRESS_TYPE, ADDRESS_TYPE_SIZE, HASTINGS_TFT_VALUE, UNLOCKHASH_TYPE,\
         NR_OF_EXTRA_ADDRESSES_TO_CHECK

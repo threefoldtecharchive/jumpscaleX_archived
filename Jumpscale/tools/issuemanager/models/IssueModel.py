@@ -2,7 +2,7 @@
 from Jumpscale import j
 # import html
 
-from JumpscaleLib.data.capnp.ModelBase import ModelBase
+from data.capnp.ModelBase import ModelBase
 
 
 
