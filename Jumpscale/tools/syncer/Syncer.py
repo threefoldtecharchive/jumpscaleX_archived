@@ -1,12 +1,10 @@
 from Jumpscale import j
-
+import time
 from watchdog.observers import Observer
 from .MyFileSystemEventHandler import MyFileSystemEventHandler
 
 
-
 class Syncer(j.application.JSBaseConfigClass):
-
     _SCHEMATEXT = """
         @url = jumpscale.syncer.1
         name* = "" (S)
@@ -14,26 +12,25 @@ class Syncer(j.application.JSBaseConfigClass):
         port = 0 (I)
         """
 
-
-
     def _init(self):
 
-        self.PATHS_DEFAULT =["{DIR_CODE}/github/threefoldtech/jumpscaleX",
-                         "{DIR_CODE}/github/threefoldtech/digitalmeX"]
+        self.PATHS_DEFAULT = ["{DIR_CODE}/github/threefoldtech/jumpscaleX",
+                              "{DIR_CODE}/github/threefoldtech/digitalmeX"]
 
-        self.IGNOREDIR =[".git",".github"]
+        self.IGNOREDIR = [".git", ".github"]
         self._executor = None
-
+        j.tools.syncer.syncers[self.name] = self
 
     @property
     def executor(self):
-        if self._executor == None:
+        if not self._executor:
             sshkey = j.clients.sshkey.get()
-            sshclient = j.clients.ssh.get("syncer_%s"%self.name,addr=self.addr,port=self.port,sshkey_name=sshkey.name)
+            sshclient = j.clients.ssh.get("syncer_%s" % self.name, addr=self.addr, port=self.port,
+                                          sshkey_name=sshkey.name)
             self._executor = j.tools.executor.ssh_get(sshclient)
         return self._executor
 
-    def sync(self, monitor=False,paths=None):
+    def sync(self, monitor=False, paths=None):
         """
         sync all code to the remote destinations, uses config as set in jumpscale.toml
 
@@ -50,21 +47,19 @@ class Syncer(j.application.JSBaseConfigClass):
 
         for item in paths:
             if j.data.types.list.check(item):
-                source=item[0]
-                dest=item[1]
-                source = j.core.tools.text_replace(source)
-                dest = self.executor.replace(dest)
+                source = j.core.tools.text_replace(item[0])
+                dest = self.executor.replace(item[1])
             else:
                 source = j.core.tools.text_replace(item)
-                dest = source
-            
+                dest = self.executor.replace(item)
+
             self.executor.upload(source, dest, recursive=True, createdir=True,
-                rsyncdelete=True, ignoredir=self.IGNOREDIR, ignorefiles=None)
+                                 rsyncdelete=True, ignoredir=self.IGNOREDIR, ignorefiles=None)
 
         if monitor:
-            self._monitor()
+            self._monitor(paths=paths)
 
-    def _monitor(self,paths):
+    def _monitor(self, paths):
         """
         look for changes in directories which are being pushed & if found push to remote nodes
 
@@ -74,11 +69,11 @@ class Syncer(j.application.JSBaseConfigClass):
 
         """
 
-        event_handler = MyFileSystemEventHandler(paths=paths,zoscontainer=self)
+        event_handler = MyFileSystemEventHandler(paths=paths, zoscontainer=self)
         observer = Observer()
         for source in paths:
             if j.data.types.list.check(source):
-                source=source[0]
+                source = source[0]
             self._logger.info("monitor:%s" % source)
             source2 = j.tools.prefab.local.core.replace(source)
             observer.schedule(event_handler, source2, recursive=True)
