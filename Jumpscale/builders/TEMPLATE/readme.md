@@ -27,3 +27,5 @@
 
 - can use small bash snippets, remember {} can be used to insert e.g. dir locations
 - investigate the template code, try to be consistent
+- there is also a lot of knowledge in js9 zos_sal lots ca be ported to the builders
+

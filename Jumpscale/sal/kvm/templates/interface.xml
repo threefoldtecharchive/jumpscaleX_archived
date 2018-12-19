@@ -1,0 +1,15 @@
+<interface type='bridge'>
+    <mac address='{{macaddress}}'/>
+    <source bridge='{{bridge}}'/>
+    {% if qos %}
+    <bandwidth>
+        <inbound average='{{rate}}'  burst='{{burst}}'/>
+        <outbound average='{{rate}}'  burst='{{burst}}'/>
+    </bandwidth>
+    {% endif %}
+    {% if name %}
+    <virtualport type='openvswitch'>
+        <parameters profileid='{{name}}'/>
+    </virtualport>
+    {% endif %}
+</interface>
