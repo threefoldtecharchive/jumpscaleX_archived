@@ -10,4 +10,4 @@ before_install:
   - sudo apt-get install -y curl
 
 script:
-  - sudo python3 ./install/install.py
+  - sudo python3.6 ./install/install.py
