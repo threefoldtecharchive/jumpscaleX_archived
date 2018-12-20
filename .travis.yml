@@ -6,8 +6,9 @@ dist: trusty
 python:
   - "3.6"
 
-install:
-  - curl
+before_install:
+  - sudo apt-get update
+  - sudo apt-get install -y curl
 
 script:
   - python3 ./install/install.py
