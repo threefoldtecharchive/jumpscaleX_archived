@@ -1,6 +1,5 @@
 language: python
 cache: pip
-sudo: required
 dist: trusty
 
 python:
@@ -11,4 +10,4 @@ before_install:
   - sudo apt-get install -y curl
 
 script:
-  - python3 ./install/install.py
+  - sudo python3 ./install/install.py
