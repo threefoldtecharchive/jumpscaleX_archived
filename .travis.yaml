@@ -11,4 +11,3 @@ install:
 
 script:
   - python3 ./install/install.py
-  - js_shell
