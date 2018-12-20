@@ -1,0 +1,14 @@
+language: python
+cache: pip
+sudo: required
+dist: trusty
+
+python:
+  - "3.6"
+
+install:
+  - curl
+
+script:
+  - python3 ./install/install.py
+  - js_shell
