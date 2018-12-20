@@ -6,30 +6,26 @@ from .Issue import Issue
 import github
 NotSet = github.GithubObject.NotSet
 
-JSConfigClient = j.application.JSBaseClass
-
-TEMPLATE = """
-login = ""
-token_ = ""
-password_ = ""
-"""
+JSConfigClient = j.application.JSBaseConfigClass
 
 
 class GitHubClient(JSConfigClient):
+    _SCHEMATEXT = """
+        @url = jumpscale.github.client
+        login = "" (S)
+        token_ = "" (S)
+        password_ = "" (S)
+        """
 
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
-        self._config = j.tools.configmanager._get_for_obj(
-            self, instance=instance, data=data, template=TEMPLATE)
-        if not (self.config.data['token_'] or (self.config.data['login'] and self.config.data['password_'])):
-            self.configure()
-        if not (self.config.data['token_'] or (self.config.data['login'] and self.config.data['password_'])):
+    def _int(self):
+        if not (self.token_ or (self.login and self.password_)):
             raise RuntimeError("Missing Github token_ or login/password_")
 
-        login_or_token = self.config.data['token_'] or self.config.data['login']
-        password_ = self.config.data['password_'] if self.config.data['password_'] != "" else None
+        login_or_token = self.token_ or self.login
+        password_ = self.password_ if self.password_ != "" else None
         self.api = github.Github(login_or_token, password_, per_page=100)
+
+    def _init_new(self):
         self.users = {}
         self.repos = {}
         self.milestones = {}
@@ -126,8 +122,9 @@ class GitHubClient(JSConfigClient):
         :return:  the created repo
         :rtype:   class:'github.Repository.Repository'
         """
-        return self.api.get_user().create_repo(name, description=description, homepage=homepage, private=private, has_issues=has_issues,
-                    has_wiki=has_wiki, has_downloads=has_downloads, auto_init=auto_init, gitignore_template=gitignore_template)
+        return self.api.get_user().create_repo(
+            name, description=description, homepage=homepage, private=private, has_issues=has_issues, has_wiki=has_wiki,
+            has_downloads=has_downloads, auto_init=auto_init, gitignore_template=gitignore_template)
 
     def repo_delete(self, repo):
         """deletes a repo

@@ -1,16 +1,17 @@
+from .GithubClient import GitHubClient
 from Jumpscale import j
 
 JSConfigFactory = j.application.JSFactoryBaseClass
 
-from .GithubClient import GitHubClient
 
 class GitHubFactory(JSConfigFactory):
 
+    __jslocation__ = "j.clients.github"
+    _CHILDCLASS = GitHubClient
+
     def __init__(self):
-        self.__jslocation__ = "j.clients.github"
         self.__imports__ = "PyGithub"
         self._clients = {}
-        JSConfigFactory.__init__(self, GitHubClient)
 
     def issue_class_get(self):
         # return Issue
@@ -23,14 +24,11 @@ class GitHubFactory(JSConfigFactory):
 
         """
 
-        #use config manager
-        #go to configured github account
+        # use config manager
+        # go to configured github account
         # create repo test_1
         # list repo
         # create some issues on repo
         # populate labels / milestones
         # list the issues
         # ...
-
-
-
