@@ -1,22 +1,22 @@
-import subprocess
-import shutil
 import copy
-import os
 import getpass
 # import socket
 import grp
-from pathlib import Path
 import logging
-import sys
+import os
 import random
-import time
-import textwrap
-import stat
-from subprocess import Popen
-from subprocess import check_output
 import select
-from fcntl import fcntl, F_GETFL, F_SETFL
+import shutil
+import stat
+import subprocess
+import sys
+import textwrap
+import time
+from fcntl import F_GETFL, F_SETFL, fcntl
 from os import O_NONBLOCK, read
+from pathlib import Path
+from subprocess import Popen, check_output
+
 
 # Returns escape codes from format codes
 def esc(*x):
@@ -822,7 +822,6 @@ class Tools():
     @staticmethod
     def code_github_get(repo, account="threefoldtech", branch=["master"], pull=True):
 
-
         url_ssh="git@github.com:%s/%s.git"%(account,repo)
 
         exists,foundgit,dontpull,ACCOUNT_DIR,REPO_DIR=Tools._code_location_get(account=account,repo=repo)
@@ -948,8 +947,8 @@ class Tools():
                             Tools.shell()
                         download = True
 
-            if download==False:
-                raise RuntimeError("Could not download:%s"%url_http)
+            if not exists and download==False:
+                raise RuntimeError("Could not download some code")
 
     @staticmethod
     def config_load(path="",if_not_exist_create=False,executor=None,content=""):
@@ -1258,7 +1257,7 @@ class MyEnv():
     @staticmethod
     def _isUnix():
         return 'posix' in sys.builtin_module_names
-    
+
     @staticmethod
     def config_default_get():
         config = {}
@@ -1327,17 +1326,17 @@ class MyEnv():
                 echo "# Jumpscale Setup" >> /etc/apt/sources.list
                 echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
                 apt-get update
-        
+
                 apt-get install -y curl rsync unzip
                 locale-gen --purge en_US.UTF-8
-                
+
                 mkdir -p /tmp/jumpscale/scripts
                 mkdir -p /sandbox/var/log
-                
+
                 """
             else:
                 if not Tools.cmd_installed("curl") or Tools.cmd_installed("unzip") or Tools.cmd_installed("rsync"):
-                    script="""                    
+                    script="""
                     brew install curl unzip rsync
                     """
                 else:
@@ -1532,7 +1531,6 @@ class JumpscaleInstaller():
 
     def __init__(self):
 
-
         MyEnv.install()
 
         self.account = "threefoldtech"
@@ -1639,5 +1637,3 @@ try:
     #print(pygments.highlight(C,lexer, colored_traceback.Colorizer('default').formatter))
 except ImportError:
     MyEnv._lexer_python = None
-
-
