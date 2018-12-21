@@ -1,13 +1,14 @@
 language: python
-cache: pip
 dist: trusty
 
-python:
-  - "3.6"
+services:
+  - docker
 
 before_install:
-  - sudo apt-get update
-  - sudo apt-get install -y curl
+  - docker build -t jumpscale .
 
 script:
-  - sudo python3.6 ./install/install.py
+  - docker run --rm -t jumpscale /bin/bash -c "source /sansbox/env.sh; pytest -v /sandbox/code/github/threefoldtech/jumpscaleX"
+
+after_success:
+  - docker run --rm -t jumpscale /bin/bash -c "codecov"
