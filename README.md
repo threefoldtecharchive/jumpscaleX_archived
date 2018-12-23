@@ -62,4 +62,4 @@ some tools
 
 
 ## Collaboration Conventions
-[check conventions][docs/conventions]
+[check conventions](docs/conventions)
