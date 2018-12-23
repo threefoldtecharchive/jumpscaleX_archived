@@ -11,6 +11,9 @@
 - variable names:
   - snake_case 
 
+## Quotes
+- Stick to single quotes where applicable
+
 ## docstrings
 Sphinx-style docstrings
 example:
