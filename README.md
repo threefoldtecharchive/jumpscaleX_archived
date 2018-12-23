@@ -40,7 +40,7 @@ some tools
 
 ## Installing Jumpscale Core (NEW, need to test!!!)
 
-[see documentation](docs/Installation/install.md)
+[see documentation](install/install.md)
 
 
 ## Usage
@@ -59,3 +59,7 @@ some tools
 ## Tutorials
 
 [Check Documentation](docs/howto/)
+
+
+## Collaboration Conventions
+[check conventions][docs/conventions]

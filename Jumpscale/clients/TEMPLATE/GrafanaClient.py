@@ -17,6 +17,7 @@ class GrafanaClient(j.application.JSBaseClass):
         self._httpclient = None
 
     def _init_new(self):
+        pass
 
 
     def ping(self):
