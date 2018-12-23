@@ -16,11 +16,14 @@ Sphinx-style docstrings
 example:
 
 ```
-"""
-Move a  File from source path to destination path
-@param source: Source file path
-@type source: string
-@param destination: Destination path the file should be moved to
-@type destination: string
+"""[summary]
+
+:param path: [description]
+:type path: [type]
+:raises j.exceptions.Input: [description]
+:return: [description]
+:rtype: [type]
 """
 ```
+
+(A useful vscode extension lives here: https://github.com/NilsJPWerner/autoDocstring)
