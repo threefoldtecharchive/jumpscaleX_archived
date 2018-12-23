@@ -1,6 +1,6 @@
 ## Linting
-Max-line length = 120
-pep8
+- Max-line length = 120
+- pep8
 
 
 ## naming conventions
@@ -11,7 +11,7 @@ pep8
 - variable names:
   - snake_case 
 
-## docstring
+## docstrings
 Sphinx-style docstrings
 example:
 
