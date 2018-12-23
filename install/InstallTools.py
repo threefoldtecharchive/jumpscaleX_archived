@@ -1293,7 +1293,7 @@ class MyEnv():
             if MyEnv.platform()=="linux":
                 config["INSYSTEM"] = True
             else:
-                config["INSYSTEM"] = True
+                config["INSYSTEM"] = False
 
         return config
 
