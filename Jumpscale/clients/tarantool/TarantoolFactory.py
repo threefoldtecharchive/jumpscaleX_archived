@@ -7,7 +7,7 @@ from .TarantoolDB import TarantoolDB
 from .TarantoolClient import TarantoolClient
 
 
-class TarantoolFactory(JSBASE):
+class TarantoolFactory(j.application.JSBaseClass):
 
     """
     #server_start
@@ -32,7 +32,7 @@ class TarantoolFactory(JSBASE):
         self._tarantoolq = {}
 
     def install(self):
-        j.tools.prefab.local.db.tarantool.install()
+        j.builder.db.tarantool.install()
 
     # def client_configure(self, name="main", ipaddr="localhost", port=3301, login="root", password="admin007"):
     #     """

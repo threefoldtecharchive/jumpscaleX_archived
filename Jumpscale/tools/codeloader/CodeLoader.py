@@ -3,7 +3,7 @@ import imp
 
 JSBASE = j.application.JSBaseClass
 
-class CodeLoader(JSBASE):
+class CodeLoader(j.application.JSBaseClass):
     """
     """
 

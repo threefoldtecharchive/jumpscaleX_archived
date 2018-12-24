@@ -5,7 +5,7 @@ from .GiteaOrgRepo import GiteaOrgRepo
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaOrgRepos(JSBASE):
+class GiteaOrgRepos(j.application.JSBaseClass):
     def __init__(self, organization):
         JSBASE.__init__(self)
         self.organization = organization

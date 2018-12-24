@@ -20,7 +20,7 @@ default_labels = [
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaOrg(JSBASE):
+class GiteaOrg(j.application.JSBaseClass):
 
     def __init__(self, client, name):
         JSBASE.__init__(self)

@@ -1,7 +1,7 @@
 from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
-from Jumpscale.tools.executor.ExecutorBase import ExecutorBase
+from .ExecutorBase import ExecutorBase
 
 import subprocess
 import os
@@ -12,11 +12,10 @@ import sys
 
 class ExecutorLocal(ExecutorBase):
 
-    def __init__(self, debug=False, checkok=False):
+    __jslocation__ = "j.tools.executorLocal"
 
-        self.__jslocation__ = "j.tools.executorLocal"
+    def _init(self):
         self._cache_expiration = 3600
-        ExecutorBase.__init__(self, debug=debug, checkok=debug)
         self.type = "local"
         self._id = 'localhost'
 

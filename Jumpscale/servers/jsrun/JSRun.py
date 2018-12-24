@@ -3,7 +3,7 @@ from .JSRunProcess import JSRunProcess
 JSBASE = j.application.JSBaseClass
 
 
-class JSRun(JSBASE):
+class JSRun(j.application.JSBaseClass):
     def __init__(self):
         self.__jslocation__ = "j.servers.jsrun"
 

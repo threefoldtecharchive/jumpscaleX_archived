@@ -21,14 +21,14 @@ def isPrimAttribute(obj, key):
     return isprimtype, funcprop
 
 
-class Struct(JSBASE):
+class Struct(j.application.JSBaseClass):
 
     def __init__(self, **kwargs):
         JSBASE.__init__(self)
         self.__dict__.update(kwargs)
 
 
-class CodeTools(JSBASE):
+class CodeTools(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.code"

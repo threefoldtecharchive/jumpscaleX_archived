@@ -10,7 +10,7 @@ import copy
 JSBASE = j.application.JSBaseClass
 
 
-class Docker(JSBASE):
+class Docker(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.docker"
@@ -538,7 +538,7 @@ class Docker(JSBASE):
         """
         self.removeDocker()
 
-        j.tools.prefab.local.docker.install(force=True)
+        j.builder.docker.install(force=True)
 
         self.init()
 

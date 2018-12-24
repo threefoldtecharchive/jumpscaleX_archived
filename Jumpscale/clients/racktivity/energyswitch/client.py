@@ -9,7 +9,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class RackSal(JSBASE):
+class RackSal(j.application.JSBaseClass):
     MODULE_INFO = (40031, 0, 1, Value(
         u"type='TYPE_VERSION_FULL'\nsize=4\nLength=4\nunit=''\nscale=0"))
 

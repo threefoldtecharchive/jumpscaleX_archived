@@ -5,7 +5,7 @@ from urllib import parse as urllib_parse
 JSBASE = j.application.JSBaseClass
 
 
-class TemplateEngine(JSBASE):
+class TemplateEngine(j.application.JSBaseClass):
 
     def __init__(self):
         self.replaceDict = {}  # dict(string,string)

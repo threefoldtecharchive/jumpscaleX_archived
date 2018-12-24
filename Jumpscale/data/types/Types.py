@@ -10,7 +10,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class Types(JSBASE):
+class Types(j.application.JSBaseClass):
     
     __jslocation__ = "j.data.types"
 

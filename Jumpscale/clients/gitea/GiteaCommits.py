@@ -5,7 +5,7 @@ from clients.gitea.GiteaCommit import GiteaCommit
 
 JSBASE = j.application.JSBaseClass
 
-class GiteaCommits(JSBASE):
+class GiteaCommits(j.application.JSBaseClass):
     def __init__(
             self,
             client,

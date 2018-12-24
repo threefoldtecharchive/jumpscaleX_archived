@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class SchemaProperty(JSBASE):
+class SchemaProperty(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
         self.name = ""

@@ -4,7 +4,7 @@ JSBASE = j.application.JSBaseClass
 import socket
 
 
-class ZDBServer(JSBASE):
+class ZDBServer(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.servers.zdb"
@@ -164,7 +164,7 @@ class ZDBServer(JSBASE):
         """
         js_shell 'j.servers.zdb.build()'
         """
-        j.tools.prefab.local.zero_os.zos_db.build(install=True, reset=True)
+        j.builder.zero_os.zos_db.build(install=True, reset=True)
 
     def test(self, build=False):
         """

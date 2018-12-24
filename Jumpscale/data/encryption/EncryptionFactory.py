@@ -6,7 +6,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 from .mnemonic.mnemonic import Mnemonic
 
-class EncryptionFactory(JSBASE):
+class EncryptionFactory(j.application.JSBaseClass):
     """
     EncryptionFactory provides the means to sign, encrypt data using NACL
     """

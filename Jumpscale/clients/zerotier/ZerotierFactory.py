@@ -51,16 +51,16 @@ class ZerotierFactory(JSConfigFactory):
         zt_client = j.clients.zerotier.get(instance='testclient', data={'token_': TOKEN})
 
         # make sure zerotier is installed and started
-        # j.tools.prefab.local.network.zerotier.build()
+        # j.builder.network.zerotier.build()
 
         # start the daemon
-        # j.tools.prefab.local.network.zerotier.start()
+        # j.builder.network.zerotier.start()
 
         # create a new test network
         network = zt_client.network_create(public=True, name='mytestnet', subnet='10.0.0.0/24')
 
         # try to make the the current machine join the new network
-        j.tools.prefab.local.network.zerotier.network_join(network_id=network.id)
+        j.builder.network.zerotier.network_join(network_id=network.id)
         time.sleep(20)
 
         # lets list the members then

@@ -3,7 +3,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaOrgRepo(JSBASE):
+class GiteaOrgRepo(j.application.JSBaseClass):
     def __init__(
             self,
             organization=None,

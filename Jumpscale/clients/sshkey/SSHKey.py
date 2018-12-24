@@ -13,7 +13,7 @@ class SSHKey(j.application.JSBaseConfigClass):
         path = "" (S) #path of the private key
         """
 
-    def _init_new(self):
+    def _data_trigger_new(self):
 
         self._connected = None
 
@@ -73,7 +73,7 @@ class SSHKey(j.application.JSBaseConfigClass):
             cmd = 'ssh-keygen -t rsa -f %s -q -P "%s"' % (self.path, self.passphrase)
             j.sal.process.execute(cmd, timeout=10)
 
-        self._init_new() #will load the info from fs
+        self._data_trigger_new() #will load the info from fs
 
     def sign_ssh_data(self, data):
         return self.agent.sign_ssh_data(data)

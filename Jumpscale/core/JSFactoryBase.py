@@ -15,8 +15,7 @@ class JSFactoryBase(JSBase):
                 if self.__class__._CHILDCLASS is None:
                     raise RuntimeError("__class__._CHILDCLASS should be set")
                 child_class = self.__class__._CHILDCLASS
-            o = child_class(id=id, name=name)
-            o.data_update(**kwargs)
+            o = child_class(id=id, name=name,data=kwargs)
             JSFactoryBase._children[name] = o
         return JSFactoryBase._children[name]
 

@@ -7,7 +7,7 @@ import datetime
 JSBASE = j.application.JSBaseClass
 
 
-class Machine(JSBASE):
+class Machine(j.application.JSBaseClass):
 
     def __init__(self, space, machine):
         JSBASE.__init__(self)
