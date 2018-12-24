@@ -16,16 +16,13 @@ JSBASE = j.application.JSBaseClass
 
 class GiteaFactory(JSConfigBase):
     __jslocation__ = "j.clients.gitea"
-    _CHILDCLASS =  GiteaClient
-    
-    # def _init(self):
-        # JSConfigBase.__init__(self, GiteaClient)
+    _CHILDCLASS = GiteaClient
 
     @property
     def _path(self):
         return j.sal.fs.getDirName(os.path.abspath(__file__)).rstrip("/")
 
-    def get_by_params(self,instance,url,gitea_token):
+    def get_by_params(self, instance, url, gitea_token):
         """get gitea client instance without using config manager
 
         :param instance: name of the instance
@@ -35,10 +32,10 @@ class GiteaFactory(JSConfigBase):
         :param gitea_token: generated gittea user token
         :type gitea_token: str
         """
-        data={}
-        data["url"]=instance
-        data["gitea_token_"]=gitea_token
-        self.get(instance=instance,data=data)
+        data = {}
+        data["url"] = instance
+        data["gitea_token_"] = gitea_token
+        self.get(instance=instance, data=data)
 
     def generate(self):
         """
@@ -70,12 +67,12 @@ class GiteaFactory(JSConfigBase):
         org = cl.org_get(name)
 
         if "testrepo" not in org.repos_list():
-            #means no test repo yet, lets create one
+            # means no test repo yet, lets create one
             org.repo_new("testrepo")
 
-
         print(org.repos_list())
-        repo_name = [item for item in org.repos_list(refresh=True).keys()][0]  # first reponame
+        repo_name = [item for item in org.repos_list(
+            refresh=True).keys()][0]  # first reponame
 
         repo = org.repo_get(repo_name)
 

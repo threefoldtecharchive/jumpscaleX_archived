@@ -18,7 +18,7 @@ class EtcdClient(JSConfigClient):
     _SCHEMATEXT = """
     @url = jumpscale.etcd.client
     host = "127.0.0.1" (S)
-    port = 2379 (I)
+    port = 2379 (ipport)
     user = "" (S)
     password_ = "" (S)
     """
