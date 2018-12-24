@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaRepoHook(j.builder._BaseClass):
+class GiteaRepoHook(j.application.JSBaseClass):
     def __init__(
             self,
             client,

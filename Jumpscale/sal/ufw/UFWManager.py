@@ -20,7 +20,7 @@ class UFWError(Exception, JSBASE):
         JSBASE.__init__(self)
 
 
-class UFWRule(j.builder._BaseClass):
+class UFWRule(j.application.JSBaseClass):
 
     def __init__(self, action=None, source=None, destination=None, number=None):
         JSBASE.__init__(self)
@@ -54,7 +54,7 @@ class UFWRule(j.builder._BaseClass):
         return str(self)
 
 
-class UFWOperation(j.builder._BaseClass):
+class UFWOperation(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
 
@@ -152,7 +152,7 @@ class RuleOp(UFWOperation):
         return ' '.join(cmd)
 
 
-class UFWManager(j.builder._BaseClass):
+class UFWManager(j.application.JSBaseClass):
     ACTION_ALLOW_IN = 'allow in'
     ACTION_ALLOW_OUT = 'allow out'
     ACTION_DENY_IN = 'deny in'

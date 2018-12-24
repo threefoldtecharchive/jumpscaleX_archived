@@ -17,7 +17,7 @@ LOCKEXIST = 4
 JSBASE = j.application.JSBaseClass
 
 
-class LibvirtUtil(j.builder._BaseClass):
+class LibvirtUtil(j.application.JSBaseClass):
 
     def __init__(self, host='localhost'):
         self._host = host

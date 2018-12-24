@@ -12,7 +12,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class ModelFactory(j.builder._BaseClass):
+class ModelFactory(j.application.JSBaseClass):
     FIRMWARE_ID = (10004, 0, 1, Value(
         u"type='TYPE_STRING'\nsize=8\nlength=8\nunit=''\nscale=0"))
     MODULE_INFO = (40031, 0, 1, Value(

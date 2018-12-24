@@ -30,7 +30,7 @@ class IndexField():
     __repr__ = __str__
 
 
-class BCDBIndexMeta(j.builder._BaseClass):
+class BCDBIndexMeta(j.application.JSBaseClass):
     def __init__(self,schema):
         """
         """

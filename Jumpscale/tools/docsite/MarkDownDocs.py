@@ -9,7 +9,7 @@ import sys
 JSBASE = j.application.JSBaseClass
 
 
-class MarkDownDocs(j.builder._BaseClass):
+class MarkDownDocs(j.application.JSBaseClass):
     """
     """
 

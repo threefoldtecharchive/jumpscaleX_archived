@@ -5,7 +5,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class NetworkScanner(j.builder._BaseClass):
+class NetworkScanner(j.application.JSBaseClass):
     COMMAND = 'nmap -n --disable-arp-ping -send-ip -Pn -sS -p{ports} -oX - {cidr}'
 
     def __init__(self, cidr, ports=[80]):

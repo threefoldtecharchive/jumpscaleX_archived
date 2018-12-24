@@ -11,7 +11,7 @@ except:
     pass
 
 
-class HashTool(j.builder._BaseClass):
+class HashTool(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.data.hash"

@@ -3,7 +3,7 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
-class HTMLPage(j.builder._BaseClass):
+class HTMLPage(j.application.JSBaseClass):
 
     """
     the methods add code to the self.body part !!!!!

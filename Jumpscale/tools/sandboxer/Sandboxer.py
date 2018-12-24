@@ -7,7 +7,7 @@ from .Dep import Dep
 JSBASE = j.application.JSBaseClass
 
 
-class Sandboxer(j.builder._BaseClass):
+class Sandboxer(j.application.JSBaseClass):
     """
     sandbox any linux app
     """

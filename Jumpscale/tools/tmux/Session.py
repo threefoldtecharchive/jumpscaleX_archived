@@ -9,7 +9,7 @@ JSBASE = j.application.JSBaseClass
 # from .Pane import Pane
 from .Window import Window
 
-class Session(j.builder._BaseClass):
+class Session(j.application.JSBaseClass):
 
     def __init__(self, session):
         JSBASE.__init__(self)

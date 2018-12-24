@@ -7,7 +7,7 @@ from .ExecutorSerial import ExecutorSerial
 JSBASE = j.application.JSBaseClass
 
 
-class ExecutorFactory(j.builder._BaseClass):
+class ExecutorFactory(j.application.JSBaseClass):
     _executors = {}
 
     def __init__(self):

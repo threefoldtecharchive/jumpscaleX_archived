@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaLabel(j.builder._BaseClass):
+class GiteaLabel(j.application.JSBaseClass):
 
     def __init__(
             self,

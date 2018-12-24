@@ -12,7 +12,7 @@ def getInt(nr):
     return int(nr)
 
 
-class ModelBaseCollection(j.builder._BaseClass):
+class ModelBaseCollection(j.application.JSBaseClass):
     """
     This class represent a collection
     It's used to list/find/create new Instance of Model objects

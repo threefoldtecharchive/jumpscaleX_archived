@@ -9,7 +9,7 @@ JSBASE = j.application.JSBaseClass
 from .Session import Session
 from .TmuxCmd import TmuxCmd
 
-class Tmux(j.builder._BaseClass):
+class Tmux(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.tmux"

@@ -7,7 +7,7 @@ import copy
 
 import sys
 
-class DocSite(j.builder._BaseClass):
+class DocSite(j.application.JSBaseClass):
     """
     """
 

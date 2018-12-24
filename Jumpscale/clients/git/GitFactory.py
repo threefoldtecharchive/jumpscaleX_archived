@@ -6,7 +6,7 @@ import sys
 JSBASE = j.application.JSBaseClass
 
 
-class GitFactory(j.builder._BaseClass):
+class GitFactory(j.application.JSBaseClass):
 
     __jslocation__ = "j.clients.git"
 

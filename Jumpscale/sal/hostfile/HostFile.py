@@ -6,14 +6,24 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class HostFile(JSBASE):
+class HostFileFactory(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = 'j.sal.hostsfile'
         self._host_filepath = '/etc/hosts'
         JSBASE.__init__(self)
 
-    def ip_remove(self, ip):
+    def get(self):
+        return HostFile()
+
+
+class HostFile(j.application.JSBaseClass):
+
+    def __init__(self):
+        self.hostfilePath = "/etc/hosts"
+        JSBASE.__init__(self)
+
+    def remove(self, ip):
         """Update a hostfile, delete ip from hostsfile
 
         :param ip: Ip of the machine to remove

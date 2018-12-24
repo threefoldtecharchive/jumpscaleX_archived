@@ -17,7 +17,7 @@ class RsyncError(Exception, JSBASE):
 
     pass
 
-class RsyncModule(j.builder._BaseClass):
+class RsyncModule(j.application.JSBaseClass):
 
     def __init__(self, name=None):
         JSBASE.__init__(self)
@@ -45,7 +45,7 @@ class RsyncModule(j.builder._BaseClass):
         return str(self)
 
 
-class Rsync(j.builder._BaseClass):
+class Rsync(j.application.JSBaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)
@@ -190,7 +190,7 @@ class Rsync(j.builder._BaseClass):
         return str(self)
 
 
-class RsyncFactory(j.builder._BaseClass):
+class RsyncFactory(j.application.JSBaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)

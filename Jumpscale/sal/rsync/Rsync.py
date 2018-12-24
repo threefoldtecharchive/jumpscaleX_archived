@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
-class RsyncInstance(j.builder._BaseClass):
+class RsyncInstance(j.application.JSBaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)
@@ -12,7 +12,7 @@ class RsyncInstance(j.builder._BaseClass):
         self.exclude = "*.pyc .git"
 
 
-class RsyncServer(j.builder._BaseClass):
+class RsyncServer(j.application.JSBaseClass):
 
     """
     """
@@ -173,7 +173,7 @@ class RsyncServer(j.builder._BaseClass):
                         #     j.sal.fs.symlink(item, destpathfile, overwriteTarget=True)
 
 
-class RsyncClient(j.builder._BaseClass):
+class RsyncClient(j.application.JSBaseClass):
 
     """
     """

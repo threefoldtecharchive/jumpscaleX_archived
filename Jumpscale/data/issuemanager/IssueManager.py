@@ -17,7 +17,7 @@ from playhouse.sqlite_ext import SqliteExtDatabase
 JSBASE = j.application.JSBaseClass
 
 
-class IssueManager(j.builder._BaseClass):
+class IssueManager(j.application.JSBaseClass):
 
     """
 

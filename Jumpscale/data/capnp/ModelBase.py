@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class ModelBase(j.builder._BaseClass):
+class ModelBase(j.application.JSBaseClass):
 
     def __init__(self, key="", new=False, collection=None):
 

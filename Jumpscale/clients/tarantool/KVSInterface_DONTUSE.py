@@ -3,7 +3,7 @@ import base64
 from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
-class KVSTarantool(j.builder._BaseClass):
+class KVSTarantool(j.application.JSBaseClass):
     """
     This class implement a simple key value store on top of tarantool
     It proxy calls to stored procedure in tarantool server

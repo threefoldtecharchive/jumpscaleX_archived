@@ -13,7 +13,7 @@ from .GiteaPublicKeys import GiteaPublicKeys
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaUser(j.builder._BaseClass):
+class GiteaUser(j.application.JSBaseClass):
     is_current = False
 
     def __init__(

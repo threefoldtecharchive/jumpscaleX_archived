@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class RegexTemplates_FindLines(j.builder._BaseClass):
+class RegexTemplates_FindLines(j.application.JSBaseClass):
     """
     regexexamples which find lines
     """
@@ -22,13 +22,13 @@ class RegexTemplates_FindLines(j.builder._BaseClass):
         return "^def .*"
 
 
-class Empty(j.builder._BaseClass):
+class Empty(j.application.JSBaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)
 
 
-class RegexMatches(j.builder._BaseClass):
+class RegexMatches(j.application.JSBaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)
@@ -53,7 +53,7 @@ class RegexMatches(j.builder._BaseClass):
         return self.__str__()
 
 
-class RegexMatch(j.builder._BaseClass):
+class RegexMatch(j.application.JSBaseClass):
 
     def __init__(self):
         self.start = 0
@@ -69,7 +69,7 @@ class RegexMatch(j.builder._BaseClass):
         return self.__str__()
 
 
-class RegexTools(j.builder._BaseClass):
+class RegexTools(j.application.JSBaseClass):
     # TODO: doe some propper error handling with re, now obscure errors  (id:21)
 
     def __init__(self):

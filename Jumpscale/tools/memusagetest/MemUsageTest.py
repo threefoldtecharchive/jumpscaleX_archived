@@ -8,7 +8,7 @@ from .ServiceBase2 import ServiceBase2
 JSBASE = j.application.JSBaseClass
 
 
-class MemUsageTest(j.builder._BaseClass):
+class MemUsageTest(j.application.JSBaseClass):
 
     __jslocation__ = "j.tools.memusagetest"
 

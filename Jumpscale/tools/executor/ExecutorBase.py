@@ -7,9 +7,8 @@ import os
 JSBASE = j.application.JSBaseClass
 
 
-class ExecutorBase(j.builder._BaseClass):
+class ExecutorBase(j.application.JSBaseClass):
     def __init__(self, debug=False, checkok=True):
-        JSBASE.__init__(self)
         self.debug = debug
         self.checkok = checkok
         self.type = None
@@ -24,6 +23,8 @@ class ExecutorBase(j.builder._BaseClass):
 
         self._config_hash = ""
         self._config_path = "/sandbox/cfg/jumpscale_config.toml"
+
+        JSBASE.__init__(self)
 
         self.reset()
 

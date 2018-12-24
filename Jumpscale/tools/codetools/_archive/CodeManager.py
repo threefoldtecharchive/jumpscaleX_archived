@@ -6,7 +6,7 @@ import re
 JSBASE = j.application.JSBaseClass
 
 
-class CodeManager(j.builder._BaseClass):
+class CodeManager(j.application.JSBaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)
@@ -90,7 +90,7 @@ class CodeManager(j.builder._BaseClass):
                     codemanagerfile.process()
 
 
-class CodeManagerFile(j.builder._BaseClass):
+class CodeManagerFile(j.application.JSBaseClass):
     """
     manages code for one file
     """

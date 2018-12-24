@@ -7,7 +7,7 @@ JSBASE = j.application.JSBaseClass
 from .Link import Link
 from urllib.parse import urlparse,parse_qs,parse_qsl
 
-class Doc(j.builder._BaseClass):
+class Doc(j.application.JSBaseClass):
     """
     """
 

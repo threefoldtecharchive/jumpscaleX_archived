@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaBranch(j.builder._BaseClass):
+class GiteaBranch(j.application.JSBaseClass):
     def __init__(
             self,
             client,

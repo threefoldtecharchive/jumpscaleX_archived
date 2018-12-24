@@ -1531,14 +1531,18 @@ class JumpscaleInstaller():
 
     def __init__(self):
 
-        MyEnv.install()
-
         self.account = "threefoldtech"
         self.branch = ["master"]
+        self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
+
+    def install(self):
+
+        MyEnv.install()
+
 
         Tools.file_touch(os.path.join(MyEnv.config["DIR_BASE"], "lib/jumpscale/__init__.py"))
 
-        self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
+
 
         self.repos_get()
         self.repos_link()
@@ -1548,9 +1552,39 @@ class JumpscaleInstaller():
         set -e
         cd {DIR_BASE}
         source env.sh
+        js_shell ' j.core.installer_jumpscale.remove_old_parts()'
         js_shell 'j.tools.console.echo("JumpscaleX IS OK.")'
         """
         Tools.execute(script,interactive=True)
+
+    def remove_old_parts(self):
+        tofind=["DigitalMe","Jumpscale","ZeroRobot"]
+        for part in sys.path:
+            if Tools.exists(part):
+                for item in os.listdir(part):
+                    for item_tofind in tofind:
+                        toremove =  os.path.join(part,item)
+                        if item.find(item_tofind)!=-1  and toremove.find("sandbox")==-1 and toremove.find("github")==-1:
+                            Tools.log("found old jumpscale item to remove:%s"%toremove)
+                            Tools.delete(toremove)
+                        if item.find(".pth")!=-1:
+                            out=""
+                            for line in Tools.file_text_read(toremove).split("\n"):
+                                if line.find("threefoldtech")==-1:
+                                    out+="%s\n"%line
+                            Tools.file_write(toremove,out)
+                            # Tools.shell()
+        tofind=["js_","js9"]
+        for part in os.environ["PATH"].split(":"):
+            if Tools.exists(part):
+                for item in os.listdir(part):
+                    for item_tofind in tofind:
+                        toremove =  os.path.join(part,item)
+                        if item.startswith(item_tofind) and toremove.find("sandbox")==-1 and toremove.find("github")==-1:
+                                Tools.log("found old jumpscale item to remove:%s"%toremove)
+                                Tools.delete(toremove)
+
+
 
     def repos_get(self,force=False):
 

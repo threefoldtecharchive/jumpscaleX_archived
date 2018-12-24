@@ -4,7 +4,7 @@ JSBASE = j.application.JSBaseClass
 import socket
 
 
-class ZDBServer(j.builder._BaseClass):
+class ZDBServer(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.servers.zdb"

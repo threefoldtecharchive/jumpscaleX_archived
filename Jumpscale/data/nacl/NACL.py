@@ -13,7 +13,7 @@ from nacl.exceptions import BadSignatureError
 JSBASE = j.application.JSBaseClass
 
 
-class NACL(j.builder._BaseClass):
+class NACL(j.application.JSBaseClass):
     def __init__(self, name, secret):
         """
         """

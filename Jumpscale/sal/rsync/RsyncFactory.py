@@ -3,7 +3,7 @@ from Jumpscale import j
 from .Rsync import *
 
 JSBASE = j.application.JSBaseClass
-class RsyncFactory(j.builder._BaseClass):
+class RsyncFactory(j.application.JSBaseClass):
     """
     """
 

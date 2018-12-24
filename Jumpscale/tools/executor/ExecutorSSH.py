@@ -1,21 +1,16 @@
 from Jumpscale import j
-JSBASE = j.application.JSBaseClass
 
-from .ExecutorBase import *
-import os
-
+from .ExecutorBase import ExecutorBase
 
 class ExecutorSSH(ExecutorBase):
 
-    def __init__(self, sshclient, debug=False, checkok=False):
-        ExecutorBase.__init__(self, debug=debug, checkok=checkok)
-
+    def __init__(self, sshclient):
         self.sshclient = sshclient
         self.type = "ssh"
-
         self._id = None
-
         self.__check_base = None
+        ExecutorBase.__init__(self)
+
 
     def exists(self, path):
         if path == "/env.sh":

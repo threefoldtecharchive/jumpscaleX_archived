@@ -5,7 +5,7 @@ from .Capacity import Capacity
 JSBASE = j.application.JSBaseClass
 
 
-class Ubuntu(j.builder._BaseClass):
+class Ubuntu(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.ubuntu"

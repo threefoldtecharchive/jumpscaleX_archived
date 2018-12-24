@@ -30,7 +30,7 @@ import sys
 # log = logging.getLogger('stdxxx')
 
 
-class Console(j.builder._BaseClass):
+class Console(j.application.JSBaseClass):
     """
     class which groups functionality to print to a console
     self.width=120

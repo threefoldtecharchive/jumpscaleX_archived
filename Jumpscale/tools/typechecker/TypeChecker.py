@@ -60,7 +60,7 @@ class Tracker(Exception, JSBASE):
         return str(self)
 
 
-class Option(j.builder._BaseClass):
+class Option(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
         raise NotImplementedError()
@@ -158,7 +158,7 @@ class Enum(Option):
             raise t.reason('value "{}" not in enum'.format(object))
 
 
-class TypeCheckerFactory(j.builder._BaseClass):
+class TypeCheckerFactory(j.application.JSBaseClass):
     """
 
     """
@@ -216,7 +216,7 @@ class TypeCheckerFactory(j.builder._BaseClass):
         """
         return TypeChecker(typedef)
 
-class TypeChecker(j.builder._BaseClass):
+class TypeChecker(j.application.JSBaseClass):
     def __init__(self, typedef):
         self._typ = typedef
         JSBASE.__init__(self)

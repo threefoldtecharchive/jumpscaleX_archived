@@ -9,14 +9,12 @@ from Jumpscale import j
 
 
 JSBASE = j.application.JSBaseClass
-class NetTools(j.builder._BaseClass):
+class NetTools(j.application.JSBaseClass):
 
-    def __init__(self):
-        self.__jslocation__ = "j.sal.nettools"
-        self.__imports__ = "netaddr"
-        JSBASE.__init__(self)
+    _jslocation__ = "j.sal.nettools"
+
+    def _init(self):
         self._windowsNetworkInfo = None
-
 
     def tcpPortConnectionTest(self, ipaddr, port, timeout=None):
         conn = None
