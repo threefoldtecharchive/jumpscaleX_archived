@@ -30,7 +30,7 @@ from urllib.parse import urlparse
 JSBASE = j.application.JSBaseClass
 
 
-class Offliner(JSBASE):
+class Offliner(j.builder._BaseClass):
 
     """
     functionality to inspect objectr structure and generate apifile

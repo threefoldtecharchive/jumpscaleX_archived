@@ -6,7 +6,7 @@ from .VirtualboxDisk import VirtualboxDisk
 
 
 
-class VirtualboxVM(JSBASE):
+class VirtualboxVM(j.builder._BaseClass):
     def __init__(self, name):
         JSBASE.__init__(self)
         self.client = j.clients.virtualbox.client

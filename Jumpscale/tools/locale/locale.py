@@ -8,7 +8,7 @@ DEFAULTLOCALE = 'en'
 JSBASE = j.application.JSBaseClass
 
 
-class Domain(JSBASE):
+class Domain(j.builder._BaseClass):
 
     def __init__(self, key):
         JSBASE.__init__(self)
@@ -40,7 +40,7 @@ class Domain(JSBASE):
         return str(self._value_) if self._value_ is not None else self._key_
 
 
-class Localizer(JSBASE):
+class Localizer(j.builder._BaseClass):
 
     def __init__(self, tdirs):
         JSBASE.__init__(self)

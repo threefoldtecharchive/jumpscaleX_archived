@@ -5,7 +5,7 @@ from .GiteaOrgHook import GiteaOrgHook
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaOrgHooks(JSBASE):
+class GiteaOrgHooks(j.builder._BaseClass):
     def __init__(self, client, organization):
         JSBASE.__init__(self)
         self.client = client

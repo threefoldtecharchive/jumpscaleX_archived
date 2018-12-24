@@ -10,7 +10,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class Zone(JSBASE):
+class Zone(j.builder._BaseClass):
     CONFIG_FILES_DIR = j.tools.path.get('/etc/bind/')
     NON_ZONE_FILES = ['/etc/bind/named.conf.options']
 

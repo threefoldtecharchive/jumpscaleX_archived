@@ -6,7 +6,7 @@ from .VirtualboxClient import VirtualboxClient
 
 JSBASE = j.application.JSBaseClass
 
-class VirtualboxFactory(JSBASE):
+class VirtualboxFactory(j.builder._BaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.virtualbox"

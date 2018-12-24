@@ -20,7 +20,7 @@ replacelabels = {
 JSBASE = j.application.JSBaseClass
 
 
-class Base(JSBASE):
+class Base(j.builder._BaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)

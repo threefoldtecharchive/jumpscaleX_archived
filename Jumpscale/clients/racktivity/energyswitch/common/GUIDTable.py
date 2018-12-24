@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class Value(JSBASE):
+class Value(j.builder._BaseClass):
 
     def __init__(self, initStr=None, **kwargs):
         JSBASE.__init__(self)
@@ -36,7 +36,7 @@ class Value(JSBASE):
             setattr(self, key, eval(val))
 
 
-class Functions(JSBASE):
+class Functions(j.builder._BaseClass):
     # Variables
 
     def __init__(self):

@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class VirtualboxDisk(JSBASE):
+class VirtualboxDisk(j.builder._BaseClass):
     def __init__(self, client, path):
         JSBASE.__init__(self)
         self.client = client

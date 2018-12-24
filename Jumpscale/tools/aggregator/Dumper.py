@@ -9,7 +9,7 @@ JSBASE = j.application.JSBaseClass
 NUM_WORKERS = 4
 
 
-class BaseDumper(JSBASE):
+class BaseDumper(j.builder._BaseClass):
 
     def __init__(self, cidr, ports=[6379], scaninterval=300):
         logging.root.setLevel(logging.INFO)

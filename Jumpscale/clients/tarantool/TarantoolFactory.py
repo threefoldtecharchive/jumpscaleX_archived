@@ -7,7 +7,7 @@ from .TarantoolDB import TarantoolDB
 from .TarantoolClient import TarantoolClient
 
 
-class TarantoolFactory(JSBASE):
+class TarantoolFactory(j.builder._BaseClass):
 
     """
     #server_start

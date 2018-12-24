@@ -3,7 +3,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class WIC_Factory(JSBASE):
+class WIC_Factory(j.builder._BaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.wic"
@@ -89,7 +89,7 @@ class WIC_Factory(JSBASE):
             # wics.append(wic)
 
 
-class WIC(JSBASE):
+class WIC(j.builder._BaseClass):
     """
     methods to work with console on windows
     """

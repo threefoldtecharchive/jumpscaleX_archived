@@ -18,7 +18,7 @@ _client_map = {
 }
 
 
-class ZDBFactory(JSBASE):
+class ZDBFactory(j.builder._BaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.zdb"

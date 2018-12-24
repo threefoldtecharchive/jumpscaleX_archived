@@ -9,7 +9,7 @@ from .ModelBase import  ModelBase
 JSBASE = j.application.JSBaseClass
 
 
-class Tools(JSBASE):
+class Tools(j.builder._BaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)
@@ -42,7 +42,7 @@ class Tools(JSBASE):
         return listInDict
 
 
-class Capnp(JSBASE):
+class Capnp(j.builder._BaseClass):
     """
     """
 

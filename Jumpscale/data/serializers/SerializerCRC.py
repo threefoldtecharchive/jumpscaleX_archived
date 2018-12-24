@@ -3,7 +3,7 @@
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
-class SerializerCRC(JSBASE):
+class SerializerCRC(j.builder._BaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)

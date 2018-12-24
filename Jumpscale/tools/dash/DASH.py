@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class DASH(JSBASE):
+class DASH(j.builder._BaseClass):
     """
     """
 

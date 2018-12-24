@@ -8,7 +8,7 @@ from .List0 import List0
 import sys
 
 
-class SchemaFactory(JSBASE):
+class SchemaFactory(j.builder._BaseClass):
     def __init__(self):
         self.__jslocation__ = "j.data.schema"
         JSBASE.__init__(self)

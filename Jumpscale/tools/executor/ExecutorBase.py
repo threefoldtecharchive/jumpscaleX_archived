@@ -7,7 +7,7 @@ import os
 JSBASE = j.application.JSBaseClass
 
 
-class ExecutorBase(JSBASE):
+class ExecutorBase(j.builder._BaseClass):
     def __init__(self, debug=False, checkok=True):
         JSBASE.__init__(self)
         self.debug = debug
@@ -203,18 +203,6 @@ class ExecutorBase(JSBASE):
         self._logger.debug(cmds)
 
         return cmds
-
-    @property
-    def prefab(self):
-        if self._prefab is None:
-            if not getattr(j.tools, "prefab", None):
-                from JumpscalePrefab.PrefabFactory \
-                    import PrefabRootClassFactory \
-                    as _PrefabRootClassFactory
-                j.tools.prefab = _PrefabRootClassFactory()
-
-            self._prefab = j.tools.prefab.get(self)
-        return self._prefab
 
     def exists(self, path):
         raise NotImplemented()

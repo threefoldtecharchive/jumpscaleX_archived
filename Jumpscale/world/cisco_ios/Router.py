@@ -29,7 +29,7 @@ def printable_out(str_in):
     return str_out
 
 
-class Router(JSBASE):
+class Router(j.builder._BaseClass):
 
     def __init__(self, hostname, software=IOS, logfile=None, **kwargs):
         JSBASE.__init__(self)

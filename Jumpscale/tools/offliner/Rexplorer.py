@@ -1,7 +1,7 @@
 from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
-class Rexplorer(JSBASE):
+class Rexplorer(j.builder._BaseClass):
     def __init__(self):
         self.__jslocation__ = "j.tools.rexplorer"
         JSBASE.__init__(self)

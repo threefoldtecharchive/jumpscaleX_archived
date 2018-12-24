@@ -15,7 +15,7 @@ class NFSError(Exception, JSBASE):
         JSBASE.__init__(self)
 
 
-class NFSExport(JSBASE):
+class NFSExport(j.builder._BaseClass):
 
     def __init__(self, path=""):
         self.__jslocation__ = "j.sal.nfs"
@@ -55,7 +55,7 @@ class NFSExport(JSBASE):
         return str(self)
 
 
-class NFS(JSBASE):
+class NFS(j.builder._BaseClass):
 
     def __init__(self):
         self._exports = None

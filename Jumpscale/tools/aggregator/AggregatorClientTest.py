@@ -8,7 +8,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class AggregatorClientTest(JSBASE):
+class AggregatorClientTest(j.builder._BaseClass):
     TEST_INFLUX_DB = "test"
 
     def __init__(self):

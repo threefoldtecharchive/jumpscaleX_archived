@@ -90,7 +90,7 @@ class UserInfo(object, JSBASE):
         self.groups = groups
 
 
-class OauthInstance(JSBASE):
+class OauthInstance(j.builder._BaseClass):
 
     def __init__(
             self,

@@ -95,7 +95,7 @@ class Application(object):
     def JSBaseClass(self):
         """
         JSBASE = j.application.JSBaseClass
-        class myclass(JSBASE):
+        class myclass(j.builder._BaseClass):
             def __init__(self):
                 JSBASE.__init__(self)
 

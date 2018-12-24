@@ -5,7 +5,7 @@ from .GiteaMilestone import GiteaMilestone
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaMilestones(JSBASE):
+class GiteaMilestones(j.builder._BaseClass):
     def __init__(self, client, repo, user):
         JSBASE.__init__(self)
         self.client = client

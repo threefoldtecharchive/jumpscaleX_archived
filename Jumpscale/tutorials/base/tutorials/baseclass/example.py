@@ -9,7 +9,7 @@ name = "{{name}}"
 # something = "{{j.data.time.epoch}}"
 
 
-class TutorialCacheClass(JSBASE):
+class TutorialCacheClass(j.builder._BaseClass):
     """
     """
 

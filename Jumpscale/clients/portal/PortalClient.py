@@ -36,7 +36,7 @@ class ApiError(Exception, JSBASE):
         return self._response
 
 
-class BaseResource(JSBASE):
+class BaseResource(j.builder._BaseClass):
 
     def __init__(self, session, url):
         self._session = session

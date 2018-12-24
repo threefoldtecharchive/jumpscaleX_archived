@@ -5,7 +5,7 @@ from .Sheet import *
 JSBASE = j.application.JSBaseClass
 
 
-class Sheets(JSBASE):
+class Sheets(j.builder._BaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.data.worksheets"

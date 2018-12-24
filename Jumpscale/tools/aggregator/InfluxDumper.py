@@ -4,7 +4,7 @@ import tools.aggregator.Dumper as Dumper
 JSBASE = j.application.JSBaseClass
 
 
-class Stats(JSBASE):
+class Stats(j.builder._BaseClass):
     def __init__(self, node, key, epoch, stat, avg, max, total):
         JSBASE.__init__(self)
         self.node = node

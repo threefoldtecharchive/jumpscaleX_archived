@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class BaseModule(JSBASE):
+class BaseModule(j.builder._BaseClass):
 
     def __init__(self, parent):
         JSBASE.__init__(self)

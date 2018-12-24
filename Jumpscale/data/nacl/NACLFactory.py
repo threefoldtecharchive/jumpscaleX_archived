@@ -9,7 +9,7 @@ from nacl.public import PrivateKey, SealedBox
 
 JSBASE = j.application.JSBaseClass
 
-class NACLFactory(JSBASE):
+class NACLFactory(j.builder._BaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)

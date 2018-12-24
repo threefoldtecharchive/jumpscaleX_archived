@@ -3,7 +3,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class NginxFactory(JSBASE):
+class NginxFactory(j.builder._BaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.nginx"
@@ -14,7 +14,7 @@ class NginxFactory(JSBASE):
         return Nginx()
 
 
-class Nginx(JSBASE):
+class Nginx(j.builder._BaseClass):
 
     def __init__(self):
         self.configPath = j.tools.path.get('/etc').joinpath('nginx', 'conf.d')

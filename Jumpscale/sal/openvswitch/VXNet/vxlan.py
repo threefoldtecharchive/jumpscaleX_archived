@@ -10,7 +10,7 @@ JSBASE = j.application.JSBaseClass
 command_name = sys.argv[0]
 
 
-class NetLayout(JSBASE):
+class NetLayout(j.builder._BaseClass):
 
     def __init__(self):
         self.interfaces = get_all_ifaces()
@@ -47,7 +47,7 @@ class NetLayout(JSBASE):
         return False
 
 
-class VXNet(JSBASE):
+class VXNet(j.builder._BaseClass):
 
     def __init__(self, netid, backend='vxbackend'):
         self.netid = NetID(netid)
