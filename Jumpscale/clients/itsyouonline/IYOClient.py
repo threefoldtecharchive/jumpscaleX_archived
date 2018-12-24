@@ -48,6 +48,7 @@ class IYOClient(j.application.JSBaseConfigClass):
     def _init(self):
         self._api = None
         self._client = None
+        self._lastjwt = None
 
     @property
     def client(self):
@@ -61,7 +62,9 @@ class IYOClient(j.application.JSBaseConfigClass):
         """Generated itsyou.onine client api"""
         if self._api is None:
             self._api = self.client.api
-            self._api.session.headers.update({"Authorization": 'bearer {}'.format(self.jwt)})
+            if self._lastjwt is None:
+                self.jwt_get()
+            self._api.session.headers.update({"Authorization": 'bearer {}'.format(self._lastjwt)})
 
         return self._api
 
@@ -73,13 +76,14 @@ class IYOClient(j.application.JSBaseConfigClass):
         return self._oauth2_client
 
 
-    def jwt_get(self,name,die=True):
+    def jwt_get(self,name="default",die=True):
 
         for item in self.data.jwt_list:
             if item.name == name:
+                #TODO: need to check if we need to refresh
                 # if self.jwt == "" or self.jwt_expires<j.data.time.epoch:
                 #     self.jwt_refresh()
-
+                self._lastjwt = item.jwt
                 return item
         if die:
             raise RuntimeError("could not find jwt with name:%s"%name)
@@ -140,6 +144,8 @@ class IYOClient(j.application.JSBaseConfigClass):
         jwt_obj.expires = jwt_data["exp"]
         jwt_obj.jwt = jwt_text
         jwt_obj.last_refresh = j.data.time.epoch
+
+        self._lastjwt = jwt_obj.jwt
 
         self.save()
 

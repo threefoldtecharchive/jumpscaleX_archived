@@ -71,6 +71,8 @@ class IYOFactory(j.application.JSFactoryBaseClass):
         jwt = cl.jwt_get_from_iyo(scope="user:memberof:tf-production")
         print(jwt)
 
+        cl.api
+
         return
 
         # from .generated.client.PublicKey import PublicKey #WHY THIS???
