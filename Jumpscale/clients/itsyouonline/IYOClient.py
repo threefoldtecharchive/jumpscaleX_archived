@@ -46,9 +46,7 @@ class IYOClient(j.application.JSBaseConfigClass):
             self.save()
 
     def _init(self):
-        self._api = None
-        self._client = None
-        self._lastjwt = None
+        self.reset()
 
     @property
     def client(self):
@@ -156,6 +154,8 @@ class IYOClient(j.application.JSBaseConfigClass):
         self._client = None
         self._api = None
         self._oauth2_client = None
-        self.jwt_refresh()
+        self._lastjwt = None
+
+
 
 
