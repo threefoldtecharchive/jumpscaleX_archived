@@ -51,9 +51,8 @@ class SyncerFactory(j.application.JSFactoryBaseClass):
         js_shell 'j.tools.syncer.test()'
         :return:
         """
-        cl = j.clients.ssh.get(
-            name="id_passwd", sshkey_name="id_passwd", addr="172.17.0.3", port=22)
+        cl = j.clients.ssh.get(name="builder", addr="10.102.133.88", port=1053)
         r = cl.execute("ls / ")
 
-        # s = self.get(name="builder",sshclient_name= cl.name,paths=None)
-        # s.sync()
+        s = self.get(name="builder", sshclient_name=cl.name, paths=None)
+        s.sync()
