@@ -17,6 +17,8 @@ class ZeroOSFactory(j.application.JSFactoryBaseClass):
         iyo = j.clients.itsyouonline.get(name=iyo_instance)
         passwd = iyo.jwt #there should be enough protection in here to refresh
 
+        passwd = "'eyJhbGciOiJFUzM4NCIsInR5cCI6IkpXVCJ9.eyJhenAiOiJGak1ja1NpcXRKSzhYWE5BUk5lYWtUb3dmeFZwIiwiZXhwIjoxNTQ1NzQzNDE5LCJpc3MiOiJpdHN5b3VvbmxpbmUiLCJyZWZyZXNoX3Rva2VuIjoiVUJiS1F5enRkTm9wODZ4Z012aTUwNkVlQnFORyIsInNjb3BlIjpbInVzZXI6bWVtYmVyb2Y6dGYtcHJvZHVjdGlvbiJdLCJ1c2VybmFtZSI6ImRlc3BpZWdrIn0.X_sZnCEUShhENYqXKjRYJrA2H-uM_X1o3h_cq3GUlGPaySoiQopx3pA6LLrLFvHz9DunAwZKDJhNuHHLVRXAVVRqLAdhrT0qQdRrlOyi6EVo0uO7owtaDZAPcFkuUjhW'"
+
 
         cl = self.get(name=name,host=host,port=port,password=passwd,ssl=True)
         cl.ping()

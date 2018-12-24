@@ -66,14 +66,15 @@ def configure(name="default", addr="localhost",port=22,user="root",passwd=None,p
     cl = j.clients.ssh.get(name=name, addr=addr, port=port,passwd=passwd)
     s = self.get(name="jssync_%s"%name,sshclient_name= cl.name,paths=paths)
 
-
 @click.command()
-def configure():
+def list():
     """
-    reload the cache, makes sure all info is read from zos again
+    will list all ssh clients, can use for name=...
     :return:
     """
-    j.tools.zos.cache_reset()
+    j.clients.ssh.find()
+    j.shell()
+
 
 @click.command()
 def help():
@@ -82,6 +83,7 @@ def help():
 cli.add_command(sync)
 cli.add_command(configure)
 cli.add_command(help)
+cli.add_command(list)
 
 if __name__ == '__main__':
     cli()
