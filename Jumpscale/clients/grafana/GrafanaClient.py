@@ -19,13 +19,12 @@ class GrafanaClient(JSConfigClient):
     def _init(self):
         self._httpclient = None
 
-<<<<<<< HEAD
     def _data_trigger_new(self):
+        pass
 
-=======
     def _init_new(self):
         pass
->>>>>>> b482796... config fixes in client
+
 
     def ping(self):
         pass
