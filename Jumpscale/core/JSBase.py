@@ -138,7 +138,7 @@ class JSBase:
         sys.exit(1)
 
     def _test_error(self, name, error):
-        j.errorhandler.try_except_error_process(e, die=False)
+        j.errorhandler.try_except_error_process(error, die=False)
         self.__class__._test_runs_error[name] = error
 
     def _test_run(self, name="", obj_key="main", **kwargs):
