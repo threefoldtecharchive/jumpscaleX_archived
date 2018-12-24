@@ -2,22 +2,23 @@ from Jumpscale import j
 
 from .GiteaOrg import GiteaOrg
 
-from clients.gitea.client import Client
+from .client.http_client import HTTPClient
 
 
-TEMPLATE = """
-url = ""
-gitea_token_ = ""
-"""
 
-JSConfigBase = j.application.JSBaseClass
+JSConfigBase = j.application.JSBaseConfigClass
 JSBASE = j.application.JSBaseClass
 
 
 class GiteaClient(JSConfigBase):
 
-    def __init__(self, instance, data={}, parent=None,interactive=False):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE,interactive=interactive)
+    _SCHEMATEXT = """
+    @url = jumpscale.gitea.client
+    url = "" (S)
+    gitea_token_ = "" (S)
+    """
+
+    def _init_new(self):
         self._api = None
 
     def config_check(self):
@@ -25,13 +26,14 @@ class GiteaClient(JSConfigBase):
         check the configuration if not what you want the class will barf & show you where it went wrong
         """
 
-        if self.config.data["url"] == "" or self.config.data["gitea_token_"] == "":
+        if self.url == "" or self.gitea_token_ == "":
             return "url and gitea_token_ are not properly configured, cannot be empty"
 
-        base_uri = self.config.data["url"]
+        base_uri = self.url
         if "/api" not in base_uri:
-            self.config.data_set("url", "%s/api/v1" % base_uri)
-            self.config.save()
+            self.url= "%s/api/v1" %base_uri
+            self.save()
+            self.data.autosave = True
 
         # TODO:*1 need to do more checks that url is properly formated
 
@@ -42,7 +44,7 @@ class GiteaClient(JSConfigBase):
         """
 
         if not self._api:
-            self._api = Client(base_uri=self.config.data["url"])
+            self._api = HTTPClient(base_uri=self.config.data["url"])
             self._api.security_schemes.passthrough_client_token.set_authorization_header(
                 'token {}'.format(self.config.data["gitea_token_"]))
         return self._api

@@ -7,27 +7,22 @@ from Jumpscale import j
 
 from .ResourceRecord import RecordType, ResourceRecord
 
-
-JSConfigBase = j.application.JSBaseClass
-
-TEMPLATE = """
-etcd_instance = "main"
-"""
-
+JSConfigBase = j.application.JSBaseConfigClass
 
 class CoreDnsClient(JSConfigBase):
+    _SCHEMATEXT = """
+    @url = jumpscale.coredns.client
+    etcd_instance = "main" (S)
+    """
 
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
-                              template=TEMPLATE, interactive=interactive)
+    def _init_new(self):
         self._etcd_client = None
-        print("CoreDNS", instance)
         self._zones = []
 
     @property
     def etcd_client(self):
         if not self._etcd_client:
-            self._etcd_client = j.clients.etcd.get(self.config.data['etcd_instance'])
+            self._etcd_client = j.clients.etcd.get(self.etcd_instance)
         return self._etcd_client
 
     @property
