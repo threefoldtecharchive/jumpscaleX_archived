@@ -137,13 +137,20 @@ class JSBase:
         print()
         sys.exit(1)
 
-    def _done_check(self,name="",reset=False):
-        if reset:
-            self._done_reset(name=name)
-        if name!="":
-            return j.core.db.hexists("done",self._objid)
-        else:
-            return j.core.db.hexists("done","%s:%s"%(self._objid,name))
+    def _test_error(self, name, error):
+        j.errorhandler.try_except_error_process(error, die=False)
+        self.__class__._test_runs_error[name] = error
+
+    def _test_run(self, name="", obj_key="main", **kwargs):
+        """
+
+        :param name: name of file to execute can be e.g. 10_test_my.py or 10_test_my or subtests/test1.py
+                    the tests are found in subdir tests of this file
+
+                if empty then will use all files sorted in tests subdir, but will not go in subdirs
+
+        :param obj_key: is the name of the function we will look for to execute, cannot have arguments
+               to pass arguments to the example script, use the templating feature, std = main
 
     def _done_set(self,name="",value=True):
         if name!="":
