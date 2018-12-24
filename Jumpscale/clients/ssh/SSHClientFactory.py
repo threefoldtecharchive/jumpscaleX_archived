@@ -2,10 +2,12 @@
 from Jumpscale import j
 from .SSHClient import SSHClient
 from .SSHClientParamiko import SSHClientParamiko
+from .SSHClientBase import  SSHClientBase
 
 class SSHClientFactory(j.application.JSFactoryBaseClass):
 
     __jslocation__ = "j.clients.ssh"
+    _CHILDCLASS = SSHClientBase
 
     def _init(self):
         self._clients = {}

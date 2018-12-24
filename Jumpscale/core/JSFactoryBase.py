@@ -34,23 +34,24 @@ class JSFactoryBase(JSBase):
                 raise RuntimeError("__class__._CHILDCLASS should be set")
             child_class = self.__class__._CHILDCLASS
 
-        if len(kwargs) == 1:
-            kwargs["name"] = kwargs[0]  # if only one then will be the name
         m = self._get_model(child_class)
-        propnames = [i for i in kwargs.keys()]
-        propnames_keys_in_schema = [
-            item.name for item in m.schema.index_key_properties if item.name in propnames]
 
-        res = []
-        if len(propnames_keys_in_schema) > 0:
-            # we can try to find this config
-            res = m.get_from_keys(**kwargs)
+        if len(kwargs)>0:
+            propnames = [i for i in kwargs.keys()]
+            propnames_keys_in_schema = [item.name for item in m.schema.index_key_properties if item.name in propnames]
 
-        res2 = []
-        for item in res:
-            res2.append(child_class(id=item.id))
+            if len(propnames_keys_in_schema) > 0:
+                # we can try to find this config
+                res = m.get_from_keys(**kwargs)
+                res2 = []
+                for item in res:
+                    res2.append(child_class(id=item.id))
 
-        return res2
+                return res2
+            return []
+        else:
+            return m.get_all()
+
 
     def _load(self, klass):
         name = klass.__name__
