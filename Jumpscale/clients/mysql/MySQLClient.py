@@ -1,40 +1,13 @@
 from Jumpscale import j
-from .MySQLClient import MySQLClient
-import mysql.connector
 import time
 import calendar
 
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigClient = j.application.JSBaseConfigClass
 
 
-<<<<<<< HEAD
-class MySQLFactory(j.application.JSBaseClass):
-=======
-class MySQLFactory(JSConfigFactory):
->>>>>>> b482796... config fixes in client
-    """
-    """
-    __jslocation__ = "j.clients.mysql"
+class MySQLClient(JSConfigClient):
 
-    def _init(self):
-        self.clients = {}
-
-    def get(self, ipaddr, port, login, passwd, dbname):
-        return self.getClient(ipaddr, port, login, passwd, dbname)
-
-    def getClient(self, ipaddr, port, login, passwd, dbname):
-        key = "%s_%s_%s_%s_%s" % (ipaddr, port, login, passwd, dbname)
-        if key not in self.clients:
-            self.clients[key] = mysql.connector.connect(
-                ipaddr, login, passwd, dbname, port=port)
-        return MySQLClient(self.clients[key])
-<<<<<<< HEAD
-
-
-class MySQLClient(j.application.JSBaseClass):
-
-    def __init__(self, cl):
-        JSBASE.__init__(self)
+    def _init(self, cl):
         self.client = cl
 
     def _html2text(self, html):
@@ -117,5 +90,3 @@ class MySQLClient(j.application.JSBaseClass):
             resultout.append(rowdict)
 
         return resultout
-=======
->>>>>>> b482796... config fixes in client

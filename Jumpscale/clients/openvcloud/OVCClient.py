@@ -20,35 +20,36 @@ account = ""
 space = ""
 """
 
-# appkey_ = ""
+JSConfigBase = j.application.JSBaseConfigClass
 
-
-JSConfigBase = j.application.JSBaseClass
 
 class OVCClient(JSConfigBase):
+    _SCHEMATEXT = """
+    address = "" (S)
+    port = 443 (ipport)
+    jwt_ = "" (S)
+    location = "" (S)
+    account = "" (S)
+    space = "" (S)
+    """
 
-    def __init__(self, instance, data=None, parent=None, interactive=False):
-        if not data:
-            data = {}
-
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
-                              template=TEMPLATE, interactive=interactive)
+    def _init(self):
         self._api = None
         self._config_check()
 
-        if not self.config.data.get("location"):
+        if not self.location:
             if len(self.locations) == 1:
-                self.config.data_set("location", self.locations[0]["locationCode"])
-                self.config.save()
-
+                self.location = self.locations[0]["locationCode"]
+                self.save()
 
     @property
     def jwt(self):
-        if self.config.data.get('jwt_', None):
-            jwt =  self.config.data["jwt_"].strip()
+        if self.jwt_:
+            jwt = self.jwt_.strip()
             jwt = j.clients.itsyouonline.refresh_jwt_token(jwt, validity=3600)
             expires = j.clients.itsyouonline.jwt_expire_timestamp(jwt)
-            if 'refresh_token' not in jose.jwt.get_unverified_claims(jwt) and j.clients.itsyouonline.jwt_is_expired(expires):
+            if 'refresh_token' not in jose.jwt.get_unverified_claims(jwt) and j.clients.itsyouonline.jwt_is_expired(
+                    expires):
                 raise RuntimeError("JWT expired and can't be refreshed, please choose another token.")
         else:
             if j.tools.configmanager.sandbox_check():
@@ -61,8 +62,8 @@ class OVCClient(JSConfigBase):
     def api(self):
         if self._api is None:
 
-            self._api = j.clients.portal.get(data={'ip': self.config.data.get("address"),
-                                                   'port': self.config.data.get("port")}, interactive=False)
+            self._api = j.clients.portal.get(data={'ip': self.address,
+                                                   'port': self.port})
             # patch handle the case where the connection dies because of inactivity
             self.__patch_portal_client(self._api)
             self.__login()
@@ -84,13 +85,13 @@ class OVCClient(JSConfigBase):
             self._logger.info("Get OpenvCloud client on URL: %s" % url)
             return url
 
-        self.config.data_set("address", urlClean(self.config.data["address"]))
+        self.address = urlClean(self.address)
 
-        if self.config.data["address"].strip() == "":
+        if self.address.strip() == "":
             raise RuntimeError(
                 "please specify address to OpenvCloud server (address) e.g. se-gen-1.demo.greenitglobe.com")
 
-        if not self.config.data["jwt_"].strip() and j.tools.configmanager.sandbox_check():
+        if not self.jwt_.strip() and j.tools.configmanager.sandbox_check():
             raise RuntimeError(
                 "When in a sandbox, jwt is required")
 
@@ -167,7 +168,7 @@ class OVCClient(JSConfigBase):
         """
 
         if name == "":
-            name = self.config.data["account"]
+            name = self.account
         if not name:
             raise RuntimeError("name needs to be specified in account in config or on method.")
         for account in self.accounts:
@@ -233,10 +234,10 @@ class OVCClient(JSConfigBase):
         """
 
         if location == "":
-            location = self.config.data["location"]
+            location = self.location
 
         if spaceName == "":
-            spaceName = self.config.data["space"]
+            spaceName = self.space
 
         if not spaceName:
             raise RuntimeError("name needs to be specified in account in config or on method.")

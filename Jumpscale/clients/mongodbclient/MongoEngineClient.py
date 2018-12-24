@@ -1,34 +1,27 @@
 from Jumpscale import j
+from mongoengine import connect
+JSConfigClient = j.application.JSBaseConfigClass
 
-JSConfigFactory = j.application.JSFactoryBaseClass
-JSConfigClient = j.application.JSBaseClass
-TEMPLATE = """
-host = "localhost"
-port = 27017
-username = ""
-password_ = ""
-alias = ""
-db = ""
-authentication_source = ""
-authentication_mechanism = ""
-ssl = false # Boolean
-replicaset = ""
-"""
 
 class MongoEngineClient(JSConfigClient):
+    _SCHEMATEXT = """
+        @url = jumpscale.MongoEngine.client
+        host = "localhost" (S)
+        port = 27017 (ipport)
+        username = "" (S)
+        password_ = "" (S)
+        alias = "" (S)
+        db = "" (S)
+        authentication_source = "" (S)
+        authentication_mechanism = "" (S)
+        ssl = False (B)
+        replicaset = "" (S)
+        """
 
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        from mongoengine import connect
-        super().__init__(instance=instance, data=data, parent=parent, template=TEMPLATE, interactive=interactive)
+    def _init(self):
         kwargs = {}
-        for key, value in self.config.data.items():
+        data = self.data
+        for key, value in data._ddict.items():
             if value != "":
                 kwargs[key.rstrip('_')] = value
         connect(**kwargs)
-
-
-class MongoClientFactory(JSConfigFactory):
-    def __init__(self):
-        self.__jslocation__ = "j.clients.mongoengine"
-        self.__imports__ = "mongoengine"
-        super().__init__(MongoEngineClient)
