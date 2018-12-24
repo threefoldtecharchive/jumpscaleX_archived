@@ -1,6 +1,6 @@
 import re
 import collections
-
+import subprocess
 
 from Jumpscale import j
 
@@ -162,7 +162,6 @@ class UFWManager(j.builder._BaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.ufw"
-        self._local = j.tools.executorLocal
         self._rules = None
         self._enabled = None
         self._transactions = []
@@ -172,7 +171,7 @@ class UFWManager(j.builder._BaseClass):
         return status == 'active'
 
     def _load(self):
-        rc, status, _ = self._local.execute('ufw status numbered')
+        status = subprocess.run(['ufw', 'status', 'numbered'], stdout=subprocess.PIPE).stdout.decode()
         self._rules = []
         for line in status.splitlines():
             line = line.strip()
@@ -294,7 +293,9 @@ class UFWManager(j.builder._BaseClass):
         try:
             while self._transactions:
                 op = self._transactions.pop(0)
-                self._local.execute('ufw %s' % op.cmd())
+                args = ['ufw']
+                args.extend(op.cmd().split(' '))
+                subprocess.run(args)
         except Exception as e:
             raise UFWError(e)
 

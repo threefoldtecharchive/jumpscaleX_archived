@@ -1,4 +1,11 @@
-[![Build Status](https://travis-ci.org/threefoldtech/jumpscaleX.svg?branch=development)](https://travis-ci.org/threefoldtech/jumpscaleX)
+**master:**   
+[![Build Status](https://travis-ci.com/threefoldtech/jumpscaleX.svg?branch=master)](https://travis-ci.com/threefoldtech/jumpscaleX)
+[![codecov](https://codecov.io/gh/threefoldtech/jumpscaleX/branch/master/graph/badge.svg)](https://codecov.io/gh/threefoldtech/jumpscaleX)  
+**development:**  
+[![Build Status](https://travis-ci.com/threefoldtech/jumpscaleX.svg?branch=development)](https://travis-ci.com/threefoldtech/jumpscaleX)
+[![codecov](https://codecov.io/gh/threefoldtech/jumpscaleX/branch/development/graph/badge.svg)](https://codecov.io/gh/threefoldtech/jumpscaleX)
+
+
 
 # Jumpscale
 
@@ -33,7 +40,7 @@ some tools
 
 ## Installing Jumpscale Core (NEW, need to test!!!)
 
-[see documentation](docs/Installation/install.md)
+[see documentation](install/install.md)
 
 
 ## Usage
@@ -52,3 +59,7 @@ some tools
 ## Tutorials
 
 [Check Documentation](docs/howto/)
+
+
+## Collaboration Conventions
+[check conventions](docs/conventions.md)
