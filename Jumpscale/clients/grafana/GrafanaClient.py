@@ -2,10 +2,13 @@ from Jumpscale import j
 import requests
 from requests.auth import HTTPBasicAuth
 
-class GrafanaClient(j.application.JSBaseClass):
+JSConfigClient = j.application.JSBaseConfigClass
+
+
+class GrafanaClient(JSConfigClient):
 
     _SCHEMATEXT = """
-        @url = jumpscale.clients.grafana.1
+        @url = jumpscale.clients.grafana.client
         name* = "" (S)
         url = "" (S)
         username = "" (S)
@@ -17,7 +20,7 @@ class GrafanaClient(j.application.JSBaseClass):
         self._httpclient = None
 
     def _init_new(self):
-
+        pass
 
     def ping(self):
         pass
@@ -25,7 +28,7 @@ class GrafanaClient(j.application.JSBaseClass):
     def test(self):
         pass
 
-        #IMPLEMENT some basic test using the client
+        # IMPLEMENT some basic test using the client
 
 
-#remark: can use the self.caching framework where relevant, this to speed up remote operations
+# remark: can use the self.caching framework where relevant, this to speed up remote operations

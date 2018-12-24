@@ -5,45 +5,36 @@ import string
 import requests
 import time
 import random
-
-
 from Jumpscale import j
-
-JSConfigClient = j.application.JSBaseClass
-JSBASE = j.application.JSBaseClass
-TEMPLATE = """
-addr = ""
-accesstokenaddr = ""
-client_id = ""
-secret_ = ""
-scope = ""
-redirect_url = ""
-user_info_url = ""
-logout_url = ""
-client_instance = "github"
-"""
+JSConfigClient = j.application.JSBaseConfigClass
 
 
 class OauthClient(JSConfigClient):
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigClient.__init__(
-            self,
-            instance=instance,
-            data=data,
-            parent=parent,
-            template=TEMPLATE,
-            interactive=interactive)
-        c = self.config.data
-        self.addr = c['addr']
-        self.accesstokenaddr = c['accesstokenaddr']
-        self.client_id = c['client_id']
-        self.secret = c['secret_']
-        self.scope = c['scope']
-        self.redirect_url = c['redirect_url']
-        self.user_info_url = c['user_info_url']
-        self.logout_url = c['logout_url']
-        self.client_instance = c['client_instance']
+    _SCHEMATEXT = """
+        @url = jumpscale.oauth.client
+        addr = "" (S)
+        accesstokenaddr = "" (S)
+        client_id = "" (S)
+        secret_ = "" (S)
+        scope = "" (S)
+        redirect_url = "" (S)
+        user_info_url = "" (S)
+        logout_url = "" (S)
+        client_instance = "github" (S)
+        """
+
+    def _init(self):
+        self.addr = self.addr
+        self.accesstokenaddr = self.accesstokenaddr
+        self.client_id = self.client_id
+        self.secret = self.secret_
+        self.scope = self.scope
+        self.redirect_url = self.redirect_url
+        self.user_info_url = self.user_info_url
+        self.logout_url = self.logout_url
+        self.client_instance = self.client_instance
         self._client = None
+        self.instance = "main"
 
     @property
     def client(self):
@@ -76,21 +67,20 @@ class OauthClient(JSConfigClient):
         return self._client
 
 
-class AuthError(Exception, JSBASE):
-    def __init__(self):
-        JSBASE.__init__(self)
+class AuthError(Exception):
+    def _init(self):
+        pass
 
 
-class UserInfo(object, JSBASE):
+class UserInfo(object):
 
-    def __init__(self, username, emailaddress, groups):
-        JSBASE.__init__(self)
+    def _init(self, username, emailaddress, groups):
         self.username = username
         self.emailaddress = emailaddress
         self.groups = groups
 
 
-class OauthInstance(JSBASE):
+class OauthInstance():
 
     def __init__(
             self,
@@ -103,7 +93,6 @@ class OauthInstance(JSBASE):
             user_info_url,
             logout_url,
             instance):
-        JSBASE.__init__(self)
         if not addr:
             raise RuntimeError(
                 "Failed to get oauth instance, no address provided")
