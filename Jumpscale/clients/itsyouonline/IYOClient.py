@@ -1,38 +1,58 @@
 import urllib
 import requests
 
+try:
+    import jose.jwt
+except ImportError:
+    raise RuntimeError('jose not installed ')
+
+from jose import jwt
+
 from Jumpscale import j
 from clients.itsyouonline.generated.client import Client
 
-TEMPLATE = """
-baseurl = "https://itsyou.online/api"
-application_id_ = ""
-secret_ = ""
-"""
-
-
-# TODO:*1 FROM CLIENT import .... and put in client property
 # TODO:*1 regenerate using proper goraml new file & newest generation tools ! (had to fix manually quite some issues?)
 
-JSConfigBase = j.application.JSBaseClass
 
 
-class IYOClient(JSConfigBase):
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigBase.__init__(self,
-                              instance=instance,
-                              data=data,
-                              parent=parent,
-                              template=TEMPLATE,
-                              interactive=interactive)
+class IYOClient(j.application.JSBaseConfigClass):
 
+    _SCHEMATEXT = """
+        @url = jumpscale.itsyouonline.1
+        name* = "" (S)
+        baseurl = "https://itsyou.online/api" (S)
+        application_id = "" (S)
+        secret = "" (S)
+        jwt_list =  (LO) !jumpscale.itsyouonline.jwt.1 
+        
+        @url = jumpscale.itsyouonline.jwt.1    
+        name = "" (S)    
+        jwt = "" (S)
+        scope = "" (S)
+        validity = 2592000 (I)  #the time in sec when to expire after last refresh, std 1 month
+        expires =  (D)
+        last_refresh = (D)
+        refreshable = true (B)
+        refresh_token = "" (S)
+        
+        
+        """
+
+    def _data_trigger_new(self):
+        self.delete()
+        if self.application_id is "" or self.secret is "":
+            self.application_id  = j.tools.console.askString("Please provide itsyouonline application id:\ncan find on https://itsyou.online/#/settings\n")
+            self.secret = j.tools.console.askString("Please provide itsyouonline secret:\ncan find on https://itsyou.online/#/settings\n")
+            self.save()
+
+    def _init(self):
         self.reset()
 
     @property
     def client(self):
         """Generated itsyou.onine client"""
         if self._client is None:
-            self._client = Client( base_uri=self.config.data['baseurl'])
+            self._client = Client( base_uri=self.baseurl)
         return self._client
 
     @property
@@ -40,6 +60,10 @@ class IYOClient(JSConfigBase):
         """Generated itsyou.onine client api"""
         if self._api is None:
             self._api = self.client.api
+            if self._lastjwt is None:
+                self.jwt_get()
+            self._api.session.headers.update({"Authorization": 'bearer {}'.format(self._lastjwt)})
+
         return self._api
 
     @property
@@ -49,93 +73,89 @@ class IYOClient(JSConfigBase):
             self._oauth2_client = self.client.Oauth2ClientOauth_2_0  #WEIRD NAME???
         return self._oauth2_client
 
-    @property
-    def jwt(self):
+
+    def jwt_get(self,name="default",die=True):
+
+        for item in self.data.jwt_list:
+            if item.name == name:
+                #TODO: need to check if we need to refresh
+                # if self.jwt == "" or self.jwt_expires<j.data.time.epoch:
+                #     self.jwt_refresh()
+                self._lastjwt = item.jwt
+                return item
+        if die:
+            raise RuntimeError("could not find jwt with name:%s"%name)
+
+
+    def jwt_get_from_iyo(self,name="default",refreshable=True,validity=2592000,scope=None):
         """returns a jwt if not set and update authorization header with that jwt"""
-        if self.config.data["application_id_"] == "" or self.config.data["secret_"] == "":
+
+        if self.application_id == "" or self.secret == "":
             raise RuntimeError("Please configure your itsyou.online, do this by calling js_shell "
                                "'j.tools.configmanager.configure(j.clients.itsyouonline,...)'")
-        if not self._jwt:
-            self._jwt = self.jwt_get()
-            self.api.session.headers.update({"Authorization": 'bearer {}'.format(self.jwt)})
-        return self._jwt
 
-    def reset(self):
-        self._jwt = None
-        self._client = None
-        self._api = None
-        self._oauth2_client = None
-
-    def _add_jwt_to_cache(self, key, jwt):
-        """
-        Add a new jwt to the client cache
-        Args:
-            key: key string
-            jwt: jwt string
-        """
-        expires = j.clients.itsyouonline.jwt_expire_timestamp(jwt)
-        self._cache.set(key, [jwt, expires])
-
-    def jwt_get(self, validity=None, refreshable=True, scope=None, use_cache=False):
-        """Get a a JSON Web token for an ItsYou.online organization or user.
-
-        :param validity: time in seconds after which the JWT will become invalid, defaults to 3600
-        :param validity: int, optional
-        :param refreshable: If true the JWT can be refreshed, defaults to False
-        :param refreshable: bool, optional
-        :param scope: define scope of the jwt, defaults to None
-        :param scope: str, optional
-        :param use_cache: if true will add the jwt to cache and retrieve required jwt if it exists
-                    if refreshable is true will refresh the cached jwt, defaults to False
-        :param use_cache: bool, optional
-        :return: jwt token
-        :rtype: str
-        """
+        # if j.clients.itsyouonline.jwt_is_expired(expires):
+        #     if refreshable:
+        #         jwt = j.clients.itsyouonline.refresh_jwt_token(jwt, validity)
+        #         self._add_jwt_to_cache(key, jwt)
+        #         return jwt
+        # else:
+        #     return jwt
 
 
-        if use_cache:
-            key = 'jwt_' + str(refreshable)
-            if scope:
-                key +=  '_' + scope
-            if self._cache.exists(key):
-                jwt = self._cache.get(key)
-                jwt, expires = jwt
-                if j.clients.itsyouonline.jwt_is_expired(expires):
-                    if refreshable:
-                        jwt = j.clients.itsyouonline.refresh_jwt_token(jwt, validity)
-                        self._add_jwt_to_cache(key, jwt)
-                        return jwt
-                else:
-                    return jwt
+        base_url = self.baseurl
 
+        if refreshable:
+            if scope.find("offline_access") == -1:
+                scope += ',offline_access'
 
-        base_url = self.config.data["baseurl"]
+        jwt_obj = self.jwt_get(name=name, die=False)
+        if jwt_obj is None:
+            jwt_obj = self.data.jwt_list.new()
+        jwt_obj.name=name
+        jwt_obj.refreshable = refreshable
+        jwt_obj.scope = scope
+        jwt_obj.validity = validity
+
 
         params = {
             'grant_type': 'client_credentials',
-            'client_id': self.config.data["application_id_"],
-            'client_secret': self.config.data["secret_"],
-            'response_type': 'id_token'
+            'client_id': self.application_id,
+            'client_secret': self.secret,
+            'response_type': 'id_token',
+            'scope': scope,
         }
 
-        if validity:
+        if jwt_obj.validity>0:
             params["validity"] = validity
 
-        if refreshable:
-            params["scope"] = 'offline_access'
-
-        if scope:
-            if refreshable:
-                params["scope"] = params["scope"] + "," + scope
-            else:
-                params["scope"] = scope
 
         url = urllib.parse.urljoin(base_url, '/v1/oauth/access_token')
         resp = requests.post(url, params=params)
         resp.raise_for_status()
-        jwt = resp.content.decode('utf8')
+        jwt_text = resp.content.decode('utf8')
+        jwt_data = jwt.get_unverified_claims(jwt_text)
 
-        if use_cache:
-            self._add_jwt_to_cache(key, jwt)
+        jwt_obj.scope = ",".join(jwt_data["scope"])
+        jwt_obj.username = jwt_data["username"]
+        jwt_obj.refresh_token = jwt_data["refresh_token"]
+        jwt_obj.expires = jwt_data["exp"]
+        jwt_obj.jwt = jwt_text
+        jwt_obj.last_refresh = j.data.time.epoch
 
-        return jwt
+        self._lastjwt = jwt_obj.jwt
+
+        self.save()
+
+        return jwt_obj
+
+
+    def reset(self):
+        self._client = None
+        self._api = None
+        self._oauth2_client = None
+        self._lastjwt = None
+
+
+
+

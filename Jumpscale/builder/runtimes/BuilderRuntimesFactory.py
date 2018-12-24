@@ -14,7 +14,7 @@ class BuilderRuntimesFactory(j.builder.system._BaseFactoryClass):
         from .BuilderPython import BuilderPython
         self.python = BuilderPython()
         from .BuilderPHP import BuilderPHP
-        self.php = BuilderPHP
+        self.php = BuilderPHP()
 
 
 

@@ -8,7 +8,7 @@ from Jumpscale import j
 
 from . import typchk
 from .AggregatorManager import AggregatorManager
-from .BaseClient import BaseClient, DefaultTimeout
+from .BaseClient import BaseClient
 from .BridgeManager import BridgeManager
 from .BtrfsManager import BtrfsManager
 from .CGroupManager import CGroupManager
@@ -69,22 +69,25 @@ class Client(BaseClient):
 
     @property
     def _redis(self):
-        password = self.config.data['password_']
-        if password and not self._jwt_expire_timestamp:
-            self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
-        if self._jwt_expire_timestamp and self._jwt_expire_timestamp - 300 < time.time():
-            password = j.clients.itsyouonline.refresh_jwt_token(password, validity=3600)
-            self.config.data_set('password_', password)
-            self.config.save()
-            if self.__redis:
-                self.__redis = None
-            self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
+        password = self.password
+
+        #NOW DONE AS PART OF THE CLIENT FOR ITSYOUONLINE, SHOULD NOT BE DONE AT THIS LEVEL
+
+        # if password:
+        #     self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
+        # if self._jwt_expire_timestamp and self._jwt_expire_timestamp - 300 < time.time():
+        #     password = j.clients.itsyouonline.refresh_jwt_token(password, validity=3600)
+        #     self.config.data_set('password_', password)
+        #     self.config.save()
+        #     if self.__redis:
+        #         self.__redis = None
+        #     self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
 
         if self.__redis is None:
-            if self.config.data['unixsocket']:
-                self.__redis = redis.Redis(unix_socket_path=self.config.data['unixsocket'], db=self.config.data['db'])
+            if self.unixsocket:
+                self.__redis = redis.Redis(unix_socket_path=self.unixsocket, db=self.db)
             else:
-                timeout = self.config.data['timeout']
+                timeout = self.timeout
                 socket_timeout = (timeout + 5) if timeout else 15
                 socket_keepalive_options = dict()
                 if hasattr(socket, 'TCP_KEEPIDLE'):
@@ -94,10 +97,10 @@ class Client(BaseClient):
                 if hasattr(socket, 'TCP_KEEPIDLE'):
                     socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
 
-                self.__redis = redis.Redis(host=self.config.data['host'],
-                                           port=self.config.data['port'],
-                                           password=self.config.data['password_'],
-                                           db=self.config.data['db'], ssl=self.config.data['ssl'],
+                self.__redis = redis.Redis(host=self.host,
+                                           port=self.port,
+                                           password=self.password,
+                                           db=self.db, ssl=self.ssl,
                                            socket_timeout=socket_timeout,
                                            socket_keepalive=True, socket_keepalive_options=socket_keepalive_options)
 

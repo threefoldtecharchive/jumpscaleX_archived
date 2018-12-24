@@ -6,13 +6,13 @@ from .SSHKey import SSHKey
 class SSHKeys(j.application.JSFactoryBaseClass):
 
     __jslocation__ = "j.clients.sshkey"
+    _CHILDCLASS = SSHKey
 
     def _init(self):
         # self._sshagent = None
-        self.SSHKey = SSHKey  #is the child class, can have more than 1
+        self.SSHKey = SSHKey  # is the child class, can have more than 1
 
-
-    def get(self,name=None,**kwargs):
+    def get(self, name=None, **kwargs):
         """
 
         :param name: name of the connection and the ssh key as loaded in sshagent
@@ -38,7 +38,6 @@ class SSHKeys(j.application.JSFactoryBaseClass):
                 out += "%s\n" % line
             j.sal.fs.writeFile(path, out)
 
-
     def test(self):
         """
         js_shell 'j.clients.sshkey.test()'
@@ -46,4 +45,4 @@ class SSHKeys(j.application.JSFactoryBaseClass):
 
         self._logger_enable()
         j.shell()
-        #TODO:
+        # TODO:
