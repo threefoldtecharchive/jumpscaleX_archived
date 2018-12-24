@@ -159,7 +159,11 @@ class ExecutorSSH(ExecutorBase):
             def do():
                 #means we did not check it
                 C="""
-                echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted > /etc/apt/sources.list
+                if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+                    echo >> /etc/apt/sources.list
+                    echo "# Jumpscale Setup" >> /etc/apt/sources.list
+                    echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+                fi
                 apt update
                 apt install rsync curl wget -y
                 apt install git -y
