@@ -2827,15 +2827,15 @@ class group_sal():
     @property
     def hostsfile(self):
         if self._hostsfile is None:
-            # print("LOAD:HostFileFactory")
+            # print("LOAD:HostFile")
             try:
-                from Jumpscale.sal.hostfile.HostFile import HostFileFactory
+                from Jumpscale.sal.hostfile.HostFile import HostFile
             except Exception as e:
                 msg = j.core.application.error_init("import", "Jumpscale.sal.hostfile.HostFile", e)
                 raise e
-            # print("RUN:HostFileFactory")
+            # print("RUN:HostFile")
             try:
-                self._hostsfile =  HostFileFactory()
+                self._hostsfile =  HostFile()
             except Exception as e:
                 msg = j.core.application.error_init("execute","Jumpscale.sal.hostfile.HostFile",e)
                 return None
