@@ -64,6 +64,15 @@ class {{BASENAME}}:
             self._set_key("{{property_name}}",val,obj.id)
         {%- endfor %}
 
+    def index_keys_delete(self,obj):
+        {%- for property_name in index.fields_key %}
+        val = obj.{{property_name}}
+        if val not in ["",None]:
+            val=str(val)
+            self._logger.debug("delete key:{{property_name}}:%s:%s"%(val,obj.id))
+            self._delete_key("{{property_name}}",val,obj.id)
+        {%- endfor %}
+
 
     {%- for property_name in index.fields_key %}
     def get_by_{{property_name}}(self,{{property_name}}):
