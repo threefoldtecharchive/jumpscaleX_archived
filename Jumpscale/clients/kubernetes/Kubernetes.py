@@ -443,11 +443,7 @@ class KubernetesMaster(JSConfigBase):
 #     DEPLOYMENT     #
 ######################
 
-<<<<<<< HEAD
-class Deployment(j.application.JSBaseClass):
-=======
 class Deployment(JSConfigBase):
->>>>>>> b482796... config fixes in client
     """
     Kubernetes cluster wrapper layer.
     """

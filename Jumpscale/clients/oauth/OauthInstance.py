@@ -80,11 +80,7 @@ class UserInfo(object):
         self.groups = groups
 
 
-<<<<<<< HEAD
-class OauthInstance(j.application.JSBaseClass):
-=======
 class OauthInstance():
->>>>>>> b482796... config fixes in client
 
     def __init__(
             self,
