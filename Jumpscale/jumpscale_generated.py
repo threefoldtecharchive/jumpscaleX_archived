@@ -2630,6 +2630,7 @@ class group_sal():
         self._docker = None
         self._qemu_img = None
         self._btrfs = None
+        self._nettools = None
         self._ssl = None
         self._disklayout = None
         self._nic = None
@@ -2721,6 +2722,23 @@ class group_sal():
                 return None
             # print("OK")
         return self._btrfs
+    @property
+    def nettools(self):
+        if self._nettools is None:
+            # print("LOAD:NetTools")
+            try:
+                from Jumpscale.sal.nettools.NetTools import NetTools
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.nettools.NetTools", e)
+                raise e
+            # print("RUN:NetTools")
+            try:
+                self._nettools =  NetTools()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.nettools.NetTools",e)
+                return None
+            # print("OK")
+        return self._nettools
     @property
     def ssl(self):
         if self._ssl is None:

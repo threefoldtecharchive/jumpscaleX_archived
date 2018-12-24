@@ -44,6 +44,8 @@ class Schema(j.application.JSBaseClass):
     def properties_list(self):
         if self._properties_list == []:
             self._properties_list = [item.name for item in self.properties]
+            for item in self.lists:
+                self._properties_list.append(item.alias)
         return self._properties_list
 
 

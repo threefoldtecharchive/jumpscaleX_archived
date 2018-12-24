@@ -37,17 +37,21 @@ class JSBaseConfig(JSBase):
                     else:
                         res=None
 
-
+        if data is None:
+            data={}
+        if kwargs is not None:
+            data.update(kwargs)
         if res is None:
             self._logger.debug("new obj")
-            data.update(kwargs)
-            self.data = m.new(data=data)
+            self.data = m.new()
+            self.data_update(**data)
             #does not exist yet
-            self._init_new()
+            self._data_trigger_new()
             self.save()
         else:
             self._isnew = False
             self.data = res
+            self.data_update(**data)
 
         self._init()
 
@@ -69,7 +73,8 @@ class JSBaseConfig(JSBase):
         self.data.load_from_data(data=kwargs,reset=False)
         self.data.save()
 
-    def _init_new(self):
+
+    def _data_trigger_new(self):
         self._isnew=True
         pass
 
