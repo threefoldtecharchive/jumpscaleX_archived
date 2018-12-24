@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaIssueComment(j.builder._BaseClass):
+class GiteaIssueComment(j.application.JSBaseClass):
     def __init__(
             self,
             client,

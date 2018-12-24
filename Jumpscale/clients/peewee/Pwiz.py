@@ -36,7 +36,7 @@ DATABASE_MAP = dict((value, key)
 JSBASE = j.application.JSBaseClass
 
 
-class Pwiz(j.builder._BaseClass):
+class Pwiz(j.application.JSBaseClass):
 
     def __init__(
             self,

@@ -7,7 +7,7 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
-class Sender(j.builder._BaseClass):
+class Sender(j.application.JSBaseClass):
 
     def __init__(self, username, password, host, port):
         JSBASE.__init__(self)

@@ -5,7 +5,7 @@ from jinja2 import Template
 
 JSBASE = j.application.JSBaseClass
 
-class Jinja2(j.builder._BaseClass):
+class Jinja2(j.application.JSBaseClass):
     """
     """
 

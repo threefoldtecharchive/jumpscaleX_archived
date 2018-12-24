@@ -5,7 +5,7 @@ from .GiteaLabel import GiteaLabel
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaLabels(j.builder._BaseClass):
+class GiteaLabels(j.application.JSBaseClass):
     def __init__(self, client, repo, user, issue=None):
         JSBASE.__init__(self)
         self.client = client

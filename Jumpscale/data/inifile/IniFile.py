@@ -12,7 +12,7 @@ except BaseException:
 JSBASE = j.application.JSBaseClass
 
 
-class InifileTool(j.builder._BaseClass):
+class InifileTool(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.data.inifile"
@@ -54,7 +54,7 @@ class InifileTool(j.builder._BaseClass):
         return IniFile(filename, create=True)
 
 
-class IniFile(j.builder._BaseClass):
+class IniFile(j.application.JSBaseClass):
     """
     Use with care:
     - addParam and setParam are 'auto-write'

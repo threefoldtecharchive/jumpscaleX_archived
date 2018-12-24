@@ -13,7 +13,7 @@ import os
 
 JSBASE = j.application.JSBaseClass
 
-class JSWebServer(j.builder._BaseClass):
+class JSWebServer(j.application.JSBaseClass):
     def __init__(self, port=8888):
         if not data:
             data = {}

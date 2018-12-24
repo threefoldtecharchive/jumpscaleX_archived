@@ -49,7 +49,7 @@ class HTTPError(Exception, JSBASE):
         return "%s:\n %s" % (self.status_code, self.msg)
 
 
-class Connection(j.builder._BaseClass):
+class Connection(j.application.JSBaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)
@@ -238,7 +238,7 @@ class Connection(j.builder._BaseClass):
         return resp
 
 
-class HttpClient(j.builder._BaseClass):
+class HttpClient(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.http"

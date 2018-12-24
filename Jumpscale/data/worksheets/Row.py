@@ -3,7 +3,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class Row(j.builder._BaseClass):
+class Row(j.application.JSBaseClass):
 
     def __init__(self, name="", ttype="float", nrcols=72, aggregate="T", description="", groupname="", groupdescr="",
                  format="", defval="default", nrfloat=None):

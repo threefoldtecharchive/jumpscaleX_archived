@@ -5,7 +5,7 @@ from .GiteaTeam import GiteaTeam
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaTeams(j.builder._BaseClass):
+class GiteaTeams(j.application.JSBaseClass):
     def __init__(self, client, organization):
         JSBASE.__init__(self)
         self.client = client

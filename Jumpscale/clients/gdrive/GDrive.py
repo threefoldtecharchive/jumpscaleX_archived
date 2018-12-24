@@ -27,7 +27,7 @@ APPLICATION_NAME = 'Google Drive Exporter'
 JSBASE = j.application.JSBaseClass
 
 
-class GDriveFactory(j.builder._BaseClass):
+class GDriveFactory(j.application.JSBaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)

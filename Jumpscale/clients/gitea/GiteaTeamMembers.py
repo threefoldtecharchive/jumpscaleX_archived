@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteTeamMembers(j.builder._BaseClass):
+class GiteTeamMembers(j.application.JSBaseClass):
     def __init__(self, client, team):
         JSBASE.__init__(self)
         self.client = client

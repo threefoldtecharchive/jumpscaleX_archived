@@ -10,7 +10,7 @@ from DigitalMe.servers.gedis.protocol import RedisResponseWriter, RedisCommandPa
 JSBASE = j.application.JSBaseClass
 
 
-class RedisServer(j.builder._BaseClass):
+class RedisServer(j.application.JSBaseClass):
     def __init__(self,bcdb, addr="localhost",port=6380,secret="123456"):
         JSBASE.__init__(self)
         self.bcdb = bcdb

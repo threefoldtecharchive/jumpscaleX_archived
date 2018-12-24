@@ -12,7 +12,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class Arg(j.builder._BaseClass):
+class Arg(j.application.JSBaseClass):
     """
         Wrapper for argument
     """
@@ -41,7 +41,7 @@ def attrib(name, type, doc=None, objectpath=None, filepath=None, extra=None):
     return (name, type, doc, objectpath, filepath, extra)
 
 
-class MethodDoc(j.builder._BaseClass):
+class MethodDoc(j.application.JSBaseClass):
     """
     Method documentation
     """
@@ -107,7 +107,7 @@ class MethodDoc(j.builder._BaseClass):
         return self.__str__()
 
 
-class ClassDoc(j.builder._BaseClass):
+class ClassDoc(j.application.JSBaseClass):
 
     def __init__(self, classobj, location):
         JSBASE.__init__(self)
@@ -189,7 +189,7 @@ class ClassDoc(j.builder._BaseClass):
         return self.__str__()
 
 
-class ObjectInspector(j.builder._BaseClass):
+class ObjectInspector(j.application.JSBaseClass):
 
     """
     functionality to inspect object structure and generate apifile

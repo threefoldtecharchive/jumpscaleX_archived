@@ -2,7 +2,7 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
-class DNSMasq(j.builder._BaseClass):
+class DNSMasq(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.dnsmasq"

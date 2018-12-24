@@ -2,7 +2,7 @@ from Jumpscale import j
 import time
 JSBASE = j.application.JSBaseClass
 
-class TutorialCacheClass(j.builder._BaseClass):
+class TutorialCacheClass(j.application.JSBaseClass):
     """
     """
 

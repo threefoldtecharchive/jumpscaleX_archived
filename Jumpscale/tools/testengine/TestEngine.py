@@ -9,7 +9,7 @@ from io import BytesIO
 JSBASE = j.application.JSBaseClass
 
 
-class Tee(j.builder._BaseClass):
+class Tee(j.application.JSBaseClass):
 
     def __init__(self, *fobjs):
         self.fileobjs = fobjs
@@ -96,7 +96,7 @@ class TestResult(unittest.result.TestResult, JSBASE):
         sys.stdout = self._original_stdout
 
 
-class Test(j.builder._BaseClass):
+class Test(j.application.JSBaseClass):
 
     def __init__(self, db, testmodule):
         self.db = db
@@ -159,7 +159,7 @@ class Test(j.builder._BaseClass):
     __repr__ = __str__
 
 
-class FakeTestObj(j.builder._BaseClass):
+class FakeTestObj(j.application.JSBaseClass):
 
     def __init__(self):
         self.source = dict()
@@ -169,7 +169,7 @@ class FakeTestObj(j.builder._BaseClass):
         JSBASE.__init__(self)
 
 
-class TestEngine(j.builder._BaseClass):
+class TestEngine(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.testengine"

@@ -7,7 +7,7 @@ JSBASE = j.application.JSBaseClass
 import copy
 import os
 
-class Schema(j.builder._BaseClass):
+class Schema(j.application.JSBaseClass):
     def __init__(self, text):
         JSBASE.__init__(self)
         self.properties = []

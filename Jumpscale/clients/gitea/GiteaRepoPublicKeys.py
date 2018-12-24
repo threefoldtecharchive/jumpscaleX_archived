@@ -6,7 +6,7 @@ from .GiteaRepoPublicKey import GiteaRepoPublicKey
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaRepoPublicKeys(j.builder._BaseClass):
+class GiteaRepoPublicKeys(j.application.JSBaseClass):
 
     def __init__(self, user, repo):
         JSBASE.__init__(self)

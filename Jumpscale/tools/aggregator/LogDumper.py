@@ -6,7 +6,7 @@ import time
 JSBASE = j.application.JSBaseClass
 
 
-class LogDumper(j.builder._BaseClass):
+class LogDumper(j.application.JSBaseClass):
     """
     dump the info to log files,
     for log's the log files are human readable

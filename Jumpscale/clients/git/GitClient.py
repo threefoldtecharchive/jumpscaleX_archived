@@ -5,7 +5,7 @@ import copy
 JSBASE = j.application.JSBaseClass
 
 
-class GitClient(j.builder._BaseClass):
+class GitClient(j.application.JSBaseClass):
     """
     Client of git services, has all git related operations like push, pull, ...
     """

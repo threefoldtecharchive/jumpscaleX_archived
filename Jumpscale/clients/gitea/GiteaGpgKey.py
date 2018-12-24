@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaGpgKey(j.builder._BaseClass):
+class GiteaGpgKey(j.application.JSBaseClass):
 
     def __init__(
             self,

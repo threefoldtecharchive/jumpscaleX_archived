@@ -6,7 +6,7 @@ from .GiteaToken import GiteaToken
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaTokens(j.builder._BaseClass):
+class GiteaTokens(j.application.JSBaseClass):
 
     def __init__(self, client, user):
         JSBASE.__init__(self)

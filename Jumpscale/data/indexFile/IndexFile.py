@@ -5,7 +5,7 @@ from pprint import pprint as print
 JSBASE = j.application.JSBaseClass
 
 
-class IndexFile(j.builder._BaseClass):
+class IndexFile(j.application.JSBaseClass):
 
     def __init__(self, path, nrbytes=4):
         j.sal.fs.createDir(j.sal.fs.getDirName(path))

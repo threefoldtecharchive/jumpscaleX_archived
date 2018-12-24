@@ -6,7 +6,7 @@ import string
 
 JSBASE = j.application.JSBaseClass
 
-class IDGenerator(j.builder._BaseClass):
+class IDGenerator(j.application.JSBaseClass):
     """
     generic provider of id's
     lives at j.data.idgenerator

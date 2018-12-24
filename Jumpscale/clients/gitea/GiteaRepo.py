@@ -5,7 +5,7 @@ import calendar
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaRepo(j.builder._BaseClass):
+class GiteaRepo(j.application.JSBaseClass):
 
     def __init__(self, org, name, data):
         JSBASE.__init__(self)

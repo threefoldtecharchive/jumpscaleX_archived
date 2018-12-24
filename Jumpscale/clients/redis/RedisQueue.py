@@ -2,7 +2,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class RedisQueue(j.builder._BaseClass):
+class RedisQueue(j.application.JSBaseClass):
     """Simple Queue with Redis Backend"""
 
     def __init__(self, redis, name, namespace='queue'):

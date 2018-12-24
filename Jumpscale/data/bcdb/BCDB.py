@@ -18,7 +18,7 @@ from Jumpscale.clients.zdb.ZDBClientBase import ZDBClientBase
 
 import gevent
 
-class BCDB(j.builder._BaseClass):
+class BCDB(j.application.JSBaseClass):
 
     def __init__(self, name=None, zdbclient=None,reset=False):
         """

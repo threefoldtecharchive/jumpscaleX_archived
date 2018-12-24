@@ -10,7 +10,7 @@ JSBASE = j.application.JSBaseClass
 
 
 
-class DocSites(j.builder._BaseClass):
+class DocSites(j.application.JSBaseClass):
     """
     """
 

@@ -17,7 +17,7 @@ md5 = ""
 """
 
 
-class BCDBMeta(j.builder._BaseClass):
+class BCDBMeta(j.application.JSBaseClass):
 
     def __init__(self, bcdb):
         JSBASE.__init__(self)

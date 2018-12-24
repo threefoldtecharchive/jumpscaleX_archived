@@ -13,7 +13,7 @@ BASEPATH = '/VNASSHARE/'
 JSBASE = j.application.JSBaseClass
 
 
-class SMBUser(j.builder._BaseClass):
+class SMBUser(j.application.JSBaseClass):
 
     def __init__(self, verbose=False):
         JSBASE.__init__(self)
@@ -67,7 +67,7 @@ class SMBUser(j.builder._BaseClass):
         return True
 
 
-class SMBShare(j.builder._BaseClass):
+class SMBShare(j.application.JSBaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)
@@ -148,7 +148,7 @@ class SMBShare(j.builder._BaseClass):
         return result
 
 
-class SMBSubShare(j.builder._BaseClass):
+class SMBSubShare(j.application.JSBaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)
@@ -205,7 +205,7 @@ class SMBSubShare(j.builder._BaseClass):
         return result
 
 
-class Samba(j.builder._BaseClass):
+class Samba(j.application.JSBaseClass):
 
     __jslocation__ = "j.sal.samba"
 

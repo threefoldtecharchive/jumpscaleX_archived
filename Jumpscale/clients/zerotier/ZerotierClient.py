@@ -9,7 +9,7 @@ import ipcalc
 JSBASE = j.application.JSBaseClass
 JSConfigClient = j.application.JSBaseClass
 
-class NetworkMember(j.builder._BaseClass):
+class NetworkMember(j.application.JSBaseClass):
     """
     Represent a zerotier network member
     """
@@ -109,7 +109,7 @@ class NetworkMember(j.builder._BaseClass):
 
 
 
-class ZeroTierNetwork(j.builder._BaseClass):
+class ZeroTierNetwork(j.application.JSBaseClass):
     """
     Represent a zerotier network
     """

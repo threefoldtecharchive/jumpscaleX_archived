@@ -3,7 +3,7 @@ JSBASE = j.application.JSBaseClass
 
 
 
-class Coordinator(j.builder._BaseClass):
+class Coordinator(j.application.JSBaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)

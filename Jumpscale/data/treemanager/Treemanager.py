@@ -3,7 +3,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class TreeItem(j.builder._BaseClass):
+class TreeItem(j.application.JSBaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)
@@ -51,7 +51,7 @@ class TreeItem(j.builder._BaseClass):
         return ("%-60s  %-20s  [%s]" % (self.path, cat, selected))
 
 
-class Tree(j.builder._BaseClass):
+class Tree(j.application.JSBaseClass):
 
     def __init__(self, data=None):
         JSBASE.__init__(self)
@@ -242,7 +242,7 @@ class Tree(j.builder._BaseClass):
         return (out)
 
 
-class TreemanagerFactory(j.builder._BaseClass):
+class TreemanagerFactory(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.data.treemanager"

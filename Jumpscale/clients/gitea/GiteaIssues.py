@@ -7,7 +7,7 @@ from .GiteaIssueTime import GiteaIssueTime
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaIssues(j.builder._BaseClass):
+class GiteaIssues(j.application.JSBaseClass):
 
     def __init__(self, user, repo=None):
         JSBASE.__init__(self)

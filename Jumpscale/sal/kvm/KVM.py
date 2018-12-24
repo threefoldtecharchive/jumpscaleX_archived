@@ -10,7 +10,7 @@ from sal.kvm.CloudMachine import CloudMachine
 from sal.kvm.MachineSnapshot import MachineSnapshot
 
 JSBASE = j.application.JSBaseClass
-class KVM(j.builder._BaseClass):
+class KVM(j.application.JSBaseClass):
 
     def __init__(self):
 

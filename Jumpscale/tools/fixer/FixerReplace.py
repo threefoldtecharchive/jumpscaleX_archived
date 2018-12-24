@@ -31,7 +31,7 @@ configmanager._base_class_config
 """
 
 JSBASE = j.application.JSBaseClass
-class FixerReplacer(j.builder._BaseClass):
+class FixerReplacer(j.application.JSBaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)

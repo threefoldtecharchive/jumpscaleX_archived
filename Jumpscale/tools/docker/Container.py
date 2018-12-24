@@ -7,7 +7,7 @@ from io import BytesIO
 JSBASE = j.application.JSBaseClass
 
 
-class Container(j.builder._BaseClass):
+class Container(j.application.JSBaseClass):
     """Docker Container"""
 
     def __init__(self, obj, client):

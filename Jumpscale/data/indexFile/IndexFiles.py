@@ -6,7 +6,7 @@ from .IndexFile import IndexFile
 JSBASE = j.application.JSBaseClass
 
 
-class IndexDB(j.builder._BaseClass):
+class IndexDB(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.data.indexfile"

@@ -6,7 +6,7 @@ JSBASE = j.application.JSBaseClass
 from .ZOS import ZOS
 from .ZOSVB import ZOSVB
 
-class Builder(j.builder._BaseClass):
+class Builder(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.builder"

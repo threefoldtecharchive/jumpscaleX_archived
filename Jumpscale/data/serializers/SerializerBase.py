@@ -3,7 +3,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class SerializerBase(j.builder._BaseClass):
+class SerializerBase(j.application.JSBaseClass):
 
     def dump(self, filepath, obj):
         data = self.dumps(obj)
@@ -22,7 +22,7 @@ class SerializerBase(j.builder._BaseClass):
 
 
 
-# class SerializerHalt(j.builder._BaseClass):
+# class SerializerHalt(j.application.JSBaseClass):
 #
 #     def __init__(self):
 #         JSBASE.__init__(self)

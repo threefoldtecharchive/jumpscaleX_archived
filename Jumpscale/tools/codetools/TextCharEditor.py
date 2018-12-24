@@ -3,7 +3,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class TextCharEditor(j.builder._BaseClass):
+class TextCharEditor(j.application.JSBaseClass):
     """
     represents a piece of text but broken appart in blocks
     this one works on a char basis

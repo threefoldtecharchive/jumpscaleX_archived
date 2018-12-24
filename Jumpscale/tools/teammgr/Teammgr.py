@@ -31,7 +31,7 @@ core = false
 JSBASE = j.application.JSBaseClass
 
 
-class Todo(j.builder._BaseClass):
+class Todo(j.application.JSBaseClass):
     def __init__(self, department, path, todo):
         path = path.replace("//", "/")
         self.department = department
@@ -49,7 +49,7 @@ class Todo(j.builder._BaseClass):
     __str__ = __repr__
 
 
-class Person(j.builder._BaseClass):
+class Person(j.application.JSBaseClass):
     def __init__(self, department, name, path):
         self.department = department
         self.path = path
@@ -251,7 +251,7 @@ class Person(j.builder._BaseClass):
     __str__ = __repr__
 
 
-class Department(j.builder._BaseClass):
+class Department(j.application.JSBaseClass):
     def __init__(self, name, path):
         JSBASE.__init__(self)
         self.path = path
@@ -298,7 +298,7 @@ class Department(j.builder._BaseClass):
     __str__ = __repr__
 
 
-class Teammgr(j.builder._BaseClass):
+class Teammgr(j.application.JSBaseClass):
     def __init__(self):
         self.__jslocation__ = "j.tools.team_manager"
         JSBASE.__init__(self)

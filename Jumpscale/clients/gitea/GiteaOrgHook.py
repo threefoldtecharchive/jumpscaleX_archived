@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaOrgHook(j.builder._BaseClass):
+class GiteaOrgHook(j.application.JSBaseClass):
     def __init__(
             self,
             client,

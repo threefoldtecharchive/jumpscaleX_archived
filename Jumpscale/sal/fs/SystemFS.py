@@ -20,7 +20,7 @@ from Jumpscale.sal.fs.SystemFSDecorators import (pathShorten, pathClean,
                                  cleanupString, path_check)
 
 JSBASE = j.application.JSBaseClass
-class SystemFS(j.builder._BaseClass):
+class SystemFS(j.application.JSBaseClass):
 
     __jslocation__ = "j.sal.fs"
 

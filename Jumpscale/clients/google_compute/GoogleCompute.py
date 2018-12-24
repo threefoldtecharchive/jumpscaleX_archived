@@ -8,7 +8,7 @@ from oauth2client.client import GoogleCredentials
 JSBASE = j.application.JSBaseClass
 
 
-class GoogleCompute(j.builder._BaseClass):
+class GoogleCompute(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.clients.google_compute"

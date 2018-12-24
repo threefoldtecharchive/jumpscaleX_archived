@@ -39,7 +39,7 @@ if j.core.platformtype.myplatform.isWindows:
 JSBASE = j.application.JSBaseClass
 
 
-class WindowsSystem(j.builder._BaseClass):
+class WindowsSystem(j.application.JSBaseClass):
 
     try:
         mythreads = []

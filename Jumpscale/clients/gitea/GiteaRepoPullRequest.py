@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaRepoPullRequest(j.builder._BaseClass):
+class GiteaRepoPullRequest(j.application.JSBaseClass):
     def __init__(
             self,
             client,

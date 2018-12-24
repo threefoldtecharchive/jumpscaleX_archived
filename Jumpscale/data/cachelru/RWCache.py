@@ -8,7 +8,7 @@ from .LRUCache import LRUCache
 from operator import itemgetter, attrgetter
 JSBASE = j.application.JSBaseClass
 
-class RWCache(j.builder._BaseClass):
+class RWCache(j.application.JSBaseClass):
 
     def __init__(self, nrItemsReadCache, maxNrItemsWriteCache=50, maxTimeWriteCache=2000, writermethod=None):
         self.cacheR = j.tools.cachelru.getRCache(nrItemsReadCache)

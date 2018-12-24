@@ -137,7 +137,7 @@ j.core.myenv = MyEnv
 j.core.myenv.init()
 
 j.core.installer_ubuntu = UbuntuInstall
-j.core.installer_jumpscale = JumpscaleInstaller
+j.core.installer_jumpscale = JumpscaleInstaller()
 j.core.tools = Tools
 
 j._profileStart = profileStart

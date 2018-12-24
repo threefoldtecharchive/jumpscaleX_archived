@@ -451,7 +451,7 @@ class KubernetesMaster(JSConfigBase):
 #     DEPLOYMENT     #
 ######################
 
-class Deployment(j.builder._BaseClass):
+class Deployment(j.application.JSBaseClass):
     """
     Kubernetes cluster wrapper layer.
     """

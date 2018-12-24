@@ -10,7 +10,7 @@ import grp
 JSBASE = j.application.JSBaseClass
 
 
-class FListMetadata(j.builder._BaseClass):
+class FListMetadata(j.application.JSBaseClass):
     """Metadata layer on top of flist that enables flist manipulation"""
 
     def __init__(

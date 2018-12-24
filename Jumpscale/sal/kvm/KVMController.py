@@ -4,7 +4,7 @@ import atexit
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
-class KVMController(j.builder._BaseClass):
+class KVMController(j.application.JSBaseClass):
 
     def __init__(self, executor=None, base_path=None):
         JSBASE.__init__(self)

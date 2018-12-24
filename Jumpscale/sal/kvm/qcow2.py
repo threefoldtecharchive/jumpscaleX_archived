@@ -7,7 +7,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class Qcow2(j.builder._BaseClass):
+class Qcow2(j.application.JSBaseClass):
     # object representing a qcow2, at this moment only readonly!
 
     def __init__(self, filename):

@@ -9,7 +9,7 @@ import tarfile
 JSBASE = j.application.JSBaseClass
 
 
-class TarFileFactory(j.builder._BaseClass):
+class TarFileFactory(j.application.JSBaseClass):
     READ = 'r'
     WRITE = 'w'
     APPEND = 'a'
@@ -22,7 +22,7 @@ class TarFileFactory(j.builder._BaseClass):
         return TarFile(path, mode)
 
 
-class TarFile(j.builder._BaseClass):
+class TarFile(j.application.JSBaseClass):
     '''Handle tar files'''
 
     def __init__(self, path, mode=TarFileFactory.READ):

@@ -5,7 +5,7 @@ import redis
 JSBASE = j.application.JSBaseClass
 
 
-class ZDBClientBase(j.builder._BaseClass):
+class ZDBClientBase(j.application.JSBaseClass):
 
     def __init__(self, addr="localhost", port=9900, mode="seq", secret="", nsname="test", admin=False):
         """ is connection to ZDB

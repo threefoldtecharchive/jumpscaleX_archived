@@ -6,7 +6,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class VXlan(j.builder._BaseClass):
+class VXlan(j.application.JSBaseClass):
 
     def __init__(self, oid, backend='vxbackend'):
         def bytes(num):
@@ -30,7 +30,7 @@ class VXlan(j.builder._BaseClass):
         pass
 
 
-class Bridge(j.builder._BaseClass):
+class Bridge(j.application.JSBaseClass):
 
     def __init__(self, name):
         self.name = name
@@ -57,7 +57,7 @@ class VXBridge(Bridge):
         Bridge.__init__(name=self.name)
 
 
-class BondBridge(j.builder._BaseClass):
+class BondBridge(j.application.JSBaseClass):
 
     def __init__(self, name, interfaces, bondname=None, trunks=None):
         JSBASE.__init__(self)
@@ -77,7 +77,7 @@ class BondBridge(j.builder._BaseClass):
         destroyBridge(self.name)
 
 
-class NameSpace(j.builder._BaseClass):
+class NameSpace(j.application.JSBaseClass):
 
     def __init__(self, name):
         JSBASE.__init__(self)
@@ -100,7 +100,7 @@ class VXNameSpace(NameSpace):
         NameSpace.__init__(name=self.name)
 
 
-class NetID(j.builder._BaseClass):
+class NetID(j.application.JSBaseClass):
 
     def __init__(self, oid):
         JSBASE.__init__(self)
@@ -115,7 +115,7 @@ class NetID(j.builder._BaseClass):
         return oidstring
 
 
-class VethPair(j.builder._BaseClass):
+class VethPair(j.application.JSBaseClass):
 
     def __init__(self, oid):
         JSBASE.__init__(self)

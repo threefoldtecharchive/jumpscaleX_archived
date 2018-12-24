@@ -6,7 +6,7 @@ import os
 
 JSBASE = j.application.JSBaseClass
 
-class TarantoolDB(j.builder._BaseClass):
+class TarantoolDB(j.application.JSBaseClass):
 
     def __init__(self, name="test", path="$DATADIR/tarantool/$NAME", adminsecret="admin007", port=3301):
         JSBASE.__init__(self)

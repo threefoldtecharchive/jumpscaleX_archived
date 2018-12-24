@@ -6,7 +6,7 @@ JSBASE = j.application.JSBaseClass
 
 
 
-class Aggregator(j.builder._BaseClass):
+class Aggregator(j.application.JSBaseClass):
     """
     """
 
