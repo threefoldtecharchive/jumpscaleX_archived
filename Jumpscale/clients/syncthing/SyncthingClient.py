@@ -15,13 +15,13 @@ class SyncthingClient(JSConfigClient):
     _SCHEMATEXT = """
     @url = jumpscale.syncthing.client
     addr = "localhost" (S)
-    port = 0 (I)
-    sshport = 22 (I)
+    port = 0 (ipport)
+    sshport = 22 (ipport)
     rootpasswd_ = "" (S)
     apikey = "" (S)
     """
 
-    def _init_new(self):
+    def _init(self):
         self._session = requests.session()
         addr = self.addr.lower()
         if addr == "127.0.0.1":
