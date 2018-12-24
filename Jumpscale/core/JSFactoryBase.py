@@ -34,12 +34,14 @@ class JSFactoryBase(JSBase):
                 raise RuntimeError("__class__._CHILDCLASS should be set")
             child_class = self.__class__._CHILDCLASS
 
-        if len(args) == 1:
-            kwargs["name"] = args[0]  # if only one then will be the name
+        if len(kwargs) == 1:
+            kwargs["name"] = kwargs[0]  # if only one then will be the name
         m = self._get_model(child_class)
         propnames = [i for i in kwargs.keys()]
-        propnames_keys_in_schema = [item.name for item in m.schema.index_key_properties if item.name in propnames]
+        propnames_keys_in_schema = [
+            item.name for item in m.schema.index_key_properties if item.name in propnames]
 
+        res = []
         if len(propnames_keys_in_schema) > 0:
             # we can try to find this config
             res = m.get_from_keys(**kwargs)
@@ -75,7 +77,8 @@ class JSFactoryBase(JSBase):
         if not tpath.endswith(".py"):
             tpath += ".py"
         print("##: path: %s\n\n" % tpath)
-        method = j.tools.jinja2.code_python_render(obj_key=obj_key, path=tpath, **kwargs)
+        method = j.tools.jinja2.code_python_render(
+            obj_key=obj_key, path=tpath, **kwargs)
         res = method()
         return res
 
@@ -86,7 +89,8 @@ class JSFactoryBase(JSBase):
             child_class = self.__class__._CHILDCLASS
         if child_class._SCHEMATEXT is not None:
             if "_MODEL" not in child_class.__dict__ or child_class._MODEL is None:
-                child_class._MODEL = j.application.bcdb_system.model_get_from_schema(child_class._SCHEMATEXT)
+                child_class._MODEL = j.application.bcdb_system.model_get_from_schema(
+                    child_class._SCHEMATEXT)
         m = child_class._MODEL
         return m
 
@@ -110,7 +114,8 @@ class JSFactoryBase(JSBase):
             kwargs["name"] = args[0]  # if only one then will be the name
         m = self._get_model(child_class)
         propnames = [i for i in kwargs.keys()]
-        propnames_keys_in_schema = [item.name for item in m.schema.index_key_properties if item.name in propnames]
+        propnames_keys_in_schema = [
+            item.name for item in m.schema.index_key_properties if item.name in propnames]
         if len(propnames_keys_in_schema) > 0:
             # we can try to find this config
             res = m.get_from_keys(**kwargs)
