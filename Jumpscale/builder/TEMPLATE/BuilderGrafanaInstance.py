@@ -16,7 +16,7 @@ class GrafanaComponent(j.application.JSBaseConfigClass):
         pass
         #called for each instance (new or not)
 
-    def _init_new(self):
+    def _data_trigger_new(self):
         pass
         #called for each new instance
 

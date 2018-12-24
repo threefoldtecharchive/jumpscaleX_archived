@@ -11,7 +11,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 class NetTools(j.application.JSBaseClass):
 
-    _jslocation__ = "j.sal.nettools"
+    __jslocation__ = "j.sal.nettools"
 
     def _init(self):
         self._windowsNetworkInfo = None

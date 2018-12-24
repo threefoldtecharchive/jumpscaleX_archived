@@ -290,7 +290,7 @@ class ExecutorBase(j.application.JSBaseClass):
             # 
 
             echo "CFG_JUMPSCALE = --TEXT--"
-            cat /sandbox/cfg/jumpscale_config.toml 2>/dev/null || echo ""
+            cat {_config_path} 2>/dev/null || echo ""
             echo --TEXT--
 
             echo "BASHPROFILE = --TEXT--"
@@ -301,7 +301,7 @@ class ExecutorBase(j.application.JSBaseClass):
             export
             echo --TEXT--
             """
-            C = j.core.text.strip(C)
+            C = j.core.text.strip(C,args=self.__dict__)
 
             rc, out, err = self.execute(C, showout=False, sudo=False, replace=False)
             res = {}
