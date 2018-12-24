@@ -411,19 +411,20 @@ class Tools():
         return False
 
     @staticmethod
-    def _installbase_for_shell(self):
+    def _installbase_for_shell():
 
-        script="""
-        echo >> /etc/apt/sources.list
-        echo "# Jumpscale Setup" >> /etc/apt/sources.list
-        echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
-        apt-get update
-
-        apt-get install -y python3-pip locales
-        apt-get install -y curl rsync
-        apt-get install -y unzip
-        pip3 install ipython
-        locale-gen --purge en_US.UTF-8
+        script = """
+            if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+                echo >> /etc/apt/sources.list
+                echo "# Jumpscale Setup" >> /etc/apt/sources.list
+                echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+                apt-get update
+                apt-get install -y python3-pip locales
+                apt-get install -y curl rsync
+                apt-get install -y unzip
+                pip3 install ipython
+                locale-gen --purge en_US.UTF-8
+            fi
         """
         Tools.execute(script, interactive=True)
 
@@ -1068,9 +1069,11 @@ class UbuntuInstall():
             return
 
         script="""
-        echo >> /etc/apt/sources.list
-        echo "# Jumpscale Setup" >> /etc/apt/sources.list
-        echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+        if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+            echo >> /etc/apt/sources.list
+            echo "# Jumpscale Setup" >> /etc/apt/sources.list
+            echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+        fi
         apt-get update
         """
         Tools.execute(script,interactive=True)
@@ -1322,9 +1325,11 @@ class MyEnv():
 
             if MyEnv.platform()== "linux":
                 script="""
-                echo >> /etc/apt/sources.list
-                echo "# Jumpscale Setup" >> /etc/apt/sources.list
-                echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+                if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+                    echo >> /etc/apt/sources.list
+                    echo "# Jumpscale Setup" >> /etc/apt/sources.list
+                    echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+                fi
                 apt-get update
 
                 apt-get install -y curl rsync unzip
