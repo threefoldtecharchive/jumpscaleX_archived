@@ -28,7 +28,7 @@ class JSBaseConfig(JSBase):
 
                 if len(propnames_keys_in_schema)>0:
                     #we can try to find this config
-                    res = m.get_from_keys(**kwargs)
+                    res = m.get_from_keys(delete_if_not_found=False,**kwargs)
                     if len(res)>1:
                         raise RuntimeError("found too many items for :%s, args:\n%s\n%s"%(self.__class__.__name__,kwargs,res))
                     elif len(res)==1:

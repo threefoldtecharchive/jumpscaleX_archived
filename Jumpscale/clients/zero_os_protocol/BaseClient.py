@@ -1,6 +1,6 @@
 import json
 import shlex
-
+from Jumpscale import j
 from . import typchk
 from .FilesystemManager import FilesystemManager
 from .InfoManager import InfoManager
@@ -17,7 +17,7 @@ class BaseClient(j.application.JSBaseConfigClass):
     host = "127.0.0.1"
     port = 6379
     unixsocket = ""
-    password_ = ""
+    password = ""  #can be the jwt
     db = 0
     ssl = true
     timeout = 120
@@ -36,10 +36,7 @@ class BaseClient(j.application.JSBaseConfigClass):
         'script': str,
     })
 
-    def __init__(self):
-
-        j.application.JSBaseConfigClass.__init__(self)
-
+    def _init(self):
         self._info = InfoManager(self)
         self._job = JobManager(self)
         self._process = ProcessManager(self)
