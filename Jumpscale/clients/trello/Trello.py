@@ -46,7 +46,7 @@ class Trello(JSConfigFactory):
         JSConfigFactory.__init__(self, TrelloClient)
 
     def install(self, reset=False):
-        j.tools.prefab.local.runtimes.pip.install("py-trello", reset=reset)
+        j.core.builder.runtimes.pip.install("py-trello", reset=reset)
 
     def configure(self,instance="main",apikey="",secret="secret"):
         data={}

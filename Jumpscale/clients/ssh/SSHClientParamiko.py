@@ -395,7 +395,7 @@ class SSHClientParamiko(SSHClientBase):
         C = "ssh -L %s:localhost:%s root@%s -p %s" % (
             remoteport, localport, self.addr, self.port)
         print(C)
-        pm = j.tools.prefab.local.system.processmanager.get()
+        pm = j.core.builder.system.processmanager.get()
         pm.ensure(cmd=C, name="ssh_%s" % localport, wait=0.5)
         print("Test tcp port to:%s" % localport)
         if not j.sal.nettools.waitConnectionTest("127.0.0.1", localport, 10):
@@ -405,7 +405,7 @@ class SSHClientParamiko(SSHClientBase):
 
     def portforwardKill(self, localport):
         print("kill portforward %s" % localport)
-        pm = j.tools.prefab.local.system.processmanager.get()
+        pm = j.core.builder.system.processmanager.get()
         pm.processmanager.stop('ssh_%s' % localport)
 
     # def SSHAuthorizeKey(

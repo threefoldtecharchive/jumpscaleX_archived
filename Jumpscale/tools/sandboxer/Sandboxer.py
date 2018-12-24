@@ -27,9 +27,9 @@ class Sandboxer(j.application.JSBaseClass):
         will build python & openresty & copy all to the right git sandboxes
         :return:
         """
-        j.tools.prefab.local.runtimes.python.copy2sandbox_github(reset=reset)
-        j.tools.prefab.local.runtimes.lua.build() #will build openresty & lua & openssl
-        j.tools.prefab.local.runtimes.lua.copy2sandbox_github()
+        j.core.builder.runtimes.python.copy2sandbox_github(reset=reset)
+        j.core.builder.runtimes.lua.build() #will build openresty & lua & openssl
+        j.core.builder.runtimes.lua.copy2sandbox_github()
 
         if j.core.platformtype.myplatform.isUbuntu: #only for building
             #no need to sandbox in non linux systems

@@ -170,7 +170,7 @@ class BuilderZDB(j.builder.system._BaseClass):
         """
         js_shell 'j.servers.zdb.build()'
         """
-        j.tools.prefab.local.zero_os.zos_db.build(install=True, reset=True)
+        j.core.builder.zero_os.zos_db.build(install=True, reset=True)
 
     def test(self, build=False):
         """

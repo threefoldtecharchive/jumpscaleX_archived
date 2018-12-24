@@ -13,7 +13,7 @@ class BuilderCapnp(j.builder.system._BaseClass):
         """
         install capnp
 
-        js_shell 'j.tools.prefab.local.lib.capnp.build(reset=True)'
+        js_shell 'j.core.builder.lib.capnp.build(reset=True)'
 
         """
 

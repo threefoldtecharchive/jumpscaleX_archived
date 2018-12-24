@@ -1,5 +1,5 @@
 from Jumpscale import j
-j.tools.prefab.local.bash.locale_check()
+j.core.builder.bash.locale_check()
 import click
 
 @click.command()
