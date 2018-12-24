@@ -2,11 +2,8 @@ from Jumpscale import j
 
 from .Client import Client
 
-JSConfigFactoryBase = j.application.JSFactoryBaseClass
-logger = j.logger.get(__name__)
 
-
-class ZeroOSFactory(JSConfigFactoryBase):
+class ZeroOSFactory(j.application.JSFactoryBaseClass):
     """
     """
     _CHILDCLASS = Client
