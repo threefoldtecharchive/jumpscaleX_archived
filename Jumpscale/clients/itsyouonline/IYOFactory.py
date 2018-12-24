@@ -67,27 +67,15 @@ class IYOFactory(j.application.JSFactoryBaseClass):
         js_shell 'j.clients.itsyouonline.test()'
         """
 
-        cl=j.clients.itsyouonline.get()
-        jwt = cl.jwt_get_from_iyo(scope="user:memberof:tf-production")
+        client=j.clients.itsyouonline.get()
+        jwt = client.jwt_get_from_iyo(scope="user:memberof:tf-production")
         print(jwt)
 
-        cl.api
-
-        return
-
-        # from .generated.client.PublicKey import PublicKey #WHY THIS???
-
-        client = j.clients.itsyouonline.default
-
-        self._logger.info(j.clients.itsyouonline.default.jwt)
-
-        j.shell()
-        #TODO: fix below
 
         self._logger.info(client.api.organizations.GetOrganization("threefold"))
 
 
-        username = client.jwt_data["username"]
+        username = jwt.username
 
         # Read all the API keys registered for your user
         self._logger.debug("list all API keys")
