@@ -163,14 +163,14 @@ class BCDBModel(j.application.JSBaseClass):
             obj_id = obj.id
         else:
             obj_id = obj
-
+        self.index_keys_delete(obj)
         self._delete2(obj_id)
         if obj_id in self.obj_cache:
             self.obj_cache.pop(obj_id)
         if self.index:
             self.index_delete(obj_id)
-        if hasattr(obj, "key"):
-            self._delete_key(obj.key,obj_id=obj_id)
+
+
 
 
     def _delete2(self,obj_id):
@@ -217,7 +217,7 @@ class BCDBModel(j.application.JSBaseClass):
         """
 
         :param property_name: property name to index
-        :param val: the obj
+        :param val: the value of the property which we want to index
         :param obj_id: id of the obj
         :return:
         """
@@ -234,13 +234,15 @@ class BCDBModel(j.application.JSBaseClass):
         j.clients.credis_core.hset(self._redis_key+b":"+hash[0:2],hash[2:],data)
 
 
-    def _delete_key(self,key,obj_id):
+    def _delete_key(self,property_name,val,obj_id):
 
+        key = "%s__%s"%(property_name,val)
+        ids = self._get_ids_from_key(key)
         if obj_id is None:
             raise RuntimeError("id cannot be None")
-        ids = self._get_ids_from_key(key)
         if obj_id in ids:
             ids.pop(ids.index(obj_id))
+        hash = self._get_redis_key(key)
         if ids == []:
             j.clients.credis_core.hdel(self._redis_key+b":"+hash[0:2],hash[2:])
         else:
@@ -264,7 +266,7 @@ class BCDBModel(j.application.JSBaseClass):
         return ids
 
 
-    def get_from_keys(self, **args):
+    def get_from_keys(self, delete_if_not_found=False,**args):
         """
 
         e.g.
@@ -286,7 +288,11 @@ class BCDBModel(j.application.JSBaseClass):
         for id_ in ids:
             res2=self.get(id_,die=None)
             if res2 is None:
-                raise RuntimeError("backend data store out of sync with key index in redis (redis has it, backend not)")
+                if delete_if_not_found:
+                    for key,val in args.items():
+                        self._delete_key(key,val,id_)
+                else:
+                    raise RuntimeError("backend data store out of sync with key index in redis (redis has it, backend not)")
             res.append(res2)
 
         return res
