@@ -25,6 +25,12 @@ class BuilderPHP(j.builder.system._BaseClass):
 
     def build(self, **config):
 
+        '''
+        js_shell 'j.builder.runtimes.php.build()'
+        :param config:
+        :return:
+        '''
+
         pkgs = "libxml2-dev libpng-dev libcurl4-openssl-dev libzip-dev zlibc zlib1g zlib1g-dev libmysqld-dev libmysqlclient-dev re2c bison bzip2 build-essential libaprutil1-dev libapr1-dev openssl pkg-config libssl-dev libsslcommon2-dev file"
         list(map(j.builder.system.package.ensure, pkgs.split(sep=" ")))
 
@@ -109,6 +115,7 @@ class BuilderPHP(j.builder.system._BaseClass):
             self.start()
 
     def start(self):
+        #TODO: needs to be redone using tmux
         phpfpmbinpath = '{DIR_BASE}/apps/php/sbin'
         # COPY BINARIES
         j.sal.process.execute("cp {DIR_BASE}/apps/php/sbin/* {DIR_BIN}")
@@ -119,6 +126,7 @@ class BuilderPHP(j.builder.system._BaseClass):
         pm.ensure(name="php-fpm", cmd=phpfpmcmd, path=phpfpmbinpath)
 
     def stop(self):
+        #TODO: needs to be redone using tmux
         pm = j.builder.system.processmanager.get()
         pm.stop("php-fpm")
 

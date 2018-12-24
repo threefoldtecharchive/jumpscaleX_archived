@@ -167,7 +167,7 @@ class ExecutorSSH(ExecutorBase):
                 self.execute(j.core.text.strip(C))
                 return "OK"
 
-            self.cache.get("_check_base", method=do, expire=3600*24, refresh=False, retry=2, die=True)
+            self.cache.get("_check_base", method=do, expiration=3600*24, refresh=False, retry=2, die=True)
 
             self.__check_base = True
 
