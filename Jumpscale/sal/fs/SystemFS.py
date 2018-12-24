@@ -20,12 +20,10 @@ from Jumpscale.sal.fs.SystemFSDecorators import (pathShorten, pathClean,
                                  cleanupString, path_check)
 
 JSBASE = j.application.JSBaseClass
-class SystemFS(JSBASE):
+class SystemFS(j.application.JSBaseClass):
 
     __jslocation__ = "j.sal.fs"
 
-    def __init__(self):
-        JSBASE.__init__(self)
 
     @path_check(fileFrom={"required", "exists", "file"}, to={"required"})
     def copyFile(self, fileFrom, to, createDirIfNeeded=False, overwriteFile=True):
@@ -228,8 +226,6 @@ class SystemFS(JSBASE):
                 raise j.exceptions.RuntimeError(
                     'Source path %s in system.fs.copyDirTree is not a directory' % src)
         else:
-            # didnt use j.sal.rsync because its not complete and doesnt work
-            # properly
             excl = " "
             for item in ignoredir:
                 excl += "--exclude '*%s/' " % item

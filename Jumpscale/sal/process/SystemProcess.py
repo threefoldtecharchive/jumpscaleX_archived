@@ -22,7 +22,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class SystemProcess(JSBASE):
+class SystemProcess(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.process"

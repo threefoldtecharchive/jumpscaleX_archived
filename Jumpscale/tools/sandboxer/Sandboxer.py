@@ -7,7 +7,7 @@ from .Dep import Dep
 JSBASE = j.application.JSBaseClass
 
 
-class Sandboxer(JSBASE):
+class Sandboxer(j.application.JSBaseClass):
     """
     sandbox any linux app
     """
@@ -27,9 +27,9 @@ class Sandboxer(JSBASE):
         will build python & openresty & copy all to the right git sandboxes
         :return:
         """
-        j.tools.prefab.local.runtimes.python.copy2sandbox_github(reset=reset)
-        j.tools.prefab.local.runtimes.lua.build() #will build openresty & lua & openssl
-        j.tools.prefab.local.runtimes.lua.copy2sandbox_github()
+        j.builder.runtimes.python.copy2sandbox_github(reset=reset)
+        j.builder.runtimes.lua.build() #will build openresty & lua & openssl
+        j.builder.runtimes.lua.copy2sandbox_github()
 
         if j.core.platformtype.myplatform.isUbuntu: #only for building
             #no need to sandbox in non linux systems
@@ -354,11 +354,11 @@ class Sandboxer(JSBASE):
     #     out = j.core.text.sort(out)
     #     j.sal.fs.writeFile(plistfile, out)
 
-    # def sandboxBinWithPrefab(self, prefab, bin_path, sandbox_dir):
+    # def sandboxBinWithBuilder(self, prefab, bin_path, sandbox_dir):
     #     """
     #     Sandbox a binary located in `bin_path` into a sandbox / filesystem
 
-    #     @param prefab Prefab: prefab either local or remote on a machine.
+    #     @param prefab Builder: prefab either local or remote on a machine.
     #     @param bin_path string: binary full path to sandbox.
     #     @param sandbox_dir string: where to create the sandbox.
 

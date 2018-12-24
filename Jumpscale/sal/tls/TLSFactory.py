@@ -4,7 +4,7 @@ from .TLS import TLS
 JSBASE = j.application.JSBaseClass
 
 
-class TLSFactory(JSBASE):
+class TLSFactory(j.application.JSBaseClass):
     """Factory class to deal with TLS, key and certificate generation"""
 
     def __init__(self):

@@ -8,7 +8,7 @@ import fnmatch
 JSBASE = j.application.JSBaseClass
 
 
-class SystemFSWalker(JSBASE):
+class SystemFSWalker(j.application.JSBaseClass):
 
     def __init__(self):
         if not hasattr(self, '__jslocation__'):

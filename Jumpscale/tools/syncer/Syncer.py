@@ -7,30 +7,66 @@ from .MyFileSystemEventHandler import MyFileSystemEventHandler
 class Syncer(j.application.JSBaseConfigClass):
     _SCHEMATEXT = """
         @url = jumpscale.syncer.1
-        name* = "" (S)
-        addr* = "" (S)
-        port = 0 (I)
+        name* = ""
+        sshclient_name = ""
+        paths = (LS)
+        ignoredir = (LS)        
         """
 
     def _init(self):
 
-        self.PATHS_DEFAULT = ["{DIR_CODE}/github/threefoldtech/jumpscaleX",
-                              "{DIR_CODE}/github/threefoldtech/digitalmeX"]
+        j.application.JSBaseConfigClass._init(self)
+
+        self.ssh_client = j.clients.ssh.get(name=self.sshclient_name)
 
         self.IGNOREDIR = [".git", ".github"]
         self._executor = None
-        j.tools.syncer.syncers[self.name] = self
+
+
+    def data_update(self,**kwargs):
+        if "paths" in kwargs:
+            paths = kwargs["paths"]
+            if not j.data.types.list.check(paths):
+                paths2=[]
+                for item in paths.split(","):
+                    item=item.strip()
+                    if not item.startswith("/") and not item.startswith("{") :
+                        item=j.sal.fs.getcwd()+"/"+item
+                    item = item.replace("//","/")
+                    paths2.append(item)
+                kwargs["paths"]=paths2
+        self.data.load_from_data(data=kwargs,reset=False)
+        self.data.save()
 
     @property
     def executor(self):
         if not self._executor:
-            sshkey = j.clients.sshkey.get()
-            sshclient = j.clients.ssh.get("syncer_%s" % self.name, addr=self.addr, port=self.port,
-                                          sshkey_name=sshkey.name)
-            self._executor = j.tools.executor.ssh_get(sshclient)
+            self._executor = j.tools.executor.ssh_get(self.ssh_client)
         return self._executor
 
-    def sync(self, monitor=False, paths=None):
+    def _get_paths(self):
+        """
+
+        :return: [[src,dest],...]
+        """
+        res=[]
+        for item in self.paths:
+            items = item.split(":")
+            if len(items)==1:
+                src = items[0]
+                dst = src
+            elif len(items)==2:
+                src = items[0]
+                dst = items[1]
+            else:
+                raise RuntimeError("can only have 2 parts")
+            src= j.core.tools.text_replace(src)
+            if "{" in dst:
+                dst = self.executor.replace(dst)
+            res.append((src,dst))
+        return res
+
+    def sync(self, monitor=True):
         """
         sync all code to the remote destinations, uses config as set in jumpscale.toml
 
@@ -38,28 +74,19 @@ class Syncer(j.application.JSBaseConfigClass):
 
         can use {} (the dir paths in the dir's
 
-        PATHS_DEFAULT =["{DIR_CODE}/github/threefoldtech/jumpscaleX",
-                     "{DIR_CODE}/github/threefoldtech/digitalmeX"]
 
         """
-        if paths is None:
-            paths = self.PATHS_DEFAULT
 
-        for item in paths:
-            if j.data.types.list.check(item):
-                source = j.core.tools.text_replace(item[0])
-                dest = self.executor.replace(item[1])
-            else:
-                source = j.core.tools.text_replace(item)
-                dest = self.executor.replace(item)
-
+        for item in self._get_paths():
+            source,dest = item
+            self._logger.info("upload:%s to %s"%(source,dest))
             self.executor.upload(source, dest, recursive=True, createdir=True,
                                  rsyncdelete=True, ignoredir=self.IGNOREDIR, ignorefiles=None)
 
         if monitor:
-            self._monitor(paths=paths)
+            self._monitor()
 
-    def _monitor(self, paths):
+    def _monitor(self):
         """
         look for changes in directories which are being pushed & if found push to remote nodes
 
@@ -69,14 +96,12 @@ class Syncer(j.application.JSBaseConfigClass):
 
         """
 
-        event_handler = MyFileSystemEventHandler(paths=paths, zoscontainer=self)
+        event_handler = MyFileSystemEventHandler( syncer=self)
         observer = Observer()
-        for source in paths:
-            if j.data.types.list.check(source):
-                source = source[0]
+        for item in self._get_paths():
+            source,dest = item
             self._logger.info("monitor:%s" % source)
-            source2 = j.tools.prefab.local.core.replace(source)
-            observer.schedule(event_handler, source2, recursive=True)
+            observer.schedule(event_handler, source, recursive=True)
         observer.start()
         try:
             while True:

@@ -12,7 +12,7 @@ import tarantool
 
 JSBASE = j.application.JSBaseClass
 
-class TarantoolQueue(JSBASE):
+class TarantoolQueue(j.application.JSBaseClass):
 
     def __init__(self, tarantoolclient, name, ttl=0, delay=0):
         """The default connection parameters are: host='localhost', port=9999, db=0"""

@@ -7,7 +7,7 @@ JSBASE = j.application.JSBaseClass
 import copy
 import os
 
-class Schema(JSBASE):
+class Schema(j.application.JSBaseClass):
     def __init__(self, text):
         JSBASE.__init__(self)
         self.properties = []
@@ -44,6 +44,8 @@ class Schema(JSBASE):
     def properties_list(self):
         if self._properties_list == []:
             self._properties_list = [item.name for item in self.properties]
+            for item in self.lists:
+                self._properties_list.append(item.alias)
         return self._properties_list
 
 

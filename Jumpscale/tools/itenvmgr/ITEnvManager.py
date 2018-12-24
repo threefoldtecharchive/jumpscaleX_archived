@@ -3,7 +3,7 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
-class TODO(JSBASE):
+class TODO(j.application.JSBaseClass):
 
     def __init__(self,obj,todo):
         JSBASE.__init__(self)
@@ -17,7 +17,7 @@ class TODO(JSBASE):
     __str__=__repr__        
 
 
-class Device(JSBASE):
+class Device(j.application.JSBaseClass):
     def __init__(self,tomlpath):
         JSBASE.__init__(self)
         tomlpath=tomlpath.replace("//","/")
@@ -140,7 +140,7 @@ class Device(JSBASE):
 
     __str__=__repr__             
 
-class Client(JSBASE):
+class Client(j.application.JSBaseClass):
     def __init__(self,tomlpath):
         JSBASE.__init__(self)
         tomlpath=tomlpath.replace("//","/")
@@ -196,7 +196,7 @@ class Client(JSBASE):
 
     __str__=__repr__   
 
-class itenv(JSBASE):
+class itenv(j.application.JSBaseClass):
     def __init__(self,company,name,path):
         JSBASE.__init__(self)
         self.company = company
@@ -239,7 +239,7 @@ class itenv(JSBASE):
     
 
 
-class ITEnvManager(JSBASE):
+class ITEnvManager(j.application.JSBaseClass):
     def __init__(self):
         self.__jslocation__ = "j.tools.itenv_manager"
         JSBASE.__init__(self)

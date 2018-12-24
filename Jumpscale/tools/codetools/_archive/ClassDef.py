@@ -5,7 +5,7 @@ import tools.codetools.PropertyDef as PropertyDef
 JSBASE = j.application.JSBaseClass
 
 
-class ClassDef(JSBASE):
+class ClassDef(j.application.JSBaseClass):
 
     def __init__(self, filePath, name="", inheritance="", comments=""):
         JSBASE.__init__(self)

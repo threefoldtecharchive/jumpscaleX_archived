@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class LRUCacheFactory(JSBASE):
+class LRUCacheFactory(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.data.cachelru"

@@ -8,7 +8,7 @@ class MountError(Exception, JSBASE):
         JSBASE.__init__(self)
 
 
-class Mount(JSBASE):
+class Mount(j.application.JSBaseClass):
 
     def __init__(self, device, path=None, options='', executor=None):
         JSBASE.__init__(self)

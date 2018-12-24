@@ -2,7 +2,7 @@ import time
 from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
-class TIMER(JSBASE):
+class TIMER(j.application.JSBaseClass):
     def __init__(self):
         self.__jslocation__ = "j.tools.timer"
         JSBASE.__init__(self)

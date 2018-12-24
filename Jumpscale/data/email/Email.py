@@ -5,7 +5,7 @@ from .Sender import Sender
 from .utils import get_msg_path, get_json_msg
 
 JSBASE = j.application.JSBaseClass
-class EmailTool(JSBASE):
+class EmailTool(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.email"

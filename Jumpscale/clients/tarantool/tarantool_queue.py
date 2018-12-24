@@ -16,7 +16,7 @@ def unpack_long(value):
     return struct.unpack("<l", value)[0]
 
 
-class Task(JSBASE):
+class Task(j.application.JSBaseClass):
     """
     Tarantool queue task wrapper.
 
@@ -169,7 +169,7 @@ class Task(JSBASE):
         )
 
 
-class Tube(JSBASE):
+class Tube(j.application.JSBaseClass):
     """
     Tarantol queue tube wrapper. Pinned to space and tube, but unlike Queue
     it has predefined delay, ttl, ttr, and pri.
@@ -321,7 +321,7 @@ class Tube(JSBASE):
         return self.queue.statistics(tube=self.opt['tube'])
 
 
-class Queue(JSBASE):
+class Queue(j.application.JSBaseClass):
     """
     Tarantool queue wrapper. Surely pinned to space. May create tubes.
     By default it uses msgpack for serialization, but you may redefine

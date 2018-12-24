@@ -6,7 +6,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class HostFileFactory(JSBASE):
+class HostFileFactory(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.hostsfile"
@@ -16,7 +16,7 @@ class HostFileFactory(JSBASE):
         return HostFile()
 
 
-class HostFile(JSBASE):
+class HostFile(j.application.JSBaseClass):
 
     def __init__(self):
         self.hostfilePath = "/etc/hosts"

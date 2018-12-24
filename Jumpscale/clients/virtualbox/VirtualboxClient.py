@@ -6,7 +6,7 @@ from .VirtualboxVM import VirtualboxVM
 from .VirtualboxDisk import VirtualboxDisk
 
 
-class VirtualboxClient(JSBASE):
+class VirtualboxClient(j.application.JSBaseClass):
     """
     info
         https://github.com/SethMichaelLarson/virtualbox-python

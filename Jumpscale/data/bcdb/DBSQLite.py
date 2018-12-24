@@ -3,7 +3,7 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
-class DBSQLite(JSBASE):
+class DBSQLite(j.application.JSBaseClass):
 
     def __init__(self,bcdb):
         JSBASE.__init__(self)

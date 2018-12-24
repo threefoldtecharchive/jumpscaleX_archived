@@ -7,10 +7,10 @@ from watchdog.observers import Observer
 
 
 class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
-    def __init__(self,paths,zoscontainer):
+    def __init__(self,syncer):
         JSBASE.__init__(self)
-        self.zoscontainer = zoscontainer
-        self.paths = paths
+        self.syncer = syncer
+        self.paths = syncer.paths
         self._logger_enable()
         self.sync_paths_src=[]
         self.sync_paths_dest=[]
@@ -21,10 +21,10 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
                 source,dest=source #get list to 2 separate ones
             if ":" in source:
                 raise RuntimeError("cannot have : in source")
-            self.sync_paths_src.append(j.tools.prefab.local.core.replace(source))
-            self.sync_paths_dest.append(j.tools.prefab.local.core.replace(dest))
+            self.sync_paths_src.append(j.builder.tools.replace(source))
+            self.sync_paths_dest.append(j.builder.tools.replace(dest))
             #THERE IS ISSUE WITH PATHS when not sandbox
-            # self.sync_paths_dest.append(self.zoscontainer.node.prefab.core.replace(dest))
+            # self.sync_paths_dest.append(self.syncer.node.prefab.core.replace(dest))
 
     def path_dest_get(self,src):
         nr=0
@@ -48,11 +48,11 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
                 return
             if event.event_type == "modified":
                 return
-            self.zoscontainer.sync(paths=self.zoscontainer.sync_paths,monitor=False)
+            self.syncer.sync(paths=self.syncer.sync_paths,monitor=False)
         else:
 
             error = False
-            node = self.zoscontainer.node
+            node = self.syncer.node
             if error is False:
                 if changedfile.find("/.git") != -1:
                     return

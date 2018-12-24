@@ -15,9 +15,6 @@ class JSGenerator():
         self._j = j
         self._generated = False
 
-
-
-
     def _check_process_file(self,path):
         bname=os.path.basename(path)
         if bname.startswith("_"):
@@ -50,8 +47,6 @@ class JSGenerator():
             if dpath.name.startswith("."):
                 continue
 
-            #level 2 deep, is where we can find the modules
-            # p = Path(rootDir)
             for dpath2 in dpath.iterdir():
                 jsmodpath = os.path.join(os.fspath(dpath2), ".jumpscalemodules")
                 if not os.path.exists(jsmodpath):
@@ -113,7 +108,7 @@ class JSGenerator():
         template = Path(template_path).read_text()
         t=Template(template)
         C = t.render(md=self.md)
-        dpath = "%s/jumpscale/jumpscale_generated.py"%self._j.dirs.TMPDIR
+        dpath = self._j.core.application._lib_generation_path
         file = open(dpath, "w")
         file.write(C)
         file.close()

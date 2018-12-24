@@ -10,6 +10,9 @@ class SSHClientFactory(j.application.JSFactoryBaseClass):
     def _init(self):
         self._clients = {}
 
+    def configure(self,name="default",addr="localhost",port=22,login="root",passwd=None):
+        return self.get(name=name,addr=addr,port=port,login=login,passwd=passwd)
+
     def get(self, name="main", **kwargs):
         """
         Get an instance of the SSHClient

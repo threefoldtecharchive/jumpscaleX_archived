@@ -6,7 +6,7 @@ import os
 
 JSBASE = j.application.JSBaseClass
 
-class TarantoolDB(JSBASE):
+class TarantoolDB(j.application.JSBaseClass):
 
     def __init__(self, name="test", path="$DATADIR/tarantool/$NAME", adminsecret="admin007", port=3301):
         JSBASE.__init__(self)
@@ -62,7 +62,7 @@ class TarantoolDB(JSBASE):
         # rm 000*;rm -rf /Users/kristofdespiegeleer1/opt/var/data/tarantool/test;tarantoolctl start test; cat /Users/kristofdespiegeleer1/opt/var/data/tarantool/test/instance.log
 
     def start(self):
-        # j.tools.prefab.local.db.tarantool.start()
+        # j.builder.db.tarantool.start()
         self._setConfig()
         cpath = j.clients.tarantool.cfgdir + "/%s.lua" % self.name
         j.tools.tmux.execute("tarantool -i %s" % cpath, window="tarantool")

@@ -7,7 +7,7 @@ import copy
 
 import sys
 
-class DocSite(JSBASE):
+class DocSite(j.application.JSBaseClass):
     """
     """
 
