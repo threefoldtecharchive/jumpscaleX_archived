@@ -3,8 +3,8 @@
 Make sure you have the required dependencies
 
 ```python
-j.tools.prefab.local.db.rocksdb.install()
-j.tools.prefab.local.zero_os.zos_stor_client.install()
+j.core.builder.db.rocksdb.install()
+j.core.builder.zero_os.zos_stor_client.install()
 ```
 
 ## Creating a flist

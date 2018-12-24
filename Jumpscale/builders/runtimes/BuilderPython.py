@@ -18,8 +18,8 @@ class BuilderPython(j.builder.system._BaseClass):
 
     def build(self, reset=False,tag="v3.6.7"):
         """
-        js_shell 'j.tools.prefab.local.runtimes.python.build(reset=False)'
-        js_shell 'j.tools.prefab.local.runtimes.python.build(reset=True)'
+        js_shell 'j.core.builder.runtimes.python.build(reset=False)'
+        js_shell 'j.core.builder.runtimes.python.build(reset=True)'
 
 
         will build python and install all pip's inside the builded directory
@@ -32,6 +32,7 @@ class BuilderPython(j.builder.system._BaseClass):
             self.reset()
 
         j.builder.buildenv.install()
+        j.shell()
 
         j.clients.git.pullGitRepo('https://github.com/python/cpython', dest=self.CODEDIRL, tag=tag, reset=reset, ssh=False, timeout=20000)
         if not self.doneGet("compile") or reset:
@@ -106,7 +107,7 @@ class BuilderPython(j.builder.system._BaseClass):
 
         will make sure we add env scripts to it as well as add all the required pip modules
 
-        js_shell 'j.tools.prefab.local.runtimes.python._addPIP(reset=True)'
+        js_shell 'j.core.builder.runtimes.python._addPIP(reset=True)'
         """
 
         C = """
@@ -185,7 +186,7 @@ class BuilderPython(j.builder.system._BaseClass):
 
     def _pipAll(self, reset=False):
         """
-        js_shell 'j.tools.prefab.local.runtimes.python._pipAll(reset=False)'
+        js_shell 'j.core.builder.runtimes.python._pipAll(reset=False)'
         """
 
         if self.doneCheck("pipall", reset):
@@ -227,7 +228,7 @@ class BuilderPython(j.builder.system._BaseClass):
     def copy2sandbox_github(self, reset=False):
         """
 
-        js_shell 'j.tools.prefab.local.runtimes.python.copy2sandbox_github(reset=False)'
+        js_shell 'j.core.builder.runtimes.python.copy2sandbox_github(reset=False)'
 
 
         builds python and returns the build dir
@@ -241,11 +242,11 @@ class BuilderPython(j.builder.system._BaseClass):
 
 
         self._logger.info("sandbox:%s" % path)
-        j.tools.prefab.local.system.package.install("zip")
+        j.core.builder.system.package.install("zip")
         if j.core.platformtype.myplatform.isMac:
-            j.tools.prefab.local.system.package.install("redis")
+            j.core.builder.system.package.install("redis")
         else:
-            j.tools.prefab.local.system.package.install("redis-server")
+            j.core.builder.system.package.install("redis-server")
 
         if path == "":
             path = self.BUILDDIR

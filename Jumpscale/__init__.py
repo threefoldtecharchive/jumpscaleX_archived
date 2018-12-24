@@ -175,13 +175,15 @@ j.core.exceptions = j.exceptions
 
 #THIS SHOULD BE THE END OF OUR CORE, EVERYTHING AFTER THIS SHOULD BE LOADED DYNAMICALLY
 
-if "JSRELOAD" in os.environ  and os.path.exists("%s/jumpscale/jumpscale_generated.py"%j.dirs.TMPDIR):
+j.core.application._lib_generation_path = j.core.tools.text_replace("{DIR_BASE}/lib/jumpscale/Jumpscale/jumpscale_generated.py")
+
+if "JSRELOAD" in os.environ  and os.path.exists(j.core.application._lib_generation_path):
     print("RELOAD JUMPSCALE LIBS")
-    os.remove("%s/jumpscale/jumpscale_generated.py"%j.dirs.TMPDIR)
+    os.remove(j.core.application._lib_generation_path)
 
 generated = False
 # print (sys.path)
-if not os.path.exists("%s/jumpscale/jumpscale_generated.py"%j.dirs.TMPDIR):
+if not os.path.exists(j.core.application._lib_generation_path):
     print("WARNING: GENERATION OF METADATA FOR JUMPSCALE")
     from .core.generator.JSGenerator import JSGenerator
     j.core.jsgenerator = JSGenerator(j)
@@ -189,7 +191,7 @@ if not os.path.exists("%s/jumpscale/jumpscale_generated.py"%j.dirs.TMPDIR):
     j.core.jsgenerator.report()
     generated = True
 
-ipath = "%s/jumpscale"%(j.dirs.TMPDIR)
+ipath = j.core.tools.text_replace("{DIR_BASE}/lib/jumpscale/Jumpscale")
 if ipath not in sys.path:
     sys.path.append(ipath)
 

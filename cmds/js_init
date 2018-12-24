@@ -7,11 +7,6 @@ import click
 def cli():
     pass
 
-
-#WILL MAKE SURE THAT THE GENERATED FILE IS REMOVED SO IT CAN GET REGENERATED
-os.environ["JSRELOAD"]="1"
-os.environ["JSGENERATE_DEBUG"]="0"
-
 try:
     from Jumpscale import j
 except:
@@ -51,8 +46,10 @@ def generate():
     """
     generate the loader file, important to do when new modules added
     """
-    #is done automatically
-    pass
+    from Jumpscale.core.generator.JSGenerator import JSGenerator
+    g=JSGenerator(j)
+    g.generate(methods_find=True)
+    g.report()
 
 
 cli.add_command(scan)
