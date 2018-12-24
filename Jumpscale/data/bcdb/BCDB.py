@@ -356,7 +356,7 @@ class BCDB(j.application.JSBaseClass):
             schema_id, acl_id, bdata_encrypted = res
             if model:
                 if schema_id != model.schema.sid:
-                    raise RuntimeError("this id: %s is not of right type"%(id))
+                    model =self.meta.model_get_from_id(schema_id,bcdb=self)
             else:
                 model =self.meta.model_get_from_id(schema_id,bcdb=self)
         else:

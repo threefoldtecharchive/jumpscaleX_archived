@@ -2,11 +2,8 @@ from Jumpscale import j
 
 from .Client import Client
 
-JSConfigFactoryBase = j.application.JSFactoryBaseClass
-logger = j.logger.get(__name__)
 
-
-class ZeroOSFactory(JSConfigFactoryBase):
+class ZeroOSFactory(j.application.JSFactoryBaseClass):
     """
     """
     _CHILDCLASS = Client
@@ -15,10 +12,11 @@ class ZeroOSFactory(JSConfigFactoryBase):
     def _init(self):
         self.connections = {}
 
-    def get_from_itsyouonline(self,name="default",iyo_instance="default",host="localhost",port=6600):
+    def get_from_itsyouonline(self,name="default",iyo_instance="default",jwtname="default",host="localhost",port=6600):
 
         iyo = j.clients.itsyouonline.get(name=iyo_instance)
-        passwd = iyo.jwt #there should be enough protection in here to refresh
+        passwd = iyo.jwt_get() #there should be enough protection in here to refresh
+
 
 
         cl = self.get(name=name,host=host,port=port,password=passwd,ssl=True)
@@ -40,7 +38,7 @@ class ZeroOSFactory(JSConfigFactoryBase):
         # timeout = 120
 
 
-        cl = self.get_from_itsyouonline(name="test",host="10.102.54.126",port=6600)
+        cl = self.get_from_itsyouonline(name="test",host="10.102.54.126",port=6379)
 
         j.shell()
 
