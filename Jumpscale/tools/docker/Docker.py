@@ -538,7 +538,7 @@ class Docker(j.application.JSBaseClass):
         """
         self.removeDocker()
 
-        j.core.builder.docker.install(force=True)
+        j.builder.docker.install(force=True)
 
         self.init()
 

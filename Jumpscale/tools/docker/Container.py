@@ -123,8 +123,8 @@ class Container(j.application.JSBaseClass):
 
 
     def ssh_authorize(self, sshkeyname, password):
-        home = j.core.builder.bash.home
-        user_info = [j.core.builder.system.user.check(user) for user in j.core.builder.system.user.list()]
+        home = j.builder.bash.home
+        user_info = [j.builder.system.user.check(user) for user in j.builder.system.user.list()]
         users = [i['name'] for i in user_info if i['home'] == home]
         user = users[0] if users else 'root'
         addr = self.info['Ports'][0]['IP']

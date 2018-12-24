@@ -24,7 +24,7 @@ class IYOFactory(JSConfigBaseFactory):
         
         """
 
-        j.core.builder.runtimes.pip.install("python-jose")
+        j.builder.runtimes.pip.install("python-jose")
 
     def refresh_jwt_token(self, token, validity=86400):
         """refresh a jwt if expired, needs to be refreshable

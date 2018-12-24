@@ -509,7 +509,7 @@ class NetTools(j.application.JSBaseClass):
 
         """
         #TODO: use caching feature from jumpscale to keep for e.g. 1 min, if not usecache needs to reset cache to make sure we load again
-        return j.core.builder.system.net.getInfo(device=device)
+        return j.builder.system.net.getInfo(device=device)
         
 
     def getIpAddress(self, interface):
@@ -518,7 +518,7 @@ class NetTools(j.application.JSBaseClass):
         #TODO: use getNetworkInfo to return info
         if j.core.platformtype.myplatform.isLinux or j.core.platformtype.myplatform.isMac:
             output =list()
-            output = j.core.builder.system.net.getInfo()
+            output = j.builder.system.net.getInfo()
             result = {'ip': [],'ip6': []}
             for nic in output:
                 if nic['name']== interface:
@@ -551,7 +551,7 @@ class NetTools(j.application.JSBaseClass):
                 "Interface %s not found on the system" % interface)
         if j.core.platformtype.myplatform.isLinux or j.core.platformtype.myplatform.isMac:
             output =list()
-            output = j.core.builder.system.net.getInfo()
+            output = j.builder.system.net.getInfo()
             result=list()
             for nic in output:
                 if nic['name']== interface:
@@ -628,7 +628,7 @@ class NetTools(j.application.JSBaseClass):
             IpAdress = list()
             IpAdress.append(ipaddress)
             output =list()
-            output = j.core.builder.system.net.getInfo()
+            output = j.builder.system.net.getInfo()
             result=list()
 
             for nic in output:

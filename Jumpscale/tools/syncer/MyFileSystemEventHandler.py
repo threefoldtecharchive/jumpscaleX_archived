@@ -21,8 +21,8 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
                 source,dest=source #get list to 2 separate ones
             if ":" in source:
                 raise RuntimeError("cannot have : in source")
-            self.sync_paths_src.append(j.core.builder.core.replace(source))
-            self.sync_paths_dest.append(j.core.builder.core.replace(dest))
+            self.sync_paths_src.append(j.builder.tools.replace(source))
+            self.sync_paths_dest.append(j.builder.tools.replace(dest))
             #THERE IS ISSUE WITH PATHS when not sandbox
             # self.sync_paths_dest.append(self.zoscontainer.node.prefab.core.replace(dest))
 
