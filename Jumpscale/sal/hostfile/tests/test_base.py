@@ -1,14 +1,13 @@
 from Jumpscale import j
 
 
-def main(self):
+def test_main(self=None):
     """
     to run:
 
     js_shell 'j.sal.hostfile._test(name="base")'
 
     """
-
     j.sal.process.execute('echo "194.45.24.74 test" >> /etc/hosts')
     assert j.sal.hostsfile.ip_exists('194.45.24.74') is True
     j.sal.hostsfile.hostnames_set('194.45.24.74', ['testhostname'])

@@ -89,4 +89,4 @@ class HostFile(JSBASE):
         :param name: basename of the file to run, defaults to "".
         :type name: str, optional
         """
-        self._test_run(name=name)
+        self._test_run(name=name, obj_key='test_main')
