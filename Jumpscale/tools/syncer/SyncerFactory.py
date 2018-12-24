@@ -10,8 +10,7 @@ class SyncerFactory(j.application.JSFactoryBaseClass):
     def _init(self):
         self.syncers = {}
 
-
-    def get(self,name="default",sshclient_name="main",paths=None):
+    def get(self, name="default", sshclient_name="main", paths=None):
         """
 
         make sure there is an ssh client first, can be done by
@@ -35,9 +34,9 @@ class SyncerFactory(j.application.JSFactoryBaseClass):
             if paths is None:
                 paths = "{DIR_CODE}/github/threefoldtech/jumpscaleX,{DIR_CODE}/github/threefoldtech/digitalmeX"
 
-            self.syncers[name]=j.application.JSFactoryBaseClass.get(self,name=name,sshclient_name=sshclient_name,paths=paths)
+            self.syncers[name] = j.application.JSFactoryBaseClass.get(
+                self, name=name, sshclient_name=sshclient_name, paths=paths)
         return self.syncers[name]
-
 
     def sync(self):
         """
@@ -52,8 +51,9 @@ class SyncerFactory(j.application.JSFactoryBaseClass):
         js_shell 'j.tools.syncer.test()'
         :return:
         """
-        cl = j.clients.ssh.get(name="builder", addr="10.102.133.88", port=1053)
+        cl = j.clients.ssh.get(
+            name="id_passwd", sshkey_name="id_passwd", addr="172.17.0.3", port=22)
         r = cl.execute("ls / ")
 
-        s = self.get(name="builder",sshclient_name= cl.name,paths=None)
-        s.sync()
+        # s = self.get(name="builder",sshclient_name= cl.name,paths=None)
+        # s.sync()

@@ -5,44 +5,81 @@ from Jumpscale import j
 class threefoldtoken_order_sell_index:
 
     def _init_index(self):
-        pass #to make sure works if no index
-        self._logger.info("init index:%s"%self.schema.url)
-
-        p = j.clients.peewee
-
-        db = self.bcdb.sqlclient.sqlitedb
-        # print(db)
-
-        class BaseModel(p.Model):
-            class Meta:
-                print("*%s"%db)
-                database = db
-
-        class Index_threefoldtoken_order_sell(BaseModel):
-            id = p.IntegerField(unique=True)
-            currency_to_sell = p.TextField(index=True)
-            price_min = p.FloatField(index=True)
-            amount = p.FloatField(index=True)
-            expiration = p.IntegerField(index=True)
-            approved = p.BooleanField(index=True)
-            wallet_addr = p.TextField(index=True)
-
-        self.index = Index_threefoldtoken_order_sell
-        self.index.create_table(safe=True)
+        self.index = None
 
     
-    def index_set(self,obj):
-        idict={}
-        idict["currency_to_sell"] = obj.currency_to_sell
-        idict["price_min"] = obj.price_min_usd
-        idict["amount"] = obj.amount
-        idict["expiration"] = obj.expiration
-        idict["approved"] = obj.approved
-        idict["wallet_addr"] = obj.wallet_addr
-        idict["id"] = obj.id
-        if not self.index.select().where(self.index.id == obj.id).count()==0:
-            #need to delete previous record from index
-            self.index.delete().where(self.index.id == obj.id).execute()
-        self.index.insert(**idict).execute()
+    def index_keys_set(self,obj):
+        val = obj.currency_to_sell
+        if val not in ["",None]:
+            val=str(val)
+            # self._logger.debug("key:currency_to_sell:%s:%s"%(val,obj.id))
+            self._set_key("currency_to_sell",val,obj.id)
+        val = obj.price_min
+        if val not in ["",None]:
+            val=str(val)
+            # self._logger.debug("key:price_min:%s:%s"%(val,obj.id))
+            self._set_key("price_min",val,obj.id)
+        val = obj.amount
+        if val not in ["",None]:
+            val=str(val)
+            # self._logger.debug("key:amount:%s:%s"%(val,obj.id))
+            self._set_key("amount",val,obj.id)
+        val = obj.expiration
+        if val not in ["",None]:
+            val=str(val)
+            # self._logger.debug("key:expiration:%s:%s"%(val,obj.id))
+            self._set_key("expiration",val,obj.id)
+        val = obj.approved
+        if val not in ["",None]:
+            val=str(val)
+            # self._logger.debug("key:approved:%s:%s"%(val,obj.id))
+            self._set_key("approved",val,obj.id)
+        val = obj.wallet_addr
+        if val not in ["",None]:
+            val=str(val)
+            # self._logger.debug("key:wallet_addr:%s:%s"%(val,obj.id))
+            self._set_key("wallet_addr",val,obj.id)
 
-    
+    def index_keys_delete(self,obj):
+        val = obj.currency_to_sell
+        if val not in ["",None]:
+            val=str(val)
+            self._logger.debug("delete key:currency_to_sell:%s:%s"%(val,obj.id))
+            self._delete_key("currency_to_sell",val,obj.id)
+        val = obj.price_min
+        if val not in ["",None]:
+            val=str(val)
+            self._logger.debug("delete key:price_min:%s:%s"%(val,obj.id))
+            self._delete_key("price_min",val,obj.id)
+        val = obj.amount
+        if val not in ["",None]:
+            val=str(val)
+            self._logger.debug("delete key:amount:%s:%s"%(val,obj.id))
+            self._delete_key("amount",val,obj.id)
+        val = obj.expiration
+        if val not in ["",None]:
+            val=str(val)
+            self._logger.debug("delete key:expiration:%s:%s"%(val,obj.id))
+            self._delete_key("expiration",val,obj.id)
+        val = obj.approved
+        if val not in ["",None]:
+            val=str(val)
+            self._logger.debug("delete key:approved:%s:%s"%(val,obj.id))
+            self._delete_key("approved",val,obj.id)
+        val = obj.wallet_addr
+        if val not in ["",None]:
+            val=str(val)
+            self._logger.debug("delete key:wallet_addr:%s:%s"%(val,obj.id))
+            self._delete_key("wallet_addr",val,obj.id)
+    def get_by_currency_to_sell(self,currency_to_sell):
+        return self.get_from_keys(currency_to_sell=currency_to_sell)
+    def get_by_price_min(self,price_min):
+        return self.get_from_keys(price_min=price_min)
+    def get_by_amount(self,amount):
+        return self.get_from_keys(amount=amount)
+    def get_by_expiration(self,expiration):
+        return self.get_from_keys(expiration=expiration)
+    def get_by_approved(self,approved):
+        return self.get_from_keys(approved=approved)
+    def get_by_wallet_addr(self,wallet_addr):
+        return self.get_from_keys(wallet_addr=wallet_addr)
