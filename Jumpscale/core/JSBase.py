@@ -134,6 +134,38 @@ class JSBase:
         print()
         sys.exit(1)
 
+    def _done_check(self,name="",reset=False):
+        if reset:
+            self._done_reset(name=name)
+        if name!="":
+            return j.core.db.hexists("done",self._objid)
+        else:
+            return j.core.db.hexists("done","%s:%s"%(self._objid,name))
+
+    def _done_set(self,name="",value=True):
+        if name!="":
+            return j.core.db.hset("done",self._objid,value)
+        else:
+            return j.core.db.hset("done","%s:%s"%(self._objid,name),value)
+
+    def _done_get(self,name=""):
+        if name!="":
+            return j.core.db.hget("done",self._objid)
+        else:
+            return j.core.db.hget("done","%s:%s"%(self._objid,name))
+
+    def _done_reset(self,name=""):
+        """
+        if name =="" then will remove all from this object
+        :param name:
+        :return:
+        """
+        if name!="":
+            for item in  j.core.db.hkeys("done","%s*"%self._objid):
+                 j.core.db.hdel("done",item)
+        else:
+            return j.core.db.hdel("done","%s:%s"%(self._objid,name))
+
 
     def __str__(self):
         try:

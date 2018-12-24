@@ -76,4 +76,4 @@ class ElectrumClientFactory(JSConfigBaseFactory):
                                                                  wallet._wallet_path)
 
         self._logger.info("Loading wallet {} using command: {}".format(wallet._name, cmd))
-        j.core.builder.core.run(cmd)
+        j.builder.tools.run(cmd)

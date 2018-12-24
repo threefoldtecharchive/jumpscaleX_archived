@@ -164,7 +164,7 @@ class ZDBServer(j.application.JSBaseClass):
         """
         js_shell 'j.servers.zdb.build()'
         """
-        j.core.builder.zero_os.zos_db.build(install=True, reset=True)
+        j.builder.zero_os.zos_db.build(install=True, reset=True)
 
     def test(self, build=False):
         """

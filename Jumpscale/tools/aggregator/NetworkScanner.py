@@ -13,7 +13,7 @@ class NetworkScanner(j.application.JSBaseClass):
         code, _, _ = j.sal.process.execute('which nmap', showout=False, die=False)
         if code != 0:
             self._logger.info('nmap not found, installing...')
-            j.core.builder.system.package.install('nmap')
+            j.builder.system.package.install('nmap')
 
         self._ports = ','.join([str(port) for port in ports])
         self._cidr = cidr
