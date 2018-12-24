@@ -43,7 +43,6 @@ class JSFactoryBase(JSBase):
             if len(propnames_keys_in_schema) > 0:
                 # we can try to find this config
                 res = m.get_from_keys(**kwargs)
-
                 res2 = []
                 for item in res:
                     res2.append(child_class(id=item.id))
