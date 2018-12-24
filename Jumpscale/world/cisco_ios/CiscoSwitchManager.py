@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class CiscoSwitchManager(JSBASE):
+class CiscoSwitchManager(j.builder._BaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.ciscoswitch"
@@ -28,7 +28,7 @@ class CiscoSwitchManager(JSBASE):
 from .Router import Router
 
 
-class CiscoSwitch(JSBASE):
+class CiscoSwitch(j.builder._BaseClass):
 
     def __init__(self, host, login, password):
         JSBASE.__init__(self)

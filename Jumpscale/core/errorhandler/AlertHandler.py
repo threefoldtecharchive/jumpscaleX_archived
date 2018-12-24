@@ -16,7 +16,7 @@ count = 0
 """
 
 
-class AlertHandler(JSBASE):
+class AlertHandler(j.builder._BaseClass):
 
     def __init__(self):
         self.__jscorelocation__ = "j.tools.alerthandler"

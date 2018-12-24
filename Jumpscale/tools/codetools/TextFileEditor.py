@@ -5,7 +5,7 @@ from .TextCharEditor import TextCharEditor
 JSBASE = j.application.JSBaseClass
 
 
-class TextFileEditor(JSBASE):
+class TextFileEditor(j.builder._BaseClass):
     """
     Allow manipulate of a text file
     ideal to manipulate e.g. config files

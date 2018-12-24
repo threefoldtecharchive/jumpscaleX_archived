@@ -10,7 +10,7 @@ JSBASE = j.application.JSFactoryBaseClass
 from pprint import pprint as print
 
 
-class CurrencyLayer(JSBASE):
+class CurrencyLayer(j.builder._BaseClass):
     """
     get key from https://currencylayer.com/quickstart
     """

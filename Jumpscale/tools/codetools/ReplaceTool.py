@@ -8,7 +8,7 @@ JSBASE = j.application.JSBaseClass
 JSBASE = j.application.JSBaseClass
 
 
-class Synonym(JSBASE):
+class Synonym(j.builder._BaseClass):
 
     def __init__(self, name='', replaceWith='', simpleSearch="", replaceExclude=''):
         """
@@ -94,7 +94,7 @@ class Synonym(JSBASE):
         return self.__str__()
 
 
-class ReplaceTool(JSBASE):
+class ReplaceTool(j.builder._BaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)

@@ -13,7 +13,7 @@ from github.GithubException import UnknownObjectException
 JSBASE = j.application.JSBaseClass
 
 
-class GithubRepo(JSBASE):
+class GithubRepo(j.builder._BaseClass):
     TYPES = ["story", "ticket", "task", "bug",
              "feature", "question", "monitor", "unknown"]
     PRIORITIES = ["critical", "urgent", "normal", "minor"]

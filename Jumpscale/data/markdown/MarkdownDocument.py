@@ -4,7 +4,7 @@ JSBASE = j.application.JSBaseClass
 import copy
 from . import mistune
 
-class MarkdownDocument(JSBASE):
+class MarkdownDocument(j.builder._BaseClass):
 
     def __init__(self, content="", path=""):
         JSBASE.__init__(self)

@@ -40,7 +40,7 @@ def jsonrpc(func):
 JSBASE = j.application.JSBaseClass
 
 
-class GeventWSServer(JSBASE):
+class GeventWSServer(j.builder._BaseClass):
     SERVICEKEY = j.core.state.configGet('rogerthat.servicekey')
 
     def __init__(self, addr, port, handler):

@@ -6,7 +6,7 @@ from socket import gethostname
 JSBASE = j.application.JSBaseClass
 
 
-class SSLFactory(JSBASE):
+class SSLFactory(j.builder._BaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.ssl"

@@ -6,7 +6,7 @@ from ..disklayout import disks
 JSBASE = j.application.JSBaseClass
 
 
-class DiskManager(JSBASE):
+class DiskManager(j.builder._BaseClass):
     """
      helps you to gather a lot of information about the disks and partitions.
     """

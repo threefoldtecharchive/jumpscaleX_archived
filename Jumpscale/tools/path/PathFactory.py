@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class PathFactory(JSBASE):
+class PathFactory(j.builder._BaseClass):
 
     def __init__(self):
         if not hasattr(self, '__jslocation__'):

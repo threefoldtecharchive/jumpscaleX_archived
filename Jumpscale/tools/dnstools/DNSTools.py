@@ -15,7 +15,7 @@ except Exception as e:
 JSBASE = j.application.JSBaseClass
 
 
-class DNSTools(JSBASE):
+class DNSTools(j.builder._BaseClass):
     """
     to install:
     pip3 install dnspython
@@ -48,7 +48,7 @@ class DNSTools(JSBASE):
 
 
 
-class DNSClient(JSBASE):
+class DNSClient(j.builder._BaseClass):
 
     def __init__(self, nameservers,port=53):
         JSBASE.__init__(self)

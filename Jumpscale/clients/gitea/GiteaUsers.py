@@ -7,7 +7,7 @@ from .GiteaUserCurrent import GiteaUserCurrent
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaUsers(JSBASE):
+class GiteaUsers(j.builder._BaseClass):
     def __init__(self, client):
         JSBASE.__init__(self)
         self.client = client

@@ -9,7 +9,7 @@ import zipfile
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
-class ZipFileFactory(JSBASE):
+class ZipFileFactory(j.builder._BaseClass):
     READ = 'r'
     WRITE = 'w'
     APPEND = 'a'
@@ -23,7 +23,7 @@ class ZipFileFactory(JSBASE):
         return ZipFile(path, mode)
 
 
-class ZipFile(JSBASE):
+class ZipFile(j.builder._BaseClass):
     '''Handle zip files'''
 
     def __init__(self, path, mode=ZipFileFactory.READ):

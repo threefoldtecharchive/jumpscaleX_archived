@@ -8,7 +8,7 @@ JSBASE = j.application.JSBaseClass
 from pyblake2 import blake2b
 
 
-class BCDBModel(JSBASE):
+class BCDBModel(j.builder._BaseClass):
     def __init__(self, bcdb, schema=None,url=None, cache_expiration=3600,custom=False, reset=False):
         """
 

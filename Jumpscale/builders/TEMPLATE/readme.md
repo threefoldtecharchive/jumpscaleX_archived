@@ -29,3 +29,7 @@
 - investigate the template code, try to be consistent
 - there is also a lot of knowledge in js9 zos_sal lots ca be ported to the builders
 
+## creating instances or not
+
+In this example we create an instance using our new config manager, this is not always a must, often its enough to only be able to start/stop/test one main instance.
+

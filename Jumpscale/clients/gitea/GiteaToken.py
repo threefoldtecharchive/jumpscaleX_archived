@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaToken(JSBASE):
+class GiteaToken(j.builder._BaseClass):
 
     def __init__(
             self,

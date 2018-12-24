@@ -12,7 +12,7 @@ import time
 # import sys
 from Jumpscale import tcpPortConnectionTest
 
-class RedisFactory(JSBASE):
+class RedisFactory(j.builder._BaseClass):
 
     """
     """

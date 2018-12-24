@@ -5,7 +5,7 @@ from .GiteaIssueComment import GiteaIssueComment
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaIssueComments(JSBASE):
+class GiteaIssueComments(j.builder._BaseClass):
     def __init__(self, client, repo, issue, user):
         JSBASE.__init__(self)
         self.client = client

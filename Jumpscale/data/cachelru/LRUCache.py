@@ -55,7 +55,7 @@ class CacheKeyError(KeyError, JSBASE):
         JSBASE.__init__(self)
 
 
-class LRUCache(JSBASE):
+class LRUCache(j.builder._BaseClass):
 
     class __Node:
         """Record of a cached value. Not for public consumption."""

@@ -10,7 +10,7 @@ from .VXNet.utils import *
 JSBASE = j.application.JSBaseClass
 
 
-class NetConfigFactory(JSBASE):
+class NetConfigFactory(j.builder._BaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.openvswitch"

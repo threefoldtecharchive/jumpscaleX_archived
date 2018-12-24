@@ -3,7 +3,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class ErrBotFactory(JSBASE):
+class ErrBotFactory(j.builder._BaseClass):
     def __init__(self):
         self.__jslocation__ = "j.servers.errbot"
 

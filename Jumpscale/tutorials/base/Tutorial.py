@@ -3,7 +3,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class Tutorial(JSBASE):
+class Tutorial(j.builder._BaseClass):
     """
     """
 

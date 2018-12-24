@@ -5,7 +5,7 @@ import copy
 
 JSBASE = j.application.JSBaseClass
 
-class Link(JSBASE):
+class Link(j.builder._BaseClass):
     def __init__(self,doc, source):
         JSBASE.__init__(self)        
         self.docsite = doc.docsite

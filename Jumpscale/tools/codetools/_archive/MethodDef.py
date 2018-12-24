@@ -2,7 +2,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class MethodDef(JSBASE):
+class MethodDef(j.builder._BaseClass):
 
     def __init__(self, classDef, fileDef, name="", paramstring="", comments="", decorators=[]):
         JSBASE.__init__(self)

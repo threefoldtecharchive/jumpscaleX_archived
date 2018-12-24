@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaMilestone(JSBASE):
+class GiteaMilestone(j.builder._BaseClass):
 
     def __init__(
             self,

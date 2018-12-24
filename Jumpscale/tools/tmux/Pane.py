@@ -5,7 +5,7 @@ import psutil
 import copy
 JSBASE = j.application.JSBaseClass
 
-class Pane(JSBASE):
+class Pane(j.builder._BaseClass):
 
     def __init__(self, window, pane,name=""):
         JSBASE.__init__(self)

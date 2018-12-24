@@ -7,7 +7,7 @@ from .Dep import Dep
 JSBASE = j.application.JSBaseClass
 
 
-class Sandboxer(JSBASE):
+class Sandboxer(j.builder._BaseClass):
     """
     sandbox any linux app
     """
@@ -354,11 +354,11 @@ class Sandboxer(JSBASE):
     #     out = j.core.text.sort(out)
     #     j.sal.fs.writeFile(plistfile, out)
 
-    # def sandboxBinWithPrefab(self, prefab, bin_path, sandbox_dir):
+    # def sandboxBinWithBuilder(self, prefab, bin_path, sandbox_dir):
     #     """
     #     Sandbox a binary located in `bin_path` into a sandbox / filesystem
 
-    #     @param prefab Prefab: prefab either local or remote on a machine.
+    #     @param prefab Builder: prefab either local or remote on a machine.
     #     @param bin_path string: binary full path to sandbox.
     #     @param sandbox_dir string: where to create the sandbox.
 

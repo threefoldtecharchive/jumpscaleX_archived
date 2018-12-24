@@ -11,7 +11,7 @@ from .FixerReplace import FixerReplacer
 ## RI = Replace case insensitive
 
 JSBASE = j.application.JSBaseClass
-class Fixer(JSBASE):
+class Fixer(j.builder._BaseClass):
 
     __jslocation__ = "j.tools.fixer"
 

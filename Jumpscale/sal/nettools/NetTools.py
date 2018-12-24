@@ -9,7 +9,7 @@ from Jumpscale import j
 
 
 JSBASE = j.application.JSBaseClass
-class NetTools(JSBASE):
+class NetTools(j.builder._BaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.nettools"
@@ -802,6 +802,8 @@ class NetTools(JSBASE):
         if md5_checksum and not j.data.hash.md5(destination_file_path) == md5_checksum:
             raise j.exceptions.RuntimeError(
                 'The provided MD5 checksum did not match that of a freshly-downloaded file!')
+
+
 
     def download(self, url, localpath, username=None, passwd=None, overwrite=True):
         '''Download a url to a file or a directory, supported protocols: http, https, ftp, file

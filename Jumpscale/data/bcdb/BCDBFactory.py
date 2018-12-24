@@ -8,7 +8,7 @@ import redis
 JSBASE = j.application.JSFactoryBaseClass
 
 
-class BCDBFactory(JSBASE):
+class BCDBFactory(j.builder._BaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)

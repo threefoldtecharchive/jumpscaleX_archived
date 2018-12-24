@@ -6,7 +6,7 @@ BASECMD = "btrfs"
 JSBASE = j.application.JSBaseClass
 
 
-class BtfsExtensionFactory(JSBASE):
+class BtfsExtensionFactory(j.builder._BaseClass):
 
     __jslocation__ = "j.sal.btrfs"
 
@@ -18,7 +18,7 @@ class BtfsExtensionFactory(JSBASE):
         return BtrfsExtension(ex)
 
 
-class BtrfsExtension(JSBASE):
+class BtrfsExtension(j.builder._BaseClass):
 
     def __init__(self, executor):
         self.__conspattern = re.compile("^(?P<key>[^:]+): total=(?P<total>[^,]+), used=(?P<used>.+)$", re.MULTILINE)

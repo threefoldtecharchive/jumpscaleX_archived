@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaOrgMembers(JSBASE):
+class GiteaOrgMembers(j.builder._BaseClass):
     def __init__(self, client, organization):
         JSBASE.__init__(self)
         self.client = client

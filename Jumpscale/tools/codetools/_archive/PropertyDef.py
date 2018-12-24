@@ -2,7 +2,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class PropertyDef(JSBASE):
+class PropertyDef(j.builder._BaseClass):
 
     def __init__(self, classDef, name="", defaultVal="", type="", comments="",
                  isArray=False, isDict=False, dictKey="", decorators=None):

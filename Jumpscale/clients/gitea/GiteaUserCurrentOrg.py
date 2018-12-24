@@ -9,7 +9,7 @@ from .GiteaOrgHooks import GiteaOrgHooks
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaUserCurrentOrg(JSBASE):
+class GiteaUserCurrentOrg(j.builder._BaseClass):
 
     def __init__(
             self,

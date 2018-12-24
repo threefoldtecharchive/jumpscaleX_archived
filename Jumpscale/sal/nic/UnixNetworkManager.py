@@ -13,7 +13,7 @@ class NetworkingError(Exception, JSBASE):
         self._logger.error(msg)
 
 
-class UnixNetworkManager(JSBASE):
+class UnixNetworkManager(j.builder._BaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.nic"

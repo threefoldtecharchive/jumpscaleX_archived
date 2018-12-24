@@ -6,7 +6,7 @@ from PIL import Image
 JSBASE = j.application.JSBaseClass
 
 
-class ImageLib(JSBASE):
+class ImageLib(j.builder._BaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.imagelib"

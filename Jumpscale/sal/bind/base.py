@@ -2,7 +2,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class DNS(JSBASE):
+class DNS(j.builder._BaseClass):
     def __init__(self):
         JSBASE.__init__(self)
 

@@ -6,7 +6,7 @@ from .GiteaRepoForNonOwner import GiteaRepoForNonOwner
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaReposForClient(JSBASE):
+class GiteaReposForClient(j.builder._BaseClass):
     def __init__(self, client, user):
         JSBASE.__init__(self)
         self.user = user

@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
-class PerformanceTraceFactory(JSBASE):
+class PerformanceTraceFactory(j.builder._BaseClass):
     """
     """
 

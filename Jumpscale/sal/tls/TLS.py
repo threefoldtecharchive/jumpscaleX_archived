@@ -2,7 +2,7 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
-class TLS(JSBASE):
+class TLS(j.builder._BaseClass):
 
     def __init__(self, cfsslService=None, path=None):
         JSBASE.__init__(self)

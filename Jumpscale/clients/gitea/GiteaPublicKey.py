@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaPublicKey(JSBASE):
+class GiteaPublicKey(j.builder._BaseClass):
 
     def __init__(
             self,

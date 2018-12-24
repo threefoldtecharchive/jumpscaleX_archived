@@ -5,7 +5,7 @@ from .GiteaBranch import GiteaBranch
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaBranches(JSBASE):
+class GiteaBranches(j.builder._BaseClass):
     def __init__(self, client, repo, user):
         JSBASE.__init__(self)
         self.repo = repo
