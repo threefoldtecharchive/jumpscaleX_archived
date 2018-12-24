@@ -46,7 +46,8 @@ class IYOClient(j.application.JSBaseConfigClass):
         self._client = None
         if self.jwt == "" or self.jwt_expires<j.data.time.epoch:
             self.jwt_refresh()
-        self.api.session.headers.update({"Authorization": 'bearer {}'.format(self.jwt)})
+        #TODO: *1 need to enable next line again, was blocked for now
+        # self.api.session.headers.update({"Authorization": 'bearer {}'.format(self.jwt)})
 
     @property
     def client(self):

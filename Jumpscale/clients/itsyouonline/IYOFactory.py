@@ -72,6 +72,9 @@ class IYOFactory(j.application.JSFactoryBaseClass):
 
         self._logger.info(j.clients.itsyouonline.default.jwt)
 
+        j.shell()
+        #TODO: fix below
+
         self._logger.info(client.api.organizations.GetOrganization("threefold"))
 
 
