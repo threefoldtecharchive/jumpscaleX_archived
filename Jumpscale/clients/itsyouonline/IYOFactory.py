@@ -8,23 +8,21 @@ import time
 
 DEFAULT_BASE_URL = "https://itsyou.online/api"
 
-JSConfigBaseFactory = j.application.JSFactoryBaseClass
 
+class IYOFactory(j.application.JSFactoryBaseClass):
 
-class IYOFactory(JSConfigBaseFactory):
+    __jslocation__ = 'j.clients.itsyouonline'
 
-    def __init__(self):
-        self.__jslocation__ = 'j.clients.itsyouonline'
+    def _init(self):
         self.raml_spec = "https://raw.githubusercontent.com/itsyouonline/identityserver/master/specifications/api/itsyouonline.raml"
-        JSConfigBaseFactory.__init__(self, IYOClient, single_item=True)
         self._default = None
 
-    def install(self):
-        """installs python-jose library locally
-        
-        """
-
-        j.builder.runtimes.pip.install("python-jose")
+    # def install(self):
+    #     """installs python-jose library locally
+    #
+    #     """
+    #
+    #     j.builder.runtimes.pip.install("python-jose")
 
     def refresh_jwt_token(self, token, validity=86400):
         """refresh a jwt if expired, needs to be refreshable

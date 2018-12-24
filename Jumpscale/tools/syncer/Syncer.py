@@ -66,7 +66,7 @@ class Syncer(j.application.JSBaseConfigClass):
             res.append((src,dst))
         return res
 
-    def sync(self, monitor=False):
+    def sync(self, monitor=True):
         """
         sync all code to the remote destinations, uses config as set in jumpscale.toml
 

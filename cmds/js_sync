@@ -51,6 +51,7 @@ if a new container was created, don't forget to call js_sync reload because cach
 @click.option('--paths', '-p', default=None, help=HELP)
 def sync(name="default",paths=None):
     cl = j.clients.ssh.get(name=name)
+    j.shell()
     s = self.get(name="jssync_%s"%name,sshclient_name= cl.name,paths=paths)
     s.sync()
 
@@ -63,6 +64,7 @@ def sync(name="default",paths=None):
 @click.option('--paths', '-p', default=None, help=HELP)
 def configure(name="default", addr="localhost",port=22,user="root",passwd=None,paths=None):
     cl = j.clients.ssh.get(name=name, addr=addr, port=port,passwd=passwd)
+    s = self.get(name="jssync_%s"%name,sshclient_name= cl.name,paths=paths)
 
 
 @click.command()
@@ -78,7 +80,7 @@ def help():
     print(HELP)
 
 cli.add_command(sync)
-cli.add_command(reload)
+cli.add_command(configure)
 cli.add_command(help)
 
 if __name__ == '__main__':
