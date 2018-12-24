@@ -62,4 +62,4 @@ some tools
 
 
 ## Collaboration Conventions
-[check conventions](docs/conventions.md)
+[check conventions](docs/CONTRIBUTING.md)
