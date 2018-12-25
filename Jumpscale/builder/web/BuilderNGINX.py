@@ -221,6 +221,8 @@ class BuilderNGINX(j.builder.system._BaseClass):
             nginxcmd = j.core.tools.text_replace(nginxcmd)
 
             self._logger.info("cmd: %s" % nginxcmd)
+            # j.tools.tmux.execute(nginxcmd, window=self.NAME,
+            #                      pane=self.NAME, reset=True)
             tmux_main_window = j.tools.tmux.window_get(window=self.NAME)
             pane = tmux_main_window.pane_get(name=self.NAME)
             pane.execute(cmd=nginxcmd)
@@ -229,8 +231,7 @@ class BuilderNGINX(j.builder.system._BaseClass):
             raise RuntimeError('Failed to start nginx')
 
     def stop(self):
-        tmux_main_window = j.tools.tmux.window_get(window=self.NAME)
-        tmux_main_window.kill()
+        j.sal.process.killProcessByName(self.NAME)
         
 
     def test(self):
