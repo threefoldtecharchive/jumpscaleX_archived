@@ -46,17 +46,17 @@ class BuilderPython(BuilderBaseClass):
                 mkdir -p {DIR_VAR}/build
 
                 # export OPENSSLPATH=$(brew --prefix openssl)
-                
+
                 # export OPENSSLPATH={OPENSSLPATH}
-                
+
                 # export CPPFLAGS=-I/opt/X11/include
-                # export CFLAGS="-I$(brew --prefix openssl)/include" LDFLAGS="-L$(brew --prefix openssl)/lib"                
+                # export CFLAGS="-I$(brew --prefix openssl)/include" LDFLAGS="-L$(brew --prefix openssl)/lib"
 
                 ./configure --prefix={BUILDDIRL}/  CPPFLAGS="-I{OPENSSLPATH}/include" LDFLAGS="-L{OPENSSLPATH}/lib"
 
                 #if you do the optimizations then it will do all the tests
                 # ./configure --prefix={BUILDDIRL}/ --enable-optimizations
-                
+
                 # make -j12
 
                 make -j12 EXTRATESTOPTS=--list-tests install
@@ -80,7 +80,7 @@ class BuilderPython(BuilderBaseClass):
                 script = """
                 set -ex
                 cd {code_dir}
-                
+
                 # THIS WILL MAKE SURE ALL TESTS ARE DONE, WILL TAKE LONG TIME
                 ./configure --prefix={build_dir}/ --enable-optimizations
 
@@ -152,7 +152,7 @@ $PBASE/lib/python3.6/lib-dynload:$PBASE/bin
             script = """
             cd {build_dir}/
             . envbuild.sh
-            set -e                        
+            set -e
             rm -rf get-pip.py
             curl https://bootstrap.pypa.io/get-pip.py > get-pip.py
             {DIR_VAR}/build//bin/python3 get-pip.py
@@ -328,7 +328,7 @@ $PBASE/lib/python3.6/lib-dynload:$PBASE/bin
         C = """
         mv $PACKAGEDIR/lib/python/_sysconfigdata_m_linux_x86_64-linux-gnu.py $PACKAGEDIR/lib/pythonbin/_sysconfigdata_m_linux_x86_64-linux-gnu.py
         rm -rf $PACKAGEDIR/lib/python/config-3.6m-x86_64-linux-gnu
-        
+
         """
         args = {}
         args["$PACKAGEDIR"] = self.package_dir
@@ -367,7 +367,6 @@ $PBASE/lib/python3.6/lib-dynload:$PBASE/bin
             url = "git@github.com:threefoldtech/sandbox_osx.git"
             j.shell()
 
-    copy2git()
 
     def _zip(self, dest="", python_lib_zip=False):
         assert self.executor.type == "local"
