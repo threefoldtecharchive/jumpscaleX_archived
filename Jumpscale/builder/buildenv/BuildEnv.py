@@ -16,7 +16,7 @@ class BuildEnv(j.builder.system._BaseClass):
         self.upgrade()
 
         if not self._done_check("fixlocale", reset):
-            j.builder.sandbox.locale_check()
+            j.tools.bash.local.locale_check()
             self._done_set("fixlocale")
 
         # out = ""
