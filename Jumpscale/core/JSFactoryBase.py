@@ -50,8 +50,10 @@ class JSFactoryBase(JSBase):
                 return res2
             return []
         else:
-            return m.get_all()
-
+            res2 = []
+            for item in m.get_all():
+                res2.append(child_class(id=item.id))
+            return res2
 
     def _load(self, klass):
         name = klass.__name__

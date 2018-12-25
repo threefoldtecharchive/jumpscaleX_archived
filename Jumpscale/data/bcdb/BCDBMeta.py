@@ -7,6 +7,7 @@ SCHEMA = """
 
 @url = jumpscale.schemas.meta.1
 schemas = (LO) !jumpscale.schemas.meta.schema.1
+name = "" (S)
 
 @url = jumpscale.schemas.meta.schema.1
 url = ""
@@ -25,7 +26,7 @@ class BCDBMeta(j.application.JSBaseClass):
         self._meta_local_path = j.sal.fs.joinPaths(
             self.bcdb._data_dir, "meta.db")
         self._schema = j.data.schema.get(SCHEMA)
-        self._logger_enable()
+        # self._logger_enable()
         self.reset()
 
     @property
@@ -41,15 +42,22 @@ class BCDBMeta(j.application.JSBaseClass):
             if data is None:
                 self._logger.debug("save, empty schema")
                 self._data = self._schema.new()
+                self._data.name = self.bcdb.name
             else:
                 self._logger.debug("schemas load from db")
                 self._data = self._schema.get(capnpbin=data)
+
+            if self._data.name != self.bcdb.name:
+                raise RuntimeError("name given to bcdb does not correspond with name in the metadata stor")
+
 
             for s in self._data.schemas:
                 self.url2sid[s.url] = s.sid
                 self.md5sid[s.md5] = s.sid
                 if s.sid > self._schema_last_id:
                     self._schema_last_id = s.sid
+
+
 
         return self._data
 

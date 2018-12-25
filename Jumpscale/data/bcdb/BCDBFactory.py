@@ -20,10 +20,10 @@ class BCDBFactory(j.application.JSBaseClass):
 
         j.clients.redis.core_get() #just to make sure the redis got started
 
-        self._logger_enable()
+        # self._logger_enable()
 
     def new(self, name, zdbclient=None,reset=False):
-        self._logger.info("new bcdb:%s"%name)
+        self._logger.debug("new bcdb:%s"%name)
         if zdbclient!=None and j.data.types.string.check(zdbclient):
             raise RuntimeError("zdbclient cannot be str")
         self.bcdb_instances[name] = BCDB(zdbclient=zdbclient,name=name,reset=reset)

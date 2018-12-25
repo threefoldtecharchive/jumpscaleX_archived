@@ -17,7 +17,7 @@ class JSBaseConfig(JSBase):
         m=self.__class__._MODEL
         res = None
 
-        self._logger_enable()
+        # self._logger_enable()
 
         if id is not None:
             res = m.get(id)
@@ -33,6 +33,7 @@ class JSBaseConfig(JSBase):
                         raise RuntimeError("found too many items for :%s, args:\n%s\n%s"%(self.__class__.__name__,kwargs,res))
                     elif len(res)==1:
                         res = res[0]
+                        # from pudb import set_trace; set_trace()
                         self._logger.debug("existing obj:%s"%res)
                     else:
                         res=None
@@ -70,7 +71,7 @@ class JSBaseConfig(JSBase):
         self.data.model.delete(self.data)
 
     def data_update(self,**kwargs):
-        self.data.load_from_data(data=kwargs,reset=False)
+        self.data.data_update(data=kwargs)
         self.data.save()
 
 

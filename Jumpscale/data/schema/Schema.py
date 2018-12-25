@@ -1,4 +1,3 @@
-import imp
 
 from Jumpscale import j
 from .SchemaProperty import SchemaProperty

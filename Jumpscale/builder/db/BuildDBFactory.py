@@ -7,5 +7,6 @@ class BuildDBFactory(j.builder.system._BaseFactoryClass):
     def _init(self):
         self._logger_enable()
         #TODO:
+        pass
 
 

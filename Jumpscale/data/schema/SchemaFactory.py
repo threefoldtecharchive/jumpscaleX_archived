@@ -1,5 +1,5 @@
 import sys
-from .SchemaCollection import SchemaCollection
+from .List0 import List0
 from .Schema import *
 from Jumpscale import j
 
@@ -124,7 +124,7 @@ class SchemaFactory(j.application.JSBaseClass):
         return res[0]
 
     def list_base_class_get(self):
-        return SchemaCollection
+        return List0
 
     def test(self, name=""):
         """

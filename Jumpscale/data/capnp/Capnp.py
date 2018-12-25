@@ -1,7 +1,7 @@
 import sys
 from Jumpscale import j
 from collections import OrderedDict
-import capnp
+# import capnp
 
 from .ModelBaseCollection import ModelBaseCollection
 from .ModelBaseData import ModelBaseData
@@ -48,15 +48,13 @@ class Capnp(j.application.JSBaseClass):
 
     __jslocation__ = "j.data.capnp"
 
-    def __init__(self):
-        self.__imports__ = "pycapnp"
+    def _init(self):
         self._schema_cache = {}
         self._capnpVarDir = j.sal.fs.joinPaths(j.dirs.VARDIR, "capnp")
         j.sal.fs.createDir(self._capnpVarDir)
         if self._capnpVarDir not in sys.path:
             sys.path.append(self._capnpVarDir)
         self.tools = Tools()
-        JSBASE.__init__(self)
 
     def getModelBaseClass(self):
         return ModelBase
@@ -130,6 +128,7 @@ class Capnp(j.application.JSBaseClass):
             j.sal.fs.remove(path)
 
     def _getSchemas(self, schemaInText):
+        import capnp
         schemaInText = j.core.text.strip(schemaInText)
         schemaInText = schemaInText.strip() + "\n"
         schemaId = self.getId(schemaInText)

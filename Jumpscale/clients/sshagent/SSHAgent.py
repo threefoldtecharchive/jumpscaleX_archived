@@ -274,7 +274,7 @@ class SSHAgent(j.application.JSFactoryBaseClass):
 
         # TODO:1 broken
 
-        self._logger_enable()
+        # self._logger_enable()
         self._logger.info("sshkeys:%s" % j.clients.sshkey.listnames())
 
         self.sshagent_kill()  # goal is to kill & make sure it get's loaded automatically

@@ -30,7 +30,7 @@ class SSHClientParamiko(SSHClientBase):
 
         self._transport = None
         self._client = None
-        self._logger_enable()
+        # self._logger_enable()
 
     def _test_local_agent(self):
         """

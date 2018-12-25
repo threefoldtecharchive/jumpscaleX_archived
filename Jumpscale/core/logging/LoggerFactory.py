@@ -107,9 +107,9 @@ class LoggerFactory():
             self.loggers[name] = self._default
             # print("DEFAULT LOGGER (disabledlogger):%s" % name)
         else:
+
             if force or check_(name):
                 # print("JSLOGGER:%s" % name)
-                # logger = logging.getLogger(name)
                 logger = JSLogger(name, self)
                 logger.level = self._j.core.myenv.config["LOGGER_LEVEL"]
 
@@ -241,11 +241,11 @@ class LoggerFactory():
             new = False
             logging = self._j.core.state.config_js["logging"]
             for item in items:
-                if item not in logging["filter"]:
+                if item not in logging["filter"] and item.strip()!="":
                     logging["filter"].append(item)
                     new = True
             for item in exclude:
-                if item not in logging["exclude"]:
+                if item not in logging["exclude"] and item.strip()!="":
                     logging["exclude"].append(item)
                     new = True
             if new:
@@ -254,12 +254,12 @@ class LoggerFactory():
 
         for item in items:
             item = item.strip().lower()
-            if item not in self.filter:
+            if item not in self.filter and item.strip()!="":
                 self.filter.append(item)
 
         for item in exclude:
             item = item.strip().lower()
-            if item not in self.exclude:
+            if item not in self.exclude and item.strip()!="":
                 self.exclude.append(item)
 
         # self.logger.debug("start re-init for logging")

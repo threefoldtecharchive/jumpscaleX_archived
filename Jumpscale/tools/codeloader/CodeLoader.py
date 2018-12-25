@@ -10,7 +10,7 @@ class CodeLoader(j.application.JSBaseClass):
     def __init__(self):
         self.__jslocation__ = "j.tools.loader"
         JSBASE.__init__(self)
-        self._logger_enable()
+        # self._logger_enable()
         j.sal.fs.createDir("%s/CODEGEN"%j.dirs.VARDIR)
         self._hash_to_codeobj = {}
 

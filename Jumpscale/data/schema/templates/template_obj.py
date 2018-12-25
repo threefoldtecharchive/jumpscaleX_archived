@@ -1,6 +1,6 @@
 from Jumpscale import j
 
-SchemaCollection = j.data.schema.list_base_class_get()
+List0 = j.data.schema.list_base_class_get()
 
 class ModelOBJ():
     
@@ -14,9 +14,9 @@ class ModelOBJ():
         self.autosave = False
         self.readonly = False
         self._JSOBJ = True
-        self.load_from_data(data=data, capnpbin=capnpbin, keepid=False, keepacl=False)
+        self._load_from_data(data=data, capnpbin=capnpbin, keepid=False, keepacl=False)
 
-    def load_from_data(self,data=None, capnpbin=None, keepid=True, keepacl=True,reset=True):
+    def _load_from_data(self,data=None, capnpbin=None, keepid=True, keepacl=True,reset=True):
 
         if self.readonly:
             raise RuntimeError("cannot load from data, obj is readonly.\n%s"%self)
@@ -41,6 +41,19 @@ class ModelOBJ():
         if not keepacl:
             self.acl_id = 0
             self._acl = None
+
+        if data is not None:
+            self.data_update(data=data)
+
+    def data_update(self,data=None):
+        """
+        upload data
+        :param data:
+        :return:
+        """
+
+        if self.readonly:
+            raise RuntimeError("cannot load from data, obj is readonly.\n%s"%self)
 
         if j.data.types.json.check(data):
             data = j.data.serializers.json.loads(data)
@@ -73,7 +86,7 @@ class ModelOBJ():
     def _reset(self):
         self._changed_items = {}
         {% for ll in obj.lists %}
-        self._{{ll.alias}} = SchemaCollection(self._schema.property_{{ll.name}})
+        self._{{ll.alias}} = List0(self._schema.property_{{ll.name}})
         for capnpbin in self._cobj_.{{ll.name_camel}}:
             self._{{ll.alias}}.new(data=capnpbin)
         {% endfor %}
@@ -177,6 +190,15 @@ class ModelOBJ():
                 # self._logger.debug("MODEL CHANGED, SAVE DONE")
                 return o
 
+            return self
+        raise RuntimeError("cannot save, model not known")
+
+    def delete(self):
+        if self.model:
+            if self.readonly:
+                raise RuntimeError("object readonly, cannot be saved.\n%s"%self)
+            if not self.model.__class__.__name__=="ACL":
+                self.model.delete(self)
             return self
         raise RuntimeError("cannot save, model not known")
 

@@ -48,7 +48,7 @@ class BCDB(j.application.JSBaseClass):
         self.dataprocessor_greenlet = None
 
         self.meta = BCDBMeta(self)
-        self._logger_enable()
+        # self._logger_enable()
 
         self._init_(reset=reset, stop=False)
 
@@ -98,8 +98,8 @@ class BCDB(j.application.JSBaseClass):
         self.user = self.model_add(USER())
         self.group = self.model_add(GROUP())
 
-        self._logger_enable()
-        self._logger.info("BCDB INIT DONE:%s" % self.name)
+        # self._logger_enable()
+        # self._logger.info("BCDB INIT DONE:%s" % self.name)
 
     def redis_server_start(self, port=6380, secret="123456"):
 
@@ -199,7 +199,6 @@ class BCDB(j.application.JSBaseClass):
         self._hset_index_key_delete()
 
         j.sal.fs.remove(self._data_dir)
-        j.shell()
 
     def stop(self):
         self._logger.info("STOP BCDB")

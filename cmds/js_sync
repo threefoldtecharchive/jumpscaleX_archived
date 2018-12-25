@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 from Jumpscale import j
-
+import pprint
 import click
 
 @click.group()
@@ -121,13 +121,14 @@ def configure(name="default", addr="localhost",port=22,user="root",passwd=None,p
         app.run()
         app.process()
 
-        cl = j.clients.ssh.get(name=app.name, addr=app.addr, port=app.port,passwd=app.passwd)
+        cl = j.clients.ssh.get(name="jssync_%s"%app.name, addr=app.addr, port=app.port,passwd=app.passwd)
         paths = app.paths
+        name = app.name
 
     else:
-        cl = j.clients.ssh.get(name=name, addr=addr, port=port,passwd=passwd)
+        cl = j.clients.ssh.get(name="jssync_%s"%name, addr=addr, port=port,passwd=passwd)
 
-    s = j.tools.syncer.get(name="jssync_%s"%name,sshclient_name= cl.name,paths=paths)
+    s = j.tools.syncer.get(name=name,sshclient_name= cl.name,paths=paths)
 
 @click.command()
 def list():
@@ -135,8 +136,18 @@ def list():
     will list all ssh clients, can use for name=...
     :return:
     """
-    # j.clients.ssh.find()
-    j.shell()
+    res = j.tools.syncer.find()
+    res_out = []
+    for item in res:
+        sshclient = j.clients.ssh.get(item.sshclient_name)
+        item_out = {}
+        item_out["name"]=item.name
+        item_out["paths"]=[item for item in item.paths]
+        item_out["addr"]=sshclient.addr
+        item_out["port"]=sshclient.port
+        res_out.append(item_out)
+
+    pprint.pprint(res_out)
 
 
 @click.command()
@@ -146,7 +157,7 @@ def help():
 
 @click.command()
 @click.option('--name', '-n', default="main", help="name of the sshclient, if empty  will be main")
-def ssh(name="default",paths=None):
+def ssh(name="default"):
     cl = j.clients.ssh.get(name=name)
     cmd="ssh {login}@{addr} -p {port}".format(**cl.data._ddict)
     j.sal.process.executeWithoutPipe(cmd)
@@ -154,11 +165,36 @@ def ssh(name="default",paths=None):
     #mosh --ssh="ssh -p 1025" root@10.102.90.219 -p 50025
 
 
+@click.command()
+@click.option('--name', '-n', default="main", help="name of the sshclient, if empty  will be main")
+def delete(name="default"):
+    """
+    delete the sshclient & sync client
+    :param name:
+    :return:
+    """
+    res=j.tools.syncer.find(name=name)
+    for item in res:
+        item.delete()
+
+@click.command()
+def reset():
+    """
+    will remove all known instances
+    :return:
+    """
+    res = j.tools.syncer.find()
+    for item in res:
+        item.delete()
+
+
 cli.add_command(sync)
 cli.add_command(configure)
 cli.add_command(help)
 cli.add_command(list)
 cli.add_command(ssh)
+cli.add_command(delete)
+cli.add_command(reset)
 
 if __name__ == '__main__':
     cli()

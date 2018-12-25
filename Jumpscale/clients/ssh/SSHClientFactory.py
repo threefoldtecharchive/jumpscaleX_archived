@@ -50,9 +50,12 @@ class SSHClientFactory(j.application.JSFactoryBaseClass):
             cl = SSHClient(name=name)
 
         cl.data_update(**kwargs)
+
         cl.allow_agent = True  #weird why I have to set this, should be default, need to check schema
         cl.forward_agent = True
         self._clients[name] = cl
+
+        cl.save()
 
         return cl
 

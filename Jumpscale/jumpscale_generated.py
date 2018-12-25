@@ -1162,7 +1162,6 @@ class group_tools():
         self._console = None
         self._expect = None
         self._bash = None
-        self._tls = None
         self._flist = None
         self._tarfile = None
         self._zipfile = None
@@ -1817,23 +1816,6 @@ class group_tools():
                 return None
             # print("OK")
         return self._bash
-    @property
-    def tls(self):
-        if self._tls is None:
-            # print("LOAD:TLSFactory")
-            try:
-                from Jumpscale.sal.tls.TLSFactory import TLSFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.tls.TLSFactory", e)
-                raise e
-            # print("RUN:TLSFactory")
-            try:
-                self._tls =  TLSFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.tls.TLSFactory",e)
-                return None
-            # print("OK")
-        return self._tls
     @property
     def flist(self):
         if self._flist is None:
@@ -2639,6 +2621,7 @@ class group_sal():
         self._hostsfile = None
         self._rsync = None
         self._unix = None
+        self._tls = None
         self._samba = None
         self._nginx = None
         self._netconfig = None
@@ -2875,6 +2858,23 @@ class group_sal():
                 return None
             # print("OK")
         return self._unix
+    @property
+    def tls(self):
+        if self._tls is None:
+            # print("LOAD:TLSFactory")
+            try:
+                from Jumpscale.sal.tls.TLSFactory import TLSFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.tls.TLSFactory", e)
+                raise e
+            # print("RUN:TLSFactory")
+            try:
+                self._tls =  TLSFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.tls.TLSFactory",e)
+                return None
+            # print("OK")
+        return self._tls
     @property
     def samba(self):
         if self._samba is None:

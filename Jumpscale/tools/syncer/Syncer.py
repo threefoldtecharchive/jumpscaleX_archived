@@ -35,8 +35,13 @@ class Syncer(j.application.JSBaseConfigClass):
                     item = item.replace("//","/")
                     paths2.append(item)
                 kwargs["paths"]=paths2
-        self.data.load_from_data(data=kwargs,reset=False)
+        self.data.data_update(kwargs)
         self.data.save()
+
+    def delete(self):
+        for item in j.clients.ssh.find(name=self.data.sshclient_name):
+            item.delete()
+        j.application.JSBaseConfigClass.delete(self)
 
     @property
     def executor(self):
