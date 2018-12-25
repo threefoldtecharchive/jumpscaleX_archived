@@ -162,7 +162,7 @@ class Pane(j.application.JSBaseClass):
 
         if running:
             time.sleep(0.1)
-            p = j.sal.process.getProcessObject(int(pid))
+            p = j.sal.process.getProcessObject(self.pid)
             for child in  p.children():
                 #now hardkill
                 child.kill()
