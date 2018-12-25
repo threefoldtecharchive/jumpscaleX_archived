@@ -168,7 +168,7 @@ class BuilderNGINX(j.builder.system._BaseClass):
             self.start()
 
     def build(self, install=True):
-        j.builder.sandbox.locale_check()
+        j.tools.bash.local.locale_check()
 
         if j.builder.tools.isUbuntu:
             j.builder.system.package.mdupdate()
