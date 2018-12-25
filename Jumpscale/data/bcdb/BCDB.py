@@ -163,13 +163,13 @@ class BCDB(j.application.JSBaseClass):
             data[self.name][schema.url]=data["lastid"]
 
             bindata = j.data.serializers.json.dumps(data)
-            j.clients.credis_core.set("bcdb.instances",bindata)
+            j.clients.credis_core.set("bcdb.schema.instances",bindata)
 
         return b"O:"+str(data[self.name][schema.url]).encode()
 
 
     def _hset_index_key_delete(self):
-        r = j.clients.credis_core.get("bcdb.instances")
+        r = j.clients.credis_core.get("bcdb.schema.instances")
         if r is None:
             return
         data = j.data.serializers.json.loads(r)
