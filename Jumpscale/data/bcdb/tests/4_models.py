@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.bcdb.test(name="models",start=True)'
+    js_shell 'j.data.bcdb.test(name="models")'
 
     work with toml files and see if models get generated properly
 

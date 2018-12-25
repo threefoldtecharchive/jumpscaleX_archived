@@ -5,7 +5,7 @@ from Jumpscale import j
 class GROUP_index:
 
     def _init_index(self):
-        pass #to make sure works if no index
+        self.index = None
 
     
     def index_keys_set(self,obj):
@@ -24,6 +24,23 @@ class GROUP_index:
             val=str(val)
             # self._logger.debug("key:email:%s:%s"%(val,obj.id))
             self._set_key("email",val,obj.id)
+
+    def index_keys_delete(self,obj):
+        val = obj.name
+        if val not in ["",None]:
+            val=str(val)
+            self._logger.debug("delete key:name:%s:%s"%(val,obj.id))
+            self._delete_key("name",val,obj.id)
+        val = obj.dm_id
+        if val not in ["",None]:
+            val=str(val)
+            self._logger.debug("delete key:dm_id:%s:%s"%(val,obj.id))
+            self._delete_key("dm_id",val,obj.id)
+        val = obj.email
+        if val not in ["",None]:
+            val=str(val)
+            self._logger.debug("delete key:email:%s:%s"%(val,obj.id))
+            self._delete_key("email",val,obj.id)
     def get_by_name(self,name):
         return self.get_from_keys(name=name)
     def get_by_dm_id(self,dm_id):

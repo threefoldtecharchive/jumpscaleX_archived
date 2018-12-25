@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.bcdb.test(name="acls",start=True)'
+    js_shell 'j.data.bcdb.test(name="acls")'
 
     test around acls
 
@@ -84,12 +84,15 @@ def main(self):
         assert a.acl.rights_check(1, "d") is False
         a.save()
 
+        j.shell()
+
         # NEED TO DO TESTS WITH GROUPS
 
     zdbclient_admin = j.servers.zdb.client_admin_get()
     zdbclient = zdbclient_admin.namespace_new("test", secret="1234")
     zdbclient.flush()  # empty
     bcdb = j.data.bcdb.new(name="test", zdbclient=zdbclient, reset=True)
+    j.shell()
     do(bcdb)
     bcdb.reset()
 

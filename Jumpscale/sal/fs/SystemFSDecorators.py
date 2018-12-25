@@ -78,6 +78,8 @@ def path_check(**arguments):
                        or empty string
         - "exists": Means that the path argument value must be an
                        existing directory
+        - "replace": Means we replace the path or filename using j.core.tools.text_replace
+
         - "file": Means that the path argument value must be an
                        existing file or a link to a file
         - "pureFile": Means that the path argument value must be an existing
@@ -99,7 +101,7 @@ def path_check(**arguments):
             raise ValueError(
                 "Expected tuple of validators for argument %s" % argument)
         for validator in validators:
-            if validator not in {"required", "exists", "file", "dir", "pureFile", "pureDir"}:
+            if validator not in {"required", "exists", "file", "dir", "pureFile", "pureDir","replace"}:
                 raise ValueError(
                     "Unsupported validator '%s' for argument %s" % (validator, argument))
 
@@ -141,6 +143,14 @@ def path_check(**arguments):
                     if "required" in validators:
                         #NORMALIZE THE PATH 
                         value=pathNormalize(value)
+                        if position < len(args):
+                            args[position] = value
+                        else:
+                            kwargs[parameter.name] = value
+
+                    if "replace" in validators:
+                        #replace THE PATH
+                        value=j.core.tools.text_replace(value)
                         if position < len(args):
                             args[position] = value
                         else:
