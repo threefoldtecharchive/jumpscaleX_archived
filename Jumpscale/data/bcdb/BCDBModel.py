@@ -408,6 +408,7 @@ class BCDBModel(j.application.JSBaseClass):
         ```
         :return:
         """
+        print("idspath:%s"%self._ids_file_path)
         with open(self._ids_file_path, "rb") as f:
             while True:
                 chunk = f.read(4)

@@ -250,7 +250,7 @@ class Client(BaseClient):
         self._raw_chk.check(payload)
         flag = 'result:{}:flag'.format(id)
         self._redis.rpush('core:default', json.dumps(payload))
-        if self._redis.brpoplpush(flag, flag, DefaultTimeout) is None:
+        if self._redis.brpoplpush(flag, flag, 120) is None:
             TimeoutError('failed to queue job {}'.format(id))
         self._logger.debug('%s >> g8core.%s(%s)', id, command, ', '.join(("%s=%s" % (k, v) for k, v in arguments.items())))
 
