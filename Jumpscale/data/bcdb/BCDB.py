@@ -180,8 +180,6 @@ class BCDB(j.application.JSBaseClass):
                     print("HKEY DELETE:%s"%key)
                     j.clients.credis_core.delete(key)
 
-        j.shell()
-
 
     def _reset(self):
 
