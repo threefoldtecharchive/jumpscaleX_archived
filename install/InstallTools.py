@@ -1306,6 +1306,7 @@ class MyEnv():
         config["DIR_VAR"] = "/sandbox/var"
         config["DIR_CODE"] = "/sandbox/code"
         config["DIR_CFG"] = "/sandbox/cfg"
+        config["DIR_BIN"] = "/sandbox/bin"
         config["USEGIT"] = True
         config["DEBUG"] = False
         config["SSH_AGENT"] = False

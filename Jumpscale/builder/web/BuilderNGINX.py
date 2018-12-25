@@ -11,7 +11,7 @@ class BuilderNGINX(j.builder.system._BaseClass):
     NAME = 'nginx'
 
     def _init(self):
-        self.BUILDDIR = j.core.tools.text_replace("{DIR_VAR}/build/")
+        self.BUILDDIR = j.core.tools.text_replace("{DIR_VAR}/build")
 
     def get_basic_nginx_conf(self):
         return """\
@@ -40,7 +40,7 @@ class BuilderNGINX(j.builder.system._BaseClass):
         	# server_names_hash_bucket_size 64;
         	# server_name_in_redirect off;
 
-        	include {DIR_VAR}/build/nginx/conf/mime.types;
+        	include %(DIR_VAR)s/nginx/conf/mime.types;
         	default_type application/octet-stream;
 
         	##
@@ -54,8 +54,8 @@ class BuilderNGINX(j.builder.system._BaseClass):
         	# Logging Settings
         	##
 
-        	access_log {DIR_VAR}/build/nginx/logs/access.log;
-        	error_log {DIR_VAR}/build/nginx/logs/error.log;
+        	access_log %(DIR_VAR)s/nginx/logs/access.log;
+        	error_log %(DIR_VAR)s/nginx/logs/error.log;
 
         	##
         	# Gzip Settings
@@ -68,10 +68,10 @@ class BuilderNGINX(j.builder.system._BaseClass):
         	# Virtual Host Configs
         	##
 
-        	include {DIR_VAR}/build/nginx/conf/conf.d/*;
-        	include {DIR_VAR}/build/nginx/conf/sites-enabled/*;
+        	include %(DIR_VAR)s/nginx/conf/conf.d/*;
+        	include %(DIR_VAR)s/nginx/conf/sites-enabled/*;
         }
-        """
+        """ % {"DIR_VAR": self.BUILDDIR}
 
     def get_basic_nginx_site(self, wwwPath="/var/www/html"):
         return """\
@@ -93,7 +93,7 @@ class BuilderNGINX(j.builder.system._BaseClass):
             }
 
             # location ~ \.php$ {
-                # include {DIR_VAR}/build/nginx/conf/snippets/fastcgi-php.conf;
+                # include %s/nginx/conf/snippets/fastcgi-php.conf;
 
                 # With php7.0-cgi alone:
                 # fastcgi_pass 127.0.0.1:9000;
@@ -101,7 +101,7 @@ class BuilderNGINX(j.builder.system._BaseClass):
                 # fastcgi_pass unix:/run/php/php7.0-fpm.sock;
             # }
         }
-        """ % wwwPath
+        """ % (wwwPath, self.BUILDDIR)
 
     def install(self, start=True):
         """
@@ -137,7 +137,7 @@ class BuilderNGINX(j.builder.system._BaseClass):
         #!/bin/bash
         set -ex
 
-        cd {DIR_TEMP}/build/nginx/nginx-1.11.3
+        cd {DIR_TEMP}/build/nginx/nginx-1.14.2
         make install
         """
 
@@ -149,18 +149,15 @@ class BuilderNGINX(j.builder.system._BaseClass):
         j.core.tools.dir_ensure("{DIR_VAR}/build/nginx/conf/sites-enabled/")
 
         basicnginxconf = self.get_basic_nginx_conf()
-        basicnginxconf = j.core.tools.text_replace(textwrap.dedent(basicnginxconf))
-
         defaultenabledsitesconf = self.get_basic_nginx_site()
-        defaultenabledsitesconf = j.core.tools.text_replace(textwrap.dedent(defaultenabledsitesconf))
 
-        j.sal.fs.writeFile("{DIR_VAR}/build/nginx/conf/nginx.conf", content=basicnginxconf)
-        j.sal.fs.writeFile("{DIR_VAR}/build/nginx/conf/sites-enabled/default", content=defaultenabledsitesconf)
+        j.sal.fs.writeFile("{DIR_VAR}/build/nginx/conf/nginx.conf", contents=basicnginxconf)
+        j.sal.fs.writeFile("{DIR_VAR}/build/nginx/conf/sites-enabled/default", contents=defaultenabledsitesconf)
 
         fst_cgi_conf = j.core.tools.file_text_read("{DIR_VAR}/build/nginx/conf/fastcgi.conf")
         fst_cgi_conf = fst_cgi_conf.replace("include fastcgi.conf;",
                                             j.core.tools.text_replace("include {DIR_VAR}/build/nginx/conf/fastcgi.conf;"))
-        j.sal.fs.writeFile("{DIR_VAR}/build/nginx/conf/fastcgi.conf", content=fst_cgi_conf)
+        j.sal.fs.writeFile("{DIR_VAR}/build/nginx/conf/fastcgi.conf", contents=fst_cgi_conf)
 
         #j.builder.tools.file_link(source="{DIR_BASE}/cfg/nginx", destination="{DIR_BASE}/apps/nginx")
         if start:
@@ -188,10 +185,10 @@ class BuilderNGINX(j.builder.system._BaseClass):
             set -ex
 
             cd {DIR_TEMP}/build/nginx
-            wget http://nginx.org/download/nginx-1.11.3.tar.gz
-            tar xzf nginx-1.11.3.tar.gz
+            wget https://nginx.org/download/nginx-1.14.2.tar.gz
+            tar xzf nginx-1.14.2.tar.gz
 
-            cd nginx-1.11.3
+            cd nginx-1.14.2
             ./configure --prefix={DIR_VAR}/build/nginx/ --with-http_ssl_module --with-ipv6
             make
             """
@@ -204,11 +201,13 @@ class BuilderNGINX(j.builder.system._BaseClass):
         if install:
             self.install()
 
-    def start(self, name="nginx", nodaemon=True, nginxconfpath=None):
+    def start(self, nodaemon=True, nginxconfpath=None):
         nginxbinpath = '{DIR_VAR}/build/nginx/sbin'
         # COPY BINARIES TO BINDIR
         j.core.tools.dir_ensure('{DIR_BIN}')
-        j.sal.process.execute("cp {DIR_VAR}/build/nginx/sbin/* {DIR_BIN}/")
+        cmd = j.core.tools.text_replace(
+            "cp {DIR_VAR}/build/nginx/sbin/* {DIR_BIN}/")
+        j.sal.process.execute(cmd)
 
         if nginxconfpath is None:
             nginxconfpath = '{DIR_VAR}/build/nginx/conf/nginx.conf'
@@ -216,21 +215,23 @@ class BuilderNGINX(j.builder.system._BaseClass):
         nginxconfpath = j.core.tools.text_replace(nginxconfpath)
         nginxconfpath = os.path.normpath(nginxconfpath)
 
-        if j.builder.tools.file_exists(nginxconfpath):
+        if j.sal.fs.exists(nginxconfpath):
             # foreground
             nginxcmd = "%s/nginx -c %s -g 'daemon off;'" % (nginxbinpath, nginxconfpath)
             nginxcmd = j.core.tools.text_replace(nginxcmd)
 
             self._logger.info("cmd: %s" % nginxcmd)
-            pm = j.builder.system.processmanager.get()
-            pm.ensure(name=name, cmd=nginxcmd, path=nginxbinpath)
+            tmux_main_window = j.tools.tmux.window_get(window=self.NAME)
+            pane = tmux_main_window.pane_get(name=self.NAME)
+            pane.execute(cmd=nginxcmd)
 
         else:
             raise RuntimeError('Failed to start nginx')
 
     def stop(self):
-        pm = j.builder.system.processmanager.get()
-        pm.stop("nginx")
+        tmux_main_window = j.tools.tmux.window_get(window=self.NAME)
+        tmux_main_window.kill()
+        
 
     def test(self):
         # host a file test can be reached
