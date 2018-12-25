@@ -5,70 +5,69 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.bcdb.test(name="meta_test")'
+    js_shell 'j.data.bcdb.test(name="meta_test",start=True)'
 
     """
 
+    # get zdb client
+    c = j.clients.zdb.client_admin_get()
+    c.namespace_new("test", secret="1234")
+    cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9900, secret="1234")
+    cl1.flush()
 
-    c=j.servers.zdb.start_test_instance(destroydata=True,namespaces=["test"])
+    bcdb, _ = self._load_test_model()
 
-
-    bcdb,model = self._load_test_model()
-
-
-    bcdb.meta._logger_enable()
+    bcdb.meta.logger_enable()
 
     print(bcdb.meta)
 
-    SCHEMA = j.core.text.strip("""
+    schema = j.core.text.strip("""
     @url = jumpscale.schema.test.a
     category*= ""
     data = ""
     """)
-    s = j.data.schema.get(SCHEMA)
+    s = j.data.schema.get(schema)
 
-    id = bcdb.meta.schema_set(s)
+    bcdb.meta.schema_set(s)
 
     bcdb.meta.data.schemas[0]
 
-    assert bcdb.meta.data.schemas[-2].url=="despiegk.test"
-    assert bcdb.meta.data.schemas[-1].url=="jumpscale.schema.test.a"
+    def data_valid(bcdb):
+        assert bcdb.meta.data.schemas[0].sid == 1
+        assert bcdb.meta.data.schemas[1].sid == 2
+        assert bcdb.meta.data.schemas[2].sid == 3
+        assert bcdb.meta.data.schemas[3].sid == 4
+        assert bcdb.meta.data.schemas[4].sid == 5
+        assert bcdb.meta.data.schemas[2].url == "jumpscale.bcdb.group"
+        assert bcdb.meta.data.schemas[3].url == "despiegk.test"
+        assert bcdb.meta.data.schemas[4].url == "jumpscale.schema.test.a"
 
-    l0=len(bcdb.meta.data.schemas)
-
+    data_valid(bcdb)
     bcdb.meta.reset()
+    data_valid(bcdb)
 
-    assert len(bcdb.meta.url2sid) == 2
-
-    assert bcdb.meta.data.schemas[-2].url=="despiegk.test"
-    assert bcdb.meta.data.schemas[-1].url=="jumpscale.schema.test.a"
+    assert len(bcdb.meta.url2schema) is 5
 
     assert "jumpscale.schema.test.a" in j.data.schema.schemas
 
+    cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9900, secret="1234")
+    cl1.flush(meta=bcdb.meta)  # remove the data
 
-    cl1 = j.clients.zdb.client_get("test", addr="localhost", port=9901, secret="1234")
-    cl1.flush(meta=bcdb.meta) #remove the data
+    redis = bcdb.meta._db
+    data = redis.get(b'\x00\x00\x00\x00')
+    assert len(data) > 100
 
-
-    data1 = bcdb.zdbclient.redis.get(b'\x00\x00\x00\x00')
-    data2 = bcdb.zdbclient.get(0)
-    assert data1==data2
-    assert len(data2)>100
-
-    #now completely remove the db, is fully empty
+    # now completely remove the db, is fully empty
     cl1.flush()
-    cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9901, secret="1234")
-    assert cl1.get(key=0) == None
+    cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9900, secret="1234")
+    assert cl1.get(key=0) is None
 
-    bcdb.meta.reset() #make sure we reload from data
+    bcdb.meta.reset()  # make sure we reload from data
 
+    assert bcdb.meta.data.schemas == []
 
-    assert bcdb.meta.data._ddict == {'schemas': []}
-
-    bcdb.zdbclient.set(data2)
-    bcdb.meta.reset() #make sure we reload from data
-
-    s = bcdb.meta.schema_get_from_url("jumpscale.schema.test.a")
-    assert s.url == "jumpscale.schema.test.a"
+    redis.set(b'\x00\x00\x00\x00', data)
+    bcdb.meta.reset()  # make sure we reload from data
+    data_valid(bcdb)  # means DB was made empty and now we check if data still there, was manually put in
 
     return("OK")

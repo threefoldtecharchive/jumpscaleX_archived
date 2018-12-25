@@ -4,6 +4,7 @@ from Jumpscale import j
 import base64
 import ast
 
+
 class String():
 
     '''
@@ -26,7 +27,7 @@ class String():
     def toHR(self, v):
         return self.clean(v)
 
-    def toJSON(self,v):
+    def toJSON(self, v):
         return self.clean(v)
 
     def check(self, value):
@@ -43,7 +44,12 @@ class String():
         if value is None:
             value = ""
         value = str(value)
-        return value.strip().strip("'").strip("\"").strip()
+        if value == "\'\'" or value == "\"\"" or value == "":
+            return ""
+        value = value.strip()  # for extra linespaces
+        if (value.startswith("\"") and value.endswith("\"")) or (value.startswith("'") and value.endswith("'")):
+            value = value[1:-1]
+        return value
 
     def python_code_get(self, value):
         """
@@ -64,14 +70,14 @@ class String():
     def capnp_schema_get(self, name, nr):
         return "%s @%s :Text;" % (name, nr)
 
-    def unique_sort(self,txt):
+    def unique_sort(self, txt):
         return "".join(j.data.types.list.clean(txt))
 
 
 class StringMultiLine(String):
 
     NAME = 'stringmultiline'     # this really does not match with the
-    BASETYPE = 'stringmultiline' # list of aliases.
+    BASETYPE = 'stringmultiline'  # list of aliases.
 
     def check(self, value):
         '''Check whether provided value is a string and has \n inside'''
@@ -143,7 +149,7 @@ class Bytes():
     def toHR(self, v):
         return "...BYTES..."
 
-    def toJSON(self,v):
+    def toJSON(self, v):
         return self.toString(v)
 
     def check(self, value):
@@ -157,7 +163,7 @@ class Bytes():
         """
         only support b64encoded strings and binary strings
         """
-        if isinstance(value,str):
+        if isinstance(value, str):
             value = base64.b64decode(value)
         else:
             if not self.check(value):
@@ -209,7 +215,7 @@ class Boolean():
     def get_default(self):
         return False
 
-    def toJSON(self,v):
+    def toJSON(self, v):
         return self.clean(v)
 
     def clean(self, value):
@@ -272,7 +278,7 @@ class Integer():
 
     def toString(self, value):
         if int(value) == 4294967295:
-            return "-"  #means not set yet
+            return "-"  # means not set yet
         if self.check(value):
             return str(value)
         else:
@@ -280,17 +286,17 @@ class Integer():
 
     def toHR(self, v):
         if int(v) == 4294967295:
-            return "-"  #means not set yet
+            return "-"  # means not set yet
         return self.clean(v)
 
     def fromString(self, s):
         return j.core.text.getInt(s)
 
     def get_default(self):
-        #return this high number, is like None, not set yet
+        # return this high number, is like None, not set yet
         return 4294967295
 
-    def toJSON(self,v):
+    def toJSON(self, v):
         return self.clean(v)
 
     def clean(self, value):
@@ -345,7 +351,7 @@ class Float():
     def toHR(self, v):
         return self.clean(v)
 
-    def toJSON(self,v):
+    def toJSON(self, v):
         return self.clean(v)
 
     def fromString(self, s):

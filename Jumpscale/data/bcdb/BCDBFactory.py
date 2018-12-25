@@ -173,7 +173,8 @@ class BCDBFactory(j.application.JSBaseClass):
         assert cla.ping()
         assert cl.ping()
 
-        bcdb = j.data.bcdb.new("test",zdbclient = cl)
+
+        bcdb = j.data.bcdb.new("test", zdbclient=cl)
 
         bcdb.reset()
 

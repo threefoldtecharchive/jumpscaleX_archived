@@ -16,11 +16,11 @@ class SchemaProperty(j.application.JSBaseClass):
         self.comment = ""
         self.pointer_type = None
         self.nr = 0
-        self.index = False #as used in sqlite
-        self.index_key = False #is for indexing the keys
+        self.index = False # as used in sqlite
+        self.index_key = False # is for indexing the keys
 
         if self.name in ["schema"]:
-            raise RuntimeError("cannot have property name:%s"%self.name)
+            raise RuntimeError("cannot have property name:%s" % self.name)
 
     @property
     def default_as_python_code(self):
@@ -30,14 +30,13 @@ class SchemaProperty(j.application.JSBaseClass):
 
     @property
     def name_camel(self):
-        out=""
+        out = ""
         for item in self.name.split("_"):
             if out is "":
-                out=item.lower()
+                out = item.lower()
             else:
-                out+=item.capitalize()
+                out += item.capitalize()
         return out
-            
 
     @property
     def js_typelocation(self):
@@ -49,15 +48,15 @@ class SchemaProperty(j.application.JSBaseClass):
 
     def __str__(self):
         if not self.jumpscaletype.NAME == "list":
-            out = "prop:%-25s (%s)"%(self.name,self.jumpscaletype.NAME)
+            out = "prop:%-25s (%s)" % (self.name, self.jumpscaletype.NAME)
         else:
-            out = "prop:%-25s (%s(%s))"%(self.name,self.jumpscaletype.NAME,self.jumpscaletype.SUBTYPE.NAME)
+            out = "prop:%-25s (%s(%s))" % (self.name, self.jumpscaletype.NAME, self.jumpscaletype.SUBTYPE.NAME)
 
-        if self.default not in [None,0,"",[]]:
-            out +="   default:%s"%self.default
+        if self.default not in [None, 0, "", []]:
+            out += "   default:%s" % self.default
 
         if self.pointer_type:
-            out+=" !%s"%self.pointer_type
+            out += " !%s" % self.pointer_type
         return out
-        
+
     __repr__ = __str__
