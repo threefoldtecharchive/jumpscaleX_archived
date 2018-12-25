@@ -25,7 +25,7 @@ class SystemFS(j.application.JSBaseClass):
     __jslocation__ = "j.sal.fs"
 
 
-    @path_check(fileFrom={"required", "exists", "file"}, to={"required"})
+    @path_check(fileFrom={"required", "replace", "exists", "file"}, to={"required"})
     def copyFile(self, fileFrom, to, createDirIfNeeded=False, overwriteFile=True):
         """Copy file
 
@@ -63,7 +63,7 @@ class SystemFS(j.application.JSBaseClass):
         shutil.copy(fileFrom, to)
         self._logger.debug("Copied file from %s to %s" % (fileFrom, to))
 
-    @path_check(source={"exists", "required", "file"}, destin={"required"})
+    @path_check(source={"exists", "required", "replace", "file"}, destin={"required"})
     def moveFile(self, source, destin):
         """Move a  File from source path to destination path
         @param source: string (Source file path)
@@ -79,7 +79,7 @@ class SystemFS(j.application.JSBaseClass):
         self._logger.debug("WARNING: renameFIle should not be used")
         return self._move(filePath, new_name)
 
-    @path_check(path={"exists", "required", "dir"})
+    @path_check(path={"exists", "required", "replace", "dir"})
     def removeIrrelevantFiles(self, path, followSymlinks=True):
         """Will remove files having extensions: pyc, bak
         @param path: string (path to search in)
@@ -96,7 +96,7 @@ class SystemFS(j.application.JSBaseClass):
         """
         return j.core.tools.delete(path)
 
-    @path_check(filename={"required", })
+    @path_check(filename={"required", "replace", })
     def createEmptyFile(self, filename):
         """Create an empty file
         @param filename: string (file path name to be created)
@@ -107,7 +107,7 @@ class SystemFS(j.application.JSBaseClass):
         self._logger.debug(
             'Empty file %s has been successfully created' % filename)
 
-    @path_check(newdir={"required", })
+    @path_check(newdir={"required", "replace", })
     def createDir(self, newdir, unlink=False):
         """Create new Directory
         @param newdir: string (Directory path/name)
@@ -249,7 +249,7 @@ class SystemFS(j.application.JSBaseClass):
 
             return j.tools.executorLocal.execute(cmd)[1]
 
-    @path_check(path={"required", "exists", "dir"})
+    @path_check(path={"required", "replace", "exists", "dir"})
     def changeDir(self, path):
         """Changes Current Directory
         @param path: string (Directory path to be changed to)
@@ -261,7 +261,7 @@ class SystemFS(j.application.JSBaseClass):
             'Directory successfully changed to %s' % path)
         return newcurrentPath
 
-    @path_check(source={"exists", "required", "dir"})
+    @path_check(source={"exists", "required", "replace", "dir"})
     def moveDir(self, source, destin):
         """Move Directory from source to destination
         @param source: string (Source path where the directory should be removed from)
@@ -296,7 +296,7 @@ class SystemFS(j.application.JSBaseClass):
             args = args2
         return os.path.join(*args)
 
-    @path_check(path={"required", })
+    @path_check(path={"required", "replace", })
     def getDirName(self, path, lastOnly=False, levelsUp=None):
         """
         Return a directory name from pathname path.
@@ -324,7 +324,7 @@ class SystemFS(j.application.JSBaseClass):
                     "Cannot find part of dir %s levels up, path %s is not long enough" % (levelsUp, path))
         return dname + os.sep if dname else dname
 
-    @path_check(path={"required", })
+    @path_check(path={"required", "replace", })
     def getBaseName(self, path, removeExtension = False):
         """Return the base name of pathname path."""
         self._logger.debug('Get basename for path: %s' % path)
@@ -410,7 +410,7 @@ class SystemFS(j.application.JSBaseClass):
                 result.append(item)
         return "/".join(result)
 
-    @path_check(path={"required", })
+    @path_check(path={"required", "replace", })
     def getParent(self, path):
         """
         Returns the parent of the path:
@@ -452,12 +452,12 @@ class SystemFS(j.application.JSBaseClass):
         else:
             return None
 
-    @path_check(path={"required", })
+    @path_check(path={"required", "replace", })
     def getFileExtension(self, path):
         ext = os.path.splitext(path)[1]
         return ext.strip('.')
 
-    @path_check(path={"required", })
+    @path_check(path={"required", "replace", })
     def chown(self, path, user, group=None):
         from pwd import getpwnam
         from grp import getgrnam
@@ -484,7 +484,7 @@ class SystemFS(j.application.JSBaseClass):
                     if str(e).find("No such file or directory") == -1:
                         raise j.exceptions.RuntimeError("%s" % e)
 
-    @path_check(path={"required", "exists"})
+    @path_check(path={"required", "replace", "exists"})
     def chmod(self, path, permissions):
         """
         @param permissions e.g. 0o660 (USE OCTAL !!!)
@@ -602,7 +602,7 @@ class SystemFS(j.application.JSBaseClass):
             res = self.joinPaths(self.getParent(path), res)
         return res
 
-    @path_check(path={"required", "exists"})
+    @path_check(path={"required", "replace", "exists"})
     def removeLinks(self, path):
         """
         find all links & remove
@@ -620,7 +620,7 @@ class SystemFS(j.application.JSBaseClass):
         names = os.listdir(path)
         return names
 
-    @path_check(path={"required", "exists", "dir"})
+    @path_check(path={"required", "replace", "exists", "dir"})
     def listFilesInDir(self, path, recursive=False, filter=None, minmtime=None, maxmtime=None,
                        depth=None, case_sensitivity='os', exclude=[], followSymlinks=False, listSymlinks=False):
         """Retrieves list of files found in the specified directory
@@ -649,7 +649,7 @@ class SystemFS(j.application.JSBaseClass):
                                                 exclude=exclude, followSymlinks=followSymlinks, listSymlinks=listSymlinks)
         return filesreturn
 
-    @path_check(path={"required", "exists", "dir"})
+    @path_check(path={"required", "replace", "exists", "dir"})
     def listFilesAndDirsInDir(self, path, recursive=False, filter=None, minmtime=None,
                               maxmtime=None, depth=None, type="fd", followSymlinks=False, listSymlinks=False):
         """Retrieves list of files found in the specified directory
@@ -788,6 +788,7 @@ class SystemFS(j.application.JSBaseClass):
         for path in paths:
             templateengine.replaceInsideFile(path)
 
+    @path_check(path={"required", "replace"})
     def listDirsInDir(self, path, recursive=False, dirNameOnly=False, findDirectorySymlinks=True, followSymlinks=True):
         """ Retrieves list of directories found in the specified directory
         @param path: string represents directory path to search in
@@ -815,6 +816,7 @@ class SystemFS(j.application.JSBaseClass):
                     findDirectorySymlinks=findDirectorySymlinks, followSymlinks=followSymlinks))
         return filesreturn
 
+    @path_check(path={"required", "replace"})
     def listPyScriptsInDir(self, path, recursive=True, filter="*.py"):
         """ Retrieves list of python scripts (with extension .py) in the specified directory
         @param path: string represents the directory path to search in
@@ -828,6 +830,7 @@ class SystemFS(j.application.JSBaseClass):
                 result.append(file)
         return result
 
+    @path_check(source={"required", "replace"},destin={"required", "replace"})
     def _move(self, source, destin):
         """Main Move function
         @param source: string (If the specified source is a File....Calls moveFile function)
@@ -862,7 +865,7 @@ class SystemFS(j.application.JSBaseClass):
         self._logger.debug('path %s does not exist' % str(path.encode("utf-8")))
         return False
 
-    @path_check(path={"required", "exists"}, target={"required", })
+    @path_check(path={"required", "replace", "exists"}, target={"required", "replace", })
     def symlink(self, path, target, overwriteTarget=False):
         """Create a symbolic link
         @param path: source path desired to create a symbolic link for
@@ -900,6 +903,7 @@ class SystemFS(j.application.JSBaseClass):
             print(cmd)
             j.sal.process.execute(cmd)
 
+    @path_check(src={"required", "replace", "exists"}, dest={"required", "replace"})
     def symlinkFilesInDir(self, src, dest, delete=True, includeDirs=False, makeExecutable=False):
         if includeDirs:
             items = self.listFilesAndDirsInDir(
@@ -920,7 +924,7 @@ class SystemFS(j.application.JSBaseClass):
                 self.chmod(dest2, 0o770)
                 self.chmod(item, 0o770)
 
-    @path_check(source={"required", "exists"}, destin={"required"})
+    @path_check(source={"required", "replace", "exists"}, destin={"required","replace"})
     def hardlinkFile(self, source, destin):
         """Create a hard link pointing to source named destin. Availability: Unix.
         @param source: string
@@ -936,7 +940,7 @@ class SystemFS(j.application.JSBaseClass):
             raise j.exceptions.RuntimeError(
                 'Cannot create a hard link on windows')
 
-    @path_check(path={"required", })
+    @path_check(path={"required", "replace"})
     def checkDirParam(self, path):
         if(path.strip() == ""):
             raise TypeError("path parameter cannot be empty.")
@@ -945,7 +949,7 @@ class SystemFS(j.application.JSBaseClass):
             path = path + "/"
         return path
 
-    @path_check(path={"required", "exists"})
+    @path_check(path={"required", "replace", "exists"})
     def isDir(self, path, followSoftlink=False):
         """Check if the specified Directory path exists
         @param path: string
@@ -958,7 +962,7 @@ class SystemFS(j.application.JSBaseClass):
             path = self.readLink(path)
         return os.path.isdir(path)
 
-    @path_check(path={"required", "exists", "dir"})
+    @path_check(path={"required", "replace", "exists", "dir"})
     def isEmptyDir(self, path):
         """Check if the specified directory path is empty
         @param path: string
@@ -970,7 +974,7 @@ class SystemFS(j.application.JSBaseClass):
         self._logger.debug('path %s is not an empty directory' % path)
         return False
 
-    @path_check(path={"required", "exists"})
+    @path_check(path={"required", "replace", "exists"})
     def isFile(self, path, followSoftlink=True):
         """Check if the specified file exists for the given path
         @param path: string
@@ -989,7 +993,7 @@ class SystemFS(j.application.JSBaseClass):
         self._logger.debug('path %s is not a file' % path)
         return False
 
-    @path_check(path={"required", "exists", "file"})
+    @path_check(path={"required", "replace", "exists", "file"})
     def isExecutable(self, path):
         statobj = self.statPath(path, follow_symlinks=False)
         return not (stat.S_IXUSR & statobj.st_mode == 0)
@@ -1003,7 +1007,7 @@ class SystemFS(j.application.JSBaseClass):
                 return True
         return False
 
-    @path_check(path={"required", "exists"})
+    @path_check(path={"required", "replace", "exists"})
     def isLink(self, path, checkJunction=False,check_valid=False):
         """Check if the specified path is a link
         @param path: string
@@ -1038,7 +1042,7 @@ class SystemFS(j.application.JSBaseClass):
         self._logger.debug('path %s is not a link' % path)
         return False
 
-    @path_check(path={"required", "dir", "exists"})
+    @path_check(path={"required", "replace", "dir", "exists"})
     def isMount(self, path):
         """Return true if pathname path is a mount point:
         A point in a file system where a different file system has been mounted.
@@ -1048,14 +1052,14 @@ class SystemFS(j.application.JSBaseClass):
             raise TypeError('Path is passed null in system.fs.isMount')
         return os.path.ismount(path)
 
-    @path_check(path={"required", "exists"})
+    @path_check(path={"required", "replace", "exists"})
     def statPath(self, path, follow_symlinks=True):
         """Perform a stat() system call on the given path
         @rtype: object whose attributes correspond to the members of the stat structure
         """
         return os.stat(path, follow_symlinks=follow_symlinks)
 
-    @path_check(dirname={"required", "exists", "dir"}, newname={"required", })
+    @path_check(dirname={"required", "replace", "exists", "dir"}, newname={"required", "replace", })
     def renameDir(self, dirname, newname, overwrite=False):
         """Rename Directory from dirname to newname
         @param dirname: string (Directory original name)
@@ -1071,7 +1075,7 @@ class SystemFS(j.application.JSBaseClass):
                 self.remove(newname)
         os.rename(dirname, newname)
 
-    @path_check(filename={"required", "exists", "pureFile"})
+    @path_check(filename={"required", "replace", "exists", "pureFile"})
     def unlinkFile(self, filename):
         """Remove the file path (only for files, not for symlinks)
         @param filename: File path to be removed
@@ -1079,7 +1083,7 @@ class SystemFS(j.application.JSBaseClass):
         self._logger.debug('Unlink file with path: %s' % filename)
         os.unlink(filename)
 
-    @path_check(filename={"required", "exists", "file"})
+    @path_check(filename={"required", "replace", "exists", "file"})
     def unlink(self, filename):
         '''Remove the given file if it's a file or a symlink
 
@@ -1094,7 +1098,7 @@ class SystemFS(j.application.JSBaseClass):
             os.system(cmd)
         os.unlink(filename)
 
-    @path_check(filename={"required", "exists", "file"})
+    @path_check(filename={"required", "replace", "exists", "file"})
     def readFile(self, filename, binary=False, encoding='utf-8'):
         """Read a file and get contents of that file
         @param filename: string (filename to open for reading )
@@ -1149,6 +1153,8 @@ class SystemFS(j.application.JSBaseClass):
     #                 break
     #         return s
 
+
+    @path_check(paths={"required","replace","multiple"})
     def touch(self, paths, overwrite=True):
         """
         can be single path or multiple (then list)
@@ -1163,7 +1169,7 @@ class SystemFS(j.application.JSBaseClass):
         if not self.exists(path=path):
             self.writeFile(path, "")
 
-    @path_check(filename={"required"})
+    @path_check(filename={"required","replace"})
     def writeFile(self, filename, contents, append=False):
         """
         Open a file and write file contents, close file afterwards
@@ -1185,7 +1191,7 @@ class SystemFS(j.application.JSBaseClass):
         # fp.write(contents)
         fp.close()
 
-    @path_check(filename={"required", "exists", "file"})
+    @path_check(filename={"required", "replace", "exists", "file"})
     def fileSize(self, filename):
         """Get Filesize of file in bytes
         @param filename: the file u want to know the filesize of
@@ -1193,7 +1199,7 @@ class SystemFS(j.application.JSBaseClass):
         """
         return os.path.getsize(filename)
 
-    @path_check(filelocation={"required"})
+    @path_check(filelocation={"required","replace"})
     def writeObjectToFile(self, filelocation, obj):
         """
         Write a object to a file(pickle format)
@@ -1214,7 +1220,7 @@ class SystemFS(j.application.JSBaseClass):
         if not self.exists(filelocation):
             raise Exception("File isn't written to the filesystem")
 
-    @path_check(filelocation={"required", "exists", "file"})
+    @path_check(filelocation={"required", "replace", "exists", "file"})
     def readObjectFromFile(self, filelocation):
         """
         Read a object from a file(file contents in pickle format)
@@ -1226,7 +1232,7 @@ class SystemFS(j.application.JSBaseClass):
         self._logger.debug("creating object")
         return pickle.loads(contents)
 
-    @path_check(filename={"required", "exists", "file"})
+    @path_check(filename={"required", "replace", "exists", "file"})
     def md5sum(self, filename):
         """Return the hex digest of a file without loading it all into memory
         @param filename: string (filename to get the hex digest of it) or list of files
@@ -1246,7 +1252,7 @@ class SystemFS(j.application.JSBaseClass):
                     digest.update(buf)
         return digest.hexdigest()
 
-    @path_check(folder={"required", "exists", "dir"})
+    @path_check(folder={"required", "replace", "exists", "dir"})
     def getFolderMD5sum(self, folder):
         files = sorted(self.walk(folder, recurse=1))
         return self.md5sum(files)
@@ -1286,7 +1292,7 @@ class SystemFS(j.application.JSBaseClass):
     def _file_path_tmp_get(self,ext="sh"):
         return j.core.tools._file_path_tmp_get(ext)
 
-    @path_check(filename={"required", "exists", "file"})
+    @path_check(filename={"required", "replace", "exists", "file"})
     def isAsciiFile(self, filename, checksize=4096):
         # TODO: let's talk about checksize feature.
         try:
@@ -1296,7 +1302,7 @@ class SystemFS(j.application.JSBaseClass):
         except UnicodeDecodeError:
             return False
 
-    @path_check(filename={"required", "exists", "file"})
+    @path_check(filename={"required", "replace", "exists", "file"})
     def isBinaryFile(self, filename, checksize=4096):
         return not self.isAsciiFile(filename, checksize)
 
@@ -1311,6 +1317,7 @@ class SystemFS(j.application.JSBaseClass):
     # unlock = staticmethod(unlock)
     # unlock_ = staticmethod(unlock_)
 
+    @path_check(filename={"required","replace"})
     def validateFilename(self, filename, platform=None):
         '''Validate a filename for a given (or current) platform
 
@@ -1414,7 +1421,7 @@ class SystemFS(j.application.JSBaseClass):
         raise NotImplementedError(
             'Filename validation on given platform not supported')
 
-    @path_check(startDir={"required", "exists", "dir"})
+    @path_check(startDir={"required", "replace", "exists", "dir"})
     def find(self, startDir, fileregex):
         """Search for files or folders matching a given pattern
         example: find("*.pyc")
@@ -1489,7 +1496,7 @@ class SystemFS(j.application.JSBaseClass):
         from Jumpscale.core.Dirs import Dirs
         return Dirs.pathToUnicode(path)
 
-    @path_check(sourcepath={"required", "exists", "dir"}, destinationpath={"required"})
+    @path_check(sourcepath={"required", "replace", "exists", "dir"}, destinationpath={"required"})
     def targzCompress(
             self,
             sourcepath,
@@ -1564,7 +1571,7 @@ class SystemFS(j.application.JSBaseClass):
                     t.add(source, self.joinPaths(destInTar, destpath))
         t.close()
 
-    @path_check(sourceFile={"required", "exists", "file"}, destFile={"required"})
+    @path_check(sourceFile={"required", "replace", "exists", "file"}, destFile={"required","replace"})
     def gzip(self, sourceFile, destFile):
         """
         Gzip source file into destination zip
@@ -1579,7 +1586,7 @@ class SystemFS(j.application.JSBaseClass):
         f_out.close()
         f_in.close()
 
-    @path_check(sourceFile={"required", "exists", "file"}, destFile={"required"})
+    @path_check(sourceFile={"required", "replace", "exists", "file"}, destFile={"required","replace"})
     def gunzip(self, sourceFile, destFile):
         """
         Gunzip gzip sourcefile into destination file
@@ -1595,7 +1602,7 @@ class SystemFS(j.application.JSBaseClass):
         f_out.close()
         f_in.close()
 
-    @path_check(sourceFile={"required", "exists", "file"}, destinationdir={"required"})
+    @path_check(sourceFile={"required", "replace", "exists", "file"}, destinationdir={"required","replace"})
     def targzUncompress(self, sourceFile, destinationdir, removeDestinationdir=True):
         """
         compress dirname recursive

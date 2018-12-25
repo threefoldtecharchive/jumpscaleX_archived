@@ -145,7 +145,7 @@ class BCDB(j.application.JSBaseClass):
         self._init_(stop=True, reset=True)
 
 
-    def _hset_index_key_get(self,schema):
+    def _hset_index_key_get(self,schema,returndata=False):
         if not isinstance(schema,j.data.schema.SCHEMA_CLASS):
             raise RuntimeError("schema needs to be of type: SCHEMA_CLASS")
 
@@ -164,8 +164,10 @@ class BCDB(j.application.JSBaseClass):
 
             bindata = j.data.serializers.json.dumps(data)
             j.clients.credis_core.set("bcdb.schema.instances",bindata)
-
-        return b"O:"+str(data[self.name][schema.url]).encode()
+        if returndata:
+            return data
+        else:
+            return b"O:"+str(data[self.name][schema.url]).encode()
 
 
     def _hset_index_key_delete(self):
@@ -197,6 +199,7 @@ class BCDB(j.application.JSBaseClass):
         self._hset_index_key_delete()
 
         j.sal.fs.remove(self._data_dir)
+        j.shell()
 
     def stop(self):
         self._logger.info("STOP BCDB")

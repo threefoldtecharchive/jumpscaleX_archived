@@ -24,30 +24,30 @@ class USER(Index_CLASS, MODEL_CLASS):
 
         self._init()
 
-    def find(self, name=None, dm_id=None, email=None):
-        if dm_id:
-            key = dm_id.lower()
-        elif email:
-            key = email.lower()
-        elif name:
-            key = name.lower()
-        else:
-            key = ""
-
-        if key not in self._users:
-
-            if id is None:
-                if dm_id:
-                    dm_id = dm_id.lower()
-                elif email:
-                    email = email.lower()
-                elif name:
-                    name = name.lower()
-                j.shell()
-
-            self._users[id] = self.model_user.get(id)
-            if self._users[id] == None:
-                raise RuntimeError("Could not find user:%s (name:%s dm_id:%s email:%s)" % (
-                    id, name, dm_id, email))
-
-        return self._users[key]
+    # def find(self, name=None, dm_id=None, email=None):
+    #     if dm_id:
+    #         key = dm_id.lower()
+    #     elif email:
+    #         key = email.lower()
+    #     elif name:
+    #         key = name.lower()
+    #     else:
+    #         key = ""
+    #
+    #     if key not in self._users:
+    #
+    #         if dm_id is None:
+    #             if dm_id:
+    #                 dm_id = dm_id.lower()
+    #             elif email:
+    #                 email = email.lower()
+    #             elif name:
+    #                 name = name.lower()
+    #             j.shell()
+    #
+    #         self._users[id] = self.model_user.get(id)
+    #         if self._users[id] == None:
+    #             raise RuntimeError("Could not find user:%s (name:%s dm_id:%s email:%s)" % (
+    #                 id, name, dm_id, email))
+    #
+    #     return self._users[key]
