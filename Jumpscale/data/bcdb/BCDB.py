@@ -150,23 +150,36 @@ class BCDB(j.application.JSBaseClass):
             raise RuntimeError("schema needs to be of type: SCHEMA_CLASS")
 
         key=[self.name,schema.url]
-        r = j.clients.credis_core.get("bcdb.instances")
+        r = j.clients.credis_core.get("bcdb.schema.instances")
+        if r is None:
+            data={}
+            data["lastid"]=0
+        else:
+            data = j.data.serializers.json.loads(r)
+        if self.name not in data:
+            data[self.name]={}
+        if schema.url not in data[self.name]:
+            data["lastid"]=data["lastid"]+1
+            data[self.name][schema.url]=data["lastid"]
 
+            bindata = j.data.serializers.json.dumps(data)
+            j.clients.credis_core.set("bcdb.instances",bindata)
 
-                r2 = b"O:"+str(nr).encode()
+        return b"O:"+str(data[self.name][schema.url]).encode()
+
 
     def _hset_index_key_delete(self):
         r = j.clients.credis_core.get("bcdb.instances")
         if r is None:
             return
-        nr=0
-        for name,url in j.data.serializers.msgpack.loads(r):
-            if name == self.name:
-                tofind=b"O:"+str(nr).encode()+b":*"
+        data = j.data.serializers.json.loads(r)
+        if self.name in data:
+            for url,key_id in data[self.name].items():
+                tofind=b"O:"+str(key_id).encode()+b":*"
                 for key in j.clients.credis_core.keys(tofind):
                     print("HKEY DELETE:%s"%key)
                     j.clients.credis_core.delete(key)
-            nr+=1
+
         j.shell()
 
 
