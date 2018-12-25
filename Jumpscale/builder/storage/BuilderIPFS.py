@@ -44,7 +44,7 @@ class BuilderIPFS(j.builder.system._BaseClass):
     def start(self, name='main', readonly=False):
         cfg_dir = '{DIR_BASE}/cfg/ipfs/{}'.format(name)
         if not j.builder.tools.file_exists(cfg_dir):
-            j.builder.tools.dir_ensure(cfg_dir)
+            j.core.tools.dir_ensure(cfg_dir)
 
         # check if the ipfs repo has not been created yet.
         if not j.builder.tools.file_exists(cfg_dir + '/config'):

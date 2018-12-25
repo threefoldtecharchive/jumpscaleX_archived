@@ -18,7 +18,7 @@ class BuilderApache2(j.builder.system._BaseClass):
         if reset and j.builder.tools.dir_exists(httpdir):
             j.builder.tools.dir_remove("{DIR_BASE}/apps/apache2")
 
-        j.builder.tools.dir_ensure("/optvar/build")
+        j.core.tools.dir_ensure("/optvar/build")
 
         # DOWNLOAD LINK
         DOWNLOADLINK = 'www-eu.apache.org/dist//httpd/httpd-2.4.29.tar.bz2'
@@ -30,8 +30,8 @@ class BuilderApache2(j.builder.system._BaseClass):
         # EXTRACT SROURCE CODE
         j.sal.process.execute(
             "cd /optvar/build && tar xjf {dest} && cp -r /optvar/build/httpd-2.4.29 /optvar/build/httpd".format(**locals()))
-        j.builder.tools.dir_ensure("{DIR_BASE}/apps/apache2/bin")
-        j.builder.tools.dir_ensure("{DIR_BASE}/apps/apache2/lib")
+        j.core.tools.dir_ensure("{DIR_BASE}/apps/apache2/bin")
+        j.core.tools.dir_ensure("{DIR_BASE}/apps/apache2/lib")
 
         buildscript = """
 
@@ -64,7 +64,7 @@ class BuilderApache2(j.builder.system._BaseClass):
         j.builder.tools.file_copy("{DIR_BASE}/apps/apache2/bin/*", '{DIR_BIN}/')
 
     def configure(self):
-        conffile = j.builder.tools.file_read("{DIR_BASE}/apps/apache2/conf/httpd.conf")
+        conffile = j.core.tools.file_text_read("{DIR_BASE}/apps/apache2/conf/httpd.conf")
         # SANE CONFIGURATIONS
         lines = """
         #LoadModule negotiation_module
@@ -101,9 +101,9 @@ class BuilderApache2(j.builder.system._BaseClass):
         conffile += "\nAddType application/x-httpd-php .php"
 
         # MAKE VHOSTS DIRECTORY
-        j.builder.tools.dir_ensure("%s/apache2/sites-enabled/" % j.dirs.CFGDIR)
-        j.builder.tools.dir_ensure("{DIR_BASE}/apps/apache2/sites-available")
-        j.builder.tools.dir_ensure("{DIR_BASE}/apps/apache2/sites-enabled")
+        j.core.tools.dir_ensure("%s/apache2/sites-enabled/" % j.dirs.CFGDIR)
+        j.core.tools.dir_ensure("{DIR_BASE}/apps/apache2/sites-available")
+        j.core.tools.dir_ensure("{DIR_BASE}/apps/apache2/sites-enabled")
         #self._logger.info("Config to be written = ", conffile)
         j.sal.fs.writeFile("{DIR_BASE}/apps/apache2/conf/httpd.conf", conffile)
 

@@ -347,6 +347,7 @@ class Tools():
 
     @staticmethod
     def file_text_read(path):
+        path = Tools.text_replace(path)
         p=Path(path)
         try:
             return p.read_text()
@@ -354,10 +355,33 @@ class Tools():
             Tools.shell()
 
     @staticmethod
+    def dir_ensure(path, remove_existing=False):
+        """Ensure the existance of a directory on the system, if the 
+        Directory does not exist, it will create it.
+        
+        Arguments:
+            path {[string]} -- [path of the directory]
+        
+        Keyword Arguments:
+            remove_existing {bool} -- [If True and the path already exist, 
+            the existing path will be removed first] (default: {False})
+        """
+        path = Tools.text_replace(path)
+
+        if os.path.exists(path) and remove_existing is True:
+            Tools.delete(path)
+        elif os.path.exists(path):
+            return
+        os.makedirs(path)
+
+
+
+    @staticmethod
     def delete(path):
         """Remove a File/Dir/...
         @param path: string (File path required to be removed)
         """
+        path = Tools.text_replace(path)
         logger.debug('Remove file with path: %s' % path)
         if os.path.islink(path):
             os.unlink(path)

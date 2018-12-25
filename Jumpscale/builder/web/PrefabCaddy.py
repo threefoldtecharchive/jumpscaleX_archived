@@ -24,7 +24,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
         :param plugins: list of plugins names to be installed
         :return:
         """
-        # if not j.builder.tools.isUbuntu:
+        # if not j.core.platformtype.myplatform.isUbuntu:
         #     raise j.exceptions.RuntimeError("only ubuntu supported")
 
         if self._done_check('build', reset):
@@ -92,7 +92,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
             template args available DATADIR, LOGDIR, WWWROOTDIR, PORT, TMPDIR, EMAIL ... (using mustasche)
         """
         vhosts_dir = j.core.tools.text_replace("{DIR_CFG}/vhosts")
-        j.builder.tools.dir_ensure(vhosts_dir)
+        j.core.tools.dir_ensure(vhosts_dir)
         C = """
         #tcpport:{{PORT}}
         import {{VHOSTS_DIR}}/*
@@ -108,7 +108,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
 
     def getTCPPort(self, configpath="{DIR_CFG}/caddy.cfg"):
         configpath = j.core.tools.text_replace(configpath)
-        C = j.builder.tools.file_read(configpath)
+        C = j.core.tools.file_text_read(configpath)
         for line in C.split("\n"):
             if "#tcpport:" in line:
                 return line.split(":")[1].strip()
@@ -151,12 +151,12 @@ class BuilderCaddy(j.builder.system._BaseClass):
         j.builder.system.processmanager.get().stop("caddy")
 
     def add_website(self, name, cfg, configpath="{DIR_CFG}/caddy.cfg"):
-        file_contents = j.builder.tools.file_read(configpath)
+        file_contents = j.core.tools.file_text_read(configpath)
         vhosts_dir = j.core.tools.text_replace("{DIR_CFG}/vhosts")
         if vhosts_dir not in file_contents:
             file_contents = "import {}/*\n".format(vhosts_dir) + file_contents
         j.sal.fs.writeFile(configpath, file_contents)
-        j.builder.tools.dir_ensure(vhosts_dir)
+        j.core.tools.dir_ensure(vhosts_dir)
         cfg_path = "{}/{}.conf".format(vhosts_dir, name)
         j.sal.fs.writeFile(cfg_path, cfg)
         self.stop()

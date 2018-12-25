@@ -9,7 +9,7 @@ class BuilderHadoop(j.builder.system._BaseClass):
 
     def _install(self):
 
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             C = """\
             apt-get install -y apt-get install openjdk-7-jre
             cd {DIR_TEMP}

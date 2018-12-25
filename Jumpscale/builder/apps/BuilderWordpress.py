@@ -67,7 +67,7 @@ class BuilderWordpress(j.builder.system._BaseClass):
         # create a new super user for this database
         j.builder.db.mariadb.admin_create(db_user, db_password)
         
-        j.builder.tools.dir_ensure(path)
+        j.core.tools.dir_ensure(path)
         j.sal.process.execute("chown {0}:{0} {1}".format(self.user, path))
 
         # start server
@@ -164,14 +164,14 @@ class BuilderWordpress(j.builder.system._BaseClass):
         """
         
         backup_path = "/tmp/backup_{}".format(str(time.time()))
-        j.builder.tools.dir_ensure(backup_path)
+        j.core.tools.dir_ensure(backup_path)
         # export database
         j.builder.db.mariadb.db_export(dbname, backup_path)
         # get wordpress files
-        j.builder.tools.dir_ensure(backup_path + path)
+        j.core.tools.dir_ensure(backup_path + path)
         j.builder.tools.copyTree(path, backup_path + path)
         # get get cfgs
-        j.builder.tools.dir_ensure(backup_path + cfg_path)
+        j.core.tools.dir_ensure(backup_path + cfg_path)
         j.builder.tools.copyTree(cfg_path, backup_path + cfg_path)
 
         backup_tar_name = "/tmp/backup_{}.tar.gz".format(str(time.time()))

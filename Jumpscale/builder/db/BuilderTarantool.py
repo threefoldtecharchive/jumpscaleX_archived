@@ -20,7 +20,7 @@ class BuilderTarantool(j.builder.system._BaseClass):
 
         j.builder.buildenv.install()
 
-        if j.builder.tools.isMac:
+        if j.core.platformtype.myplatform.isMac:
             # cmd="brew install tarantool"
             j.builder.tools.package_install(
                 "lua,tarantool,luajit,cmake,msgpuck")
@@ -61,7 +61,7 @@ class BuilderTarantool(j.builder.system._BaseClass):
             popd
             """
             j.builder.tools.run(C)
-        elif j.builder.tools.isUbuntu:
+        elif j.core.platformtype.myplatform.isUbuntu:
             if not self._done_check('dependencies', reset):
                 # j.builder.tools.package_install('build-essential,cmake,coreutils,sed,libreadline-dev,'
                 #                                    'libncurses5-dev,libyaml-dev,libssl-dev,libcurl4-openssl-dev,'

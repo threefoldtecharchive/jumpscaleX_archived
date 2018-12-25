@@ -114,19 +114,19 @@ class BuilderNGINX(j.builder.system._BaseClass):
         # j.builder.system.package.ensure('nginx')
         # link nginx to binDir and use it from there
 
-        # j.builder.tools.dir_ensure("{DIR_BASE}/apps/nginx/")
-        # j.builder.tools.dir_ensure("{DIR_BASE}/apps/nginx/bin")
-        # j.builder.tools.dir_ensure("{DIR_BASE}/apps/nginx/etc")
-        j.builder.tools.dir_ensure("{DIR_BASE}/cfg")
-        j.builder.tools.dir_ensure("{DIR_TEMP}")
-        # j.builder.tools.dir_ensure("/optvar/tmp")
-        j.builder.tools.dir_ensure("{DIR_BASE}/apps/nginx/")
-        j.builder.tools.dir_ensure("{DIR_BASE}/apps/nginx/bin")
-        j.builder.tools.dir_ensure("{DIR_BASE}/apps/nginx/etc")
-        j.builder.tools.dir_ensure("{DIR_BASE}/cfg/nginx/etc")
+        # j.core.tools.dir_ensure("{DIR_BASE}/apps/nginx/")
+        # j.core.tools.dir_ensure("{DIR_BASE}/apps/nginx/bin")
+        # j.core.tools.dir_ensure("{DIR_BASE}/apps/nginx/etc")
+        j.core.tools.dir_ensure("{DIR_BASE}/cfg")
+        j.core.tools.dir_ensure("{DIR_TEMP}")
+        # j.core.tools.dir_ensure("/optvar/tmp")
+        j.core.tools.dir_ensure("{DIR_BASE}/apps/nginx/")
+        j.core.tools.dir_ensure("{DIR_BASE}/apps/nginx/bin")
+        j.core.tools.dir_ensure("{DIR_BASE}/apps/nginx/etc")
+        j.core.tools.dir_ensure("{DIR_BASE}/cfg/nginx/etc")
 
         j.builder.tools.file_copy('/usr/sbin/nginx', '{DIR_BASE}/apps/nginx/bin/nginx', overwrite=True)
-        j.builder.tools.dir_ensure('/var/log/nginx')
+        j.core.tools.dir_ensure('/var/log/nginx')
         j.builder.tools.file_copy('/etc/nginx/*', '{DIR_BASE}/apps/nginx/etc/', recursive=True)  # default conf
         j.builder.tools.file_copy('/etc/nginx/*', '{DIR_BASE}/cfg/nginx/etc/', recursive=True)  # variable conf
         """
@@ -141,13 +141,12 @@ class BuilderNGINX(j.builder.system._BaseClass):
         make install
         """
 
-        C = j.builder.tools.replace(C)
         C = j.core.tools.text_replace(C)
         j.sal.process.execute(C)
 
         # Writing config files
-        j.builder.tools.dir_ensure("{DIR_VAR}/build/nginx/conf/conf.d/")
-        j.builder.tools.dir_ensure("{DIR_VAR}/build/nginx/conf/sites-enabled/")
+        j.core.tools.dir_ensure("{DIR_VAR}/build/nginx/conf/conf.d/")
+        j.core.tools.dir_ensure("{DIR_VAR}/build/nginx/conf/sites-enabled/")
 
         basicnginxconf = self.get_basic_nginx_conf()
         basicnginxconf = j.core.tools.text_replace(textwrap.dedent(basicnginxconf))
@@ -158,7 +157,7 @@ class BuilderNGINX(j.builder.system._BaseClass):
         j.sal.fs.writeFile("{DIR_VAR}/build/nginx/conf/nginx.conf", content=basicnginxconf)
         j.sal.fs.writeFile("{DIR_VAR}/build/nginx/conf/sites-enabled/default", content=defaultenabledsitesconf)
 
-        fst_cgi_conf = j.builder.tools.file_read("{DIR_VAR}/build/nginx/conf/fastcgi.conf")
+        fst_cgi_conf = j.core.tools.file_text_read("{DIR_VAR}/build/nginx/conf/fastcgi.conf")
         fst_cgi_conf = fst_cgi_conf.replace("include fastcgi.conf;",
                                             j.core.tools.text_replace("include {DIR_VAR}/build/nginx/conf/fastcgi.conf;"))
         j.sal.fs.writeFile("{DIR_VAR}/build/nginx/conf/fastcgi.conf", content=fst_cgi_conf)
@@ -168,14 +167,21 @@ class BuilderNGINX(j.builder.system._BaseClass):
             self.start()
 
     def build(self, install=True):
+        """ Builds NGINX server
+        Arguments:
+            install {[bool]} -- [If True, the server will be installed locally after building](default: {True})
+        """
         j.tools.bash.local.locale_check()
 
-        if j.builder.tools.isUbuntu:
-            j.builder.system.package.mdupdate()
-            j.builder.tools.package_install("build-essential libpcre3-dev libssl-dev")
-
-            j.builder.tools.dir_remove("{DIR_TEMP}/build/nginx")
-            j.builder.tools.dir_ensure("{DIR_TEMP}/build/nginx")
+        if j.core.platformtype.myplatform.isUbuntu:
+            j.sal.ubuntu.apt_update()
+            j.sal.ubuntu.apt_install(
+                "build-essential libpcre3-dev libssl-dev zlibc zlib1g zlib1g-dev", update_md=False)
+            
+            tmp_dir = j.core.tools.text_replace("{DIR_TEMP}/build/nginx")
+            j.core.tools.dir_ensure(tmp_dir, remove_existing=True)
+            build_dir = j.core.tools.text_replace("{DIR_VAR}/build/nginx")
+            j.core.tools.dir_ensure(tmp_dir, remove_existing=True)
 
             C = """
             #!/bin/bash
@@ -189,7 +195,6 @@ class BuilderNGINX(j.builder.system._BaseClass):
             ./configure --prefix={DIR_VAR}/build/nginx/ --with-http_ssl_module --with-ipv6
             make
             """
-            C = j.builder.tools.replace(C)
             C = j.core.tools.text_replace(C)
             j.sal.process.execute(C)
 
@@ -202,7 +207,7 @@ class BuilderNGINX(j.builder.system._BaseClass):
     def start(self, name="nginx", nodaemon=True, nginxconfpath=None):
         nginxbinpath = '{DIR_VAR}/build/nginx/sbin'
         # COPY BINARIES TO BINDIR
-        j.builder.tools.dir_ensure('{DIR_BIN}')
+        j.core.tools.dir_ensure('{DIR_BIN}')
         j.sal.process.execute("cp {DIR_VAR}/build/nginx/sbin/* {DIR_BIN}/")
 
         if nginxconfpath is None:
