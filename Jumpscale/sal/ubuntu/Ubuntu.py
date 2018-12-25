@@ -166,18 +166,32 @@ class Ubuntu(JSBASE):
         if remove_downloaded:
             j.tools.path.get(path).rmtree_p()
 
-    def pkg_list(self, pkgname, regex=""):
+    def pkg_list(self, pkg_name, regex=""):
         """
         list files of dpkg
         if regex used only output the ones who are matching regex
+
+        :param pkg_name: debian package name
+        :rtype: str
+        :param regex: regular expression
+        :rtype: str
+
+        :return: List files owned by package
+        :rtype: list
         """
-        rc, out, err = self._local.execute("dpkg -L %s" % pkgname)
+        rc, out, err = self._local.execute("dpkg -L %s" % pkg_name)
         if regex != "":
             return j.data.regex.findAll(regex, out)
         else:
             return out.split("\n")
 
     def pkg_remove(self, package_name):
+        """
+        remove ubuntu package
+
+        :param package_name: package name to be removed
+        :rtype: str
+        """
         self._logger.info("ubuntu remove package:%s" % package_name)
         self.check()
         if self._cache_ubuntu is None:
@@ -190,58 +204,119 @@ class Ubuntu(JSBASE):
         self._cache_ubuntu.commit()
         self._cache_ubuntu.clear()
 
-    def service_install(self, servicename, daemonpath, args='', respawn=True, pwd=None, env=None, reload=True):
-        C = """
+    def service_install(self, service_name, daemon_path, args='', respawn=True, pwd=None, env=None, reload=True):
+        """
+        Install an ubuntu service
+
+        :param service_name: ubuntu service name
+        :rtype: str
+        :param daemon_path: daemon path
+        :rtype: str
+        :param args: service args
+        :type: str
+        :param respawn: respawn
+        :type: bool
+        :param pwd: chdir to pwd
+        :param: str
+        :param env: environment values
+        :rtype: dict
+        :param reload: reload
+        :rtype: bool
+        """
+        cmd = """
 start on runlevel [2345]
 stop on runlevel [016]
 """
         if respawn:
-            C += "respawn\n"
+            cmd += "respawn\n"
         if pwd:
-            C += "chdir %s\n" % pwd
+            cmd += "chdir %s\n" % pwd
         if env is not None:
             for key, value in list(env.items()):
-                C += "env %s=%s\n" % (key, value)
-        C += "exec %s %s\n" % (daemonpath, args)
+                cmd += "env %s=%s\n" % (key, value)
+        cmd += "exec %s %s\n" % (daemon_path, args)
 
-        C = j.dirs.replace_txt_dir_vars(C)
+        cmd = j.dirs.replace_txt_dir_vars(cmd)
 
-        j.tools.path.get("/etc/init/%s.conf" % servicename).write_text(C)
+        j.tools.path.get("/etc/init/%s.conf" % service_name).write_text(cmd)
         if reload:
             self._local.execute("initctl reload-configuration")
 
-    def service_uninstall(self, servicename):
-        self.service_stop(servicename)
-        j.tools.path.get("/etc/init/%s.conf" % servicename).remove_p()
+    def service_uninstall(self, service_name):
+        """
+        remove an ubuntu service
 
-    def service_start(self, servicename):
-        self._logger.debug("start service on ubuntu for:%s" % servicename)
-        if not self.service_status(servicename):
-            cmd = "sudo start %s" % servicename
+        :param service_name: ubuntu service name
+        """
+        self.service_stop(service_name)
+        j.tools.path.get("/etc/init/%s.conf" % service_name).remove_p()
+
+    def service_start(self, service_name):
+        """
+        start an ubuntu service
+
+        :param service_name: ubuntu service name
+        :return: start service output
+        :rtype: bool
+        """
+        self._logger.debug("start service on ubuntu for:%s" % service_name)
+        if not self.service_status(service_name):
+            cmd = "sudo start %s" % service_name
             return self._local.execute(cmd)
 
-    def service_stop(self, servicename):
-        cmd = "sudo stop %s" % servicename
+    def service_stop(self, service_name):
+        """
+        stop an ubuntu service
+
+        :param service_name: ubuntu service name
+        :return: start service output
+        :rtype: bool
+        """
+        cmd = "sudo stop %s" % service_name
         return self._local.execute(cmd, False)
 
-    def service_restart(self, servicename):
-        return self._local.execute("sudo restart %s" % servicename, False)
+    def service_restart(self, service_name):
+        """
+        restart an ubuntu service
 
-    def service_status(self, servicename):
-        exitcode, output = self._local.execute("sudo status %s" % servicename, False)
+        :param service_name: ubuntu service name
+        :return: start service output
+        :rtype: bool
+        """
+        return self._local.execute("sudo restart %s" % service_name, False)
+
+    def service_status(self, service_name):
+        """
+        check service status
+
+        :param service_name: ubuntu service name
+        :return:
+        """
+        exitcode, output = self._local.execute("sudo status %s" % service_name, False)
         parts = output.split(' ')
         if len(parts) >= 2 and parts[1].startswith('start'):
             return True
 
         return False
 
-    def service_disable_start_boot(self, servicename):
-        self._local.execute("update-rc.d -f %s remove" % servicename)
+    def service_disable_start_boot(self, service_name):
+        """
 
-    def service_enable_start_boot(self, servicename):
-        self._local.execute("update-rc.d -f %s defaults" % servicename)
+        :param service_name: ubuntu service name
+        """
+        self._local.execute("update-rc.d -f %s remove" % service_name)
 
-    def apt_update(self, force=True):
+    def service_enable_start_boot(self, service_name):
+        """
+
+        :param service_name: ubuntu service name
+        """
+        self._local.execute("update-rc.d -f %s defaults" % service_name)
+
+    def apt_update(self):
+        """
+        apt update
+        """
         self.check()
         if self._cache_ubuntu is None:
             self.apt_init()
@@ -250,7 +325,10 @@ stop on runlevel [016]
         else:
             self._local.execute("apt-get update", False)
 
-    def apt_upgrade(self, force=True):
+    def apt_upgrade(self):
+        """
+        apt upgrade
+        """
         self.check()
         if self._cache_ubuntu is None:
             self.apt_init()
@@ -258,15 +336,31 @@ stop on runlevel [016]
         self._cache_ubuntu.upgrade()
 
     def apt_get_cache_keys(self):
+        """
+
+        :return: list of cache keys
+        :rtype: list
+        """
         return list(self._cache_ubuntu.keys())
 
     def apt_get_installed(self):
+        """
+
+        :return: list of installed list
+        :rtype: list
+        """
         return self.get_installed_package_names()
 
     def apt_get(self, name):
         return self._cache_ubuntu[name]
 
     def apt_find_all(self, package_name):
+        """
+
+
+        :param package_name: ubuntu package name
+        :return:
+        """
         package_name = package_name.lower().strip().replace("_", "").replace("_", "")
         if self._cache_ubuntu is None:
             self.apt_init()
@@ -278,6 +372,11 @@ stop on runlevel [016]
         return result
 
     def get_installed_package_names(self):
+        """
+
+        :return: list of installed list
+        :rtype: list
+        """
         if self._cache_ubuntu is None:
             self.apt_init()
         if self._installed_pkgs is None:
@@ -292,6 +391,12 @@ stop on runlevel [016]
         return pkg in self._installed_pkgs
 
     def apt_find_installed(self, package_name):
+        """
+        
+
+        :param package_name: ubuntu package name
+        :return:
+        """
         package_name = package_name.lower().strip().replace("_", "").replace("_", "")
         if self._cache_ubuntu is None:
             self.apt_init()
@@ -302,23 +407,23 @@ stop on runlevel [016]
                 result.append(item)
         return result
 
-    def apt_find1_installed(self, package_name):
-        self._logger.info("find 1 package in ubuntu")
-        res = self.apt_find_installed(package_name)
-        if len(res) == 1:
-            return res[0]
-        elif len(res) > 1:
-            raise j.exceptions.RuntimeError("Found more than 1 package for %s" % package_name)
-        raise j.exceptions.RuntimeError("Could not find package %s" % package_name)
-
     def apt_sources_list(self):
+        """
+        
+        :return: list of apt sources 
+        """
         from aptsources import sourceslist
         return sourceslist.SourcesList()
 
-    def apt_sources_uri_change(self, newuri):
+    def apt_sources_uri_change(self, new_uri):
+        """
+
+        :param new_uri:
+        :return:
+        """
         src = self.apt_sources_list()
         for entry in src.list:
-            entry.uri = newuri
+            entry.uri = new_uri
         src.save()
 
     def apt_sources_uri_add(self, url):
