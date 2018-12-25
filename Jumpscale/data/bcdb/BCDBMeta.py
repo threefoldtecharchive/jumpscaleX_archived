@@ -37,8 +37,7 @@ class BCDBMeta(j.application.JSBaseClass):
                 if not j.sal.fs.exists(self._meta_local_path):
                     data = None
                 else:
-                    data = j.sal.fs.readFile(
-                        self._meta_local_path, binary=True)
+                    data = j.sal.fs.readFile(self._meta_local_path, binary=True)
             if data is None:
                 self._logger.debug("save, empty schema")
                 self._data = self._schema.new()

@@ -21,6 +21,7 @@ class ZeroOSFactory(j.application.JSFactoryBaseClass):
 
         cl = self.get(name=name,host=host,port=port,password=passwd,ssl=True)
         cl.ping()
+        return cl
 
     def test(self):
         """

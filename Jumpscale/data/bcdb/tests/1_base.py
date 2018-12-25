@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.bcdb.test(name="base",start=True)'
+    js_shell 'j.data.bcdb.test(name="base")'
 
     """
 

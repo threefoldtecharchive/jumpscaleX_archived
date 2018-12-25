@@ -447,7 +447,7 @@ class Tools():
         return _shell(stack_depth=2)
 
     @staticmethod
-    def text_strip(content, ignorecomments=True,args={},replace=True,executor=None):
+    def text_strip(content, ignorecomments=False,args={},replace=False,executor=None):
         """
         remove all spaces at beginning & end of line when relevant (this to allow easy definition of scripts)
         args will be substitued to .format(...) string function https://docs.python.org/3/library/string.html#formatspec
@@ -485,12 +485,12 @@ class Tools():
             content = "\n".join([line[minchars:] for line in content.split("\n")])
 
         if replace:
-            content = Tools.text_replace(content,args=args,executor=executor)
+            content = Tools.text_replace(content=content,args=args,executor=executor,text_strip=False)
 
         return content
 
     @staticmethod
-    def text_replace(content,args=None,executor=None):
+    def text_replace(content,args=None,executor=None,ignorecomments=False,text_strip=True):
         """
 
         j.core.tools.text_replace
@@ -504,7 +504,7 @@ class Tools():
 
         performance is +100k per sec
 
-
+        will call the strip if
 
         """
         if args is None:
@@ -516,6 +516,9 @@ class Tools():
             else:
                 args.update(MyEnv.config)
             content = content.format(**args)
+
+        if text_strip:
+            content = Tools.text_strip(content,ignorecomments=ignorecomments)
 
         return content
 

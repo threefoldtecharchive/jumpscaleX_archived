@@ -105,17 +105,7 @@ class BCDBModel(j.application.JSBaseClass):
         :return:
         """
         if self.__redis_key is None:
-            r = j.clients.credis_core.get("bcdb.instances")
-            if r is None:
-                r = []
-            else:
-                r = j.data.serializers.msgpack.loads(r)
-            if self.key not in r:
-                r.append(self.key)
-                j.clients.credis_core.set(
-                    "bcdb.instances", j.data.serializers.msgpack.dumps(r))
-            self.__redis_key = b"O:"+str(r.index(self.key)).encode()
-
+           self.__redis_key = self.bcdb._hset_index_key_get(self.schema)
         return self.__redis_key
 
     @queue_method
@@ -406,6 +396,7 @@ class BCDBModel(j.application.JSBaseClass):
         ```
         :return:
         """
+        print("idspath:%s"%self._ids_file_path)
         with open(self._ids_file_path, "rb") as f:
             while True:
                 chunk = f.read(4)
@@ -523,18 +514,11 @@ class BCDBModel(j.application.JSBaseClass):
         self.stop()
         j.sal.fs.remove(self._data_dir)
 
-        r = j.clients.credis_core.get("bcdb.instances")
-        if r is not None:
-            done = False
-            r = j.data.serializers.msgpack.loads(r)
-            if self.key in r:
-                r_id = r.index(self.key)
-                r_id2 = "O:%s:*" % r_id
-                for key in j.clients.credis_core.keys(r_id2.encode()):
-                    j.clients.credis_core.delete(key)
-                done = True
 
-            # name needs to stay in the redis because otherwise the index nr will change for the others
+        tofind=self.bcdb._hset_index_key_get(self.schema)+b":*"
+
+        for key in j.clients.credis_core.keys(tofind):
+            j.clients.credis_core.delete(key)
 
         self._init_()
 
