@@ -144,6 +144,32 @@ class BCDB(j.application.JSBaseClass):
         """
         self._init_(stop=True, reset=True)
 
+
+    def _hset_index_key_get(self,schema):
+        if not isinstance(schema,j.data.schema.SCHEMA_CLASS):
+            raise RuntimeError("schema needs to be of type: SCHEMA_CLASS")
+
+        key=[self.name,schema.url]
+        r = j.clients.credis_core.get("bcdb.instances")
+
+
+                r2 = b"O:"+str(nr).encode()
+
+    def _hset_index_key_delete(self):
+        r = j.clients.credis_core.get("bcdb.instances")
+        if r is None:
+            return
+        nr=0
+        for name,url in j.data.serializers.msgpack.loads(r):
+            if name == self.name:
+                tofind=b"O:"+str(nr).encode()+b":*"
+                for key in j.clients.credis_core.keys(tofind):
+                    print("HKEY DELETE:%s"%key)
+                    j.clients.credis_core.delete(key)
+            nr+=1
+        j.shell()
+
+
     def _reset(self):
 
         if self.zdbclient:
@@ -157,8 +183,7 @@ class BCDB(j.application.JSBaseClass):
             self._sqlclient = None
 
         # need to clean redis
-        for key in j.clients.credis_core.keys(b"O:*"):
-            j.clients.credis_core.delete(key)
+        self._hset_index_key_delete()
 
         j.sal.fs.remove(self._data_dir)
 

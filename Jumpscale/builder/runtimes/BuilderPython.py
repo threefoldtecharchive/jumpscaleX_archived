@@ -7,6 +7,7 @@ class BuilderPython(j.builder.system._BaseClass):
     def _init(self):
         self._logger_enable()
         self.BUILDDIRL = j.core.tools.text_replace("{DIR_VAR}/build/python3")
+        self.PACKAGEDIR = j.core.tools.text_replace("{DIR_VAR}/build/python3_package")
         self.CODEDIRL = j.core.tools.text_replace("{DIR_VAR}/build/code/python3")
         self.OPENSSLPATH = j.core.tools.text_replace("{DIR_VAR}/build/openssl")
 
@@ -225,18 +226,15 @@ class BuilderPython(j.builder.system._BaseClass):
         return j.dirs.BUILDDIR + "/sandbox/tfbot/"
 
 
-    def copy2sandbox_github(self, reset=False):
+    def package(self, reset=False):
         """
 
-        js_shell 'j.builder.runtimes.python.copy2sandbox_github(reset=False)'
+        js_shell 'j.builder.runtimes.python.package(reset=False)'
 
 
         builds python and returns the build dir
 
-        result in : j.dirs.BUILDDIR+"/sandbox/tfbot/
-
         """
-        assert self.executor.type=="local"
 
         path = self.build(reset=reset)
 
@@ -363,37 +361,36 @@ class BuilderPython(j.builder.system._BaseClass):
         C = j.core.tools.text_strip(C,args=args)
         j.sal.process.executeBashScript(C)
 
-        def copy2git():
+    def copy2git(self):
+        """
+        be careful !!!
+        :return:
+        """
 
-            #copy to sandbox & upload
-            ignoredir = ['.egg-info', '.dist-info', "__pycache__", "audio", "tkinter", "audio", "test",".git","linux-gnu"]
-            ignorefiles = ['.egg-info', ".pyc","_64-linux-gnu.py"]
+        #copy to sandbox & upload
+        ignoredir = ['.egg-info', '.dist-info', "__pycache__", "audio", "tkinter", "audio", "test",".git","linux-gnu"]
+        ignorefiles = ['.egg-info', ".pyc","_64-linux-gnu.py"]
 
-            path = j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_base.git")
-            src0 = "%s/lib/python"%self.PACKAGEDIR
-            dest0 = "%s/base/lib/python"%path
+        path = j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_base.git")
+        src0 = "%s/lib/python"%self.PACKAGEDIR
+        dest0 = "%s/base/lib/python"%path
+        j.sal.fs.createDir(dest0)
+        j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
+                         ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
+        j.shell()
+
+        if j.core.platformtype.myplatform.isUbuntu:
+            url = "git@github.com:threefoldtech/sandbox_ubuntu.git"
+            path = j.clients.git.getContentPathFromURLorPath(url)
+            src0 = "%s/lib/pythonbin"%self.PACKAGEDIR
+            dest0 = "%s/base/lib/pythonbin"%path
             j.sal.fs.createDir(dest0)
             j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
                              ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
+
+        if j.core.platformtype.myplatform.isMac:
+            url = "git@github.com:threefoldtech/sandbox_osx.git"
             j.shell()
-
-            if j.core.platformtype.myplatform.isUbuntu:
-                url = "git@github.com:threefoldtech/sandbox_ubuntu.git"
-                path = j.clients.git.getContentPathFromURLorPath(url)
-                src0 = "%s/lib/pythonbin"%self.PACKAGEDIR
-                dest0 = "%s/base/lib/pythonbin"%path
-                j.sal.fs.createDir(dest0)
-                j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
-                                 ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
-
-            if j.core.platformtype.myplatform.isMac:
-                url = "git@github.com:threefoldtech/sandbox_osx.git"
-                j.shell()
-
-
-
-
-        copy2git()
 
 
     def _zip(self, dest="", python_lib_zip=False):
