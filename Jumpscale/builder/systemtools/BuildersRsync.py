@@ -24,7 +24,7 @@ class BuilderRsync()
         if self._done_get("build") and not reset:
             return
 
-        j.builder.tools.dir_ensure(self.BUILDDIRL)
+        j.core.tools.dir_ensure(self.BUILDDIRL)
 
         j.builder.system.package.ensure("gcc")
         j.builder.system.package.ensure("g++")

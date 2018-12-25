@@ -37,7 +37,7 @@ class BuilderZerotier(j.builder.system._BaseClass):
             if not self._done_get("xcode_install"):
                 j.sal.process.execute("xcode-select --install", die=False, showout=True)
                 self._done_set("xcode_install")
-        elif j.builder.tools.isUbuntu:
+        elif j.core.platformtype.myplatform.isUbuntu:
             j.builder.system.package.ensure("gcc")
             j.builder.system.package.ensure("g++")
             j.builder.system.package.ensure('make')
@@ -50,11 +50,11 @@ class BuilderZerotier(j.builder.system._BaseClass):
         if j.core.platformtype.myplatform.isMac:
             cmd = "cd {code} && make install-mac-tap".format(code=codedir, build=self.BUILDDIRL)
             bindir = '{DIR_BIN}'
-            j.builder.tools.dir_ensure(bindir)
+            j.core.tools.dir_ensure(bindir)
             for item in ['zerotier-cli', 'zerotier-idtool', 'zerotier-one']:
                 j.builder.tools.file_copy('{code}/{item}'.format(code=codedir, item=item), bindir+'/')
             return
-        j.builder.tools.dir_ensure(self.BUILDDIRL)
+        j.core.tools.dir_ensure(self.BUILDDIRL)
         cmd = "cd {code} && DESTDIR={build} make install".format(code=codedir, build=self.BUILDDIRL)
         j.sal.process.execute(cmd)
 
@@ -68,7 +68,7 @@ class BuilderZerotier(j.builder.system._BaseClass):
         if "LEDE" in j.builder.platformtype.osname:
             return
         bindir = '{DIR_BIN}'
-        j.builder.tools.dir_ensure(bindir)
+        j.core.tools.dir_ensure(bindir)
 
         if j.core.platformtype.myplatform.isMac:
             return

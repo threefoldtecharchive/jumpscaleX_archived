@@ -20,8 +20,8 @@ class BuilderMariadb(j.builder.system._BaseClass):
         if self._done_check("install", reset):
             return
         j.builder.tools.package_install("mariadb-server")
-        j.builder.tools.dir_ensure("/data/db")
-        j.builder.tools.dir_ensure("/var/run/mysqld")
+        j.core.tools.dir_ensure("/data/db")
+        j.core.tools.dir_ensure("/var/run/mysqld")
         script = """
         chown -R mysql.mysql /data/db/
         chown -R mysql.mysql /var/run/mysqld

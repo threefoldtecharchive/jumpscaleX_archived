@@ -16,7 +16,7 @@ class BuilderTIDB(j.builder.system._BaseClass):
     def build(self, install=True, reset=False):
         if self._done_check("build", reset):
             return
-        j.builder.tools.dir_ensure(self.BUILDDIR)
+        j.core.tools.dir_ensure(self.BUILDDIR)
         tidb_url = 'http://download.pingcap.org/tidb-latest-linux-amd64.tar.gz'
         j.builder.tools.file_download(
             tidb_url, overwrite=False, to=self.BUILDDIR, expand=True, removeTopDir=True)

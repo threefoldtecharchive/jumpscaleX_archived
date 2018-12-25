@@ -23,7 +23,7 @@ class BuilderRedis(j.builder.system._BaseClass):
                 'Redis is already installed, pass reset=True to reinstall.')
             return
 
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             j.builder.system.package.mdupdate()
             j.builder.tools.package_install("build-essential")
 
@@ -75,7 +75,7 @@ class BuilderRedis(j.builder.system._BaseClass):
               snapshot=False, slave=(), is_master=False, password=None, unixsocket=None):
         if unixsocket is not None:
             redis_socket = j.sal.fs.getParent(unixsocket)
-            j.builder.tools.dir_ensure(redis_socket)
+            j.core.tools.dir_ensure(redis_socket)
 
         self.configure_instance(name,
                                 ip,
@@ -133,7 +133,7 @@ class BuilderRedis(j.builder.system._BaseClass):
     def empty_instance(self, name):
         d_path, _ = self._get_paths(name)
         j.builder.tools.dir_remove(d_path)
-        j.builder.tools.dir_ensure(d_path)
+        j.core.tools.dir_ensure(d_path)
 
     def configure_instance(self, name, ip="localhost", port=6379, max_ram="1048576", append_only=True,
                            snapshot=False, slave=(), is_master=False, password=None, unixsocket=False):
@@ -1212,7 +1212,7 @@ class BuilderRedis(j.builder.system._BaseClass):
 
         base_dir = j.builder.tools.replace(
             '{DIR_VAR}/data/redis/redis_%s' % name)
-        j.builder.tools.dir_ensure(base_dir)
+        j.core.tools.dir_ensure(base_dir)
         config = config.replace("$dir", base_dir)
 
         if ip is None or ip == '':
@@ -1252,5 +1252,5 @@ class BuilderRedis(j.builder.system._BaseClass):
 
         d_path, c_path = self._get_paths(name)
         db_path = j.sal.fs.joinPaths(d_path, "db")
-        j.builder.tools.dir_ensure(db_path)
+        j.core.tools.dir_ensure(db_path)
         j.sal.fs.writeFile(c_path, config)

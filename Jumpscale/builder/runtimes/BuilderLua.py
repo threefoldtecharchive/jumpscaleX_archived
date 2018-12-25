@@ -69,7 +69,7 @@ class BuilderLua(j.builder.system._BaseClass):
         :return:
         """
 
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             # j.builder.system.package.mdupdate()
             j.builder.tools.package_install("geoip-database,libgeoip-dev")
 
@@ -196,9 +196,9 @@ class BuilderLua(j.builder.system._BaseClass):
         assert self.executor.type=="local"
         path="/sandbox/openresty/lualib"
 
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             destbin="%s/base/openresty/lualib"%j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_ubuntu.git")
-        elif j.builder.tools.isMac:
+        elif j.core.platformtype.myplatform.isMac:
             destbin="%s/base/openresty/lualib"%j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_osx.git")
         else:
             raise RuntimeError("only ubuntu & osx support")

@@ -123,8 +123,8 @@ class BuilderARDB(j.builder.system._BaseClass):
         if self._done_check("install-%s" % name, reset):
             return
         self.buildARDB()
-        j.builder.tools.dir_ensure("{DIR_BIN}")
-        j.builder.tools.dir_ensure("$CFGDIR")
+        j.core.tools.dir_ensure("{DIR_BIN}")
+        j.core.tools.dir_ensure("$CFGDIR")
         if not j.builder.tools.file_exists('{DIR_BIN}/ardb-server'):
             j.builder.tools.file_copy("{DIR_VAR}/build/ardb/ardb-server",
                                 "{DIR_BIN}/ardb-server")
@@ -133,11 +133,11 @@ class BuilderARDB(j.builder.system._BaseClass):
 
         if datadir is None or datadir == '':
             datadir = j.core.tools.text_replace("{DIR_VAR}/data/ardb/{}".format(name))
-        j.builder.tools.dir_ensure(datadir)
+        j.core.tools.dir_ensure(datadir)
 
         # config = config.replace("redis-compatible-mode     no", "redis-compatible-mode     yes")
         # config = config.replace("redis-compatible-version  2.8.0", "redis-compatible-version  3.5.2")
-        config = j.builder.tools.file_read("{DIR_VAR}/build/ardb/ardb.conf")
+        config = j.core.tools.file_text_read("{DIR_VAR}/build/ardb/ardb.conf")
         config = config.replace("${ARDB_HOME}", datadir)
         config = config.replace(
             "0.0.0.0:16379", '{host}:{port}'.format(host=host, port=port))

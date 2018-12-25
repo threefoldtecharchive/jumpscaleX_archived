@@ -47,7 +47,7 @@ class BuilderElectrum(j.builder.system._BaseClass):
         if not j.sal.fs.isFile(electrum_bin_path):
             electrum_bin_path = j.builder.tools.joinpaths(electrum_bin_path, 'electrum')
 
-        j.builder.tools.dir_ensure( "{DIR_BIN}")
+        j.core.tools.dir_ensure( "{DIR_BIN}")
         j.builder.tools.file_copy(electrum_bin_path, "{DIR_BIN}/")
 
         self._done_set('install')

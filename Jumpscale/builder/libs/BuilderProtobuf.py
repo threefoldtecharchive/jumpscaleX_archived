@@ -15,7 +15,7 @@ class BuilderProtobuf(j.builder.system._BaseClass):
             return
 
         j.builder.system.package.mdupdate()
-        if j.builder.tools.isMac:
+        if j.core.platformtype.myplatform.isMac:
             j.builder.tools.package_install(['protobuf'])
         else:
             url="https://github.com/google/protobuf/releases/download/v3.4.0/protoc-3.4.0-linux-x86_64.zip"

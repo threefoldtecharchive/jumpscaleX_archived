@@ -1177,6 +1177,7 @@ class SystemFS(j.application.JSBaseClass):
         """
         if contents is None:
             raise TypeError('Passed None parameters in system.fs.writeFile')
+        filename = j.core.tools.text_replace(filename)
         self._logger.debug('Opened file %s for writing' % filename)
         if append is False:
             fp = open(filename, "wb")

@@ -47,7 +47,7 @@ class BuilderVolumeDriver(j.builder.system._BaseClass):
 
     def _build(self, version='6.0.0'):
         workspace = j.core.tools.text_replace("{DIR_TEMP}/volumedriver-workspace")
-        j.builder.tools.dir_ensure(workspace)
+        j.core.tools.dir_ensure(workspace)
 
         str_repl = {
             'workspace': workspace,

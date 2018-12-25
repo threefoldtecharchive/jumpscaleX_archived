@@ -10,7 +10,7 @@ class BuilderCmake(j.builder.system._BaseClass):
         self.src_dir = "{DIR_TEMP}/cmake"
 
     def build(self):
-        j.builder.tools.dir_ensure(self.src_dir)
+        j.core.tools.dir_ensure(self.src_dir)
         cmake_url = "https://cmake.org/files/v3.8/cmake-3.8.2.tar.gz"
         j.builder.tools.file_download(cmake_url, to=self.src_dir, overwrite=False, expand=True, removeTopDir=True)
         cmd = """

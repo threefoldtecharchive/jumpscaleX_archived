@@ -15,9 +15,9 @@ class BuilderMicroEditor(j.builder.system._BaseClass):
 
         print("INSTALL MICROEDITOR")
 
-        if j.builder.tools.isMac:
+        if j.core.platformtype.myplatform.isMac:
             url = "https://github.com/zyedidia/micro/releases/download/v1.3.3/micro-1.3.3-osx.tar.gz"
-        elif j.builder.tools.isUbuntu:
+        elif j.core.platformtype.myplatform.isUbuntu:
             url = "https://github.com/zyedidia/micro/releases/download/v1.3.3/micro-1.3.3-linux64.tar.gz"
         else:
             raise RuntimeError("not implemented for other platforms")
