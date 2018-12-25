@@ -3,9 +3,9 @@ from Jumpscale import j
 
 SCHEMA="""
 @url = jumpscale.bcdb.test.house
-name** = "" (S)
-active** = "" (B)
-cost** = (N)
+name* = "" (S)
+active* = "" (B)
+cost* = (N)
 room = (LO) !jumpscale.bcdb.test.room
 
 

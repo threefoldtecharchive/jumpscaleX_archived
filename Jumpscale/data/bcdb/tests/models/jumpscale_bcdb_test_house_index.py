@@ -5,38 +5,45 @@ from Jumpscale import j
 class jumpscale_bcdb_test_house_index:
 
     def _init_index(self):
-        pass #to make sure works if no index
-        self._logger.info("init index:%s"%self.schema.url)
-
-        p = j.clients.peewee
-
-        db = self.bcdb.sqlclient.sqlitedb
-        # print(db)
-
-        class BaseModel(p.Model):
-            class Meta:
-                print("*%s"%db)
-                database = db
-
-        class Index_jumpscale_bcdb_test_house(BaseModel):
-            id = p.IntegerField(unique=True)
-            name = p.TextField(index=True)
-            active = p.BooleanField(index=True)
-            cost = p.FloatField(index=True)
-
-        self.index = Index_jumpscale_bcdb_test_house
-        self.index.create_table(safe=True)
+        self.index = None
 
     
-    def index_set(self,obj):
-        idict={}
-        idict["name"] = obj.name
-        idict["active"] = obj.active
-        idict["cost"] = obj.cost_usd
-        idict["id"] = obj.id
-        if not self.index.select().where(self.index.id == obj.id).count()==0:
-            #need to delete previous record from index
-            self.index.delete().where(self.index.id == obj.id).execute()
-        self.index.insert(**idict).execute()
+    def index_keys_set(self,obj):
+        val = obj.name
+        if val not in ["",None]:
+            val=str(val)
+            # self._logger.debug("key:name:%s:%s"%(val,obj.id))
+            self._set_key("name",val,obj.id)
+        val = obj.active
+        if val not in ["",None]:
+            val=str(val)
+            # self._logger.debug("key:active:%s:%s"%(val,obj.id))
+            self._set_key("active",val,obj.id)
+        val = obj.cost
+        if val not in ["",None]:
+            val=str(val)
+            # self._logger.debug("key:cost:%s:%s"%(val,obj.id))
+            self._set_key("cost",val,obj.id)
 
-    
+    def index_keys_delete(self,obj):
+        val = obj.name
+        if val not in ["",None]:
+            val=str(val)
+            self._logger.debug("delete key:name:%s:%s"%(val,obj.id))
+            self._delete_key("name",val,obj.id)
+        val = obj.active
+        if val not in ["",None]:
+            val=str(val)
+            self._logger.debug("delete key:active:%s:%s"%(val,obj.id))
+            self._delete_key("active",val,obj.id)
+        val = obj.cost
+        if val not in ["",None]:
+            val=str(val)
+            self._logger.debug("delete key:cost:%s:%s"%(val,obj.id))
+            self._delete_key("cost",val,obj.id)
+    def get_by_name(self,name):
+        return self.get_from_keys(name=name)
+    def get_by_active(self,active):
+        return self.get_from_keys(active=active)
+    def get_by_cost(self,cost):
+        return self.get_from_keys(cost=cost)
