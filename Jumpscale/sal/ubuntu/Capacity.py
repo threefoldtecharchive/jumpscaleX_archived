@@ -1,17 +1,15 @@
 import json
-
 import psutil
-
 from Jumpscale import j
 from sal_zos.disks.Disks import StorageType
 
 
 class Capacity:
-
     def __init__(self, node):
         self._node = node
         self._hw_info = None
         self._disk_info = None
+        self._memory_info = None
         self._smartmontools_installed = False
 
     @property
@@ -56,12 +54,18 @@ class Capacity:
                 )
         return self._disk_info
 
+    @property
+    def memory_info(self):
+        if self._memory_info is None:
+            self._memory_info = psutil.virtual_memory().total
+        return self._memory_info
+
     def report(self, indent=None):
         """
         create a report of the hardware capacity for
         processor, memory, motherboard and disks
         """
-        return j.tools.capacity.parser.get_report(psutil.virtual_memory().total, self.hw_info, self.disk_info, indent=indent)
+        return j.tools.capacity.parser.get_report(self._memory_info, self.hw_info, self.disk_info, indent=indent)
 
     def get(self, farmer_id):
         """
@@ -69,6 +73,7 @@ class Capacity:
 
         this capacity object is used in the capacity registration
 
+        :param: farmer_id
         :return: dict object ready for capacity registration
         :rtype: dict
         """
@@ -96,6 +101,13 @@ class Capacity:
         return capacity
 
     def register(self, farmer_id):
+        """
+        register the node
+
+        :param farmer_id:
+        :return: If registration done, return True, else return False
+        :rtype: bool
+        """
         if not farmer_id:
             return False
         data = self.get(farmer_id)

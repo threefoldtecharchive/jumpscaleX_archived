@@ -1,23 +1,26 @@
 from Jumpscale import j
-
 from .Capacity import Capacity
 
 JSBASE = j.application.JSBaseClass
 
 
 class Ubuntu(JSBASE):
-
     def __init__(self):
         self.__jslocation__ = "j.sal.ubuntu"
         JSBASE.__init__(self)
         self._aptupdated = False
         self._checked = False
         self._cache_ubuntu = None
-        self.installedPackageNames = []
+        self.installedpackage_names = []
         self._local = j.tools.executorLocal
         self.capacity = Capacity(self)
 
     def uptime(self):
+        """
+        return system uptime value.
+        :return: uptime value
+        :rtype: float
+        """
         with open('/proc/uptime') as f:
             data = f.read()
             uptime, _ = data.split(' ')
@@ -43,9 +46,12 @@ class Ubuntu(JSBASE):
         self.aptCache = self._cache_ubuntu
         self.apt = apt
 
-    def check(self, die=True):
+    def check(self):
         """
         check if ubuntu or mint (which is based on ubuntu)
+        :return: True if system in ubuntu or mint
+        :rtype: bool
+        :raise: j.exceptions.RuntimeError: is os is not ubuntu nor mint
         """
         if not self._checked:
             osname = j.core.platformtype.myplatform.osname
@@ -63,86 +69,101 @@ class Ubuntu(JSBASE):
 
     def version_get(self):
         """
-        returns codename,descr,id,release
-        known ids" raring, linuxmint
+        :return: codename, description, id, release
+        :rtype: tuple
         """
         self.check()
         import lsb_release
         result = lsb_release.get_distro_information()
-        return result["CODENAME"].lower().strip(), result["DESCRIPTION"], result[
-            "ID"].lower().strip(), result["RELEASE"],
+        return result["CODENAME"].lower().strip(), result["DESCRIPTION"], result["ID"].lower().strip(),\
+               result["RELEASE"]
 
-    def apt_install_check(self, packagenames, cmdname):
+    def apt_install_check(self, package_name, cmd_name):
         """
-        @param packagenames is name or array of names of ubuntu package to install e.g. curl
-        @param cmdname is cmd to check e.g. curl
+        :param package_name: is name of ubuntu package to install e.g. curl
+        :type package_name: str
+        :param cmd_name: is cmd to check e.g. curl
+        :type cmd_name: str
+        
+        :raise: j.exceptions.RuntimeError: Could not install package
         """
         self.check()
-        if j.data.types.list.check(packagenames):
-            for packagename in packagenames:
-                self.apt_install_check(packagename, cmdname)
-        else:
-            packagename = packagenames
-            rc, out, err = self._local.execute("which %s" % cmdname, False)
-            if rc != 0:
-                self.apt_install(packagename)
-            else:
-                return
-            rc, out, err = self._local.execute("which %s" % cmdname, False)
-            if rc != 0:
-                raise j.exceptions.RuntimeError(
-                    "Could not install package %s and check for command %s." % (packagename, cmdname))
+        rc, out, err = self._local.execute("which %s" % cmd_name, False)
+        if rc != 0:
+            self.apt_install(package_name)
+        
+        rc, out, err = self._local.execute("which %s" % cmd_name, False)
+        if rc != 0:
+            raise j.exceptions.RuntimeError(
+                "Could not install package %s and check for command %s." % (package_name, cmd_name))
 
-    def apt_install(self, packagename):
+    def apt_install(self, package_name):
+        """
+        :param package_name: name of the package
+        :type package_name: str
+
+        """
         self.apt_update()
-        cmd = 'apt-get install %s --force-yes -y' % packagename
+        cmd = 'apt-get install %s --force-yes -y' % package_name
         self._local.execute(cmd)
 
-    def apt_install_version(self, packageName, version):
-        '''
-        Installs a specific version of an ubuntu package.
+    def apt_install_version(self, package_name, version):
+        """
+        Install a specific version of an ubuntu package.
 
-        @param packageName: name of the package
-        @type packageName: str
+        :param package_name: name of the package
+        :type package_name: str
 
-        @param version: version of the package
-        @type version: str
-        '''
+        :param version: version of the package
+        :type version: str
+        """
 
         self.check()
         if self._cache_ubuntu is None:
             self.apt_init()
 
-        mainPackage = self._cache_ubuntu[packageName]
-        versionPackage = mainPackage.versions[version].package
+        main_package = self._cache_ubuntu[package_name]
+        version_package = main_package.versions[version].package
 
-        if not versionPackage.is_installed:
-            versionPackage.mark_install()
+        if not version_package.is_installed:
+            version_package.mark_install()
 
         self._cache_ubuntu.commit()
         self._cache_ubuntu.clear()
 
-    def deb_install(self, path, installDeps=True):
+    def deb_install(self, path, install_deps=True):
+        """
+        Install a debian package
+
+        :param path: debian package path
+        :type path: str
+        :param install_deps: install debian package's dependencies
+        :type install_deps: bool 
+        """
         self.check()
         if self._cache_ubuntu is None:
             self.apt_init()
         import apt.debfile
         deb = apt.debfile.DebPackage(path, cache=self._cache_ubuntu)
-        if installDeps:
+        if install_deps:
             deb.check()
-            for missingpkg in deb.missing_deps:
-                self.apt_install(missingpkg)
+            for missing_pkg in deb.missing_deps:
+                self.apt_install(missing_pkg)
         deb.install()
 
-    def deb_download_install(self, url, removeDownloaded=False, minspeed=20):
+    def deb_download_install(self, url, remove_downloaded=False):
         """
-        will download to tmp if not there yet
-        will then install
+        download to tmp if not there yet, then install it
+
+        :param url: debian package  url
+        :rtype: str
+        :param remove_downloaded: remove tmp download file
+        :rtype: bool
         """
         j.sal.fs.changeDir(j.dirs.TMPDIR)  # will go to tmp
         path = j.sal.nettools.download(url, "")
         self.deb_install(path)
-        if removeDownloaded:
+        if remove_downloaded:
             j.tools.path.get(path).rmtree_p()
 
     def pkg_list(self, pkgname, regex=""):
@@ -156,16 +177,16 @@ class Ubuntu(JSBASE):
         else:
             return out.split("\n")
 
-    def pkg_remove(self, packagename):
-        self._logger.info("ubuntu remove package:%s" % packagename)
+    def pkg_remove(self, package_name):
+        self._logger.info("ubuntu remove package:%s" % package_name)
         self.check()
         if self._cache_ubuntu is None:
             self.apt_init()
-        pkg = self._cache_ubuntu[packagename]
+        pkg = self._cache_ubuntu[package_name]
         if pkg.is_installed:
             pkg.mark_delete()
-        if packagename in self.installedPackageNames:
-            self.installedPackageNames.pop(self.installedPackageNames.index(packagename))
+        if package_name in self.installedpackage_names:
+            self.installedpackage_names.pop(self.installedpackage_names.index(package_name))
         self._cache_ubuntu.commit()
         self._cache_ubuntu.clear()
 
@@ -245,14 +266,14 @@ stop on runlevel [016]
     def apt_get(self, name):
         return self._cache_ubuntu[name]
 
-    def apt_find_all(self, packagename):
-        packagename = packagename.lower().strip().replace("_", "").replace("_", "")
+    def apt_find_all(self, package_name):
+        package_name = package_name.lower().strip().replace("_", "").replace("_", "")
         if self._cache_ubuntu is None:
             self.apt_init()
         result = []
         for item in self._cache_ubuntu.keys():
             item2 = item.replace("_", "").replace("_", "").lower()
-            if item2.find(packagename) != -1:
+            if item2.find(package_name) != -1:
                 result.append(item)
         return result
 
@@ -270,25 +291,25 @@ stop on runlevel [016]
     def is_pkg_installed(self, pkg):
         return pkg in self._installed_pkgs
 
-    def apt_find_installed(self, packagename):
-        packagename = packagename.lower().strip().replace("_", "").replace("_", "")
+    def apt_find_installed(self, package_name):
+        package_name = package_name.lower().strip().replace("_", "").replace("_", "")
         if self._cache_ubuntu is None:
             self.apt_init()
         result = []
         for item in self.get_installed_package_names():
             item2 = item.replace("_", "").replace("_", "").lower()
-            if item2.find(packagename) != -1:
+            if item2.find(package_name) != -1:
                 result.append(item)
         return result
 
-    def apt_find1_installed(self, packagename):
+    def apt_find1_installed(self, package_name):
         self._logger.info("find 1 package in ubuntu")
-        res = self.apt_find_installed(packagename)
+        res = self.apt_find_installed(package_name)
         if len(res) == 1:
             return res[0]
         elif len(res) > 1:
-            raise j.exceptions.RuntimeError("Found more than 1 package for %s" % packagename)
-        raise j.exceptions.RuntimeError("Could not find package %s" % packagename)
+            raise j.exceptions.RuntimeError("Found more than 1 package for %s" % package_name)
+        raise j.exceptions.RuntimeError("Could not find package %s" % package_name)
 
     def apt_sources_list(self):
         from aptsources import sourceslist
