@@ -1,28 +1,25 @@
-from Jumpscale import j
-from OpenSSL import crypto
 import OpenSSL
+from Jumpscale import j
 from socket import gethostname
 
 JSBASE = j.application.JSBaseClass
 
-
-class SSLFactory(j.application.JSBaseClass):
+class SSLFactory(JSBASE):
 
     def __init__(self):
-        self.__jslocation__ = "j.sal.ssl"
-        self.__imports__ = "pyopenssl"
+        self.__jslocation__ = 'j.sal.ssl'
+        self.__imports__ = 'pyopenssl'
         JSBASE.__init__(self)
 
-    def ca_cert_generate(self, cert_dir="",reset=False):
+    def ca_cert_generate(self, cert_dir='',reset=False):
         """
-        is for CA
-        If ca.crt and ca.key don't exist in cert_dir, create a new ??? #TODO: *1 this is not right I think
-        self-signed cert and keypair and write them into that directory.
-
-        js_shell 'j.sal.ssl.ca_cert_generate()'
-
-        returns True if generation happened
-
+        :description: CA (Certificate Authority) generate
+        :param cert_dir: 
+            certificate directory If ca.crt and ca.key don't exist in cert_dir, 
+            create a new in /sandbox/cfg/ssl/
+        :file: /sandbox/lib/jumpscale/Jumpscale/sal/ssl/SSLFactory.py
+        :js_shell: 'j.sal.ssl.ca_cert_generate()'
+        :return: returns True if generation happened
         """
         if cert_dir == "":
             cert_dir = j.dirs.CFGDIR+"/ssl"
@@ -30,7 +27,7 @@ class SSLFactory(j.application.JSBaseClass):
         j.sal.fs.createDir(cert_dir)
             
         cert_dir = j.tools.path.get(cert_dir)
-        CERT_FILE = cert_dir.joinpath("ca.crt")  # info (certificaat) (pub is inhere + other info)
+        CERT_FILE = cert_dir.joinpath("ca.crt")  # info (certificate) (pub is in here + other info)
         KEY_FILE = cert_dir.joinpath("ca.key")  # private key
 
         if reset or not CERT_FILE.exists() or not KEY_FILE.exists():
@@ -42,11 +39,11 @@ class SSLFactory(j.application.JSBaseClass):
             # create a self-signed cert
             cert = crypto.X509()
             cert.set_version(3)
-            cert.get_subject().C = "BE"
-            cert.get_subject().ST = "OV"
-            cert.get_subject().L = "Ghent"
-            cert.get_subject().O = "my company"
-            cert.get_subject().OU = "my organization"
+            cert.get_subject().C = "BE"  # c -- countryName
+            cert.get_subject().ST = "OV" # ST  -- state Or ProvinceName
+            cert.get_subject().L = "Ghent" # L -- localityName
+            cert.get_subject().O = "my company" # O -- organizationName
+            cert.get_subject().OU = "my organization" 
             cert.get_subject().CN = gethostname()
 
             import time
@@ -70,13 +67,16 @@ class SSLFactory(j.application.JSBaseClass):
         else:
             return False
 
-    def create_signed_cert(self, path, keyname):
+    def signed_cert_create(self, path, keyname):
         """
-        Signing X509 certificate using CA
-        The following code sample shows how to sign an X509 certificate using a CA:
-        THis is usually done by the certificate authority it self like verisign, GODaddy, ... etc
+        :description:
+            Signing X509 certificate using CA
+            The following code sample shows how to sign an X509 certificate using a CA:
+            This is usually done by the certificate authority it self like verisign, GODaddy, ... etc
         :param path: Path to the certificate and key that will be used in signing the new certificate
         :param keyname: the new certficate and key name
+        :file: /sandbox/lib/jumpscale/Jumpscale/sal/ssl/SSLFactory.py
+        :js_shell: j.sal.ssl.create_signed_cert('/tmp/test/', 'test')
         """
         path = j.tools.path.get(path)
         cacert = path.joinpath("ca.crt").text()
@@ -102,11 +102,14 @@ class SSLFactory(j.application.JSBaseClass):
         path.joinpath("%s.crt" % keyname).write_text(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode())
         path.joinpath("%s.key" % keyname).write_text(crypto.dump_privatekey(crypto.FILETYPE_PEM, key).decode())
 
-    def create_certificate_signing_request(self, common_name):
+    def certificate_signing_request_create(self, common_name):
         """
-        Creating CSR (Certificate Signing Request)
-        this CSR normally passed to the CA (Certificate Authority) to create a signed certificate
+        :description:
+            Creating CSR (Certificate Signing Request)
+            this CSR normally passed to the CA (Certificate Authority) to create a signed certificate
         :param common_name: common_name to be used in subject
+        :file: /sandbox/lib/jumpscale/Jumpscale/sal/ssl/SSLFactory.py
+        :js_shell: j.sal.ssl.create_certificate_signing_request('test')
         """
         key = OpenSSL.crypto.PKey()
         key.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
@@ -127,10 +130,12 @@ class SSLFactory(j.application.JSBaseClass):
 
     def sign_request(self, req, path):
         """
-        Processes a CSR (Certificate Signning Request)
-        issues a certificate based on the CSR data and signit
+        :description:
+            Processes a CSR (Certificate Signning Request)
+            issues a certificate based on the CSR data and signit
         :param req: CSR
         :param path: path to the key and certificate that will be used in signning this request
+        :return: certificate
         """
 
         path = j.tools.path.get(path)
@@ -161,8 +166,9 @@ class SSLFactory(j.application.JSBaseClass):
 
     def verify(self, certificate, key):
         """
-        It reads the pathes of certificate and key files of an X509 certificate
-        and verify if certificate matches private key
+        :description:
+            It reads the pathes of certificate and key files of an X509 certificate
+            and verify if certificate matches private key
 
         :param certificate (string): path to the certificate file
         :param key (string): path to the key file
@@ -185,8 +191,9 @@ class SSLFactory(j.application.JSBaseClass):
 
     def bundle(self, certificate, key, certification_chain=(), passphrase=None):
         """
-        Bundles a certificate with it's private key (if any) and it's chain of trust.
-        Optionally secures it with a passphrase.
+        description:
+            Bundles a certificate with it's private key (if any) and it's chain of trust.
+            Optionally secures it with a passphrase.
 
         :param certificate (string): path to the certificate file
         :param key (string): path to the key file
@@ -207,7 +214,7 @@ class SSLFactory(j.application.JSBaseClass):
 
     def _load_privatekey(self, path):
         """
-        load a private key content from a path
+        :decsription: load a private key content from a path
 
         :param path: path to the key file
         :return: content of the file
@@ -218,7 +225,7 @@ class SSLFactory(j.application.JSBaseClass):
 
     def _load_certificate(self, path):
         """
-        load certifcate content from a path
+        :decsription: load certifcate content from a path
 
         :param path: path to the certificate
         :return: content of the certificate
