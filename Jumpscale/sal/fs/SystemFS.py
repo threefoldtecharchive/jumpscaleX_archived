@@ -1154,7 +1154,7 @@ class SystemFS(j.application.JSBaseClass):
     #         return s
 
 
-    @path_check(paths={"required","replace"})
+    @path_check(paths={"required","replace","multiple"})
     def touch(self, paths, overwrite=True):
         """
         can be single path or multiple (then list)

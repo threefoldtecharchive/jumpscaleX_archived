@@ -88,6 +88,9 @@ def path_check(**arguments):
                        existing directory or a link to a directory
         - "pureDir": Means that the path argument value must be an
                        existing directory
+
+        - "multiple": Means will check if multiple arguments (comma separated or list), if yes execute the method multiple times
+
         When no validations are added, the value of the path argument will still
         be expanded with the current home directory if the path starts with ~
 
@@ -101,7 +104,7 @@ def path_check(**arguments):
             raise ValueError(
                 "Expected tuple of validators for argument %s" % argument)
         for validator in validators:
-            if validator not in {"required", "exists", "file", "dir", "pureFile", "pureDir","replace"}:
+            if validator not in {"required", "exists", "file", "dir", "pureFile", "pureDir","replace","multiple"}:
                 raise ValueError(
                     "Unsupported validator '%s' for argument %s" % (validator, argument))
 
@@ -168,6 +171,16 @@ def path_check(**arguments):
                     if value and "pureDir" in validators and os.path.islink(value):
                         raise ValueError("Argument %s in %s%s expects a directory path! %s is not a directory but a link." % (
                             parameter.name, jslocation(), func.__name__, value))
+
+                    if "multiple" in validators:
+                        raise RuntimeError("need to implement support for multiple times execution, is more difficult")
+                        #replace THE PATH
+                        value=j.core.tools.text_replace(value)
+                        if position < len(args):
+                            args[position] = value
+                        else:
+                            kwargs[parameter.name] = value
+
                 position += 1
             return func(*args, **kwargs)
         return wrapper
