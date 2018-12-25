@@ -42,9 +42,9 @@ class TLS(JSBASE):
     def ca_create(self, subjects, key_algo='rsa', key_size=4096):
         """Generate a Root CA.
 
-        :param subjects: list of dict containing valid names. get create it with asubjects_ask method
+        :param subjects: list of dicts containing valid csr names. It can be created with subjects_ask method.
         :type subjects: dict
-        :param key_algo: name of the algorythme to use to for key generation, defaults to 'rsa'
+        :param key_algo: name of the algorithm to use to for key generation, defaults to 'rsa'
         :type key_algo: str, optional
         :param key_size: size of the key to generate, defaults to 4096
         :type key_size: int, optional
@@ -56,9 +56,8 @@ class TLS(JSBASE):
         ca_cert_path = self.cwd.joinpath('root-ca')
         ca_csr_path.write_text(j.data.serializers.json.dumps(csr, indent=4))
 
-        process = subprocess.run(
-            'cfssl gencert -initca %s | cfssljson -bare %s' % (ca_csr_path, ca_cert_path), shell=True)
-        process.check_returncode()
+        subprocess.run(
+            'cfssl gencert -initca %s | cfssljson -bare %s' % (ca_csr_path, ca_cert_path), shell=True, check=True)
 
         cert_path = ca_cert_path + '.pem'
         key_path = ca_cert_path + '-key.pem'
@@ -72,7 +71,7 @@ class TLS(JSBASE):
 
         :param name: name to indentify the csr
         :type name: str
-        :param subjects: list of dict containing valid names. get create it with subjects_ask method
+        :param subjects: list of dicts containing valid csr names. It can be created with subjects_ask method.
         :type subjects: list
         :param hosts: list of the domain names which the certificate should be valid for
         :type hosts: list
@@ -88,8 +87,7 @@ class TLS(JSBASE):
         csr_json_path.write_text(j.data.serializers.json.dumps(csr, indent=4))
 
         output_path = self.cwd.joinpath(name)
-        process = subprocess.run('cfssl genkey %s | cfssljson -bare %s' % (csr_json_path, output_path), shell=True)
-        process.check_returncode()
+        subprocess.run('cfssl genkey %s | cfssljson -bare %s' % (csr_json_path, output_path), shell=True, check=True)
 
         csr_path = self.cwd.joinpath('%s.csr' % name)
         key_path = self.cwd.joinpath('%s-key.pem' % name)
@@ -114,9 +112,9 @@ class TLS(JSBASE):
         name = base.split('.')[0]
 
         output_path = self.cwd.joinpath(name)
-        process = subprocess.run(
-            'cfssl sign -ca %s -ca-key %s %s | cfssljson -bare %s' % (ca, ca_key, csr, output_path), shell=True)
-        process.check_returncode()
+        subprocess.run(
+            'cfssl sign -ca %s -ca-key %s %s | cfssljson -bare %s' % (ca, ca_key, csr, output_path),
+            shell=True, check=True)
         cert_path = self.cwd.joinpath('%s.pem' % name)
         output = 'certificate created at %s' % cert_path
 
@@ -130,7 +128,7 @@ class TLS(JSBASE):
 
         :param name: name to indentify the csr
         :type name: str
-        :param subjects: list of dict containing valid names. get create it with subjects_ask method
+        :param subjects: list of dicts containing valid csr names. It can be created with subjects_ask method.
         :type subjects: list
         :param hosts: list of the domain names which the certificate should be valid for
         :type hosts: list
@@ -150,10 +148,9 @@ class TLS(JSBASE):
         csr_json_path.write_text(j.data.serializers.json.dumps(csr, indent=4))
 
         output_path = self.cwd.joinpath(name)
-        process = subprocess.run(
+        subprocess.run(
             'cfssl gencert -ca %s -ca-key %s %s | cfssljson -bare %s' % (ca, ca_key, csr_json_path, output_path),
-            shell=True)
-        process.check_returncode()
+            shell=True, check=True)
 
         cert_path = self.cwd.joinpath('%s.pem' % name)
         key_path = self.cwd.joinpath('%s-key.pem' % name)
@@ -166,7 +163,7 @@ class TLS(JSBASE):
     def _csr_get(self, subjects, hosts=None, key_algo='rsa', key_size=2048):
         """Helper function that returns the dict used for csr json
 
-        :param subjects: list of dict containing valid names. get create it with subjects_ask method
+        :param subjects: list of dicts containing valid csr names. It can be created with subjects_ask method.
         :type subjects: list
         :param hosts: list of the domain names which the certificate should be valid for
         :type hosts: list

@@ -46,11 +46,11 @@ def signedcert_flow():
 
 def test_main(self=None):
     subprocess.run(
-        'curl https://pkg.cfssl.org/R1.2/cfssl_linux-amd64 -o /usr/local/bin/cfssl', shell=True).check_returncode()
+        'curl https://pkg.cfssl.org/R1.2/cfssl_linux-amd64 -o /usr/local/bin/cfssl', shell=True, check=True)
     subprocess.run(
         'curl https://pkg.cfssl.org/R1.2/cfssljson_linux-amd64 -o /usr/local/bin/cfssljson',
-        shell=True).check_returncode
-    subprocess.run('chmod +x /usr/local/bin/cfssl /usr/local/bin/cfssljson', shell=True).check_returncode()
+        shell=True, check=True)
+    subprocess.run('chmod +x /usr/local/bin/cfssl /usr/local/bin/cfssljson', shell=True, check=True)
 
     full_flow()
     signedcert_flow()
