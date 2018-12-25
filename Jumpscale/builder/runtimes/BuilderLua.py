@@ -24,7 +24,7 @@ class BuilderLua(j.builder.system._BaseClass):
         j.builder.lib.openssl.build()
         j.builder.web.openresty.build()
 
-        j.builder.sandbox.locale_check()
+        j.tools.bash.local.locale_check()
 
 
         url="https://luarocks.org/releases/luarocks-3.0.4.tar.gz"

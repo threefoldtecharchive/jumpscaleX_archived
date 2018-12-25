@@ -23,7 +23,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         if self._done_check("build") and not reset:
             return
 
-        j.builder.sandbox.locale_check()
+        j.tools.bash.local.locale_check()
 
         if j.builder.tools.isUbuntu:
             j.builder.system.package.mdupdate()
