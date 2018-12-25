@@ -93,16 +93,17 @@ class Ubuntu(j.application.JSBaseClass):
                 raise j.exceptions.RuntimeError(
                     "Could not install package %s and check for command %s." % (packagename, cmdname))
 
+
     def apt_install(self, packagename, update_md=True):
         """Install a package in the system
         
-        Arguments:
-            packagename {[string]} -- [name of the package ot install, can be a space separated list of of names]
-        
-        Keyword Arguments:
-            update_md {bool} -- [if True, an apt update will be executed before 
-            installing the package] (default: {True})
+        :param packagename: name of the package ot install, can be a space separated list of of names
+        :type packagename: string
+        :param update_md: if True, an apt update will be executed before 
+            installing the package, defaults to True
+        :param update_md: bool, optional
         """
+
         if update_md:
             self.apt_update()
         cmd = 'apt-get install %s --force-yes -y' % packagename

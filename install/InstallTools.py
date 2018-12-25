@@ -354,18 +354,19 @@ class Tools():
         except Exception as e:
             Tools.shell()
 
+
     @staticmethod
     def dir_ensure(path, remove_existing=False):
         """Ensure the existance of a directory on the system, if the 
         Directory does not exist, it will create it.
         
-        Arguments:
-            path {[string]} -- [path of the directory]
-        
-        Keyword Arguments:
-            remove_existing {bool} -- [If True and the path already exist, 
-            the existing path will be removed first] (default: {False})
+        :param path:path of the directory
+        :type path: string
+        :param remove_existing: If True and the path already exist, 
+            the existing path will be removed first, defaults to False
+        :param remove_existing: bool, optional
         """
+
         path = Tools.text_replace(path)
 
         if os.path.exists(path) and remove_existing is True:
