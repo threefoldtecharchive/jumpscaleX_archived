@@ -364,7 +364,7 @@ class Tools():
         :type path: string
         :param remove_existing: If True and the path already exist, 
             the existing path will be removed first, defaults to False
-        :param remove_existing: bool, optional
+        :type remove_existing: bool, optional
         """
 
         path = Tools.text_replace(path)

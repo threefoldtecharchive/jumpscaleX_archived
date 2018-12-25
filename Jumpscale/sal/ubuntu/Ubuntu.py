@@ -101,7 +101,7 @@ class Ubuntu(j.application.JSBaseClass):
         :type packagename: string
         :param update_md: if True, an apt update will be executed before 
             installing the package, defaults to True
-        :param update_md: bool, optional
+        :type update_md: bool, optional
         """
 
         if update_md:
