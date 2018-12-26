@@ -88,11 +88,11 @@ class Ubuntu(JSBASE):
         :raise: j.exceptions.RuntimeError: Could not install package
         """
         self.check()
-        rc, out, err = self._local.execute('which %s' % cmd_name, False)
+        rc, out, err = j.sal.process.execute('which %s' % cmd_name, useShell=True)
         if rc != 0:
             self.apt_install(package_name)
         
-        rc, out, err = self._local.execute('which %s' % cmd_name, False)
+        rc, out, err = j.sal.process.execute('which %s' % cmd_name, useShell=True)
         if rc != 0:
             raise j.exceptions.RuntimeError(
                 'Could not install package %s and check for command %s.' % (package_name, cmd_name))
@@ -105,7 +105,7 @@ class Ubuntu(JSBASE):
         """
         self.apt_update()
         cmd = 'apt-get install %s --force-yes -y' % package_name
-        self._local.execute(cmd)
+        j.sal.process.execute(cmd)
 
     def apt_install_version(self, package_name, version):
         """
@@ -179,7 +179,7 @@ class Ubuntu(JSBASE):
         :return: List files owned by package
         :rtype: list
         """
-        rc, out, err = self._local.execute('dpkg -L %s' % pkg_name)
+        rc, out, err = j.sal.process.execute('dpkg -L %s' % pkg_name, useShell=True)
         if regex != '':
             return j.data.regex.findAll(regex, out)
         else:
@@ -240,7 +240,7 @@ stop on runlevel [016]
 
         j.tools.path.get('/etc/init/%s.conf' % service_name).write_text(cmd)
         if reload:
-            self._local.execute('initctl reload-configuration')
+            j.sal.process.execute('initctl reload-configuration', useShell=True)
 
     def service_uninstall(self, service_name):
         """
@@ -264,7 +264,7 @@ stop on runlevel [016]
         self._logger.debug('start service on ubuntu for:%s' % service_name)
         if not self.service_status(service_name):
             cmd = 'sudo start %s' % service_name
-            return self._local.execute(cmd)
+            return j.sal.process.execute(cmd, useShell=True)
 
     def service_stop(self, service_name):
         """
@@ -275,7 +275,7 @@ stop on runlevel [016]
         :rtype: bool
         """
         cmd = 'sudo stop %s' % service_name
-        return self._local.execute(cmd, False)
+        return j.sal.process.execute(cmd, useShell=True)
 
     def service_restart(self, service_name):
         """
@@ -286,7 +286,7 @@ stop on runlevel [016]
         :return: start service output
         :rtype: bool
         """
-        return self._local.execute('sudo restart %s' % service_name, False)
+        return j.sal.process.execute('sudo restart %s' % service_name)
 
     def service_status(self, service_name):
         """
@@ -296,7 +296,7 @@ stop on runlevel [016]
         :rtype: str
         :return:
         """
-        exitcode, output = self._local.execute('sudo status %s' % service_name, False)
+        exitcode, output = j.sal.process.execute('sudo status %s' % service_name)
         parts = output.split(' ')
         if len(parts) >= 2 and parts[1].startswith('start'):
             return True
@@ -309,14 +309,14 @@ stop on runlevel [016]
         :param service_name: ubuntu service name
         :rtype: str
         """
-        self._local.execute('update-rc.d -f %s remove' % service_name)
+        j.sal.process.execute('update-rc.d -f %s remove' % service_name)
 
     def service_enable_start_boot(self, service_name):
         """
 
         :param service_name: ubuntu service name
         """
-        self._local.execute('update-rc.d -f %s defaults' % service_name)
+        j.sal.process.execute('update-rc.d -f %s defaults' % service_name)
 
     def apt_update(self):
         """
@@ -328,7 +328,7 @@ stop on runlevel [016]
         if self._cache_ubuntu:
             self._cache_ubuntu.update()
         else:
-            self._local.execute('apt-get update', False)
+            j.sal.process.execute('apt-get update', False)
 
     def apt_upgrade(self):
         """
@@ -444,7 +444,7 @@ stop on runlevel [016]
         :return: return whoami
         :rtype: str
         """
-        rc, out, err = self._local.execute('whoami')
+        rc, out, err = j.sal.process.execute('whoami', useShell=True)
         return out.strip()
 
     def checkroot(self):
@@ -474,5 +474,5 @@ stop on runlevel [016]
             if ssh_type not in ['rsa', 'dsa']:
                 raise j.exceptions.Input("only support rsa or dsa for now")
             cmd = "ssh-keygen -t %s -b 4096 -P '%s' -f %s" % (ssh_type, passphrase, path)
-            self._local.execute(cmd)
+            j.sal.process.execute(cmd)
 
