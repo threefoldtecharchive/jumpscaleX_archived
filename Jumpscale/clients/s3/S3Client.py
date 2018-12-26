@@ -15,27 +15,24 @@ except ImportError:
     print("WARNING: s3 pip client (minio) not found please install do j.clients.s3.install()")
 
 
-TEMPLATE = """
-address = ""
-port = 9000
-accesskey_ = ""
-secretkey_ = ""
-bucket = ""
-bucket_ok = false
-"""
 
-JSConfigBase = j.application.JSBaseClass
+JSConfigBase = j.application.JSBaseConfigClass
 
 
 class S3Client(JSConfigBase):
     """
 
     """
-
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigBase.__init__(self, instance=instance,
-                              data=data, parent=parent, template=TEMPLATE, interactive=interactive)
-        c = self.config.data
+    _SCHEMATEXT = """
+    @url = jumpscale.s3.client
+    address = "" (S)
+    port = 9000 (I)
+    accesskey_ = "" (S)
+    secretkey_ = "" (S)
+    bucket = "" (S)
+    bucket_ok = false (B)
+    """
+    def _init_new(self):
 
         # s3 = boto3.resource('s3',
         #                     endpoint_url='http://%s:%s' % (c["address"], c["port"]),
@@ -57,13 +54,13 @@ class S3Client(JSConfigBase):
         )
 
         self._logger.info("open connection to minio:%s"%self.instance)
-        self.client = Minio('%s:%s' % (c["address"], c["port"]),
-                            access_key=c["accesskey_"],
-                            secret_key=c["secretkey_"],
+        self.client = Minio('%s:%s' % (self.address, self.port),
+                            access_key=self.accesskey_,
+                            secret_key=self.secretkey_,
                             secure=False, http_client=http_client)
 
-        if not self.config.data["bucket_ok"]:
-            self._bucket_create(self.config.data["bucket"])
+        if not self.bucket_ok:
+            self._bucket_create(self.bucket)
 
     def _bucket_create(self, name):
         try:
