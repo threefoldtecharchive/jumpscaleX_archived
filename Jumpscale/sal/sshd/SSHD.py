@@ -40,11 +40,15 @@ class SSHD:
 
     def addKey(self, key):
         """ Add pubkey to authorized_keys
+        :param key: public key which  will be added to authorized keys.
+        :type key: string.
         """
         self._transactions.append((OP_ADD, key.strip()))
 
     def deleteKey(self, key):
         """ Delete pubkey from authorized_keys
+        :param key: public key which  will be deleted from authorized keys.
+        :type key: string.
         """
         self._transactions.append((OP_DEL, key.strip()))
 
