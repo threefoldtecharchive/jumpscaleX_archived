@@ -73,7 +73,8 @@ class Capacity:
 
         this capacity object is used in the capacity registration
 
-        :param: farmer_id
+        :param farmer_id: farmer id value
+        :rtype: str
         :return: dict object ready for capacity registration
         :rtype: dict
         """
@@ -104,7 +105,8 @@ class Capacity:
         """
         register the node
 
-        :param farmer_id:
+        :param farmer_id: farmer id value
+        :rtype: str
         :return: If registration done, return True, else return False
         :rtype: bool
         """

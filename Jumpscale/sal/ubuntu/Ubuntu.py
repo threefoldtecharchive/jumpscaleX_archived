@@ -6,7 +6,7 @@ JSBASE = j.application.JSBaseClass
 
 class Ubuntu(JSBASE):
     def __init__(self):
-        self.__jslocation__ = "j.sal.ubuntu"
+        self.__jslocation__ = 'j.sal.ubuntu'
         JSBASE.__init__(self)
         self._aptupdated = False
         self._checked = False
@@ -38,12 +38,12 @@ class Ubuntu(JSBASE):
         else:
             cfg = apt.apt_pkg.Configuration
         try:
-            cfg.set("APT::Install-Recommends", "0")
-            cfg.set("APT::Install-Suggests", "0")
+            cfg.set('APT::Install-Recommends', '0')
+            cfg.set('APT::Install-Suggests', '0')
         except BaseException:
             pass
         self._cache_ubuntu = apt.Cache()
-        self.aptCache = self._cache_ubuntu
+        self.apt_cache = self._cache_ubuntu
         self.apt = apt
 
     def check(self):
@@ -57,12 +57,12 @@ class Ubuntu(JSBASE):
             osname = j.core.platformtype.myplatform.osname
             osversion = j.core.platformtype.myplatform.osversion
             if osname not in ('ubuntu', 'linuxmint'):
-                raise j.exceptions.RuntimeError("Only Ubuntu/Mint supported")
+                raise j.exceptions.RuntimeError('Only Ubuntu/Mint supported')
             # safe cast to the release to a number
             else:
                 release = float(osversion)
                 if release < 14:
-                    raise j.exceptions.RuntimeError("Only ubuntu version 14+ supported")
+                    raise j.exceptions.RuntimeError('Only ubuntu version 14+ supported')
                 self._checked = True
 
         return self._checked
@@ -75,8 +75,8 @@ class Ubuntu(JSBASE):
         self.check()
         import lsb_release
         result = lsb_release.get_distro_information()
-        return result["CODENAME"].lower().strip(), result["DESCRIPTION"], result["ID"].lower().strip(),\
-               result["RELEASE"]
+        return result['CODENAME'].lower().strip(), result['DESCRIPTION'], result['ID'].lower().strip(),\
+               result['RELEASE']
 
     def apt_install_check(self, package_name, cmd_name):
         """
@@ -88,14 +88,14 @@ class Ubuntu(JSBASE):
         :raise: j.exceptions.RuntimeError: Could not install package
         """
         self.check()
-        rc, out, err = self._local.execute("which %s" % cmd_name, False)
+        rc, out, err = self._local.execute('which %s' % cmd_name, False)
         if rc != 0:
             self.apt_install(package_name)
         
-        rc, out, err = self._local.execute("which %s" % cmd_name, False)
+        rc, out, err = self._local.execute('which %s' % cmd_name, False)
         if rc != 0:
             raise j.exceptions.RuntimeError(
-                "Could not install package %s and check for command %s." % (package_name, cmd_name))
+                'Could not install package %s and check for command %s.' % (package_name, cmd_name))
 
     def apt_install(self, package_name):
         """
@@ -161,12 +161,12 @@ class Ubuntu(JSBASE):
         :rtype: bool
         """
         j.sal.fs.changeDir(j.dirs.TMPDIR)  # will go to tmp
-        path = j.sal.nettools.download(url, "")
+        path = j.sal.nettools.download(url, '')
         self.deb_install(path)
         if remove_downloaded:
             j.tools.path.get(path).rmtree_p()
 
-    def pkg_list(self, pkg_name, regex=""):
+    def pkg_list(self, pkg_name, regex=''):
         """
         list files of dpkg
         if regex used only output the ones who are matching regex
@@ -179,8 +179,8 @@ class Ubuntu(JSBASE):
         :return: List files owned by package
         :rtype: list
         """
-        rc, out, err = self._local.execute("dpkg -L %s" % pkg_name)
-        if regex != "":
+        rc, out, err = self._local.execute('dpkg -L %s' % pkg_name)
+        if regex != '':
             return j.data.regex.findAll(regex, out)
         else:
             return out.split("\n")
@@ -192,7 +192,7 @@ class Ubuntu(JSBASE):
         :param package_name: package name to be removed
         :rtype: str
         """
-        self._logger.info("ubuntu remove package:%s" % package_name)
+        self._logger.info('ubuntu remove package:%s' % package_name)
         self.check()
         if self._cache_ubuntu is None:
             self.apt_init()
@@ -228,40 +228,42 @@ start on runlevel [2345]
 stop on runlevel [016]
 """
         if respawn:
-            cmd += "respawn\n"
+            cmd += 'respawn\n'
         if pwd:
-            cmd += "chdir %s\n" % pwd
+            cmd += 'chdir %s\n' % pwd
         if env is not None:
             for key, value in list(env.items()):
-                cmd += "env %s=%s\n" % (key, value)
-        cmd += "exec %s %s\n" % (daemon_path, args)
+                cmd += 'env %s=%s\n' % (key, value)
+        cmd += 'exec %s %s\n' % (daemon_path, args)
 
         cmd = j.dirs.replace_txt_dir_vars(cmd)
 
-        j.tools.path.get("/etc/init/%s.conf" % service_name).write_text(cmd)
+        j.tools.path.get('/etc/init/%s.conf' % service_name).write_text(cmd)
         if reload:
-            self._local.execute("initctl reload-configuration")
+            self._local.execute('initctl reload-configuration')
 
     def service_uninstall(self, service_name):
         """
         remove an ubuntu service
 
         :param service_name: ubuntu service name
+        :rtype: str
         """
         self.service_stop(service_name)
-        j.tools.path.get("/etc/init/%s.conf" % service_name).remove_p()
+        j.tools.path.get('/etc/init/%s.conf' % service_name).remove_p()
 
     def service_start(self, service_name):
         """
         start an ubuntu service
 
         :param service_name: ubuntu service name
+        :rtype: str
         :return: start service output
         :rtype: bool
         """
-        self._logger.debug("start service on ubuntu for:%s" % service_name)
+        self._logger.debug('start service on ubuntu for:%s' % service_name)
         if not self.service_status(service_name):
-            cmd = "sudo start %s" % service_name
+            cmd = 'sudo start %s' % service_name
             return self._local.execute(cmd)
 
     def service_stop(self, service_name):
@@ -272,7 +274,7 @@ stop on runlevel [016]
         :return: start service output
         :rtype: bool
         """
-        cmd = "sudo stop %s" % service_name
+        cmd = 'sudo stop %s' % service_name
         return self._local.execute(cmd, False)
 
     def service_restart(self, service_name):
@@ -280,19 +282,21 @@ stop on runlevel [016]
         restart an ubuntu service
 
         :param service_name: ubuntu service name
+        :rtype: str
         :return: start service output
         :rtype: bool
         """
-        return self._local.execute("sudo restart %s" % service_name, False)
+        return self._local.execute('sudo restart %s' % service_name, False)
 
     def service_status(self, service_name):
         """
         check service status
 
         :param service_name: ubuntu service name
+        :rtype: str
         :return:
         """
-        exitcode, output = self._local.execute("sudo status %s" % service_name, False)
+        exitcode, output = self._local.execute('sudo status %s' % service_name, False)
         parts = output.split(' ')
         if len(parts) >= 2 and parts[1].startswith('start'):
             return True
@@ -303,15 +307,16 @@ stop on runlevel [016]
         """
 
         :param service_name: ubuntu service name
+        :rtype: str
         """
-        self._local.execute("update-rc.d -f %s remove" % service_name)
+        self._local.execute('update-rc.d -f %s remove' % service_name)
 
     def service_enable_start_boot(self, service_name):
         """
 
         :param service_name: ubuntu service name
         """
-        self._local.execute("update-rc.d -f %s defaults" % service_name)
+        self._local.execute('update-rc.d -f %s defaults' % service_name)
 
     def apt_update(self):
         """
@@ -323,7 +328,7 @@ stop on runlevel [016]
         if self._cache_ubuntu:
             self._cache_ubuntu.update()
         else:
-            self._local.execute("apt-get update", False)
+            self._local.execute('apt-get update', False)
 
     def apt_upgrade(self):
         """
@@ -361,12 +366,12 @@ stop on runlevel [016]
         :param package_name: ubuntu package name
         :return:
         """
-        package_name = package_name.lower().strip().replace("_", "").replace("_", "")
+        package_name = package_name.lower().strip().replace('_', '').replace('_', '')
         if self._cache_ubuntu is None:
             self.apt_init()
         result = []
         for item in self._cache_ubuntu.keys():
-            item2 = item.replace("_", "").replace("_", "").lower()
+            item2 = item.replace('_', '').replace('_', '').lower()
             if item2.find(package_name) != -1:
                 result.append(item)
         return result
@@ -388,6 +393,12 @@ stop on runlevel [016]
         return self._installed_pkgs
 
     def is_pkg_installed(self, pkg):
+        """
+        check if the pkg is installed or not
+        :param pkg: package name
+        :rtype: str
+        :return: bool
+        """
         return pkg in self._installed_pkgs
 
     def apt_find_installed(self, package_name):
@@ -395,15 +406,16 @@ stop on runlevel [016]
         
 
         :param package_name: ubuntu package name
-        :return:
+        :rtype: str
+        :return: list of installed packages with the same name
+        :rtype: list
         """
-        package_name = package_name.lower().strip().replace("_", "").replace("_", "")
+        package_name = package_name.lower().strip().replace('_', '')
         if self._cache_ubuntu is None:
             self.apt_init()
         result = []
         for item in self.get_installed_package_names():
-            item2 = item.replace("_", "").replace("_", "").lower()
-            if item2.find(package_name) != -1:
+            if item.replace('_', '').lower().find(package_name) != -1:
                 result.append(item)
         return result
 
@@ -415,44 +427,52 @@ stop on runlevel [016]
         from aptsources import sourceslist
         return sourceslist.SourcesList()
 
-    def apt_sources_uri_change(self, new_uri):
-        """
-
-        :param new_uri:
-        :return:
-        """
-        src = self.apt_sources_list()
-        for entry in src.list:
-            entry.uri = new_uri
-        src.save()
-
     def apt_sources_uri_add(self, url):
-        url = url.replace(";", ":")
-        name = url.replace("\\", "/").replace("http://", "").replace("https://", "").split("/")[0]
-        path = j.tools.path.get("/etc/apt/sources.list.d/%s.list" % name)
-        path.write_text("deb %s\n" % url)
+        """
+        add a new apt source url
+        :param url: source url
+        :rtype: str
+        """
+        url = url.replace(';', ':')
+        name = url.replace('\\', '/').replace('http://', '').replace('https://', '').split('/')[0]
+        path = j.tools.path.get('/etc/apt/sources.list.d/%s.list' % name)
+        path.write_text('deb %s\n' % url)
 
     def whoami(self):
-        rc, out, err = self._local.execute("whoami")
+        """
+
+        :return: return whoami
+        :rtype: str
+        """
+        rc, out, err = self._local.execute('whoami')
         return out.strip()
 
     def checkroot(self):
-        if self.whoami() != "root":
-            raise j.exceptions.Input("only support root")
+        """
+        check if the current user is root
+        :raise j.exceptions.Input: only support root
+        """
+        if self.whoami() != 'root':
+            raise j.exceptions.Input('only support root')
 
-    def sshkeys_generate(self, passphrase='', type="rsa", overwrite=False, path="/root/.ssh/id_rsa"):
+    def sshkey_generate(self, passphrase='', ssh_type='rsa', overwrite=False, path='/root/.ssh/id_rsa'):
+        """
+        generate an ssh key
+        :param passphrase: ssh key passphrase
+        :rtype: str
+        :param ssh_type: ssh key type (rsa or dsa)
+        :rtype: str
+        :param overwrite: overwrite the existing ssh key, default is  (false)
+        :rtype: bool
+        :param path: ssh key path, default is (/root/.ssh/id_rsa)
+        :rtype: str
+        """
         path = j.tools.path.get(path)
         if overwrite and path.exists():
             path.rmtree_p()
         if not path.exists():
-            if type not in ['rsa', 'dsa']:
+            if ssh_type not in ['rsa', 'dsa']:
                 raise j.exceptions.Input("only support rsa or dsa for now")
-            cmd = "ssh-keygen -t %s -b 4096 -P '%s' -f %s" % (type, passphrase, path)
+            cmd = "ssh-keygen -t %s -b 4096 -P '%s' -f %s" % (ssh_type, passphrase, path)
             self._local.execute(cmd)
 
-    @property
-    def version(self):
-        # use command, don't bypass it by going directly to /etc/lsb-release
-        cmd = "lsb_release -r"
-        rc, out, err = self._local.execute(cmd)
-        return (out.split(":")[-1]).strip()
