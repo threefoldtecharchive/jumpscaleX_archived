@@ -117,19 +117,9 @@ class Ubuntu(JSBASE):
         :param version: version of the package
         :type version: str
         """
-
-        self.check()
-        if self._cache_ubuntu is None:
-            self.apt_init()
-
-        main_package = self._cache_ubuntu[package_name]
-        version_package = main_package.versions[version].package
-
-        if not version_package.is_installed:
-            version_package.mark_install()
-
-        self._cache_ubuntu.commit()
-        self._cache_ubuntu.clear()
+        self.apt_update()
+        cmd = 'apt-get install %s=%s --force-yes -y' % (package_name, version)
+        j.sal.process.execute(cmd)
 
     def deb_install(self, path, install_deps=True):
         """
