@@ -1,48 +1,10 @@
 from Jumpscale import j
-from .JSBase import JSBase
-
-class JSBaseConfig(JSBase):
 
 
-    def __init__(self,dataobj=None,factory=None):
-        JSBase.__init__(self,init=False)
-        if factory is None:
-            raise RuntimeError("factory cannot be None")
-
-        self.factory = factory
-        self.data = dataobj
-
-        if self.data is None:
-            self._logger.debug("new obj")
-            self.data = self.factory._model.new()
-            #does not exist yet
-            self._data_trigger_new()
-            self._isnew = True
-        else:
-            self._isnew = False
-
-        self._init()
-
-    @property
-    def _id(self):
-        return self.data.id
-        # if self._id_ is None:
-        #     self._id_ = self.__class__._MODEL.bcdb.name+"_%s"%self.data.id
-        # return self._id_
-
-    def save(self):
-        self.data.save()
-
-    def delete(self):
-        self.data.model.delete(self.data)
-        self.factory._children.pop(self.name)
-
-    def data_update(self,**kwargs):
-        self.data.data_update(data=kwargs)
-        self.data.save()
+class KosmosUniverse(j.application.JSBaseClass):
 
 
-    def _data_trigger_new(self):
+    def _init(self):
         pass
 
     def __getattr__(self, attr):
@@ -78,3 +40,4 @@ class JSBaseConfig(JSBase):
         return out
 
     __repr__ = __str__
+

@@ -34,14 +34,20 @@ class Application(object):
 
     @property
     def bcdb_system(self):
-        if self._j.data.bcdb.latest:
-            return self._j.data.bcdb.latest
         if self._bcdb_system is None:
             bcdb =  self._j.data.bcdb.get("system",die=False)
             if bcdb is None:
                 bcdb = self._j.data.bcdb.new("system",None)
             self._bcdb_system = bcdb
         return self._bcdb_system
+
+    def bcdb_system_configure(self,addr, port, namespace,secret):
+        """
+        will remember that this becdb is being used
+        will remember in redis (encrypted)
+        :return:
+        """
+        self._j.shell()
 
     def _trace_get(self, ttype, err, tb=None):
 

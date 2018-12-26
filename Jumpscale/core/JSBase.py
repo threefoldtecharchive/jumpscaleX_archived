@@ -120,6 +120,7 @@ class JSBase:
             msg = "ERROR_INPUT: %s"%msg
         else:
             msg = "ERROR_INPUT (%s): %s "%(cat,msg)
+        raise RuntimeError(msg)
         j.shell()
         print()
         sys.exit(1)
@@ -227,7 +228,7 @@ class JSBase:
 
             return
 
-        method = j.tools.loader.load(obj_key=obj_key, path=tpath, reload=False, md5="")
+        method = j.tools.codeloader.load(obj_key=obj_key, path=tpath, reload=False, md5="")
         try:
             res = method(self=self, **kwargs)
         except Exception as e:

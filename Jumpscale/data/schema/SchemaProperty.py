@@ -8,7 +8,7 @@ class SchemaProperty(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
         self.name = ""
-        self.alias = ""
+        #self.name = ""
         self.default = ""
         self.jumpscaletype = None
         self.isList = False
@@ -40,6 +40,8 @@ class SchemaProperty(j.application.JSBaseClass):
 
     @property
     def js_typelocation(self):
+        if "_jumpscale_location" in self.jumpscaletype.__dict__:
+            return  self.jumpscaletype._jumpscale_location
         return "j.data.types.%s" % self.jumpscaletype.NAME
 
     @property

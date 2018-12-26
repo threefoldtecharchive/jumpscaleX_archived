@@ -5,14 +5,14 @@ import os
 import sys
 import redis
 
-JSBASE = j.application.JSFactoryBaseClass
 
 
 class BCDBFactory(j.application.JSBaseClass):
 
-    def __init__(self):
-        JSBASE.__init__(self)
-        self.__jslocation__ = "j.data.bcdb"
+    __jslocation__ = "j.data.bcdb"
+
+    def _init(self):
+
         self._path = j.sal.fs.getDirName(os.path.abspath(__file__))
         self._code_generation_dir = None
         self.latest=None
@@ -20,10 +20,10 @@ class BCDBFactory(j.application.JSBaseClass):
 
         j.clients.redis.core_get() #just to make sure the redis got started
 
-        self._logger_enable()
+        # self._logger_enable()
 
     def new(self, name, zdbclient=None,reset=False):
-        self._logger.info("new bcdb:%s"%name)
+        self._logger.debug("new bcdb:%s"%name)
         if zdbclient!=None and j.data.types.string.check(zdbclient):
             raise RuntimeError("zdbclient cannot be str")
         self.bcdb_instances[name] = BCDB(zdbclient=zdbclient,name=name,reset=reset)

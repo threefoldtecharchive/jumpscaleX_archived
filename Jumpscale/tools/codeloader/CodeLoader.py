@@ -7,10 +7,11 @@ class CodeLoader(j.application.JSBaseClass):
     """
     """
 
-    def __init__(self):
-        self.__jslocation__ = "j.tools.loader"
-        JSBASE.__init__(self)
-        self._logger_enable()
+    __jslocation__ = "j.tools.codeloader"
+
+    def _init(self):
+
+        # self._logger_enable()
         j.sal.fs.createDir("%s/CODEGEN"%j.dirs.VARDIR)
         self._hash_to_codeobj = {}
 
@@ -46,12 +47,12 @@ class CodeLoader(j.application.JSBaseClass):
         return self.load(obj_key=obj_key,path=dest,reload=reload,md5=md5)
 
 
-    def load(self, obj_key="", path="",reload=False,md5=""):
+    def load(self, obj_key="", path="",reload=False,md5=None):
         """
 
         example:
 
-        j.tools.loader.load(obj_key,path=path,reload=False)
+        j.tools.codeloader.load(obj_key,path=path,reload=False)
 
         :param obj_key:  is name of function or class we need to evaluate when the code get's loaded
         :param path: path of the template (is path or text to be used)
@@ -66,8 +67,10 @@ class CodeLoader(j.application.JSBaseClass):
         if path!="" and not j.sal.fs.exists(path):
             raise RuntimeError("path:%s does not exist"%path)
 
-        if md5=="":
-            md5=j.data.hash.md5_string(path)
+        if md5 is None:
+            txt=j.sal.fs.readFile(path)
+            md5=j.data.hash.md5_string(txt)
+
         if reload or md5 not in self._hash_to_codeobj:
 
             try:

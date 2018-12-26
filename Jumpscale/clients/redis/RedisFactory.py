@@ -22,7 +22,7 @@ class RedisFactory(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
         self._cache_clear()
-        self._logger_enable()
+        # self._logger_enable()
 
     def _cache_clear(self):
         """
@@ -166,7 +166,7 @@ class RedisFactory(j.application.JSBaseClass):
 
         nr=0
         while True:
-            self._logger.info("try to connect to redis of unixsocket:%s or tcp port 6379"%self.unix_socket_path)
+            # self._logger.info("try to connect to redis of unixsocket:%s or tcp port 6379"%self.unix_socket_path)
             if self.core_running():
                 return self.get(ipaddr="",port=0,unixsocket=self.unix_socket_path)
             if nr>200:

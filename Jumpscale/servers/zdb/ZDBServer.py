@@ -10,7 +10,7 @@ class ZDBServer(j.application.JSBaseClass):
         self.__jslocation__ = "j.servers.zdb"
         JSBASE.__init__(self)
         self.configure()
-        self._logger_enable()
+        # self._logger_enable()
 
     def configure(self, name="main", addr="127.0.0.1", port=9900, datadir="", mode="seq", adminsecret="123456"):
         self.name = name

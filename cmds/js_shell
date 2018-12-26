@@ -25,3 +25,4 @@ if len(args) == 1:
         exec(toexec)
 else:
     j.shell(loc=False)
+

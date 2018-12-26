@@ -15,7 +15,7 @@ class RedisServer(j.application.JSBaseClass):
         JSBASE.__init__(self)
         self.bcdb = bcdb
         self._sig_handler = []
-        self._logger_enable()
+        # self._logger_enable()
         self.host = addr
         self.port = port  # 1 port higher than the std port
         self.secret = secret

@@ -15,6 +15,9 @@ class group_clients():
         pass
 
         
+        self._gedis = None
+        self._multicast = None
+        self._gedis_backend = None
         self._syncthing = None
         self._postgres = None
         self._s3 = None
@@ -73,11 +76,59 @@ class group_clients():
         self._git = None
         self._traefik = None
         self._packetnet = None
-        self._gedis = None
-        self._multicast = None
-        self._gedis_backend = None
 
     
+    @property
+    def gedis(self):
+        if self._gedis is None:
+            # print("LOAD:GedisClientFactory")
+            try:
+                from DigitalMe.clients.gedis.GedisClientFactory import GedisClientFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "DigitalMe.clients.gedis.GedisClientFactory", e)
+                raise e
+            # print("RUN:GedisClientFactory")
+            try:
+                self._gedis =  GedisClientFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","DigitalMe.clients.gedis.GedisClientFactory",e)
+                return None
+            # print("OK")
+        return self._gedis
+    @property
+    def multicast(self):
+        if self._multicast is None:
+            # print("LOAD:MulticastFactory")
+            try:
+                from DigitalMe.clients.multicast.MulticastFactory import MulticastFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "DigitalMe.clients.multicast.MulticastFactory", e)
+                raise e
+            # print("RUN:MulticastFactory")
+            try:
+                self._multicast =  MulticastFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","DigitalMe.clients.multicast.MulticastFactory",e)
+                return None
+            # print("OK")
+        return self._multicast
+    @property
+    def gedis_backend(self):
+        if self._gedis_backend is None:
+            # print("LOAD:GedisBackendClientFactory")
+            try:
+                from DigitalMe.clients.gedis_backends.GedisBackendClientFactory import GedisBackendClientFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "DigitalMe.clients.gedis_backends.GedisBackendClientFactory", e)
+                raise e
+            # print("RUN:GedisBackendClientFactory")
+            try:
+                self._gedis_backend =  GedisBackendClientFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","DigitalMe.clients.gedis_backends.GedisBackendClientFactory",e)
+                return None
+            # print("OK")
+        return self._gedis_backend
     @property
     def syncthing(self):
         if self._syncthing is None:
@@ -1064,538 +1115,8 @@ class group_clients():
                 return None
             # print("OK")
         return self._packetnet
-    @property
-    def gedis(self):
-        if self._gedis is None:
-            # print("LOAD:GedisClientFactory")
-            try:
-                from DigitalMe.clients.gedis.GedisClientFactory import GedisClientFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "DigitalMe.clients.gedis.GedisClientFactory", e)
-                raise e
-            # print("RUN:GedisClientFactory")
-            try:
-                self._gedis =  GedisClientFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","DigitalMe.clients.gedis.GedisClientFactory",e)
-                return None
-            # print("OK")
-        return self._gedis
-    @property
-    def multicast(self):
-        if self._multicast is None:
-            # print("LOAD:MulticastFactory")
-            try:
-                from DigitalMe.clients.multicast.MulticastFactory import MulticastFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "DigitalMe.clients.multicast.MulticastFactory", e)
-                raise e
-            # print("RUN:MulticastFactory")
-            try:
-                self._multicast =  MulticastFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","DigitalMe.clients.multicast.MulticastFactory",e)
-                return None
-            # print("OK")
-        return self._multicast
-    @property
-    def gedis_backend(self):
-        if self._gedis_backend is None:
-            # print("LOAD:GedisBackendClientFactory")
-            try:
-                from DigitalMe.clients.gedis_backends.GedisBackendClientFactory import GedisBackendClientFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "DigitalMe.clients.gedis_backends.GedisBackendClientFactory", e)
-                raise e
-            # print("RUN:GedisBackendClientFactory")
-            try:
-                self._gedis_backend =  GedisBackendClientFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","DigitalMe.clients.gedis_backends.GedisBackendClientFactory",e)
-                return None
-            # print("OK")
-        return self._gedis_backend
 
 j.clients = group_clients()
-
-
-class group_sal():
-    def __init__(self):
-        pass
-
-        
-        self._coredns = None
-        self._docker = None
-        self._qemu_img = None
-        self._btrfs = None
-        self._nettools = None
-        self._ssl = None
-        self._disklayout = None
-        self._nic = None
-        self._nfs = None
-        self._sshd = None
-        self._hostsfile = None
-        self._rsync = None
-        self._unix = None
-        self._samba = None
-        self._nginx = None
-        self._netconfig = None
-        self._kvm = None
-        self._windows = None
-        self._ufw = None
-        self._bind = None
-        self._fswalker = None
-        self._fs = None
-        self._ubuntu = None
-        self._openvswitch = None
-        self._dnsmasq = None
-        self._process = None
-
-    
-    @property
-    def coredns(self):
-        if self._coredns is None:
-            # print("LOAD:CoreDnsFactory")
-            try:
-                from Jumpscale.clients.coredns.alternative.CoreDnsFactory import CoreDnsFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.coredns.alternative.CoreDnsFactory", e)
-                raise e
-            # print("RUN:CoreDnsFactory")
-            try:
-                self._coredns =  CoreDnsFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.coredns.alternative.CoreDnsFactory",e)
-                return None
-            # print("OK")
-        return self._coredns
-    @property
-    def docker(self):
-        if self._docker is None:
-            # print("LOAD:Docker")
-            try:
-                from Jumpscale.tools.docker.Docker import Docker
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.tools.docker.Docker", e)
-                raise e
-            # print("RUN:Docker")
-            try:
-                self._docker =  Docker()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.tools.docker.Docker",e)
-                return None
-            # print("OK")
-        return self._docker
-    @property
-    def qemu_img(self):
-        if self._qemu_img is None:
-            # print("LOAD:QemuImg")
-            try:
-                from Jumpscale.sal.qemu_img.Qemu_img import QemuImg
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.qemu_img.Qemu_img", e)
-                raise e
-            # print("RUN:QemuImg")
-            try:
-                self._qemu_img =  QemuImg()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.qemu_img.Qemu_img",e)
-                return None
-            # print("OK")
-        return self._qemu_img
-    @property
-    def btrfs(self):
-        if self._btrfs is None:
-            # print("LOAD:BtfsExtensionFactory")
-            try:
-                from Jumpscale.sal.btrfs.BtrfsExtension import BtfsExtensionFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.btrfs.BtrfsExtension", e)
-                raise e
-            # print("RUN:BtfsExtensionFactory")
-            try:
-                self._btrfs =  BtfsExtensionFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.btrfs.BtrfsExtension",e)
-                return None
-            # print("OK")
-        return self._btrfs
-    @property
-    def nettools(self):
-        if self._nettools is None:
-            # print("LOAD:NetTools")
-            try:
-                from Jumpscale.sal.nettools.NetTools import NetTools
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.nettools.NetTools", e)
-                raise e
-            # print("RUN:NetTools")
-            try:
-                self._nettools =  NetTools()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.nettools.NetTools",e)
-                return None
-            # print("OK")
-        return self._nettools
-    @property
-    def ssl(self):
-        if self._ssl is None:
-            # print("LOAD:SSLFactory")
-            try:
-                from Jumpscale.sal.ssl.SSLFactory import SSLFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.ssl.SSLFactory", e)
-                raise e
-            # print("RUN:SSLFactory")
-            try:
-                self._ssl =  SSLFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.ssl.SSLFactory",e)
-                return None
-            # print("OK")
-        return self._ssl
-    @property
-    def disklayout(self):
-        if self._disklayout is None:
-            # print("LOAD:DiskManager")
-            try:
-                from Jumpscale.sal.disklayout.DiskManager import DiskManager
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.disklayout.DiskManager", e)
-                raise e
-            # print("RUN:DiskManager")
-            try:
-                self._disklayout =  DiskManager()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.disklayout.DiskManager",e)
-                return None
-            # print("OK")
-        return self._disklayout
-    @property
-    def nic(self):
-        if self._nic is None:
-            # print("LOAD:UnixNetworkManager")
-            try:
-                from Jumpscale.sal.nic.UnixNetworkManager import UnixNetworkManager
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.nic.UnixNetworkManager", e)
-                raise e
-            # print("RUN:UnixNetworkManager")
-            try:
-                self._nic =  UnixNetworkManager()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.nic.UnixNetworkManager",e)
-                return None
-            # print("OK")
-        return self._nic
-    @property
-    def nfs(self):
-        if self._nfs is None:
-            # print("LOAD:NFSExport")
-            try:
-                from Jumpscale.sal.nfs.NFS import NFSExport
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.nfs.NFS", e)
-                raise e
-            # print("RUN:NFSExport")
-            try:
-                self._nfs =  NFSExport()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.nfs.NFS",e)
-                return None
-            # print("OK")
-        return self._nfs
-    @property
-    def sshd(self):
-        if self._sshd is None:
-            # print("LOAD:SSHD")
-            try:
-                from Jumpscale.sal.sshd.SSHD import SSHD
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.sshd.SSHD", e)
-                raise e
-            # print("RUN:SSHD")
-            try:
-                self._sshd =  SSHD()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.sshd.SSHD",e)
-                return None
-            # print("OK")
-        return self._sshd
-    @property
-    def hostsfile(self):
-        if self._hostsfile is None:
-            # print("LOAD:HostFile")
-            try:
-                from Jumpscale.sal.hostfile.HostFile import HostFile
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.hostfile.HostFile", e)
-                raise e
-            # print("RUN:HostFile")
-            try:
-                self._hostsfile =  HostFile()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.hostfile.HostFile",e)
-                return None
-            # print("OK")
-        return self._hostsfile
-    @property
-    def rsync(self):
-        if self._rsync is None:
-            # print("LOAD:RsyncFactory")
-            try:
-                from Jumpscale.sal.rsync.RsyncFactory import RsyncFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.rsync.RsyncFactory", e)
-                raise e
-            # print("RUN:RsyncFactory")
-            try:
-                self._rsync =  RsyncFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.rsync.RsyncFactory",e)
-                return None
-            # print("OK")
-        return self._rsync
-    @property
-    def unix(self):
-        if self._unix is None:
-            # print("LOAD:UnixSystem")
-            try:
-                from Jumpscale.sal.unix.Unix import UnixSystem
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.unix.Unix", e)
-                raise e
-            # print("RUN:UnixSystem")
-            try:
-                self._unix =  UnixSystem()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.unix.Unix",e)
-                return None
-            # print("OK")
-        return self._unix
-    @property
-    def samba(self):
-        if self._samba is None:
-            # print("LOAD:Samba")
-            try:
-                from Jumpscale.sal.samba.Samba import Samba
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.samba.Samba", e)
-                raise e
-            # print("RUN:Samba")
-            try:
-                self._samba =  Samba()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.samba.Samba",e)
-                return None
-            # print("OK")
-        return self._samba
-    @property
-    def nginx(self):
-        if self._nginx is None:
-            # print("LOAD:NginxFactory")
-            try:
-                from Jumpscale.sal.nginx.Nginx import NginxFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.nginx.Nginx", e)
-                raise e
-            # print("RUN:NginxFactory")
-            try:
-                self._nginx =  NginxFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.nginx.Nginx",e)
-                return None
-            # print("OK")
-        return self._nginx
-    @property
-    def netconfig(self):
-        if self._netconfig is None:
-            # print("LOAD:Netconfig")
-            try:
-                from Jumpscale.sal.netconfig.Netconfig import Netconfig
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.netconfig.Netconfig", e)
-                raise e
-            # print("RUN:Netconfig")
-            try:
-                self._netconfig =  Netconfig()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.netconfig.Netconfig",e)
-                return None
-            # print("OK")
-        return self._netconfig
-    @property
-    def kvm(self):
-        if self._kvm is None:
-            # print("LOAD:KVM")
-            try:
-                from Jumpscale.sal.kvm.KVM import KVM
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.kvm.KVM", e)
-                raise e
-            # print("RUN:KVM")
-            try:
-                self._kvm =  KVM()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.kvm.KVM",e)
-                return None
-            # print("OK")
-        return self._kvm
-    @property
-    def windows(self):
-        if self._windows is None:
-            # print("LOAD:WindowsSystem")
-            try:
-                from Jumpscale.sal.windows.Windows import WindowsSystem
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.windows.Windows", e)
-                raise e
-            # print("RUN:WindowsSystem")
-            try:
-                self._windows =  WindowsSystem()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.windows.Windows",e)
-                return None
-            # print("OK")
-        return self._windows
-    @property
-    def ufw(self):
-        if self._ufw is None:
-            # print("LOAD:UFWManager")
-            try:
-                from Jumpscale.sal.ufw.UFWManager import UFWManager
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.ufw.UFWManager", e)
-                raise e
-            # print("RUN:UFWManager")
-            try:
-                self._ufw =  UFWManager()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.ufw.UFWManager",e)
-                return None
-            # print("OK")
-        return self._ufw
-    @property
-    def bind(self):
-        if self._bind is None:
-            # print("LOAD:BindDNS")
-            try:
-                from Jumpscale.sal.bind.BindDNS import BindDNS
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.bind.BindDNS", e)
-                raise e
-            # print("RUN:BindDNS")
-            try:
-                self._bind =  BindDNS()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.bind.BindDNS",e)
-                return None
-            # print("OK")
-        return self._bind
-    @property
-    def fswalker(self):
-        if self._fswalker is None:
-            # print("LOAD:SystemFSWalker")
-            try:
-                from Jumpscale.sal.fs.SystemFSWalker import SystemFSWalker
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.fs.SystemFSWalker", e)
-                raise e
-            # print("RUN:SystemFSWalker")
-            try:
-                self._fswalker =  SystemFSWalker()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.fs.SystemFSWalker",e)
-                return None
-            # print("OK")
-        return self._fswalker
-    @property
-    def fs(self):
-        if self._fs is None:
-            # print("LOAD:SystemFS")
-            try:
-                from Jumpscale.sal.fs.SystemFS import SystemFS
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.fs.SystemFS", e)
-                raise e
-            # print("RUN:SystemFS")
-            try:
-                self._fs =  SystemFS()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.fs.SystemFS",e)
-                return None
-            # print("OK")
-        return self._fs
-    @property
-    def ubuntu(self):
-        if self._ubuntu is None:
-            # print("LOAD:Ubuntu")
-            try:
-                from Jumpscale.sal.ubuntu.Ubuntu import Ubuntu
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.ubuntu.Ubuntu", e)
-                raise e
-            # print("RUN:Ubuntu")
-            try:
-                self._ubuntu =  Ubuntu()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.ubuntu.Ubuntu",e)
-                return None
-            # print("OK")
-        return self._ubuntu
-    @property
-    def openvswitch(self):
-        if self._openvswitch is None:
-            # print("LOAD:NetConfigFactory")
-            try:
-                from Jumpscale.sal.openvswitch.NetConfigFactory import NetConfigFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.openvswitch.NetConfigFactory", e)
-                raise e
-            # print("RUN:NetConfigFactory")
-            try:
-                self._openvswitch =  NetConfigFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.openvswitch.NetConfigFactory",e)
-                return None
-            # print("OK")
-        return self._openvswitch
-    @property
-    def dnsmasq(self):
-        if self._dnsmasq is None:
-            # print("LOAD:DNSMasq")
-            try:
-                from Jumpscale.sal.dnsmasq.Dnsmasq import DNSMasq
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.dnsmasq.Dnsmasq", e)
-                raise e
-            # print("RUN:DNSMasq")
-            try:
-                self._dnsmasq =  DNSMasq()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.dnsmasq.Dnsmasq",e)
-                return None
-            # print("OK")
-        return self._dnsmasq
-    @property
-    def process(self):
-        if self._process is None:
-            # print("LOAD:SystemProcess")
-            try:
-                from Jumpscale.sal.process.SystemProcess import SystemProcess
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.process.SystemProcess", e)
-                raise e
-            # print("RUN:SystemProcess")
-            try:
-                self._process =  SystemProcess()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.process.SystemProcess",e)
-                return None
-            # print("OK")
-        return self._process
-
-j.sal = group_sal()
 
 
 class group_tools():
@@ -1603,6 +1124,8 @@ class group_tools():
         pass
 
         
+        self._zos = None
+        self._tfbot = None
         self._sandboxer = None
         self._fixer = None
         self._itenv_manager = None
@@ -1610,7 +1133,7 @@ class group_tools():
         self._imagelib = None
         self._jinja2 = None
         self._performancetrace = None
-        self._loader = None
+        self._codeloader = None
         self._offliner = None
         self._rexplorer = None
         self._path = None
@@ -1630,6 +1153,7 @@ class group_tools():
         self._executorLocal = None
         self._storybot = None
         self._syncer = None
+        self._kosmos = None
         self._docsites = None
         self._markdowndocs = None
         self._code = None
@@ -1639,17 +1163,48 @@ class group_tools():
         self._console = None
         self._expect = None
         self._bash = None
-        self._tls = None
         self._flist = None
         self._tarfile = None
         self._zipfile = None
         self._numtools = None
         self._issuemanager = None
         self._email = None
-        self._tfbot = None
-        self._zos = None
 
     
+    @property
+    def zos(self):
+        if self._zos is None:
+            # print("LOAD:ZOSFactory")
+            try:
+                from DigitalMe.tools.zos.ZOSFactory import ZOSFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "DigitalMe.tools.zos.ZOSFactory", e)
+                raise e
+            # print("RUN:ZOSFactory")
+            try:
+                self._zos =  ZOSFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","DigitalMe.tools.zos.ZOSFactory",e)
+                return None
+            # print("OK")
+        return self._zos
+    @property
+    def tfbot(self):
+        if self._tfbot is None:
+            # print("LOAD:TFBotFactory")
+            try:
+                from DigitalMe.tools.tfbot.TFBotFactory import TFBotFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "DigitalMe.tools.tfbot.TFBotFactory", e)
+                raise e
+            # print("RUN:TFBotFactory")
+            try:
+                self._tfbot =  TFBotFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","DigitalMe.tools.tfbot.TFBotFactory",e)
+                return None
+            # print("OK")
+        return self._tfbot
     @property
     def sandboxer(self):
         if self._sandboxer is None:
@@ -1770,8 +1325,8 @@ class group_tools():
             # print("OK")
         return self._performancetrace
     @property
-    def loader(self):
-        if self._loader is None:
+    def codeloader(self):
+        if self._codeloader is None:
             # print("LOAD:CodeLoader")
             try:
                 from Jumpscale.tools.codeloader.CodeLoader import CodeLoader
@@ -1780,12 +1335,12 @@ class group_tools():
                 raise e
             # print("RUN:CodeLoader")
             try:
-                self._loader =  CodeLoader()
+                self._codeloader =  CodeLoader()
             except Exception as e:
                 msg = j.core.application.error_init("execute","Jumpscale.tools.codeloader.CodeLoader",e)
                 return None
             # print("OK")
-        return self._loader
+        return self._codeloader
     @property
     def offliner(self):
         if self._offliner is None:
@@ -2110,6 +1665,23 @@ class group_tools():
             # print("OK")
         return self._syncer
     @property
+    def kosmos(self):
+        if self._kosmos is None:
+            # print("LOAD:Kosmos")
+            try:
+                from Jumpscale.tools.kosmos.Kosmos import Kosmos
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.tools.kosmos.Kosmos", e)
+                raise e
+            # print("RUN:Kosmos")
+            try:
+                self._kosmos =  Kosmos()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.tools.kosmos.Kosmos",e)
+                return None
+            # print("OK")
+        return self._kosmos
+    @property
     def docsites(self):
         if self._docsites is None:
             # print("LOAD:DocSites")
@@ -2263,23 +1835,6 @@ class group_tools():
             # print("OK")
         return self._bash
     @property
-    def tls(self):
-        if self._tls is None:
-            # print("LOAD:TLSFactory")
-            try:
-                from Jumpscale.sal.tls.TLSFactory import TLSFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.tls.TLSFactory", e)
-                raise e
-            # print("RUN:TLSFactory")
-            try:
-                self._tls =  TLSFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.tls.TLSFactory",e)
-                return None
-            # print("OK")
-        return self._tls
-    @property
     def flist(self):
         if self._flist is None:
             # print("LOAD:FListFactory")
@@ -2381,71 +1936,73 @@ class group_tools():
                 return None
             # print("OK")
         return self._email
-    @property
-    def tfbot(self):
-        if self._tfbot is None:
-            # print("LOAD:TFBotFactory")
-            try:
-                from DigitalMe.tools.tfbot.TFBotFactory import TFBotFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "DigitalMe.tools.tfbot.TFBotFactory", e)
-                raise e
-            # print("RUN:TFBotFactory")
-            try:
-                self._tfbot =  TFBotFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","DigitalMe.tools.tfbot.TFBotFactory",e)
-                return None
-            # print("OK")
-        return self._tfbot
-    @property
-    def zos(self):
-        if self._zos is None:
-            # print("LOAD:ZOSFactory")
-            try:
-                from DigitalMe.tools.zos.ZOSFactory import ZOSFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "DigitalMe.tools.zos.ZOSFactory", e)
-                raise e
-            # print("RUN:ZOSFactory")
-            try:
-                self._zos =  ZOSFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","DigitalMe.tools.zos.ZOSFactory",e)
-                return None
-            # print("OK")
-        return self._zos
 
 j.tools = group_tools()
 
 
-class group_tutorials():
+class group_world():
     def __init__(self):
         pass
 
         
-        self._base = None
+        self._system = None
+        self._hypervisor = None
+        self._zos = None
 
     
     @property
-    def base(self):
-        if self._base is None:
-            # print("LOAD:Tutorial")
+    def system(self):
+        if self._system is None:
+            # print("LOAD:WorldSystem")
             try:
-                from Jumpscale.tutorials.base.Tutorial import Tutorial
+                from DigitalMe.tools.kosmos.WorldSystem import WorldSystem
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.tutorials.base.Tutorial", e)
+                msg = j.core.application.error_init("import", "DigitalMe.tools.kosmos.WorldSystem", e)
                 raise e
-            # print("RUN:Tutorial")
+            # print("RUN:WorldSystem")
             try:
-                self._base =  Tutorial()
+                self._system =  WorldSystem()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.tutorials.base.Tutorial",e)
+                msg = j.core.application.error_init("execute","DigitalMe.tools.kosmos.WorldSystem",e)
                 return None
             # print("OK")
-        return self._base
+        return self._system
+    @property
+    def hypervisor(self):
+        if self._hypervisor is None:
+            # print("LOAD:CoordinatorHypervisor")
+            try:
+                from DigitalMe.tools.kosmos.world_example.HyperVisorCoordinator.CoordinatorHypervisor import CoordinatorHypervisor
+            except Exception as e:
+                msg = j.core.application.error_init("import", "DigitalMe.tools.kosmos.world_example.HyperVisorCoordinator.CoordinatorHypervisor", e)
+                raise e
+            # print("RUN:CoordinatorHypervisor")
+            try:
+                self._hypervisor =  CoordinatorHypervisor()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","DigitalMe.tools.kosmos.world_example.HyperVisorCoordinator.CoordinatorHypervisor",e)
+                return None
+            # print("OK")
+        return self._hypervisor
+    @property
+    def zos(self):
+        if self._zos is None:
+            # print("LOAD:ZOSCmdFactory")
+            try:
+                from DigitalMe.kosmos.zos.ZOSFactory import ZOSCmdFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "DigitalMe.kosmos.zos.ZOSFactory", e)
+                raise e
+            # print("RUN:ZOSCmdFactory")
+            try:
+                self._zos =  ZOSCmdFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","DigitalMe.kosmos.zos.ZOSFactory",e)
+                return None
+            # print("OK")
+        return self._zos
 
-j.tutorials = group_tutorials()
+j.world = group_world()
 
 
 class group_data():
@@ -2453,6 +2010,7 @@ class group_data():
         pass
 
         
+        self._nltk = None
         self._encryption = None
         self._cachelru = None
         self._inifile = None
@@ -2474,9 +2032,25 @@ class group_data():
         self._nacl = None
         self._bcdb = None
         self._idgenerator = None
-        self._nltk = None
 
     
+    @property
+    def nltk(self):
+        if self._nltk is None:
+            # print("LOAD:NLTKFactory")
+            try:
+                from DigitalMe.data.nltk.NLTK import NLTKFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "DigitalMe.data.nltk.NLTK", e)
+                raise e
+            # print("RUN:NLTKFactory")
+            try:
+                self._nltk =  NLTKFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","DigitalMe.data.nltk.NLTK",e)
+                return None
+            # print("OK")
+        return self._nltk
     @property
     def encryption(self):
         if self._encryption is None:
@@ -2834,25 +2408,743 @@ class group_data():
                 return None
             # print("OK")
         return self._idgenerator
-    @property
-    def nltk(self):
-        if self._nltk is None:
-            # print("LOAD:NLTKFactory")
-            try:
-                from DigitalMe.data.nltk.NLTK import NLTKFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "DigitalMe.data.nltk.NLTK", e)
-                raise e
-            # print("RUN:NLTKFactory")
-            try:
-                self._nltk =  NLTKFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","DigitalMe.data.nltk.NLTK",e)
-                return None
-            # print("OK")
-        return self._nltk
 
 j.data = group_data()
+
+
+class group_servers():
+    def __init__(self):
+        pass
+
+        
+        self._gedis = None
+        self._digitalme = None
+        self._myjobs = None
+        self._raftserver = None
+        self._dns = None
+        self._errbot = None
+        self._openresty = None
+        self._web = None
+        self._capacity = None
+        self._zdb = None
+        self._jsrun = None
+
+    
+    @property
+    def gedis(self):
+        if self._gedis is None:
+            # print("LOAD:GedisFactory")
+            try:
+                from DigitalMe.servers.gedis.GedisFactory import GedisFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "DigitalMe.servers.gedis.GedisFactory", e)
+                raise e
+            # print("RUN:GedisFactory")
+            try:
+                self._gedis =  GedisFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","DigitalMe.servers.gedis.GedisFactory",e)
+                return None
+            # print("OK")
+        return self._gedis
+    @property
+    def digitalme(self):
+        if self._digitalme is None:
+            # print("LOAD:DigitalMe")
+            try:
+                from DigitalMe.servers.digitalme.DigitalMe import DigitalMe
+            except Exception as e:
+                msg = j.core.application.error_init("import", "DigitalMe.servers.digitalme.DigitalMe", e)
+                raise e
+            # print("RUN:DigitalMe")
+            try:
+                self._digitalme =  DigitalMe()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","DigitalMe.servers.digitalme.DigitalMe",e)
+                return None
+            # print("OK")
+        return self._digitalme
+    @property
+    def myjobs(self):
+        if self._myjobs is None:
+            # print("LOAD:MyJobs")
+            try:
+                from DigitalMe.servers.myjobs.MyJobs import MyJobs
+            except Exception as e:
+                msg = j.core.application.error_init("import", "DigitalMe.servers.myjobs.MyJobs", e)
+                raise e
+            # print("RUN:MyJobs")
+            try:
+                self._myjobs =  MyJobs()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","DigitalMe.servers.myjobs.MyJobs",e)
+                return None
+            # print("OK")
+        return self._myjobs
+    @property
+    def raftserver(self):
+        if self._raftserver is None:
+            # print("LOAD:RaftServerFactory")
+            try:
+                from DigitalMe.servers.raft.RaftServerFactory import RaftServerFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "DigitalMe.servers.raft.RaftServerFactory", e)
+                raise e
+            # print("RUN:RaftServerFactory")
+            try:
+                self._raftserver =  RaftServerFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","DigitalMe.servers.raft.RaftServerFactory",e)
+                return None
+            # print("OK")
+        return self._raftserver
+    @property
+    def dns(self):
+        if self._dns is None:
+            # print("LOAD:DNSServerFactory")
+            try:
+                from DigitalMe.servers.dns.DNSServerFactory import DNSServerFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "DigitalMe.servers.dns.DNSServerFactory", e)
+                raise e
+            # print("RUN:DNSServerFactory")
+            try:
+                self._dns =  DNSServerFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","DigitalMe.servers.dns.DNSServerFactory",e)
+                return None
+            # print("OK")
+        return self._dns
+    @property
+    def errbot(self):
+        if self._errbot is None:
+            # print("LOAD:ErrBotFactory")
+            try:
+                from Jumpscale.servers.errbot.ErrBotFactory import ErrBotFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.servers.errbot.ErrBotFactory", e)
+                raise e
+            # print("RUN:ErrBotFactory")
+            try:
+                self._errbot =  ErrBotFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.servers.errbot.ErrBotFactory",e)
+                return None
+            # print("OK")
+        return self._errbot
+    @property
+    def openresty(self):
+        if self._openresty is None:
+            # print("LOAD:OpenRestyFactory")
+            try:
+                from Jumpscale.servers.openresty.OpenRestyFactory import OpenRestyFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.servers.openresty.OpenRestyFactory", e)
+                raise e
+            # print("RUN:OpenRestyFactory")
+            try:
+                self._openresty =  OpenRestyFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.servers.openresty.OpenRestyFactory",e)
+                return None
+            # print("OK")
+        return self._openresty
+    @property
+    def web(self):
+        if self._web is None:
+            # print("LOAD:JSWebServers")
+            try:
+                from Jumpscale.servers.webserver.JSWebServers import JSWebServers
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.servers.webserver.JSWebServers", e)
+                raise e
+            # print("RUN:JSWebServers")
+            try:
+                self._web =  JSWebServers()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.servers.webserver.JSWebServers",e)
+                return None
+            # print("OK")
+        return self._web
+    @property
+    def capacity(self):
+        if self._capacity is None:
+            # print("LOAD:CapacityFactory")
+            try:
+                from Jumpscale.servers.grid_capacity.CapacityFactory import CapacityFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.servers.grid_capacity.CapacityFactory", e)
+                raise e
+            # print("RUN:CapacityFactory")
+            try:
+                self._capacity =  CapacityFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.servers.grid_capacity.CapacityFactory",e)
+                return None
+            # print("OK")
+        return self._capacity
+    @property
+    def zdb(self):
+        if self._zdb is None:
+            # print("LOAD:ZDBServer")
+            try:
+                from Jumpscale.servers.zdb.ZDBServer import ZDBServer
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.servers.zdb.ZDBServer", e)
+                raise e
+            # print("RUN:ZDBServer")
+            try:
+                self._zdb =  ZDBServer()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.servers.zdb.ZDBServer",e)
+                return None
+            # print("OK")
+        return self._zdb
+    @property
+    def jsrun(self):
+        if self._jsrun is None:
+            # print("LOAD:JSRun")
+            try:
+                from Jumpscale.servers.jsrun.JSRun import JSRun
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.servers.jsrun.JSRun", e)
+                raise e
+            # print("RUN:JSRun")
+            try:
+                self._jsrun =  JSRun()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.servers.jsrun.JSRun",e)
+                return None
+            # print("OK")
+        return self._jsrun
+
+j.servers = group_servers()
+
+
+class group_sal():
+    def __init__(self):
+        pass
+
+        
+        self._coredns = None
+        self._docker = None
+        self._qemu_img = None
+        self._btrfs = None
+        self._nettools = None
+        self._ssl = None
+        self._disklayout = None
+        self._nic = None
+        self._nfs = None
+        self._sshd = None
+        self._hostsfile = None
+        self._rsync = None
+        self._unix = None
+        self._tls = None
+        self._samba = None
+        self._nginx = None
+        self._netconfig = None
+        self._kvm = None
+        self._windows = None
+        self._ufw = None
+        self._bind = None
+        self._fswalker = None
+        self._fs = None
+        self._ubuntu = None
+        self._openvswitch = None
+        self._dnsmasq = None
+        self._process = None
+
+    
+    @property
+    def coredns(self):
+        if self._coredns is None:
+            # print("LOAD:CoreDnsFactory")
+            try:
+                from Jumpscale.clients.coredns.alternative.CoreDnsFactory import CoreDnsFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.clients.coredns.alternative.CoreDnsFactory", e)
+                raise e
+            # print("RUN:CoreDnsFactory")
+            try:
+                self._coredns =  CoreDnsFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.clients.coredns.alternative.CoreDnsFactory",e)
+                return None
+            # print("OK")
+        return self._coredns
+    @property
+    def docker(self):
+        if self._docker is None:
+            # print("LOAD:Docker")
+            try:
+                from Jumpscale.tools.docker.Docker import Docker
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.tools.docker.Docker", e)
+                raise e
+            # print("RUN:Docker")
+            try:
+                self._docker =  Docker()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.tools.docker.Docker",e)
+                return None
+            # print("OK")
+        return self._docker
+    @property
+    def qemu_img(self):
+        if self._qemu_img is None:
+            # print("LOAD:QemuImg")
+            try:
+                from Jumpscale.sal.qemu_img.Qemu_img import QemuImg
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.qemu_img.Qemu_img", e)
+                raise e
+            # print("RUN:QemuImg")
+            try:
+                self._qemu_img =  QemuImg()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.qemu_img.Qemu_img",e)
+                return None
+            # print("OK")
+        return self._qemu_img
+    @property
+    def btrfs(self):
+        if self._btrfs is None:
+            # print("LOAD:BtfsExtensionFactory")
+            try:
+                from Jumpscale.sal.btrfs.BtrfsExtension import BtfsExtensionFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.btrfs.BtrfsExtension", e)
+                raise e
+            # print("RUN:BtfsExtensionFactory")
+            try:
+                self._btrfs =  BtfsExtensionFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.btrfs.BtrfsExtension",e)
+                return None
+            # print("OK")
+        return self._btrfs
+    @property
+    def nettools(self):
+        if self._nettools is None:
+            # print("LOAD:NetTools")
+            try:
+                from Jumpscale.sal.nettools.NetTools import NetTools
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.nettools.NetTools", e)
+                raise e
+            # print("RUN:NetTools")
+            try:
+                self._nettools =  NetTools()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.nettools.NetTools",e)
+                return None
+            # print("OK")
+        return self._nettools
+    @property
+    def ssl(self):
+        if self._ssl is None:
+            # print("LOAD:SSLFactory")
+            try:
+                from Jumpscale.sal.ssl.SSLFactory import SSLFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.ssl.SSLFactory", e)
+                raise e
+            # print("RUN:SSLFactory")
+            try:
+                self._ssl =  SSLFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.ssl.SSLFactory",e)
+                return None
+            # print("OK")
+        return self._ssl
+    @property
+    def disklayout(self):
+        if self._disklayout is None:
+            # print("LOAD:DiskManager")
+            try:
+                from Jumpscale.sal.disklayout.DiskManager import DiskManager
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.disklayout.DiskManager", e)
+                raise e
+            # print("RUN:DiskManager")
+            try:
+                self._disklayout =  DiskManager()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.disklayout.DiskManager",e)
+                return None
+            # print("OK")
+        return self._disklayout
+    @property
+    def nic(self):
+        if self._nic is None:
+            # print("LOAD:UnixNetworkManager")
+            try:
+                from Jumpscale.sal.nic.UnixNetworkManager import UnixNetworkManager
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.nic.UnixNetworkManager", e)
+                raise e
+            # print("RUN:UnixNetworkManager")
+            try:
+                self._nic =  UnixNetworkManager()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.nic.UnixNetworkManager",e)
+                return None
+            # print("OK")
+        return self._nic
+    @property
+    def nfs(self):
+        if self._nfs is None:
+            # print("LOAD:NFSExport")
+            try:
+                from Jumpscale.sal.nfs.NFS import NFSExport
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.nfs.NFS", e)
+                raise e
+            # print("RUN:NFSExport")
+            try:
+                self._nfs =  NFSExport()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.nfs.NFS",e)
+                return None
+            # print("OK")
+        return self._nfs
+    @property
+    def sshd(self):
+        if self._sshd is None:
+            # print("LOAD:SSHD")
+            try:
+                from Jumpscale.sal.sshd.SSHD import SSHD
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.sshd.SSHD", e)
+                raise e
+            # print("RUN:SSHD")
+            try:
+                self._sshd =  SSHD()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.sshd.SSHD",e)
+                return None
+            # print("OK")
+        return self._sshd
+    @property
+    def hostsfile(self):
+        if self._hostsfile is None:
+            # print("LOAD:HostFile")
+            try:
+                from Jumpscale.sal.hostfile.HostFile import HostFile
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.hostfile.HostFile", e)
+                raise e
+            # print("RUN:HostFile")
+            try:
+                self._hostsfile =  HostFile()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.hostfile.HostFile",e)
+                return None
+            # print("OK")
+        return self._hostsfile
+    @property
+    def rsync(self):
+        if self._rsync is None:
+            # print("LOAD:RsyncFactory")
+            try:
+                from Jumpscale.sal.rsync.RsyncFactory import RsyncFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.rsync.RsyncFactory", e)
+                raise e
+            # print("RUN:RsyncFactory")
+            try:
+                self._rsync =  RsyncFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.rsync.RsyncFactory",e)
+                return None
+            # print("OK")
+        return self._rsync
+    @property
+    def unix(self):
+        if self._unix is None:
+            # print("LOAD:UnixSystem")
+            try:
+                from Jumpscale.sal.unix.Unix import UnixSystem
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.unix.Unix", e)
+                raise e
+            # print("RUN:UnixSystem")
+            try:
+                self._unix =  UnixSystem()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.unix.Unix",e)
+                return None
+            # print("OK")
+        return self._unix
+    @property
+    def tls(self):
+        if self._tls is None:
+            # print("LOAD:TLSFactory")
+            try:
+                from Jumpscale.sal.tls.TLSFactory import TLSFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.tls.TLSFactory", e)
+                raise e
+            # print("RUN:TLSFactory")
+            try:
+                self._tls =  TLSFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.tls.TLSFactory",e)
+                return None
+            # print("OK")
+        return self._tls
+    @property
+    def samba(self):
+        if self._samba is None:
+            # print("LOAD:Samba")
+            try:
+                from Jumpscale.sal.samba.Samba import Samba
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.samba.Samba", e)
+                raise e
+            # print("RUN:Samba")
+            try:
+                self._samba =  Samba()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.samba.Samba",e)
+                return None
+            # print("OK")
+        return self._samba
+    @property
+    def nginx(self):
+        if self._nginx is None:
+            # print("LOAD:NginxFactory")
+            try:
+                from Jumpscale.sal.nginx.Nginx import NginxFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.nginx.Nginx", e)
+                raise e
+            # print("RUN:NginxFactory")
+            try:
+                self._nginx =  NginxFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.nginx.Nginx",e)
+                return None
+            # print("OK")
+        return self._nginx
+    @property
+    def netconfig(self):
+        if self._netconfig is None:
+            # print("LOAD:Netconfig")
+            try:
+                from Jumpscale.sal.netconfig.Netconfig import Netconfig
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.netconfig.Netconfig", e)
+                raise e
+            # print("RUN:Netconfig")
+            try:
+                self._netconfig =  Netconfig()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.netconfig.Netconfig",e)
+                return None
+            # print("OK")
+        return self._netconfig
+    @property
+    def kvm(self):
+        if self._kvm is None:
+            # print("LOAD:KVM")
+            try:
+                from Jumpscale.sal.kvm.KVM import KVM
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.kvm.KVM", e)
+                raise e
+            # print("RUN:KVM")
+            try:
+                self._kvm =  KVM()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.kvm.KVM",e)
+                return None
+            # print("OK")
+        return self._kvm
+    @property
+    def windows(self):
+        if self._windows is None:
+            # print("LOAD:WindowsSystem")
+            try:
+                from Jumpscale.sal.windows.Windows import WindowsSystem
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.windows.Windows", e)
+                raise e
+            # print("RUN:WindowsSystem")
+            try:
+                self._windows =  WindowsSystem()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.windows.Windows",e)
+                return None
+            # print("OK")
+        return self._windows
+    @property
+    def ufw(self):
+        if self._ufw is None:
+            # print("LOAD:UFWManager")
+            try:
+                from Jumpscale.sal.ufw.UFWManager import UFWManager
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.ufw.UFWManager", e)
+                raise e
+            # print("RUN:UFWManager")
+            try:
+                self._ufw =  UFWManager()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.ufw.UFWManager",e)
+                return None
+            # print("OK")
+        return self._ufw
+    @property
+    def bind(self):
+        if self._bind is None:
+            # print("LOAD:BindDNS")
+            try:
+                from Jumpscale.sal.bind.BindDNS import BindDNS
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.bind.BindDNS", e)
+                raise e
+            # print("RUN:BindDNS")
+            try:
+                self._bind =  BindDNS()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.bind.BindDNS",e)
+                return None
+            # print("OK")
+        return self._bind
+    @property
+    def fswalker(self):
+        if self._fswalker is None:
+            # print("LOAD:SystemFSWalker")
+            try:
+                from Jumpscale.sal.fs.SystemFSWalker import SystemFSWalker
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.fs.SystemFSWalker", e)
+                raise e
+            # print("RUN:SystemFSWalker")
+            try:
+                self._fswalker =  SystemFSWalker()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.fs.SystemFSWalker",e)
+                return None
+            # print("OK")
+        return self._fswalker
+    @property
+    def fs(self):
+        if self._fs is None:
+            # print("LOAD:SystemFS")
+            try:
+                from Jumpscale.sal.fs.SystemFS import SystemFS
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.fs.SystemFS", e)
+                raise e
+            # print("RUN:SystemFS")
+            try:
+                self._fs =  SystemFS()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.fs.SystemFS",e)
+                return None
+            # print("OK")
+        return self._fs
+    @property
+    def ubuntu(self):
+        if self._ubuntu is None:
+            # print("LOAD:Ubuntu")
+            try:
+                from Jumpscale.sal.ubuntu.Ubuntu import Ubuntu
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.ubuntu.Ubuntu", e)
+                raise e
+            # print("RUN:Ubuntu")
+            try:
+                self._ubuntu =  Ubuntu()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.ubuntu.Ubuntu",e)
+                return None
+            # print("OK")
+        return self._ubuntu
+    @property
+    def openvswitch(self):
+        if self._openvswitch is None:
+            # print("LOAD:NetConfigFactory")
+            try:
+                from Jumpscale.sal.openvswitch.NetConfigFactory import NetConfigFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.openvswitch.NetConfigFactory", e)
+                raise e
+            # print("RUN:NetConfigFactory")
+            try:
+                self._openvswitch =  NetConfigFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.openvswitch.NetConfigFactory",e)
+                return None
+            # print("OK")
+        return self._openvswitch
+    @property
+    def dnsmasq(self):
+        if self._dnsmasq is None:
+            # print("LOAD:DNSMasq")
+            try:
+                from Jumpscale.sal.dnsmasq.Dnsmasq import DNSMasq
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.dnsmasq.Dnsmasq", e)
+                raise e
+            # print("RUN:DNSMasq")
+            try:
+                self._dnsmasq =  DNSMasq()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.dnsmasq.Dnsmasq",e)
+                return None
+            # print("OK")
+        return self._dnsmasq
+    @property
+    def process(self):
+        if self._process is None:
+            # print("LOAD:SystemProcess")
+            try:
+                from Jumpscale.sal.process.SystemProcess import SystemProcess
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.process.SystemProcess", e)
+                raise e
+            # print("RUN:SystemProcess")
+            try:
+                self._process =  SystemProcess()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.process.SystemProcess",e)
+                return None
+            # print("OK")
+        return self._process
+
+j.sal = group_sal()
+
+
+class group_tutorials():
+    def __init__(self):
+        pass
+
+        
+        self._base = None
+
+    
+    @property
+    def base(self):
+        if self._base is None:
+            # print("LOAD:Tutorial")
+            try:
+                from Jumpscale.tutorials.base.Tutorial import Tutorial
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.tutorials.base.Tutorial", e)
+                raise e
+            # print("RUN:Tutorial")
+            try:
+                self._base =  Tutorial()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.tutorials.base.Tutorial",e)
+                return None
+            # print("OK")
+        return self._base
+
+j.tutorials = group_tutorials()
 
 
 class group_data_units():
@@ -3163,215 +3455,6 @@ class group_builder():
         return self._buildenv
 
 j.builder = group_builder()
-
-
-class group_servers():
-    def __init__(self):
-        pass
-
-        
-        self._errbot = None
-        self._openresty = None
-        self._web = None
-        self._capacity = None
-        self._zdb = None
-        self._jsrun = None
-        self._gedis = None
-        self._myjobs = None
-        self._digitalme = None
-        self._dns = None
-        self._raftserver = None
-
-    
-    @property
-    def errbot(self):
-        if self._errbot is None:
-            # print("LOAD:ErrBotFactory")
-            try:
-                from Jumpscale.servers.errbot.ErrBotFactory import ErrBotFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.servers.errbot.ErrBotFactory", e)
-                raise e
-            # print("RUN:ErrBotFactory")
-            try:
-                self._errbot =  ErrBotFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.servers.errbot.ErrBotFactory",e)
-                return None
-            # print("OK")
-        return self._errbot
-    @property
-    def openresty(self):
-        if self._openresty is None:
-            # print("LOAD:OpenRestyFactory")
-            try:
-                from Jumpscale.servers.openresty.OpenRestyFactory import OpenRestyFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.servers.openresty.OpenRestyFactory", e)
-                raise e
-            # print("RUN:OpenRestyFactory")
-            try:
-                self._openresty =  OpenRestyFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.servers.openresty.OpenRestyFactory",e)
-                return None
-            # print("OK")
-        return self._openresty
-    @property
-    def web(self):
-        if self._web is None:
-            # print("LOAD:JSWebServers")
-            try:
-                from Jumpscale.servers.webserver.JSWebServers import JSWebServers
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.servers.webserver.JSWebServers", e)
-                raise e
-            # print("RUN:JSWebServers")
-            try:
-                self._web =  JSWebServers()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.servers.webserver.JSWebServers",e)
-                return None
-            # print("OK")
-        return self._web
-    @property
-    def capacity(self):
-        if self._capacity is None:
-            # print("LOAD:CapacityFactory")
-            try:
-                from Jumpscale.servers.grid_capacity.CapacityFactory import CapacityFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.servers.grid_capacity.CapacityFactory", e)
-                raise e
-            # print("RUN:CapacityFactory")
-            try:
-                self._capacity =  CapacityFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.servers.grid_capacity.CapacityFactory",e)
-                return None
-            # print("OK")
-        return self._capacity
-    @property
-    def zdb(self):
-        if self._zdb is None:
-            # print("LOAD:ZDBServer")
-            try:
-                from Jumpscale.servers.zdb.ZDBServer import ZDBServer
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.servers.zdb.ZDBServer", e)
-                raise e
-            # print("RUN:ZDBServer")
-            try:
-                self._zdb =  ZDBServer()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.servers.zdb.ZDBServer",e)
-                return None
-            # print("OK")
-        return self._zdb
-    @property
-    def jsrun(self):
-        if self._jsrun is None:
-            # print("LOAD:JSRun")
-            try:
-                from Jumpscale.servers.jsrun.JSRun import JSRun
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.servers.jsrun.JSRun", e)
-                raise e
-            # print("RUN:JSRun")
-            try:
-                self._jsrun =  JSRun()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.servers.jsrun.JSRun",e)
-                return None
-            # print("OK")
-        return self._jsrun
-    @property
-    def gedis(self):
-        if self._gedis is None:
-            # print("LOAD:GedisFactory")
-            try:
-                from DigitalMe.servers.gedis.GedisFactory import GedisFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "DigitalMe.servers.gedis.GedisFactory", e)
-                raise e
-            # print("RUN:GedisFactory")
-            try:
-                self._gedis =  GedisFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","DigitalMe.servers.gedis.GedisFactory",e)
-                return None
-            # print("OK")
-        return self._gedis
-    @property
-    def myjobs(self):
-        if self._myjobs is None:
-            # print("LOAD:MyJobs")
-            try:
-                from DigitalMe.servers.myjobs.MyJobs import MyJobs
-            except Exception as e:
-                msg = j.core.application.error_init("import", "DigitalMe.servers.myjobs.MyJobs", e)
-                raise e
-            # print("RUN:MyJobs")
-            try:
-                self._myjobs =  MyJobs()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","DigitalMe.servers.myjobs.MyJobs",e)
-                return None
-            # print("OK")
-        return self._myjobs
-    @property
-    def digitalme(self):
-        if self._digitalme is None:
-            # print("LOAD:DigitalMe")
-            try:
-                from DigitalMe.servers.digitalme.DigitalMe import DigitalMe
-            except Exception as e:
-                msg = j.core.application.error_init("import", "DigitalMe.servers.digitalme.DigitalMe", e)
-                raise e
-            # print("RUN:DigitalMe")
-            try:
-                self._digitalme =  DigitalMe()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","DigitalMe.servers.digitalme.DigitalMe",e)
-                return None
-            # print("OK")
-        return self._digitalme
-    @property
-    def dns(self):
-        if self._dns is None:
-            # print("LOAD:DNSServerFactory")
-            try:
-                from DigitalMe.servers.dns.DNSServerFactory import DNSServerFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "DigitalMe.servers.dns.DNSServerFactory", e)
-                raise e
-            # print("RUN:DNSServerFactory")
-            try:
-                self._dns =  DNSServerFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","DigitalMe.servers.dns.DNSServerFactory",e)
-                return None
-            # print("OK")
-        return self._dns
-    @property
-    def raftserver(self):
-        if self._raftserver is None:
-            # print("LOAD:RaftServerFactory")
-            try:
-                from DigitalMe.servers.raft.RaftServerFactory import RaftServerFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "DigitalMe.servers.raft.RaftServerFactory", e)
-                raise e
-            # print("RUN:RaftServerFactory")
-            try:
-                self._raftserver =  RaftServerFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","DigitalMe.servers.raft.RaftServerFactory",e)
-                return None
-            # print("OK")
-        return self._raftserver
-
-j.servers = group_servers()
 
 
 

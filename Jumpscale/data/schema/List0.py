@@ -1,8 +1,9 @@
 import collections
 from Jumpscale import j
 
+from collections.abc import MutableSequence
 
-class SchemaCollection(collections.MutableSequence):
+class List0(MutableSequence):
 
     def __init__(self, schema_property):
         self._inner_list = []

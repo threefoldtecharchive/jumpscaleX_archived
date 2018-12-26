@@ -47,7 +47,7 @@ class BCDBModel(j.application.JSBaseClass):
 
         self.autosave = False  # if set it will make sure data is automatically set from object
 
-        self._logger_enable()
+        # self._logger_enable()
 
         self._modifiers = []
 
@@ -158,6 +158,7 @@ class BCDBModel(j.application.JSBaseClass):
             self.obj_cache.pop(obj_id)
         if self.index:
             self.index_delete(obj_id)
+        self.id_delete(obj.id)
 
     def _delete2(self, obj_id):
         if not self.zdbclient:
@@ -396,7 +397,7 @@ class BCDBModel(j.application.JSBaseClass):
         ```
         :return:
         """
-        print("idspath:%s"%self._ids_file_path)
+        # print("idspath:%s"%self._ids_file_path)
         with open(self._ids_file_path, "rb") as f:
             while True:
                 chunk = f.read(4)
@@ -405,6 +406,14 @@ class BCDBModel(j.application.JSBaseClass):
                     yield obj_id
                 else:
                     break
+
+    def id_delete(self,id):
+        out=b""
+        for id_ in self.id_iterator:
+            if id_ != id:
+                out+=struct.pack("<I", id_)
+        j.sal.fs.writeFile(self._ids_file_path, out)
+
 
     def _dict_process_out(self, ddict):
         """
@@ -496,7 +505,7 @@ class BCDBModel(j.application.JSBaseClass):
 
         obj = self.bcdb._unserialize(
             obj_id, data, return_as_capnp=return_as_capnp, model=self)
-        self.obj_cache[obj_id] = (j.data.time.epoch, obj)
+        # self.obj_cache[obj_id] = (j.data.time.epoch, obj)  #FOR NOW NO CACHE, UNSAFE
         return obj
 
     def delete_all(self):

@@ -173,13 +173,14 @@ def path_check(**arguments):
                             parameter.name, jslocation(), func.__name__, value))
 
                     if "multiple" in validators:
-                        raise RuntimeError("need to implement support for multiple times execution, is more difficult")
-                        #replace THE PATH
-                        value=j.core.tools.text_replace(value)
-                        if position < len(args):
-                            args[position] = value
-                        else:
-                            kwargs[parameter.name] = value
+                        if j.data.types.list.check(value) or "," in value:
+                            raise RuntimeError("need to implement support for multiple times execution, is more difficult")
+                            #replace THE PATH
+                            value=j.core.tools.text_replace(value)
+                            if position < len(args):
+                                args[position] = value
+                            else:
+                                kwargs[parameter.name] = value
 
                 position += 1
             return func(*args, **kwargs)

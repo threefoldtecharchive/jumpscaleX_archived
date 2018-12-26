@@ -48,7 +48,7 @@ class BCDB(j.application.JSBaseClass):
         self.dataprocessor_greenlet = None
 
         self.meta = BCDBMeta(self)
-        self._logger_enable()
+        # self._logger_enable()
 
         self._init_(reset=reset, stop=False)
 
@@ -98,8 +98,8 @@ class BCDB(j.application.JSBaseClass):
         self.user = self.model_add(USER())
         self.group = self.model_add(GROUP())
 
-        self._logger_enable()
-        self._logger.info("BCDB INIT DONE:%s" % self.name)
+        # self._logger_enable()
+        # self._logger.info("BCDB INIT DONE:%s" % self.name)
 
     def redis_server_start(self, port=6380, secret="123456"):
 
@@ -199,7 +199,6 @@ class BCDB(j.application.JSBaseClass):
         self._hset_index_key_delete()
 
         j.sal.fs.remove(self._data_dir)
-        j.shell()
 
     def stop(self):
         self._logger.info("STOP BCDB")
@@ -328,7 +327,7 @@ class BCDB(j.application.JSBaseClass):
         """
         self._logger.debug("model get from file:%s" % path)
         obj_key = j.sal.fs.getBaseName(path)[:-3]
-        cl = j.tools.loader.load(obj_key=obj_key, path=path, reload=False)
+        cl = j.tools.codeloader.load(obj_key=obj_key, path=path, reload=False)
         model = cl()
         self.models[model.schema.url] = model
         return model
@@ -348,7 +347,7 @@ class BCDB(j.application.JSBaseClass):
 
         pyfiles_base = []
         for fpath in j.sal.fs.listFilesInDir(path, recursive=True, filter="*.py", followSymlinks=True):
-            pyfile_base = j.tools.loader._basename(fpath)
+            pyfile_base = j.tools.codeloader._basename(fpath)
             if pyfile_base.find("_index") == -1:
                 pyfiles_base.append(pyfile_base)
 
