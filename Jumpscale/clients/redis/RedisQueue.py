@@ -1,15 +1,20 @@
 from Jumpscale import j
-JSBASE = j.application.JSBaseClass
+JSConfigBase = j.application.JSBaseConfigClass
 
 
-class RedisQueue(j.application.JSBaseClass):
+class RedisQueue(JSConfigBase):
     """Simple Queue with Redis Backend"""
+    _SCHEMATEXT = """
+    @url = jumpscale.redis.client
+    redis = "" (S)
+    name = "" (S)
+    namespace = "queue" (S)
+    """
 
-    def __init__(self, redis, name, namespace='queue'):
+    def _init(self):
         """The default connection parameters are: host='localhost', port=9999, db=0"""
-        JSBASE.__init__(self)
-        self.__db = redis
-        self.key = '%s:%s' % (namespace, name)
+        self.__db = self.redis
+        self.key = '%s:%s' % (self.namespace, self.name)
 
     def qsize(self):
         """Return the approximate size of the queue."""
