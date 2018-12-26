@@ -2,75 +2,71 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
-class DNSMasq(j.application.JSBaseClass):
 
-    def __init__(self):
-        self.__jslocation__ = "j.sal.dnsmasq"
-        self._configured = False
+class DNSMasq(JSBASE):
+    def __init__(self, path):
         JSBASE.__init__(self)
-        self.executor = j.tools.executorLocal
-        self._prefab = self.executor.prefab
-        self._configdir = ""
+        self._configdir = j.tools.path.get(path)
+        j.sal.fs.createDir(self._configdir)
+        self._hosts = self._configdir.joinpath('hosts')
+        self._configfile = self._configdir.joinpath('dnsmasq.conf')
+        self._leasesfile = self._configdir.joinpath('dnsmasq.leases')
 
-    def install(self, start=True):
-        """
-        Install Dnsmasq.
+    def install(self, start=True, device='eth0', rangefrom='', rangeto='', deviceonly=True):
+        """Install Dnsmasq.
 
-        @param start=True: start dnsmasq
+        :param start: start dnsqmasq, defaults to True
+        :type start: bool, optional
+        :param device: device name, defaults to 'eth0'
+        :type device: str, optional
+        :param rangefrom: dhcp from range, defaults to ''
+        :type rangefrom: str, optional
+        :param rangeto: dhcp to range, defaults to ''
+        :type rangeto: str, optional
+        :param deviceonly: listen to requests only from this device, defaults to True
+        :type deviceonly: bool, optional
         """
-        self._prefab.processmanager.remove("dnsmasq")
-        self._prefab.process.kill("dnsmasq")
-        self._prefab.system.package.install("dnsmasq")
-        if not self._prefab.core.file_exists("/etc/dnsmasq.conf"):
-            self.config()
+        if not j.sal.process.checkInstalled('dnsmasq'):
+            j.sal.ubuntu.apt_install('dnsmasq')
+        else:
+            j.sal.process.killProcessByName('dnsmasq')
+
+        self.config(device=device, rangefrom=rangefrom, rangeto=rangeto, deviceonly=deviceonly)
         if start:
-            cmd = self._prefab.bash.cmdGetPath("dnsmasq")
-            self._prefab.processmanager.ensure("dnsmasq", "%s -d" % (cmd,))
+            cmd = j.tools.bash.local.cmdGetPath('dnsmasq')
+            j.tools.tmux.execute('%s -d --conf-file=%s' % (cmd, self._configfile), window='dnsmasq', pane='dnsmasq')
 
     def restart(self):
         """
         Restarts Dnsmasq.
-
         """
-        self._prefab.processmanager.restart("dnsmasq")
+        j.sal.process.killProcessByName('dnsmasq')
+        cmd = j.tools.bash.local.cmdGetPath('dnsmasq')
+        j.tools.tmux.execute('%s -d --conf-file=%s' % (cmd, self._configfile), window='dnsmasq', pane='dnsmasq')
 
-    def setConfigPath(self, config_path=None):
+    def _file_check(self, filename):
+        """Check if a file exists, and create it if it doesn't exist
+
+        :param filename: path of the file
+        :type filename: str
         """
-        Set configuration files path.
-
-        @param config_path string: configuration file path.
-        """
-        if not config_path:
-            self._configdir = j.tools.path.get('/etc').joinpath('dnsmasq')
-        else:
-            self._configdir = j.tools.path.get(config_path)
-
-        self._hosts = self._configdir.joinpath('hosts')
-        self._pidfile = self._configdir.joinpath('dnsmasq.pid')
-        self._leasesfile = self._configdir.joinpath('dnsmasq.leases')
-        self._configfile = self._configdir.joinpath('dnsmasq.conf')
-        self._configured = True
-
-    def _checkFile(self, filename):
         filepath = j.tools.path.get(filename)
         if not filepath.exists():
             filepath.touch()
 
-    def addHost(self, macaddress, ipaddress, name=None):
-        """
-        Add a host.
+    def host_add(self, macaddress, ipaddress, name=None):
+        """Adds a dhcp-host entry to dnsmasq.conf file
 
-        @param macaddress string: macaddress
-        @param ip string: ip
-        @param name string: name
-
+        :param macaddress: macaddress of the host
+        :type macaddress: str
+        :param ipaddress: ipaddress of the host
+        :type ipaddress: str
+        :param name: name of the entry, defaults to None
+        :type name: str, optional
+        :raises Exception: if dnsmasq is not configured
         """
-        if not self._configured:
-            raise Exception(
-                'Please run first setConfigPath to select the correct paths')
-        """Adds a dhcp-host entry to dnsmasq.conf file"""
-        self._checkFile(self._hosts)
-        te = j.tools.code.getTextFileEditor(self._hosts)
+        self._file_check(self._hosts)
+        te = j.tools.code.text_editor_get(self._hosts)
         contents = '%s' % macaddress
         if name:
             contents += ',%s' % name
@@ -79,25 +75,36 @@ class DNSMasq(j.application.JSBaseClass):
         te.save()
         self.restart()
 
-    def removeHost(self, macaddress):
-        """Removes a dhcp-host entry from dnsmasq.conf file"""
-        if not self._configured:
-            raise Exception(
-                'Please run first setConfigPath to select the correct paths')
-        self._checkFile(self._hosts)
-        te = j.tools.code.getTextFileEditor(self._hosts)
+    def host_remove(self, macaddress):
+        """Removes a dhcp-host entry from dnsmasq.conf file
+
+        :param macaddress: macaddress of the host to remove
+        :type macaddress: str
+        :raises Exception: if dnsmasq is not configured
+        """
+        self._file_check(self._hosts)
+        te = j.tools.code.text_editor_get(self._hosts)
         te.deleteLines('.*%s.*' % macaddress)
         te.save()
         self.restart()
 
-    def config(self, device="eth0", rangefrom="", rangeto="", deviceonly=True):
-        """
+    def config(self, device='eth0', rangefrom='', rangeto='', deviceonly=True):
+        """Configure dnsmasq
         if rangefrom & rangeto not specified then will serve full local range minus bottomn 10 & top 10 addr
-        """
-        if rangefrom == "" or rangeto == "":
-            rangefrom, rangeto = self._prefab.system.net.getNetRange(device)
 
-        C = """
+        :param device: device name, defaults to 'eth0'
+        :type device: str, optional
+        :param rangefrom: dhcp from range, defaults to ''
+        :type rangefrom: str, optional
+        :param rangeto: dhcp to range, defaults to ''
+        :type rangeto: str, optional
+        :param deviceonly: listen to requests only from this device, defaults to True
+        :type deviceonly: bool, optional
+        """
+        if rangefrom == '' or rangeto == '':
+            rangefrom, rangeto = j.sal.nettools.netrange_get(device)
+
+        config = """
 
         # Listen on this specific port instead of the standard DNS port (53).
         # Setting this to zero completely disables DNS function,
@@ -250,7 +257,7 @@ class DNSMasq(j.application.JSBaseClass):
         # agent. If you don't know what a DHCP relay agent is, you probably
         # don't need to worry about this.
         #dhcp-range=192.168.0.50,192.168.0.150,255.255.255.0,12h
-        dhcp-range=$dhcprange,24h
+        dhcp-range={range},24h
 
         # This is an example of a DHCP range which sets a tag, so that
         # some DHCP options may be set only for this network.
@@ -627,7 +634,7 @@ class DNSMasq(j.application.JSBaseClass):
         # The DHCP server needs somewhere on disk to keep its lease database.
         # This defaults to a sane location, but if you want to change it, use
         # the line below.
-        dhcp-leasefile={DIR_VAR}/dnsmasq/dnsmasq.leases
+        dhcp-leasefile={lease_file}
 
         # Set the DHCP server to authoritative mode. In this mode it will barge in
         # and take over the lease for any client which broadcasts on the network,
@@ -759,8 +766,17 @@ class DNSMasq(j.application.JSBaseClass):
 
         """
         if deviceonly:
-            C = C.replace("#interface=", "interface=%s" % device)
-        C = C.replace("$dhcprange", "%s,%s" % (rangefrom, rangeto))
-        self._prefab.core.dir_ensure("/etc/dnsmasq.d/")
-        self._prefab.core.dir_ensure("{DIR_VAR}/dnsmasq")
-        self._prefab.core.file_write("/etc/dnsmasq.conf", C, replaceArgs=True)
+            config = config.replace('#interface=', 'interface=%s' % device)
+        config = j.core.tools.text_replace(
+            config, {'range': '%s,%s' % (rangefrom, rangeto), 'lease_file': self._leasesfile})
+        j.sal.fs.createDir('/etc/dnsmasq.d/')
+        j.sal.fs.createDir(self._configdir)
+        j.tools.bash.local.executor.file_write(self._configfile, config)
+
+    def _test(self, name=''):
+        """Run tests under tests
+
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        self._test_run(name=name, obj_key='test_main')
