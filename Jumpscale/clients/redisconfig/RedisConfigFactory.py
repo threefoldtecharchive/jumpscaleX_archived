@@ -7,11 +7,10 @@ JSConfigBase = j.application.JSFactoryBaseClass
 
 
 class RedisConfigFactory(JSConfigBase):
+    __jslocation__ = "j.clients.redis_config"
+    _CHILDCLASS = RedisConfig
 
-    def __init__(self):
-        if not hasattr(self, '__jslocation__'):
-            self.__jslocation__ = "j.clients.redis_config"
-        JSConfigBase.__init__(self, RedisConfig)
+    def _init(self):
         self._tree = None
 
     def configure(self, instance="core", ipaddr="localhost",
@@ -19,21 +18,20 @@ class RedisConfigFactory(JSConfigBase):
                   ardb_patch=False, set_patch=False,
                   ssl=False, ssl_keyfile=None, ssl_certfile=None):
 
-        data = {}
-        data["addr"] = ipaddr
-        data["port"] = port
-        data["password_"] = password
-        data["unixsocket"] = unixsocket
-        data["ardb_patch"] = ardb_patch
-        data["set_patch"] = set_patch
-        data["ssl"] = ssl
+        self.addr = ipaddr
+        self.port = port
+        self.password_ = password
+        self.unixsocket = unixsocket
+        self.ardb_patch = ardb_patch
+        self.set_patch = set_patch
+        self.ssl = ssl
         if ssl_keyfile and ssl_certfile:
             # check if its a path, if yes load
-            data["ssl"] = True
+            self.ssl = True
             # means path will be used for sslkey at redis client
-            data["sslkey"] = True
+            self.sslkey = True
 
-        r = self.get(instance=instance, data=data)
+        r = self.get(name=instance)
 
         if ssl_keyfile and ssl_certfile:
             # check if its a path, if yes safe the key paths into config
