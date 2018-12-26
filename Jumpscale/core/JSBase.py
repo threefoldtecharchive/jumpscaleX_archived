@@ -195,16 +195,25 @@ class JSBase:
             self._logger.info("ALL TESTS OK")
         return res
 
-    def __test_run(self, name="", obj_key="main", **kwargs):
+    def __test_run(self, name=None, obj_key="main", **kwargs):
+
+        if name == '':
+            name=None
 
         self._logger_enable()
-        self._logger.info("##: TEST RUN")
-        if name.endswith(".py"):
-            name = name[:-3]
-        if name != "":
+        if name is not None:
+            self._logger.info("##: TEST RUN: %s"%name.upper())
+
+        if name is not None:
+
+            if name.endswith(".py"):
+                name = name[:-3]
+
+
             tpath = "%s/tests/%s" % (self._dirpath, name)
             tpath = tpath.replace("//", "/")
-            tpath += ".py"
+            if not name.endswith(".py"):
+                tpath += ".py"
             if not j.sal.fs.exists(tpath):
                 for item in j.sal.fs.listFilesInDir("%s/tests" % self._dirpath, recursive=False, filter="*.py"):
                     bname = j.sal.fs.getBaseName(item)
@@ -228,7 +237,8 @@ class JSBase:
 
             return
 
-        method = j.tools.codeloader.load(obj_key=obj_key, path=tpath, reload=False, md5="")
+        method = j.tools.codeloader.load(obj_key=obj_key, path=tpath)
+        self._logger.debug("##:LOAD: path: %s\n\n" % tpath)
         try:
             res = method(self=self, **kwargs)
         except Exception as e:

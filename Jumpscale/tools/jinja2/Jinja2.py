@@ -88,7 +88,7 @@ class Jinja2(j.application.JSBaseClass):
 
 
 
-    def code_python_render(self, obj_key="", path=None,text=None,dest=None,
+    def code_python_render(self, obj_key=None, path=None,text=None,dest=None,
                            objForHash=None,name=None, **args):
         """
 
@@ -111,9 +111,9 @@ class Jinja2(j.application.JSBaseClass):
         t = self.template_get(path=path,text=text)
 
         if objForHash:
-            tohash=j.data.serializers.msgpack.dumps(objForHash)+t.md5.encode()+obj_key.encode()
+            tohash=j.data.serializers.msgpack.dumps(objForHash)+t.md5.encode()
         else:
-            tohash=j.data.serializers.msgpack.dumps(args)+t.md5.encode()+obj_key.encode() #make sure we have unique identifier
+            tohash=j.data.serializers.msgpack.dumps(args)+t.md5.encode() #make sure we have unique identifier
         md5=j.data.hash.md5_string(tohash)
 
         if md5 in self._hash_to_codeobj:
@@ -124,13 +124,13 @@ class Jinja2(j.application.JSBaseClass):
             dest = "%s/%s.py"%(self._codegendir,name)
             dest_md5 = "%s/%s.md5"%(self._codegendir,name)
         else:
-            dest = "%s/%s.py"%(self._codegendir,md5)
+            dest = "%s/_%s.py"%(self._codegendir,md5)
             dest_md5 = None
 
         self._logger.debug("python code render:%s"%(dest))
 
         render=False
-        if dest_md5 is not None and j.sal.fs.exists(dest_md5):
+        if dest_md5 is not None and j.sal.fs.exists(dest_md5) and j.sal.fs.exists(dest):
             md5_ondisk = j.sal.fs.readFile(dest_md5)
             if md5_ondisk != md5:
                 render=True

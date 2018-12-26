@@ -30,12 +30,19 @@ def main(self):
     assert e.toString(" blue")=="BLUE"
     assert e.toString("Red ")=="RED"
 
-    assert e.clean("Red ")== 2
-    assert e.clean("BLUE ")== 1
-    assert e.clean("YELLOW ")== 3
+    assert e.clean("Red ")== "RED"
+    assert e.clean("BLUE ")== "BLUE"
+    assert e.clean("YELLOW ")== "YELLOW"
+
+    assert e.toData("BLUE ")== 1
+    assert e.toData("Red ")== 2
+    assert e.toData("YELLOW ")== 3
+
+
+
 
     assert e._jumpscale_location=="j.data.types.enumerations['6d9fe6d18a520e26fce3841a7065c93b']"
 
-    # self.logger.info("TEST DONE")
+    # self._logger.info("TEST DONE")
 
     return ("OK")

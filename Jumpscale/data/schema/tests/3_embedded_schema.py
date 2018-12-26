@@ -55,6 +55,6 @@ def main(self):
 
     assert schema_test3._data == schema_test4._data
 
-    self.logger.info("TEST DONE")
+    self._logger.info("TEST DONE SCHEMAEMBED")
 
     return ("OK")

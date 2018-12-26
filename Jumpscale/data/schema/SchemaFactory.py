@@ -108,7 +108,7 @@ class SchemaFactory(j.application.JSBaseClass):
                 res.append(self._md5_schema[md5])
             else:
                 s = Schema(text=block)
-                if s.md5 in self._md5_schema:
+                if s._md5 in self._md5_schema:
                     raise RuntimeError("should not be there")
                 else:
                     res.append(s)

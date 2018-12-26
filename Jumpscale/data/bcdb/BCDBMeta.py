@@ -143,7 +143,7 @@ class BCDBMeta(j.application.JSBaseClass):
         self._logger.debug("schema set in meta:%s" % schema.url)
         schema_existing = self.schema_get_from_url(schema.url, die=False)
         if schema_existing is not None:  # means exists
-            if schema_existing.md5 == schema.md5:
+            if schema_existing._md5 == schema._md5:
                 return schema_existing
 
         # not known yet in namespace in ZDB

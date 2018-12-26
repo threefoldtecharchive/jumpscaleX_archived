@@ -307,7 +307,7 @@ class BCDB(j.application.JSBaseClass):
             imodel = BCDBIndexMeta(schema=schema)
             imodel.include_schema = True
             tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._path
-            myclass = j.tools.jinja2.code_python_render(path=tpath,
+            myclass = j.tools.jinja2.code_python_render(path=tpath,objForHash=schema._md5,
                                                         reload=True, dest=dest,
                                                         schema=schema, bcdb=self, index=imodel)
 

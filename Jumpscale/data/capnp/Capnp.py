@@ -6,13 +6,9 @@ from collections import OrderedDict
 from .ModelBaseCollection import ModelBaseCollection
 from .ModelBaseData import ModelBaseData
 from .ModelBase import  ModelBase
-JSBASE = j.application.JSBaseClass
-
 
 class Tools(j.application.JSBaseClass):
 
-    def __init__(self):
-        JSBASE.__init__(self)
 
     def listInDictCreation(self, listInDict, name, manipulateDef=None):
         """
@@ -140,7 +136,11 @@ class Capnp(j.application.JSBaseClass):
                 contents=schemaInText,
                 append=False)
             parser = capnp.SchemaParser()
-            schema = parser.load(path)
+            try:
+                schema = parser.load(path)
+            except Exception as e:
+                msg = str(e)
+                raise RuntimeError("%s\n\nERROR:Could not parse capnp schema:\n%s"%(schemaInText,msg))
             self._schema_cache[schemaId] = schema
         return self._schema_cache[schemaId]
 
