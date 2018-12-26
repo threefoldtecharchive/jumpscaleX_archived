@@ -63,7 +63,6 @@ def main(self):
     cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9900, secret="1234")
     assert cl1.get(key=0) is None
 
-
     bcdb.meta.reset()  # make sure we reload from data
 
     assert bcdb.meta.data.schemas == []
