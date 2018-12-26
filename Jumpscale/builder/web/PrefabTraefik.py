@@ -84,14 +84,14 @@ class BuilderTraefik(j.builder.system._BaseClass):
 
         C = j.core.tools.text_replace(C, args)
 
-        j.builder.tools.dir_ensure(args["LOGDIR"])
-        j.builder.tools.dir_ensure(args["WWWROOTDIR"])
+        j.core.tools.dir_ensure(args["LOGDIR"])
+        j.core.tools.dir_ensure(args["WWWROOTDIR"])
 
         j.sal.fs.writeFile(configpath, C)
 
     def getTCPPort(self, configpath="{DIR_CFG}/caddy.cfg"):
         configpath = j.core.tools.text_replace(configpath)
-        C = j.builder.tools.file_read(configpath)
+        C = j.core.tools.file_text_read(configpath)
         for line in C.split("\n"):
             if "#tcpport:" in line:
                 return line.split(":")[1].strip()

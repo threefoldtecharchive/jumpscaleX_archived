@@ -3,18 +3,17 @@ import os
 from jinja2 import Template
 
 
-JSBASE = j.application.JSBaseClass
 
 class Jinja2(j.application.JSBaseClass):
     """
     """
 
-    def __init__(self):
-        self.__jslocation__ = "j.tools.jinja2"
-        JSBASE.__init__(self)
-        self.reset()
+    __jslocation__ = "j.tools.jinja2"
+
+    def _init(self):
+        self._codegendir = j.core.tools.text_replace("{DIR_VAR}/CODEGEN")
+
         self._logger_enable()
-        j.sal.fs.createDir("%s/CODEGEN"%j.dirs.VARDIR)
         self.reset(destroyall=False)
 
 
@@ -29,23 +28,32 @@ class Jinja2(j.application.JSBaseClass):
         self._hash_to_template = {}
         self._hash_to_codeobj = {}
         if destroyall:
-            j.sal.fs.remove("%s/CODEGEN"%j.dirs.VARDIR)
-        j.sal.fs.createDir("%s/CODEGEN"%j.dirs.VARDIR)
+            j.sal.fs.remove(self._codegendir)
+        j.sal.fs.createDir(self._codegendir)
         
 
-    def template_get(self,path="",text="",reload=False):
+    def template_get(self,path=None,text=None,reload=False):
         """
         returns jinja2 template and will be cached
+
+        param: reload, only relevant for path, when path exists and has been loaded before will not load again (only cached in memory)
+        param: path location of the template
+        param: text = text of the template
         """
-        md5=""
-        if path!="":
+
+        if path is not None and text is not None:
+            raise RuntimeError("can not specify path and text at same time")
+        if path is  None and text is  None:
+            raise RuntimeError("need to specify path or text")
+
+        md5=None
+        if path is not None:
             if reload==False and path in self._path_to_contenthash:
                 md5 = self._path_to_contenthash[path]
-            if md5 =="" or not md5 in self._hash_to_template:
+            else:
                 text = j.sal.fs.readFile(path)
-                md5=""
 
-        if md5 == "":
+        if md5 is None:
             md5 = j.data.hash.md5_string(text)
 
         if md5 not in self._hash_to_template:
@@ -54,11 +62,20 @@ class Jinja2(j.application.JSBaseClass):
 
         return self._hash_to_template[md5]
 
-    def template_render(self,path="",text="",dest=None,reload=False, **args):
+    def template_render(self,path=None,text=None,dest=None,reload=False, **args):
         """
-        load the template, do not write back
+
+        load the template, do not write back to the path
         render & return result as string
+
+        :param path: to template (use path or text)
+        :param text: text which is the template if path is not used
+        :param dest: where to write the result, if not specified then will just return the rendered text
+        :param reload, only relevant for path, when path exists and has been loaded before will not load again (only cached in memory)
+        :param args: args which will be passed to the template engine
+        :return:
         """
+
         # self._logger.debug("template render:%s"%path)
         t = self.template_get(path=path,text=text,reload=reload)
         txt =  t.render(**args)
@@ -71,8 +88,8 @@ class Jinja2(j.application.JSBaseClass):
 
 
 
-    def code_python_render(self, obj_key="", path="",text="",dest="",reload=False, objForHash=None,
-                           overwrite=False,name="", **args):
+    def code_python_render(self, obj_key="", path=None,text=None,dest=None,
+                           objForHash=None,name=None, **args):
         """
 
         :param obj_key:  is name of function or class we need to evaluate when the code get's loaded
@@ -81,46 +98,58 @@ class Jinja2(j.application.JSBaseClass):
         :param path: path of the template (is path or text to be used)
         :param text: if not path used, text = is the text of the template (the content)
         :param dest: if not specified will be in j.dirs.VARDIR,"CODEGEN",md5+".py" (md5 is md5 of template+msgpack of args)
-        :param reload: will reload the template and also reload the result of the rendering, even if it already existed in mem
-        :param overwrite: will overwrite the destination file
+                        or if name is specified will use the name  j.dirs.VARDIR,"CODEGEN",name+".py
         :param args: arguments for the template (DIRS will be passed by default)
         :return:
         """
-        if dest is None:
-            dest=""
-        t = self.template_get(path=path,text=text,reload=reload)
+        if dest is not None and name is not None:
+            raise RuntimeError("cannot specify name & dest at same time")
+
         if "j" in args:
             args.pop("j")
-        if dest=="":
-            if objForHash:
-                tohash=j.data.serializers.msgpack.dumps(objForHash)+t.md5.encode()+obj_key.encode()
-            else:
-                if not overwrite:
-                    tohash=j.data.serializers.msgpack.dumps(args)+t.md5.encode()+obj_key.encode() #make sure we have unique identifier
+
+        t = self.template_get(path=path,text=text)
+
+        if objForHash:
+            tohash=j.data.serializers.msgpack.dumps(objForHash)+t.md5.encode()+obj_key.encode()
         else:
-            tohash=dest
-        if objForHash is None and overwrite and name!="":
-            md5=name
+            tohash=j.data.serializers.msgpack.dumps(args)+t.md5.encode()+obj_key.encode() #make sure we have unique identifier
+        md5=j.data.hash.md5_string(tohash)
+
+        if md5 in self._hash_to_codeobj:
+            return self._hash_to_codeobj[md5]
+
+        if dest is None and name is not None:
+            name=name.lower()
+            dest = "%s/%s.py"%(self._codegendir,name)
+            dest_md5 = "%s/%s.md5"%(self._codegendir,name)
         else:
-            md5=j.data.hash.md5_string(tohash)
-        if md5 not in self._hash_to_codeobj or overwrite:
-            #means the code block is not there yet
-            # print("code not here yet")
-            if dest == "":
-                dest = j.sal.fs.joinPaths(j.dirs.VARDIR,"CODEGEN","%s_%s.py"%(name,md5))
+            dest = "%s/%s.py"%(self._codegendir,md5)
+            dest_md5 = None
 
-            BASENAME = j.tools.loader._basename(dest)
+        self._logger.debug("python code render:%s"%(dest))
 
-            if overwrite or not j.sal.fs.exists(dest):
-                #means has not been rendered yet lets do
-                out = t.render(j=j,DIRS=j.dirs,BASENAME=BASENAME,**args)
-                j.sal.fs.writeFile(dest,out)
-            else:
-                out = ""
+        render=False
+        if dest_md5 is not None and j.sal.fs.exists(dest_md5):
+            md5_ondisk = j.sal.fs.readFile(dest_md5)
+            if md5_ondisk != md5:
+                render=True
+        elif not j.sal.fs.exists(dest):
+            render=True
 
-            obj = j.tools.loader.load(obj_key=obj_key, path=dest,md5=md5,reload=reload)
+        if render:
+            BASENAME = j.tools.codeloader._basename(dest)
+            #means has not been rendered yet lets do
+            out = t.render(j=j,DIRS=j.dirs,BASENAME=BASENAME,**args)
+            j.sal.fs.writeFile(dest,out)
+            if dest_md5 is not None:
+                j.sal.fs.writeFile(dest_md5,md5) #remember the md5
 
-            self._hash_to_codeobj[md5]=obj
+        obj = j.tools.codeloader.load(obj_key=obj_key, path=dest,md5=md5)
+
+        self._hash_to_codeobj[md5]=obj
+
+
 
         return self._hash_to_codeobj[md5]
 
@@ -226,7 +255,7 @@ class Jinja2(j.application.JSBaseClass):
         somethingelse= {{j.data.time.epoch}}
         """
 
-        j.tools.timer.start("jinja")
+        j.tools.timer.start("jinja text")
         nr=5000
         for x in range(nr):
             R=self.template_render(text=C,reload=False, j=j,name="myname:%s"%x)

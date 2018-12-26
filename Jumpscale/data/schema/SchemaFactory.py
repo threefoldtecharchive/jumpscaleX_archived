@@ -7,12 +7,13 @@ JSBASE = j.application.JSBaseClass
 
 
 class SchemaFactory(j.application.JSBaseClass):
-    def __init__(self):
-        self.__jslocation__ = "j.data.schema"
-        JSBASE.__init__(self)
-        self._code_generation_dir = None
+    __jslocation__ = "j.data.schema"
+
+    def _init(self):
+        self.__code_generation_dir = None
         self.db = j.clients.redis.core_get()
         self.schemas = {}
+        self.schemas_versionless = {}
         self._md5_schema = {}
 
     @property
@@ -20,35 +21,37 @@ class SchemaFactory(j.application.JSBaseClass):
         return Schema
 
     @property
-    def code_generation_dir(self):
-        if not self._code_generation_dir:
+    def _code_generation_dir(self):
+        if not self.__code_generation_dir:
             path = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", "schema")
             j.sal.fs.createDir(path)
             if path not in sys.path:
                 sys.path.append(path)
             j.sal.fs.touch(j.sal.fs.joinPaths(path, "__init__.py"))
             self._logger.debug("codegendir:%s" % path)
-            self._code_generation_dir = path
-        return self._code_generation_dir
+            self.__code_generation_dir = path
+        return self.__code_generation_dir
 
     def reset(self):
         self.schemas = {}
 
-    def get(self, schema_text_path="", url=None, die=True):
+    def get(self, schema_text="", url=None, die=True):
         """
-        get schema from the url or schema_text_path
+        get schema from the url or schema_text
 
         Keyword Arguments:
-            schema_text_path {str} -- schema file path or shcema string  (default: {""})
+            schema_text {str} -- schema file path or shcema string  (default: {""})
             url {[type]} -- url of your schema e.g. @url = despiegk.test  (default: {None})
+
+        if die False and schema is not found e.g. based on url, then will return None
 
         Returns:
             Schema
         """
 
-        if schema_text_path != "":
-            if j.data.types.string.check(schema_text_path):
-                return self._add(schema_text_path)
+        if schema_text != "":
+            if j.data.types.string.check(schema_text):
+                return self._add(schema_text)
             else:
                 raise RuntimeError("need to be text ")
         else:
@@ -70,19 +73,12 @@ class SchemaFactory(j.application.JSBaseClass):
     def exists(self, url):
         return self.get(url=url, die=False) is not None
 
-    def _add(self, schema_text_path):
+    def _add(self, schema_text):
         """
         :param schema_text or schema_path
         :return: incache,schema  (incache is bool, when True means was in cache)
         """
 
-        if "\n" not in schema_text_path:
-            if j.sal.fs.exists(schema_text_path):
-                schema_text = j.sal.fs.readFile(schema_text_path)
-            else:
-                raise RuntimeError("this path '%s' doesn't exist" % schema_text_path)
-        else:
-            schema_text = schema_text_path
 
         block = ""
         blocks = []

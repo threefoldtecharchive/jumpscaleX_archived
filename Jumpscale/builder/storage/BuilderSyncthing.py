@@ -36,8 +36,8 @@ class BuilderSyncthing(j.builder.system._BaseClass):
         else:
             j.sal.process.execute("cd %s && go run build.go" % dest, profile=True)
 
-        # j.builder.tools.dir_ensure(self.builddir+"/cfg")
-        # j.builder.tools.dir_ensure(self.builddir+"/bin")
+        # j.core.tools.dir_ensure(self.builddir+"/cfg")
+        # j.core.tools.dir_ensure(self.builddir+"/bin")
 
         j.builder.tools.copyTree(
             '{DIR_BASE}/go/src/github.com/syncthing/syncthing/bin',
@@ -68,7 +68,7 @@ class BuilderSyncthing(j.builder.system._BaseClass):
         self.build()
         j.builder.system.python_pip.install("syncthing")
 
-        j.builder.tools.dir_ensure("$CFGDIR/syncthing")
+        j.core.tools.dir_ensure("$CFGDIR/syncthing")
         # j.sal.fs.writeFile("$CFGDIR/syncthing/syncthing.xml", config)
 
         j.builder.tools.copyTree(self.builddir + "/bin", "{DIR_BIN}")

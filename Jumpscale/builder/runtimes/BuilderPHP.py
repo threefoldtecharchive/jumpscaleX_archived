@@ -109,7 +109,7 @@ class BuilderPHP(j.builder.system._BaseClass):
 
 
         # FOR APACHE
-        j.builder.tools.dir_ensure('{DIR_BASE}/apps/php/lib/')
+        j.core.tools.dir_ensure('{DIR_BASE}/apps/php/lib/')
         j.builder.tools.file_copy("{DIR_TEMP}/php/php.ini-development", "{DIR_BASE}/apps/php/lib/php.ini")
         if start:
             self.start()

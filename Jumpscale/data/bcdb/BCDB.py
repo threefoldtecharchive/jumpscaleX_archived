@@ -327,7 +327,7 @@ class BCDB(j.application.JSBaseClass):
         """
         self._logger.debug("model get from file:%s" % path)
         obj_key = j.sal.fs.getBaseName(path)[:-3]
-        cl = j.tools.loader.load(obj_key=obj_key, path=path, reload=False)
+        cl = j.tools.codeloader.load(obj_key=obj_key, path=path, reload=False)
         model = cl()
         self.models[model.schema.url] = model
         return model
@@ -347,7 +347,7 @@ class BCDB(j.application.JSBaseClass):
 
         pyfiles_base = []
         for fpath in j.sal.fs.listFilesInDir(path, recursive=True, filter="*.py", followSymlinks=True):
-            pyfile_base = j.tools.loader._basename(fpath)
+            pyfile_base = j.tools.codeloader._basename(fpath)
             if pyfile_base.find("_index") == -1:
                 pyfiles_base.append(pyfile_base)
 

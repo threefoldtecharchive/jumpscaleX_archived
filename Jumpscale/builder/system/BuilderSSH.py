@@ -76,7 +76,7 @@ class BuilderSSH(j.builder.system._BaseClass):
                     # out=j.sal.process.execute("nmap -p 22 %s | grep for"%range)
                     _, out, _ = j.sal.process.execute("nmap %s -p %s --open -oX {DIR_TEMP}/nmap" %
                                                      (range))
-            out = j.builder.tools.file_read("{DIR_TEMP}/nmap")
+            out = j.core.tools.file_text_read("{DIR_TEMP}/nmap")
             import xml.etree.ElementTree as ET
             root = ET.fromstring(out)
             for child in root:
@@ -105,7 +105,7 @@ class BuilderSSH(j.builder.system._BaseClass):
 
     def define_host(self, addr, user='root', port=22):
         known_hostsfile = '/{}/.ssh/known_hosts'.format(user)
-        lines = j.builder.tools.file_read(known_hostsfile, default='').splitlines()
+        lines = j.core.tools.file_text_read(known_hostsfile, default='').splitlines()
         isknown = False
         for line in lines:
             if line.startswith(addr):
@@ -122,7 +122,7 @@ class BuilderSSH(j.builder.system._BaseClass):
         home = d["home"]
         path = '%s/.ssh/%s' % (home, name)
         if not j.builder.tools.file_exists(path + ".pub"):
-            j.builder.tools.dir_ensure(home + "/.ssh", mode="0700", owner=user, group=user)
+            j.core.tools.dir_ensure(home + "/.ssh", mode="0700", owner=user, group=user)
 
             j.sal.process.execute("ssh-keygen -q -t %s -f %s -N ''" % (keytype, path))
             j.builder.tools.file_attribs(path, mode="0600", owner=user, group=user)
@@ -175,7 +175,7 @@ class BuilderSSH(j.builder.system._BaseClass):
             line = key
 
         if j.builder.tools.file_exists(keyf):
-            content = j.builder.tools.file_read(keyf)
+            content = j.core.tools.file_text_read(keyf)
             if content.find(key[:-1]) == -1:
                 content = add_newline(content)
                 j.sal.fs.writeFile(keyf, content + line, sudo=False)
@@ -184,7 +184,7 @@ class BuilderSSH(j.builder.system._BaseClass):
                 ret = True
         else:
             # Make sure that .ssh directory exists, see #42
-            j.builder.tools.dir_ensure(j.sal.fs.getDirName(keyf), owner=user, group=group, mode='700')
+            j.core.tools.dir_ensure(j.sal.fs.getDirName(keyf), owner=user, group=group, mode='700')
             j.sal.fs.writeFile(keyf, line, owner=user, group=group, mode='600', sudo=False)
             ret = False
 
@@ -199,7 +199,7 @@ class BuilderSSH(j.builder.system._BaseClass):
         group = d["gid"]
         keyf = d["home"] + "/.ssh/authorized_keys"
         if j.builder.tools.file_exists(keyf):
-            j.sal.fs.writeFile(keyf, "\n".join(_ for _ in j.builder.tools.file_read(keyf).split(
+            j.sal.fs.writeFile(keyf, "\n".join(_ for _ in j.core.tools.file_text_read(keyf).split(
                 "\n") if _.strip() != key), owner=user, group=group, mode="600")
             return True
         else:
@@ -209,7 +209,7 @@ class BuilderSSH(j.builder.system._BaseClass):
         """
         """
         self._logger.info("clean known hosts/autorized keys")
-        j.builder.tools.dir_ensure("/root/.ssh")
+        j.core.tools.dir_ensure("/root/.ssh")
         j.builder.tools.dir_remove("/root/.ssh/known_hosts")
         j.builder.tools.dir_remove("/root/.ssh/authorized_keys")
 

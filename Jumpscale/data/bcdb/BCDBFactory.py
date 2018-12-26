@@ -5,14 +5,14 @@ import os
 import sys
 import redis
 
-JSBASE = j.application.JSFactoryBaseClass
 
 
 class BCDBFactory(j.application.JSBaseClass):
 
-    def __init__(self):
-        JSBASE.__init__(self)
-        self.__jslocation__ = "j.data.bcdb"
+    __jslocation__ = "j.data.bcdb"
+
+    def _init(self):
+
         self._path = j.sal.fs.getDirName(os.path.abspath(__file__))
         self._code_generation_dir = None
         self.latest=None

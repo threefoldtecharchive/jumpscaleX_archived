@@ -167,8 +167,8 @@ class Sandboxer(j.application.JSBaseClass):
 
         if dest is None:
             dest = "{{BASE_DIR}}/bin"
-        dest=j.core.executor.replace(dest)
-        path=j.core.executor.replace(path)
+        dest=j.core.tools.text_replace(dest)
+        path=j.core.tools.text_replace(path)
 
         self._logger.info("lib sandbox:%s" % path)
 

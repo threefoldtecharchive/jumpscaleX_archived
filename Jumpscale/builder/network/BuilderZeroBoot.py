@@ -53,7 +53,7 @@ class BuilderZeroBoot(j.builder.system._BaseClass):
         j.sal.process.execute("uci set dhcp.@dnsmasq[0].dhcp_boot='pxelinux.0'")
         j.sal.process.execute("uci commit")
 
-        j.builder.tools.dir_ensure('/opt/storage')
+        j.core.tools.dir_ensure('/opt/storage')
         j.sal.process.execute("opkg install curl ca-bundle")
         j.sal.process.execute("curl https://download.gig.tech/pxe.tar.gz -o /opt/storage/pxe.tar.gz")
         j.sal.process.execute("tar -xzf /opt/storage/pxe.tar.gz -C /opt/storage")

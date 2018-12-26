@@ -202,7 +202,7 @@ class BuilderProxyClassic(j.builder.system._BaseClass):
         if btrfs:
             j.builder.storage.btrfs.subvolumeCreate(cachedir)
         else:
-            j.builder.tools.dir_ensure(cachedir)
+            j.core.tools.dir_ensure(cachedir)
 
         j.builder.tools.package_install("polipo")
 
@@ -353,7 +353,7 @@ class BuilderProxyClassic(j.builder.system._BaseClass):
             addr = j.builder.executor.addr
         config = 'Acquire::http::Proxy "http://%s:%s";' % (addr, port)
         if j.builder.prefab.platformtype.myplatform.startswith("ubuntu"):
-            f = j.builder.tools.file_read("/etc/apt/apt.conf", "")
+            f = j.core.tools.file_text_read("/etc/apt/apt.conf", "")
             f += "\n%s\n" % config
             j.sal.fs.writeFile("/etc/apt/apt.conf", f)
         else:

@@ -11,7 +11,7 @@ class BuilderLedis(j.builder.system._BaseClass):
         if self._done_check("build", reset):
             return
 
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
 
             C = """
             #!/bin/bash
@@ -31,7 +31,7 @@ class BuilderLedis(j.builder.system._BaseClass):
             ledisdir = j.core.tools.text_replace(
                 "{DIR_BASE}/go/src/github.com/siddontang/ledisdb")
 
-            configcontent = j.builder.tools.file_read(
+            configcontent = j.core.tools.file_text_read(
                 os.path.join(ledisdir, "config", "config.toml"))
             ledisdir = j.core.tools.text_replace(
                 "{DIR_BASE}/go/src/github.com/siddontang/ledisdb")
@@ -74,7 +74,7 @@ class BuilderLedis(j.builder.system._BaseClass):
         ledisdir = j.core.tools.text_replace("{DIR_BASE}/go/src/github.com/siddontang/ledisdb")
 
         #rc, out, err = j.sal.process.execute("cd {ledisdir} && source dev.sh && make install".format(ledisdir=ledisdir), profile=True)
-        j.builder.tools.dir_ensure("{DIR_VAR}/templates/cfg")
+        j.core.tools.dir_ensure("{DIR_VAR}/templates/cfg")
         j.builder.tools.file_copy(
             "/tmp/ledisconfig.toml", dest="{DIR_VAR}/templates/cfg/ledisconfig.toml")
         j.builder.tools.file_copy(

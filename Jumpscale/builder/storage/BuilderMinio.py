@@ -18,7 +18,7 @@ class BuilderMinio(j.builder.system._BaseClass):
         """
         if self._done_check("build", reset):
             return
-        j.builder.tools.dir_ensure(self.BUILDDIR)
+        j.core.tools.dir_ensure(self.BUILDDIR)
 
         minio_url = "https://dl.minio.io/server/minio/release/linux-amd64/minio"
         j.builder.tools.file_download(minio_url, overwrite=True, to=self.BUILDDIR, expand=False, removeTopDir=True)
@@ -45,7 +45,7 @@ class BuilderMinio(j.builder.system._BaseClass):
         """
         Starts minio.
         """
-        j.builder.tools.dir_ensure(datadir)
+        j.core.tools.dir_ensure(datadir)
 
         cmd = "MINIO_ACCESS_KEY={} MINIO_SECRET_KEY={} minio server --address {}:{} {}".format(miniokey, miniosecret, address, port, datadir)
         pm = j.builder.system.processmanager.get()

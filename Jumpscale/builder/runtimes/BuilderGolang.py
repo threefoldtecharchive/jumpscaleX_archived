@@ -69,8 +69,8 @@ class BuilderGolang(j.builder.system._BaseClass):
             raise j.exceptions.RuntimeError("platform not supported")
 
         j.sal.process.execute(cmd=j.core.tools.text_replace("rm -rf $GOROOTDIR"), die=True)
-        j.builder.tools.dir_ensure(self.GOROOTDIR)
-        j.builder.tools.dir_ensure(self.GOPATHDIR)
+        j.core.tools.dir_ensure(self.GOROOTDIR)
+        j.core.tools.dir_ensure(self.GOPATHDIR)
 
         profile = j.builder.sandbox.profileDefault
         profile.envSet("GOROOT", self.GOROOTDIR)
@@ -82,9 +82,9 @@ class BuilderGolang(j.builder.system._BaseClass):
         j.builder.tools.file_download(downl, self.GOROOTDIR, overwrite=False, retry=3,
                                        timeout=0, expand=True, removeTopDir=True)
 
-        j.builder.tools.dir_ensure("%s/src" % self.GOPATHDIR)
-        j.builder.tools.dir_ensure("%s/pkg" % self.GOPATHDIR)
-        j.builder.tools.dir_ensure("%s/bin" % self.GOPATHDIR)
+        j.core.tools.dir_ensure("%s/src" % self.GOPATHDIR)
+        j.core.tools.dir_ensure("%s/pkg" % self.GOPATHDIR)
+        j.core.tools.dir_ensure("%s/bin" % self.GOPATHDIR)
 
         self.get("github.com/tools/godep")
         self._done_set("install")

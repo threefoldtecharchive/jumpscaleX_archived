@@ -23,14 +23,14 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         if self._done_check("build") and not reset:
             return
 
-        j.builder.sandbox.locale_check()
+        j.tools.bash.local.locale_check()
 
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             j.builder.system.package.mdupdate()
             j.builder.tools.package_install("build-essential libpcre3-dev libssl-dev")
 
             # j.builder.tools.dir_remove("{DIR_TEMP}/build/openresty")
-            # j.builder.tools.dir_ensure("{DIR_TEMP}/build/openresty")
+            # j.core.tools.dir_ensure("{DIR_TEMP}/build/openresty")
             url="https://openresty.org/download/openresty-1.13.6.2.tar.gz"
             dest = j.core.tools.text_replace("{DIR_VAR}/build/openresty")
             j.sal.fs.createDir(dest)
@@ -110,9 +110,9 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         """
         assert self.executor.type=="local"
 
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             CODE_SB_BIN=j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_ubuntu.git")
-        elif j.builder.tools.isMac:
+        elif j.core.platformtype.myplatform.isMac:
             CODE_SB_BIN=j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_osx.git")
         else:
             raise RuntimeError("only ubuntu & osx support")

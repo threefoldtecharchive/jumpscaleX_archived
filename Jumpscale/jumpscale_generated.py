@@ -1133,7 +1133,7 @@ class group_tools():
         self._imagelib = None
         self._jinja2 = None
         self._performancetrace = None
-        self._loader = None
+        self._codeloader = None
         self._offliner = None
         self._rexplorer = None
         self._path = None
@@ -1153,6 +1153,7 @@ class group_tools():
         self._executorLocal = None
         self._storybot = None
         self._syncer = None
+        self._kosmos = None
         self._docsites = None
         self._markdowndocs = None
         self._code = None
@@ -1324,8 +1325,8 @@ class group_tools():
             # print("OK")
         return self._performancetrace
     @property
-    def loader(self):
-        if self._loader is None:
+    def codeloader(self):
+        if self._codeloader is None:
             # print("LOAD:CodeLoader")
             try:
                 from Jumpscale.tools.codeloader.CodeLoader import CodeLoader
@@ -1334,12 +1335,12 @@ class group_tools():
                 raise e
             # print("RUN:CodeLoader")
             try:
-                self._loader =  CodeLoader()
+                self._codeloader =  CodeLoader()
             except Exception as e:
                 msg = j.core.application.error_init("execute","Jumpscale.tools.codeloader.CodeLoader",e)
                 return None
             # print("OK")
-        return self._loader
+        return self._codeloader
     @property
     def offliner(self):
         if self._offliner is None:
@@ -1663,6 +1664,23 @@ class group_tools():
                 return None
             # print("OK")
         return self._syncer
+    @property
+    def kosmos(self):
+        if self._kosmos is None:
+            # print("LOAD:Kosmos")
+            try:
+                from Jumpscale.tools.kosmos.Kosmos import Kosmos
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.tools.kosmos.Kosmos", e)
+                raise e
+            # print("RUN:Kosmos")
+            try:
+                self._kosmos =  Kosmos()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.tools.kosmos.Kosmos",e)
+                return None
+            # print("OK")
+        return self._kosmos
     @property
     def docsites(self):
         if self._docsites is None:

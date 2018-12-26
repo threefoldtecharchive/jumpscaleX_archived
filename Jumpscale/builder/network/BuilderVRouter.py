@@ -91,7 +91,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         C = C.replace("$iface", self.wirelessInterfaceNonDefGW)
         C = C.replace("$range", self.freeNetworkRangeDMZ)
         C = j.core.text.strip(C)
-        I = j.builder.tools.file_read("/etc/network/interfaces")
+        I = j.core.tools.file_text_read("/etc/network/interfaces")
         OUT = ""
         state = ""
         for l in I.split("\n"):

@@ -80,7 +80,7 @@ class BuilderEtcd(j.builder.system._BaseClass):
         build_dir = j.sal.fs.getTmpDirPath()
         tarfile = '/tmp/etcd-3.3.4.tar.gz'
         bin_dir = j.sal.fs.joinPaths(build_dir, 'bin')
-        j.builder.tools.dir_ensure(bin_dir)
+        j.core.tools.dir_ensure(bin_dir)
         j.builder.tools.file_copy(j.sal.fs.joinPaths(j.dirs.BINDIR, 'etcd'), bin_dir)
         j.builder.tools.file_copy(j.sal.fs.joinPaths(j.dirs.BINDIR, 'etcdctl'), bin_dir)
 

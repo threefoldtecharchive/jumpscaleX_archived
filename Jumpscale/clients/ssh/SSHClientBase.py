@@ -27,6 +27,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         self._connected = None
         self._prefab = None
 
+
     @property
     def prefab(self):
         if not self._prefab:

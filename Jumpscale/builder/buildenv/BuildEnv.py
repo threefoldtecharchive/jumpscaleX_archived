@@ -16,7 +16,7 @@ class BuildEnv(j.builder.system._BaseClass):
         self.upgrade()
 
         if not self._done_check("fixlocale", reset):
-            j.builder.sandbox.locale_check()
+            j.tools.bash.local.locale_check()
             self._done_set("fixlocale")
 
         # out = ""
@@ -84,7 +84,7 @@ class BuildEnv(j.builder.system._BaseClass):
         """
         C=j.core.text.strip(C)
 
-        if j.builder.tools.isMac:
+        if j.core.platformtype.myplatform.isMac:
 
             if  not self._done_get("xcode_install"):
                 j.sal.process.execute("xcode-select --install", die=False, showout=True)

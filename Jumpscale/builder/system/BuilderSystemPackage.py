@@ -39,7 +39,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
     #     key = "upgrade_%s" % package
     #     if self._done_check(key, reset):
     #         return
-    #     if j.builder.tools.isUbuntu:
+    #     if j.core.platformtype.myplatform.isUbuntu:
     #         if package is None:
     #             return self._apt_get("-q --yes update")
     #         else:
@@ -61,7 +61,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
         if self._done_check("mdupdate", reset):
             return
         self._logger.info("packages mdupdate")
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             j.sal.process.execute("apt-get update")
         elif j.builder.tools.isAlpine:
             j.builder.tools.run("apk update")
@@ -81,7 +81,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
             return
         self.mdupdate()
         self._logger.info("packages upgrade")
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             if distupgrade:
                 raise NotImplementedError()
                 # return self._apt_get("dist-upgrade")
@@ -130,7 +130,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
 
             self._logger.info("prepare to install:%s" % package)
 
-            if j.builder.tools.isUbuntu:
+            if j.core.platformtype.myplatform.isUbuntu:
                 cmd += "%s install %s\n" % (CMD_APT_GET, package)
 
             elif j.builder.tools.isAlpine:
@@ -242,7 +242,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
     #             package, allow_unauthenticated=allow_unauthenticated, reset=reset)
 
     def start(self, package):
-        if j.builder.tools.isArch or j.builder.tools.isUbuntu or j.core.platformtype.myplatform.isMac:
+        if j.builder.tools.isArch or j.core.platformtype.myplatform.isUbuntu or j.core.platformtype.myplatform.isMac:
             pm = j.builder.system.processmanager.get()
             pm.ensure(package)
         else:
@@ -251,7 +251,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
 
     def ensure(self, package, update=False):
         """Ensure apt packages are installed"""
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             if isinstance(package, str):
                 package = package.split()
             res = {}
@@ -293,7 +293,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
         @param agressive if True will delete full cache
 
         """
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
 
             if package is not None:
                 return self._apt_get("-y --purge remove %s" % package)
@@ -342,7 +342,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
                 "could not package clean:%s, platform not supported" % package)
 
     def remove(self, package, autoclean=False):
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             self._apt_get('remove ' + package)
             if autoclean:
                 self._apt_get("autoclean")

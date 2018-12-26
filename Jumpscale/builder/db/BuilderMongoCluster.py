@@ -69,7 +69,7 @@ class MongoInstance(Startable):
 
     def _install(self):
         super()._install()
-        j.builder.tools.dir_ensure(self.dbdir)
+        j.core.tools.dir_ensure(self.dbdir)
         return j.builder.apps.mongodb.build(start=False)
 
     def _gen_service_name(self):

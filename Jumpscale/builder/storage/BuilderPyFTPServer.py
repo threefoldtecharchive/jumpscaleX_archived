@@ -131,7 +131,7 @@ class BuilderPyFTPServer(j.builder.system._BaseClass):
         C = C.replace("$port", str(port))
         C = C.replace("$authorizers", authorizer)
 
-        j.builder.tools.dir_ensure("$CFGDIR/ftpserver")
+        j.core.tools.dir_ensure("$CFGDIR/ftpserver")
         j.sal.fs.writeFile("$CFGDIR/ftpserver/start.py", C)
 
     def start(self):

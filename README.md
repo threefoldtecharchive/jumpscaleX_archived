@@ -1,11 +1,33 @@
-**master:**   
+**Master:**   
 [![Build Status](https://travis-ci.com/threefoldtech/jumpscaleX.svg?branch=master)](https://travis-ci.com/threefoldtech/jumpscaleX)
 [![codecov](https://codecov.io/gh/threefoldtech/jumpscaleX/branch/master/graph/badge.svg)](https://codecov.io/gh/threefoldtech/jumpscaleX)  
-**development:**  
+**Development:**  
 [![Build Status](https://travis-ci.com/threefoldtech/jumpscaleX.svg?branch=development)](https://travis-ci.com/threefoldtech/jumpscaleX)
 [![codecov](https://codecov.io/gh/threefoldtech/jumpscaleX/branch/development/graph/badge.svg)](https://codecov.io/gh/threefoldtech/jumpscaleX)
 
+| asasd 	| sdfsdf 	| sdf 	|  	| dsfsdf 	|
+|-------	|--------	|------	|---	|--------	|
+|  	| asdf 	|  	|  	|  	|
+|  	| asdf 	| adsf 	|  	| adf 	|
+|  	| adf 	| adf 	|  	| adf 	|
 
+
+this is a code block
+
+```python
+class Schema(j.application.JSBaseClass):
+    def __init__(self, text):
+        JSBASE.__init__(self)
+        self.properties = []
+        self._properties_list = []
+        self.lists = []
+        self._obj_class = None
+        self._capnp = None
+        self._index_list = None
+        self.url = ""
+        self._schema_from_text(text)
+        self.key = j.core.text.strip_to_ascii_dense(self.url).replace(".", "_")
+```
 
 # Jumpscale
 
@@ -15,9 +37,11 @@ which was acquired by SUN Microsystems from Q-Layer. In the mean time we are
 4 versions further and we have rebranded it to Jumpscale.
 
 - [Jumpscale](#jumpscale)
-  - [To Install](docs/Installation/install.md)
+  - [About Jumpscale Core](#about-jumpscale-core)
+  - [Installing Jumpscale Core (NEW, need to test!!!)](#installing-jumpscale-core-new-need-to-test)
   - [Usage](#usage)
   - [Tutorials](#tutorials)
+  - [Collaboration Conventions](#collaboration-conventions)
 
 ## About Jumpscale Core
 

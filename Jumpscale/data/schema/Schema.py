@@ -1,5 +1,8 @@
 
+import sys
+sys.path.append("/sandbox/lib")
 from Jumpscale import j
+
 from .SchemaProperty import SchemaProperty
 from copy import copy
 import os
@@ -11,7 +14,6 @@ class Schema(j.application.JSBaseClass):
     def __init__(self, text):
         JSBASE.__init__(self)
         self.properties = []
-        self._properties_list = []
         self.lists = []
         self._obj_class = None
         self._capnp = None
@@ -24,33 +26,29 @@ class Schema(j.application.JSBaseClass):
         if len(urls) > 0:
             try:
                 # try if last one is version nr, if so pop it
-                j.data.types.float.clean(urls[-1])
+                j.data.types.int.clean(urls[-1])
                 self.version = urls.pop(len(urls) - 1)
                 # will remove the version from the url
+                self.url_noversion = ".".join(self.url.split(".")[:-1])
+                if self.url_noversion in j.data.schema.schemas_versionless:
+                    if j.data.schema.schemas_versionless[self.url_noversion].version<self.version+1:
+                        #version itself can be replaced as well, there could be an update
+                        j.data.schema.schemas_versionless[self.url_noversion] = self
+                else:
+                    j.data.schema.schemas_versionless[self.url_noversion]=self
             except:
                 self.version = None
+                self.url_noversion = None
             urls = ".".join(urls)
 
-        self.name = j.core.text.strip_to_ascii_dense(self.url).replace(".", "_")
-
-    @property
-    def md5(self):
-        return self._md5
-
-    @property
-    def properties_list(self):
-        if self._properties_list == []:
-            self._properties_list = [item.name for item in self.properties]
-            for item in self.lists:
-                self._properties_list.append(item.alias)
-        return self._properties_list
+        j.data.schema.schemas[self.url] = self
 
 
     @property
     def _path(self):
         return j.sal.fs.getDirName(os.path.abspath(__file__))
 
-    def error_raise(self, msg, e=None, schema=None):
+    def _error_raise(self, msg, e=None, schema=None):
         if self.url == "" and "url" in self._systemprops:
             self.url = self._systemprops["url"]
         out = "\nerror in schema:\n"
@@ -101,7 +99,7 @@ class Schema(j.application.JSBaseClass):
 
     def _schema_from_text(self, text):
         """
-        get shcema object from schema text 
+        get schema object from schema text
         """
 
         self._logger.debug("load schema:\n%s" % text)
@@ -112,7 +110,7 @@ class Schema(j.application.JSBaseClass):
 
         systemprops = {}
         self.properties = []
-        self._systemprops = systemprops
+        # self._systemprops = systemprops
 
         def process(line):
             line_original = copy(line)
@@ -134,6 +132,19 @@ class Schema(j.application.JSBaseClass):
             else:
                 comment = ""
 
+            p = SchemaProperty()
+
+            name=propname+"" #make sure there is copy
+            if name.endswith("**"):
+                name=name[:-2]
+                p.index = True
+            if name.endswith("*"):
+                name=name[:-1]
+                p.index_key = True
+
+            if name in ["id"]:
+                self._error_raise("do not use 'id' in your schema, is reserved for system.", schema=text)
+
             if "(" in line:
                 line_proptype = line.split("(")[1].split(")")[0].strip().lower()
                 line_wo_proptype = line.split("(")[0].strip()
@@ -143,31 +154,32 @@ class Schema(j.application.JSBaseClass):
                     jumpscaletype.SUBTYPE = pointer_type
                     defvalue = ""
                 else:
-                    jumpscaletype = j.data.types.get(line_proptype)
-                    try:
-                        if line_wo_proptype == "" or line_wo_proptype is None:
+                    if line_proptype in ["e","enum"]:
+                        enumvalues = j.core.text.strip_to_ascii_dense(line_wo_proptype)
+                        try:
+                            jumpscaletype = j.data.types.get_custom("e",values=enumvalues)
                             defvalue = jumpscaletype.get_default()
-                        else:
-                            defvalue = jumpscaletype.fromString(line_wo_proptype)
-                    except Exception as e:
-                        self.error_raise("error on line:%s" % line_original, e=e)
+                        except Exception as e:
+                            self._error_raise("error (enum) on line:%s" % line_original, e=e)
+                    else:
+                        jumpscaletype = j.data.types.get(line_proptype)
+                        try:
+                            if line_wo_proptype == "" or line_wo_proptype is None:
+                                defvalue = jumpscaletype.get_default()
+                            else:
+                                defvalue = jumpscaletype.fromString(line_wo_proptype)
+                        except Exception as e:
+                            self._error_raise("error on line:%s" % line_original, e=e)
             else:
                 jumpscaletype, defvalue = self._proptype_get(line)
 
-            if ":" in propname:
-                propname, alias = propname.split(":", 1)
-            else:
-                alias = propname
+            p.name = name
+            p.default = defvalue
+            p.comment = comment
+            p.jumpscaletype = jumpscaletype
+            p.pointer_type = pointer_type
 
-            if alias.endswith("**"):
-                alias=alias[:-2]
-            if alias.endswith("*"):
-                alias=alias[:-1]
-
-            if propname in ["id"]:
-                self.error_raise("do not use 'id' in your schema, is reserved for system.", schema=text)
-
-            return (propname, alias, jumpscaletype, defvalue, comment, pointer_type)
+            return p
 
         nr = 0
         for line in text.split("\n"):
@@ -184,26 +196,9 @@ class Schema(j.application.JSBaseClass):
             if line.startswith("#"):
                 continue
             if "=" not in line:
-                self.error_raise("did not find =, need to be there to define field", schema=text)
+                self._error_raise("did not find =, need to be there to define field", schema=text)
 
-            propname, alias, jumpscaletype, defvalue, comment, pointer_type = process(line)
-
-            p = SchemaProperty()
-
-            if propname.endswith("**"):
-                propname = propname[:-2]
-                p.index = True
-
-            if propname.endswith("*"):
-                propname = propname[:-1]
-                p.index_key = True
-
-            p.name = propname
-            p.default = defvalue
-            p.comment = comment
-            p.jumpscaletype = jumpscaletype
-            p.alias = alias
-            p.pointer_type = pointer_type
+            p = process(line)
 
             if p.jumpscaletype.NAME is "list":
                 self.lists.append(p)
@@ -225,17 +220,17 @@ class Schema(j.application.JSBaseClass):
             nr += 1
 
     @property
-    def capnp_id(self):
+    def _capnp_id(self):
         if self.md5 == "":
             raise RuntimeError("hash cannot be empty")
         return "f" + self.md5[1:16]  # first bit needs to be 1
 
     @property
-    def capnp_schema(self):
+    def _capnp_schema(self):
         if not self._capnp:
             tpath = "%s/templates/schema.capnp" % self._path
-            capnp_schema_text = j.tools.jinja2.template_render(path=tpath, reload=False, obj=self, objForHash=self.md5)
-            self._capnp = j.data.capnp.getSchemaFromText(capnp_schema_text)
+            _capnp_schema_text = j.tools.jinja2.template_render(path=tpath, reload=False, obj=self, objForHash=self.md5)
+            self._capnp = j.data.capnp.getSchemaFromText(_capnp_schema_text)
         return self._capnp
 
     @property
@@ -257,7 +252,7 @@ class Schema(j.application.JSBaseClass):
 
         return self._obj_class
 
-    def get(self, data=None, capnpbin=None):
+    def get(self, data=None, capnpbin=None,model=None):
         """
         get schema_object using data and capnpbin
         :param data:
@@ -268,39 +263,56 @@ class Schema(j.application.JSBaseClass):
         """
         if data is None:
             data = {}
-        obj = self.objclass(schema=self, data=data, capnpbin=capnpbin)
+        obj = self.objclass(schema=self, data=data, capnpbin=capnpbin,model=model)
         return obj
 
-    def new(self):
+    def new(self,model=None,data=None):
         """
         get schema_object without any data
         """
-        return self.get()
+        if data is None:
+            data={}
+        r =  self.get(data=data)
+        if model is not None:
+            model.notify_new()
 
     @property
-    def index_list(self):
-        if self._index_list is None:
-            self._index_list = []
-            for prop in self.properties:
-                if prop.index:
-                    self._index_list.append(prop.alias)
-        return self._index_list
-
-    @property
-    def index_properties(self):
-        _index_list = []
+    def propertynames_index_sql(self):
+        """
+        list of the properties which
+        :return:
+        """
+        res=[]
         for prop in self.properties:
             if prop.index:
-                _index_list.append(prop)
-        return _index_list
+                res.append(prop.name)
+        return res
 
     @property
-    def index_key_properties(self):
-        _index_list = []
+    def propertynames_index_keys(self):
+        res=[]
         for prop in self.properties:
             if prop.index_key:
-                _index_list.append(prop)
-        return _index_list
+                res.append(prop)
+        return res
+
+    @property
+    def propertynames(self):
+        res = [item.name for item in self.properties]
+        for item in self.lists:
+           res.append(item.name)
+        return res
+
+    @property
+    def propertynames_list(self):
+        res = [item.name for item in self.lists]
+        return res
+
+    @property
+    def propertynames_nonlist(self):
+        res = [item.name for item in self.properties]
+        return res
+
 
     def __str__(self):
         out = ""

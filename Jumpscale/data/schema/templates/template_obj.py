@@ -16,7 +16,7 @@ class ModelOBJ():
         self._JSOBJ = True
         self._load_from_data(data=data, capnpbin=capnpbin, keepid=False, keepacl=False)
 
-    def _load_from_data(self,data=None, capnpbin=None, keepid=True, keepacl=True,reset=True):
+    def _load_from_data(self,data=None, capnpbin=None, keepid=True, keepacl=True):
 
         if self.readonly:
             raise RuntimeError("cannot load from data, obj is readonly.\n%s"%self)
@@ -29,6 +29,7 @@ class ModelOBJ():
             set_default = True
 
         self._reset()
+
         if set_default:
             self._defaults_set()
 
@@ -83,12 +84,16 @@ class ModelOBJ():
         {% endif %}
         {% endfor %}
 
-    def _reset(self):
+    def reset(self):
+        """
+        reset all values to their default
+        :return:
+        """
         self._changed_items = {}
         {% for ll in obj.lists %}
-        self._{{ll.alias}} = List0(self._schema.property_{{ll.name}})
+        self._{{ll.name}} = List0(self._schema.property_{{ll.name}})
         for capnpbin in self._cobj_.{{ll.name_camel}}:
-            self._{{ll.alias}}.new(data=capnpbin)
+            self._{{ll.name}}.new(data=capnpbin)
         {% endfor %}
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
@@ -105,7 +110,7 @@ class ModelOBJ():
     {# generate the properties #}
     {% for prop in obj.properties %}
     @property 
-    def {{prop.alias}}(self):
+    def {{prop.name}}(self):
         {% if prop.comment != "" %}
         '''
         {{prop.comment}}
@@ -120,8 +125,8 @@ class ModelOBJ():
             return self._cobj_.{{prop.name_camel}}
         {% endif %} 
         
-    @{{prop.alias}}.setter
-    def {{prop.alias}}(self,val):
+    @{{prop.name}}.setter
+    def {{prop.name}}(self,val):
         if self.readonly:
             raise RuntimeError("object readonly, cannot set.\n%s"%self)
         {% if prop.jumpscaletype.NAME == "jsobject" %}
@@ -129,7 +134,7 @@ class ModelOBJ():
         {% else %} 
         #will make sure that the input args are put in right format
         val = {{prop.js_typelocation}}.clean(val)  #is important because needs to come in right format e.g. binary for numeric
-        if self.{{prop.alias}} != val:
+        if self.{{prop.name}} != val:
             self._changed_items["{{prop.name_camel}}"] = val
             if self.autosave:
                 self.save()
@@ -137,18 +142,18 @@ class ModelOBJ():
 
     {% if prop.jumpscaletype.NAME == "numeric" %}
     @property
-    def {{prop.alias}}_usd(self):
-        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.alias}})
+    def {{prop.name}}_usd(self):
+        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.name}})
 
     @property
-    def {{prop.alias}}_eur(self):
-        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.alias}},curcode="eur")
+    def {{prop.name}}_eur(self):
+        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.name}},curcode="eur")
 
-    def {{prop.alias}}_cur(self,curcode):
+    def {{prop.name}}_cur(self,curcode):
         """
         @PARAM curcode e.g. usd, eur, egp, ...
         """
-        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.alias}}, curcode = curcode)
+        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.name}}, curcode = curcode)
 
     {% endif %}
 
@@ -157,18 +162,18 @@ class ModelOBJ():
     {#generate the properties for lists#}
     {% for ll in obj.lists %}
     @property
-    def {{ll.alias}}(self):
-        return self._{{ll.alias}}
+    def {{ll.name}}(self):
+        return self._{{ll.name}}
 
-    @{{ll.alias}}.setter
-    def {{ll.alias}}(self,val):
+    @{{ll.name}}.setter
+    def {{ll.name}}(self,val):
         if self.readonly:
             raise RuntimeError("object readonly, cannot set.\n%s"%self)
-        self._{{ll.alias}}._inner_list=[]
+        self._{{ll.name}}._inner_list=[]
         if j.data.types.string.check(val):
             val = [i.strip() for i in val.split(",")]
         for item in val:
-            self._{{ll.alias}}.append(item)
+            self._{{ll.name}}.append(item)
         if self.autosave:
             self.save()
     {% endfor %}
@@ -211,7 +216,7 @@ class ModelOBJ():
         if  self._changed_items != {}:
             return True
         {% for ll in obj.lists %}
-        if self._{{ll.alias}}.changed:
+        if self._{{ll.name}}.changed:
             return True
         {% endfor %}
         return False
@@ -224,7 +229,7 @@ class ModelOBJ():
         ddict = self._cobj_.to_dict()
 
         {% for prop in obj.lists %}
-        if self._{{prop.alias}}.changed:
+        if self._{{prop.name}}.changed:
             #means the list was modified
             if "{{prop.name_camel}}" in ddict:
                 ddict.pop("{{prop.name_camel}}")
@@ -278,14 +283,14 @@ class ModelOBJ():
         d={}
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
-        d["{{prop.name}}"] = self.{{prop.alias}}._ddict
+        d["{{prop.name}}"] = self.{{prop.name}}._ddict
         {% else %}
-        d["{{prop.name}}"] = self.{{prop.alias}}
+        d["{{prop.name}}"] = self.{{prop.name}}
         {% endif %}    
         {% endfor %}
 
         {% for prop in obj.lists %}
-        d["{{prop.name}}"] = self._{{prop.alias}}.pylist()
+        d["{{prop.name}}"] = self._{{prop.name}}.pylist()
         {% endfor %}
         if self.id is not None:
             d["id"]=self.id
@@ -302,13 +307,13 @@ class ModelOBJ():
         d={}
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
-        d["{{prop.name}}"] = self.{{prop.alias}}._ddict_hr
+        d["{{prop.name}}"] = self.{{prop.name}}._ddict_hr
         {% else %}
-        d["{{prop.name}}"] = {{prop.js_typelocation}}.toHR(self.{{prop.alias}})
+        d["{{prop.name}}"] = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
         {% endif %}
         {% endfor %}
         {% for prop in obj.lists %}
-        d["{{prop.name}}"] = self._{{prop.alias}}.pylist(subobj_format="H")
+        d["{{prop.name}}"] = self._{{prop.name}}.pylist(subobj_format="H")
         {% endfor %}
         if self.id is not None:
             d["id"]=self.id
@@ -324,13 +329,13 @@ class ModelOBJ():
         # d={}
         # {% for prop in obj.properties %}
         # {% if prop.jumpscaletype.NAME == "jsobject" %}
-        # d["{{prop.name}}"] = self.{{prop.alias}}._ddict_json
+        # d["{{prop.name}}"] = self.{{prop.name}}._ddict_json
         # {% else %}
-        # d["{{prop.name}}"] = {{prop.js_typelocation}}.toJSON(self.{{prop.alias}})
+        # d["{{prop.name}}"] = {{prop.js_typelocation}}.toJSON(self.{{prop.name}})
         # {% endif %}
         # {% endfor %}
         # {% for prop in obj.lists %}
-        # d["{{prop.name}}"] = self._{{prop.alias}}.pylist(subobj_format="J")
+        # d["{{prop.name}}"] = self._{{prop.name}}.pylist(subobj_format="J")
         # {% endfor %}
         # if self.id is not None:
         #     d["id"]=self.id
@@ -346,9 +351,9 @@ class ModelOBJ():
         d = {}
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
-        d["{{prop.name}}"] = self.{{prop.alias}}._ddict_hr
+        d["{{prop.name}}"] = self.{{prop.name}}._ddict_hr
         {% else %}
-        res = {{prop.js_typelocation}}.toHR(self.{{prop.alias}})
+        res = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
         if len(str(res))<maxsize:
             d["{{prop.name}}"] = res
         {% endif %}
