@@ -30,6 +30,9 @@ class String():
     def toJSON(self, v):
         return self.clean(v)
 
+    def toData(self, v):
+        return self.clean(v)
+
     def check(self, value):
         '''Check whether provided value is a string'''
         return isinstance(value, str)
@@ -152,6 +155,10 @@ class Bytes():
     def toJSON(self, v):
         return self.toString(v)
 
+    def toData(self, v):
+        return self.clean(v)
+
+
     def check(self, value):
         '''Check whether provided value is a array of bytes'''
         return isinstance(value, bytes)
@@ -204,6 +211,10 @@ class Boolean():
             return str(boolean)
         else:
             raise ValueError("Invalid value for boolean: '%s'" % boolean)
+
+    def toData(self, v):
+        return self.clean(v)
+
 
     def toHR(self, v):
         return self.clean(v)
@@ -284,6 +295,10 @@ class Integer():
         else:
             raise ValueError("Invalid value for integer: '%s'" % value)
 
+    def toData(self, v):
+        return self.clean(v)
+
+
     def toHR(self, v):
         if int(v) == 4294967295:
             return "-"  # means not set yet
@@ -347,6 +362,10 @@ class Float():
             return str(value)
         else:
             raise ValueError("Invalid value for float: '%s'" % value)
+
+    def toData(self, v):
+        return self.clean(v)
+
 
     def toHR(self, v):
         return self.clean(v)
@@ -532,6 +551,7 @@ class Enumeration(String):
     def __init__(self,values):
         if isinstance(values, str):
             values = values.split(",")
+            values=[item.strip().strip("'").strip().strip('"').strip() for item in values]
         if not isinstance(values, list):
             raise RuntimeError("input for enum is comma separated str or list")
         self.values = [item.upper().strip() for item in values]
@@ -549,29 +569,39 @@ class Enumeration(String):
             return False
         return True
 
+    def capnp_schema_get(self, name, nr):
+        return "%s @%s :UInt32;" % (name, nr)
+
     def get_default(self):
         return self.default
 
     def toString(self, v):
+        return self.clean(v)
+
+    def toData(self, v):
         v=self.clean(v)
-        return self.values[v-1]
+        return self.values.index(v)+1
 
     def clean(self, value):
         """
         can use int or string,
         will find it and return as string
         """
+        try:
+            value=int(value)
+        except:
+            pass
         if isinstance(value, str):
             value = value.upper().strip()
             if value not in self.values:
                 raise RuntimeError("could not find enum:'%s' in '%s'"%(value,self.values_str))
-            return self.values.index(value)+1
+            return value
         elif isinstance(value, int):
             if value == 0:
                 raise RuntimeError("could not find enum id:%s in '%s', tshould not be 0"%(value,self.values_str))
             if value > len(self.values)+1:
                 raise RuntimeError("could not find enum id:%s in '%s', too high"%(value,self.values_str))
-            return value
+            return self.values[value-1]
         else:
             raise RuntimeError("unsupported type for enum, is int or string")
 

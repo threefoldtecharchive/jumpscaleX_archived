@@ -14,6 +14,7 @@ class Schema(j.application.JSBaseClass):
     def __init__(self, text):
         JSBASE.__init__(self)
         self.properties = []
+        self._systemprops = {}
         self.lists = []
         self._obj_class = None
         self._capnp = None
@@ -116,6 +117,8 @@ class Schema(j.application.JSBaseClass):
             line_original = copy(line)
             propname, line = line.split("=", 1)
             propname = propname.strip()
+            if ":" in propname:
+                self._error_raise("Aliases no longer supported in names, remove  ':' in name '%s'"%propname, schema=text)
             line = line.strip()
 
             if "!" in line:
@@ -155,9 +158,8 @@ class Schema(j.application.JSBaseClass):
                     defvalue = ""
                 else:
                     if line_proptype in ["e","enum"]:
-                        enumvalues = j.core.text.strip_to_ascii_dense(line_wo_proptype)
                         try:
-                            jumpscaletype = j.data.types.get_custom("e",values=enumvalues)
+                            jumpscaletype = j.data.types.get_custom("e",values=line_wo_proptype)
                             defvalue = jumpscaletype.get_default()
                         except Exception as e:
                             self._error_raise("error (enum) on line:%s" % line_original, e=e)
@@ -221,15 +223,15 @@ class Schema(j.application.JSBaseClass):
 
     @property
     def _capnp_id(self):
-        if self.md5 == "":
+        if self._md5 == "":
             raise RuntimeError("hash cannot be empty")
-        return "f" + self.md5[1:16]  # first bit needs to be 1
+        return "f" + self._md5[1:16]  # first bit needs to be 1
 
     @property
     def _capnp_schema(self):
         if not self._capnp:
             tpath = "%s/templates/schema.capnp" % self._path
-            _capnp_schema_text = j.tools.jinja2.template_render(path=tpath, reload=False, obj=self, objForHash=self.md5)
+            _capnp_schema_text = j.tools.jinja2.template_render(path=tpath, reload=False, obj=self, objForHash=self._md5)
             self._capnp = j.data.capnp.getSchemaFromText(_capnp_schema_text)
         return self._capnp
 
@@ -237,7 +239,7 @@ class Schema(j.application.JSBaseClass):
     def objclass(self):
         if self._obj_class is None:
 
-            if self.md5 in [None, ""]:
+            if self._md5 in [None, ""]:
                 raise RuntimeError("md5 cannot be None")
 
             tpath = "%s/templates/template_obj.py" % self._path
@@ -247,8 +249,8 @@ class Schema(j.application.JSBaseClass):
             for prop in self.lists:
                 prop.default_as_python_code
 
-            self._obj_class = j.tools.jinja2.code_python_render(
-                obj_key="ModelOBJ", path=tpath, obj=self, objForHash=self.md5)
+            self._obj_class = j.tools.jinja2.code_python_render(name="schema_%s"%self.key,
+                obj_key="ModelOBJ", path=tpath, obj=self, objForHash=self._md5)
 
         return self._obj_class
 
@@ -279,7 +281,7 @@ class Schema(j.application.JSBaseClass):
     @property
     def propertynames_index_sql(self):
         """
-        list of the properties which
+        list of the property names which are used for indexing in sql db (sqlite)
         :return:
         """
         res=[]
@@ -289,7 +291,35 @@ class Schema(j.application.JSBaseClass):
         return res
 
     @property
+    def properties_index_sql(self):
+        """
+        list of the properties which are used for indexing in sql db (sqlite)
+        :return:
+        """
+        res=[]
+        for prop in self.properties:
+            if prop.index:
+                res.append(prop)
+        return res
+
+    @property
     def propertynames_index_keys(self):
+        """
+        list of the property names which are used for indexing with keys
+        :return:
+        """
+        res=[]
+        for prop in self.properties:
+            if prop.index_key:
+                res.append(prop.name)
+        return res
+
+    @property
+    def properties_index_keys(self):
+        """
+        list of the properties which are used for indexing with keys
+        :return:
+        """
         res=[]
         for prop in self.properties:
             if prop.index_key:
@@ -298,6 +328,10 @@ class Schema(j.application.JSBaseClass):
 
     @property
     def propertynames(self):
+        """
+        lists all the property names
+        :return:
+        """
         res = [item.name for item in self.properties]
         for item in self.lists:
            res.append(item.name)
@@ -309,8 +343,18 @@ class Schema(j.application.JSBaseClass):
         return res
 
     @property
+    def properties_list(self):
+        res = [item for item in self.lists]
+        return res
+
+    @property
     def propertynames_nonlist(self):
         res = [item.name for item in self.properties]
+        return res
+
+    @property
+    def properties_nonlist(self):
+        res = [item for item in self.properties]
         return res
 
 

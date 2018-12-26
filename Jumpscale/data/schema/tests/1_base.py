@@ -14,7 +14,7 @@ def main(self):
         date_start = 0 (D)
         description = ""
         token_price = "10 USD" (N)
-        cost_estimate:hw_cost = 0.0 #this is a comment
+        cost_estimate = 0.0 #this is a comment
         llist = []
         llist3 = "1,2,3" (LF)
         llist4 = "1,2,3" (L)
@@ -23,7 +23,7 @@ def main(self):
         #pool_type = "managed,unmanaged" (E)  #NOT DONE FOR NOW
         """
 
-    schema_object = j.data.schema.get(schema_text_path=schema)
+    schema_object = j.data.schema.get(schema_text=schema)
 
     assert schema_object.url == "despiegk.test"
     print(schema_object)
@@ -69,14 +69,15 @@ def main(self):
         date_start = 0 (D)
         description = ""
         token_price = "10 USD" (N)
-        cost_estimate:hw_cost = 0.0 #this is a comment
+        cost_estimate = 0.0 #this is a comment
         llist = []
+        enum = "red,green,blue,zhisisaverylongoneneedittotestletsdosomemore" (E) #first one specified is the default one
 
         @url = despiegk.test3
         llist = []
         description = ""
         """
-    j.data.schema.get(schema_text_path=schema)
+    j.data.schema.get(schema_text=schema)
     schema_object1 = j.data.schema.get(url="despiegk.test2")
     schema_object2 = j.data.schema.get(url="despiegk.test3")
 
@@ -85,6 +86,24 @@ def main(self):
     schema_test1.llist2.append("5")
     schema_test2.llist.append("1")
 
-    self.logger.info("TEST DONE")
+    assert schema_test1.enum == 'RED'
+
+    schema_test1.enum = 2
+    assert schema_test1.enum == 'GREEN'
+    schema_test1.enum = "  green"
+    assert schema_test1.enum == 'GREEN'
+
+    assert schema_test1._ddict["enum"]=="GREEN"
+
+    assert schema_test1._data.find(b"GREEN")==-1 #needs to be stored as int
+    assert len(schema_test1._data) < 25
+    x=len(schema_test1._data)+0
+
+    schema_test1.enum = 4
+    assert schema_test1.enum == "ZHISISAVERYLONGONENEEDITTOTESTLETSDOSOMEMORE"
+    assert len(schema_test1._data) < 25
+    assert len(schema_test1._data) == x
+
+    self._logger.info("TEST DONE")
 
     return ("OK")

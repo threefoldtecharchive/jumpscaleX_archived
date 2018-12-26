@@ -9,7 +9,7 @@ class ModelOBJ():
         if data is None:
             data = {}
         self._schema = schema
-        self._capnp_schema = schema.capnp_schema
+        self._capnp_schema = schema._capnp_schema
         self.model = model
         self.autosave = False
         self.readonly = False
@@ -31,6 +31,7 @@ class ModelOBJ():
         self._reset()
 
         if set_default:
+            #should only be done when not capnpbin
             self._defaults_set()
 
         if not keepid:
@@ -39,6 +40,7 @@ class ModelOBJ():
                 if self.id in self.model.obj_cache:
                     self.model.obj_cache.pop(self.id)
             self.id = None
+
         if not keepacl:
             self.acl_id = 0
             self._acl = None
@@ -75,6 +77,17 @@ class ModelOBJ():
                 self._acl = self.model.bcdb.acl.new()
         return self._acl
 
+    def _hr_get(self,exclude=[]):
+        """
+        human readable test format
+        """
+        out = "\n"
+        res = self._ddict_hr_get(exclude=exclude)
+        for key, item in res.items():
+            out += "%-20s: %s\n" % (key, item)
+        return out
+
+
     def _defaults_set(self):
         pass
         {% for prop in obj.properties %}
@@ -84,7 +97,7 @@ class ModelOBJ():
         {% endif %}
         {% endfor %}
 
-    def reset(self):
+    def _reset(self):
         """
         reset all values to their default
         :return:
@@ -100,9 +113,9 @@ class ModelOBJ():
         self._schema_{{prop.name}} = j.data.schema.get(url="{{prop.jumpscaletype.SUBTYPE}}")
 
         if self._cobj_.{{prop.name_camel}}:
-            self._changed_items["{{prop.name_camel}}"] = self._schema_{{prop.name}}.get(capnpbin=self._cobj_.{{prop.name_camel}})
+            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.get(capnpbin=self._cobj_.{{prop.name_camel}})
         else:
-            self._changed_items["{{prop.name_camel}}"] = self._schema_{{prop.name}}.new()
+            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.new()
         {% endif %}
         {% endfor %}
 
@@ -117,10 +130,10 @@ class ModelOBJ():
         '''
         {% endif %} 
         {% if prop.jumpscaletype.NAME == "jsobject" %}
-        return self._changed_items["{{prop.name_camel}}"]
+        return self._changed_items["{{prop.name}}"]
         {% else %} 
-        if "{{prop.name_camel}}" in self._changed_items:
-            return self._changed_items["{{prop.name_camel}}"]
+        if "{{prop.name}}" in self._changed_items:
+            return self._changed_items["{{prop.name}}"]
         else:
             return self._cobj_.{{prop.name_camel}}
         {% endif %} 
@@ -130,12 +143,12 @@ class ModelOBJ():
         if self.readonly:
             raise RuntimeError("object readonly, cannot set.\n%s"%self)
         {% if prop.jumpscaletype.NAME == "jsobject" %}
-        self._changed_items["{{prop.name_camel}}"] = val
+        self._changed_items["{{prop.name}}"] = val
         {% else %} 
         #will make sure that the input args are put in right format
         val = {{prop.js_typelocation}}.clean(val)  #is important because needs to come in right format e.g. binary for numeric
         if self.{{prop.name}} != val:
-            self._changed_items["{{prop.name_camel}}"] = val
+            self._changed_items["{{prop.name}}"] = val
             if self.autosave:
                 self.save()
         {% endif %}
@@ -243,11 +256,11 @@ class ModelOBJ():
 
         {% for prop in obj.properties %}
         #convert jsobjects to capnpbin data
-        if "{{prop.name_camel}}" in self._changed_items:
+        if "{{prop.name}}" in self._changed_items:
             {% if prop.jumpscaletype.NAME == "jsobject" %}
-            ddict["{{prop.name_camel}}"] = self._changed_items["{{prop.name_camel}}"]._data
+            ddict["{{prop.name_camel}}"] = self._changed_items["{{prop.name}}"]._data
             {% else %}
-            ddict["{{prop.name_camel}}"] = self._changed_items["{{prop.name_camel}}"]
+            ddict["{{prop.name_camel}}"] = {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
             {% endif %}
         {% endfor %}
 
@@ -365,15 +378,6 @@ class ModelOBJ():
                 d.pop(item)
         return d
 
-    def _hr_get(self,exclude=[]):
-        """
-        human readable test format
-        """
-        out = "\n"
-        res = self._ddict_hr_get(exclude=exclude)
-        for key, item in res.items():
-            out += "%-20s: %s\n" % (key, item)
-        return out
 
 
     @property

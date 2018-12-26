@@ -38,9 +38,32 @@ pool_type = "managed,unmanaged" (E)
   - boolean
   - true,True,1 are all considered to be True
 
-TODO:*1 complete
+```python
+type is one of following
+- s, str, string
+- i, int, integer
+- f, float
+- b, bool,boolean
+- tel, mobile
+- d, date
+- n, numeric
+- h, hash       #set of 2 int
+- p, percent
+- o, jsobject
+- ipaddr, ipaddress
+- ipport, tcpport
+- iprange
+- email
+- multiline
+- list
+- dict
+- yaml
+- set
+- guid
+- url, u
+- e,enum        #enumeration
+```
 
-there are also more capable types like ipaddress, tel nrs, ...
 
 ### collection types
 
@@ -80,7 +103,7 @@ enable = true (B)
 ```python
 def get(self, schema_text="", url=None, die=True):
     """
-    get schema from the url or schema_text_path
+    get schema from the url or schema_text
 
     Keyword Arguments:
         schema_text {str} -- schema file path or shcema string  (default: {""})
@@ -96,7 +119,7 @@ def get(self, schema_text="", url=None, die=True):
 SCHEMA="""
 @url =  jumpscale.digitalme.package.1
 name = "UNKNOWN" (S)           #official name of the package, there can be no overlap (can be dot notation)
-enable = true (B)
+abool = true (B)
 """
 
 s=j.data.schema.get(SCHEMA)
@@ -109,4 +132,35 @@ s=j.data.schema.get(url="jumpscale.digitalme.package.1") #will die if not exists
 
 ## how to get a new object
 
-s.new()
+```python
+s=j.data.schema.get(url="jumpscale.digitalme.package") #will die if not exists
+obj = s.new()
+obj.abool = True
+obj.abool = 1
+assert obj.abool == True
+obj.abool = 0
+assert obj.abool == False
+```
+
+can see how the type system we use is intelligent, especially if used for things like numerics.
+
+
+### enumerators
+
+- are cool, you can store long string representations and they will only take 4 bytes to store (int)
+
+e.g.
+
+```
+schema = """
+    @url = despiegk.test2
+    enum = "red,green,blue" (E) #first one specified is the default one
+    """
+s=j.data.schema.get(schema_text=schema)
+o=s.new()
+assert o.enum == "RED" 
+o.enum = 3
+assert o.enum == 'RED'  #is always sorted on alfabet
+
+```
+

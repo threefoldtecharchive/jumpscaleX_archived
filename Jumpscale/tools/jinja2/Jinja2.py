@@ -124,13 +124,13 @@ class Jinja2(j.application.JSBaseClass):
             dest = "%s/%s.py"%(self._codegendir,name)
             dest_md5 = "%s/%s.md5"%(self._codegendir,name)
         else:
-            dest = "%s/%s.py"%(self._codegendir,md5)
+            dest = "%s/_%s.py"%(self._codegendir,md5)
             dest_md5 = None
 
         self._logger.debug("python code render:%s"%(dest))
 
         render=False
-        if dest_md5 is not None and j.sal.fs.exists(dest_md5):
+        if dest_md5 is not None and j.sal.fs.exists(dest_md5) and j.sal.fs.exists(dest):
             md5_ondisk = j.sal.fs.readFile(dest_md5)
             if md5_ondisk != md5:
                 render=True
