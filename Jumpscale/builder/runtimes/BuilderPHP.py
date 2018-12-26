@@ -30,43 +30,48 @@ class BuilderPHP(j.builder.system._BaseClass):
         :param config:
         :return:
         '''
+        j.tools.bash.local.locale_check()
 
-        pkgs = "libxml2-dev libpng-dev libcurl4-openssl-dev libzip-dev zlibc zlib1g zlib1g-dev libmysqld-dev libmysqlclient-dev re2c bison bzip2 build-essential libaprutil1-dev libapr1-dev openssl pkg-config libssl-dev libsslcommon2-dev file"
-        list(map(j.builder.system.package.ensure, pkgs.split(sep=" ")))
+        if j.core.platformtype.myplatform.isUbuntu:
+            pkgs = "libxml2-dev libpng-dev libcurl4-openssl-dev libzip-dev zlibc zlib1g zlib1g-dev \
+            libmysqld-dev libmysqlclient-dev re2c bison bzip2 build-essential libaprutil1-dev libapr1-dev \
+            openssl pkg-config libssl-dev libsslcommon2-dev file"
+            j.sal.ubuntu.apt_update()
+            j.sal.ubuntu.apt_install(pkgs, update_md=False)
+            
+            compileconfig['with_apxs2'] = j.builder.tools.replace("{DIR_BASE}/apps/apache2/bin/apxs")
+            buildconfig = deepcopy(compileconfig)
+            buildconfig.update(config)  # should be defaultconfig.update(config) instead of overriding the explicit ones.
 
-        compileconfig['with_apxs2'] = j.builder.tools.replace("{DIR_BASE}/apps/apache2/bin/apxs")
-        buildconfig = deepcopy(compileconfig)
-        buildconfig.update(config)  # should be defaultconfig.update(config) instead of overriding the explicit ones.
+            # check for apxs2 binary if it's valid.
+            apxs = buildconfig['with_apxs2']
+            if not j.builder.tools.file_exists(apxs):
+                buildconfig.pop('with_apxs2')
 
-        # check for apxs2 binary if it's valid.
-        apxs = buildconfig['with_apxs2']
-        if not j.builder.tools.file_exists(apxs):
-            buildconfig.pop('with_apxs2')
+            args_string = ""
+            for k, v in buildconfig.items():
+                k = k.replace("_", "-")
+                if v is True:
+                    args_string += " --{k}".format(k=k)
+                else:
+                    args_string += " --{k}={v}".format(k=k, v=v)
+            C = """
+            set -x
+            rm -f {DIR_TEMP}/php-7.3.0.tar.bz*
+            cd {DIR_TEMP} && [ ! -f {DIR_TEMP}/php-7.3.0.tar.bz2 ] && wget http://be2.php.net/distributions/php-7.3.0.tar.bz2
+            cd {DIR_TEMP} && tar xvjf {DIR_TEMP}/php-7.3.0.tar.bz2
+            mv {DIR_TEMP}/php-7.3.0/ {DIR_TEMP}/php
 
-        args_string = ""
-        for k, v in buildconfig.items():
-            k = k.replace("_", "-")
-            if v is True:
-                args_string += " --{k}".format(k=k)
-            else:
-                args_string += " --{k}={v}".format(k=k, v=v)
-        C = """
-        set -x
-        rm -f {DIR_TEMP}/php-7.0.17.tar.bz*
-        cd {DIR_TEMP} && [ ! -f {DIR_TEMP}/php-7.0.17.tar.bz2 ] && wget http://be2.php.net/distributions/php-7.0.17.tar.bz2
-        cd {DIR_TEMP} && tar xvjf {DIR_TEMP}/php-7.0.17.tar.bz2
-        mv {DIR_TEMP}/php-7.0.17/ {DIR_TEMP}/php
+            """
 
-        """
+            C = j.core.tools.text_replace(C)
+            j.sal.process.execute(C)
 
-        C = j.core.tools.text_replace(C)
-        j.sal.process.execute(C)
+            C = """cd {DIR_TEMP}/php && ./configure {args_string}""".format(args_string=args_string)
+            j.sal.process.execute(C, die=False)
 
-        C = """cd {DIR_TEMP}/php && ./configure {args_string}""".format(args_string=args_string)
-        j.sal.process.execute(C, die=False)
-
-        C = """cd {DIR_TEMP}/php && make"""
-        j.sal.process.execute(C, die=False)
+            C = """cd {DIR_TEMP}/php && make"""
+            j.sal.process.execute(C, die=False)
 
         # check if we need an php accelerator: https://en.wikipedia.org/wiki/List_of_PHP_accelerators
 
