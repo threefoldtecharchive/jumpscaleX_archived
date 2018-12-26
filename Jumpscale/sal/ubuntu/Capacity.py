@@ -1,7 +1,6 @@
 import json
 import psutil
 from Jumpscale import j
-from sal_zos.disks.Disks import StorageType
 
 
 class Capacity:
@@ -123,16 +122,23 @@ def _disk_type(disk_info):
     """
     return the type of the disk
     """
+    #@todo from sal_zos.disks.Disks import StorageType
     if disk_info['rota'] == "1":
         if disk_info['type'] == 'rom':
-            return StorageType.CDROM
+            #@todo return StorageType.CDROM
+            return 'CDROM'
         # assume that if a disk is more than 7TB it's a SMR disk
         elif int(disk_info['size']) > (1024 * 1024 * 1024 * 1024 * 7):
-            return StorageType.ARCHIVE
+            #@todo return StorageType.ARCHIVE
+            return 'ARCHIVE'
         else:
-            return StorageType.HDD
+            #@todo return StorageType.HDD
+            return 'HDD'
     else:
         if "nvme" in disk_info['name']:
-            return StorageType.NVME
+            #@todo return StorageType.NVME
+            return 'NVME'
+
         else:
-            return StorageType.SSD
+            #@todo return StorageType.SSD
+            return 'SDD'
