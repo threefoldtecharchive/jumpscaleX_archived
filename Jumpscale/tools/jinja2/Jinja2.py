@@ -111,9 +111,9 @@ class Jinja2(j.application.JSBaseClass):
         t = self.template_get(path=path,text=text)
 
         if objForHash:
-            tohash=j.data.serializers.msgpack.dumps(objForHash)+t.md5.encode()+obj_key.encode()
+            tohash=j.data.serializers.msgpack.dumps(objForHash)+t.md5.encode()
         else:
-            tohash=j.data.serializers.msgpack.dumps(args)+t.md5.encode()+obj_key.encode() #make sure we have unique identifier
+            tohash=j.data.serializers.msgpack.dumps(args)+t.md5.encode() #make sure we have unique identifier
         md5=j.data.hash.md5_string(tohash)
 
         if md5 in self._hash_to_codeobj:
