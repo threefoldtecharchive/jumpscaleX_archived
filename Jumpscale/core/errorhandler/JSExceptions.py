@@ -137,4 +137,9 @@ class Timeout(BaseJSException):
         super().__init__(message=message,level=level,cat=cat,msgpub=msgpub)
         self.trace_do = True
 
+class SSHError(BaseJSException):
+
+    def __init__(self, message="", level=1, cat="", msgpub=""):
+        super().__init__(message=message,level=level,cat=cat,msgpub=msgpub)
+        self.trace_do = True
 SSHTimeout = pssh.exceptions.Timeout
