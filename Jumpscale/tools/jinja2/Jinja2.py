@@ -88,7 +88,7 @@ class Jinja2(j.application.JSBaseClass):
 
 
 
-    def code_python_render(self, obj_key="", path=None,text=None,dest=None,
+    def code_python_render(self, obj_key=None, path=None,text=None,dest=None,
                            objForHash=None,name=None, **args):
         """
 

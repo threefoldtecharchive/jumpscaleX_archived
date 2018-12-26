@@ -21,16 +21,16 @@ def main(self):
         date_start = 0 (D)
         description = ""
         token_price = "10 USD" (N)
-        cost_estimate:hw_cost = 0.0 (N) #this is a comment
+        cost_estimate = 0.0 (N) #this is a comment
         """
 
     schema_object1 = j.data.schema.get(schema1)
     schema_object0 = j.data.schema.get(schema0)
     print(schema_object0)
 
-    print(schema_object1.capnp_schema)
-    print(schema_object0.capnp_schema)
+    print(schema_object1._capnp_schema)
+    print(schema_object0._capnp_schema)
 
-    self.logger.info("TEST DONE")
+    self._logger.info("TEST DONE CAPNP")
 
     return ("OK")

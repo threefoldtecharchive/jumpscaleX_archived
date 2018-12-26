@@ -104,6 +104,6 @@ def main(self):
 
     # THERE IS STILL ERROR, readonly does not work for subobjects, need to change template
 
-    self.logger.info("TEST DONE")
+    self._logger.info("TEST DONE LIST")
 
     return ("OK")

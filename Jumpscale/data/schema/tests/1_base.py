@@ -104,6 +104,6 @@ def main(self):
     assert len(schema_test1._data) < 25
     assert len(schema_test1._data) == x
 
-    self._logger.info("TEST DONE")
+    self._logger.info("TEST DONE BASE")
 
     return ("OK")

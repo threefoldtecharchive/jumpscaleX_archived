@@ -42,7 +42,7 @@ class List0(MutableSequence):
         else:
             if j.data.types.dict.check(value):
                 o = self.new()
-                o.load_from_data(data=value)
+                o._load_from_data(data=value)
                 self.changed = True
                 return
             elif not "_JSOBJ" in value.__dict__:
@@ -107,12 +107,14 @@ class List0(MutableSequence):
                 data = self.schema_property.jumpscaletype.SUBTYPE.clean(data)
             else:
                 data = self.schema_property.jumpscaletype.SUBTYPE.get_default()
+            # assert data != None
         else:
 
             if data is None:
                 data = self.pointer_schema.new()
             else:
                 data = self.pointer_schema.get(capnpbin=data)
+            assert data != None
         if data:
             self.append(data)
         self.changed = True

@@ -276,7 +276,8 @@ class Schema(j.application.JSBaseClass):
             data={}
         r =  self.get(data=data)
         if model is not None:
-            model.notify_new()
+            model.notify_new(r)
+        return r
 
     @property
     def propertynames_index_sql(self):
