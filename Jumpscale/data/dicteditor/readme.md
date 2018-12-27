@@ -75,3 +75,10 @@ They use the dict editor underneith.
 ![](images/oview.png)
 
 ![](images/edit_o.png)
+
+
+## a screencast
+
+[![asciicast](https://asciinema.org/a/JCr6CP4F7HZBIaSPooYf832Ox.png)](https://asciinema.org/a/JCr6CP4F7HZBIaSPooYf832Ox)
+
+
