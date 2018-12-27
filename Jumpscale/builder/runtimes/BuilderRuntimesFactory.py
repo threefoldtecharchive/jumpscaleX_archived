@@ -15,6 +15,8 @@ class BuilderRuntimesFactory(j.builder.system._BaseFactoryClass):
         self.python = BuilderPython()
         from .BuilderPHP import BuilderPHP
         self.php = BuilderPHP()
+        from .BuilderGolang import BuilderGolang
+        self.go = BuilderGolang()
 
 
 

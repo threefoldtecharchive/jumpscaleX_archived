@@ -165,7 +165,7 @@ class BuilderTools(j.builder.system._BaseClass):
 
         if not (self.file_exists(to) and self.file_exists("%s.downloadok" % to)):
 
-            self.createDir(j.sal.fs.getDirName(to))
+            j.sal.fs.createDir(j.sal.fs.getDirName(to))
 
             if multithread is False:
                 minspeed = 0
@@ -432,6 +432,15 @@ class BuilderTools(j.builder.system._BaseClass):
         j.sal.fs.writeFile(path, content, append=append)
         self.file_attribs(path, mode, owner, group)
 
+    def file_unlink(self, filename):
+        """Remove the file path (only for files, not for symlinks)
+
+        :param filename: file path to be removed
+        :type filename: str
+        """
+        if self.file_exists(filename):
+            j.sal.fs.unlinkFile(filename)
+
     def file_ensure(self, location, mode=None, owner=None, group=None):
         """
         Updates the mode/owner/group for the remote file at the given
@@ -487,7 +496,7 @@ class BuilderTools(j.builder.system._BaseClass):
     def file_copy(self, source, dest, recursive=False, overwrite=True):
         source = j.core.tools.text_replace(source)
         dest = j.core.tools.text_replace(dest)
-        raise RuntimeError("use jumpscale,call libs")
+        j.sal.fs.copyFile(source, dest)
 
     def file_move(self, source, dest, recursive=False):
         raise RuntimeError("use jumpscale,call libs")
@@ -690,7 +699,6 @@ class BuilderTools(j.builder.system._BaseClass):
         if replace:
             cmd = j.core.tools.text_replace(cmd, args=args)
 
-        raise RuntimeError("use jumpscale,call libs")
         return rc, out, err
 
     def cd(self, path):

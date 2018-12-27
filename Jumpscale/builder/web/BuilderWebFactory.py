@@ -6,12 +6,11 @@ class BuilderWebFactory(j.builder.system._BaseFactoryClass):
 
     def _init(self):
         self._logger_enable()
+
         from .BuilderNGINX import BuilderNGINX
+        from .BuilderTraefik import BuilderTraefik
 
         self.nginx = BuilderNGINX()
+        self.traefik = BuilderTraefik()
 
         #TODO:*1
-
-
-
-
