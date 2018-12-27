@@ -1,11 +1,12 @@
 import pytest
 import os
 import requests
+import time
 
 from Jumpscale import j
 
 
-def get_test_nginx_site(self, www_path="/var/www/html"):
+def get_test_nginx_site(www_path="/var/www/html"):
     return """\
     server {
         listen 80 default_server;
@@ -51,13 +52,13 @@ def test_main(self=None):
         j.builder.runtimes.php.build(install=True)
     try:
         www_path = j.core.tools.text_replace(
-            "{DIR_TMP}/www/html"
+            "{DIR_TEMP}/www/html"
         )
         j.core.tools.dir_ensure(www_path)
         default_enabled_sites_conf = get_test_nginx_site(www_path)
         default_site_path = j.core.tools.text_replace(
             "{DIR_APPS}/nginx/conf/sites-enabled/default")
-        default_site_backup_path = "{}.bak".format(default_site_path)
+        default_site_backup_path = j.core.tools.text_replace("{DIR_TEMP}/default_nginx_site.bak")
         j.sal.fs.moveFile(default_site_path, default_site_backup_path)
         j.sal.fs.writeFile(default_site_path, contents=default_enabled_sites_conf)
         j.sal.fs.writeFile(j.sal.fs.joinPaths(www_path, 'index.php'),
@@ -66,11 +67,14 @@ def test_main(self=None):
         j.builder.runtimes.php.start()
         j.builder.web.nginx.stop()
         j.builder.web.nginx.start()
+        
+        # wait until port is ready
+        time.sleep(30)
 
         # test executing the php index file
-        res = requests.get("http://locahost")
+        res = requests.get("http://localhost")
         assert res.status_code == 200, "Failed to retrieve deployed php page. Error: {}".format(res.text)
-        
+
     finally:
         j.sal.fs.remove(os.path.dirname(www_path))
         if j.sal.fs.exists(default_site_backup_path):
