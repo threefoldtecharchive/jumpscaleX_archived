@@ -334,7 +334,7 @@ stop on runlevel [016]
         """get all the installed packages.
 
         :return: list of installed list
-        :type: list
+        :rtype: list
         """
         if self._cache_ubuntu is None:
             self.apt_init()
@@ -350,6 +350,7 @@ stop on runlevel [016]
         """find all packages match with the package_name
 
         :param package_name: ubuntu package name
+        :type package_name: str
         :return: list of package names
         :rtype: list
         """
@@ -366,8 +367,9 @@ stop on runlevel [016]
         """check if the package is installed or not.
 
         :param package_name: package name
-        :type: str
-        :return: bool
+        :type package_name: str
+        :return: if the package is installed, return True otherwise return False
+        :rtype: bool
         """
         self.apt_get_installed()
         return package_name in self._installed_pkgs
