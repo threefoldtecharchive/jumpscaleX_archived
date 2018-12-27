@@ -255,12 +255,13 @@ class LogFormatter(TTYColoredFormatter):
     def __init__(self, fmt=None, datefmt=None, style="{"):
         if fmt is None:
             # fmt = MyEnv.FORMAT_LOG
-            '{cyan!s}{asctime!s}{reset!s} - {filename:<18}:{name:12}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}'
+            # '{cyan!s}{asctime!s}{reset!s} - {filename:<18}:{name:12}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}'
             fmt = {
                 'DEBUG': MyEnv.FORMAT_LOG,
                 'INFO': '{yellow!s}* {message!s}',
                 'WARNING': '{purple!s}* {message!s}',
-                'ERROR': '{red!s}{asctime!s}{reset!s} - {filename:<18}:{name:12}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}',
+                # 'ERROR': '{red!s}{asctime!s}{reset!s} - {filename:<18}:{name:15}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}',
+                'ERROR': '{red!s}{asctime!s}{reset!s} {filename:<18}:-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}',
                 'CRITICAL':'{red!s}* {message!s}',
             }
         if datefmt is None:
@@ -286,6 +287,10 @@ class LogFormatter(TTYColoredFormatter):
     def format(self, record):
         if len(record.pathname) > self.length:
             record.pathname = "..." + record.pathname[-self.length:]
+        if len(record.name) > 15:
+            record.name = record.name[-15:]
+        if len(record.name) > 25:
+            record.name = ""
         return super(LogFormatter, self).format(record)
 
 MYCOLORS =   { "RED":"\033[1;31m",
@@ -298,6 +303,9 @@ MYCOLORS =   { "RED":"\033[1;31m",
 
 
 class Tools():
+
+    _LogFormatter = LogFormatter
+
     @staticmethod
     def log(msg):
         logging.debug(msg)
@@ -1289,7 +1297,8 @@ class MyEnv():
     _cmd_installed = {}
     state = None
     __init = False
-    FORMAT_LOG =  '{cyan!s}{asctime!s}{reset!s} - {filename:<18}:{name:12}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}'
+    # FORMAT_LOG =  '{cyan!s}{asctime!s}{reset!s} - {filename:<18}:{name:12}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}'
+    FORMAT_LOG =  '{cyan!s}{asctime!s}{reset!s}  {filename:<18}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}'
     FORMAT_TIME = "%a%d %H:%M"
 
     @staticmethod

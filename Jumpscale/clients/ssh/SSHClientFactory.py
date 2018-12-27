@@ -17,11 +17,6 @@ class SSHClientFactory(j.application.JSFactoryBaseClass):
         gives a creator of a factory the ability to change the type of child to be returned
         :return:
         """
-        if dataobj.allow_agent is False:
-            j.shell()
-        dataobj.allow_agent = True  #weird why I have to set this, should be default, need to check schema
-        dataobj.forward_agent = True
-
         if j.core.platformtype.myplatform.isMac:
             return SSHClientParamiko
         else:
@@ -37,7 +32,10 @@ class SSHClientFactory(j.application.JSFactoryBaseClass):
         s.port=1053
         s.sshkey_name="test"
 
-        s2=j.clients.ssh.instances.test2.date_update(addr="a.b.c.e", port=1054, sshkey_name="test2", passwd="passwd")
+        j.clients.ssh.instances.test2.data_update(addr="a.b.c.e", port=1054, sshkey_name="test2", passwd="passwd")
+        print (j.clients.ssh.instances.test2)
 
-        j.shell()
+        assert j.clients.ssh.instances.test2.port == 1054
 
+
+        #j.clients.ssh.instances.test2.shell()  #NOT TO BE DONE IN TEST but can use to do ssh

@@ -97,7 +97,7 @@ class ModelOBJ():
         {% for prop in obj.properties %}
         {% if not prop.jumpscaletype.NAME == "jsobject" %}
         if {{prop.default_as_python_code}} is not None:
-            self.{{prop.name_camel}} = {{prop.default_as_python_code}}
+            self.{{prop.name}} = {{prop.default_as_python_code}}
         {% endif %}
         {% endfor %}
 

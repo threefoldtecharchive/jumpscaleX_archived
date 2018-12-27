@@ -48,20 +48,20 @@ class JSBaseConfig(JSBase):
     def __getattr__(self, attr):
         # if self.factory._model is None:
         #     return self.__getattribute__(attr)
-        if attr in self.factory._model.schema.properties_list:
+        if attr in self.factory._model.schema.propertynames:
             return self.data.__getattribute__(attr)
         return self.__getattribute__(attr)
         # raise RuntimeError("could not find attribute:%s"%attr)
 
     def __dir__(self):
-        r = self.factory._model.schema.properties_list
+        r = self.factory._model.schema.propertynames
         for item in self.__dict__.keys():
             if item not in r:
                 r.append(item)
         return r
 
     def __setattr__(self, key, value):
-        if "data" in self.__dict__ and key in self.factory._model.schema.properties_list:
+        if "data" in self.__dict__ and key in self.factory._model.schema.propertynames:
             # if value != self.data.__getattribute__(key):
             self._logger.debug("SET:%s:%s"%(key,value))
             self.__dict__["data"].__setattr__(key,value)

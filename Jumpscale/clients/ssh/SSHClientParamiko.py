@@ -20,6 +20,7 @@ class SSHClientParamiko(SSHClientBase):
         SSHClientBase._init(self)
         # key_filename = self.sshkey.path if (self.sshkey and self.sshkey.path) else None
         self._lock = threading.Lock()
+
         if self.passwd:
             self.forward_agent = False
             self.look_for_keys = False

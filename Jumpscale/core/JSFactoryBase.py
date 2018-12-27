@@ -15,7 +15,7 @@ class KosmosServices():
         r =  m.get(name=name,die=False)
         if r is None:
             r=m.new(name=name)
-        j.shell()
+        return r
 
     def __dir__(self):
         m = self.__dict__["_factory"]
@@ -65,10 +65,7 @@ class JSFactoryBase(JSBase):
         :param kwargs: the data elements
         :return: the service
         """
-        from pudb import set_trace; set_trace()
-        self._model.schema.new()
         data = self._model.new()
-        j.shell()
         data.name = name
         if kwargs is not {}:
             data.data_update(**kwargs)

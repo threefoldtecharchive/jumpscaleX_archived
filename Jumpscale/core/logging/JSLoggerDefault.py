@@ -63,8 +63,8 @@ class JSLoggerDefault(logging.Logger):
     #     """
     #     self._j.logger.logger.critical(msg)
 
-    def info(self, msg, *args, **kwargs):
-        print ("* %s"%msg)
+    # def info(self, msg, *args, **kwargs):
+    #     print ("* %s"%msg)
 
     def debug(self, *args, **kwargs):
         pass
