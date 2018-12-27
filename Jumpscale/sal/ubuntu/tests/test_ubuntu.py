@@ -1,6 +1,7 @@
 from Jumpscale.sal.ubuntu.Ubuntu import Ubuntu
 from Jumpscale import j
-from unittest import  TestCase
+from unittest import TestCase
+
 
 class Test_Ubuntu(TestCase):
     def setUp(self):
@@ -61,3 +62,35 @@ class Test_Ubuntu(TestCase):
         j.sal.process.execute('service dbus start')
         self.assertTrue(self.ubuntu.service_status('dbus'))
 
+    def test012_apt_find_all(self):
+        self.assertIn('wget', self.ubuntu.apt_find_all('wget'))
+
+    def test013_apt_is_pkg_installed(self):
+        self.assertTrue(self.ubuntu.is_pkg_installed('wget'))
+
+    def test014_sshkey_generate(self):
+        self.ubuntu.sshkey_generate(path='/tmp/id_rsa')
+        rc, out, err = j.sal.process.execute('ls /tmp | grep id_rsa')
+        self.assertIn('id_rsa', out)
+
+
+def test_main(self=None):
+    """
+    to run:
+    js_shell 'j.sal.tls._test(name="tls")'
+    """
+    test_ubuntu = Test_Ubuntu()
+    test_ubuntu.test001_uptime()
+    test_ubuntu.test002_check()
+    test_ubuntu.test003_version_get()
+    test_ubuntu.test004_apt_install_check()
+    test_ubuntu.test005_apt_install_version()
+    test_ubuntu.test006_deb_install()
+    test_ubuntu.test007_pkg_list()
+    test_ubuntu.test008_service_start()
+    test_ubuntu.test009_service_stop()
+    test_ubuntu.test010_service_restart()
+    test_ubuntu.test011_service_status()
+    test_ubuntu.test012_apt_find_all()
+    test_ubuntu.test013_apt_is_pkg_installed()
+    test_ubuntu.test014_sshkey_generate()
