@@ -72,6 +72,6 @@ you can now use the o.edit() and o.view() methods.
 
 They use the dict editor underneith.
 
-![](oview.png)
+![](images/oview.png)
 
-![](edit_o.png)
+![](images/edit_o.png)
