@@ -112,7 +112,7 @@ class Capacity:
                 hru=report.HRU,
                 sru=report.SRU,
             ),
-            robot_address=private',
+            robot_address='private',
             os_version='private',
             farmer_id=farmer_id,
             uptime=int(self._node.uptime()),

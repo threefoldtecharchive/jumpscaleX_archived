@@ -5,7 +5,7 @@ from Jumpscale import j
 class Ubuntu(j.application.JSBaseClass):
     def __init__(self):
         self.__jslocation__ = 'j.sal.ubuntu'
-        JSBASE.__init__(self)
+        j.application.JSBaseClass.__init__(self)
         self._aptupdated = False
         self._checked = False
         self._cache_ubuntu = None
