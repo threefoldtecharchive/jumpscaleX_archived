@@ -17,7 +17,6 @@ from os import O_NONBLOCK, read
 from pathlib import Path
 from subprocess import Popen, check_output
 
-
 # Returns escape codes from format codes
 def esc(*x):
     return '\033[' + ';'.join(x) + 'm'
@@ -305,6 +304,7 @@ MYCOLORS =   { "RED":"\033[1;31m",
 class Tools():
 
     _LogFormatter = LogFormatter
+    _supported_editors = set(["micro","mcedit","joe","vim","vi"])
 
     @staticmethod
     def log(msg):
@@ -348,9 +348,16 @@ class Tools():
         """
         starts the editor micro with file specified
         """
-        if not Tools.cmd_installed("micro"):
-            Tools.error_raise("cannot edit the file: '%s', micro has been not installed"%path)
-        Tools._execute_interactive("micro %s"%path)
+        user_editor = os.environ.get('EDITOR')
+        if user_editor and Tools.cmd_installed(user_editor):
+            Tools._execute_interactive("%s %s" % (user_editor, path))
+            return
+        for editor in Tools._supported_editors:
+            if Tools.cmd_installed(editor):
+                Tools._execute_interactive("%s %s" % (editor, path))
+                return
+        Tools.error_raise("cannot edit the file: '{}', non of the supported editors is installed".format(path))
+
 
 
     @staticmethod
@@ -1176,6 +1183,7 @@ class UbuntuInstall():
                 "Brotli>=0.6.0",
                 "certifi",
                 "click>=6.6",
+                "pygments-github-lexers",
                 "colored-traceback>=0.2.2",
                 "colorlog>=2.10.0",
                 # "credis",
@@ -1745,10 +1753,3 @@ try:
 except ImportError:
     MyEnv._colored_traceback = None
 
-try:
-    import pygments
-    import pygments.lexers
-    MyEnv._lexer_python = pygments.lexers.Python3Lexer()
-    #print(pygments.highlight(C,lexer, colored_traceback.Colorizer('default').formatter))
-except ImportError:
-    MyEnv._lexer_python = None

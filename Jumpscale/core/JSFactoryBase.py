@@ -9,15 +9,19 @@ class KosmosServices():
         self._factory = factory
 
     def __getattr__(self, name):
+        #if private then just return
         if name.startswith("_"):
             return self.__dict__[name]
         m = self.__dict__["_factory"]
+        #else see if we can from the factory find the child object
         r =  m.get(name=name,die=False)
+        #if none means does not exist yet will have to create a new one
         if r is None:
             r=m.new(name=name)
         return r
 
     def __dir__(self):
+        #list the children from the factory
         m = self.__dict__["_factory"]
         return [item.name for item in m._get_all()]
 
@@ -25,9 +29,7 @@ class KosmosServices():
         if name.startswith("_"):
             self.__dict__[name]=value
             return
-        m = self.__dict__["_factory"]
-        o=m.get(name=name,die=False)
-        j.shell()
+        raise RuntimeError("readonly")
 
     def __str__(self):
         try:
