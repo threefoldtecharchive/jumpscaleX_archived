@@ -12,6 +12,7 @@ class GitHubFactory(JSConfigFactory):
     def __init__(self):
         self.__imports__ = "PyGithub"
         self._clients = {}
+        super(GitHubFactory, self).__init__()
 
     def issue_class_get(self):
         # return Issue

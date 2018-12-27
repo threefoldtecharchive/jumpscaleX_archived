@@ -89,7 +89,7 @@ class JSFactoryBase(JSBase):
             raise RuntimeError("__class__._CHILDCLASS should be set")
         return self.__class__._CHILDCLASS
 
-    def get(self,name=None,id=None,die=True,**kwargs):
+    def get(self,name=None,id=None,die=True ,**kwargs):
         """
         :param id: id of the obj to find, is a unique id
         :param name: of the object, can be empty when searching based on id or the search criteria (kwargs)
