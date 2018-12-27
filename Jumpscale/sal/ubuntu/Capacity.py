@@ -13,6 +13,12 @@ class Capacity:
 
     @property
     def hw_info(self):
+        """dump a computer's DMI (some say SMBIOS) table contents in a human-readable.
+
+        :raise RuntimeError: Error getting hardware info from dmidecode
+        :return: the hardware info
+        :rtype: str
+        """
         if self._hw_info is None:
             self._node.apt_install_check("dmidecode", "dmidecode")
 
@@ -25,6 +31,11 @@ class Capacity:
 
     @property
     def disk_info(self):
+        """get information about all available or the specified block devices.
+
+        :return: disk information
+        :rtype: str
+        """
         if self._disk_info is None:
             j.builder.monitoring.smartmontools.install()
 
@@ -55,6 +66,12 @@ class Capacity:
 
     @property
     def memory_info(self):
+        """get the total memeory information.
+
+        :return: the memory total information
+        :rtype: str
+        """
+
         if self._memory_info is None:
             self._memory_info = psutil.virtual_memory().total
         return self._memory_info
@@ -63,17 +80,17 @@ class Capacity:
         """
         create a report of the hardware capacity for
         processor, memory, motherboard and disks
+
+        :return: report for the hardware capacity information
+        :rtype: report
         """
         return j.tools.capacity.parser.get_report(self._memory_info, self.hw_info, self.disk_info, indent=indent)
 
     def get(self, farmer_id):
-        """
-        get the capacity object of the node
-
-        this capacity object is used in the capacity registration
+        """get the capacity object of the node. This capacity object is used in the capacity registration
 
         :param farmer_id: farmer id value
-        :rtype: str
+        :type: str
         :return: dict object ready for capacity registration
         :rtype: dict
         """
@@ -101,11 +118,10 @@ class Capacity:
         return capacity
 
     def register(self, farmer_id):
-        """
-        register the node
+        """register the node
 
         :param farmer_id: farmer id value
-        :rtype: str
+        :type: str
         :return: If registration done, return True, else return False
         :rtype: bool
         """
@@ -119,8 +135,10 @@ class Capacity:
 
 
 def _disk_type(disk_info):
-    """
-    return the type of the disk
+    """get the type of the disk.
+
+    :return: the type of the disk
+    :rtype: str
     """
     #@todo from sal_zos.disks.Disks import StorageType
     if disk_info['rota'] == "1":
