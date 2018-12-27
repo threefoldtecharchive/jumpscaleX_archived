@@ -14,8 +14,7 @@ class Ubuntu(j.application.JSBaseClass):
         #self.capacity = Capacity(self)
 
     def uptime(self):
-        """
-        return system uptime value.
+        """return system uptime value.
 
         :return: uptime value
         :rtype: float
