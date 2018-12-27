@@ -549,10 +549,31 @@ class SystemProcess(j.application.JSBaseClass):
             raise j.exceptions.RuntimeError(
                 "could not stop %s, found %s nr of instances." % (cmd, len(found)))
 
-    def getProcessPid(self, process):
+    def getProcessPid(self, process, match_predicate=None):
+        """Get process ID(s) for a given process
+        
+        :param process: process to look for
+        :type process: str
+        :param match_predicate: function that does matching between 
+            found processes and the targested process, the function should accept 
+            two arguments and return a boolean, defaults to None
+        :type match_predicate: callable, optional
+        :raises j.exceptions.RuntimeError: If process is None
+        :raises NotImplementedError: If called on a non-unix system
+        :return: list of matching process IDs
+        :rtype: list
+        """
+        # default match predicate
+        # why aren't we using psutil ??
+        def default_predicate(given, target):
+            return given.find(target.strip()) != -1 
+        if match_predicate is None:
+            match_predicate = default_predicate
+
         if process is None:
             raise j.exceptions.RuntimeError("process cannot be None")
         if self.isUnix:
+            
             # Need to set $COLUMNS such that we can grep full commandline
             # Note: apparently this does not work on solaris
             command = "bash -c 'env COLUMNS=300 ps -ef'"
@@ -571,7 +592,7 @@ class SystemProcess(j.application.JSBaseClass):
                 # print process
                 if isinstance(process, int) and gd['pid'] == process:
                     pids.append(gd['pid'])
-                elif gd['cmd'].find(process.strip()) != -1:
+                elif match_predicate(gd['cmd'], process):
                     pids.append(gd['pid'])
             pids = [int(item) for item in pids]
             return pids
@@ -693,8 +714,20 @@ class SystemProcess(j.application.JSBaseClass):
         # print pids
         return pids
 
-    def killProcessByName(self, name, sig=None):
-        pids = self.getProcessPid(name)
+    def killProcessByName(self, name, sig=None, match_predicate=None):
+        """Kill all processes for a given command
+        
+        :param name: Name of the command that started the process(s)
+        :type name: str
+        :param sig: os signal to send to the process(s), defaults to None
+        :type sig: int, optional
+        :param match_predicate: function that does matching between 
+            found processes and the targested process, the function should accept 
+            two arguments and return a boolean, defaults to None
+        :type match_predicate: callable, optional
+        """
+
+        pids = self.getProcessPid(name, match_predicate=match_predicate)
         for pid in pids:
             self.kill(pid, sig)
 
