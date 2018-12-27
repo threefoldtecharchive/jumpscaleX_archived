@@ -81,6 +81,8 @@ class Capacity:
         create a report of the hardware capacity for
         processor, memory, motherboard and disks
 
+        :param indent: json indent for pretty printing
+        :type: int
         :return: report for the hardware capacity information
         :rtype: report
         """
