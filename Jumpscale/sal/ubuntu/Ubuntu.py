@@ -106,7 +106,7 @@ class Ubuntu(j.application.JSBaseClass):
 
         if update_md:
             self.apt_update()
-        cmd = 'apt-get install %s --force-yes -y' % packagename
+        cmd = 'apt-get install %s -y' % packagename
         self._local.execute(cmd)
 
     def apt_install_version(self, packageName, version):

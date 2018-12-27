@@ -136,8 +136,7 @@ class BuilderPython(BuilderBaseClass):
         export PBASE=`pwd`
         export PYTHONHTTPSVERIFY=0
         export PATH=$PBASE/bin:/usr/local/bin:/usr/bin
-        export PYTHONPATH=$PBASE/lib/python.zip:$PBASE/lib:$PBASE/lib/python3.6:$PBASE/lib/python3.6/site-packages:\
-$PBASE/lib/python3.6/lib-dynload:$PBASE/bin
+        export PYTHONPATH=$PBASE/lib/python.zip:$PBASE/lib:$PBASE/lib/python3.6:$PBASE/lib/python3.6/site-packages:$PBASE/lib/python3.6/lib-dynload:$PBASE/bin
         export PYTHONHOME=$PBASE
         export LIBRARY_PATH="$PBASE/bin:$PBASE/lib"
         export LD_LIBRARY_PATH="$LIBRARY_PATH"
@@ -391,3 +390,5 @@ $PBASE/lib/python3.6/lib-dynload:$PBASE/bin
         raise RuntimeError("implement")
 
         print("TEST OK")
+
+

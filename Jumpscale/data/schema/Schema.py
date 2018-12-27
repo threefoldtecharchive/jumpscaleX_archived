@@ -243,11 +243,6 @@ class Schema(j.application.JSBaseClass):
                 raise RuntimeError("md5 cannot be None")
 
             tpath = "%s/templates/template_obj.py" % self._path
-            # make sure the defaults render
-            for prop in self.properties:
-                prop.default_as_python_code
-            for prop in self.lists:
-                prop.default_as_python_code
 
             self._obj_class = j.tools.jinja2.code_python_render(name="schema_%s"%self.key,
                 obj_key="ModelOBJ", path=tpath, obj=self, objForHash=self._md5)
@@ -279,17 +274,17 @@ class Schema(j.application.JSBaseClass):
             model.notify_new(r)
         return r
 
-    @property
-    def propertynames_index_sql(self):
-        """
-        list of the property names which are used for indexing in sql db (sqlite)
-        :return:
-        """
-        res=[]
-        for prop in self.properties:
-            if prop.index:
-                res.append(prop.name)
-        return res
+    # @property
+    # def propertynames_index_sql(self):
+    #     """
+    #     list of the property names which are used for indexing in sql db (sqlite)
+    #     :return:
+    #     """
+    #     res=[]
+    #     for prop in self.properties:
+    #         if prop.index:
+    #             res.append(prop.name)
+    #     return res
 
     @property
     def properties_index_sql(self):
@@ -303,17 +298,17 @@ class Schema(j.application.JSBaseClass):
                 res.append(prop)
         return res
 
-    @property
-    def propertynames_index_keys(self):
-        """
-        list of the property names which are used for indexing with keys
-        :return:
-        """
-        res=[]
-        for prop in self.properties:
-            if prop.index_key:
-                res.append(prop.name)
-        return res
+    # @property
+    # def propertynames_index_keys(self):
+    #     """
+    #     list of the property names which are used for indexing with keys
+    #     :return:
+    #     """
+    #     res=[]
+    #     for prop in self.properties:
+    #         if prop.index_key:
+    #             res.append(prop.name)
+    #     return res
 
     @property
     def properties_index_keys(self):
@@ -338,20 +333,20 @@ class Schema(j.application.JSBaseClass):
            res.append(item.name)
         return res
 
-    @property
-    def propertynames_list(self):
-        res = [item.name for item in self.lists]
-        return res
+    # @property
+    # def propertynames_list(self):
+    #     res = [item.name for item in self.lists]
+    #     return res
 
     @property
     def properties_list(self):
         res = [item for item in self.lists]
         return res
 
-    @property
-    def propertynames_nonlist(self):
-        res = [item.name for item in self.properties]
-        return res
+    # @property
+    # def propertynames_nonlist(self):
+    #     res = [item.name for item in self.properties]
+    #     return res
 
     @property
     def properties_nonlist(self):

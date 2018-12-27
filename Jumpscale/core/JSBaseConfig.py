@@ -27,7 +27,7 @@ class JSBaseConfig(JSBase):
     def _id(self):
         return self.data.id
         # if self._id_ is None:
-        #     self._id_ = self.__class__._MODEL.bcdb.name+"_%s"%self.data.id
+        #     self._id_ = self.factory._model.bcdb.name+"_%s"%self.data.id
         # return self._id_
 
     def save(self):
@@ -46,22 +46,22 @@ class JSBaseConfig(JSBase):
         pass
 
     def __getattr__(self, attr):
-        # if self.__class__._MODEL is None:
+        # if self.factory._model is None:
         #     return self.__getattribute__(attr)
-        if attr in self.__class__._MODEL.schema.properties_list:
+        if attr in self.factory._model.schema.propertynames:
             return self.data.__getattribute__(attr)
         return self.__getattribute__(attr)
         # raise RuntimeError("could not find attribute:%s"%attr)
 
     def __dir__(self):
-        r = self.__class__._MODEL.schema.properties_list
+        r = self.factory._model.schema.propertynames
         for item in self.__dict__.keys():
             if item not in r:
                 r.append(item)
         return r
 
     def __setattr__(self, key, value):
-        if "data" in self.__dict__ and key in self.__class__._MODEL.schema.properties_list:
+        if "data" in self.__dict__ and key in self.factory._model.schema.propertynames:
             # if value != self.data.__getattribute__(key):
             self._logger.debug("SET:%s:%s"%(key,value))
             self.__dict__["data"].__setattr__(key,value)

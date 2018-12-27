@@ -7,3 +7,4 @@ class BuilderBaseClass(j.application.JSBaseClass):
         self.system = j.builder.system
         self.tools = j.builder.tools
         self.b = j.builder
+

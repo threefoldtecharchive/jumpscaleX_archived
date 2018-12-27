@@ -12,7 +12,10 @@ class KosmosServices():
         if name.startswith("_"):
             return self.__dict__[name]
         m = self.__dict__["_factory"]
-        return m.get(name)
+        r =  m.get(name=name,die=False)
+        if r is None:
+            r=m.new(name=name)
+        return r
 
     def __dir__(self):
         m = self.__dict__["_factory"]
@@ -23,7 +26,7 @@ class KosmosServices():
             self.__dict__[name]=value
             return
         m = self.__dict__["_factory"]
-        o=m.get(name)
+        o=m.get(name=name,die=False)
         j.shell()
 
     def __str__(self):
@@ -89,7 +92,7 @@ class JSFactoryBase(JSBase):
             raise RuntimeError("__class__._CHILDCLASS should be set")
         return self.__class__._CHILDCLASS
 
-    def get(self,name=None,id=None,die=True,**kwargs):
+    def get(self,name=None,id=None,die=True ,**kwargs):
         """
         :param id: id of the obj to find, is a unique id
         :param name: of the object, can be empty when searching based on id or the search criteria (kwargs)
@@ -161,7 +164,7 @@ class JSFactoryBase(JSBase):
         """
         if len(kwargs)>0:
             propnames = [i for i in kwargs.keys()]
-            propnames_keys_in_schema = [item.name for item in self._model.schema.propertynames_index_keys if item.name in propnames]
+            propnames_keys_in_schema = [item.name for item in self._model.schema.properties_index_keys if item.name in propnames]
             if len(propnames_keys_in_schema) > 0:
                 # we can try to find this config
                 return self._model.get_from_keys(**kwargs)
