@@ -5,29 +5,6 @@
 [![Build Status](https://travis-ci.com/threefoldtech/jumpscaleX.svg?branch=development)](https://travis-ci.com/threefoldtech/jumpscaleX)
 [![codecov](https://codecov.io/gh/threefoldtech/jumpscaleX/branch/development/graph/badge.svg)](https://codecov.io/gh/threefoldtech/jumpscaleX)
 
-| asasd 	| sdfsdf 	| sdf 	|  	| dsfsdf 	|
-|-------	|--------	|------	|---	|--------	|
-|  	| asdf 	|  	|  	|  	|
-|  	| asdf 	| adsf 	|  	| adf 	|
-|  	| adf 	| adf 	|  	| adf 	|
-
-
-this is a code block
-
-```python
-class Schema(j.application.JSBaseClass):
-    def __init__(self, text):
-        JSBASE.__init__(self)
-        self.properties = []
-        self._properties_list = []
-        self.lists = []
-        self._obj_class = None
-        self._capnp = None
-        self._index_list = None
-        self.url = ""
-        self._schema_from_text(text)
-        self.key = j.core.text.strip_to_ascii_dense(self.url).replace(".", "_")
-```
 
 # Jumpscale
 
