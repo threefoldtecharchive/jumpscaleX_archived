@@ -542,7 +542,7 @@ class BuilderTools(j.builder.system._BaseClass):
     # =============================================================================
 
     def joinpaths(self, *args):
-        return j.sal.fs.joinPaths(args)
+        return j.sal.fs.joinPaths(*args)
 
     def dir_attribs(self, location, mode=None, owner=None, group=None, recursive=False, showout=False):
         """Updates the mode / owner / group for the given remote directory."""
