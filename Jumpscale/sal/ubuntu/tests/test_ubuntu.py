@@ -4,7 +4,7 @@ from unittest import TestCase
 
 
 class Test_Ubuntu(TestCase):
-    j.sal.process.execute('pip install apt')
+    j.sal.process.execute('pip3 install python-apt')
 
     def setUp(self):
         self.ubuntu = Ubuntu()
