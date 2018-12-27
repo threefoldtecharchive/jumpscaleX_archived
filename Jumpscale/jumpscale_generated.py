@@ -1141,6 +1141,7 @@ class group_tools():
         self._realityprocess = None
         self._timer = None
         self._cython = None
+        self._formatters = None
         self._capacity = None
         self._team_manager = None
         self._memusagetest = None
@@ -1460,6 +1461,23 @@ class group_tools():
                 return None
             # print("OK")
         return self._cython
+    @property
+    def formatters(self):
+        if self._formatters is None:
+            # print("LOAD:FormattersFactory")
+            try:
+                from Jumpscale.tools.formatters.FormattersFactory import FormattersFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.tools.formatters.FormattersFactory", e)
+                raise e
+            # print("RUN:FormattersFactory")
+            try:
+                self._formatters =  FormattersFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.tools.formatters.FormattersFactory",e)
+                return None
+            # print("OK")
+        return self._formatters
     @property
     def capacity(self):
         if self._capacity is None:
@@ -2031,6 +2049,7 @@ class group_data():
         self._serializers = None
         self._nacl = None
         self._bcdb = None
+        self._dict_editor = None
         self._idgenerator = None
 
     
@@ -2391,6 +2410,23 @@ class group_data():
                 return None
             # print("OK")
         return self._bcdb
+    @property
+    def dict_editor(self):
+        if self._dict_editor is None:
+            # print("LOAD:DictEditorFactory")
+            try:
+                from Jumpscale.data.dicteditor.DictEditor import DictEditorFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.data.dicteditor.DictEditor", e)
+                raise e
+            # print("RUN:DictEditorFactory")
+            try:
+                self._dict_editor =  DictEditorFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.data.dicteditor.DictEditor",e)
+                return None
+            # print("OK")
+        return self._dict_editor
     @property
     def idgenerator(self):
         if self._idgenerator is None:

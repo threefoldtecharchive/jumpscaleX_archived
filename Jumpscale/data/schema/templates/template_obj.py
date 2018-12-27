@@ -48,6 +48,15 @@ class ModelOBJ():
         if data is not None:
             self.data_update(data=data)
 
+    def edit(self):
+        e = j.data.dict_editor.get(self._ddict)
+        e.edit()
+        self.data_update(e._dict)
+
+    def view(self):
+        e = j.data.dict_editor.get(self._ddict)
+        e.view()
+
     def data_update(self,data=None):
         """
         upload data
@@ -339,7 +348,7 @@ class ModelOBJ():
         return d
 
     @property
-    def _ddict_json(self):
+    def _ddict_json_hr(self):
         """
         json readable dict
         """
@@ -386,7 +395,13 @@ class ModelOBJ():
 
     @property
     def _json(self):
-        return j.data.serializers.json.dumps(self._ddict_json,True,True)
+        return j.data.serializers.json.dumps(self._ddict,True,True)
+
+    @property
+    def _toml(self):
+        return j.data.serializers.toml.dumps(self._ddict)
+
+
 
     @property
     def _msgpack(self):

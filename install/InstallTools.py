@@ -17,7 +17,6 @@ from os import O_NONBLOCK, read
 from pathlib import Path
 from subprocess import Popen, check_output
 
-
 # Returns escape codes from format codes
 def esc(*x):
     return '\033[' + ';'.join(x) + 'm'
@@ -348,9 +347,12 @@ class Tools():
         """
         starts the editor micro with file specified
         """
-        if not Tools.cmd_installed("micro"):
-            Tools.error_raise("cannot edit the file: '%s', micro has been not installed"%path)
-        Tools._execute_interactive("micro %s"%path)
+        for cmdtest in ["micro","mcedit","joe","vim","vi"]:
+            if Tools.cmd_installed(cmdtest):
+                Tools._execute_interactive("%s %s"%(cmdtest,path))
+                return
+        Tools.error_raise("cannot edit the file: '%s', micro has been not installed"%path)
+
 
 
     @staticmethod
@@ -1176,6 +1178,7 @@ class UbuntuInstall():
                 "Brotli>=0.6.0",
                 "certifi",
                 "click>=6.6",
+                "pygments-github-lexers",
                 "colored-traceback>=0.2.2",
                 "colorlog>=2.10.0",
                 # "credis",
@@ -1745,10 +1748,3 @@ try:
 except ImportError:
     MyEnv._colored_traceback = None
 
-try:
-    import pygments
-    import pygments.lexers
-    MyEnv._lexer_python = pygments.lexers.Python3Lexer()
-    #print(pygments.highlight(C,lexer, colored_traceback.Colorizer('default').formatter))
-except ImportError:
-    MyEnv._lexer_python = None

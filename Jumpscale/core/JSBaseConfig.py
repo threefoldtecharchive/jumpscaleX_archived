@@ -45,6 +45,25 @@ class JSBaseConfig(JSBase):
     def _data_trigger_new(self):
         pass
 
+    def edit(self):
+        path = j.core.tools.text_replace("{DIR_TEMP}/js_baseconfig_%s.toml"%self.__location__)
+        data_in = self.data._toml
+        j.sal.fs.writeFile(path,data_in)
+        j.core.tools.file_edit(path)
+        data_out = j.sal.fs.readFile(path)
+        if data_in != data_out:
+            self._logger.debug("'%s' instance '%s' has been editted (changed)"%(self.factory.__jslocation__,self.data.name))
+            data2 = j.data.serializers.toml.loads(data_out)
+            self.data.data_update(data2)
+            self.data.save()
+        j.sal.fs.remove(path)
+
+    def view(self):
+        path = j.core.tools.text_replace("{DIR_TEMP}/js_baseconfig_%s.toml"%self.__location__)
+        data_in = self.data._toml
+        j.tools.formatters.print_toml(data_in)
+
+
     def __getattr__(self, attr):
         # if self.factory._model is None:
         #     return self.__getattribute__(attr)
