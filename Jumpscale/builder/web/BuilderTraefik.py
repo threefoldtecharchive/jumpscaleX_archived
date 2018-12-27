@@ -79,6 +79,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         # try to start/stop
         tmux_pane = self.start()
         child_process = tmux_pane.process_obj_child
+        # TODO wait or something? and kill the parent (tmux/bash) process?
         if not child_process.is_running:
             raise j.exceptions.RuntimeError('Process did not start')
         self.stop(child_process.pid)
