@@ -141,7 +141,7 @@ def _disk_type(disk_info):
     :rtype: str
     """
     #@todo from sal_zos.disks.Disks import StorageType
-    if disk_info['rota'] == "1":
+    if disk_info['rota'] == '1':
         if disk_info['type'] == 'rom':
             #@todo return StorageType.CDROM
             return 'CDROM'
@@ -153,7 +153,7 @@ def _disk_type(disk_info):
             #@todo return StorageType.HDD
             return 'HDD'
     else:
-        if "nvme" in disk_info['name']:
+        if 'nvme' in disk_info['name']:
             #@todo return StorageType.NVME
             return 'NVME'
 
