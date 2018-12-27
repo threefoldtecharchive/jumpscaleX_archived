@@ -65,7 +65,7 @@ class Test_Ubuntu(TestCase):
     def test012_apt_find_all(self):
         self.assertIn('wget', self.ubuntu.apt_find_all('wget'))
 
-    def test013_apt_is_pkg_installed(self):
+    def test013_is_pkg_installed(self):
         self.assertTrue(self.ubuntu.is_pkg_installed('wget'))
 
     def test014_sshkey_generate(self):
@@ -77,7 +77,7 @@ class Test_Ubuntu(TestCase):
 def test_main(self=None):
     """
     to run:
-    js_shell 'j.sal.tls._test(name="tls")'
+    js_shell 'j.sal.ubuntu._test(name="ubuntu")'
     """
     test_ubuntu = Test_Ubuntu()
     test_ubuntu.test001_uptime()
@@ -92,5 +92,5 @@ def test_main(self=None):
     test_ubuntu.test010_service_restart()
     test_ubuntu.test011_service_status()
     test_ubuntu.test012_apt_find_all()
-    test_ubuntu.test013_apt_is_pkg_installed()
+    test_ubuntu.test013_is_pkg_installed()
     test_ubuntu.test014_sshkey_generate()
