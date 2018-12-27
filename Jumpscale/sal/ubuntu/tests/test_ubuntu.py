@@ -15,7 +15,7 @@ class Test_Ubuntu(TestCase):
             data = f.read()
             uptime, _ = data.split(' ')
 
-        self.assertAlmostEqual(uptime, self.ubuntu.uptime(), 1000)
+        self.assertAlmostEqual(float(uptime), self.ubuntu.uptime(), 1000)
 
     def test002_check(self):
         self.assertTrue(self.ubuntu.check())
