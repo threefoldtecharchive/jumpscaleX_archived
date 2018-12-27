@@ -57,6 +57,23 @@ some tools
 
   the default mem usage < 23 MB and lazy loading of the modules.
 
+## Running Tests
+To run unittests you can execute the following command
+```bash
+source /sandbox/env.sh; pytest /sandbox/code/github/threefoldtech/jumpscaleX/
+```
+
+You can also run Integration tests by running the command
+```bash
+source /sandbox/env.sh; pytest  --integration /sandbox/code/github/threefoldtech/jumpscaleX/
+```
+
+To annotate the one of your tests is an itegeration test rather than a unittests, you can add the following docorator to the test
+```python
+@pytest.mark.integration
+def test_main(self)
+```
+
 ## Tutorials
 
 [Check Documentation](docs/howto/)
