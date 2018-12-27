@@ -3,43 +3,40 @@ import time
 
 from Jumpscale import j
 
-JSConfigBase = j.application.JSBaseClass
+JSConfigBase = j.application.JSBaseConfigClass
 
-TEMPLATE = """
-bmc = ""
-user = ""
-password_ = ""
-port = 623
-"""
 
 class Ipmi(JSConfigBase):
+    _SCHEMATEXT = """
+    @url = jumpscale.ipmi.client
+        bmc = "" (S)
+        user = "" (S)
+        password_ = "" (S)
+        port = 623 (ipport)
+    """
     """ Ipmi client
 
     Before using the ipmi client, make sure to install ipmitool
     """
 
-    def __init__(self, instance, data={}, parent=None, interactive=None):
-        JSConfigBase.__init__(self, instance=instance,
-                              data=data, parent=parent, template=TEMPLATE)
-
     def power_on(self):
         """ Power on ipmi host
         """
         j.tools.executorLocal.execute("ipmitool -H {host} -U {user} -P {password} -p {port} chassis power on".format(
-            host=self.config.data["bmc"],
-            user=self.config.data["user"],
-            password=self.config.data["password_"],
-            port=self.config.data["port"],
+            host=self.bmc,
+            user=self.user,
+            password=self.password_,
+            port=self.port,
         ))
 
     def power_off(self):
         """ Power off ipmi host
         """
         j.tools.executorLocal.execute("ipmitool -H {host} -U {user} -P {password} -p {port} chassis power off".format(
-            host=self.config.data["bmc"],
-            user=self.config.data["user"],
-            password=self.config.data["password_"],
-            port=self.config.data["port"],
+            host=self.bmc,
+            user=self.user,
+            password=self.password_,
+            port=self.port,
         ))
 
     def power_status(self):
@@ -48,13 +45,12 @@ class Ipmi(JSConfigBase):
         Returns:
             str -- power status of node ('on' or 'off')
         """
-        _, out,_ = j.tools.executorLocal.execute("ipmitool -H {host} -U {user} -P {password} -p {port} chassis power status".format(
-            host=self.config.data["bmc"],
-            user=self.config.data["user"],
-            password=self.config.data["password_"],
-            port=self.config.data["port"],
-        ))
-
+        _, out, _ = j.tools.executorLocal.execute(
+            "ipmitool -H {host} -U {user} -P {password} -p {port} chassis power status".format(
+                host=self.bmc,
+                user=self.user,
+                password=self.password_,
+                port=self.port,))
 
         if out.lower().strip() == "chassis power is on":
             return "on"
@@ -73,8 +69,8 @@ class Ipmi(JSConfigBase):
             return
 
         j.tools.executorLocal.execute("ipmitool -H {host} -U {user} -P {password} -p {port} chassis power cycle".format(
-            host=self.config.data["bmc"],
-            user=self.config.data["user"],
-            password=self.config.data["password_"],
-            port=self.config.data["port"],
+            host=self.bmc,
+            user=self.user,
+            password=self.password_,
+            port=self.port,
         ))
