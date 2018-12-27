@@ -7,7 +7,7 @@ from .GiteaOrgForNonMember import GiteaOrgForNonMember
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaOrgs(JSBASE):
+class GiteaOrgs(j.application.JSBaseClass):
     def __init__(self, client, user):
         JSBASE.__init__(self)
         self.user = user

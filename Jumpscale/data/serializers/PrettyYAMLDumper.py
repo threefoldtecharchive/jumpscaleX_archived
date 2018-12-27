@@ -136,7 +136,7 @@ for str_type in {bytes, unicode}:
 UnsafePrettyYAMLDumper.add_representer(
 	type(None), lambda s,o: s.represent_scalar('tag:yaml.org,2002:null', '') )
 
-class PrettyYaml(JSBASE):
+class PrettyYaml(j.application.JSBaseClass):
 
 	def __init__(self):
 		JSBASE.__init__(self)

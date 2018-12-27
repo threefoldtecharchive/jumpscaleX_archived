@@ -1,96 +1,48 @@
-
-
 from Jumpscale import j
 from .IYOClient import IYOClient
 import requests
-from jose import jwt
+
 import time
 
 DEFAULT_BASE_URL = "https://itsyou.online/api"
 
-JSConfigBaseFactory = j.application.JSFactoryBaseClass
 
+class IYOFactory(j.application.JSFactoryBaseClass):
+    __jslocation__ = 'j.clients.itsyouonline'
+    _CHILDCLASS = IYOClient
 
-class IYOFactory(JSConfigBaseFactory):
-
-    def __init__(self):
-        self.__jslocation__ = 'j.clients.itsyouonline'
+    def _init(self):
         self.raml_spec = "https://raw.githubusercontent.com/itsyouonline/identityserver/master/specifications/api/itsyouonline.raml"
-        JSConfigBaseFactory.__init__(self, IYOClient, single_item=True)
         self._default = None
-
-    def install(self):
-        """installs python-jose library locally
-        
-        """
-
-        j.tools.prefab.local.runtimes.pip.install("python-jose")
-
-    def refresh_jwt_token(self, token, validity=86400):
-        """refresh a jwt if expired, needs to be refreshable
-        
-        :param token: refreshable jwt token
-        :type token: str
-        :param validity: expiration time of the refreshed jwt, defaults to 86400
-        :param validity: int, optional
-        :return: refreshed token
-        :rtype: str
-        """
-
-        try:
-            import jose.jwt
-        except ImportError:
-            self._logger.info('jose not installed please use install method to get jose')
-            return
-        expires = self.jwt_expire_timestamp(token)
-        if 'refresh_token' not in jose.jwt.get_unverified_claims(token):
-            self._logger.info("Specified token can't be refreshed. Please choose another refreshable token")
-        elif self.jwt_is_expired(expires):
-            headers = {'Authorization': 'bearer %s' % token}
-            params = {'validity': validity}
-            resp = requests.get('https://itsyou.online/v1/oauth/jwt/refresh', headers=headers, params=params)
-            resp.raise_for_status()
-            return resp.content.decode()
-        return token
-
-    def jwt_is_expired(self, expiration):
-        """check if jwt is expired
-        
-        :param expiration: jwt expiration timestamp
-        :type expiration: int
-        :return: true if expired
-        :rtype: bool
-        """
-
-        if time.time() + 300 > expiration:
-            return True
-        return False
 
     @property
     def default(self):
         """ return default itsyou.online instance"""
-
-        if self._default == None:
-            if j.tools.configmanager.sandbox_check():
-                raise RuntimeError("should not call IYO client in sandbox!")
-            self._default = self.get(interactive=False)
+        if self._default is None:
+            self._default = self.get()
         return self._default
-
 
     def test(self):
         """
         do:
         js_shell 'j.clients.itsyouonline.test()'
         """
-        # from .generated.client.PublicKey import PublicKey #WHY THIS???
 
-        client = j.clients.itsyouonline.default
+        client = j.clients.itsyouonline.get(name="test")
+        jwt = client.jwt_get(scope="user:admin")
+        username = jwt.username
+        self._logger.debug("Creating a test organization")
+        test_globa_id = "test_org"
+        client.api.organizations.CreateNewOrganization(
+            {"globalid": test_globa_id, "owners": [jwt.username], "dns": [], "includes": [], "includesuborgsof": [],
+             "members": [], "orgmemmbers": [], "orgowners": [], "publicKeys": [], "requiredscopes": []})
+        self._logger.debug("getting the test organization details")
+        org = client.api.organizations.GetOrganization(test_globa_id)
+        assert org.data.globalid == test_globa_id
+        self._logger.debug("deleting the test organization")
+        res = client.api.organizations.DeleteOrganization(test_globa_id)
+        assert res.ok
 
-        self._logger.info(j.clients.itsyouonline.default.jwt)
-
-        self._logger.info(client.api.organizations.GetOrganization("threefold"))
-
-        # TODO:*1 why username???
 
         # Read all the API keys registered for your user
         self._logger.debug("list all API keys")
@@ -122,13 +74,15 @@ class IYOFactory(JSConfigBaseFactory):
         key_labels = [k.label for k in client.api.users.ListAPIKeys(username).data]
         assert 'test' not in key_labels
 
-    def jwt_expire_timestamp(self, token):
-        """Get expiration date of jwt token
+    def test_jwt(self):
+        client = j.clients.itsyouonline.get(name="test")
+        token = client.jwt_get(scope="user:admin", validity=5)
+        token2 = client.jwt_get()
 
-        :param token: jwt token
-        :type token: str
-        :return: return expiration date(timestamp) for the token
-        :rtype: int
-        """
-        jwt_data = jwt.get_unverified_claims(token)
-        return jwt_data['exp']
+        assert token.jwt == token2.jwt
+
+        from time import sleep
+        sleep(10)
+
+        token3 = client.jwt_get()
+        assert token3.jwt != token.jwt

@@ -5,10 +5,10 @@ services:
   - docker
 
 before_install:
-  - docker build -t jumpscale .
+  - docker build --rm -t jumpscale .
 
 script:
-  - docker run --rm -t jumpscale /bin/bash -c "source /sansbox/env.sh; pytest -v /sandbox/code/github/threefoldtech/jumpscaleX"
+  - docker run --rm -t jumpscale /bin/bash -c "source /sandbox/env.sh; pytest -v /sandbox/code/github/threefoldtech/jumpscaleX"
 
 after_success:
   - docker run --rm -t jumpscale /bin/bash -c "codecov"

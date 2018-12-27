@@ -6,7 +6,7 @@ import calendar
 JSBASE = j.application.JSBaseClass
 
 
-class MySQLFactory(JSBASE):
+class MySQLFactory(j.application.JSBaseClass):
     """
     """
 
@@ -23,7 +23,7 @@ class MySQLFactory(JSBASE):
         return MySQLClient(self.clients[key])
 
 
-class MySQLClient(JSBASE):
+class MySQLClient(j.application.JSBaseClass):
 
     def __init__(self, cl):
         JSBASE.__init__(self)

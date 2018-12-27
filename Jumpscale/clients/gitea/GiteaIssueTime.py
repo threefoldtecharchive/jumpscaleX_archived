@@ -5,7 +5,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaIssueTime(JSBASE):
+class GiteaIssueTime(j.application.JSBaseClass):
     def __init__(
             self,
             user,

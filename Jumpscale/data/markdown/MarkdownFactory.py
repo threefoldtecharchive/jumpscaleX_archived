@@ -14,7 +14,7 @@ from .MarkdownComponents import *
 JSBASE = j.application.JSBaseClass
 
 
-class MarkdownFactory(JSBASE):
+class MarkdownFactory(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.data.markdown"

@@ -4,7 +4,7 @@ import struct
 import math
 JSBASE = j.application.JSBaseClass
 
-class NumTools(JSBASE):
+class NumTools(j.application.JSBaseClass):
 
     __jslocation__ = "j.tools.numtools"
 

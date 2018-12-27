@@ -7,7 +7,7 @@ from .reality_parser import RealityParser
 JSBASE = j.application.JSBaseClass
 
 
-class Factory(JSBASE):
+class Factory(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.capacity"

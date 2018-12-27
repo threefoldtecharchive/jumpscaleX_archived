@@ -26,7 +26,7 @@ class Capacity:
     @property
     def disk_info(self):
         if self._disk_info is None:
-            j.tools.prefab.local.monitoring.smartmontools.install()
+            j.builder.monitoring.smartmontools.install()
 
             self._disk_info = {}
 

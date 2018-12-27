@@ -20,6 +20,7 @@ class SSHClientParamiko(SSHClientBase):
         SSHClientBase._init(self)
         # key_filename = self.sshkey.path if (self.sshkey and self.sshkey.path) else None
         self._lock = threading.Lock()
+
         if self.passwd:
             self.forward_agent = False
             self.look_for_keys = False
@@ -30,7 +31,7 @@ class SSHClientParamiko(SSHClientBase):
 
         self._transport = None
         self._client = None
-        self._logger_enable()
+        # self._logger_enable()
 
     def _test_local_agent(self):
         """
@@ -395,7 +396,7 @@ class SSHClientParamiko(SSHClientBase):
         C = "ssh -L %s:localhost:%s root@%s -p %s" % (
             remoteport, localport, self.addr, self.port)
         print(C)
-        pm = j.tools.prefab.local.system.processmanager.get()
+        pm = j.builder.system.processmanager.get()
         pm.ensure(cmd=C, name="ssh_%s" % localport, wait=0.5)
         print("Test tcp port to:%s" % localport)
         if not j.sal.nettools.waitConnectionTest("127.0.0.1", localport, 10):
@@ -405,7 +406,7 @@ class SSHClientParamiko(SSHClientBase):
 
     def portforwardKill(self, localport):
         print("kill portforward %s" % localport)
-        pm = j.tools.prefab.local.system.processmanager.get()
+        pm = j.builder.system.processmanager.get()
         pm.processmanager.stop('ssh_%s' % localport)
 
     # def SSHAuthorizeKey(

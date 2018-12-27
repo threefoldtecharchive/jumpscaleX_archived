@@ -7,7 +7,7 @@ from io import BytesIO
 JSBASE = j.application.JSBaseClass
 
 
-class Container(JSBASE):
+class Container(j.application.JSBaseClass):
     """Docker Container"""
 
     def __init__(self, obj, client):
@@ -123,8 +123,8 @@ class Container(JSBASE):
 
 
     def ssh_authorize(self, sshkeyname, password):
-        home = j.tools.prefab.local.bash.home
-        user_info = [j.tools.prefab.local.system.user.check(user) for user in j.tools.prefab.local.system.user.list()]
+        home = j.builder.bash.home
+        user_info = [j.builder.system.user.check(user) for user in j.builder.system.user.list()]
         users = [i['name'] for i in user_info if i['home'] == home]
         user = users[0] if users else 'root'
         addr = self.info['Ports'][0]['IP']

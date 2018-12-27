@@ -1,0 +1,5 @@
+#! /usr/bin/env python3
+
+from Jumpscale import j
+
+j.tools.jsloader.removeEggs()

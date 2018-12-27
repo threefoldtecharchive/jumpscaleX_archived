@@ -4,7 +4,7 @@ import time
 JSBASE = j.application.JSBaseClass
 
 
-class TmuxCmd(JSBASE):
+class TmuxCmd(j.application.JSBaseClass):
     def __init__(self,name,pane_name,cmd="",path=None,env={},ports=[],stopcmd=None,process_strings=[],window_name="multi"):
         JSBASE.__init__(self)
         self.name = name

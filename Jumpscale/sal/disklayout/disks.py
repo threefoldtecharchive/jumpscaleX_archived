@@ -38,7 +38,7 @@ class DiskError(Exception, JSBASE):
         JSBASE.__init__(self)
 
 
-class BlkInfo(JSBASE):
+class BlkInfo(j.application.JSBaseClass):
 
     def __init__(self, name, type, size, executor):
         self.name = name

@@ -3,7 +3,7 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
-class DBSQLite(JSBASE):
+class DBSQLite(j.application.JSBaseClass):
 
     def __init__(self,bcdb):
         JSBASE.__init__(self)
@@ -12,9 +12,9 @@ class DBSQLite(JSBASE):
         self._dbpath = j.sal.fs.joinPaths(bcdb._data_dir, "sqlite.db")
 
         if j.sal.fs.exists(self._dbpath):
-            self._logger.info("EXISTING SQLITEDB in %s"%self._dbpath)
+            self._logger.debug("EXISTING SQLITEDB in %s"%self._dbpath)
         else:
-            self._logger.warning("NEW SQLITEDB in %s"%self._dbpath)
+            self._logger.debug("NEW SQLITEDB in %s"%self._dbpath)
 
         self.sqlitedb = j.clients.peewee.SqliteDatabase(self._dbpath)
         if  self.sqlitedb.is_closed():
@@ -31,7 +31,7 @@ class DBSQLite(JSBASE):
             value = p.BlobField()
 
         self._table_model = KVS
-        self._logger_enable()
+        # self._logger_enable()
         self._table_model.create_table()
 
     def set(self,key,val):

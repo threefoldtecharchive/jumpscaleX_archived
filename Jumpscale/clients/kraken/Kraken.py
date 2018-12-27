@@ -38,5 +38,5 @@ class Kraken(JSConfigFactory):
         JSConfigFactory.__init__(self, KrakenClient)
 
     def install(self, reset=False):
-        j.tools.prefab.local.runtimes.pip.install("pykrakenapi", reset=reset)
-        j.tools.prefab.local.runtimes.pip.install("krakenex", reset=reset)
+        j.builder.runtimes.pip.install("pykrakenapi", reset=reset)
+        j.builder.runtimes.pip.install("krakenex", reset=reset)

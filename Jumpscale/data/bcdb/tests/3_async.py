@@ -11,42 +11,39 @@ def main(self):
 
     """
 
-
-    db, m = self._load_test_model()
+    _, model = self._load_test_model()
 
     def get_obj(i):
-        o = m.new()
-        o.nr = i
-        o.name= "somename%s"%i
-        return o
+        model_obj = model.new()
+        model_obj.nr = i
+        model_obj.name = "somename%s" % i
+        return model_obj
 
-    o = get_obj(1)
+    model_obj = get_obj(1)
 
-    #should be empty
-    assert m.bcdb.queue.empty() == True
+    # should be empty
+    assert model.bcdb.queue.empty() is True
 
-    # j.shell()
-    m.set_dynamic(o)
+    model.set_dynamic(model_obj)
 
-    o2 = m.get(o.id)
-    assert o2._data == o._data
+    model_obj2 = model.get(model_obj.id)
+    assert model_obj2._data == model_obj._data
 
-    #will process 1000 obj (set)
+    # will process 1000 obj (set)
     for x in range(1000):
-        m.set_dynamic(get_obj(x))
+        model.set_dynamic(get_obj(x))
 
-    #should be nothing in queue
-    assert m.bcdb.queue.empty() == True
+    # should be nothing in queue
+    assert model.bcdb.queue.empty() is True
 
-    #now make sure index processed and do a new get
-    m.index_ready()
+    # now make sure index processed and do a new get
+    model.index_ready()
 
-    o2 = m.get(o.id)
-    assert o2._data == o._data
+    model_obj2 = model.get(model_obj.id)
+    assert model_obj2._data == model_obj._data
 
-    assert m.bcdb.queue.empty()
+    assert model.bcdb.queue.empty()
 
-    self._logger.info("TEST2 DONE")
+    self._logger.info("TEST DONE")
 
     return ("OK")
-
