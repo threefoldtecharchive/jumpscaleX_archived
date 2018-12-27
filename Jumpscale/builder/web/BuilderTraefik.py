@@ -47,20 +47,39 @@ class BuilderTraefik(j.builder.system._BaseClass):
         :param config_file: config file path e.g. ~/traefik.toml
         :type config_file: str, optional
         :raises j.exceptions.RuntimeError: in case config file does not exist
+        :return: tmux pane
+        :rtype: tmux.Pane
         """
         cmd = self.tools.joinpaths(self.go_runtime.go_path_bin, self.NAME)
         if config_file and self.tools.file_exists(config_file):
             cmd += ' --configFile=%s' % config_file
-        j.tools.tmux.execute(cmd, window=self.NAME, pane=self.NAME, reset=True)
+        p = j.tools.tmux.execute(cmd, window=self.NAME, pane=self.NAME, reset=True)
+        return p
 
-    def stop(self):
-        """Stops traefik process"""
-        j.sal.process.killProcessByName(self.NAME)
+    def stop(self, pid=None, sig=None):
+        """Stops traefik process
+
+        :param pid: pid of the process, if not given, will kill by name
+        :type pid: long, defaults to None
+        :param sig: signal, if not given, SIGKILL will be used
+        :param sig: int, defaults to None
+        """
+        if pid:
+            j.sal.process.kill(pid, sig)
+        else:
+            j.sal.process.killProcessByName(self.NAME, sig)
 
     def test(self):
         """Testing the install/start/stop"""
-        # TODO: test install/start/stop
-        self.install()
-        self.start()
+        # stop at first (by name)
         self.stop()
+        # install with reset
+        self.install(reset=True)
+
+        # try to start/stop
+        tmux_pane = self.start()
+        child_process = tmux_pane.process_obj_child
+        if not child_process.is_running:
+            raise j.exceptions.RuntimeError('Process did not start')
+        self.stop(child_process.pid)
 
