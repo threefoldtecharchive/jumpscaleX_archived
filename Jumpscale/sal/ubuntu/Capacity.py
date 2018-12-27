@@ -22,9 +22,9 @@ class Capacity:
         if self._hw_info is None:
             self._node.apt_install_check("dmidecode", "dmidecode")
 
-            rc, dmi_data, err = self._node._local.execute("dmidecode", die=False)
+            rc, dmi_data, err = j.sal.process.execute('dmidecode', die=False)
             if rc != 0:
-                raise RuntimeError("Error getting hardware info:\n%s" % (err))
+                raise RuntimeError('Error getting hardware info:\n%s' % (err))
 
             self._hw_info = j.tools.capacity.parser.hw_info_from_dmi(dmi_data)
         return self._hw_info
@@ -41,25 +41,25 @@ class Capacity:
 
             self._disk_info = {}
 
-            rc, out, err = self._node._local.execute(
-                "lsblk -Jb -o NAME,SIZE,ROTA,TYPE", die=False)
+            rc, out, err = j.sal.process.execute(
+                'lsblk -Jb -o NAME,SIZE,ROTA,TYPE', die=False)
             if rc != 0:
-                raise RuntimeError("Error getting disks:\n%s" % (err))
+                raise RuntimeError('Error getting disks:\n%s' % (err))
 
-            disks = json.loads(out)["blockdevices"]
+            disks = json.loads(out)['blockdevices']
             for disk in disks:
-                if not disk["name"].startswith("/dev/"):
-                    disk["name"] = "/dev/%s" % disk["name"]
+                if not disk['name'].startswith('/dev/'):
+                    disk['name'] = '/dev/%s' % disk['name']
 
-                rc, out, err = self._node._local.execute(
-                    "smartctl -T permissive -i %s" % disk["name"], die=False)
+                rc, out, err = j.sal.process.execute(
+                    'smartctl -T permissive -i %s' % disk['name'], die=False)
                 if rc != 0:
                     # smartctl prints error on stdout
-                    raise RuntimeError("Error getting disk data for %s (Make sure you run this on baremetal, not on a VM):\n%s\n\n%s" % (disk["name"], out, err))
+                    raise RuntimeError('Error getting disk data for %s (Make sure you run this on baremetal, not on a VM):\n%s\n\n%s' % (disk['name'], out, err))
 
-                self._disk_info[disk["name"]] = j.tools.capacity.parser.disk_info_from_smartctl(
+                self._disk_info[disk['name']] = j.tools.capacity.parser.disk_info_from_smartctl(
                     out,
-                    disk["size"],
+                    disk['size'],
                     _disk_type(disk).name,
                 )
         return self._disk_info
@@ -110,8 +110,8 @@ class Capacity:
                 hru=report.HRU,
                 sru=report.SRU,
             ),
-            robot_address="private",
-            os_version="private",
+            robot_address=private',
+            os_version='private',
             farmer_id=farmer_id,
             uptime=int(self._node.uptime()),
         )
