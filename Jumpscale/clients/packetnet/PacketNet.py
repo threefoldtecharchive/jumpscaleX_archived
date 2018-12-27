@@ -3,18 +3,18 @@ from Jumpscale import j
 import packet
 import time
 
-
-TEMPLATE = """
-auth_token_ = ""
-project_name = ""
-"""
+JSConfigBase = j.application.JSBaseConfigClass
 
 
-class PacketNet(JSConfigClient):
+class PacketNet(JSConfigBase):
+    _SCHEMATEXT = """
+    @url = jumpscale.packetnet.client
+    name = "main" (S)
+    auth_token_ = "" (S)
+    project_name = "" (S)
+    """
 
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
+    def _init(self):
         self._client = None
         self._plans = None
         self._facilities = None
@@ -22,15 +22,15 @@ class PacketNet(JSConfigClient):
         self._projects = None
         self._projectid = None
         self._devices = None
-        self.projectname = self.config.data['project_name']
+        self.projectname = self.project_name
 
     @property
     def client(self):
         if not self._client:
-            if not self.config.data['auth_token_']:
+            if not self.auth_token_:
                 raise RuntimeError(
-                    "please configure your auth_token, do: 'js_config configure -l j.clients.packetnet -i {}'".format(instance))
-            self._client = packet.Manager(auth_token=self.config.data["auth_token_"])
+                    "please configure your auth_token, do: 'js_config configure -l j.clients.packetnet -i {}'".format(self.name))
+            self._client = packet.Manager(auth_token=self.auth_token_)
         return self._client
 
     @property
@@ -149,8 +149,9 @@ class PacketNet(JSConfigClient):
             zerotierId = ""
         else:
             zerotierId = ipxeUrl.split('/')[-1]
-        return self._startDevice(hostname=hostname, plan=plan, facility=facility, os=os,
-                                 wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=False, sshkey=sshkey)
+        return self._startDevice(
+            hostname=hostname, plan=plan, facility=facility, os=os, wait=wait, remove=remove, ipxeUrl=ipxeUrl,
+            zerotierId=zerotierId, always_pxe=False, sshkey=sshkey)
 
     def startZeroOS(self, hostname="removeMe", plan='baremetal_0', facility='ams1', zerotierId="",
                     zerotierAPI="", wait=True, remove=False, params=None, branch='master'):
@@ -168,7 +169,6 @@ class PacketNet(JSConfigClient):
             raise RuntimeError("zerotierAPI needs to be specified")
         ipxeUrl = "http://unsecure.bootstrap.grid.tf/ipxe/{}/{}".format(branch, zerotierId)
 
-
         if params is not None:
             pstring = '%20'.join(params)
             ipxeUrl = ipxeUrl + '/' + pstring
@@ -179,7 +179,6 @@ class PacketNet(JSConfigClient):
         # data = {'token_': zerotierAPI, 'networkID_': zerotierId}
         data = {'token_': zerotierAPI}
         zerotierClient = j.clients.zerotier.get(self.instance, data=data)
-
 
         public_ip = node.addr
         if not public_ip:
@@ -204,8 +203,8 @@ class PacketNet(JSConfigClient):
         zosclient = j.clients.zero_os.get(ipaddr_priv, data=data)
         return zosclient, node, ipaddr_priv
 
-  #TODO: IS THIS STILL RELEVANT?
-    
+  # TODO: IS THIS STILL RELEVANT?
+
   # def zero_node_packetnet_install(self, packetnetClient, zerotierClient, project_name,
   #                                   plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.grid.tf/ipxe/master'):
   #       """

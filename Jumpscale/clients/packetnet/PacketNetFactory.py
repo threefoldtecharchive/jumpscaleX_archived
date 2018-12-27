@@ -1,17 +1,19 @@
 from Jumpscale import j
+from .PacketNet import PacketNet
+
+JSConfigBaseFactory = j.application.JSFactoryBaseClass
 
 
-class PacketNetFactory(j.application.JSFactoryBaseClass):
+class PacketNetFactory(JSConfigBaseFactory):
 
     __jslocation__ = "j.clients.packetnet"
+    _CHILDCLASS = PacketNet
 
     def _init(self):
         self.connections = {}
-        JSConfigFactory.__init__(self, PacketNet)
 
-    def get(self,name="test"):
-        pass #TODO: implement getter
-
+    def get(self, name="test"):
+        pass  # TODO: implement getter
 
     def test(self):
         """
@@ -21,8 +23,6 @@ class PacketNetFactory(j.application.JSFactoryBaseClass):
         client = self.get()
         self._logger.debug(client.servers_list())
 
-        #TODO:*1 connect to packet.net * boot zero-os
-        #connect the client to zero-os
-        #do a ping
-
-
+        # TODO:*1 connect to packet.net * boot zero-os
+        # connect the client to zero-os
+        # do a ping
