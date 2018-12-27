@@ -92,7 +92,9 @@ class BuilderGolang(j.builder.system._BaseClass):
         j.core.tools.dir_ensure(self.go_path)
 
         profile = self.profile_default
+        profile.envSet('GOROOT', self.go_root)
         profile.envSet('GOPATH', self.go_path)
+        profile.addPath(self.go_root_bin)
         profile.addPath(self.go_path_bin)
         profile.save()
 
