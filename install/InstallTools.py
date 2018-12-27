@@ -347,9 +347,12 @@ class Tools():
         """
         starts the editor micro with file specified
         """
-        if not Tools.cmd_installed("micro"):
-            Tools.error_raise("cannot edit the file: '%s', micro has been not installed"%path)
-        Tools._execute_interactive("micro %s"%path)
+        for cmdtest in ["micro","mcedit","joe","vim","vi"]:
+            if Tools.cmd_installed(cmdtest):
+                Tools._execute_interactive("%s %s"%(cmdtest,path))
+                return
+        Tools.error_raise("cannot edit the file: '%s', micro has been not installed"%path)
+
 
 
     @staticmethod
