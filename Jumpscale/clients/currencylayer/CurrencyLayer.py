@@ -1,45 +1,47 @@
+from pprint import pprint as print
 import cryptocompare as cc
 from Jumpscale import j
-TEMPLATE = """
-api_key_ = ""
-"""
 
 
-JSBASE = j.application.JSFactoryBaseClass
-
-from pprint import pprint as print
+JSBASE = j.application.JSBaseConfigClass
 
 
-class CurrencyLayer(j.application.JSBaseClass):
+class CurrencyLayer(JSBASE):
     """
     get key from https://currencylayer.com/quickstart
     """
+    _SCHEMATEXT = """
+    @url = jumpscale.currencylayer.client
+    api_key_ = "" (S)
+    """
 
-    def __init__(self):
-        self.__jslocation__ = 'j.clients.currencylayer'
-        JSBASE.__init__(self)
+    # def _init(self):
+    #     key = self.api_key_
+
+    def _init_new(self):
         self._data_cur = {}
         self._id2cur = {}
         self._cur2id = {}
         self.fallback = True
-        self.fake = True #otherone is broken for now, will have to fix
+        self.fake = True  # otherone is broken for now, will have to fix
 
     def write_default(self):
         """ will load currencies from internet and then write to currencies.py 
             in the extension directory
         """
         raise NotImplementedError()
-        #TODO:*2
+        # TODO:*2
 
-    def load(self,reset=False):
+    def load(self, reset=False):
         """ js_shell 'j.clients.currencylayer.load()'
         """
         if reset:
             self._cache.reset()
+
         def get():
             if not self.fake and \
-                j.sal.nettools.tcpPortConnectionTest("currencylayer.com", 443):
-                key = self.config.data["api_key_"]
+                    j.sal.nettools.tcpPortConnectionTest("currencylayer.com", 443):
+                key = self.api_key_
                 if key.strip():
                     url = "http://apilayer.net/api/live?access_key=%s" % key
 
@@ -49,26 +51,26 @@ class CurrencyLayer(j.application.JSBaseClass):
                     data = r[0].decode()
                     data = j.data.serializers.json.loads(data)["quotes"]
 
-                    data['USDETH'] = 1/cc.get_price('ETH','USD')['ETH']['USD']
+                    data['USDETH'] = 1/cc.get_price('ETH', 'USD')['ETH']['USD']
                     data['USDXRP'] = cc.get_price('USD', 'XRP')['USD']['XRP']
-                    data['USDBTC'] = 1/cc.get_price('BTC','USD')['BTC']['USD']
+                    data['USDBTC'] = 1/cc.get_price('BTC', 'USD')['BTC']['USD']
 
                     self._logger.error("fetch currency from internet")
                     return data
                 elif not self.fallback:
                     raise RuntimeError("api key for currency layer "
-                                        "needs to be specified")
+                                       "needs to be specified")
                 else:
                     self._logger.warning("currencylayer api_key not set, "
-                                    "use fake local data.")
+                                         "use fake local data.")
 
             if self.fake or self.fallback:
                 self._logger.warning("cannot reach: currencylayer.com, "
-                                "use fake local data.")
+                                     "use fake local data.")
                 from .currencies import currencies
                 return currencies
             raise RuntimeError("could not data from currencylayers")
-        
+
         data = self._cache.get("currency_data", get, expire=3600 * 24)
         for key, item in data.items():
             if key.startswith("USD"):
@@ -138,7 +140,6 @@ class CurrencyLayer(j.application.JSBaseClass):
         js_shell 'j.clients.currencylayer.cur2id_print()'
         """
         pprint(self.cur2id)
-
 
     def test(self):
         """

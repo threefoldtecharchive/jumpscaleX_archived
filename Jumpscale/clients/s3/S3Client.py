@@ -14,8 +14,6 @@ try:
 except ImportError:
     print("WARNING: s3 pip client (minio) not found please install do j.clients.s3.install()")
 
-
-
 JSConfigBase = j.application.JSBaseConfigClass
 
 
@@ -26,12 +24,13 @@ class S3Client(JSConfigBase):
     _SCHEMATEXT = """
     @url = jumpscale.s3.client
     address = "" (S)
-    port = 9000 (I)
+    port = 9000 (ipport)
     accesskey_ = "" (S)
     secretkey_ = "" (S)
     bucket = "" (S)
     bucket_ok = false (B)
     """
+
     def _init_new(self):
 
         # s3 = boto3.resource('s3',
