@@ -54,11 +54,27 @@ class JSBase:
     def _objid(self):
         if self._objid_ is None:
             id = self.__location__
-            for item in ["instance", "_instance", "_id", "id", "name", "_name"]:
-                if item in self.__dict__ and self.__dict__[item]:
-                    id += "_" + str(self.__dict__[item])
-                    break
-            self._objid_ = id
+            id2=""
+            try:
+                id2=self.data.name
+            except:
+                pass
+            if id2=="":
+                try:
+                    if self.data.id is not None:
+                        id2 = self.data.id
+                except:
+                    pass
+            if id2=="":
+                for item in ["instance", "_instance", "_id", "id", "name", "_name"]:
+                    if item in self.__dict__ and self.__dict__[item]:
+                        self._logger.debug("found extra for obj_id")
+                        id2 = str(self.__dict__[item])
+                        break
+            if id2!="":
+                self._objid_ = "%s_%s"%(id,id2)
+            else:
+                self._objid_ = id
         return self._objid_
 
     @property

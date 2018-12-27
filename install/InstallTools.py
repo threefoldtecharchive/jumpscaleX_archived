@@ -17,7 +17,6 @@ from os import O_NONBLOCK, read
 from pathlib import Path
 from subprocess import Popen, check_output
 
-
 # Returns escape codes from format codes
 def esc(*x):
     return '\033[' + ';'.join(x) + 'm'
@@ -1176,6 +1175,7 @@ class UbuntuInstall():
                 "Brotli>=0.6.0",
                 "certifi",
                 "click>=6.6",
+                "pygments-github-lexers",
                 "colored-traceback>=0.2.2",
                 "colorlog>=2.10.0",
                 # "credis",
@@ -1745,10 +1745,3 @@ try:
 except ImportError:
     MyEnv._colored_traceback = None
 
-try:
-    import pygments
-    import pygments.lexers
-    MyEnv._lexer_python = pygments.lexers.Python3Lexer()
-    #print(pygments.highlight(C,lexer, colored_traceback.Colorizer('default').formatter))
-except ImportError:
-    MyEnv._lexer_python = None
