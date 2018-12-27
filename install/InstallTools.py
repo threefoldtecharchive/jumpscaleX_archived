@@ -1323,6 +1323,7 @@ class MyEnv():
         config["DIR_CODE"] = "/sandbox/code"
         config["DIR_CFG"] = "/sandbox/cfg"
         config["DIR_BIN"] = "/sandbox/bin"
+        config["DIR_APPS"] = "/sandbox/apps"
         config["USEGIT"] = True
         config["DEBUG"] = False
         config["SSH_AGENT"] = False

@@ -22,7 +22,7 @@ class TestGuthubClient(unittest.TestCase):
         """
         check if organizations_get working
         """
-        githubclient = j.clients.github.get()
+        githubclient = j.clients.github.new(name="testclient")
         githubclient.api = MagicMock()
         githubclient.organizations_get()
         # assert the expected call for get_orgs
