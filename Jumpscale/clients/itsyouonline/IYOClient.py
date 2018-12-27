@@ -7,16 +7,16 @@ except ImportError:
     raise RuntimeError('jose not installed ')
 
 from jose import jwt
+from time import time
 
 from Jumpscale import j
 from clients.itsyouonline.generated.client import Client
 
+
 # TODO:*1 regenerate using proper goraml new file & newest generation tools ! (had to fix manually quite some issues?)
 
 
-
 class IYOClient(j.application.JSBaseConfigClass):
-
     _SCHEMATEXT = """
         @url = jumpscale.itsyouonline.1
         name* = "" (S)
@@ -39,10 +39,12 @@ class IYOClient(j.application.JSBaseConfigClass):
         """
 
     def _data_trigger_new(self):
-        self.delete()
+        # self.delete()
         if self.application_id is "" or self.secret is "":
-            self.application_id  = j.tools.console.askString("Please provide itsyouonline application id:\ncan find on https://itsyou.online/#/settings\n")
-            self.secret = j.tools.console.askString("Please provide itsyouonline secret:\ncan find on https://itsyou.online/#/settings\n")
+            self.application_id = j.tools.console.askString(
+                "Please provide itsyouonline application id:\ncan find on https://itsyou.online/#/settings\n")
+            self.secret = j.tools.console.askString(
+                "Please provide itsyouonline secret:\ncan find on https://itsyou.online/#/settings\n")
             self.save()
 
     def _init(self):
@@ -52,7 +54,7 @@ class IYOClient(j.application.JSBaseConfigClass):
     def client(self):
         """Generated itsyou.onine client"""
         if self._client is None:
-            self._client = Client( base_uri=self.baseurl)
+            self._client = Client(base_uri=self.baseurl)
         return self._client
 
     @property
@@ -70,70 +72,39 @@ class IYOClient(j.application.JSBaseConfigClass):
     def oauth2_client(self):
         """Generated itsyou.onine client oauth2 client"""
         if self._oauth2_client is None:
-            self._oauth2_client = self.client.Oauth2ClientOauth_2_0  #WEIRD NAME???
+            self._oauth2_client = self.client.Oauth2ClientOauth_2_0  # WEIRD NAME???
         return self._oauth2_client
 
-
-    def jwt_get(self,name="default",die=True):
-
-        for item in self.data.jwt_list:
-            if item.name == name:
-                #TODO: need to check if we need to refresh
-                # if self.jwt == "" or self.jwt_expires<j.data.time.epoch:
-                #     self.jwt_refresh()
-                self._lastjwt = item.jwt
-                return item
-        if die:
-            raise RuntimeError("could not find jwt with name:%s"%name)
-
-
-    def jwt_get_from_iyo(self,name="default",refreshable=True,validity=2592000,scope=None):
-        """returns a jwt if not set and update authorization header with that jwt"""
+    def jwt_get(self, name="default", refreshable=True, validity=2592000, scope=None, die=False):
+        """
+        returns a jwt if not set and update authorization header with that jwt
+        :param name: jwt name
+        :param refreshable: True if the jwt token will be refreshable
+        :param validity: the validity of the jwt token
+        :param scope: jwt scope, read itsyouonline docs to learn what scope to use
+        :param die: die if the jwt name not found
+        :return:
+        """
 
         if self.application_id == "" or self.secret == "":
             raise RuntimeError("Please configure your itsyou.online, do this by calling js_shell "
                                "'j.tools.configmanager.configure(j.clients.itsyouonline,...)'")
 
-        # if j.clients.itsyouonline.jwt_is_expired(expires):
-        #     if refreshable:
-        #         jwt = j.clients.itsyouonline.refresh_jwt_token(jwt, validity)
-        #         self._add_jwt_to_cache(key, jwt)
-        #         return jwt
-        # else:
-        #     return jwt
+        for item in self.data.jwt_list:
+            if item.name == name:
+                item.jwt = self._jwt_refresh(item.jwt)
+                self._lastjwt = item.jwt
+                return item
+        if die:
+            raise RuntimeError("could not find jwt with name:%s" % name)
 
-
-        base_url = self.baseurl
-
-        if refreshable:
-            if scope.find("offline_access") == -1:
-                scope += ',offline_access'
-
-        jwt_obj = self.jwt_get(name=name, die=False)
-        if jwt_obj is None:
-            jwt_obj = self.data.jwt_list.new()
-        jwt_obj.name=name
+        jwt_obj = self.data.jwt_list.new()
+        jwt_obj.name = name
         jwt_obj.refreshable = refreshable
         jwt_obj.scope = scope
         jwt_obj.validity = validity
 
-
-        params = {
-            'grant_type': 'client_credentials',
-            'client_id': self.application_id,
-            'client_secret': self.secret,
-            'response_type': 'id_token',
-            'scope': scope,
-        }
-
-        if jwt_obj.validity>0:
-            params["validity"] = validity
-
-
-        url = urllib.parse.urljoin(base_url, '/v1/oauth/access_token')
-        resp = requests.post(url, params=params)
-        resp.raise_for_status()
-        jwt_text = resp.content.decode('utf8')
+        jwt_text = self._jwt_new(scope=scope, refreshable=refreshable, validity=validity)
         jwt_data = jwt.get_unverified_claims(jwt_text)
 
         jwt_obj.scope = ",".join(jwt_data["scope"])
@@ -146,8 +117,58 @@ class IYOClient(j.application.JSBaseConfigClass):
         self._lastjwt = jwt_obj.jwt
 
         self.save()
-
+        # force reset self api to use the new jwt
+        self._api = None
         return jwt_obj
+
+    def _jwt_new(self, scope=None, refreshable=True, validity=2592000):
+        """
+        gets a new JWT from auth server
+        :param scope: jwt scope, please see itsyou online docs to decide what scope to use
+        :param refreshable: if true it will request a refreshable token
+        :param validity: the validity of the requested token
+        :return: return the token as string
+        """
+        url = urllib.parse.urljoin(self.baseurl, '/v1/oauth/access_token')
+        if refreshable:
+            if scope.find("offline_access") == -1:
+                scope += ', offline_access'
+        params = {
+            'grant_type': 'client_credentials',
+            'client_id': self.application_id,
+            'client_secret': self.secret,
+            'response_type': 'id_token',
+            'scope': scope,
+            'validity': validity or None
+        }
+        resp = requests.post(url, params=params)
+        resp.raise_for_status()
+        return resp.content.decode('utf8')
+
+    def _jwt_refresh(self, jwt_token, validity=2592000, die=True):
+        """
+        refreshes a jwt token, if the jwt isn't expired return the same jwt
+        :param jwt_token: the jwt to be refreshed
+        :param validity: the validity of the new jwt
+        :param die: die if the jwt is not refreshable
+        :return: jwt token text
+        """
+        claims = jwt.get_unverified_claims(jwt_token)
+        # if the jwt isn't expired return the same jwt
+        if claims['exp'] > time():
+            return jwt_token
+
+        if not claims['refresh_token']:
+            if die:
+                raise RuntimeError("jwt token can't be refreshed, no refresh token claim found")
+            else:
+                return
+
+        headers = {'Authorization': 'bearer %s' % jwt_token}
+        params = {'validity': validity}
+        resp = requests.get('https://itsyou.online/v1/oauth/jwt/refresh', headers=headers, params=params)
+        resp.raise_for_status()
+        return resp.content.decode('utf8')
 
 
     def reset(self):
@@ -155,7 +176,3 @@ class IYOClient(j.application.JSBaseConfigClass):
         self._api = None
         self._oauth2_client = None
         self._lastjwt = None
-
-
-
-
