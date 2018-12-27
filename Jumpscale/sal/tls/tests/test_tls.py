@@ -1,4 +1,5 @@
 import subprocess
+import pytest
 
 from Jumpscale.sal.tls.TLS import TLS
 from Jumpscale import j
@@ -44,6 +45,7 @@ def signedcert_flow():
     j.sal.fs.remove('/tmp/testtls')
 
 
+@pytest.mark.integration
 def test_main(self=None):
     """
     to run:
