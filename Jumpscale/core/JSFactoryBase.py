@@ -12,7 +12,10 @@ class KosmosServices():
         if name.startswith("_"):
             return self.__dict__[name]
         m = self.__dict__["_factory"]
-        return m.get(name)
+        r =  m.get(name=name,die=False)
+        if r is None:
+            r=m.new(name=name)
+        j.shell()
 
     def __dir__(self):
         m = self.__dict__["_factory"]
@@ -23,7 +26,7 @@ class KosmosServices():
             self.__dict__[name]=value
             return
         m = self.__dict__["_factory"]
-        o=m.get(name)
+        o=m.get(name=name,die=False)
         j.shell()
 
     def __str__(self):
@@ -62,7 +65,10 @@ class JSFactoryBase(JSBase):
         :param kwargs: the data elements
         :return: the service
         """
+        from pudb import set_trace; set_trace()
+        self._model.schema.new()
         data = self._model.new()
+        j.shell()
         data.name = name
         if kwargs is not {}:
             data.data_update(**kwargs)
@@ -161,7 +167,7 @@ class JSFactoryBase(JSBase):
         """
         if len(kwargs)>0:
             propnames = [i for i in kwargs.keys()]
-            propnames_keys_in_schema = [item.name for item in self._model.schema.propertynames_index_keys if item.name in propnames]
+            propnames_keys_in_schema = [item.name for item in self._model.schema.properties_index_keys if item.name in propnames]
             if len(propnames_keys_in_schema) > 0:
                 # we can try to find this config
                 return self._model.get_from_keys(**kwargs)

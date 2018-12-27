@@ -233,6 +233,8 @@ class Boolean():
         """
         used to change the value to a predefined standard for this type
         """
+        if isinstance(value,str):
+            value=value.strip().strip("'").strip("\"")
         if value in ["1", 1, True]:
             value = True
         elif j.data.types.string.check(value) and value.strip().lower() in ["true", "yes", "y"]:

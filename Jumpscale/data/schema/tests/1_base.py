@@ -104,6 +104,31 @@ def main(self):
     assert len(schema_test1._data) < 25
     assert len(schema_test1._data) == x
 
+    schema = """
+        @url = despiegk.test2
+        #lets check the defaults
+        bool1 = true (B)
+        bool2 = True (B)
+        bool3 = false (B)
+        bool4 = False (B)
+        bool5 = 1 (B)
+        bool6 = '1' (B)
+        bool7 = '0' (B)
+        bool8 = 'n' (B)
+        int1 =  10 (I)
+    """
+
+    o = j.data.schema.get(schema).new()
+    assert o.bool1 == True
+    assert o.bool2 == True
+    assert o.bool3 == False
+    assert o.bool4 == False
+    assert o.bool5 == True
+    assert o.bool6 == True
+    assert o.bool7 == False
+    assert o.bool8 == False
+    assert o.int1 == 10
+
     self._logger.info("TEST DONE BASE")
 
     return ("OK")

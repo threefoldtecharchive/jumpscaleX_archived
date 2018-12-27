@@ -55,6 +55,10 @@ class ModelOBJ():
         :return:
         """
 
+        if data is None:
+            data={}
+
+
         if self.readonly:
             raise RuntimeError("cannot load from data, obj is readonly.\n%s"%self)
 

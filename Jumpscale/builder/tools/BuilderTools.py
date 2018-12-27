@@ -287,18 +287,13 @@ class BuilderTools(j.builder.system._BaseClass):
         return base64.decodebytes(frame.encode(errors='replace')).decode()
 
     def file_exists(self, location):
-        location = j.core.tools.text_replace(location)
-        """Tests if there is a *remote* file at the given location."""
-        raise RuntimeError("use jumpscale,call libs")
-        return self._check_is_ok('test -e', location)
+        return j.sal.fs.exists(location)
 
     def exists(self, location, replace=True):
         """
         check if dir or file or exists
         """
-        raise RuntimeError("use jumpscale,call libs")
-        location = j.core.tools.text_replace(location)
-        return self._check_is_ok('test -e', location, replace=replace)
+        return j.sal.fs.exists(location)
 
     def file_is_file(self, location):
         raise RuntimeError("use jumpscale,call libs")
@@ -422,6 +417,7 @@ class BuilderTools(j.builder.system._BaseClass):
     def file_ensure(self, location, mode=None, owner=None, group=None):
         """Updates the mode/owner/group for the remote file at the given
         location."""
+        raise RuntimeError("use jumpscale,call libs")
         location = j.core.tools.text_replace(location)
         if self.file_exists(location):
             self.file_attribs(location, mode=mode, owner=owner, group=group)
