@@ -1,5 +1,3 @@
-import subprocess
-
 from Jumpscale.sal.ubuntu.Ubuntu import Ubuntu
 from Jumpscale import j
 from unittest import  TestCase
@@ -42,6 +40,24 @@ class Test_Ubuntu(TestCase):
     def test007_pkg_list(self):
         self.assertNotEqual(self.ubuntu.pkg_list('ping'), 0)
 
-    
+    def test008_service_start(self):
+        self.ubuntu.service_start('dbus')
+        rc, out, err = j.sal.process.execute('service dbus status')
+        self.assertIn('dbus is running', out)
 
+    def test009_service_stop(self):
+        j.sal.process.execute('service dbus start')
+        self.ubuntu.service_stop('dbus')
+        rc, out, err = j.sal.process.execute('service dbus status')
+        self.assertIn('dbus is not running', out)
+
+    def test010_service_restart(self):
+        j.sal.process.execute('service dbus start')
+        self.ubuntu.service_restart('dbus')
+        rc, out, err = j.sal.process.execute('service dbus status')
+        self.assertIn('dbus is running', out)
+
+    def test011_service_status(self):
+        j.sal.process.execute('service dbus start')
+        self.assertTrue(self.ubuntu.service_status('dbus'))
 

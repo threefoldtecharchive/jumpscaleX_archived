@@ -253,7 +253,7 @@ stop on runlevel [016]
         """
         self._logger.debug('start service on ubuntu for:%s' % service_name)
         if not self.service_status(service_name):
-            cmd = 'sudo start %s' % service_name
+            cmd = 'sudo service %s start' % service_name
             return j.sal.process.execute(cmd, useShell=True)
 
     def service_stop(self, service_name):
@@ -264,7 +264,7 @@ stop on runlevel [016]
         :return: start service output
         :rtype: bool
         """
-        cmd = 'sudo stop %s' % service_name
+        cmd = 'sudo service %s stop' % service_name
         return j.sal.process.execute(cmd, useShell=True)
 
     def service_restart(self, service_name):
@@ -276,7 +276,7 @@ stop on runlevel [016]
         :return: start service output
         :rtype: bool
         """
-        return j.sal.process.execute('sudo restart %s' % service_name)
+        return j.sal.process.execute('sudo service %s restart' % service_name)
 
     def service_status(self, service_name):
         """
@@ -286,12 +286,13 @@ stop on runlevel [016]
         :rtype: str
         :return:
         """
-        exitcode, output = j.sal.process.execute('sudo status %s' % service_name)
-        parts = output.split(' ')
-        if len(parts) >= 2 and parts[1].startswith('start'):
+        exitcode, output, error = j.sal.process.execute('sudo service %s status' % service_name)
+        if '%s is running' in output:
             return True
-
-        return False
+        elif '%s is not running' in output:
+            return False
+        else:
+            return 
 
     def service_disable_start_boot(self, service_name):
         """
@@ -303,6 +304,7 @@ stop on runlevel [016]
 
     def service_enable_start_boot(self, service_name):
         """
+        remove all links for a script
 
         :param service_name: ubuntu service name
         """
