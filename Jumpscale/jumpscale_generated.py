@@ -2049,6 +2049,7 @@ class group_data():
         self._serializers = None
         self._nacl = None
         self._bcdb = None
+        self._dict_editor = None
         self._idgenerator = None
 
     
@@ -2409,6 +2410,23 @@ class group_data():
                 return None
             # print("OK")
         return self._bcdb
+    @property
+    def dict_editor(self):
+        if self._dict_editor is None:
+            # print("LOAD:DictEditorFactory")
+            try:
+                from Jumpscale.data.dicteditor.DictEditor import DictEditorFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.data.dicteditor.DictEditor", e)
+                raise e
+            # print("RUN:DictEditorFactory")
+            try:
+                self._dict_editor =  DictEditorFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.data.dicteditor.DictEditor",e)
+                return None
+            # print("OK")
+        return self._dict_editor
     @property
     def idgenerator(self):
         if self._idgenerator is None:
