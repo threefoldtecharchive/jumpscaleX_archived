@@ -47,5 +47,31 @@ After editing the file the data will be put back in the dict.
 
 ### usage as part of the jsconfig class
 
-- works for each data object which is result of using the jumpscale schema framework.
+works for each data object which is result of using the jumpscale schema framework.
 
+```python
+schema = """
+@url = despiegk.test2
+llist2 = "" (LS)
+nr = 4
+date_start = 0 (D)
+description = ""
+cost_estimate = 0.0 #this is a comment
+llist = []
+enum = "red,green,blue" (E) #first one specified is the default one
+
+@url = despiegk.test3
+llist = []
+description = ""
+"""
+s=j.data.schema.get(schema_text=schema)
+o=s.new()
+```
+
+you can now use the o.edit() and o.view() methods.
+
+They use the dict editor underneith.
+
+![](oview.png)
+
+![](edit_o.png)
