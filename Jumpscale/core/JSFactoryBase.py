@@ -8,6 +8,13 @@ class KosmosServices():
     def __init__(self,factory):
         self._factory = factory
 
+    def _empty_js_obj(self):
+        for key,val in self.__dict__.items():
+            if not key.startswith("_"):
+                self.__dict__[key]._empty_js_obj()
+                del self.__dict__[key]
+                self.__dict__[key]=None
+
     def __getattr__(self, name):
         #if private then just return
         if name.startswith("_"):
@@ -56,6 +63,14 @@ class JSFactoryBase(JSBase):
             self.services = KosmosServices(self)
         self.__model = None
         self._init()
+
+
+    def _empty_js_obj(self):
+        self.__dict__["_children"] = {}
+        if "clients" in self.__location__:
+            self.instances._empty_js_obj()
+        else:
+            self.services._empty_js_obj()
 
     @property
     def name(self):

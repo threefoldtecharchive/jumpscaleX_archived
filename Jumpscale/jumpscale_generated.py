@@ -9,11 +9,12 @@ if "/sandbox/lib/jumpscale" not in sys.path:
     sys.path.append("/sandbox/lib/jumpscale")
 
 
+class JSGroup():
+    pass
 
-class group_clients():
+
+class group_clients(JSGroup):
     def __init__(self):
-        pass
-
         
         self._gedis = None
         self._multicast = None
@@ -1117,12 +1118,11 @@ class group_clients():
         return self._packetnet
 
 j.clients = group_clients()
+j.core._groups["clients"] = j.clients
 
 
-class group_tools():
+class group_tools(JSGroup):
     def __init__(self):
-        pass
-
         
         self._zos = None
         self._tfbot = None
@@ -1956,12 +1956,11 @@ class group_tools():
         return self._email
 
 j.tools = group_tools()
+j.core._groups["tools"] = j.tools
 
 
-class group_world():
+class group_world(JSGroup):
     def __init__(self):
-        pass
-
         
         self._system = None
         self._hypervisor = None
@@ -2021,12 +2020,11 @@ class group_world():
         return self._zos
 
 j.world = group_world()
+j.core._groups["world"] = j.world
 
 
-class group_data():
+class group_data(JSGroup):
     def __init__(self):
-        pass
-
         
         self._nltk = None
         self._encryption = None
@@ -2446,12 +2444,11 @@ class group_data():
         return self._idgenerator
 
 j.data = group_data()
+j.core._groups["data"] = j.data
 
 
-class group_servers():
+class group_servers(JSGroup):
     def __init__(self):
-        pass
-
         
         self._gedis = None
         self._digitalme = None
@@ -2655,12 +2652,11 @@ class group_servers():
         return self._jsrun
 
 j.servers = group_servers()
+j.core._groups["servers"] = j.servers
 
 
-class group_sal():
+class group_sal(JSGroup):
     def __init__(self):
-        pass
-
         
         self._coredns = None
         self._docker = None
@@ -3152,12 +3148,11 @@ class group_sal():
         return self._process
 
 j.sal = group_sal()
+j.core._groups["sal"] = j.sal
 
 
-class group_tutorials():
+class group_tutorials(JSGroup):
     def __init__(self):
-        pass
-
         
         self._base = None
 
@@ -3181,12 +3176,11 @@ class group_tutorials():
         return self._base
 
 j.tutorials = group_tutorials()
+j.core._groups["tutorials"] = j.tutorials
 
 
-class group_data_units():
+class group_data_units(JSGroup):
     def __init__(self):
-        pass
-
         
         self._sizes = None
 
@@ -3210,12 +3204,11 @@ class group_data_units():
         return self._sizes
 
 j.data_units = group_data_units()
+j.core._groups["data_units"] = j.data_units
 
 
-class group_builder():
+class group_builder(JSGroup):
     def __init__(self):
-        pass
-
         
         self._systemtools = None
         self._tools = None
@@ -3491,6 +3484,7 @@ class group_builder():
         return self._buildenv
 
 j.builder = group_builder()
+j.core._groups["builder"] = j.builder
 
 
 

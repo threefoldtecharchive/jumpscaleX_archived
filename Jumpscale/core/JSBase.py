@@ -17,6 +17,14 @@ class JSBase:
     _test_runs = {}
     _test_runs_error = {}
 
+    def _empty_js_obj(self):
+        self._logger_ = None
+        self._test_runs = {}
+
+        for key,obj in self.__dict__.items():
+            del obj
+
+
     def __init__(self,init=True):
         self._cache_ = None
         if init:
@@ -76,6 +84,7 @@ class JSBase:
             else:
                 self._objid_ = id
         return self._objid_
+
 
     @property
     def _logger(self):
