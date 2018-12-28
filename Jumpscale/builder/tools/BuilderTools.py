@@ -160,12 +160,12 @@ class BuilderTools(j.builder.system._BaseClass):
 
         if overwrite:
             if self.file_exists(to):
-                self.file_unlink(to)
-                self.file_unlink("%s.downloadok" % to)
+                j.sal.fs.remove(to)
+                j.sal.fs.remove("%s.downloadok" % to)
 
         if not (self.file_exists(to) and self.file_exists("%s.downloadok" % to)):
 
-            self.createDir(j.sal.fs.getDirName(to))
+            j.sal.fs.createDir(j.sal.fs.getDirName(to))
 
             if multithread is False:
                 minspeed = 0
@@ -183,10 +183,10 @@ class BuilderTools(j.builder.system._BaseClass):
                 if self.file_exists(to):
                     cmd += " -C -"
                 self._logger.info(cmd)
-                self.file_unlink("%s.downloadok" % to)
+                j.sal.fs.remove("%s.downloadok" % to)
                 rc, out, err = self.run(cmd, die=False, timeout=timeout)
                 if rc == 33:  # resume is not support try again withouth resume
-                    self.file_unlink(to)
+                    j.sal.fs.remove(to)
                     cmd = "curl -L '%s' -o '%s' %s %s --connect-timeout 5 --retry %s --retry-max-time %s" % (
                         url, to, user, minsp, retry, timeout)
                     rc, out, err = self.run(cmd, die=False, timeout=timeout)
@@ -229,6 +229,8 @@ class BuilderTools(j.builder.system._BaseClass):
             raise RuntimeError("Cannot file expand, not supported")
         if destination == "":
             destination = self.joinpaths("{DIR_TEMP}", base)
+        j.sal.fs.remove(destination)
+        j.sal.fs.createDir(destination)
         path = j.core.tools.text_replace(path)
         destination = j.core.tools.text_replace(destination)
         self.dir_ensure(destination)
@@ -577,7 +579,7 @@ class BuilderTools(j.builder.system._BaseClass):
         :type location: string
         """
         location = j.core.tools.text_replace(location)
-        return j.sal.fs.isDir(location)
+        return j.sal.fs.exists(location)
 
     def dir_remove(self, location, recursive=True):
         """ Removes a directory """

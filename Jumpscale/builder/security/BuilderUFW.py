@@ -91,7 +91,7 @@ class BuilderUFW(j.builder.system._BaseClass):
         iptables --table nat --delete-chain
         iptables --table filter --delete-chain
         """
-        j.builder.tools.execute_bash(C)
+        j.sal.process.execute(C)
 
     def show(self):
         if self.ufw_enabled==False:

@@ -16,7 +16,7 @@ class BuilderLibffi(j.builder.system._BaseClass):
 
     def build(self, reset=False):
         """
-        js_shell 'j.builder.lib.libffi.build(reset=True)'
+        js_shell 'j.builder.libs.libffi.build(reset=True)'
         """
         if reset:
             self.reset()

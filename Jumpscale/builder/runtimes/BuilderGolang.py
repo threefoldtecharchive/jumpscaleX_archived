@@ -107,7 +107,7 @@ class BuilderGolang(j.builder.system._BaseClass):
         cd $GOPATH/src/github.com/Jumpscale/go-raml
         sh build.sh
         '''
-        j.builder.tools.execute_bash(C, profile=True)
+        j.sal.process.execute(C, profile=True)
         self._done_set('goraml')
 
     def bindata(self, reset=False):
@@ -123,7 +123,7 @@ class BuilderGolang(j.builder.system._BaseClass):
         go build
         go install
         '''
-        j.builder.tools.execute_bash(C, profile=True)
+        j.sal.process.execute(C, profile=True)
         self._done_set('bindata')
 
     def glide(self):

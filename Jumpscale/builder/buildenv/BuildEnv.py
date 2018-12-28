@@ -23,7 +23,7 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
         # make sure all dirs exist
         # for key, item in j.builder.tools.dir_paths.items():
         #     out += "mkdir -p %s\n" % item
-        # j.builder.tools.execute_bash(out)
+        # j.sal.process.execute(out)
 
         j.builder.system.package.mdupdate()
 

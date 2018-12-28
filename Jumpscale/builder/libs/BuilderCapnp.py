@@ -13,7 +13,7 @@ class BuilderCapnp(j.builder.system._BaseClass):
         """
         install capnp
 
-        js_shell 'j.builder.lib.capnp.build(reset=True)'
+        js_shell 'j.builder.libs.capnp.build(reset=True)'
 
         """
 

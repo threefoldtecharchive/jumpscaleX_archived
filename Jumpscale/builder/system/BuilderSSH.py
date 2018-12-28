@@ -112,7 +112,7 @@ class BuilderSSH(j.builder.system._BaseClass):
                 isknown = True
                 break
         if not isknown:
-            j.builder.tools.execute_bash('ssh-keyscan -p {} -t rsa {} >> {}'.format(port, addr, known_hostsfile))
+            j.sal.process.execute('ssh-keyscan -p {} -t rsa {} >> {}'.format(port, addr, known_hostsfile))
 
     def keygen(self, user="root", keytype="rsa", name="default"):
         """Generates a pair of ssh keys in the user's home .ssh directory."""

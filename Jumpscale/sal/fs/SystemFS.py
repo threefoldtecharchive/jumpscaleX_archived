@@ -173,7 +173,7 @@ class SystemFS(j.application.JSBaseClass):
             if item not in ignorefiles:
                 ignorefiles.append(item)
 
-        if not ssh:
+        if not rsync:
             if src.find("file://") != -1 or dst.find("file://") != -1:
                 raise j.exceptions.RuntimeError(
                     "Cannot use file notation here")
@@ -230,6 +230,16 @@ class SystemFS(j.application.JSBaseClass):
             for item in ignoredir:
                 excl += "--exclude '*%s/' " % item
             dstpath = dst.split(':')[1] if ':' in dst else dst
+
+            dstpath = dstpath.replace("//","/")
+            src = src.replace("//","/")
+
+            if j.sal.fs.isDir(src):
+                if src[-1]!="/":
+                    src+="/"
+                if dstpath[-1]!="/":
+                    dstpath+="/"
+
             cmd = "rsync --no-owner --no-group"
             if keepsymlinks:
                 #-l is keep symlinks, -L follow
@@ -243,11 +253,13 @@ class SystemFS(j.application.JSBaseClass):
             if ssh:
                 cmd += " -e 'ssh -o StrictHostKeyChecking=no -p %s' " % sshport
             if createdir:
-                cmd += "--rsync-path='mkdir -p %s && rsync' " % self.getParent(dstpath)
-            cmd += " '%s' '%s'" % (src, dst)
-            print(cmd)
+                # cmd += "--rsync-path='mkdir -p %s && rsync' " % dstpath
+                self.createDir(dstpath)
+            cmd += " '%s' '%s'" % (src, dstpath)
+            # print(cmd)
+            #self.getParent(
 
-            return j.tools.executorLocal.execute(cmd)[1]
+            rc,out,err = j.sal.process.execute(cmd)
 
     @path_check(path={"required", "replace", "exists", "dir"})
     def changeDir(self, path):

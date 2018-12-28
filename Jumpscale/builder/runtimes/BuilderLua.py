@@ -5,7 +5,6 @@ from Jumpscale import j
 
 class BuilderLua(j.builder.system._BaseClass):
 
-
     NAME = "lua"
 
     def _init(self):
@@ -21,7 +20,7 @@ class BuilderLua(j.builder.system._BaseClass):
             return
 
         #need openresty & openssl to start from
-        j.builder.lib.openssl.build()
+        j.builder.libs.openssl.build()
         j.builder.web.openresty.build()
 
         j.tools.bash.local.locale_check()
@@ -42,7 +41,7 @@ class BuilderLua(j.builder.system._BaseClass):
         
         """
 
-        j.builder.tools.execute_bash(j.core.tools.text_replace(C))
+        j.sal.process.execute(j.core.tools.text_replace(C))
 
         self.lua_rocks_install()
         self.copy2sandbox_github()
@@ -137,7 +136,7 @@ class BuilderLua(j.builder.system._BaseClass):
         rsync -rav /sandbox/var/build/luarocks/lua_modules/share/lua/5.1/ $LUALIB/
 
         """
-        j.builder.tools.execute_bash(j.core.tools.text_replace(C))
+        j.sal.process.execute(j.core.tools.text_replace(C))
 
 
 
@@ -185,7 +184,7 @@ class BuilderLua(j.builder.system._BaseClass):
         C = j.core.tools.text_replace(C)
         print(C)
 
-        j.builder.tools.execute_bash(C)
+        j.sal.process.execute(C)
 
 
     def copy2sandbox_github(self):

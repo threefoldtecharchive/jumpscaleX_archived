@@ -69,7 +69,7 @@ class SystemProcess(j.application.JSBaseClass):
         return exitcode
 
     def execute(self, command, showout=True, useShell=True, cwd=None, timeout=600,die=True, async_=False,
-                env=None,interactive=False, replace=False):
+                env=None,interactive=False, replace=False,args={}):
         """
 
         :param command:
@@ -82,7 +82,8 @@ class SystemProcess(j.application.JSBaseClass):
         :param env: is arguments which will be replaced om the command core.text_replace(... feature)
         :return: (rc,out,err)
         """
-
+        if args!={} and args is not None:
+            j.core.tools.text_replace(command,args=args)
         return j.core.tools.execute(command=command, showout=showout, useShell=useShell, cwd=cwd,
                                           timeout=timeout,die=die, async_=async_,
                                           env=env,interactive=interactive,replace=replace)

@@ -9,6 +9,8 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
         # self._logger_enable()
         self._python = None
         self._php = None
+        self._lua = None
+        self._golang = None
 
     @property
     def python(self):
@@ -23,4 +25,19 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
             from .BuilderPHP import BuilderPHP
             self._php = BuilderPHP()
         return self._php
+
+    @property
+    def lua(self):
+        if self._lua is None:
+            from .BuilderLua import BuilderLua
+            self._lua = BuilderLua()
+        return self._lua
+
+
+    @property
+    def golang(self):
+        if self._golang is None:
+            from .BuilderGolang import BuilderGolang
+            self._golang = BuilderGolang()
+        return self._golang
 

@@ -34,7 +34,7 @@ class BuilderPostgresql(j.builder.system._BaseClass):
         ./configure --prefix={DIR_BASE}/apps/pgsql --bindir={DIR_BIN} --sysconfdir=$CFGDIR --libdir=$LIBDIR/postgres --datarootdir={DIR_BASE}/apps/pgsql/share
         make
         """.format(self.BUILD_DIR)
-        j.builder.tools.execute_bash(cmd, profile=True)
+        j.sal.process.execute(cmd, profile=True)
         self._done_set('build')
 
     def _group_exists(self, groupname):
@@ -49,7 +49,7 @@ class BuilderPostgresql(j.builder.system._BaseClass):
         make install with-pgport={port}
         """.format(build_dir=self.BUILD_DIR, port=port)
         j.core.tools.dir_ensure(self.dbdir)
-        j.builder.tools.execute_bash(cmd, profile=True)
+        j.sal.process.execute(cmd, profile=True)
         if not self._group_exists("postgres"):
             j.sal.process.execute('adduser --system --quiet --home $LIBDIR/postgres --no-create-home \
         --shell /bin/bash --group --gecos "PostgreSQL administrator" postgres')
@@ -64,7 +64,7 @@ class BuilderPostgresql(j.builder.system._BaseClass):
         """.format(postgresdbdir=self.dbdir)
 
         # NOTE pg_hba.conf uses the default trust configurations.
-        j.builder.tools.execute_bash(c, profile=True)
+        j.sal.process.execute(c, profile=True)
         if start:
             self.start()
 
@@ -85,7 +85,7 @@ class BuilderPostgresql(j.builder.system._BaseClass):
         chown postgres {DIR_BASE}/apps/pgsql/log/
         """
 
-        j.builder.tools.execute_bash(cmd, profile=True)
+        j.sal.process.execute(cmd, profile=True)
 
         cmdpostgres = "sudo -u postgres {DIR_BIN}/postgres -D {postgresdbdir}".format(
             postgresdbdir=self.dbdir)
@@ -109,7 +109,7 @@ class BuilderPostgresql(j.builder.system._BaseClass):
         cmd = """
         sudo -u postgres {DIR_BIN}/psql -c "ALTER USER postgres WITH PASSWORD '{passwd}'";
         """.format(passwd=self.passwd)
-        j.builder.tools.execute_bash(cmd, profile=True)
+        j.sal.process.execute(cmd, profile=True)
         print("user: {}, password: {}".format("postgres", self.passwd))
 
     def stop(self):

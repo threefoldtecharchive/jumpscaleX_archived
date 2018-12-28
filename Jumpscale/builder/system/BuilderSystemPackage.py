@@ -314,7 +314,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
             mkdir -p /var/tmp
 
             """
-            j.builder.tools.execute_bash(C)
+            j.sal.process.execute(C)
 
         # elif j.builder.tools.isArch:
         #     cmd = "pacman -Sc"

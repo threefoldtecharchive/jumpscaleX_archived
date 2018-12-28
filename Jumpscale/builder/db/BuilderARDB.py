@@ -112,7 +112,7 @@ class BuilderARDB(j.builder.system._BaseClass):
             cp ardb.conf {DIR_VAR}/build/ARDB/
             """
         C = C.replace("$storageEngine", storageEngine)
-        j.builder.tools.execute_bash(j.core.tools.text_replace(C))
+        j.sal.process.execute(j.core.tools.text_replace(C))
 
         self._done_set("buildardb")
 
