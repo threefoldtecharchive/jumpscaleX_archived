@@ -52,14 +52,14 @@ class IYOClient(j.application.JSBaseConfigClass):
 
     @property
     def client(self):
-        """Generated itsyou.onine client"""
+        """Generated itsyou.online client"""
         if self._client is None:
             self._client = Client(base_uri=self.baseurl)
         return self._client
 
     @property
     def api(self):
-        """Generated itsyou.onine client api"""
+        """Generated itsyou.online client api"""
         if self._api is None:
             self._api = self.client.api
             if self._lastjwt is None:
@@ -70,7 +70,7 @@ class IYOClient(j.application.JSBaseConfigClass):
 
     @property
     def oauth2_client(self):
-        """Generated itsyou.onine client oauth2 client"""
+        """Generated itsyou.online client oauth2 client"""
         if self._oauth2_client is None:
             self._oauth2_client = self.client.Oauth2ClientOauth_2_0  # WEIRD NAME???
         return self._oauth2_client
@@ -129,6 +129,8 @@ class IYOClient(j.application.JSBaseConfigClass):
         :param validity: the validity of the requested token
         :return: return the token as string
         """
+        if scope is None:
+            scope=""
         url = urllib.parse.urljoin(self.baseurl, '/v1/oauth/access_token')
         if refreshable:
             if scope.find("offline_access") == -1:

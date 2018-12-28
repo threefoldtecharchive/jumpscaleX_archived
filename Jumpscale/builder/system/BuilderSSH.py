@@ -35,7 +35,7 @@ class BuilderSSH(j.builder.system._BaseClass):
         login = "root"
         done = []
         for item in self.test_login(passwd, port, range, onlyplatform=onlyplatform):
-            keypath = j.sal.fs.joinPaths(j.builder.sandbox.env["HOME"], ".ssh", keyname + ".pub")
+            keypath = j.sal.fs.joinPaths(#j.builder.sandbox.env["HOME"], ".ssh", keyname + ".pub")
             if j.sal.fs.exists(keypath):
                 key = j.sal.fs.readFile(keypath)
                 executor = j.tools.executor.getSSHBased(item, port, login, passwd, checkok=True)

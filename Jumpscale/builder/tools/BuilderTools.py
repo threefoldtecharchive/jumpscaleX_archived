@@ -687,7 +687,7 @@ class BuilderTools(j.builder.system._BaseClass):
         """
         @param profile, execute the bash profile first
         """
-        # self._logger.info(cmd)
+        self._logger.info(cmd)
         if cmd.strip() == "":
             raise RuntimeError("cmd cannot be empty")
         if not env:
@@ -695,7 +695,7 @@ class BuilderTools(j.builder.system._BaseClass):
         else:
             env = args.update(env)
 
-        rc, out, err = j.sal.process.execute(vmd, cwd=None, timeout=timeout, die=True,
+        rc, out, err = j.sal.process.execute(cmd, cwd=None, timeout=timeout, die=True,
                                              env=env, interactive=False, replace=replace)
         return rc, out, err
 
@@ -742,8 +742,8 @@ class BuilderTools(j.builder.system._BaseClass):
         command = j.core.tools.text_replace(command)
         rc, out, err = self.run("which '%s'" % command,
                                 die=False, showout=False, profile=True)
-        if not rc:
-            raise RuntimeError("command %s does not exist" % command)
+        if rc>0:
+            raise RuntimeError("command '%s' does not exist, cannot find" % command)
         return out.strip()
 
     def command_ensure(self, command, package=None):
@@ -760,24 +760,24 @@ class BuilderTools(j.builder.system._BaseClass):
 
     @property
     def isUbuntu(self):
-        return 'ubuntu' in j.core.platformtype.myplatform
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("ubuntu")!=-1
 
     @property
     def isLinux(self):
-        return "linux" in j.core.platformtype.getParents(j.core.platformtype.myplatform)
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("linux")!=-1
 
     @property
     def isAlpine(self):
-        return "alpine" in j.core.platformtype.getParents(j.core.platformtype.myplatform)
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("alpine")!=-1
 
     @property
     def isArch(self):
-        return "arch" in j.core.platformtype.getParents(j.core.platformtype.myplatform)
+        return False
 
     @property
     def isMac(self):
-        return "darwin" in j.core.platformtype.getParents(j.core.platformtype.myplatform)
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("darwin")!=-1
 
     @property
     def isCygwin(self):
-        return "cygwin" in j.core.platformtype.getParents(j.core.platformtype.myplatform)
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("cygwin")!=-1

@@ -162,7 +162,7 @@ class JSBase:
     def _done_check(self,name="",reset=False):
         if reset:
             self._done_reset(name=name)
-        if name!="":
+        if name=="":
             return j.core.db.hexists("done",self._objid)
         else:
             return j.core.db.hexists("done","%s:%s"%(self._objid,name))
@@ -185,9 +185,10 @@ class JSBase:
         :param name:
         :return:
         """
-        if name!="":
-            for item in  j.core.db.hkeys("done","%s*"%self._objid):
-                 j.core.db.hdel("done",item)
+        if name=="":
+            for item in j.core.db.hkeys("done"):
+                if item.find(self._objid)!=-1:
+                    j.core.db.hdel("done",self._objid)
         else:
             return j.core.db.hdel("done","%s:%s"%(self._objid,name))
 
@@ -276,9 +277,8 @@ class JSBase:
     def __str__(self):
         try:
             out = "%s\n%s\n"%(self.__class__,str(j.data.serializers.yaml.dumps(self._ddict)))
-        except:
+        except Exception as e:
             out = str(self.__class__)+"\n"
-            out+=j.core.text.prefix(" - ", str(self.__dict__))
         return out
 
     __repr__ = __str__

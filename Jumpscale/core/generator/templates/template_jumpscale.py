@@ -9,7 +9,8 @@ if "{{syspath}}" not in sys.path:
     sys.path.append("{{syspath}}")
 {%- endfor %}
 
-
+class JSGroup():
+    pass
 
 
 {% for name, jsgroup in md.jsgroups.items() %}

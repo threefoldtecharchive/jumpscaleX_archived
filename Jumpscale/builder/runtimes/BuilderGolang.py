@@ -11,29 +11,29 @@ class BuilderGolang(j.builder.system._BaseClass):
     NAME = 'go'
 
     def reset(self):
-        if j.builder.sandbox.profileDefault.envExists("GOPATH"):
-            go_path = j.builder.sandbox.profileDefault.envGet("GOPATH")
-            j.builder.sandbox.profileDefault.pathDelete(go_path)
-        if j.builder.sandbox.profileDefault.envExists("GOROOT"):
-            go_root = j.builder.sandbox.profileDefault.envGet("GOROOT")
-            j.builder.sandbox.profileDefault.pathDelete(go_root)
-            j.builder.sandbox.profileJS.pathDelete(go_root)
+        if #j.builder.sandbox.profileDefault.envExists("GOPATH"):
+            go_path = #j.builder.sandbox.profileDefault.envGet("GOPATH")
+            #j.builder.sandbox.profileDefault.pathDelete(go_path)
+        if #j.builder.sandbox.profileDefault.envExists("GOROOT"):
+            go_root = #j.builder.sandbox.profileDefault.envGet("GOROOT")
+            #j.builder.sandbox.profileDefault.pathDelete(go_root)
+            #j.builder.sandbox.profileJS.pathDelete(go_root)
 
-        j.builder.sandbox.profileDefault.deleteAll("GOPATH")
-        j.builder.sandbox.profileJS.deleteAll("GOPATH")
+        #j.builder.sandbox.profileDefault.deleteAll("GOPATH")
+        #j.builder.sandbox.profileJS.deleteAll("GOPATH")
 
-        j.builder.sandbox.profileDefault.deleteAll("GOROOT")
-        j.builder.sandbox.profileJS.deleteAll("GOROOT")
+        #j.builder.sandbox.profileDefault.deleteAll("GOROOT")
+        #j.builder.sandbox.profileJS.deleteAll("GOROOT")
 
-        j.builder.sandbox.profileDefault.deleteAll("GOGITSDIR")
-        j.builder.sandbox.profileJS.deleteAll("GOGITSDIR")
+        #j.builder.sandbox.profileDefault.deleteAll("GOGITSDIR")
+        #j.builder.sandbox.profileJS.deleteAll("GOGITSDIR")
 
-        j.builder.sandbox.profileDefault.pathDelete("/go/")
-        j.builder.sandbox.profileJS.pathDelete("/go/")
+        #j.builder.sandbox.profileDefault.pathDelete("/go/")
+        #j.builder.sandbox.profileJS.pathDelete("/go/")
 
         # ALWAYS SAVE THE DEFAULT FIRST !!!
-        j.builder.sandbox.profileDefault.save()
-        j.builder.sandbox.profileJS.save()
+        #j.builder.sandbox.profileDefault.save()
+        #j.builder.sandbox.profileJS.save()
 
         self._init()
 
@@ -72,7 +72,7 @@ class BuilderGolang(j.builder.system._BaseClass):
         j.core.tools.dir_ensure(self.GOROOTDIR)
         j.core.tools.dir_ensure(self.GOPATHDIR)
 
-        profile = j.builder.sandbox.profileDefault
+        profile = #j.builder.sandbox.profileDefault
         profile.envSet("GOROOT", self.GOROOTDIR)
         profile.envSet("GOPATH", self.GOPATHDIR)
         profile.addPath(j.builder.tools.joinpaths(self.GOPATHDIR, 'bin'))
