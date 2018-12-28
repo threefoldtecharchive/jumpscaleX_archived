@@ -1650,7 +1650,10 @@ class JumpscaleInstaller():
                             for line in Tools.file_text_read(toremove).split("\n"):
                                 if line.find("threefoldtech")==-1:
                                     out+="%s\n"%line
-                            Tools.file_write(toremove,out)
+                            try:
+                                Tools.file_write(toremove,out)
+                            except:
+                                pass
                             # Tools.shell()
         tofind=["js_","js9"]
         for part in os.environ["PATH"].split(":"):
