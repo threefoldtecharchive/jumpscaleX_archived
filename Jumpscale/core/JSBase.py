@@ -168,13 +168,13 @@ class JSBase:
             return j.core.db.hexists("done","%s:%s"%(self._objid,name))
 
     def _done_set(self,name="",value=True):
-        if name!="":
+        if name=="":
             return j.core.db.hset("done",self._objid,value)
         else:
             return j.core.db.hset("done","%s:%s"%(self._objid,name),value)
 
     def _done_get(self,name=""):
-        if name!="":
+        if name=="":
             return j.core.db.hget("done",self._objid)
         else:
             return j.core.db.hget("done","%s:%s"%(self._objid,name))

@@ -23,7 +23,7 @@ class BuilderPython(j.builder.system._BaseClass):
 
     def build(self, reset=False, tag="v3.6.7"):
         """
-        
+
         js_shell 'j.builder.runtimes.python.build(reset=False)'
         js_shell 'j.builder.runtimes.python.build(reset=True)'
 
@@ -39,6 +39,7 @@ class BuilderPython(j.builder.system._BaseClass):
             self.reset()
 
         j.builder.buildenv.install()
+        j.shell()
         j.clients.git.pullGitRepo('https://github.com/python/cpython', dest=self.DIR_CODE_L, depth=1,
                                   tag=tag, reset=reset, ssh=False, timeout=20000)
         if not self._done_get("compile") or reset:
