@@ -304,6 +304,7 @@ MYCOLORS =   { "RED":"\033[1;31m",
 class Tools():
 
     _LogFormatter = LogFormatter
+    _supported_editors = set(["micro","mcedit","joe","vim","vi"])
 
     @staticmethod
     def log(msg):
@@ -347,11 +348,15 @@ class Tools():
         """
         starts the editor micro with file specified
         """
-        for cmdtest in ["micro","mcedit","joe","vim","vi"]:
-            if Tools.cmd_installed(cmdtest):
-                Tools._execute_interactive("%s %s"%(cmdtest,path))
+        user_editor = os.environ.get('EDITOR')
+        if user_editor and Tools.cmd_installed(user_editor):
+            Tools._execute_interactive("%s %s" % (user_editor, path))
+            return
+        for editor in Tools._supported_editors:
+            if Tools.cmd_installed(editor):
+                Tools._execute_interactive("%s %s" % (editor, path))
                 return
-        Tools.error_raise("cannot edit the file: '%s', micro has been not installed"%path)
+        Tools.error_raise("cannot edit the file: '{}', non of the supported editors is installed".format(path))
 
 
 

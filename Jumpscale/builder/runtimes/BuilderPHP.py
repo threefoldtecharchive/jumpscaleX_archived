@@ -23,8 +23,7 @@ class BuilderPHP(j.builder.system._BaseClass):
 
     NAME = 'php-fpm'
 
-    def build(self, **config):
-
+    def build(self, install=False, **config):
         '''
         js_shell 'j.builder.runtimes.php.build()'
         :param config:
@@ -74,7 +73,11 @@ class BuilderPHP(j.builder.system._BaseClass):
             C = """cd {DIR_TEMP}/php && make"""
             C = j.core.tools.text_replace(C)
             j.sal.process.execute(C)
-
+        else:
+            raise j.exceptions.NotImplemented(
+                message="only ubuntu supported for building php")
+        if install is True:
+            self.install()
         # check if we need an php accelerator: https://en.wikipedia.org/wiki/List_of_PHP_accelerators
 
     def install(self, start=False):
@@ -152,8 +155,10 @@ class BuilderPHP(j.builder.system._BaseClass):
     def stop(self):
         j.sal.process.killProcessByName(self.NAME)
 
-    def test(self):
-        # TODO: *2 test php deployed in nginx
-        # check there is a local nginx running, if not install it
-        # deploy some php script, test it works
-        raise NotImplementedError
+    def _test(self, name=""):
+        """Run tests under tests directory
+
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        self._test_run(name=name, obj_key='test_main')

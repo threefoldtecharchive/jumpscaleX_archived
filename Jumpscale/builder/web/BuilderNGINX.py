@@ -202,9 +202,13 @@ class BuilderNGINX(j.builder.system._BaseClass):
             raise RuntimeError('Failed to start nginx')
 
     def stop(self):
-        j.sal.process.killProcessByName(self.NAME)
+        j.sal.process.killProcessByName(self.NAME, match_predicate=lambda a, b: a.startswith(b))
         
+    def _test(self, name=""):
+        """Run tests under tests directory
 
-    def test(self):
-        # host a file test can be reached
-        raise NotImplementedError
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        # test is already implemented in php runtime
+        pass
