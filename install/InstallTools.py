@@ -1630,6 +1630,8 @@ class JumpscaleInstaller():
         set -e
         cd {DIR_BASE}
         source env.sh
+        mkdir -p /sandbox/openresty/nginx/logs
+        mkdir -p /sandbox/var/log
         js_shell ' j.core.installer_jumpscale.remove_old_parts()'
         js_shell 'j.tools.console.echo("JumpscaleX IS OK.")'
         """
