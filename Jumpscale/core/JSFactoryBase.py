@@ -76,10 +76,11 @@ class JSFactoryBase(JSBase):
     def name(self):
         return self.__location__.split(".")[-1]
 
-    def new(self,name,**kwargs):
+    def new(self,name,childclass_name=None,**kwargs):
         """
         :param name: for the service
         :param kwargs: the data elements
+        :param childclass_name, if different typen of childclass, specify its name, needs to be implemented in _childclass_selector
         :return: the service
         """
         data = self._model.new()
@@ -87,18 +88,24 @@ class JSFactoryBase(JSBase):
         if kwargs is not {}:
             data.data_update(data=kwargs)
 
-        child_class = self._childclass_selector(dataobj=data,kwargs=kwargs)
+        child_class = self._childclass_selector(dataobj=data,kwargs=kwargs,childclass_name=childclass_name)
 
         o = child_class(factory=self,dataobj=data)
 
         o._data_trigger_new()
         self._isnew = True
 
-        self.__class__._children[data.name] = o
-        return self.__class__._children[data.name]
+        if childclass_name is not None:
+            key = "%s_%s"%(childclass_name,name)
+        else:
+            key = name
+
+        self.__class__._children[key] = o
+
+        return self.__class__._children[key]
 
 
-    def _childclass_selector(self,dataobj,kwargs):
+    def _childclass_selector(self,dataobj,kwargs,childclass_name=None):
         """
         gives a creator of a factory the ability to change the type of child to be returned
         :return:
@@ -107,17 +114,24 @@ class JSFactoryBase(JSBase):
             raise RuntimeError("__class__._CHILDCLASS should be set")
         return self.__class__._CHILDCLASS
 
-    def get(self,name=None,id=None,die=True ,create_new=True,**kwargs):
+    def get(self,name=None,id=None,die=True ,create_new=True,childclass_name=None,**kwargs):
         """
         :param id: id of the obj to find, is a unique id
         :param name: of the object, can be empty when searching based on id or the search criteria (kwargs)
         :param search criteria (if name not used) or data elements for the new one being created
         :param die, means will give error when object not found
         :param create_new, if True it will automatically create a new one
+        :param childclass_name, if different typen of childclass, specify its name, needs to be implemented in _childclass_selector
         :return: the service
         """
-        if name is not None and name  in self.__class__._children:
-            return self.__class__._children[name]
+
+        if name is not None:
+            if childclass_name is not None:
+                key = "%s_%s"%(childclass_name,name)
+            else:
+                key = name
+            if key in self.__class__._children:
+                return self.__class__._children[key]
 
         if id is not None:
             data = self._model.get(id=id)
@@ -136,7 +150,7 @@ class JSFactoryBase(JSBase):
                 res = self._find_obj(name=name)
                 if len(res)<1:
                     if create_new:
-                        return self.new(name=name,**kwargs)
+                        return self.new(name=name,childclass_name=childclass_name,**kwargs)
                     if die:
                         return self._error_input_raise("Did not find the service for '%s', name looking for:\n%s"%(self.__location__,name))
                     else:
@@ -146,12 +160,18 @@ class JSFactoryBase(JSBase):
                 else:
                     data=res[0]
 
-        if self.__class__._CHILDCLASS is None:
-            raise RuntimeError("__class__._CHILDCLASS should be set")
-        child_class = self.__class__._CHILDCLASS
+        if childclass_name is not None:
+            key = "%s_%s"%(childclass_name,name)
+        else:
+            key = name
+        if key in self.__class__._children:
+            return self.__class__._children[key]
+
+        child_class  = self._childclass_selector(dataobj=data,kwargs=kwargs,childclass_name=childclass_name)
         o = child_class(factory=self,dataobj=data)
-        self.__class__._children[name] = o
-        return self.__class__._children[name]
+        self.__class__._children[key] = o
+
+        return self.__class__._children[key]
 
     def reset(self):
         """
