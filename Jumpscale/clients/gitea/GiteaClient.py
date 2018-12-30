@@ -4,8 +4,6 @@ from .GiteaOrg import GiteaOrg
 
 from .client.http_client import HTTPClient
 
-
-
 JSConfigBase = j.application.JSBaseConfigClass
 JSBASE = j.application.JSBaseClass
 
@@ -14,6 +12,7 @@ class GiteaClient(JSConfigBase):
 
     _SCHEMATEXT = """
     @url = jumpscale.gitea.client
+    name* = "" (S)
     url = "" (S)
     gitea_token_ = "" (S)
     """

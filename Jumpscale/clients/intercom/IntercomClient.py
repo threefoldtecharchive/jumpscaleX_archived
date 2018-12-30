@@ -13,6 +13,7 @@ JSConfigClient = j.application.JSBaseConfigClass
 class IntercomClient(JSConfigClient):
     _SCHEMATEXT = """
         @url = jumpscale.intercom.client
+        name* = "" (S)
         token_ = "dG9rOmNjNTRlZDFiX2E3OTZfNGFiM185Mjk5X2YzMGQyN2NjODM4ZToxOjA=" (S)
         """
 

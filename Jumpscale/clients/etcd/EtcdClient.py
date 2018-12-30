@@ -17,6 +17,7 @@ if socket.socket is gevent.socket.socket:
 class EtcdClient(JSConfigClient):
     _SCHEMATEXT = """
     @url = jumpscale.etcd.client
+    name* = "" (S)
     host = "127.0.0.1" (S)
     port = 2379 (ipport)
     user = "" (S)

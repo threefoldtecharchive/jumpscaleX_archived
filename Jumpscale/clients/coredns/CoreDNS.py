@@ -88,6 +88,7 @@ class CoreDNS(JSConfigBase):
 
     _SCHEMATEXT = """
     @url = jumpscale.coredns.client
+    name* = "" (S)
     etcd_instance = "default" (S)
     etcdpath = "skydns" (S)
     secrets_ = "" (S)

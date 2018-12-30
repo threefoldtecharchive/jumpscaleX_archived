@@ -5,23 +5,25 @@ from googleapiclient import discovery
 from oauth2client.client import GoogleCredentials
 
 # https://cloud.google.com/compute/docs/reference/latest/instances/list
-JSBASE = j.application.JSBaseClass
+JSBASE = j.application.JSBaseConfigClass
 
 
-class GoogleCompute(j.application.JSBaseClass):
+class GoogleCompute(JSBASE):
+    _SCHEMATEXT = """
+    @url = jumpscale.googlecompute.client
+    name* = "" (S)
+    zone = "us-east1-b" (S)
+    projectName = "constant-carver-655" (S)
+    """
 
-    def __init__(self):
-        self.__jslocation__ = "j.clients.google_compute"
-        JSBASE.__init__(self)
-        self.zone = 'us-east1-b'
-        self.projectName = 'constant-carver-655'
+    def _init_new(self):
         self.credentials = None
         self.service = None
         self._projects = None
         self._instances = None
         self._images = {}
 
-    def init(self, zone=None, projectName=None):
+    def _init(self, zone=None, projectName=None):
         if zone is not None:
             self.zone = zone
         if projectName is not None:

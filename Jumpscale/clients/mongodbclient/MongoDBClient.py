@@ -9,6 +9,7 @@ JSConfigClient = j.application.JSBaseConfigClass
 class MongoDBClient(JSConfigClient):
     _SCHEMATEXT = """
         @url = jumpscale.MongoDB.client
+        name* = "" (S)
         host = "localhost" (S)
         port = 27017 (ipport)
         ssl = False (B)

@@ -18,6 +18,7 @@ class BTCClient(JSConfigBase):
 
     _SCHEMATEXT = """
     @url = jumpscale.btc.client
+    name* = "" (S)
     service_url = "https://btc-alpha.com/api/" (S)
     key_ = "" (S)
     secret_ = "" (S)

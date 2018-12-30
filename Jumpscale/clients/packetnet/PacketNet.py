@@ -9,6 +9,7 @@ JSConfigBase = j.application.JSBaseConfigClass
 class PacketNet(JSConfigBase):
     _SCHEMATEXT = """
     @url = jumpscale.packetnet.client
+    name* = "" (S)
     name = "main" (S)
     auth_token_ = "" (S)
     project_name = "" (S)

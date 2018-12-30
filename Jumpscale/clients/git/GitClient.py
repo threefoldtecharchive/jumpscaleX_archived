@@ -11,6 +11,7 @@ class GitClient(JSBASE):
     """
     _SCHEMATEXT = """
     @url = jumpscale.git.client
+    name* = "" (S)
     baseDir = "" (S)
     check_path = True (B)
     """

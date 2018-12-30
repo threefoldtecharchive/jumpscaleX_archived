@@ -9,10 +9,11 @@ JSConfigBase = j.application.JSBaseConfigClass
 class Ipmi(JSConfigBase):
     _SCHEMATEXT = """
     @url = jumpscale.ipmi.client
-        bmc = "" (S)
-        user = "" (S)
-        password_ = "" (S)
-        port = 623 (ipport)
+    name* = "" (S)
+    bmc = "" (S)
+    user = "" (S)
+    password_ = "" (S)
+    port = 623 (ipport)
     """
     """ Ipmi client
 

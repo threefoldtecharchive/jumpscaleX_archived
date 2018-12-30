@@ -6,6 +6,7 @@ JSConfigClient = j.application.JSBaseConfigClass
 class MongoEngineClient(JSConfigClient):
     _SCHEMATEXT = """
         @url = jumpscale.MongoEngine.client
+        name* = "default" (S)
         host = "localhost" (S)
         port = 27017 (ipport)
         username = "" (S)

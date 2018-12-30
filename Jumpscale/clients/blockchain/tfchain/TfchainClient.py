@@ -28,6 +28,7 @@ class TfchainClient(JSConfigBase):
     """
     _SCHEMATEXT = """
         @url = jumpscale.tfchain.client
+        name* = "" (S)
         network = "" (LS)
         seed_ = "" (S)
         explorers = "" (S)

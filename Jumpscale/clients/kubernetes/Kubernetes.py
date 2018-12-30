@@ -7,6 +7,7 @@ JSConfigBase = j.application.JSBaseConfigClass
 class KubernetesMaster(JSConfigBase):
     _SCHEMATEXT = """
         @url = jumpscale.Kubernetes.client
+        name* = "" (S)
         config_path = "" (S)
         context = "" (S)
         sshkey_path = "" (S)

@@ -12,6 +12,7 @@ class CurrencyLayer(JSBASE):
     """
     _SCHEMATEXT = """
     @url = jumpscale.currencylayer.client
+    name* = "" (S)
     api_key_ = "" (S)
     """
 
