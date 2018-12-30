@@ -1,11 +1,11 @@
 from Jumpscale import j
 
-from .Capacity import Capacity
+# from .Capacity import Capacity
 
 JSBASE = j.application.JSBaseClass
 
 
-class Ubuntu(JSBASE):
+class Ubuntu(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.ubuntu"
@@ -15,7 +15,7 @@ class Ubuntu(JSBASE):
         self._cache_ubuntu = None
         self.installedPackageNames = []
         self._local = j.tools.executorLocal
-        self.capacity = Capacity(self)
+        # self.capacity = Capacity(self)
 
     def uptime(self):
         with open('/proc/uptime') as f:
@@ -93,9 +93,20 @@ class Ubuntu(JSBASE):
                 raise j.exceptions.RuntimeError(
                     "Could not install package %s and check for command %s." % (packagename, cmdname))
 
-    def apt_install(self, packagename):
-        self.apt_update()
-        cmd = 'apt-get install %s --force-yes -y' % packagename
+
+    def apt_install(self, packagename, update_md=True):
+        """Install a package in the system
+        
+        :param packagename: name of the package ot install, can be a space separated list of of names
+        :type packagename: string
+        :param update_md: if True, an apt update will be executed before 
+            installing the package, defaults to True
+        :type update_md: bool, optional
+        """
+
+        if update_md:
+            self.apt_update()
+        cmd = 'apt-get install %s -y' % packagename
         self._local.execute(cmd)
 
     def apt_install_version(self, packageName, version):

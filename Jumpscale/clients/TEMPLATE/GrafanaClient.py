@@ -7,16 +7,21 @@ class GrafanaClient(j.application.JSBaseClass):
     _SCHEMATEXT = """
         @url = jumpscale.clients.grafana.1
         name* = "" (S)
-        url = "" (S)
+        url* = "" (S)
         username = "" (S)
         password = "" (S)
         verify_ssl = False (B)
         """
 
+
+
     def _init(self):
         self._httpclient = None
 
-    def _init_new(self):
+    def _data_trigger_new(self):
+        pass
+
+        self.name
 
 
     def ping(self):

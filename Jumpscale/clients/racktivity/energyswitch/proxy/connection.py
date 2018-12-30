@@ -8,7 +8,7 @@ def Connect(username, password, hostname="127.0.0.1", port=8080):
     return BlockingConnection(username, password, hostname, port)
 
 JSBASE = j.application.JSBaseClass
-class BlockingConnection(JSBASE):
+class BlockingConnection(j.application.JSBaseClass):
 
     def __init__(self, username, password, hostname="127.0.0.1", port=8080):
         JSBASE.__init__(self)

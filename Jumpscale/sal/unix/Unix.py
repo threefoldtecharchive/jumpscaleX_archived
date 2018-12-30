@@ -47,7 +47,7 @@ def user_in_group(username, groupname):
     return user.pw_gid == group.gr_gid
 
 
-class UnixSystem(JSBASE):
+class UnixSystem(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.unix"

@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaUserCurrentEmail(JSBASE):
+class GiteaUserCurrentEmail(j.application.JSBaseClass):
     def __init__(
         self,
         client,

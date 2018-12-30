@@ -17,7 +17,7 @@ class LoggerFactory():
         self._handlers = None
         self.__default = None
 
-        self.loggers = {}
+        self._loggers = {}
         self.filter = []
         self.exclude = []
 
@@ -30,12 +30,12 @@ class LoggerFactory():
             level = j.core.myenv.config["LOGGER_LEVEL"]
             self.loggers_level_set(level)
             self.handlers_level_set(level)
-            self.loggers = {}
+            self._loggers = {}
             items = j.core.myenv.config["LOGGER_INCLUDE"]
             exclude = j.core.myenv.config["LOGGER_EXCLUDE"]
             self.logger_filters_add(items=items, exclude=exclude, save=False)
 
-        # self.logger.info("##### started logger factory")
+        # self._logger.info("##### started logger factory")
 
     @property
     def handlers(self):
@@ -104,12 +104,12 @@ class LoggerFactory():
             return False
 
         if force == False and self.enabled is False:
-            self.loggers[name] = self._default
+            self._loggers[name] = self._default
             # print("DEFAULT LOGGER (disabledlogger):%s" % name)
         else:
+
             if force or check_(name):
                 # print("JSLOGGER:%s" % name)
-                # logger = logging.getLogger(name)
                 logger = JSLogger(name, self)
                 logger.level = self._j.core.myenv.config["LOGGER_LEVEL"]
 
@@ -117,13 +117,13 @@ class LoggerFactory():
                     logger.handlers = []
                     logger.addHandler(handler)
 
-                self.loggers[name] = logger
+                self._loggers[name] = logger
                 # print("LOGGER:%s:%s"%(name,logger))
             else:
                 # print("DEFAULT LOGGER:%s" % name)
-                self.loggers[name] = self._default
+                self._loggers[name] = self._default
 
-        return self.loggers[name]
+        return self._loggers[name]
 
     def disable(self):
         """ will transform all loggers to empty loggers which only act
@@ -131,7 +131,7 @@ class LoggerFactory():
         """
         self.enabled = False
         self.filter = []
-        # for key, logger in self.loggers.items():
+        # for key, logger in self._loggers.items():
         #     # print("disable logger: %s"%key)
         #     logger.setLevel(20)
         self._j.application.debug = False
@@ -195,7 +195,7 @@ class LoggerFactory():
         https://docs.python.org/3/library/logging.html#levels
 
         """
-        for key, logger in self.loggers.items():
+        for key, logger in self._loggers.items():
             logger.setLevel(level)
         self.handlers_level_set(level)
 
@@ -203,18 +203,18 @@ class LoggerFactory():
         """
         walk over all loggers, attach the handlers
         """
-        for key, logger in self.loggers.items():
+        for key, logger in self._loggers.items():
             for handler in self.handlers._all:
                 logger.handlers = []
                 logger.addHandler(handler)
 
     def memhandler_enable(self):
-        # self.logger.propagate = True
-        self.logger.addHandler(self.handlers.memoryHandler)
+        # self._logger.propagate = True
+        self._logger.addHandler(self.handlers.memoryHandler)
 
     def consolehandler_enable(self):
-        # self.logger.propagate = True
-        self.logger.addHandler(self.handlers.consoleHandler)
+        # self._logger.propagate = True
+        self._logger.addHandler(self.handlers.consoleHandler)
 
     # def telegramhandler_enable(self, client, chat_id):
     #     """
@@ -222,10 +222,10 @@ class LoggerFactory():
     #     @param client: A jumpscale telegram_bot client
     #     @param chat_id: Telegram chat id to which logs need to be forwarded
     #     """
-    #     self.logger.addHandler(self.handlers.telegramHandler(client, chat_id))
+    #     self._logger.addHandler(self.handlers.telegramHandler(client, chat_id))
 
     def handlers_reset(self):
-        self.logger.handlers = []
+        self._logger.handlers = []
         self.handlers_attach()
 
     def logger_filters_get(self):
@@ -241,11 +241,11 @@ class LoggerFactory():
             new = False
             logging = self._j.core.state.config_js["logging"]
             for item in items:
-                if item not in logging["filter"]:
+                if item not in logging["filter"] and item.strip()!="":
                     logging["filter"].append(item)
                     new = True
             for item in exclude:
-                if item not in logging["exclude"]:
+                if item not in logging["exclude"] and item.strip()!="":
                     logging["exclude"].append(item)
                     new = True
             if new:
@@ -254,15 +254,15 @@ class LoggerFactory():
 
         for item in items:
             item = item.strip().lower()
-            if item not in self.filter:
+            if item not in self.filter and item.strip()!="":
                 self.filter.append(item)
 
         for item in exclude:
             item = item.strip().lower()
-            if item not in self.exclude:
+            if item not in self.exclude and item.strip()!="":
                 self.exclude.append(item)
 
-        # self.logger.debug("start re-init for logging")
+        # self._logger.debug("start re-init for logging")
 
         self.handlers_level_set(level)
 
@@ -290,30 +290,30 @@ class LoggerFactory():
                             if 'logger' in item.__dict__:
                                 item.__dict__["logger"] = self.get(item.__jslocation__)
                             item._logger = None
-        self.loggers = {}
+        self._loggers = {}
 
         # print(self._j.tools.jsloader._logger)
         # print(self._j.tools.jsloader.logger)
 
 
     # def enableConsoleMemHandler(self):
-    #     self.logger.handlers = []
-    #     # self.logger.propagate = True
-    #     self.logger.addHandler(self.handlers.memoryHandler)
-    #     self.logger.addHandler(self.handlers.consoleHandler)
+    #     self._logger.handlers = []
+    #     # self._logger.propagate = True
+    #     self._logger.addHandler(self.handlers.memoryHandler)
+    #     self._logger.addHandler(self.handlers.consoleHandler)
 
     # def _enable_production_mode(self):
-    #     self.logger.handlers = []
-    #     self.logger.addHandler(logging.NullHandler())
-    #     # self.logger.propagate = True
+    #     self._logger.handlers = []
+    #     self._logger.addHandler(logging.NullHandler())
+    #     # self._logger.propagate = True
 
     # def _enable_dev_mode(self):
     #     logging.setLoggerClass(JSLogger)
-    #     self.logger.setLevel(logging.DEBUG)
-    #     self.logger.propagate = False
+    #     self._logger.setLevel(logging.DEBUG)
+    #     self._logger.propagate = False
     #     logging.lastResort = None
     #     self.enableConsoleHandler()
-    #     self.logger.addHandler(self.handlers.fileRotateHandler)
+    #     self._logger.addHandler(self.handlers.fileRotateHandler)
 
     def test(self):
         """

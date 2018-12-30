@@ -1,18 +1,14 @@
 import sys
 from Jumpscale import j
 from collections import OrderedDict
-import capnp
+# import capnp
 
 from .ModelBaseCollection import ModelBaseCollection
 from .ModelBaseData import ModelBaseData
 from .ModelBase import  ModelBase
-JSBASE = j.application.JSBaseClass
 
+class Tools(j.application.JSBaseClass):
 
-class Tools(JSBASE):
-
-    def __init__(self):
-        JSBASE.__init__(self)
 
     def listInDictCreation(self, listInDict, name, manipulateDef=None):
         """
@@ -42,21 +38,19 @@ class Tools(JSBASE):
         return listInDict
 
 
-class Capnp(JSBASE):
+class Capnp(j.application.JSBaseClass):
     """
     """
 
     __jslocation__ = "j.data.capnp"
 
-    def __init__(self):
-        self.__imports__ = "pycapnp"
+    def _init(self):
         self._schema_cache = {}
         self._capnpVarDir = j.sal.fs.joinPaths(j.dirs.VARDIR, "capnp")
         j.sal.fs.createDir(self._capnpVarDir)
         if self._capnpVarDir not in sys.path:
             sys.path.append(self._capnpVarDir)
         self.tools = Tools()
-        JSBASE.__init__(self)
 
     def getModelBaseClass(self):
         return ModelBase
@@ -130,6 +124,7 @@ class Capnp(JSBASE):
             j.sal.fs.remove(path)
 
     def _getSchemas(self, schemaInText):
+        import capnp
         schemaInText = j.core.text.strip(schemaInText)
         schemaInText = schemaInText.strip() + "\n"
         schemaId = self.getId(schemaInText)
@@ -141,7 +136,11 @@ class Capnp(JSBASE):
                 contents=schemaInText,
                 append=False)
             parser = capnp.SchemaParser()
-            schema = parser.load(path)
+            try:
+                schema = parser.load(path)
+            except Exception as e:
+                msg = str(e)
+                raise RuntimeError("%s\n\nERROR:Could not parse capnp schema:\n%s"%(schemaInText,msg))
             self._schema_cache[schemaId] = schema
         return self._schema_cache[schemaId]
 

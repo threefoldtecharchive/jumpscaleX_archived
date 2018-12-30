@@ -5,7 +5,7 @@ from .Row import *
 JSBASE = j.application.JSBaseClass
 
 
-class Sheet(JSBASE):
+class Sheet(j.application.JSBaseClass):
 
     def __init__(self, name, nrcols=72, headers=[], period="M"):
         """

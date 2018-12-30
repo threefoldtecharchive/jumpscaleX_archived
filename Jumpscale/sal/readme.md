@@ -7,7 +7,7 @@
 
 ## remark
 
-- a lot of code needs to be ported from Prefab
+- a lot of code needs to be ported from Builder
 - DO NOT use executor or prefab
 - use only other sal's
 - when using bash commands use the j.core.tools.text_replace function (to allow dir paths replacement)

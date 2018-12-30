@@ -7,7 +7,7 @@ from .Dep import Dep
 JSBASE = j.application.JSBaseClass
 
 
-class Sandboxer(JSBASE):
+class Sandboxer(j.application.JSBaseClass):
     """
     sandbox any linux app
     """
@@ -20,16 +20,17 @@ class Sandboxer(JSBASE):
         self.new_size = 0
         self._logger_enable()
 
-    def buildall(self,reset=False):
+    def sandbox_build(self,reset=False):
         """
-        js_shell 'j.tools.sandboxer.buildall()'
+        js_shell 'j.tools.sandboxer.sandbox_build()'
 
-        will build python & openresty & copy all to the right git sandboxes
+        will build python & openresty & copy all to the right git sandboxes works for Ubuntu & OSX
         :return:
         """
-        j.tools.prefab.local.runtimes.python.copy2sandbox_github(reset=reset)
-        j.tools.prefab.local.runtimes.lua.build() #will build openresty & lua & openssl
-        j.tools.prefab.local.runtimes.lua.copy2sandbox_github()
+        j.buider.runtimes.python.build(reset=reset)
+        j.builder.runtimes.python.copy2sandbox_github(reset=reset)
+        j.builder.runtimes.lua.build() #will build openresty & lua & openssl
+        j.builder.runtimes.lua.copy2sandbox_github()
 
         if j.core.platformtype.myplatform.isUbuntu: #only for building
             #no need to sandbox in non linux systems
@@ -87,8 +88,6 @@ class Sandboxer(JSBASE):
             done.append(path)
         return result
 
-
-
     def _otool(self, path, result=dict(), done=list()):
         """
         like ldd on linux but for osx
@@ -102,9 +101,8 @@ class Sandboxer(JSBASE):
             return result
 
         def excl(name):
-            exclude=["libSystem","/System/Library/Frameworks/Core","libiconv.2.dylib",
-                     "libutil.dylib","libc++.1.dylib"]
-            excl = False
+            exclude=["libSystem","/System/Library/Frameworks/Core","libiconv.2.dylib","libnetwork.dylib",
+                     "libutil.dylib","libc++.1.dylib","libxml2.2.dylib"]
             for toexeclude in exclude:
                 if name.lower().find(toexeclude.lower()) != -1:
                     self._logger.debug("exclude:%s"%name)
@@ -133,11 +131,15 @@ class Sandboxer(JSBASE):
                 if not excl(lpath):
                     self._logger.debug(("found:%s" % name))
                     if lpath not in result:
-                        try:
-                            result[lpath] = Dep(name, lpath)
-                            result = self._otool(lpath, result=result, done=done)
-                        except Exception as e:
-                            self._logger.warning("could not process dep:%s"%lpath)
+                        if "@" in lpath:
+                            #need to check if @ can be current dir
+                            alt_base=j.sal.fs.getDirName(out.strip().split("\n")[0])
+                            lpath=lpath.replace("@loader_path",alt_base).replace("//","/")
+                        if j.sal.fs.exists(lpath):
+                            x =  j.sal.fs.getBaseName(lpath)
+                            if x[0].lower() == x[0]:
+                                result[lpath] = Dep(name, lpath)
+                                result = self._otool(lpath, result=result, done=done)
 
 
             done.append(path)
@@ -156,7 +158,7 @@ class Sandboxer(JSBASE):
             result = self._ldd(path, result=dict(), done=list())
         return result
 
-    def libs_sandbox(self, path, dest=None, recursive=False):
+    def libs_sandbox(self, path, dest=None, recursive=True):
         """
 
         js_shell 'j.tools.sandboxer.libs_sandbox(".",".",True)'
@@ -167,8 +169,8 @@ class Sandboxer(JSBASE):
 
         if dest is None:
             dest = "{{BASE_DIR}}/bin"
-        dest=j.core.executor.replace(dest)
-        path=j.core.executor.replace(path)
+        dest=j.core.tools.text_replace(dest)
+        path=j.core.tools.text_replace(path)
 
         self._logger.info("lib sandbox:%s" % path)
 
@@ -354,11 +356,11 @@ class Sandboxer(JSBASE):
     #     out = j.core.text.sort(out)
     #     j.sal.fs.writeFile(plistfile, out)
 
-    # def sandboxBinWithPrefab(self, prefab, bin_path, sandbox_dir):
+    # def sandboxBinWithBuilder(self, prefab, bin_path, sandbox_dir):
     #     """
     #     Sandbox a binary located in `bin_path` into a sandbox / filesystem
 
-    #     @param prefab Prefab: prefab either local or remote on a machine.
+    #     @param prefab Builder: prefab either local or remote on a machine.
     #     @param bin_path string: binary full path to sandbox.
     #     @param sandbox_dir string: where to create the sandbox.
 

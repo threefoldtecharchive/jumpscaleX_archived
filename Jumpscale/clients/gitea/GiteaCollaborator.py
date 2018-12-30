@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaCollaborator(JSBASE):
+class GiteaCollaborator(j.application.JSBaseClass):
     def __init__(
             self,
             client,

@@ -1,21 +1,16 @@
 from Jumpscale import j
-JSBASE = j.application.JSBaseClass
 
-from .ExecutorBase import *
-import os
-
+from .ExecutorBase import ExecutorBase
 
 class ExecutorSSH(ExecutorBase):
 
-    def __init__(self, sshclient, debug=False, checkok=False):
-        ExecutorBase.__init__(self, debug=debug, checkok=checkok)
-
+    def __init__(self, sshclient):
         self.sshclient = sshclient
         self.type = "ssh"
-
         self._id = None
-
         self.__check_base = None
+        ExecutorBase.__init__(self)
+
 
     def exists(self, path):
         if path == "/env.sh":
@@ -164,10 +159,15 @@ class ExecutorSSH(ExecutorBase):
             def do():
                 #means we did not check it
                 C="""
-                echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted > /etc/apt/sources.list
+                if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+                    echo >> /etc/apt/sources.list
+                    echo "# Jumpscale Setup" >> /etc/apt/sources.list
+                    echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+                fi
                 apt update
                 apt install rsync curl wget -y
                 apt install git -y
+                apt install mosh -y
                 """
                 self.execute(j.core.text.strip(C))
                 return "OK"

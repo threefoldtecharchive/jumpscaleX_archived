@@ -1,22 +1,21 @@
-import subprocess
-import shutil
 import copy
-import os
 import getpass
 # import socket
 import grp
-from pathlib import Path
 import logging
-import sys
+import os
 import random
-import time
-import textwrap
-import stat
-from subprocess import Popen
-from subprocess import check_output
 import select
-from fcntl import fcntl, F_GETFL, F_SETFL
+import shutil
+import stat
+import subprocess
+import sys
+import textwrap
+import time
+from fcntl import F_GETFL, F_SETFL, fcntl
 from os import O_NONBLOCK, read
+from pathlib import Path
+from subprocess import Popen, check_output
 
 # Returns escape codes from format codes
 def esc(*x):
@@ -63,8 +62,8 @@ def parse_colors(sequence):
     return ''.join(escape_codes[n] for n in sequence.split(',') if n)
 
 
-__all__ = ('escape_codes', 'default_log_colors', 'ColoredFormatter',
-           'LevelFormatter', 'TTYColoredFormatter')
+# __all__ = ('escape_codes', 'default_log_colors', 'ColoredFormatter',
+#            'LevelFormatter', 'TTYColoredFormatter')
 
 # The default colors to use for the debug levels
 default_log_colors = {
@@ -75,13 +74,13 @@ default_log_colors = {
     'CRITICAL': 'bold_red',
 }
 
-# The default format to use for each style
-default_formats = {
-    '%': '%(log_color)s%(levelname)s:%(name)s:%(message)s',
-    '{': '{log_color}{levelname}:{name}:{message}',
-    '$': '${log_color}${levelname}:${name}:${message}'
-}
-
+# # The default format to use for each style
+# default_formats = {
+#     '%': '%(log_color)s%(levelname)s:%(name)s:%(message)s',
+#     '{': '{log_color}{levelname}:{name}:{message}',
+#     '$': '${log_color}${levelname}:${name}:${message}'
+# }
+#
 
 class ColoredRecord(object):
     """
@@ -138,20 +137,12 @@ class ColoredFormatter(logging.Formatter):
             Map secondary ``log_color`` attributes. (*New in version 2.6.*)
         """
         if fmt is None:
-            if sys.version_info > (3, 2):
-                fmt = default_formats[style]
-            else:
-                fmt = default_formats['%']
+            print("USE DEFAULT FORMATS IN COLORED FORMATTER")
+            fmt = default_formats[style]
 
-        if sys.version_info > (3, 2):
-            super(ColoredFormatter, self).__init__(fmt, datefmt, style)
-        elif sys.version_info > (2, 7):
-            super(ColoredFormatter, self).__init__(fmt, datefmt)
-        else:
-            logging.Formatter.__init__(self, fmt, datefmt)
+        super(ColoredFormatter, self).__init__(fmt, datefmt, style)
 
-        self.log_colors = (
-            log_colors if log_colors is not None else default_log_colors)
+        self.log_colors = (log_colors if log_colors is not None else default_log_colors)
         self.secondary_log_colors = secondary_log_colors
         self.reset = reset
 
@@ -171,10 +162,7 @@ class ColoredFormatter(logging.Formatter):
                 setattr(record, name + '_log_color', color)
 
         # Format the message
-        if sys.version_info > (2, 7):
-            message = super(ColoredFormatter, self).format(record)
-        else:
-            message = logging.Formatter.format(self, record)
+        message = super(ColoredFormatter, self).format(record)
 
         # Add a reset code to the end of the message
         # (if it wasn't explicitly added in format str)
@@ -204,7 +192,7 @@ class LevelFormatter(ColoredFormatter):
 
         Example:
 
-        formatter = colorlog.LevelFormatter(fmt={
+        formatter = LevelFormatter(fmt={
             'DEBUG':'%(log_color)s%(msg)s (%(module)s:%(lineno)d)',
             'INFO': '%(log_color)s%(msg)s',
             'WARNING': '%(log_color)sWARN: %(msg)s (%(module)s:%(lineno)d)',
@@ -212,15 +200,9 @@ class LevelFormatter(ColoredFormatter):
             'CRITICAL': '%(log_color)sCRIT: %(msg)s (%(module)s:%(lineno)d)',
         })
         """
-        if sys.version_info > (2, 7):
-            super(LevelFormatter, self).__init__(
-                fmt=fmt, datefmt=datefmt, style=style, log_colors=log_colors,
-                reset=reset, secondary_log_colors=secondary_log_colors)
-        else:
-            ColoredFormatter.__init__(
-                self, fmt=fmt, datefmt=datefmt, style=style,
-                log_colors=log_colors, reset=reset,
-                secondary_log_colors=secondary_log_colors)
+        ColoredFormatter.__init__(self,
+            fmt=fmt, datefmt=datefmt, style=style, log_colors=log_colors,
+            reset=reset, secondary_log_colors=secondary_log_colors)
         self.style = style
         self.fmt = fmt
 
@@ -244,7 +226,7 @@ class LevelFormatter(ColoredFormatter):
         return message
 
 
-class TTYColoredFormatter(ColoredFormatter):
+class TTYColoredFormatter(LevelFormatter):
     """
     Blanks all color codes if not running under a TTY.
 
@@ -258,7 +240,7 @@ class TTYColoredFormatter(ColoredFormatter):
         # Both `reset` and `isatty` must be true to insert reset codes.
         kwargs['reset'] = kwargs.get('reset', True) and self.stream.isatty()
 
-        ColoredFormatter.__init__(self, *args, **kwargs)
+        LevelFormatter.__init__(self, *args, **kwargs)
 
     def color(self, log_colors, level_name):
         """Only returns colors if STDOUT is a TTY."""
@@ -271,9 +253,21 @@ class LogFormatter(TTYColoredFormatter):
 
     def __init__(self, fmt=None, datefmt=None, style="{"):
         if fmt is None:
-            fmt = MyEnv.FORMAT_LOG
+            # fmt = MyEnv.FORMAT_LOG
+            # '{cyan!s}{asctime!s}{reset!s} - {filename:<18}:{name:12}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}'
+            fmt = {
+                'DEBUG': MyEnv.FORMAT_LOG,
+                'INFO': '{yellow!s}* {message!s}',
+                'WARNING': '{purple!s}* {message!s}',
+                # 'ERROR': '{red!s}{asctime!s}{reset!s} - {filename:<18}:{name:15}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}',
+                'ERROR': '{red!s}{asctime!s}{reset!s} {filename:<18}:-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}',
+                'CRITICAL':'{red!s}* {message!s}',
+            }
         if datefmt is None:
             datefmt = MyEnv.FORMAT_TIME
+
+
+
         super(LogFormatter, self).__init__(
             fmt=fmt,
             datefmt=datefmt,
@@ -292,10 +286,26 @@ class LogFormatter(TTYColoredFormatter):
     def format(self, record):
         if len(record.pathname) > self.length:
             record.pathname = "..." + record.pathname[-self.length:]
+        if len(record.name) > 15:
+            record.name = record.name[-15:]
+        if len(record.name) > 25:
+            record.name = ""
         return super(LogFormatter, self).format(record)
+
+MYCOLORS =   { "RED":"\033[1;31m",
+                "BLUE":"\033[1;34m",
+                "CYAN":"\033[1;36m",
+                "GREEN":"\033[0;32m",
+                "RESET":"\033[0;0m",
+                "BOLD":"\033[;1m",
+                "REVERSE":"\033[;7m"}
 
 
 class Tools():
+
+    _LogFormatter = LogFormatter
+    _supported_editors = set(["micro","mcedit","joe","vim","vi"])
+
     @staticmethod
     def log(msg):
         logging.debug(msg)
@@ -315,16 +325,15 @@ class Tools():
     def _execute_interactive(cmd=None, args=None, die=True):
         if args is None:
             args = cmd.split(" ")
-        if interactive:
-            returncode = os.spawnvpe(os.P_WAIT, args[0], args, os.environ)
-            cmd=" ".join(args   )
-            if returncode == 127:
-                Tools.error_raise('{0}: command not found\n'.format(args[0]))
-            if returncode>0 and returncode != 999:
-                if die:
-                    Tools.error_raise("***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n"%(cmd,returncode))
-                return returncode
+        returncode = os.spawnvpe(os.P_WAIT, args[0], args, os.environ)
+        cmd=" ".join(args   )
+        if returncode == 127:
+            Tools.error_raise('{0}: command not found\n'.format(args[0]))
+        if returncode>0 and returncode != 999:
+            if die:
+                Tools.error_raise("***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n"%(cmd,returncode))
             return returncode
+        return returncode
 
     @staticmethod
     def file_touch(path):
@@ -333,6 +342,23 @@ class Tools():
 
         with open(path, 'a'):
             os.utime(path, None)
+
+    @staticmethod
+    def file_edit(path):
+        """
+        starts the editor micro with file specified
+        """
+        user_editor = os.environ.get('EDITOR')
+        if user_editor and Tools.cmd_installed(user_editor):
+            Tools._execute_interactive("%s %s" % (user_editor, path))
+            return
+        for editor in Tools._supported_editors:
+            if Tools.cmd_installed(editor):
+                Tools._execute_interactive("%s %s" % (editor, path))
+                return
+        Tools.error_raise("cannot edit the file: '{}', non of the supported editors is installed".format(path))
+
+
 
     @staticmethod
     def file_write(path, content,replace=False,args=None):
@@ -347,17 +373,42 @@ class Tools():
 
     @staticmethod
     def file_text_read(path):
+        path = Tools.text_replace(path)
         p=Path(path)
         try:
             return p.read_text()
         except Exception as e:
             Tools.shell()
 
+
+    @staticmethod
+    def dir_ensure(path, remove_existing=False):
+        """Ensure the existance of a directory on the system, if the 
+        Directory does not exist, it will create it.
+        
+        :param path:path of the directory
+        :type path: string
+        :param remove_existing: If True and the path already exist, 
+            the existing path will be removed first, defaults to False
+        :type remove_existing: bool, optional
+        """
+
+        path = Tools.text_replace(path)
+
+        if os.path.exists(path) and remove_existing is True:
+            Tools.delete(path)
+        elif os.path.exists(path):
+            return
+        os.makedirs(path)
+
+
+
     @staticmethod
     def delete(path):
         """Remove a File/Dir/...
         @param path: string (File path required to be removed)
         """
+        path = Tools.text_replace(path)
         logger.debug('Remove file with path: %s' % path)
         if os.path.islink(path):
             os.unlink(path)
@@ -411,19 +462,20 @@ class Tools():
         return False
 
     @staticmethod
-    def _installbase_for_shell(self):
+    def _installbase_for_shell():
 
-        script="""
-        echo >> /etc/apt/sources.list
-        echo "# Jumpscale Setup" >> /etc/apt/sources.list
-        echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
-        apt-get update
-
-        apt-get install -y python3-pip locales
-        apt-get install -y curl rsync
-        apt-get install -y unzip
-        pip3 install ipython
-        locale-gen --purge en_US.UTF-8
+        script = """
+            if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+                echo >> /etc/apt/sources.list
+                echo "# Jumpscale Setup" >> /etc/apt/sources.list
+                echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+                apt-get update
+                apt-get install -y python3-pip locales
+                apt-get install -y curl rsync
+                apt-get install -y unzip
+                pip3 install ipython
+                locale-gen --purge en_US.UTF-8
+            fi
         """
         Tools.execute(script, interactive=True)
 
@@ -446,7 +498,7 @@ class Tools():
         return _shell(stack_depth=2)
 
     @staticmethod
-    def text_strip(content, ignorecomments=True,args={},replace=True,executor=None):
+    def text_strip(content, ignorecomments=False,args={},replace=False,executor=None,colors=False):
         """
         remove all spaces at beginning & end of line when relevant (this to allow easy definition of scripts)
         args will be substitued to .format(...) string function https://docs.python.org/3/library/string.html#formatspec
@@ -484,12 +536,12 @@ class Tools():
             content = "\n".join([line[minchars:] for line in content.split("\n")])
 
         if replace:
-            content = Tools.text_replace(content,args=args,executor=executor)
+            content = Tools.text_replace(content=content,args=args,executor=executor,text_strip=False,colors=colors)
 
         return content
 
     @staticmethod
-    def text_replace(content,args=None,executor=None):
+    def text_replace(content,args=None,executor=None,ignorecomments=False,text_strip=True,colors=False):
         """
 
         j.core.tools.text_replace
@@ -503,7 +555,7 @@ class Tools():
 
         performance is +100k per sec
 
-
+        will call the strip if
 
         """
         if args is None:
@@ -514,7 +566,14 @@ class Tools():
                 args.update(executor.config)
             else:
                 args.update(MyEnv.config)
+
+            if colors:
+                args.update(MYCOLORS)
+
             content = content.format(**args)
+
+        if text_strip:
+            content = Tools.text_strip(content,ignorecomments=ignorecomments)
 
         return content
 
@@ -822,7 +881,6 @@ class Tools():
     @staticmethod
     def code_github_get(repo, account="threefoldtech", branch=["master"], pull=True):
 
-
         url_ssh="git@github.com:%s/%s.git"%(account,repo)
 
         exists,foundgit,dontpull,ACCOUNT_DIR,REPO_DIR=Tools._code_location_get(account=account,repo=repo)
@@ -948,8 +1006,9 @@ class Tools():
                             Tools.shell()
                         download = True
 
-            if download==False:
-                raise RuntimeError("Could not download:%s"%url_http)
+            if not exists and download==False:
+                raise RuntimeError("Could not download some code")
+
 
     @staticmethod
     def config_load(path="",if_not_exist_create=False,executor=None,content=""):
@@ -995,7 +1054,7 @@ class Tools():
                 val=True
             elif str(val).find("[")!=-1:
                 val2 = str(val).strip("[").strip("]")
-                val = [item.strip().strip("'").strip() for item in val2.split(",")]
+                val = [item.strip().strip("'").strip().strip("\"").strip() for item in val2.split(",")]
             else:
                 try:
                     val=int(val)
@@ -1069,9 +1128,11 @@ class UbuntuInstall():
             return
 
         script="""
-        echo >> /etc/apt/sources.list
-        echo "# Jumpscale Setup" >> /etc/apt/sources.list
-        echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+        if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+            echo >> /etc/apt/sources.list
+            echo "# Jumpscale Setup" >> /etc/apt/sources.list
+            echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+        fi
         apt-get update
         """
         Tools.execute(script,interactive=True)
@@ -1122,6 +1183,7 @@ class UbuntuInstall():
                 "Brotli>=0.6.0",
                 "certifi",
                 "click>=6.6",
+                "pygments-github-lexers",
                 "colored-traceback>=0.2.2",
                 "colorlog>=2.10.0",
                 # "credis",
@@ -1242,8 +1304,9 @@ class MyEnv():
     config_changed = False
     _cmd_installed = {}
     state = None
-    _init = False
-    FORMAT_LOG =  '{cyan!s}{asctime!s}{reset!s} - {filename:<18}:{name:12}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}'
+    __init = False
+    # FORMAT_LOG =  '{cyan!s}{asctime!s}{reset!s} - {filename:<18}:{name:12}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}'
+    FORMAT_LOG =  '{cyan!s}{asctime!s}{reset!s}  {filename:<18}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}'
     FORMAT_TIME = "%a%d %H:%M"
 
     @staticmethod
@@ -1258,7 +1321,7 @@ class MyEnv():
     @staticmethod
     def _isUnix():
         return 'posix' in sys.builtin_module_names
-    
+
     @staticmethod
     def config_default_get():
         config = {}
@@ -1276,6 +1339,8 @@ class MyEnv():
         config["DIR_VAR"] = "/sandbox/var"
         config["DIR_CODE"] = "/sandbox/code"
         config["DIR_CFG"] = "/sandbox/cfg"
+        config["DIR_BIN"] = "/sandbox/bin"
+        config["DIR_APPS"] = "/sandbox/apps"
         config["USEGIT"] = True
         config["DEBUG"] = False
         config["SSH_AGENT"] = False
@@ -1294,15 +1359,15 @@ class MyEnv():
             if MyEnv.platform()=="linux":
                 config["INSYSTEM"] = True
             else:
-                config["INSYSTEM"] = True
+                config["INSYSTEM"] = False
 
         return config
 
 
     @staticmethod
-    def init(force=False):
+    def _init(force=False):
 
-        if MyEnv._init:
+        if MyEnv.__init:
             return
 
         if "DIR_CFG" in os.environ:
@@ -1323,21 +1388,23 @@ class MyEnv():
 
             if MyEnv.platform()== "linux":
                 script="""
-                echo >> /etc/apt/sources.list
-                echo "# Jumpscale Setup" >> /etc/apt/sources.list
-                echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+                if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+                    echo >> /etc/apt/sources.list
+                    echo "# Jumpscale Setup" >> /etc/apt/sources.list
+                    echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+                fi
                 apt-get update
-        
+
                 apt-get install -y curl rsync unzip
                 locale-gen --purge en_US.UTF-8
-                
+
                 mkdir -p /tmp/jumpscale/scripts
                 mkdir -p /sandbox/var/log
-                
+
                 """
             else:
                 if not Tools.cmd_installed("curl") or Tools.cmd_installed("unzip") or Tools.cmd_installed("rsync"):
-                    script="""                    
+                    script="""
                     brew install curl unzip rsync
                     """
                 else:
@@ -1382,7 +1449,7 @@ class MyEnv():
         else:
             MyEnv.sandbox_python_active=False
 
-        MyEnv._init = True
+        MyEnv.__init = True
 
     @staticmethod
     def install(force=False):
@@ -1465,6 +1532,10 @@ class MyEnv():
 
     @staticmethod
     def sshagent_active_check():
+        """
+        check if the ssh agent is active
+        :return:
+        """
         if MyEnv._sshagent_active is None:
             MyEnv._sshagent_active = len(Tools.execute("ssh-add -L",die=False,showout=False)[1])>40
         return MyEnv._sshagent_active
@@ -1475,10 +1546,18 @@ class MyEnv():
         # return True
 
     @staticmethod
+    def config_edit():
+        """
+        edits the configuration file which is in {DIR_BASE}/cfg/jumpscale_config.toml
+        {DIR_BASE} normally is /sandbox
+        """
+        Tools.file_edit(MyEnv.config_file_path)
+
+    @staticmethod
     def config_load():
         """
-        only 1 level deep toml format only for int,string,bool
-        no multiline
+        loads the configuration file which is in {DIR_BASE}/cfg/jumpscale_config.toml
+        {DIR_BASE} normally is /sandbox
         """
         MyEnv.config = Tools.config_load(MyEnv.config_file_path)
 
@@ -1532,15 +1611,16 @@ class JumpscaleInstaller():
 
     def __init__(self):
 
+        self.account = "threefoldtech"
+        self.branch = ["master"]
+        self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
+
+    def install(self):
 
         MyEnv.install()
 
-        self.account = "threefoldtech"
-        self.branch = ["master"]
 
         Tools.file_touch(os.path.join(MyEnv.config["DIR_BASE"], "lib/jumpscale/__init__.py"))
-
-        self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
         self.repos_get()
         self.repos_link()
@@ -1550,9 +1630,39 @@ class JumpscaleInstaller():
         set -e
         cd {DIR_BASE}
         source env.sh
+        js_shell ' j.core.installer_jumpscale.remove_old_parts()'
         js_shell 'j.tools.console.echo("JumpscaleX IS OK.")'
         """
         Tools.execute(script,interactive=True)
+
+    def remove_old_parts(self):
+        tofind=["DigitalMe","Jumpscale","ZeroRobot"]
+        for part in sys.path:
+            if Tools.exists(part):
+                for item in os.listdir(part):
+                    for item_tofind in tofind:
+                        toremove =  os.path.join(part,item)
+                        if item.find(item_tofind)!=-1  and toremove.find("sandbox")==-1 and toremove.find("github")==-1:
+                            Tools.log("found old jumpscale item to remove:%s"%toremove)
+                            Tools.delete(toremove)
+                        if item.find(".pth")!=-1:
+                            out=""
+                            for line in Tools.file_text_read(toremove).split("\n"):
+                                if line.find("threefoldtech")==-1:
+                                    out+="%s\n"%line
+                            Tools.file_write(toremove,out)
+                            # Tools.shell()
+        tofind=["js_","js9"]
+        for part in os.environ["PATH"].split(":"):
+            if Tools.exists(part):
+                for item in os.listdir(part):
+                    for item_tofind in tofind:
+                        toremove =  os.path.join(part,item)
+                        if item.startswith(item_tofind) and toremove.find("sandbox")==-1 and toremove.find("github")==-1:
+                                Tools.log("found old jumpscale item to remove:%s"%toremove)
+                                Tools.delete(toremove)
+
+
 
     def repos_get(self,force=False):
 
@@ -1611,7 +1721,7 @@ class JumpscaleInstaller():
 formatter = LogFormatter()
 
 logger = logging.Logger("installer")
-logger.level = logging.INFO  #10 is debug
+logger.level = logging.DEBUG  #10 is debug
 
 log_handler = logging.StreamHandler()
 log_handler.setLevel(logging.DEBUG)
@@ -1622,7 +1732,16 @@ logging.basicConfig(level=logging.DEBUG)
 
 MyEnv.logger = logger
 
-MyEnv.init()
+
+# print (Tools.text_replace("{BLUE} this is a test {BOLD}{RED} now red {RESET} go back to white",colors=True))
+
+# MyEnv.logger.debug("test")
+# MyEnv.logger.info("test")
+# MyEnv.logger.error("test")
+# MyEnv.logger.critical("test \033[94m other color")
+
+
+MyEnv._init()
 
 try:
     from colored_traceback import add_hook
@@ -1631,13 +1750,4 @@ try:
     MyEnv._colored_traceback = colored_traceback
 except ImportError:
     MyEnv._colored_traceback = None
-
-try:
-    import pygments
-    import pygments.lexers
-    MyEnv._lexer_python = pygments.lexers.Python3Lexer()
-    #print(pygments.highlight(C,lexer, colored_traceback.Colorizer('default').formatter))
-except ImportError:
-    MyEnv._lexer_python = None
-
 

@@ -5,7 +5,7 @@ from .GiteaRepoPullRequest import GiteaRepoPullRequest
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaRepoPullRequests(JSBASE):
+class GiteaRepoPullRequests(j.application.JSBaseClass):
     def __init__(self, client, repo, user):
         JSBASE.__init__(self)
         self.client = client

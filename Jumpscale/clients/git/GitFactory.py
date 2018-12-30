@@ -6,7 +6,7 @@ import sys
 JSBASE = j.application.JSBaseClass
 
 
-class GitFactory(JSBASE):
+class GitFactory(j.application.JSBaseClass):
 
     __jslocation__ = "j.clients.git"
 
@@ -50,7 +50,7 @@ class GitFactory(JSBASE):
 
         url = url.strip()
         if ssh == "auto" or ssh == "first":
-            ssh = j.clients.sshkey.available()
+            ssh = j.clients.sshagent.available()
         elif ssh or ssh is False:
             pass
         else:
@@ -368,7 +368,7 @@ class GitFactory(JSBASE):
                 rc = 1
                 counter = 0
                 while rc > 0 and counter < 4:
-                    cmd = "cd %s;git pull origin %s" % (dest, branch)
+                    cmd = "cd %s;git pull origin %s" % (dest, branch or tag)
                     self._logger.debug(cmd)
                     rc, out, err = self.execute(
                         cmd, timeout=timeout, executor=executor, die=False)

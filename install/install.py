@@ -23,7 +23,8 @@ IT = spec.loader.load_module()
 # IT.UbuntuInstall.base_install()
 
 
-IT.JumpscaleInstaller()
+installer = IT.JumpscaleInstaller()
+installer.install()
 
 
 """

@@ -149,7 +149,7 @@ class Popen(subprocess.Popen, JSBASE):
                     fcntl.fcntl(conn, fcntl.F_SETFL, flags)
 
 
-class ExpectTool(JSBASE):
+class ExpectTool(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.tools.expect"
@@ -168,7 +168,7 @@ class ExpectTool(JSBASE):
         return Expect(cmd=cmd or '')
 
 
-class Expect(JSBASE):
+class Expect(j.application.JSBaseClass):
     _p = None  # popen process
     error = False
     _lastsend = ""

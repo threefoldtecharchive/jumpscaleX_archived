@@ -8,7 +8,7 @@ from .HTMLPage import HTMLPage
 from .HTMLWebParts import HTMLWebParts
 from html2text import HTML2Text
 
-class HTMLFactory(JSBASE):
+class HTMLFactory(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.data.html"

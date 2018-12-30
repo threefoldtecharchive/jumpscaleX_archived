@@ -3,7 +3,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaMarkdowns(JSBASE):
+class GiteaMarkdowns(j.application.JSBaseClass):
     def __init__(self, client):
         JSBASE.__init__(self)
         self.client = client

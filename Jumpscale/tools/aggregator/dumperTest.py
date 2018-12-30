@@ -1,5 +1,5 @@
 from Jumpscale import j
-j.tools.prefab.local.bash.locale_check()
+j.builder.bash.locale_check()
 import click
 from tools.aggregator.Dumper import BaseDumper
 

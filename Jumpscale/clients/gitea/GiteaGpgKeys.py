@@ -6,7 +6,7 @@ from .GiteaGpgKey import GiteaGpgKey
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaGpgKeys(JSBASE):
+class GiteaGpgKeys(j.application.JSBaseClass):
 
     def __init__(self, client, user):
         JSBASE.__init__(self)

@@ -1,4 +1,10 @@
-[![Build Status](https://travis-ci.org/threefoldtech/jumpscaleX.svg?branch=development)](https://travis-ci.org/threefoldtech/jumpscaleX)
+**Master:**   
+[![Build Status](https://travis-ci.com/threefoldtech/jumpscaleX.svg?branch=master)](https://travis-ci.com/threefoldtech/jumpscaleX)
+[![codecov](https://codecov.io/gh/threefoldtech/jumpscaleX/branch/master/graph/badge.svg)](https://codecov.io/gh/threefoldtech/jumpscaleX)  
+**Development:**  
+[![Build Status](https://travis-ci.com/threefoldtech/jumpscaleX.svg?branch=development)](https://travis-ci.com/threefoldtech/jumpscaleX)
+[![codecov](https://codecov.io/gh/threefoldtech/jumpscaleX/branch/development/graph/badge.svg)](https://codecov.io/gh/threefoldtech/jumpscaleX)
+
 
 # Jumpscale
 
@@ -8,9 +14,11 @@ which was acquired by SUN Microsystems from Q-Layer. In the mean time we are
 4 versions further and we have rebranded it to Jumpscale.
 
 - [Jumpscale](#jumpscale)
-  - [To Install](docs/Installation/install.md)
+  - [About Jumpscale Core](#about-jumpscale-core)
+  - [Installing Jumpscale Core (NEW, need to test!!!)](#installing-jumpscale-core-new-need-to-test)
   - [Usage](#usage)
   - [Tutorials](#tutorials)
+  - [Collaboration Conventions](#collaboration-conventions)
 
 ## About Jumpscale Core
 
@@ -33,7 +41,7 @@ some tools
 
 ## Installing Jumpscale Core (NEW, need to test!!!)
 
-[see documentation](docs/Installation/install.md)
+[see documentation](install/install.md)
 
 
 ## Usage
@@ -49,6 +57,27 @@ some tools
 
   the default mem usage < 23 MB and lazy loading of the modules.
 
+## Running Tests
+To run unittests you can execute the following command
+```bash
+source /sandbox/env.sh; pytest /sandbox/code/github/threefoldtech/jumpscaleX/
+```
+
+You can also run Integration tests by running the command
+```bash
+source /sandbox/env.sh; pytest  --integration /sandbox/code/github/threefoldtech/jumpscaleX/
+```
+
+To annotate the one of your tests is an itegeration test rather than a unittests, you can add the following docorator to the test
+```python
+@pytest.mark.integration
+def test_main(self)
+```
+
 ## Tutorials
 
 [Check Documentation](docs/howto/)
+
+
+## Collaboration Conventions
+[check conventions](docs/CONTRIBUTING.md)
