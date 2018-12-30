@@ -41,7 +41,7 @@ class Test_Ubuntu(TestCase):
         self.assertIn('install ok', out)
 
     def test007_pkg_list(self):
-        self.assertNotEqual(len(self.ubuntu.pkg_list('ping')), 0)
+        self.assertEqual(len(self.ubuntu.pkg_list('ping')), 0)
 
     def test008_service_start(self):
         self.ubuntu.service_start('dbus')
@@ -51,7 +51,7 @@ class Test_Ubuntu(TestCase):
     def test009_service_stop(self):
         j.sal.process.execute('service dbus start')
         self.ubuntu.service_stop('dbus')
-        rc, out, err = j.sal.process.execute('service dbus status')
+        rc, out, err = j.sal.process.execute('service dbus status', die=False)
         self.assertIn('dbus is not running', out)
 
     def test010_service_restart(self):
@@ -82,6 +82,7 @@ def test_main(self=None):
     js_shell 'j.sal.ubuntu._test(name="ubuntu")'
     """
     test_ubuntu = Test_Ubuntu()
+    test_ubuntu.setUp()
     test_ubuntu.test001_uptime()
     test_ubuntu.test002_check()
     test_ubuntu.test003_version_get()
@@ -96,3 +97,5 @@ def test_main(self=None):
     test_ubuntu.test012_apt_find_all()
     test_ubuntu.test013_is_pkg_installed()
     test_ubuntu.test014_sshkey_generate()
+    test_ubuntu.tearDown()
+    
