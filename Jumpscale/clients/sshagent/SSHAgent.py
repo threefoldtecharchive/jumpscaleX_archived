@@ -65,12 +65,9 @@ class SSHAgent(j.application.JSBaseConfigClass):
         self._sshagent = None  # to make sure it gets loaded again
 
         data = {}
-        data["path"] = path
+        data["path"] = self.path
 
-            data = {}
-            data["path"] = self.path
-
-            return self.get(instance=name, data=data)
+        return self.get(instance=name, data=data)
 
     def profile_js_configure(self):
         '''
