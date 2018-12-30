@@ -52,7 +52,7 @@ class SSHAgent(j.application.JSBaseConfigClass):
                 echo "exec cat" > ap-cat.sh
                 chmod a+x ap-cat.sh
                 export DISPLAY=1
-                echo {self.passphrase} | SSH_ASKPASS=./ap-cat.sh ssh-add -t {duration} {self.path}
+                echo {self.passphrase} | SSH_ASKPASS=./ap-cat.sh ssh-add -t {duration} {path}
                 """.format(path=path0, passphrase=self.passphrase, duration=duration)
             try:
                 j.sal.process.execute(C, showout=False)
