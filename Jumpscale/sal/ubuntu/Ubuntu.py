@@ -10,6 +10,7 @@ class Ubuntu(j.application.JSBaseClass):
         self._checked = False
         self._cache_ubuntu = None
         self.installedpackage_names = []
+        self._installed_pkgs = None
         self._local = j.tools.executorLocal
         #self.capacity = Capacity(self)
 
@@ -93,7 +94,7 @@ class Ubuntu(j.application.JSBaseClass):
         :raise: j.exceptions.RuntimeError: Could not install package
         """
         self.check()
-        rc, out, err = j.sal.process.execute('which %s' % cmd_name, useShell=True)
+        rc, out, err = j.sal.process.execute('which %s' % cmd_name, useShell=True, die=False)
         if rc != 0:
             self.apt_install(package_name)
 
@@ -168,11 +169,11 @@ class Ubuntu(j.application.JSBaseClass):
         :return: List files owned by package
         :rtype: list
         """
-        rc, out, err = j.sal.process.execute('dpkg -L %s' % pkg_name, useShell=True)
+        rc, out, err = j.sal.process.execute('dpkg -L %s' % pkg_name, useShell=True, die=False)
         if regex != '':
             return j.data.regex.findAll(regex, out)
         else:
-            return out.split("\n")
+            return out.split("\n")[:-1]
 
     def pkg_remove(self, package_name):
         """remove an ubuntu package.
@@ -281,10 +282,10 @@ stop on runlevel [016]
         :return: True if service is running
         :rtype: bool
         """
-        exitcode, output, error = j.sal.process.execute('service %s status' % service_name)
-        if '%s is running' in output:
+        exitcode, output, error = j.sal.process.execute('service %s status' % service_name, die=False)
+        if '%s is running' % service_name in output:
             return True
-        elif '%s is not running' in output:
+        elif '%s is not running' % service_name in output:
             return False
 
     def service_disable_start_boot(self, service_name):

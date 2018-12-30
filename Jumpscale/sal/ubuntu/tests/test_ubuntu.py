@@ -4,7 +4,7 @@ from unittest import TestCase
 
 
 class Test_Ubuntu(TestCase):
-    j.sal.process.execute('pip3 install python-apt')
+    j.sal.process.execute('apt-get install -y python3-distutils-extra python3-dbus python3-apt')
 
     def setUp(self):
         self.ubuntu = Ubuntu()
@@ -23,7 +23,7 @@ class Test_Ubuntu(TestCase):
         self.assertTrue(self.ubuntu.check())
 
     def test003_version_get(self):
-        self.assertIn('Ubuntu', self.ubuntu.version_get()['DESCRIPTION'])
+        self.assertIn('Ubuntu', self.ubuntu.version_get())
 
     def test004_apt_install_check(self):
         # if it fails, it will raise an error
@@ -37,11 +37,11 @@ class Test_Ubuntu(TestCase):
     def test006_deb_install(self):
         j.sal.process.execute('wget http://security.ubuntu.com/ubuntu/pool/universe/t/tmuxp/python-tmuxp_1.3.1-1_all.deb')
         self.ubuntu.deb_install(path='python-tmuxp_1.3.1-1_all.deb')
-        rc, out, err = j.sal.process.execute('dpkg -s python-tmuxp | grep Status')
+        rc, out, err = j.sal.process.execute('dpkg -s python-tmuxp | grep Status', die=False)
         self.assertIn('install ok', out)
 
     def test007_pkg_list(self):
-        self.assertNotEqual(self.ubuntu.pkg_list('ping'), 0)
+        self.assertNotEqual(len(self.ubuntu.pkg_list('ping')), 0)
 
     def test008_service_start(self):
         self.ubuntu.service_start('dbus')
