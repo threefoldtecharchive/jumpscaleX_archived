@@ -34,18 +34,18 @@ class PostgresClient(JSConfigClient):
 
     def cursor_get(self):
         """Get client dict cursor
-        @return : clients
-        @rtype : dict cursor
+        :return : clients
+        :rtype : dict cursor
         """
 
         self.cursor = self.client.cursor()
 
     def execute(self, sql):
         """Execute sql code
-        @param sql: sql code to be executed
-        @type sql: str
-        @return: psycopg2 client
-        @rtype: dict cursor
+        :param sql: sql code to be executed
+        :type sql: str
+        :return: psycopg2 client
+        :rtype: dict cursor
         """
         if self.cursor is None:
             self.cursor_get()
@@ -75,10 +75,10 @@ class PostgresClient(JSConfigClient):
 
     def dump(self, path, tables_ignore=[]):
         """Dump data from db to path/_shcema.sql
-        @param path: path
-        @type path: str
-        @param tables_ignore: tables to be ignored and its records are not considered
-        @type tables_ignore: str
+        :param path: path
+        :type path: str
+        :param tables_ignore: tables to be ignored and its records are not considered
+        :type tables_ignore: str
         """
         args = copy.copy(self.__dict__)
         j.sal.fs.createDir(path)
@@ -102,12 +102,12 @@ class PostgresClient(JSConfigClient):
 
     def restore(self, path, tables=[], schema=True):
         """Restore db
-        @param path: path to import from
-        @type path: str
-        @param tables: tables to be considered
-        @type tables: list
-        @param schema: schema exists
-        @type schema: bool
+        :param path: path to import from
+        :type path: str
+        :param tables: tables to be considered
+        :type tables: list
+        :param schema: schema exists
+        :type schema: bool
         """
         if not j.sal.fs.exists(path=path):
             raise j.exceptions.Input(

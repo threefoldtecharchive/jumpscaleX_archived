@@ -22,17 +22,17 @@ class PostgresqlFactory(JSConfigFactory):
 
     def db_create(self, db, ipaddr="localhost", port=5432, login="postgres", passwd="rooter"):
         """Create new database
-        @param db: db name to be created
-        @type db: str
-        @param ipaddr: ip address
-        @type ipaddr: str
-        @param port: port
-        @type port: ipport
-        @param login : postgres login
-        @type login: str
-        @param passwd: password associated with login
-        @type passwd: str
-        @raises j.exceptions.RuntimeError: Exception if db already exists
+        :param db: db name to be created
+        :type db: str
+        :param ipaddr: ip address
+        :type ipaddr: str
+        :param port: port
+        :type port: ipport
+        :param login : postgres login
+        :type login: str
+        :param passwd: password associated with login
+        :type passwd: str
+        :raises j.exceptions.RuntimeError: Exception if db already exists
         """
         client = psycopg2.connect("dbname='%s' user='%s' host='%s' password='%s' port='%s'" % (
             "template1", login, ipaddr, passwd, port))
@@ -49,16 +49,16 @@ class PostgresqlFactory(JSConfigFactory):
 
     def db_drop(self, db, ipaddr="localhost", port=5432, login="postgres", passwd="rooter"):
         """Drop a database
-        @param db: db name to be dropped
-        @type db: str
-        @param ipaddr: ip address
-        @type ipaddr: str
-        @param port: port
-        @type port: ipport
-        @param login : postgres login
-        @type login: str
-        @param passwd: password associated with login
-        @type passwd: str
+        :param db: db name to be dropped
+        :type db: str
+        :param ipaddr: ip address
+        :type ipaddr: str
+        :param port: port
+        :type port: ipport
+        :param login : postgres login
+        :type login: str
+        :param passwd: password associated with login
+        :type passwd: str
         """
         args = {}
         args["db"] = db
