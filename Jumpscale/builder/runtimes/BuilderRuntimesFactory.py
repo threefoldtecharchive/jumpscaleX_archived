@@ -1,23 +1,42 @@
 from Jumpscale import j
 
-JSBASE = j.builder.system._BaseClass
 
-
-
-
-class BuilderRuntimesFactory(j.builder.system._BaseFactoryClass):
+class BuilderRuntimesFactory(j.application.JSBaseClass):
 
     __jslocation__ = "j.builder.runtimes"
 
     def _init(self):
         # self._logger_enable()
-        from .BuilderPython import BuilderPython
-        self.python = BuilderPython()
-        from .BuilderPHP import BuilderPHP
-        self.php = BuilderPHP()
-        from .BuilderGolang import BuilderGolang
-        self.go = BuilderGolang()
+        self._python = None
+        self._php = None
+        self._lua = None
+        self._golang = None
 
+    @property
+    def python(self):
+        if self._python is None:
+            from .BuilderPython import BuilderPython
+            self._python = BuilderPython()
+        return self._python
 
+    @property
+    def php(self):
+        if self._php is None:
+            from .BuilderPHP import BuilderPHP
+            self._php = BuilderPHP()
+        return self._php
 
+    @property
+    def lua(self):
+        if self._lua is None:
+            from .BuilderLua import BuilderLua
+            self._lua = BuilderLua()
+        return self._lua
+
+    @property
+    def golang(self):
+        if self._golang is None:
+            from .BuilderGolang import BuilderGolang
+            self._golang = BuilderGolang()
+        return self._golang
 

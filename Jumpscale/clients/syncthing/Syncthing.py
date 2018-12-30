@@ -48,7 +48,7 @@ class SyncthingClient(JSConfigClient):
         self._logger.debug("execute cmd on %s" % self.addr)
         self._logger.debug(cmds)
         if self.addr == "localhost":
-            return j.builder.tools.execute_bash(content=cmds, die=die)
+            return j.sal.process.execute(content=cmds, die=die)
         else:
             executor = j.tools.prefab.get(
                 j.tools.executor.getSSHBased(addr=self.addr, port=self.sshport))

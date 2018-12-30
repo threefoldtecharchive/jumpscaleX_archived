@@ -8,7 +8,12 @@ import traceback
 from .JSBase import JSBase
 from .JSFactoryBase import JSFactoryBase
 from .JSBaseConfig import JSBaseConfig
-
+import gc
+import sys
+import types
+import time
+class JSGroup():
+    pass
 
 class Application(object):
 
@@ -31,6 +36,8 @@ class Application(object):
 
         self.errors_init = []
         self._bcdb_system = None
+
+        self._JSGroup = JSGroup
 
     @property
     def bcdb_system(self):
@@ -277,6 +284,81 @@ class Application(object):
         info = p.memory_full_info()
         return info.uss / 1024
 
+    def getProcessObject(self):
+        return self._j.sal.process.getMyProcessObject()
+    #
+    # def reload(self):
+    #     # from importlib import reload
+    #     from IPython.lib.deepreload import reload as dreload
+    #     l=[]
+    #     for name,group in self._j.core._groups.items():
+    #         for key,obj in group.__dict__.items():
+    #             if obj is not None:
+    #                 print("GROUP_OBJ:%s"%key)
+    #                 self._walk_obj(obj)
+    #                 print("POP:%s"%key)
+    #                 del group.__dict__[key]
+    #                 group.__dict__[key]=None
+    #
+    #     res=[]
+    #     for key,mod in sys.modules.items():
+    #         s=str(mod).lower()
+    #         if s.find("jumpscale")!=-1 and s.find("_init")==-1 and s.find("/core/")==-1 and s.find("jumpscale_generated")==-1:
+    #             res.append(key)
+    #
+    #     for key in res:
+    #         self._j.shell()
+    #
+    #         try:
+    #             dreload(sys.modules[key])
+    #         except:
+    #             print("could not reload:%s"%key)
+    #         # print("module delete:%s"%key)
+    #         # del sys.modules[key]
+    #         # exec("del %s"%key)
+    #         # sys.modules.pop(key)
+
+
+
+    def _walk_obj(self,obj):
+
+        if isinstance(obj,JSFactoryBase):
+
+            for key,obj2 in obj._children.items():
+                self._walk_obj(obj2)
+
+            print("- factory empty %s"%(obj._objid))
+            obj._empty_js_obj()
+
+        if isinstance(obj,JSBase):
+            print("- base empty %s"%(obj._objid))
+            obj._empty_js_obj()
+
+    #
+    # def _get_referents(self,obj,level=0,done=[]):
+    #     if isinstance(obj, types.FunctionType) or isinstance(obj, types.MethodType):
+    #         return done
+    #     level+=1
+    #     try:
+    #         r=str(obj)
+    #     except:
+    #         r="unknown"
+    #     r.replace("\n","")
+    #     if len(r)>120:
+    #         r=r[:120]
+    #
+    #     for item in gc.get_referents(obj):
+    #         if item is not None and item not in done:
+    #             done.append(item)
+    #             done = self._get_referents(item,level=level,done=done)
+    #     if hasattr(obj,"_empty_js_obj"):
+    #         print("%s: empty %s"%(level,r))
+    #         obj._empty_js_obj()
+    #
+    #     return done
+
+
+
     def _setWriteExitcodeOnExit(self, value):
         if not self._j.data.types.bool.check(value):
             raise TypeError
@@ -291,3 +373,31 @@ class Application(object):
         fset=_setWriteExitcodeOnExit,
         fget=_getWriteExitcodeOnExit,
         doc="Gets / sets if the exitcode has to be persisted on disk")
+
+    def _gc_count(self):
+        return len(gc.get_objects())
+        # cs=gc.get_count()
+        # res=0
+        # for c in cs:
+        #     res+=c
+        # return res
+
+    # def _test_gc(self):
+    #     """
+    #     js_shell 'j.application._test_gc()'
+    #     :return:
+    #     """
+    #     j=self._j
+    #     print ("nr of obj in gc at start: %s" % self._gc_count())
+    #     print ("mem usage start:%s"% self.getMemoryUsage())
+    #     o=j.clients.ssh.instances.kds
+    #     print ("mem usage after 1 config obj:%s"% self.getMemoryUsage())
+    #     print ("nr of obj before garbage collection: %s"%self._gc_count())
+    #     del o
+    #     o="a"
+    #     self.reload()
+    #     print ("mem usage after 1 config obj:%s"% self.getMemoryUsage())
+    #     print ("nr of obj after garbage collection: %s"%self._gc_count())
+    #
+    #     self._j.shell()
+    #

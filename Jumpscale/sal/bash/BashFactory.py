@@ -203,6 +203,7 @@ class Profile(j.application.JSBaseClass):
         self.bash.reset()  # do not remove !
 
     def getLocaleItems(self, force=False, showout=False):
+
         if self.executor.type == "local":
             return [item for key, item in locale.locale_alias.items()]
         else:

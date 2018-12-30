@@ -119,6 +119,7 @@ class Jumpscale():
 
 j = Jumpscale()
 j.core = Core(j)
+j.core._groups = {}
 
 
 rootdir = os.path.dirname(os.path.abspath(__file__))

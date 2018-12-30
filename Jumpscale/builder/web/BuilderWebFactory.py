@@ -9,8 +9,10 @@ class BuilderWebFactory(j.builder.system._BaseFactoryClass):
 
         from .BuilderNGINX import BuilderNGINX
         from .BuilderTraefik import BuilderTraefik
+        from .PrefabOpenResty import PrefabOpenResty
 
         self.nginx = BuilderNGINX()
+        self.openresty = PrefabOpenResty()
         self.traefik = BuilderTraefik()
 
         #TODO:*1

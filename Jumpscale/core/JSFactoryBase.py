@@ -8,6 +8,13 @@ class KosmosServices():
     def __init__(self,factory):
         self._factory = factory
 
+    def _empty_js_obj(self):
+        for key,val in self.__dict__.items():
+            if not key.startswith("_"):
+                self.__dict__[key]._empty_js_obj()
+                del self.__dict__[key]
+                self.__dict__[key]=None
+
     def __getattr__(self, name):
         #if private then just return
         if name.startswith("_"):
@@ -57,6 +64,14 @@ class JSFactoryBase(JSBase):
         self.__model = None
         self._init()
 
+
+    def _empty_js_obj(self):
+        self.__dict__["_children"] = {}
+        if "clients" in self.__location__:
+            self.instances._empty_js_obj()
+        else:
+            self.services._empty_js_obj()
+
     @property
     def name(self):
         return self.__location__.split(".")[-1]
@@ -70,9 +85,7 @@ class JSFactoryBase(JSBase):
         data = self._model.new()
         data.name = name
         if kwargs is not {}:
-            data.data_update(**kwargs)
-
-
+            data.data_update(data=kwargs)
 
         child_class = self._childclass_selector(dataobj=data,kwargs=kwargs)
 
@@ -94,12 +107,13 @@ class JSFactoryBase(JSBase):
             raise RuntimeError("__class__._CHILDCLASS should be set")
         return self.__class__._CHILDCLASS
 
-    def get(self,name=None,id=None,die=True ,**kwargs):
+    def get(self,name=None,id=None,die=True ,create_new=True,**kwargs):
         """
         :param id: id of the obj to find, is a unique id
         :param name: of the object, can be empty when searching based on id or the search criteria (kwargs)
         :param search criteria (if name not used) or data elements for the new one being created
         :param die, means will give error when object not found
+        :param create_new, if True it will automatically create a new one
         :return: the service
         """
         if name is not None and name  in self.__class__._children:
@@ -121,6 +135,8 @@ class JSFactoryBase(JSBase):
             else:
                 res = self._find_obj(name=name)
                 if len(res)<1:
+                    if create_new:
+                        return self.new(name=name,**kwargs)
                     if die:
                         return self._error_input_raise("Did not find the service for '%s', name looking for:\n%s"%(self.__location__,name))
                     else:
@@ -171,7 +187,7 @@ class JSFactoryBase(JSBase):
                 # we can try to find this config
                 return self._model.get_from_keys(**kwargs)
             else:
-                raise RuntimeError("cannot find obj in %s: because kwargs do not match, is there * in schema"%self)
+                raise RuntimeError("cannot find obj with kwargs:\n%s\n in %s\nbecause kwargs do not match, is there * in schema"%(kwargs,self))
             return []
         else:
             return self._model.get_all()

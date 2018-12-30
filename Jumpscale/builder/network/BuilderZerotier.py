@@ -77,8 +77,8 @@ class BuilderZerotier(j.builder.system._BaseClass):
             j.builder.tools.file_copy(item, bindir + '/')
 
     def start(self):
-        j.builder.sandbox.profileDefault.addPath(j.builder.tools.replace("{DIR_BIN}"))
-        j.builder.sandbox.profileDefault.save()
+        #j.builder.sandbox.profileDefault.addPath(j.builder.tools.replace("{DIR_BIN}"))
+        #j.builder.sandbox.profileDefault.save()
         pm = j.builder.system.processmanager.get()
         pm.ensure('zerotier-one', cmd='zerotier-one')
 

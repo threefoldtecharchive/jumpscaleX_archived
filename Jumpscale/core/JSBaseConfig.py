@@ -23,6 +23,10 @@ class JSBaseConfig(JSBase):
 
         self._init()
 
+    def _empty_js_obj(self):
+        self.__dict__["factory"] = None
+        self.__dict__["data"] = None
+
     @property
     def _id(self):
         return self.data.id

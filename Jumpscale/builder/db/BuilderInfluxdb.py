@@ -38,9 +38,9 @@ class BuilderInfluxdb(j.builder.system._BaseClass):
             j.sal.process.execute(C, profile=True)
         else:
             raise RuntimeError("cannot install, unsuported platform")
-        j.builder.sandbox.profileJS.addPath(j.core.tools.text_replace("{DIR_BIN}"))
-        j.builder.sandbox.profileJS.save()
-        binPath = j.builder.sandbox.cmdGetPath('influxd')
+        #j.builder.sandbox.profileJS.addPath(j.core.tools.text_replace("{DIR_BIN}"))
+        #j.builder.sandbox.profileJS.save()
+        binPath = #j.builder.sandbox.cmdGetPath('influxd')
         j.core.tools.dir_ensure("{DIR_VAR}/data/influxdb")
         j.core.tools.dir_ensure("{DIR_VAR}/data/influxdb/meta")
         j.core.tools.dir_ensure("{DIR_VAR}/data/influxdb/data")
@@ -64,7 +64,7 @@ class BuilderInfluxdb(j.builder.system._BaseClass):
         raise RuntimeError("not implemented")
 
     def start(self):
-        binPath = j.builder.sandbox.cmdGetPath('influxd')
+        binPath = #j.builder.sandbox.cmdGetPath('influxd')
         cmd = "%s -config $CFGDIR/influxdb/influxdb.conf" % (binPath)
         j.builder.system.process.kill("influxdb")
         pm = j.builder.system.processmanager.get()

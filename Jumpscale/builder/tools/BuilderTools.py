@@ -160,8 +160,8 @@ class BuilderTools(j.builder.system._BaseClass):
 
         if overwrite:
             if self.file_exists(to):
-                self.file_unlink(to)
-                self.file_unlink("%s.downloadok" % to)
+                j.sal.fs.remove(to)
+                j.sal.fs.remove("%s.downloadok" % to)
 
         if not (self.file_exists(to) and self.file_exists("%s.downloadok" % to)):
 
@@ -183,10 +183,10 @@ class BuilderTools(j.builder.system._BaseClass):
                 if self.file_exists(to):
                     cmd += " -C -"
                 self._logger.info(cmd)
-                self.file_unlink("%s.downloadok" % to)
+                j.sal.fs.remove("%s.downloadok" % to)
                 rc, out, err = self.run(cmd, die=False, timeout=timeout)
                 if rc == 33:  # resume is not support try again withouth resume
-                    self.file_unlink(to)
+                    j.sal.fs.remove(to)
                     cmd = "curl -L '%s' -o '%s' %s %s --connect-timeout 5 --retry %s --retry-max-time %s" % (
                         url, to, user, minsp, retry, timeout)
                     rc, out, err = self.run(cmd, die=False, timeout=timeout)
@@ -229,6 +229,8 @@ class BuilderTools(j.builder.system._BaseClass):
             raise RuntimeError("Cannot file expand, not supported")
         if destination == "":
             destination = self.joinpaths("{DIR_TEMP}", base)
+        j.sal.fs.remove(destination)
+        j.sal.fs.createDir(destination)
         path = j.core.tools.text_replace(path)
         destination = j.core.tools.text_replace(destination)
         self.dir_ensure(destination)
@@ -441,6 +443,7 @@ class BuilderTools(j.builder.system._BaseClass):
         :param filename: file path to be removed
         :type filename: str
         """
+        filename = j.core.tools.text_replace(filename)
         if self.file_exists(filename):
             j.sal.fs.unlinkFile(filename)
 
@@ -586,7 +589,7 @@ class BuilderTools(j.builder.system._BaseClass):
         :type location: string
         """
         location = j.core.tools.text_replace(location)
-        return j.sal.fs.isDir(location)
+        return j.sal.fs.exists(location)
 
     def dir_remove(self, location, recursive=True):
         """ Removes a directory """
@@ -696,7 +699,7 @@ class BuilderTools(j.builder.system._BaseClass):
         """
         @param profile, execute the bash profile first
         """
-        # self._logger.info(cmd)
+        self._logger.info(cmd)
         if cmd.strip() == "":
             raise RuntimeError("cmd cannot be empty")
         if not env:
@@ -704,7 +707,7 @@ class BuilderTools(j.builder.system._BaseClass):
         else:
             env = args.update(env)
 
-        rc, out, err = j.sal.process.execute(vmd, cwd=None, timeout=timeout, die=True,
+        rc, out, err = j.sal.process.execute(cmd, cwd=None, timeout=timeout, die=True,
                                              env=env, interactive=False, replace=replace)
         return rc, out, err
 
@@ -751,8 +754,8 @@ class BuilderTools(j.builder.system._BaseClass):
         command = j.core.tools.text_replace(command)
         rc, out, err = self.run("which '%s'" % command,
                                 die=False, showout=False, profile=True)
-        if not rc:
-            raise RuntimeError("command %s does not exist" % command)
+        if rc>0:
+            raise RuntimeError("command '%s' does not exist, cannot find" % command)
         return out.strip()
 
     def command_ensure(self, command, package=None):
@@ -769,24 +772,24 @@ class BuilderTools(j.builder.system._BaseClass):
 
     @property
     def isUbuntu(self):
-        return 'ubuntu' in j.core.platformtype.myplatform
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("ubuntu")!=-1
 
     @property
     def isLinux(self):
-        return "linux" in j.core.platformtype.getParents(j.core.platformtype.myplatform)
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("linux")!=-1
 
     @property
     def isAlpine(self):
-        return "alpine" in j.core.platformtype.getParents(j.core.platformtype.myplatform)
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("alpine")!=-1
 
     @property
     def isArch(self):
-        return "arch" in j.core.platformtype.getParents(j.core.platformtype.myplatform)
+        return False
 
     @property
     def isMac(self):
-        return "darwin" in j.core.platformtype.getParents(j.core.platformtype.myplatform)
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("darwin")!=-1
 
     @property
     def isCygwin(self):
-        return "cygwin" in j.core.platformtype.getParents(j.core.platformtype.myplatform)
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("cygwin")!=-1

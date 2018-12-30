@@ -17,6 +17,14 @@ class JSBase:
     _test_runs = {}
     _test_runs_error = {}
 
+    def _empty_js_obj(self):
+        self._logger_ = None
+        self._test_runs = {}
+
+        for key,obj in self.__dict__.items():
+            del obj
+
+
     def __init__(self,init=True):
         self._cache_ = None
         if init:
@@ -76,6 +84,7 @@ class JSBase:
             else:
                 self._objid_ = id
         return self._objid_
+
 
     @property
     def _logger(self):
@@ -153,19 +162,19 @@ class JSBase:
     def _done_check(self,name="",reset=False):
         if reset:
             self._done_reset(name=name)
-        if name!="":
+        if name=="":
             return j.core.db.hexists("done",self._objid)
         else:
             return j.core.db.hexists("done","%s:%s"%(self._objid,name))
 
     def _done_set(self,name="",value=True):
-        if name!="":
+        if name=="":
             return j.core.db.hset("done",self._objid,value)
         else:
             return j.core.db.hset("done","%s:%s"%(self._objid,name),value)
 
     def _done_get(self,name=""):
-        if name!="":
+        if name=="":
             return j.core.db.hget("done",self._objid)
         else:
             return j.core.db.hget("done","%s:%s"%(self._objid,name))
@@ -176,9 +185,10 @@ class JSBase:
         :param name:
         :return:
         """
-        if name!="":
-            for item in  j.core.db.hkeys("done","%s*"%self._objid):
-                 j.core.db.hdel("done",item)
+        if name=="":
+            for item in j.core.db.hkeys("done"):
+                if item.find(self._objid)!=-1:
+                    j.core.db.hdel("done",self._objid)
         else:
             return j.core.db.hdel("done","%s:%s"%(self._objid,name))
 
@@ -267,9 +277,8 @@ class JSBase:
     def __str__(self):
         try:
             out = "%s\n%s\n"%(self.__class__,str(j.data.serializers.yaml.dumps(self._ddict)))
-        except:
+        except Exception as e:
             out = str(self.__class__)+"\n"
-            out+=j.core.text.prefix(" - ", str(self.__dict__))
         return out
 
     __repr__ = __str__

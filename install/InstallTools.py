@@ -1622,8 +1622,6 @@ class JumpscaleInstaller():
 
         Tools.file_touch(os.path.join(MyEnv.config["DIR_BASE"], "lib/jumpscale/__init__.py"))
 
-
-
         self.repos_get()
         self.repos_link()
         self.cmds_link()

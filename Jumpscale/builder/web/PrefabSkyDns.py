@@ -17,12 +17,12 @@ class BuilderSkyDns(j.builder.system._BaseClass):
         download , install, move files to appropriate places, and create relavent configs
         """
         j.builder.tools.file_copy(j.builder.tools.joinpaths('{DIR_BASE}/go', 'bin', 'skydns'), '{DIR_BIN}')
-        j.builder.sandbox.addPath(j.core.tools.text_replace("{DIR_BIN}"))
+        #j.builder.sandbox.addPath(j.core.tools.text_replace("{DIR_BIN}"))
 
         if start:
             self.start()
 
     def start(self):
-        cmd = j.builder.sandbox.cmdGetPath("skydns")
+        cmd = #j.builder.sandbox.cmdGetPath("skydns")
         pm = j.builder.system.processmanager.get()
         pm.ensure("skydns", cmd + " -addr 0.0.0.0:53")

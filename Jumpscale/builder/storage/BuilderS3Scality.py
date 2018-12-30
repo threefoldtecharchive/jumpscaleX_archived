@@ -20,7 +20,7 @@ class BuilderS3Scality(j.builder.system._BaseClass):
 
         j.core.tools.dir_ensure('/opt/code/github/scality')
         path = j.clients.git.pullGitRepo('https://github.com/scality/S3.git', ssh=False)
-        profile = j.builder.sandbox.profileDefault
+        profile = #j.builder.sandbox.profileDefault
         profile.addPath('{DIR_BIN}')
         profile.save()
         j.builder.runtimes.nodejs.install()
@@ -53,10 +53,10 @@ class BuilderS3Scality(j.builder.system._BaseClass):
         if not j.builder.tools.dir_exists('%s/npm-run-all' % nodePath):
             j.sal.process.execute('npm install npm-run-all')
         nodePath = j.builder.tools.replace('{DIR_BASE}/node/lib/node_modules/s3/node_modules:%s' % nodePath)
-        if j.builder.sandbox.profileDefault.envGet('NODE_PATH') != nodePath:
-            j.builder.sandbox.profileDefault.envSet("NODE_PATH", nodePath)
-            j.builder.sandbox.profileDefault.addPath(j.builder.tools.replace("{DIR_BASE}/node/bin/"))
-            j.builder.sandbox.profileDefault.save()
+        if #j.builder.sandbox.profileDefault.envGet('NODE_PATH') != nodePath:
+            #j.builder.sandbox.profileDefault.envSet("NODE_PATH", nodePath)
+            #j.builder.sandbox.profileDefault.addPath(j.builder.tools.replace("{DIR_BASE}/node/bin/"))
+            #j.builder.sandbox.profileDefault.save()
         path = j.sal.fs.joinPaths(j.dirs.JSAPPSDIR, 'S3')
         j.sal.process.execute('cd {} && npm run start_location'.format(path), profile=True)
 

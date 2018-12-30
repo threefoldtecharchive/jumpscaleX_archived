@@ -6,7 +6,7 @@ JSBASE = j.builder.system._BaseClass
 class BuilderOpenSSL(j.builder.system._BaseClass):
 
 
-    def __init(self):
+    def _init(self):
         self._logger_enable()
         self.BUILDDIRL = j.core.tools.text_replace("{DIR_VAR}/build/openssl")
         self.CODEDIRL = j.core.tools.text_replace("{DIR_VAR}/build/code/openssl")
@@ -21,7 +21,7 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
 
     def build(self, reset=False):
         """
-        js_shell 'j.builder.libs.openssl.build()'
+        js_shell 'j.builder.libs..openssl.build()'
         """
 
         if self._done_check("build") and not reset:
