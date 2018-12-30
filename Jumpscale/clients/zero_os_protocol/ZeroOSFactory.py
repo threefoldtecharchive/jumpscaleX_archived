@@ -12,12 +12,13 @@ class ZeroOSFactory(j.application.JSFactoryBaseClass):
     def _init(self):
         self.connections = {}
 
-    def get_from_itsyouonline(self,name="default",iyo_instance="default",jwtname="default",host="localhost",port=6600):
+    def get_from_itsyouonline(
+            self, name="default", iyo_instance="default", jwtname="default", host="localhost", port=6600):
 
         iyo = j.clients.itsyouonline.get(name=iyo_instance)
-        passwd = iyo.jwt_get() #there should be enough protection in here to refresh
+        passwd = iyo.jwt_get()  # there should be enough protection in here to refresh
 
-        cl = self.get(name=name,host=host,port=port,password=passwd,ssl=True)
+        cl = self.get(name=name, host=host, port=port, password=passwd, ssl=True)
         cl.ping()
         return cl
 
@@ -27,7 +28,6 @@ class ZeroOSFactory(j.application.JSFactoryBaseClass):
         :return:
         """
 
-
         # host = "127.0.0.1"
         # port = 6379
         # unixsocket = ""
@@ -36,11 +36,9 @@ class ZeroOSFactory(j.application.JSFactoryBaseClass):
         # ssl = true
         # timeout = 120
 
-
-        cl = self.get_from_itsyouonline(name="test",host="10.102.54.126",port=6379)
+        cl = self.get_from_itsyouonline(name="test", host="10.102.54.126", port=6379)
 
         j.shell()
 
-
-        #use j.clients.zoscmd... to start a local zos
-        #connect client to zos do quite some tests
+        # use j.clients.zoscmd... to start a local zos
+        # connect client to zos do quite some tests

@@ -1,9 +1,10 @@
 from Jumpscale import j
 
+
 class SSHKey(j.application.JSBaseConfigClass):
 
     _SCHEMATEXT = """
-        @url = jumpscale.sshkey.1
+        @url = jumpscale.sshkey.client
         name* = "" (S)
         pubkey = "" (S)
         allow_agent = True (B)
@@ -13,16 +14,16 @@ class SSHKey(j.application.JSBaseConfigClass):
         path = "" (S) #path of the private key
         """
 
-    def _data_trigger_new(self):
+    def _init_new(self):
 
         self._connected = None
 
         if self.data.name == "":
             raise RuntimeError("need to specify name")
 
-        if self.path=="":
-            keyspath="%s/keys"%(j.sal.fs.getcwd())
-            keyspath_system = j.core.tools.text_replace("{DIR_HOME}/.ssh/%s"%self.name)
+        if self.path == "":
+            keyspath = "%s/keys" % (j.sal.fs.getcwd())
+            keyspath_system = j.core.tools.text_replace("{DIR_HOME}/.ssh/%s" % self.name)
             if j.sal.fs.exists(keyspath):
                 # means we are in directory where keys dir is found
                 self.path = keyspath
@@ -34,15 +35,13 @@ class SSHKey(j.application.JSBaseConfigClass):
             if not j.sal.fs.exists(path):
                 cmd = 'ssh-keygen -f {} -y > {}'.format(self.path, path)
                 j.sal.process.execute(cmd)
-            self.pubkey=j.sal.fs.readFile(path)
+            self.pubkey = j.sal.fs.readFile(path)
 
         if not self.privkey:
-            self.privkey=j.sal.fs.readFile(self.path)
+            self.privkey = j.sal.fs.readFile(self.path)
 
         self.save()
-        self.data.autosave = True #means every write will be saved (is optional to set)
-
-
+        self.data.autosave = True  # means every write will be saved (is optional to set)
 
     def delete(self):
         """
@@ -73,7 +72,7 @@ class SSHKey(j.application.JSBaseConfigClass):
             cmd = 'ssh-keygen -t rsa -f %s -q -P "%s"' % (self.path, self.passphrase)
             j.sal.process.execute(cmd, timeout=10)
 
-        self._data_trigger_new() #will load the info from fs
+        self._init_new()  # will load the info from fs
 
     def sign_ssh_data(self, data):
         return self.agent.sign_ssh_data(data)

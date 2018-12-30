@@ -6,6 +6,7 @@ JSConfigClient = j.application.JSBaseConfigClass
 class PeeweeClient(JSConfigClient):
     _SCHEMATEXT = """
     @url = jumpscale.peewee.client
+    name* = "" (S)
     ipaddr = "localhost" (S)
     port = 0 (ipport)
     login = "postgres" (S)

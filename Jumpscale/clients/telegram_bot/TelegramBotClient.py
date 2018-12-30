@@ -9,6 +9,7 @@ JSConfigClient = j.application.JSBaseConfigClass
 class TelegramBot(JSConfigClient):
     _SCHEMATEXT = """
     @url = jumpscale.telegramBot.client
+    name* = "" (S)
     bot_token_ = "" (S)
     """
 

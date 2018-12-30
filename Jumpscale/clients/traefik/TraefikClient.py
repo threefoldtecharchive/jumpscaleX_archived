@@ -14,6 +14,7 @@ JSConfigBase = j.application.JSBaseConfigClass
 class TraefikClient(JSConfigBase):
     _SCHEMATEXT = """
     @url = jumpscale.traefik.client
+    name* = "" (S)
     etcd_instance = "main" (S)
     """
 

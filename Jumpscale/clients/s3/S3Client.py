@@ -23,6 +23,7 @@ class S3Client(JSConfigBase):
     """
     _SCHEMATEXT = """
     @url = jumpscale.s3.client
+    name* = "" (S)
     address = "" (S)
     port = 9000 (ipport)
     accesskey_ = "" (S)
@@ -52,7 +53,7 @@ class S3Client(JSConfigBase):
             )
         )
 
-        self._logger.info("open connection to minio:%s"%self.instance)
+        self._logger.info("open connection to minio:%s" % self.instance)
         self.client = Minio('%s:%s' % (self.address, self.port),
                             access_key=self.accesskey_,
                             secret_key=self.secretkey_,

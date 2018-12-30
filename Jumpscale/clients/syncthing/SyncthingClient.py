@@ -14,6 +14,7 @@ JSConfigClient = j.application.JSBaseConfigClass
 class SyncthingClient(JSConfigClient):
     _SCHEMATEXT = """
     @url = jumpscale.syncthing.client
+    name* = "" (S)
     addr = "localhost" (S)
     port = 0 (ipport)
     sshport = 22 (ipport)
@@ -95,7 +96,7 @@ class SyncthingClient(JSConfigClient):
         res = self.executeBashScript(C)
 
         self._logger.debug("check if we can find syncthing on right port: %s:%s" %
-                          (self.addr, self.port))
+                           (self.addr, self.port))
         if j.sal.nettools.waitConnectionTest(self.addr, self.port, timeout=10) is False:
             raise j.exceptions.RuntimeError(
                 "Could not find syncthing on %s:%s, tcp port test" % (self.addr, self.port))

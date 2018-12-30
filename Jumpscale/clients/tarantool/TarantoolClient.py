@@ -14,6 +14,7 @@ class Models():
 class TarantoolClient(JSBASE):
     _SCHEMATEXT = """
     @url = jumpscale.tarantool.clients
+    name* ="" (S)
     ip = "localhost" (S)
     port = 3301 (ipport)
     login = "root" (S)

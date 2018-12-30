@@ -9,7 +9,7 @@ JSConfigBase = j.application.JSBaseConfigClass
 class WebGateway(JSConfigBase):
     _SCHEMATEXT = """
     @url = jumpscale.webgateway.client
-    name = "webgateway" (S)
+    name* = "" (S)
     etcd_instance = "main" (S)
     public_ips = [] (LS)
     """

@@ -7,6 +7,7 @@ import os
 class SSHAgent(j.application.JSBaseConfigClass):
     _SCHEMATEXT = """
     @url = jumpscale.sshagent.client
+    name* = "" (S)
     passphrase = "" (S)
     path = "" (S)
     """

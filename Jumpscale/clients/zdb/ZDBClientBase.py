@@ -8,6 +8,7 @@ JSBASE = j.application.JSBaseConfigClass
 class ZDBClientBase(JSBASE):
     _SCHEMATEXT = """
     @url = jumpscale.zdb.client
+    name* = "" (S)
     addr = "localhost" (S)
     port = 9900 (ipport)
     mode = "seq" (S)

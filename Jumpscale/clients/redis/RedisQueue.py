@@ -7,7 +7,7 @@ class RedisQueue(JSConfigBase):
     _SCHEMATEXT = """
     @url = jumpscale.redis.client
     redis = "" (S)
-    name = "" (S)
+    name* = "" (S)
     namespace = "queue" (S)
     """
 

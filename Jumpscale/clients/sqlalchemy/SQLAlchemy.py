@@ -93,6 +93,7 @@ JSConfigClient = j.application.JSBaseConfigClass
 class SQLAlchemy(JSConfigClient):
     _SCHEMATEXT = """
     @url = jumpscale.sqlalchemy.client
+    name* = "" (S)
     connectionstring = "" (S)
     sqlitepath = "" (S)
     tomlpath = "../data" (S)

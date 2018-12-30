@@ -95,6 +95,7 @@ class PortalClient(JSConfigBase, Resource):
 
     _SCHEMATEXT = """
     @url = jumpscale.portal.client
+    name* = "" (S)
     ip = "" (S)
     port = 8200 (ipport)
     iyoinstance = "" (S)

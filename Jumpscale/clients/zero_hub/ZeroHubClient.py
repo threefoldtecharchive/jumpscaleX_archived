@@ -10,6 +10,7 @@ class ZeroHubClient(JSConfigClient):
     """
     _SCHEMATEXT = """
     @url =  jumpscale.zerohub.client
+    name* = "" (S)
     token_ = "" (S)
     username = "" (S)
     url = "https://hub.gig.tech/api" (S)

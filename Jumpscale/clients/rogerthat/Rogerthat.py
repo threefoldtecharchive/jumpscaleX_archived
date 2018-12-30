@@ -10,6 +10,7 @@ JSConfigClient = j.application.JSBaseConfigClass
 class Rogerthat(JSConfigClient):
     _SCHEMATEXT = """
     @url = jumpscale.rogerthat.client
+    name* = "" (S)
     api_key_ = "" (S)
     """
 

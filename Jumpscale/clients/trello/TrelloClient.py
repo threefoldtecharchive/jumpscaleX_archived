@@ -7,6 +7,7 @@ JSConfigClient = j.application.JSBaseConfigClass
 class TrelloClient(JSConfigClient):
     _SCHEMATEXT = """
     @url = jumpscale.trello.client
+    name* = "" (S)
     api_key_ = "" (S)
     secret_ = "" (S)
     token_ = "" (S)
