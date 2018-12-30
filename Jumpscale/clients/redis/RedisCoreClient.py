@@ -8,7 +8,7 @@ JSConfigBaseFactory = j.application.JSFactoryBaseClass
 
 class RedisCoreClient(JSConfigBaseFactory):
 
-    __jslocation__ = "j.clients.redis_core"
+    __jslocation__ = "j.clients.credis_core"
 
     def _init(self):
 
