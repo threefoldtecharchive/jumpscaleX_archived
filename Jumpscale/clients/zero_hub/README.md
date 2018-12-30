@@ -3,7 +3,7 @@
 ## Staging
 Install upstream client:
 ```
-pip install --user -e 'git+https://github.com/zero-os/0-hub@api-client#egg=zerohub&subdirectory=client'
+pip3 install -e 'git+https://github.com/threefoldtech/0-hub#egg=zerohub&subdirectory=client'
 ```
 
 ## Using the client
@@ -11,7 +11,7 @@ pip install --user -e 'git+https://github.com/zero-os/0-hub@api-client#egg=zeroh
 ### Public
 You can make basic requests without authentification like:
 ```
-cl = j.clients.zerohub.getClient()
+cl = j.clients.zhub.getClient()
 
 cl.repositories()
 cl.list()
