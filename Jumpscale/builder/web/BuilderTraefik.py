@@ -5,8 +5,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
     NAME = 'traefik'
 
     def _init(self):
-        self.tools = j.builder.tools
-        self.go_runtime = j.builder.runtimes.golang
+        self.go_runtime = self.b.runtimes.golang
         self.traefik_dir = self.go_runtime.package_path_get('containous/traefik')
 
     def install(self, reset=False):

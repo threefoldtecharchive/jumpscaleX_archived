@@ -28,7 +28,6 @@ class BuilderGolang(j.builder.system._BaseClass):
     def _init(self):
         self.base_dir = j.core.tools.text_replace('{DIR_BASE}')
 
-        self.tools = j.builder.tools
         self.bash = j.tools.bash.get()
         self.profile_default = self.bash.profileDefault
         self.profile_js = self.bash.profileJS
