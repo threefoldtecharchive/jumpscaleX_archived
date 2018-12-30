@@ -17,13 +17,14 @@ class HostFileFactory(j.application.JSBaseClass):
         return HostFile()
 
 
-class HostFile(j.application.JSBaseClass):
+class HostFile(JSBASE):
 
     def __init__(self):
-        self.hostfilePath = "/etc/hosts"
+        self.__jslocation__ = 'j.sal.hostsfile'
+        self._host_filepath = '/etc/hosts'
         JSBASE.__init__(self)
 
-    def remove(self, ip):
+    def ip_remove(self, ip):
         """Update a hostfile, delete ip from hostsfile
 
         :param ip: Ip of the machine to remove
@@ -91,12 +92,6 @@ class HostFile(j.application.JSBaseClass):
         else:
             filecontents += '%s %s\n' % (ip, hostnames)
 
-        j.sal.fs.writeFile(self._host_filepath, filecontents)
-
-    def _test(self, name=""):
-        """Run tests under tests
-
-        :param name: basename of the file to run, defaults to "".
-        :type name: str, optional
-        """
-        self._test_run(name=name)
+==== BASE ====
+        j.sal.fs.writeFile(self.hostfilePath, filecontents)
+==== BASE ====
