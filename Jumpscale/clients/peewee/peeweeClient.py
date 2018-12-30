@@ -13,7 +13,7 @@ class PeeweeClient(JSConfigClient):
     passwd_ = "" (S)
     dbname = "template" (S)
     dbtype = "postgres" (S)
-    schema = "" (S)
+    peeweeschema = "" (S)
     cache = true (B)
     """
 
