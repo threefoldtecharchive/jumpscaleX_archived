@@ -12,9 +12,6 @@ class PacketNetFactory(JSConfigBaseFactory):
     def _init(self):
         self.connections = {}
 
-    def get(self, name="test"):
-        pass  # TODO: implement getter
-
     def test(self):
         """
         do:
