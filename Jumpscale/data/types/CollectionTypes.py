@@ -70,6 +70,8 @@ class Dictionary():
             s = s.replace("''", '"')
             j.data.serializers.json.loads(s)
             return s
+    def toData(self, v):
+        return self.clean(v)
 
     def toString(self, v):
         return j.data.serializers.json.dumps(v, True, True)
@@ -157,6 +159,9 @@ class List():
         if sort:
             res.sort()
         return res
+
+    def toData(self, v):
+        return self.clean(v)
 
     def toString(self, val, clean=True, sort=False):
         """

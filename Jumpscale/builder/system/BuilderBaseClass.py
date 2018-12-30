@@ -3,7 +3,15 @@ from Jumpscale import j
 class BuilderBaseClass(j.application.JSBaseClass):
 
 
-    def _init(self):
-        self.system = j.builder.system
-        self.tools = j.builder.tools
-        self.b = j.builder
+    @property
+    def system(self):
+        return j.builder.system
+
+    @property
+    def tools(self):
+        return j.builder.tools
+
+    @property
+    def b(self):
+        return j.builder
+

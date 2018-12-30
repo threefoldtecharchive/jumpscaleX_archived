@@ -87,7 +87,7 @@ class BuilderNS(j.builder.system._BaseClass):
         can set & get
         @param nameservers [$nserver1,$nserver2]
         """
-        file = j.builder.tools.file_read('/etc/resolv.conf')
+        file = j.core.tools.file_text_read('/etc/resolv.conf')
         results = []
         for line in file.splitlines():
             nameserver = re.search(r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b', line)

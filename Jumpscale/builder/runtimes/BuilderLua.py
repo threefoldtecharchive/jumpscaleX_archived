@@ -5,7 +5,6 @@ from Jumpscale import j
 
 class BuilderLua(j.builder.system._BaseClass):
 
-
     NAME = "lua"
 
     def _init(self):
@@ -21,10 +20,10 @@ class BuilderLua(j.builder.system._BaseClass):
             return
 
         #need openresty & openssl to start from
-        j.builder.lib.openssl.build()
+        j.builder.libs.openssl.build()
         j.builder.web.openresty.build()
 
-        j.builder.sandbox.locale_check()
+        j.tools.bash.local.locale_check()
 
 
         url="https://luarocks.org/releases/luarocks-3.0.4.tar.gz"
@@ -42,7 +41,7 @@ class BuilderLua(j.builder.system._BaseClass):
         
         """
 
-        j.builder.tools.execute_bash(j.core.tools.text_replace(C))
+        j.sal.process.execute(j.core.tools.text_replace(C))
 
         self.lua_rocks_install()
         self.copy2sandbox_github()
@@ -69,7 +68,7 @@ class BuilderLua(j.builder.system._BaseClass):
         :return:
         """
 
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             # j.builder.system.package.mdupdate()
             j.builder.tools.package_install("geoip-database,libgeoip-dev")
 
@@ -137,7 +136,7 @@ class BuilderLua(j.builder.system._BaseClass):
         rsync -rav /sandbox/var/build/luarocks/lua_modules/share/lua/5.1/ $LUALIB/
 
         """
-        j.builder.tools.execute_bash(j.core.tools.text_replace(C))
+        j.sal.process.execute(j.core.tools.text_replace(C))
 
 
 
@@ -185,7 +184,7 @@ class BuilderLua(j.builder.system._BaseClass):
         C = j.core.tools.text_replace(C)
         print(C)
 
-        j.builder.tools.execute_bash(C)
+        j.sal.process.execute(C)
 
 
     def copy2sandbox_github(self):
@@ -196,9 +195,9 @@ class BuilderLua(j.builder.system._BaseClass):
         assert self.executor.type=="local"
         path="/sandbox/openresty/lualib"
 
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             destbin="%s/base/openresty/lualib"%j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_ubuntu.git")
-        elif j.builder.tools.isMac:
+        elif j.core.platformtype.myplatform.isMac:
             destbin="%s/base/openresty/lualib"%j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_osx.git")
         else:
             raise RuntimeError("only ubuntu & osx support")

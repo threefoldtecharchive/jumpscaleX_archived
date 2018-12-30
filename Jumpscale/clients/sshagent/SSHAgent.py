@@ -64,7 +64,8 @@ class SSHAgent(j.application.JSBaseConfigClass):
 
         self._sshagent = None  # to make sure it gets loaded again
 
-        if returnObj:
+        data = {}
+        data["path"] = path
 
             data = {}
             data["path"] = self.path
@@ -120,7 +121,7 @@ class SSHAgent(j.application.JSBaseConfigClass):
         """
         if "SSH_AUTH_SOCK" not in os.environ:
             self._init_ssh_env()
-            self.sshagent_init()
+            # self.sshagent_init()
         if not self.available():
             self._logger.info('Will start agent')
             self.sshagent_start()
@@ -225,7 +226,7 @@ class SSHAgent(j.application.JSBaseConfigClass):
 
                 socket_path = j.sal.fs.joinPaths("/tmp", "ssh-agent-pid")
                 j.sal.fs.writeFile(socket_path, str(pid))
-                self.sshagent_init()
+                # self.sshagent_init()
                 j.clients.sshkey._sshagent = None
             return
 
@@ -279,7 +280,7 @@ class SSHAgent(j.application.JSBaseConfigClass):
 
         # TODO:1 broken
 
-        self._logger_enable()
+        # self._logger_enable()
         self._logger.info("sshkeys:%s" % j.clients.sshkey.listnames())
 
         self.sshagent_kill()  # goal is to kill & make sure it get's loaded automatically

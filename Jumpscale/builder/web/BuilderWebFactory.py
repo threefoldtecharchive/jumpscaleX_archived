@@ -6,8 +6,11 @@ class BuilderWebFactory(j.builder.system._BaseFactoryClass):
 
     def _init(self):
         self._logger_enable()
-        from .PrefabNGINX import PrefabNGINX
-        self.nginx = PrefabNGINX()
+        from .BuilderNGINX import BuilderNGINX
+        from .PrefabOpenResty import PrefabOpenResty
+
+        self.nginx = BuilderNGINX()
+        self.openresty = PrefabOpenResty()
 
         #TODO:*1
 

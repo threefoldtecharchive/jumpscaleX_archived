@@ -35,7 +35,7 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
 
         j.sal.process.execute('ufw allow %s' % port, die=False)
 
-        j.builder.tools.dir_ensure("/home/sshreflector/.ssh", recursive=True, mode=None,
+        j.core.tools.dir_ensure("/home/sshreflector/.ssh", recursive=True, mode=None,
                                     owner="sshreflector", group="sshreflector")
 
         lpath = os.environ["HOME"] + "/.ssh/reflector"
@@ -214,7 +214,7 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
         ftp = prefab.core.executor.sshclient.sftp
         ftp.get(rpath, lpath)
 
-        out = j.builder.tools.file_read(lpath)
+        out = j.core.tools.file_text_read(lpath)
 
         addr = prefab.core.executor.addr
 

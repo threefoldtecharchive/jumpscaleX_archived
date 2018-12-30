@@ -11,29 +11,29 @@ class BuilderGolang(j.builder.system._BaseClass):
     NAME = 'go'
 
     def reset(self):
-        if j.builder.sandbox.profileDefault.envExists("GOPATH"):
-            go_path = j.builder.sandbox.profileDefault.envGet("GOPATH")
-            j.builder.sandbox.profileDefault.pathDelete(go_path)
-        if j.builder.sandbox.profileDefault.envExists("GOROOT"):
-            go_root = j.builder.sandbox.profileDefault.envGet("GOROOT")
-            j.builder.sandbox.profileDefault.pathDelete(go_root)
-            j.builder.sandbox.profileJS.pathDelete(go_root)
+        if #j.builder.sandbox.profileDefault.envExists("GOPATH"):
+            go_path = #j.builder.sandbox.profileDefault.envGet("GOPATH")
+            #j.builder.sandbox.profileDefault.pathDelete(go_path)
+        if #j.builder.sandbox.profileDefault.envExists("GOROOT"):
+            go_root = #j.builder.sandbox.profileDefault.envGet("GOROOT")
+            #j.builder.sandbox.profileDefault.pathDelete(go_root)
+            #j.builder.sandbox.profileJS.pathDelete(go_root)
 
-        j.builder.sandbox.profileDefault.deleteAll("GOPATH")
-        j.builder.sandbox.profileJS.deleteAll("GOPATH")
+        #j.builder.sandbox.profileDefault.deleteAll("GOPATH")
+        #j.builder.sandbox.profileJS.deleteAll("GOPATH")
 
-        j.builder.sandbox.profileDefault.deleteAll("GOROOT")
-        j.builder.sandbox.profileJS.deleteAll("GOROOT")
+        #j.builder.sandbox.profileDefault.deleteAll("GOROOT")
+        #j.builder.sandbox.profileJS.deleteAll("GOROOT")
 
-        j.builder.sandbox.profileDefault.deleteAll("GOGITSDIR")
-        j.builder.sandbox.profileJS.deleteAll("GOGITSDIR")
+        #j.builder.sandbox.profileDefault.deleteAll("GOGITSDIR")
+        #j.builder.sandbox.profileJS.deleteAll("GOGITSDIR")
 
-        j.builder.sandbox.profileDefault.pathDelete("/go/")
-        j.builder.sandbox.profileJS.pathDelete("/go/")
+        #j.builder.sandbox.profileDefault.pathDelete("/go/")
+        #j.builder.sandbox.profileJS.pathDelete("/go/")
 
         # ALWAYS SAVE THE DEFAULT FIRST !!!
-        j.builder.sandbox.profileDefault.save()
-        j.builder.sandbox.profileJS.save()
+        #j.builder.sandbox.profileDefault.save()
+        #j.builder.sandbox.profileJS.save()
 
         self._init()
 
@@ -69,10 +69,10 @@ class BuilderGolang(j.builder.system._BaseClass):
             raise j.exceptions.RuntimeError("platform not supported")
 
         j.sal.process.execute(cmd=j.core.tools.text_replace("rm -rf $GOROOTDIR"), die=True)
-        j.builder.tools.dir_ensure(self.GOROOTDIR)
-        j.builder.tools.dir_ensure(self.GOPATHDIR)
+        j.core.tools.dir_ensure(self.GOROOTDIR)
+        j.core.tools.dir_ensure(self.GOPATHDIR)
 
-        profile = j.builder.sandbox.profileDefault
+        profile = #j.builder.sandbox.profileDefault
         profile.envSet("GOROOT", self.GOROOTDIR)
         profile.envSet("GOPATH", self.GOPATHDIR)
         profile.addPath(j.builder.tools.joinpaths(self.GOPATHDIR, 'bin'))
@@ -82,9 +82,9 @@ class BuilderGolang(j.builder.system._BaseClass):
         j.builder.tools.file_download(downl, self.GOROOTDIR, overwrite=False, retry=3,
                                        timeout=0, expand=True, removeTopDir=True)
 
-        j.builder.tools.dir_ensure("%s/src" % self.GOPATHDIR)
-        j.builder.tools.dir_ensure("%s/pkg" % self.GOPATHDIR)
-        j.builder.tools.dir_ensure("%s/bin" % self.GOPATHDIR)
+        j.core.tools.dir_ensure("%s/src" % self.GOPATHDIR)
+        j.core.tools.dir_ensure("%s/pkg" % self.GOPATHDIR)
+        j.core.tools.dir_ensure("%s/bin" % self.GOPATHDIR)
 
         self.get("github.com/tools/godep")
         self._done_set("install")
@@ -107,7 +107,7 @@ class BuilderGolang(j.builder.system._BaseClass):
         cd $GOPATH/src/github.com/Jumpscale/go-raml
         sh build.sh
         '''
-        j.builder.tools.execute_bash(C, profile=True)
+        j.sal.process.execute(C, profile=True)
         self._done_set('goraml')
 
     def bindata(self, reset=False):
@@ -123,7 +123,7 @@ class BuilderGolang(j.builder.system._BaseClass):
         go build
         go install
         '''
-        j.builder.tools.execute_bash(C, profile=True)
+        j.sal.process.execute(C, profile=True)
         self._done_set('bindata')
 
     def glide(self):

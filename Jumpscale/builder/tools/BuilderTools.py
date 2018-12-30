@@ -23,7 +23,6 @@ class BuilderTools(j.builder.system._BaseClass):
         path = "".join([("\\" + _) if _ in SHELL_ESCAPE else _ for _ in path])
         return path
 
-
     # =============================================================================
     #
     # SYSTEM
@@ -35,8 +34,7 @@ class BuilderTools(j.builder.system._BaseClass):
         @format py3, bash
         """
         text = j.core.tools.text_replace(text)
-        return j.core.text.print(text,lexer=lexer)
-
+        return j.core.text.print(text, lexer=lexer)
 
     def system_uuid_alias_add(self):
         """Adds system UUID alias to /etc/hosts.
@@ -91,9 +89,8 @@ class BuilderTools(j.builder.system._BaseClass):
         dest = j.core.tools.text_replace(dest)
 
         return j.sal.fs.copyDirTree(src=source, dst=dest, keepsymlinks=keepsymlinks, deletefirst=deletefirst,
-                    overwriteFiles=overwriteFiles, ignoredir=ignoredir, ignorefiles=ignorefiles,
-                    recursive=recursive, rsyncdelete=rsyncdelete, createdir=createdir)
-
+                                    overwriteFiles=overwriteFiles, ignoredir=ignoredir, ignorefiles=ignorefiles,
+                                    recursive=recursive, rsyncdelete=rsyncdelete, createdir=createdir)
 
     def file_backup(self, location, suffix=".orig", once=False):
         """Backups the file at the given location in the same directory, appending
@@ -163,12 +160,12 @@ class BuilderTools(j.builder.system._BaseClass):
 
         if overwrite:
             if self.file_exists(to):
-                self.file_unlink(to)
-                self.file_unlink("%s.downloadok" % to)
+                j.sal.fs.remove(to)
+                j.sal.fs.remove("%s.downloadok" % to)
 
         if not (self.file_exists(to) and self.file_exists("%s.downloadok" % to)):
 
-            self.createDir(j.sal.fs.getDirName(to))
+            j.sal.fs.createDir(j.sal.fs.getDirName(to))
 
             if multithread is False:
                 minspeed = 0
@@ -186,10 +183,10 @@ class BuilderTools(j.builder.system._BaseClass):
                 if self.file_exists(to):
                     cmd += " -C -"
                 self._logger.info(cmd)
-                self.file_unlink("%s.downloadok" % to)
+                j.sal.fs.remove("%s.downloadok" % to)
                 rc, out, err = self.run(cmd, die=False, timeout=timeout)
                 if rc == 33:  # resume is not support try again withouth resume
-                    self.file_unlink(to)
+                    j.sal.fs.remove(to)
                     cmd = "curl -L '%s' -o '%s' %s %s --connect-timeout 5 --retry %s --retry-max-time %s" % (
                         url, to, user, minsp, retry, timeout)
                     rc, out, err = self.run(cmd, die=False, timeout=timeout)
@@ -232,6 +229,8 @@ class BuilderTools(j.builder.system._BaseClass):
             raise RuntimeError("Cannot file expand, not supported")
         if destination == "":
             destination = self.joinpaths("{DIR_TEMP}", base)
+        j.sal.fs.remove(destination)
+        j.sal.fs.createDir(destination)
         path = j.core.tools.text_replace(path)
         destination = j.core.tools.text_replace(destination)
         self.dir_ensure(destination)
@@ -280,47 +279,57 @@ class BuilderTools(j.builder.system._BaseClass):
         default will be returned if the file does not exist."""
         location = j.core.tools.text_replace(location)
         if default is None:
-            assert self.file_exists(location), "prefab.file_read: file does not exists {0}".format(location)
+            assert self.file_exists(
+                location), "prefab.file_read: file does not exists {0}".format(location)
         elif not self.file_exists(location):
             return default
         frame = self.file_base64(location)
         return base64.decodebytes(frame.encode(errors='replace')).decode()
 
     def file_exists(self, location):
+        """Tests if there is a file at the given location."""
         location = j.core.tools.text_replace(location)
-        """Tests if there is a *remote* file at the given location."""
-        raise RuntimeError("use jumpscale,call libs")
-        return self._check_is_ok('test -e', location)
+        if j.sal.fs.exists(location) and j.sal.fs.isFile(location):
+            return True
+        return False
 
     def exists(self, location, replace=True):
         """
         check if dir or file or exists
         """
-        raise RuntimeError("use jumpscale,call libs")
-        location = j.core.tools.text_replace(location)
-        return self._check_is_ok('test -e', location, replace=replace)
+        if replace:
+            location = j.core.tools.text_replace(location)
+        return j.sal.fs.exists(location)
 
     def file_is_file(self, location):
-        raise RuntimeError("use jumpscale,call libs")
         location = j.core.tools.text_replace(location)
-        return self._check_is_ok('test -f', location)
+        return j.sal.fs.isFile(location)
 
     def file_is_dir(self, location):
-        raise RuntimeError("use jumpscale,call libs")
         location = j.core.tools.text_replace(location)
-        return self._check_is_ok('test -d', location)
+        return j.sal.fs.isDir(location)
 
     def file_is_link(self, location):
-        raise RuntimeError("use jumpscale,call libs")
         location = j.core.tools.text_replace(location)
-        return self._check_is_ok('test -L', location)
+        return j.sal.fs.isLink(location)
 
     def file_attribs(self, location, mode=None, owner=None, group=None):
-        """Updates the mode/owner/group for the remote file at the given
-        location."""
-        raise RuntimeError("use jumpscale,call libs")
+        """
+        Updates the mode/owner/group for the remote file at the given
+        location.
+
+        :param mode: mode of file, sent as Octal, defaults to None
+        :type mode: Octal, optional
+        :param owner: owner of file, defaults to None
+        :type owner: string, optional
+        :param group: owning group, defaults to None
+        :type group: string, optional
+        """
         location = j.core.tools.text_replace(location)
-        return self.dir_attribs(location, mode, owner, group, False)
+        if mode:
+            j.sal.fs.chmod(path, mode)
+        if owner or group:
+            j.sal.fs.chown(path, owner, group)
 
     def file_attribs_get(self, location):
         """Return mode, owner, and group for remote path.
@@ -345,23 +354,20 @@ class BuilderTools(j.builder.system._BaseClass):
         """
         return in kb
         """
-        raise RuntimeError("use jumpscale,call libs")
         path = j.core.tools.text_replace(path)
-        if  self.executor.type =="local":
-            return j.sal.fs.fileSize(path)
+        return j.sal.fs.fileSize(path)
         # print("du -Lck %s" % path)
-        rc, out, err = self.run("du -Lck %s" % path, showout=False)
-        if rc != 0:
-            raise j.exceptions.RuntimeError("Failed to define size of path '%s' \nerror: %s" % (path, err))
-        res = out.split("\n")[-1].split("\t")[0].split(" ")[0]
-        print(out)
-        # j.shell()
-        return int(res)
+        # rc, out, err = self.run("du -Lck %s" % path, showout=False)
+        # if rc != 0:
+        #     raise j.exceptions.RuntimeError("Failed to define size of path '%s' \nerror: %s" % (path, err))
+        # res = out.split("\n")[-1].split("\t")[0].split(" ")[0]
+        # print(out)
+        # # j.shell()
+        # return int(res)
 
     @property
     def hostname(self):
-        raise RuntimeError("use jumpscale,call libs")
-        return self.executor.state_on_system["hostname"]
+        j.sal.nettools.getHostname()
 
     @hostname.setter
     def hostname(self, val):
@@ -380,9 +386,8 @@ class BuilderTools(j.builder.system._BaseClass):
 
     @property
     def ns(self):
-        #TODO:
+        # TODO:
         return self.prefab.system.ns
-
 
     def setIDs(self, name, grid, domain="aydo.com"):
         self.fqn = "%s.%s.%s" % (name, grid, domain)
@@ -408,26 +413,49 @@ class BuilderTools(j.builder.system._BaseClass):
             self.file_write(hostfile, val)
         self._cache.reset()
 
-
     def file_write(self, location, content, mode=None, owner=None, group=None, check=False,
-                   strip=True, showout=True, append=False, replaceInContent=False, sudo=False):
+                   strip=True, showout=True, append=False, sudo=False):
         """
-        @param append if append then will add to file
+        :param location: location to write to
+        :type location: string
+        :param content: content will be written in file
+        :type content: string
+        :param mode: mode of file, sent as Octal, defaults to None
+        :type mode: Octal, optional
+        :param owner: owner of file, defaults to None
+        :type owner: string, optional
+        :param group: owning group, defaults to None
+        :type group: string, optional
+        :param append: append to file if exists, defaults to False
+        :type append: bool, optional
+        :param sudo: defaults to False
+        :type sudo: bool, optional
         """
         path = j.core.tools.text_replace(location)
         if strip:
             content = j.core.text.strip(content)
-        raise RuntimeError("use jumpscale,call libs")
+        j.sal.fs.writeFile(path, content, append=append)
+        self.file_attribs(path, mode, owner, group)
 
     def file_ensure(self, location, mode=None, owner=None, group=None):
-        """Updates the mode/owner/group for the remote file at the given
-        location."""
+        """
+        Updates the mode/owner/group for the remote file at the given
+        location.
+
+        :param location: path to file
+        :type location: string
+        :param mode: mode of file, sent as Octal, defaults to None
+        :type mode: Octal, optional
+        :param owner: owner of file, defaults to None
+        :type owner: string, optional
+        :param group: owning group, defaults to None
+        :type group: string, optional
+        """
         location = j.core.tools.text_replace(location)
         if self.file_exists(location):
             self.file_attribs(location, mode=mode, owner=owner, group=group)
         else:
             self.file_write(location, "", mode=mode, owner=owner, group=group)
-
 
     def file_remove_prefix(self, location, prefix, strip=True):
         # look for each line which starts with prefix & remove
@@ -444,7 +472,6 @@ class BuilderTools(j.builder.system._BaseClass):
             out += "%s\n" % l
         self.file_write(location, out)
 
-
     def file_link(self, source, destination, symbolic=True, mode=None, owner=None, group=None):
         """Creates a (symbolic) link between source and destination on the remote host,
         optionally setting its mode / owner / group."""
@@ -453,11 +480,10 @@ class BuilderTools(j.builder.system._BaseClass):
         if self.file_exists(destination) and (not self.file_is_link(destination)):
             raise Exception(
                 "Destination already exists and is not a link: %s" % (destination))
-        raise RuntimeError("use jumpscale,call libs")
         self.file_attribs(destination, mode, owner, group)
 
-    def replace(self,text,args={}):
-        text = j.core.tools.text_replace(text,args=args)
+    def replace(self, text, args={}):
+        text = j.core.tools.text_replace(text, args=args)
         if "$" in text:
             raise RuntimeError("found $ in the text to replace, should use {}")
         return text
@@ -465,32 +491,37 @@ class BuilderTools(j.builder.system._BaseClass):
     def file_copy(self, source, dest, recursive=False, overwrite=True):
         source = j.core.tools.text_replace(source)
         dest = j.core.tools.text_replace(dest)
-        raise RuntimeError("use jumpscale,call libs")
+        j.sal.fs.copyFile(source, dest, createDirIfNeeded=True, overwriteFile=overwrite)
 
     def file_move(self, source, dest, recursive=False):
-        raise RuntimeError("use jumpscale,call libs")
+        source = j.core.tools.text_replace(source)
+        dest = j.core.tools.text_replace(dest)
+        j.sal.fs.moveFile(source, dest)
 
     def file_base64(self, location):
         """Returns the base64 - encoded content of the file at the given location."""
-        raise RuntimeError("use jumpscale,call libs")
+        content = self.file_read(location)
+        return j.data.serializers.base64.dumps(content)
 
     def file_sha256(self, location):
         """Returns the SHA - 256 sum (as a hex string) for the remote file at the given location."""
-        raise RuntimeError("use jumpscale,call libs")
+        location = j.core.tools.text_replace(location)
+        return j.data.hash.sha512(location)
 
     def file_md5(self, location):
         """Returns the MD5 sum (as a hex string) for the remote file at the given location."""
-        raise RuntimeError("use jumpscale,call libs")
+        location = j.core.tools.text_replace(location)
+        return j.data.hash.md5(location)
 
-    def package_install(self,name):
+    def package_install(self, name):
         if "," in name:
             for item in name.split(","):
                 self.package_install(item.strip())
 
-        #TODO do same for list
-        #check if ubuntu or osx, use right package manager to install
-        raise RuntimeError("use jumpscale,call libs")
-
+        # TODO do same for list
+        # check if ubuntu or osx, use right package manager to install
+        if self.isUbuntu or self.isLinux:
+            j.sal.ubuntu.apt_install(name)
 
     # =============================================================================
     #
@@ -521,12 +552,10 @@ class BuilderTools(j.builder.system._BaseClass):
     # =============================================================================
 
     def joinpaths(self, *args):
-        raise RuntimeError("use jumpscale,call libs")
-        path = j.core.tools.text_replace(path)
+        return j.sal.fs.joinPaths(*args)
 
     def dir_attribs(self, location, mode=None, owner=None, group=None, recursive=False, showout=False):
         """Updates the mode / owner / group for the given remote directory."""
-        raise RuntimeError("use jumpscale,call libs")
         location = j.core.tools.text_replace(location)
         if showout:
             # self._logger.info("set dir attributes:%s"%location)
@@ -543,14 +572,19 @@ class BuilderTools(j.builder.system._BaseClass):
                      (recursive, group, location), showout=False)
 
     def dir_exists(self, location):
-        """Tells if there is a remote directory at the given location."""
+        """
+        Tells if there is a remote directory at the given location.
+
+        :param location: location of dir to check
+        :type location: string
+        """
         location = j.core.tools.text_replace(location)
-        raise RuntimeError("use jumpscale,call libs")
+        return j.sal.fs.exists(location)
 
     def dir_remove(self, location, recursive=True):
         """ Removes a directory """
         location = j.core.tools.text_replace(location)
-        raise RuntimeError("use jumpscale,call libs")
+        j.sal.fs.remove(location)
 
     def dir_ensure(self, location, recursive=True, mode=None, owner=None, group=None):
         """Ensures that there is a remote directory at the given location,
@@ -559,8 +593,8 @@ class BuilderTools(j.builder.system._BaseClass):
         If we are not updating the owner / group then this can be done as a single
         ssh call, so use that method, otherwise set owner / group after creation."""
         location = j.core.tools.text_replace(location)
-        raise RuntimeError("use jumpscale,call libs")
-
+        j.sal.fs.createDir(location)
+        self.file_attribs(location, mode, owner, group)
 
     def find(self, path, recursive=True, pattern="", findstatement="", type="", contentsearch="",
              executable=False, extendinfo=False):
@@ -650,29 +684,27 @@ class BuilderTools(j.builder.system._BaseClass):
     # CORE
     # -----------------------------------------------------------------------------
 
-
     def run(self, cmd, die=True, debug=None,  showout=True, profile=True, replace=True,
-            shell=False, env=None, timeout=600,args={}):
+            shell=False, env=None, timeout=600, args={}):
         """
         @param profile, execute the bash profile first
         """
-        # self._logger.info(cmd)
+        self._logger.info(cmd)
         if cmd.strip() == "":
             raise RuntimeError("cmd cannot be empty")
         if not env:
             env = {}
         else:
-            args=args.update(env)
-        if replace:
-            cmd = j.core.tools.text_replace(cmd,args=args)
+            env = args.update(env)
 
-        raise RuntimeError("use jumpscale,call libs")
+        rc, out, err = j.sal.process.execute(cmd, cwd=None, timeout=timeout, die=True,
+                                             env=env, interactive=False, replace=replace)
         return rc, out, err
 
     def cd(self, path):
         """cd to the given path"""
         path = j.core.tools.text_replace(path)
-        raise RuntimeError("use jumpscale,call libs")
+        j.sal.fs.changeDir(path)
         self._cd = path
 
     def pwd(self):
@@ -688,7 +720,7 @@ class BuilderTools(j.builder.system._BaseClass):
         if script.find("from Jumpscale import j") == -1:
             script = "from Jumpscale import j\n\n%s" % script
 
-        #TODO:
+        # TODO:
         return self.execute_script(script, die=die, profile=profile, interpreter="jspython", tmux=tmux,
                                    replace=replace, showout=showout)
 
@@ -701,7 +733,6 @@ class BuilderTools(j.builder.system._BaseClass):
     def command_check(self, command):
         """Tests if the given command is available on the system."""
         command = j.core.tools.text_replace(command)
-        raise RuntimeError("use jumpscale,call libs")
         rc, out, err = self.run("which '%s'" % command,
                                 die=False, showout=False, profile=True)
         return rc == 0
@@ -710,9 +741,12 @@ class BuilderTools(j.builder.system._BaseClass):
         """
         return location of cmd
         """
-        raise RuntimeError("use jumpscale,call libs")
         command = j.core.tools.text_replace(command)
-        return self.prefab.bash.cmdGetPath(command)
+        rc, out, err = self.run("which '%s'" % command,
+                                die=False, showout=False, profile=True)
+        if rc>0:
+            raise RuntimeError("command '%s' does not exist, cannot find" % command)
+        return out.strip()
 
     def command_ensure(self, command, package=None):
         """Ensures that the given command is present, if not installs the
@@ -728,36 +762,24 @@ class BuilderTools(j.builder.system._BaseClass):
 
     @property
     def isUbuntu(self):
-        raise RuntimeError("use jumpscale,call libs")
-        return "ubuntu" in self.prefab.platformtype.platformtypes
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("ubuntu")!=-1
 
     @property
     def isLinux(self):
-        raise RuntimeError("use jumpscale,call libs")
-        return "linux" in self.prefab.platformtype.platformtypes
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("linux")!=-1
 
     @property
     def isAlpine(self):
-        raise RuntimeError("use jumpscale,call libs")
-        return "alpine" in self.prefab.platformtype.platformtypes
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("alpine")!=-1
 
     @property
     def isArch(self):
-        raise RuntimeError("use jumpscale,call libs")
-        return "arch" in self.prefab.platformtype.platformtypes
+        return False
 
     @property
     def isMac(self):
-        raise RuntimeError("use jumpscale,call libs")
-        return "darwin" in self.prefab.platformtype.platformtypes
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("darwin")!=-1
 
     @property
     def isCygwin(self):
-        raise RuntimeError("use jumpscale,call libs")
-        return "cygwin" in self.prefab.platformtype.platformtypes
-
-    def __str__(self):
-        #TODO:
-        return "prefab:core:%s:%s" % (getattr(self.executor, 'addr', 'local'), getattr(self.executor, 'port', ''))
-
-    __repr__ = __str__
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("cygwin")!=-1

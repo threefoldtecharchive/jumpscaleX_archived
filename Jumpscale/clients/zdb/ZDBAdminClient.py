@@ -15,7 +15,7 @@ class ZDBAdminClient(ZDBClientBase):
         ZDBClientBase._init(self)
         self.admin = True
         self._system = None
-        self._logger_enable()
+        # self._logger_enable()
         if self.secret:
             import ipdb
             ipdb.set_trace()

@@ -30,7 +30,7 @@ class BuilderZDisk(j.builder.system._BaseClass):
         # install 0-Disk
         install_path =  j.sal.fs.joinPaths(j.builder.runtimes.golang.GOPATH,\
         "src", "github.com", "zero-os")
-        j.builder.tools.dir_ensure(install_path)
+        j.core.tools.dir_ensure(install_path)
         cmd = """
         cd {0}
         rm -rf ./0-Disk

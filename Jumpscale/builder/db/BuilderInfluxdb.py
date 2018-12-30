@@ -14,16 +14,16 @@ class BuilderInfluxdb(j.builder.system._BaseClass):
         if dependencies:
             j.builder.system.package.mdupdate()
 
-        j.builder.tools.dir_ensure('{DIR_BIN}')
+        j.core.tools.dir_ensure('{DIR_BIN}')
 
         if j.core.platformtype.myplatform.isMac:
             j.builder.tools.package_install('influxdb')
-            j.builder.tools.dir_ensure("{DIR_VAR}/templates/cfg/influxdb")
+            j.core.tools.dir_ensure("{DIR_VAR}/templates/cfg/influxdb")
             j.builder.tools.file_copy(
                 "/usr/local/etc/influxdb.conf", "{DIR_VAR}/templates/cfg/influxdb/influxdb.conf")
 
-        elif j.builder.tools.isUbuntu:
-            j.builder.tools.dir_ensure("{DIR_VAR}/templates/cfg/influxdb")
+        elif j.core.platformtype.myplatform.isUbuntu:
+            j.core.tools.dir_ensure("{DIR_VAR}/templates/cfg/influxdb")
             C = """
             set -ex
             cd {DIR_TEMP}
@@ -38,20 +38,20 @@ class BuilderInfluxdb(j.builder.system._BaseClass):
             j.sal.process.execute(C, profile=True)
         else:
             raise RuntimeError("cannot install, unsuported platform")
-        j.builder.sandbox.profileJS.addPath(j.core.tools.text_replace("{DIR_BIN}"))
-        j.builder.sandbox.profileJS.save()
-        binPath = j.builder.sandbox.cmdGetPath('influxd')
-        j.builder.tools.dir_ensure("{DIR_VAR}/data/influxdb")
-        j.builder.tools.dir_ensure("{DIR_VAR}/data/influxdb/meta")
-        j.builder.tools.dir_ensure("{DIR_VAR}/data/influxdb/data")
-        j.builder.tools.dir_ensure("{DIR_VAR}/data/influxdb/wal")
-        content = j.builder.tools.file_read(
+        #j.builder.sandbox.profileJS.addPath(j.core.tools.text_replace("{DIR_BIN}"))
+        #j.builder.sandbox.profileJS.save()
+        binPath = #j.builder.sandbox.cmdGetPath('influxd')
+        j.core.tools.dir_ensure("{DIR_VAR}/data/influxdb")
+        j.core.tools.dir_ensure("{DIR_VAR}/data/influxdb/meta")
+        j.core.tools.dir_ensure("{DIR_VAR}/data/influxdb/data")
+        j.core.tools.dir_ensure("{DIR_VAR}/data/influxdb/wal")
+        content = j.core.tools.file_text_read(
             '{DIR_VAR}/templates/cfg/influxdb/influxdb.conf')
         cfg = j.data.serializers.toml.loads(content)
         cfg['meta']['dir'] = j.core.tools.text_replace("{DIR_VAR}/data/influxdb/meta")
         cfg['data']['dir'] = j.core.tools.text_replace("{DIR_VAR}/data/influxdb/data")
         cfg['data']['wal-dir'] = j.core.tools.text_replace("{DIR_VAR}/data/influxdb/wal")
-        j.builder.tools.dir_ensure('$CFGDIR/influxdb')
+        j.core.tools.dir_ensure('$CFGDIR/influxdb')
         j.sal.fs.writeFile('$CFGDIR/influxdb/influxdb.conf', j.data.serializers.toml.dumps(cfg))
         cmd = "%s -config $CFGDIR/influxdb/influxdb.conf" % (binPath)
         cmd = j.core.tools.text_replace(cmd)
@@ -64,7 +64,7 @@ class BuilderInfluxdb(j.builder.system._BaseClass):
         raise RuntimeError("not implemented")
 
     def start(self):
-        binPath = j.builder.sandbox.cmdGetPath('influxd')
+        binPath = #j.builder.sandbox.cmdGetPath('influxd')
         cmd = "%s -config $CFGDIR/influxdb/influxdb.conf" % (binPath)
         j.builder.system.process.kill("influxdb")
         pm = j.builder.system.processmanager.get()

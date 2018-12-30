@@ -4,7 +4,7 @@ from Jumpscale import j
 
 from .BuilderBaseClass import BuilderBaseClass
 from .BuilderBaseFactoryClass import BuilderBaseFactoryClass
-class BuilderSystemPackage(j.application.JSFactoryBaseClass):
+class BuilderSystemPackage(j.application.JSBaseClass):
 
     __jslocation__ = "j.builder.system"
     _BaseClass = BuilderBaseClass

@@ -23,7 +23,7 @@ class BuilderNodeJS(j.builder.system._BaseClass):
         """
         if self._bowerDir == "":
             self.install()
-            j.builder.tools.dir_ensure("{DIR_TEMP}/bower")
+            j.core.tools.dir_ensure("{DIR_TEMP}/bower")
             self._bowerDir = j.core.tools.text_replace("{DIR_TEMP}/bower")
         if j.data.types.list.check(name):
             for item in name:
@@ -58,7 +58,7 @@ class BuilderNodeJS(j.builder.system._BaseClass):
         """
         if self._done_get("phantomjs") and reset is False:
             return
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
 
             url = 'https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2'
             cdest = j.builder.tools.file_download(
@@ -133,7 +133,7 @@ class BuilderNodeJS(j.builder.system._BaseClass):
         if j.core.platformtype.myplatform.isMac:
             url = 'https://nodejs.org/dist/v%s/node-v%s-darwin-x64.tar.gz' % (
                 version, version)
-        elif j.builder.tools.isUbuntu:
+        elif j.core.platformtype.myplatform.isUbuntu:
             url = 'https://nodejs.org/dist/v%s/node-v%s-linux-x64.tar.gz' % (
                 version, version)
 
