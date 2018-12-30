@@ -91,7 +91,4 @@ class HostFile(JSBASE):
                 search_obj.group(0), '%s %s\n' % (ip, hostnames))
         else:
             filecontents += '%s %s\n' % (ip, hostnames)
-
-==== BASE ====
         j.sal.fs.writeFile(self.hostfilePath, filecontents)
-==== BASE ====
