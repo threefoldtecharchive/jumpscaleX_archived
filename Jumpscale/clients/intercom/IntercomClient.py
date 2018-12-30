@@ -1,10 +1,9 @@
+from intercom.client import Client
 from Jumpscale import j
 from intercom.errors import HttpError
 import intercom
 intercom.HttpError = HttpError
 intercom.__version__ = '3.1.0'
-
-from intercom.client import Client
 
 
 JSConfigClient = j.application.JSBaseConfigClass

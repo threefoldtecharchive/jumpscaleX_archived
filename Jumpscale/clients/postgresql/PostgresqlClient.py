@@ -73,12 +73,6 @@ class PostgresClient(JSConfigClient):
 
         return Base, session
 
-    def peewee_client_get(self):
-        """
-        # TODO
-        """
-        pass
-
     def dump(self, path, tables_ignore=[]):
         """Dump data from db to path/_shcema.sql
         @param path: path

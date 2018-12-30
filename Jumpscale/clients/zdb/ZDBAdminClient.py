@@ -17,8 +17,6 @@ class ZDBAdminClient(ZDBClientBase):
         self._system = None
         # self._logger_enable()
         if self.secret:
-            import ipdb
-            ipdb.set_trace()
             # authentication should only happen in zdbadmin client
             self._logger.debug("AUTH in namespace %s" % (self.nsname))
             self.redis.execute_command("AUTH", self.secret)
