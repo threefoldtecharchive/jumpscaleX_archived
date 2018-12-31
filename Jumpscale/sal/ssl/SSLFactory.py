@@ -180,8 +180,8 @@ class SSLFactory(JSBASE):
             boolean -- True only if certificate matches the private key
         """
 
-        key = self._load_privatekey(key)
-        certificate = self._load_certificate(certificate)
+        key = self._privatekey_load(key)
+        certificate = self._certificate_load(certificate)
 
         ctx = OpenSSL.SSL.Context(OpenSSL.SSL.TLSv1_METHOD)
         ctx.use_privatekey(key)
@@ -210,8 +210,8 @@ class SSLFactory(JSBASE):
         Returns:
             str -- PKCS12 object
         """
-        key = self._load_privatekey(key)
-        x509 = self._load_certificate(certificate)
+        key = self._privatekey_load(key)
+        x509 = self._certificate_load(certificate)
 
         p12 = OpenSSL.crypto.PKCS12()
         p12.set_privatekey(key)
@@ -221,7 +221,7 @@ class SSLFactory(JSBASE):
         return p12.export(passphrase=passphrase)
 
 
-    def _load_privatekey(self, path):
+    def _privatekey_load(self, path):
         """load a private key content from a path
         
         Arguments:
@@ -234,7 +234,7 @@ class SSLFactory(JSBASE):
         key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
         return key
 
-    def _load_certificate(self, path):
+    def _certificate_load(self, path):
         """load certifcate content from a path
         
         Arguments:
