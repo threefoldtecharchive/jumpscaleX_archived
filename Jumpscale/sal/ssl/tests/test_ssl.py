@@ -7,9 +7,8 @@ SSLFactory = SSLFactory()
 def test_ca_generate():
     
     """
-    to run
-    js.shell 'j.sal.ssl.ca_cert_generate(cert_dir='/test')'
-    CA (Certificate Authority) generate
+    test_ca_geneerate uses ca_cert_generate to generate ca certificate 
+    in cert_dir directory
     """
     
     SSLFactory.ca_cert_generate('/tmp/test/')
@@ -21,8 +20,8 @@ def test_ca_generate():
 def test_verify():
 
     """
-        to run
-        js.shell 'j.sal.ssl.verify('/tmp/test/ca.crt', '/tmp/test/ca.key')
+    It reads the pathes of certificate and key files of an X509 certificate
+    and verify if certificate matches private key
     """
 
     output = SSLFactory.verify('/tmp/test/ca.crt', '/tmp/test/ca.key')
@@ -31,9 +30,8 @@ def test_verify():
 def test_certificate_signing_request_create():
 
     """
-       to run 
-       js.shell 'j.sal.ssl.certificate_signing_request_create('test')'
-
+    Creating CSR (Certificate Signing Request)
+    this CSR normally passed to the CA (Certificate Authority) to create a signed certificate
     """
 
     output = SSLFactory.certificate_signing_request_create('test')
