@@ -8,8 +8,7 @@ TEST_DNSMASQ = '/tmp/dnsmasq'
 
 
 def test_main(self=None):
-    if j.sal.process.psfind('systemd-resolved'):
-        systemd = True
+    systemd = j.sal.process.psfind('systemd-resolved')
 
     try:
         dns_masq = DNSMasq(TEST_DNSMASQ)
