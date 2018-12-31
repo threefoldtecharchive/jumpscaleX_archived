@@ -26,17 +26,18 @@ class BuilderTraefik(j.builder.system._BaseClass):
         self.go_runtime.get('github.com/containous/go-bindata/...')
         # ensure bindata is installed
         bindata_dir = self.go_runtime.package_path_get('containous/go-bindata')
-        j.sal.process.execute('cd %s && go install' % bindata_dir)
+        self.go_runtime.execute('cd %s && go install' % bindata_dir)
         # clone traefik repo
         j.clients.git.pullGitRepo(
             'https://github.com/containous/traefik/',
             dest=self.traefik_dir, ssh=False, depth=1, timeout=20000)
         # generate and build
-        j.sal.process.execute('cd %s && go generate && go build ./cmd/traefik' % self.traefik_dir)
+        self.go_runtime.execute('cd %s && go generate && go build ./cmd/traefik' % self.traefik_dir)
         # then copy the binary to GOBIN
         self.tools.file_copy(
             self.tools.joinpaths(self.traefik_dir, self.NAME),
             self.go_runtime.go_path_bin)
+        self.go_runtime.execute('ln -s $GOPATH/bin/traefik {DIR_BIN}/traefik')
 
         self._done_set('install')
 
@@ -68,18 +69,11 @@ class BuilderTraefik(j.builder.system._BaseClass):
         else:
             j.sal.process.killProcessByName(self.NAME, sig)
 
-    def test(self):
-        """Testing the install/start/stop"""
-        # stop at first (by name)
-        self.stop()
-        # install with reset
-        self.install(reset=True)
+    def _test(self, name=""):
+        """Run tests under tests directory
 
-        # try to start/stop
-        tmux_pane = self.start()
-        child_process = tmux_pane.process_obj_child
-        # TODO wait or something? and kill the parent (tmux/bash) process?
-        if not child_process.is_running:
-            raise j.exceptions.RuntimeError('Process did not start')
-        self.stop(child_process.pid)
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        self._test_run(name=name, obj_key='test_main')
 

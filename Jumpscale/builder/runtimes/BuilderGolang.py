@@ -37,22 +37,35 @@ class BuilderGolang(j.builder.system._BaseClass):
         self.go_root_bin = self.tools.joinpaths(self.go_root, 'bin')
         self.go_path_bin = self.tools.joinpaths(self.go_path, 'bin')
 
+    def execute(self, command, **kwargs):
+        """execute a command with the default profile sourced
+           with GOROOT and GOPATH
+
+        :param command: command
+        :type command: str
+        :return: execution result (return code, output, error)
+        :rtype: tuple
+        """
+        profile_source = 'source %s\n' % self.profile_default.pathProfile
+        command = j.core.tools.text_replace(profile_source + command)
+        return j.sal.process.execute(command, **kwargs)
+
     @property
     def version(self):
-        """gets the current installed go version
+        """get the current installed go version
 
         :raises j.exceptions.RuntimeError: in case go is not installed
         :return: go version e.g. 1.11.4
         :rtype: str
         """
-        rc, out, err = j.sal.process.execute('go version', die=False, showout=False)
+        rc, out, err = self.execute('go version', die=False, showout=False)
         if rc:
             raise j.exceptions.RuntimeError('go is not instlled\n%s' % err)
         return j.data.regex.findOne(r'go\d+.\d+.\d+', out)[2:]
 
     @property
     def is_installed(self):
-        """checks if go is installed with the latest stable version
+        """check if go is installed with the latest stable version
 
         :return: installed and the version is `VERSION_STABLE` or not
         :rtype: bool
@@ -67,10 +80,10 @@ class BuilderGolang(j.builder.system._BaseClass):
             return False
 
     def install(self, reset=False):
-        """Install go
+        """install go
 
         :param reset: reset installation, defaults to False
-        :param reset: bool, optional
+        :type reset: bool, optional
         :raises j.exceptions.RuntimeError: in case the platform is not supported
         """
         if self.is_installed and not reset:
@@ -87,7 +100,7 @@ class BuilderGolang(j.builder.system._BaseClass):
         else:
             raise j.exceptions.RuntimeError('platform not supported')
 
-        j.sal.process.execute(command=j.core.tools.text_replace('rm -rf $GOPATH'), die=True)
+        self.execute('rm -rf $GOPATH', die=True)
         j.core.tools.dir_ensure(self.go_path)
 
         profile = self.profile_default
@@ -98,21 +111,19 @@ class BuilderGolang(j.builder.system._BaseClass):
         profile.save()
 
         self.tools.file_download(
-            download_url, self.go_path, overwrite=False, retry=3,
+            download_url, self.go_root, overwrite=False, retry=3,
             timeout=0, expand=True, removeTopDir=True)
 
-        j.core.tools.dir_ensure("%s/src" % self.go_path)
-        j.core.tools.dir_ensure("%s/pkg" % self.go_path)
-        j.core.tools.dir_ensure("%s/bin" % self.go_path)
+        self.execute('ln -s $GOROOT/bin/go {DIR_BIN}/go')
 
         self.get("github.com/tools/godep")
         self._done_set("install")
 
     def goraml(self, reset=False):
-        """Install (using go get) goraml.
+        """install (using go get) goraml.
 
         :param reset: reset installation, defaults to False
-        :param reset: bool, optional
+        :type reset: bool, optional
         """
 
         if reset is False and self._done_get('goraml'):
@@ -129,14 +140,14 @@ class BuilderGolang(j.builder.system._BaseClass):
         cd $GOPATH/src/github.com/Jumpscale/go-raml
         sh build.sh
         '''
-        j.sal.process.execute(C, profile=True)
+        self.execute(C)
         self._done_set('goraml')
 
     def bindata(self, reset=False):
-        """Install (using go get) go-bindata.
+        """install (using go get) go-bindata.
 
         :param reset: reset installation, defaults to False
-        :param reset: bool, optional
+        :type reset: bool, optional
         """
 
         if reset is False and self._done_get('bindata'):
@@ -148,7 +159,7 @@ class BuilderGolang(j.builder.system._BaseClass):
         go build
         go install
         '''
-        j.sal.process.execute(C, profile=True)
+        self.execute(C)
         self._done_set('bindata')
 
     def glide(self):
@@ -157,19 +168,20 @@ class BuilderGolang(j.builder.system._BaseClass):
             return
         self.tools.file_download(
             'https://glide.sh/get', '{DIR_TEMP}/installglide.sh', minsizekb=4)
-        j.sal.process.execute('. {DIR_TEMP}/installglide.sh', profile=True)
+        self.execute('. {DIR_TEMP}/installglide.sh')
         self._done_set('glide')
 
-    def clean_src_path(self):
-        srcpath = self.tools.joinpaths(self.go_path, 'src')
-        self.tools.dir_remove(srcpath)
-
     def get(self, url, install=True, update=True, die=True):
-        """
-        @param url ,, str url to run the go get command on.
-        @param install ,, bool will default build and install the repo if false will only get the repo.
-        @param update ,, bool will if True will update requirements if they exist.
-        e.g. url=github.com/tools/godep
+        """go get a package
+
+        :param url: pacakge url e.g. github.com/tools/godep
+        :type url:  str
+        :param install: build and install the repo if false will only get the repo, defaults to True
+        :type install: bool, optional
+        :param update: will update requirements if they exist, defaults to True
+        :type update: bool, optional
+        :param die: raise a RuntimeError if failed, defaults to True
+        :type die: bool, optional
         """
         download_flag = ''
         update_flag = ''
@@ -177,36 +189,52 @@ class BuilderGolang(j.builder.system._BaseClass):
             download_flag = '-d'
         if update:
             update_flag = '-u'
-        j.sal.process.execute('go get %s -v %s %s' % (download_flag, update_flag, url), die=die)
+        self.execute('go get %s -v %s %s' % (download_flag, update_flag, url), die=die)
 
     def package_path_get(self, name, host='github.com', go_path=None):
         """A helper method to get a package path installed by `get`
         Will use this builder's default go path if go_path is not provided
 
         :param name: pacakge name e.g. containous/go-bindata
-        :param host: host, defaults to github.com
-        :param go_path: GOPATH, defaults to None
         :type name: str
+        :param host: host, defaults to github.com
+        :type host: str
+        :param go_path: GOPATH, defaults to None
+        :type go_path: str
+
+        :return: go package path
+        :rtype: str
         """
         if not go_path:
             go_path = self.go_path
-        return j.sal.fs.joinPaths(go_path, 'src', host, name)
+        return self.tools.joinpaths(go_path, 'src', host, name)
 
     def godep(self, url, branch=None, depth=1):
-        """
-        @param url ,, str url to run the godep command on.
-        @param branch ,,str branch to use on the specified repo
-        @param depth ,,int depth of repo pull defines how shallow the git clone is
-        e.g. url=github.com/tools/godep
-        """
-        self.clean_src_path()
-        GOPATH = self.GOPATH
+        """install a package using godep
 
+        :param url: package url e.g. github.com/tools/godep
+        :type url: str
+        :param branch: a specific branch, defaults to None
+        :type branch: str, optional
+        :param depth: depth to pull with, defaults to 1
+        :type depth: int, optional
+        """
+
+        self.clean_src_path()
         pullurl = "git@%s.git" % url.replace('/', ':', 1)
 
-        dest = j.clients.git.pullGitRepo(pullurl,
-                                              branch=branch,
-                                              depth=depth,
-                                              dest='%s/src/%s' % (GOPATH, url),
-                                              ssh=False)
-        j.sal.process.execute('cd %s && godep restore' % dest, profile=True)
+        dest = j.clients.git.pullGitRepo(
+            pullurl,
+            branch=branch,
+            depth=depth,
+            dest='%s/src/%s' % (self.go_path, url),
+            ssh=False)
+        self.execute('cd %s && godep restore' % dest)
+
+    def _test(self, name=""):
+        """Run tests under tests directory
+
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        self._test_run(name=name, obj_key='test_main')
