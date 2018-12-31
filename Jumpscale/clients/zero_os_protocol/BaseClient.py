@@ -1,6 +1,6 @@
 import json
 import shlex
-
+from Jumpscale import j
 from . import typchk
 from .FilesystemManager import FilesystemManager
 from .InfoManager import InfoManager
@@ -9,18 +9,19 @@ from .JobManager import JobManager
 from .ProcessManager import ProcessManager
 from .Response import ResultError
 
-class BaseClient(j.application.JSBaseConfigClass):
 
+class BaseClient(j.application.JSBaseConfigClass):
 
     _SCHEMATEXT = """
     @url = jumpscale.zos.client.connection.1
-    host = "127.0.0.1"
-    port = 6379
-    unixsocket = ""
-    password_ = ""
-    db = 0
-    ssl = true
-    timeout = 120
+    name* = "" (S)
+    host = "127.0.0.1" (S)
+    port = 6379 (ipport)
+    unixsocket = "" (S)
+    password = ""  (S)
+    db = 0 (I)
+    ssl = true (B)
+    timeout = 120 (I)
     """
 
     _system_chk = typchk.Checker({
@@ -36,10 +37,7 @@ class BaseClient(j.application.JSBaseConfigClass):
         'script': str,
     })
 
-    def __init__(self):
-
-        j.application.JSBaseConfigClass.__init__(self)
-
+    def _init(self):
         self._info = InfoManager(self)
         self._job = JobManager(self)
         self._process = ProcessManager(self)
@@ -144,7 +142,9 @@ class BaseClient(j.application.JSBaseConfigClass):
         """
         return self.json('core.ping', {})
 
-    def system(self, command, dir='', stdin='', env=None, queue=None, max_time=None, stream=False, tags=None, id=None, recurring_period=None):
+    def system(
+            self, command, dir='', stdin='', env=None, queue=None, max_time=None, stream=False, tags=None, id=None,
+            recurring_period=None):
         """
         Execute a command
 
@@ -168,8 +168,8 @@ class BaseClient(j.application.JSBaseConfigClass):
         }
 
         self._system_chk.check(args)
-        response = self.raw(command='core.system', arguments=args,
-                            queue=queue, max_time=max_time, stream=stream, tags=tags, id=id, recurring_period=recurring_period)
+        response = self.raw(command='core.system', arguments=args, queue=queue, max_time=max_time,
+                            stream=stream, tags=tags, id=id, recurring_period=recurring_period)
 
         return response
 
@@ -187,8 +187,8 @@ class BaseClient(j.application.JSBaseConfigClass):
             'stdin': stdin,
         }
         self._bash_chk.check(args)
-        response = self.raw(command='bash', arguments=args,
-                            queue=queue, max_time=max_time, stream=stream, tags=tags, id=id, recurring_period=recurring_period)
+        response = self.raw(command='bash', arguments=args, queue=queue, max_time=max_time,
+                            stream=stream, tags=tags, id=id, recurring_period=recurring_period)
 
         return response
 

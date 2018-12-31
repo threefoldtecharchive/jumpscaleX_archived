@@ -1,23 +1,23 @@
 
 from Jumpscale import j
-
+import redis
 from .ZDBClientBase import ZDBClientBase
 
 
 class ZDBAdminClient(ZDBClientBase):
-
-    def __init__(self, addr="localhost", port=9900, mode="seq", secret="123456"):
+    def _init(self):
         """ is connection to ZDB
 
         port {[int} -- (default: 9900)
         mode -- user,seq(uential) see
                     https://github.com/rivine/0-db/blob/master/README.md
         """
-        ZDBClientBase.__init__(self, addr=addr, port=port, mode=mode, secret=secret,admin=True)
+        ZDBClientBase._init(self)
+        self.admin = True
         self._system = None
-        self._logger_enable()
+        # self._logger_enable()
         if self.secret:
-            #authentication should only happen in zdbadmin client
+            # authentication should only happen in zdbadmin client
             self._logger.debug("AUTH in namespace %s" % (self.nsname))
             self.redis.execute_command("AUTH", self.secret)
 
@@ -51,7 +51,7 @@ class ZDBAdminClient(ZDBClientBase):
             self._logger.debug("namespace exists")
             if die:
                 raise RuntimeError("namespace already exists:%s" % name)
-            #now return std client
+            # now return std client
             return j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, nsname=name)
 
         self.redis.execute_command("NSNEW", name)
@@ -65,7 +65,7 @@ class ZDBAdminClient(ZDBClientBase):
             self.redis.execute_command("NSSET", name, "maxsize", maxsize)
 
         self._logger.debug("connect client")
-        
+
         ns = j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, nsname=name)
 
         assert ns.ping()
@@ -73,7 +73,7 @@ class ZDBAdminClient(ZDBClientBase):
         return ns
 
     def namespace_get(self, name, secret=""):
-        return self.namespace_new(name,secret)
+        return self.namespace_new(name, secret)
 
     def namespace_delete(self, name):
         if self.namespace_exists(name):
@@ -89,4 +89,3 @@ class ZDBAdminClient(ZDBClientBase):
         for name in self.namespaces_list():
             if name not in ["default"] and name not in ignore:
                 self.namespace_delete(name)
-

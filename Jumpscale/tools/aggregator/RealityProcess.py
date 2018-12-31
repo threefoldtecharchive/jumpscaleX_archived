@@ -7,7 +7,7 @@ from .ECODumper import ECODumper
 JSBASE = j.application.JSBaseClass
 
 
-class RealitProcess(JSBASE):
+class RealitProcess(j.application.JSBaseClass):
     """
     """
 

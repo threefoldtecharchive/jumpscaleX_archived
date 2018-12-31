@@ -23,7 +23,7 @@ GOOGLEMIME = ['application/vnd.google-apps.audio',
 JSBASE = j.application.JSBaseClass
 
 
-class GDriveFile(JSBASE):
+class GDriveFile(j.application.JSBaseClass):
 
     def __init__(self, id="", json=""):
         JSBASE.__init__(self)

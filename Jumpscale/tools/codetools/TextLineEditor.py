@@ -6,7 +6,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class TextLineEditor(JSBASE):
+class TextLineEditor(j.application.JSBaseClass):
     """
     represents a piece of text but broken appart in blocks/tokens
     this one works on a line basis
@@ -221,7 +221,7 @@ class TextLineEditor(JSBASE):
             return ""
 
 
-class LTLine(JSBASE):
+class LTLine(j.application.JSBaseClass):
 
     def __init__(self, line, blockname="", blocknr=0):
         """

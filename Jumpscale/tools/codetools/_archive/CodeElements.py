@@ -7,7 +7,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class CodeElements(JSBASE):
+class CodeElements(j.application.JSBaseClass):
 
     def __init__(self, filepath=""):
         JSBASE.__init__(self)

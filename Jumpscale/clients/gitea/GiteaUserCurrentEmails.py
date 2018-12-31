@@ -5,7 +5,7 @@ from .GiteaUserCurrentEmail import GiteaUserCurrentEmail
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaUserCurrentEmails(JSBASE):
+class GiteaUserCurrentEmails(j.application.JSBaseClass):
     def __init__(self, client, user):
         self.user = user
         self.client = client

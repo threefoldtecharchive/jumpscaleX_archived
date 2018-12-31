@@ -4,7 +4,7 @@ import time
 JSBASE = j.application.JSBaseClass
 
 
-class JSRunProcess(JSBASE):
+class JSRunProcess(j.application.JSBaseClass):
     def __init__(self,name,cmd="",path=None,env={},ports=[],stopcmd=None,process_strings=[]):
         JSBASE.__init__(self)
         self.name = name

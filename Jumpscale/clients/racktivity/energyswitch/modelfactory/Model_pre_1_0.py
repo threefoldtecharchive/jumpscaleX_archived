@@ -3,7 +3,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class Master(JSBASE):
+class Master(j.application.JSBaseClass):
 
     def __init__(self, parent):
         JSBASE.__init__(self)
@@ -21,7 +21,7 @@ class Master(JSBASE):
         return 0, "%d.%d.%d.%d" % (ipaddress[0], ipaddress[1], ipaddress[2], ipaddress[3])
 
 
-class Power(JSBASE):
+class Power(j.application.JSBaseClass):
 
     def __init__(self, parent):
         JSBASE.__init__(self)

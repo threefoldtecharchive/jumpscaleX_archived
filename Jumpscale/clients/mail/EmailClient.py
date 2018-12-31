@@ -8,29 +8,28 @@ from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-JSConfigFactory = j.application.JSFactoryBaseClass
-JSConfigClient = j.application.JSBaseClass
-TEMPLATE = """
-smtp_server = ""
-smtp_port = 0
-login = ""
-password = ""
-from = ""
-"""
+JSConfigClient = j.application.JSBaseConfigClass
 
 
 class EmailClient(JSConfigClient):
+    _SCHEMATEXT = """
+        @url = jumpscale.Email.client
+        name* = "" (S)
+        smtp_server = "" (S)
+        smtp_port = 0 (ipport)
+        login = "" (S)
+        password = "" (S)
+        Email_from = "" (S)
+        """
 
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
-        config = self.config.data
-        self._server = config['smtp_server']
-        self._port = config['smtp_port']
+    def _init(self):
+
+        self._server = self.smtp_server
+        self._port = self.smtp_port
         self._ssl = self._port in [465, 587]
-        self._username = config.get('login')
-        self._password = config.get('password')
-        self._sender = config.get('from')
+        self._username = self.login
+        self._password = self.password
+        self._sender = self.Email_from
 
     def __str__(self):
         out = "server=%s\n" % (self._server)
@@ -140,9 +139,3 @@ class EmailClient(JSConfigClient):
     #     s.sendmail(msg['From'], msg['To'], msg.as_string())
     #
     #     s.quit()
-
-
-class EmailClientFactory(JSConfigFactory):
-    def __init__(self):
-        self.__jslocation__ = "j.clients.email"
-        JSConfigFactory.__init__(self, EmailClient)

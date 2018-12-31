@@ -24,15 +24,16 @@ from clients.blockchain.rivine.errors import WalletAlreadyExistsException
 
 JSConfigBaseFactory = j.application.JSFactoryBaseClass
 
+
 class TfchainClientFactory(JSConfigBaseFactory):
     """
     Factory class to get a tfchain client object
     """
+    __jslocation__ = "j.clients.tfchain"
+    _CHILDCLASS = TfchainClient
 
-    def __init__(self):
-        self.__jslocation__ = "j.clients.tfchain"
+    def _init(self):
         self.__imports__ = "tfchain"
-        JSConfigBaseFactory.__init__(self, TfchainClient)
 
     @property
     def network(self):

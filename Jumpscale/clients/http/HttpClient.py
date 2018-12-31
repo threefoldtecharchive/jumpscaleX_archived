@@ -31,10 +31,9 @@ STATUS_AUTH_REQ = set([HTTP_AUTH_REQUIRED, HTTP_FORBIDDEN])
 AUTHORIZATION_HEADER = 'Authorization'
 
 
-class HTTPError(Exception, JSBASE):
+class HTTPError(Exception):
 
     def __init__(self, httperror, url):
-        JSBASE.__init__(self)
         msg = 'Could not open http connection to url %s' % url
         data = ''
         self.status_code = None
@@ -51,9 +50,6 @@ class HTTPError(Exception, JSBASE):
 
 class Connection(JSBASE):
 
-    def __init__(self):
-        JSBASE.__init__(self)
-
     def simpleAuth(self, url, username, password):
         """
         authorize with the given username and password on url
@@ -67,7 +63,7 @@ class Connection(JSBASE):
             handle = urllib.request.urlopen(req)
             return handle
         except IOError as e:
-            raise RuntimeError("could not do simple auth.\n%s"%e)
+            raise RuntimeError("could not do simple auth.\n%s" % e)
 
     def get(self, url, data=None, headers=None, **params):
         """
@@ -78,29 +74,28 @@ class Connection(JSBASE):
             url, headers=headers, method='GET', **params)  # TODO: P1 fix & check
         return response
 
-    def get_head(self,url):
+    def get_head(self, url):
         """
         get head only, this to make sure you don't have to download everything
         """
-        response = self._http_request(url, method='HEAD')  
-        return response        
+        response = self._http_request(url, method='HEAD')
+        return response
 
-    def ping(self,url):
+    def ping(self, url):
         """
         """
         try:
-            r=self.get_head(url)
+            r = self.get_head(url)
         except Exception as e:
             # check=[401,402,403,404,405]
             # for tocheck in check:
-            #     str_e=str(e)                
+            #     str_e=str(e)
             #     if str(tocheck) in str(e):
             #         return False
-            if "401" in str(e): #means unauthorized so could be there, cannot check
+            if "401" in str(e):  # means unauthorized so could be there, cannot check
                 return True
             return False
         return r.status == 200
-        
 
     def post(self, url, data=None, headers=None, **params):
         """
@@ -238,11 +233,8 @@ class Connection(JSBASE):
         return resp
 
 
-class HttpClient(JSBASE):
-
-    def __init__(self):
-        self.__jslocation__ = "j.clients.http"
-        JSBASE.__init__(self)
+class HttpClient(j.application.JSFactoryBaseClass):
+    __jslocation__ = "j.clients.http"
 
     def getConnection(self):
         """
@@ -251,7 +243,7 @@ class HttpClient(JSBASE):
         connection = Connection()
         return connection
 
-    def ping(self,url):
+    def ping(self, url):
         # Use unverified ssl context for pinging websites
         import ssl
         ssl._create_default_https_context = ssl._create_unverified_context
@@ -260,24 +252,23 @@ class HttpClient(JSBASE):
         ssl._create_default_https_context = ssl.create_default_context
         return res
 
-    def download(self,url,dest):
-        c=self.getConnection()
-        return c.download(url,dest)
+    def download(self, url, dest):
+        c = self.getConnection()
+        return c.download(url, dest)
 
-    def get(self,url,dest):
-        c=self.getConnection()
+    def get(self, url, dest):
+        c = self.getConnection()
         return c.get(url)
 
     def test(self):
         """
         js_shell 'j.clients.http.test()'
         """
-        c=self.getConnection()
-        assert c.ping("https://github.com/Jumpscale")==True
+        c = self.getConnection()
+        assert c.ping("https://github.com/Jumpscale") == True
 
-        assert c.ping("https://something/j")==False
+        assert c.ping("https://something/j") == False
 
-        assert c.ping("https://docs.grid.tf/dividi/values/src/branch/master/veda_values.md") == True #authentication error
+        assert c.ping("https://docs.grid.tf/dividi/values/src/branch/master/veda_values.md") == True  # authentication error
 
         # assert c.ping("https://www.linkedin.com/in/babenkonickolay/") == False
-        

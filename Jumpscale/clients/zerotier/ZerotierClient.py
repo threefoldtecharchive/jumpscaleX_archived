@@ -6,18 +6,18 @@ import copy
 import time
 import ipcalc
 
-JSBASE = j.application.JSBaseClass
-JSConfigClient = j.application.JSBaseClass
+JSConfigClient = j.application.JSBaseConfigClass
 
-class NetworkMember(JSBASE):
+
+class NetworkMember():
     """
     Represent a zerotier network member
     """
+
     def __init__(self, network, address, data):
         """
         Initialize new memeber
         """
-        JSBASE.__init__(self)
         self.data = data
         self._network = network
         self.address = address
@@ -45,9 +45,9 @@ class NetworkMember(JSBASE):
     def nodeid(self):
         return self.data["nodeId"]
 
-    def nodeid_check(self,nodeids=[]):
+    def nodeid_check(self, nodeids=[]):
         for item in nodeids:
-            item=item.lower()
+            item = item.lower()
             if item == self.nodeid:
                 return True
         return False
@@ -58,7 +58,6 @@ class NetworkMember(JSBASE):
         """
         member = self._network.member_get(address=self.address)
         self.data = member.data
-
 
     def _update_authorization(self, authorize=True, timeout=30):
         """
@@ -79,11 +78,12 @@ class NetworkMember(JSBASE):
                 time.sleep(2)
                 timeout_ -= 2
             if self.data['config']['authorized'] != authorize:
-                self._logger.warn('{}uthorization request sent but data is not updated after {} seconds'.format('A' if authorize else 'Dea', timeout))
+                self._logger.warn(
+                    '{}uthorization request sent but data is not updated after {} seconds'.format(
+                        'A' if authorize else 'Dea', timeout))
         else:
-            self._logger.info("Member {}/{} already {}".format(self._network.id, self.address, 'authorized' if authorize else 'deauthorized'))
-
-
+            self._logger.info("Member {}/{} already {}".format(self._network.id,
+                                                               self.address, 'authorized' if authorize else 'deauthorized'))
 
     def authorize(self, timeout=30):
         """
@@ -92,7 +92,6 @@ class NetworkMember(JSBASE):
         @param timeout: Timeout to wait until giving up updating the current state of the member
         """
         self._update_authorization(authorize=True, timeout=timeout)
-
 
     def deauthorize(self, timeout=30):
         """
@@ -108,16 +107,15 @@ class NetworkMember(JSBASE):
     __repr__ = __str__
 
 
-
-class ZeroTierNetwork(JSBASE):
+class ZeroTierNetwork():
     """
     Represent a zerotier network
     """
+
     def __init__(self, network_id, name, description, config, client):
         """
         Initialize new network
         """
-        JSBASE.__init__(self)
         self.id = network_id
         self.name = name
         self.description = description
@@ -142,7 +140,6 @@ class ZeroTierNetwork(JSBASE):
         self.mynode_member.authorize()
         return self.mynode_member
 
-
     def members_list(self, raw=False):
         """
         Lists the members of the current network
@@ -154,7 +151,7 @@ class ZeroTierNetwork(JSBASE):
             msg = 'Failed to list network memebers. Error: {}'.format(resp.text)
             self._logger.error(msg)
             raise RuntimeError(msg)
-        items=resp.json()
+        items = resp.json()
 
         return items if raw else self._create_netork_memebers_from_dict(items=items)
 
@@ -192,7 +189,7 @@ class ZeroTierNetwork(JSBASE):
                 if filter_name == 'private_ip' and filter_value and filter_value in member['config']['ipAssignments']:
                     result = self._create_netork_memebers_from_dict(items=[member])[0]
                     break
-                elif filter_name !='private_ip' and filter_value and filter_value == member[filter_name]:
+                elif filter_name != 'private_ip' and filter_value and filter_value == member[filter_name]:
                     result = self._create_netork_memebers_from_dict(items=[member])[0]
                     break
 
@@ -202,7 +199,6 @@ class ZeroTierNetwork(JSBASE):
             raise RuntimeError(msg)
         return result
 
-
     def _create_netork_memebers_from_dict(self, items):
         """
         Convert network members info into @NetworkMember objects
@@ -211,7 +207,6 @@ class ZeroTierNetwork(JSBASE):
         for item in items:
             result.append(NetworkMember(network=self, address=item['nodeId'], data=item))
         return result
-
 
     def member_delete(self, address):
         """
@@ -293,28 +288,29 @@ class ZeroTierNetwork(JSBASE):
     __repr__ = __str__
 
 
-TEMPLATE = """
-token_ = ""
-networkid = ""
-nodeids = ""
-"""
-
 class ZerotierClient(JSConfigClient):
+    _SCHEMATEXT = """
+    @url = jumpscale.zerotier.client
+    name* = "" (S)
+    instance = "main" (S)
+    token_ = "" (S)
+    networkid = "" (S)
+    nodeids = "" (S)
+    """
 
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        super().__init__(instance=instance, data=data, parent=parent, template=TEMPLATE, interactive=interactive)
+    def _init(self):
 
-        if not self.config.data['token_']:
-            raise RuntimeError("Missing auth token in config instance {}".format(instance))
+        if not self.token_:
+            raise RuntimeError("Missing auth token in config instance {}".format(self.instance))
         self.client = zerotier.client.Client()
-        self.client.set_auth_header("Bearer " + self.config.data['token_'])
+        self.client.set_auth_header("Bearer " + self.token_)
         # self._client = ZerotierClientInteral(self.config.data['token_'])
         self._defaultnet = None
 
     @property
     def nodeids(self):
         if "nodeids" in self.config.data:
-            return [item for item in self.config.data["nodeids"].split(",") if item.strip() is not ""]
+            return [item for item in self.nodeids.split(",") if item.strip() is not ""]
         return []
 
     def networks_list(self):
@@ -328,7 +324,6 @@ class ZerotierClient(JSConfigClient):
             raise RuntimeError(msg)
         return self._network_creates_from_dict(items=resp.json())
 
-
     def network_get(self, network_id=""):
         """
         Retrieves details information about a netowrk
@@ -336,17 +331,16 @@ class ZerotierClient(JSConfigClient):
         @param network_id: ID of the network, if not specified will check if it is in the config
         """
         if network_id is "":
-            if self.config.data['networkid'] is "":
+            if self.networkid is "":
                 raise j.exceptions.Input("could not find network id in config")
-            network_id =  self.config.data['networkid']
-             
+            network_id = self.networkid
+
         resp = self.client.network.getNetwork(id=network_id)
         if resp.status_code != 200:
             msg = 'Failed to retrieve network. Error: {}'.format(resp.text)
             self._logger.error(msg)
             raise RuntimeError(msg)
         return self._network_creates_from_dict(items=[resp.json()])[0]
-
 
     def _network_creates_from_dict(self, items):
         """
@@ -355,9 +349,8 @@ class ZerotierClient(JSConfigClient):
         result = []
         for item in items:
             result.append(ZeroTierNetwork(network_id=item['id'], name=item['config']['name'],
-                        description=item['description'], config=item['config'], client=self))
+                                          description=item['description'], config=item['config'], client=self))
         return result
-
 
     def network_create(self, public, subnet=None, name=None, auto_assign=True, routes=None):
         """
@@ -403,7 +396,6 @@ class ZerotierClient(JSConfigClient):
             raise RuntimeError(msg)
         return self._network_creates_from_dict([resp.json()])[0]
 
-
     def network_delete(self, network_id):
         """
         Delete netowrk
@@ -417,10 +409,9 @@ class ZerotierClient(JSConfigClient):
             raise RuntimeError(msg)
         return True
 
-
     def members_nonactive_delete(self):
         """
         walks over all members, the ones which are not active get deleted
         """
         raise RuntimeError("not implemented")
-        #TODO: *1 yves
+        # TODO: *1 yves

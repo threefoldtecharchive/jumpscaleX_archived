@@ -8,19 +8,19 @@ from .error import ProxyNameConflictError
 from .types import (Backend, BackendServer, Frontend, FrontendRule,
                     LoadBalanceMethod, RoutingKind)
 
-JSConfigBase = j.application.JSBaseClass
-
-TEMPLATE = """
-etcd_instance = "main"
-"""
+JSConfigBase = j.application.JSBaseConfigClass
 
 
 class TraefikClient(JSConfigBase):
-    def __init__(self, instance, data={}, parent=None, interactive=None):
-        JSConfigBase.__init__(self, instance=instance,
-                              data=data, parent=parent, template=TEMPLATE, interactive=interactive)
+    _SCHEMATEXT = """
+    @url = jumpscale.traefik.client
+    name* = "" (S)
+    etcd_instance = "main" (S)
+    """
+
+    def _init_new(self):
         self._etcd_client = None
-        self._etcd_instance = self.config.data['etcd_instance']
+        self._etcd_instance = self.etcd_instance
         self.proxies = ProxyMap(self)
         self._frontends = {}
         self._backends = {}
@@ -144,7 +144,8 @@ class ProxyMap(MutableMapping):
 
     def _load_proxy(self, name):
         proxy = Proxy(self._traefik.etcd_client, name)
-        proxy.frontend = encoding.frontend_load(self._traefik.etcd_client, name)
+        proxy.frontend = encoding.frontend_load(
+            self._traefik.etcd_client, name)
         proxy.backend = encoding.backend_load(self._traefik.etcd_client, name)
         self._proxies[name] = proxy
         return proxy

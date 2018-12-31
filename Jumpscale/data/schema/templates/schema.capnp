@@ -1,4 +1,4 @@
-@0x{{obj.capnp_id}};
+@0x{{obj._capnp_id}};
 
 struct Schema {
 

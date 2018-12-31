@@ -2,27 +2,26 @@ from Jumpscale import j
 from .client import Client
 import base64
 
-JSConfigBase = j.application.JSBaseClass
+JSConfigClient = j.application.JSBaseConfigClass
 
 
-TEMPLATE = """
-base_uri = "https://direct.hub.gig.tech"
-jwt_ = ""
-"""
+class HubDirectClient(JSConfigClient):
+    _SCHEMATEXT = """
+    @url = jumpscale.hubdirect.client
+    name* = "" (S)
+    base_uri = "https://direct.hub.gig.tech" (S)
+    jwt_ = "" (S)
+    """
 
-
-class HubDirectClient(JSConfigBase):
-
-    def __init__(self, instance, data=None, parent=None, interactive=False):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
-                              template=TEMPLATE, interactive=interactive)
+    def _init(self):
         self._api = None
 
     @property
     def api(self):
         if self._api is None:
             self._api = Client(base_uri=self.config.data["base_uri"])
-            self._api.security_schemes.passthrough_client_jwt.set_authorization_header('bearer %s' % self.config.data['jwt_'])
+            self._api.security_schemes.passthrough_client_jwt.set_authorization_header(
+                'bearer %s' % self.config.data['jwt_'])
         return self._api
 
     def exists(self, keys):

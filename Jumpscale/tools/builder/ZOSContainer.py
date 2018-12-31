@@ -36,7 +36,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
         self._container = None
         self._node_connected = False
 
-    def _init_new(self):
+    def _data_trigger_new(self):
 
         self.flist = "https://hub.grid.tf/tf-bootable/ubuntu:18.04.flist"
         self._create()

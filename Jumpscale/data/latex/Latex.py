@@ -3,7 +3,7 @@ JSBASE = j.application.JSBaseClass
 from pylatex import *
 from pylatex.utils import bold
 
-class Latex(JSBASE):
+class Latex(j.application.JSBaseClass):
     def __init__(self):
         self.__jslocation__ = "j.data.latex"
         JSBASE.__init__(self)

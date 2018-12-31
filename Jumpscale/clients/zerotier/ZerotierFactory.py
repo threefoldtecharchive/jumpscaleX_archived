@@ -1,3 +1,4 @@
+from .ZerotierClient import ZerotierClient
 """
 zc = j.clients.zerotier.get(name="geert", data={'token_':"jkhljhbljb"})
 mynetworks = zc.networks_list()-> [ZerotierNetwork]
@@ -14,30 +15,26 @@ from Jumpscale import j
 JSConfigFactory = j.application.JSFactoryBaseClass
 
 
-from .ZerotierClient import ZerotierClient
-
-
-JSBASE = j.application.JSBaseClass
-
+JSBASE = j.application.JSFactoryBaseClass
 
 
 class ZerotierFactory(JSConfigFactory):
+    __jslocation__ = "j.clients.zerotier"
+    _CHILDCLASS = ZerotierClient
 
-    def __init__(self):
-        self.__jslocation__ = "j.clients.zerotier"
+    def _init(self):
         self.__imports__ = "zerotier"
         self.connections = {}
-        JSConfigFactory.__init__(self, ZerotierClient)
 
-    def configure(self,instance,token,nodeids="",networkid_default="",interactive=False):
+    def configure(self, instance, token, nodeids="", networkid_default=""):
         """
         @PARAM networkid is optional
         @PARAM nodeids is optional, comma separated list of nodeids, used to define your connection (you're a member of a network)
         """
-        data={}
-        data["token_"]=token
-        data["networkid"]=networkid_default
-        return self.get(instance=instance,data=data,interactive=interactive)
+        data = {}
+        data["token_"] = token
+        data["networkid"] = networkid_default
+        return self.get(instance=instance, data=data)
 
     def test(self):
         """
@@ -51,16 +48,16 @@ class ZerotierFactory(JSConfigFactory):
         zt_client = j.clients.zerotier.get(instance='testclient', data={'token_': TOKEN})
 
         # make sure zerotier is installed and started
-        # j.tools.prefab.local.network.zerotier.build()
+        # j.builder.network.zerotier.build()
 
         # start the daemon
-        # j.tools.prefab.local.network.zerotier.start()
+        # j.builder.network.zerotier.start()
 
         # create a new test network
         network = zt_client.network_create(public=True, name='mytestnet', subnet='10.0.0.0/24')
 
         # try to make the the current machine join the new network
-        j.tools.prefab.local.network.zerotier.network_join(network_id=network.id)
+        j.builder.network.zerotier.network_join(network_id=network.id)
         time.sleep(20)
 
         # lets list the members then

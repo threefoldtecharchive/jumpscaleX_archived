@@ -1,13 +1,13 @@
-from Jumpscale import j
-JSBASE = j.application.JSBaseClass
-import tarantool
-import os
-from Jumpscale import j
-from .TarantoolDB import TarantoolDB
 from .TarantoolClient import TarantoolClient
+from .TarantoolDB import TarantoolDB
+import os
+import tarantool
+from Jumpscale import j
+
+JSConfigBaseFactory = j.application.JSFactoryBaseClass
 
 
-class TarantoolFactory(JSBASE):
+class TarantoolFactory(JSConfigBaseFactory):
 
     """
     #server_start
@@ -17,12 +17,10 @@ class TarantoolFactory(JSBASE):
     js_shell 'j.clients.tarantool.test()'
 
     """
+    __jslocation__ = "j.clients.tarantool"
+    _CHILDCLASS = TarantoolClient
 
-
-
-    def __init__(self):
-        JSBASE.__init__(self)
-        self.__jslocation__ = "j.clients.tarantool"
+    def _init(self):
         self.__imports__ = "tarantool"
 
         if j.core.platformtype.myplatform.isMac:
@@ -32,7 +30,7 @@ class TarantoolFactory(JSBASE):
         self._tarantoolq = {}
 
     def install(self):
-        j.tools.prefab.local.db.tarantool.install()
+        j.builder.db.tarantool.install()
 
     # def client_configure(self, name="main", ipaddr="localhost", port=3301, login="root", password="admin007"):
     #     """
@@ -92,7 +90,9 @@ class TarantoolFactory(JSBASE):
         """
         return TarantoolDB(name=name, path=path, adminsecret=adminsecret, port=port)
 
-    def server_start(self, name="main", path="$DATADIR/tarantool/$NAME", adminsecret="admin007", port=3301, configTemplatePath=None):
+    def server_start(
+            self, name="main", path="$DATADIR/tarantool/$NAME", adminsecret="admin007", port=3301,
+            configTemplatePath=None):
         db = self.server_get(name=name, path=path, adminsecret=adminsecret, port=port)
         db.configTemplatePath = configTemplatePath
         db.start()

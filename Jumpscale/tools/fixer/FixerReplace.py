@@ -18,7 +18,12 @@ RI| j.logging. | j.logger.
 RI | Jumpscale.logging. | Jumpscale.core.logging.
 RI| self._location | self.__jslocation__
 RI| j.data.serializer. | j.data.serializers.
-# RI| j.data.text. | j.core.text.
+RI| self.prefab.core.file_write | j.sal.fs.writeFile
+RI| self.prefab.core.run | j.sal.process.execute
+RI| self.prefab.core.createDir | j.sal.fs.createDir
+RI| self.prefab.core.file_download | self.prefab.core.file_download
+RI| self.prefab.system.package.install | j.builder.tools.package_install
+
 """
 
 ERRORS = """
@@ -26,7 +31,7 @@ configmanager._base_class_config
 """
 
 JSBASE = j.application.JSBaseClass
-class FixerReplacer(JSBASE):
+class FixerReplacer(j.application.JSBaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)

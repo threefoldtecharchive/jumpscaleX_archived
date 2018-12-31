@@ -20,13 +20,13 @@ class OVCClientFactory(JSConfigBaseFactory):
         if not filled in will bet done auto
 
     """
+    __jslocation__ = "j.clients.openvcloud"
+    _CHILDCLASS = OVCClient
 
-    def __init__(self):
-        self.__jslocation__ = "j.clients.openvcloud"
+    def _init(self):
         self.__imports__ = "ovc"
-        JSConfigBaseFactory.__init__(self, OVCClient)
 
-    def getFromParams(self, address, location="", port=443, instance="main", ):
+    def getFromParams(self, address, location="", port=443, instance="main"):
         """
         example address:
         - be-gen-1.demo.greenitglobe.com

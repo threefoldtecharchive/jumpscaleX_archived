@@ -12,6 +12,7 @@ JSConfigClient = j.application.JSBaseConfigClass
 class GitHubClient(JSConfigClient):
     _SCHEMATEXT = """
         @url = jumpscale.github.client
+        name* = "" (S)
         login = "" (S)
         token_ = "" (S)
         password_ = "" (S)
@@ -25,7 +26,7 @@ class GitHubClient(JSConfigClient):
         password_ = self.password_ if self.password_ != "" else None
         self.api = github.Github(login_or_token, password_, per_page=100)
 
-    def _init_new(self):
+    def _data_trigger_new(self):
         self.users = {}
         self.repos = {}
         self.milestones = {}

@@ -1,5 +1,6 @@
 from Jumpscale import j
 
+
 def main(self):
     """
     to run:
@@ -10,110 +11,114 @@ def main(self):
 
     def load():
 
-        #don't forget the record 0 is always a systems record
+        # don't forget the record 0 is always a systems record
 
-        db,model = self._load_test_model()
+        db, model = self._load_test_model()
 
-        assert model.zdbclient.nsinfo["entries"]==1
+        assert model.zdbclient.nsinfo["entries"] == 1
 
         for i in range(10):
-            o = model.new()
-            o.llist.append(1)
-            o.llist2.append("yes")
-            o.llist2.append("no")
-            o.llist3.append(1.2)
-            o.date_start = j.data.time.epoch
-            o.U = 1.1
-            o.nr = i
-            o.token_price = "10 EUR"
-            o.description = "something"
-            o.name = "name%s" % i
-            o.email = "info%s@something.com" % i
-            o2 = model.set_dynamic(o)
+            model_obj = model.new()
+            model_obj.llist.append(1)
+            model_obj.llist2.append("yes")
+            model_obj.llist2.append("no")
+            model_obj.llist3.append(1.2)
+            model_obj.date_start = j.data.time.epoch
+            model_obj.U = 1.1
+            model_obj.nr = i
+            model_obj.token_price = "10 EUR"
+            model_obj.description = "something"
+            model_obj.name = "name%s" % i
+            model_obj.email = "info%s@something.com" % i
+            model_obj2 = model.set_dynamic(model_obj)
 
-        o3 = model.get(o2.id)
-        assert o3.id == o2.id
+        model_obj3 = model.get(model_obj2.id)
+        assert model_obj3.id == model_obj2.id
 
-        assert o3._ddict == o2._ddict
-        assert o3._ddict == o._ddict
+        assert model_obj3._ddict == model_obj2._ddict
+        assert model_obj3._ddict == model_obj._ddict
 
         return db
 
     db = load()
-    m = db.model_get(url="despiegk.test")
-    query = m.index.select()
+    db_model = db.model_get(url="despiegk.test")
+    query = db_model.index.select()
     qres = [(item.name, item.nr) for item in query]
 
     assert qres == [('name0', 0),
-         ('name1', 1),
-         ('name2', 2),
-         ('name3', 3),
-         ('name4', 4),
-         ('name5', 5),
-         ('name6', 6),
-         ('name7', 7),
-         ('name8', 8),
-         ('name9', 9)]
+                    ('name1', 1),
+                    ('name2', 2),
+                    ('name3', 3),
+                    ('name4', 4),
+                    ('name5', 5),
+                    ('name6', 6),
+                    ('name7', 7),
+                    ('name8', 8),
+                    ('name9', 9)]
 
-    assert m.index.select().where(m.index.nr == 5)[0].name == "name5"
+    assert db_model.index.select().where(
+        db_model.index.nr == 5)[0].name == "name5"
 
-
-    query =  m.index.select().where(m.index.nr > 5) # should return 4 records
-    qres = [(item.name,item.nr) for item in query]
+    query = db_model.index.select().where(
+        db_model.index.nr > 5)  # should return 4 records
+    qres = [(item.name, item.nr) for item in query]
 
     assert len(qres) == 4
 
-    res = m.index.select().where(m.index.name=="name2")
+    res = db_model.index.select().where(db_model.index.name == "name2")
     assert len(res) == 1
     assert res.first().name == "name2"
 
-    res = m.index.select().where(m.index.email=="info2@something.com")
+    res = db_model.index.select().where(db_model.index.email == "info2@something.com")
     assert len(res) == 1
     assert res.first().name == "name2"
 
-    o = m.get(res.first().id)
+    model_obj = db_model.get(res.first().id)
 
-    o.name = "name2"
+    model_obj.name = "name2"
 
-    assert o._changed_items == {}  # because data did not change, was already that data
-    o.name = "name3"
-    assert o._changed_items ==  {'name': 'name3'}  # now it really changed
+    # because data did not change, was already that data
+    assert model_obj._changed_items == {}
+    model_obj.name = "name3"
+    assert model_obj._changed_items == {
+        'name': 'name3'}  # now it really changed
 
-    assert o._ddict["name"] == "name3"
+    assert model_obj._ddict["name"] == "name3"
 
-    o.token_price = "10 USD"
-    assert o.token_price_usd == 10
-    m.set_dynamic(o)
-    o2=m.get(o.id)
-    assert o2.token_price_usd == 10
+    model_obj.token_price = "10 USD"
+    assert model_obj.token_price_usd == 10
+    db_model.set_dynamic(model_obj)
+    model_obj2 = db_model.get(model_obj.id)
+    assert model_obj2.token_price_usd == 10
 
-    assert m.index.select().where(m.index.id == o.id).first().token_price == 10
+    assert db_model.index.select().where(
+        db_model.index.id == model_obj.id).first().token_price == 10
 
-    def do(id,obj,result):
-        result[obj.nr]=obj.name
+    def do(id, obj, result):
+        result[obj.nr] = obj.name
         return result
 
     result = {}
-    for obj in m.iterate():
+    for obj in db_model.iterate():
         result[obj.nr] = obj.name
 
-    print (result)
+    print(result)
     assert result == {0: 'name0',
-         1: 'name1',
-         2: 'name3',
-         3: 'name3',
-         4: 'name4',
-         5: 'name5',
-         6: 'name6',
-         7: 'name7',
-         8: 'name8',
-         9: 'name9'}
+                      1: 'name1',
+                      2: 'name3',
+                      3: 'name3',
+                      4: 'name4',
+                      5: 'name5',
+                      6: 'name6',
+                      7: 'name7',
+                      8: 'name8',
+                      9: 'name9'}
 
+    result = {}
+    # for obj in db_model.find(key='nr', key_start=7, reverse=False):
+    #     result[obj.nr] = obj.name
 
-    m.reset()
-    assert  [i for i in  m.index.select()]==[]
-    assert  m.get_all() == []
-    assert  [i for i in m.id_iterator] == []
+    # assert result == {7: 'name7', 8: 'name8', 9: 'name9'} # TODO illogical test case
 
     self._logger.info("TEST DONE")
 
