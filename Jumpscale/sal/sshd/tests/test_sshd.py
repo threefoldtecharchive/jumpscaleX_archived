@@ -12,8 +12,8 @@ def test_add_key():
     sshd.key_add(random_key)
     assert random_key not in sshd.keys    
     sshd.commit() 
-    assert random_key in sshd.keys    
-    authorized_keys = sshd.ssh_authorized_keys_path.bytes()
+    assert random_key in sshd.keys 
+    authorized_keys = sshd.ssh_authorized_keys_path.bytes().decode("utf-8") 
     assert random_key in authorized_keys
 
 def test_remove_key():
@@ -25,7 +25,7 @@ def test_remove_key():
     assert random_key in sshd.keys    
     sshd.commit()
     assert random_key not in sshd.keys    
-    authorized_keys = sshd.ssh_authorized_keys_path.bytes()
+    authorized_keys = sshd.ssh_authorized_keys_path.bytes().decode("utf-8") 
     assert random_key not in authorized_keys
 
 def test_remove_all_keys():
@@ -40,6 +40,6 @@ def test_remove_all_keys():
     sshd.commit()
     assert random_key1 not in sshd.keys    
     assert random_key2 not in sshd.keys    
-    authorized_keys = sshd.ssh_authorized_keys_path.bytes()
+    authorized_keys = sshd.ssh_authorized_keys_path.bytes().decode("utf-8") 
     assert random_key1 not in authorized_keys
     assert random_key2 not in authorized_keys
