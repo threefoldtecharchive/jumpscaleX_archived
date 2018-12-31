@@ -10,7 +10,6 @@ def test_main(self=None):
     """
 
     if not j.sal.process.checkInstalled(j.builder.web.traefik.NAME):
-        j.builder.web.traefik.stop()
         j.builder.web.traefik.install(reset=True)
 
     # try to start/stop

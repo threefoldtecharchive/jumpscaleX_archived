@@ -37,6 +37,9 @@ class BuilderTraefik(j.builder.system._BaseClass):
         self.tools.file_copy(
             self.tools.joinpaths(self.traefik_dir, self.NAME),
             self.go_runtime.go_path_bin)
+
+        if self.tools.file_exists('{DIR_BIN}/traefik'):
+            self.go_runtime.execute('unlink {DIR_BIN}/traefik')
         self.go_runtime.execute('ln -s $GOPATH/bin/traefik {DIR_BIN}/traefik')
 
         self._done_set('install')

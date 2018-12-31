@@ -114,6 +114,8 @@ class BuilderGolang(j.builder.system._BaseClass):
             download_url, self.go_root, overwrite=False, retry=3,
             timeout=0, expand=True, removeTopDir=True)
 
+        if self.tools.file_exists('{DIR_BIN}/go'):
+            self.execute('unlink {DIR_BIN}/go')
         self.execute('ln -s $GOROOT/bin/go {DIR_BIN}/go')
 
         self.get("github.com/tools/godep")
