@@ -1,5 +1,6 @@
 import OpenSSL
 from Jumpscale import j
+from OpenSSL import crypto
 from socket import gethostname
 
 JSBASE = j.application.JSBaseClass
@@ -82,9 +83,9 @@ class SSLFactory(JSBASE):
         path = j.tools.path.get(path)
         cacert = path.joinpath('ca.crt').text()
         cakey = path.joinpath('ca.key').text()
-        ca_cert = OpenSSL.crypto.certificate_load(
+        ca_cert = OpenSSL.crypto.load_certificate(
             OpenSSL.crypto.FILETYPE_PEM, cacert)
-        ca_key = OpenSSL.crypto.privatekey_load(
+        ca_key = OpenSSL.crypto.load_privatekey(
             OpenSSL.crypto.FILETYPE_PEM, cakey)
 
         key = OpenSSL.crypto.PKey()
@@ -145,12 +146,12 @@ class SSLFactory(JSBASE):
         cacert = path.joinpath('ca.crt').text()
         cakey = path.joinpath('ca.key').text()
         
-        ca_cert = OpenSSL.crypto.certificate_load(
+        ca_cert = OpenSSL.crypto.load_certificate(
             OpenSSL.crypto.FILETYPE_PEM, cacert)
-        ca_key = OpenSSL.crypto.privatekey_load(
+        ca_key = OpenSSL.crypto.pri(
             OpenSSL.crypto.FILETYPE_PEM, cakey)
             
-        req = OpenSSL.crypto.certificate_load_request(
+        req = OpenSSL.crypto.load_certificate_request(
             OpenSSL.crypto.FILETYPE_PEM, req)
 
         cert = OpenSSL.crypto.X509()
@@ -167,7 +168,7 @@ class SSLFactory(JSBASE):
             OpenSSL.crypto.FILETYPE_PEM, cert)
         return certificate
 
-    def certificate_verify(self, certificate, key):
+    def verify(self, certificate, key):
         """It reads the pathes of certificate and key files of an X509 certificate
         and verify if certificate matches private key
 
@@ -179,8 +180,8 @@ class SSLFactory(JSBASE):
             boolean -- True only if certificate matches the private key
         """
 
-        key = self._privatekey_load(key)
-        certificate = self._certificate_load(certificate)
+        key = self._load_privatekey(key)
+        certificate = self._load_certificate(certificate)
 
         ctx = OpenSSL.SSL.Context(OpenSSL.SSL.TLSv1_METHOD)
         ctx.use_privatekey(key)
@@ -209,8 +210,8 @@ class SSLFactory(JSBASE):
         Returns:
             str -- PKCS12 object
         """
-        key = self._privatekey_load(key)
-        x509 = self._certificate_load(certificate)
+        key = self._load_privatekey(key)
+        x509 = self._load_certificate(certificate)
 
         p12 = OpenSSL.crypto.PKCS12()
         p12.set_privatekey(key)
@@ -220,7 +221,7 @@ class SSLFactory(JSBASE):
         return p12.export(passphrase=passphrase)
 
 
-    def _privatekey_load(self, path):
+    def _load_privatekey(self, path):
         """load a private key content from a path
         
         Arguments:
@@ -230,10 +231,10 @@ class SSLFactory(JSBASE):
             str -- content of the file
         """
         key = j.tools.path.get(path).text()
-        key = OpenSSL.crypto.privatekey_load(OpenSSL.crypto.FILETYPE_PEM, key)
+        key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
         return key
 
-    def _certificate_load(self, path):
+    def _load_certificate(self, path):
         """load certifcate content from a path
         
         Arguments:
@@ -243,5 +244,5 @@ class SSLFactory(JSBASE):
             str -- content of the certificate
         """
         certificate = j.tools.path.get(path).text()
-        x509 = OpenSSL.crypto.certificate_load(OpenSSL.crypto.FILETYPE_PEM, certificate)
+        x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificate)
         return x509
