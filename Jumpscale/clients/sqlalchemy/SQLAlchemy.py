@@ -87,64 +87,29 @@ class Base(Base0):
         return str(self.getDataAsDict())
 
 
-JSConfigFactory = j.application.JSFactoryBaseClass
-JSConfigClient = j.application.JSBaseClass
-
-TEMPLATE = """
-connectionstring = ""
-sqlitepath = ""
-tomlpath = "../data"
-"""
-
-
-class SQLAlchemyFactory(JSConfigFactory):
-
-    def __init__(self):
-        self.__jslocation__ = "j.clients.sqlalchemy"
-        self.__imports__ = "sqlalchemy"
-        JSConfigFactory.__init__(self, SQLAlchemy)
-
-    def getBaseClass(self):
-        """
-        complete example how to use sqlalchemy:
-        https://github.com/Jumpscale/jumpscaleX/wiki/SQLAlchemy
-        """
-        return Base
-
-    def validate_lower_strip(self, target, value, oldvalue, initiator):
-        value = value.lower().strip()
-        return value
-
-    def validate_tel(self, target, value, oldvalue, initiator):
-        value = value.lower().strip()
-        value = value.replace(".", "")
-        value = value.replace(",", "")
-        value = value.replace("+", "")
-        return value
-
-    def validate_email(self, target, value, oldvalue, initiator):
-        value = value.lower().strip()
-        if value.find("@") == -1:
-            raise j.exceptions.Input(
-                "Property error, email not formatted well, needs @.Val:%s\nObj:\n%s" % (value, target))
-        return value
+JSConfigClient = j.application.JSBaseConfigClass
 
 
 class SQLAlchemy(JSConfigClient):
+    _SCHEMATEXT = """
+    @url = jumpscale.sqlalchemy.client
+    name* = "" (S)
+    connectionstring = "" (S)
+    sqlitepath = "" (S)
+    tomlpath = "../data" (S)
+    """
 
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
-        c = self.config.data
-        if c['sqlitepath'] != "":
-            self.connectionstring = 'sqlite:///%s' % c['sqlitepath']
+    def _init(self):
+
+        if self.sqlitepath != "":
+            self.connectionstring = 'sqlite:///%s' % self.sqlitepath
         else:
-            self.connectionstring = c['connectionstring']
+            self.connectionstring = self.connectionstring
 
-        self.tomlpath = c['tomlpath']
+        self.tomlpath = self.tomlpath
         self.engine = None
         self.session = None
-        self.sqlitepath = c['sqlitepath']
+        self.sqlitepath = self.sqlitepath
         self._initsql()
 
     def _initsql(self):

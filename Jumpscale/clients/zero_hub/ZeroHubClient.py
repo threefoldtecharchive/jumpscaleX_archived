@@ -1,26 +1,26 @@
 from zeroos.zerohub import Client as ZHubClient
 from Jumpscale import j
 
-JSConfigClient = j.application.JSBaseClass
-
-TEMPLATE = """
-token_ = ""
-username = ""
-url = "https://hub.gig.tech/api"
-"""
+JSConfigClient = j.application.JSBaseConfigClass
 
 
 class ZeroHubClient(JSConfigClient):
     """
     Provide an easy way to communicate and do some actions on the ZeroHub
     """
+    _SCHEMATEXT = """
+    @url =  jumpscale.zerohub.client
+    name* = "" (S)
+    token_ = "" (S)
+    username = "" (S)
+    url = "https://hub.gig.tech/api" (S)
+    """
 
-    def __init__(self, instance, data={}, parent=None, interactive=None):
-        JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
-        self.token = self.config.data['token_']
-        self.username = self.config.data['username']
-        self.client = ZHubClient(self.config.data.get("url", "https://hub.gig.tech/api"))
+    def _init(self):
+
+        self.token = self.token_
+        self.username = self.username
+        self.client = ZHubClient(self.url)
         self.api = self.client.api
 
     def authenticate(self):

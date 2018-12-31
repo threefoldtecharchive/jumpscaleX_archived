@@ -5,28 +5,27 @@ import requests
 from time import time
 from urllib.parse import urlencode
 
-TEMPLATE = """
-service_url = "https://btc-alpha.com/api/"
-key_ = ""
-secret_ = ""
-"""
+
 
 
 # TODO:*1 FROM CLIENT import .... and put in client property
 # TODO:*1 regenerate using proper goraml new file & newest generation tools ! (had to fix manually quite some issues?)
 
-JSConfigBase = j.application.JSBaseClass
+JSConfigBase = j.application.JSBaseConfigClass
 
 
 class BTCClient(JSConfigBase):
-    def __init__(self, instance, data={}, parent=None, interactive=True):
-        JSConfigBase.__init__(self,
-                              instance=instance,
-                              data=data,
-                              parent=parent,
-                              template=TEMPLATE,
-                              interactive=interactive)
-        if not self.config.data['key_'] or not self.config.data['secret_']:
+
+    _SCHEMATEXT = """
+    @url = jumpscale.btc.client
+    name* = "" (S)
+    service_url = "https://btc-alpha.com/api/" (S)
+    key_ = "" (S)
+    secret_ = "" (S)
+    """
+
+    def _init(self):
+        if not self.key_ or not self.secret_:
             raise j.exceptions.Input('Need to specify both key and secret to use the client')
 
     def get_currencies(self):
@@ -160,7 +159,7 @@ class BTCClient(JSConfigBase):
     def _query(self, method, base_url, params=None, data=None, auth=False):
         request_conf = {
             'method': method,
-            'url': self.config.data['service_url'] + base_url,
+            'url': self.service_url + base_url,
             'allow_redirects': True
         }
 
@@ -181,12 +180,12 @@ class BTCClient(JSConfigBase):
             raise ValueError('Http status {} - {}'.format(response.status_code, response.content))
 
     def _get_headers(self, data):
-        msg = self.config.data['key_'] + urlencode(sorted(data.items(), key=lambda val: val[0]))
+        msg = self.key_ + urlencode(sorted(data.items(), key=lambda val: val[0]))
 
-        sign = hmac.new(self.config.data['secret_'].encode(), msg.encode(), digestmod='sha256').hexdigest()
+        sign = hmac.new(self.secret_.encode(), msg.encode(), digestmod='sha256').hexdigest()
 
         return {
-            'X-KEY': self.config.data['key_'],
+            'X-KEY': self.key_,
             'X-SIGN': sign,
             'X-NONCE': str(int(time() * 1000)),
         }

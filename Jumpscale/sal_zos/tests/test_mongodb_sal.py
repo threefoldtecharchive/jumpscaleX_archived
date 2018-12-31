@@ -8,7 +8,7 @@ This test script executes the following scenario:
     5. Ensure that new PRYMARY was elected and previously created collection is still avaliable.
 
 """
-
+import pytest
 import time
 import re
 from Jumpscale import j
@@ -20,24 +20,21 @@ def error_check(result, message=''):
 
     if result.state != 'SUCCESS':
         err = '{}: {} \n {}'.format(message, result.stderr, result.data)
-        raise RuntimeError(err) 
+        raise RuntimeError(err)
 
 def get_node(ip):
     """ Get robot instance
-    
+
     :param ip: IP addres of Zero-os node
     """
     node_id = 'local'
-    j.clients.zos.get(
-            instance=node_id,
+    return j.clients.zos.get(
+            name=node_id,
             data={
                     "host": ip,
                     "port": 6379,
                     }
             )
-    j.clients.zero_os.sal.get_node(instance=node_id)
-    return j.clients.zos.sal.get_node(node_id)  
-
 
 def create_container(name, node):
     # determine parent interface for macvlan
@@ -61,10 +58,9 @@ def get_mongod_shard_config(shard, port):
     roles = re.findall(r'"stateStr" : "\w+"', result.stdout)
     return dict(zip(names,roles))
 
-
-
+@pytest.mark.skip(reason="test need to be reviewed")
 def test_deploy_cluster(node_ip, cluster_id):
-    """ Test case covers mongodb cluster deployment, connection to mongos, 
+    """ Test case covers mongodb cluster deployment, connection to mongos,
         check db avaliability after nocking out a PRIMARY node for both shard and config replica sets """
 
     node = get_node(node_ip)
@@ -91,7 +87,7 @@ def test_deploy_cluster(node_ip, cluster_id):
         except ValueError:
             fs = sp.create(container_name)
 
-        shard = j.clients.zos.sal.get_mongodb(
+        shard = j.sal_zos.get_mongodb(
             name='mongodb',
             node=node,
             container_name=container_name,
@@ -109,7 +105,7 @@ def test_deploy_cluster(node_ip, cluster_id):
                     'fs': container_name,
                     'dir': '/mongo/configdb',
                 },
-        )        
+        )
 
         shard.start(log_to_file=True)
         assert shard.shard_server.is_running()
@@ -121,13 +117,13 @@ def test_deploy_cluster(node_ip, cluster_id):
     config_hosts = ['{}:{}'.format(host, config_port) for host in hosts]
     shard_hosts = ['{}:{}'.format(host, shard_port) for host in hosts]
     shard.init_replica_sets(config_hosts, shard_hosts)
-    
+
     # deploy container with mongos
     router_container_name = 'mongo-router'
     route_port = 27010
     container = create_container(router_container_name, node)
-    
-    router = j.clients.zos.sal.get_mongos(container, port=route_port)
+
+    router = j.sal_zos.mongodb.get(container, port=route_port)
     router.start(config_replica, config_hosts, log_to_file=True)
 
     start = time.time()
@@ -190,7 +186,7 @@ def test_deploy_cluster(node_ip, cluster_id):
             if new_shard_members[member].find('PRIMARY') != -1:
                 print('time to reassign PRYMARY {} sec'.format(time.time()-start))
                 primary_is_up = True
-                break   
+                break
 
     assert primary_is_up
     assert len(new_config_members) == 2
@@ -210,8 +206,3 @@ def test_deploy_cluster(node_ip, cluster_id):
     router.destroy()
 
     print('test was completed successfully')
-
-
-test_deploy_cluster('192.168.122.89', cluster_id='32')
-
-

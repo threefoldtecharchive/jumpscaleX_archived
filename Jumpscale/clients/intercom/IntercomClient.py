@@ -1,37 +1,23 @@
+from intercom.client import Client
 from Jumpscale import j
 from intercom.errors import HttpError
 import intercom
 intercom.HttpError = HttpError
 intercom.__version__ = '3.1.0'
 
-from intercom.client import Client
 
-
-JSConfigFactory = j.application.JSFactoryBaseClass
-JSConfigClient = j.application.JSBaseClass
-
-TEMPLATE = """
-token="dG9rOmNjNTRlZDFiX2E3OTZfNGFiM185Mjk5X2YzMGQyN2NjODM4ZToxOjA="
-"""
-
-
-class Intercom(JSConfigFactory):
-    def __init__(self):
-        self.__jslocation__ = "j.clients.intercom"
-        JSConfigFactory.__init__(self, IntercomClient)
+JSConfigClient = j.application.JSBaseConfigClass
 
 
 class IntercomClient(JSConfigClient):
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigClient.__init__(
-            self,
-            instance=instance,
-            data=data,
-            parent=parent,
-            template=TEMPLATE,
-            interactive=interactive)
-        c = self.config.data
-        self.token = c['token']
+    _SCHEMATEXT = """
+        @url = jumpscale.intercom.client
+        name* = "" (S)
+        token_ = "dG9rOmNjNTRlZDFiX2E3OTZfNGFiM185Mjk5X2YzMGQyN2NjODM4ZToxOjA=" (S)
+        """
+
+    def _init(self):
+        self.token = self.token_
         self.api = Client(personal_access_token=self.token)
 
     def send_in_app_message(self, body, admin_id, user_id):

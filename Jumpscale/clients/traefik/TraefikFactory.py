@@ -7,9 +7,8 @@ JSConfigBaseFactory = j.application.JSFactoryBaseClass
 
 
 class TraefikFactory(JSConfigBaseFactory):
-    def __init__(self):
-        self.__jslocation__ = "j.clients.traefik"
-        JSConfigBaseFactory.__init__(self, TraefikClient)
+    __jslocation__ = "j.clients.traefik"
+    _CHILDCLASS = TraefikClient
 
     def configure(self, instance_name, host, port="2379", user="root", password="root"):
         """
