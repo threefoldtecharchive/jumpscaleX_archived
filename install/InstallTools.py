@@ -1296,7 +1296,7 @@ class UbuntuInstall():
     def apts_install():
         for apt in UbuntuInstall.apts_list():
             if not MyEnv.state_exists('apt_%s' % apt):
-                command = 'apt-get install %s' % apt
+                command = 'apt-get install -y %s' % apt
                 Tools.execute(command,die=True)
                 MyEnv.state_set('apt_%s' % apt)
     # def pip3(self):
