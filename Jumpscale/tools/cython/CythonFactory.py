@@ -8,7 +8,7 @@ import sys
 import pyximport
 
 JSBASE = j.application.JSBaseClass
-class CythonFactory(JSBASE):
+class CythonFactory(j.application.JSBaseClass):
     """
     example:
         '''

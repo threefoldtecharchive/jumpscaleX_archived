@@ -8,7 +8,7 @@ import inspect
 
 JSBASE = j.application.JSBaseClass
 
-class ServiceBase(JSBASE):
+class ServiceBase(j.application.JSBaseClass):
 
 
     _MODEL = None

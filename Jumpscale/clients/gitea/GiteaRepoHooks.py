@@ -5,7 +5,7 @@ from .GiteaRepoHook import GiteaRepoHook
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaRepoHooks(JSBASE):
+class GiteaRepoHooks(j.application.JSBaseClass):
     def __init__(self, client, repo, user):
         JSBASE.__init__(self)
         self.client = client

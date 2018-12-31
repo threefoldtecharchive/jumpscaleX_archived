@@ -10,7 +10,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class Authorizables(JSBASE):
+class Authorizables(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
 

@@ -7,17 +7,21 @@ import json
 import math
 from ipaddress import IPv4Address, IPv6Address
 from ipaddress import AddressValueError, NetmaskValueError
+from Jumpscale import j
+
+JSConfigBase = j.application.JSBaseConfigClass
 
 TEMPLATE = """
 etcdpath = "skydns"
 secrets_ = ""
 """
 
+
 class ResourceRecord:
 
     def __init__(self, name, type, ttl, rrdata,
-                             priority=None, port=None # SRV
-                ):
+                 priority=None, port=None  # SRV
+                 ):
         """ DNS Resource Record.
 
             name    : Record Name.  Corresponds to first field in
@@ -48,20 +52,19 @@ class ResourceRecord:
         self.weight = 100
         self._rrdata = rrdata
 
-
     @property
     def rrdata(self):
         """ reconstructs CoreDNS/etcd-style JSON data format
         """
         res = {'ttl': self.ttl}
-        rdatafield = 'host' # covers SRV, A, AAAA and CNAME
+        rdatafield = 'host'  # covers SRV, A, AAAA and CNAME
         if self.type == 'TXT':
             rdatafield = 'text'
         elif self.type == 'SRV':
             res['priority'] = self.priority
             res['port'] = self.port
         elif self.type == 'CNAME':
-            res['cname'] = self._rrdata # hmmm... weird, these being inverted
+            res['cname'] = self._rrdata  # hmmm... weird, these being inverted
             res['host'] = self.cname    # weeeeird....
         res[rdatafield] = self._rrdata
         return json.dumps(res)
@@ -78,39 +81,44 @@ class ResourceRecord:
             (self.name, self.ttl, extra, rrdata)
 
     def __repr__(self):
-            return "'%s'" % str(self)
+        return "'%s'" % str(self)
 
 
-class CoreDNS:
+class CoreDNS(JSConfigBase):
+
+    _SCHEMATEXT = """
+    @url = jumpscale.coredns.client
+    name* = "" (S)
+    etcd_instance = "default" (S)
+    etcdpath = "skydns" (S)
+    secrets_ = "" (S)
+    """
 
     __jsbase__ = 'j.tools.configmanager._base_class_config'
-    _template = TEMPLATE
 
-    def __init__(self, instance, data={}, parent=None, interactive=False,
-                                 started=True):
+    def _init(self):
         self._etcd = None
-        print ("CoreDNS", instance)
         self.zones = {}
-        self.CoreDNSZone = self._jsbase(('CoreDNSZone', '.CoreDNS'))
+        # self.CoreDNSZone = self._jsbase(('CoreDNSZone', '.CoreDNS'))
         self.ResourceRecord = ResourceRecord
 
     @property
     def secrets(self):
-        res={}
-        if "," in self.config.data["secrets_"]:
-            items = self.config.data["secrets_"].split(",")
+        res = {}
+        if "," in self.secrets_:
+            items = self.secrets_.split(",")
             for item in items:
-                if item.strip()=="":
+                if item.strip() == "":
                     continue
-                nsname,secret = item.split(":")
-                res[nsname.lower().strip()]=secret.strip()
+                nsname, secret = item.split(":")
+                res[nsname.lower().strip()] = secret.strip()
         else:
-            res["default"]=self.config.data["secrets_"].strip()
+            res["default"] = self.secrets_.strip()
         return res
 
     @property
-    def etcdpath(self):
-        return self.config.data["etcdpath"]
+    def etcdpath_get(self):
+        return self.etcdpath
 
     def zone_exists(self, name):
         return name in self.zones
@@ -125,11 +133,11 @@ class CoreDNS:
         del ns
 
     def zone_get(self, name, *args, **kwargs):
-        if not name in self.zones:
+        if name not in self.zones:
             pth = self.etcdpath
             if name:
                 pth = "%s/%s" % (pth, name)
-            etcd = self._j.clients.etcd.get(self.instance) # use same instance
+            etcd = j.clients.etcd.get(self.etcd_instance)  # use same instance
             db = etcd.namespace_get(pth)
             self.zones[name] = CoreDNSZone(self, name, db)
         return self.zones[name]
@@ -140,7 +148,7 @@ class CoreDNS:
                 raise RuntimeError("namespace already exists:%s" % name)
             return self.zone_get(name)
 
-        #if secret is "" and "default" in self.secrets.keys():
+        # if secret is "" and "default" in self.secrets.keys():
         #    secret = self.secrets["default"]
 
         return self.zone_get(name)
@@ -156,6 +164,7 @@ class DNSZone:
             description = dns_nme
         self.description = description
         self.resource_records = []
+
 
 def get_type_and_rdata(record):
     if "text" in record:
@@ -193,7 +202,7 @@ class CoreDNSZone:
         """
         self.zonedb.set(key, rr.rrdata)
 
-    def del(self, key):
+    def delete(self, key):
         """ deletes a single CoreDNS key
         """
         self.zonedb.delete(key)
@@ -230,12 +239,12 @@ class CoreDNSZone:
             rtype = None
             priority = None
             port = None
-            name = zname # apparently should always return zone-name
+            name = zname  # apparently should always return zone-name
             name = "%s." % name
             rtype, rrdata = get_type_and_rdata(record)
-            if "text" in record: # skip TXT
+            if "text" in record:  # skip TXT
                 continue
-            elif "port" in record: # skip SRV
+            elif "port" in record:  # skip SRV
                 continue
             elif "cname" in record:
                 print ("found cname", record, zname)
@@ -248,7 +257,7 @@ class CoreDNSZone:
                 if rtype == 'AAAA':
                     continue
             else:
-                raise Exception("unknown record type %s search %s in %s" % \
+                raise Exception("unknown record type %s search %s in %s" %
                                 (repr(record), subname, self.db.nsname))
             # filter non-matching subname
             if rtype == 'CNAME':
@@ -259,7 +268,7 @@ class CoreDNSZone:
                 print ("found a-rec", a_rec_match.rrdata)
             if rtype.lower() not in ['a', 'cname']:
                 continue
-            #if k != subname:
+            # if k != subname:
             #    continue
             res.append(rr)
         nres = []
@@ -269,7 +278,7 @@ class CoreDNSZone:
                     rr.name = "."
 
         res += nres
-        #print ("checking", res, subname, zname)
+        # print ("checking", res, subname, zname)
         if res or subname:
             return res
         # hmmm.... need to split and do a subname query....
@@ -300,12 +309,12 @@ class CoreDNSZone:
             ttl = record['ttl']
             priority = None
             port = None
-            name = zname # apparently should always return zone-name
+            name = zname  # apparently should always return zone-name
             name = "%s." % name
             rtype, rrdata = get_type_and_rdata(record)
-            if "text" in record: # skip TXT
+            if "text" in record:  # skip TXT
                 continue
-            elif "port" in record: # skip SRV
+            elif "port" in record:  # skip SRV
                 continue
             elif "cname" in record:
                 print ("found cname", record, zname)
@@ -316,7 +325,7 @@ class CoreDNSZone:
                 if rtype == 'A':
                     continue
             else:
-                raise Exception("unknown record type %s search %s in %s" % \
+                raise Exception("unknown record type %s search %s in %s" %
                                 (repr(record), subname, self.db.nsname))
             # filter non-matching subname
             if rtype == 'CNAME':
@@ -325,7 +334,7 @@ class CoreDNSZone:
             if rtype == 'AAAA':
                 aaaa_rec_match = deepcopy(rr)
                 print ("found aaaa-rec", aaaa_rec_match.rrdata)
-            #if k != subname:
+            # if k != subname:
             #    continue
             res.append(rr)
         nres = []
@@ -355,7 +364,7 @@ class CoreDNSZone:
             rtype, rrdata = get_type_and_rdata(record)
             if rtype != 'TXT':
                 continue
-            name = zname # apparently should always return zone-name
+            name = zname  # apparently should always return zone-name
             name = "%s." % name
             rr = ResourceRecord(name, rtype, ttl, rrdata, priority, port)
             res.append(rr)
@@ -378,7 +387,7 @@ class CoreDNSZone:
                 change_to_dot = rrdata
                 rrdata = "."
                 print ("found cname", record)
-            name = zname # apparently should always return zone-name
+            name = zname  # apparently should always return zone-name
             name = "%s." % name
             rrdata = '%s %s' % (record['cname'], rrdata)
             rr = ResourceRecord(name, rtype, ttl, rrdata, priority, port)
@@ -398,7 +407,7 @@ class CoreDNSZone:
             ttl = record['ttl']
             priority = None
             port = None
-            name = zname # apparently should always return zone-name
+            name = zname  # apparently should always return zone-name
             name = "%s." % name
             rtype, rrdata = get_type_and_rdata(record)
             if "text" in record:
@@ -417,7 +426,7 @@ class CoreDNSZone:
                 if rtype == 'A':
                     change_to_dot = rrdata
                     a_rec_match = ResourceRecord('.', rtype, ttl, rrdata,
-                                                   priority, port)
+                                                 priority, port)
                     rrdata = '.'
                 if rtype == 'AAAA':
                     if subname:
@@ -427,11 +436,11 @@ class CoreDNSZone:
                     else:
                         _name = name
                     aaaa_rec_match = ResourceRecord(_name, rtype, ttl, rrdata,
-                                                   priority, port)
+                                                    priority, port)
                     rrdata = _name
 
             else:
-                raise Exception("unknown record type %s search %s in %s" % \
+                raise Exception("unknown record type %s search %s in %s" %
                                 (repr(record), subname, self.db.nsname))
             if subname and rtype != 'AAAA':
                 name = "%s.%s" % (subname, name)

@@ -6,81 +6,82 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class HostFileFactory(JSBASE):
-
-    def __init__(self):
-        self.__jslocation__ = "j.sal.hostsfile"
-        JSBASE.__init__(self)
-
-    def get(self):
-        return HostFile()
-
-
 class HostFile(JSBASE):
 
     def __init__(self):
-        self.hostfilePath = "/etc/hosts"
+        self.__jslocation__ = 'j.sal.hostsfile'
+        self._host_filepath = '/etc/hosts'
         JSBASE.__init__(self)
 
-    def remove(self, ip):
+    def ip_remove(self, ip):
         """Update a hostfile, delete ip from hostsfile
-        @param hostsfile: File where hosts are defined
-        @param ip: Ip of the machine to remove
+        :param ip: Ip of the machine to remove
+        :type ip: string
         """
         # get content of hostsfile
-        filecontents = j.sal.fs.readFile(self.hostfilePath)
-        searchObj = re.search('^%s\s.*\n' % ip, filecontents, re.MULTILINE)
-        if searchObj:
-            filecontents = filecontents.replace(searchObj.group(0), '')
-            j.sal.fs.writeFile(self.hostfilePath, filecontents)
+        filecontents = j.sal.fs.readFile(self._host_filepath)
+        search_obj = re.search('^%s\s.*\n' % ip, filecontents, re.MULTILINE)
+        if search_obj:
+            filecontents = filecontents.replace(search_obj.group(0), '')
+            j.sal.fs.writeFile(self._host_filepath, filecontents)
         else:
             self._logger.warning('Ip address %s not found in hosts file' % ip)
 
-    def existsIP(self, ip):
+    def ip_exists(self, ip):
         """Check if ip is in the hostsfile
-        @param hostsfile: File where hosts are defined
-        @param ip: Ip of the machine to check
+        :param ip: Ip of the machine to check
+        :type ip: string
+        :return: True if ip is in hostfile, False otherwise
+        :rtype: bool
         """
         # get content of hostsfile
-        filecontents = j.sal.fs.readFile(self.hostfilePath)
+        filecontents = j.sal.fs.readFile(self._host_filepath)
         res = re.search('^%s\s' % ip, filecontents, re.MULTILINE)
         if res:
             return True
         else:
             return False
 
-    def getNames(self, ip):
+    def hostnames_get(self, ip):
         """Get hostnames for ip address
-        @param hostsfile: File where hosts are defined
-        @param ip: Ip of the machine to get hostnames from
-        @return: List of machinehostnames
+        :param ip: Ip of the machine to get hostnames from
+        :type ip: string
+        :return: list of hostnames
+        :rtype: list
         """
-
-        if self.existsIP(ip):
-            filecontents = j.sal.fs.readFile(self.hostfilePath)
-            searchObj = re.search('^%s\s.*\n' % ip, filecontents, re.MULTILINE)
-            hostnames = searchObj.group(0).strip().split()
+        if self.ip_exists(ip):
+            filecontents = j.sal.fs.readFile(self._host_filepath)
+            search_obj = re.search('^%s\s.*\n' % ip, filecontents, re.MULTILINE)
+            hostnames = search_obj.group(0).strip().split()
             hostnames.pop(0)
             return hostnames
         else:
             return []
 
-    def set(self, ip, hostname):
+    def hostnames_set(self, ip, hostnames):
         """Update a hostfile to contain the basic information install
-        @param hostsfile: File where hosts are defined
-        @param ip: Ip of the machine to add/modify
-        @param hostname: List of machinehostnames to add/modify
+        :param ip: Ip of the machine to add/modify
+        :type ip: string
+        :param hostnames: List of machinehostnames to add/modify
+        :type hostnames: list of hostnames or a string of space-separated hostnames
         """
-        if isinstance(hostname, str):
-            hostname = hostname.split()
-        filecontents = j.sal.fs.readFile(self.hostfilePath)
-        searchObj = re.search('^%s\s.*\n' % ip, filecontents, re.MULTILINE)
+        if isinstance(hostnames, str):
+            hostnames = hostnames.split()
+        filecontents = j.sal.fs.readFile(self._host_filepath)
+        search_obj = re.search('^%s\s.*\n' % ip, filecontents, re.MULTILINE)
 
-        hostnames = ' '.join(hostname)
-        if searchObj:
+        hostnames = ' '.join(hostnames)
+        if search_obj:
             filecontents = filecontents.replace(
-                searchObj.group(0), '%s %s\n' % (ip, hostnames))
+                search_obj.group(0), '%s %s\n' % (ip, hostnames))
         else:
             filecontents += '%s %s\n' % (ip, hostnames)
 
-        j.sal.fs.writeFile(self.hostfilePath, filecontents)
+        j.sal.fs.writeFile(self._host_filepath, filecontents)
+
+    def _test(self, name=""):
+        """Run tests under tests
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        self._test_run(name=name, obj_key='test_main')

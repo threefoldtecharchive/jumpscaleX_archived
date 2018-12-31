@@ -1,199 +1,202 @@
+import subprocess
+
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
+
 class TLS(JSBASE):
-
-    def __init__(self, cfsslService=None, path=None):
+    def __init__(self, path):
         JSBASE.__init__(self)
-        self._local = j.tools.executorLocal
-        if cfsslService is not None:
-            self._cfsslService = cfsslService
-            self.cwd = j.tools.path.get(cfsslService.path).joinpath('tls')
-        elif path is not None:
-            self.cwd = j.tools.path.get(path)
-        else:
-            raise j.exceptions.RuntimeError('TLS must be initialized with either the cfsslService or path')
+        self.cwd = j.tools.path.get(path)
 
-    def askSubjects(self):
+    def subjects_ask(self):
         """
-        ask questions for names arguments
-        return a list of dict like :
+        Ask questions for names arguments
+        :return: a list of dict like :
          [{
-            "C": "AE",
-            "L": "Dubai",
-            "O": "GreenITGlobe",
-            "OU": "0-complexity",
-            "ST": "Dubai",
-            "CN": "Common Name"
+            'C': 'AE',
+            'L': 'Dubai',
+            'O': 'GreenITGlobe',
+            'OU': '0-complexity',
+            'ST': 'Dubai',
+            'CN': 'Common Name'
         }]
+        :rtype: list
         """
-        def validCountry(input):
-            return False if len(input) > 2 else True
-
-        countrty = j.tools.console.askString("Country", "AE")
-        location = j.tools.console.askString("Location", "Dubai")
-        organisation = j.tools.console.askString("Organisation", "GreenITGlobe")
-        orgUnit = j.tools.console.askString('Organisation Unit', "0-complexity")
-        state = j.tools.console.askString('State', "Dubai")
-        commonName = j.tools.console.askString('CommonName')
+        country = j.tools.console.askString('Country', 'AE')
+        location = j.tools.console.askString('Location', 'Dubai')
+        organisation = j.tools.console.askString('Organisation', 'GreenITGlobe')
+        org_unit = j.tools.console.askString('Organisation Unit', '0-complexity')
+        state = j.tools.console.askString('State', 'Dubai')
+        common_name = j.tools.console.askString('common_name')
         return [{
-            "C": countrty,
-            "L": location,
-            "O": organisation,
-            "OU": orgUnit,
-            "ST": state,
-            "CN": commonName
+            'C': country,
+            'L': location,
+            'O': organisation,
+            'OU': org_unit,
+            'ST': state,
+            'CN': common_name
         }]
 
-    def createCA(self, subjects, keyAlgo='rsa', keySize=4096):
+    def ca_create(self, subjects, key_algo='rsa', key_size=4096):
+        """Generate a Root CA.
+
+        :param subjects: list of dicts containing valid csr names. It can be created with subjects_ask method.
+        :type subjects: dict
+        :param key_algo: name of the algorithm to use to for key generation, defaults to 'rsa'
+        :type key_algo: str, optional
+        :param key_size: size of the key to generate, defaults to 4096
+        :type key_size: int, optional
+        :return: (path_to_cert, path_to_key)
+        :rtype: set
         """
-        Generate a Root CA.
-
-        subjects: list of dict containing valid names. get create it with askSubjects method
-        commonName: string used by some CAs to determine which domain the certificate is to be generated
-        keyAlgo: string. name of the algorythme to use to for key generation
-        keySize: int. size of the key to generate
-
-        return (path_to_cert, path_to_key)
-        """
-        if not isinstance(subjects, list):
-            subjects = [subjects]
-
-        commonName = ""
-        for s in subjects:
-            commonName += '%s,' % s['CN']
-            del s['CN']
-        commonName = commonName.rstrip(',')
-
-        csr = {
-            'hosts': [],
-            'CN': commonName,
-            'key': {
-                'algo': keyAlgo,
-                'size': keySize,
-            },
-            'names': subjects
-        }
+        csr = self._csr_get(subjects, None, key_algo, key_size)
         ca_csr_path = self.cwd.joinpath('ca-csr.json')
         ca_cert_path = self.cwd.joinpath('root-ca')
         ca_csr_path.write_text(j.data.serializers.json.dumps(csr, indent=4))
 
-        cmd = 'cfssl gencert -initca %s | cfssljson -bare %s' % (ca_csr_path, ca_cert_path)
-        self._local.execute(cmd)
+        subprocess.run(
+            'cfssl gencert -initca %s | cfssljson -bare %s' % (ca_csr_path, ca_cert_path), shell=True, check=True)
 
-        cert_path = ca_cert_path + ".pem"
-        key_path = ca_cert_path + "-key.pem"
-        output = "certificate generated at %s and key at %s" % (cert_path, key_path)
+        cert_path = ca_cert_path + '.pem'
+        key_path = ca_cert_path + '-key.pem'
+        output = 'certificate generated at %s and key at %s' % (cert_path, key_path)
         self._logger.debug(output)
 
         return (cert_path, key_path)
 
-    def createCSR(self, name, subjects, hosts, keyAlgo='rsa', keySize=2048):
+    def csr_create(self, name, subjects, hosts, key_algo='rsa', key_size=2048):
+        """Create csr file and key
+
+        :param name: name to indentify the csr
+        :type name: str
+        :param subjects: list of dicts containing valid csr names. It can be created with subjects_ask method.
+        :type subjects: list
+        :param hosts: list of the domain names which the certificate should be valid for
+        :type hosts: list
+        :param key_algo: name of the algorithm to use to for key generation, defaults to 'rsa'
+        :type key_algo: str, optional
+        :param key_size: size of the key to generate, defaults to 2048
+        :type key_size: int, optional
+        :return: (path_to_csr, path_to_key)
+        :rtype: set
         """
-        name: name to indentify the csr.
-        subjects: list of dict containing valid names. get create it with askSubjects method
-        hosts: list of the domain names which the certificate should be valid for
-        commonName: string used by some CAs to determine which domain the certificate is to be generated
-        keyAlgo: string. name of the algorythme to use to for key generation
-        keySize: int. size of the key to generate
-
-        return (path_to_csr, path_to_key)
-        """
-        if not isinstance(subjects, list):
-            subjects = [subjects]
-
-        commonName = ""
-        for s in subjects:
-            commonName += '%s,' % s['CN']
-            del s['CN']
-        commonName = commonName.rstrip(',')
-
-        csr = {
-            'hosts': hosts,
-            'CN': commonName,
-            'key': {
-                'algo': keyAlgo,
-                'size': keySize,
-            },
-            'names': subjects
-        }
+        csr = self._csr_get(subjects, hosts, key_algo, key_size)
         csr_json_path = self.cwd.joinpath('%s.json' % name)
         csr_json_path.write_text(j.data.serializers.json.dumps(csr, indent=4))
 
         output_path = self.cwd.joinpath(name)
-        cmd = 'cfssl genkey %s | cfssljson -bare %s' % (csr_json_path, output_path)
-        self._local.execute(cmd)
+        subprocess.run('cfssl genkey %s | cfssljson -bare %s' % (csr_json_path, output_path), shell=True, check=True)
 
         csr_path = self.cwd.joinpath('%s.csr' % name)
         key_path = self.cwd.joinpath('%s-key.pem' % name)
-        output = "certificate signing request generated at %s and key at %s" % (csr_path, key_path)
+        output = 'certificate signing request generated at %s and key at %s' % (csr_path, key_path)
         self._logger.debug(output)
 
         return (csr_path, key_path)
 
-    def signCSR(self, csr, ca, ca_key):
-        """
-        csr: path to the csr filee to sign
-        ca: path to the ca certificate
-        ca_key: path to the ca key
+    def csr_sign(self, csr, ca, ca_key):
+        """Sign csr certificate
+
+        :param csr: path to the csr filee to sign
+        :type csr: str
+        :param ca: path to the ca certificate
+        :type ca: str
+        :param ca_key: path to the ca key
+        :type ca_key: str
+        :return: the signed certificate
+        :rtype: str
         """
         base = j.tools.path.get(csr.rstrip('/')).basename()
         name = base.split('.')[0]
 
         output_path = self.cwd.joinpath(name)
-        cmd = 'cfssl sign -ca %s -ca-key %s %s | cfssljson -bare %s' % (ca, ca_key, csr, output_path)
-        self._local.execute(cmd)
-        cert_path = self.cwd.joinpath("%s.pem" % name)
+        subprocess.run(
+            'cfssl sign -ca %s -ca-key %s %s | cfssljson -bare %s' % (ca, ca_key, csr, output_path),
+            shell=True, check=True)
+        cert_path = self.cwd.joinpath('%s.pem' % name)
         output = 'certificate created at %s' % cert_path
 
         self._logger.debug(output)
 
         return cert_path
 
-    def createSignedCertificate(self, name, subjects, hosts, ca, ca_key, keyAlgo='rsa', keySize=2048):
+    def signedcertificate_create(self, name, subjects, hosts, ca, ca_key, key_algo='rsa', key_size=2048):
         """
-        createSignedCertificate is a helper that create a CSR and sign it with the given CA in one operation.
+        signedcertificate_create is a helper that create a CSR and sign it with the given CA in one operation.
 
-        name: name to indentify the csr.
-        subjects: list of dict containing valid names. get create it with askSubjects method
-        hosts: list of the domain names which the certificate should be valid for
-        ca: path to the CA certificate
-        ca_key: path to the CA key
-        keyAlgo: string. name of the algorythme to use to for key generation
-        keySize: int. size of the key to generate
+        :param name: name to indentify the csr
+        :type name: str
+        :param subjects: list of dicts containing valid csr names. It can be created with subjects_ask method.
+        :type subjects: list
+        :param hosts: list of the domain names which the certificate should be valid for
+        :type hosts: list
+        :param ca: path to the ca certificate
+        :type ca: str
+        :param ca_key: path to the ca key
+        :type ca_key: str
+        :param key_algo: name of the algorithm to use to for key generation, defaults to 'rsa'
+        :type key_algo: str, optional
+        :param key_size: size of the key to generate, defaults to 2048
+        :type key_size: int, optional
 
         return (path_to_csr, path_to_key)
         """
-        if not isinstance(subjects, list):
-            subjects = [subjects]
-
-        commonName = ""
-        for s in subjects:
-            commonName += '%s,' % s['CN']
-            del s['CN']
-        commonName = commonName.rstrip(',')
-
-        csr = {
-            'hosts': hosts,
-            'CN': commonName,
-            'key': {
-                'algo': keyAlgo,
-                'size': keySize,
-            },
-            'names': subjects
-        }
+        csr = self._csr_get(subjects, hosts, key_algo, key_size)
         csr_json_path = self.cwd.joinpath('%s.json' % name)
         csr_json_path.write_text(j.data.serializers.json.dumps(csr, indent=4))
 
         output_path = self.cwd.joinpath(name)
-        cmd = 'cfssl gencert -ca %s -ca-key %s %s | cfssljson -bare %s' % (ca, ca_key, csr_json_path, output_path)
-        self._local.execute(cmd)
+        subprocess.run(
+            'cfssl gencert -ca %s -ca-key %s %s | cfssljson -bare %s' % (ca, ca_key, csr_json_path, output_path),
+            shell=True, check=True)
 
         cert_path = self.cwd.joinpath('%s.pem' % name)
         key_path = self.cwd.joinpath('%s-key.pem' % name)
 
-        output = "certificate generated at %s and key at %s" % (cert_path, key_path)
+        output = 'certificate generated at %s and key at %s' % (cert_path, key_path)
         self._logger.debug(output)
 
         return (cert_path, key_path)
+
+    def _csr_get(self, subjects, hosts=None, key_algo='rsa', key_size=2048):
+        """Helper function that returns the dict used for csr json
+
+        :param subjects: list of dicts containing valid csr names. It can be created with subjects_ask method.
+        :type subjects: list
+        :param hosts: list of the domain names which the certificate should be valid for
+        :type hosts: list
+        :param key_algo: name of the algorithm to use to for key generation, defaults to 'rsa'
+        :type key_algo: str, optional
+        :param key_size: size of the key to generate, defaults to 2048
+        :type key_size: int, optional
+        :return: csr dict
+        :rtype: dict
+        """
+        if not isinstance(subjects, list):
+            subjects = [subjects]
+
+        common_name = ''
+        for s in subjects:
+            common_name += '%s,' % s['CN']
+            del s['CN']
+        common_name = common_name.rstrip(',')
+
+        return {
+            'hosts': hosts if hosts else [],
+            'CN': common_name,
+            'key': {
+                'algo': key_algo,
+                'size': key_size,
+            },
+            'names': subjects
+        }
+
+    def _test(self, name=""):
+        """Run tests under tests
+
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        self._test_run(name=name, obj_key='test_main')

@@ -209,8 +209,10 @@ class Text(object):
             return str(value)
 
     def strip(self,content, ignorecomments=True,args={},replace=False):
-        return self._j.core.tools.text_strip(content=content, ignorecomments=ignorecomments,
-                                             args=args,replace=replace)
+        if replace:
+            return self._j.core.tools.text_replace(content=content, ignorecomments=ignorecomments,args=args)
+        else:
+            return self._j.core.tools.text_strip(content=content, ignorecomments=ignorecomments)
 
     def sort(self, txt):
         """

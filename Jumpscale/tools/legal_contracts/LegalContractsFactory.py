@@ -1,7 +1,7 @@
 from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
-class LegalContractsFactory(JSBASE):
+class LegalContractsFactory(j.application.JSBaseClass):
     def __init__(self):
         self.__jslocation__ = "j.tools.legal_contracts"
         JSBASE.__init__(self)

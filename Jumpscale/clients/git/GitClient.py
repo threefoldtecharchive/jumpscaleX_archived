@@ -2,29 +2,33 @@ from Jumpscale import j
 import git
 import copy
 
-JSBASE = j.application.JSBaseClass
+JSBASE = j.application.JSBaseConfigClass
 
 
 class GitClient(JSBASE):
     """
     Client of git services, has all git related operations like push, pull, ...
     """
+    _SCHEMATEXT = """
+    @url = jumpscale.git.client
+    name* = "" (S)
+    baseDir = "" (S)
+    check_path = True (B)
+    """
 
-    def __init__(self, baseDir, check_path=True):  # NOQA
+    def _init(self):  # NOQA
 
-        if baseDir is None or baseDir.strip() == "":
+        if self.baseDir is None or self.baseDir.strip() == "":
             raise RuntimeError("basedir cannot be empty")
 
-        baseDir_org = copy.copy(baseDir)
-
-        JSBASE.__init__(self)
+        baseDir_org = copy.copy(self.baseDir)
 
         self._repo = None
-        if not j.sal.fs.exists(path=baseDir):
+        if not j.sal.fs.exists(path=self.baseDir):
             raise j.exceptions.Input("git repo on %s not found." % baseDir_org)
 
         # split path to find parts
-        baseDir = j.sal.fs.pathClean(baseDir)
+        baseDir = j.sal.fs.pathClean(self.baseDir)
         baseDir = baseDir.replace("\\", "/")  # NOQA
         baseDir = baseDir.rstrip("/")
 
@@ -42,7 +46,7 @@ class GitClient(JSBASE):
             raise j.exceptions.RuntimeError(
                 "could not find basepath for .git in %s" %
                 baseDir_org)
-        if check_path:
+        if self.check_path:
             if baseDir.find("/code/") == -1:
                 raise j.exceptions.Input(
                     "jumpscale code management always requires path in form of $somewhere/code/$type/$account/$reponame")

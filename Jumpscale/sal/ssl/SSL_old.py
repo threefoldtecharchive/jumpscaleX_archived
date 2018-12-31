@@ -4,7 +4,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class Empty(JSBASE):
+class Empty(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
 

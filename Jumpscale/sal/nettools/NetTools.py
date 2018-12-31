@@ -9,14 +9,12 @@ from Jumpscale import j
 
 
 JSBASE = j.application.JSBaseClass
-class NetTools(JSBASE):
+class NetTools(j.application.JSBaseClass):
 
-    def __init__(self):
-        self.__jslocation__ = "j.sal.nettools"
-        self.__imports__ = "netaddr"
-        JSBASE.__init__(self)
+    __jslocation__ = "j.sal.nettools"
+
+    def _init(self):
         self._windowsNetworkInfo = None
-
 
     def tcpPortConnectionTest(self, ipaddr, port, timeout=None):
         conn = None
@@ -511,7 +509,7 @@ class NetTools(JSBASE):
 
         """
         #TODO: use caching feature from jumpscale to keep for e.g. 1 min, if not usecache needs to reset cache to make sure we load again
-        return j.tools.prefab.local.system.net.getInfo(device=device)
+        return j.builder.system.net.getInfo(device=device)
         
 
     def getIpAddress(self, interface):
@@ -520,7 +518,7 @@ class NetTools(JSBASE):
         #TODO: use getNetworkInfo to return info
         if j.core.platformtype.myplatform.isLinux or j.core.platformtype.myplatform.isMac:
             output =list()
-            output = j.tools.prefab.local.system.net.getInfo()
+            output = j.builder.system.net.getInfo()
             result = {'ip': [],'ip6': []}
             for nic in output:
                 if nic['name']== interface:
@@ -553,7 +551,7 @@ class NetTools(JSBASE):
                 "Interface %s not found on the system" % interface)
         if j.core.platformtype.myplatform.isLinux or j.core.platformtype.myplatform.isMac:
             output =list()
-            output = j.tools.prefab.local.system.net.getInfo()
+            output = j.builder.system.net.getInfo()
             result=list()
             for nic in output:
                 if nic['name']== interface:
@@ -630,7 +628,7 @@ class NetTools(JSBASE):
             IpAdress = list()
             IpAdress.append(ipaddress)
             output =list()
-            output = j.tools.prefab.local.system.net.getInfo()
+            output = j.builder.system.net.getInfo()
             result=list()
 
             for nic in output:
@@ -802,6 +800,8 @@ class NetTools(JSBASE):
         if md5_checksum and not j.data.hash.md5(destination_file_path) == md5_checksum:
             raise j.exceptions.RuntimeError(
                 'The provided MD5 checksum did not match that of a freshly-downloaded file!')
+
+
 
     def download(self, url, localpath, username=None, passwd=None, overwrite=True):
         '''Download a url to a file or a directory, supported protocols: http, https, ftp, file

@@ -1,6 +1,6 @@
 import re
 import collections
-
+import subprocess
 
 from Jumpscale import j
 
@@ -20,7 +20,7 @@ class UFWError(Exception, JSBASE):
         JSBASE.__init__(self)
 
 
-class UFWRule(JSBASE):
+class UFWRule(j.application.JSBaseClass):
 
     def __init__(self, action=None, source=None, destination=None, number=None):
         JSBASE.__init__(self)
@@ -54,7 +54,7 @@ class UFWRule(JSBASE):
         return str(self)
 
 
-class UFWOperation(JSBASE):
+class UFWOperation(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
 
@@ -152,7 +152,7 @@ class RuleOp(UFWOperation):
         return ' '.join(cmd)
 
 
-class UFWManager(JSBASE):
+class UFWManager(j.application.JSBaseClass):
     ACTION_ALLOW_IN = 'allow in'
     ACTION_ALLOW_OUT = 'allow out'
     ACTION_DENY_IN = 'deny in'
@@ -162,7 +162,6 @@ class UFWManager(JSBASE):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.ufw"
-        self._local = j.tools.executorLocal
         self._rules = None
         self._enabled = None
         self._transactions = []
@@ -172,7 +171,7 @@ class UFWManager(JSBASE):
         return status == 'active'
 
     def _load(self):
-        rc, status, _ = self._local.execute('ufw status numbered')
+        status = subprocess.run(['ufw', 'status', 'numbered'], stdout=subprocess.PIPE).stdout.decode()
         self._rules = []
         for line in status.splitlines():
             line = line.strip()
@@ -294,7 +293,9 @@ class UFWManager(JSBASE):
         try:
             while self._transactions:
                 op = self._transactions.pop(0)
-                self._local.execute('ufw %s' % op.cmd())
+                args = ['ufw']
+                args.extend(op.cmd().split(' '))
+                subprocess.run(args)
         except Exception as e:
             raise UFWError(e)
 

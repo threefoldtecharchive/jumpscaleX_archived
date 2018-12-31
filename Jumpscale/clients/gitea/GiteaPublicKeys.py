@@ -5,7 +5,7 @@ from .GiteaPublicKey import GiteaPublicKey
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaPublicKeys(JSBASE):
+class GiteaPublicKeys(j.application.JSBaseClass):
 
     def __init__(self, client, user):
         JSBASE.__init__(self)

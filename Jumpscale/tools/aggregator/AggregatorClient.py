@@ -12,7 +12,7 @@ Log = collections.namedtuple('Log', 'level message node epoch tags')
 JSBASE = j.application.JSBaseClass
 
 
-class AggregatorClient(JSBASE):
+class AggregatorClient(j.application.JSBaseClass):
 
     def __init__(self, redis, nodename):
         self.redis = redis

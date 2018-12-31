@@ -1,9 +1,10 @@
 from Jumpscale import j
+import subprocess
 
 JSBASE = j.application.JSBaseClass
 
 
-class NginxFactory(JSBASE):
+class NginxFactory(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.sal.nginx"
@@ -14,15 +15,18 @@ class NginxFactory(JSBASE):
         return Nginx()
 
 
-class Nginx(JSBASE):
+class Nginx(j.application.JSBaseClass):
 
     def __init__(self):
         self.configPath = j.tools.path.get('/etc').joinpath('nginx', 'conf.d')
-        self._executor = j.tools.executorLocal
         JSBASE.__init__(self)
 
     def list(self):
         return self.configPath.files()
+
+    def run(self, cmd):
+        args = cmd.split(' ')
+        subprocess.run(args)
 
     def configure(self, fwObject):
         json = j.data.serializers.serializers.getSerializerType('j')
@@ -68,13 +72,13 @@ server {
             self.reload()
 
     def start(self):
-        self._executor.execute('service nginx start')
+        self.run('service nginx start')
 
     def stop(self):
-        self._executor.execute('service nginx stop')
+        self.run('service nginx stop')
 
     def reload(self):
-        self._executor.execute('service nginx reload')
+        self.run('service nginx reload')
 
     def restart(self):
-        self._executor.execute('service nginx restart')
+        self.run('service nginx restart')

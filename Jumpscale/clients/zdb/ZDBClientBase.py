@@ -2,56 +2,56 @@
 from Jumpscale import j
 import redis
 
-JSBASE = j.application.JSBaseClass
+JSBASE = j.application.JSBaseConfigClass
 
 
 class ZDBClientBase(JSBASE):
+    _SCHEMATEXT = """
+    @url = jumpscale.zdb.client
+    name* = "" (S)
+    addr = "localhost" (S)
+    port = 9900 (ipport)
+    mode = "seq" (S)
+    secret = "" (S)
+    nsname = "test" (S)
+    admin = False (B)
+    """
 
-    def __init__(self, addr="localhost", port=9900, mode="seq", secret="", nsname="test", admin=False):
+    def _init(self):
         """ is connection to ZDB
 
         port {[int} -- (default: 9900)
         mode -- user,seq(uential) see
                     https://github.com/rivine/0-db/blob/master/README.md
         """
-        JSBASE.__init__(self)
-        if admin:
-            nsname="default"
-        self.admin = admin
-        self.addr = addr
-        self.port = int(port)
-        self.mode = mode
-        self.secret = secret
+        if self.admin:
+            self.nsname = "default"
         self.type = "ZDB"
 
+        self.redis = _patch_redis_client(j.clients.redis.get(
+            ipaddr=self.addr, port=self.port, fromcache=False,  ping=False))
 
-        self.redis = _patch_redis_client(j.clients.redis.get(ipaddr=addr, port=port, fromcache=False,  ping=False))
-
-        self.nsname = nsname.lower().strip()
+        self.nsname = self.nsname.lower().strip()
 
         self._logger_enable()
 
+        if not self.admin:
+            #     #only passwd in admin mode !
+            #     self.redis = _patch_redis_client(j.clients.redis.get(ipaddr=addr, port=port, fromcache=False,
+            #                                                                 password=self.admin_secret,ping=False))
+            # else:
 
-
-        if not admin:
-        #     #only passwd in admin mode !
-        #     self.redis = _patch_redis_client(j.clients.redis.get(ipaddr=addr, port=port, fromcache=False,
-        #                                                                 password=self.admin_secret,ping=False))
-        # else:
-
-
-            if self.nsname in ["default","system"]:
+            if self.nsname in ["default", "system"]:
                 raise RuntimeError("a non admin namespace cannot be default or system")
 
-            #DO NOT AUTOMATICALLY CREATE THE NAMESPACE !!!!!
-            #only go inside namespace if not in admin mode
+            # DO NOT AUTOMATICALLY CREATE THE NAMESPACE !!!!!
+            # only go inside namespace if not in admin mode
             if self.secret is "":
                 self._logger.debug("select namespace:%s with NO secret" % (self.nsname))
                 self.redis.execute_command("SELECT", self.nsname)
             else:
                 self._logger.debug("select namespace:%s with a secret" % (self.nsname))
                 self.redis.execute_command("SELECT", self.nsname, self.secret)
-
 
         assert self.ping()
 
@@ -77,7 +77,7 @@ class ZDBClientBase(JSBASE):
             raise ValueError("key must be provided")
         self.redis.execute_command("DEL", key)
 
-    def flush(self,meta=None):
+    def flush(self, meta=None):
         """
         will remove all data from the database DANGEROUS !!!!
         :return:
@@ -85,11 +85,11 @@ class ZDBClientBase(JSBASE):
         if meta:
             data = meta._data
             self.redis.execute_command("FLUSH")
-            #recreate the metadata table
+            # recreate the metadata table
             meta.reset()
-            #copy the old data back
-            meta._data=data
-            #now make sure its back in the db
+            # copy the old data back
+            meta._data = data
+            # now make sure its back in the db
             meta.save()
         else:
             self.redis.execute_command("FLUSH")
@@ -175,15 +175,13 @@ class ZDBClientBase(JSBASE):
         """
         return self.nsinfo['entries']
 
-
-
-
     def ping(self):
         """
         go to default namespace & ping
         :return:
         """
         return self.redis.ping()
+
 
 def _patch_redis_client(redis):
     # don't auto parse response for set, it's not 100% redis compatible
@@ -192,6 +190,7 @@ def _patch_redis_client(redis):
         if cmd in redis.response_callbacks:
             del redis.response_callbacks[cmd]
     return redis
+
 
 def _parse_nsinfo(raw):
     def empty(line):

@@ -3,7 +3,7 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-class GiteaCommit(JSBASE):
+class GiteaCommit(j.application.JSBaseClass):
     def __init__(
             self,
             client,

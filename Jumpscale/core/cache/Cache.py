@@ -10,7 +10,7 @@ class Cache(object):
     # def serialize(self, val):
     #     tt = self._j.data.types.type_detect(val)
 
-    def get(self, id="main", reset=False, expiration=30):
+    def get(self, id="main", reset=False, expiration=3600):
         """
         @param id is a unique id for the cache
         db = when none then will be in memory

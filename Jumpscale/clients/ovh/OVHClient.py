@@ -1,33 +1,24 @@
 from Jumpscale import j
-
-try:
-    import ovh
-except:
-    self._logger.warning("WARNING: ovh pip client not found please install do j.clients.ovh.install()")
-    # OVHFactory().install()
+import ovh
 
 import requests
 import time
 
-TEMPLATE = """
-ipxeBase = "https://bootstrap.grid.tf/ipxe/master"
-endpoint = "soyoustart-eu"
-appkey_ = ""
-appsecret_ = ""
-consumerkey_ = ""
-"""
-
-JSConfigBase = j.application.JSBaseClass
+JSConfigBase = j.application.JSBaseConfigClass
 
 
 class OVHClient(JSConfigBase):
+    _SCHEMATEXT = """
+    @url = jumpscale.ovh.client
+    name* = "" (S)
+    ipxeBase = "https://bootstrap.grid.tf/ipxe/master" (S)
+    endpoint = "soyoustart-eu" (S)
+    appkey_ = "" (S)
+    appsecret_ = "" (S)
+    consumerkey_ = "" (S)
     """
 
-    """
-
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigBase.__init__(self, instance=instance,
-                              data=data, parent=parent, template=TEMPLATE, interactive=interactive)
+    def _init(self):
 
         # id = "ovhclient_%s" % c["consumerkey_"]
 
@@ -35,34 +26,30 @@ class OVHClient(JSConfigBase):
 
         self.client.get("/me")
 
-        if self.config.data["consumerkey_"]=="":
+        if self.consumerkey == "":
             self.consumer_key_get()
             self._connect()
 
         self.client.get("/me")
 
     def consumer_key_get(self):
-        #TODO:*1 something still goes wrong here, need to debug
-        ck=self.client.new_consumer_key_request()
+        # TODO:*1 something still goes wrong here, need to debug
+        ck = self.client.new_consumer_key_request()
         ck.add_recursive_rules(ovh.API_READ_WRITE, '/')
         # ck.add_rules(["GET", "POST", "PUT", "DELETE"], "/*")
         validation = ck.request()
         self._logger.info(validation['consumerKey'])
-        self.config.data_set("consumerkey_", validation['consumerKey'], save=True)
+        self.consumerkey_ = validation['consumerKey']
+        self.save
 
     def _connect(self):
-        c = self.config.data
         self.client = ovh.Client(
-            endpoint=c["endpoint"],
-            application_key=c["appkey_"],
-            application_secret=c["appsecret_"],
-            consumer_key=c["consumerkey_"],
+            endpoint=self.endpoint,
+            application_key=self.appkey_,
+            application_secret=self.appsecret_,
+            consumer_key=self.consumerkey_,
         )
-        self.ipxeBase = c["ipxeBase"]
-
-
-
-
+        self.ipxeBase = self.ipxeBase
 
     def ovh_id_check(self, ovh_id):
         if "ns302912" in ovh_id:
@@ -422,7 +409,7 @@ class OVHClient(JSConfigBase):
             time.sleep(1)
     #
 
-    ##IS THIS STILL RELEVANT
+    # IS THIS STILL RELEVANT
 
     # def zero_node_ovh_install(self, OVHHostName, OVHClient, zerotierNetworkID, zerotierClient):
     #     """

@@ -27,22 +27,11 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         self._connected = None
         self._prefab = None
 
-    @property
-    def prefab(self):
-        if not self._prefab:
-            ex = j.tools.executor
-            # executor = ex.getSSHViaProxy(self.addr_variable) if self.proxy else ex.ssh_get(self)
-            executor = ex.ssh_get(self)
-            if self.login != "root":
-                executor.state_disabled = True
-            self._prefab = executor.prefab
-        return self._prefab
-
 
     @property
     def isprivate(self):
         if self._private is None:
-            self._private = self.addr_priv and not j.sal.nettools.tcpPortConnectionTest(self.addr, self.port, 1)
+             self._private = j.sal.nettools.tcpPortConnectionTest(self.addr_priv, self.port_priv, 1)
         return self._private
 
     # SETTERS & GETTERS
@@ -104,3 +93,17 @@ class SSHClientBase(j.application.JSBaseConfigClass):
             raise RuntimeError("pubkey not given")
         j.shell()
         self.prefab.system.ssh.authorize(user=user, key=pubkey)
+
+    def shell(self):
+        cmd="ssh {login}@{addr} -p {port}".format(**self.data._ddict)
+        j.sal.process.executeWithoutPipe(cmd)
+
+    @property
+    def syncer(self):
+        """
+        is a tool to sync local files to your remote ssh instance
+        :return:
+        """
+        if self._syncer == None:
+            self._syncer = j.tools.syncer.get(name=self.name, sshclient_name=self.name)
+        return self._syncer

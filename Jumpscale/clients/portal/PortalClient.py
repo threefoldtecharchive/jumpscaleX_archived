@@ -3,17 +3,10 @@ import os
 import json
 from Jumpscale import j
 
-TEMPLATE = """
-ip = ""
-port = 8200
-iyoinstance = ""
-"""
-
-JSConfigBase = j.application.JSBaseClass
-JSBASE = j.application.JSBaseClass
+JSConfigBase = j.application.JSBaseConfigClass
 
 
-class ApiError(Exception, JSBASE):
+class ApiError(Exception):
 
     def __init__(self, response):
         message = None
@@ -27,7 +20,6 @@ class ApiError(Exception, JSBASE):
         elif isinstance(message, dict) and 'errormessage' in message:
             msg += '\n%s' % message['errormessage']
 
-        JSBASE.__init__(self)
         super(ApiError, self).__init__(msg)
         self._response = response
 
@@ -36,13 +28,12 @@ class ApiError(Exception, JSBASE):
         return self._response
 
 
-class BaseResource(JSBASE):
+class BaseResource():
 
     def __init__(self, session, url):
         self._session = session
         self._url = url
         self._method = 'POST'
-        JSBASE.__init__(self)
 
     def __getattr__(self, item):
         url = os.path.join(self._url, item)
@@ -101,17 +92,17 @@ class Resource(BaseResource):
 
 
 class PortalClient(JSConfigBase, Resource):
-    def __init__(self, instance, data=None, parent=None, interactive=False):
-        if not data:
-            data = {}
-        JSConfigBase.__init__(
-            self,
-            instance=instance,
-            data=data,
-            parent=parent,
-            template=TEMPLATE,
-            interactive=interactive)
-        cfg = self.config.data
-        ip = cfg['ip']
-        port = cfg['port']
+
+    _SCHEMATEXT = """
+    @url = jumpscale.portal.client
+    name* = "" (S)
+    ip = "" (S)
+    port = 8200 (ipport)
+    iyoinstance = "" (S)
+    """
+
+    def _init(self):
+
+        ip = self.ip
+        port = self.port
         Resource.__init__(self, ip, port, "/restmachine")
