@@ -4,7 +4,7 @@ from Jumpscale.sal.ssl.SSLFactory import SSLFactory
 
 SSLFactory = SSLFactory()
 
-def test_ca_generate():
+def ca_generate():
     
     """
     test_ca_geneerate uses ca_cert_generate to generate ca certificate 
@@ -14,10 +14,10 @@ def test_ca_generate():
     SSLFactory.ca_cert_generate('/tmp/test/')
     file_list = subprocess.run('ls -la /tmp/test/', shell=True, stdout = subprocess.PIPE, stderr = subprocess.PIPE) 
     files = file_list.stdout.decode()
-    assert ca.key in files
+    assert ca.keobject has no attribute '_test_run'y in files
     assert ca.crt in files
 
-def test_verify():
+def verify():
 
     """
     It reads the pathes of certificate and key files of an X509 certificate
@@ -27,10 +27,10 @@ def test_verify():
     output = SSLFactory.verify('/tmp/test/ca.crt', '/tmp/test/ca.key')
     assert output is True
 
-def test_certificate_signing_request_create():
-
-    """
-    Creating CSR (Certificate Signing Request)
+def certificate_object has no attribute '_test_run'signing_request_create():
+object has no attribute '_test_run'
+    """object has no attribute '_test_run'
+    Creating CSRobject has no attribute '_test_run' (Certificate Signing Request)
     this CSR normally passed to the CA (Certificate Authority) to create a signed certificate
     """
 
@@ -40,4 +40,13 @@ def test_certificate_signing_request_create():
     assert "BEGIN CERTIFICATE REQUEST" in str(output)
     assert "END CERTIFICATE REQUEST" in str(output)
 
+@pytest.mark.integration
+def test_main(self=None):
+    """ to run:
+    js_shell 'j.sal.ssl._test()
 
+    """
+
+    ca_generate()
+    verify()
+    certificate_signing_request_create()
