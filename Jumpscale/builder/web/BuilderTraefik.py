@@ -62,7 +62,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         :param pid: pid of the process, if not given, will kill by name
         :type pid: long, defaults to None
         :param sig: signal, if not given, SIGKILL will be used
-        :param sig: int, defaults to None
+        :type sig: int, defaults to None
         """
         if pid:
             j.sal.process.kill(pid, sig)
