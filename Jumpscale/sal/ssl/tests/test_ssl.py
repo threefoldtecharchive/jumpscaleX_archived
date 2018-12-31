@@ -43,7 +43,7 @@ def certificate_signing_request_create():
 @pytest.mark.integration
 def test_main(self=None):
     """ to run:
-    js_shell 'j.sal.ssl._test()
+     js_shell 'j.sal.ssl._test(name="ssl")'
 
     """
     ca_generate()

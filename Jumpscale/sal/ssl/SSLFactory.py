@@ -245,10 +245,9 @@ class SSLFactory(JSBASE):
         x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificate)
         return x509
 
-    # def _test(self):
-    #     from Jumpscale.sal.ssl.
-    #     """Run tests under tests
-    #     :param name: basename of the file to run, defaults to "".
-    #     :type name: str, optional
-    #     """
-    #     self._test_run(obj_key='test_main')
+    def _test(self, name=""):
+        """Run tests under tests
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        self._test_run(name=name, obj_key='test_main')
