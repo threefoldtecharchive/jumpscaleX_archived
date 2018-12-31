@@ -8,36 +8,32 @@ from clients.blockchain.electrum.ElectrumWallet import ElectrumWallet
 from clients.blockchain.electrum.ElectrumAtomicswap import ElectrumAtomicswap
 
 
-TEMPLATE = """
-server = "localhost:7777:s"
-rpc_user = "user"
-rpc_pass_ = "pass"
-seed_ = ""
-fee = 10000
-password_ = ""
-passphrase_ = ""
-electrum_path = ""
-testnet = 0
-"""
-
-
-
-JSConfigBase = j.application.JSBaseClass
+JSConfigBase = j.application.JSBaseConfigClass
 
 
 class ElectrumClient(JSConfigBase):
     """
     Electrum client object
     """
-    def __init__(self, instance, data=None, parent=None, interactive=False):
+
+    _SCHEMATEXT = """
+        @url = jumpscale.electrum.client
+        name* = "" (S)
+        server = "localhost:7777" (S)
+        rpc_user = "user" (S)
+        rpc_pass_ = "pass" (S)
+        seed_ = "" (S)
+        fee = 10000 (I)
+        password_ = "" (S)
+        passphrase_ = "" (S)
+        electrum_path = "" (S)
+        testnet = 0 (I)
+        """
+
+    def _init(self):
         """
         Initializes new Rivine Client
         """
-        if not data:
-            data = {}
-
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent,
-                              template=TEMPLATE, interactive=interactive)
         self._wallet = None
         self._atomicswap = None
 

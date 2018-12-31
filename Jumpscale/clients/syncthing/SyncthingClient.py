@@ -8,40 +8,32 @@ import time
 import pprint
 from Jumpscale import j
 
-JSConfigFactory = j.application.JSFactoryBaseClass
-JSConfigClient = j.application.JSBaseClass
-
-TEMPLATE = """
-addr = "localhost"
-port = 0
-sshport = 22
-rootpasswd_ = ""
-apikey = ""
-"""
-class SyncthingFactory(JSConfigFactory):
-
-    def __init__(self):
-        self.__jslocation__ = "j.clients.syncthing"
-        JSConfigFactory.__init__(self, SyncthingClient)
+JSConfigClient = j.application.JSBaseConfigClass
 
 
 class SyncthingClient(JSConfigClient):
+    _SCHEMATEXT = """
+    @url = jumpscale.syncthing.client
+    name* = "" (S)
+    addr = "localhost" (S)
+    port = 0 (ipport)
+    sshport = 22 (ipport)
+    rootpasswd_ = "" (S)
+    apikey = "" (S)
+    """
 
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
-        c = self.config.data
+    def _init(self):
         self._session = requests.session()
-        addr = c['addr'].lower()
+        addr = self.addr.lower()
         if addr == "127.0.0.1":
             addr = "localhost"
         self.addr = addr
-        self.sshport = c['sshport']
-        self.rootpasswd = c['rootpasswd_']
-        self.port = c['port']
+        self.sshport = self.sshport
+        self.rootpasswd = self.rootpasswd_
+        self.port = self.port
         # TODO: need to be https
         self.syncthing_url = 'http://%s:%s/rest' % (self.addr, self.port)
-        self.syncthing_apikey = c['apikey']
+        self.syncthing_apikey = self.apikey
         self._config = None
 
     def executeBashScript(self, cmds, die=True):
@@ -104,7 +96,7 @@ class SyncthingClient(JSConfigClient):
         res = self.executeBashScript(C)
 
         self._logger.debug("check if we can find syncthing on right port: %s:%s" %
-                          (self.addr, self.port))
+                           (self.addr, self.port))
         if j.sal.nettools.waitConnectionTest(self.addr, self.port, timeout=10) is False:
             raise j.exceptions.RuntimeError(
                 "Could not find syncthing on %s:%s, tcp port test" % (self.addr, self.port))

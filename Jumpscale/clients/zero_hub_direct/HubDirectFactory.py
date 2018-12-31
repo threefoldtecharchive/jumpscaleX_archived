@@ -3,17 +3,17 @@ from Jumpscale import j
 
 from .HubDirectClient import HubDirectClient
 
-JSConfigBaseFactory = j.application.JSFactoryBaseClass
+JSConfigFactory = j.application.JSFactoryBaseClass
 
 
-class HubDirectFactory(JSConfigBaseFactory):
+class HubDirectFactory(JSConfigFactory):
     """
     """
+    __jslocation__ = "j.clients.zhubdirect"
+    _CHILDCLASS = HubDirectClient
 
-    def __init__(self):
-        self.__jslocation__ = "j.clients.zhubdirect"
+    def _init(self):
         self.__imports__ = "ovc"
-        JSConfigBaseFactory.__init__(self, HubDirectClient)
 
     def generate(self):
         """

@@ -36,8 +36,8 @@ class Node:
         # g8os client to talk to the node
         self._storage_addr = None
         self._name = None
-        self.addr = client.config.data['host']
-        self.port = client.config.data['port']
+        self.addr = client.host
+        self.port = client.port
         self.disks = Disks(self)
         self.storagepools = StoragePools(self)
         self.containers = Containers(self)

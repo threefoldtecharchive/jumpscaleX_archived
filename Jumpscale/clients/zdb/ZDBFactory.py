@@ -7,7 +7,7 @@ from Jumpscale import j
 from .ZDBAdminClient import ZDBAdminClient
 from .clients_impl import ZDBClientDirectMode, ZDBClientSeqMode, ZDBClientUserMode
 
-JSBASE = j.application.JSBaseClass
+JSConfigBaseFactory = j.application.JSFactoryBaseClass
 
 
 _client_map = {
@@ -18,11 +18,9 @@ _client_map = {
 }
 
 
-class ZDBFactory(j.application.JSBaseClass):
-
-    def __init__(self):
-        self.__jslocation__ = "j.clients.zdb"
-        JSBASE.__init__(self)
+class ZDBFactory(JSConfigBaseFactory):
+    __jslocation__ = "j.clients.zdb"
+    _CHILDCLASS = ZDBAdminClient
 
     def client_admin_get(self, addr="localhost", port=9900, secret="123456", mode='seq'):
         return ZDBAdminClient(addr=addr, port=port, secret=secret, mode=mode)
@@ -40,7 +38,7 @@ class ZDBFactory(j.application.JSBaseClass):
         klass = _client_map[mode]
         return klass(addr=addr, port=port, secret=secret, nsname=nsname)
 
-    def start_test_instance(self, destroydata=False, admin_secret="123456",namespaces_secret="1234"):
+    def start_test_instance(self, destroydata=False, admin_secret="123456", namespaces_secret="1234"):
         """
         js_shell 'j.clients.zdb.start_test_instance(destroydata=True)'
 
@@ -50,10 +48,8 @@ class ZDBFactory(j.application.JSBaseClass):
 
         """
 
-        return j.servers.zdb.start_test_instance(destroydata=destroydata,admin_secret=admin_secret,
-                                 namespaces_secret=namespaces_secret)
-
-
+        return j.servers.zdb.start_test_instance(destroydata=destroydata, admin_secret=admin_secret,
+                                                 namespaces_secret=namespaces_secret)
 
     def test(self):
         """
@@ -61,12 +57,7 @@ class ZDBFactory(j.application.JSBaseClass):
 
         """
 
-
         cl = j.clients.zdb.start_test_instance()
 
         self._test_run(name="base")
         self._test_run(name="admin")
-
-
-
-

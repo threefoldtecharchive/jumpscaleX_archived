@@ -4,19 +4,21 @@ from Jumpscale import j
 
 from .VirtualboxClient import VirtualboxClient
 
-JSBASE = j.application.JSBaseClass
+JSBASE = j.application.JSFactoryBaseClass
+
 
 class VirtualboxFactory(j.application.JSBaseClass):
+    __jslocation__ = "j.clients.virtualbox"
 
-    def __init__(self):
-        self.__jslocation__ = "j.clients.virtualbox"
-        JSBASE.__init__(self)
+    def _init(self):
         self._logger_enable()
-        self._client=None
+        self._client = None
+
+    def get(self):
+        return self.client
 
     @property
     def client(self):
-        if self._client==None:
+        if self._client == None:
             self._client = VirtualboxClient()
         return self._client
-

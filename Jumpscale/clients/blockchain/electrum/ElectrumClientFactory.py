@@ -14,12 +14,11 @@ class ElectrumClientFactory(JSConfigBaseFactory):
     """
     Factroy class to get a electrum client object
     """
+    __jslocation__ = "j.clients.btc_electrum"
+    _CHILDCLASS = ElectrumClient
 
-    def __init__(self):
-        self.__jslocation__ = "j.clients.btc_electrum"
-        # self.__imports__ = "electrum"
-        JSConfigBaseFactory.__init__(self, ElectrumClient)
-
+    def _init(self):
+        self.__imports__ = "electrum"
 
     def generate_seed(self, nbits=132):
         """
@@ -76,4 +75,4 @@ class ElectrumClientFactory(JSConfigBaseFactory):
                                                                  wallet._wallet_path)
 
         self._logger.info("Loading wallet {} using command: {}".format(wallet._name, cmd))
-        j.builder.tools.run(cmd)
+        j.tools.prefab.local.core.run(cmd)
