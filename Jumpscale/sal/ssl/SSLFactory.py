@@ -24,14 +24,14 @@ class SSLFactory(JSBASE):
         Returns:
             bool -- returns True if generation happened
         """
-        if cert_dir == '':
-            cert_dir = j.dirs.CFGDIR+'/ssl'
+        if cert_dir == "":
+            cert_dir = j.dirs.CFGDIR+"/ssl"
             
         j.sal.fs.createDir(cert_dir)
             
         cert_dir = j.tools.path.get(cert_dir)
-        CERT_FILE = cert_dir.joinpath('ca.crt')  # info (certificate) (pub is in here + other info)
-        KEY_FILE = cert_dir.joinpath('ca.key')  # private key
+        CERT_FILE = cert_dir.joinpath("ca.crt")  # info (certificate) (pub is in here + other info)
+        KEY_FILE = cert_dir.joinpath("ca.key")  # private key
 
         if reset or not CERT_FILE.exists() or not KEY_FILE.exists():
 
@@ -42,11 +42,11 @@ class SSLFactory(JSBASE):
             # create a self-signed cert
             cert = crypto.X509()
             cert.set_version(3)
-            cert.get_subject().C = 'BE'  # c -- countryName
-            cert.get_subject().ST = 'OV' # ST  -- state Or ProvinceName
-            cert.get_subject().L = 'Ghent' # L -- localityName
-            cert.get_subject().O = 'my company' # O -- organizationName
-            cert.get_subject().OU = 'my organization' 
+            cert.get_subject().C = "BE"
+            cert.get_subject().ST = "OV"
+            cert.get_subject().L = "Ghent"
+            cert.get_subject().O = "my company"
+            cert.get_subject().OU = "my organization"
             cert.get_subject().CN = gethostname()
 
             import time
@@ -56,9 +56,9 @@ class SSLFactory(JSBASE):
             cert.set_issuer(cert.get_subject())
             cert.set_pubkey(k)
             cert.add_extensions([
-                OpenSSL.crypto.X509Extension(b'basicConstraints', True, b'CA:TRUE, pathlen:0'),
-                OpenSSL.crypto.X509Extension(b'keyUsage', True, b'keyCertSign, cRLSign'),
-                OpenSSL.crypto.X509Extension(b'subjectKeyIdentifier', False, b'hash',
+                OpenSSL.crypto.X509Extension(b"basicConstraints", True, b"CA:TRUE, pathlen:0"),
+                OpenSSL.crypto.X509Extension(b"keyUsage", True, b"keyCertSign, cRLSign"),
+                OpenSSL.crypto.X509Extension(b"subjectKeyIdentifier", False, b"hash",
                                              subject=cert),
             ])
             cert.sign(k, 'sha1')
@@ -81,8 +81,8 @@ class SSLFactory(JSBASE):
         """
 
         path = j.tools.path.get(path)
-        cacert = path.joinpath('ca.crt').text()
-        cakey = path.joinpath('ca.key').text()
+        cacert = path.joinpath("ca.crt").text()
+        cakey = path.joinpath("ca.key").text()
         ca_cert = OpenSSL.crypto.load_certificate(
             OpenSSL.crypto.FILETYPE_PEM, cacert)
         ca_key = OpenSSL.crypto.load_privatekey(
@@ -92,17 +92,17 @@ class SSLFactory(JSBASE):
         key.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
 
         cert = OpenSSL.crypto.X509()
-        cert.get_subject().CN = 'node1.example.com'
+        cert.get_subject().CN = "node1.example.com"
         import time
         cert.set_serial_number(int(time.time() * 1000000))
         cert.gmtime_adj_notBefore(0)
         cert.gmtime_adj_notAfter(24 * 60 * 60)
         cert.set_issuer(ca_cert.get_subject())
         cert.set_pubkey(key)
-        cert.sign(ca_key, 'sha1')
+        cert.sign(ca_key, "sha1")
 
-        path.joinpath('%s.crt' % keyname).write_text(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode())
-        path.joinpath('%s.key' % keyname).write_text(crypto.dump_privatekey(crypto.FILETYPE_PEM, key).decode())
+        path.joinpath("%s.crt" % keyname).write_text(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode())
+        path.joinpath("%s.key" % keyname).write_text(crypto.dump_privatekey(crypto.FILETYPE_PEM, key).decode())
 
     def certificate_signing_request_create(self, common_name):
         """Creating CSR (Certificate Signing Request)
@@ -120,7 +120,7 @@ class SSLFactory(JSBASE):
         req.get_subject().commonName = common_name
 
         req.set_pubkey(key)
-        req.sign(key, 'sha1')
+        req.sign(key, "sha1")
 
         # Write private key
         key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
@@ -143,12 +143,12 @@ class SSLFactory(JSBASE):
         """
         
         path = j.tools.path.get(path)
-        cacert = path.joinpath('ca.crt').text()
-        cakey = path.joinpath('ca.key').text()
+        cacert = path.joinpath("ca.crt").text()
+        cakey = path.joinpath("ca.key").text()
         
         ca_cert = OpenSSL.crypto.load_certificate(
             OpenSSL.crypto.FILETYPE_PEM, cacert)
-        ca_key = OpenSSL.crypto.pri(
+        ca_key = OpenSSL.crypto.load_privatekey(
             OpenSSL.crypto.FILETYPE_PEM, cakey)
             
         req = OpenSSL.crypto.load_certificate_request(
@@ -162,7 +162,7 @@ class SSLFactory(JSBASE):
         cert.gmtime_adj_notAfter(24 * 60 * 60)
         cert.set_issuer(ca_cert.get_subject())
         cert.set_pubkey(req.get_pubkey())
-        cert.sign(ca_key, 'sha1')
+        cert.sign(ca_key, "sha1")
 
         certificate = OpenSSL.crypto.dump_certificate(
             OpenSSL.crypto.FILETYPE_PEM, cert)
@@ -189,11 +189,11 @@ class SSLFactory(JSBASE):
         try:
             ctx.check_privatekey()
         except OpenSSL.SSL.Error:
-            self._logger.debug('Incorrect key')
+            self._logger.debug("Incorrect key")
             return False
         else:
-            self._logger.debug('Key matches certificate')
-            return True
+            self._logger.debug("Key matches certificate")
+        return True
 
     def bundle(self, certificate, key, certification_chain=(), passphrase=None):
         """Bundles a certificate with it's private key (if any) and it's chain of trust.
@@ -246,3 +246,4 @@ class SSLFactory(JSBASE):
         certificate = j.tools.path.get(path).text()
         x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificate)
         return x509
+        
