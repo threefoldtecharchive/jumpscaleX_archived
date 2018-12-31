@@ -42,10 +42,10 @@ class BCDBIndexMeta(j.application.JSBaseClass):
         self.fields = []
         self.fields_key = []
 
-        for p in schema.index_properties:
+        for p in schema.properties_index_sql:
             self.fields.append(IndexField(p))
 
-        for p in schema.index_key_properties:
+        for p in schema.properties_index_keys:
             self.fields_key.append(p.name)
 
         if len(self.fields)>0:

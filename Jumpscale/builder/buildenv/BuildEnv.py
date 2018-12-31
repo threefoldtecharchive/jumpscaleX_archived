@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 
-class BuildEnv(j.builder.system._BaseClass):
+class BuildEnv(j.builder.system._BaseFactoryClass):
 
     __jslocation__ = "j.builder.buildenv"
 
@@ -23,7 +23,7 @@ class BuildEnv(j.builder.system._BaseClass):
         # make sure all dirs exist
         # for key, item in j.builder.tools.dir_paths.items():
         #     out += "mkdir -p %s\n" % item
-        # j.builder.tools.execute_bash(out)
+        # j.sal.process.execute(out)
 
         j.builder.system.package.mdupdate()
 
@@ -56,8 +56,8 @@ class BuildEnv(j.builder.system._BaseClass):
         """
         j.builder.tools.package_install(C)
 
-        j.builder.sandbox.profileJS.addPath("{DIR_BIN}")
-        j.builder.sandbox.profileJS.save()
+        ##j.builder.sandbox.profileJS.addPath("{DIR_BIN}")
+        ##j.builder.sandbox.profileJS.save()
 
         if upgrade:
             self.upgrade(reset=reset, update=False)

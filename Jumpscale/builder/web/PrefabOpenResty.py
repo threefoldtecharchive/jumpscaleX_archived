@@ -5,9 +5,7 @@ from time import sleep
 
 
 
-
-
-class BuilderOpenResty(j.builder.system._BaseClass):
+class PrefabOpenResty(j.builder.system._BaseClass):
     NAME = 'openresty'
 
     def _init(self):
@@ -27,10 +25,10 @@ class BuilderOpenResty(j.builder.system._BaseClass):
 
         if j.core.platformtype.myplatform.isUbuntu:
             j.builder.system.package.mdupdate()
-            j.builder.tools.package_install("build-essential libpcre3-dev libssl-dev")
+            j.builder.tools.package_install("build-essential,libpcre3-dev, libssl-dev")
 
-            # j.builder.tools.dir_remove("{DIR_TEMP}/build/openresty")
-            # j.core.tools.dir_ensure("{DIR_TEMP}/build/openresty")
+            j.builder.tools.dir_remove("{DIR_TEMP}/build/openresty")
+            j.core.tools.dir_ensure("{DIR_TEMP}/build/openresty")
             url="https://openresty.org/download/openresty-1.13.6.2.tar.gz"
             dest = j.core.tools.text_replace("{DIR_VAR}/build/openresty")
             j.sal.fs.createDir(dest)
@@ -65,7 +63,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
 
         else:
             #build with system openssl, no need to include custom build
-            # j.builder.lib.openssl.build()
+            # j.builder.libs.openssl.build()
 
             url="https://openresty.org/download/openresty-1.13.6.2.tar.gz"
             dest = j.core.tools.text_replace("{DIR_VAR}/build/openresty")
@@ -98,9 +96,10 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             C = j.core.tools.text_replace(C)
             j.sal.process.execute(C)
 
-        self._done_set("build")
 
         self.copy2sandbox_github()
+
+        self._done_set("build")
 
 
     def copy2sandbox_github(self):
@@ -108,7 +107,6 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         js_shell 'j.builder.web.openresty.copy2sandbox_github()'
         :return:
         """
-        assert self.executor.type=="local"
 
         if j.core.platformtype.myplatform.isUbuntu:
             CODE_SB_BIN=j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_ubuntu.git")
@@ -122,26 +120,26 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         C="""
         set -ex
 
-        cp $SRCBINDIR/resty* $CODE_SB_BASE/base/bin/
-        rm -f $CODE_SB_BIN/base/bin/resty*
+        cp {SRCBINDIR}/resty* {CODE_SB_BASE}/base/bin/
+        rm -f {CODE_SB_BIN}/base/bin/resty*
                 
-        cp $SRCBINDIR/openresty $CODE_SB_BASE/base/bin/
-        rm -f $CODE_SB_BIN/base/bin/openresty        
+        cp {SRCBINDIR}/openresty {CODE_SB_BASE}/base/bin/
+        rm -f {CODE_SB_BIN}/base/bin/openresty        
 
-        cp {DIR_BIN}/*.lua $CODE_SB_BASE/base/bin/
-        rm -f $CODE_SB_BIN/base/bin/*.lua    
+        cp {DIR_BIN}/*.lua {CODE_SB_BASE}/base/bin/
+        rm -f {CODE_SB_BIN}/base/bin/*.lua    
 
-        cp {DIR_BIN}/lapis $CODE_SB_BASE/base/bin/
-        rm -f $CODE_SB_BIN/base/bin/lapis  
+        cp {DIR_BIN}/lapis {CODE_SB_BASE}/base/bin/
+        rm -f {CODE_SB_BIN}/base/bin/lapis  
 
-        cp {DIR_BIN}/lua $CODE_SB_BIN/base/bin/
-        rm -f $CODE_SB_BASE/base/bin/lua  
+        cp {DIR_BIN}/lua {CODE_SB_BIN}/base/bin/
+        rm -f {CODE_SB_BASE}/base/bin/lua  
 
-        cp {DIR_BIN}/moon* $CODE_SB_BASE/base/bin/
-        rm -f $CODE_SB_BIN/base/bin/moon*
+        cp {DIR_BIN}/moon* {CODE_SB_BASE}/base/bin/
+        rm -f {CODE_SB_BIN}/base/bin/moon*
         
-        cp {DIR_BIN}/openresty $CODE_SB_BIN/base/bin/
-        rm -f $CODE_SB_BASE/base/bin/openresty
+        cp {DIR_BIN}/openresty {CODE_SB_BIN}/base/bin/
+        rm -f {CODE_SB_BASE}/base/bin/openresty
           
 
 
@@ -149,7 +147,10 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         args={}
         args["CODE_SB_BIN"]=CODE_SB_BIN
         args["CODE_SB_BASE"]=CODE_SB_BASE
-        args["SRCBINDIR"]="%s/openresty/bin"%j.core.installtools.MyEnv.config["DIR_BASE"]
-        args["BINDIR"]="%s/bin"%j.core.installtools.MyEnv.config["DIR_BASE"]
-        j.core.tools.run(C, args=args)
+        args["SRCBINDIR"]=j.core.tools.text_replace("{DIR_BASE}/openresty/bin")
+        args["BINDIR"]=j.core.tools.text_replace("{DIR_BASE}/bin")
+
+        C=j.core.tools.text_replace(C, args=args)
+
+        j.sal.process.execute(C)
         # self.cleanup()

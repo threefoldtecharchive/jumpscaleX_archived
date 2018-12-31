@@ -40,21 +40,7 @@ class Handlers():
     @property
     def consoleHandler(self):
         if self._consoleHandler is None:
-            formatter = LimitFormatter(
-                fmt=self._j.core.myenv.FORMAT_LOG,
-                datefmt="%a%d %H:%M",
-                reset=True,
-                log_colors={
-                    'DEBUG': 'cyan',
-                    'INFO': 'green',
-                    'WARNING': 'yellow',
-                    'ERROR': 'red',
-                    'CRITICAL': 'red,bg_white',
-                },
-                secondary_log_colors={},
-                style='{',
-                length=37
-            )
+            formatter = self._j.core.tools._LogFormatter()
             ch = logging.StreamHandler()
             ch.setLevel(logging.DEBUG)
             ch.setFormatter(formatter)

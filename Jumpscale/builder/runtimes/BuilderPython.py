@@ -1,25 +1,36 @@
 from Jumpscale import j
-from Jumpscale.builder.system.BuilderBaseClass import BuilderBaseClass
 
 
-class BuilderPython(BuilderBaseClass):
+class BuilderPython(j.builder.system._BaseClass):
     def _init(self):
+
         self._logger_enable()
 
-        self.build_dir = j.core.tools.text_replace("{DIR_VAR}/build/python3")
-        self.code_dir = j.core.tools.text_replace("{DIR_VAR}/build/code/python3")
-        self.open_ssl_path = j.core.tools.text_replace("{DIR_VAR}/build/openssl")
-        self.package_dir = j.core.tools.text_replace("{DIR_VAR}/build/sandbox/tfbot/")
+        self.DIR_BUILD_L = j.core.tools.text_replace("{DIR_VAR}/build/python3")
+        j.sal.fs.createDir(self.DIR_BUILD_L)
+
+        self.DIR_CODE_L = j.core.tools.text_replace("{DIR_VAR}/build/code/python3")
+
+        if not j.core.platformtype.myplatform.isMac:
+            self.PATH_OPENSSL = j.core.tools.text_replace("{DIR_VAR}/build/openssl")
+        else:
+            rc,out,err=j.sal.process.execute("brew --prefix openssl")
+            self.PATH_OPENSSL=out.strip()
+
+        self.DIR_PACKAGE = j.core.tools.text_replace("{DIR_VAR}/build/sandbox/tfbot/")
+        j.sal.fs.createDir(self.DIR_PACKAGE)
 
     def reset(self):
-        j.sal.fs.remove(self.build_dir)
-        j.sal.fs.remove(self.code_dir)
-        j.builder.system.python_pip.reset()
+        j.sal.fs.remove(self.DIR_BUILD_L)
+        j.sal.fs.remove(self.DIR_CODE_L)
+        j.sal.fs.remove(self.DIR_PACKAGE)
 
-    def build(self, reset=False, tag="v3.6.7"):
+    def build(self, reset=False, sandbox=True,tag="v3.6.7"):
         """
+
         js_shell 'j.builder.runtimes.python.build(reset=False)'
         js_shell 'j.builder.runtimes.python.build(reset=True)'
+
         will build python and install all pip's inside the build directory
 
         :param reset: choose to reset the build process even if it was done before
@@ -32,9 +43,13 @@ class BuilderPython(BuilderBaseClass):
             self.reset()
 
         j.builder.buildenv.install()
-        j.clients.git.pullGitRepo('https://github.com/python/cpython', dest=self.code_dir, depth=1,
-                                  tag=tag, reset=reset, ssh=False, timeout=20000)
+
+
         if not self._done_get("compile") or reset:
+
+            j.clients.git.pullGitRepo('https://github.com/python/cpython', dest=self.DIR_CODE_L, depth=1,
+                                  tag=tag, reset=reset, ssh=False, timeout=20000)
+
             if j.core.platformtype.myplatform.isMac:
                 # clue to get it finally working was in
                 # https://stackoverflow.com/questions/46457404/
@@ -42,20 +57,16 @@ class BuilderPython(BuilderBaseClass):
 
                 script = """
                 set -ex
-                cd {CODEDIRL}
-                mkdir -p {DIR_VAR}/build
-
-                # export OPENSSLPATH=$(brew --prefix openssl)
-
-                # export OPENSSLPATH={OPENSSLPATH}
+                cd {DIR_CODE_L}
+                mkdir -p {DIR_BUILD_L}
 
                 # export CPPFLAGS=-I/opt/X11/include
-                # export CFLAGS="-I$(brew --prefix openssl)/include" LDFLAGS="-L$(brew --prefix openssl)/lib"
+                # export CFLAGS="-I${PATH_OPENSSL}/include" LDFLAGS="-L${PATH_OPENSSL}/lib"
 
-                ./configure --prefix={BUILDDIRL}/  CPPFLAGS="-I{OPENSSLPATH}/include" LDFLAGS="-L{OPENSSLPATH}/lib"
+                ./configure --prefix={DIR_BUILD_L}/  CPPFLAGS="-I{PATH_OPENSSL}/include" LDFLAGS="-L{PATH_OPENSSL}/lib"
 
                 #if you do the optimizations then it will do all the tests
-                # ./configure --prefix={BUILDDIRL}/ --enable-optimizations
+                # ./configure --prefix={DIR_BUILD_L}/ --enable-optimizations
 
                 # make -j12
 
@@ -64,6 +75,7 @@ class BuilderPython(BuilderBaseClass):
                 script = j.core.tools.text_replace(script, args=self.__dict__)
             else:
                 # on ubuntu 1604 it was all working with default libs, no reason to do it ourselves
+                j.builder.libs.openssl.build()
                 j.builder.system.package.install([
                     'zlib1g-dev',
                     'libncurses5-dev',
@@ -79,23 +91,24 @@ class BuilderPython(BuilderBaseClass):
                 ])
                 script = """
                 set -ex
-                cd {code_dir}
+                cd {DIR_CODE_L}
+                mkdir -p {DIR_BUILD_L}
 
                 # THIS WILL MAKE SURE ALL TESTS ARE DONE, WILL TAKE LONG TIME
-                ./configure --prefix={build_dir}/ --enable-optimizations
+                ./configure --prefix={DIR_BUILD_L}/ --enable-optimizations
 
                 make clean
                 make -j8 EXTRATESTOPTS=--list-tests install
                 """
-                script = script.format(build_dir=self.build_dir, code_dir=self.code_dir)
+                script = script.format(DIR_BUILD_L=self.DIR_BUILD_L, DIR_CODE_L=self.DIR_CODE_L)
 
-            j.sal.fs.writeFile("%s/mycompile_all.sh" % self.code_dir, script)
+            j.sal.fs.writeFile("%s/mycompile_all.sh" % self.DIR_CODE_L, script)
 
             self._logger.info("compiling python3...")
             self._logger.debug(script)
 
             # makes it easy to test & make changes where required
-            j.sal.process.execute("bash %s/mycompile_all.sh" % self.code_dir)
+            j.sal.process.execute("bash %s/mycompile_all.sh" % self.DIR_CODE_L)
 
             # test openssl is working
             cmd = "source /sandbox/env.sh;/sandbox/var/build/python3/bin/python3 -c 'import ssl'"
@@ -106,7 +119,9 @@ class BuilderPython(BuilderBaseClass):
 
         self._add_pip(reset=reset)
 
-        return self.build_dir
+        if sandbox:
+            self.sandbox()
+
 
     def _add_pip(self, reset=False):
         """
@@ -119,25 +134,24 @@ class BuilderPython(BuilderBaseClass):
         script = """
         source env.sh
         export PBASE=`pwd`
-        export PATH=$PATH:{open_ssl_path}/bin:/usr/local/bin:/usr/bin:/bin
-        export LIBRARY_PATH="$LIBRARY_PATH:{open_ssl_path}/lib:/usr/lib:/usr/local/lib:/lib:/lib/x86_64-linux-gnu"
+        export PATH=$PATH:{PATH_OPENSSL}/bin:/usr/local/bin:/usr/bin:/bin
+        export LIBRARY_PATH="$LIBRARY_PATH:{PATH_OPENSSL}/lib:/usr/lib:/usr/local/lib:/lib:/lib/x86_64-linux-gnu"
         export LD_LIBRARY_PATH="$LIBRARY_PATH"
 
-        export CPPPATH="$PBASE/include/python3.6m:{open_ssl_path}/include:/usr/include"
+        export CPPPATH="$PBASE/include/python3.6m:{PATH_OPENSSL}/include:/usr/include"
         export CPATH="$CPPPATH"
         export CFLAGS="-I$CPATH/"
         export CPPFLAGS="-I$CPATH/"
         export LDFLAGS="-L$LIBRARY_PATH/"
         """
-        script = script.format(open_ssl_path=self.open_ssl_path)
-        j.sal.fs.writeFile("%s/envbuild.sh" % self.build_dir, script)
+        script = script.format(PATH_OPENSSL=self.PATH_OPENSSL)
+        j.sal.fs.writeFile("%s/envbuild.sh" % self.DIR_BUILD_L, script)
 
         script = """
         export PBASE=`pwd`
         export PYTHONHTTPSVERIFY=0
         export PATH=$PBASE/bin:/usr/local/bin:/usr/bin
-        export PYTHONPATH=$PBASE/lib/python.zip:$PBASE/lib:$PBASE/lib/python3.6:$PBASE/lib/python3.6/site-packages:\
-$PBASE/lib/python3.6/lib-dynload:$PBASE/bin
+        export PYTHONPATH=$PBASE/lib/python.zip:$PBASE/lib:$PBASE/lib/python3.6:$PBASE/lib/python3.6/site-packages:$PBASE/lib/python3.6/lib-dynload:$PBASE/bin
         export PYTHONHOME=$PBASE
         export LIBRARY_PATH="$PBASE/bin:$PBASE/lib"
         export LD_LIBRARY_PATH="$LIBRARY_PATH"
@@ -146,31 +160,32 @@ $PBASE/lib/python3.6/lib-dynload:$PBASE/bin
         export LANG=en_US.UTF-8
         export PS1="JUMPSCALE: "
         """
-        j.sal.fs.writeFile("%s/env.sh" % self.build_dir, script)
+        j.sal.fs.writeFile("%s/env.sh" % self.DIR_BUILD_L, script)
 
         if not self._done_get("pip3install") or reset:
             script = """
-            cd {build_dir}/
+            cd {DIR_BUILD_L}/
             . envbuild.sh
             set -e
             rm -rf get-pip.py
             curl https://bootstrap.pypa.io/get-pip.py > get-pip.py
-            {DIR_VAR}/build//bin/python3 get-pip.py
+            {DIR_BUILD_L}/bin/python3 get-pip.py
             """
-            script = j.core.tools.text_replace(script, args={'build_dir': self.build_dir})
-            j.sal.fs.writeFile("%s/pip3build.sh" % self.build_dir, script)
-            j.sal.process.execute("cd %s;bash pip3build.sh" % self.build_dir)
+            script = j.core.tools.text_replace(script, args=self.__dict__)
+            j.sal.fs.writeFile("%s/pip3build.sh" % self.DIR_BUILD_L, script)
+            j.sal.process.execute("cd %s;bash pip3build.sh" % self.DIR_BUILD_L)
         self._done_set("pip3install")
 
         self._pip_all(reset=reset)
 
         msg = "\n\nto test do:\ncd {DIR_VAR}/build/;source env.sh;python3"
         msg = j.core.tools.text_replace(msg)
+
         self._logger.info(msg)
 
     def _pip_all(self, reset=False):
         """
-        js_shell 'j.builder.runtimes.python._pipAll(reset=False)'
+        js_shell 'j.builder.runtimes.python._pip_all(reset=True)'
         """
         if self._done_check("pipall", reset):
             return
@@ -181,9 +196,9 @@ $PBASE/lib/python3.6/lib-dynload:$PBASE/bin
 
         # list comes from /sandbox/code/github/threefoldtech/jumpscale_core/install/InstallTools.py
 
-        self._pip(j.core.installtools.UbuntuInstall.pips_list())
+        self._pip(j.core.installer_ubuntu.pips_list(),reset=reset)
 
-        if not self.core.isMac:
+        if not self.tools.isMac:
             # raise NotImplementedError()
             j.builders.zero_os.zos_stor_client.build(python_build=True)  # builds the zos_stor_client
             self._pip(["g8storclient"])
@@ -191,47 +206,59 @@ $PBASE/lib/python3.6/lib-dynload:$PBASE/bin
         # self.sandbox(deps=False)
         self._done_set("pipall")
 
+        self._logger.info("PIP DONE")
+
     # need to do it here because all runs in the sandbox
     def _pip(self, pips, reset=False):
         for item in pips:
             item = "'%s'" % item
             # cannot use prefab functionality because would not be sandboxed
             if not self._done_get("pip3_%s" % item) or reset:
-                script = "set -ex;cd {BUILDDIRL}/;" \
+                script = "set -ex;cd {DIR_BUILD_L}/;" \
                          "source envbuild.sh;" \
                          "pip3 install --trusted-host pypi.python.org %s" % item
-                j.sal.process.execute(j.core.tools.text_replace(script), shell=True)
+                j.sal.process.execute(j.core.tools.text_replace(script,args=self.__dict__))
                 self._done_set("pip3_%s" % item)
 
-    def copy2sandbox_github(self, reset=False):
+    def sandbox(self,copy2git=True):
+        """
+        js_shell 'j.builder.runtimes.python.sandbox()'
+        :return:
         """
 
-        js_shell 'j.builder.runtimes.python.package(reset=False)'
+        self._copy2sandbox_github()
+        path=j.core.tools.text_replace("{DIR_PACKAGE}/bin/",args=self.__dict__)
+        j.tools.sandboxer.libs_sandbox(path,path,True)
+        path=j.core.tools.text_replace("{DIR_PACKAGE}/lib/pythonbin/",args=self.__dict__)
+        j.tools.sandboxer.libs_sandbox(path,path,True)
+        if copy2git:
+            self.copy2git()
+
+    def _copy2sandbox_github(self):
+        """
+
+        js_shell 'j.builder.runtimes.python.copy2sandbox_github(reset=False)'
 
 
         builds python and returns the build dir
 
         """
-        assert self.executor.type == "local"
 
-        path = self.build(reset=reset)
+        self._logger.info("COPY FILES TO SANDBOX")
 
+        path = self.DIR_BUILD_L
         self._logger.info("sandbox:%s" % path)
-        j.builder.system.package.install("zip")
+
         if j.core.platformtype.myplatform.isMac:
             j.builder.system.package.install("redis")
         else:
             j.builder.system.package.install("redis-server")
 
-        if path == "":
-            path = self.BUILDDIR
 
         if not j.sal.fs.exists("%s/bin/python3.6" % path):
-            j.shell()
-            raise RuntimeError(
-                "am not in compiled python dir, need to find %s/bin/python3.6" % path)
+            raise RuntimeError("am not in compiled python dir, need to find %s/bin/python3.6" % path)
 
-        dest = self.package_dir
+        dest = self.DIR_PACKAGE
 
         j.sal.fs.remove(dest)
         j.sal.fs.createDir(dest)
@@ -312,7 +339,7 @@ $PBASE/lib/python3.6/lib-dynload:$PBASE/bin
                 if dest0 is not "":
                     j.sal.fs.copyFile(item, dest0)
 
-        self.env_write(dest)
+        # self.env_write(dest)
 
         remove = ["codecs_jp", "codecs_hk", "codecs_cn", "codecs_kr", "testcapi", "tkinter", "audio"]
         # remove some stuff we don't need
@@ -325,19 +352,29 @@ $PBASE/lib/python3.6/lib-dynload:$PBASE/bin
                     j.sal.fs.remove(item)
                     pass
 
-        C = """
-        mv $PACKAGEDIR/lib/python/_sysconfigdata_m_linux_x86_64-linux-gnu.py $PACKAGEDIR/lib/pythonbin/_sysconfigdata_m_linux_x86_64-linux-gnu.py
-        rm -rf $PACKAGEDIR/lib/python/config-3.6m-x86_64-linux-gnu
+        if j.core.platformtype.myplatform.isMac:
+            C = """
+            mv {DIR_PACKAGE}/lib/python/_sysconfigdata_m_darwin_darwin.py {DIR_PACKAGE}/lib/pythonbin/_sysconfigdata_m_darwin_darwin.py
+            rm -rf {DIR_PACKAGE}/lib/python/config-3.6m-darwin
+    
+            """
+        else:
+            C = """
+            mv {DIR_PACKAGE}/lib/python/_sysconfigdata_m_linux_x86_64-linux-gnu.py {DIR_PACKAGE}/lib/pythonbin/_sysconfigdata_m_linux_x86_64-linux-gnu.py
+            rm -rf {DIR_PACKAGE}/lib/python/config-3.6m-x86_64-linux-gnu
+    
+            """
 
-        """
-        args = {}
-        args["$PACKAGEDIR"] = self.package_dir
-        C = j.core.tools.text_strip(C, args=args)
-        j.sal.process.executeBashScript(C)
+        C = j.core.tools.text_replace(C, args=self.__dict__)
+        j.sal.process.execute(C)
+
+        self._logger.info("copy to sandbox done")
+
+
 
     def copy2git(self):
         """
-        be careful !!!
+        js_shell 'j.builder.runtimes.python.copy2git()'
         :return:
         """
 
@@ -347,29 +384,36 @@ $PBASE/lib/python3.6/lib-dynload:$PBASE/bin
         ignorefiles = ['.egg-info', ".pyc", "_64-linux-gnu.py"]
 
         path = j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_base.git")
-        src0 = "%s/lib/python" % self.package_dir
+        src0 = "%s/lib/python" % self.DIR_PACKAGE
         dest0 = "%s/base/lib/python" % path
         j.sal.fs.createDir(dest0)
+
         j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
                              ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
-        j.shell()
 
         if j.core.platformtype.myplatform.isUbuntu:
             url = "git@github.com:threefoldtech/sandbox_ubuntu.git"
             path = j.clients.git.getContentPathFromURLorPath(url)
-            src0 = "%s/lib/pythonbin" % self.package_dir
-            dest0 = "%s/base/lib/pythonbin" % path
+            src0 = "%s/lib/pythonbin/" % self.DIR_PACKAGE
+            dest0 = "%s/base/lib/pythonbin/" % path
             j.sal.fs.createDir(dest0)
             j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
                                  ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
 
         if j.core.platformtype.myplatform.isMac:
             url = "git@github.com:threefoldtech/sandbox_osx.git"
-            j.shell()
+            path = j.clients.git.getContentPathFromURLorPath(url)
+            src0 = "%s/lib/pythonbin/" % self.DIR_PACKAGE
+            dest0 = "%s/base/lib/pythonbin/" % path
+            j.sal.fs.createDir(dest0)
+            j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
+                                 ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
+
+
 
 
     def _zip(self, dest="", python_lib_zip=False):
-        assert self.executor.type == "local"
+        j.builder.system.package.install("zip")
         if dest == "":
             dest = j.dirs.BUILDDIR + "/sandbox/python3/"
         cmd = "cd %s;rm -f ../js_sandbox.tar.gz;tar -czf ../js_sandbox.tar.gz .;" % dest
@@ -391,3 +435,5 @@ $PBASE/lib/python3.6/lib-dynload:$PBASE/bin
         raise RuntimeError("implement")
 
         print("TEST OK")
+
+

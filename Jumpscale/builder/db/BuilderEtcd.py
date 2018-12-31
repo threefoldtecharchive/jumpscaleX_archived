@@ -39,9 +39,9 @@ class BuilderEtcd(j.builder.system._BaseClass):
         CGO_ENABLED=0 go build $GO_BUILD_FLAGS -installsuffix cgo -ldflags "-s" -o {DIR_BIN}/etcdctl ${REPO_PATH}/cmd/etcdctl
         """
 
-        script = j.builder.sandbox.replaceEnvironInText(_script)
+        script = #j.builder.sandbox.replaceEnvironInText(_script)
         j.sal.process.execute(script, profile=True)
-        j.builder.sandbox.addPath("{DIR_BASE}/bin")
+        #j.builder.sandbox.addPath("{DIR_BASE}/bin")
 
         self._done_set("build")
 

@@ -2,8 +2,6 @@ from Jumpscale import j
 
 import importlib
 
-JSConfigFactory = j.application.JSFactoryBaseClass
-JSConfigClient = j.application.JSBaseClass
 
 TEMPLATE = """
 ipaddr = "localhost"
@@ -16,12 +14,13 @@ schema = ""
 cache = true
 """
 
-class PeeweeFactory(JSConfigFactory):
+class PeeweeFactory(j.application.JSBaseClass):
     """
     """
+    __jslocation__ = "j.clients.peewee"
 
-    def __init__(self):
-        self.__jslocation__ = "j.clients.peewee"
+    def _init(self):
+
         self.__imports__ = "peewee"
         self.clients = {}
         # JSConfigFactory.__init__(self, PeeweeClient)
@@ -61,7 +60,7 @@ class PeeweeFactory(JSConfigFactory):
         for item in j.core.db.keys("peewee.*"):
             j.core.db.delete(item)
 
-class PeeweeClient(JSConfigClient):
+class PeeweeClient(j.application.JSBaseClass):
     def __init__(self, instance, data={}, parent=None, interactive=False):
         JSConfigClient.__init__(self, instance=instance,
                                 data=data, parent=parent, template=TEMPLATE, interactive=interactive)

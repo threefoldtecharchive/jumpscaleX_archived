@@ -87,9 +87,9 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
                 # return self._apt_get("dist-upgrade")
             else:
                 self._apt_get("upgrade -y")
-        elif j.builder.tools.isArch:
-            j.sal.process.execute(
-                "pacman -Syu --noconfirm;pacman -Sc --noconfirm")
+        # elif j.builder.tools.isArch:
+        #     j.sal.process.execute(
+        #         "pacman -Syu --noconfirm;pacman -Sc --noconfirm")
         elif j.core.platformtype.myplatform.isMac:
             j.sal.process.execute("brew upgrade")
         elif j.builder.tools.isAlpine:
@@ -314,15 +314,15 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
             mkdir -p /var/tmp
 
             """
-            j.builder.tools.execute_bash(C)
+            j.sal.process.execute(C)
 
-        elif j.builder.tools.isArch:
-            cmd = "pacman -Sc"
-            if agressive:
-                cmd += "c"
-            j.sal.process.execute(cmd)
-            if agressive:
-                j.sal.process.execute("pacman -Qdttq", showout=False)
+        # elif j.builder.tools.isArch:
+        #     cmd = "pacman -Sc"
+        #     if agressive:
+        #         cmd += "c"
+        #     j.sal.process.execute(cmd)
+        #     if agressive:
+        #         j.sal.process.execute("pacman -Qdttq", showout=False)
 
         elif j.core.platformtype.myplatform.isMac:
             if package:

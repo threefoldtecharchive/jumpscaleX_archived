@@ -55,8 +55,8 @@ class BuilderRsync()
         if build:
             if not self._done_get("build"):
                 self.build(install=False)
-            j.builder.sandbox.profileDefault.addPath(j.builder.tools.replace("{DIR_BIN}"))
-            j.builder.sandbox.profileDefault.save()
+            #j.builder.sandbox.profileDefault.addPath(j.builder.tools.replace("{DIR_BIN}"))
+            #j.builder.sandbox.profileDefault.save()
             j.builder.tools.file_copy(
                 "%s/%s/rsync" %
                 (self.BUILDDIRL,

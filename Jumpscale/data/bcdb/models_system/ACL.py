@@ -18,7 +18,7 @@ rights = ""
 """
 
 import types
-print("***IMPORT ACL****")
+# print("***IMPORT ACL****")
 bcdb = j.data.bcdb.latest
 schema = j.data.schema.get(SCHEMA)
 

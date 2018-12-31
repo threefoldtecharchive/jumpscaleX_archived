@@ -10,7 +10,7 @@ def main(self):
     """
 
     # get zdb client
-    from pudb import set_trace; set_trace()
+
     c = j.clients.zdb.client_admin_get()
     c.namespace_new("test", secret="1234")
     cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9900, secret="1234")
@@ -62,7 +62,6 @@ def main(self):
     cl1.flush()
     cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9900, secret="1234")
     assert cl1.get(key=0) is None
-
 
     bcdb.meta.reset()  # make sure we reload from data
 
