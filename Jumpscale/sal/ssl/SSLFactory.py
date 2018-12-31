@@ -14,16 +14,14 @@ class SSLFactory(JSBASE):
 
     def ca_cert_generate(self, cert_dir='',reset=False):
         """CA (Certificate Authority) generate
-        Note: certificate directory If ca.crt and ca.key don't exist in cert_dir, 
-        create a new in /sandbox/cfg/ssl/
-        
-        Keyword Arguments:
-            cert_dir {str} -- (default: {''})
-            reset {bool} -- (default: {False})
-        
-        Returns:
-            bool -- returns True if generation happened
+        :param cert_dir: certificate directory, defaults to '' 
+                        it will create ca in /sandbox/cfg/ssl/ if default is ''  
+        :type cert_dir: str, optional
+        :param reset: bool, defaults to False
+        :return: returns True if generation happened
+        :rtype: bool
         """
+
         if cert_dir == "":
             cert_dir = j.dirs.CFGDIR+"/ssl"
             
@@ -75,9 +73,10 @@ class SSLFactory(JSBASE):
         The following code sample shows how to sign an X509 certificate using a CA:
         This is usually done by the certificate authority it self like verisign, GODaddy, ... etc
         
-        Arguments:
-            path {str} -- Path to the certificate and key that will be used in signing the new certificate
-            keyname {str} -- the new certficate and key name
+        :param path: Path to the certificate and key that will be used in signing the new certificate
+        :type path: str
+        :param keyname: the new certficate and key name
+        :type keyname: str
         """
 
         path = j.tools.path.get(path)
@@ -108,11 +107,12 @@ class SSLFactory(JSBASE):
         """Creating CSR (Certificate Signing Request)
         this CSR normally passed to the CA (Certificate Authority) to create a signed certificate
         
-        Arguments:
-            common_name {str} -- common_name to be used in subject
-        
+        :param common_name: str
+        :type common_name: common_name to be used in subject
+        :return: crt, key
+        :rtype: tuple
         """
-
+    
         key = OpenSSL.crypto.PKey()
         key.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
 
@@ -133,15 +133,15 @@ class SSLFactory(JSBASE):
     def sign_request(self, req, path):
         """Processes a CSR (Certificate Signning Request)
         issues a certificate based on the CSR data and signit
-
-        Arguments:
-            req {str} -- CSR
-            path {str} -- path to the key and certificate that will be used in signning this request
         
-        Returns:
-            str -- certificate
+        :param req: CSR
+        :type req: str
+        :param path: path to the key and certificate that will be used in signning this request
+        :type path: str
+        :return: certificate
+        :rtype: str
         """
-        
+ 
         path = j.tools.path.get(path)
         cacert = path.joinpath("ca.crt").text()
         cakey = path.joinpath("ca.key").text()
@@ -171,15 +171,15 @@ class SSLFactory(JSBASE):
     def verify(self, certificate, key):
         """It reads the pathes of certificate and key files of an X509 certificate
         and verify if certificate matches private key
-
-        Arguments:
-            certificate {str} --  path to the certificate file
-            key {str} -- path to the key file
         
-        Returns:
-            boolean -- True only if certificate matches the private key
+        :param certificate: path to the certificate file
+        :type certificate: str
+        :param key: path to the key file
+        :type key: str
+        :return: True only if certificate matches the private key
+        :rtype: boolean
         """
-
+    
         key = self._privatekey_load(key)
         certificate = self._certificate_load(certificate)
 
@@ -198,17 +198,17 @@ class SSLFactory(JSBASE):
     def bundle(self, certificate, key, certification_chain=(), passphrase=None):
         """Bundles a certificate with it's private key (if any) and it's chain of trust.
         Optionally secures it with a passphrase.
-
-        Arguments:
-            certificate {str} -- path to the certificate file
-            key {str} -- path to the key file
         
-        Keyword Arguments:
-            certification_chain {tuple} -- certification chain (default: {()})
-            passphrase {str} -- passpharse for the bundle (default: {None})
-        
-        Returns:
-            str -- PKCS12 object
+        :param certificate: path to the certificate file
+        :type certificate: str
+        :param key: path to the key file
+        :type key: str
+        :param certification_chain: certification chain, defaults to ()
+        :type certification_chain: tuple, optional
+        :param passphrase: passpharse for the bundle, defaults to None
+        :param passphrase: str, optional
+        :return: PKCS12 object
+        :rtype: str
         """
         key = self._privatekey_load(key)
         x509 = self._certificate_load(certificate)
@@ -224,11 +224,10 @@ class SSLFactory(JSBASE):
     def _privatekey_load(self, path):
         """load a private key content from a path
         
-        Arguments:
-            path {str} -- path to the key file
-        
-        Returns:
-            str -- content of the file
+        :param path: path to the key file
+        :type path: str
+        :return: content of the file
+        :rtype: str
         """
         key = j.tools.path.get(path).text()
         key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
@@ -237,13 +236,11 @@ class SSLFactory(JSBASE):
     def _certificate_load(self, path):
         """load certifcate content from a path
         
-        Arguments:
-            path {str} -- path to the certificate 
-        
-        Returns:
-            str -- content of the certificate
+        :param path: path to the certificate
+        :type path: str
+        :return: content of the certificate
+        :rtype: str
         """
         certificate = j.tools.path.get(path).text()
         x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificate)
         return x509
-        
