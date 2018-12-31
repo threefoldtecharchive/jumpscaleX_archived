@@ -1290,7 +1290,7 @@ class UbuntuInstall():
     def apts_list():
         return [
             'iproute2',
-            'python-ufw'
+            'python-ufw',
             'ufw'
         ]
 
