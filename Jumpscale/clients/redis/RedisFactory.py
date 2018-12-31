@@ -58,7 +58,7 @@ class RedisFactory(JSConfigBaseFactory):
         :param fromcache: if False, will create a new one instead of checking cache
         :param unixsocket: path of unixsocket to be used while creating Redis
 
-        other arguments to redis: ssl_cert_reqs=None, ssl_ca_certs=None 
+        other arguments to redis: ssl_cert_reqs=None, ssl_ca_certs=None
 
         set_patch is needed when using the client for gedis
 
@@ -198,7 +198,7 @@ class RedisFactory(JSConfigBaseFactory):
         else:
             if j.sal.nettools.tcpPortConnectionTest("localhost", 6379) == False:
                 r = self.get(ipaddr="localhost", port=6379, unixsocket=self.unix_socket_path)
-            return r.ping()
+                return r.ping()
         return False
 
     def _core_start(self, timeout=20, reset=False):
