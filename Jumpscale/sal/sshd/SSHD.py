@@ -7,7 +7,7 @@ OP_DEL = '-'
 OP_ERS = '--'
 
 class SSHD:
-
+    
     __jslocation__ = "j.sal.sshd"
 
     def __init__(self):
@@ -38,14 +38,14 @@ class SSHD:
         cmd = cmd.split(' ')
         subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    def addKey(self, key):
+    def key_add(self, key):
         """ Add pubkey to authorized_keys
         :param key: public key which  will be added to authorized keys.
         :type key: string.
         """
         self._transactions.append((OP_ADD, key.strip()))
 
-    def deleteKey(self, key):
+    def key_delete(self, key):
         """ Delete pubkey from authorized_keys
         :param key: public key which  will be deleted from authorized keys.
         :type key: string.
@@ -72,7 +72,7 @@ class SSHD:
             self.ssh_authorized_keys_path.write_text('\n'.join(keys))
         self._keys = None
 
-    def disableNonKeyAccess(self):
+    def disable_none_Key_access(self):
         """ Disable passowrd login to server
         This action doens't require calling to commit and applies immediately. 
         So if you added your key make sure to commit it before you call this method.
