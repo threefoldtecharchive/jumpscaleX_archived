@@ -20,7 +20,8 @@ def test_main(self=None):
             j.sal.process.execute('systemctl stop systemd-resolved')
         dns_masq.install(start=True, device='lo')
         time.sleep(5)
-        assert j.sal.process.psfind('dnsmasq') is True
+        cmd = j.tools.bash.local.cmdGetPath('dnsmasq')
+        assert j.sal.process.psfind(cmd) is True
 
         # add host
         dns_masq.host_add('5E-A4-92-AB-2D-27', '127.0.0.1')
@@ -33,7 +34,7 @@ def test_main(self=None):
         te = j.tools.code.text_editor_get(dns_masq._hosts)
         assert '5E-A4-92-AB-2D-27,127.0.0.1' not in te.content
 
-        j.sal.process.killProcessByName('dnsmasq')
+        j.tools.tmux.pane_get(window='dnsmasq', pane='dnsmasq').kill()
     finally:
         if systemd:
             j.sal.process.execute('systemctl start systemd-resolved')
