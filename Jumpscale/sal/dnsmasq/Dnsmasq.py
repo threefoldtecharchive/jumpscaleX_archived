@@ -29,20 +29,20 @@ class DNSMasq(JSBASE):
         if not j.sal.process.checkInstalled('dnsmasq'):
             j.sal.ubuntu.apt_install('dnsmasq')
         else:
-            j.tools.tmux.pane_get(window='dnsmasq', pane='dnsmasq').kill()
+            j.tools.tmux.pane_get(window='main', pane='dnsmasq').kill()
 
         self.config(device=device, rangefrom=rangefrom, rangeto=rangeto, deviceonly=deviceonly)
         if start:
             cmd = j.tools.bash.local.cmdGetPath('dnsmasq')
-            j.tools.tmux.execute('%s -d --conf-file=%s' % (cmd, self._configfile), window='dnsmasq', pane='dnsmasq')
+            j.tools.tmux.execute('%s -d --conf-file=%s' % (cmd, self._configfile), window='main', pane='dnsmasq')
 
     def restart(self):
         """
         Restarts Dnsmasq.
         """
-        j.tools.tmux.pane_get(window='dnsmasq', pane='dnsmasq').kill()
+        j.tools.tmux.pane_get(window='main', pane='dnsmasq').kill()
         cmd = j.tools.bash.local.cmdGetPath('dnsmasq')
-        j.tools.tmux.execute('%s -d --conf-file=%s' % (cmd, self._configfile), window='dnsmasq', pane='dnsmasq')
+        j.tools.tmux.execute('%s -d --conf-file=%s' % (cmd, self._configfile), window='main', pane='dnsmasq')
 
     def _file_check(self, filename):
         """Check if a file exists, and create it if it doesn't exist

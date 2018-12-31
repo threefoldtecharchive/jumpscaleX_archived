@@ -34,7 +34,7 @@ def test_main(self=None):
         te = j.tools.code.text_editor_get(dns_masq._hosts)
         assert '5E-A4-92-AB-2D-27,127.0.0.1' not in te.content
 
-        j.tools.tmux.pane_get(window='dnsmasq', pane='dnsmasq').kill()
+        j.tools.tmux.pane_get(window='main', pane='dnsmasq').kill()
     finally:
         if systemd:
             j.sal.process.execute('systemctl start systemd-resolved')
