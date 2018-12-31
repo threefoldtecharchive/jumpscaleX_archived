@@ -72,7 +72,7 @@ class SSHD:
             self.ssh_authorized_keys_path.write_text('\n'.join(keys))
         self._keys = None
 
-    def disable_none_Key_access(self):
+    def disable_none_key_access(self):
         """ Disable passowrd login to server
         This action doens't require calling to commit and applies immediately. 
         So if you added your key make sure to commit it before you call this method.
