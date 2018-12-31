@@ -12,6 +12,7 @@ JSConfigClient = j.application.JSBaseConfigClass
 class GitHubClient(JSConfigClient):
     _SCHEMATEXT = """
         @url = jumpscale.github.client
+        name* = "" (S)
         login = "" (S)
         token_ = "" (S)
         password_ = "" (S)

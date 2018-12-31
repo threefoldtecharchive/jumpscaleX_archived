@@ -9,10 +9,8 @@ class KubernetesFactory(JSConfigBaseFactory):
     """
     kubernetes client factory each instance can relate to either a config file or a context or both
     """
-
-    def __init__(self):
-        self.__jslocation__ = "j.clients.kubernetes"
-        JSConfigBaseFactory.__init__(self, KubernetesMaster)
+    __jslocation__ = "j.clients.kubernetes"
+    _CHILDCLASS = KubernetesMaster
 
     def create_config(self, config, path=None):
         """

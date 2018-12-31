@@ -3,29 +3,31 @@ from Jumpscale import j
 from .service import Service
 from .errors import ServiceExistError, ServiceNotFoundError
 
-JSConfigBase = j.application.JSBaseClass
-
-TEMPLATE = """
-etcd_instance = "main"
-public_ips = []
-"""
+JSConfigBase = j.application.JSBaseConfigClass
 
 
 class WebGateway(JSConfigBase):
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE, interactive=interactive)
-        self.etcd = j.clients.etcd.get(self.config.data['etcd_instance'])
-        self.traefik = j.sal.traefik.configure(instance,
-                                               host=self.etcd.config.data['host'],
-                                               port=self.etcd.config.data['port'],
-                                               user=self.etcd.config.data['user'],
-                                               password=self.etcd.config.data['password_'])
-        self.coredns = j.sal.coredns.configure(instance,
-                                               host=self.etcd.config.data['host'],
-                                               port=self.etcd.config.data['port'],
-                                               user=self.etcd.config.data['user'],
-                                               password=self.etcd.config.data['password_'])
-        self.public_ips = self.config.data.get('public_ips') or []
+    _SCHEMATEXT = """
+    @url = jumpscale.webgateway.client
+    name* = "" (S)
+    etcd_instance = "main" (S)
+    public_ips = [] (LS)
+    """
+
+    def _init(self):
+
+        self.etcd = j.clients.etcd.get(self.etcd_instance)
+        self.traefik = j.clients.traefik.configure(self.name,
+                                                   host=self.etcd.host,
+                                                   port=self.etcd.port,
+                                                   user=self.etcd.user,
+                                                   password=self.etcd.password_)
+        self.coredns = j.clients.coredns.configure(self.name,
+                                                   host=self.etcd.host,
+                                                   port=self.etcd.port,
+                                                   user=self.etcd.user,
+                                                   password=self.etcd.password_)
+        self.public_ips = self.public_ips or []
         self._services = None
 
     def public_ips_set(self, public_ips):
@@ -38,8 +40,8 @@ class WebGateway(JSConfigBase):
         :param public_ips: list of public ips to be used by te webgateway
         :type public_ips: [str]
         """
-        self.config.data_set('public_ips', public_ips)
-        self.config.data.save()
+        self.public_ips = public_ips
+        self.save
 
         # update
         for service in self.services:
@@ -74,7 +76,8 @@ class WebGateway(JSConfigBase):
         :rtype: sal.webgateway.service.Service
         """
         if name in [s.name for s in self.services]:
-            raise ServiceExistError("a service with name %s already exist. maybe you are looking for `service_get(%s)`" % (name, name))
+            raise ServiceExistError(
+                "a service with name %s already exist. maybe you are looking for `service_get(%s)`" % (name, name))
 
         service = Service(name, self.public_ips, self.traefik, self.coredns)
         self.services.append(service)
