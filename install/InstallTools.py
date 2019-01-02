@@ -1339,6 +1339,19 @@ class MyEnv():
         return 'posix' in sys.builtin_module_names
 
     @staticmethod
+    def check_platform():
+        """check if current platform is supported (linux or darwin)
+        for linux, the version check is done by `UbuntuInstall.ensure_version()`
+
+        :raises RuntimeError: in case platform is not supported
+        """
+        platform = MyEnv.platform()
+        if 'linux' in platform:
+            UbuntuInstall.ensure_version()
+        elif 'darwin' not in platform:
+            raise RuntimeError('Your platform is not supported')
+
+    @staticmethod
     def config_default_get():
         config = {}
         config["DIR_BASE"] = "/sandbox"
@@ -1382,6 +1395,7 @@ class MyEnv():
 
     @staticmethod
     def _init(force=False):
+        MyEnv.check_platform()
 
         if MyEnv.__init:
             return
