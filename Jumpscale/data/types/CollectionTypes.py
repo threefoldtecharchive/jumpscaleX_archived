@@ -4,8 +4,8 @@ from Jumpscale import j
 
 
 from Jumpscale.data.types.PrimitiveTypes import (String, StringMultiLine, Bytes,
-                             Boolean, Integer,
-                             Float, Percent, Object, JSObject)
+                                                 Boolean, Integer,
+                                                 Float, Percent, Object, JSObject)
 
 import struct
 
@@ -14,14 +14,28 @@ class YAML(String):
     '''Generic dictionary type'''
 
     NAME = 'yaml'
-    BASETYPE = 'dictionary'
+    BASETYPE = 'string'
 
     def check(self, value):
         '''Check whether provided value is a dict'''
-        return isinstance(value, dict)
+        if not isinstance(value, str):
+            return False
+        try:
+            j.data.serializers.yaml.loads(value)
+        except ValueError:
+            return False
+        return True
 
     def get_default(self):
-        return dict()
+        return ""
+
+    def clean(self, value):
+
+        if value is None:
+            value = self.get_default()
+        elif not self.check(value):
+            raise ValueError("Invalid value for yaml: %s" % value)
+        return value
 
     def fromString(self, s):
         """
@@ -41,7 +55,39 @@ class YAML(String):
 class JSON(String):
 
     NAME = 'json'
-    BASETYPE = 'dictionary'
+    BASETYPE = 'string'
+
+    def check(self, value):
+        """
+        Check whether provided value is a dict
+        """
+        if not isinstance(value, str):
+            return False
+        try:
+            j.data.serializers.json.loads(value)
+        except ValueError:
+            return False
+        return True
+
+    def get_default(self):
+        return ""
+
+    def clean(self, v=""):
+        if not self.check(v):
+            raise RuntimeError("Valid serialized json string is required")
+        return v
+
+    def fromString(self, v):
+        return self.clean(v)
+
+    def toString(self, v):
+        return self.clean(v)
+
+    def toJSON(self, v):
+        return self.fromString(v)
+
+    def toHR(self, v):
+        return self.toString(v)
 
 
 class Dictionary():
@@ -70,13 +116,14 @@ class Dictionary():
             s = s.replace("''", '"')
             j.data.serializers.json.loads(s)
             return s
+
     def toData(self, v):
         return self.clean(v)
 
     def toString(self, v):
         return j.data.serializers.json.dumps(v, True, True)
 
-    def toJSON(self,v):
+    def toJSON(self, v):
         return self.toString(v)
 
     def capnp_schema_get(self, name, nr):
@@ -175,8 +222,6 @@ class List():
                 out += " %s," % item
             out = out.strip().strip(",").strip()
         return out
-
-
 
     def python_code_get(self, value, sort=False):
         """
