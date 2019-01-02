@@ -57,7 +57,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         rm -rf /opt/dnsmasq-alt
         ln -s {DIR_CODE}/github/threefoldtech/jumpscale_smartproxy /opt/dnsmasq-alt
         """
-        j.builder.tools.execute_bash(C)
+        j.sal.process.execute(C)
 
         config = """
         net.ipv4.ip_forward=1
@@ -91,7 +91,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         C = C.replace("$iface", self.wirelessInterfaceNonDefGW)
         C = C.replace("$range", self.freeNetworkRangeDMZ)
         C = j.core.text.strip(C)
-        I = j.builder.tools.file_read("/etc/network/interfaces")
+        I = j.core.tools.file_text_read("/etc/network/interfaces")
         OUT = ""
         state = ""
         for l in I.split("\n"):
@@ -180,7 +180,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         rm /var/lib/dhcp/dhcpd.leases
         touch /var/lib/dhcp/dhcpd.leases
         """
-        j.builder.tools.execute_bash(C)
+        j.sal.process.execute(C)
 
         cmd = "dhcpd -f"
         j.builder.system.tmux.executeInScreen('ovsrouter', 'dhcpd', cmd)
@@ -221,7 +221,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         echo CONFIG_DRIVER_RTW=y >> .config
         make clean && make
         """
-        j.builder.tools.execute_bash(C)
+        j.sal.process.execute(C)
 
     def accesspoint(self, sid="internet", passphrase="helloworld"):
         """

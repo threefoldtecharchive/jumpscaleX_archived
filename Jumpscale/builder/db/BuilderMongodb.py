@@ -19,10 +19,10 @@ class BuilderMongodb(j.builder.system._BaseClass):
             j.sal.process.execute("brew uninstall mongodb", die=False)
 
         appbase = "%s/" % j.builder.tools.dir_paths["BINDIR"]
-        j.builder.tools.dir_ensure(appbase)
+        j.core.tools.dir_ensure(appbase)
 
         url = None
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             url = 'https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-3.4.0.tgz'
             dest = "{DIR_TEMP}/mongodb-linux-x86_64-ubuntu1604-3.4.0/bin/"
         elif j.builder.tools.isArch:
@@ -47,7 +47,7 @@ class BuilderMongodb(j.builder.system._BaseClass):
             for file in j.builder.tools.find(dest, type='f'):
                 j.builder.tools.file_copy(file, appbase)
 
-        j.builder.tools.dir_ensure('{DIR_VAR}/data/mongodb')
+        j.core.tools.dir_ensure('{DIR_VAR}/data/mongodb')
         self._done_set("install")
         if start:
             self.start(reset=reset)
@@ -58,7 +58,7 @@ class BuilderMongodb(j.builder.system._BaseClass):
     def start(self, reset=False):
         if self.isStarted() and not reset:
             return
-        j.builder.tools.dir_ensure('{DIR_VAR}/data/mongodb')
+        j.core.tools.dir_ensure('{DIR_VAR}/data/mongodb')
         cmd = "mongod --dbpath '{DIR_VAR}/data/mongodb'"
         j.builder.system.process.kill("mongod")
         pm = j.builder.system.processmanager.get()

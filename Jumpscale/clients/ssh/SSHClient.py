@@ -7,6 +7,8 @@ from .SSHClientBase import SSHClientBase
 class SSHClient(SSHClientBase):
 
 
+
+
     def _init(self):
         SSHClientBase._init(self)
         self._logger = j.logger.get("ssh client: %s:%s(%s)" % (self.addr_variable, self.port, self.login))

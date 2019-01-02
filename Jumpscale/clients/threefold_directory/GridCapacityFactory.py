@@ -5,36 +5,36 @@ from .api_service import ApiService
 
 from .http_client import HTTPClient
 
-JSBASE = j.application.JSBaseClass
-JSConfigClient = j.application.JSBaseClass
+JSConfigClient = j.application.JSBaseConfigClass
 JSConfigFactory = j.application.JSFactoryBaseClass
-TEMPLATE =  """
-base_uri = "https://capacity.threefoldtoken.com"
-"""
 
 
 class Client(JSConfigClient):
+    _SCHEMATEXT = """
+    @url = jumpscale.threefold_directory.client
+    name* = "" (S)
+    base_uri = "https://capacity.threefoldtoken.com" (S)
+    """
 
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        super().__init__(instance=instance, data=data, parent=parent, template=TEMPLATE, interactive=interactive)
-        http_client = HTTPClient(self.config.data['base_uri'])
+    def _init(self):
+        http_client = HTTPClient(self.base_uri)
         self.api = ApiService(http_client)
         self.close = http_client.close
 
 
 class GridCapacityFactory(JSConfigFactory):
+    __jslocation__ = "j.clients.threefold_directory"
+    _CHILDCLASS = Client
 
-    def __init__(self):
-        self.__jslocation__ = "j.clients.threefold_directory"
+    def _init(self):
         self.connections = {}
         self._api = None
-        JSConfigFactory.__init__(self, Client)
 
     @property
     def client(self):
         if self._api is None:
             self.configure(instance="main")
-            self._api =  self.get().api
+            self._api = self.get().api
         return self._api
 
     @property
@@ -56,8 +56,6 @@ class GridCapacityFactory(JSConfigFactory):
         """
         return [item.as_dict() for item in self._capacity]
 
-
-
     @property
     def farmers(self):
         """
@@ -65,17 +63,15 @@ class GridCapacityFactory(JSConfigFactory):
         """
         return [item.as_dict() for item in self._farmers]
 
-    def configure(self, instance, base_uri="https://capacity.threefoldtoken.com", interactive=False):
+    def configure(self, instance, base_uri="https://capacity.threefoldtoken.com"):
         """
         :param base_uri: Url for grid_capacity api
         :type base_uri: str
         """
-        data = {}
-        data["base_uri"] = base_uri
-        return self.get(instance=instance, data=data, interactive=interactive)
 
+        return self.get(name=instance, base_uri=base_uri)
 
-    def resource_units(self,reload=False):
+    def resource_units(self, reload=False):
         """
         js_shell "print(j.clients.threefold_directory.resource_units())"
         """
@@ -97,5 +93,3 @@ class GridCapacityFactory(JSConfigFactory):
             resource_units['sru'] += node.total_resources.sru
 
         return(resource_units)
-
-

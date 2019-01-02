@@ -26,10 +26,10 @@ class BuilderGeoDns(j.builder.system._BaseClass):
         j.builder.runtimes.golang.get("github.com/abh/geodns")
 
         # moving files and creating config
-        j.builder.tools.dir_ensure('{DIR_BIN}')
+        j.core.tools.dir_ensure('{DIR_BIN}')
         j.builder.tools.file_copy("{DIR_BASE}/go/bin/geodns", "{DIR_BIN}")
-        j.builder.tools.dir_ensure("{DIR_VAR}/templates/cfg/geodns/dns", recursive=True)
-        profile = j.builder.sandbox.profileDefault
+        j.core.tools.dir_ensure("{DIR_VAR}/templates/cfg/geodns/dns", recursive=True)
+        profile = #j.builder.sandbox.profileDefault
         profile.addPath('{DIR_BIN}')
         profile.save()
 
@@ -42,7 +42,7 @@ class BuilderGeoDns(j.builder.system._BaseClass):
         starts geodns server with given params
         """
         if j.builder.tools.dir_exists(config_dir):
-            j.builder.tools.dir_ensure(config_dir)
+            j.core.tools.dir_ensure(config_dir)
         cmd = "{DIR_BIN}/geodns -interface %s -port %s -config=%s -identifier=%s -cpus=%s" % (
             ip, str(port), config_dir, identifier, str(cpus))
         if tmux:

@@ -16,7 +16,7 @@ class BuilderLibffi(j.builder.system._BaseClass):
 
     def build(self, reset=False):
         """
-        js_shell 'j.builder.lib.libffi.build(reset=True)'
+        js_shell 'j.builder.libs.libffi.build(reset=True)'
         """
         if reset:
             self.reset()
@@ -25,8 +25,8 @@ class BuilderLibffi(j.builder.system._BaseClass):
             return
 
         j.builder.system.package.mdupdate()
-        j.builder.tools.dir_ensure(self.BUILDDIRL)
-        if not j.builder.tools.isMac:
+        j.core.tools.dir_ensure(self.BUILDDIRL)
+        if not j.core.platformtype.myplatform.isMac:
             j.builder.tools.package_install('dh-autoreconf')
         url = "https://github.com/libffi/libffi.git"
         j.clients.git.pullGitRepo(url, reset=False,dest=self.CODEDIRL, ssh=False)

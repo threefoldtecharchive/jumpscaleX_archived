@@ -13,7 +13,7 @@ class BuilderBrotli(j.builder.system._BaseClass):
     def build(self, reset=False):
         if reset is False and (self.isInstalled() or self._done_get('build')):
             return
-        cmake = j.builder.lib.cmake
+        cmake = j.builder.libs.cmake
         if not cmake.isInstalled():
             cmake.install()
         git_url = "https://github.com/google/brotli.git"

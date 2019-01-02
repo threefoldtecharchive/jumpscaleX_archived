@@ -13,7 +13,7 @@ class BuilderCockroachDB(j.builder.system._BaseClass):
             return
 
         appbase = "%s/" % j.builder.tools.dir_paths["BINDIR"]
-        j.builder.tools.dir_ensure(appbase)
+        j.core.tools.dir_ensure(appbase)
 
         url = 'https://binaries.cockroachdb.com/cockroach-latest.linux-amd64.tgz'
         dest = "{DIR_TEMP}/cockroach-latest.linux-amd64"

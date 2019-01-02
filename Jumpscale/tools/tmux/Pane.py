@@ -16,7 +16,7 @@ class Pane(j.application.JSBaseClass):
             self.name_set(name)
         else:
             self.name = self.mgmt.get("pane_title")
-        self._logger_enable()
+        # self._logger_enable()
 
     # @property
     # def name(self):
@@ -162,7 +162,7 @@ class Pane(j.application.JSBaseClass):
 
         if running:
             time.sleep(0.1)
-            p = j.sal.process.getProcessObject(int(pid))
+            p = j.sal.process.getProcessObject(self.pid)
             for child in  p.children():
                 #now hardkill
                 child.kill()

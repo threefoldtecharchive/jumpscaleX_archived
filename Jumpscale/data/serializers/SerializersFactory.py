@@ -1,7 +1,7 @@
 from Jumpscale import j
 
 
-class SerializersFactory(j.application.JSFactoryBaseClass):
+class SerializersFactory(j.application.JSBaseClass):
 
     __jslocation__ = "j.data.serializers"
     _msgpack = None

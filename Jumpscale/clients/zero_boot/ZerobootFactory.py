@@ -7,7 +7,5 @@ JSConfigFactoryBase = j.application.JSFactoryBaseClass
 
 
 class ZerobootFactory(JSConfigFactoryBase):
-
-    def __init__(self):
-        self.__jslocation__ = "j.clients.zboot"
-        JSConfigFactoryBase.__init__(self, zero_bootClient)
+    __jslocation__ = "j.clients.zboot"
+    _CHILDCLASS = zero_bootClient

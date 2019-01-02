@@ -15,18 +15,18 @@ class BuilderS3Scality(j.builder.system._BaseClass):
         j.builder.system.package.mdupdate()
         j.builder.tools.package_install('build-essential')
         j.builder.tools.package_install('python2.7')
-        j.builder.tools.dir_ensure(storageLocation)
-        j.builder.tools.dir_ensure(metaLocation)
+        j.core.tools.dir_ensure(storageLocation)
+        j.core.tools.dir_ensure(metaLocation)
 
-        j.builder.tools.dir_ensure('/opt/code/github/scality')
+        j.core.tools.dir_ensure('/opt/code/github/scality')
         path = j.clients.git.pullGitRepo('https://github.com/scality/S3.git', ssh=False)
-        profile = j.builder.sandbox.profileDefault
+        profile = #j.builder.sandbox.profileDefault
         profile.addPath('{DIR_BIN}')
         profile.save()
         j.builder.runtimes.nodejs.install()
         j.sal.process.execute('cd {} && npm install --python=python2.7'.format(path), profile=True)
         j.builder.tools.dir_remove('{DIR_BASE}/apps/S3', recursive=True)
-        j.builder.tools.dir_ensure('{DIR_BASE}/apps/')
+        j.core.tools.dir_ensure('{DIR_BASE}/apps/')
         j.sal.process.execute('mv {} {DIR_BASE}/apps/'.format(path))
 
         cmd = 'S3DATAPATH={data} S3METADATAPATH={meta} npm start'.format(
@@ -34,7 +34,7 @@ class BuilderS3Scality(j.builder.system._BaseClass):
             meta=metaLocation,
         )
 
-        content = j.builder.tools.file_read('{DIR_BASE}/apps/S3/package.json')
+        content = j.core.tools.file_text_read('{DIR_BASE}/apps/S3/package.json')
         pkg = j.data.serializers.json.loads(content)
         pkg['scripts']['start_location'] = cmd
 
@@ -47,16 +47,16 @@ class BuilderS3Scality(j.builder.system._BaseClass):
     def start(self, name=NAME):
         nodePath = '{DIR_BASE}/node/lib/node_modules'
         # Temporary. Should be removed after updating the building process
-        j.builder.tools.dir_ensure('/data/data')
-        j.builder.tools.dir_ensure('/data/meta')
+        j.core.tools.dir_ensure('/data/data')
+        j.core.tools.dir_ensure('/data/meta')
         # Temporary. npm install should be added to install() function after updating the building process
         if not j.builder.tools.dir_exists('%s/npm-run-all' % nodePath):
             j.sal.process.execute('npm install npm-run-all')
         nodePath = j.builder.tools.replace('{DIR_BASE}/node/lib/node_modules/s3/node_modules:%s' % nodePath)
-        if j.builder.sandbox.profileDefault.envGet('NODE_PATH') != nodePath:
-            j.builder.sandbox.profileDefault.envSet("NODE_PATH", nodePath)
-            j.builder.sandbox.profileDefault.addPath(j.builder.tools.replace("{DIR_BASE}/node/bin/"))
-            j.builder.sandbox.profileDefault.save()
+        if #j.builder.sandbox.profileDefault.envGet('NODE_PATH') != nodePath:
+            #j.builder.sandbox.profileDefault.envSet("NODE_PATH", nodePath)
+            #j.builder.sandbox.profileDefault.addPath(j.builder.tools.replace("{DIR_BASE}/node/bin/"))
+            #j.builder.sandbox.profileDefault.save()
         path = j.sal.fs.joinPaths(j.dirs.JSAPPSDIR, 'S3')
         j.sal.process.execute('cd {} && npm run start_location'.format(path), profile=True)
 

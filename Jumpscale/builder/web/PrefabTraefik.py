@@ -27,8 +27,8 @@ class BuilderTraefik(j.builder.system._BaseClass):
         if self._done_get('install') and reset is False and self.isInstalled():
             return
 
-        j.builder.sandbox.profileDefault.addPath('{DIR_BIN}')
-        j.builder.sandbox.profileDefault.save()
+        #j.builder.sandbox.profileDefault.addPath('{DIR_BIN}')
+        #j.builder.sandbox.profileDefault.save()
 
         configpath = j.core.tools.text_replace(configpath)
 
@@ -84,14 +84,14 @@ class BuilderTraefik(j.builder.system._BaseClass):
 
         C = j.core.tools.text_replace(C, args)
 
-        j.builder.tools.dir_ensure(args["LOGDIR"])
-        j.builder.tools.dir_ensure(args["WWWROOTDIR"])
+        j.core.tools.dir_ensure(args["LOGDIR"])
+        j.core.tools.dir_ensure(args["WWWROOTDIR"])
 
         j.sal.fs.writeFile(configpath, C)
 
     def getTCPPort(self, configpath="{DIR_CFG}/caddy.cfg"):
         configpath = j.core.tools.text_replace(configpath)
-        C = j.builder.tools.file_read(configpath)
+        C = j.core.tools.file_text_read(configpath)
         for line in C.split("\n"):
             if "#tcpport:" in line:
                 return line.split(":")[1].strip()
@@ -118,7 +118,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         pm = j.builder.system.processmanager.get()
         pm.stop("caddy")  # will also kill
 
-        cmd = j.builder.sandbox.cmdGetPath("caddy")
+        cmd = #j.builder.sandbox.cmdGetPath("caddy")
         if agree:
             agree = " -agree"
 

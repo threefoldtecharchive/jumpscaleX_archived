@@ -7,9 +7,6 @@ from .CollectionTypes import *
 from .PrimitiveTypes import *
 from Jumpscale import j
 
-JSBASE = j.application.JSBaseClass
-
-
 class Types(j.application.JSBaseClass):
     
     __jslocation__ = "j.data.types"
@@ -44,6 +41,7 @@ class Types(j.application.JSBaseClass):
         self.object = Object()
         self.jsobject = JSObject()
         self.url = Url()
+        self.enumerations = {}
 
         self._dict = Dictionary
         self._list = List
@@ -70,6 +68,7 @@ class Types(j.application.JSBaseClass):
         self._object = Object
         self._jsobject = JSObject
         self._url = Url
+        self._enumeration = Enumeration
 
         self.types_list = [self.bool, self.dict, self.list, self.bytes,
                            self.guid, self.float, self.int, self.multiline,
@@ -85,6 +84,28 @@ class Types(j.application.JSBaseClass):
                 return ttype
         raise RuntimeError("did not detect val for :%s" % val)
 
+    def get_custom(self, ttype, **kwargs):
+        """
+        e.g. for enum, but there can be other types in future who take certain input
+        :param ttype:
+        :param kwargs: e.g. values="red,blue,green" can also a list for e.g. enum
+        :return:
+
+        e.g. for enumeration
+
+        j.data.types.get_custom("e",values="blue,red")
+
+        """
+        ttype = ttype.lower().strip()
+        if ttype in ["e","enum"]:
+            cl = self._enumeration
+            cl= cl(values=kwargs["values"])
+            self.enumerations[cl._md5] = cl
+            return self.enumerations[cl._md5]
+        else:
+            raise j.exceptions.RuntimeError("did not find custom type:'%s'" % ttype)
+
+
     def get(self, ttype, return_class=False):
         """
         type is one of following
@@ -95,7 +116,7 @@ class Types(j.application.JSBaseClass):
         - tel, mobile
         - d, date
         - n, numeric
-        - h, hash (set of 2 int)
+        - h, hash       #set of 2 int
         - p, percent
         - o, jsobject
         - ipaddr, ipaddress
@@ -109,6 +130,7 @@ class Types(j.application.JSBaseClass):
         - set
         - guid
         - url, u
+        - e,enum        #enumeration
         """
         ttype = ttype.lower().strip()
         if ttype in ["s", "str", "string"]:
@@ -176,6 +198,13 @@ class Types(j.application.JSBaseClass):
             return res()
 
 
+    def test(self, name=""):
+        """
+        js_shell 'j.data.types.test()'
+
+        if want run specific test ( write the name of test ) e.g. j.data.schema.test(name="base")
+        """
+        self._test_run(name=name)
 
 
     def fix(self,val,default):

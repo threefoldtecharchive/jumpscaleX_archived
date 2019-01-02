@@ -12,7 +12,7 @@ class BuilderGrafana(j.builder.system._BaseClass):
         if reset is False and self.isInstalled():
             return
 
-        if j.builder.tools.isUbuntu:
+        if j.core.platformtype.myplatform.isUbuntu:
             C = """
             cd {DIR_TEMP}
             wget https://grafanarel.s3.amazonaws.com/builds/grafana_3.1.1-1470047149_amd64.deb
@@ -25,16 +25,16 @@ class BuilderGrafana(j.builder.system._BaseClass):
             raise RuntimeError("platform not supported")
 
     def install(self, start=False, influx_addr='127.0.0.1', influx_port=8086, port=3000):
-        j.builder.tools.dir_ensure('{DIR_BIN}')
+        j.core.tools.dir_ensure('{DIR_BIN}')
         j.builder.tools.file_copy("/usr/sbin/grafana*", dest="{DIR_BIN}")
 
-        j.builder.tools.dir_ensure("{DIR_BASE}/apps/grafana")
+        j.core.tools.dir_ensure("{DIR_BASE}/apps/grafana")
         j.builder.tools.file_copy("/usr/share/grafana/", "{DIR_BASE}/apps/", recursive=True)
 
         if j.builder.tools.file_exists("/usr/share/grafana/conf/defaults.ini"):
-            cfg = j.builder.tools.file_read("/usr/share/grafana/conf/defaults.ini")
+            cfg = j.core.tools.file_text_read("/usr/share/grafana/conf/defaults.ini")
         else:
-            cfg = j.builder.tools.file_read('{DIR_TEMP}/cfg/grafana/conf/defaults.ini')
+            cfg = j.core.tools.file_text_read('{DIR_TEMP}/cfg/grafana/conf/defaults.ini')
         j.sal.fs.writeFile('{DIR_BASE}/cfg/grafana/grafana.ini', cfg)
 
         if start:

@@ -6,11 +6,13 @@ class BuilderNetworkFactory(j.builder.system._BaseFactoryClass):
 
     def _init(self):
         self._logger_enable()
-        from .BuilderZerotier import BuilderZerotier
-        self.zerotier = BuilderZerotier()
-
-        #TODO:*1
-
-
+        self._zerotier = None
+        
+    @property
+    def zerotier(self):
+        if self._zerotier is None:
+            from .BuilderZerotier import BuilderZerotier
+            self._zerotier = BuilderZerotier()
+        return self._zerotier
 
 

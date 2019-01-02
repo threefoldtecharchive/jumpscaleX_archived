@@ -2,7 +2,7 @@ from io import StringIO
 from urllib.parse import urlparse
 
 from Jumpscale import j
-from sal.coredns.ResourceRecord import RecordType
+from clients.coredns.ResourceRecord import RecordType
 
 
 class Service:

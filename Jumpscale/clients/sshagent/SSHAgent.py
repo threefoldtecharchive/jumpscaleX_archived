@@ -3,9 +3,14 @@ from Jumpscale.core.InstallTools import Tools
 
 import os
 
-class SSHAgent(j.application.JSFactoryBaseClass):
 
-    __jslocation__ = "j.clients.sshagent"
+class SSHAgent(j.application.JSBaseConfigClass):
+    _SCHEMATEXT = """
+    @url = jumpscale.sshagent.client
+    name* = "" (S)
+    passphrase = "" (S)
+    path = "" (S)
+    """
 
     @property
     def keyname_default(self):
@@ -14,41 +19,41 @@ class SSHAgent(j.application.JSFactoryBaseClass):
         :return:
         """
         r = [j.sal.fs.getBaseName(item) for item in self.keys_list()]
-        if len(r)==0:
+        if len(r) == 0:
             raise RuntimeError("could not find sshkey in sshagent")
-        if len(r)>1:
+        if len(r) > 1:
             raise RuntimeError("found more than 1 sshkey in sshagent")
         return r[0]
 
-
-    def key_load(self, path, passphrase="", duration=3600 * 24):
+    def key_load(self, duration=3600 * 24):
         """
         load the key on path
 
         """
-        if not j.sal.fs.exists(path):
-            raise RuntimeError("Cannot find path:%sfor sshkey (private key)" % path)
+        if not j.sal.fs.exists(self.path):
+            raise RuntimeError(
+                "Cannot find path:%sfor sshkey (private key)" % self.path)
 
         self.check()
 
-
-        name = j.sal.fs.getBaseName(path)
+        name = j.sal.fs.getBaseName(self.path)
 
         if name in [j.sal.fs.getBaseName(item) for item in self.keys_list()]:
             return
 
-        path0 = j.sal.fs.pathNormalize(path)  # otherwise the expect script will fail
+        # otherwise the expect script will fail
+        path0 = j.sal.fs.pathNormalize(self.path)
 
         self._logger.info("load ssh key: %s" % path0)
-        j.sal.fs.chmod(path, 0o600)
-        if passphrase:
+        j.sal.fs.chmod(self.path, 0o600)
+        if self.passphrase:
             self._logger.debug("load with passphrase")
             C = """
                 echo "exec cat" > ap-cat.sh
                 chmod a+x ap-cat.sh
                 export DISPLAY=1
-                echo {passphrase} | SSH_ASKPASS=./ap-cat.sh ssh-add -t {duration} {path}
-                """.format(path=path0, passphrase=passphrase, duration=duration)
+                echo {self.passphrase} | SSH_ASKPASS=./ap-cat.sh ssh-add -t {duration} {path}
+                """.format(path=path0, passphrase=self.passphrase, duration=duration)
             try:
                 j.sal.process.execute(C, showout=False)
             finally:
@@ -60,12 +65,10 @@ class SSHAgent(j.application.JSFactoryBaseClass):
 
         self._sshagent = None  # to make sure it gets loaded again
 
-        if returnObj:
+        data = {}
+        data["path"] = self.path
 
-            data = {}
-            data["path"] = path
-
-            return self.get(instance=name, data=data)
+        return self.get(instance=name, data=data)
 
     def profile_js_configure(self):
         '''
@@ -102,12 +105,13 @@ class SSHAgent(j.application.JSFactoryBaseClass):
         if "SSH_AUTH_SOCK" in os.environ:
             return(os.environ["SSH_AUTH_SOCK"])
 
-        socketpath =  Tools.text_replace("{DIR_VAR}/sshagent_socket")
+        socketpath = Tools.text_replace("{DIR_VAR}/sshagent_socket")
         os.environ['SSH_AUTH_SOCK'] = socketpath
         return socketpath
 
     def sshagent_start(self):
-        j.sal.process.execute('ssh-agent -a {}'.format(os.environ['SSH_AUTH_SOCK']), showout=False, die=True, timeout=1)
+        j.sal.process.execute(
+            'ssh-agent -a {}'.format(os.environ['SSH_AUTH_SOCK']), showout=False, die=True, timeout=1)
 
     def check(self):
         """
@@ -115,7 +119,7 @@ class SSHAgent(j.application.JSFactoryBaseClass):
         """
         if "SSH_AUTH_SOCK" not in os.environ:
             self._init_ssh_env()
-            self.sshagent_init()
+            # self.sshagent_init()
         if not self.available():
             self._logger.info('Will start agent')
             self.sshagent_start()
@@ -148,7 +152,7 @@ class SSHAgent(j.application.JSFactoryBaseClass):
                 "Did not find key with name:%s, check its loaded in ssh-agent with ssh-add -l" %
                 keyname)
 
-    def keys_list(self,key_included=False):
+    def keys_list(self, key_included=False):
         """
 
         js_shell 'print(j.clients.sshkey.keys_list())'
@@ -163,7 +167,8 @@ class SSHAgent(j.application.JSFactoryBaseClass):
             self._init_ssh_env()
         self.check()
         cmd = "ssh-add -L"
-        return_code, out, err = j.sal.process.execute(cmd, showout=False, die=False, timeout=1)
+        return_code, out, err = j.sal.process.execute(
+            cmd, showout=False, die=False, timeout=1)
         if return_code:
             if return_code == 1 and out.find("The agent has no identities") != -1:
                 return []
@@ -174,7 +179,6 @@ class SSHAgent(j.application.JSFactoryBaseClass):
             return list(map(lambda key: [key[2], ' '.join(key[0:2])], keys))
         else:
             return list(map(lambda key: key[2], keys))
-
 
     def start(self):
         """
@@ -197,7 +201,8 @@ class SSHAgent(j.application.JSFactoryBaseClass):
                                                  showout=False,
                                                  timeout=20)
             if rc > 0:
-                raise RuntimeError("Could not start ssh-agent, \nstdout:%s\nstderr:%s\n" % (out, err))
+                raise RuntimeError(
+                    "Could not start ssh-agent, \nstdout:%s\nstderr:%s\n" % (out, err))
             else:
                 if not j.sal.fs.exists(socketpath):
                     err_msg = "Serious bug, ssh-agent not started while there was no error, "\
@@ -205,7 +210,8 @@ class SSHAgent(j.application.JSFactoryBaseClass):
                     raise RuntimeError(err_msg)
 
                 # get pid from out of ssh-agent being started
-                piditems = [item for item in out.split("\n") if item.find("pid") != -1]
+                piditems = [item for item in out.split(
+                    "\n") if item.find("pid") != -1]
 
                 # print(piditems)
                 if len(piditems) < 1:
@@ -218,7 +224,7 @@ class SSHAgent(j.application.JSFactoryBaseClass):
 
                 socket_path = j.sal.fs.joinPaths("/tmp", "ssh-agent-pid")
                 j.sal.fs.writeFile(socket_path, str(pid))
-                self.sshagent_init()
+                # self.sshagent_init()
                 j.clients.sshkey._sshagent = None
             return
 
@@ -241,7 +247,7 @@ class SSHAgent(j.application.JSFactoryBaseClass):
             self._init_ssh_env()
         return_code, out, _ = j.sal.process.execute("ssh-add -l",
                                                     showout=False,
-                                                    die=False,useShell=False)
+                                                    die=False, useShell=False)
         if 'The agent has no identities.' in out:
             return True
 
@@ -270,9 +276,9 @@ class SSHAgent(j.application.JSFactoryBaseClass):
 
         """
 
-        #TODO:1 broken
+        # TODO:1 broken
 
-        self._logger_enable()
+        # self._logger_enable()
         self._logger.info("sshkeys:%s" % j.clients.sshkey.listnames())
 
         self.sshagent_kill()  # goal is to kill & make sure it get's loaded automatically
@@ -283,11 +289,10 @@ class SSHAgent(j.application.JSFactoryBaseClass):
         skey.path = "apath"
         skey.save()
 
-        #this will reload the key from the db
+        # this will reload the key from the db
         skey2 = self.SSHKey(name="test")
 
         assert skey2._ddict == skey.data._ddict
-
 
         skey.generate(reset=True)
         skey.load()

@@ -119,6 +119,7 @@ class Jumpscale():
 
 j = Jumpscale()
 j.core = Core(j)
+j.core._groups = {}
 
 
 rootdir = os.path.dirname(os.path.abspath(__file__))
@@ -134,7 +135,9 @@ from .core.InstallTools import Tools
 
 
 j.core.myenv = MyEnv
-j.core.myenv.init()
+j.core.myenv._init()
+
+
 
 j.core.installer_ubuntu = UbuntuInstall
 j.core.installer_jumpscale = JumpscaleInstaller()

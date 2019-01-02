@@ -159,15 +159,20 @@ class ExecutorSSH(ExecutorBase):
             def do():
                 #means we did not check it
                 C="""
-                echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted > /etc/apt/sources.list
+                if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+                    echo >> /etc/apt/sources.list
+                    echo "# Jumpscale Setup" >> /etc/apt/sources.list
+                    echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+                fi
                 apt update
                 apt install rsync curl wget -y
                 apt install git -y
+                apt install mosh -y
                 """
                 self.execute(j.core.text.strip(C))
                 return "OK"
 
-            self.cache.get("_check_base", method=do, expiration=3600*24, refresh=False, retry=2, die=True)
+            self.cache.get("_check_base", method=do, expire=3600*24, refresh=False, retry=2, die=True)
 
             self.__check_base = True
 

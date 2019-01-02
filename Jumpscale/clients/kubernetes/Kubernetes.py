@@ -3,36 +3,29 @@ import time
 import urllib
 from Jumpscale import j
 
-TEMPLATE = """
-config_path = ""
-context = ""
-sshkey_path = ""
-incluster_config = false
-"""
-
-
-JSConfigBase = j.application.JSBaseClass
-JSBASE = j.application.JSBaseClass
-
-
+JSConfigBase = j.application.JSBaseConfigClass
 class KubernetesMaster(JSConfigBase):
+    _SCHEMATEXT = """
+        @url = jumpscale.Kubernetes.client
+        name* = "" (S)
+        config_path = "" (S)
+        context = "" (S)
+        sshkey_path = "" (S)
+        incluster_config = False (B)
+        """
     """
     A class that represents a top view of the hirarchy.
     Where only the config, context , or namespace are defined.
     """
 
-    def __init__(self, instance, data={}, parent=None, interactive=False):
+    def _init(self):
         """
         Creates a client instance that connects to either a config path or context or both
         """
-        JSConfigBase.__init__(self, instance=instance, data=data, parent=parent, template=TEMPLATE, interactive=interactive)
-        # load data from jsconfig
-        c = self.config.data
-        config_path = c['config_path']
-        context = c['context']
-        sshkey_path = c['sshkey_path']
-        incluster_config = c['incluster_config']
-
+        config_path = self.config_path
+        context = self.context
+        sshkey_path = self.sshkey_path
+        incluster_config = self.incluster_config
         if incluster_config:
             config.load_incluster_config()
         else:
@@ -154,7 +147,7 @@ class KubernetesMaster(JSConfigBase):
                 output.append(dep_dict)
             return output
         for dep_obj in deployment_objects:
-            deployments.append(Deployment(dep_obj.metadata.name, self, [], deployment_object=deployment_object))
+            deployments.append(Deployment(dep_obj.metadata.name, self, [], deployment_object=dep_obj))
         return deployments
 
     def define_deployment(self, name, containers, namespace='default', labels={}, replicas=1, kind='Deployment',
@@ -240,7 +233,7 @@ class KubernetesMaster(JSConfigBase):
         """
         config_map_vol = client.V1ConfigMapVolumeSource(default_mode=default_mode, optional=optional, name=config_name,
                                                         items=config_items)
-        return client.V1Volume(name=name, config_map=config_map)
+        return client.V1Volume(name=name, config_map=config_map_vol)
 
     def define_empty_dir_volume(self, name, medium="", size_limit=None):
         """
@@ -255,7 +248,7 @@ class KubernetesMaster(JSConfigBase):
         @param medium ,,str What type of storage medium should back this directory. The default is "" which means to use the node's default medium. Must be an empty string (default) or Memory.
         @param size_limit ,,int Total amount of local storage required for this EmptyDir volume.
         """
-        empty_dir_vol = client.V1EmptyDirVolumeSource(medium=medium, size_limit=sizeLimit)
+        empty_dir_vol = client.V1EmptyDirVolumeSource(medium=medium, size_limit=size_limit)
         return client.V1Volume(name=name, empty_dir=empty_dir_vol)
 
     def define_git_volume(self, name, directory, repo, revision=None):
@@ -289,7 +282,7 @@ class KubernetesMaster(JSConfigBase):
         @param namespace,, str namespace to filter on.
         """
         pod_obj = self._v1.read_namespaced_pod(name, namespace)
-        return Pod(pod_obj.metadata.name, self, [], pod_object=pod_object)
+        return Pod(pod_obj.metadata.name, self, [], pod_object=pod_obj)
 
     def list_pods(self, namespace=None, short=True):
         """
@@ -451,7 +444,7 @@ class KubernetesMaster(JSConfigBase):
 #     DEPLOYMENT     #
 ######################
 
-class Deployment(j.application.JSBaseClass):
+class Deployment(JSConfigBase):
     """
     Kubernetes cluster wrapper layer.
     """
@@ -480,7 +473,6 @@ class Deployment(j.application.JSBaseClass):
         @param min_ready_seconds,, int Minimum number of seconds for which a newly created pod should be ready without any of its container crashing, for it to be considered available. Defaults to 0 (pod will be considered available as soon as it is ready)
         @param volumes,, list(V1Volume) can be created from the define_?_volume methods
         """
-        JSBASE.__init__(self)
         self.object = deployment_object
         if not deployment_object:
             kind = 'Deployment'
@@ -560,7 +552,7 @@ class Deployment(j.application.JSBaseClass):
 ######################
 
 
-class Pod(client.V1Pod, JSBASE):
+class Pod(client.V1Pod, JSConfigBase):
     """
     Kubernetes Pod wrapper layer.
     """
@@ -587,7 +579,6 @@ class Pod(client.V1Pod, JSBASE):
         @param node_selector,,list({string:string}) NodeSelector is a selector which must be true for the pod to fit on a node. Selector which must match a node's labels for the pod to be scheduled on that node. More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
         @param subdomain,,str If specified, the fully qualified Pod hostname will be "...svc.". If not specified, the pod will not have a domainname at all.
         """
-        JSBASE.__init__(self)
         self.object = pod_object
         if not pod_object:
             # create metadata for the pod
@@ -659,7 +650,7 @@ class Pod(client.V1Pod, JSBASE):
 ######################
 
 
-class Service(client.V1Service, JSBASE):
+class Service(client.V1Service, JSConfigBase):
 
     def __init__(self, name, master, selector=None, ports=None, namespace='default', protocol='tcp', service_type='LoadBalancer',
                  service_object=None):
@@ -674,7 +665,6 @@ class Service(client.V1Service, JSBASE):
         @param protocol,,str tcp or udp , default to tcp
         @param service_type,,str type determines how the Service is exposed. Defaults to ClusterIP. Valid options are ExternalName, ClusterIP, NodePort, and LoadBalancer. "ExternalName" maps to the specified externalName. "ClusterIP" allocates a cluster-internal IP address for load-balancing to endpoints. Endpoints are determined by the selector or if that is not specified, by manual construction of an Endpoints object. If clusterIP is "None", no virtual IP is allocated and the endpoints are published as a set of endpoints rather than a stable IP. "NodePort" builds on ClusterIP and allocates a port on every node which routes to the clusterIP. "LoadBalancer" builds on NodePort and creates an external load-balancer (if supported in the current cloud) which routes to the clusterIP. More info: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services---service-types
         """
-        JSBASE.__init__(self)
         self.object = service_object
         if not service_object:
             # create etadata for the service
