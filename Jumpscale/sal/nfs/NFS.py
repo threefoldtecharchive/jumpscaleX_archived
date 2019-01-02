@@ -11,12 +11,12 @@ CLIENT_OPT_REGEXT = re.compile('\s*([^\(]+)\(([^\)]+)\)')
 JSBASE = j.application.JSBaseClass
 
 class NFSError(Exception):
-    def __init__(self, message=""):
+    def __init__(self, message=''):
         super().__init__(message)
 
 
 class NFSExport(JSBASE):
-    def __init__(self, path=""):
+    def __init__(self, path=''):
         JSBASE.__init__(self)
         self._path = j.tools.path.get(path)
         self._clients = []
@@ -54,7 +54,7 @@ class NFSExport(JSBASE):
         """
         for client in self.clients:
             if client[0] == name:
-                raise NFSError("client {} is already added".format(name))
+                raise NFSError('client {} is already added'.format(name))
 
         name = name.replace(' ', '')
         options = options.replace(' ', '')
@@ -73,11 +73,11 @@ class NFSExport(JSBASE):
                 self._clients.pop(i)
                 break
         else:
-            raise NFSError("Client {} is not found".format(name))
+            raise NFSError('Client {} is not found'.format(name))
 
     def __str__(self):
         buf = list()
-        buf.append('"%s"' % self._path)
+        buf.append('%s' % self._path)
         for client in self._clients:
             buf.append(' %s(%s)' % client)
 
@@ -90,7 +90,7 @@ class NFSExport(JSBASE):
 class NFS(JSBASE):
     def __init__(self):
         self._exports = None
-        self.__jslocation__ = "j.sal.nfs"
+        self.__jslocation__ = 'j.sal.nfs'
         JSBASE.__init__(self)
 
     def _load(self):
@@ -146,7 +146,7 @@ class NFS(JSBASE):
         """
         for export in self.exports:
             if export.path == path:
-                raise NFSError("Path {} is already added".format(path))
+                raise NFSError('Path {} is already added'.format(path))
 
         export = NFSExport(path)
         self.exports.append(export)
@@ -164,7 +164,7 @@ class NFS(JSBASE):
                 self.exports.pop(i)
                 break
         else:
-            raise NFSError("Path {} is not found".format(path))
+            raise NFSError('Path {} is not found'.format(path))
 
     def erase(self):
         """Delete all shared directories
@@ -178,7 +178,7 @@ class NFS(JSBASE):
         for export in self.exports:
             buf.append(export.__str__())
 
-        EXPORTS_FILE.write_text("\n".join(buf))
+        EXPORTS_FILE.write_text('\n'.join(buf))
         EXPORTS_FILE.chmod(644)
         response = run('service nfs-kernel-server reload', shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
         if response.stderr:
