@@ -33,7 +33,6 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
             self._lua = BuilderLua()
         return self._lua
 
-
     @property
     def golang(self):
         if self._golang is None:
