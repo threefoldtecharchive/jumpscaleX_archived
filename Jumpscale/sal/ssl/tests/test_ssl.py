@@ -40,7 +40,7 @@ def certificate_signing_request_create():
     assert "BEGIN CERTIFICATE REQUEST" in str(output)
     assert "END CERTIFICATE REQUEST" in str(output)
 
-@pytest.mark.integration
+
 def test_main(self=None):
     """ to run:
      js_shell 'j.sal.ssl._test(name="ssl")'
