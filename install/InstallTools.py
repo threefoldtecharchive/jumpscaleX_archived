@@ -383,12 +383,12 @@ class Tools():
 
     @staticmethod
     def dir_ensure(path, remove_existing=False):
-        """Ensure the existance of a directory on the system, if the 
+        """Ensure the existance of a directory on the system, if the
         Directory does not exist, it will create it.
-        
+
         :param path:path of the directory
         :type path: string
-        :param remove_existing: If True and the path already exist, 
+        :param remove_existing: If True and the path already exist,
             the existing path will be removed first, defaults to False
         :type remove_existing: bool, optional
         """
@@ -1109,6 +1109,7 @@ class UbuntuInstall():
         UbuntuInstall.change_apt_source()
         UbuntuInstall.ubuntu_base_install()
         UbuntuInstall.python_redis_install()
+        UbuntuInstall.apts_install()
         UbuntuInstall.pips_install()
 
     @staticmethod
@@ -1284,6 +1285,21 @@ class UbuntuInstall():
                 C="pip3 install '%s'"%pip
                 Tools.execute(C,die=True)
                 MyEnv.state_set("pip_%s"%pip)
+
+    @staticmethod
+    def apts_list():
+        return [
+            'iproute2',
+            'python-ufw',
+            'ufw'
+        ]
+
+    def apts_install():
+        for apt in UbuntuInstall.apts_list():
+            if not MyEnv.state_exists('apt_%s' % apt):
+                command = 'apt-get install -y %s' % apt
+                Tools.execute(command,die=True)
+                MyEnv.state_set('apt_%s' % apt)
 
     # def pip3(self):
     #     script="""
@@ -1750,4 +1766,3 @@ try:
     MyEnv._colored_traceback = colored_traceback
 except ImportError:
     MyEnv._colored_traceback = None
-
