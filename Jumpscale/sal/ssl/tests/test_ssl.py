@@ -14,8 +14,8 @@ def ca_generate():
     SSLFactory.ca_cert_generate('/tmp/test/')
     file_list = subprocess.run('ls -la /tmp/test/', shell=True, stdout = subprocess.PIPE, stderr = subprocess.PIPE) 
     files = file_list.stdout.decode()
-    assert ca.key in files
-    assert ca.crt in files
+    assert 'ca.key' in files
+    assert 'ca.crt' in files
 
 def verify():
 
