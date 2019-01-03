@@ -29,11 +29,9 @@ def main(self):
     print(schema_object)
     schema_test = schema_object.get()
 
-    schema_test.llist.append(1)
     schema_test.llist2.append("yes")
     schema_test.llist2.append("no")
     schema_test.llist3.append(1.2)
-    schema_test.llist4.append(1)
     schema_test.llist5.append(1)
     schema_test.llist5.append(2)
     schema_test.U = 1.1
@@ -93,15 +91,15 @@ def main(self):
     schema_test1.enum = "  green"
     assert schema_test1.enum == 'GREEN'
 
-    assert schema_test1._ddict["enum"]=="GREEN"
+    assert schema_test1._ddict["enum"] == "GREEN"
 
-    assert schema_test1._data.find(b"GREEN")==-1 #needs to be stored as int
-    assert len(schema_test1._data) < 25
-    x=len(schema_test1._data)+0
+    assert schema_test1._data.find(b"GREEN") == -1  # needs to be stored as int
+    assert len(schema_test1._data) < 30
+    x = len(schema_test1._data)+0
 
     schema_test1.enum = 4
     assert schema_test1.enum == "ZHISISAVERYLONGONENEEDITTOTESTLETSDOSOMEMORE"
-    assert len(schema_test1._data) < 25
+    assert len(schema_test1._data) < 30
     assert len(schema_test1._data) == x
 
     schema = """
