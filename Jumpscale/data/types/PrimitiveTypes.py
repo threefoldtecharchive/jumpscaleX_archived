@@ -81,7 +81,7 @@ class String():
 
 class StringMultiLine(String):
 
-    NAME = 'stringmultiline'     # this really does not match with the
+    NAME = 'multiline'     # this really does not match with the
     BASETYPE = 'stringmultiline'  # list of aliases.
 
     def check(self, value):
@@ -92,6 +92,10 @@ class StringMultiLine(String):
         """
         will do a strip on multiline
         """
+        if value == "" or value is None:
+            value = ""
+        elif not self.check(value):
+            raise ValueError("Invalid String Multiline type %s" % value)
         value = str(value)
         return j.core.text.strip(value)
 
@@ -114,7 +118,9 @@ class StringMultiLine(String):
         for item in value.split("\n"):
             out0 += "%s\n" % item
         out0 = out0.rstrip()
-        out0 += "%s\n'''\n\n" % out0
+        out0 += "\n'''"
+        if out0 == "''''''":
+            out0 = "'''default \n value '''"
         return out0
 
     def toml_string_get(self, value, key=""):
