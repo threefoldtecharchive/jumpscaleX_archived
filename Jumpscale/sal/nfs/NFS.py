@@ -184,3 +184,12 @@ class NFS(JSBASE):
         if response.stderr:
             raise NFSError(response.stderr.strip())
         return response.stdout.strip()
+
+    def _test(self, name=""):
+        """Run tests under tests
+
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        self._test_run(name=name, obj_key='main')
+        

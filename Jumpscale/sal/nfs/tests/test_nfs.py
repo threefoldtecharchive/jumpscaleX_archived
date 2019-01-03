@@ -59,3 +59,13 @@ def test_add_remove_paths():
     if found:
         with open('/etc/exports', 'w+') as f:
             f.write(file)
+
+def main(self=None):
+    """
+    to run:
+
+    js_shell 'j.sal.nfs._test(name="nfs")'
+
+    """
+    test_add_remove_paths()
+    test_add_remove_list_clients()
