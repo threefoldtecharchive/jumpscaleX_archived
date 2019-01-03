@@ -335,7 +335,7 @@ class SchemaTest(BaseTest):
 
         self.log("Try to set parameter[P1] with non ipaddr type, should fail.")
         with self.assertRaises(Exception):
-            schema_obj.ip = random.randint(1, 100) + 0.5
+            schema_obj.ip = random.uniform(1, 100)
         
         with self.assertRaises(Exception):
             schema_obj.ip = self.random_string()
@@ -347,13 +347,10 @@ class SchemaTest(BaseTest):
             schema_obj.ip = '10.20.1'
         
         with self.assertRaises(Exception):
-            schema_obj.ip = ["10", "20"]
+            schema_obj.ip = [random.randint(0, 255), random.randint(0, 255)]
         
         with self.assertRaises(Exception):
-            schema_obj.ip = [10.5, 20.9]
-        
-        with self.assertRaises(Exception):
-            schema_obj.ip = {'number': 10.7}
+            schema_obj.ip = {'number': random.randint(0, 255)}
 
         self.log("Try to set parameter[P1] with ipaddr type, should succeed.")
         ip = '10.15.{}.1'.format(random.randint(0, 255))
@@ -388,7 +385,7 @@ class SchemaTest(BaseTest):
             schema_obj.iprange = random.randint(1, 100)
 
         with self.assertRaises(Exception):
-            schema_obj.iprange = random.randint(1, 100) + 0.5
+            schema_obj.iprange = random.uniform(1, 100)
         
         with self.assertRaises(Exception):
             schema_obj.iprange = self.random_string()
@@ -406,13 +403,10 @@ class SchemaTest(BaseTest):
             schema_obj.iprange = '10.20.1.0/'
 
         with self.assertRaises(Exception):
-            schema_obj.iprange = ["10", "20"]
+            schema_obj.iprange = [random.randint(1, 100), random.randint(1, 100)]
         
         with self.assertRaises(Exception):
-            schema_obj.iprange = [10.5, 20.9]
-        
-        with self.assertRaises(Exception):
-            schema_obj.iprange = {'number': 10.7}
+            schema_obj.iprange = {'number': random.randint(1, 100)}
 
         self.log("Try to set parameter[P1] with iprange type, should succeed.")
         iprange = '10.15.{}.1/24'.format(random.randint(0, 255))
@@ -440,7 +434,7 @@ class SchemaTest(BaseTest):
 
         self.log("Try to set parameter[P1] with non date type, should fail.")
         with self.assertRaises(Exception):
-            schema_obj.date = random.randint(1, 100) + 0.5
+            schema_obj.date = random.uniform(1, 100)
         
         with self.assertRaises(Exception):
             schema_obj.date = self.random_string()
@@ -476,13 +470,10 @@ class SchemaTest(BaseTest):
             self.assertEqual(schema_obj.date, date)
 
         with self.assertRaises(Exception):
-            schema_obj.date = ["10", "20"]
+            schema_obj.date = [random.randint(1, 9), random.randint(1, 9)]
         
         with self.assertRaises(Exception):
-            schema_obj.date = [10.5, 20.9]
-        
-        with self.assertRaises(Exception):
-            schema_obj.date = {'date': 10.7}
+            schema_obj.date = {'date': random.randint(1, 9)}
 
         self.log("Try to set parameter[P1] with date type, should succeed.")
         date = 0
@@ -524,13 +515,13 @@ class SchemaTest(BaseTest):
         schema_obj.date = '{}/{:02}/{:02} {:02}:{:02}'.format(year, month, day, hour, minutes)
         self.assertEqual(schema_obj.date, int(date))
 
-        # date = datetime((year_2c + years), month, day).timestamp()
-        # schema_obj.date = '{:02}/{:02}/{:02}'.format(year_2c, month, day)
-        # self.assertEqual(schema_obj.date, int(date))
+        date = datetime((year_2c + years), month, day).timestamp()
+        schema_obj.date = '{:02}/{:02}/{:02}'.format(year_2c, month, day)
+        self.assertEqual(schema_obj.date, int(date))
 
-        # date = datetime((year_2c + years), month, day).timestamp()
-        # schema_obj.date = '{:02}/{:02}/{:02} {:02}:{:02}'.format(year_2c, month, day, hour, minutes)
-        # self.assertEqual(schema_obj.date, int(date))
+        date = datetime((year_2c + years), month, day).timestamp()
+        schema_obj.date = '{:02}/{:02}/{:02} {:02}:{:02}'.format(year_2c, month, day, hour, minutes)
+        self.assertEqual(schema_obj.date, int(date))
 
         date = datetime(year, month, day, hours, minutes).timestamp()
         schema_obj.date = '{}/{:02}/{:02} {:02}{}:{:02}'.format(year, month, day, hour_12, am_or_pm, minutes)
@@ -575,17 +566,17 @@ class SchemaTest(BaseTest):
             schema_obj.percent = ["10", "20"]
         
         with self.assertRaises(Exception):
-            schema_obj.percent = [10.5, 20.9]
+            schema_obj.percent = [random.randint(1, 100), random.randint(1, 100)]
         
         with self.assertRaises(Exception):
-            schema_obj.percent = {'number': 10.7}
+            schema_obj.percent = {'number': random.randint(1, 100)}
 
         self.log("Try to set parameter[P1] with percent type, should succeed.")
         percent = random.randint(0, 250)
         schema_obj.percent = percent
         self.assertEqual(schema_obj.percent, percent)
         
-        percent = random.randint(0, 250) + 0.5
+        percent = random.uniform(0, 250)
         schema_obj.percent = percent
         self.assertEqual(schema_obj.percent, percent*100)
         
@@ -599,13 +590,14 @@ class SchemaTest(BaseTest):
         schema_obj.percent = percent
         self.assertEqual(schema_obj.percent, value)
 
-        percent = '{}'.format(value + 0.09)
+        value = random.uniform(1, 100)
+        percent = '{}'.format(value)
         schema_obj.percent = percent
-        self.assertEqual(schema_obj.percent, (value + 0.09)*100)
+        self.assertEqual(schema_obj.percent, value*100)
 
-        percent = '{}%'.format(value + 0.4)
+        percent = '{}%'.format(value)
         schema_obj.percent = percent
-        self.assertEqual(schema_obj.percent, (value + 0.4)*100)
+        self.assertEqual(schema_obj.percent, (value)*100)
 
     def test011_validate_url_type(self):
         """
@@ -631,7 +623,7 @@ class SchemaTest(BaseTest):
             schema_obj.site = random.randint(1, 100)
 
         with self.assertRaises(Exception):
-            schema_obj.site = random.randint(1, 100) + 0.5
+            schema_obj.site = random.uniform(1, 100)
         
         with self.assertRaises(Exception):
             schema_obj.site = self.random_string()
@@ -643,13 +635,10 @@ class SchemaTest(BaseTest):
             schema_obj.site = 'test/example.com'
         
         with self.assertRaises(Exception):
-            schema_obj.site = ["10", "20"]
+            schema_obj.site = [random.randint(1, 100), random.randint(1, 100)]
         
         with self.assertRaises(Exception):
-            schema_obj.site = [10.5, 20.9]
-        
-        with self.assertRaises(Exception):
-            schema_obj.site = {'number': 10.7}
+            schema_obj.site = {'number': random.randint(1, 100)}
 
         self.log("Try to set parameter[P1] with url type, should succeed.")
         schema_obj.site = 'test.example.com'
@@ -683,20 +672,17 @@ class SchemaTest(BaseTest):
             schema_obj.currency = self.random_string()
 
         with self.assertRaises(Exception):
-            schema_obj.currency = ["10", "20"]
+            schema_obj.currency = [random.randint(1, 100), random.randint(1, 100)]
         
         with self.assertRaises(Exception):
-            schema_obj.currency = [10.5, 20.9]
-        
-        with self.assertRaises(Exception):
-            schema_obj.currency = {'number': 10.7}
+            schema_obj.currency = {'number': random.randint(1, 100)}
 
         self.log("Try to set parameter[P1] with numeric type, should succeed.")
         name = random.randint(1, 1000)
         schema_obj.name = name
         self.assertEqual(schema_obj.name, name)
 
-        name = random.randint(1, 1000) + 0.004
+        name = random.uniform(1, 1000)
         schema_obj.name = name
         self.assertEqual(schema_obj.name, name)
 
@@ -726,7 +712,7 @@ class SchemaTest(BaseTest):
         self.log("Put one of currencies and convert it to the other currencies and Check result is same as calculated")
         currencies = j.clients.currencylayer.cur2usd
         for curr1 in currencies:
-            value = random.randint(1, 100)
+            value = random.uniform(1, 100)
             currency = '{} {}'.format(value, curr1)
             schema_obj.currency = currency
             for curr2 in currencies:
@@ -762,23 +748,19 @@ class SchemaTest(BaseTest):
             schema_obj.guid = random.randint(1, 1000)
 
         with self.assertRaises(Exception):
-            schema_obj.guid = random.randint(1, 1000) + 0.004
+            schema_obj.guid = random.uniform(1, 1000)
         
         with self.assertRaises(Exception):
-            schema_obj.guid = ["10", "20"]
+            schema_obj.guid = [random.randint(1, 100), random.randint(1, 100)]
         
         with self.assertRaises(Exception):
-            schema_obj.guid = [10.5, 20.9]
-        
-        with self.assertRaises(Exception):
-            schema_obj.guid = {'number': 10.7}
+            schema_obj.guid = {'number': random.randint(1, 100)}
 
         self.log("Try to set parameter[P1] with guid type, should succeed.")
         guid = str(uuid4())
         schema_obj.guid = guid
         self.assertEqual(schema_obj.guid, guid)
 
-    # @unittest.skip("Can't create schema")
     def test015_validate_dict_type(self):
         """
         SCM-015
@@ -806,19 +788,16 @@ class SchemaTest(BaseTest):
             schema_obj.info = random.randint(1, 1000)
 
         with self.assertRaises(Exception): 
-            schema_obj.info = random.randint(1, 1000) + 0.004
+            schema_obj.info = random.uniform(1, 100)
         
         with self.assertRaises(Exception):
-            schema_obj.info = ["10", "20"]
-        
-        with self.assertRaises(Exception):
-            schema_obj.info = [10.5, 20.9]
+            schema_obj.info = [random.randint(1, 100), random.randint(1, 100)]
 
         self.log("Try to set parameter[P1] with dict type, should succeed.")
-        schema_obj.info = {'number': 10.7}
-        self.assertEqual(schema_obj.info, {'number': 10.7})
+        value = random.randint(1, 1000)
+        schema_obj.info = {'number': value}
+        self.assertEqual(schema_obj.info, {'number': value})
 
-    # @unittest.skip("Can't create schema")
     def test016_validate_set_type(self):
         """
         SCM-016
@@ -846,31 +825,28 @@ class SchemaTest(BaseTest):
             schema_obj.data = random.randint(1, 1000)
 
         with self.assertRaises(Exception): 
-            schema_obj.data = random.randint(1, 1000) + 0.004
+            schema_obj.data = random.uniform(1, 100)
         
         with self.assertRaises(Exception):
-            schema_obj.data = ["10", "20"]
-        
-        with self.assertRaises(Exception):
-            schema_obj.data = [10.5, 20.9]
-        
-        with self.assertRaises(Exception):
-            schema_obj.data = {'number': 10.7}
+            schema_obj.data = {'number': random.randint(1, 1000)}
 
         self.log("Try to set parameter[P1] with set type, should succeed.")
-        schema_obj.data = [1, 2, 3]
-        self.assertEqual(schema_obj.data, [1, 2, 3])
+        int_list = [random.randint(1, 1000), random.randint(1, 1000)]
+        schema_obj.data = int_list
+        self.assertEqual(schema_obj.data, int_list)
 
-        schema_obj.data = [10.5, 20.9]
-        self.assertEqual(schema_obj.data, [10.5, 20.9])
+        float_list = [random.uniform(1, 100), random.uniform(1, 100)]
+        schema_obj.data = float_list
+        self.assertEqual(schema_obj.data, float_list)
 
-        schema_obj.data = ["10", "20"]
-        self.assertEqual(schema_obj.data, ["10", "20"])
+        str_list = [self.random_string(), self.random_string()]
+        schema_obj.data = str_list
+        self.assertEqual(schema_obj.data, str_list)
         
-        schema_obj.data = [{'number': 10.7}, {'number': 20}]
-        self.assertEqual(schema_obj.data, [{'number': 10.7}, {'number': 20}])
+        dict_list = [{self.random_string(): random.randint(1, 100)}]
+        schema_obj.data = dict_list
+        self.assertEqual(schema_obj.data, dict_list)
     
-    # @unittest.skip("Can't create schema")
     def test017_validate_hash_type(self):
         """
         SCM-017
@@ -898,22 +874,19 @@ class SchemaTest(BaseTest):
             schema_obj.data = random.randint(1, 1000)
 
         with self.assertRaises(Exception): 
-            schema_obj.data = random.randint(1, 1000) + 0.004
+            schema_obj.data = random.uniform(1, 100)
         
         with self.assertRaises(Exception):
-            schema_obj.data = ["10", "20"]
+            schema_obj.data = [random.randint(1, 100), random.randint(1, 100)]
         
         with self.assertRaises(Exception):
-            schema_obj.data = [10.5, 20.9]
-        
-        with self.assertRaises(Exception):
-            schema_obj.data = {'number': 10.7}
+            schema_obj.data = {'number': random.randint(1, 100)}
 
         self.log("Try to set parameter[P1] with hash type, should succeed.")
-        schema_obj.data = (1, 1564)
-        self.assertEqual(schema_obj.data, (1, 1564))
+        data = (random.randint(1, 1000), random.randint(1000, 1000000))
+        schema_obj.data = data
+        self.assertEqual(schema_obj.data, data)
     
-    # @unittest.skip("Can't create schema")
     def test018_validate_multiline_type(self):
         """
         SCM-018
@@ -941,22 +914,18 @@ class SchemaTest(BaseTest):
             schema_obj.lines = random.randint(1, 1000)
 
         with self.assertRaises(Exception): 
-            schema_obj.lines = random.randint(1, 1000) + 0.004
+            schema_obj.lines = random.uniform(1, 100)
         
         with self.assertRaises(Exception):
-            schema_obj.lines = ["10", "20"]
+            schema_obj.lines = [random.randint(1, 100), random.randint(1, 100)]
         
         with self.assertRaises(Exception):
-            schema_obj.lines = [10.5, 20.9]
-        
-        with self.assertRaises(Exception):
-            schema_obj.lines = {'number': 10.7}
+            schema_obj.lines = {'number': random.randint(1, 100)}
 
         self.log("Try to set parameter[P1] with multiline type, should succeed.")
         schema_obj.lines = "example \n example2 \n example3"
         self.assertEqual(schema_obj.lines, "example \n example2 \n example3")
 
-    # @unittest.skip("Can't create schema")
     def test019_validate_yaml_type(self):
         """
         SCM-019
@@ -978,26 +947,24 @@ class SchemaTest(BaseTest):
 
         self.log("Try to set parameter[P1] with non yaml type, should fail.")    
         with self.assertRaises(Exception):
-            schema_obj.data = self.random_string()
-
-        with self.assertRaises(Exception):
             schema_obj.data = random.randint(1, 1000)
 
         with self.assertRaises(Exception): 
-            schema_obj.data = random.randint(1, 1000) + 0.004
+            schema_obj.data = random.uniform(1, 100)
         
         with self.assertRaises(Exception):
-            schema_obj.data = ["10", "20"]
+            schema_obj.data = [random.randint(1, 100), random.randint(1, 100)]
         
         with self.assertRaises(Exception):
-            schema_obj.data = [10.5, 20.9]
-        
-        with self.assertRaises(Exception):
-            schema_obj.data = {'number': 10.7}
+            schema_obj.data = {'number': random.randint(1, 100)}
 
         self.log("Try to set parameter[P1] with yaml type, should succeed.")
-        schema_obj.data = "example: - test1"
-        self.assertEqual(schema_obj.data, "example: - test1")
+        data = self.random_string()
+        schema_obj.data = data
+        self.assertEqual(schema_obj.data, data)
+
+        schema_obj.data = "example:     test1"
+        self.assertEqual(schema_obj.data, "example:     test1")
 
     def test020_validate_list_of_types_with_one_char_symbol(self):
         """
@@ -1049,7 +1016,7 @@ class SchemaTest(BaseTest):
 
         self.log("Try to set parameter with non mobile type, should fail.")
         with self.assertRaises(Exception):
-            schema_obj.mobile_list = [20.9, random.randint(100000, 1000000)]
+            schema_obj.mobile_list = [random.uniform(1, 100), random.randint(100000, 1000000)]
 
         self.log("Try to set parameter with mobile type, should succeed.")
         mobile_list = ['{}'.format(random.randint(100000, 1000000)), '{}'.format(random.randint(100000, 1000000))]
