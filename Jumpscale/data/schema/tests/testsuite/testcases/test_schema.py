@@ -2,7 +2,6 @@
 from testsuite.testcases.base_test import BaseTest
 from Jumpscale import j
 from unittest import TestCase
-from nose_parameterized import parameterized
 from uuid import uuid4
 from datetime import datetime
 import random, time, unittest
@@ -1162,62 +1161,35 @@ class SchemaTest(BaseTest):
         schema_obj.lines_list = lines_list
         self.assertEqual(schema_obj.lines_list, lines_list)
 
-    @parameterized.expand(['sperated', 'concatenated'])
-    def test027_nested_schema(self, schema):
+    def test027_nested_concatenated_schema(self):
         """
         SCM-027
-        *Test case for nesting schema *
+        *Test case for concatenated nesting schema *
 
         **Test Scenario:**
 
-        #. Create three schemas with different datatypes, should succeed.
+        #. Create three schemas on one schema with different datatypes, should succeed.
         #. Set data to schema parameters, should succeed.
         #. Check that data reflected correctly.
         """
         self.log("Create three schemas with different datatypes, should succeed.")
-        if schema == "sperated":
-            scm1 = """
-            @url = phone.schema
-            mobile_number = (tel)
-            home_number = (tel)
-            """
-            scm2 = """
-            @url = address.schema
-            country = (S)
-            city = (S)
-            street = (S)
-            building = (I)
-            """
-            scm3 = """
-            @url = student.schema
-            name = (S)
-            numbers = (O) !phone.schema
-            address = (O) !address.schema
-            grades = (Lp)
-            """ 
-            schema1 = self.schema(scm1)
-            schema_obj1 = schema1.new()
+        scm3 = """
+        @url = student.schema
+        name = (S)
+        numbers = (O) !phone.schema
+        address = (O) !address.schema
+        grades = (Lp)
 
-            schema2 = self.schema(scm2)
-            schema_obj2 = schema2.new()
-        else:
-            scm3 = """
-            @url = student.schema
-            name = (S)
-            numbers = (O) !phone.schema
-            address = (O) !address.schema
-            grades = (Lp)
+        @url = phone.schema
+        mobile_number = (tel)
+        home_number = (tel)
 
-            @url = phone.schema
-            mobile_number = (tel)
-            home_number = (tel)
-
-            @url = address.schema
-            country = (S)
-            city = (S)
-            street = (S)
-            building = (I)
-            """
+        @url = address.schema
+        country = (S)
+        city = (S)
+        street = (S)
+        building = (I)
+        """
 
         schema3 = self.schema(scm3)
         schema_obj3 = schema3.new()
@@ -1250,3 +1222,73 @@ class SchemaTest(BaseTest):
         self.assertEqual(schema_obj3.address.street, street)
         self.assertEqual(schema_obj3.address.building, building)
         self.assertEqual(schema_obj3.grades, grades)
+
+    def test028_nested_sperated_schema(self):
+        """
+        SCM-028
+        *Test case for concatenated nesting schema *
+
+        **Test Scenario:**
+
+        #. Create three schemas on one schema with different datatypes, should succeed.
+        #. Set data to schema parameters, should succeed.
+        #. Check that data reflected correctly.
+        """
+        self.log("Create three schemas with different datatypes, should succeed.")
+        scm1 = """
+        @url = phone.schema
+        mobile_number = (tel)
+        home_number = (tel)
+        """
+        scm2 = """
+        @url = address.schema
+        country = (S)
+        city = (S)
+        street = (S)
+        building = (I)
+        """
+        scm3 = """
+        @url = student.schema
+        name = (S)
+        numbers = (O) !phone.schema
+        address = (O) !address.schema
+        grades = (Lp)
+        """ 
+        schema1 = self.schema(scm1)
+        schema_obj1 = schema1.new()
+
+        schema2 = self.schema(scm2)
+        schema_obj2 = schema2.new()
+
+        schema3 = self.schema(scm3)
+        schema_obj3 = schema3.new()
+
+        self.log("Set data to schema parameters, should succeed.")
+        name = self.random_string()
+        mobile_number = '{}'.format(random.randint(1000000000, 2000000000))
+        home_number = '{}'.format(random.randint(500000000, 900000000))
+        country = self.random_string()
+        city = self.random_string()
+        street = self.random_string()
+        building = random.randint(1, 100)
+        grades = [random.randint(50, 100), random.randint(50, 100)]
+
+        schema_obj3.name = name
+        schema_obj3.numbers.mobile_number = mobile_number
+        schema_obj3.numbers.home_number = home_number
+        schema_obj3.address.country = country
+        schema_obj3.address.city = city
+        schema_obj3.address.street = street
+        schema_obj3.address.building = building
+        schema_obj3.grades = grades
+
+        self.log("Check that data reflected correctly")
+        self.assertEqual(schema_obj3.name, name)
+        self.assertEqual(schema_obj3.numbers.mobile_number, mobile_number)
+        self.assertEqual(schema_obj3.numbers.home_number, home_number)
+        self.assertEqual(schema_obj3.address.country, country)
+        self.assertEqual(schema_obj3.address.city, city)
+        self.assertEqual(schema_obj3.address.street, street)
+        self.assertEqual(schema_obj3.address.building, building)
+        self.assertEqual(schema_obj3.grades, grades)
+    
