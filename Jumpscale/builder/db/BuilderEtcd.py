@@ -4,26 +4,23 @@ from Jumpscale import j
 class BuilderEtcd(j.builder.system._BaseClass):
     NAME = 'etcd'
 
+    def _init(self):
+        self.package_path = j.builder.runtimes.golang.package_path_get('etcd', host='go.etcd.io')
+
     def build(self, reset=False):
         """
         Build etcd
         """
-        def do():
-            if self._done_check('build', reset):
-                    return
-            j.sal.fs.remove('/tmp/etcd')
-            # j.builder.runtimes.golang.install()
+        if self._done_check('build', reset):
+                return
 
-            _script = """
-            cd /tmp
-            # git clone https://github.com/coreos/etcd.git
-            cd etcd
-            ./build
-            """
-            j.sal.process.execute(_script, timeout=10000000000000000000)
+        j.builder.runtimes.golang.install()
+        # get a vendored etcd from master
+        j.builder.runtimes.golang.get('go.etcd.io/etcd', install=False, update=False)
+        # go to package path and build (for etcdctl)
+        j.builder.runtimes.golang.execute('cd %s && ./build' % self.package_path)
 
-            self._done_set('build')
-        do()
+        self._done_set('build')
         # self._cache.get(key='build', method=do, expire=3600*30*24, refresh=False, retry=2, die=True)
 
     def sandbox(self):
@@ -33,13 +30,12 @@ class BuilderEtcd(j.builder.system._BaseClass):
             if not self._done_check('build'):
                 self.build()
 
-            path = '/tmp/etcd/bin'
-            j.sal.fs.copyFile(j.sal.fs.joinPaths(path, 'etcd'), j.core.dirs.BINDIR)
-            j.sal.fs.copyFile(j.sal.fs.joinPaths(path, 'etcdctl'), j.core.dirs.BINDIR)
+            j.sal.fs.copyFile(j.sal.fs.joinPaths(self.package_path, 'bin', 'etcd'), j.core.dirs.BINDIR)
+            j.sal.fs.copyFile(j.sal.fs.joinPaths(self.package_path, 'bin', 'etcdctl'), j.core.dirs.BINDIR)
 
             self._done_set('sandbox')
 
-        self._cache.get(key="sandbox", method=do, expire=3600*30*24, refresh=False, retry=1, die=True)
+        #self._cache.get(key="sandbox", method=do, expire=3600*30*24, refresh=False, retry=1, die=True)
 
     def client_get(self, name):
         """
