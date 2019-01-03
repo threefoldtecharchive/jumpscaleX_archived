@@ -1,4 +1,5 @@
 import time
+import pytest
 
 from Jumpscale import j
 from Jumpscale.sal.dnsmasq.Dnsmasq import DNSMasq
@@ -7,6 +8,7 @@ from Jumpscale.sal.dnsmasq.Dnsmasq import DNSMasq
 TEST_DNSMASQ = '/tmp/dnsmasq'
 
 
+@pytest.mark.skip(reason="test need to be reviewed")
 def test_main(self=None):
     systemd = j.sal.process.psfind('systemd-resolved')
 
@@ -34,7 +36,7 @@ def test_main(self=None):
         te = j.tools.code.text_editor_get(dns_masq._hosts)
         assert '5E-A4-92-AB-2D-27,127.0.0.1' not in te.content
 
-        j.tools.tmux.pane_get(window='main', pane='dnsmasq').kill()
+        j.sal.process.killProcessByName(cmd)
     finally:
         if systemd:
             j.sal.process.execute('systemctl start systemd-resolved')
