@@ -14,16 +14,16 @@ def test_add_remove_list_clients():
     home = nfs.add('/home')
     client_1 = str(uuid4()).replace('-', '')[:10]
     client_2 = str(uuid4()).replace('-', '')[:10]
-    home.addClient(client_1, 'rw,sync')
-    home.addClient(client_2)
+    home.client_add(client_1, 'rw,sync')
+    home.client_add(client_2)
     with pytest.raises(Exception):
-        home.addClient(client_1)
+        home.client_add(client_1)
 
     assert home.clients[0][0] == client_1
     assert home.clients[0][1] == 'rw,sync'
-    home.removeClient(client_1)
+    home.client_remove(client_1)
     with pytest.raises(Exception):
-        home.removeClient(client_1)
+        home.client_remove(client_1)
     for client in home.clients:
         assert client_1 not in client
     

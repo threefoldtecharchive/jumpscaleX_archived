@@ -35,7 +35,7 @@ class NFSExport(JSBASE):
         """
         return self._clients
 
-    def addClient(self, name='*', options='rw,sync'):
+    def client_add(self, name='*', options='rw,sync'):
         """Add client to access shared directory
         
         :param name: client like:
@@ -61,7 +61,7 @@ class NFSExport(JSBASE):
 
         self._clients.append((name, options))
 
-    def removeClient(self, name):
+    def client_remove(self, name):
         """Remove client from accessing shared directory.
 
         :param name: hostname
