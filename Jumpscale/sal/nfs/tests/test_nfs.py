@@ -1,9 +1,15 @@
 from Jumpscale import j
 from Jumpscale.sal.nfs.NFS import NFS
 from uuid import uuid4
-import pytest
+import pytest, os
 
 def test_add_remove_list_clients():
+    found = os.path.exists('/etc/exports')
+    if found:
+        with open('/etc/exports', 'r') as f:
+            file = f.read()
+           
+    open('/etc/exports', 'w+').close()
     nfs = NFS()
     home = nfs.add('/home')
     client_1 = str(uuid4()).replace('-', '')[:10]
@@ -20,8 +26,18 @@ def test_add_remove_list_clients():
         home.removeClient(client_1)
     for client in home.clients:
         assert client_1 not in client
+    
+    if found:
+        with open('/etc/exports', 'w+') as f:
+            f.write(file)
 
 def test_add_remove_paths():
+    found = os.path.exists('/etc/exports')
+    if found:
+        with open('/etc/exports', 'r') as f:
+            file = f.read()
+
+    open('/etc/exports', 'w+').close()
     nfs = NFS()
     home = nfs.add('/home')
     var = nfs.add('/var')
@@ -39,3 +55,7 @@ def test_add_remove_paths():
         assert '/home' not in export.path
     nfs.erase()
     assert nfs.exports  == []
+
+    if found:
+        with open('/etc/exports', 'w+') as f:
+            f.write(file)
