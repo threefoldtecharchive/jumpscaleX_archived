@@ -994,7 +994,6 @@ class SchemaTest(BaseTest):
         schema_obj.list_names = list_names
         self.assertEqual(schema_obj.list_names, list_names)
     
-    @unittest.skip('https://github.com/threefoldtech/jumpscale_core/issues/172')
     def test021_validate_list_of_types_with_three_char_symbol(self):
         """
         SCM-021
@@ -1023,7 +1022,6 @@ class SchemaTest(BaseTest):
         schema_obj.mobile_list = mobile_list
         self.assertEqual(schema_obj.mobile_list, mobile_list)
     
-    @unittest.skip('https://github.com/threefoldtech/jumpscale_core/issues/172')
     def test022_validate_list_of_types_with_four_char_symbol(self):
         """
         SCM-022
@@ -1052,7 +1050,6 @@ class SchemaTest(BaseTest):
         schema_obj.guid_list = guid_list
         self.assertEqual(schema_obj.guid_list, guid_list)
 
-    @unittest.skip('https://github.com/threefoldtech/jumpscale_core/issues/172')
     def test023_validate_list_of_types_with_five_char_symbol(self):
         """
         SCM-023
@@ -1081,7 +1078,6 @@ class SchemaTest(BaseTest):
         schema_obj.email_list = email_list
         self.assertEqual(schema_obj.email_list, email_list)
 
-    @unittest.skip('https://github.com/threefoldtech/jumpscale_core/issues/172')
     def test024_validate_list_of_types_with_six_char_symbol(self):
         """
         SCM-024
@@ -1110,7 +1106,6 @@ class SchemaTest(BaseTest):
         schema_obj.port_list = port_list
         self.assertEqual(schema_obj.port_list, port_list)
 
-    @unittest.skip('https://github.com/threefoldtech/jumpscale_core/issues/172')
     def test025_validate_list_of_types_with_seven_char_symbol(self):
         """
         SCM-025
@@ -1139,7 +1134,6 @@ class SchemaTest(BaseTest):
         schema_obj.range_list = range_list
         self.assertEqual(schema_obj.range_list, range_list)
 
-    @unittest.skip('https://github.com/threefoldtech/jumpscale_core/issues/172')
     def test026_validate_list_of_types_with_nine_char_symbol(self):
         """
         SCM-026
