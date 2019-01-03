@@ -519,7 +519,7 @@ class SchemaTest(BaseTest):
         schema_obj.date = '{:02}/{:02}/{:02}'.format(year_2c, month, day)
         self.assertEqual(schema_obj.date, int(date))
 
-        date = datetime((year_2c + years), month, day).timestamp()
+        date = datetime((year_2c + years), month, day, hour, minutes).timestamp()
         schema_obj.date = '{:02}/{:02}/{:02} {:02}:{:02}'.format(year_2c, month, day, hour, minutes)
         self.assertEqual(schema_obj.date, int(date))
 
