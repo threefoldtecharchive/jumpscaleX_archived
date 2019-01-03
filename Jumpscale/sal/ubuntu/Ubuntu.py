@@ -1,18 +1,18 @@
 from Jumpscale import j
-#from .Capacity import Capacity
+# from .Capacity import Capacity
+JSBaseClass = j.application.JSBaseClass
 
 
-class Ubuntu(j.application.JSBaseClass):
+class Ubuntu(JSBaseClass):
     def __init__(self):
         self.__jslocation__ = 'j.sal.ubuntu'
-        j.application.JSBaseClass.__init__(self)
+        JSBaseClass.__init__(self)
         self._aptupdated = False
         self._checked = False
         self._cache_ubuntu = None
         self.installedpackage_names = []
         self._installed_pkgs = None
-        self._local = j.tools.executorLocal
-        #self.capacity = Capacity(self)
+        # self.capacity = Capacity(self)
 
     def uptime(self):
         """return system uptime value.

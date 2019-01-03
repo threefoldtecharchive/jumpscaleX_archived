@@ -7,9 +7,10 @@ import re
 import os
 from Jumpscale import j
 
-
 JSBASE = j.application.JSBaseClass
-class NetTools(j.application.JSBaseClass):
+
+
+class NetTools(JSBASE):
 
     __jslocation__ = "j.sal.nettools"
 
@@ -29,7 +30,7 @@ class NetTools(j.application.JSBaseClass):
         finally:
             if conn:
                 conn.close()
-        return True    
+        return True
 
     def ip_to_num(self, ip="127.0.0.1"):
         """
@@ -489,9 +490,71 @@ class NetTools(j.application.JSBaseClass):
         j.sal.process.execute(cmd)
         return "added %s default gw" % gw
 
-    def getNetworkInfo(self,device=None):
+    def _linux_networkinfo_get(self, device=None):
         """
         returns network info like
+        [{'cidr': 8, 'ip': ['127.0.0.1'], 'mac': '00:00:00:00:00:00', 'name': 'lo'},
+         {'cidr': 24,
+          'ip': ['192.168.0.105'],
+          'mac': '80:ee:73:a9:19:05',
+          'name': 'enp2s0'},
+         {'cidr': 0, 'ip': [], 'mac': '80:ee:73:a9:19:06', 'name': 'enp3s0'},
+         {'cidr': 16,
+          'ip': ['172.17.0.1'],
+          'mac': '02:42:97:63:e6:ba',
+          'name': 'docker0'}]
+
+        :param device: device name, defaults to None
+        :type device: str, optional
+        :raises RuntimeError: if the platform isn't implemented
+        :return: network info
+        :rtype: list or dict if device is specified
+        """
+
+        IPBLOCKS = re.compile('(^|\n)(?P<block>\d+:.*?)(?=(\n\d+)|$)', re.S)
+        IPMAC = re.compile('^\s+link/\w+\s+(?P<mac>(\w+:){5}\w{2})', re.M)
+        IPIP = re.compile(r'\s+?inet\s(?P<ip>(\d+\.){3}\d+)/(?P<cidr>\d+)', re.M)
+        IPNAME = re.compile('^\d+: (?P<name>.*?)(?=:)', re.M)
+
+        def block_parse(block):
+            result = {'ip': [], 'ip6': [], 'cidr': [], 'mac': '', 'name': ''}
+            for rec in (IPMAC, IPNAME):
+                match = rec.search(block)
+                if match:
+                    result.update(match.groupdict())
+            for mrec in (IPIP, ):
+                for m in mrec.finditer(block):
+                    for key, value in list(m.groupdict().items()):
+                        result[key].append(value)
+            _, IPV6, _ = j.sal.process.execute("ifconfig %s |  awk '/inet6/{print $2}'" % result['name'], showout=False)
+            for ipv6 in IPV6.split('\n'):
+                result['ip6'].append(ipv6)
+            if j.data.types.list.check(result['cidr']):
+                if len(result['cidr']) == 0:
+                    result['cidr'] = 0
+                else:
+                    result['cidr'] = int(result['cidr'][0])
+            return result
+
+        def networkinfo_get():
+            _, output, _ = j.sal.process.execute('ip a', showout=False)
+            for m in IPBLOCKS.finditer(output):
+                block = m.group('block')
+                yield block_parse(block)
+
+        res = []
+        for nic in networkinfo_get():
+            if nic['name'] == device:
+                return nic
+            res.append(nic)
+
+        if device is not None:
+            raise j.exceptions.RuntimeError('could not find device')
+        return res
+
+    def networkinfo_get(self, device=None):
+        """
+        Get network info
 
         [{'cidr': 8, 'ip': ['127.0.0.1'], 'mac': '00:00:00:00:00:00', 'name': 'lo'},
          {'cidr': 24,
@@ -503,14 +566,22 @@ class NetTools(j.application.JSBaseClass):
          {'cidr': 16,
           'ip': ['172.17.0.1'],
           'mac': '02:42:97:63:e6:ba',
-          'name': 'docker0'}]        
+          'name': 'docker0'}]
 
-        TODO: change for windows
+        :param device: device name, defaults to None
+        :type device: str, optional
+        :raises RuntimeError: if the platform isn't implemented
+        :return: network info
+        :rtype: list or dict if device is specified
 
         """
-        #TODO: use caching feature from jumpscale to keep for e.g. 1 min, if not usecache needs to reset cache to make sure we load again
-        return j.builder.system.net.getInfo(device=device)
-        
+        # @TODO: change for windows
+        # @TODO: use caching feature from jumpscale to keep for e.g. 1 min,
+        # if not usecache needs to reset cache to make sure we load again
+        if j.core.platformtype.myplatform.isLinux:
+            return self._linux_networkinfo_get(device)
+        else:
+            raise RuntimeError("not implemented")
 
     def getIpAddress(self, interface):
         """Return a list of ip addresses and netmasks assigned to this interface"""
@@ -801,8 +872,6 @@ class NetTools(j.application.JSBaseClass):
             raise j.exceptions.RuntimeError(
                 'The provided MD5 checksum did not match that of a freshly-downloaded file!')
 
-
-
     def download(self, url, localpath, username=None, passwd=None, overwrite=True):
         '''Download a url to a file or a directory, supported protocols: http, https, ftp, file
         @param url: URL to download from
@@ -891,7 +960,7 @@ class NetTools(j.application.JSBaseClass):
         _, domainName, _ = j.sal.process.execute(cmd, showout=False)
 
         if not domainName:
-            raise ValueError("There's no Domain Name") 
+            raise ValueError("There's no Domain Name")
 
         domainName = domainName.splitlines()[0]
 
@@ -952,6 +1021,29 @@ class NetTools(j.application.JSBaseClass):
                 self._logger.info('Restarting interface %s' % device)
                 j.sal.process.execute('ifdown %s && ifup %s' % (device, device))
         self._logger.info('DONE')
+
+    def netobject_get(self, device):
+        n = self.networkinfo_get(device)
+        net = netaddr.IPNetwork(n['ip'][0] + '/' + str(n['cidr']))
+        return net.cidr
+
+    def netrange_get(self, device, skip_begin=10, skip_end=10):
+        """
+        Get ($fromip,$topip) from range attached to device, skip the mentioned ip addresses.
+
+        :param device: device name
+        :type device: str
+        :param skip_begin: ips to skip from the begining of the range, defaults to 10
+        :type skip_begin: int, optional
+        :param skip_end: ips to skip from the end of the range, defaults to 10
+        :type skip_end: int, optional
+
+        :return: ip range for this device
+        :rtype: tuple
+        """
+        n = self.netobject_get(device)
+        return(str(netaddr.IPAddress(n.first + skip_begin)), str(netaddr.IPAddress(n.last - skip_end)))
+
 
 # XXX TODO: make dynamic-js-based.  doesn't seem to be used anywhere?
 class NetworkZone:
