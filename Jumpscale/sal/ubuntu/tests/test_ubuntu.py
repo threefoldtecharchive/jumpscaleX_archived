@@ -35,7 +35,8 @@ class Test_Ubuntu(TestCase):
         self.assertIn('1.19.4', out)
 
     def test006_deb_install(self):
-        j.sal.process.execute('wget http://security.ubuntu.com/ubuntu/pool/universe/t/tmuxp/python-tmuxp_1.3.1-1_all.deb')
+        j.sal.process.execute(
+            'wget http://security.ubuntu.com/ubuntu/pool/universe/t/tmuxp/python-tmuxp_1.3.1-1_all.deb')
         self.ubuntu.deb_install(path='python-tmuxp_1.3.1-1_all.deb')
         rc, out, err = j.sal.process.execute('dpkg -s python-tmuxp | grep Status', die=False)
         self.assertIn('install ok', out)
@@ -76,7 +77,7 @@ class Test_Ubuntu(TestCase):
         self.assertIn('id_rsa', out)
 
 
-def test_main(self=None):
+def main(self=None):
     """
     to run:
     js_shell 'j.sal.ubuntu._test(name="ubuntu")'
@@ -98,4 +99,3 @@ def test_main(self=None):
     test_ubuntu.test013_is_pkg_installed()
     test_ubuntu.test014_sshkey_generate()
     test_ubuntu.tearDown()
-    

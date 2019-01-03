@@ -435,3 +435,11 @@ stop on runlevel [016]
                 raise j.exceptions.Input("only support rsa or dsa for now")
             cmd = "ssh-keygen -t %s -b 4096 -P '%s' -f %s" % (ssh_type, passphrase, path)
             j.sal.process.execute(cmd)
+
+    def _test(self, name=''):
+        """Run tests under tests
+
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        self._test_run(name=name, obj_key='main')

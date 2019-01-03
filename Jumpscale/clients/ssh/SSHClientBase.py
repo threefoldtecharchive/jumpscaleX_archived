@@ -75,7 +75,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         """
         if not pubkey:
             pubkey = self.sshkey_obj.pubkey
-        if pubkey in [None, '']:
+        if not pubkey:
             raise RuntimeError('pubkey not given')
         j.builder.system.ssh.authorize(user=user, key=pubkey)
 
