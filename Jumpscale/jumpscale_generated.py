@@ -1361,15 +1361,15 @@ class group_sal(JSGroup):
     @property
     def nfs(self):
         if self._nfs is None:
-            print("LOAD:NFSExport")
+            print("LOAD:NFS")
             try:
-                from Jumpscale.sal.nfs.NFS import NFSExport
+                from Jumpscale.sal.nfs.NFS import NFS
             except Exception as e:
                 msg = j.core.application.error_init("import", "Jumpscale.sal.nfs.NFS", e)
                 raise e
-            # print("RUN:NFSExport")
+            # print("RUN:NFS")
             try:
-                self._nfs =  NFSExport()
+                self._nfs =  NFS()
             except Exception as e:
                 msg = j.core.application.error_init("execute","Jumpscale.sal.nfs.NFS",e)
                 return None
