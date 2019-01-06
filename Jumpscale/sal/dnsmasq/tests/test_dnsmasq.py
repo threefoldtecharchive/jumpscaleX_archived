@@ -8,7 +8,6 @@ from Jumpscale.sal.dnsmasq.Dnsmasq import DNSMasq
 TEST_DNSMASQ = '/tmp/dnsmasq'
 
 
-@pytest.mark.skip(reason="test need to be reviewed")
 def test_main(self=None):
     systemd = j.sal.process.psfind('systemd-resolved')
 
