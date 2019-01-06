@@ -105,8 +105,15 @@ class MDTable(MDBase):
         """        
         if j.data.types.string.check(cols):
             cols=[item.strip().strip("'").strip('"').strip() for item in cols.split(",")]
-        while len(cols) < len(self.header):
-            cols.append("  ")
+
+        if len(cols)  > len(self.header):
+            diff = len(cols)  - len(self.header)
+            for i in range(diff):
+                cols.pop()
+        elif len(self.header) > len(cols):
+            diff = len(self.header) - len(cols)
+            cols.extend([" "]* diff)
+
         if len(cols) != len(self.header):
             raise j.exceptions.Input(
                 "cols need to be same size as header.\n %s vs %s\nline:%s\n" % (len(cols), len(self.header),cols))
@@ -117,21 +124,27 @@ class MDTable(MDBase):
         self.rows.append(cols)
 
     def _findSizes(self):
-        m = [0 for item in self.header]
-        x = 0
-        for col in self.header:
-            if len(col) > m[x]:
-                m[x] = len(col)
-            x += 1
+        s = [len(row) for row in self.rows]
+        if len(set(s)) > 1:
+            size = sorted(s)[-1]
+            if size > len(self.header):
+                self.header.append(" ")
+
+        m = [0] * len(self.header)
+        for i, col in enumerate(self.header):
+            if len(col) > m[i]:
+                m[i] = len(col)
+
         for row in self.rows:
-            x = 0
-            for col in row:
+            for i, col in enumerate(row):
                 col=str(col)
-                if len(col) > m[x]:
-                    m[x] = len(col)
-                    if m[x]<3:
-                        m[x]=3
-                x += 1
+                try:
+                    if len(col) > m[i]:
+                        m[i] = len(col)
+                        if m[i]<3:
+                            m[i]=3
+                except:
+                    import ipdb; ipdb.set_trace()
         return m
 
     @property

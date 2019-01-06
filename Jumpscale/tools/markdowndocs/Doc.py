@@ -343,6 +343,8 @@ class Doc(j.application.JSBaseClass):
         """
         if not self._links == []:
             return
+        if self.markdown_source == "":
+            return
         regex = "!*\[.*\] *\(.*\)"
         for match in j.data.regex.yieldRegexMatches(regex, self.markdown_source, flags=0):
             self._logger.debug("##:file:link:%s" % match)
