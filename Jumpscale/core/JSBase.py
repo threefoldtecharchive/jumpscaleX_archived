@@ -17,7 +17,7 @@ class JSBase:
     _test_runs = {}
     _test_runs_error = {}
 
-    def _empty_js_obj(self):
+    def _obj_cache_reset(self):
         self._logger_ = None
         self._test_runs = {}
 

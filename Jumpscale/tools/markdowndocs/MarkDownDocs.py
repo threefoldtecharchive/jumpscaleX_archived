@@ -62,12 +62,12 @@ class MarkDownDocs(j.application.JSBaseClass):
     #         self.macros_load("https://github.com/Jumpscale/markdowndocs/tree/master/macros")
     #         self._initOK = True
 
-    def macros_load(self, pathOrUrl="https://github.com/threefoldtech/jumpscale_weblibs/tree/master/macros"):
+    def macros_load(self, pathOrUrl="https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/tools/markdowndocs/macros"):
         """
         @param pathOrUrl can be existing path or url
-        e.g. https://github.com/threefoldtech/jumpscale_lib/docsite/tree/master/examples
         """
         self._logger.info("load macros:%s"%pathOrUrl)
+
         path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
 
         if path not in self._macros_modules:
@@ -179,12 +179,20 @@ class MarkDownDocs(j.application.JSBaseClass):
         else:
             return None
 
+    def webserver(self):
+        url = "https://github.com/threefoldfoundation/lapis-wiki"
+        j.shell()
+
+
     def test(self):
         """
         js_shell 'j.tools.markdowndocs.test()'
         """
         url = "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/docsites_examples/test/"
         ds = self.load(url, name="test")
+
+        url = "https://github.com/threefoldtech/jumpscaleX/blob/master/docs"
+        ds_js = self.load(url, name="jumpscale")
 
         doc = ds.doc_get("links")
 
@@ -195,48 +203,60 @@ class MarkDownDocs(j.application.JSBaseClass):
         for link in doc.links:
             print(link)
 
+
         assert str(doc.link_get(cat="image", nr=0)) == 'link:image:unsplash.jpeg'
         assert str(doc.link_get(cat="link", nr=0)) == 'link:link:https://unsplash.com/'
 
-        doc = ds.doc_get("include_test")
+        doci = ds.doc_get("include_test")
 
-        print(doc.markdown_obj)
+        print(doci.markdown_obj)
 
         print("### PROCESSED MARKDOWN DOC")
 
-        print(doc.markdown_processed)
+        print(doci.markdown)
 
-        from IPython import embed
-        embed(colors='Linux')
+        doc = ds.doc_get("use_data")
+        md = str(doc.markdown)
+        assert "- a" in md
+        assert "- b" in md
+        assert "high" in md
 
-    # def scan_load(self, pathOrUrl="", name=""):
-    #     """
+        doc = ds.doc_get("has_data") #combines data from subdirs as well as data from doc itself
 
-    #     js_shell 'j.tools.markdowndocs.load()'
+        assert doc.data == {'color': 'blue',
+                         'colors': ['blue', 'red'],
+                         'importance': 'somewhat',
+                         'somelist': ['a', 'b', 'c']}
 
-    #     will look for config.toml in $source/config.toml
 
-    #     @param pathOrUrl is the location where the markdown or html docs are which need to be processed
-    #         if not specified then will look for root of git repo and add docs
-    #         source = $gitrepoRootDir/docs
+        print ("test of docsite done")
 
-    #         this can also be a git url e.g. https://github.com/Jumpscale/markdowndocs/tree/master/examples
 
-    #     """
-    #     if pathOrUrl == "":
-    #         pathOrUrl = j.sal.fs.getcwd()
-    #     if pathOrUrl in self._loaded:
-    #         return
-    #     self._logger.info("load:%s" % pathOrUrl)
-    #     self._loaded.append(pathOrUrl)
-    #     self._init()
-    #     if pathOrUrl == "":
-    #         path = j.sal.fs.getcwd()
-    #     else:
-    #         path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
+        #include of a markdown doc in a repo
+        p=doci.markdown_obj.parts[-2]
+        assert str(p).find("rivine client itself")!=-1
 
-    #     for configPath in j.sal.fs.listFilesInDir(path, recursive=True, filter="docs_config.toml"):
-    #         if configPath not in self._configs:
-    #             self._logger.debug("found configPath for doc dir:%s" % configPath)
-    #             ds = DocSite(self, configPath=configPath, name=name)
-    #             self.docsites[ds.name] = ds
+        #this was include test of docstring of a method
+        p=doci.markdown_obj.parts[-6]
+        assert str(p).find("j.tools.fixer.write_changes()")!=-1
+
+        #next will rewrite the full pre-processed docsite
+        ds.write()
+
+        ds_js.write()
+
+        url = "https://github.com/threefoldfoundation/info_tokens/tree/master/docs"
+        ds4 = self.load(url, name="tf_tokens")
+        ds4.write()
+
+        url = "https://github.com/threefoldfoundation/info_foundation/tree/development/docs"
+        ds5 = self.load(url, name="tf_foundation")
+        ds5.write()
+
+        url = "https://github.com/threefoldfoundation/info_grid/tree/development/docs"
+        ds6= self.load(url, name="tf_grid")
+        ds6.write()
+
+        self.webserver()
+
+        print ("TEST FOR MARKDOWN PREPROCESSING IS DONE")

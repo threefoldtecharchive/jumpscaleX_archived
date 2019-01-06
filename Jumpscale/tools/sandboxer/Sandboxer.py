@@ -102,7 +102,7 @@ class Sandboxer(j.application.JSBaseClass):
 
         def excl(name):
             exclude=["libSystem","/System/Library/Frameworks/Core","libiconv.2.dylib","libnetwork.dylib",
-                     "libutil.dylib","libc++.1.dylib","libxml2.2.dylib"]
+                     "libutil.dylib","libc++.1.dylib","libxml2.2.dylib","binascii"]
             for toexeclude in exclude:
                 if name.lower().find(toexeclude.lower()) != -1:
                     self._logger.debug("exclude:%s"%name)

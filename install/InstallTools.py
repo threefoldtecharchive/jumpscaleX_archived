@@ -632,6 +632,7 @@ class Tools():
                 async_=False, args=None, env=None,
                 interactive=False,self=None,
                 replace=True):
+
         if env is None:
             env={}
         if self is None:
@@ -1096,6 +1097,11 @@ class OSXInstall():
     @staticmethod
     def do_all():
         Tools.log("installing OSX version")
+
+        C='''
+        mkdir -p /sandbox
+        '''
+
         UbuntuInstall.pips_install()
 
 
@@ -1660,6 +1666,8 @@ class JumpscaleInstaller():
         set -e
         cd {DIR_BASE}
         source env.sh
+        mkdir -p /sandbox/openresty/nginx/logs
+        mkdir -p /sandbox/var/log
         js_shell ' j.core.installer_jumpscale.remove_old_parts()'
         js_shell 'j.tools.console.echo("JumpscaleX IS OK.")'
         """
@@ -1680,7 +1688,10 @@ class JumpscaleInstaller():
                             for line in Tools.file_text_read(toremove).split("\n"):
                                 if line.find("threefoldtech")==-1:
                                     out+="%s\n"%line
-                            Tools.file_write(toremove,out)
+                            try:
+                                Tools.file_write(toremove,out)
+                            except:
+                                pass
                             # Tools.shell()
         tofind=["js_","js9"]
         for part in os.environ["PATH"].split(":"):

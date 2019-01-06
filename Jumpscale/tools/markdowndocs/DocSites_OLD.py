@@ -15,7 +15,7 @@ class DocSites(j.application.JSBaseClass):
     """
 
     def __init__(self):
-        self.__jslocation__ = "j.tools.docsites"
+
         JSBASE.__init__(self)
         self.__imports__ = "toml"
         
@@ -158,7 +158,7 @@ class DocSites(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.tools.docsites.test()'
+        js_shell 'j.tools.markdowndocs.test()'
         """
         url = "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/docsites_examples/test/"
         ds = self.load(url, name="test")

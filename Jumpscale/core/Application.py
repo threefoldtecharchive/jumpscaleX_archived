@@ -328,11 +328,11 @@ class Application(object):
                 self._walk_obj(obj2)
 
             print("- factory empty %s"%(obj._objid))
-            obj._empty_js_obj()
+            obj._obj_cache_reset()
 
         if isinstance(obj,JSBase):
             print("- base empty %s"%(obj._objid))
-            obj._empty_js_obj()
+            obj._obj_cache_reset()
 
     #
     # def _get_referents(self,obj,level=0,done=[]):
@@ -351,9 +351,9 @@ class Application(object):
     #         if item is not None and item not in done:
     #             done.append(item)
     #             done = self._get_referents(item,level=level,done=done)
-    #     if hasattr(obj,"_empty_js_obj"):
+    #     if hasattr(obj,"_obj_cache_reset"):
     #         print("%s: empty %s"%(level,r))
-    #         obj._empty_js_obj()
+    #         obj._obj_cache_reset()
     #
     #     return done
 

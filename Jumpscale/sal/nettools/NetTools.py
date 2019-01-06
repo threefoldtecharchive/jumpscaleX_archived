@@ -891,7 +891,7 @@ class NetTools(JSBASE):
         filename = ''
         if localpath == '-':
             filename = '-'
-        if j.sal.fs.isDir(localpath):
+        if j.sal.fs.exists(localpath) and j.sal.fs.isDir(localpath):
             filename = j.sal.fs.joinPaths(localpath, j.sal.fs.getBaseName(url))
         else:
             if j.sal.fs.isDir(j.sal.fs.getDirName(localpath)):

@@ -5,12 +5,18 @@ import os
 
 
 class SSHAgent(j.application.JSBaseConfigClass):
+
+    __jslocation__ = "j.clients.sshagent"
+
     _SCHEMATEXT = """
-    @url = jumpscale.sshagent.client
-    name* = "" (S)
-    passphrase = "" (S)
-    path = "" (S)
-    """
+        @url = jumpscale.sshagent.client
+        name* = "" (S)
+        passphrase = "" (S)
+        path = "" (S)
+        """
+
+    def _init(self):
+        self._available=None
 
     @property
     def keyname_default(self):
@@ -240,24 +246,30 @@ class SSHAgent(j.application.JSBaseConfigClass):
         Check if agent available
         :return: bool
         """
-        socket_path = self.ssh_socket_path
-        if not j.sal.fs.exists(socket_path):
-            return False
-        if "SSH_AUTH_SOCK" not in os.environ:
-            self._init_ssh_env()
-        return_code, out, _ = j.sal.process.execute("ssh-add -l",
-                                                    showout=False,
-                                                    die=False, useShell=False)
-        if 'The agent has no identities.' in out:
-            return True
+        if self._available is None:
+            socket_path = self.ssh_socket_path
+            if not j.sal.fs.exists(socket_path):
+                self._available = False
+                return False
+            if "SSH_AUTH_SOCK" not in os.environ:
+                self._init_ssh_env()
+            return_code, out, _ = j.sal.process.execute("ssh-add -l",
+                                                        showout=False,
+                                                        die=False, useShell=False)
+            if 'The agent has no identities.' in out:
+                self._available = True
+                return True
 
-        if return_code != 0:
-            # Remove old socket if can't connect
-            if j.sal.fs.exists(socket_path):
-                j.sal.fs.remove(socket_path)
-            return False
-        else:
-            return True
+            if return_code != 0:
+                # Remove old socket if can't connect
+                if j.sal.fs.exists(socket_path):
+                    j.sal.fs.remove(socket_path)
+                self._available = False
+                return False
+            else:
+                self._available = True
+                return True
+        return self._available
 
     def kill(self, socketpath=None):
         """
@@ -272,7 +284,7 @@ class SSHAgent(j.application.JSBaseConfigClass):
 
     def test(self):
         """
-        js_shell 'j.clients.sshkey.test()'
+        js_shell 'j.clients.sshagent.test()'
 
         """
 

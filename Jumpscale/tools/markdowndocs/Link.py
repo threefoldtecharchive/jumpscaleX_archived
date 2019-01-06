@@ -23,7 +23,7 @@ class Link(j.application.JSBaseClass):
         self._process()
 
     def _clean(self,name):
-        return j.core.text.strip_to_ascii_dense(name)
+        return j.core.text.convert_to_snake_case(name)
 
     def error(self,msg):
         self.error_msg = msg
@@ -35,7 +35,8 @@ class Link(j.application.JSBaseClass):
 
     def _process(self):
         self.link_source = self.source.split("(",1)[1].split(")",1)[0] #find inside ()
-        self.link_descr = self.source.split("[",1)[1].split("]",1)[0] #find inside []
+        self.link_source = self.link_source.replace("\"","").replace("'","")
+        self.link_descr = self.source.split("[",1)[1].split("]",1)[0].replace("\"","").replace("'","") #find inside []
 
         if self.link_source.strip()=="":
             return self.error("link is empty, but url is:%s"%self.source)
@@ -49,19 +50,31 @@ class Link(j.application.JSBaseClass):
             lsource=self.link_source.split("?",1)[0]
         else:
             lsource =self.link_source
+
+
         self.extension = j.sal.fs.getFileExtension(lsource)
 
         if "http" in self.link_source:
             self.link_source_original = self.link_source            
             if self.source.startswith("!"):
-                if not self.extension in ["png", "jpg", "jpeg", "mov", "mp4"]:
+                if not self.extension in ["png", "jpg", "jpeg", "mov", "mp4","mp3","docx"]:
                     self.extension = "jpeg" #to support url's like https://images.unsplash.com/photo-1533157961145-8cb586c448e1?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4e252bcd55caa8958985866ad15ec954&auto=format&fit=crop&w=1534&q=80
+                if "?" in self.link_source:
+                   link_source=self.link_source.split("?",1)[0]
+                else:
+                    link_source=self.link_source
+                self.filename = self._clean(j.sal.fs.getBaseName(link_source))
+                if j.sal.fs.getFileExtension(self.filename)!=self.extension:
+                    j.shell()
             else:
                 #check link exists
                 self.cat = "link"
                 if self.docsite.links_verify:
                     self.link_verify()
-         
+
+                self.filename = None #because is e.g. other site
+
+
         else:
             if self.link_source.strip() == "/":
                 self.link_source = ""
@@ -102,16 +115,14 @@ class Link(j.application.JSBaseClass):
                         if "Cannot find doc" in str(e):
                             return self.error(str(e))
                         raise e
-                    return
                 else:
+                    j.shell()
                     return self.error("found unsupported extension")
-            
 
             self.filepath = self.doc.docsite.file_get(self.filename, die=False)
-            if self.filepath is None and self.source.startswith("!"):
-                #is image try re-download
-                self.download()
-                
+
+
+
     
     @property
     def markdown(self):
@@ -127,50 +138,17 @@ class Link(j.application.JSBaseClass):
         c+= "[%s](%s)"%(descr,self.link_source)
         return c
 
-    def download(self):
-        def do():
-            self._logger.info("image download")
-            if self.link_verify():
-                link_descr = self._clean(self.link_descr)
-                name=""
-                if len(link_descr)>0:
-                    name = link_descr        
-                if name == "":
-                    name,dest = self.doc._get_file_path_new(extension=self.extension)
-                else:            
-                    dest = "%s/%s.%s"%(self.doc.path_dir,name,self.extension)
-
-                self.link_source = "%s.%s"%(name,self.extension) #will be replaced with this name
-                
-                self._logger.info("download:%s\n%s"%(self.link_source_original,dest))
-                try:
-                    j.clients.http.download(self.link_source_original,dest)
-                except Exception as e:
-                    if "404" in str(e) or "400" in str(e):
-                        return self.error("could not find file to download:%s"%self.link_source_original)
-                    # raise e
-                    print("error in download in link")
-                    from IPython import embed;embed(colors='Linux')
-                    k
-                self.replace_in_doc()
-                self._logger.info ("download done")
-            return "OK"
-        self._cache.get("download:%s"%self.link_source_original, method=do, expire=600)
-
-
+    def download(self,dest):
+        if not "http" in self.link_source:
+            return
+        self._logger.info("download:%s\n%s"%(self.link_source_original,dest))
+        ddir = j.sal.fs.getDirName(dest)
+        if not j.sal.fs.exists(dest):
+            cmd = "cd %s;rm -f %s;curl '%s' -o '%s'"%(ddir,dest,self.link_source_original,dest) #cannot use primitive something wrong sometimes with ssl verification
+            j.sal.process.execute(cmd)
 
     def link_verify(self):
-        def do():            
-            if "verification" in self.docsite.config:
-                for item in self.docsite.config["verification"]:
-                    if "ignore" in item:
-                        if self.link_source_original.find(item["ignore"]) != -1:
-                            return True
-                    if "error" in item:
-                        if self.link_source_original.find(item["error"]) != -1:
-                            self.error("link in error state:%s"%self.link_source_original)
-                            return False
-
+        def do():
             self._logger.info("check link exists:%s"%self.link_source)
             if not j.clients.http.ping(self.link_source_original):
                 self.error("link not alive:%s"%self.link_source_original)                
@@ -181,15 +159,13 @@ class Link(j.application.JSBaseClass):
             self.error(res)
             return False
 
-    def replace_in_doc(self):
-        self._logger.info("replace_in_doc")
-        self.doc._content = self.doc._content.replace(self.source,self.markdown)   
-        self.source = self.markdown #there is a new source now        
-        print(678)
-        from IPython import embed;embed(colors='Linux')
-        s
-        # j.sal.fs.writeFile(self.doc.path,self.doc._content)
-        self._process()
+    def replace_in_txt(self,txt):
+        if len(self.source)<4:
+            j.shell()
+            raise RuntimeError("something wrong with original source")
+        txt = txt.replace(self.source,self.markdown)
+        # self.source = self.markdown #there is a new source now
+        return txt
 
     def __repr__(self):
         if self.cat == "link":

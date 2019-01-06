@@ -1167,7 +1167,7 @@ class SystemFS(j.application.JSBaseClass):
 
 
     @path_check(paths={"required","replace","multiple"})
-    def touch(self, paths, overwrite=True):
+    def touch(self, paths):
         """
         can be single path or multiple (then list)
         """
@@ -1176,8 +1176,6 @@ class SystemFS(j.application.JSBaseClass):
                 self.touch(item, overwrite=overwrite)
         path = paths
         self.createDir(self.getDirName(path))
-        if overwrite:
-            self.remove(path)
         if not self.exists(path=path):
             self.writeFile(path, "")
 

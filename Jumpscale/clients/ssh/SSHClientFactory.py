@@ -12,7 +12,7 @@ class SSHClientFactory(j.application.JSFactoryBaseClass):
     def _init(self):
         self._clients = {}
 
-    def _childclass_selector(self,dataobj,kwargs):
+    def _childclass_selector(self,childclass_name=None):
         """
         gives a creator of a factory the ability to change the type of child to be returned
         :return:

@@ -2,33 +2,28 @@ from Jumpscale import j
 import git
 import copy
 
-JSBASE = j.application.JSBaseConfigClass
 
 
-class GitClient(JSBASE):
+class GitClient(j.application.JSBaseClass):
     """
     Client of git services, has all git related operations like push, pull, ...
     """
-    _SCHEMATEXT = """
-    @url = jumpscale.git.client
-    name* = "" (S)
-    baseDir = "" (S)
-    check_path = True (B)
-    """
 
-    def _init(self):  # NOQA
+    def __init__(self, baseDir, check_path=True):  # NOQA
 
-        if self.baseDir is None or self.baseDir.strip() == "":
+        if baseDir is None or baseDir.strip() == "":
             raise RuntimeError("basedir cannot be empty")
 
-        baseDir_org = copy.copy(self.baseDir)
+        baseDir_org = copy.copy(baseDir)
+
+        j.application.JSBaseClass.__init__(self)
 
         self._repo = None
-        if not j.sal.fs.exists(path=self.baseDir):
+        if not j.sal.fs.exists(path=baseDir):
             raise j.exceptions.Input("git repo on %s not found." % baseDir_org)
 
         # split path to find parts
-        baseDir = j.sal.fs.pathClean(self.baseDir)
+        baseDir = j.sal.fs.pathClean(baseDir)
         baseDir = baseDir.replace("\\", "/")  # NOQA
         baseDir = baseDir.rstrip("/")
 
@@ -46,7 +41,7 @@ class GitClient(JSBASE):
             raise j.exceptions.RuntimeError(
                 "could not find basepath for .git in %s" %
                 baseDir_org)
-        if self.check_path:
+        if check_path:
             if baseDir.find("/code/") == -1:
                 raise j.exceptions.Input(
                     "jumpscale code management always requires path in form of $somewhere/code/$type/$account/$reponame")
@@ -423,52 +418,54 @@ class GitClient(JSBASE):
         return diffs
 
     def patchGitignore(self):
-        gitignore = '''# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-develop-eggs/
-eggs/
-sdist/
-var/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-.tox/
-.coverage
-.cache
-nosetests.xml
-coverage.xml
-
-# Translations
-*.mo
-
-# Mr Developer
-.mr.developer.cfg
-.project
-.pydevproject
-
-# Rope
-.ropeproject
-
-# Django stuff:
-*.log
-*.pot
-
-# Sphinx documentation
-docs/_build/
-'''
+        gitignore = '''
+            # Byte-compiled / optimized / DLL files
+            __pycache__/
+            *.py[cod]
+            
+            # C extensions
+            *.so
+            
+            # Distribution / packaging
+            .Python
+            develop-eggs/
+            eggs/
+            sdist/
+            var/
+            *.egg-info/
+            .installed.cfg
+            *.egg
+            
+            # Installer logs
+            pip-log.txt
+            pip-delete-this-directory.txt
+            
+            # Unit test / coverage reports
+            .tox/
+            .coverage
+            .cache
+            nosetests.xml
+            coverage.xml
+            
+            # Translations
+            *.mo
+            
+            # Mr Developer
+            .mr.developer.cfg
+            .project
+            .pydevproject
+            
+            # Rope
+            .ropeproject
+            
+            # Django stuff:
+            *.log
+            *.pot
+            
+            # Sphinx documentation
+            docs/_build/
+            '''
+        gitignore=j.core.tools.text_strip(gitignore)
         ignorefilepath = j.sal.fs.joinPaths(self.BASEDIR, '.gitignore')
         if not j.sal.fs.exists(ignorefilepath):
             j.sal.fs.writeFile(ignorefilepath, gitignore)

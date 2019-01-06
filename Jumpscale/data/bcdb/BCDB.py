@@ -49,7 +49,6 @@ class BCDB(j.application.JSBaseClass):
 
         self.meta = BCDBMeta(self)
         # self._logger_enable()
-
         self._init_(reset=reset, stop=False)
 
     @property

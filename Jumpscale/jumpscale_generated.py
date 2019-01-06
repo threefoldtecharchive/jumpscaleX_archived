@@ -83,7 +83,7 @@ class group_clients(JSGroup):
     @property
     def _template(self):
         if self.__template is None:
-            print("LOAD:GrafanaFactory")
+            # print("LOAD:GrafanaFactory")
             try:
                 from Jumpscale.clients.TEMPLATE.TemplateGrafanaFactory import GrafanaFactory
             except Exception as e:
@@ -100,7 +100,7 @@ class group_clients(JSGroup):
     @property
     def btc_electrum(self):
         if self._btc_electrum is None:
-            print("LOAD:ElectrumClientFactory")
+            # print("LOAD:ElectrumClientFactory")
             try:
                 from Jumpscale.clients.blockchain.electrum.ElectrumClientFactory import ElectrumClientFactory
             except Exception as e:
@@ -117,7 +117,7 @@ class group_clients(JSGroup):
     @property
     def tfchain(self):
         if self._tfchain is None:
-            print("LOAD:TfchainClientFactory")
+            # print("LOAD:TfchainClientFactory")
             try:
                 from Jumpscale.clients.blockchain.tfchain.TfchainClientFactory import TfchainClientFactory
             except Exception as e:
@@ -134,7 +134,7 @@ class group_clients(JSGroup):
     @property
     def btc_alpha(self):
         if self._btc_alpha is None:
-            print("LOAD:GitHubFactory")
+            # print("LOAD:GitHubFactory")
             try:
                 from Jumpscale.clients.btc_alpha.BTCFactory import GitHubFactory
             except Exception as e:
@@ -151,7 +151,7 @@ class group_clients(JSGroup):
     @property
     def coredns(self):
         if self._coredns is None:
-            print("LOAD:CoreDNSFactory")
+            # print("LOAD:CoreDNSFactory")
             try:
                 from Jumpscale.clients.coredns.CoreDNSFactory import CoreDNSFactory
             except Exception as e:
@@ -168,7 +168,7 @@ class group_clients(JSGroup):
     @property
     def currencylayer(self):
         if self._currencylayer is None:
-            print("LOAD:CurrencyLayerFactory")
+            # print("LOAD:CurrencyLayerFactory")
             try:
                 from Jumpscale.clients.currencylayer.CurrencyLayerFactory import CurrencyLayerFactory
             except Exception as e:
@@ -185,7 +185,7 @@ class group_clients(JSGroup):
     @property
     def etcd(self):
         if self._etcd is None:
-            print("LOAD:EtcdFactory")
+            # print("LOAD:EtcdFactory")
             try:
                 from Jumpscale.clients.etcd.EtcdFactory import EtcdFactory
             except Exception as e:
@@ -202,7 +202,7 @@ class group_clients(JSGroup):
     @property
     def git(self):
         if self._git is None:
-            print("LOAD:GitFactory")
+            # print("LOAD:GitFactory")
             try:
                 from Jumpscale.clients.git.GitFactory import GitFactory
             except Exception as e:
@@ -219,7 +219,7 @@ class group_clients(JSGroup):
     @property
     def gitea(self):
         if self._gitea is None:
-            print("LOAD:GiteaFactory")
+            # print("LOAD:GiteaFactory")
             try:
                 from Jumpscale.clients.gitea.GiteaFactory import GiteaFactory
             except Exception as e:
@@ -236,7 +236,7 @@ class group_clients(JSGroup):
     @property
     def github(self):
         if self._github is None:
-            print("LOAD:GitHubFactory")
+            # print("LOAD:GitHubFactory")
             try:
                 from Jumpscale.clients.github.GitHubFactory import GitHubFactory
             except Exception as e:
@@ -253,7 +253,7 @@ class group_clients(JSGroup):
     @property
     def google_compute(self):
         if self._google_compute is None:
-            print("LOAD:GoogleComputeFactory")
+            # print("LOAD:GoogleComputeFactory")
             try:
                 from Jumpscale.clients.google_compute.GoogleComputeFactory import GoogleComputeFactory
             except Exception as e:
@@ -270,7 +270,7 @@ class group_clients(JSGroup):
     @property
     def grafana(self):
         if self._grafana is None:
-            print("LOAD:GrafanaFactory")
+            # print("LOAD:GrafanaFactory")
             try:
                 from Jumpscale.clients.grafana.GrafanaFactory import GrafanaFactory
             except Exception as e:
@@ -287,7 +287,7 @@ class group_clients(JSGroup):
     @property
     def graphite(self):
         if self._graphite is None:
-            print("LOAD:GraphiteFactory")
+            # print("LOAD:GraphiteFactory")
             try:
                 from Jumpscale.clients.graphite.GraphiteFactory import GraphiteFactory
             except Exception as e:
@@ -304,7 +304,7 @@ class group_clients(JSGroup):
     @property
     def http(self):
         if self._http is None:
-            print("LOAD:HttpClient")
+            # print("LOAD:HttpClient")
             try:
                 from Jumpscale.clients.http.HttpClient import HttpClient
             except Exception as e:
@@ -321,7 +321,7 @@ class group_clients(JSGroup):
     @property
     def influxdb(self):
         if self._influxdb is None:
-            print("LOAD:InfluxdbFactory")
+            # print("LOAD:InfluxdbFactory")
             try:
                 from Jumpscale.clients.influxdb.InfluxdbFactory import InfluxdbFactory
             except Exception as e:
@@ -338,7 +338,7 @@ class group_clients(JSGroup):
     @property
     def intercom(self):
         if self._intercom is None:
-            print("LOAD:Intercom")
+            # print("LOAD:Intercom")
             try:
                 from Jumpscale.clients.intercom.IntercomFactory import Intercom
             except Exception as e:
@@ -355,7 +355,7 @@ class group_clients(JSGroup):
     @property
     def ipmi(self):
         if self._ipmi is None:
-            print("LOAD:IpmiFactory")
+            # print("LOAD:IpmiFactory")
             try:
                 from Jumpscale.clients.ipmi.IpmiFactory import IpmiFactory
             except Exception as e:
@@ -372,7 +372,7 @@ class group_clients(JSGroup):
     @property
     def itsyouonline(self):
         if self._itsyouonline is None:
-            print("LOAD:IYOFactory")
+            # print("LOAD:IYOFactory")
             try:
                 from Jumpscale.clients.itsyouonline.IYOFactory import IYOFactory
             except Exception as e:
@@ -389,7 +389,7 @@ class group_clients(JSGroup):
     @property
     def kraken(self):
         if self._kraken is None:
-            print("LOAD:KrakenFactory")
+            # print("LOAD:KrakenFactory")
             try:
                 from Jumpscale.clients.kraken.KrakenFactory import KrakenFactory
             except Exception as e:
@@ -406,7 +406,7 @@ class group_clients(JSGroup):
     @property
     def kubernetes(self):
         if self._kubernetes is None:
-            print("LOAD:KubernetesFactory")
+            # print("LOAD:KubernetesFactory")
             try:
                 from Jumpscale.clients.kubernetes.KubernetesFactory import KubernetesFactory
             except Exception as e:
@@ -423,7 +423,7 @@ class group_clients(JSGroup):
     @property
     def email(self):
         if self._email is None:
-            print("LOAD:EmailFactory")
+            # print("LOAD:EmailFactory")
             try:
                 from Jumpscale.clients.mail.EmailFactory import EmailFactory
             except Exception as e:
@@ -440,7 +440,7 @@ class group_clients(JSGroup):
     @property
     def sendgrid(self):
         if self._sendgrid is None:
-            print("LOAD:SendGridClient")
+            # print("LOAD:SendGridClient")
             try:
                 from Jumpscale.clients.mail.sendgrid.SendGridClient import SendGridClient
             except Exception as e:
@@ -457,7 +457,7 @@ class group_clients(JSGroup):
     @property
     def mongoengine(self):
         if self._mongoengine is None:
-            print("LOAD:MongoEngineFactory")
+            # print("LOAD:MongoEngineFactory")
             try:
                 from Jumpscale.clients.mongodbclient.MongoEngineFactory import MongoEngineFactory
             except Exception as e:
@@ -474,7 +474,7 @@ class group_clients(JSGroup):
     @property
     def mongodb(self):
         if self._mongodb is None:
-            print("LOAD:MongoFactory")
+            # print("LOAD:MongoFactory")
             try:
                 from Jumpscale.clients.mongodbclient.MongoFactory import MongoFactory
             except Exception as e:
@@ -491,7 +491,7 @@ class group_clients(JSGroup):
     @property
     def mysql(self):
         if self._mysql is None:
-            print("LOAD:MySQLFactory")
+            # print("LOAD:MySQLFactory")
             try:
                 from Jumpscale.clients.mysql.MySQLFactory import MySQLFactory
             except Exception as e:
@@ -508,7 +508,7 @@ class group_clients(JSGroup):
     @property
     def oauth(self):
         if self._oauth is None:
-            print("LOAD:OauthFactory")
+            # print("LOAD:OauthFactory")
             try:
                 from Jumpscale.clients.oauth.OauthFactory import OauthFactory
             except Exception as e:
@@ -525,7 +525,7 @@ class group_clients(JSGroup):
     @property
     def openvcloud(self):
         if self._openvcloud is None:
-            print("LOAD:OVCClientFactory")
+            # print("LOAD:OVCClientFactory")
             try:
                 from Jumpscale.clients.openvcloud.OVCFactory import OVCClientFactory
             except Exception as e:
@@ -542,7 +542,7 @@ class group_clients(JSGroup):
     @property
     def ovh(self):
         if self._ovh is None:
-            print("LOAD:OVHFactory")
+            # print("LOAD:OVHFactory")
             try:
                 from Jumpscale.clients.ovh.OVHFactory import OVHFactory
             except Exception as e:
@@ -559,7 +559,7 @@ class group_clients(JSGroup):
     @property
     def packetnet(self):
         if self._packetnet is None:
-            print("LOAD:PacketNetFactory")
+            # print("LOAD:PacketNetFactory")
             try:
                 from Jumpscale.clients.packetnet.PacketNetFactory import PacketNetFactory
             except Exception as e:
@@ -576,7 +576,7 @@ class group_clients(JSGroup):
     @property
     def peewee(self):
         if self._peewee is None:
-            print("LOAD:PeeweeFactory")
+            # print("LOAD:PeeweeFactory")
             try:
                 from Jumpscale.clients.peewee.PeeweeFactory import PeeweeFactory
             except Exception as e:
@@ -593,7 +593,7 @@ class group_clients(JSGroup):
     @property
     def portal(self):
         if self._portal is None:
-            print("LOAD:PortalClientFactory")
+            # print("LOAD:PortalClientFactory")
             try:
                 from Jumpscale.clients.portal.PortalClientFactory import PortalClientFactory
             except Exception as e:
@@ -610,7 +610,7 @@ class group_clients(JSGroup):
     @property
     def postgres(self):
         if self._postgres is None:
-            print("LOAD:PostgresqlFactory")
+            # print("LOAD:PostgresqlFactory")
             try:
                 from Jumpscale.clients.postgresql.PostgresqlFactory import PostgresqlFactory
             except Exception as e:
@@ -627,7 +627,7 @@ class group_clients(JSGroup):
     @property
     def racktivity(self):
         if self._racktivity is None:
-            print("LOAD:RacktivityFactory")
+            # print("LOAD:RacktivityFactory")
             try:
                 from Jumpscale.clients.racktivity.RacktivityFactory import RacktivityFactory
             except Exception as e:
@@ -644,7 +644,7 @@ class group_clients(JSGroup):
     @property
     def credis_core(self):
         if self._credis_core is None:
-            print("LOAD:RedisCoreClient")
+            # print("LOAD:RedisCoreClient")
             try:
                 from Jumpscale.clients.redis.RedisCoreClient import RedisCoreClient
             except Exception as e:
@@ -661,7 +661,7 @@ class group_clients(JSGroup):
     @property
     def redis(self):
         if self._redis is None:
-            print("LOAD:RedisFactory")
+            # print("LOAD:RedisFactory")
             try:
                 from Jumpscale.clients.redis.RedisFactory import RedisFactory
             except Exception as e:
@@ -678,7 +678,7 @@ class group_clients(JSGroup):
     @property
     def redis_config(self):
         if self._redis_config is None:
-            print("LOAD:RedisConfigFactory")
+            # print("LOAD:RedisConfigFactory")
             try:
                 from Jumpscale.clients.redisconfig.RedisConfigFactory import RedisConfigFactory
             except Exception as e:
@@ -695,7 +695,7 @@ class group_clients(JSGroup):
     @property
     def rogerthat(self):
         if self._rogerthat is None:
-            print("LOAD:RogerthatFactory")
+            # print("LOAD:RogerthatFactory")
             try:
                 from Jumpscale.clients.rogerthat.RogerthatFactory import RogerthatFactory
             except Exception as e:
@@ -712,7 +712,7 @@ class group_clients(JSGroup):
     @property
     def s3(self):
         if self._s3 is None:
-            print("LOAD:S3Factory")
+            # print("LOAD:S3Factory")
             try:
                 from Jumpscale.clients.s3.S3Factory import S3Factory
             except Exception as e:
@@ -729,7 +729,7 @@ class group_clients(JSGroup):
     @property
     def sqlalchemy(self):
         if self._sqlalchemy is None:
-            print("LOAD:SQLAlchemyFactory")
+            # print("LOAD:SQLAlchemyFactory")
             try:
                 from Jumpscale.clients.sqlalchemy.SQLAlchemyFactory import SQLAlchemyFactory
             except Exception as e:
@@ -746,7 +746,7 @@ class group_clients(JSGroup):
     @property
     def ssh(self):
         if self._ssh is None:
-            print("LOAD:SSHClientFactory")
+            # print("LOAD:SSHClientFactory")
             try:
                 from Jumpscale.clients.ssh.SSHClientFactory import SSHClientFactory
             except Exception as e:
@@ -763,24 +763,24 @@ class group_clients(JSGroup):
     @property
     def sshagent(self):
         if self._sshagent is None:
-            print("LOAD:SSHAgentFactory")
+            # print("LOAD:SSHAgent")
             try:
-                from Jumpscale.clients.sshagent.SSHAgentFactory import SSHAgentFactory
+                from Jumpscale.clients.sshagent.SSHAgent import SSHAgent
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.sshagent.SSHAgentFactory", e)
+                msg = j.core.application.error_init("import", "Jumpscale.clients.sshagent.SSHAgent", e)
                 raise e
-            # print("RUN:SSHAgentFactory")
+            # print("RUN:SSHAgent")
             try:
-                self._sshagent =  SSHAgentFactory()
+                self._sshagent =  SSHAgent()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.sshagent.SSHAgentFactory",e)
+                msg = j.core.application.error_init("execute","Jumpscale.clients.sshagent.SSHAgent",e)
                 return None
             # print("OK")
         return self._sshagent
     @property
     def sshkey(self):
         if self._sshkey is None:
-            print("LOAD:SSHKeys")
+            # print("LOAD:SSHKeys")
             try:
                 from Jumpscale.clients.sshkey.SSHKeys import SSHKeys
             except Exception as e:
@@ -797,7 +797,7 @@ class group_clients(JSGroup):
     @property
     def syncthing(self):
         if self._syncthing is None:
-            print("LOAD:SyncthingFactory")
+            # print("LOAD:SyncthingFactory")
             try:
                 from Jumpscale.clients.syncthing.SyncthingFactory import SyncthingFactory
             except Exception as e:
@@ -814,7 +814,7 @@ class group_clients(JSGroup):
     @property
     def tarantool(self):
         if self._tarantool is None:
-            print("LOAD:TarantoolFactory")
+            # print("LOAD:TarantoolFactory")
             try:
                 from Jumpscale.clients.tarantool.TarantoolFactory import TarantoolFactory
             except Exception as e:
@@ -831,7 +831,7 @@ class group_clients(JSGroup):
     @property
     def telegram_bot(self):
         if self._telegram_bot is None:
-            print("LOAD:TelegramBotFactory")
+            # print("LOAD:TelegramBotFactory")
             try:
                 from Jumpscale.clients.telegram_bot.TelegramBotFactory import TelegramBotFactory
             except Exception as e:
@@ -848,7 +848,7 @@ class group_clients(JSGroup):
     @property
     def threefold_directory(self):
         if self._threefold_directory is None:
-            print("LOAD:GridCapacityFactory")
+            # print("LOAD:GridCapacityFactory")
             try:
                 from Jumpscale.clients.threefold_directory.GridCapacityFactory import GridCapacityFactory
             except Exception as e:
@@ -865,7 +865,7 @@ class group_clients(JSGroup):
     @property
     def traefik(self):
         if self._traefik is None:
-            print("LOAD:TraefikFactory")
+            # print("LOAD:TraefikFactory")
             try:
                 from Jumpscale.clients.traefik.TraefikFactory import TraefikFactory
             except Exception as e:
@@ -882,7 +882,7 @@ class group_clients(JSGroup):
     @property
     def trello(self):
         if self._trello is None:
-            print("LOAD:Trello")
+            # print("LOAD:Trello")
             try:
                 from Jumpscale.clients.trello.TrelloFactory import Trello
             except Exception as e:
@@ -899,7 +899,7 @@ class group_clients(JSGroup):
     @property
     def virtualbox(self):
         if self._virtualbox is None:
-            print("LOAD:VirtualboxFactory")
+            # print("LOAD:VirtualboxFactory")
             try:
                 from Jumpscale.clients.virtualbox.VirtualboxFactory import VirtualboxFactory
             except Exception as e:
@@ -916,7 +916,7 @@ class group_clients(JSGroup):
     @property
     def webgateway(self):
         if self._webgateway is None:
-            print("LOAD:WebGatewayFactory")
+            # print("LOAD:WebGatewayFactory")
             try:
                 from Jumpscale.clients.webgateway.WebGatewayFactory import WebGatewayFactory
             except Exception as e:
@@ -933,7 +933,7 @@ class group_clients(JSGroup):
     @property
     def zdb(self):
         if self._zdb is None:
-            print("LOAD:ZDBFactory")
+            # print("LOAD:ZDBFactory")
             try:
                 from Jumpscale.clients.zdb.ZDBFactory import ZDBFactory
             except Exception as e:
@@ -950,7 +950,7 @@ class group_clients(JSGroup):
     @property
     def zboot(self):
         if self._zboot is None:
-            print("LOAD:ZerobootFactory")
+            # print("LOAD:ZerobootFactory")
             try:
                 from Jumpscale.clients.zero_boot.ZerobootFactory import ZerobootFactory
             except Exception as e:
@@ -967,7 +967,7 @@ class group_clients(JSGroup):
     @property
     def zhub(self):
         if self._zhub is None:
-            print("LOAD:ZeroHubFactory")
+            # print("LOAD:ZeroHubFactory")
             try:
                 from Jumpscale.clients.zero_hub.ZeroHubFactory import ZeroHubFactory
             except Exception as e:
@@ -984,7 +984,7 @@ class group_clients(JSGroup):
     @property
     def zhubdirect(self):
         if self._zhubdirect is None:
-            print("LOAD:HubDirectFactory")
+            # print("LOAD:HubDirectFactory")
             try:
                 from Jumpscale.clients.zero_hub_direct.HubDirectFactory import HubDirectFactory
             except Exception as e:
@@ -1001,7 +1001,7 @@ class group_clients(JSGroup):
     @property
     def zos_protocol(self):
         if self._zos_protocol is None:
-            print("LOAD:ZeroOSFactory")
+            # print("LOAD:ZeroOSFactory")
             try:
                 from Jumpscale.clients.zero_os_protocol.ZeroOSFactory import ZeroOSFactory
             except Exception as e:
@@ -1018,7 +1018,7 @@ class group_clients(JSGroup):
     @property
     def zerostor(self):
         if self._zerostor is None:
-            print("LOAD:ZeroStorFactoryDeprecated")
+            # print("LOAD:ZeroStorFactoryDeprecated")
             try:
                 from Jumpscale.clients.zero_stor.ZeroStorFactoryDeprecated import ZeroStorFactoryDeprecated
             except Exception as e:
@@ -1035,7 +1035,7 @@ class group_clients(JSGroup):
     @property
     def zstor(self):
         if self._zstor is None:
-            print("LOAD:ZeroStorFactory")
+            # print("LOAD:ZeroStorFactory")
             try:
                 from Jumpscale.clients.zero_stor.ZeroStorFactory import ZeroStorFactory
             except Exception as e:
@@ -1052,7 +1052,7 @@ class group_clients(JSGroup):
     @property
     def zerotier(self):
         if self._zerotier is None:
-            print("LOAD:ZerotierFactory")
+            # print("LOAD:ZerotierFactory")
             try:
                 from Jumpscale.clients.zerotier.ZerotierFactory import ZerotierFactory
             except Exception as e:
@@ -1069,7 +1069,7 @@ class group_clients(JSGroup):
     @property
     def zos(self):
         if self._zos is None:
-            print("LOAD:ZeroOSClientFactory")
+            # print("LOAD:ZeroOSClientFactory")
             try:
                 from Jumpscale.clients.zero_os.ZeroOsFactory import ZeroOSClientFactory
             except Exception as e:
@@ -1086,7 +1086,7 @@ class group_clients(JSGroup):
     @property
     def gedis(self):
         if self._gedis is None:
-            print("LOAD:GedisClientFactory")
+            # print("LOAD:GedisClientFactory")
             try:
                 from DigitalMe.clients.gedis.GedisClientFactory import GedisClientFactory
             except Exception as e:
@@ -1103,7 +1103,7 @@ class group_clients(JSGroup):
     @property
     def gedis_backend(self):
         if self._gedis_backend is None:
-            print("LOAD:GedisBackendClientFactory")
+            # print("LOAD:GedisBackendClientFactory")
             try:
                 from DigitalMe.clients.gedis_backends.GedisBackendClientFactory import GedisBackendClientFactory
             except Exception as e:
@@ -1120,7 +1120,7 @@ class group_clients(JSGroup):
     @property
     def multicast(self):
         if self._multicast is None:
-            print("LOAD:MulticastFactory")
+            # print("LOAD:MulticastFactory")
             try:
                 from DigitalMe.clients.multicast.MulticastFactory import MulticastFactory
             except Exception as e:
@@ -1147,8 +1147,8 @@ class group_sal(JSGroup):
         self._btrfs = None
         self._disklayout = None
         self._dnsmasq = None
-        self._fs = None
         self._fswalker = None
+        self._fs = None
         self._hostsfile = None
         self._kvm = None
         self._netconfig = None
@@ -1174,7 +1174,7 @@ class group_sal(JSGroup):
     @property
     def coredns(self):
         if self._coredns is None:
-            print("LOAD:CoreDnsFactory")
+            # print("LOAD:CoreDnsFactory")
             try:
                 from Jumpscale.clients.coredns.alternative.CoreDnsFactory import CoreDnsFactory
             except Exception as e:
@@ -1191,7 +1191,7 @@ class group_sal(JSGroup):
     @property
     def bind(self):
         if self._bind is None:
-            print("LOAD:BindDNS")
+            # print("LOAD:BindDNS")
             try:
                 from Jumpscale.sal.bind.BindDNS import BindDNS
             except Exception as e:
@@ -1208,7 +1208,7 @@ class group_sal(JSGroup):
     @property
     def btrfs(self):
         if self._btrfs is None:
-            print("LOAD:BtfsExtensionFactory")
+            # print("LOAD:BtfsExtensionFactory")
             try:
                 from Jumpscale.sal.btrfs.BtrfsExtension import BtfsExtensionFactory
             except Exception as e:
@@ -1225,7 +1225,7 @@ class group_sal(JSGroup):
     @property
     def disklayout(self):
         if self._disklayout is None:
-            print("LOAD:DiskManager")
+            # print("LOAD:DiskManager")
             try:
                 from Jumpscale.sal.disklayout.DiskManager import DiskManager
             except Exception as e:
@@ -1242,7 +1242,7 @@ class group_sal(JSGroup):
     @property
     def dnsmasq(self):
         if self._dnsmasq is None:
-            print("LOAD:DnsmasqFactory")
+            # print("LOAD:DnsmasqFactory")
             try:
                 from Jumpscale.sal.dnsmasq.DnsmasqFactory import DnsmasqFactory
             except Exception as e:
@@ -1257,26 +1257,9 @@ class group_sal(JSGroup):
             # print("OK")
         return self._dnsmasq
     @property
-    def fs(self):
-        if self._fs is None:
-            print("LOAD:SystemFS")
-            try:
-                from Jumpscale.sal.fs.SystemFS import SystemFS
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.fs.SystemFS", e)
-                raise e
-            # print("RUN:SystemFS")
-            try:
-                self._fs =  SystemFS()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.fs.SystemFS",e)
-                return None
-            # print("OK")
-        return self._fs
-    @property
     def fswalker(self):
         if self._fswalker is None:
-            print("LOAD:SystemFSWalker")
+            # print("LOAD:SystemFSWalker")
             try:
                 from Jumpscale.sal.fs.SystemFSWalker import SystemFSWalker
             except Exception as e:
@@ -1291,9 +1274,26 @@ class group_sal(JSGroup):
             # print("OK")
         return self._fswalker
     @property
+    def fs(self):
+        if self._fs is None:
+            # print("LOAD:SystemFS")
+            try:
+                from Jumpscale.sal.fs.SystemFS import SystemFS
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal.fs.SystemFS", e)
+                raise e
+            # print("RUN:SystemFS")
+            try:
+                self._fs =  SystemFS()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal.fs.SystemFS",e)
+                return None
+            # print("OK")
+        return self._fs
+    @property
     def hostsfile(self):
         if self._hostsfile is None:
-            print("LOAD:HostFile")
+            # print("LOAD:HostFile")
             try:
                 from Jumpscale.sal.hostfile.HostFile import HostFile
             except Exception as e:
@@ -1310,7 +1310,7 @@ class group_sal(JSGroup):
     @property
     def kvm(self):
         if self._kvm is None:
-            print("LOAD:KVM")
+            # print("LOAD:KVM")
             try:
                 from Jumpscale.sal.kvm.KVM import KVM
             except Exception as e:
@@ -1327,7 +1327,7 @@ class group_sal(JSGroup):
     @property
     def netconfig(self):
         if self._netconfig is None:
-            print("LOAD:Netconfig")
+            # print("LOAD:Netconfig")
             try:
                 from Jumpscale.sal.netconfig.Netconfig import Netconfig
             except Exception as e:
@@ -1344,7 +1344,7 @@ class group_sal(JSGroup):
     @property
     def nettools(self):
         if self._nettools is None:
-            print("LOAD:NetTools")
+            # print("LOAD:NetTools")
             try:
                 from Jumpscale.sal.nettools.NetTools import NetTools
             except Exception as e:
@@ -1361,7 +1361,7 @@ class group_sal(JSGroup):
     @property
     def nfs(self):
         if self._nfs is None:
-            print("LOAD:NFS")
+            # print("LOAD:NFS")
             try:
                 from Jumpscale.sal.nfs.NFS import NFS
             except Exception as e:
@@ -1378,7 +1378,7 @@ class group_sal(JSGroup):
     @property
     def nginx(self):
         if self._nginx is None:
-            print("LOAD:NginxFactory")
+            # print("LOAD:NginxFactory")
             try:
                 from Jumpscale.sal.nginx.Nginx import NginxFactory
             except Exception as e:
@@ -1395,7 +1395,7 @@ class group_sal(JSGroup):
     @property
     def nic(self):
         if self._nic is None:
-            print("LOAD:UnixNetworkManager")
+            # print("LOAD:UnixNetworkManager")
             try:
                 from Jumpscale.sal.nic.UnixNetworkManager import UnixNetworkManager
             except Exception as e:
@@ -1412,7 +1412,7 @@ class group_sal(JSGroup):
     @property
     def openvswitch(self):
         if self._openvswitch is None:
-            print("LOAD:NetConfigFactory")
+            # print("LOAD:NetConfigFactory")
             try:
                 from Jumpscale.sal.openvswitch.NetConfigFactory import NetConfigFactory
             except Exception as e:
@@ -1429,7 +1429,7 @@ class group_sal(JSGroup):
     @property
     def process(self):
         if self._process is None:
-            print("LOAD:SystemProcess")
+            # print("LOAD:SystemProcess")
             try:
                 from Jumpscale.sal.process.SystemProcess import SystemProcess
             except Exception as e:
@@ -1446,7 +1446,7 @@ class group_sal(JSGroup):
     @property
     def qemu_img(self):
         if self._qemu_img is None:
-            print("LOAD:QemuImg")
+            # print("LOAD:QemuImg")
             try:
                 from Jumpscale.sal.qemu_img.Qemu_img import QemuImg
             except Exception as e:
@@ -1463,7 +1463,7 @@ class group_sal(JSGroup):
     @property
     def rsync(self):
         if self._rsync is None:
-            print("LOAD:RsyncFactory")
+            # print("LOAD:RsyncFactory")
             try:
                 from Jumpscale.sal.rsync.RsyncFactory import RsyncFactory
             except Exception as e:
@@ -1480,7 +1480,7 @@ class group_sal(JSGroup):
     @property
     def samba(self):
         if self._samba is None:
-            print("LOAD:Samba")
+            # print("LOAD:Samba")
             try:
                 from Jumpscale.sal.samba.Samba import Samba
             except Exception as e:
@@ -1497,7 +1497,7 @@ class group_sal(JSGroup):
     @property
     def sshd(self):
         if self._sshd is None:
-            print("LOAD:SSHD")
+            # print("LOAD:SSHD")
             try:
                 from Jumpscale.sal.sshd.SSHD import SSHD
             except Exception as e:
@@ -1514,7 +1514,7 @@ class group_sal(JSGroup):
     @property
     def ssl(self):
         if self._ssl is None:
-            print("LOAD:SSLFactory")
+            # print("LOAD:SSLFactory")
             try:
                 from Jumpscale.sal.ssl.SSLFactory import SSLFactory
             except Exception as e:
@@ -1531,7 +1531,7 @@ class group_sal(JSGroup):
     @property
     def tls(self):
         if self._tls is None:
-            print("LOAD:TLSFactory")
+            # print("LOAD:TLSFactory")
             try:
                 from Jumpscale.sal.tls.TLSFactory import TLSFactory
             except Exception as e:
@@ -1548,7 +1548,7 @@ class group_sal(JSGroup):
     @property
     def ubuntu(self):
         if self._ubuntu is None:
-            print("LOAD:Ubuntu")
+            # print("LOAD:Ubuntu")
             try:
                 from Jumpscale.sal.ubuntu.Ubuntu import Ubuntu
             except Exception as e:
@@ -1565,7 +1565,7 @@ class group_sal(JSGroup):
     @property
     def ufw(self):
         if self._ufw is None:
-            print("LOAD:UFWManager")
+            # print("LOAD:UFWManager")
             try:
                 from Jumpscale.sal.ufw.UFWManager import UFWManager
             except Exception as e:
@@ -1582,7 +1582,7 @@ class group_sal(JSGroup):
     @property
     def unix(self):
         if self._unix is None:
-            print("LOAD:UnixSystem")
+            # print("LOAD:UnixSystem")
             try:
                 from Jumpscale.sal.unix.Unix import UnixSystem
             except Exception as e:
@@ -1599,7 +1599,7 @@ class group_sal(JSGroup):
     @property
     def windows(self):
         if self._windows is None:
-            print("LOAD:WindowsSystem")
+            # print("LOAD:WindowsSystem")
             try:
                 from Jumpscale.sal.windows.Windows import WindowsSystem
             except Exception as e:
@@ -1616,7 +1616,7 @@ class group_sal(JSGroup):
     @property
     def docker(self):
         if self._docker is None:
-            print("LOAD:Docker")
+            # print("LOAD:Docker")
             try:
                 from Jumpscale.tools.docker.Docker import Docker
             except Exception as e:
@@ -1660,13 +1660,14 @@ class group_data(JSGroup):
         self._worksheets = None
         self._dict_editor = None
         self._inifile = None
+        self._docs = None
         self._nltk = None
 
     
     @property
     def bcdb(self):
         if self._bcdb is None:
-            print("LOAD:BCDBFactory")
+            # print("LOAD:BCDBFactory")
             try:
                 from Jumpscale.data.bcdb.BCDBFactory import BCDBFactory
             except Exception as e:
@@ -1683,7 +1684,7 @@ class group_data(JSGroup):
     @property
     def cachelru(self):
         if self._cachelru is None:
-            print("LOAD:LRUCacheFactory")
+            # print("LOAD:LRUCacheFactory")
             try:
                 from Jumpscale.data.cachelru.LRUCacheFactory import LRUCacheFactory
             except Exception as e:
@@ -1700,7 +1701,7 @@ class group_data(JSGroup):
     @property
     def capnp(self):
         if self._capnp is None:
-            print("LOAD:Capnp")
+            # print("LOAD:Capnp")
             try:
                 from Jumpscale.data.capnp.Capnp import Capnp
             except Exception as e:
@@ -1717,7 +1718,7 @@ class group_data(JSGroup):
     @property
     def encryption(self):
         if self._encryption is None:
-            print("LOAD:EncryptionFactory")
+            # print("LOAD:EncryptionFactory")
             try:
                 from Jumpscale.data.encryption.EncryptionFactory import EncryptionFactory
             except Exception as e:
@@ -1734,7 +1735,7 @@ class group_data(JSGroup):
     @property
     def hash(self):
         if self._hash is None:
-            print("LOAD:HashTool")
+            # print("LOAD:HashTool")
             try:
                 from Jumpscale.data.hash.HashTool import HashTool
             except Exception as e:
@@ -1751,7 +1752,7 @@ class group_data(JSGroup):
     @property
     def html(self):
         if self._html is None:
-            print("LOAD:HTMLFactory")
+            # print("LOAD:HTMLFactory")
             try:
                 from Jumpscale.data.html.HTMLFactory import HTMLFactory
             except Exception as e:
@@ -1768,7 +1769,7 @@ class group_data(JSGroup):
     @property
     def idgenerator(self):
         if self._idgenerator is None:
-            print("LOAD:IDGenerator")
+            # print("LOAD:IDGenerator")
             try:
                 from Jumpscale.data.idgenerator.IDGenerator import IDGenerator
             except Exception as e:
@@ -1785,7 +1786,7 @@ class group_data(JSGroup):
     @property
     def indexfile(self):
         if self._indexfile is None:
-            print("LOAD:IndexDB")
+            # print("LOAD:IndexDB")
             try:
                 from Jumpscale.data.indexFile.IndexFiles import IndexDB
             except Exception as e:
@@ -1802,7 +1803,7 @@ class group_data(JSGroup):
     @property
     def latex(self):
         if self._latex is None:
-            print("LOAD:Latex")
+            # print("LOAD:Latex")
             try:
                 from Jumpscale.data.latex.Latex import Latex
             except Exception as e:
@@ -1819,7 +1820,7 @@ class group_data(JSGroup):
     @property
     def markdown(self):
         if self._markdown is None:
-            print("LOAD:MarkdownFactory")
+            # print("LOAD:MarkdownFactory")
             try:
                 from Jumpscale.data.markdown.MarkdownFactory import MarkdownFactory
             except Exception as e:
@@ -1836,7 +1837,7 @@ class group_data(JSGroup):
     @property
     def nacl(self):
         if self._nacl is None:
-            print("LOAD:NACLFactory")
+            # print("LOAD:NACLFactory")
             try:
                 from Jumpscale.data.nacl.NACLFactory import NACLFactory
             except Exception as e:
@@ -1853,7 +1854,7 @@ class group_data(JSGroup):
     @property
     def randomnames(self):
         if self._randomnames is None:
-            print("LOAD:RandomNames")
+            # print("LOAD:RandomNames")
             try:
                 from Jumpscale.data.random_names.RandomNames import RandomNames
             except Exception as e:
@@ -1870,7 +1871,7 @@ class group_data(JSGroup):
     @property
     def regex(self):
         if self._regex is None:
-            print("LOAD:RegexTools")
+            # print("LOAD:RegexTools")
             try:
                 from Jumpscale.data.regex.RegexTools import RegexTools
             except Exception as e:
@@ -1887,7 +1888,7 @@ class group_data(JSGroup):
     @property
     def schema(self):
         if self._schema is None:
-            print("LOAD:SchemaFactory")
+            # print("LOAD:SchemaFactory")
             try:
                 from Jumpscale.data.schema.SchemaFactory import SchemaFactory
             except Exception as e:
@@ -1904,7 +1905,7 @@ class group_data(JSGroup):
     @property
     def serializers(self):
         if self._serializers is None:
-            print("LOAD:SerializersFactory")
+            # print("LOAD:SerializersFactory")
             try:
                 from Jumpscale.data.serializers.SerializersFactory import SerializersFactory
             except Exception as e:
@@ -1921,7 +1922,7 @@ class group_data(JSGroup):
     @property
     def time(self):
         if self._time is None:
-            print("LOAD:Time_")
+            # print("LOAD:Time_")
             try:
                 from Jumpscale.data.time.Time import Time_
             except Exception as e:
@@ -1938,7 +1939,7 @@ class group_data(JSGroup):
     @property
     def timeinterval(self):
         if self._timeinterval is None:
-            print("LOAD:TimeInterval")
+            # print("LOAD:TimeInterval")
             try:
                 from Jumpscale.data.time.TimeInterval import TimeInterval
             except Exception as e:
@@ -1955,7 +1956,7 @@ class group_data(JSGroup):
     @property
     def treemanager(self):
         if self._treemanager is None:
-            print("LOAD:TreemanagerFactory")
+            # print("LOAD:TreemanagerFactory")
             try:
                 from Jumpscale.data.treemanager.Treemanager import TreemanagerFactory
             except Exception as e:
@@ -1972,7 +1973,7 @@ class group_data(JSGroup):
     @property
     def types(self):
         if self._types is None:
-            print("LOAD:Types")
+            # print("LOAD:Types")
             try:
                 from Jumpscale.data.types.Types import Types
             except Exception as e:
@@ -1989,7 +1990,7 @@ class group_data(JSGroup):
     @property
     def worksheets(self):
         if self._worksheets is None:
-            print("LOAD:Sheets")
+            # print("LOAD:Sheets")
             try:
                 from Jumpscale.data.worksheets.Sheets import Sheets
             except Exception as e:
@@ -2006,7 +2007,7 @@ class group_data(JSGroup):
     @property
     def dict_editor(self):
         if self._dict_editor is None:
-            print("LOAD:DictEditorFactory")
+            # print("LOAD:DictEditorFactory")
             try:
                 from Jumpscale.data.dicteditor.DictEditor import DictEditorFactory
             except Exception as e:
@@ -2023,7 +2024,7 @@ class group_data(JSGroup):
     @property
     def inifile(self):
         if self._inifile is None:
-            print("LOAD:InifileTool")
+            # print("LOAD:InifileTool")
             try:
                 from Jumpscale.data.inifile.IniFile import InifileTool
             except Exception as e:
@@ -2038,9 +2039,26 @@ class group_data(JSGroup):
             # print("OK")
         return self._inifile
     @property
+    def docs(self):
+        if self._docs is None:
+            # print("LOAD:DocsFactory")
+            try:
+                from Jumpscale.data.docs.DocsFactory import DocsFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.data.docs.DocsFactory", e)
+                raise e
+            # print("RUN:DocsFactory")
+            try:
+                self._docs =  DocsFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.data.docs.DocsFactory",e)
+                return None
+            # print("OK")
+        return self._docs
+    @property
     def nltk(self):
         if self._nltk is None:
-            print("LOAD:NLTKFactory")
+            # print("LOAD:NLTKFactory")
             try:
                 from DigitalMe.data.nltk.NLTK import NLTKFactory
             except Exception as e:
@@ -2075,12 +2093,11 @@ class group_tools(JSGroup):
         self._capacity = None
         self._codeloader = None
         self._code = None
+        self._code = None
         self._console = None
         self._cython = None
         self._dash = None
         self._dnstools = None
-        self._docsites = None
-        self._markdowndocs = None
         self._executor = None
         self._executorLocal = None
         self._expect = None
@@ -2106,6 +2123,8 @@ class group_tools(JSGroup):
         self._typechecker = None
         self._formatters = None
         self._kosmos = None
+        self._codegenerator = None
+        self._markdowndocs = None
         self._tfbot = None
         self._zos = None
 
@@ -2113,7 +2132,7 @@ class group_tools(JSGroup):
     @property
     def email(self):
         if self._email is None:
-            print("LOAD:EmailTool")
+            # print("LOAD:EmailTool")
             try:
                 from Jumpscale.data.email.Email import EmailTool
             except Exception as e:
@@ -2130,7 +2149,7 @@ class group_tools(JSGroup):
     @property
     def flist(self):
         if self._flist is None:
-            print("LOAD:FListFactory")
+            # print("LOAD:FListFactory")
             try:
                 from Jumpscale.data.flist.FListFactory import FListFactory
             except Exception as e:
@@ -2147,7 +2166,7 @@ class group_tools(JSGroup):
     @property
     def numtools(self):
         if self._numtools is None:
-            print("LOAD:NumTools")
+            # print("LOAD:NumTools")
             try:
                 from Jumpscale.data.numtools.NumTools import NumTools
             except Exception as e:
@@ -2164,7 +2183,7 @@ class group_tools(JSGroup):
     @property
     def tarfile(self):
         if self._tarfile is None:
-            print("LOAD:TarFileFactory")
+            # print("LOAD:TarFileFactory")
             try:
                 from Jumpscale.data.tarfile.TarFile import TarFileFactory
             except Exception as e:
@@ -2181,7 +2200,7 @@ class group_tools(JSGroup):
     @property
     def zipfile(self):
         if self._zipfile is None:
-            print("LOAD:ZipFileFactory")
+            # print("LOAD:ZipFileFactory")
             try:
                 from Jumpscale.data.zip.ZipFile import ZipFileFactory
             except Exception as e:
@@ -2198,7 +2217,7 @@ class group_tools(JSGroup):
     @property
     def issuemanager(self):
         if self._issuemanager is None:
-            print("LOAD:IssueManager")
+            # print("LOAD:IssueManager")
             try:
                 from Jumpscale.data.issuemanager.IssueManager import IssueManager
             except Exception as e:
@@ -2215,7 +2234,7 @@ class group_tools(JSGroup):
     @property
     def bash(self):
         if self._bash is None:
-            print("LOAD:BashFactory")
+            # print("LOAD:BashFactory")
             try:
                 from Jumpscale.sal.bash.BashFactory import BashFactory
             except Exception as e:
@@ -2232,7 +2251,7 @@ class group_tools(JSGroup):
     @property
     def aggregator(self):
         if self._aggregator is None:
-            print("LOAD:Aggregator")
+            # print("LOAD:Aggregator")
             try:
                 from Jumpscale.tools.aggregator.Aggregator import Aggregator
             except Exception as e:
@@ -2249,7 +2268,7 @@ class group_tools(JSGroup):
     @property
     def realityprocess(self):
         if self._realityprocess is None:
-            print("LOAD:RealitProcess")
+            # print("LOAD:RealitProcess")
             try:
                 from Jumpscale.tools.aggregator.RealityProcess import RealitProcess
             except Exception as e:
@@ -2266,7 +2285,7 @@ class group_tools(JSGroup):
     @property
     def notapplicableyet(self):
         if self._notapplicableyet is None:
-            print("LOAD:Builder")
+            # print("LOAD:Builder")
             try:
                 from Jumpscale.tools.builder.Builder import Builder
             except Exception as e:
@@ -2283,7 +2302,7 @@ class group_tools(JSGroup):
     @property
     def capacity(self):
         if self._capacity is None:
-            print("LOAD:Factory")
+            # print("LOAD:Factory")
             try:
                 from Jumpscale.tools.capacity.Factory import Factory
             except Exception as e:
@@ -2300,7 +2319,7 @@ class group_tools(JSGroup):
     @property
     def codeloader(self):
         if self._codeloader is None:
-            print("LOAD:CodeLoader")
+            # print("LOAD:CodeLoader")
             try:
                 from Jumpscale.tools.codeloader.CodeLoader import CodeLoader
             except Exception as e:
@@ -2317,7 +2336,24 @@ class group_tools(JSGroup):
     @property
     def code(self):
         if self._code is None:
-            print("LOAD:CodeTools")
+            # print("LOAD:CodeTools")
+            try:
+                from Jumpscale.tools.codeloader.CodeTools import CodeTools
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.tools.codeloader.CodeTools", e)
+                raise e
+            # print("RUN:CodeTools")
+            try:
+                self._code =  CodeTools()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.tools.codeloader.CodeTools",e)
+                return None
+            # print("OK")
+        return self._code
+    @property
+    def code(self):
+        if self._code is None:
+            # print("LOAD:CodeTools")
             try:
                 from Jumpscale.tools.codetools.CodeTools import CodeTools
             except Exception as e:
@@ -2334,7 +2370,7 @@ class group_tools(JSGroup):
     @property
     def console(self):
         if self._console is None:
-            print("LOAD:Console")
+            # print("LOAD:Console")
             try:
                 from Jumpscale.tools.console.Console import Console
             except Exception as e:
@@ -2351,7 +2387,7 @@ class group_tools(JSGroup):
     @property
     def cython(self):
         if self._cython is None:
-            print("LOAD:CythonFactory")
+            # print("LOAD:CythonFactory")
             try:
                 from Jumpscale.tools.cython.CythonFactory import CythonFactory
             except Exception as e:
@@ -2368,7 +2404,7 @@ class group_tools(JSGroup):
     @property
     def dash(self):
         if self._dash is None:
-            print("LOAD:DASH")
+            # print("LOAD:DASH")
             try:
                 from Jumpscale.tools.dash.DASH import DASH
             except Exception as e:
@@ -2385,7 +2421,7 @@ class group_tools(JSGroup):
     @property
     def dnstools(self):
         if self._dnstools is None:
-            print("LOAD:DNSTools")
+            # print("LOAD:DNSTools")
             try:
                 from Jumpscale.tools.dnstools.DNSTools import DNSTools
             except Exception as e:
@@ -2400,43 +2436,9 @@ class group_tools(JSGroup):
             # print("OK")
         return self._dnstools
     @property
-    def docsites(self):
-        if self._docsites is None:
-            print("LOAD:DocSites")
-            try:
-                from Jumpscale.tools.docsite.DocSites import DocSites
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.tools.docsite.DocSites", e)
-                raise e
-            # print("RUN:DocSites")
-            try:
-                self._docsites =  DocSites()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.tools.docsite.DocSites",e)
-                return None
-            # print("OK")
-        return self._docsites
-    @property
-    def markdowndocs(self):
-        if self._markdowndocs is None:
-            print("LOAD:MarkDownDocs")
-            try:
-                from Jumpscale.tools.docsite.MarkDownDocs import MarkDownDocs
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.tools.docsite.MarkDownDocs", e)
-                raise e
-            # print("RUN:MarkDownDocs")
-            try:
-                self._markdowndocs =  MarkDownDocs()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.tools.docsite.MarkDownDocs",e)
-                return None
-            # print("OK")
-        return self._markdowndocs
-    @property
     def executor(self):
         if self._executor is None:
-            print("LOAD:ExecutorFactory")
+            # print("LOAD:ExecutorFactory")
             try:
                 from Jumpscale.tools.executor.ExecutorFactory import ExecutorFactory
             except Exception as e:
@@ -2453,7 +2455,7 @@ class group_tools(JSGroup):
     @property
     def executorLocal(self):
         if self._executorLocal is None:
-            print("LOAD:ExecutorLocal")
+            # print("LOAD:ExecutorLocal")
             try:
                 from Jumpscale.tools.executor.ExecutorLocal import ExecutorLocal
             except Exception as e:
@@ -2470,7 +2472,7 @@ class group_tools(JSGroup):
     @property
     def expect(self):
         if self._expect is None:
-            print("LOAD:ExpectTool")
+            # print("LOAD:ExpectTool")
             try:
                 from Jumpscale.tools.expect.Expect import ExpectTool
             except Exception as e:
@@ -2487,7 +2489,7 @@ class group_tools(JSGroup):
     @property
     def fixer(self):
         if self._fixer is None:
-            print("LOAD:Fixer")
+            # print("LOAD:Fixer")
             try:
                 from Jumpscale.tools.fixer.Fixer import Fixer
             except Exception as e:
@@ -2504,7 +2506,7 @@ class group_tools(JSGroup):
     @property
     def imagelib(self):
         if self._imagelib is None:
-            print("LOAD:ImageLib")
+            # print("LOAD:ImageLib")
             try:
                 from Jumpscale.tools.imagelib.ImageLib import ImageLib
             except Exception as e:
@@ -2521,7 +2523,7 @@ class group_tools(JSGroup):
     @property
     def itenv_manager(self):
         if self._itenv_manager is None:
-            print("LOAD:ITEnvManager")
+            # print("LOAD:ITEnvManager")
             try:
                 from Jumpscale.tools.itenvmgr.ITEnvManager import ITEnvManager
             except Exception as e:
@@ -2538,7 +2540,7 @@ class group_tools(JSGroup):
     @property
     def jinja2(self):
         if self._jinja2 is None:
-            print("LOAD:Jinja2")
+            # print("LOAD:Jinja2")
             try:
                 from Jumpscale.tools.jinja2.Jinja2 import Jinja2
             except Exception as e:
@@ -2555,7 +2557,7 @@ class group_tools(JSGroup):
     @property
     def legal_contracts(self):
         if self._legal_contracts is None:
-            print("LOAD:LegalContractsFactory")
+            # print("LOAD:LegalContractsFactory")
             try:
                 from Jumpscale.tools.legal_contracts.LegalContractsFactory import LegalContractsFactory
             except Exception as e:
@@ -2572,7 +2574,7 @@ class group_tools(JSGroup):
     @property
     def memusagetest(self):
         if self._memusagetest is None:
-            print("LOAD:MemUsageTest")
+            # print("LOAD:MemUsageTest")
             try:
                 from Jumpscale.tools.memusagetest.MemUsageTest import MemUsageTest
             except Exception as e:
@@ -2589,7 +2591,7 @@ class group_tools(JSGroup):
     @property
     def objectinspector(self):
         if self._objectinspector is None:
-            print("LOAD:ObjectInspector")
+            # print("LOAD:ObjectInspector")
             try:
                 from Jumpscale.tools.objectinspector.ObjectInspector import ObjectInspector
             except Exception as e:
@@ -2606,7 +2608,7 @@ class group_tools(JSGroup):
     @property
     def offliner(self):
         if self._offliner is None:
-            print("LOAD:Offliner")
+            # print("LOAD:Offliner")
             try:
                 from Jumpscale.tools.offliner.Offliner import Offliner
             except Exception as e:
@@ -2623,7 +2625,7 @@ class group_tools(JSGroup):
     @property
     def rexplorer(self):
         if self._rexplorer is None:
-            print("LOAD:Rexplorer")
+            # print("LOAD:Rexplorer")
             try:
                 from Jumpscale.tools.offliner.Rexplorer import Rexplorer
             except Exception as e:
@@ -2640,7 +2642,7 @@ class group_tools(JSGroup):
     @property
     def path(self):
         if self._path is None:
-            print("LOAD:PathFactory")
+            # print("LOAD:PathFactory")
             try:
                 from Jumpscale.tools.path.PathFactory import PathFactory
             except Exception as e:
@@ -2657,7 +2659,7 @@ class group_tools(JSGroup):
     @property
     def performancetrace(self):
         if self._performancetrace is None:
-            print("LOAD:PerformanceTraceFactory")
+            # print("LOAD:PerformanceTraceFactory")
             try:
                 from Jumpscale.tools.performancetrace.PerformanceTrace import PerformanceTraceFactory
             except Exception as e:
@@ -2674,7 +2676,7 @@ class group_tools(JSGroup):
     @property
     def reportlab(self):
         if self._reportlab is None:
-            print("LOAD:ReportlabFactory")
+            # print("LOAD:ReportlabFactory")
             try:
                 from Jumpscale.tools.reportlab.ReportlabFactory import ReportlabFactory
             except Exception as e:
@@ -2691,7 +2693,7 @@ class group_tools(JSGroup):
     @property
     def sandboxer(self):
         if self._sandboxer is None:
-            print("LOAD:Sandboxer")
+            # print("LOAD:Sandboxer")
             try:
                 from Jumpscale.tools.sandboxer.Sandboxer import Sandboxer
             except Exception as e:
@@ -2708,7 +2710,7 @@ class group_tools(JSGroup):
     @property
     def storybot(self):
         if self._storybot is None:
-            print("LOAD:StoryBotFactory")
+            # print("LOAD:StoryBotFactory")
             try:
                 from Jumpscale.tools.storybot.StoryBotFactory import StoryBotFactory
             except Exception as e:
@@ -2725,7 +2727,7 @@ class group_tools(JSGroup):
     @property
     def syncer(self):
         if self._syncer is None:
-            print("LOAD:SyncerFactory")
+            # print("LOAD:SyncerFactory")
             try:
                 from Jumpscale.tools.syncer.SyncerFactory import SyncerFactory
             except Exception as e:
@@ -2742,7 +2744,7 @@ class group_tools(JSGroup):
     @property
     def team_manager(self):
         if self._team_manager is None:
-            print("LOAD:Teammgr")
+            # print("LOAD:Teammgr")
             try:
                 from Jumpscale.tools.teammgr.Teammgr import Teammgr
             except Exception as e:
@@ -2759,7 +2761,7 @@ class group_tools(JSGroup):
     @property
     def testengine(self):
         if self._testengine is None:
-            print("LOAD:TestEngine")
+            # print("LOAD:TestEngine")
             try:
                 from Jumpscale.tools.testengine.TestEngine import TestEngine
             except Exception as e:
@@ -2776,7 +2778,7 @@ class group_tools(JSGroup):
     @property
     def timer(self):
         if self._timer is None:
-            print("LOAD:TIMER")
+            # print("LOAD:TIMER")
             try:
                 from Jumpscale.tools.timer.Timer import TIMER
             except Exception as e:
@@ -2793,7 +2795,7 @@ class group_tools(JSGroup):
     @property
     def tmux(self):
         if self._tmux is None:
-            print("LOAD:Tmux")
+            # print("LOAD:Tmux")
             try:
                 from Jumpscale.tools.tmux.Tmux import Tmux
             except Exception as e:
@@ -2810,7 +2812,7 @@ class group_tools(JSGroup):
     @property
     def typechecker(self):
         if self._typechecker is None:
-            print("LOAD:TypeCheckerFactory")
+            # print("LOAD:TypeCheckerFactory")
             try:
                 from Jumpscale.tools.typechecker.TypeChecker import TypeCheckerFactory
             except Exception as e:
@@ -2827,7 +2829,7 @@ class group_tools(JSGroup):
     @property
     def formatters(self):
         if self._formatters is None:
-            print("LOAD:FormattersFactory")
+            # print("LOAD:FormattersFactory")
             try:
                 from Jumpscale.tools.formatters.FormattersFactory import FormattersFactory
             except Exception as e:
@@ -2844,7 +2846,7 @@ class group_tools(JSGroup):
     @property
     def kosmos(self):
         if self._kosmos is None:
-            print("LOAD:Kosmos")
+            # print("LOAD:Kosmos")
             try:
                 from Jumpscale.tools.kosmos.Kosmos import Kosmos
             except Exception as e:
@@ -2859,9 +2861,43 @@ class group_tools(JSGroup):
             # print("OK")
         return self._kosmos
     @property
+    def codegenerator(self):
+        if self._codegenerator is None:
+            # print("LOAD:CodeGenerator")
+            try:
+                from Jumpscale.tools.codegenerator.CodeGenerator import CodeGenerator
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.tools.codegenerator.CodeGenerator", e)
+                raise e
+            # print("RUN:CodeGenerator")
+            try:
+                self._codegenerator =  CodeGenerator()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.tools.codegenerator.CodeGenerator",e)
+                return None
+            # print("OK")
+        return self._codegenerator
+    @property
+    def markdowndocs(self):
+        if self._markdowndocs is None:
+            # print("LOAD:MarkDownDocs")
+            try:
+                from Jumpscale.tools.markdowndocs.MarkDownDocs import MarkDownDocs
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.tools.markdowndocs.MarkDownDocs", e)
+                raise e
+            # print("RUN:MarkDownDocs")
+            try:
+                self._markdowndocs =  MarkDownDocs()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.tools.markdowndocs.MarkDownDocs",e)
+                return None
+            # print("OK")
+        return self._markdowndocs
+    @property
     def tfbot(self):
         if self._tfbot is None:
-            print("LOAD:TFBotFactory")
+            # print("LOAD:TFBotFactory")
             try:
                 from DigitalMe.tools.tfbot.TFBotFactory import TFBotFactory
             except Exception as e:
@@ -2878,7 +2914,7 @@ class group_tools(JSGroup):
     @property
     def zos(self):
         if self._zos is None:
-            print("LOAD:ZOSFactory")
+            # print("LOAD:ZOSFactory")
             try:
                 from DigitalMe.tools.zos.ZOSFactory import ZOSFactory
             except Exception as e:
@@ -2906,7 +2942,7 @@ class group_data_units(JSGroup):
     @property
     def sizes(self):
         if self._sizes is None:
-            print("LOAD:Bytes")
+            # print("LOAD:Bytes")
             try:
                 from Jumpscale.data.numtools.units.Units import Bytes
             except Exception as e:
@@ -2944,7 +2980,7 @@ class group_servers(JSGroup):
     @property
     def errbot(self):
         if self._errbot is None:
-            print("LOAD:ErrBotFactory")
+            # print("LOAD:ErrBotFactory")
             try:
                 from Jumpscale.servers.errbot.ErrBotFactory import ErrBotFactory
             except Exception as e:
@@ -2961,7 +2997,7 @@ class group_servers(JSGroup):
     @property
     def capacity(self):
         if self._capacity is None:
-            print("LOAD:CapacityFactory")
+            # print("LOAD:CapacityFactory")
             try:
                 from Jumpscale.servers.grid_capacity.CapacityFactory import CapacityFactory
             except Exception as e:
@@ -2978,7 +3014,7 @@ class group_servers(JSGroup):
     @property
     def jsrun(self):
         if self._jsrun is None:
-            print("LOAD:JSRun")
+            # print("LOAD:JSRun")
             try:
                 from Jumpscale.servers.jsrun.JSRun import JSRun
             except Exception as e:
@@ -2995,7 +3031,7 @@ class group_servers(JSGroup):
     @property
     def openresty(self):
         if self._openresty is None:
-            print("LOAD:OpenRestyFactory")
+            # print("LOAD:OpenRestyFactory")
             try:
                 from Jumpscale.servers.openresty.OpenRestyFactory import OpenRestyFactory
             except Exception as e:
@@ -3012,7 +3048,7 @@ class group_servers(JSGroup):
     @property
     def web(self):
         if self._web is None:
-            print("LOAD:JSWebServers")
+            # print("LOAD:JSWebServers")
             try:
                 from Jumpscale.servers.webserver.JSWebServers import JSWebServers
             except Exception as e:
@@ -3029,7 +3065,7 @@ class group_servers(JSGroup):
     @property
     def zdb(self):
         if self._zdb is None:
-            print("LOAD:ZDBServer")
+            # print("LOAD:ZDBServer")
             try:
                 from Jumpscale.servers.zdb.ZDBServer import ZDBServer
             except Exception as e:
@@ -3046,7 +3082,7 @@ class group_servers(JSGroup):
     @property
     def digitalme(self):
         if self._digitalme is None:
-            print("LOAD:DigitalMe")
+            # print("LOAD:DigitalMe")
             try:
                 from DigitalMe.servers.digitalme.DigitalMe import DigitalMe
             except Exception as e:
@@ -3063,7 +3099,7 @@ class group_servers(JSGroup):
     @property
     def dns(self):
         if self._dns is None:
-            print("LOAD:DNSServerFactory")
+            # print("LOAD:DNSServerFactory")
             try:
                 from DigitalMe.servers.dns.DNSServerFactory import DNSServerFactory
             except Exception as e:
@@ -3080,7 +3116,7 @@ class group_servers(JSGroup):
     @property
     def gedis(self):
         if self._gedis is None:
-            print("LOAD:GedisFactory")
+            # print("LOAD:GedisFactory")
             try:
                 from DigitalMe.servers.gedis.GedisFactory import GedisFactory
             except Exception as e:
@@ -3097,7 +3133,7 @@ class group_servers(JSGroup):
     @property
     def myjobs(self):
         if self._myjobs is None:
-            print("LOAD:MyJobs")
+            # print("LOAD:MyJobs")
             try:
                 from DigitalMe.servers.myjobs.MyJobs import MyJobs
             except Exception as e:
@@ -3114,7 +3150,7 @@ class group_servers(JSGroup):
     @property
     def raftserver(self):
         if self._raftserver is None:
-            print("LOAD:RaftServerFactory")
+            # print("LOAD:RaftServerFactory")
             try:
                 from DigitalMe.servers.raft.RaftServerFactory import RaftServerFactory
             except Exception as e:
@@ -3142,7 +3178,7 @@ class group_tutorials(JSGroup):
     @property
     def base(self):
         if self._base is None:
-            print("LOAD:Tutorial")
+            # print("LOAD:Tutorial")
             try:
                 from Jumpscale.tutorials.base.Tutorial import Tutorial
             except Exception as e:
@@ -3184,7 +3220,7 @@ class group_builder(JSGroup):
     @property
     def apps(self):
         if self._apps is None:
-            print("LOAD:BuilderAppsFactory")
+            # print("LOAD:BuilderAppsFactory")
             try:
                 from Jumpscale.builder.apps.BuilderAppsFactory import BuilderAppsFactory
             except Exception as e:
@@ -3201,7 +3237,7 @@ class group_builder(JSGroup):
     @property
     def buildenv(self):
         if self._buildenv is None:
-            print("LOAD:BuildEnv")
+            # print("LOAD:BuildEnv")
             try:
                 from Jumpscale.builder.buildenv.BuildEnv import BuildEnv
             except Exception as e:
@@ -3218,7 +3254,7 @@ class group_builder(JSGroup):
     @property
     def db(self):
         if self._db is None:
-            print("LOAD:BuildDBFactory")
+            # print("LOAD:BuildDBFactory")
             try:
                 from Jumpscale.builder.db.BuildDBFactory import BuildDBFactory
             except Exception as e:
@@ -3235,7 +3271,7 @@ class group_builder(JSGroup):
     @property
     def network(self):
         if self._network is None:
-            print("LOAD:BuilderNetworkFactory")
+            # print("LOAD:BuilderNetworkFactory")
             try:
                 from Jumpscale.builder.network.BuilderNetworkFactory import BuilderNetworkFactory
             except Exception as e:
@@ -3252,7 +3288,7 @@ class group_builder(JSGroup):
     @property
     def runtimes(self):
         if self._runtimes is None:
-            print("LOAD:BuilderRuntimesFactory")
+            # print("LOAD:BuilderRuntimesFactory")
             try:
                 from Jumpscale.builder.runtimes.BuilderRuntimesFactory import BuilderRuntimesFactory
             except Exception as e:
@@ -3269,7 +3305,7 @@ class group_builder(JSGroup):
     @property
     def system(self):
         if self._system is None:
-            print("LOAD:BuilderSystemPackage")
+            # print("LOAD:BuilderSystemPackage")
             try:
                 from Jumpscale.builder.system.BuilderSystemFactory import BuilderSystemPackage
             except Exception as e:
@@ -3286,7 +3322,7 @@ class group_builder(JSGroup):
     @property
     def tools(self):
         if self._tools is None:
-            print("LOAD:BuilderTools")
+            # print("LOAD:BuilderTools")
             try:
                 from Jumpscale.builder.tools.BuilderTools import BuilderTools
             except Exception as e:
@@ -3303,7 +3339,7 @@ class group_builder(JSGroup):
     @property
     def _template(self):
         if self.__template is None:
-            print("LOAD:GrafanaFactory")
+            # print("LOAD:GrafanaFactory")
             try:
                 from Jumpscale.builder.TEMPLATE.BuilderGrafanaFactory import GrafanaFactory
             except Exception as e:
@@ -3320,7 +3356,7 @@ class group_builder(JSGroup):
     @property
     def blockchain(self):
         if self._blockchain is None:
-            print("LOAD:BuilderBlockchainFactory")
+            # print("LOAD:BuilderBlockchainFactory")
             try:
                 from Jumpscale.builder.blockchain.BuilderBlockchainFactory import BuilderBlockchainFactory
             except Exception as e:
@@ -3337,7 +3373,7 @@ class group_builder(JSGroup):
     @property
     def libs(self):
         if self._libs is None:
-            print("LOAD:BuilderLibs")
+            # print("LOAD:BuilderLibs")
             try:
                 from Jumpscale.builder.libs.BuilderLibs import BuilderLibs
             except Exception as e:
@@ -3354,7 +3390,7 @@ class group_builder(JSGroup):
     @property
     def libs(self):
         if self._libs is None:
-            print("LOAD:BuilderLibsFactory")
+            # print("LOAD:BuilderLibsFactory")
             try:
                 from Jumpscale.builder.libs.BuilderLibsFactory import BuilderLibsFactory
             except Exception as e:
@@ -3371,7 +3407,7 @@ class group_builder(JSGroup):
     @property
     def monitoring(self):
         if self._monitoring is None:
-            print("LOAD:BuilderMonitoringFactory")
+            # print("LOAD:BuilderMonitoringFactory")
             try:
                 from Jumpscale.builder.monitoring.BuilderMonitoringFactory import BuilderMonitoringFactory
             except Exception as e:
@@ -3388,7 +3424,7 @@ class group_builder(JSGroup):
     @property
     def _template(self):
         if self.__template is None:
-            print("LOAD:BuilderGrafanaFactory")
+            # print("LOAD:BuilderGrafanaFactory")
             try:
                 from Jumpscale.builder.monitoring.BuilderGrafanaFactory import BuilderGrafanaFactory
             except Exception as e:
@@ -3405,7 +3441,7 @@ class group_builder(JSGroup):
     @property
     def systemtools(self):
         if self._systemtools is None:
-            print("LOAD:BuilderSystemToolsFactory")
+            # print("LOAD:BuilderSystemToolsFactory")
             try:
                 from Jumpscale.builder.systemtools.BuilderSystemToolsFactory import BuilderSystemToolsFactory
             except Exception as e:
@@ -3422,7 +3458,7 @@ class group_builder(JSGroup):
     @property
     def web(self):
         if self._web is None:
-            print("LOAD:BuilderWebFactory")
+            # print("LOAD:BuilderWebFactory")
             try:
                 from Jumpscale.builder.web.BuilderWebFactory import BuilderWebFactory
             except Exception as e:
@@ -3477,7 +3513,7 @@ class group_sal_zos(JSGroup):
     @property
     def capacity(self):
         if self._capacity is None:
-            print("LOAD:CapacityFactory")
+            # print("LOAD:CapacityFactory")
             try:
                 from Jumpscale.sal_zos.capacity.CapacityFactory import CapacityFactory
             except Exception as e:
@@ -3494,7 +3530,7 @@ class group_sal_zos(JSGroup):
     @property
     def containers(self):
         if self._containers is None:
-            print("LOAD:ContainerFactory")
+            # print("LOAD:ContainerFactory")
             try:
                 from Jumpscale.sal_zos.container.ContainerFactory import ContainerFactory
             except Exception as e:
@@ -3511,7 +3547,7 @@ class group_sal_zos(JSGroup):
     @property
     def disks(self):
         if self._disks is None:
-            print("LOAD:DisksFactory")
+            # print("LOAD:DisksFactory")
             try:
                 from Jumpscale.sal_zos.disks.DisksFactory import DisksFactory
             except Exception as e:
@@ -3528,7 +3564,7 @@ class group_sal_zos(JSGroup):
     @property
     def gateway(self):
         if self._gateway is None:
-            print("LOAD:GatewayFactory")
+            # print("LOAD:GatewayFactory")
             try:
                 from Jumpscale.sal_zos.gateway.gatewayFactory import GatewayFactory
             except Exception as e:
@@ -3545,7 +3581,7 @@ class group_sal_zos(JSGroup):
     @property
     def hypervisor(self):
         if self._hypervisor is None:
-            print("LOAD:HypervisorFactory")
+            # print("LOAD:HypervisorFactory")
             try:
                 from Jumpscale.sal_zos.hypervisor.HypervisorFactory import HypervisorFactory
             except Exception as e:
@@ -3562,7 +3598,7 @@ class group_sal_zos(JSGroup):
     @property
     def ippoolmanager(self):
         if self._ippoolmanager is None:
-            print("LOAD:IPPoolManagerFactory")
+            # print("LOAD:IPPoolManagerFactory")
             try:
                 from Jumpscale.sal_zos.ip_pool_manager.IPPoolManagerFactory import IPPoolManagerFactory
             except Exception as e:
@@ -3579,7 +3615,7 @@ class group_sal_zos(JSGroup):
     @property
     def minio(self):
         if self._minio is None:
-            print("LOAD:MinioFactory")
+            # print("LOAD:MinioFactory")
             try:
                 from Jumpscale.sal_zos.minio.MinioFactory import MinioFactory
             except Exception as e:
@@ -3596,7 +3632,7 @@ class group_sal_zos(JSGroup):
     @property
     def mongodb(self):
         if self._mongodb is None:
-            print("LOAD:MongodbFactory")
+            # print("LOAD:MongodbFactory")
             try:
                 from Jumpscale.sal_zos.mongodb.MongodbFactory import MongodbFactory
             except Exception as e:
@@ -3613,7 +3649,7 @@ class group_sal_zos(JSGroup):
     @property
     def network(self):
         if self._network is None:
-            print("LOAD:NetworkFactory")
+            # print("LOAD:NetworkFactory")
             try:
                 from Jumpscale.sal_zos.network.NetworkFactory import NetworkFactory
             except Exception as e:
@@ -3630,7 +3666,7 @@ class group_sal_zos(JSGroup):
     @property
     def node(self):
         if self._node is None:
-            print("LOAD:PrimitivesFactory")
+            # print("LOAD:PrimitivesFactory")
             try:
                 from Jumpscale.sal_zos.node.NodeFactory import PrimitivesFactory
             except Exception as e:
@@ -3647,7 +3683,7 @@ class group_sal_zos(JSGroup):
     @property
     def primitives(self):
         if self._primitives is None:
-            print("LOAD:PrimitivesFactory")
+            # print("LOAD:PrimitivesFactory")
             try:
                 from Jumpscale.sal_zos.primitives.PrimitivesFactory import PrimitivesFactory
             except Exception as e:
@@ -3664,7 +3700,7 @@ class group_sal_zos(JSGroup):
     @property
     def storagepools(self):
         if self._storagepools is None:
-            print("LOAD:ContainerFactory")
+            # print("LOAD:ContainerFactory")
             try:
                 from Jumpscale.sal_zos.storage.StorageFactory import ContainerFactory
             except Exception as e:
@@ -3681,7 +3717,7 @@ class group_sal_zos(JSGroup):
     @property
     def vm(self):
         if self._vm is None:
-            print("LOAD:ZOS_VMFactory")
+            # print("LOAD:ZOS_VMFactory")
             try:
                 from Jumpscale.sal_zos.vm.ZOS_VMFactory import ZOS_VMFactory
             except Exception as e:
@@ -3698,7 +3734,7 @@ class group_sal_zos(JSGroup):
     @property
     def zerodb(self):
         if self._zerodb is None:
-            print("LOAD:ZerodbFactory")
+            # print("LOAD:ZerodbFactory")
             try:
                 from Jumpscale.sal_zos.zerodb.zerodbFactory import ZerodbFactory
             except Exception as e:
@@ -3715,7 +3751,7 @@ class group_sal_zos(JSGroup):
     @property
     def etcd(self):
         if self._etcd is None:
-            print("LOAD:ETCDFactory")
+            # print("LOAD:ETCDFactory")
             try:
                 from Jumpscale.sal_zos.ETCD.ETCDFactory import ETCDFactory
             except Exception as e:
@@ -3732,7 +3768,7 @@ class group_sal_zos(JSGroup):
     @property
     def pubsub(self):
         if self._pubsub is None:
-            print("LOAD:PubsubFactory")
+            # print("LOAD:PubsubFactory")
             try:
                 from Jumpscale.sal_zos.Pubsub.PubsubFactory import PubsubFactory
             except Exception as e:
@@ -3749,7 +3785,7 @@ class group_sal_zos(JSGroup):
     @property
     def coredns(self):
         if self._coredns is None:
-            print("LOAD:CorednsFactory")
+            # print("LOAD:CorednsFactory")
             try:
                 from Jumpscale.sal_zos.coredns.CorednsFactory import CorednsFactory
             except Exception as e:
@@ -3766,7 +3802,7 @@ class group_sal_zos(JSGroup):
     @property
     def farm(self):
         if self._farm is None:
-            print("LOAD:FarmFactory")
+            # print("LOAD:FarmFactory")
             try:
                 from Jumpscale.sal_zos.farm.FarmFactory import FarmFactory
             except Exception as e:
@@ -3783,7 +3819,7 @@ class group_sal_zos(JSGroup):
     @property
     def ftpclient(self):
         if self._ftpclient is None:
-            print("LOAD:FtpFactory")
+            # print("LOAD:FtpFactory")
             try:
                 from Jumpscale.sal_zos.ftpClient.ftpFactory import FtpFactory
             except Exception as e:
@@ -3800,7 +3836,7 @@ class group_sal_zos(JSGroup):
     @property
     def grafana(self):
         if self._grafana is None:
-            print("LOAD:GrafanaFactory")
+            # print("LOAD:GrafanaFactory")
             try:
                 from Jumpscale.sal_zos.grafana.grafanaFactory import GrafanaFactory
             except Exception as e:
@@ -3817,7 +3853,7 @@ class group_sal_zos(JSGroup):
     @property
     def influx(self):
         if self._influx is None:
-            print("LOAD:InfluxDBFactory")
+            # print("LOAD:InfluxDBFactory")
             try:
                 from Jumpscale.sal_zos.influxdb.influxdbFactory import InfluxDBFactory
             except Exception as e:
@@ -3834,7 +3870,7 @@ class group_sal_zos(JSGroup):
     @property
     def sandbox(self):
         if self._sandbox is None:
-            print("LOAD:ZOSSandboxFactory")
+            # print("LOAD:ZOSSandboxFactory")
             try:
                 from Jumpscale.sal_zos.sandbox.ZOSSandboxFactory import ZOSSandboxFactory
             except Exception as e:
@@ -3851,7 +3887,7 @@ class group_sal_zos(JSGroup):
     @property
     def stats_collector(self):
         if self._stats_collector is None:
-            print("LOAD:StatsCollectorFactory")
+            # print("LOAD:StatsCollectorFactory")
             try:
                 from Jumpscale.sal_zos.stats_collector.stats_collector_factory import StatsCollectorFactory
             except Exception as e:
@@ -3868,7 +3904,7 @@ class group_sal_zos(JSGroup):
     @property
     def tfchain(self):
         if self._tfchain is None:
-            print("LOAD:TfChainFactory")
+            # print("LOAD:TfChainFactory")
             try:
                 from Jumpscale.sal_zos.tfchain.TfChainFactory import TfChainFactory
             except Exception as e:
@@ -3885,7 +3921,7 @@ class group_sal_zos(JSGroup):
     @property
     def traefik(self):
         if self._traefik is None:
-            print("LOAD:TraefikFactory")
+            # print("LOAD:TraefikFactory")
             try:
                 from Jumpscale.sal_zos.traefik.TraefikFactory import TraefikFactory
             except Exception as e:
@@ -3902,7 +3938,7 @@ class group_sal_zos(JSGroup):
     @property
     def zt_bootstrap(self):
         if self._zt_bootstrap is None:
-            print("LOAD:ZerotierBootstrapFactory")
+            # print("LOAD:ZerotierBootstrapFactory")
             try:
                 from Jumpscale.sal_zos.zerotier_bootstrap.ZerotierBootstrapFactory import ZerotierBootstrapFactory
             except Exception as e:
@@ -3919,7 +3955,7 @@ class group_sal_zos(JSGroup):
     @property
     def zrobot(self):
         if self._zrobot is None:
-            print("LOAD:ZeroRobotFactory")
+            # print("LOAD:ZeroRobotFactory")
             try:
                 from Jumpscale.sal_zos.zrobot.ZRobotFactory import ZeroRobotFactory
             except Exception as e:
@@ -3936,7 +3972,7 @@ class group_sal_zos(JSGroup):
     @property
     def zstor(self):
         if self._zstor is None:
-            print("LOAD:ZeroStorFactory")
+            # print("LOAD:ZeroStorFactory")
             try:
                 from Jumpscale.sal_zos.zstor.ZStorFactory import ZeroStorFactory
             except Exception as e:
