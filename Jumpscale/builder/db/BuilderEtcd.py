@@ -12,7 +12,7 @@ class BuilderEtcd(j.builder.system._BaseClass):
         Build etcd
         """
         if self._done_check('build', reset):
-                return
+            return
 
         j.builder.runtimes.golang.install()
         # get a vendored etcd from master
@@ -44,17 +44,39 @@ class BuilderEtcd(j.builder.system._BaseClass):
         """
         return j.clients.etcd.get(name)
 
-    def test(self):
+    def start(self, config_file=None):
+        """start etcd
+
+        :param config_file: config file path, defaults to None
+        :type config_file: str, optional
+        :return: tmux pane
+        :rtype: tmux.Pane
         """
-        js_shell 'j.builder._template.test()'
-        :return:
+        cmd = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
+        if config_file:
+            cmd += ' --config-file %s' % config_file
+        return j.tools.tmux.execute(cmd, window=self.NAME, pane=self.NAME, reset=True)
+
+    def stop(self, pid=None, sig=None):
+        """Stops traefik process
+
+        :param pid: pid of the process, if not given, will kill by name
+        :type pid: long, defaults to None
+        :param sig: signal, if not given, SIGKILL will be used
+        :type sig: int, defaults to None
         """
-        #TODO: check that test instance is running, if so stop
-        #TODO: build/sandbox a server (or component)
-        #TODO: call the component call start/stop/... to test
-        #TODO: create a client to the server (use j.clients....) and connect to server if a server
-        #TODO: do some test on the server (use the component.test... method)
-        pass
+        if pid:
+            j.sal.process.kill(pid, sig)
+        else:
+            j.sal.process.killProcessByName(self.NAME, sig)
+
+    def _test(self, name=''):
+        """Run tests under tests directory
+
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        self._test_run(name=name, obj_key='test_main')
 
     def build_flist(self, hub_instance=None):
         """
