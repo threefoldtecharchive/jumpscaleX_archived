@@ -661,17 +661,17 @@ class group_clients(JSGroup):
     @property
     def sshagent(self):
         if self._sshagent is None:
-            # print("LOAD:SSHAgentFactory")
+            # print("LOAD:SSHAgent")
             try:
-                from Jumpscale.clients.sshagent.SSHAgentFactory import SSHAgentFactory
+                from Jumpscale.clients.sshagent.SSHAgent import SSHAgent
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.sshagent.SSHAgentFactory", e)
+                msg = j.core.application.error_init("import", "Jumpscale.clients.sshagent.SSHAgent", e)
                 raise e
-            # print("RUN:SSHAgentFactory")
+            # print("RUN:SSHAgent")
             try:
-                self._sshagent =  SSHAgentFactory()
+                self._sshagent =  SSHAgent()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.sshagent.SSHAgentFactory",e)
+                msg = j.core.application.error_init("execute","Jumpscale.clients.sshagent.SSHAgent",e)
                 return None
             # print("OK")
         return self._sshagent

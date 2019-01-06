@@ -5,12 +5,15 @@ import os
 
 
 class SSHAgent(j.application.JSBaseConfigClass):
+
+    __jslocation__ = "j.clients.sshagent"
+
     _SCHEMATEXT = """
-    @url = jumpscale.sshagent.client
-    name* = "" (S)
-    passphrase = "" (S)
-    path = "" (S)
-    """
+        @url = jumpscale.sshagent.client
+        name* = "" (S)
+        passphrase = "" (S)
+        path = "" (S)
+        """
 
     def _init(self):
         self._available=None
@@ -281,7 +284,7 @@ class SSHAgent(j.application.JSBaseConfigClass):
 
     def test(self):
         """
-        js_shell 'j.clients.sshkey.test()'
+        js_shell 'j.clients.sshagent.test()'
 
         """
 

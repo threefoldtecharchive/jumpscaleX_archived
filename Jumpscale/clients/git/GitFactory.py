@@ -3,16 +3,13 @@ from Jumpscale import j
 import os
 import re
 import sys
-JSBASE = j.application.JSFactoryBaseClass
 
 
-class GitFactory(JSBASE):
+
+class GitFactory(j.application.JSBaseClass):
 
     __jslocation__ = "j.clients.git"
-    _CHILDCLASS = GitClient
 
-    def _init(self):
-        self.GitClient = GitClient
 
     def execute(self, *args, **kwargs):
         executor = None
@@ -553,7 +550,7 @@ class GitFactory(JSBASE):
         url = url.strip()
         repository_host, repository_type, repository_account, repository_name, repository_url, branch, gitpath, relpath, port = j.clients.git.parseUrl(url)
         rpath = j.sal.fs.joinPaths(gitpath, relpath)
-
+        
         if not j.sal.fs.exists(rpath, followlinks=True):
             j.clients.git.pullGitRepo(repository_url, branch=branch)
         elif pull is True:
@@ -603,6 +600,14 @@ class GitFactory(JSBASE):
         repository_url, gitpath, relativepath = self.getContentInfoFromURL(urlOrPath,pull=pull)
         path = j.sal.fs.joinPaths(gitpath, relativepath)
         return path
+
+    def get(self, basedir="", check_path=True):
+        """
+        PLEASE USE SSH, see http://gig.gitbooks.io/jumpscale/content/Howto/how_to_use_git.html for more details
+        """
+        if basedir == "":
+            basedir = j.sal.fs.getcwd()
+        return GitClient(basedir, check_path=check_path)
 
     def find(self, account=None, name=None, interactive=False, returnGitClient=False):  # NOQA
         """

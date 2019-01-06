@@ -6,8 +6,8 @@ class JSBaseConfig(JSBase):
 
     def __init__(self,dataobj=None,factory=None,childclass_name=None,**kwargs):
         JSBase.__init__(self,init=False)
-        if factory is None:
-            raise RuntimeError("factory cannot be None")
+        # if factory is None:
+        #     raise RuntimeError("factory cannot be None")
         self._childclass_name = childclass_name
         self._factory = factory
         self.data = dataobj
@@ -27,7 +27,8 @@ class JSBaseConfig(JSBase):
 
     def delete(self):
         self.data.model.delete(self.data)
-        self._factory._delete(name=self.name,childclass_name=self._childclass_name)
+        if self._factory:
+            self._factory._delete(name=self.name,childclass_name=self._childclass_name)
 
     def data_update(self,**kwargs):
         self.data.data_update(data=kwargs)
