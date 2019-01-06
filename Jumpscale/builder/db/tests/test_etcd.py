@@ -20,8 +20,8 @@ def test_main(self=None):
     child_process = tmux_pane.process_obj_child
     assert child_process.is_running()
 
-    j.sal.nettools.waitConnectionTest('127.0.0.1', 2379)
     client = j.builder.db.etcd.client_get('etcd_test')
+    j.sal.nettools.waitConnectionTest(client.host, client.port)
     client.api.put('foo', 'etcd_bar')
     assert client.get('foo') == 'etcd_bar'
     j.builder.db.etcd.stop(tmux_process.pid)
