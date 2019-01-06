@@ -24,7 +24,7 @@ class EtcdClient(JSConfigClient):
     password_ = "" (S)
     """
 
-    def _init_new(self):
+    def _init(self):
         self._logger.debug(self.user)
         self._api = None
 
