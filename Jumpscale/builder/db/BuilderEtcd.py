@@ -68,7 +68,8 @@ class BuilderEtcd(j.builder.system._BaseClass):
         if pid:
             j.sal.process.kill(pid, sig)
         else:
-            j.sal.process.killProcessByName(self.NAME, sig)
+            full_path = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
+            j.sal.process.killProcessByName(full_path, sig)
 
     def _test(self, name=''):
         """Run tests under tests directory
