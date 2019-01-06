@@ -23,11 +23,11 @@ class BuilderCapnp(j.builder.system._BaseClass):
         # self.prefab.system.package.mdupdate()
         j.builder.buildenv.install()
         if self.prefab.core.isUbuntu:
-            self.prefab.system.package.install('g++')
+            j.builder.tools.package_install('g++')
 
         url="https://capnproto.org/capnproto-c++-0.6.1.tar.gz"
         dest = j.core.tools.text_replace("{DIR_VAR}/build/capnproto")
-        self.prefab.core.createDir(dest)
+        j.sal.fs.createDir(dest)
         self.prefab.core.file_download(url, to=dest, overwrite=False, retry=3,
                     expand=True, minsizekb=900, removeTopDir=True, deletedest=True)
 

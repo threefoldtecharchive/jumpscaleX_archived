@@ -3991,4 +3991,68 @@ j.sal_zos = group_sal_zos()
 j.core._groups["sal_zos"] = j.sal_zos
 
 
+class group_world(JSGroup):
+    def __init__(self):
+        
+        self._system = None
+        self._hypervisor = None
+        self._zos = None
+
+    
+    @property
+    def system(self):
+        if self._system is None:
+            # print("LOAD:WorldSystem")
+            try:
+                from DigitalMe.tools.kosmos.WorldSystem import WorldSystem
+            except Exception as e:
+                msg = j.core.application.error_init("import", "DigitalMe.tools.kosmos.WorldSystem", e)
+                raise e
+            # print("RUN:WorldSystem")
+            try:
+                self._system =  WorldSystem()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","DigitalMe.tools.kosmos.WorldSystem",e)
+                return None
+            # print("OK")
+        return self._system
+    @property
+    def hypervisor(self):
+        if self._hypervisor is None:
+            # print("LOAD:CoordinatorHypervisor")
+            try:
+                from DigitalMe.tools.kosmos.world_example.HyperVisorCoordinator.CoordinatorHypervisor import CoordinatorHypervisor
+            except Exception as e:
+                msg = j.core.application.error_init("import", "DigitalMe.tools.kosmos.world_example.HyperVisorCoordinator.CoordinatorHypervisor", e)
+                raise e
+            # print("RUN:CoordinatorHypervisor")
+            try:
+                self._hypervisor =  CoordinatorHypervisor()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","DigitalMe.tools.kosmos.world_example.HyperVisorCoordinator.CoordinatorHypervisor",e)
+                return None
+            # print("OK")
+        return self._hypervisor
+    @property
+    def zos(self):
+        if self._zos is None:
+            # print("LOAD:ZOSCmdFactory")
+            try:
+                from DigitalMe.kosmos.zos.ZOSFactory import ZOSCmdFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "DigitalMe.kosmos.zos.ZOSFactory", e)
+                raise e
+            # print("RUN:ZOSCmdFactory")
+            try:
+                self._zos =  ZOSCmdFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","DigitalMe.kosmos.zos.ZOSFactory",e)
+                return None
+            # print("OK")
+        return self._zos
+
+j.world = group_world()
+j.core._groups["world"] = j.world
+
+
 

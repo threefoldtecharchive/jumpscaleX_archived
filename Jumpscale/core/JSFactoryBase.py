@@ -158,7 +158,7 @@ class JSFactoryBase(JSBase):
                 #need to find based on kwargs
                 res = self._find_obj(childclass_name=childclass_name,**kwargs)
                 if len(res)<1:
-                    return self._error_input_raise("Dit not find services for :%s, search criteria:\n%s"%(self.__location__,kwargs))
+                    return self._error_input_raise("Did not find services for :%s, search criteria:\n%s"%(self.__location__,kwargs))
                 elif len(res)>1:
                     return self._error_input_raise("Found more than 1 service for :%s, search criteria:\n%s"%(self.__location__,kwargs))
                 data = res[0]
