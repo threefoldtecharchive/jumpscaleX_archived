@@ -18,7 +18,7 @@ class TraefikClient(JSConfigBase):
     etcd_instance = "main" (S)
     """
 
-    def _init_new(self):
+    def _init(self):
         self._etcd_client = None
         self._etcd_instance = self.etcd_instance
         self.proxies = ProxyMap(self)
