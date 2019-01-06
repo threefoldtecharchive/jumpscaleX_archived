@@ -7,6 +7,5 @@ JSConfigFactory = j.application.JSFactoryBaseClass
 
 class EtcdFactory(JSConfigFactory):
 
-    def __init__(self):
-        self.__jslocation__ = "j.clients.etcd"
-        JSConfigFactory.__init__(self, EtcdClient)
+    __jslocation__ = "j.clients.etcd"
+    _CHILDCLASS = EtcdClient

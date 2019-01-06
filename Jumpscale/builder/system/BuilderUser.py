@@ -14,9 +14,6 @@ def shell_safe(path):
     return path
 
 
-
-
-
 class BuilderUser(j.builder.system._BaseClass):
 
     def passwd(self, name, passwd, encrypted_passwd=False):
@@ -79,7 +76,7 @@ class BuilderUser(j.builder.system._BaseClass):
         """
         assert name is not None or uid is not None, "check: either `uid` or `name` should be given"
         assert name is None or uid is None, "check: `uid` and `name` both given, only one should be provided"
-        if "LEDE" in j.builder.platformtype.osname:
+        if "LEDE" in str(j.core.platformtype.myplatform):
             cmd = "grep -w '^%s' /etc/passwd" % (name)
             _, d, _ = j.sal.process.execute(cmd)
         else:

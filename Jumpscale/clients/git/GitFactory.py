@@ -3,15 +3,16 @@ from Jumpscale import j
 import os
 import re
 import sys
-JSBASE = j.application.JSBaseClass
+JSBASE = j.application.JSFactoryBaseClass
 
 
-class GitFactory(j.application.JSBaseClass):
+class GitFactory(JSBASE):
 
     __jslocation__ = "j.clients.git"
+    _CHILDCLASS = GitClient
 
-    def __init__(self):
-        JSBASE.__init__(self)
+    def _init(self):
+        self.GitClient = GitClient
 
     def execute(self, *args, **kwargs):
         executor = None
@@ -602,14 +603,6 @@ class GitFactory(j.application.JSBaseClass):
         repository_url, gitpath, relativepath = self.getContentInfoFromURL(urlOrPath,pull=pull)
         path = j.sal.fs.joinPaths(gitpath, relativepath)
         return path
-
-    def get(self, basedir="", check_path=True):
-        """
-        PLEASE USE SSH, see http://gig.gitbooks.io/jumpscale/content/Howto/how_to_use_git.html for more details
-        """
-        if basedir == "":
-            basedir = j.sal.fs.getcwd()
-        return GitClient(basedir, check_path=check_path)
 
     def find(self, account=None, name=None, interactive=False, returnGitClient=False):  # NOQA
         """

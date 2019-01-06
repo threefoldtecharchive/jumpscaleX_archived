@@ -437,6 +437,16 @@ class BuilderTools(j.builder.system._BaseClass):
         j.sal.fs.writeFile(path, content, append=append)
         self.file_attribs(path, mode, owner, group)
 
+    def file_unlink(self, filename):
+        """Remove the file path (only for files, not for symlinks)
+
+        :param filename: file path to be removed
+        :type filename: str
+        """
+        filename = j.core.tools.text_replace(filename)
+        if self.file_exists(filename):
+            j.sal.fs.unlinkFile(filename)
+
     def file_ensure(self, location, mode=None, owner=None, group=None):
         """
         Updates the mode/owner/group for the remote file at the given

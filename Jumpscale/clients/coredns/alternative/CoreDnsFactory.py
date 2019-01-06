@@ -6,9 +6,8 @@ JSConfigFactory = j.application.JSFactoryBaseClass
 
 
 class CoreDnsFactory(JSConfigFactory):
-    def __init__(self):
-        self.__jslocation__ = "j.sal.coredns"
-        JSConfigFactory.__init__(self, CoreDnsClient)
+    __jslocation__ = "j.sal.coredns"
+    _CHILDCLASS = CoreDnsClient
 
     def configure(self, instance_name, host, port="2379", user="root", password="root"):
         """
