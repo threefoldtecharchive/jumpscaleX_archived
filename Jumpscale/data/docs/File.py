@@ -1,7 +1,7 @@
 
 from Jumpscale import j
 
-class WebAsset(j.application.JSBaseClass):
+class File(j.application.JSBaseConfigClass):
     """
     eg. a picture, html doc, ...
     """

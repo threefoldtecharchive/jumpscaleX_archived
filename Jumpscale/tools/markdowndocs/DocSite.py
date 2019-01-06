@@ -13,8 +13,9 @@ class DocSite(j.application.JSBaseClass):
 
     def __init__(self, path, name=""):
         JSBASE.__init__(self)
+        self._j = j
 
-        self.docgen = j.tools.docsites
+        self.docgen = j.tools.markdowndocs
         #init initial arguments
 
         config_path = j.sal.fs.joinPaths(path,"docs_config.toml")
@@ -49,6 +50,8 @@ class DocSite(j.application.JSBaseClass):
 
         self.error_file_path = self.path + "/errors.md"
 
+        self.outpath = j.core.tools.text_replace("{DIR_VAR}/docsites/{NAME}",args={"NAME":self.name})
+
         self._logger_enable()
         self._logger.level=1
 
@@ -58,13 +61,12 @@ class DocSite(j.application.JSBaseClass):
         self._logger.info("found:%s"%self)
 
     def _clean(self,name):
-        if j.data.types.list.check(name):
-            if len(name)==1:
-                name=name[0]
-            else:
-                name="/".join(name) #not sure this is correct
-
-        return j.core.text.strip_to_ascii_dense(name)
+        assert j.data.types.string.check(name)
+        #     if len(name)==1:
+        #         name=name[0]
+        #     else:
+        #         name="/".join(name) #not sure this is correct
+        return j.core.text.convert_to_snake_case(name)
 
     @property
     def git(self):
@@ -73,9 +75,10 @@ class DocSite(j.application.JSBaseClass):
             if not gitpath:
                 return
             if gitpath not in self.docgen._git_repos:
-                self._git = j.tools.docsites._git_get(gitpath)
+                self._git = j.tools.markdowndocs._git_get(gitpath)
                 self.docgen._git_repos[gitpath] = self.git
         return self._git
+        #MARKER FOR INCLUDE TO STOP  (HIDE)
 
     @property
     def urls(self):
@@ -143,10 +146,11 @@ class DocSite(j.application.JSBaseClass):
         self._docs={}
         self._sidebars={}
 
-        j.sal.fs.remove(self.path + "errors.md")
         path = self.path
         if not j.sal.fs.exists(path=path):
             raise j.exceptions.NotFound("Cannot find source path in load:'%s'" % path)
+
+        j.sal.fs.remove(self.path + "/errors.md")
 
         def callbackForMatchDir(path, arg):
             base = j.sal.fs.getBaseName(path).lower()
@@ -179,6 +183,8 @@ class DocSite(j.application.JSBaseClass):
             return True
 
         def callbackFunctionFile(path, arg):
+            if path.find("error.md")!=-1:
+                return
             self._logger.debug("file:%s"%path)
             ext = j.sal.fs.getFileExtension(path).lower()
             base = j.sal.fs.getBaseName(path)
@@ -191,7 +197,7 @@ class DocSite(j.application.JSBaseClass):
                 self._docs[doc.name_dot_lower] = doc
             elif ext in ["html","htm"]:
                 self._logger.debug("found html:%s"%path)
-                # raise RuntimeError()
+                raise RuntimeError()
                 # l = len(ext)+1
                 # base = base[:-l]  # remove extension
                 # doc = HtmlPage(path, base, docsite=self)
@@ -199,14 +205,7 @@ class DocSite(j.application.JSBaseClass):
                 # #     self.htmlpages[base.lower()] = doc
                 # self.htmlpages[doc.name_dot_lower] = doc
             else:
-
-                if ext in ["png", "jpg", "jpeg", "pdf", "docx", "doc", "xlsx", "xls", \
-                            "ppt", "pptx", "mp4","css","js","mov"]:
-                    self._logger.debug("found file:%s"%path)
-                    base=self._clean(base)
-                    if base in self._files:
-                        raise j.exceptions.Input(message="duplication file in %s,%s" %  (self, path))
-                    self._files[base] = path
+                self.file_add(path)
                 # else:
                 #     self._logger.debug("found other:%s"%path)
                 #     l = len(ext)+1
@@ -229,7 +228,16 @@ class DocSite(j.application.JSBaseClass):
 
         self._loaded=True
 
-
+    def file_add(self,path,duplication_test=True):
+        ext = j.sal.fs.getFileExtension(path).lower()
+        base = j.sal.fs.getBaseName(path)
+        if ext in ["png", "jpg", "jpeg", "pdf", "docx", "doc", "xlsx", "xls", \
+                    "ppt", "pptx", "mp4","css","js","mov"]:
+            self._logger.debug("found file:%s"%path)
+            base=self._clean(base)
+            if duplication_test and base in self._files:
+                raise j.exceptions.Input(message="duplication file in %s,%s" %  (self, path))
+            self._files[base] = path
 
     def error_raise(self, errormsg, doc=None):
         if doc is not None:
@@ -479,7 +487,7 @@ class DocSite(j.application.JSBaseClass):
         else:
             # out+="----\n\n"
             out+="\n\n* **Wiki Sites.**\n"
-            keys = [item for item in j.tools.docsites.docsites.keys()]
+            keys = [item for item in j.tools.markdowndocs.docsites.keys()]
             keys.sort()
             for key in keys:
                 if key.startswith("www") or key.startswith("simple") :
@@ -517,46 +525,51 @@ class DocSite(j.application.JSBaseClass):
         return errors
 
 
-
     def __repr__(self):
         return "docsite:%s" % ( self.path)
 
     __str__ = __repr__
 
-    # def write(self):
-    #     if self._config:
-    #         j.sal.fs.remove(self.outpath)
-    #         dest = j.sal.fs.joinPaths(self.outpath, "content")
-    #         j.sal.fs.createDir(dest)
-    #         # source = self.path
-    #         # j.do.copyTree(source, dest, overwriteFiles=True, ignoredir=['.*'], ignorefiles=[
-    #         #               "*.md", "*.toml", "_*", "*.yaml", ".*"], rsync=True, recursive=True, rsyncdelete=False)
+    def write(self,reset=False):
+        self.load()
+        self.verify()
 
-    #         for key, doc in self.docs.items():
-    #             doc.process()
+        if reset:
+            j.sal.fs.remove(self.outpath)
 
-    #         # find the defs, also process the aliases
-    #         for key, doc in self.docs.items():
-    #             if "tags" in doc.data:
-    #                 tags = doc.data["tags"]
-    #                 if "def" in tags:
-    #                     name = doc.name.lower().replace("_", "").replace("-", "").replace(" ", "")
-    #                     self.defs[name] = doc
-    #                     if "alias" in doc.data:
-    #                         for alias in doc.data["alias"]:
-    #                             name = alias.lower().replace("_", "").replace("-", "").replace(" ", "")
-    #                             self.defs[name] = doc
+        # dest = j.sal.fs.joinPaths(self.outpath, "content")
+        dest = self.outpath
+        j.sal.fs.createDir(dest)
 
-    #         for key, doc in self.docs.items():
-    #             # doc.defs_process()
-    #             doc.write()
 
-    #         self.generator.generate(self)
+        #NO NEED (also the ignore does not work well)
+        # j.sal.fs.copyDirTree(self.path, self.outpath, overwriteFiles=True, ignoredir=['.*'], ignorefiles=[
+        #               "*.md", "*.toml", "_*", "*.yaml", ".*"], rsync=True, recursive=True, rsyncdelete=True)
 
-    #         if j.sal.fs.exists(j.sal.fs.joinPaths(self.path, "static"), followlinks=True):
-    #             j.sal.fs.copyDirTree(j.sal.fs.joinPaths(self.path, "static"), j.sal.fs.joinPaths(self.outpath, "public"))
-    #     else:
-    #         self._logger.info("no need to write:%s"%self.path)
+        keys = [item for item in self.docs.keys()]
+        keys.sort()
+        for key in keys:
+            doc = self.doc_get(key,die=True)
+            doc.write()
+
+        # # find the defs, also process the aliases
+        # for key, doc in self.docs.items():
+        #     if "tags" in doc.data:
+        #         tags = doc.data["tags"]
+        #         if "def" in tags:
+        #             name = doc.name.lower().replace("_", "").replace("-", "").replace(" ", "")
+        #             self.defs[name] = doc
+        #             if "alias" in doc.data:
+        #                 for alias in doc.data["alias"]:
+        #                     name = alias.lower().replace("_", "").replace("-", "").replace(" ", "")
+        #                     self.defs[name] = doc
+
+        for key, doc in self.docs.items():
+            # doc.defs_process()
+            doc.write()
+
+        # if j.sal.fs.exists(j.sal.fs.joinPaths(self.path, "static"), followlinks=True):
+        #     j.sal.fs.copyDirTree(j.sal.fs.joinPaths(self.path, "static"), j.sal.fs.joinPaths(self.outpath, "public"))
 
 
     # def file_add(self, path):

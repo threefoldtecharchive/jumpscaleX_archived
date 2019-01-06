@@ -305,17 +305,21 @@ class MDCode(MDCodeMacroDataBase):
 
 class MDMacro(MDCodeMacroDataBase):
 
-    def __init__(self, data="", lang="", method=""):
+    def __init__(self, data=None, method=""):
+        if data is None:
+            data={}
         self.data = data
-        self.lang = lang
         self.type = "macro"
         self.method = method.strip()
         self.result = ""
 
     @property
     def _markdown(self):
-        out = "```%s\n!!!%s\n"%(self.lang,self.method)
-        t = self.data.strip()
+        out = "```\n!!!%s\n"%(self.method)
+        if j.data.types.dict.check(self.data):
+            t = j.data.serializers.toml.dumps(self.data)
+        else:
+            t= self.data.strip()
         out += t
         if t:
             out+="\n"

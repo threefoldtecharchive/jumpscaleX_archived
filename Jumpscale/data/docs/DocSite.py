@@ -1,8 +1,9 @@
 from Jumpscale import j
 from .Doc import  Doc
-from .WebAsset import WebAsset
+from .File import File
+from .Navigation import Navigation
 
-class DocSite(j.application.JSFactoryBaseClass):
+class DocSite(j.application.JSFactoryBaseClass,j.application.JSBaseConfigClass):
 
     _SCHEMATEXT = """
         @url = jumpscale.docs.docsite.1
@@ -13,22 +14,28 @@ class DocSite(j.application.JSFactoryBaseClass):
         last_process_data = (D)
         """
 
-    def _childclass_selector(self,dataobj,kwargs,childclass_name="doc"):
+    def __init__(self,factory=None,dataobj=None,childclass_name=None):
+        j.application.JSBaseConfigClass.__init__(self,factory=factory,dataobj=dataobj,childclass_name=childclass_name)
+        j.application.JSFactoryBaseClass.__init__(self)
+
+
+    def _childclass_selector(self,childclass_name="doc"):
         """
-        childclass name is webasset or doc
+        childclass name is file or doc
         :return:
         """
         if childclass_name=="doc":
             return Doc
-        elif childclass_name=="webasset":
-            return WebAsset
-        elif childclass_name=="sidemenu":
-            return SideMenu
+        elif childclass_name=="file":
+            return File
+        elif childclass_name=="navigation":
+            return Navigation
         else:
-            raise RuntimeError("did not find childclass")
+            raise RuntimeError("did not find childclass type:%s"%childclass_name)
 
     def _init(self):
         self._git = None
+        self._loaded = False
 
     @property
     def _error_file_path(self):
@@ -36,17 +43,26 @@ class DocSite(j.application.JSFactoryBaseClass):
             raise RuntimeError("path should not be empty")
         return self.path + "/errors.md"
 
-    def get_doc(self,name=None,id=None,die=True ,create_new=True,**kwargs):
-        return self.get(name=name,id=id,die=die,create_new=create_new,childclass_name="doc",**kwargs)
+    def get_doc(self,name=None,id=None,die=True ,create_new=False,**kwargs):
+        name = j.core.text.strip_to_ascii_dense(name)
+        self._check()
+        return self.get(name=name,id=id,die=die,create_new=create_new,childclass_name="doc",docsite=self,**kwargs)
 
-    def get_webasset(self,name=None,id=None,die=True ,create_new=True,**kwargs):
-        return self.get(name=name,id=id,die=die,create_new=create_new,childclass_name="webasset",**kwargs)
+    def get_file(self,name=None,id=None,die=True ,create_new=False,**kwargs):
+        name = j.core.text.strip_to_ascii_dense(name)
+        self._check()
+        return self.get(name=name,id=id,die=die,create_new=create_new,childclass_name="file",docsite=self,**kwargs)
+
+    def get_navigation(self,name=None,id=None,die=True ,create_new=False,**kwargs):
+        name = j.core.text.strip_to_ascii_dense(name)
+        self._check()
+        return self.get(name=name,id=id,die=die,create_new=create_new,childclass_name="navigation",docsite=self,**kwargs)
 
 
     @property
     def git(self):
         if self._git is None:
-            if self.git_url is !="":
+            if self.git_url !="":
                 gitpath = self.git_url
             else:
                 gitpath = j.clients.git.findGitPath(self.path,die=False)
@@ -55,20 +71,36 @@ class DocSite(j.application.JSFactoryBaseClass):
             self._git = j.clients.git.get(gitpath)
         return self._git
 
+    def _check(self):
+        if not self._loaded:
+            if not self.data.path:
+                if not self.data.git_url:
+                    raise RuntimeError("url not specified for %s"%self.name)
+                self.data.path = j.clients.git.getContentPathFromURLorPath(self.data.git_url,pull=False) #just to make sure data there
+                # if not j.sal.fs.exists(self.path):
+                #     self.update_from_git()
+            self._load()
+
     def push_to_redis(self):
+        self._check()
         j.shell()
 
-    def load_from_filesystem(self,reset=False):
+    def update(self):
         """
-        walk in right order over all files which we want to potentially use (include)
-        and remember their paths
+        will check the docs from git & get them local
+        if the repo already exists will try to pull the changes in
+        :return:
+        """
+        self.data.path = j.clients.git.getContentPathFromURLorPath(self.data.git_url,pull=True)
 
-        if duplicate only the first found will be used
-
+    def _load(self,reset=False):
+        """
+        load all the files/docs inside a directory
+        the result will be stored in the BCDB which is attached to the DocsFactory (j.data.docs._bcdb)
         """
         if reset == False and self._loaded:
             return
-
+        self._loaded=True
         self._files={}
         self._docs={}
         self._sidebars={}
@@ -99,13 +131,13 @@ class DocSite(j.application.JSFactoryBaseClass):
 
         def callbackFunctionDir(path, arg):
             # will see if ther eis data.toml or data.yaml & load in data structure in this obj
-            self._processData(path + "/data")
+            # self._processData(path + "/data")
             dpath = path + "/default.md"
             if j.sal.fs.exists(dpath, followlinks=True):
                 C = j.sal.fs.readFile(dpath)
                 rdirpath = j.sal.fs.pathRemoveDirPart(path, self.path)
                 rdirpath = rdirpath.strip("/").strip().strip("/")
-                self.content_default[rdirpath] = C
+                self._content_default[rdirpath] = C
             return True
 
         def callbackFunctionFile(path, arg):
@@ -114,8 +146,10 @@ class DocSite(j.application.JSFactoryBaseClass):
             base = j.sal.fs.getBaseName(path)
             if ext == "md":
                 self._logger.debug("found md:%s"%path)
-                base = base[:-3]  # remove extension
-                doc = Doc(path, base, docsite=self)
+                name = base[:-3].lower()  # remove extension
+                doc = self.get_doc(name=name,path=path,create_new=True)
+                j.shell()
+                w
                 # if base not in self.docs:
                 #     self.docs[base.lower()] = doc
                 self._docs[doc.name_dot_lower] = doc
@@ -161,7 +195,7 @@ class DocSite(j.application.JSFactoryBaseClass):
 
 
 
-    def error_raise(self, errormsg, doc=None):
+    def _error_raise(self, errormsg, doc=None):
         if doc is not None:
             errormsg2 = "## ERROR: %s\n\n- in doc: %s\n\n%s\n\n\n" % (doc.name, doc, errormsg)
             key = j.data.hash.md5_string("%s_%s"%(doc.name,errormsg))

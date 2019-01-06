@@ -632,6 +632,7 @@ class Tools():
                 async_=False, args=None, env=None,
                 interactive=False,self=None,
                 replace=True):
+
         if env is None:
             env={}
         if self is None:
@@ -1096,6 +1097,11 @@ class OSXInstall():
     @staticmethod
     def do_all():
         Tools.log("installing OSX version")
+
+        C='''
+        mkdir -p /sandbox
+        '''
+
         UbuntuInstall.pips_install()
 
 

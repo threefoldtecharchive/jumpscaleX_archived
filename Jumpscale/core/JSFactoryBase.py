@@ -8,10 +8,10 @@ class KosmosServices():
     def __init__(self,factory):
         self._factory = factory
 
-    def _empty_js_obj(self):
+    def _obj_cache_reset(self):
         for key,val in self.__dict__.items():
             if not key.startswith("_"):
-                self.__dict__[key]._empty_js_obj()
+                self.__dict__[key]._obj_cache_reset()
                 del self.__dict__[key]
                 self.__dict__[key]=None
 
@@ -61,16 +61,22 @@ class JSFactoryBase(JSBase):
             self.instances = KosmosServices(self)
         else:
             self.services = KosmosServices(self)
-        self.__model = None
+        self._obj_cache_reset()
+        self._logger_enable()
         self._init()
 
 
-    def _empty_js_obj(self):
+    def _obj_cache_reset(self):
+        """
+        make sure that all objects we remember inside are emptied
+        :return:
+        """
+        self.__models = {}
         self.__dict__["_children"] = {}
         if "clients" in self.__location__:
-            self.instances._empty_js_obj()
+            self.instances._obj_cache_reset()
         else:
-            self.services._empty_js_obj()
+            self.services._obj_cache_reset()
 
     @property
     def name(self):
@@ -83,17 +89,19 @@ class JSFactoryBase(JSBase):
         :param childclass_name, if different typen of childclass, specify its name, needs to be implemented in _childclass_selector
         :return: the service
         """
-        data = self._model.new()
+        data = self._model_get(childclass_name).new()
         data.name = name
         if kwargs is not {}:
             data.data_update(data=kwargs)
 
-        child_class = self._childclass_selector(dataobj=data,kwargs=kwargs,childclass_name=childclass_name)
+        child_class = self._childclass_selector(childclass_name=childclass_name)
 
-        o = child_class(factory=self,dataobj=data)
+        self._logger.debug("create child for %s: name:%s class:'%s' "%(self.__location__,name,childclass_name))
+
+        o = child_class(factory=self,dataobj=data,childclass_name=childclass_name,**kwargs)
 
         o._data_trigger_new()
-        self._isnew = True
+        o._isnew = True
 
         if childclass_name is not None:
             key = "%s_%s"%(childclass_name,name)
@@ -104,8 +112,17 @@ class JSFactoryBase(JSBase):
 
         return self.__class__._children[key]
 
+    def delete(self,name,childclass_name=None):
+        if childclass_name is not None:
+            key = "%s_%s"%(childclass_name,name)
+        else:
+            key = name
+        o=self.__class__._children[key]
+        o._data_trigger_delete()
+        self.__class__._children.pop(key)
 
-    def _childclass_selector(self,dataobj,kwargs,childclass_name=None):
+
+    def _childclass_selector(self,childclass_name=None):
         """
         gives a creator of a factory the ability to change the type of child to be returned
         :return:
@@ -134,12 +151,12 @@ class JSFactoryBase(JSBase):
                 return self.__class__._children[key]
 
         if id is not None:
-            data = self._model.get(id=id)
+            data = self._model_get(childclass_name).get(id=id)
             name = data.name
         else:
             if name is None:
                 #need to find based on kwargs
-                res = self._find_obj(**kwargs)
+                res = self._find_obj(childclass_name=childclass_name,**kwargs)
                 if len(res)<1:
                     return self._error_input_raise("Dit not find services for :%s, search criteria:\n%s"%(self.__location__,kwargs))
                 elif len(res)>1:
@@ -147,7 +164,7 @@ class JSFactoryBase(JSBase):
                 data = res[0]
                 name = data.name
             else:
-                res = self._find_obj(name=name)
+                res = self._find_obj(childclass_name=childclass_name,name=name)
                 if len(res)<1:
                     if create_new:
                         return self.new(name=name,childclass_name=childclass_name,**kwargs)
@@ -167,60 +184,60 @@ class JSFactoryBase(JSBase):
         if key in self.__class__._children:
             return self.__class__._children[key]
 
-        child_class  = self._childclass_selector(dataobj=data,kwargs=kwargs,childclass_name=childclass_name)
-        o = child_class(factory=self,dataobj=data)
+        child_class  = self._childclass_selector(childclass_name=childclass_name)
+        o = child_class(factory=self,dataobj=data,childclass_name=childclass_name,**kwargs)
         self.__class__._children[key] = o
 
         return self.__class__._children[key]
 
-    def reset(self):
+    def reset(self,childclass_name=None):
         """
         will remove all the instances, be carefull
         :return:
 
         """
-        for item in self.find():
+        for item in self.find(childclass_name=childclass_name):
             item.delete()
 
-    def count(self):
-        return self._count()
+    def count(self,childclass_name=None):
+        return self._count(childclass_name=childclass_name)
 
     @property
     def _model(self):
-        if self.__model is None:
-            if self.__class__._CHILDCLASS is None:
-                raise RuntimeError("__class__._CHILDCLASS should be set")
-            child_class = self.__class__._CHILDCLASS
-            self.__model = j.application.bcdb_system.model_get_from_schema(child_class._SCHEMATEXT)
-        return self.__model
+        return self._model_get()
 
+    def _model_get(self,childclass_name=None):
+        if childclass_name not in self.__models:
+            child_class = self._childclass_selector(childclass_name=childclass_name)
+            self.__models[childclass_name] = j.application.bcdb_system.model_get_from_schema(child_class._SCHEMATEXT)
+        return self.__models[childclass_name]
 
-    def _find_obj(self, **kwargs):
+    def _find_obj(self, childclass_name=None, **kwargs):
         """
         :param kwargs: e.g. color="red",...
         :return: list of the objects
         """
         if len(kwargs)>0:
             propnames = [i for i in kwargs.keys()]
-            propnames_keys_in_schema = [item.name for item in self._model.schema.properties_index_keys if item.name in propnames]
+            propnames_keys_in_schema = [item.name for item in self._model_get(childclass_name=childclass_name).schema.properties_index_keys if item.name in propnames]
             if len(propnames_keys_in_schema) > 0:
                 # we can try to find this config
-                return self._model.get_from_keys(**kwargs)
+                return self._model_get(childclass_name=childclass_name).get_from_keys(**kwargs)
             else:
                 raise RuntimeError("cannot find obj with kwargs:\n%s\n in %s\nbecause kwargs do not match, is there * in schema"%(kwargs,self))
             return []
         else:
-            return self._model.get_all()
+            return self._model_get(childclass_name).get_all()
 
 
-    def find(self, **kwargs):
+    def find(self, childclass_name=None,**kwargs):
         """
         :param kwargs: e.g. color="red",...
         :return: list of the objects
         """
         res=[]
-        for dataobj in self._find_obj( **kwargs):
-            res.append(self.get(dataobj.id))
+        for dataobj in self._find_obj( childclass_name=childclass_name,**kwargs):
+            res.append(self.get(dataobj.id,childclass_name=childclass_name))
         return res
 
 
@@ -255,23 +272,23 @@ class JSFactoryBase(JSBase):
     #     return res
 
 
-    def _get_all(self):
-        m = self._model
+    def _get_all(self,childclass_name=None):
+        m = self._model_get(childclass_name)
         return m.get_all()
 
-    def _reset(self):
-        m = self._model
+    def _reset(self,childclass_name=None):
+        m = self._model_get(childclass_name)
         m.reset()
 
-    def _count(self):
+    def _count(self,childclass_name=None):
         counter = 0
-        m = self._model
+        m = self._model_get(childclass_name)
         for obj_id in m.id_iterator:
             counter += 1
         return counter
 
-    def _exists(self, **kwargs):
-        res = self._find_obj(**kwargs)
+    def _exists(self,childclass_name=None, **kwargs):
+        res = self._find_obj(childclass_name=childclass_name,**kwargs)
         if len(res) > 1:
             raise RuntimeError("found too many items for :%s, args:\n%s\n%s" %(self.__class__.__name__, kwargs, res))
         elif len(res) == 1:

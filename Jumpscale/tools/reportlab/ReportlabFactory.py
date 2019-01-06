@@ -45,7 +45,7 @@ class ReportlabFactory(j.application.JSBaseClass):
         #                         "https://github.com/threefoldfoundation/info_legal/tree/master/HR/dutch")
 
         url = "https://github.com/threefoldfoundation/info_legal/tree/master/HR/dutch"
-        ds = j.tools.docsites.load(url, name="test")
+        ds = j.tools.markdowndocs.load(url, name="test")
 
         doc = ds.doc_get("employment_agreement_v1")
 

@@ -24,7 +24,7 @@ class group_{{jsgroup.name}}(JSGroup):
     @property
     def {{module.jname}}(self):
         if self._{{module.jname}} is None:
-            print("LOAD:{{module.name}}")
+            # print("LOAD:{{module.name}}")
             try:
                 from {{module.importlocation}} import {{module.name}}
             except Exception as e:

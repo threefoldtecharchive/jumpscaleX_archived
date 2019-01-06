@@ -1,11 +1,49 @@
 
 # install
 
-### should add your ssh key in your github account 
-### to get your ssh key 
+## easiest way
+
+### OSX
+
+required steps:
+
+- install brew
+- install requirements
+- create the dir with right permissions
+- install using the install script
+
+```bash
+#to install brew:
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+
+# install requirements
+brew install curl python3
+
+#create dir
+sudo mkdir -p /sandbox;sudo chown -R $USER:staff /sandbox
+
+#do the installation
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py
+```
+
+### Ubuntu
+
+- TODO:
+
+
+## more info
+
+see also [install/readme.md](../install/readme.md)
+
+## with SSH key
+
+should add your ssh key in your github account 
+
+to see if SSL key has been loaded
 ```bash 
 ssh-add -L
 ``` 
+
 ```bash
 export USEGIT=1
 curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py
