@@ -1264,7 +1264,7 @@ class UbuntuInstall():
                 "psycopg2>=2.7.1",
                 "pystache>=0.5.4",
                 # "pypandoc>=1.3.3",
-                "#SQLAlchemy>=1.1.9",
+                # "SQLAlchemy>=1.1.9",
                 "pymongo>=3.4.0",
                 "docker>=3",
                 "dnspython>=1.15.0",
