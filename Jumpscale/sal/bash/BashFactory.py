@@ -6,8 +6,7 @@ from Jumpscale import j
 
 
 class Profile(j.application.JSBaseClass):
-    env_pattern = re.compile(r'^([^=\n]+)="([^"\n]+)"$', re.MULTILINE)
-    include_pattern = re.compile(r'^source (.*)$', re.MULTILINE)
+    env_pattern = re.compile(r'([A-Za-z0-9_]+)=(.*)\n', re.MULTILINE)
 
     def __init__(self, bash, profilePath=None):
         """
@@ -36,19 +35,33 @@ class Profile(j.application.JSBaseClass):
     def pathProfile(self, newpath):
         self._pathProfile = newpath
 
+    def find_env_vars(self, content):
+        """get defined environment variables in `content`
+        this will match for XYZ=value
+
+        :param content: content of e.g. a bash profile or the output of `printenv`
+        :type content: str
+        :return: a mapping between variables/values
+        :rtype: dict
+        """
+        return dict(self.env_pattern.findall(content))
+
     def load(self):
         self.home = self.bash.home
         self._env = {}
         self._path = []
         self._includes = []
 
+        # to let bash evaluate the profile source, we source the profile
+        # then get the current environment variables using printenv
         content = self.executor.file_read(self.pathProfile)
-        # content = self.executor.state_on_system["bashprofile"].strip()  ##WHY??
-
-        for match in Profile.env_pattern.finditer(content):
-            self._env[match.group(1)] = match.group(2)
-        for match in Profile.include_pattern.finditer(content):
-            self._includes.append(match.group(1))
+        _, current_env, _ = self.executor.execute('source %s && printenv' % self.pathProfile)
+        # get a set of profile variables and current environment variables
+        profile_vars = self.find_env_vars(content).keys()
+        current_env = self.find_env_vars(current_env)
+        for var, value in current_env.items():
+            if var in profile_vars:
+                self._env[var] = value
 
         # load path
         if 'PATH' in self._env:
@@ -105,7 +118,7 @@ class Profile(j.application.JSBaseClass):
 
     def envDeleteAll(self, key):
         """
-        dangerous function will look for env argument 
+        dangerous function will look for env argument
         which has been set in the profile
         if found will delete
         and will do this multiple times to make sure all instances are found
@@ -130,7 +143,7 @@ class Profile(j.application.JSBaseClass):
 
     # def deletePathFromEnv(self, key):
     #     """
-    #     dangerous function will look for env argument 
+    #     dangerous function will look for env argument
     #       which has been set in the profile
     #     if found will delete
     #     and will do this multiple times to make sure all instances are found
