@@ -549,8 +549,9 @@ class DocSite(j.application.JSBaseClass):
         keys = [item for item in self.docs.keys()]
         keys.sort()
         for key in keys:
-            doc = self.doc_get(key,die=True)
-            doc.write()
+            doc = self.doc_get(key,die=False)
+            if doc:
+                doc.write()
 
         # # find the defs, also process the aliases
         # for key, doc in self.docs.items():

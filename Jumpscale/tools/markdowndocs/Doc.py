@@ -326,15 +326,14 @@ class Doc(j.application.JSBaseClass):
             if j.data.types.dict.check(part.data):
                 kwargs.update(part.data)
 
-            part.result = method(self,*args,**kwargs,content=part.data)
-            # try:
-            #     part.result = method(self,*args,**kwargs,content=part.data)
-            # except Exception as e:
-            #     j.shell()
-            #     block = "```python\nERROR IN MACRO*** TODO: *1 ***\nmacro:\n%s\nERROR:\n%s\n```\n" % (macro_name, e)
-            #     self._logger.error(block)
-            #     self.docsite.error_raise(block, doc=self)
-            #     part.result = block
+            # part.result = method(self,*args,**kwargs,content=part.data)
+            try:
+                part.result = method(self,*args,**kwargs,content=part.data)
+            except Exception as e:
+                block = "```python\nERROR IN MACRO*** TODO: *1 ***\nmacro:\n%s\nERROR:\n%s\n```\n" % (macro_name, e)
+                self._logger.error(block)
+                self.docsite.error_raise(block, doc=self)
+                part.result = block
 
     def _links_process(self):
         """
