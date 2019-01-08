@@ -15,7 +15,7 @@ def test_main(self=None):
         j.builder.db.etcd.sandbox()
 
     # try to start/stop
-    tmux_pane = j.builder.db.etcd.start()
+    tmux_pane = j.servers.etcd.start()
     tmux_process = tmux_pane.process_obj
     child_process = tmux_pane.process_obj_child
     assert child_process.is_running()
@@ -24,5 +24,5 @@ def test_main(self=None):
     j.sal.nettools.waitConnectionTest(client.host, client.port)
     client.api.put('foo', 'etcd_bar')
     assert client.get('foo') == 'etcd_bar'
-    j.builder.db.etcd.stop(tmux_process.pid)
+    j.servers.etcd.stop(tmux_process.pid)
 

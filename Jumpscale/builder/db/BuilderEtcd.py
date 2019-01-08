@@ -44,33 +44,6 @@ class BuilderEtcd(j.builder.system._BaseClass):
         """
         return j.clients.etcd.get(name)
 
-    def start(self, config_file=None):
-        """start etcd
-
-        :param config_file: config file path, defaults to None
-        :type config_file: str, optional
-        :return: tmux pane
-        :rtype: tmux.Pane
-        """
-        cmd = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
-        if config_file:
-            cmd += ' --config-file %s' % config_file
-        return j.tools.tmux.execute(cmd, window=self.NAME, pane=self.NAME, reset=True)
-
-    def stop(self, pid=None, sig=None):
-        """Stops traefik process
-
-        :param pid: pid of the process, if not given, will kill by name
-        :type pid: long, defaults to None
-        :param sig: signal, if not given, SIGKILL will be used
-        :type sig: int, defaults to None
-        """
-        if pid:
-            j.sal.process.kill(pid, sig)
-        else:
-            full_path = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
-            j.sal.process.killProcessByName(full_path, sig)
-
     def _test(self, name=''):
         """Run tests under tests directory
 
