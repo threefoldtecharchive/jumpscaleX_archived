@@ -7,6 +7,7 @@ from Jumpscale import j
 
 class Profile(j.application.JSBaseClass):
     env_pattern = re.compile(r'([A-Za-z0-9_]+)=(.*)\n', re.MULTILINE)
+    include_pattern = re.compile(r'(source|\.) (.*)$', re.MULTILINE)
 
     def __init__(self, bash, profilePath=None):
         """
@@ -46,6 +47,15 @@ class Profile(j.application.JSBaseClass):
         """
         return dict(self.env_pattern.findall(content))
 
+    def find_includes(self, content):
+        """get included sources
+        this will match for `source file.sh` or `. file.sh`
+
+        :param content: content of e.g. bash profile
+        :type content: str
+        """
+        return [match.group(2) for match in self.include_pattern.finditer(content)]
+
     def load(self):
         self.home = self.bash.home
         self._env = {}
@@ -62,6 +72,9 @@ class Profile(j.application.JSBaseClass):
         for var, value in current_env.items():
             if var in profile_vars:
                 self._env[var] = value
+
+        # includes
+        self._includes.extend(self.find_includes(content))
 
         # load path
         if 'PATH' in self._env:
@@ -164,7 +177,8 @@ class Profile(j.application.JSBaseClass):
 
         content.write('# includes\n')
         for path in self._includes:
-            content.write('source %s\n' % path)
+            if self.executor.exists(path):
+                content.write('source %s\n' % path)
 
         self._env.pop('PATH')
 
