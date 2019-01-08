@@ -228,9 +228,9 @@ class SchemaTest(BaseTest):
         schema_obj.mobile = "464-4564-464"
         self.assertEqual(schema_obj.mobile, '4644564464')
 
-    def test005_validate_email_type(self):
+    def test006_validate_email_type(self):
         """
-        SCM-005
+        SCM-006
         *Test case for validating email type *
 
         **Test Scenario:**
@@ -273,9 +273,9 @@ class SchemaTest(BaseTest):
         schema_obj.email = 'test.example@domain.com'
         self.assertEqual(schema_obj.email, 'test.example@domain.com')
 
-    def test006_validate_ipport_type(self):
+    def test007_validate_ipport_type(self):
         """
-        SCM-006
+        SCM-007
         *Test case for validating ipport type *
 
         **Test Scenario:**
@@ -313,9 +313,9 @@ class SchemaTest(BaseTest):
         schema_obj.port = port
         self.assertEqual(schema_obj.port, port)
 
-    def test007_validate_ipaddr_type(self):
+    def test008_validate_ipaddr_type(self):
         """
-        SCM-007
+        SCM-008
         *Test case for validating ipaddr type *
 
         **Test Scenario:**
@@ -360,9 +360,9 @@ class SchemaTest(BaseTest):
         schema_obj.ip = 256**3
         self.assertEqual(schema_obj.ip, ip)
 
-    def test008_validate_iprange_type(self):
+    def test009_validate_iprange_type(self):
         """
-        SCM-008
+        SCM-009
         *Test case for validating iprange type *
 
         **Test Scenario:**
@@ -412,9 +412,9 @@ class SchemaTest(BaseTest):
         schema_obj.iprange = iprange
         self.assertEqual(schema_obj.iprange, iprange)
     
-    def test009_validate_date_type(self):
+    def test010_validate_date_type(self):
         """
-        SCM-009
+        SCM-010
         *Test case for validating date type *
 
         **Test Scenario:**
@@ -535,9 +535,9 @@ class SchemaTest(BaseTest):
         schema_obj.date = '+{}h'.format(added_hours)
         self.assertAlmostEqual(schema_obj.date, int(date), delta=3) 
 
-    def test010_validate_percent_type(self):
+    def test011_validate_percent_type(self):
         """
-        SCM-010
+        SCM-011
         *Test case for validating percent type *
 
         **Test Scenario:**
@@ -556,7 +556,7 @@ class SchemaTest(BaseTest):
 
         self.log("Try to set parameter[P1] with non percent type, should fail.")
         with self.assertRaises(Exception):
-            schema_obj.percent = self.random_string()
+            schema_obj.percent = 's' + self.random_string()
 
         with self.assertRaises(Exception):
             schema_obj.percent = '10$'
@@ -598,9 +598,9 @@ class SchemaTest(BaseTest):
         schema_obj.percent = percent
         self.assertEqual(schema_obj.percent, (value)*100)
 
-    def test011_validate_url_type(self):
+    def test012_validate_url_type(self):
         """
-        SCM-011
+        SCM-012
         *Test case for validating url type *
 
         **Test Scenario:**
@@ -646,9 +646,9 @@ class SchemaTest(BaseTest):
         schema_obj.site = 'test.example.com/home'
         self.assertEqual(schema_obj.site, 'test.example.com/home')
 
-    def test012_validate_numeric_type(self):
+    def test013_validate_numeric_type(self):
         """
-        SCM-012
+        SCM-013
         *Test case for validating numeric type *
 
         **Test Scenario:**
@@ -690,9 +690,9 @@ class SchemaTest(BaseTest):
         schema_obj.currency = currency
         self.assertEqual(schema_obj.currency_usd, value)
 
-    def test013_validate_currency_conversion(self):
+    def test014_validate_currency_conversion(self):
         """
-        SCM-013
+        SCM-014
         *Test case for validating currencies conversion *
 
         **Test Scenario:**
@@ -717,9 +717,9 @@ class SchemaTest(BaseTest):
             for curr2 in currencies:
                 self.assertAlmostEqual(schema_obj.currency_cur(curr2), value*currencies[curr2]/currencies[curr1], delta=0.0001)
         
-    def test014_validate_guid_type(self):
+    def test015_validate_guid_type(self):
         """
-        SCM-014
+        SCM-015
         *Test case for validating guid type *
 
         **Test Scenario:**
@@ -760,9 +760,9 @@ class SchemaTest(BaseTest):
         schema_obj.guid = guid
         self.assertEqual(schema_obj.guid, guid)
 
-    def test015_validate_dict_type(self):
+    def test016_validate_dict_type(self):
         """
-        SCM-015
+        SCM-016
         *Test case for validating dict type *
 
         **Test Scenario:**
@@ -797,9 +797,9 @@ class SchemaTest(BaseTest):
         schema_obj.info = {'number': value}
         self.assertEqual(schema_obj.info, {'number': value})
 
-    def test016_validate_set_type(self):
+    def test017_validate_set_type(self):
         """
-        SCM-016
+        SCM-017
         *Test case for validating set type *
 
         **Test Scenario:**
@@ -846,9 +846,9 @@ class SchemaTest(BaseTest):
         schema_obj.data = dict_list
         self.assertEqual(schema_obj.data, dict_list)
     
-    def test017_validate_hash_type(self):
+    def test018_validate_hash_type(self):
         """
-        SCM-017
+        SCM-018
         *Test case for validating hash type *
 
         **Test Scenario:**
@@ -886,9 +886,9 @@ class SchemaTest(BaseTest):
         schema_obj.data = data
         self.assertEqual(schema_obj.data, data)
     
-    def test018_validate_multiline_type(self):
+    def test019_validate_multiline_type(self):
         """
-        SCM-018
+        SCM-019
         *Test case for validating multiline type *
 
         **Test Scenario:**
@@ -925,9 +925,9 @@ class SchemaTest(BaseTest):
         schema_obj.lines = "example \n example2 \n example3"
         self.assertEqual(schema_obj.lines, "example \n example2 \n example3")
 
-    def test019_validate_yaml_type(self):
+    def test020_validate_yaml_type(self):
         """
-        SCM-019
+        SCM-020
         *Test case for validating yaml type *
 
         **Test Scenario:**
@@ -965,9 +965,54 @@ class SchemaTest(BaseTest):
         schema_obj.data = "example:     test1"
         self.assertEqual(schema_obj.data, "example:     test1")
 
-    def test020_validate_list_of_types_with_one_char_symbol(self):
+    def test021_validate_enum_type(self):
         """
-        SCM-020
+        SCM-021
+        *Test case for validating enum type *
+
+        **Test Scenario:**
+
+        #. Create schema with enum parameter[P1], should succeed.
+        #. Try to set parameter[P1] with non enum type, should fail.
+        #. Try to set parameter[P1] with enum type, should succeed.
+        """
+        self.log("Create schema with enum parameter[P1], should succeed.")
+        scm = """
+        @url = test.schema
+        colors = 'red, green, blue, black' (E)
+        """
+        schema = self.schema(scm)
+        schema_obj = schema.new()
+
+        self.log("Try to set parameter[P1] with non enum type, should fail.")
+        with self.assertRaises(Exception):
+            schema_obj.colors = self.random_string()
+
+        with self.assertRaises(Exception):
+            schema_obj.colors = random.randint(5, 1000)
+
+        with self.assertRaises(Exception): 
+            schema_obj.colors = random.uniform(1, 100)
+        
+        with self.assertRaises(Exception):
+            schema_obj.colors = ['RED', 'GREEN', 'BLUE', 'BLACK']
+        
+        with self.assertRaises(Exception):
+            schema_obj.colors = {'colors': ['RED', 'GREEN', 'BLUE', 'BLACK']}
+
+        self.log("Try to set parameter[P1] with enum type, should succeed.")
+        colors = ['BLACK', 'BLUE', 'GREEN', 'RED']
+        color = random.choice(colors)
+        schema_obj.colors = color
+        self.assertEqual(schema_obj.colors, color)
+
+        index = random.randint(0,3)
+        schema_obj.colors = index + 1
+        self.assertEqual(schema_obj.colors, colors[index])
+
+    def test022_validate_list_of_types_with_one_char_symbol(self):
+        """
+        SCM-022
         *Test case for validating list of type with one char symbol(string) *
 
         **Test Scenario:**
@@ -993,9 +1038,9 @@ class SchemaTest(BaseTest):
         schema_obj.list_names = list_names
         self.assertEqual(schema_obj.list_names, list_names)
     
-    def test021_validate_list_of_types_with_three_char_symbol(self):
+    def test023_validate_list_of_types_with_three_char_symbol(self):
         """
-        SCM-021
+        SCM-023
         *Test case for validating list of type with three char symbol(mobile) *
 
         **Test Scenario:**
@@ -1021,9 +1066,9 @@ class SchemaTest(BaseTest):
         schema_obj.mobile_list = mobile_list
         self.assertEqual(schema_obj.mobile_list, mobile_list)
     
-    def test022_validate_list_of_types_with_four_char_symbol(self):
+    def test024_validate_list_of_types_with_four_char_symbol(self):
         """
-        SCM-022
+        SCM-024
         *Test case for validating list of type with four char symbol(guid) *
 
         **Test Scenario:**
@@ -1049,9 +1094,9 @@ class SchemaTest(BaseTest):
         schema_obj.guid_list = guid_list
         self.assertEqual(schema_obj.guid_list, guid_list)
 
-    def test023_validate_list_of_types_with_five_char_symbol(self):
+    def test025_validate_list_of_types_with_five_char_symbol(self):
         """
-        SCM-023
+        SCM-025
         *Test case for validating list of type with five char symbol(email) *
 
         **Test Scenario:**
@@ -1077,9 +1122,9 @@ class SchemaTest(BaseTest):
         schema_obj.email_list = email_list
         self.assertEqual(schema_obj.email_list, email_list)
 
-    def test024_validate_list_of_types_with_six_char_symbol(self):
+    def test026_validate_list_of_types_with_six_char_symbol(self):
         """
-        SCM-024
+        SCM-026
         *Test case for validating list of type with six char symbol(ipport) *
 
         **Test Scenario:**
@@ -1105,9 +1150,9 @@ class SchemaTest(BaseTest):
         schema_obj.port_list = port_list
         self.assertEqual(schema_obj.port_list, port_list)
 
-    def test025_validate_list_of_types_with_seven_char_symbol(self):
+    def test027_validate_list_of_types_with_seven_char_symbol(self):
         """
-        SCM-025
+        SCM-027
         *Test case for validating list of type with seven char symbol(iprange) *
 
         **Test Scenario:**
@@ -1133,9 +1178,9 @@ class SchemaTest(BaseTest):
         schema_obj.range_list = range_list
         self.assertEqual(schema_obj.range_list, range_list)
 
-    def test026_validate_list_of_types_with_nine_char_symbol(self):
+    def test028_validate_list_of_types_with_nine_char_symbol(self):
         """
-        SCM-026
+        SCM-028
         *Test case for validating list of type with nine char symbol(multiline) *
 
         **Test Scenario:**
@@ -1150,6 +1195,7 @@ class SchemaTest(BaseTest):
         lines_list = (Lmultiline)
         """
         schema = self.schema(scm)
+        time.sleep(1)
         schema_obj = schema.new()
 
         self.log("Try to set parameter with non multiline type, should fail.")
@@ -1161,9 +1207,9 @@ class SchemaTest(BaseTest):
         schema_obj.lines_list = lines_list
         self.assertEqual(schema_obj.lines_list, lines_list)
 
-    def test027_nested_concatenated_schema(self):
+    def test029_nested_concatenated_schema(self):
         """
-        SCM-027
+        SCM-029
         *Test case for concatenated nesting schema *
 
         **Test Scenario:**
@@ -1223,9 +1269,9 @@ class SchemaTest(BaseTest):
         self.assertEqual(schema_obj3.address.building, building)
         self.assertEqual(schema_obj3.grades, grades)
 
-    def test028_nested_sperated_schema(self):
+    def test030_nested_sperated_schema(self):
         """
-        SCM-028
+        SCM-030
         *Test case for concatenated nesting schema *
 
         **Test Scenario:**
