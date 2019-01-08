@@ -53,6 +53,8 @@ class Profile(j.application.JSBaseClass):
 
         :param content: content of e.g. bash profile
         :type content: str
+        :return: a list of included files
+        :rtype: list of str
         """
         return [match.group(2) for match in self.include_pattern.finditer(content)]
 
