@@ -93,7 +93,7 @@ class JSON(String):
 class Dictionary():
     '''Generic dictionary type'''
 
-    NAME = 'dictionary'
+    NAME = 'dict'
     BASETYPE = 'dictionary'
 
     def check(self, value):
@@ -123,11 +123,19 @@ class Dictionary():
     def toString(self, v):
         return j.data.serializers.json.dumps(v, True, True)
 
+    def clean(self, v):
+        if not self.check(v):
+            raise ValueError("Valid dict is required")
+        return v
+
     def toJSON(self, v):
         return self.toString(v)
 
-    def capnp_schema_get(self, name, nr):
-        raise RuntimeError("not implemented")
+    def python_code_get(self, value):
+        """
+        produce the python code which represents this value
+        """
+        return value
 
 
 class List():
@@ -305,7 +313,7 @@ class Hash(List):
         return isinstance(value, (list, tuple)) and len(value) == 2
 
     def get_default(self):
-        return (0, 0)
+        return "0:0"
 
     def clean(self, value):
         """
@@ -372,7 +380,27 @@ class Set(List):
 
     def check(self, value):
         '''Check whether provided value is a set'''
+        if value == {}:
+            value = {"default"}
+
         return isinstance(value, set)
 
     def get_default(self):
-        return list()
+        return set()
+
+    def clean(self, value):
+        if not self.check(value):
+            raise ValueError("Valid set is required")
+        return value
+
+    def python_code_get(self, value, sort=False):
+        """
+        produce the python code which represents this value
+        """
+        value = self.clean(value)
+        out = "{ "
+        for item in value:
+            out += "%s, " % self.SUBTYPE.python_code_get(item)
+        out = out.strip(",")
+        out += " }"
+        return out

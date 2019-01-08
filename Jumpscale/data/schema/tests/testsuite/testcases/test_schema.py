@@ -830,21 +830,17 @@ class SchemaTest(BaseTest):
             schema_obj.data = {'number': random.randint(1, 1000)}
 
         self.log("Try to set parameter[P1] with set type, should succeed.")
-        int_list = [random.randint(1, 1000), random.randint(1, 1000)]
+        int_list = {random.randint(1, 1000), random.randint(1, 1000)}
         schema_obj.data = int_list
         self.assertEqual(schema_obj.data, int_list)
 
-        float_list = [random.uniform(1, 100), random.uniform(1, 100)]
+        float_list = {random.uniform(1, 100), random.uniform(1, 100)}
         schema_obj.data = float_list
         self.assertEqual(schema_obj.data, float_list)
 
-        str_list = [self.random_string(), self.random_string()]
+        str_list = {self.random_string(), self.random_string()}
         schema_obj.data = str_list
         self.assertEqual(schema_obj.data, str_list)
-        
-        dict_list = [{self.random_string(): random.randint(1, 100)}]
-        schema_obj.data = dict_list
-        self.assertEqual(schema_obj.data, dict_list)
     
     def test018_validate_hash_type(self):
         """
@@ -876,15 +872,17 @@ class SchemaTest(BaseTest):
             schema_obj.data = random.uniform(1, 100)
         
         with self.assertRaises(Exception):
-            schema_obj.data = [random.randint(1, 100), random.randint(1, 100)]
-        
-        with self.assertRaises(Exception):
             schema_obj.data = {'number': random.randint(1, 100)}
 
         self.log("Try to set parameter[P1] with hash type, should succeed.")
         data = (random.randint(1, 1000), random.randint(1000, 1000000))
         schema_obj.data = data
         self.assertEqual(schema_obj.data, data)
+
+        data = [random.randint(1, 100), random.randint(1, 100)]
+        schema_obj.data = data
+        self.assertEqual(schema_obj.data[0], data[0])
+        self.assertEqual(schema_obj.data[1], data[1])
     
     def test019_validate_multiline_type(self):
         """

@@ -94,12 +94,12 @@ def main(self):
     assert schema_test1._ddict["enum"] == "GREEN"
 
     assert schema_test1._data.find(b"GREEN") == -1  # needs to be stored as int
-    assert len(schema_test1._data) < 30
+    assert len(schema_test1._data) <= 30
     x = len(schema_test1._data)+0
 
     schema_test1.enum = 4
     assert schema_test1.enum == "ZHISISAVERYLONGONENEEDITTOTESTLETSDOSOMEMORE"
-    assert len(schema_test1._data) < 30
+    assert len(schema_test1._data) <= 30
     assert len(schema_test1._data) == x
 
     schema = """
