@@ -531,7 +531,9 @@ class SchemaTest(BaseTest):
         self.assertEqual(schema_obj.date, int(date))
 
         added_hours = random.randint(1, 12)
-        date = datetime(datetime.now().year, datetime.now().month, datetime.now().day, datetime.now().hour + added_hours, datetime.now().minute, datetime.now().second).timestamp()
+        added_day = 0 if (datetime.now().hour + added_hours) / 24 < 1 else 1
+        added_hours_from_now = datetime.now().hour + added_hours if added_day == 0 else (datetime.now().hour + added_hours) % 24
+        date = datetime(datetime.now().year, datetime.now().month, datetime.now().day + added_day, added_hours_from_now, datetime.now().minute, datetime.now().second).timestamp()
         schema_obj.date = '+{}h'.format(added_hours)
         self.assertAlmostEqual(schema_obj.date, int(date), delta=3) 
 
@@ -990,7 +992,7 @@ class SchemaTest(BaseTest):
             schema_obj.colors = random.randint(5, 1000)
 
         with self.assertRaises(Exception): 
-            schema_obj.colors = random.uniform(1, 100)
+            schema_obj.colors = random.uniform(5, 100)
         
         with self.assertRaises(Exception):
             schema_obj.colors = ['RED', 'GREEN', 'BLUE', 'BLACK']
