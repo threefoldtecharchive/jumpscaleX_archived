@@ -567,7 +567,8 @@ class DocSite(j.application.JSBaseClass):
 
         for key, doc in self.docs.items():
             # doc.defs_process()
-            doc.write()
+            if doc:
+                doc.write()
 
         # if j.sal.fs.exists(j.sal.fs.joinPaths(self.path, "static"), followlinks=True):
         #     j.sal.fs.copyDirTree(j.sal.fs.joinPaths(self.path, "static"), j.sal.fs.joinPaths(self.outpath, "public"))
