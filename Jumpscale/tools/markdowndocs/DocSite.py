@@ -35,6 +35,7 @@ class DocSite(j.application.JSBaseClass):
             raise RuntimeError("name cannot be empty")
 
         self.defs = {}
+        self.htmlpages = {}
         self.content_default = {}  # key is relative path in docsite where default content found
 
         # need to empty again, because was used in config
@@ -197,13 +198,12 @@ class DocSite(j.application.JSBaseClass):
                 self._docs[doc.name_dot_lower] = doc
             elif ext in ["html","htm"]:
                 self._logger.debug("found html:%s"%path)
-                raise RuntimeError()
-                # l = len(ext)+1
-                # base = base[:-l]  # remove extension
-                # doc = HtmlPage(path, base, docsite=self)
-                # # if base not in self.htmlpages:
-                # #     self.htmlpages[base.lower()] = doc
-                # self.htmlpages[doc.name_dot_lower] = doc
+                l = len(ext)+1
+                base = base[:-l]  # remove extension
+                doc = Doc(path, base, docsite=self)
+                # if base not in self.htmlpages:
+                #     self.htmlpages[base.lower()] = doc
+                self.htmlpages[doc.name_dot_lower] = doc
             else:
                 self.file_add(path)
                 # else:

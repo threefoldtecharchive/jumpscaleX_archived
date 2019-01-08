@@ -1177,7 +1177,7 @@ class UbuntuInstall():
         MyEnv.state_set("python_redis_install")
 
     @staticmethod
-    def pips_list(level=1):
+    def pips_list(level=3):
         """
         level0 is only the most basic
         1 in the middle (recommended)
@@ -1264,7 +1264,7 @@ class UbuntuInstall():
                 "psycopg2>=2.7.1",
                 "pystache>=0.5.4",
                 # "pypandoc>=1.3.3",
-                "#SQLAlchemy>=1.1.9",
+                # "SQLAlchemy>=1.1.9",
                 "pymongo>=3.4.0",
                 "docker>=3",
                 "dnspython>=1.15.0",
@@ -1285,7 +1285,7 @@ class UbuntuInstall():
         return res
 
     def pips_install():
-        for pip in UbuntuInstall.pips_list(0):
+        for pip in UbuntuInstall.pips_list(3):
 
             if not MyEnv.state_exists("pip_%s"%pip):
                 C="pip3 install '%s'"%pip
