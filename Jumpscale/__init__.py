@@ -211,3 +211,7 @@ if generated  and len(j.core.application.errors_init)>0:
 
 # import time
 # time.sleep(1000)
+
+ssh=j.clients.ssh.instances
+
+

@@ -198,7 +198,7 @@ class SSHClientParamiko(SSHClientBase):
 
         if j.sal.nettools.waitConnectionTest(self.addr, self.port, self.timeout) is False:
             self._logger.error("Cannot connect to ssh server %s:%s with login:%s and using sshkey:%s" %
-                              (self.addr, self.port, self.login, self.key_filename))
+                              (self.addr, self.port, self.login, self.sshkey_name))
             raise RuntimeError("Could not connect to addr:'%s' port:'%s'"%(self.addr,self.port))
 
         # self.pkey = None

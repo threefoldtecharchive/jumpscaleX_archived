@@ -47,7 +47,7 @@ class JSBaseConfig(JSBase):
         j.core.tools.file_edit(path)
         data_out = j.sal.fs.readFile(path)
         if data_in != data_out:
-            self._logger.debug("'%s' instance '%s' has been editted (changed)"%(self._factory.__jslocation__,self.data.name))
+            self._logger.debug("'%s' instance '%s' has been edited (changed)"%(self._factory.__jslocation__,self.data.name))
             data2 = j.data.serializers.toml.loads(data_out)
             self.data.data_update(data2)
             self.data.save()
