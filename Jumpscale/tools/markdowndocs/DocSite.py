@@ -549,8 +549,9 @@ class DocSite(j.application.JSBaseClass):
         keys = [item for item in self.docs.keys()]
         keys.sort()
         for key in keys:
-            doc = self.doc_get(key,die=True)
-            doc.write()
+            doc = self.doc_get(key,die=False)
+            if doc:
+                doc.write()
 
         # # find the defs, also process the aliases
         # for key, doc in self.docs.items():
@@ -566,7 +567,8 @@ class DocSite(j.application.JSBaseClass):
 
         for key, doc in self.docs.items():
             # doc.defs_process()
-            doc.write()
+            if doc:
+                doc.write()
 
         # if j.sal.fs.exists(j.sal.fs.joinPaths(self.path, "static"), followlinks=True):
         #     j.sal.fs.copyDirTree(j.sal.fs.joinPaths(self.path, "static"), j.sal.fs.joinPaths(self.outpath, "public"))

@@ -18,13 +18,13 @@ class EtcdClient(JSConfigClient):
     _SCHEMATEXT = """
     @url = jumpscale.etcd.client
     name* = "" (S)
-    host = "127.0.0.1" (S)
+    host = "127.0.0.1" (ipaddr)
     port = 2379 (ipport)
     user = "" (S)
     password_ = "" (S)
     """
 
-    def _init_new(self):
+    def _init(self):
         self._logger.debug(self.user)
         self._api = None
 

@@ -21,7 +21,6 @@ class group_clients(JSGroup):
         self._gedis_backend = None
         self._syncthing = None
         self._postgres = None
-        self._zos = None
         self._s3 = None
         self._zhub = None
         self._portal = None
@@ -165,23 +164,6 @@ class group_clients(JSGroup):
                 return None
             # print("OK")
         return self._postgres
-    @property
-    def zos(self):
-        if self._zos is None:
-            # print("LOAD:ZeroOSClientFactory")
-            try:
-                from Jumpscale.clients.zero_os.ZeroOsFactory import ZeroOSClientFactory
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.zero_os.ZeroOsFactory", e)
-                raise e
-            # print("RUN:ZeroOSClientFactory")
-            try:
-                self._zos =  ZeroOSClientFactory()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.zero_os.ZeroOsFactory",e)
-                return None
-            # print("OK")
-        return self._zos
     @property
     def s3(self):
         if self._s3 is None:
@@ -2522,6 +2504,7 @@ class group_servers(JSGroup):
         self._errbot = None
         self._openresty = None
         self._web = None
+        self._etcd = None
         self._capacity = None
         self._zdb = None
         self._jsrun = None
@@ -2663,6 +2646,23 @@ class group_servers(JSGroup):
                 return None
             # print("OK")
         return self._web
+    @property
+    def etcd(self):
+        if self._etcd is None:
+            # print("LOAD:EtcdServer")
+            try:
+                from Jumpscale.servers.etcd.EtcdServer import EtcdServer
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.servers.etcd.EtcdServer", e)
+                raise e
+            # print("RUN:EtcdServer")
+            try:
+                self._etcd =  EtcdServer()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.servers.etcd.EtcdServer",e)
+                return None
+            # print("OK")
+        return self._etcd
     @property
     def capacity(self):
         if self._capacity is None:

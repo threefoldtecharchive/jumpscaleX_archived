@@ -12,7 +12,7 @@ class BuilderEtcd(j.builder.system._BaseClass):
         Build etcd
         """
         if self._done_check('build', reset):
-                return
+            return
 
         j.builder.runtimes.golang.install()
         # get a vendored etcd from master
@@ -44,17 +44,13 @@ class BuilderEtcd(j.builder.system._BaseClass):
         """
         return j.clients.etcd.get(name)
 
-    def test(self):
+    def _test(self, name=''):
+        """Run tests under tests directory
+
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
         """
-        js_shell 'j.builder._template.test()'
-        :return:
-        """
-        #TODO: check that test instance is running, if so stop
-        #TODO: build/sandbox a server (or component)
-        #TODO: call the component call start/stop/... to test
-        #TODO: create a client to the server (use j.clients....) and connect to server if a server
-        #TODO: do some test on the server (use the component.test... method)
-        pass
+        self._test_run(name=name, obj_key='test_main')
 
     def build_flist(self, hub_instance=None):
         """

@@ -148,7 +148,7 @@ class Link(j.application.JSBaseClass):
         ddir = j.sal.fs.getDirName(dest)
         if not j.sal.fs.exists(dest):
             cmd = "cd %s;rm -f %s;curl '%s' -o '%s'"%(ddir,dest,self.link_source_original,dest) #cannot use primitive something wrong sometimes with ssl verification
-            j.sal.process.execute(cmd)
+            j.sal.process.execute(cmd, die=False)
 
     def link_verify(self):
         def do():
