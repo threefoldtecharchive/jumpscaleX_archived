@@ -49,7 +49,7 @@ class SSHClientParamiko(SSHClientBase):
 
     @property
     def sftp(self):
-        is self._ftp is None:
+        if self._ftp is None:
             # self._ftp = self._client.open_sftp()
             """Make SFTP client from open transport"""
             transport = self._transport
