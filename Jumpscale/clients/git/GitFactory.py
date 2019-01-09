@@ -572,8 +572,7 @@ class GitFactory(j.application.JSBaseClass):
 
         """
         if not j.sal.fs.exists(urlOrPath, followlinks=True):
-            repository_url, gitpath, relativepath = self.getContentInfoFromURL(
-                urlOrPath)
+            repository_url, gitpath, relativepath = self.getContentInfoFromURL(urlOrPath)
         else:
             repository_host, repository_type, repository_account, repository_name, repository_url, branch, gitpath, relativepath = j.clients.git.parseUrl(
                 urlOrPath)

@@ -53,11 +53,9 @@ class SystemProcess(j.application.JSBaseClass):
         """
 
         if printCommandToStdout:
-            self._logger.info(
-                "system.process.executeWithoutPipe [%s]" % command)
+            self._logger.info("system.process.executeWithoutPipe [%s]" % command)
         else:
-            self._logger.debug(
-                "system.process.executeWithoutPipe [%s]" % command)
+            self._logger.debug("system.process.executeWithoutPipe [%s]" % command)
         exitcode = os.system(command)
 
         if exitcode != 0 and die:
