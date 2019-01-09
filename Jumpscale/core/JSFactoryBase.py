@@ -31,7 +31,7 @@ class KosmosServices():
     def __dir__(self):
         #list the children from the factory
         m = self.__dict__["_factory"]
-        x = [item.name for item in self._factory.__class__._children.values()]
+        x = [item.name for item in self._factory._children.values()]
         for item in m._get_all():
             if item.name not in x:
                 x.append(item.name)
@@ -44,11 +44,9 @@ class KosmosServices():
         raise RuntimeError("readonly")
 
     def __str__(self):
-        try:
-            out = "%s\n%s\n"%(self.__class__.__name__,self.data)
-        except:
-            out = str(self.__class__)+"\n"
-            out+=j.core.text.prefix(" - ", self.data)
+        out = "kosmos:%s\n"%self._factory.__jslocation__
+        for ite in self.__dir__():
+            out+=" - %s\n"%ite
         return out
 
     __repr__ = __str__
