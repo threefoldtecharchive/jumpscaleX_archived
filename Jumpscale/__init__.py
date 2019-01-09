@@ -214,7 +214,7 @@ if generated  and len(j.core.application.errors_init)>0:
 
 
 
-# ssh = j.clients.ssh.instances
-# iyo = j.clients.itsyouonline.instances
+ssh = j.clients.ssh.instances
+iyo = j.clients.itsyouonline.instances
 # zos = j.kosmos.zos.instances
 
