@@ -1,9 +1,12 @@
 from Jumpscale import j
 
-try:
-    import ujson as json
-except BaseException:
-    import json
+# TODO if we use ujson, then we need to refactor the rest of this file
+# cause ujson has no JSEncoder propery
+# try:
+#     import ujson as json
+# except BaseException:
+# import json
+import json
 from .SerializerBase import SerializerBase
 
 
