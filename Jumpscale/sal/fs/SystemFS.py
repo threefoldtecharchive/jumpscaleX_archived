@@ -226,6 +226,7 @@ class SystemFS(j.application.JSBaseClass):
                 raise j.exceptions.RuntimeError(
                     'Source path %s in system.fs.copyDirTree is not a directory' % src)
         else:
+            from pudb import set_trace; set_trace()
             excl = " "
             for item in ignoredir:
                 excl += "--exclude '*%s/' " % item

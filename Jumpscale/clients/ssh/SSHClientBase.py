@@ -25,9 +25,11 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         self.async_ = False
         self._private = None
         self._connected = None
+
         self._client_ = None
+        self._transport_ = None
+
         self._ftp = None
-        self._transport = None
         self._syncer = None
 
     def mkdir(self,path):
@@ -101,6 +103,12 @@ class SSHClientBase(j.application.JSBaseConfigClass):
             self._syncer = j.tools.syncer.get(name=self.name, sshclient_name=self.name)
         return self._syncer
 
+    @property
+    def executor(self):
+        if not self._executor:
+            self._executor = j.tools.executor.ssh_get(self)
+        return self._executor
+
     def portforward_to_local(self, remoteport, localport):
         """
         forward remote port on host to the local one, so we can connect over localhost
@@ -124,3 +132,5 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         print("kill portforward %s" % localport)
         pm = j.builder.system.processmanager.get()
         pm.processmanager.stop('ssh_%s' % localport)
+
+

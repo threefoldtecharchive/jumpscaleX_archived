@@ -114,43 +114,5 @@ class SSHClient(SSHClientBase):
     #     #DOES THIS WORK?
     #     return self._client.copy_file(local_file, remote_file, recurse=recurse, sftp=self.sftp)
 
-    def rsync_up(self, source, dest, recursive=True):
-        if dest[0] != "/":
-            raise j.exceptions.RuntimeError("dest path should be absolute")
 
-        dest = "%s@%s:%s" % (self.login, self.addr_variable, dest)
-        j.sal.fs.copyDirTree(
-            source,
-            dest,
-            keepsymlinks=True,
-            deletefirst=False,
-            overwriteFiles=True,
-            ignoredir=[
-                ".egg-info",
-                ".dist-info",
-                "__pycache__"],
-            ignorefiles=[".egg-info"],
-            rsync=True,
-            ssh=True,
-            sshport=self.port_variable,
-            recursive=recursive)
-
-    def rsync_down(self, source, dest, source_prefix="", recursive=True):
-        if source[0] != "/":
-            raise j.exceptions.RuntimeError("source path should be absolute")
-        source = "%s@%s:%s" % (self.login, self.addr_variable, source)
-        j.sal.fs.copyDirTree(
-            source,
-            dest,
-            keepsymlinks=True,
-            deletefirst=False,
-            overwriteFiles=True,
-            ignoredir=[
-                ".egg-info",
-                ".dist-info"],
-            ignorefiles=[".egg-info"],
-            rsync=True,
-            ssh=True,
-            sshport=self.port_variable,
-            recursive=recursive)
 

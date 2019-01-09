@@ -71,15 +71,15 @@ class SSHClientParamiko(SSHClientBase):
             destination = sep + destination
         return destination
 
-    def _copy_dir(self, local_dir, remote_dir, sftp):
-        """Call copy_file on every file in the specified directory, copying
-        them to the specified remote directory."""
-        file_list = os.listdir(local_dir)
-        for file_name in file_list:
-            local_path = os.path.join(local_dir, file_name)
-            remote_path = '/'.join([remote_dir, file_name])
-            self.copy_file(local_path, remote_path, recurse=True,
-                           sftp=sftp)
+    # def _copy_dir(self, local_dir, remote_dir, sftp):
+    #     """Call copy_file on every file in the specified directory, copying
+    #     them to the specified remote directory."""
+    #     file_list = os.listdir(local_dir)
+    #     for file_name in file_list:
+    #         local_path = os.path.join(local_dir, file_name)
+    #         remote_path = '/'.join([remote_dir, file_name])
+    #         self.copy_file(local_path, remote_path, recurse=True,
+    #                        sftp=sftp)
 
     def copy_file(self, local_file, remote_file):
         """Copy local file to host via SFTP/SCP
@@ -272,48 +272,6 @@ class SSHClientParamiko(SSHClientBase):
 
         return rc, out.getvalue(), err.getvalue()
 
-
-    def rsync_up(self, source, dest, recursive=True):
-        if dest[0] != "/":
-            raise j.exceptions.RuntimeError("dest path should be absolute")
-
-        dest = "%s@%s:%s" % (
-            self.config.data['login'], self.addr_variable, dest)
-        j.sal.fs.copyDirTree(
-            source,
-            dest,
-            keepsymlinks=True,
-            deletefirst=False,
-            overwriteFiles=True,
-            ignoredir=[
-                ".egg-info",
-                ".dist-info",
-                "__pycache__"],
-            ignorefiles=[".egg-info"],
-            rsync=True,
-            ssh=True,
-            sshport=self.port_variable,
-            recursive=recursive)
-
-    def rsync_down(self, source, dest, source_prefix="", recursive=True):
-        if source[0] != "/":
-            raise j.exceptions.RuntimeError("source path should be absolute")
-        source = "%s@%s:%s" % (
-            self.config.data['login'], self.addr_variable, source)
-        j.sal.fs.copyDirTree(
-            source,
-            dest,
-            keepsymlinks=True,
-            deletefirst=False,
-            overwriteFiles=True,
-            ignoredir=[
-                ".egg-info",
-                ".dist-info"],
-            ignorefiles=[".egg-info"],
-            rsync=True,
-            ssh=True,
-            sshport=self.port_variable,
-            recursive=recursive)
 
 
 
