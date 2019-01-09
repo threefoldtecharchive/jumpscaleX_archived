@@ -230,7 +230,7 @@ class SystemFS(j.application.JSBaseClass):
             for item in ignoredir:
                 excl += "--exclude '*%s/' " % item
 
-            # dstpath = dst.split(':')[1] if ':' in dst else dst  #OTHERWISE CANNOT WORK FOR SSH
+            dstpath2 = dst.split(':')[1] if ':' in dst else dst  #OTHERWISE CANNOT WORK FOR SSH
 
             dstpath = dst
 
@@ -256,7 +256,7 @@ class SystemFS(j.application.JSBaseClass):
             if ssh:
                 cmd += " -e 'ssh -o StrictHostKeyChecking=no -p %s' " % sshport
                 if createdir:
-                    cmd += "--rsync-path='mkdir -p %s && rsync' " % self.getParent(dstpath)
+                    cmd += "--rsync-path='mkdir -p %s && rsync' " % self.getParent(dstpath2)
             else:
                 self.createDir(self.getParent(dstpath))
             cmd += " '%s' '%s'" % (src, dst)

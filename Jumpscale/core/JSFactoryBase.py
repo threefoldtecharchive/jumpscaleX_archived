@@ -2,6 +2,7 @@ from Jumpscale import j
 
 from .JSBase import JSBase
 
+METHODS=["find","get","reset","count","delete"]
 
 class KosmosServices():
 
@@ -10,7 +11,7 @@ class KosmosServices():
 
     def _obj_cache_reset(self):
         for key,val in self.__dict__.items():
-            if not key.startswith("_"):
+            if not key.startswith("_") and key not in ["KOSMOS","K","kosmos"]:
                 self.__dict__[key]._obj_cache_reset()
                 del self.__dict__[key]
                 self.__dict__[key]=None
@@ -19,6 +20,8 @@ class KosmosServices():
         #if private then just return
         if name.startswith("_"):
             return self.__dict__[name]
+        if name.lower().rstrip("(") in METHODS:
+            return self._factory.__getattribute__(name.lower().rstrip("("))
         m = self.__dict__["_factory"]
         #else see if we can from the factory find the child object
         r =  m.get(name=name,die=False)
@@ -35,6 +38,8 @@ class KosmosServices():
         for item in m._get_all():
             if item.name not in x:
                 x.append(item.name)
+        for i in METHODS:
+            x.append(i[0].upper()+i[1:].lower()+"(")
         return x
 
     def __setattr__(self, name, value):

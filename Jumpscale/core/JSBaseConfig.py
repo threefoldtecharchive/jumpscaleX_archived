@@ -1,5 +1,6 @@
 from Jumpscale import j
 from .JSBase import JSBase
+import types
 
 class JSBaseConfig(JSBase):
 
@@ -69,8 +70,16 @@ class JSBaseConfig(JSBase):
     def __dir__(self):
         r = self._factory._model_get(self._childclass_name).schema.propertynames
         for item in self.__dict__.keys():
+            # print("-%s"%item)
             if item not in r:
                 r.append(item)
+        # for item in self.__class__.__dict__.keys():
+        #     # if isinstance(self.__dict__[item],types.MethodType):
+        #     if not item.startswith("_"):
+        #         if item in r:
+        #             r.pop(item)
+        #         item+="("
+        #         r.append(item)
         return r
 
     def __setattr__(self, key, value):
