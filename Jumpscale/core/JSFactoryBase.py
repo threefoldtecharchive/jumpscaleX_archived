@@ -58,7 +58,7 @@ class JSFactoryBase(JSBase):
 
     _location = None
     _CHILDCLASS = None
-    _children = {}
+
 
     def __init__(self):
         JSBase.__init__(self)
@@ -68,6 +68,7 @@ class JSFactoryBase(JSBase):
             self.services = KosmosServices(self)
         self._obj_cache_reset()
         self._logger_enable()
+        self._children = {}
         self._init()
 
 
@@ -113,18 +114,18 @@ class JSFactoryBase(JSBase):
         else:
             key = name
 
-        self.__class__._children[key] = o
+        self._children[key] = o
 
-        return self.__class__._children[key]
+        return self._children[key]
 
     def delete(self,name,childclass_name=None):
         if childclass_name is not None:
             key = "%s_%s"%(childclass_name,name)
         else:
             key = name
-        o=self.__class__._children[key]
+        o=self._children[key]
         o._data_trigger_delete()
-        self.__class__._children.pop(key)
+        self._children.pop(key)
 
 
     def _childclass_selector(self,childclass_name=None):
@@ -152,8 +153,8 @@ class JSFactoryBase(JSBase):
                 key = "%s_%s"%(childclass_name,name)
             else:
                 key = name
-            if key in self.__class__._children:
-                return self.__class__._children[key]
+            if key in self._children:
+                return self._children[key]
 
         if id is not None:
             data = self._model_get(childclass_name).get(id=id)
@@ -186,14 +187,14 @@ class JSFactoryBase(JSBase):
             key = "%s_%s"%(childclass_name,name)
         else:
             key = name
-        if key in self.__class__._children:
-            return self.__class__._children[key]
+        if key in self._children:
+            return self._children[key]
 
         child_class  = self._childclass_selector(childclass_name=childclass_name)
         o = child_class(factory=self,dataobj=data,childclass_name=childclass_name,**kwargs)
-        self.__class__._children[key] = o
+        self._children[key] = o
 
-        return self.__class__._children[key]
+        return self._children[key]
 
     def reset(self,childclass_name=None):
         """

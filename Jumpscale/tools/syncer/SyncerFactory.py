@@ -34,8 +34,7 @@ class SyncerFactory(j.application.JSFactoryBaseClass):
             if paths is None:
                 paths = "{DIR_CODE}/github/threefoldtech/jumpscaleX,{DIR_CODE}/github/threefoldtech/digitalmeX"
 
-            self.syncers[name] = j.application.JSFactoryBaseClass.get(
-                self, name=name, sshclient_name=sshclient_name, paths=paths)
+            self.syncers[name] = super(SyncerFactory, self).get(name=name, sshclient_name=sshclient_name, paths=paths)
         return self.syncers[name]
 
     def sync(self):
