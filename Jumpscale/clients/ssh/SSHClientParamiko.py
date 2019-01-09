@@ -112,13 +112,14 @@ class SSHClientParamiko(SSHClientBase):
                          local_file, remote_file)
 
     @property
-    def transport(self):
-        if self._client is None:
-            raise j.exceptions.RuntimeError("Could not connect to %s:%s" % (self.addr, self.port))
-        r = self._client.get_transport()
-        if r is None:
-            raise RuntimeError("transport cannot be None")
-        return r
+    def _transport(self):
+        if self._transport_ is None:
+            if self._client is None:
+                raise j.exceptions.RuntimeError("Could not connect to %s:%s" % (self.addr, self.port))
+            self._transport_ = self._client.get_transport()
+            if self._transport_ is None:
+                raise RuntimeError("transport cannot be None")
+        return self._transport_
 
     def _connect(self):
         if self.addr == "" or self.port == 0:
@@ -201,7 +202,7 @@ class SSHClientParamiko(SSHClientBase):
         """
         ch = None
 
-        ch = self.transport.open_session()
+        ch = self._transport.open_session()
 
         if self.forward_agent:
             paramiko.agent.AgentRequestHandler(ch)
