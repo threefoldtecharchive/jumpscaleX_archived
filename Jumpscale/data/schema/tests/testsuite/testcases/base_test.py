@@ -1,4 +1,4 @@
-from testsuite.framework.schema import Schema
+from Jumpscale.data.schema.tests.testsuite.framework.schema import Schema
 from Jumpscale import j
 from unittest import TestCase
 from uuid import uuid4

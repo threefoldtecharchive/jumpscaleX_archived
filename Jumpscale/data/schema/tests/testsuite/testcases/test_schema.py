@@ -1,5 +1,5 @@
 
-from testsuite.testcases.base_test import BaseTest
+from Jumpscale.data.schema.tests.testsuite.testcases.base_test import BaseTest
 from Jumpscale import j
 from unittest import TestCase
 from uuid import uuid4
