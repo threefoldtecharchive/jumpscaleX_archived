@@ -141,8 +141,8 @@ class SystemFS(j.application.JSBaseClass):
                 'Created the directory [%s]' % j.core.text.toStr(newdir))
 
     def copyDirTree(self, src, dst, keepsymlinks=False, deletefirst=False,
-                    overwriteFiles=True, ignoredir=None, ignorefiles=None, rsync=True,
-                    ssh=False, sshport=22, recursive=True, rsyncdelete=True, createdir=False):
+                    overwriteFiles=True, ignoredir=None, ignorefiles=None, rsync=True,ssh=False,
+                    sshport=22, recursive=True, rsyncdelete=True, createdir=False):
         """Recursively copy an entire directory tree rooted at src.
         The dst directory may already exist; if not,
         it will be created as well as missing parent directories
@@ -226,11 +226,13 @@ class SystemFS(j.application.JSBaseClass):
                 raise j.exceptions.RuntimeError(
                     'Source path %s in system.fs.copyDirTree is not a directory' % src)
         else:
-            from pudb import set_trace; set_trace()
             excl = " "
             for item in ignoredir:
                 excl += "--exclude '*%s/' " % item
-            dstpath = dst.split(':')[1] if ':' in dst else dst
+
+            # dstpath = dst.split(':')[1] if ':' in dst else dst  #OTHERWISE CANNOT WORK FOR SSH
+
+            dstpath = dst
 
             dstpath = dstpath.replace("//","/")
             src = src.replace("//","/")
@@ -253,13 +255,12 @@ class SystemFS(j.application.JSBaseClass):
                 cmd += " --delete --delete-excluded "
             if ssh:
                 cmd += " -e 'ssh -o StrictHostKeyChecking=no -p %s' " % sshport
-            if createdir:
-                # cmd += "--rsync-path='mkdir -p %s && rsync' " % dstpath
-                self.createDir(dstpath)
-            cmd += " '%s' '%s'" % (src, dstpath)
+                if createdir:
+                    cmd += "--rsync-path='mkdir -p %s && rsync' " % self.getParent(dstpath)
+            else:
+                self.createDir(self.getParent(dstpath))
+            cmd += " '%s' '%s'" % (src, dst)
             # print(cmd)
-            #self.getParent(
-
             rc,out,err = j.sal.process.execute(cmd)
 
     @path_check(path={"required", "replace", "exists", "dir"})
