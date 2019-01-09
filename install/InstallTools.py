@@ -304,7 +304,7 @@ MYCOLORS =   { "RED":"\033[1;31m",
 class Tools():
 
     _LogFormatter = LogFormatter
-    _supported_editors = set(["micro","mcedit","joe","vim","vi"])
+    _supported_editors = ["micro","mcedit","joe","vim","vi"]  #DONT DO AS SET  OR ITS SORTED
 
     @staticmethod
     def log(msg):

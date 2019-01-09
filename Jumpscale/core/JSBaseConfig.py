@@ -32,7 +32,7 @@ class JSBaseConfig(JSBase):
 
     def data_update(self,**kwargs):
         self.data.data_update(data=kwargs)
-        self.data.save()
+        # self.data.save()
 
     def _data_trigger_new(self):
         pass
@@ -50,7 +50,6 @@ class JSBaseConfig(JSBase):
             self._logger.debug("'%s' instance '%s' has been edited (changed)"%(self._factory.__jslocation__,self.data.name))
             data2 = j.data.serializers.toml.loads(data_out)
             self.data.data_update(data2)
-            self.data.save()
         j.sal.fs.remove(path)
 
     def view(self):

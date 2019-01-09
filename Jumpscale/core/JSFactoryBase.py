@@ -25,12 +25,17 @@ class KosmosServices():
         #if none means does not exist yet will have to create a new one
         if r is None:
             r=m.new(name=name)
+
         return r
 
     def __dir__(self):
         #list the children from the factory
         m = self.__dict__["_factory"]
-        return [item.name for item in m._get_all()]
+        x = [item.name for item in self._factory.__class__._children.values()]
+        for item in m._get_all():
+            if item.name not in x:
+                x.append(item.name)
+        return x
 
     def __setattr__(self, name, value):
         if name.startswith("_"):

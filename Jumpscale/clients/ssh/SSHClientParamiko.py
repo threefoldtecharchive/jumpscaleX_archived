@@ -18,8 +18,6 @@ class SSHClientParamiko(SSHClientBase):
 
     def _init(self):
         SSHClientBase._init(self)
-        # key_filename = self.sshkey.path if (self.sshkey and self.sshkey.path) else None
-        self._lock = threading.Lock()
 
         if self.passwd:
             self.forward_agent = False
@@ -29,8 +27,6 @@ class SSHClientParamiko(SSHClientBase):
         else:
             self.look_for_keys = True
 
-        self._transport = None
-        self._client = None
         # self._logger_enable()
 
     def _test_local_agent(self):
@@ -45,78 +41,23 @@ class SSHClientParamiko(SSHClientBase):
             return True
 
     @property
-    def client(self):
-        if self._client is None:
+    def _client(self):
+        if self._client_ is None:
             self._connect()
-        return self._client
+        return self._client_
 
-    def connect(self):
-        return self._connect()
-
-    def reset(self):
-        with self._lock:
-            if self._client is not None:
-                self._client = None
 
     @property
     def sftp(self):
-        return self.client.open_sftp()
+        is self._ftp is None:
+            # self._ftp = self._client.open_sftp()
+            """Make SFTP client from open transport"""
+            transport = self._transport
+            transport.open_session()
+            self._ftp = paramiko.SFTPClient.from_transport(transport)
 
-    def _make_sftp(self):
-        """Make SFTP client from open transport"""
-        transport = self.transport
-        transport.open_session()
-        return paramiko.SFTPClient.from_transport(transport)
+        return self._ftp
 
-    def _mkdir(self, sftp, directory):
-        """Make directory via SFTP channel
-
-        :param sftp: SFTP client object
-        :type sftp: :py:class:`paramiko.sftp_client.SFTPClient`
-        :param directory: Remote directory to create
-        :type directory: str
-
-        Catches and logs at error level remote IOErrors on creating directory.
-        """
-        try:
-            sftp.mkdir(directory)
-        except IOError as error:
-            msg = "Error occured creating directory %s on %s - %s"
-            self._logger.error(msg, directory, self.host, error)
-            raise IOError(msg, directory, self.host, error)
-        self._logger.debug("Creating remote directory %s", directory)
-        return True
-
-    def mkdir(self, sftp, directory):
-        """Make directory via SFTP channel.
-
-        Parent paths in the directory are created if they do not exist.
-
-        :param sftp: SFTP client object
-        :type sftp: :py:class:`paramiko.sftp_client.SFTPClient`
-        :param directory: Remote directory to create
-        :type directory: str
-
-        Catches and logs at error level remote IOErrors on creating directory.
-        """
-        try:
-            parent_path, sub_dirs = directory.split(os.path.sep, 1)
-        except ValueError:
-            parent_path = directory.split(os.path.sep, 1)[0]
-            sub_dirs = None
-        if not parent_path and directory.startswith(os.path.sep):
-            try:
-                parent_path, sub_dirs = sub_dirs.split(os.path.sep, 1)
-            except ValueError:
-                return True
-        try:
-            sftp.stat(parent_path)
-        except IOError:
-            self._mkdir(sftp, parent_path)
-        sftp.chdir(parent_path)
-        if sub_dirs:
-            return self.mkdir(sftp, sub_dirs)
-        return True
 
     def _parent_paths_split(self, file_path, sep=None):
         sep = os.path.sep if sep is None else sep
@@ -140,8 +81,7 @@ class SSHClientParamiko(SSHClientBase):
             self.copy_file(local_path, remote_path, recurse=True,
                            sftp=sftp)
 
-    def copy_file(self, local_file, remote_file, recurse=False,
-                  sftp=None):
+    def copy_file(self, local_file, remote_file):
         """Copy local file to host via SFTP/SCP
 
         Copy is done natively using SFTP/SCP version 2 protocol, no scp command
@@ -151,28 +91,18 @@ class SSHClientParamiko(SSHClientBase):
         :type local_file: str
         :param remote_file: Remote filepath on remote host to copy file to
         :type remote_file: str
-        :param recurse: Whether or not to descend into directories recursively.
-        :type recurse: bool
-
         :raises: :py:class:`ValueError` when a directory is supplied to
           ``local_file`` and ``recurse`` is not set
         :raises: :py:class:`IOError` on I/O errors writing files
         :raises: :py:class:`OSError` on OS errors like permission denied
         """
-        if os.path.isdir(local_file) and recurse:
-            return self._copy_dir(local_file, remote_file, sftp)
-        elif os.path.isdir(local_file) and not recurse:
-            raise ValueError("Recurse must be true if local_file is a "
-                             "directory.")
-        sftp = self._make_sftp() if not sftp else sftp
+        if os.path.isdir(local_file):
+            raise ValueError("Local file cannot be a dir")
         destination = self._parent_paths_split(remote_file, sep='/')
+        self.mkdir(destination)
+        self.sftp.chdir()
         try:
-            sftp.stat(destination)
-        except IOError:
-            self.mkdir(sftp, destination)
-        sftp.chdir()
-        try:
-            sftp.put(local_file, remote_file)
+            self.sftp.put(local_file, remote_file)
         except Exception as error:
             self._logger.error("Error occured copying file %s to remote destination "
                               "%s:%s - %s",
@@ -183,9 +113,9 @@ class SSHClientParamiko(SSHClientBase):
 
     @property
     def transport(self):
-        if self.client is None:
+        if self._client is None:
             raise j.exceptions.RuntimeError("Could not connect to %s:%s" % (self.addr, self.port))
-        r = self.client.get_transport()
+        r = self._client.get_transport()
         if r is None:
             raise RuntimeError("transport cannot be None")
         return r
@@ -193,8 +123,8 @@ class SSHClientParamiko(SSHClientBase):
     def _connect(self):
         if self.addr == "" or self.port == 0:
             raise RuntimeError("addr or port cannot be empty.")
-        with self._lock:
-            self._logger.debug("Test sync ssh connection to %s:%s:%s" % (self.addr, self.port, self.login))
+
+        self._logger.debug("Test sync ssh connection to %s:%s:%s" % (self.addr, self.port, self.login))
 
         if j.sal.nettools.waitConnectionTest(self.addr, self.port, self.timeout) is False:
             self._logger.error("Cannot connect to ssh server %s:%s with login:%s and using sshkey:%s" %
@@ -206,8 +136,8 @@ class SSHClientParamiko(SSHClientBase):
         #     self.pkey = paramiko.RSAKey.from_private_key_file(
         #         self.sshkey.path, password=self.sshkey.passphrase)
 
-        self._client = paramiko.SSHClient()
-        self._client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self._client_ = paramiko.SSHClient()
+        self._client_.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         # if self.key_filename:
         #     self.allow_agent = True
@@ -227,7 +157,7 @@ class SSHClientParamiko(SSHClientBase):
                 self._logger.debug("connect with allow_agent :%s" %self.allow_agent)
                 self._logger.debug("connect with look_for_keys :%s" % self.look_for_keys)
                 self._logger.debug("Timeout is : %s " % self.timeout)
-                self._client.connect(
+                self._client_.connect(
                     self.addr,
                     int(self.port),
                     username=self.login,
@@ -238,7 +168,7 @@ class SSHClientParamiko(SSHClientBase):
                     timeout=2.0,
                     banner_timeout=3.0)
                 self._logger.info("connection ok")
-                return self._client
+                return self._client_
             except BadAuthenticationType as e:
                 raise e
             except (BadHostKeyException, AuthenticationException) as e:
@@ -250,7 +180,7 @@ class SSHClientParamiko(SSHClientBase):
             except (SSHException, socket.error) as e:
                 self._logger.error("Unexpected error in socket connection for ssh. Aborting connection and try again.")
                 self._logger.error(e)
-                self._client.close()
+                self._client_.close()
                 # self.reset()
                 time.sleep(0.1)
                 continue
@@ -270,7 +200,7 @@ class SSHClientParamiko(SSHClientBase):
         return: (retcode,out_err)
         """
         ch = None
-        # with self._lock:
+
         ch = self.transport.open_session()
 
         if self.forward_agent:
@@ -309,13 +239,11 @@ class SSHClientParamiko(SSHClientBase):
                 line = j.core.text.toAscii(line)
                 if chan == 'O':
                     if showout:
-                        with self._lock:
-                            self._logger.debug(line.rstrip())
+                        self._logger.debug(line.rstrip())
                     out.write(line)
                 elif chan == 'E':
                     if showout:
-                        with self._lock:
-                            self._logger.error(line.rstrip())
+                        self._logger.error(line.rstrip())
                     err.write(line)
             except queue.Empty:
                 pass
@@ -343,9 +271,6 @@ class SSHClientParamiko(SSHClientBase):
 
         return rc, out.getvalue(), err.getvalue()
 
-    def close(self):
-        # TODO: make sure we don't need to clean anything
-        pass
 
     def rsync_up(self, source, dest, recursive=True):
         if dest[0] != "/":
@@ -390,24 +315,6 @@ class SSHClientParamiko(SSHClientBase):
             recursive=recursive)
 
 
-
-    def portforwardToLocal(self, remoteport, localport):
-        self.portforwardKill(localport)
-        C = "ssh -L %s:localhost:%s root@%s -p %s" % (
-            remoteport, localport, self.addr, self.port)
-        print(C)
-        pm = j.builder.system.processmanager.get()
-        pm.ensure(cmd=C, name="ssh_%s" % localport, wait=0.5)
-        print("Test tcp port to:%s" % localport)
-        if not j.sal.nettools.waitConnectionTest("127.0.0.1", localport, 10):
-            raise RuntimeError("Cannot open ssh forward:%s_%s_%s" %
-                               (self, remoteport, localport))
-        print("Connection ok")
-
-    def portforwardKill(self, localport):
-        print("kill portforward %s" % localport)
-        pm = j.builder.system.processmanager.get()
-        pm.processmanager.stop('ssh_%s' % localport)
 
     # def SSHAuthorizeKey(
     #         self,

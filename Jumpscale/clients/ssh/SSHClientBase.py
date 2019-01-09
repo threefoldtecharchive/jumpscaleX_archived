@@ -25,6 +25,13 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         self.async_ = False
         self._private = None
         self._connected = None
+        self._client_ = None
+        self._ftp = None
+        self._transport = None
+
+    def mkdir(self,path):
+        cmd = "mkdir -p %s"%path
+        self.execute(cmd)
 
     @property
     def isprivate(self):
@@ -92,3 +99,27 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         if self._syncer is None:
             self._syncer = j.tools.syncer.get(name=self.name, sshclient_name=self.name)
         return self._syncer
+
+    def portforward_to_local(self, remoteport, localport):
+        """
+        forward remote port on host to the local one, so we can connect over localhost
+        :param remoteport: the port to forward to local
+        :param localport: the local tcp port to be used (will terminate on remote)
+        :return:
+        """
+        self.portforwardKill(localport)
+        C = "ssh -L %s:localhost:%s %s@%s -p %s" % (
+            remoteport, localport, self.login, self.addr, self.port)
+        print(C)
+        pm = j.builder.system.processmanager.get() #need to use other one, no longer working #TODO:
+        pm.ensure(cmd=C, name="ssh_%s" % localport, wait=0.5)
+        print("Test tcp port to:%s" % localport)
+        if not j.sal.nettools.waitConnectionTest("127.0.0.1", localport, 10):
+            raise RuntimeError("Cannot open ssh forward:%s_%s_%s" %
+                               (self, remoteport, localport))
+        print("Connection ok")
+
+    def portforward_kill(self, localport):
+        print("kill portforward %s" % localport)
+        pm = j.builder.system.processmanager.get()
+        pm.processmanager.stop('ssh_%s' % localport)
