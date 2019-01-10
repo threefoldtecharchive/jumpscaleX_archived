@@ -181,8 +181,13 @@ class MarkDownDocs(j.application.JSBaseClass):
 
     def webserver(self):
         url = "https://github.com/threefoldfoundation/lapis-wiki"
-        j.shell()
-
+        server_path = j.clients.git.getContentPathFromURLorPath(url)
+        url = "https://github.com/threefoldtech/jumpscale_weblibs"
+        weblibs_path = j.clients.git.getContentPathFromURLorPath(url)
+        j.sal.fs.symlink("{}/static".format(weblibs_path), "{}/static/weblibs".format(server_path),
+                         overwriteTarget=False)
+        cmd = "moonc {0} && openresty -p {0} -c {0}/nginx.conf.compiled".format(server_path)
+        j.tools.tmux.execute(cmd, reset=False)
 
     def test(self):
         """

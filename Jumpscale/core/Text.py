@@ -70,14 +70,9 @@ class Text(object):
     def strip_to_ascii(self, text):
         return "".join([char for char in str(text) if ((ord(char) > 31 and ord(char) < 127) or ord(char) == 10)])
 
-    def convert_to_snake_case(self,text):
-        out=""
-        for t in text:
-            if ord(t)>64 and ord(t)<91 and out!="":
-                out+="_"
-            out+=t.lower()
-        out = out.rstrip("_")
-        return self.strip_to_ascii_dense(out).rstrip("_")
+    def convert_to_snake_case(self, text):
+        converted_string = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', text)
+        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', converted_string).lower()
 
 
     def strip_to_ascii_dense(self, text):
