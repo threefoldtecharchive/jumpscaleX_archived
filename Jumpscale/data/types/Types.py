@@ -169,14 +169,12 @@ class Types(j.application.JSBaseClass):
             tt = self._list() #need to create new instance
             if return_class:
                 raise RuntimeError("cannot return class if subtype specified")
-            if len(ttype)==2:
-                tt.SUBTYPE  = self.get(ttype[1],return_class=True)()
+            if len(ttype)>1:
+                tt.SUBTYPE  = self.get(ttype[1:],return_class=True)()
                 return tt
             elif len(ttype)==1:
                 assert tt.SUBTYPE == None
                 return tt
-            else:
-                raise RuntimeError("list type len needs to be 1 or 2")
         elif ttype == "dict":
             res = self._dict
         elif ttype == "yaml":

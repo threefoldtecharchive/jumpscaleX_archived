@@ -24,6 +24,11 @@ class Guid(String):
     def __init__(self):
         String.__init__(self)
 
+    def clean(self, value):
+        if not self.check(value):
+            raise ValueError("Invalid guid :%s" % value)
+        return value
+
     def check(self, value):
         ''' Check whether provided value is a valid GUID string
             (WITHOUT using insane regular expressions.  also catches
@@ -60,8 +65,7 @@ class Email(String):
     def __init__(self):
         String.__init__(self)
 
-        self._RE = re.compile(
-            '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+        self._RE = re.compile('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 
     def check(self, value):
         '''
@@ -69,12 +73,13 @@ class Email(String):
         '''
         if not j.data.types.string.check(value):
             return False
-        value = self.clean(value)
         return self._RE.fullmatch(value) is not None
 
     def clean(self, v):
         if not j.data.types.string.check(v):
             raise ValueError("Input needs to be string:%s" % v)
+        elif not self.check(v):
+            raise ValueError("Invalid email :%s" % v)
         v = v.lower()
         v.strip()
         return v
@@ -99,7 +104,20 @@ class Path(String):
 
     def __init__(self):
         String.__init__(self)
-        self._RE = re.compile('.*')
+        self._RE = re.compile("^(?:\.{2})?(?:\/\.{2})*(\/[a-zA-Z0-9]+)+$")
+
+    def check(self, value):
+        '''
+        Check whether provided value is a valid 
+        '''
+        if not j.data.types.string.check(value):
+            return False
+        return self._RE.fullmatch(value) is not None
+
+    def clean(self, value):
+        if not self.check(value):
+            raise ValueError("Invalid path :%s" % value)
+        return value
 
     def get_default(self):
         return ""
@@ -111,10 +129,23 @@ class Url(String):
 
     def __init__(self):
         String.__init__(self)
-        self._RE = re.compile('.*')
+        self._RE = re.compile("^[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$")
+
+    def check(self, value):
+        '''
+        Check whether provided value is a valid 
+        '''
+        if not j.data.types.string.check(value):
+            return False
+        return self._RE.fullmatch(value) is not None
+
+    def clean(self, value):
+        if not self.check(value):
+            raise ValueError("Invalid Url :%s" % value)
+        return value
 
     def get_default(self):
-        return ""
+        return "www.example.com"
 
 
 class Tel(String):
@@ -130,6 +161,14 @@ class Tel(String):
         String.__init__(self)
         self._RE = re.compile('^\+?[0-9]{6,15}(?:x[0-9]+)?$')
 
+    def check(self, value):
+        '''
+        Check whether provided value is a valid 
+        '''
+        if not j.data.types.string.check(value):
+            return False
+        return self._RE.fullmatch(value) is not None
+
     def clean(self, v):
         if not j.data.types.string.check(v):
             raise ValueError("Input needs to be string:%s" % v)
@@ -140,6 +179,8 @@ class Tel(String):
         v = v.replace(")", "")
         v = v.replace(" ", "")
         v.strip()
+        if not self.check(v):
+            raise ValueError("Invalid mobile number :%s" % v)
         return v
 
     def get_default(self):
@@ -153,8 +194,20 @@ class IPRange(String):
 
     def __init__(self):
         String.__init__(self)
-        self._RE = re.compile(
-            '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2}')
+        self._RE = re.compile('[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2}')
+
+    def check(self, value):
+        '''
+        Check whether provided value is a valid 
+        '''
+        if not j.data.types.string.check(value):
+            return False
+        return self._RE.fullmatch(value) is not None
+
+    def clean(self, value):
+        if not self.check(value):
+            raise ValueError("Invalid IPrange :%s" % value)
+        return value
 
     def get_default(self):
         return "192.168.1.1/24"
@@ -176,6 +229,13 @@ class IPAddress(String):
         """Validates IP addresses.
         """
         return self.is_valid_ipv4(ip) or self.is_valid_ipv6(ip)
+
+    def clean(self, ip):
+        if not self.check(ip):
+            raise ValueError("Invalid IPAddress :%s" % ip)
+        ip_value = IPv4Address(ip)
+        ip = ip_value.compressed
+        return ip
 
     def is_valid_ipv4(self, ip):
         """ Validates IPv4 addresses.
@@ -214,11 +274,17 @@ class IPPort(Integer):
         We just check if the value a single port or a range
         Values must be between 0 and 65535
         '''
+
         if not Integer.check(self, value):
             return False
         if 0 < value <= 65535:
             return True
         return False
+
+    def clean(self, value):
+        if not self.check(value):
+            raise ValueError("Invalid IP port :%s" % value)
+        return value
 
 
 class Numeric(String):
@@ -348,17 +414,17 @@ class Numeric(String):
         res = res.replace(" %", "%")
         # print(res)
         return res.strip()
-        
+
     def getCur(self, value):
-            value = value.lower()
-            for cur2 in list(j.clients.currencylayer.cur2usd.keys()):
+        value = value.lower()
+        for cur2 in list(j.clients.currencylayer.cur2usd.keys()):
                 # print(cur2)
-                if value.find(cur2) != -1:
+            if value.find(cur2) != -1:
                     # print("FOUND:%s"%cur2)
-                    value = value.lower().replace(cur2, "").strip()
-                    return value, cur2
-            cur2 = "usd"
-            return value, cur2
+                value = value.lower().replace(cur2, "").strip()
+                return value, cur2
+        cur2 = "usd"
+        return value, cur2
 
     def str2bytes(self, value):
         """
@@ -442,14 +508,14 @@ class Numeric(String):
             if value.strip() == "":
                 value = "0"
             fv = float(value)
-            if fv.is_integer(): # check floated val fits into an int
+            if fv.is_integer():  # check floated val fits into an int
                 # ok, we now know str->float->int will actually be an int
                 value = int(fv)
                 ttype = 0
             else:
                 value = fv
                 if fv > 10000:
-                    value = int(value) # doesn't look safe.  issue #72
+                    value = int(value)  # doesn't look safe.  issue #72
                     ttype = 3
                 else:
                     ttype = 1
@@ -530,7 +596,7 @@ class Numeric(String):
     def toHR(self, v):
         return self.toString(v)
 
-    def toJSON(self,v):
+    def toJSON(self, v):
         return self.toString(v)
 
     def toString(self, val):
@@ -586,7 +652,7 @@ class Date(String):
 
     def toString(self, val, local=True):
         val = self.clean(val)
-        if val==0:
+        if val == 0:
             return ""
         return j.data.time.epoch2HRDateTime(val, local=local)
 
@@ -638,7 +704,7 @@ class Date(String):
         def time_process(v):
             v = v.strip()
             if ":" not in v:
-                return ("10:00:00", "%H:%M:%S")
+                return ("00:00:00", "%H:%M:%S")
             splitted = v.split(":")
             if len(splitted) == 2:
                 if "am" in v.lower() or "pm" in v.lower():

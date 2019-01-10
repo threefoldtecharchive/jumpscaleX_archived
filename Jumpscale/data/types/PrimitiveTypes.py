@@ -46,6 +46,8 @@ class String():
         """
         if value is None:
             value = ""
+        elif not self.check(value):
+            raise ValueError("Invalid value for string: '%s'" % value)
         value = str(value)
         if value == "\'\'" or value == "\"\"" or value == "":
             return ""
@@ -79,7 +81,7 @@ class String():
 
 class StringMultiLine(String):
 
-    NAME = 'stringmultiline'     # this really does not match with the
+    NAME = 'multiline'     # this really does not match with the
     BASETYPE = 'stringmultiline'  # list of aliases.
 
     def check(self, value):
@@ -90,10 +92,18 @@ class StringMultiLine(String):
         """
         will do a strip on multiline
         """
+        if value == "" or value is None:
+            value = ""
+        elif not self.check(value):
+            raise ValueError("Invalid String Multiline type %s" % value)
         value = str(value)
         return j.core.text.strip(value)
 
     def toString(self, v):
+        if value is None:
+            value = ""
+        if not self.check(value):
+            raise ValueError("Invalid value for StringMultiLine: '%s'" % value)
         v = self.clean(v)
         return v
 
@@ -108,7 +118,9 @@ class StringMultiLine(String):
         for item in value.split("\n"):
             out0 += "%s\n" % item
         out0 = out0.rstrip()
-        out0 += "%s\n'''\n\n" % out0
+        out0 += "\n'''"
+        if out0 == "''''''":
+            out0 = "'''default \n value '''"
         return out0
 
     def toml_string_get(self, value, key=""):
@@ -150,14 +162,13 @@ class Bytes():
         return base64.b64encode(v).decode()
 
     def toHR(self, v):
-        return "...BYTES..."
+        return self.toString(v)
 
     def toJSON(self, v):
         return self.toString(v)
 
     def toData(self, v):
         return self.clean(v)
-
 
     def check(self, value):
         '''Check whether provided value is a array of bytes'''
@@ -186,8 +197,13 @@ class Bytes():
     def capnp_schema_get(self, name, nr):
         return "%s @%s :Data;" % (name, nr)
 
-    def toml_string_get(self, value, key):
-        raise NotImplemented()
+    def toml_string_get(self, value, key=""):
+        value = self.clean(value)
+        if key == "":
+            return self.toString(value)
+        else:
+            out = "%s = %s" % (key, self.toString(value))
+            return out
 
 
 class Boolean():
@@ -215,7 +231,6 @@ class Boolean():
     def toData(self, v):
         return self.clean(v)
 
-
     def toHR(self, v):
         return self.clean(v)
 
@@ -233,8 +248,8 @@ class Boolean():
         """
         used to change the value to a predefined standard for this type
         """
-        if isinstance(value,str):
-            value=value.strip().strip("'").strip("\"")
+        if isinstance(value, str):
+            value = value.strip().strip("'").strip("\"")
         if value in ["1", 1, True]:
             value = True
         elif j.data.types.string.check(value) and value.strip().lower() in ["true", "yes", "y"]:
@@ -300,7 +315,6 @@ class Integer():
     def toData(self, v):
         return self.clean(v)
 
-
     def toHR(self, v):
         if int(v) == 4294967295:
             return "-"  # means not set yet
@@ -311,7 +325,7 @@ class Integer():
 
     def get_default(self):
         # return this high number, is like None, not set yet
-        return 4294967295
+        return 65535
 
     def toJSON(self, v):
         return self.clean(v)
@@ -320,6 +334,8 @@ class Integer():
         """
         used to change the value to a predefined standard for this type
         """
+        if not self.check(value):
+            raise ValueError("Invalid value for integer: '%s'" % value)
         return int(value)
 
     def python_code_get(self, value):
@@ -368,7 +384,6 @@ class Float():
     def toData(self, v):
         return self.clean(v)
 
-
     def toHR(self, v):
         return self.clean(v)
 
@@ -385,6 +400,8 @@ class Float():
         """
         used to change the value to a predefined standard for this type
         """
+        if not self.check(value):
+            raise ValueError("Invalid value for float: '%s'" % value)
         return float(value)
 
     def python_code_get(self, value):
@@ -411,14 +428,11 @@ class Percent(Integer):
     '''
     stored as integer,
     to deal with percentages < 1 we multiply with 100 before storing
-
     as input support:
-
     xx%
     when int: is native format is multiples of 100 e.g. 1000 is 10%
     when string: is e.g. 99 which would be 99%
     when float is e.g. 0.5 which would be 50%
-
     '''
 
     NAME = 'percent'
@@ -428,15 +442,17 @@ class Percent(Integer):
         """
         used to change the value to a predefined standard for this type
         """
-        if self.string.check(value):
+        if String().check(value):
             if "%" in value:
-                return int(value.replace("%", "")) * 100
+                value = value.replace("%", "")
+            if "." in value:
+                value = float(value)
             else:
-                return int(value) * 100
-        elif self.integer.check(value):
+                value = int(value)
+        if Integer().check(value):
             return value
-        elif self.float.check(value):
-            return value * 10000
+        elif Float().check(value):
+            return value * 100
         else:
             raise RuntimeError(
                 "could not convert input to percent, input was:%s" %
@@ -454,7 +470,7 @@ class Percent(Integer):
         v = round(v / 100, 2)
         if int(v) == v:
             v = int(v)
-        return "%s/%" % v
+        return "{}%".format(v)
 
 
 class Object(Bytes):
@@ -540,6 +556,7 @@ class JSObject(Bytes):
     def toml_string_get(self, value, key):
         raise NotImplemented()
 
+
 class Enumeration(String):
 
     '''
@@ -550,18 +567,18 @@ class Enumeration(String):
     NAME = 'enum'
     BASETYPE = 'string'
 
-    def __init__(self,values):
+    def __init__(self, values):
         if isinstance(values, str):
             values = values.split(",")
-            values=[item.strip().strip("'").strip().strip('"').strip() for item in values]
+            values = [item.strip().strip("'").strip().strip('"').strip() for item in values]
         if not isinstance(values, list):
             raise RuntimeError("input for enum is comma separated str or list")
         self.values = [item.upper().strip() for item in values]
         self.default = self.values[0]
         self.values.sort()
         self.values_str = ",".join(self.values)
-        self._md5 = j.data.hash.md5_string(str(self)) #so it has the default as well
-        self._jumpscale_location = "j.data.types.enumerations['%s']"%self._md5
+        self._md5 = j.data.hash.md5_string(str(self))  # so it has the default as well
+        self._jumpscale_location = "j.data.types.enumerations['%s']" % self._md5
 
     def check(self, value):
         '''Check whether provided value is a string'''
@@ -581,7 +598,7 @@ class Enumeration(String):
         return self.clean(v)
 
     def toData(self, v):
-        v=self.clean(v)
+        v = self.clean(v)
         return self.values.index(v)+1
 
     def clean(self, value):
@@ -590,24 +607,24 @@ class Enumeration(String):
         will find it and return as string
         """
         try:
-            value=int(value)
+            value = int(value)
         except:
             pass
         if isinstance(value, str):
             value = value.upper().strip()
             if value not in self.values:
-                raise RuntimeError("could not find enum:'%s' in '%s'"%(value,self.values_str))
+                raise RuntimeError("could not find enum:'%s' in '%s'" % (value, self.values_str))
             return value
         elif isinstance(value, int):
             if value == 0:
-                raise RuntimeError("could not find enum id:%s in '%s', tshould not be 0"%(value,self.values_str))
+                raise RuntimeError("could not find enum id:%s in '%s', tshould not be 0" % (value, self.values_str))
             if value > len(self.values)+1:
-                raise RuntimeError("could not find enum id:%s in '%s', too high"%(value,self.values_str))
+                raise RuntimeError("could not find enum id:%s in '%s', too high" % (value, self.values_str))
             return self.values[value-1]
         else:
             raise RuntimeError("unsupported type for enum, is int or string")
 
     def __str__(self):
-        return "ENNUM: %s (default:%s)"%(self.values_str,self.default)
+        return "ENNUM: %s (default:%s)" % (self.values_str, self.default)
 
     __repr__ = __str__

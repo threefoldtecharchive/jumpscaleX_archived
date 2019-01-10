@@ -160,10 +160,9 @@ class ModelOBJ():
         {% else %} 
         #will make sure that the input args are put in right format
         val = {{prop.js_typelocation}}.clean(val)  #is important because needs to come in right format e.g. binary for numeric
-        if self.{{prop.name}} != val:
-            self._changed_items["{{prop.name}}"] = val
-            if self.autosave:
-                self.save()
+        self._changed_items["{{prop.name}}"] = val
+        if self.autosave:
+            self.save()
         {% endif %}
 
     {% if prop.jumpscaletype.NAME == "numeric" %}
