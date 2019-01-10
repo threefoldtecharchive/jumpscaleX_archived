@@ -53,8 +53,8 @@ class BuilderCaddy(j.builder.system._BaseClass):
             return
 
         j.builder.tools.file_copy('/opt/go_proj/bin/caddy', '{DIR_BIN}/caddy')
-        j.builder.sandbox.profileDefault.addPath('{DIR_BIN}')
-        j.builder.sandbox.profileDefault.save()
+        #j.builder.sandbox.profileDefault.addPath('{DIR_BIN}')
+        #j.builder.sandbox.profileDefault.save()
 
         configpath = j.core.tools.text_replace(configpath)
 

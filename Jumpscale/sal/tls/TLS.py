@@ -193,10 +193,10 @@ class TLS(JSBASE):
             'names': subjects
         }
 
-    def _test(self, name=""):
+    def _test(self, name=''):
         """Run tests under tests
 
-        :param name: basename of the file to run, defaults to "".
+        :param name: basename of the file to run, defaults to ''.
         :type name: str, optional
         """
         self._test_run(name=name, obj_key='test_main')

@@ -1,64 +1,56 @@
 from Jumpscale import j
 
 
-
-
-
 class BuilderEtcd(j.builder.system._BaseClass):
-    NAME = "etcd"
+    NAME = 'etcd'
+
+    def _init(self):
+        self.package_path = j.builder.runtimes.golang.package_path_get('etcd', host='go.etcd.io')
 
     def build(self, reset=False):
         """
-        Build and start etcd
-
-        @start, bool start etcd after buildinf or not
-        @host, string. host of this node in the cluster e.g: http://etcd1.com
-        @peer, list of string, list of all node in the cluster. [http://etcd1.com, http://etcd2.com, http://etcd3.com]
+        Build etcd
         """
-        if self._done_check("build", reset):
+        if self._done_check('build', reset):
             return
 
         j.builder.runtimes.golang.install()
+        # get a vendored etcd from master
+        j.builder.runtimes.golang.get('go.etcd.io/etcd', install=False, update=False)
+        # go to package path and build (for etcdctl)
+        j.builder.runtimes.golang.execute('cd %s && ./build' % self.package_path)
 
-        # FYI, REPO_PATH: github.com/coreos/etcd
-        _script = """
-        set -ex
-        ORG_PATH="github.com/coreos"
-        REPO_PATH="${ORG_PATH}/etcd"
+        self._done_set('build')
+        # self._cache.get(key='build', method=do, expire=3600*30*24, refresh=False, retry=2, die=True)
 
-        go get -x -d -u github.com/coreos/etcd
+    def sandbox(self):
+        def do():
+            if self._done_check('sandbox'):
+                return
+            if not self._done_check('build'):
+                self.build()
 
-        cd {DIR_BASE}/go/src/$REPO_PATH
+            j.sal.fs.copyFile(j.sal.fs.joinPaths(self.package_path, 'bin', 'etcd'), j.core.dirs.BINDIR)
+            j.sal.fs.copyFile(j.sal.fs.joinPaths(self.package_path, 'bin', 'etcdctl'), j.core.dirs.BINDIR)
 
-        # first checkout master to prevent error if already in detached mode
-        git checkout master
+            self._done_set('sandbox')
 
-        go get -d .
+        #self._cache.get(key="sandbox", method=do, expire=3600*30*24, refresh=False, retry=1, die=True)
 
-        CGO_ENABLED=0 go build $GO_BUILD_FLAGS -installsuffix cgo -ldflags "-s -X ${REPO_PATH}/cmd/vendor/${REPO_PATH}/version.GitSHA=${GIT_SHA}" -o {DIR_BIN}/etcd ${REPO_PATH}/cmd/etcd
-        CGO_ENABLED=0 go build $GO_BUILD_FLAGS -installsuffix cgo -ldflags "-s" -o {DIR_BIN}/etcdctl ${REPO_PATH}/cmd/etcdctl
+    def client_get(self, name):
         """
+        return the client to the installed server, use the config params of the server to create a client for
+        :return:
+        """
+        return j.clients.etcd.get(name)
 
-        script = j.builder.sandbox.replaceEnvironInText(_script)
-        j.sal.process.execute(script, profile=True)
-        j.builder.sandbox.addPath("{DIR_BASE}/bin")
+    def _test(self, name=''):
+        """Run tests under tests directory
 
-        self._done_set("build")
-
-    def install(self):
-        if self._done_check("install"):
-            return
-
-        url = "https://github.com/coreos/etcd/releases/download/v3.3.4/etcd-v3.3.4-linux-amd64.tar.gz"
-        dest = j.sal.fs.getTmpDirPath()
-        try:
-            expanded = j.builder.tools.file_download(url, dest, expand=True, minsizekb=0)
-            j.builder.tools.file_copy(j.sal.fs.joinPaths(expanded, 'etcd'), j.dirs.BINDIR)
-            j.builder.tools.file_copy(j.sal.fs.joinPaths(expanded, 'etcdctl'), j.dirs.BINDIR)
-        finally:
-            j.builder.tools.dir_remove(dest)
-
-        self._done_set("install")
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        self._test_run(name=name, obj_key='test_main')
 
     def build_flist(self, hub_instance=None):
         """
@@ -72,17 +64,15 @@ class BuilderEtcd(j.builder.system._BaseClass):
         :return: path to the tar.gz created
         :rtype: str
         """
+        self.sandbox()
 
-        if not self.isInstalled():
-            self.install()
-
-        self._logger.info("building flist")
+        self._logger.info('building flist')
         build_dir = j.sal.fs.getTmpDirPath()
         tarfile = '/tmp/etcd-3.3.4.tar.gz'
         bin_dir = j.sal.fs.joinPaths(build_dir, 'bin')
         j.core.tools.dir_ensure(bin_dir)
-        j.builder.tools.file_copy(j.sal.fs.joinPaths(j.dirs.BINDIR, 'etcd'), bin_dir)
-        j.builder.tools.file_copy(j.sal.fs.joinPaths(j.dirs.BINDIR, 'etcdctl'), bin_dir)
+        j.builder.tools.file_copy(j.sal.fs.joinPaths(j.core.dirs.BINDIR, 'etcd'), bin_dir)
+        j.builder.tools.file_copy(j.sal.fs.joinPaths(j.core.dirs.BINDIR, 'etcdctl'), bin_dir)
 
         j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, build_dir))
 
@@ -96,40 +86,3 @@ class BuilderEtcd(j.builder.system._BaseClass):
             self._logger.info("uploaded at https://hub.gig.tech/%s/etcd-3.3.4.flist", hub.config.data['username'])
 
         return tarfile
-
-    def start(self, host=None, peers=None):
-        j.builder.system.process.kill("etcd")
-        if host and peers:
-            cmd = self._etcd_cluster_cmd(host, peers)
-        else:
-            cmd = '{DIR_BIN}/etcd'
-        pm = j.builder.system.processmanager.get()
-        pm.ensure("etcd", cmd)
-
-    def _etcd_cluster_cmd(self, host, peers=[]):
-        """
-        return the command to execute to launch etcd as a static cluster
-        @host, string. host of this node in the cluster e.g: http://etcd1.com
-        @peer, list of string, list of all node in the cluster. [http://etcd1.com, http://etcd2.com, http://etcd3.com]
-        """
-        if host not in peers:
-            peers.append(host)
-
-        cluster = ""
-        number = None
-        for i, peer in enumerate(peers):
-            cluster += 'infra{i}={host}:2380,'.format(i=i, host=peer)
-            if peer == host:
-                number = i
-        cluster = cluster.rstrip(",")
-
-        host = host.lstrip("http://").lstrip('https://')
-        cmd = """{DIR_BIN}/etcd -name infra{i} -initial-advertise-peer-urls http://{host}:2380 \
-      -listen-peer-urls http://{host}:2380 \
-      -listen-client-urls http://{host}:2379,http://127.0.0.1:2379,http://{host}:4001,http://127.0.0.1:4001 \
-      -advertise-client-urls http://{host}:2379,http://{host}:4001 \
-      -initial-cluster-token etcd-cluster-1 \
-      -initial-cluster {cluster} \
-      -initial-cluster-state new \
-    """.format(host=host, cluster=cluster, i=number)
-        return j.core.tools.text_replace(cmd)

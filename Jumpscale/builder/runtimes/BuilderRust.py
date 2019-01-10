@@ -24,7 +24,7 @@ class BuilderRust(j.builder.system._BaseClass):
             'cd /tmp/{version} && ./install.sh --prefix={DIR_BASE}/apps/rust --destdir=={DIR_BASE}/apps/rust'.format(version=version))
 
         # was profileDefault
-        j.builder.sandbox.profileJS.addPath(j.core.tools.text_replace('{DIR_BASE}/apps/rust/bin'))
-        j.builder.sandbox.profileJS.save()
+        #j.builder.sandbox.profileJS.addPath(j.core.tools.text_replace('{DIR_BASE}/apps/rust/bin'))
+        #j.builder.sandbox.profileJS.save()
 
         self._done_set('install')

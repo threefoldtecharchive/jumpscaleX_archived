@@ -20,13 +20,14 @@ class Sandboxer(j.application.JSBaseClass):
         self.new_size = 0
         self._logger_enable()
 
-    def buildall(self,reset=False):
+    def sandbox_build(self,reset=False):
         """
-        js_shell 'j.tools.sandboxer.buildall()'
+        js_shell 'j.tools.sandboxer.sandbox_build()'
 
-        will build python & openresty & copy all to the right git sandboxes
+        will build python & openresty & copy all to the right git sandboxes works for Ubuntu & OSX
         :return:
         """
+        j.buider.runtimes.python.build(reset=reset)
         j.builder.runtimes.python.copy2sandbox_github(reset=reset)
         j.builder.runtimes.lua.build() #will build openresty & lua & openssl
         j.builder.runtimes.lua.copy2sandbox_github()
@@ -87,8 +88,6 @@ class Sandboxer(j.application.JSBaseClass):
             done.append(path)
         return result
 
-
-
     def _otool(self, path, result=dict(), done=list()):
         """
         like ldd on linux but for osx
@@ -102,9 +101,8 @@ class Sandboxer(j.application.JSBaseClass):
             return result
 
         def excl(name):
-            exclude=["libSystem","/System/Library/Frameworks/Core","libiconv.2.dylib",
-                     "libutil.dylib","libc++.1.dylib"]
-            excl = False
+            exclude=["libSystem","/System/Library/Frameworks/Core","libiconv.2.dylib","libnetwork.dylib",
+                     "libutil.dylib","libc++.1.dylib","libxml2.2.dylib","binascii"]
             for toexeclude in exclude:
                 if name.lower().find(toexeclude.lower()) != -1:
                     self._logger.debug("exclude:%s"%name)
@@ -133,11 +131,15 @@ class Sandboxer(j.application.JSBaseClass):
                 if not excl(lpath):
                     self._logger.debug(("found:%s" % name))
                     if lpath not in result:
-                        try:
-                            result[lpath] = Dep(name, lpath)
-                            result = self._otool(lpath, result=result, done=done)
-                        except Exception as e:
-                            self._logger.warning("could not process dep:%s"%lpath)
+                        if "@" in lpath:
+                            #need to check if @ can be current dir
+                            alt_base=j.sal.fs.getDirName(out.strip().split("\n")[0])
+                            lpath=lpath.replace("@loader_path",alt_base).replace("//","/")
+                        if j.sal.fs.exists(lpath):
+                            x =  j.sal.fs.getBaseName(lpath)
+                            if x[0].lower() == x[0]:
+                                result[lpath] = Dep(name, lpath)
+                                result = self._otool(lpath, result=result, done=done)
 
 
             done.append(path)
@@ -156,7 +158,7 @@ class Sandboxer(j.application.JSBaseClass):
             result = self._ldd(path, result=dict(), done=list())
         return result
 
-    def libs_sandbox(self, path, dest=None, recursive=False):
+    def libs_sandbox(self, path, dest=None, recursive=True):
         """
 
         js_shell 'j.tools.sandboxer.libs_sandbox(".",".",True)'

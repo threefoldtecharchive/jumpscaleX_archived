@@ -61,8 +61,8 @@ class MarkdownDocument(j.application.JSBaseClass):
         ddict = copy.copy(ddict)
         self.parts.append(MDData(ddict=ddict,toml=toml,yaml=yaml))
 
-    def macro_add(self, method, data="",lang=""):
-        self.parts.append(MDMacro(method=method, data=data, lang=lang))        
+    def macro_add(self, method, data=""):
+        self.parts.append(MDMacro(method=method, data=data))
 
     def _parse(self):
 
@@ -200,20 +200,28 @@ class MarkdownDocument(j.application.JSBaseClass):
         """
         lang=lang.lower().strip()
         c=block.strip().split("\n")[0].lower()
-        if c.startswith("!!!data") or c=="!!!":
+        if c.startswith("!!!data") and lang in ["toml","yaml"]:
             #is data
             block="\n".join(block.strip().split("\n")[1:])+"\n"
-            if lang=="" or lang=="toml":
+            if lang=="toml":
                 self.data_add(toml=block)
             elif lang=="yaml":
                 self.data_add(yaml=block)
             else:
                 raise RuntimeError("could not add codeblock for %s"%block)            
         elif c.startswith("!!!") and lang=="":
-            #is macro
             method=block.strip().split("\n")[0][3:].strip() #remove !!!
             data="\n".join(block.strip().split("\n")[1:])+"\n"
-            self.macro_add(method=method,data=data,lang=lang)
+            if "(" in method:
+                data2 = data
+            else:
+                data=data.replace("True","true")
+                data=data.replace("False","false")
+                if data.strip()!="":
+                    data2 = j.data.serializers.toml.loads(data)
+                else:
+                    data2 = {}
+            self.macro_add(method=method,data=data2)
         else:
             self.code_add(text=block,lang=lang)
 

@@ -17,7 +17,7 @@ class BuilderFW(j.builder.system._BaseClass):
                 raise j.exceptions.Input(message="cannot enable fw, mac  not supported ",
                                          level=1, source="", tags="", msgpub="")
 
-                if j.builder.sandbox.cmdGetPath("nft", die=False) is not False:
+                if #j.builder.sandbox.cmdGetPath("nft", die=False) is not False:
                     self._fw_type = "nft"
                 else:
                     raise NotImplemented("only support nft for now")

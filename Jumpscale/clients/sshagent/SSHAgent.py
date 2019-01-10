@@ -4,9 +4,19 @@ from Jumpscale.core.InstallTools import Tools
 import os
 
 
-class SSHAgent(j.application.JSFactoryBaseClass):
+class SSHAgent(j.application.JSBaseConfigClass):
 
     __jslocation__ = "j.clients.sshagent"
+
+    _SCHEMATEXT = """
+        @url = jumpscale.sshagent.client
+        name* = "" (S)
+        passphrase = "" (S)
+        path = "" (S)
+        """
+
+    def _init(self):
+        self._available=None
 
     @property
     def keyname_default(self):
@@ -21,35 +31,35 @@ class SSHAgent(j.application.JSFactoryBaseClass):
             raise RuntimeError("found more than 1 sshkey in sshagent")
         return r[0]
 
-    def key_load(self, path, passphrase="", duration=3600 * 24):
+    def key_load(self, duration=3600 * 24):
         """
         load the key on path
 
         """
-        if not j.sal.fs.exists(path):
+        if not j.sal.fs.exists(self.path):
             raise RuntimeError(
-                "Cannot find path:%sfor sshkey (private key)" % path)
+                "Cannot find path:%sfor sshkey (private key)" % self.path)
 
         self.check()
 
-        name = j.sal.fs.getBaseName(path)
+        name = j.sal.fs.getBaseName(self.path)
 
         if name in [j.sal.fs.getBaseName(item) for item in self.keys_list()]:
             return
 
         # otherwise the expect script will fail
-        path0 = j.sal.fs.pathNormalize(path)
+        path0 = j.sal.fs.pathNormalize(self.path)
 
         self._logger.info("load ssh key: %s" % path0)
-        j.sal.fs.chmod(path, 0o600)
-        if passphrase:
+        j.sal.fs.chmod(self.path, 0o600)
+        if self.passphrase:
             self._logger.debug("load with passphrase")
             C = """
                 echo "exec cat" > ap-cat.sh
                 chmod a+x ap-cat.sh
                 export DISPLAY=1
-                echo {passphrase} | SSH_ASKPASS=./ap-cat.sh ssh-add -t {duration} {path}
-                """.format(path=path0, passphrase=passphrase, duration=duration)
+                echo {self.passphrase} | SSH_ASKPASS=./ap-cat.sh ssh-add -t {duration} {path}
+                """.format(path=path0, passphrase=self.passphrase, duration=duration)
             try:
                 j.sal.process.execute(C, showout=False)
             finally:
@@ -62,7 +72,7 @@ class SSHAgent(j.application.JSFactoryBaseClass):
         self._sshagent = None  # to make sure it gets loaded again
 
         data = {}
-        data["path"] = path
+        data["path"] = self.path
 
         return self.get(instance=name, data=data)
 
@@ -236,24 +246,30 @@ class SSHAgent(j.application.JSFactoryBaseClass):
         Check if agent available
         :return: bool
         """
-        socket_path = self.ssh_socket_path
-        if not j.sal.fs.exists(socket_path):
-            return False
-        if "SSH_AUTH_SOCK" not in os.environ:
-            self._init_ssh_env()
-        return_code, out, _ = j.sal.process.execute("ssh-add -l",
-                                                    showout=False,
-                                                    die=False, useShell=False)
-        if 'The agent has no identities.' in out:
-            return True
+        if self._available is None:
+            socket_path = self.ssh_socket_path
+            if not j.sal.fs.exists(socket_path):
+                self._available = False
+                return False
+            if "SSH_AUTH_SOCK" not in os.environ:
+                self._init_ssh_env()
+            return_code, out, _ = j.sal.process.execute("ssh-add -l",
+                                                        showout=False,
+                                                        die=False, useShell=False)
+            if 'The agent has no identities.' in out:
+                self._available = True
+                return True
 
-        if return_code != 0:
-            # Remove old socket if can't connect
-            if j.sal.fs.exists(socket_path):
-                j.sal.fs.remove(socket_path)
-            return False
-        else:
-            return True
+            if return_code != 0:
+                # Remove old socket if can't connect
+                if j.sal.fs.exists(socket_path):
+                    j.sal.fs.remove(socket_path)
+                self._available = False
+                return False
+            else:
+                self._available = True
+                return True
+        return self._available
 
     def kill(self, socketpath=None):
         """
@@ -268,7 +284,7 @@ class SSHAgent(j.application.JSFactoryBaseClass):
 
     def test(self):
         """
-        js_shell 'j.clients.sshkey.test()'
+        js_shell 'j.clients.sshagent.test()'
 
         """
 

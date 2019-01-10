@@ -141,8 +141,8 @@ class SystemFS(j.application.JSBaseClass):
                 'Created the directory [%s]' % j.core.text.toStr(newdir))
 
     def copyDirTree(self, src, dst, keepsymlinks=False, deletefirst=False,
-                    overwriteFiles=True, ignoredir=None, ignorefiles=None, rsync=True,
-                    ssh=False, sshport=22, recursive=True, rsyncdelete=True, createdir=False):
+                    overwriteFiles=True, ignoredir=None, ignorefiles=None, rsync=True,ssh=False,
+                    sshport=22, recursive=True, rsyncdelete=True, createdir=False):
         """Recursively copy an entire directory tree rooted at src.
         The dst directory may already exist; if not,
         it will be created as well as missing parent directories
@@ -173,7 +173,7 @@ class SystemFS(j.application.JSBaseClass):
             if item not in ignorefiles:
                 ignorefiles.append(item)
 
-        if not ssh:
+        if not rsync:
             if src.find("file://") != -1 or dst.find("file://") != -1:
                 raise j.exceptions.RuntimeError(
                     "Cannot use file notation here")
@@ -229,7 +229,20 @@ class SystemFS(j.application.JSBaseClass):
             excl = " "
             for item in ignoredir:
                 excl += "--exclude '*%s/' " % item
-            dstpath = dst.split(':')[1] if ':' in dst else dst
+
+            dstpath2 = dst.split(':')[1] if ':' in dst else dst  #OTHERWISE CANNOT WORK FOR SSH
+
+            dstpath = dst
+
+            dstpath = dstpath.replace("//","/")
+            src = src.replace("//","/")
+
+            if j.sal.fs.isDir(src):
+                if src[-1]!="/":
+                    src+="/"
+                if dstpath[-1]!="/":
+                    dstpath+="/"
+
             cmd = "rsync --no-owner --no-group"
             if keepsymlinks:
                 #-l is keep symlinks, -L follow
@@ -242,12 +255,13 @@ class SystemFS(j.application.JSBaseClass):
                 cmd += " --delete --delete-excluded "
             if ssh:
                 cmd += " -e 'ssh -o StrictHostKeyChecking=no -p %s' " % sshport
-            if createdir:
-                cmd += "--rsync-path='mkdir -p %s && rsync' " % self.getParent(dstpath)
+                if createdir:
+                    cmd += "--rsync-path='mkdir -p %s && rsync' " % self.getParent(dstpath2)
+            else:
+                self.createDir(self.getParent(dstpath))
             cmd += " '%s' '%s'" % (src, dst)
-            print(cmd)
-
-            return j.tools.executorLocal.execute(cmd)[1]
+            # print(cmd)
+            rc,out,err = j.sal.process.execute(cmd)
 
     @path_check(path={"required", "replace", "exists", "dir"})
     def changeDir(self, path):
@@ -1155,7 +1169,7 @@ class SystemFS(j.application.JSBaseClass):
 
 
     @path_check(paths={"required","replace","multiple"})
-    def touch(self, paths, overwrite=True):
+    def touch(self, paths):
         """
         can be single path or multiple (then list)
         """
@@ -1164,8 +1178,6 @@ class SystemFS(j.application.JSBaseClass):
                 self.touch(item, overwrite=overwrite)
         path = paths
         self.createDir(self.getDirName(path))
-        if overwrite:
-            self.remove(path)
         if not self.exists(path=path):
             self.writeFile(path, "")
 

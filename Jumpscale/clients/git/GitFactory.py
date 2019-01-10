@@ -3,15 +3,13 @@ from Jumpscale import j
 import os
 import re
 import sys
-JSBASE = j.application.JSBaseClass
+
 
 
 class GitFactory(j.application.JSBaseClass):
 
     __jslocation__ = "j.clients.git"
 
-    def __init__(self):
-        JSBASE.__init__(self)
 
     def execute(self, *args, **kwargs):
         executor = None
@@ -50,7 +48,7 @@ class GitFactory(j.application.JSBaseClass):
 
         url = url.strip()
         if ssh == "auto" or ssh == "first":
-            ssh = j.clients.sshkey.available()
+            ssh = j.clients.sshagent.available()
         elif ssh or ssh is False:
             pass
         else:
@@ -533,12 +531,12 @@ class GitFactory(j.application.JSBaseClass):
             path,
             port)
 
-    def getContentInfoFromURL(self, url, pull=True):
+    def getContentInfoFromURL(self, url, pull=False):
         """
         get content info of repo from url
 
         @param url : git repo url
-        @param pull : (default True) if True and repo doesn't exist localy will pull this repo
+        @param pull : if True will do a pull, otherwise only when it doesn't exist
 
         @return (giturl,gitpath,relativepath)
 
@@ -550,14 +548,13 @@ class GitFactory(j.application.JSBaseClass):
 
         """
         url = url.strip()
-        repository_host, repository_type, repository_account, repository_name, repository_url, branch, gitpath, relpath, port = j.clients.git.parseUrl(
-            url)
+        repository_host, repository_type, repository_account, repository_name, repository_url, branch, gitpath, relpath, port = j.clients.git.parseUrl(url)
         rpath = j.sal.fs.joinPaths(gitpath, relpath)
-        if not j.sal.fs.exists(rpath, followlinks=True) and pull:
-            j.clients.git.pullGitRepo(repository_url, branch=branch)
+        
         if not j.sal.fs.exists(rpath, followlinks=True):
-            raise j.exceptions.Input(
-                message="Did not find path in git:%s" % rpath)
+            j.clients.git.pullGitRepo(repository_url, branch=branch)
+        elif pull is True:
+            j.clients.git.pullGitRepo(repository_url, branch=branch)
 
         return (repository_url, gitpath, relpath)
 
@@ -575,8 +572,7 @@ class GitFactory(j.application.JSBaseClass):
 
         """
         if not j.sal.fs.exists(urlOrPath, followlinks=True):
-            repository_url, gitpath, relativepath = self.getContentInfoFromURL(
-                urlOrPath)
+            repository_url, gitpath, relativepath = self.getContentInfoFromURL(urlOrPath)
         else:
             repository_host, repository_type, repository_account, repository_name, repository_url, branch, gitpath, relativepath = j.clients.git.parseUrl(
                 urlOrPath)
@@ -586,7 +582,7 @@ class GitFactory(j.application.JSBaseClass):
         path = j.sal.fs.joinPaths(gitpath, relativepath)
         return path
 
-    def getContentPathFromURLorPath(self, urlOrPath):
+    def getContentPathFromURLorPath(self, urlOrPath,pull=False):
         """
 
         @return path of the content found, will also do a pull to make sure git repo is up to date
@@ -599,10 +595,8 @@ class GitFactory(j.application.JSBaseClass):
 
         """
         if j.sal.fs.exists(urlOrPath, followlinks=True):
-
             return urlOrPath
-        repository_url, gitpath, relativepath = self.getContentInfoFromURL(
-            urlOrPath)
+        repository_url, gitpath, relativepath = self.getContentInfoFromURL(urlOrPath,pull=pull)
         path = j.sal.fs.joinPaths(gitpath, relativepath)
         return path
 

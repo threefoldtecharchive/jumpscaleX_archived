@@ -3,7 +3,6 @@ from Jumpscale import j
 
 import socket
 import time
-# import urllib.request, urllib.parse, urllib.error
 
 try:
     import urllib.request
@@ -12,32 +11,23 @@ try:
 except BaseException:
     import urllib.parse as urllib
 
-JSConfigFactory = j.application.JSFactoryBaseClass
-JSConfigClient = j.application.JSBaseClass
-TEMPLATE = """
-server = "127.0.0.1"
-carbon_port = 2003
-graphite_port = 8081
-"""
+JSConfigClient = j.application.JSBaseConfigClass
 
-
-class GraphiteFactory(JSConfigFactory):
-    def __init__(self):
-        self.__jslocation__ = "j.clients.graphite"
-        JSConfigFactory.__init__(self, GraphiteClient)
 
 class GraphiteClient(JSConfigClient):
+    _SCHEMATEXT = """
+        @url = jumpscale.graphite.client
+        name* = "" (S)
+        server = "127.0.0.1" (ipaddr)
+        carbon_port = 2003 (ipport)
+        graphite_port = 8081 (ipport)
+        """
 
-    def __init__(self, instance, data={}, parent=None, interactive=False):
-        JSConfigClient.__init__(self, instance=instance,
-                                data=data, parent=parent, template=TEMPLATE, interactive=interactive)
-        c = self.config.data
-        self._SERVER = c['server']
-        self._CARBON_PORT = c['carbon_port']
-        self._GRAPHITE_PORT = c['graphite_port']
+    def _init(self):
+        self._SERVER = self.server
+        self._CARBON_PORT = self.carbon_port
+        self._GRAPHITE_PORT = self.graphite_port
         self._url = "http://%s:%s/render" % (self._SERVER, self._GRAPHITE_PORT)
-
-        # self.sock.connect((self.CARBON_SERVER, self.CARBON_PORT))
 
     def send(self, msg):
         """

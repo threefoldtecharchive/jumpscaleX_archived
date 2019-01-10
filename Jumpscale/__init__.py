@@ -119,6 +119,7 @@ class Jumpscale():
 
 j = Jumpscale()
 j.core = Core(j)
+j.core._groups = {}
 
 
 rootdir = os.path.dirname(os.path.abspath(__file__))
@@ -210,3 +211,10 @@ if generated  and len(j.core.application.errors_init)>0:
 
 # import time
 # time.sleep(1000)
+
+
+
+ssh = j.clients.ssh.instances
+iyo = j.clients.itsyouonline.instances
+# zos = j.kosmos.zos.instances
+

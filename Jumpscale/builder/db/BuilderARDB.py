@@ -22,7 +22,7 @@ class BuilderARDB(j.builder.system._BaseClass):
         if self._done_check("build", reset):
             return
 
-        if j.builder.sandbox.cmdGetPath('ardb-server', die=False) and not reset:
+        if #j.builder.sandbox.cmdGetPath('ardb-server', die=False) and not reset:
             return
 
         if reset:
@@ -112,7 +112,7 @@ class BuilderARDB(j.builder.system._BaseClass):
             cp ardb.conf {DIR_VAR}/build/ARDB/
             """
         C = C.replace("$storageEngine", storageEngine)
-        j.builder.tools.execute_bash(j.core.tools.text_replace(C))
+        j.sal.process.execute(j.core.tools.text_replace(C))
 
         self._done_set("buildardb")
 
@@ -129,7 +129,7 @@ class BuilderARDB(j.builder.system._BaseClass):
             j.builder.tools.file_copy("{DIR_VAR}/build/ardb/ardb-server",
                                 "{DIR_BIN}/ardb-server")
 
-        j.builder.sandbox.profileDefault.addPath('{DIR_BIN}')
+        #j.builder.sandbox.profileDefault.addPath('{DIR_BIN}')
 
         if datadir is None or datadir == '':
             datadir = j.core.tools.text_replace("{DIR_VAR}/data/ardb/{}".format(name))

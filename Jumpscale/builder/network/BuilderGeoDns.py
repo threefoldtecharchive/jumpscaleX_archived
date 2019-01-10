@@ -29,7 +29,7 @@ class BuilderGeoDns(j.builder.system._BaseClass):
         j.core.tools.dir_ensure('{DIR_BIN}')
         j.builder.tools.file_copy("{DIR_BASE}/go/bin/geodns", "{DIR_BIN}")
         j.core.tools.dir_ensure("{DIR_VAR}/templates/cfg/geodns/dns", recursive=True)
-        profile = j.builder.sandbox.profileDefault
+        profile = #j.builder.sandbox.profileDefault
         profile.addPath('{DIR_BIN}')
         profile.save()
 

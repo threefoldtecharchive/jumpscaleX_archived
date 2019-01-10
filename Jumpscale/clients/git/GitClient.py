@@ -2,7 +2,6 @@ from Jumpscale import j
 import git
 import copy
 
-JSBASE = j.application.JSBaseClass
 
 
 class GitClient(j.application.JSBaseClass):
@@ -17,7 +16,7 @@ class GitClient(j.application.JSBaseClass):
 
         baseDir_org = copy.copy(baseDir)
 
-        JSBASE.__init__(self)
+        j.application.JSBaseClass.__init__(self)
 
         self._repo = None
         if not j.sal.fs.exists(path=baseDir):
@@ -419,52 +418,54 @@ class GitClient(j.application.JSBaseClass):
         return diffs
 
     def patchGitignore(self):
-        gitignore = '''# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-
-# C extensions
-*.so
-
-# Distribution / packaging
-.Python
-develop-eggs/
-eggs/
-sdist/
-var/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-.tox/
-.coverage
-.cache
-nosetests.xml
-coverage.xml
-
-# Translations
-*.mo
-
-# Mr Developer
-.mr.developer.cfg
-.project
-.pydevproject
-
-# Rope
-.ropeproject
-
-# Django stuff:
-*.log
-*.pot
-
-# Sphinx documentation
-docs/_build/
-'''
+        gitignore = '''
+            # Byte-compiled / optimized / DLL files
+            __pycache__/
+            *.py[cod]
+            
+            # C extensions
+            *.so
+            
+            # Distribution / packaging
+            .Python
+            develop-eggs/
+            eggs/
+            sdist/
+            var/
+            *.egg-info/
+            .installed.cfg
+            *.egg
+            
+            # Installer logs
+            pip-log.txt
+            pip-delete-this-directory.txt
+            
+            # Unit test / coverage reports
+            .tox/
+            .coverage
+            .cache
+            nosetests.xml
+            coverage.xml
+            
+            # Translations
+            *.mo
+            
+            # Mr Developer
+            .mr.developer.cfg
+            .project
+            .pydevproject
+            
+            # Rope
+            .ropeproject
+            
+            # Django stuff:
+            *.log
+            *.pot
+            
+            # Sphinx documentation
+            docs/_build/
+            '''
+        gitignore=j.core.tools.text_strip(gitignore)
         ignorefilepath = j.sal.fs.joinPaths(self.BASEDIR, '.gitignore')
         if not j.sal.fs.exists(ignorefilepath):
             j.sal.fs.writeFile(ignorefilepath, gitignore)

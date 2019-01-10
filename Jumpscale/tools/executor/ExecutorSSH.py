@@ -157,22 +157,22 @@ class ExecutorSSH(ExecutorBase):
     def _check_base(self):
         if not self.__check_base:
             def do():
-                #means we did not check it
-                C="""
-                if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
-                    echo >> /etc/apt/sources.list
-                    echo "# Jumpscale Setup" >> /etc/apt/sources.list
-                    echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
-                fi
-                apt update
-                apt install rsync curl wget -y
-                apt install git -y
-                apt install mosh -y
-                """
-                self.execute(j.core.text.strip(C))
+                if self.state_exists("check_base") is False:
+                    C="""
+                    if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+                        echo >> /etc/apt/sources.list
+                        echo "# Jumpscale Setup" >> /etc/apt/sources.list
+                        echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+                    fi
+                    apt update
+                    apt install rsync curl wget -y
+                    apt install git -y
+                    # apt install mosh -y
+                    """
+                    self.execute(j.core.text.strip(C))
+                    self.state_set("check_base")
                 return "OK"
-
-            self.cache.get("_check_base", method=do, expire=3600*24, refresh=False, retry=2, die=True)
+            self.cache.get("_check_base", method=do, expire=3600, refresh=False, retry=2, die=True)
 
             self.__check_base = True
 
@@ -196,7 +196,9 @@ class ExecutorSSH(ExecutorBase):
         :param showout:
         :return:
         """
-
+        source = self.replace(source)
+        dest = self.replace(dest)
+        self._check_base()
         if dest_prefix != "":
             dest = j.sal.fs.joinPaths(dest_prefix, dest)
         if dest[0] != "/":
@@ -205,8 +207,7 @@ class ExecutorSSH(ExecutorBase):
             source += ("/")
         if dest[-1] != "/":
             dest += ("/")
-        dest = "root@%s:%s" % (self.sshclient.addr, dest)
-        self._check_base()
+        dest = "%s@%s:%s" % (self.sshclient.login,self.sshclient.addr, dest)
         j.sal.fs.copyDirTree(
             source,
             dest,
@@ -237,6 +238,8 @@ class ExecutorSSH(ExecutorBase):
         :param ignorefiles: the following are always in, no need to specify: ["*.egg-info","*.pyc","*.bak"]
         :return:
         """
+        source = self.replace(source)
+        dest = self.replace(dest)
         self._check_base()
         if source_prefix != "":
             source = j.sal.fs.joinPaths(source_prefix, source)

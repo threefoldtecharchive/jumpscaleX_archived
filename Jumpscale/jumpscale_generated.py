@@ -8,12 +8,13 @@ from Jumpscale import j
 if "/sandbox/lib/jumpscale" not in sys.path:
     sys.path.append("/sandbox/lib/jumpscale")
 
+class JSGroup():
+    pass
 
 
-class group_clients():
+
+class group_clients(JSGroup):
     def __init__(self):
-        pass
-
         
         self._gedis = None
         self._multicast = None
@@ -31,7 +32,7 @@ class group_clients():
         self._mongodb = None
         self._currencylayer = None
         self._tarantool = None
-        self._zos_protocol = None
+        self._zos = None
         self._redis = None
         self._credis_core = None
         self._email = None
@@ -40,7 +41,7 @@ class group_clients():
         self._intercom = None
         self.__template = None
         self._itsyouonline = None
-        self.__template = None
+        self._grafana = None
         self._zstor = None
         self._zerostor = None
         self._sqlalchemy = None
@@ -134,15 +135,15 @@ class group_clients():
         if self._syncthing is None:
             # print("LOAD:SyncthingFactory")
             try:
-                from Jumpscale.clients.syncthing.Syncthing import SyncthingFactory
+                from Jumpscale.clients.syncthing.SyncthingFactory import SyncthingFactory
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.syncthing.Syncthing", e)
+                msg = j.core.application.error_init("import", "Jumpscale.clients.syncthing.SyncthingFactory", e)
                 raise e
             # print("RUN:SyncthingFactory")
             try:
                 self._syncthing =  SyncthingFactory()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.syncthing.Syncthing",e)
+                msg = j.core.application.error_init("execute","Jumpscale.clients.syncthing.SyncthingFactory",e)
                 return None
             # print("OK")
         return self._syncthing
@@ -270,66 +271,66 @@ class group_clients():
         if self._telegram_bot is None:
             # print("LOAD:TelegramBotFactory")
             try:
-                from Jumpscale.clients.telegram_bot.TelegramBot import TelegramBotFactory
+                from Jumpscale.clients.telegram_bot.TelegramBotFactory import TelegramBotFactory
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.telegram_bot.TelegramBot", e)
+                msg = j.core.application.error_init("import", "Jumpscale.clients.telegram_bot.TelegramBotFactory", e)
                 raise e
             # print("RUN:TelegramBotFactory")
             try:
                 self._telegram_bot =  TelegramBotFactory()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.telegram_bot.TelegramBot",e)
+                msg = j.core.application.error_init("execute","Jumpscale.clients.telegram_bot.TelegramBotFactory",e)
                 return None
             # print("OK")
         return self._telegram_bot
     @property
     def mongoengine(self):
         if self._mongoengine is None:
-            # print("LOAD:MongoClientFactory")
+            # print("LOAD:MongoEngineFactory")
             try:
-                from Jumpscale.clients.mongodbclient.MongoEngineClient import MongoClientFactory
+                from Jumpscale.clients.mongodbclient.MongoEngineFactory import MongoEngineFactory
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.mongodbclient.MongoEngineClient", e)
+                msg = j.core.application.error_init("import", "Jumpscale.clients.mongodbclient.MongoEngineFactory", e)
                 raise e
-            # print("RUN:MongoClientFactory")
+            # print("RUN:MongoEngineFactory")
             try:
-                self._mongoengine =  MongoClientFactory()
+                self._mongoengine =  MongoEngineFactory()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.mongodbclient.MongoEngineClient",e)
+                msg = j.core.application.error_init("execute","Jumpscale.clients.mongodbclient.MongoEngineFactory",e)
                 return None
             # print("OK")
         return self._mongoengine
     @property
     def mongodb(self):
         if self._mongodb is None:
-            # print("LOAD:MongoClientFactory")
+            # print("LOAD:MongoFactory")
             try:
-                from Jumpscale.clients.mongodbclient.MongoDBClient import MongoClientFactory
+                from Jumpscale.clients.mongodbclient.MongoFactory import MongoFactory
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.mongodbclient.MongoDBClient", e)
+                msg = j.core.application.error_init("import", "Jumpscale.clients.mongodbclient.MongoFactory", e)
                 raise e
-            # print("RUN:MongoClientFactory")
+            # print("RUN:MongoFactory")
             try:
-                self._mongodb =  MongoClientFactory()
+                self._mongodb =  MongoFactory()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.mongodbclient.MongoDBClient",e)
+                msg = j.core.application.error_init("execute","Jumpscale.clients.mongodbclient.MongoFactory",e)
                 return None
             # print("OK")
         return self._mongodb
     @property
     def currencylayer(self):
         if self._currencylayer is None:
-            # print("LOAD:CurrencyLayer")
+            # print("LOAD:CurrencyLayerFactory")
             try:
-                from Jumpscale.clients.currencylayer.CurrencyLayer import CurrencyLayer
+                from Jumpscale.clients.currencylayer.CurrencyLayerFactory import CurrencyLayerFactory
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.currencylayer.CurrencyLayer", e)
+                msg = j.core.application.error_init("import", "Jumpscale.clients.currencylayer.CurrencyLayerFactory", e)
                 raise e
-            # print("RUN:CurrencyLayer")
+            # print("RUN:CurrencyLayerFactory")
             try:
-                self._currencylayer =  CurrencyLayer()
+                self._currencylayer =  CurrencyLayerFactory()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.currencylayer.CurrencyLayer",e)
+                msg = j.core.application.error_init("execute","Jumpscale.clients.currencylayer.CurrencyLayerFactory",e)
                 return None
             # print("OK")
         return self._currencylayer
@@ -351,8 +352,8 @@ class group_clients():
             # print("OK")
         return self._tarantool
     @property
-    def zos_protocol(self):
-        if self._zos_protocol is None:
+    def zos(self):
+        if self._zos is None:
             # print("LOAD:ZeroOSFactory")
             try:
                 from Jumpscale.clients.zero_os_protocol.ZeroOSFactory import ZeroOSFactory
@@ -361,12 +362,12 @@ class group_clients():
                 raise e
             # print("RUN:ZeroOSFactory")
             try:
-                self._zos_protocol =  ZeroOSFactory()
+                self._zos =  ZeroOSFactory()
             except Exception as e:
                 msg = j.core.application.error_init("execute","Jumpscale.clients.zero_os_protocol.ZeroOSFactory",e)
                 return None
             # print("OK")
-        return self._zos_protocol
+        return self._zos
     @property
     def redis(self):
         if self._redis is None:
@@ -404,17 +405,17 @@ class group_clients():
     @property
     def email(self):
         if self._email is None:
-            # print("LOAD:EmailClientFactory")
+            # print("LOAD:EmailFactory")
             try:
-                from Jumpscale.clients.mail.EmailClient import EmailClientFactory
+                from Jumpscale.clients.mail.EmailFactory import EmailFactory
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.mail.EmailClient", e)
+                msg = j.core.application.error_init("import", "Jumpscale.clients.mail.EmailFactory", e)
                 raise e
-            # print("RUN:EmailClientFactory")
+            # print("RUN:EmailFactory")
             try:
-                self._email =  EmailClientFactory()
+                self._email =  EmailFactory()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.mail.EmailClient",e)
+                msg = j.core.application.error_init("execute","Jumpscale.clients.mail.EmailFactory",e)
                 return None
             # print("OK")
         return self._email
@@ -457,15 +458,15 @@ class group_clients():
         if self._intercom is None:
             # print("LOAD:Intercom")
             try:
-                from Jumpscale.clients.intercom.Intercom import Intercom
+                from Jumpscale.clients.intercom.IntercomFactory import Intercom
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.intercom.Intercom", e)
+                msg = j.core.application.error_init("import", "Jumpscale.clients.intercom.IntercomFactory", e)
                 raise e
             # print("RUN:Intercom")
             try:
                 self._intercom =  Intercom()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.intercom.Intercom",e)
+                msg = j.core.application.error_init("execute","Jumpscale.clients.intercom.IntercomFactory",e)
                 return None
             # print("OK")
         return self._intercom
@@ -504,8 +505,8 @@ class group_clients():
             # print("OK")
         return self._itsyouonline
     @property
-    def _template(self):
-        if self.__template is None:
+    def grafana(self):
+        if self._grafana is None:
             # print("LOAD:GrafanaFactory")
             try:
                 from Jumpscale.clients.grafana.GrafanaFactory import GrafanaFactory
@@ -514,12 +515,12 @@ class group_clients():
                 raise e
             # print("RUN:GrafanaFactory")
             try:
-                self.__template =  GrafanaFactory()
+                self._grafana =  GrafanaFactory()
             except Exception as e:
                 msg = j.core.application.error_init("execute","Jumpscale.clients.grafana.GrafanaFactory",e)
                 return None
             # print("OK")
-        return self.__template
+        return self._grafana
     @property
     def zstor(self):
         if self._zstor is None:
@@ -559,15 +560,15 @@ class group_clients():
         if self._sqlalchemy is None:
             # print("LOAD:SQLAlchemyFactory")
             try:
-                from Jumpscale.clients.sqlalchemy.SQLAlchemy import SQLAlchemyFactory
+                from Jumpscale.clients.sqlalchemy.SQLAlchemyFactory import SQLAlchemyFactory
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.sqlalchemy.SQLAlchemy", e)
+                msg = j.core.application.error_init("import", "Jumpscale.clients.sqlalchemy.SQLAlchemyFactory", e)
                 raise e
             # print("RUN:SQLAlchemyFactory")
             try:
                 self._sqlalchemy =  SQLAlchemyFactory()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.sqlalchemy.SQLAlchemy",e)
+                msg = j.core.application.error_init("execute","Jumpscale.clients.sqlalchemy.SQLAlchemyFactory",e)
                 return None
             # print("OK")
         return self._sqlalchemy
@@ -727,17 +728,17 @@ class group_clients():
     @property
     def google_compute(self):
         if self._google_compute is None:
-            # print("LOAD:GoogleCompute")
+            # print("LOAD:GoogleComputeFactory")
             try:
-                from Jumpscale.clients.google_compute.GoogleCompute import GoogleCompute
+                from Jumpscale.clients.google_compute.GoogleComputeFactory import GoogleComputeFactory
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.google_compute.GoogleCompute", e)
+                msg = j.core.application.error_init("import", "Jumpscale.clients.google_compute.GoogleComputeFactory", e)
                 raise e
-            # print("RUN:GoogleCompute")
+            # print("RUN:GoogleComputeFactory")
             try:
-                self._google_compute =  GoogleCompute()
+                self._google_compute =  GoogleComputeFactory()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.google_compute.GoogleCompute",e)
+                msg = j.core.application.error_init("execute","Jumpscale.clients.google_compute.GoogleComputeFactory",e)
                 return None
             # print("OK")
         return self._google_compute
@@ -780,15 +781,15 @@ class group_clients():
         if self._rogerthat is None:
             # print("LOAD:RogerthatFactory")
             try:
-                from Jumpscale.clients.rogerthat.Rogerthat import RogerthatFactory
+                from Jumpscale.clients.rogerthat.RogerthatFactory import RogerthatFactory
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.rogerthat.Rogerthat", e)
+                msg = j.core.application.error_init("import", "Jumpscale.clients.rogerthat.RogerthatFactory", e)
                 raise e
             # print("RUN:RogerthatFactory")
             try:
                 self._rogerthat =  RogerthatFactory()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.rogerthat.Rogerthat",e)
+                msg = j.core.application.error_init("execute","Jumpscale.clients.rogerthat.RogerthatFactory",e)
                 return None
             # print("OK")
         return self._rogerthat
@@ -897,17 +898,17 @@ class group_clients():
     @property
     def kraken(self):
         if self._kraken is None:
-            # print("LOAD:Kraken")
+            # print("LOAD:KrakenFactory")
             try:
-                from Jumpscale.clients.kraken.Kraken import Kraken
+                from Jumpscale.clients.kraken.KrakenFactory import KrakenFactory
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.kraken.Kraken", e)
+                msg = j.core.application.error_init("import", "Jumpscale.clients.kraken.KrakenFactory", e)
                 raise e
-            # print("RUN:Kraken")
+            # print("RUN:KrakenFactory")
             try:
-                self._kraken =  Kraken()
+                self._kraken =  KrakenFactory()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.kraken.Kraken",e)
+                msg = j.core.application.error_init("execute","Jumpscale.clients.kraken.KrakenFactory",e)
                 return None
             # print("OK")
         return self._kraken
@@ -933,15 +934,15 @@ class group_clients():
         if self._trello is None:
             # print("LOAD:Trello")
             try:
-                from Jumpscale.clients.trello.Trello import Trello
+                from Jumpscale.clients.trello.TrelloFactory import Trello
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.trello.Trello", e)
+                msg = j.core.application.error_init("import", "Jumpscale.clients.trello.TrelloFactory", e)
                 raise e
             # print("RUN:Trello")
             try:
                 self._trello =  Trello()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.trello.Trello",e)
+                msg = j.core.application.error_init("execute","Jumpscale.clients.trello.TrelloFactory",e)
                 return None
             # print("OK")
         return self._trello
@@ -1035,15 +1036,15 @@ class group_clients():
         if self._graphite is None:
             # print("LOAD:GraphiteFactory")
             try:
-                from Jumpscale.clients.graphite.GraphiteClient import GraphiteFactory
+                from Jumpscale.clients.graphite.GraphiteFactory import GraphiteFactory
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.clients.graphite.GraphiteClient", e)
+                msg = j.core.application.error_init("import", "Jumpscale.clients.graphite.GraphiteFactory", e)
                 raise e
             # print("RUN:GraphiteFactory")
             try:
                 self._graphite =  GraphiteFactory()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.clients.graphite.GraphiteClient",e)
+                msg = j.core.application.error_init("execute","Jumpscale.clients.graphite.GraphiteFactory",e)
                 return None
             # print("OK")
         return self._graphite
@@ -1117,12 +1118,11 @@ class group_clients():
         return self._packetnet
 
 j.clients = group_clients()
+j.core._groups["clients"] = j.clients
 
 
-class group_tools():
+class group_tools(JSGroup):
     def __init__(self):
-        pass
-
         
         self._zos = None
         self._tfbot = None
@@ -1131,8 +1131,10 @@ class group_tools():
         self._itenv_manager = None
         self._legal_contracts = None
         self._imagelib = None
+        self._markdowndocs = None
         self._jinja2 = None
         self._performancetrace = None
+        self._code = None
         self._codeloader = None
         self._offliner = None
         self._rexplorer = None
@@ -1155,9 +1157,8 @@ class group_tools():
         self._storybot = None
         self._syncer = None
         self._kosmos = None
-        self._docsites = None
-        self._markdowndocs = None
         self._code = None
+        self._codegenerator = None
         self._reportlab = None
         self._notapplicableyet = None
         self._typechecker = None
@@ -1292,6 +1293,23 @@ class group_tools():
             # print("OK")
         return self._imagelib
     @property
+    def markdowndocs(self):
+        if self._markdowndocs is None:
+            # print("LOAD:MarkDownDocs")
+            try:
+                from Jumpscale.tools.markdowndocs.MarkDownDocs import MarkDownDocs
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.tools.markdowndocs.MarkDownDocs", e)
+                raise e
+            # print("RUN:MarkDownDocs")
+            try:
+                self._markdowndocs =  MarkDownDocs()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.tools.markdowndocs.MarkDownDocs",e)
+                return None
+            # print("OK")
+        return self._markdowndocs
+    @property
     def jinja2(self):
         if self._jinja2 is None:
             # print("LOAD:Jinja2")
@@ -1325,6 +1343,23 @@ class group_tools():
                 return None
             # print("OK")
         return self._performancetrace
+    @property
+    def code(self):
+        if self._code is None:
+            # print("LOAD:CodeTools")
+            try:
+                from Jumpscale.tools.codeloader.CodeTools import CodeTools
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.tools.codeloader.CodeTools", e)
+                raise e
+            # print("RUN:CodeTools")
+            try:
+                self._code =  CodeTools()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.tools.codeloader.CodeTools",e)
+                return None
+            # print("OK")
+        return self._code
     @property
     def codeloader(self):
         if self._codeloader is None:
@@ -1700,40 +1735,6 @@ class group_tools():
             # print("OK")
         return self._kosmos
     @property
-    def docsites(self):
-        if self._docsites is None:
-            # print("LOAD:DocSites")
-            try:
-                from Jumpscale.tools.docsite.DocSites import DocSites
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.tools.docsite.DocSites", e)
-                raise e
-            # print("RUN:DocSites")
-            try:
-                self._docsites =  DocSites()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.tools.docsite.DocSites",e)
-                return None
-            # print("OK")
-        return self._docsites
-    @property
-    def markdowndocs(self):
-        if self._markdowndocs is None:
-            # print("LOAD:MarkDownDocs")
-            try:
-                from Jumpscale.tools.docsite.MarkDownDocs import MarkDownDocs
-            except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.tools.docsite.MarkDownDocs", e)
-                raise e
-            # print("RUN:MarkDownDocs")
-            try:
-                self._markdowndocs =  MarkDownDocs()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.tools.docsite.MarkDownDocs",e)
-                return None
-            # print("OK")
-        return self._markdowndocs
-    @property
     def code(self):
         if self._code is None:
             # print("LOAD:CodeTools")
@@ -1750,6 +1751,23 @@ class group_tools():
                 return None
             # print("OK")
         return self._code
+    @property
+    def codegenerator(self):
+        if self._codegenerator is None:
+            # print("LOAD:CodeGenerator")
+            try:
+                from Jumpscale.tools.codegenerator.CodeGenerator import CodeGenerator
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.tools.codegenerator.CodeGenerator", e)
+                raise e
+            # print("RUN:CodeGenerator")
+            try:
+                self._codegenerator =  CodeGenerator()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.tools.codegenerator.CodeGenerator",e)
+                return None
+            # print("OK")
+        return self._codegenerator
     @property
     def reportlab(self):
         if self._reportlab is None:
@@ -1956,16 +1974,14 @@ class group_tools():
         return self._email
 
 j.tools = group_tools()
+j.core._groups["tools"] = j.tools
 
 
-class group_world():
+class group_world(JSGroup):
     def __init__(self):
-        pass
-
         
         self._system = None
         self._hypervisor = None
-        self._zos = None
 
     
     @property
@@ -2002,6 +2018,17 @@ class group_world():
                 return None
             # print("OK")
         return self._hypervisor
+
+j.world = group_world()
+j.core._groups["world"] = j.world
+
+
+class group_kosmos(JSGroup):
+    def __init__(self):
+        
+        self._zos = None
+
+    
     @property
     def zos(self):
         if self._zos is None:
@@ -2020,13 +2047,12 @@ class group_world():
             # print("OK")
         return self._zos
 
-j.world = group_world()
+j.kosmos = group_kosmos()
+j.core._groups["kosmos"] = j.kosmos
 
 
-class group_data():
+class group_data(JSGroup):
     def __init__(self):
-        pass
-
         
         self._nltk = None
         self._encryption = None
@@ -2042,6 +2068,7 @@ class group_data():
         self._latex = None
         self._capnp = None
         self._html = None
+        self._docs = None
         self._regex = None
         self._time = None
         self._timeinterval = None
@@ -2292,6 +2319,23 @@ class group_data():
             # print("OK")
         return self._html
     @property
+    def docs(self):
+        if self._docs is None:
+            # print("LOAD:DocsFactory")
+            try:
+                from Jumpscale.data.docs.DocsFactory import DocsFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.data.docs.DocsFactory", e)
+                raise e
+            # print("RUN:DocsFactory")
+            try:
+                self._docs =  DocsFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.data.docs.DocsFactory",e)
+                return None
+            # print("OK")
+        return self._docs
+    @property
     def regex(self):
         if self._regex is None:
             # print("LOAD:RegexTools")
@@ -2446,12 +2490,11 @@ class group_data():
         return self._idgenerator
 
 j.data = group_data()
+j.core._groups["data"] = j.data
 
 
-class group_servers():
+class group_servers(JSGroup):
     def __init__(self):
-        pass
-
         
         self._gedis = None
         self._digitalme = None
@@ -2461,6 +2504,7 @@ class group_servers():
         self._errbot = None
         self._openresty = None
         self._web = None
+        self._etcd = None
         self._capacity = None
         self._zdb = None
         self._jsrun = None
@@ -2603,6 +2647,23 @@ class group_servers():
             # print("OK")
         return self._web
     @property
+    def etcd(self):
+        if self._etcd is None:
+            # print("LOAD:EtcdServer")
+            try:
+                from Jumpscale.servers.etcd.EtcdServer import EtcdServer
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.servers.etcd.EtcdServer", e)
+                raise e
+            # print("RUN:EtcdServer")
+            try:
+                self._etcd =  EtcdServer()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.servers.etcd.EtcdServer",e)
+                return None
+            # print("OK")
+        return self._etcd
+    @property
     def capacity(self):
         if self._capacity is None:
             # print("LOAD:CapacityFactory")
@@ -2655,12 +2716,11 @@ class group_servers():
         return self._jsrun
 
 j.servers = group_servers()
+j.core._groups["servers"] = j.servers
 
 
-class group_sal():
+class group_sal(JSGroup):
     def __init__(self):
-        pass
-
         
         self._coredns = None
         self._docker = None
@@ -2830,15 +2890,15 @@ class group_sal():
     @property
     def nfs(self):
         if self._nfs is None:
-            # print("LOAD:NFSExport")
+            # print("LOAD:NFS")
             try:
-                from Jumpscale.sal.nfs.NFS import NFSExport
+                from Jumpscale.sal.nfs.NFS import NFS
             except Exception as e:
                 msg = j.core.application.error_init("import", "Jumpscale.sal.nfs.NFS", e)
                 raise e
-            # print("RUN:NFSExport")
+            # print("RUN:NFS")
             try:
-                self._nfs =  NFSExport()
+                self._nfs =  NFS()
             except Exception as e:
                 msg = j.core.application.error_init("execute","Jumpscale.sal.nfs.NFS",e)
                 return None
@@ -3119,17 +3179,17 @@ class group_sal():
     @property
     def dnsmasq(self):
         if self._dnsmasq is None:
-            # print("LOAD:DNSMasq")
+            # print("LOAD:DnsmasqFactory")
             try:
-                from Jumpscale.sal.dnsmasq.Dnsmasq import DNSMasq
+                from Jumpscale.sal.dnsmasq.DnsmasqFactory import DnsmasqFactory
             except Exception as e:
-                msg = j.core.application.error_init("import", "Jumpscale.sal.dnsmasq.Dnsmasq", e)
+                msg = j.core.application.error_init("import", "Jumpscale.sal.dnsmasq.DnsmasqFactory", e)
                 raise e
-            # print("RUN:DNSMasq")
+            # print("RUN:DnsmasqFactory")
             try:
-                self._dnsmasq =  DNSMasq()
+                self._dnsmasq =  DnsmasqFactory()
             except Exception as e:
-                msg = j.core.application.error_init("execute","Jumpscale.sal.dnsmasq.Dnsmasq",e)
+                msg = j.core.application.error_init("execute","Jumpscale.sal.dnsmasq.DnsmasqFactory",e)
                 return None
             # print("OK")
         return self._dnsmasq
@@ -3152,12 +3212,11 @@ class group_sal():
         return self._process
 
 j.sal = group_sal()
+j.core._groups["sal"] = j.sal
 
 
-class group_tutorials():
+class group_tutorials(JSGroup):
     def __init__(self):
-        pass
-
         
         self._base = None
 
@@ -3181,12 +3240,11 @@ class group_tutorials():
         return self._base
 
 j.tutorials = group_tutorials()
+j.core._groups["tutorials"] = j.tutorials
 
 
-class group_data_units():
+class group_data_units(JSGroup):
     def __init__(self):
-        pass
-
         
         self._sizes = None
 
@@ -3210,12 +3268,11 @@ class group_data_units():
         return self._sizes
 
 j.data_units = group_data_units()
+j.core._groups["data_units"] = j.data_units
 
 
-class group_builder():
+class group_builder(JSGroup):
     def __init__(self):
-        pass
-
         
         self._systemtools = None
         self._tools = None
@@ -3491,6 +3548,521 @@ class group_builder():
         return self._buildenv
 
 j.builder = group_builder()
+j.core._groups["builder"] = j.builder
+
+
+class group_sal_zos(JSGroup):
+    def __init__(self):
+        
+        self._farm = None
+        self._zt_bootstrap = None
+        self._stats_collector = None
+        self._zrobot = None
+        self._zerodb = None
+        self._network = None
+        self._grafana = None
+        self._minio = None
+        self._mongodb = None
+        self._storagepools = None
+        self._influx = None
+        self._primitives = None
+        self._capacity = None
+        self._containers = None
+        self._zstor = None
+        self._vm = None
+        self._sandbox = None
+        self._tfchain = None
+        self._disks = None
+        self._ftpclient = None
+        self._etcd = None
+        self._pubsub = None
+        self._ippoolmanager = None
+        self._node = None
+        self._coredns = None
+        self._hypervisor = None
+        self._traefik = None
+        self._gateway = None
+
+    
+    @property
+    def farm(self):
+        if self._farm is None:
+            # print("LOAD:FarmFactory")
+            try:
+                from Jumpscale.sal_zos.farm.FarmFactory import FarmFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.farm.FarmFactory", e)
+                raise e
+            # print("RUN:FarmFactory")
+            try:
+                self._farm =  FarmFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.farm.FarmFactory",e)
+                return None
+            # print("OK")
+        return self._farm
+    @property
+    def zt_bootstrap(self):
+        if self._zt_bootstrap is None:
+            # print("LOAD:ZerotierBootstrapFactory")
+            try:
+                from Jumpscale.sal_zos.zerotier_bootstrap.ZerotierBootstrapFactory import ZerotierBootstrapFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.zerotier_bootstrap.ZerotierBootstrapFactory", e)
+                raise e
+            # print("RUN:ZerotierBootstrapFactory")
+            try:
+                self._zt_bootstrap =  ZerotierBootstrapFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.zerotier_bootstrap.ZerotierBootstrapFactory",e)
+                return None
+            # print("OK")
+        return self._zt_bootstrap
+    @property
+    def stats_collector(self):
+        if self._stats_collector is None:
+            # print("LOAD:StatsCollectorFactory")
+            try:
+                from Jumpscale.sal_zos.stats_collector.stats_collector_factory import StatsCollectorFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.stats_collector.stats_collector_factory", e)
+                raise e
+            # print("RUN:StatsCollectorFactory")
+            try:
+                self._stats_collector =  StatsCollectorFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.stats_collector.stats_collector_factory",e)
+                return None
+            # print("OK")
+        return self._stats_collector
+    @property
+    def zrobot(self):
+        if self._zrobot is None:
+            # print("LOAD:ZeroRobotFactory")
+            try:
+                from Jumpscale.sal_zos.zrobot.ZRobotFactory import ZeroRobotFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.zrobot.ZRobotFactory", e)
+                raise e
+            # print("RUN:ZeroRobotFactory")
+            try:
+                self._zrobot =  ZeroRobotFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.zrobot.ZRobotFactory",e)
+                return None
+            # print("OK")
+        return self._zrobot
+    @property
+    def zerodb(self):
+        if self._zerodb is None:
+            # print("LOAD:ZerodbFactory")
+            try:
+                from Jumpscale.sal_zos.zerodb.zerodbFactory import ZerodbFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.zerodb.zerodbFactory", e)
+                raise e
+            # print("RUN:ZerodbFactory")
+            try:
+                self._zerodb =  ZerodbFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.zerodb.zerodbFactory",e)
+                return None
+            # print("OK")
+        return self._zerodb
+    @property
+    def network(self):
+        if self._network is None:
+            # print("LOAD:NetworkFactory")
+            try:
+                from Jumpscale.sal_zos.network.NetworkFactory import NetworkFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.network.NetworkFactory", e)
+                raise e
+            # print("RUN:NetworkFactory")
+            try:
+                self._network =  NetworkFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.network.NetworkFactory",e)
+                return None
+            # print("OK")
+        return self._network
+    @property
+    def grafana(self):
+        if self._grafana is None:
+            # print("LOAD:GrafanaFactory")
+            try:
+                from Jumpscale.sal_zos.grafana.grafanaFactory import GrafanaFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.grafana.grafanaFactory", e)
+                raise e
+            # print("RUN:GrafanaFactory")
+            try:
+                self._grafana =  GrafanaFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.grafana.grafanaFactory",e)
+                return None
+            # print("OK")
+        return self._grafana
+    @property
+    def minio(self):
+        if self._minio is None:
+            # print("LOAD:MinioFactory")
+            try:
+                from Jumpscale.sal_zos.minio.MinioFactory import MinioFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.minio.MinioFactory", e)
+                raise e
+            # print("RUN:MinioFactory")
+            try:
+                self._minio =  MinioFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.minio.MinioFactory",e)
+                return None
+            # print("OK")
+        return self._minio
+    @property
+    def mongodb(self):
+        if self._mongodb is None:
+            # print("LOAD:MongodbFactory")
+            try:
+                from Jumpscale.sal_zos.mongodb.MongodbFactory import MongodbFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.mongodb.MongodbFactory", e)
+                raise e
+            # print("RUN:MongodbFactory")
+            try:
+                self._mongodb =  MongodbFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.mongodb.MongodbFactory",e)
+                return None
+            # print("OK")
+        return self._mongodb
+    @property
+    def storagepools(self):
+        if self._storagepools is None:
+            # print("LOAD:ContainerFactory")
+            try:
+                from Jumpscale.sal_zos.storage.StorageFactory import ContainerFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.storage.StorageFactory", e)
+                raise e
+            # print("RUN:ContainerFactory")
+            try:
+                self._storagepools =  ContainerFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.storage.StorageFactory",e)
+                return None
+            # print("OK")
+        return self._storagepools
+    @property
+    def influx(self):
+        if self._influx is None:
+            # print("LOAD:InfluxDBFactory")
+            try:
+                from Jumpscale.sal_zos.influxdb.influxdbFactory import InfluxDBFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.influxdb.influxdbFactory", e)
+                raise e
+            # print("RUN:InfluxDBFactory")
+            try:
+                self._influx =  InfluxDBFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.influxdb.influxdbFactory",e)
+                return None
+            # print("OK")
+        return self._influx
+    @property
+    def primitives(self):
+        if self._primitives is None:
+            # print("LOAD:PrimitivesFactory")
+            try:
+                from Jumpscale.sal_zos.primitives.PrimitivesFactory import PrimitivesFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.primitives.PrimitivesFactory", e)
+                raise e
+            # print("RUN:PrimitivesFactory")
+            try:
+                self._primitives =  PrimitivesFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.primitives.PrimitivesFactory",e)
+                return None
+            # print("OK")
+        return self._primitives
+    @property
+    def capacity(self):
+        if self._capacity is None:
+            # print("LOAD:CapacityFactory")
+            try:
+                from Jumpscale.sal_zos.capacity.CapacityFactory import CapacityFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.capacity.CapacityFactory", e)
+                raise e
+            # print("RUN:CapacityFactory")
+            try:
+                self._capacity =  CapacityFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.capacity.CapacityFactory",e)
+                return None
+            # print("OK")
+        return self._capacity
+    @property
+    def containers(self):
+        if self._containers is None:
+            # print("LOAD:ContainerFactory")
+            try:
+                from Jumpscale.sal_zos.container.ContainerFactory import ContainerFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.container.ContainerFactory", e)
+                raise e
+            # print("RUN:ContainerFactory")
+            try:
+                self._containers =  ContainerFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.container.ContainerFactory",e)
+                return None
+            # print("OK")
+        return self._containers
+    @property
+    def zstor(self):
+        if self._zstor is None:
+            # print("LOAD:ZeroStorFactory")
+            try:
+                from Jumpscale.sal_zos.zstor.ZStorFactory import ZeroStorFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.zstor.ZStorFactory", e)
+                raise e
+            # print("RUN:ZeroStorFactory")
+            try:
+                self._zstor =  ZeroStorFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.zstor.ZStorFactory",e)
+                return None
+            # print("OK")
+        return self._zstor
+    @property
+    def vm(self):
+        if self._vm is None:
+            # print("LOAD:ZOS_VMFactory")
+            try:
+                from Jumpscale.sal_zos.vm.ZOS_VMFactory import ZOS_VMFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.vm.ZOS_VMFactory", e)
+                raise e
+            # print("RUN:ZOS_VMFactory")
+            try:
+                self._vm =  ZOS_VMFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.vm.ZOS_VMFactory",e)
+                return None
+            # print("OK")
+        return self._vm
+    @property
+    def sandbox(self):
+        if self._sandbox is None:
+            # print("LOAD:ZOSSandboxFactory")
+            try:
+                from Jumpscale.sal_zos.sandbox.ZOSSandboxFactory import ZOSSandboxFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.sandbox.ZOSSandboxFactory", e)
+                raise e
+            # print("RUN:ZOSSandboxFactory")
+            try:
+                self._sandbox =  ZOSSandboxFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.sandbox.ZOSSandboxFactory",e)
+                return None
+            # print("OK")
+        return self._sandbox
+    @property
+    def tfchain(self):
+        if self._tfchain is None:
+            # print("LOAD:TfChainFactory")
+            try:
+                from Jumpscale.sal_zos.tfchain.TfChainFactory import TfChainFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.tfchain.TfChainFactory", e)
+                raise e
+            # print("RUN:TfChainFactory")
+            try:
+                self._tfchain =  TfChainFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.tfchain.TfChainFactory",e)
+                return None
+            # print("OK")
+        return self._tfchain
+    @property
+    def disks(self):
+        if self._disks is None:
+            # print("LOAD:DisksFactory")
+            try:
+                from Jumpscale.sal_zos.disks.DisksFactory import DisksFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.disks.DisksFactory", e)
+                raise e
+            # print("RUN:DisksFactory")
+            try:
+                self._disks =  DisksFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.disks.DisksFactory",e)
+                return None
+            # print("OK")
+        return self._disks
+    @property
+    def ftpclient(self):
+        if self._ftpclient is None:
+            # print("LOAD:FtpFactory")
+            try:
+                from Jumpscale.sal_zos.ftpClient.ftpFactory import FtpFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.ftpClient.ftpFactory", e)
+                raise e
+            # print("RUN:FtpFactory")
+            try:
+                self._ftpclient =  FtpFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.ftpClient.ftpFactory",e)
+                return None
+            # print("OK")
+        return self._ftpclient
+    @property
+    def etcd(self):
+        if self._etcd is None:
+            # print("LOAD:ETCDFactory")
+            try:
+                from Jumpscale.sal_zos.ETCD.ETCDFactory import ETCDFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.ETCD.ETCDFactory", e)
+                raise e
+            # print("RUN:ETCDFactory")
+            try:
+                self._etcd =  ETCDFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.ETCD.ETCDFactory",e)
+                return None
+            # print("OK")
+        return self._etcd
+    @property
+    def pubsub(self):
+        if self._pubsub is None:
+            # print("LOAD:PubsubFactory")
+            try:
+                from Jumpscale.sal_zos.Pubsub.PubsubFactory import PubsubFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.Pubsub.PubsubFactory", e)
+                raise e
+            # print("RUN:PubsubFactory")
+            try:
+                self._pubsub =  PubsubFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.Pubsub.PubsubFactory",e)
+                return None
+            # print("OK")
+        return self._pubsub
+    @property
+    def ippoolmanager(self):
+        if self._ippoolmanager is None:
+            # print("LOAD:IPPoolManagerFactory")
+            try:
+                from Jumpscale.sal_zos.ip_pool_manager.IPPoolManagerFactory import IPPoolManagerFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.ip_pool_manager.IPPoolManagerFactory", e)
+                raise e
+            # print("RUN:IPPoolManagerFactory")
+            try:
+                self._ippoolmanager =  IPPoolManagerFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.ip_pool_manager.IPPoolManagerFactory",e)
+                return None
+            # print("OK")
+        return self._ippoolmanager
+    @property
+    def node(self):
+        if self._node is None:
+            # print("LOAD:PrimitivesFactory")
+            try:
+                from Jumpscale.sal_zos.node.NodeFactory import PrimitivesFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.node.NodeFactory", e)
+                raise e
+            # print("RUN:PrimitivesFactory")
+            try:
+                self._node =  PrimitivesFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.node.NodeFactory",e)
+                return None
+            # print("OK")
+        return self._node
+    @property
+    def coredns(self):
+        if self._coredns is None:
+            # print("LOAD:CorednsFactory")
+            try:
+                from Jumpscale.sal_zos.coredns.CorednsFactory import CorednsFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.coredns.CorednsFactory", e)
+                raise e
+            # print("RUN:CorednsFactory")
+            try:
+                self._coredns =  CorednsFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.coredns.CorednsFactory",e)
+                return None
+            # print("OK")
+        return self._coredns
+    @property
+    def hypervisor(self):
+        if self._hypervisor is None:
+            # print("LOAD:HypervisorFactory")
+            try:
+                from Jumpscale.sal_zos.hypervisor.HypervisorFactory import HypervisorFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.hypervisor.HypervisorFactory", e)
+                raise e
+            # print("RUN:HypervisorFactory")
+            try:
+                self._hypervisor =  HypervisorFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.hypervisor.HypervisorFactory",e)
+                return None
+            # print("OK")
+        return self._hypervisor
+    @property
+    def traefik(self):
+        if self._traefik is None:
+            # print("LOAD:TraefikFactory")
+            try:
+                from Jumpscale.sal_zos.traefik.TraefikFactory import TraefikFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.traefik.TraefikFactory", e)
+                raise e
+            # print("RUN:TraefikFactory")
+            try:
+                self._traefik =  TraefikFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.traefik.TraefikFactory",e)
+                return None
+            # print("OK")
+        return self._traefik
+    @property
+    def gateway(self):
+        if self._gateway is None:
+            # print("LOAD:GatewayFactory")
+            try:
+                from Jumpscale.sal_zos.gateway.gatewayFactory import GatewayFactory
+            except Exception as e:
+                msg = j.core.application.error_init("import", "Jumpscale.sal_zos.gateway.gatewayFactory", e)
+                raise e
+            # print("RUN:GatewayFactory")
+            try:
+                self._gateway =  GatewayFactory()
+            except Exception as e:
+                msg = j.core.application.error_init("execute","Jumpscale.sal_zos.gateway.gatewayFactory",e)
+                return None
+            # print("OK")
+        return self._gateway
+
+j.sal_zos = group_sal_zos()
+j.core._groups["sal_zos"] = j.sal_zos
 
 
 

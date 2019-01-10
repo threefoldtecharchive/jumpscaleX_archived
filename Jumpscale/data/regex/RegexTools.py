@@ -288,7 +288,7 @@ class RegexTools(j.application.JSBaseClass):
         pattern = self._patternFix(pattern)
         match = re.match(pattern, text, flags)
         if match:
-            rm = self.RegexMatch()
+            rm = RegexMatch()
             rm.start = match.start()
             rm.end = match.end()
             rm.founditem = match.group()

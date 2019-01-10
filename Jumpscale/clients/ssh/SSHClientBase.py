@@ -18,35 +18,29 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         timeout = 60
         forward_agent = True (B)
         allow_agent = True (B)
-        stdout = true    
+        stdout = true
         """
 
     def _init(self):
         self.async_ = False
         self._private = None
         self._connected = None
-        self._prefab = None
 
+        self._client_ = None
+        self._transport_ = None
 
-    @property
-    def prefab(self):
-        if not self._prefab:
-            ex = j.tools.executor
-            # executor = ex.getSSHViaProxy(self.addr_variable) if self.proxy else ex.ssh_get(self)
-            executor = ex.ssh_get(self)
-            if self.login != "root":
-                executor.state_disabled = True
-            self._prefab = executor.prefab
-        return self._prefab
+        self._ftp = None
+        self._syncer = None
 
+    def mkdir(self,path):
+        cmd = "mkdir -p %s"%path
+        self.execute(cmd)
 
     @property
     def isprivate(self):
         if self._private is None:
-            self._private = self.addr_priv and not j.sal.nettools.tcpPortConnectionTest(self.addr, self.port, 1)
+            self._private = j.sal.nettools.tcpPortConnectionTest(self.addr_priv, self.port_priv, 1)
         return self._private
-
-    # SETTERS & GETTERS
 
     @property
     def addr_variable(self):
@@ -55,7 +49,6 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         else:
             return self.addr
 
-
     @property
     def port_variable(self):
         if self.isprivate:
@@ -63,22 +56,13 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         else:
             return self.port
 
-
-    # @property
-    # def ssh_client_proxy(self):
-    #     """
-    #     ssh client to server which acts as proxy
-    #     """
-    #     return j.clients.ssh.get(self.proxy)
-
-
     @property
     def sshkey_obj(self):
         """
         return right sshkey
         """
-        if self.sshkey_name in [None,""]:
-            raise RuntimeError("sshkeyname needs to be specified")
+        if self.sshkey_name in [None, '']:
+            raise RuntimeError('sshkeyname needs to be specified')
         return j.clients.sshkey.get(name=self.sshkey_name)
 
     @property
@@ -97,11 +81,56 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         :param user: user to authorize
         :type user: str
         :param pubkey: public key to authorize, defaults to None
-        :param pubkey: str, optional
+        :type pubkey: str, optional
         """
         if not pubkey:
             pubkey = self.sshkey_obj.pubkey
-        if pubkey in [None,""]:
-            raise RuntimeError("pubkey not given")
-        j.shell()
-        self.prefab.system.ssh.authorize(user=user, key=pubkey)
+        if not pubkey:
+            raise RuntimeError('pubkey not given')
+        j.builder.system.ssh.authorize(user=user, key=pubkey)
+
+    def shell(self):
+        cmd = 'ssh {login}@{addr} -p {port}'.format(**self.data._ddict)
+        j.sal.process.executeWithoutPipe(cmd)
+
+    @property
+    def syncer(self):
+        """
+        is a tool to sync local files to your remote ssh instance
+        :return:
+        """
+        if self._syncer is None:
+            self._syncer = j.tools.syncer.get(name=self.name, sshclient_name=self.name)
+        return self._syncer
+
+    @property
+    def executor(self):
+        if not self._executor:
+            self._executor = j.tools.executor.ssh_get(self)
+        return self._executor
+
+    def portforward_to_local(self, remoteport, localport):
+        """
+        forward remote port on host to the local one, so we can connect over localhost
+        :param remoteport: the port to forward to local
+        :param localport: the local tcp port to be used (will terminate on remote)
+        :return:
+        """
+        self.portforwardKill(localport)
+        C = "ssh -L %s:localhost:%s %s@%s -p %s" % (
+            remoteport, localport, self.login, self.addr, self.port)
+        print(C)
+        pm = j.builder.system.processmanager.get() #need to use other one, no longer working #TODO:
+        pm.ensure(cmd=C, name="ssh_%s" % localport, wait=0.5)
+        print("Test tcp port to:%s" % localport)
+        if not j.sal.nettools.waitConnectionTest("127.0.0.1", localport, 10):
+            raise RuntimeError("Cannot open ssh forward:%s_%s_%s" %
+                               (self, remoteport, localport))
+        print("Connection ok")
+
+    def portforward_kill(self, localport):
+        print("kill portforward %s" % localport)
+        pm = j.builder.system.processmanager.get()
+        pm.processmanager.stop('ssh_%s' % localport)
+
+

@@ -304,7 +304,7 @@ MYCOLORS =   { "RED":"\033[1;31m",
 class Tools():
 
     _LogFormatter = LogFormatter
-    _supported_editors = set(["micro","mcedit","joe","vim","vi"])
+    _supported_editors = ["micro","mcedit","joe","vim","vi"]  #DONT DO AS SET  OR ITS SORTED
 
     @staticmethod
     def log(msg):
@@ -383,12 +383,12 @@ class Tools():
 
     @staticmethod
     def dir_ensure(path, remove_existing=False):
-        """Ensure the existance of a directory on the system, if the 
+        """Ensure the existance of a directory on the system, if the
         Directory does not exist, it will create it.
-        
+
         :param path:path of the directory
         :type path: string
-        :param remove_existing: If True and the path already exist, 
+        :param remove_existing: If True and the path already exist,
             the existing path will be removed first, defaults to False
         :type remove_existing: bool, optional
         """
@@ -632,6 +632,7 @@ class Tools():
                 async_=False, args=None, env=None,
                 interactive=False,self=None,
                 replace=True):
+
         if env is None:
             env={}
         if self is None:
@@ -1096,6 +1097,11 @@ class OSXInstall():
     @staticmethod
     def do_all():
         Tools.log("installing OSX version")
+
+        C='''
+        mkdir -p /sandbox
+        '''
+
         UbuntuInstall.pips_install()
 
 
@@ -1109,6 +1115,7 @@ class UbuntuInstall():
         UbuntuInstall.change_apt_source()
         UbuntuInstall.ubuntu_base_install()
         UbuntuInstall.python_redis_install()
+        UbuntuInstall.apts_install()
         UbuntuInstall.pips_install()
 
     @staticmethod
@@ -1170,7 +1177,7 @@ class UbuntuInstall():
         MyEnv.state_set("python_redis_install")
 
     @staticmethod
-    def pips_list(level=1):
+    def pips_list(level=3):
         """
         level0 is only the most basic
         1 in the middle (recommended)
@@ -1257,7 +1264,7 @@ class UbuntuInstall():
                 "psycopg2>=2.7.1",
                 "pystache>=0.5.4",
                 # "pypandoc>=1.3.3",
-                "#SQLAlchemy>=1.1.9",
+                # "SQLAlchemy>=1.1.9",
                 "pymongo>=3.4.0",
                 "docker>=3",
                 "dnspython>=1.15.0",
@@ -1278,12 +1285,27 @@ class UbuntuInstall():
         return res
 
     def pips_install():
-        for pip in UbuntuInstall.pips_list(0):
+        for pip in UbuntuInstall.pips_list(3):
 
             if not MyEnv.state_exists("pip_%s"%pip):
                 C="pip3 install '%s'"%pip
                 Tools.execute(C,die=True)
                 MyEnv.state_set("pip_%s"%pip)
+
+    @staticmethod
+    def apts_list():
+        return [
+            'iproute2',
+            'python-ufw',
+            'ufw'
+        ]
+
+    def apts_install():
+        for apt in UbuntuInstall.apts_list():
+            if not MyEnv.state_exists('apt_%s' % apt):
+                command = 'apt-get install -y %s' % apt
+                Tools.execute(command,die=True)
+                MyEnv.state_set('apt_%s' % apt)
 
     # def pip3(self):
     #     script="""
@@ -1321,6 +1343,19 @@ class MyEnv():
     @staticmethod
     def _isUnix():
         return 'posix' in sys.builtin_module_names
+
+    @staticmethod
+    def check_platform():
+        """check if current platform is supported (linux or darwin)
+        for linux, the version check is done by `UbuntuInstall.ensure_version()`
+
+        :raises RuntimeError: in case platform is not supported
+        """
+        platform = MyEnv.platform()
+        if 'linux' in platform:
+            UbuntuInstall.ensure_version()
+        elif 'darwin' not in platform:
+            raise RuntimeError('Your platform is not supported')
 
     @staticmethod
     def config_default_get():
@@ -1366,6 +1401,7 @@ class MyEnv():
 
     @staticmethod
     def _init(force=False):
+        MyEnv.check_platform()
 
         if MyEnv.__init:
             return
@@ -1622,8 +1658,6 @@ class JumpscaleInstaller():
 
         Tools.file_touch(os.path.join(MyEnv.config["DIR_BASE"], "lib/jumpscale/__init__.py"))
 
-
-
         self.repos_get()
         self.repos_link()
         self.cmds_link()
@@ -1632,6 +1666,8 @@ class JumpscaleInstaller():
         set -e
         cd {DIR_BASE}
         source env.sh
+        mkdir -p /sandbox/openresty/nginx/logs
+        mkdir -p /sandbox/var/log
         js_shell ' j.core.installer_jumpscale.remove_old_parts()'
         js_shell 'j.tools.console.echo("JumpscaleX IS OK.")'
         """
@@ -1652,7 +1688,10 @@ class JumpscaleInstaller():
                             for line in Tools.file_text_read(toremove).split("\n"):
                                 if line.find("threefoldtech")==-1:
                                     out+="%s\n"%line
-                            Tools.file_write(toremove,out)
+                            try:
+                                Tools.file_write(toremove,out)
+                            except:
+                                pass
                             # Tools.shell()
         tofind=["js_","js9"]
         for part in os.environ["PATH"].split(":"):
@@ -1752,4 +1791,3 @@ try:
     MyEnv._colored_traceback = colored_traceback
 except ImportError:
     MyEnv._colored_traceback = None
-

@@ -70,6 +70,16 @@ class Text(object):
     def strip_to_ascii(self, text):
         return "".join([char for char in str(text) if ((ord(char) > 31 and ord(char) < 127) or ord(char) == 10)])
 
+    def convert_to_snake_case(self,text):
+        out=""
+        for t in text:
+            if ord(t)>64 and ord(t)<91 and out!="":
+                out+="_"
+            out+=t.lower()
+        out = out.rstrip("_")
+        return self.strip_to_ascii_dense(out).rstrip("_")
+
+
     def strip_to_ascii_dense(self, text):
         """
         convert to ascii converting as much as possibe to ascii
@@ -198,7 +208,7 @@ class Text(object):
         str|unicode : string indented by ntabs and nspaces.
 
         """
-        self._j.coretools.text_strip(content, ignorecomments=True, args={})
+        self._j.core.tools.text_strip(instr, ignorecomments=True, args={})
 
     def toUnicode(self, value, codec='utf-8'):
         if isinstance(value, str):
@@ -228,7 +238,7 @@ class Text(object):
         return out
 
     def wrap(self, txt, length=120):
-        return self._j.coretools.text_wrap(txt=txt, length=length)
+        return self._j.core.tools.text_wrap(txt=txt, length=length)
 
     def prefix_remove(self, prefix, txt, onlyPrefix=False):
         """

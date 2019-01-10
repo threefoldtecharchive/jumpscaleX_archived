@@ -1,37 +1,35 @@
+import OpenSSL
 from Jumpscale import j
 from OpenSSL import crypto
-import OpenSSL
 from socket import gethostname
 
 JSBASE = j.application.JSBaseClass
 
-
-class SSLFactory(j.application.JSBaseClass):
+class SSLFactory(JSBASE):
 
     def __init__(self):
-        self.__jslocation__ = "j.sal.ssl"
-        self.__imports__ = "pyopenssl"
+        self.__jslocation__ = 'j.sal.ssl'
+        self.__imports__ = 'pyopenssl'
         JSBASE.__init__(self)
 
-    def ca_cert_generate(self, cert_dir="",reset=False):
+    def ca_cert_generate(self, cert_dir='',reset=False):
+        """CA (Certificate Authority) generate
+        :param cert_dir: certificate directory, defaults to '' 
+                        it will create ca in /sandbox/cfg/ssl/ if default is ''  
+        :type cert_dir: str, optional
+        :param reset: bool, defaults to False
+        :return: returns True if generation happened
+        :rtype: bool
         """
-        is for CA
-        If ca.crt and ca.key don't exist in cert_dir, create a new ??? #TODO: *1 this is not right I think
-        self-signed cert and keypair and write them into that directory.
 
-        js_shell 'j.sal.ssl.ca_cert_generate()'
-
-        returns True if generation happened
-
-        """
-        if cert_dir == "":
-            cert_dir = j.dirs.CFGDIR+"/ssl"
+        if cert_dir == '':
+            cert_dir = j.dirs.CFGDIR+'/ssl'
             
         j.sal.fs.createDir(cert_dir)
             
         cert_dir = j.tools.path.get(cert_dir)
-        CERT_FILE = cert_dir.joinpath("ca.crt")  # info (certificaat) (pub is inhere + other info)
-        KEY_FILE = cert_dir.joinpath("ca.key")  # private key
+        CERT_FILE = cert_dir.joinpath('ca.crt')  # info (certificate) (pub is in here + other info)
+        KEY_FILE = cert_dir.joinpath('ca.key')  # private key
 
         if reset or not CERT_FILE.exists() or not KEY_FILE.exists():
 
@@ -42,11 +40,11 @@ class SSLFactory(j.application.JSBaseClass):
             # create a self-signed cert
             cert = crypto.X509()
             cert.set_version(3)
-            cert.get_subject().C = "BE"
-            cert.get_subject().ST = "OV"
-            cert.get_subject().L = "Ghent"
-            cert.get_subject().O = "my company"
-            cert.get_subject().OU = "my organization"
+            cert.get_subject().C = 'BE'
+            cert.get_subject().ST = 'OV'
+            cert.get_subject().L = 'Ghent'
+            cert.get_subject().O = 'my company'
+            cert.get_subject().OU = 'my organization'
             cert.get_subject().CN = gethostname()
 
             import time
@@ -56,9 +54,9 @@ class SSLFactory(j.application.JSBaseClass):
             cert.set_issuer(cert.get_subject())
             cert.set_pubkey(k)
             cert.add_extensions([
-                OpenSSL.crypto.X509Extension(b"basicConstraints", True, b"CA:TRUE, pathlen:0"),
-                OpenSSL.crypto.X509Extension(b"keyUsage", True, b"keyCertSign, cRLSign"),
-                OpenSSL.crypto.X509Extension(b"subjectKeyIdentifier", False, b"hash",
+                OpenSSL.crypto.X509Extension(b'basicConstraints', True, b'CA:TRUE, pathlen:0'),
+                OpenSSL.crypto.X509Extension(b'keyUsage', True, b'keyCertSign, cRLSign'),
+                OpenSSL.crypto.X509Extension(b'subjectKeyIdentifier', False, b'hash',
                                              subject=cert),
             ])
             cert.sign(k, 'sha1')
@@ -70,17 +68,20 @@ class SSLFactory(j.application.JSBaseClass):
         else:
             return False
 
-    def create_signed_cert(self, path, keyname):
-        """
-        Signing X509 certificate using CA
+    def signed_cert_create(self, path, keyname):
+        """Signing X509 certificate using CA
         The following code sample shows how to sign an X509 certificate using a CA:
-        THis is usually done by the certificate authority it self like verisign, GODaddy, ... etc
+        This is usually done by the certificate authority it self like verisign, GODaddy, ... etc
+        
         :param path: Path to the certificate and key that will be used in signing the new certificate
+        :type path: str
         :param keyname: the new certficate and key name
+        :type keyname: str
         """
+
         path = j.tools.path.get(path)
-        cacert = path.joinpath("ca.crt").text()
-        cakey = path.joinpath("ca.key").text()
+        cacert = path.joinpath('ca.crt').text()
+        cakey = path.joinpath('ca.key').text()
         ca_cert = OpenSSL.crypto.load_certificate(
             OpenSSL.crypto.FILETYPE_PEM, cacert)
         ca_key = OpenSSL.crypto.load_privatekey(
@@ -90,24 +91,28 @@ class SSLFactory(j.application.JSBaseClass):
         key.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
 
         cert = OpenSSL.crypto.X509()
-        cert.get_subject().CN = "node1.example.com"
+        cert.get_subject().CN = 'node1.example.com'
         import time
         cert.set_serial_number(int(time.time() * 1000000))
         cert.gmtime_adj_notBefore(0)
         cert.gmtime_adj_notAfter(24 * 60 * 60)
         cert.set_issuer(ca_cert.get_subject())
         cert.set_pubkey(key)
-        cert.sign(ca_key, "sha1")
+        cert.sign(ca_key, 'sha1')
 
-        path.joinpath("%s.crt" % keyname).write_text(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode())
-        path.joinpath("%s.key" % keyname).write_text(crypto.dump_privatekey(crypto.FILETYPE_PEM, key).decode())
+        path.joinpath('%s.crt' % keyname).write_text(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode())
+        path.joinpath('%s.key' % keyname).write_text(crypto.dump_privatekey(crypto.FILETYPE_PEM, key).decode())
 
-    def create_certificate_signing_request(self, common_name):
-        """
-        Creating CSR (Certificate Signing Request)
+    def certificate_signing_request_create(self, common_name):
+        """Creating CSR (Certificate Signing Request)
         this CSR normally passed to the CA (Certificate Authority) to create a signed certificate
-        :param common_name: common_name to be used in subject
+        
+        :param common_name: str
+        :type common_name: common_name to be used in subject
+        :return: crt, key
+        :rtype: tuple
         """
+    
         key = OpenSSL.crypto.PKey()
         key.generate_key(OpenSSL.crypto.TYPE_RSA, 2048)
 
@@ -115,7 +120,7 @@ class SSLFactory(j.application.JSBaseClass):
         req.get_subject().commonName = common_name
 
         req.set_pubkey(key)
-        req.sign(key, "sha1")
+        req.sign(key, 'sha1')
 
         # Write private key
         key = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
@@ -126,16 +131,20 @@ class SSLFactory(j.application.JSBaseClass):
         return key, req
 
     def sign_request(self, req, path):
-        """
-        Processes a CSR (Certificate Signning Request)
+        """Processes a CSR (Certificate Signning Request)
         issues a certificate based on the CSR data and signit
+        
         :param req: CSR
+        :type req: str
         :param path: path to the key and certificate that will be used in signning this request
+        :type path: str
+        :return: certificate
+        :rtype: str
         """
-
+ 
         path = j.tools.path.get(path)
-        cacert = path.joinpath("ca.crt").text()
-        cakey = path.joinpath("ca.key").text()
+        cacert = path.joinpath('ca.crt').text()
+        cakey = path.joinpath('ca.key').text()
         
         ca_cert = OpenSSL.crypto.load_certificate(
             OpenSSL.crypto.FILETYPE_PEM, cacert)
@@ -153,23 +162,26 @@ class SSLFactory(j.application.JSBaseClass):
         cert.gmtime_adj_notAfter(24 * 60 * 60)
         cert.set_issuer(ca_cert.get_subject())
         cert.set_pubkey(req.get_pubkey())
-        cert.sign(ca_key, "sha1")
+        cert.sign(ca_key, 'sha1')
 
         certificate = OpenSSL.crypto.dump_certificate(
             OpenSSL.crypto.FILETYPE_PEM, cert)
         return certificate
 
     def verify(self, certificate, key):
-        """
-        It reads the pathes of certificate and key files of an X509 certificate
+        """It reads the pathes of certificate and key files of an X509 certificate
         and verify if certificate matches private key
-
-        :param certificate (string): path to the certificate file
-        :param key (string): path to the key file
-        :return (boolean): True only if certificate matches the private key
+        
+        :param certificate: path to the certificate file
+        :type certificate: str
+        :param key: path to the key file
+        :type key: str
+        :return: True only if certificate matches the private key
+        :rtype: boolean
         """
-        key = self._load_privatekey(key)
-        certificate = self._load_certificate(certificate)
+    
+        key = self._privatekey_load(key)
+        certificate = self._certificate_load(certificate)
 
         ctx = OpenSSL.SSL.Context(OpenSSL.SSL.TLSv1_METHOD)
         ctx.use_privatekey(key)
@@ -177,25 +189,29 @@ class SSLFactory(j.application.JSBaseClass):
         try:
             ctx.check_privatekey()
         except OpenSSL.SSL.Error:
-            self._logger.debug("Incorrect key")
+            self._logger.debug('Incorrect key')
             return False
         else:
-            self._logger.debug("Key matches certificate")
-            return True
+            self._logger.debug('Key matches certificate')
+        return True
 
     def bundle(self, certificate, key, certification_chain=(), passphrase=None):
-        """
-        Bundles a certificate with it's private key (if any) and it's chain of trust.
+        """Bundles a certificate with it's private key (if any) and it's chain of trust.
         Optionally secures it with a passphrase.
-
-        :param certificate (string): path to the certificate file
-        :param key (string): path to the key file
-        :param certification_chain (tuple): certification chain, by default it is an empty tuple
-        :param passphrase (string): passpharse for the bundle, by default it is None
+        
+        :param certificate: path to the certificate file
+        :type certificate: str
+        :param key: path to the key file
+        :type key: str
+        :param certification_chain: certification chain, defaults to ()
+        :type certification_chain: tuple, optional
+        :param passphrase: passpharse for the bundle, defaults to None
+        :param passphrase: str, optional
         :return: PKCS12 object
+        :rtype: str
         """
-        key = self._load_privatekey(key)
-        x509 = self._load_certificate(certificate)
+        key = self._privatekey_load(key)
+        x509 = self._certificate_load(certificate)
 
         p12 = OpenSSL.crypto.PKCS12()
         p12.set_privatekey(key)
@@ -205,24 +221,34 @@ class SSLFactory(j.application.JSBaseClass):
         return p12.export(passphrase=passphrase)
 
 
-    def _load_privatekey(self, path):
-        """
-        load a private key content from a path
-
+    def _privatekey_load(self, path):
+        """load a private key content from a path
+        
         :param path: path to the key file
+        :type path: str
         :return: content of the file
+        :rtype: str
         """
         key = j.tools.path.get(path).text()
         key = OpenSSL.crypto.load_privatekey(OpenSSL.crypto.FILETYPE_PEM, key)
         return key
 
-    def _load_certificate(self, path):
-        """
-        load certifcate content from a path
-
+    def _certificate_load(self, path):
+        """load certifcate content from a path
+        
         :param path: path to the certificate
+        :type path: str
         :return: content of the certificate
+        :rtype: str
         """
         certificate = j.tools.path.get(path).text()
         x509 = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, certificate)
         return x509
+
+    def _test(self, name=''):
+        """Run tests under tests
+        :param name: basename of the file to run, defaults to ''.
+        :type name: str, optional
+        """
+        self._test_run(name=name, obj_key='test_main')
+        

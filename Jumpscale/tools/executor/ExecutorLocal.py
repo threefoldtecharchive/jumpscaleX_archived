@@ -45,7 +45,7 @@ class ExecutorLocal(ExecutorBase):
         if sudo:
             raise RuntimeError("sudo not supported")
 
-        self._logger.debug(cmd)
+        # self._logger.debug(cmd)
 
         rc, out, err = j.sal.process.execute(cmd, die=die, showout=showout, timeout=timeout,replace=replace)
 
@@ -70,6 +70,8 @@ class ExecutorLocal(ExecutorBase):
         :param ignorefiles: the following are always in, no need to specify: ["*.egg-info","*.pyc","*.bak"]
         :return:
         """
+        if source==dest:
+            raise RuntimeError()
         if dest_prefix != "":
             dest = j.sal.fs.joinPaths(dest_prefix, dest)
         if j.sal.fs.isDir(source):

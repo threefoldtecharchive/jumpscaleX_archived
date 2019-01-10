@@ -15,7 +15,6 @@ class HostFile(JSBASE):
 
     def ip_remove(self, ip):
         """Update a hostfile, delete ip from hostsfile
-
         :param ip: Ip of the machine to remove
         :type ip: string
         """
@@ -30,7 +29,6 @@ class HostFile(JSBASE):
 
     def ip_exists(self, ip):
         """Check if ip is in the hostsfile
-
         :param ip: Ip of the machine to check
         :type ip: string
         :return: True if ip is in hostfile, False otherwise
@@ -46,7 +44,6 @@ class HostFile(JSBASE):
 
     def hostnames_get(self, ip):
         """Get hostnames for ip address
-
         :param ip: Ip of the machine to get hostnames from
         :type ip: string
         :return: list of hostnames
@@ -63,7 +60,6 @@ class HostFile(JSBASE):
 
     def hostnames_set(self, ip, hostnames):
         """Update a hostfile to contain the basic information install
-
         :param ip: Ip of the machine to add/modify
         :type ip: string
         :param hostnames: List of machinehostnames to add/modify
@@ -85,7 +81,6 @@ class HostFile(JSBASE):
 
     def _test(self, name=""):
         """Run tests under tests
-
         :param name: basename of the file to run, defaults to "".
         :type name: str, optional
         """

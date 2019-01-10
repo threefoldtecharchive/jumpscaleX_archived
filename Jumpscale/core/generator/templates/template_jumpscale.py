@@ -9,12 +9,13 @@ if "{{syspath}}" not in sys.path:
     sys.path.append("{{syspath}}")
 {%- endfor %}
 
+class JSGroup():
+    pass
+
 
 {% for name, jsgroup in md.jsgroups.items() %}
-class group_{{jsgroup.name}}():
+class group_{{jsgroup.name}}(JSGroup):
     def __init__(self):
-        pass
-
         {% for module in jsgroup.jsmodules %}
         self._{{module.jname}} = None
         {%- endfor %}
@@ -40,6 +41,7 @@ class group_{{jsgroup.name}}():
     {%- endfor %}
 
 {{jsgroup.jdir}} = group_{{jsgroup.name}}()
+j.core._groups["{{name}}"] = {{jsgroup.jdir}}
 
 {% endfor %}
 

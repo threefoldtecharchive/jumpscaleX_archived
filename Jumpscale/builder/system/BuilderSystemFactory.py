@@ -4,7 +4,9 @@ from Jumpscale import j
 
 from .BuilderBaseClass import BuilderBaseClass
 from .BuilderBaseFactoryClass import BuilderBaseFactoryClass
-class BuilderSystemPackage(j.application.JSFactoryBaseClass):
+
+
+class BuilderSystemPackage(j.application.JSBaseClass):
 
     __jslocation__ = "j.builder.system"
     _BaseClass = BuilderBaseClass
@@ -16,6 +18,8 @@ class BuilderSystemPackage(j.application.JSFactoryBaseClass):
         self._ns = None
         self._net = None
         self._process = None
+        self._ssh = None
+        self._user = None
 
     @property
     def package(self):
@@ -53,9 +57,16 @@ class BuilderSystemPackage(j.application.JSFactoryBaseClass):
             self._process = BuilderProcess()
         return self._process
 
+    @property
+    def ssh(self):
+        if self._ssh is None:
+            from .BuilderSSH import BuilderSSH
+            self._ssh = BuilderSSH()
+        return self._ssh
 
-
-
-
-
-
+    @property
+    def user(self):
+        if self._user is None:
+            from .BuilderUser import BuilderUser
+            self._user = BuilderUser()
+        return self._user

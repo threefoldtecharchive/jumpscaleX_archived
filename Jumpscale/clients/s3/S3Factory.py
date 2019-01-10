@@ -8,11 +8,11 @@ JSConfigBase = j.application.JSFactoryBaseClass
 class S3Factory(JSConfigBase):
     """
     """
+    __jslocation__ = "j.clients.s3"
+    _CHILDCLASS = S3Client
 
-    def __init__(self):
-        self.__jslocation__ = "j.clients.s3"
+    def _init(self):
         self.__imports__ = "minio"
-        JSConfigBase.__init__(self, S3Client)
 
     def install(self):
         p = j.tools.prefab.local

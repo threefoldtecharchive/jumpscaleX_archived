@@ -5,7 +5,7 @@ import gevent.socket
 import etcd3
 from Jumpscale import j
 
-JSConfigClient = j.application.JSBaseClass
+JSConfigClient = j.application.JSBaseConfigClass
 
 
 if socket.socket is gevent.socket.socket:
@@ -14,34 +14,31 @@ if socket.socket is gevent.socket.socket:
     grpc_gevent.init_gevent()
 
 
-_template = """
-host = "127.0.0.1"
-port = 2379
-#timeout = null
-user = ""
-password_ = ""
-"""
-
-
 class EtcdClient(JSConfigClient):
+    _SCHEMATEXT = """
+    @url = jumpscale.etcd.client
+    name* = "" (S)
+    host = "127.0.0.1" (ipaddr)
+    port = 2379 (ipport)
+    user = "" (S)
+    password_ = "" (S)
+    """
 
-    def __init__(self, instance="main", data=None, parent=None, template=None, ui=None, interactive=True):
-        data = data or {}
-        super().__init__(instance=instance, data=data, parent=parent, template=_template, ui=ui, interactive=interactive)
+    def _init(self):
+        self._logger.debug(self.user)
         self._api = None
 
     @property
     def api(self):
         if self._api is None:
-            data = self.config.data
             kwargs = {
-                'host': data['host'],
-                'port': data['port'],
+                'host': self.host,
+                'port': self.port,
             }
-            if data['user'] and data['password_']:
+            if self.user and self.password_:
                 kwargs.update({
-                    'user': data['user'],
-                    'password': data['password_']
+                    'user': self.user,
+                    'password': self.password_
                 })
             self._api = etcd3.client(**kwargs)
         return self._api
