@@ -11,6 +11,7 @@ from uuid import UUID
 from ipaddress import IPv4Address, IPv6Address
 from ipaddress import AddressValueError, NetmaskValueError
 from Jumpscale import j
+from ast import literal_eval
 
 
 class Guid(String):
@@ -108,7 +109,7 @@ class Path(String):
 
     def check(self, value):
         '''
-        Check whether provided value is a valid 
+        Check whether provided value is a valid
         '''
         if not j.data.types.string.check(value):
             return False
@@ -133,7 +134,7 @@ class Url(String):
 
     def check(self, value):
         '''
-        Check whether provided value is a valid 
+        Check whether provided value is a valid
         '''
         if not j.data.types.string.check(value):
             return False
@@ -163,7 +164,7 @@ class Tel(String):
 
     def check(self, value):
         '''
-        Check whether provided value is a valid 
+        Check whether provided value is a valid
         '''
         if not j.data.types.string.check(value):
             return False
@@ -198,7 +199,7 @@ class IPRange(String):
 
     def check(self, value):
         '''
-        Check whether provided value is a valid 
+        Check whether provided value is a valid
         '''
         if not j.data.types.string.check(value):
             return False
@@ -231,6 +232,11 @@ class IPAddress(String):
         return self.is_valid_ipv4(ip) or self.is_valid_ipv6(ip)
 
     def clean(self, ip):
+        if isinstance(ip, str):
+            if ip.isdecimal():
+                ip = int(ip)
+            else:
+                ip = ip.strip('"').strip("'")
         if not self.check(ip):
             raise ValueError("Invalid IPAddress :%s" % ip)
         ip_value = IPv4Address(ip)
