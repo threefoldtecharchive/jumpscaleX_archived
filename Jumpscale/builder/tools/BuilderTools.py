@@ -524,10 +524,7 @@ class BuilderTools(j.builder.system._BaseClass):
         return j.data.hash.md5(location)
 
     def package_install(self, name):
-        if "," in name:
-            for item in name.split(","):
-                self.package_install(item.strip())
-
+        name = ' '.join(name.split(','))
         # TODO do same for list
         # check if ubuntu or osx, use right package manager to install
         if self.isUbuntu or self.isLinux:

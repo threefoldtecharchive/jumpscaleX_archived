@@ -35,7 +35,7 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
             set -ex
             mkdir -p {BUILDDIRL}
             cd {CODEDIRL}
-            # ./config
+            ./config
             ./Configure $target shared enable-ec_nistp_64_gcc_128 no-ssl2 no-ssl3 no-comp --openssldir={BUILDDIRL} --prefix={BUILDDIRL}
             make depend
             make install

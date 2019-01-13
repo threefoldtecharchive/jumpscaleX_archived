@@ -25,7 +25,7 @@ class PrefabOpenResty(j.builder.system._BaseClass):
 
         if j.core.platformtype.myplatform.isUbuntu:
             j.builder.system.package.mdupdate()
-            j.builder.tools.package_install("build-essential,libpcre3-dev, libssl-dev")
+            j.builder.tools.package_install("build-essential libpcre3-dev libssl-dev")
 
             j.builder.tools.dir_remove("{DIR_TEMP}/build/openresty")
             j.core.tools.dir_ensure("{DIR_TEMP}/build/openresty")
@@ -53,7 +53,7 @@ class PrefabOpenResty(j.builder.system._BaseClass):
             make -j8
             make install
             rm -rf {DIR_VAR}/build/openresty
-            
+            rm /sandbox/bin/lua
             ln -s /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
             
             """
@@ -88,7 +88,7 @@ class PrefabOpenResty(j.builder.system._BaseClass):
             make -j8
             make install
             rm -rf {DIR_VAR}/build/openresty
-            
+            rm /sandbox/bin/lua
             ln -s /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
             
             """
