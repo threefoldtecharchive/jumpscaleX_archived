@@ -16,10 +16,7 @@ class CurrencyLayer(JSBASE):
     api_key_ = "" (S)
     """
 
-    # def _init(self):
-    #     key = self.api_key_
-
-    def _init_new(self):
+    def _init(self):
         self._data_cur = {}
         self._id2cur = {}
         self._cur2id = {}

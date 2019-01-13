@@ -345,11 +345,11 @@ class Numeric(String):
 
         # if curtype0 not in j.clients.currencylayer.id2cur:
         #     raise RuntimeError("need to specify valid curtype, was:%s"%curtype)
-
-        curcode0 = j.clients.currencylayer.id2cur[curtype0]
+        currency = j.clients.currencylayer.get("main")
+        curcode0 = currency.id2cur[curtype0]
         if not curcode0 == curcode:
-            val = val / j.clients.currencylayer.cur2usd[curcode0]  # val now in usd
-            val = val * j.clients.currencylayer.cur2usd[curcode]
+            val = val / currency.cur2usd[curcode0]  # val now in usd
+            val = val * currency.cur2usd[curcode]
 
         if negative:
             val = -val
@@ -391,9 +391,9 @@ class Numeric(String):
                 val = int(val)
         else:
             mult = ""
-
-        if curtype is not j.clients.currencylayer.cur2id["usd"]:
-            curcode = j.clients.currencylayer.id2cur[curtype]
+        currency = j.clients.currencylayer.get("main")
+        if curtype is not currency.cur2id["usd"]:
+            curcode = currency.id2cur[curtype]
         else:
             curcode = ""
 
@@ -417,7 +417,8 @@ class Numeric(String):
 
     def getCur(self, value):
         value = value.lower()
-        for cur2 in list(j.clients.currencylayer.cur2usd.keys()):
+        currency = j.clients.currencylayer.get("main")
+        for cur2 in list(currency.cur2usd.keys()):
                 # print(cur2)
             if value.find(cur2) != -1:
                     # print("FOUND:%s"%cur2)
@@ -519,7 +520,8 @@ class Numeric(String):
                     ttype = 3
                 else:
                     ttype = 1
-        curcat = j.clients.currencylayer.cur2id[cur2]
+        currency = j.clients.currencylayer.get("main")
+        curcat = currency.cur2id[cur2]
 
         if negative:
             ttype += 128
