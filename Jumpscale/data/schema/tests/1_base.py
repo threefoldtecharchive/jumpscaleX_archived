@@ -46,8 +46,9 @@ def main(self):
     assert inr > 100  # ok INR is pretty high... check properly in a bit...
     eur = schema_test.token_price_eur
     # print ("convert 10 USD to EUR", eur)
-    cureur = j.clients.currencylayer.cur2usd["eur"]
-    curinr = j.clients.currencylayer.cur2usd["inr"]
+    currency = j.clients.currencylayer.get("test")
+    cureur = currency.cur2usd["eur"]
+    curinr = currency.cur2usd["inr"]
     # print (cureur, curinr, o.token_price)
     assert usd2usd * cureur == eur
     assert usd2usd * curinr == inr

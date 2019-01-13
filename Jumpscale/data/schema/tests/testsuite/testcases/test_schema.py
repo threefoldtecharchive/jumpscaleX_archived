@@ -711,7 +711,8 @@ class SchemaTest(BaseTest):
         schema_obj = schema.new()
 
         self.log("Put one of currencies and convert it to the other currencies and Check result is same as calculated")
-        currencies = j.clients.currencylayer.cur2usd
+        currency = j.clients.currencylayer.get(self.random_string())
+        currencies = currency.cur2usd
         for curr1 in currencies:
             value = random.uniform(1, 100)
             currency = '{} {}'.format(value, curr1)
