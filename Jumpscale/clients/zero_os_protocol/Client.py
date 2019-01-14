@@ -43,7 +43,7 @@ class Client(BaseClient):
     })
 
     def _init(self):
-
+        BaseClient._init(self)
         self.__redis = None
 
         self._container_manager = ContainerManager(self)

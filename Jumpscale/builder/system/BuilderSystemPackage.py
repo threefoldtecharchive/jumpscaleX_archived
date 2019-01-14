@@ -1,6 +1,7 @@
 from Jumpscale import j
+import time
 
-
+CMD_APT_GET = "apt-get "
 class BuilderSystemPackage(j.builder.system._BaseClass):
 
 

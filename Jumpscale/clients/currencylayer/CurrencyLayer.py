@@ -17,10 +17,10 @@ class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
     api_key_ = "" (S)
     """
 
+
     def __init__(self):
         factory = CurrencyLayerFactory()
-        j.application.JSBaseConfigClass.__init__(self,name="main",factory=factory)
-
+        j.application.JSBaseConfigClass.__init__(self,name="main",factory=factory)xs
 
     def _init(self):
         self._data_cur = {}

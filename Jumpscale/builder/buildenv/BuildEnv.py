@@ -37,23 +37,9 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
         if j.core.platformtype.myplatform.isMac:
             C = ""
         else:
-            C = """
-            sudo
-            net-tools
-            python3
-            python3-distutils
-            python3-psutil
-            """
+            C = "sudo net-tools python3 python3-distutils python3-psutil"
 
-        C += """
-        openssl
-        wget
-        curl
-        git
-        mc
-        tmux
-        rsync
-        """
+        C += " openssl wget curl git mc tmux rsync"
         j.builder.tools.package_install(C)
 
         ##j.builder.sandbox.profileJS.addPath("{DIR_BIN}")
@@ -73,15 +59,7 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
 
         """
 
-        C = """
-        autoconf        
-        gcc
-        make        
-        autoconf
-        libtool
-        pkg-config
-        curl
-        """
+        C = "autoconf gcc make autoconf libtool pkg-config curl"
         C=j.core.text.strip(C)
 
         if j.core.platformtype.myplatform.isMac:
@@ -93,19 +71,19 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
                 self._done_set("xcode_install")
 
 
-            C+="libffi\n"
-            C+="automake\n"
-            C+="pcre\n"
-            C+="xz\n"
-            C+="openssl\n"
-            C+="zlib\n"
+            C+="libffi "
+            C+="automake "
+            C+="pcre "
+            C+="xz "
+            C+="openssl "
+            C+="zlib "
         else:
-            C+="libffi-dev\n"
-            C+="build-essential\n"
-            C+="libsqlite3-dev\n"
-            C+="libpq-dev\n"
+            C+="libffi-dev "
+            C+="build-essential "
+            C+="libsqlite3-dev "
+            C+="libpq-dev "
             if python:
-                C+="python3-dev\n"
+                C+="python3-dev "
 
         self.install()
         if self._done_check("development", reset):

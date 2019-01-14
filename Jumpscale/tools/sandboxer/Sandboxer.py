@@ -27,16 +27,18 @@ class Sandboxer(j.application.JSBaseClass):
         will build python & openresty & copy all to the right git sandboxes works for Ubuntu & OSX
         :return:
         """
-        j.buider.runtimes.python.build(reset=reset)
-        j.builder.runtimes.python.copy2sandbox_github(reset=reset)
-        j.builder.runtimes.lua.build() #will build openresty & lua & openssl
+        j.builder.runtimes.python.build(reset=reset)
+        j.builder.runtimes.python._copy2sandbox_github()
+        j.builder.runtimes.lua.build()  # will build openresty & lua & openssl
         j.builder.runtimes.lua.copy2sandbox_github()
 
         if j.core.platformtype.myplatform.isUbuntu: #only for building
             #no need to sandbox in non linux systems
-            j.tools.sandboxer.libs_sandbox("{{BASE_DIR}}/bin", "{{BASE_DIR}}/lib"% self.PACKAGEDIR, True)
-            j.tools.sandboxer.libs_sandbox("{{BASE_DIR}}/lib", "{{BASE_DIR}}/lib"% self.PACKAGEDIR, True)
+            j.tools.sandboxer.libs_sandbox("{{DIR_BASE}}/bin", "{{DIR_BASE}}/lib", True)
+            # TODO: Check if still needed
+            # j.tools.sandboxer.libs_sandbox("{{BASE_DIR}}/lib", "{{BASE_DIR}}/lib"% self.PACKAGEDIR, True)
         else:
+            # FIXME : support OSX
             j.shell()
 
     def _ldd(self, path, result=dict(), done=list()):
@@ -168,7 +170,7 @@ class Sandboxer(j.application.JSBaseClass):
         """
 
         if dest is None:
-            dest = "{{BASE_DIR}}/bin"
+            dest = "{{DIR_BASE}}/bin"
         dest=j.core.tools.text_replace(dest)
         path=j.core.tools.text_replace(path)
 

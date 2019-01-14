@@ -4,6 +4,7 @@ import struct
 import math
 JSBASE = j.application.JSBaseClass
 
+
 class NumTools(j.application.JSBaseClass):
 
     __jslocation__ = "j.tools.numtools"
@@ -15,7 +16,8 @@ class NumTools(j.application.JSBaseClass):
 
     @property
     def currencies(self):
-        return j.clients.currencylayer.cur2usd
+        currency = j.clients.currencylayer.get("numtools")
+        return currency.cur2usd
 
     def _getYearFromMonthId(self, monthid, startyear=0):
         """

@@ -19,6 +19,9 @@ class BuilderLua(j.builder.system._BaseClass):
         if self._done_check("build") and not reset:
             return
 
+        j.builder.system.package.install([
+            'libsqlite3-dev'
+        ])
         #need openresty & openssl to start from
         j.builder.libs.openssl.build()
         j.builder.web.openresty.build()
@@ -192,7 +195,7 @@ class BuilderLua(j.builder.system._BaseClass):
         js_shell 'j.builder.runtimes.lua.copy2sandbox_github()'
         :return:
         """
-        assert self.executor.type=="local"
+        # assert self.executor.type=="local"
         path="/sandbox/openresty/lualib"
 
         if j.core.platformtype.myplatform.isUbuntu:
