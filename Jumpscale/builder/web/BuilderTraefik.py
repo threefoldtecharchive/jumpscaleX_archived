@@ -40,13 +40,13 @@ class BuilderTraefik(j.builder.system._BaseClass):
 
         self._done_set('install')
 
-    def start(self, config_file=None, **kwargs):
+    def start(self, config_file=None, args=None):
         """Starts traefik with the configuration file provided
 
         :param config_file: config file path e.g. ~/traefik.toml
         :type config_file: str, optional
-        :param kwargs: any additional arguments to be passed to traefik
-        :type kwargs: keyword arguments, e.g. logfile='~/traefik.log'
+        :param args: any additional arguments to be passed to traefik
+        :type args: dict, optional (e.g. {'api': '', 'api.dashboard': 'true'})
         :raises j.exceptions.RuntimeError: in case config file does not exist
         :return: tmux pane
         :rtype: tmux.Pane
@@ -54,9 +54,12 @@ class BuilderTraefik(j.builder.system._BaseClass):
         cmd = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
         if config_file and self.tools.file_exists(config_file):
             cmd += ' --configFile=%s' % config_file
-        if kwargs:
-            for arg, value in kwargs:
-                cmd += '--%s=%s' % (arg, value)
+
+        args = args or {}
+        for arg, value in args.items():
+            cmd += ' --%s' % arg
+            if value:
+                cmd += '=%s' % value
 
         p = j.tools.tmux.execute(cmd, window=self.NAME, pane=self.NAME, reset=True)
         return p

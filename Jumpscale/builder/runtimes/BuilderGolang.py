@@ -81,6 +81,11 @@ class BuilderGolang(j.builder.system._BaseClass):
 
     @property
     def current_arch(self):
+        """get the current arch string commonly used by go projects
+
+        :return: arch (386 or amd64)
+        :rtype: str
+        """
         if j.core.platformtype.myplatform.is32bit:
             return  '386'
         return 'amd64'
