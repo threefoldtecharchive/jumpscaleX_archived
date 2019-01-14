@@ -350,14 +350,14 @@ class SchemaTest(BaseTest):
         
         with self.assertRaises(Exception):
             schema_obj.ip = {'number': random.randint(0, 255)}
+            
+        with self.assertRaises(Exception):
+            ip = '1.0.0.0'
+            schema_obj.ip = 256**3
 
         self.log("Try to set parameter[P1] with ipaddr type, should succeed.")
         ip = '10.15.{}.1'.format(random.randint(0, 255))
         schema_obj.ip = ip
-        self.assertEqual(schema_obj.ip, ip)
-
-        ip = '1.0.0.0'
-        schema_obj.ip = 256**3
         self.assertEqual(schema_obj.ip, ip)
 
     def test009_validate_iprange_type(self):

@@ -327,9 +327,9 @@ class BuilderTools(j.builder.system._BaseClass):
         """
         location = j.core.tools.text_replace(location)
         if mode:
-            j.sal.fs.chmod(path, mode)
+            j.sal.fs.chmod(location, mode)
         if owner or group:
-            j.sal.fs.chown(path, owner, group)
+            j.sal.fs.chown(location, owner, group)
 
     def file_attribs_get(self, location):
         """Return mode, owner, and group for remote path.

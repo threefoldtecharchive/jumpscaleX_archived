@@ -79,6 +79,17 @@ class BuilderGolang(j.builder.system._BaseClass):
         except j.exceptions.RuntimeError:
             return False
 
+    @property
+    def current_arch(self):
+        """get the current arch string commonly used by go projects
+
+        :return: arch (386 or amd64)
+        :rtype: str
+        """
+        if j.core.platformtype.myplatform.is32bit:
+            return  '386'
+        return 'amd64'
+
     def install(self, reset=False):
         """install go
 
@@ -90,13 +101,8 @@ class BuilderGolang(j.builder.system._BaseClass):
             return
 
         # only check for linux for now
-        if j.core.platformtype.myplatform.is32bit:
-            arch = '386'
-        else:
-            arch = 'amd64'
-
         if j.core.platformtype.myplatform.isLinux:
-            download_url = self.DOWNLOAD_URL.format(version='1.11.4', platform='linux', arch=arch)
+            download_url = self.DOWNLOAD_URL.format(version='1.11.4', platform='linux', arch=self.current_arch)
         else:
             raise j.exceptions.RuntimeError('platform not supported')
 
