@@ -20,7 +20,7 @@ class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
 
     def __init__(self):
         factory = CurrencyLayerFactory()
-        j.application.JSBaseConfigClass.__init__(self,name="main",factory=factory)xs
+        j.application.JSBaseConfigClass.__init__(self,name="main",factory=factory)
 
     def _init(self):
         self._data_cur = {}
