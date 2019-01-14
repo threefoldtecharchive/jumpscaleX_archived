@@ -7,10 +7,9 @@ from .RedisQueue import RedisQueue
 from .Redis import Redis
 from Jumpscale import j
 
-JSConfigBaseFactory = j.application.JSFactoryBaseClass
 
 
-class RedisFactory(JSConfigBaseFactory):
+class RedisFactory(j.application.JSBaseClass):
 
     """
     """

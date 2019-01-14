@@ -5,9 +5,10 @@ import struct
 from collections import namedtuple
 import psutil
 import traceback
-from .JSBase import JSBase
-from .JSFactoryBase import JSFactoryBase
-from .JSBaseConfig import JSBaseConfig
+from .BASECLASSES.JSBase import JSBase
+from .BASECLASSES.JSFactoryBase import JSFactoryBase
+from .BASECLASSES.JSBaseConfig import JSBaseConfig
+from .BASECLASSES.JSBaseConfigs import JSBaseConfigs
 import gc
 import sys
 import types
@@ -136,6 +137,19 @@ class Application(object):
 
         """
         return JSBaseConfig
+
+    @property
+    def JSBaseConfigsClass(self):
+        """
+        JSBase = j.application.JSBaseConfigClass
+        class myclass(JSBase):
+            def __init__(self):
+                JSBase.__init__(self)
+
+        """
+        return JSBaseConfigs
+
+
 
 
     def reset(self):

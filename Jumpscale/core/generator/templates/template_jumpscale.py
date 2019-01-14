@@ -25,17 +25,21 @@ class group_{{jsgroup.name}}(JSGroup):
     def {{module.jname}}(self):
         if self._{{module.jname}} is None:
             # print("LOAD:{{module.name}}")
-            try:
-                from {{module.importlocation}} import {{module.name}}
-            except Exception as e:
-                msg = j.core.application.error_init("import", "{{module.importlocation}}", e)
-                raise e
-            # print("RUN:{{module.name}}")
-            try:
-                self._{{module.jname}} =  {{module.name}}()
-            except Exception as e:
-                msg = j.core.application.error_init("execute","{{module.importlocation}}",e)
-                return None
+            from {{module.importlocation}} import {{module.name}}
+            # try:
+            #     from {{module.importlocation}} import {{module.name}}
+            # except Exception as e:
+            #     msg = j.core.application.error_init("import", "{{module.importlocation}}", e)
+            #     raise e
+            # # print("RUN:{{module.name}}")
+
+            self._{{module.jname}} =  {{module.name}}()
+
+            # try:
+            #     self._{{module.jname}} =  {{module.name}}()
+            # except Exception as e:
+            #     msg = j.core.application.error_init("execute","{{module.importlocation}}",e)
+            #     return None
             # print("OK")
         return self._{{module.jname}}
     {%- endfor %}

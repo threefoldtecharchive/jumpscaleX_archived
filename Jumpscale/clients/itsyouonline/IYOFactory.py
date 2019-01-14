@@ -7,7 +7,7 @@ import time
 DEFAULT_BASE_URL = "https://itsyou.online/api"
 
 
-class IYOFactory(j.application.JSFactoryBaseClass):
+class IYOFactory(j.application.JSBaseConfigsClass):
     __jslocation__ = 'j.clients.itsyouonline'
     _CHILDCLASS = IYOClient
 

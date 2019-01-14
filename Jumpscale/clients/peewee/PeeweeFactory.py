@@ -3,10 +3,8 @@ from .peeweeClient import PeeweeClient
 
 import importlib
 
-JSConfigFactory = j.application.JSFactoryBaseClass
 
-
-class PeeweeFactory(JSConfigFactory):
+class PeeweeFactory(j.application.JSBaseClass):
     """
     """
     __jslocation__ = "j.clients.peewee"

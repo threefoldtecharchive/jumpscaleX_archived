@@ -7,28 +7,50 @@ import sys
 
 class JSBase:
 
-    _dirpath_ = ""
-    _logger_ = None
-    _cache_expiration = 3600
-    _classname = None
-    _location = None
-    _objid_ = None
-
-    _test_runs = {}
-    _test_runs_error = {}
-
     def _obj_cache_reset(self):
-        self._logger_ = None
-        self._test_runs = {}
+        """
+        this empties the runtime state of an obj and the logger and the testruns
+        :return:
+        """
+        self.__class__._logger_ = None
+        self.__class__._test_runs = {}
+        self._cache_ = None
+        self._objid_ = None
 
         for key,obj in self.__dict__.items():
             del obj
 
+    def _class_init(self):
+        if not hasattr(self.__class__,"_class_init_done"):
+            #only needed to execute once, needs to be done at init time, class inheritance does not exist
+            self.__class__._dirpath_ = ""           #path of the directory hosting this class
+            self.__class__._logger_ = None          #logger attached to this class
+            self.__class__._cache_expiration = 3600 #expiration of the cache
+            self.__class__._test_runs = {}
+            self.__class__._test_runs_error = {}
+
+            self.__class__.__name__ = j.core.text.strip_to_ascii_dense(str(self.__class__)).lower()
+
+            #short location name:
+            if '__jslocation__' in self.__dict__:
+                self.__class__._location = self.__jslocation__
+            elif '__jslocation__' in self.__class__.__dict__:
+                self.__class__._location = self.__class__.__jslocation__
+            elif '__jscorelocation__' in self.__dict__:
+                self.__class__._location = self.__jslocation__
+            else:
+                self.__class__._location = self.__class__.__name__.lower()
+
+            self.__class__._class_init_done = True
 
     def __init__(self,init=True):
-        self._cache_ = None
+        self._class_init() #is needed to init class properties, needs to be first thing
+
         if init:
             self._init()
+
+        self._obj_cache_reset()
+
 
     def _init(self):
         pass
@@ -39,29 +61,11 @@ class JSBase:
             self.__class__._dirpath_ = os.path.dirname(inspect.getfile(self.__class__))
         return self.__class__._dirpath_
 
-    @property
-    def __name__(self):
-        if self.__class__._classname is None:
-            self.__class__._classname = j.core.text.strip_to_ascii_dense(str(self.__class__))
-        return self.__class__._classname
-
-    @property
-    def __location__(self):
-        if self.__class__._location is None:
-            if '__jslocation__' in self.__dict__:
-                self.__class__._location = self.__jslocation__
-            elif '__jslocation__' in self.__class__.__dict__:
-                self.__class__._location = self.__class__.__jslocation__
-            elif '__jscorelocation__' in self.__dict__:
-                self.__class__._location = self.__jslocation__
-            else:
-                self.__class__._location = self.__name__.lower()
-        return self.__class__._location
 
     @property
     def _objid(self):
         if self._objid_ is None:
-            id = self.__location__
+            id = self.__class__._location
             id2=""
             try:
                 id2=self.data.name
@@ -89,7 +93,7 @@ class JSBase:
     @property
     def _logger(self):
         if self.__class__._logger_ is None:
-            self.__class__._logger_ = j.logger.get(self.__location__)
+            self.__class__._logger_ = j.logger.get(self.__class__._location)
             self.__class__._logger_._parent = self
         return self.__class__._logger_
 

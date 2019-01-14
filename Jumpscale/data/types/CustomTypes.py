@@ -417,6 +417,7 @@ class Numeric(String):
 
     def getCur(self, value):
         value = value.lower()
+        j.shell()
         for cur2 in list(j.clients.currencylayer.cur2usd.keys()):
                 # print(cur2)
             if value.find(cur2) != -1:

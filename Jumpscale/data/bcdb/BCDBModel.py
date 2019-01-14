@@ -148,17 +148,16 @@ class BCDBModel(j.application.JSBaseClass):
 
     @queue_method
     def delete(self, obj):
-        if hasattr(obj, "_JSOBJ"):
-            obj_id = obj.id
-        else:
-            obj_id = obj
-        self.index_keys_delete(obj)
-        self._delete2(obj_id)
-        if obj_id in self.obj_cache:
-            self.obj_cache.pop(obj_id)
-        if self.index:
-            self.index_delete(obj_id)
-        self.id_delete(obj.id)
+        if not hasattr(obj, "_JSOBJ"):
+            obj = self.get(obj)
+        if obj.id is not None:
+            self.index_keys_delete(obj)
+            self._delete2(obj.id)
+            if obj_id in self.obj_cache:
+                self.obj_cache.pop(obj.id)
+            if self.index:
+                self.index_delete(obj.id)
+            self.id_delete(obj.id)
 
     def _delete2(self, obj_id):
         if not self.zdbclient:

@@ -3,23 +3,26 @@ import cryptocompare as cc
 from Jumpscale import j
 
 
-JSBASE = j.application.JSBaseConfigClass
-
-
-class CurrencyLayer(JSBASE):
+class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
     """
     get key from https://currencylayer.com/quickstart
     """
+
+    __jslocation__ = 'j.clients.currencylayer'
+
+
     _SCHEMATEXT = """
     @url = jumpscale.currencylayer.client
     name* = "" (S)
     api_key_ = "" (S)
     """
 
-    # def _init(self):
-    #     key = self.api_key_
+    def __init__(self):
+        factory = CurrencyLayerFactory()
+        j.application.JSBaseConfigClass.__init__(self,name="main",factory=factory)
 
-    def _init_new(self):
+
+    def _init(self):
         self._data_cur = {}
         self._id2cur = {}
         self._cur2id = {}
@@ -146,5 +149,12 @@ class CurrencyLayer(JSBASE):
         """
         js_shell 'j.clients.currencylayer.test()'
         """
+        r=j.clients.currencylayer._Find()
+        j.shell()
         self._logger.info(self.cur2usd)
         assert 'aed' in self.cur2usd
+
+class CurrencyLayerFactory(j.application.JSBaseConfigsClass):
+
+    _CHILDCLASS = CurrencyLayerSingleton
+
