@@ -3,6 +3,8 @@ from Jumpscale import j
 
 class BuilderTraefik(j.builder.system._BaseClass):
     NAME = 'traefik'
+    VERSION = '1.7.7' # latest
+    URL = 'https://github.com/containous/traefik/releases/download/v{version}/traefik_{platform}-{arch}'
 
     def _init(self):
         self.go_runtime = self.b.runtimes.golang
@@ -23,39 +25,42 @@ class BuilderTraefik(j.builder.system._BaseClass):
         if version < (1, 9):
             raise j.exceptions.RuntimeError('%s requires go version >= 1.9')
 
-        self.go_runtime.get('github.com/containous/go-bindata/...')
-        # ensure bindata is installed
-        bindata_dir = self.go_runtime.package_path_get('containous/go-bindata')
-        self.go_runtime.execute('cd %s && go install' % bindata_dir)
-        # clone traefik repo
-        j.clients.git.pullGitRepo(
-            'https://github.com/containous/traefik/',
-            dest=self.traefik_dir, ssh=False, depth=1, timeout=20000)
-        # generate and build
-        self.go_runtime.execute('cd %s && go generate && go build ./cmd/traefik' % self.traefik_dir)
-        # then copy the binary to GOBIN
-        self.tools.file_copy(
-            self.tools.joinpaths(self.traefik_dir, self.NAME),
-            self.go_runtime.go_path_bin)
+        # get the prebuilt binary, as the building needs docker...etc
+        # only check for linux for now
+        arch = self.go_runtime.current_arch
+        if j.core.platformtype.myplatform.isLinux:
+            download_url = self.URL.format(version=self.VERSION, platform='linux', arch=arch)
+        else:
+            raise j.exceptions.RuntimeError('platform not supported')
 
-        if self.tools.file_exists('{DIR_BIN}/traefik'):
-            self.go_runtime.execute('unlink {DIR_BIN}/traefik')
-        self.go_runtime.execute('ln -s $GOPATH/bin/traefik {DIR_BIN}/traefik')
+        dest = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
+        self.tools.file_download(
+            download_url, dest, overwrite=False, retry=3, timeout=0)
+        self.tools.file_attribs(dest, mode=0o770)
 
         self._done_set('install')
 
-    def start(self, config_file=None):
+    def start(self, config_file=None, args=None):
         """Starts traefik with the configuration file provided
 
         :param config_file: config file path e.g. ~/traefik.toml
         :type config_file: str, optional
+        :param args: any additional arguments to be passed to traefik
+        :type args: dict, optional (e.g. {'api': '', 'api.dashboard': 'true'})
         :raises j.exceptions.RuntimeError: in case config file does not exist
         :return: tmux pane
         :rtype: tmux.Pane
         """
-        cmd = self.tools.joinpaths(self.go_runtime.go_path_bin, self.NAME)
+        cmd = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
         if config_file and self.tools.file_exists(config_file):
             cmd += ' --configFile=%s' % config_file
+
+        args = args or {}
+        for arg, value in args.items():
+            cmd += ' --%s' % arg
+            if value:
+                cmd += '=%s' % value
+
         p = j.tools.tmux.execute(cmd, window=self.NAME, pane=self.NAME, reset=True)
         return p
 
