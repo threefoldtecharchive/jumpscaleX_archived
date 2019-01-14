@@ -29,8 +29,7 @@ class JSBase:
             self.__class__._test_runs = {}
             self.__class__._test_runs_error = {}
 
-            self.__class__.__name__ = j.core.text.strip_to_ascii_dense(str(self.__class__)).lower()
-
+            self.__class__.__name__ = j.core.text.strip_to_ascii_dense(str(self.__class__)).split(".")[-1].lower()
             #short location name:
             if '__jslocation__' in self.__dict__:
                 self.__class__._location = self.__jslocation__
