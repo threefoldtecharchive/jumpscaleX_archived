@@ -127,15 +127,9 @@ class Dictionary():
         if not self.check(v):
             raise ValueError("Valid dict is required")
         return v
-      
+
     def toJSON(self, v):
         return self.toString(v)
-
-    def python_code_get(self, value):
-        """
-        produce the python code which represents this value
-        """
-        return value
 
     def python_code_get(self, value, sort=False):
         """
