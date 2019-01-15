@@ -7,11 +7,13 @@ def authorize_zerotiers(identify, nics):
         if isinstance(nic, ZTNic):
             nic.authorize(identify)
 
+
 def get_ip_from_nic(addrs):
     for ip in addrs:
         network = netaddr.IPNetwork(ip['addr'])
         if network.version == 4:
             return network.ip.format()
+
 
 def get_zt_ip(nics, network=False, network_range=''):
     """[summary]
@@ -40,4 +42,3 @@ def get_zt_ip(nics, network=False, network_range=''):
                 # network range should be avoided
                 continue
             return ipAdress
-

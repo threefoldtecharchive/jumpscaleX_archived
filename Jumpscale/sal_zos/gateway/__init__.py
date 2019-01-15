@@ -1,5 +1,6 @@
 from .gateway import Gateway
 
+
 class Gateways:
     def __init__(self, node):
         self.node = node
@@ -12,5 +13,3 @@ class Gateways:
         :rtype: Gateway
         """
         return Gateway(self.node, name)
-
-

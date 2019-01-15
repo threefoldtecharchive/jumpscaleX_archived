@@ -1,11 +1,13 @@
 from .Primitives import Primitives
-from Jumpscale import j
+from jumpscale import j
 
-JSBASE = j.application.JSBaseClass
+JSBASE = j.application.jsbase_get_class()
 
 
 class PrimitivesFactory(JSBASE):
-    __jslocation__ = "j.sal_zos.primitives"
+    def __init__(self):
+        self.__jslocation__ = "j.sal_zos.primitives"
+        JSBASE.__init__(self)
 
     @staticmethod
     def get(node):
@@ -15,4 +17,3 @@ class PrimitivesFactory(JSBASE):
             the sal layer 
         """
         return Primitives(node)
-

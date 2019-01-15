@@ -2,8 +2,6 @@ import time
 from Jumpscale import j
 
 
-
-
 class StatsCollector():
     def __init__(self, container, ip, port, db, retention, jwt):
 
@@ -54,4 +52,3 @@ class StatsCollector():
         if not self.is_running():
             return
         self.container.client.job.kill(self.job_id)
-

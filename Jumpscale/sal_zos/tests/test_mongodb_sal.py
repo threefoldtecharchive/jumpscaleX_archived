@@ -8,12 +8,13 @@ This test script executes the following scenario:
     5. Ensure that new PRYMARY was elected and previously created collection is still avaliable.
 
 """
-import pytest
+
 import time
 import re
 from Jumpscale import j
 
 FLIST = 'https://hub.gig.tech/ekaterina_evdokimova_1/ubuntu-16.04-mongodb.flist'
+
 
 def error_check(result, message=''):
     """ Raise error if call wasn't successfull """
@@ -22,19 +23,23 @@ def error_check(result, message=''):
         err = '{}: {} \n {}'.format(message, result.stderr, result.data)
         raise RuntimeError(err)
 
+
 def get_node(ip):
     """ Get robot instance
 
     :param ip: IP addres of Zero-os node
     """
     node_id = 'local'
-    return j.clients.zos.get(
-            name=node_id,
+    j.clients.zos.get(
+        instance=node_id,
             data={
                     "host": ip,
                     "port": 6379,
                     }
             )
+    j.clients.zero_os.sal.get_node(instance=node_id)
+    return j.clients.zos.sal.get_node(node_id)
+
 
 def create_container(name, node):
     # determine parent interface for macvlan
@@ -45,9 +50,11 @@ def create_container(name, node):
     if not candidates:
         raise RuntimeError("Could not find interface for macvlan parent")
     elif len(candidates) > 1:
-        raise RuntimeError("Found multiple eligible interfaces for macvlan parent: %s" % ", ".join(c['dev'] for c in candidates))
+        raise RuntimeError("Found multiple eligible interfaces for macvlan parent: %s" %
+                           ", ".join(c['dev'] for c in candidates))
     parent_if = candidates[0]['dev']
-    return node.containers.create(name, flist=FLIST, nics=[{'type': 'macvlan', 'id': parent_if, 'name': 'stoffel', 'config': { 'dhcp': True }}])
+    return node.containers.create(name, flist=FLIST, nics=[{'type': 'macvlan', 'id': parent_if, 'name': 'stoffel', 'config': {'dhcp': True}}])
+
 
 def get_mongod_shard_config(shard, port):
     # get new configuration of shard replica set
@@ -56,9 +63,9 @@ def get_mongod_shard_config(shard, port):
     error_check(result)
     names = re.findall(r'"name" : "\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', result.stdout)
     roles = re.findall(r'"stateStr" : "\w+"', result.stdout)
-    return dict(zip(names,roles))
+    return dict(zip(names, roles))
 
-@pytest.mark.skip(reason="test need to be reviewed")
+
 def test_deploy_cluster(node_ip, cluster_id):
     """ Test case covers mongodb cluster deployment, connection to mongos,
         check db avaliability after nocking out a PRIMARY node for both shard and config replica sets """
@@ -78,7 +85,7 @@ def test_deploy_cluster(node_ip, cluster_id):
 
     # deploy 3 instances of each replica set
     for idx in range(shard_nr):
-        container_name='mongo-shard-{}-{}'.format(cluster_id, idx)
+        container_name = 'mongo-shard-{}-{}'.format(cluster_id, idx)
 
         # ensure filesystem
         sp = node.storagepools.get(storagepool)
@@ -87,7 +94,7 @@ def test_deploy_cluster(node_ip, cluster_id):
         except ValueError:
             fs = sp.create(container_name)
 
-        shard = j.sal_zos.get_mongodb(
+        shard = j.clients.zos.sal.get_mongodb(
             name='mongodb',
             node=node,
             container_name=container_name,
@@ -123,7 +130,7 @@ def test_deploy_cluster(node_ip, cluster_id):
     route_port = 27010
     container = create_container(router_container_name, node)
 
-    router = j.sal_zos.mongodb.get(container, port=route_port)
+    router = j.clients.zos.sal.get_mongos(container, port=route_port)
     router.start(config_replica, config_hosts, log_to_file=True)
 
     start = time.time()
@@ -140,7 +147,6 @@ def test_deploy_cluster(node_ip, cluster_id):
     cmd = """mongo --host {}:{} --eval 'db.createCollection("{}")'""".format(router.ip, route_port, test_collection)
     result = container.client.bash(cmd).get()
     error_check(result)
-
 
     cmd = """mongo --host %s:%s --eval 'db.%s.insert({product: "item"})'""" % (router.ip, route_port, test_collection)
     result = container.client.bash(cmd).get()
@@ -165,7 +171,7 @@ def test_deploy_cluster(node_ip, cluster_id):
     start = time.time()
     timeout = 100
     primary_is_up = False
-    while time.time()<start+timeout and not primary_is_up:
+    while time.time() < start+timeout and not primary_is_up:
         time.sleep(1)
         new_shard_members = get_mongod_shard_config(shard, shard_port)
         for member in new_shard_members:
@@ -179,7 +185,7 @@ def test_deploy_cluster(node_ip, cluster_id):
 
     start = time.time()
     primary_is_up = False
-    while time.time()<start+timeout and not primary_is_up:
+    while time.time() < start+timeout and not primary_is_up:
         time.sleep(1)
         new_config_members = get_mongod_shard_config(shard, config_port)
         for member in new_config_members:
@@ -200,9 +206,12 @@ def test_deploy_cluster(node_ip, cluster_id):
     # check that collection contains previously added item
     assert result.stdout.find('"product" : "item"') != -1
 
-    #clean up
+    # clean up
     for shard in shards:
         shard.destroy()
     router.destroy()
 
     print('test was completed successfully')
+
+
+test_deploy_cluster('192.168.122.89', cluster_id='32')

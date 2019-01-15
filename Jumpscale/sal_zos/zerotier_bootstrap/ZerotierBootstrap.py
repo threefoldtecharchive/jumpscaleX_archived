@@ -78,4 +78,3 @@ if __name__ == '__main__':
     zt = ZTBootstrap(token, bootstap_nwid, grid_nwid, '192.168.10.0/24')
     from IPython import embed
     embed()
-

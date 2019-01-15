@@ -34,7 +34,6 @@ class Minio(Service):
                  master_namespace=None,
                  master_address=None):
         """
-
         :param name: instance name
         :param node: sal of the node to deploy minio on
         :param login: minio access key
@@ -53,8 +52,7 @@ class Minio(Service):
         """
         super().__init__(name, node, 'minio', [DEFAULT_PORT])
 
-        # self.flist = 'https://hub.grid.tf/tf-official-apps/minio.flist'
-        self.flist = 'https://hub.grid.tf/tf-autobuilder/threefoldtech-minio-zerostor.flist'  # TODO replace me when merging to master
+        self.flist = 'https://hub.grid.tf/tf-official-apps/minio-1.5.0.flist'
         self.zdbs = zdbs
         self._nr_datashards = nr_datashards
         self._nr_parityshards = nr_parityshards
@@ -96,11 +94,26 @@ class Minio(Service):
             'MINIO_ZEROSTOR_META_DIR': metadata_path,
         }
 
-        sp = self.node.storagepools.get('zos-cache')
+        # select a storage pool where to create subvolume to mount into the container
+        # we want only the storage pool on top of an SSD
+        pools = filter(lambda p: p.type.value == 'SSD', self.node.storagepools.list())
+        # sort all the SSD storage pool by ussage
+        pools = sorted(pools, key=lambda p: p.used)
+        fs = None
+        for sp in pools:
         try:
             fs = sp.get(self._id)
         except ValueError:
+                try:
             fs = sp.create(self._id)
+                except Exception as err:
+                    logger.warning('couldn create storage pool filesystem: %s\nTrying another disk' % str(err))
+                    continue
+            if fs:
+                break
+
+        if fs is None:
+            raise RuntimeError("couldn't find a disk to use to mount in the container")
 
         return {
             'name': self._container_name,
@@ -135,7 +148,7 @@ class Minio(Service):
     def stream(self, callback):
         if not self.is_running:
             raise Exception('minio is not running')
-            
+
         self.container.client.subscribe(
             self._id,
             "%s.logs" % self._id
@@ -169,10 +182,22 @@ class Minio(Service):
     def destroy(self):
         super().destroy()
 
-        sp = self.node.storagepools.get('zos-cache')
+        for sp in self.node.storagepools.list():
         try:
             fs = sp.get(self._id)
             fs.delete()
+                break
         except ValueError:
-            pass
+                continue
 
+    def check_and_repair(self):
+        cmd = '/bin/minio gateway zerostor-repair --config-dir {dir}'.format(dir=self._config_dir)
+
+        job = self.container.client.system(cmd)
+        while job.running:
+            time.sleep(10)
+            logger.info("Check and repair still running")
+
+        result = job.get()
+        if result.state == 'ERROR':
+            raise RuntimeError("Failed to do check and repair")

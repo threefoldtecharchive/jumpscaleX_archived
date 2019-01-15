@@ -4,6 +4,7 @@ JSBASE = j.application.JSBaseClass
 
 from .Farm import Farm
 
+
 class FarmFactory(JSBASE):
 
     __jslocation__ = "j.sal_zos.farm"
@@ -14,7 +15,7 @@ class FarmFactory(JSBASE):
 
         Arguments:
             farmer_iyo_org: the farmer iyo organisation
-        
+
         Returns:
             the sal layer
         """

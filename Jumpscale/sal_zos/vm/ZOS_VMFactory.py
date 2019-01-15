@@ -1,6 +1,3 @@
-from Jumpscale import j
-JSBASE = j.application.JSBaseClass
-
 from .ZOS_VM import ZOS_VM
 
 
@@ -13,7 +10,6 @@ class ZOS_VMFactory(JSBASE):
         Get sal for VM management in ZOS
 
         Returns:
-            the sal layer 
+            the sal layer
         """
         return ZOS_VM(node, name, flist, vcpus, memory)
-
