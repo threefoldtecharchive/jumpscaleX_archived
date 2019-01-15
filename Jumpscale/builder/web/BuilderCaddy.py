@@ -1,20 +1,15 @@
 from Jumpscale import j
 
 
-
-
-
 class BuilderCaddy(j.builder.system._BaseClass):
     NAME = "caddy"
 
     def _init(self):
-        self.BUILDDIR_ = j.core.tools.text_replace("{DIR_VAR}/build/caddy")
+        self.go_runtme = j.builder.runtimes.golang
 
     def reset(self):
         self.stop()
-        app.reset(self)
         self._init()
-        j.builder.tools.dir_remove(self.BUILDDIR_)
         j.builder.tools.dir_remove("{DIR_BIN}/caddy")
 
     def build(self, reset=False, plugins=None):
@@ -30,9 +25,8 @@ class BuilderCaddy(j.builder.system._BaseClass):
         if self._done_check('build', reset):
             return
 
-        j.builder.system.installbase.install(upgrade=True)
-        golang = j.builder.runtimes.golang
-        golang.install()
+        if not self.go_runtme.is_installed:
+            self.go_runtme.install()
 
         # build caddy from source using our caddyman
         j.clients.git.pullGitRepo("https://github.com/incubaid/caddyman", dest="/tmp/caddyman")
@@ -47,12 +41,14 @@ class BuilderCaddy(j.builder.system._BaseClass):
         """
         will build if required & then install binary on right location
         """
-        self.build(plugins=plugins, reset=reset)
+        if not self._done_check('build', reset):
+            self.build(plugins=plugins, reset=reset)
 
         if self._done_check('install', reset):
             return
 
-        j.builder.tools.file_copy('/opt/go_proj/bin/caddy', '{DIR_BIN}/caddy')
+        caddy_bin_path = self.tools.joinpaths(self.go_runtme.go_path_bin, self.NAME)
+        j.builder.tools.file_copy(caddy_bin_path, '{DIR_BIN}/caddy')
         #j.builder.sandbox.profileDefault.addPath('{DIR_BIN}')
         #j.builder.sandbox.profileDefault.save()
 
@@ -70,7 +66,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
         if fw:
             j.builder.security.ufw.allowIncoming(port)
 
-        if j.builder.system.process.tcpport_check(port, ""):
+        if j.builder.system.net.tcpport_check(port, ""):
             raise RuntimeError(
                 "port %s is occupied, cannot install caddy" % port)
 
