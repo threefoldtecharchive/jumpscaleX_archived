@@ -145,14 +145,16 @@ def create_blockchain_zos_vms(zos_node_name='main', sshkeyname=None):
     'flist': 'https://hub.gig.tech/abdelrahman_hussein_1/ubuntucryptoexchange.flist',
     'memory': 1024 * 14,
     'cpu': 2,
-    'nics':[{'type': 'default', 'name': 'nic01'}],
-    'ports':[{'name': 'ssh', 'source': 2250, 'target':22}],
+        'nics': [{'type': 'default', 'name': 'nic01'}],
+        'ports': [{'name': 'ssh', 'source': 2250, 'target': 22}],
     'configs': [{'path': '/root/.ssh/authorized_keys', 'content': sshkey.pubkey,
                  'name': 'sshauthorizedkeys'}],
     }
-    data_disk = {'size': 100, 'mountPoint': DEFAULT_DATA_PATH, 'diskType': 'ssd', 'filesystem': 'btrfs', 'label': 'data'}
+    data_disk = {'size': 100, 'mountPoint': DEFAULT_DATA_PATH,
+                 'diskType': 'ssd', 'filesystem': 'btrfs', 'label': 'data'}
     print("Creating TFT data disk service")
-    disk_srv = zrobot_cl.services.find_or_create('github.com/zero-os/0-templates/vdisk/0.0.1', 'tft_data_disk', data_disk)
+    disk_srv = zrobot_cl.services.find_or_create(
+        'github.com/zero-os/0-templates/vdisk/0.0.1', 'tft_data_disk', data_disk)
     disk_srv.schedule_action('install').wait(die=True)
     disk_url = disk_srv.schedule_action('private_url').wait(die=True).result
     # disk_info = disk_srv.schedule_action('info').wait(die=True).result
@@ -163,7 +165,8 @@ def create_blockchain_zos_vms(zos_node_name='main', sshkeyname=None):
     tft_node_data['disks'] = [data_disk]
 
     print("Creating TFT node vm")
-    tft_node_srv = zrobot_cl.services.find_or_create('github.com/zero-os/0-templates/vm/0.0.1', tft_node_name, tft_node_data)
+    tft_node_srv = zrobot_cl.services.find_or_create(
+        'github.com/zero-os/0-templates/vm/0.0.1', tft_node_name, tft_node_data)
     task = tft_node_srv.schedule_action('install')
     try:
         task.wait(die=True)
@@ -183,11 +186,11 @@ def create_blockchain_zos_vms(zos_node_name='main', sshkeyname=None):
             timeout -= 30
 
     if tft_node_prefab is None:
-        raise RuntimeError("Failed to establish a connection to {} port: {}".format(zos_node_name, tft_node_data['ports'][0]['source']))
+        raise RuntimeError("Failed to establish a connection to {} port: {}".format(
+            zos_node_name, tft_node_data['ports'][0]['source']))
 
     # add /opt/bin to the path
     tft_node_prefab.core.run('echo "export PATH=/opt/bin:$PATH" >> /root/.profile_js', profile=False, showout=False)
-
 
     start_blockchains(tft_node_prefab, tft_node_name)
     print('Initializing TFT wallet')
@@ -206,14 +209,16 @@ def create_blockchain_zos_vms(zos_node_name='main', sshkeyname=None):
     'flist': 'https://hub.gig.tech/abdelrahman_hussein_1/ubuntucryptoexchange.flist',
     'memory': 1024 * 14,
     'cpu': 2,
-    'nics':[{'type': 'default', 'name': 'nic01'}],
-    'ports':[{'name': 'ssh', 'source': 2350, 'target':22}],
+        'nics': [{'type': 'default', 'name': 'nic01'}],
+        'ports': [{'name': 'ssh', 'source': 2350, 'target': 22}],
     'configs': [{'path': '/root/.ssh/authorized_keys', 'content': sshkey.pubkey,
                  'name': 'sshauthorizedkeys'}],
     }
-    data_disk = {'size': 100, 'mountPoint': DEFAULT_DATA_PATH, 'diskType': 'ssd', 'filesystem': 'btrfs', 'label': 'data'}
+    data_disk = {'size': 100, 'mountPoint': DEFAULT_DATA_PATH,
+                 'diskType': 'ssd', 'filesystem': 'btrfs', 'label': 'data'}
     print("Creating BTC data disk service")
-    disk_srv = zrobot_cl.services.find_or_create('github.com/zero-os/0-templates/vdisk/0.0.1', 'btc_data_disk', data_disk)
+    disk_srv = zrobot_cl.services.find_or_create(
+        'github.com/zero-os/0-templates/vdisk/0.0.1', 'btc_data_disk', data_disk)
     disk_srv.schedule_action('install').wait(die=True)
     disk_url = disk_srv.schedule_action('private_url').wait(die=True).result
     disk_info = disk_srv.schedule_action('info').wait(die=True).result
@@ -223,7 +228,8 @@ def create_blockchain_zos_vms(zos_node_name='main', sshkeyname=None):
     btc_node_data['disks'] = [data_disk]
 
     print("Creating BTC node vm")
-    btc_node_srv = zrobot_cl.services.find_or_create('github.com/zero-os/0-templates/vm/0.0.1', btc_node_name, btc_node_data)
+    btc_node_srv = zrobot_cl.services.find_or_create(
+        'github.com/zero-os/0-templates/vm/0.0.1', btc_node_name, btc_node_data)
     task = btc_node_srv.schedule_action('install')
     task.wait()
     if task.state != 'ok':
@@ -241,7 +247,8 @@ def create_blockchain_zos_vms(zos_node_name='main', sshkeyname=None):
             timeout -= 30
 
     if btc_node_prefab is None:
-        raise RuntimeError("Failed to establish a connection to {} port: {}".format(zos_node_name, btc_node_data['ports'][0]['source']))
+        raise RuntimeError("Failed to establish a connection to {} port: {}".format(
+            zos_node_name, btc_node_data['ports'][0]['source']))
 
     # add /opt/bin to the path
     btc_node_prefab.core.run('echo "export PATH=/opt/bin:$PATH" >> /root/.profile_js', profile=False, showout=False)
@@ -259,7 +266,6 @@ def create_blockchain_zos_vms(zos_node_name='main', sshkeyname=None):
         if check_btc_synced(btc_node_prefab):
             break
         time.sleep(20)
-
 
 
 # def create_packet_machines(sshkeyname=None):
@@ -312,7 +318,6 @@ def create_blockchain_zos_vms(zos_node_name='main', sshkeyname=None):
 #     # prefab.blockchain.ethereum.install()
 
 
-
 def create_packet_zos(sshkeyname=None, zt_netid="", zt_client_instance='main', packet_client_instance='main', hostname='atomicswap.test'):
     """
     Creates a zos node on packet.net
@@ -323,8 +328,9 @@ def create_packet_zos(sshkeyname=None, zt_netid="", zt_client_instance='main', p
     """
     zt_api_token = j.clients.zerotier.get(zt_client_instance).config.data['token_']
     packet_cl = j.clients.packetnet.get(packet_client_instance)
-    sshkeyname = sshkeyname or (j.clients.sshkey.listnames()[0] if j.clients.sshkey.listnames() else DEFAULT_SSHKEY_NAME)
-    zos_packet_cl, packet_node, ipaddr  = packet_cl.startZeroOS(hostname=hostname, zerotierId=zt_netid,
+    sshkeyname = sshkeyname or (j.clients.sshkey.listnames()[0]
+                                if j.clients.sshkey.listnames() else DEFAULT_SSHKEY_NAME)
+    zos_packet_cl, packet_node, ipaddr = packet_cl.startZeroOS(hostname=hostname, zerotierId=zt_netid,
                                                                 plan='baremetal_1', zerotierAPI=zt_api_token,
                                                                 branch='development', params=['development', 'console=ttyS1,115200'])
     zos_node_name = ipaddr

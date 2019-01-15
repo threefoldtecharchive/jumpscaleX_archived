@@ -12,7 +12,7 @@ class StatsCollectorFactory(JSBASE):
         """
         Get sal for Disks
         Returns:
-            the sal layer 
+            the sal layer
         """
         return StatsCollector(container, ip, port, db, retention, jwt)
 

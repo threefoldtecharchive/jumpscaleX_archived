@@ -87,7 +87,8 @@ class Zerodbs(DynamicCollection):
         for device in set(all_disks) - set(disks_used):
             name = j.data.idgenerator.generateGUID()
             logger.info("create storage pool %s on %s", name, device)
-            sp = self.node.storagepools.create(name, device=device, metadata_profile='single', data_profile='single', overwrite=True)
+            sp = self.node.storagepools.create(
+                name, device=device, metadata_profile='single', data_profile='single', overwrite=True)
             storagepools.append(sp)
 
         # make sure we don't use storage pool reserved for something else

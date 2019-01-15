@@ -11,7 +11,6 @@ class ZerotierBootstrapFactory(JSBASE):
         """
         Get sal for zerotier bootstrap in ZOS
         Returns:
-            the sal layer 
+            the sal layer
         """
         return ZTBootstrap(zt_token, bootstap_id, grid_id, cidr)
-

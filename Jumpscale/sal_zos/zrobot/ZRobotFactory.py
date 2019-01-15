@@ -14,11 +14,10 @@ class ZeroRobotFactory(JSBASE):
         """
         Get sal for ZeroRobot in ZOS
         Returns:
-            the sal layer 
+            the sal layer
         """
         return ZeroRobot(container, port=port, telegram_bot_token=telegram_bot_token,
                          telegram_chat_id=telegram_chat_id, template_repos=template_repos,
                          data_repo=data_repo, config_repo=config_repo, config_key=config_key,
                          organization=organization, auto_push=auto_push,
                          auto_push_interval=auto_push_interval)
-
