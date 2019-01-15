@@ -25,7 +25,7 @@ class PrefabOpenResty(j.builder.system._BaseClass):
 
         if j.core.platformtype.myplatform.isUbuntu:
             j.builder.system.package.mdupdate()
-            j.builder.tools.package_install("build-essential libpcre3-dev libssl-dev")
+            j.builder.tools.package_install("build-essential libpcre3-dev libssl-dev zlib1g-dev")
 
             j.builder.tools.dir_remove("{DIR_TEMP}/build/openresty")
             j.core.tools.dir_ensure("{DIR_TEMP}/build/openresty")
@@ -53,9 +53,9 @@ class PrefabOpenResty(j.builder.system._BaseClass):
             make -j8
             make install
             rm -rf {DIR_VAR}/build/openresty
-            rm /sandbox/bin/lua
+            rm -f /sandbox/bin/lua
             ln -s /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
-            
+
             """
             C = j.builder.tools.replace(C)
             C = j.core.tools.text_replace(C)
@@ -90,7 +90,7 @@ class PrefabOpenResty(j.builder.system._BaseClass):
             rm -rf {DIR_VAR}/build/openresty
             rm /sandbox/bin/lua
             ln -s /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
-            
+
             """
             C = j.builder.tools.replace(C)
             C = j.core.tools.text_replace(C)
@@ -122,25 +122,25 @@ class PrefabOpenResty(j.builder.system._BaseClass):
 
         cp {SRCBINDIR}/resty* {CODE_SB_BASE}/base/bin/
         rm -f {CODE_SB_BIN}/base/bin/resty*
-                
+
         cp {SRCBINDIR}/openresty {CODE_SB_BASE}/base/bin/
-        rm -f {CODE_SB_BIN}/base/bin/openresty        
+        rm -f {CODE_SB_BIN}/base/bin/openresty
 
         cp {DIR_BIN}/*.lua {CODE_SB_BASE}/base/bin/
-        rm -f {CODE_SB_BIN}/base/bin/*.lua    
+        rm -f {CODE_SB_BIN}/base/bin/*.lua
 
         cp {DIR_BIN}/lapis {CODE_SB_BASE}/base/bin/
-        rm -f {CODE_SB_BIN}/base/bin/lapis  
+        rm -f {CODE_SB_BIN}/base/bin/lapis
 
         cp {DIR_BIN}/lua {CODE_SB_BIN}/base/bin/
-        rm -f {CODE_SB_BASE}/base/bin/lua  
+        rm -f {CODE_SB_BASE}/base/bin/lua
 
         cp {DIR_BIN}/moon* {CODE_SB_BASE}/base/bin/
         rm -f {CODE_SB_BIN}/base/bin/moon*
-        
+
         cp {DIR_BIN}/openresty {CODE_SB_BIN}/base/bin/
         rm -f {CODE_SB_BASE}/base/bin/openresty
-          
+
 
 
         """

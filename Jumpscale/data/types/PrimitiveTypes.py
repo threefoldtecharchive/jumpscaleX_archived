@@ -92,6 +92,7 @@ class StringMultiLine(String):
         """
         will do a strip on multiline
         """
+        value = j.data.types.string.clean(value)
         if value == "" or value is None:
             value = ""
         elif not self.check(value):

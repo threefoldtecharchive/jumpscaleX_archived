@@ -110,11 +110,10 @@ class Path(String):
         '''
         Check whether provided value is a valid
         '''
-        if not j.data.types.string.check(value):
-            return False
         return self._RE.fullmatch(value) is not None
 
     def clean(self, value):
+        value = j.data.types.string.clean(value)
         if not self.check(value):
             raise ValueError("Invalid path :%s" % value)
         return value
@@ -135,11 +134,10 @@ class Url(String):
         '''
         Check whether provided value is a valid
         '''
-        if not j.data.types.string.check(value):
-            return False
         return self._RE.fullmatch(value) is not None
 
     def clean(self, value):
+        value = j.data.types.string.clean(value)
         if not self.check(value):
             raise ValueError("Invalid Url :%s" % value)
         return value
@@ -165,13 +163,11 @@ class Tel(String):
         '''
         Check whether provided value is a valid
         '''
-        if not j.data.types.string.check(value):
-            return False
         return self._RE.fullmatch(value) is not None
 
     def clean(self, v):
-        if not j.data.types.string.check(v):
-            raise ValueError("Input needs to be string:%s" % v)
+
+        v = j.data.types.string.clean(v)
         v = v.replace(".", "")
         v = v.replace(",", "")
         v = v.replace("-", "")
@@ -200,11 +196,10 @@ class IPRange(String):
         '''
         Check whether provided value is a valid
         '''
-        if not j.data.types.string.check(value):
-            return False
         return self._RE.fullmatch(value) is not None
 
     def clean(self, value):
+        value = j.data.types.string.clean(value)
         if not self.check(value):
             raise ValueError("Invalid IPrange :%s" % value)
         return value
@@ -231,11 +226,7 @@ class IPAddress(String):
         return self.is_valid_ipv4(ip) or self.is_valid_ipv6(ip)
 
     def clean(self, ip):
-        if isinstance(ip, str):
-            if ip.isdecimal():
-                ip = int(ip)
-            else:
-                ip = ip.strip('"').strip("'")
+        ip = j.data.types.string.clean(ip)
         if not self.check(ip):
             raise ValueError("Invalid IPAddress :%s" % ip)
         ip_value = IPv4Address(ip)
