@@ -43,11 +43,24 @@ class BuilderBaseClass(BaseClass):
             j.sal.fs.copyFile(bin, j.sal.fs.joinPaths(bin_dest, j.sal.fs.getBaseName(bin)))
 
         for dir in self.dirs:
-            if dir.startswith('/'):
-                dir = dir[1:]
-            dir_dest = j.sal.fs.joinPaths(dest, dir)
+
+            file_name = None
+            if j.sal.fs.isFile(dir):
+                file_name = j.sal.fs.getBaseName(dir)
+                base_dir = j.sal.fs.getDirName(dir)
+            else:
+                base_dir = dir
+
+            # remove the first slash to make sure the path will join correctly
+            if base_dir.startswith('/'):
+                base_dir = base_dir[1:]
+            dir_dest = j.sal.fs.joinPaths(dest, base_dir)
             j.builder.tools.dir_ensure(dir_dest)
-            j.sal.fs.copyDirTree(dir, dir_dest)
+            if file_name:
+                j.sal.fs.copyFile(dir, dir_dest)
+            else:
+                j.sal.fs.copyDirTree(dir, dir_dest)
+
 
     def flist_create(self, hub_instance=None):
         """
