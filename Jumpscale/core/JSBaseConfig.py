@@ -29,7 +29,7 @@ class JSBaseConfig(JSBase):
     def delete(self):
         self.data.model.delete(self.data)
         if self._factory:
-            self._factory._delete(name=self.name,childclass_name=self._childclass_name)
+            self._factory.delete(name=self.name,childclass_name=self._childclass_name)
 
     def data_update(self,**kwargs):
         self.data.data_update(data=kwargs)
