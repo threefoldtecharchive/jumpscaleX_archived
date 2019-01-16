@@ -270,7 +270,6 @@ class IPPort(Integer):
         We just check if the value a single port or a range
         Values must be between 0 and 65535
         '''
-
         if not Integer.check(self, value):
             return False
         if 0 < value <= 65535:
@@ -279,7 +278,7 @@ class IPPort(Integer):
 
     def clean(self, value):
         if not self.check(value):
-            raise ValueError("Invalid IP port :%s" % value)
+            raise ValueError("Invalid IP port: %s" % value)
         return value
 
 
