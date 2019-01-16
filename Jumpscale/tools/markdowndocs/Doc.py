@@ -383,8 +383,10 @@ class Doc(j.application.JSBaseClass):
                 else:
                     if link.source.startswith("!"):
                         link.download(dest=dest_file)
-                #now change the right link in the doc
-                link.link_source = j.sal.fs.pathRemoveDirPart(dest_file,self.docsite.outpath)
+                # now change the right link in the doc
+                # link.link_source = j.sal.fs.pathRemoveDirPart(dest_file,self.docsite.outpath)
+                # Set link source to the file name only as it gets its files from current page path
+                link.link_source = link.filename
                 md = link.replace_in_txt(md)
 
 

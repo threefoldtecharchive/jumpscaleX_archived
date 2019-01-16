@@ -89,8 +89,8 @@ class Link(j.application.JSBaseClass):
             if "?" in self.link_source:
                 self.link_source=self.link_source.split("?",1)[0]
                 
-            if self.link_source.find("/") != -1:
-                name = self.link_source.split("/")[-1]     
+            if self.link_source.find("/") != -1 and self.extension != "md":
+                name = self.link_source.split("/")[-1]
             else:
                 name = self.link_source
 
