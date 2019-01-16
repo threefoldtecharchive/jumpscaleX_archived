@@ -11,6 +11,17 @@ class PrefabOpenResty(j.builder.system._BaseClass):
     def _init(self):
         self.BUILDDIR = j.core.tools.text_replace("{DIR_VAR}/build/")
 
+    def _build_prepare(self):
+        j.builder.system.package.mdupdate()
+        j.builder.tools.package_install('build-essential libpcre3-dev libssl-dev zlib1g-dev')
+
+        j.builder.tools.dir_remove('{DIR_TEMP}/build/openresty')
+        j.core.tools.dir_ensure('{DIR_TEMP}/build/openresty')
+        url = 'https://openresty.org/download/openresty-1.13.6.2.tar.gz'
+        dest = j.core.tools.text_replace('{DIR_VAR}/build/openresty')
+        j.sal.fs.createDir(dest)
+        j.builder.tools.file_download(url, to=dest, overwrite=False, retry=3,
+                                      expand=True, minsizekb=1000, removeTopDir=True, deletedest=True)
 
     def build(self, reset=False):
         """
@@ -24,17 +35,7 @@ class PrefabOpenResty(j.builder.system._BaseClass):
         j.tools.bash.local.locale_check()
 
         if j.core.platformtype.myplatform.isUbuntu:
-            j.builder.system.package.mdupdate()
-            j.builder.tools.package_install("build-essential libpcre3-dev libssl-dev zlib1g-dev")
-
-            j.builder.tools.dir_remove("{DIR_TEMP}/build/openresty")
-            j.core.tools.dir_ensure("{DIR_TEMP}/build/openresty")
-            url="https://openresty.org/download/openresty-1.13.6.2.tar.gz"
-            dest = j.core.tools.text_replace("{DIR_VAR}/build/openresty")
-            j.sal.fs.createDir(dest)
-            j.builder.tools.file_download(url, to=dest, overwrite=False, retry=3,
-                        expand=True, minsizekb=1000, removeTopDir=True, deletedest=True)
-
+            self._build_prepare()
             C = """
             cd {DIR_VAR}/build/openresty
             mkdir -p /sandbox/var/pid
@@ -154,3 +155,64 @@ class PrefabOpenResty(j.builder.system._BaseClass):
 
         j.sal.process.execute(C)
         # self.cleanup()
+
+    def flist_build(self, hub_instance):
+        """
+        js_shell 'j.builder.web.openresty.flist_build()'
+        :return:
+        """
+        self._build_prepare()
+        command = """
+        cd {DIR_VAR}/build/openresty
+        rm -rf /tmp/openresty/sandbox/
+        mkdir -p /tmp/openresty/sandbox/var/pid
+        mkdir -p /tmp/openresty/sandbox/var/log
+        ./configure \
+            --with-cc-opt="-I/usr/local/opt/openssl/include/ -I/usr/local/opt/pcre/include/" \
+            --with-ld-opt="-L/usr/local/opt/openssl/lib/ -L/usr/local/opt/pcre/lib/" \
+            --prefix="/tmp/openresty/sandbox/openresty" \
+            --sbin-path="/tmp/openresty/sandbox/bin/openresty" \
+            --modules-path="/sandbox/lib" \
+            --pid-path="/sandbox/var/pid/openresty.pid" \
+            --error-log-path="/sandbox/var/log/openresty.log" \
+            --lock-path="/sandbox/var/nginx.lock" \
+            --conf-path="/sandbox/cfg/openresty.cfg" \
+            -j8
+        make -j8
+        make install
+        rm -rf {DIR_VAR}/build/openresty
+
+        """
+        command = j.builder.tools.replace(command)
+        command = j.core.tools.text_replace(command)
+        j.sal.process.execute(command)
+
+        command = """
+        set -ex
+        mkdir -p /tmp/openresty/sandbox/cfg
+        mkdir -p /tmp/openresty/sandbox/bin
+        cp {DIR_BASE}/cfg/openresty.cfg /tmp/openresty/sandbox/cfg/
+
+        cp /tmp/openresty/sandbox/openresty/luajit/bin/luajit /tmp/openresty/sandbox/bin/lua
+        cp /tmp/openresty/sandbox/openresty/bin/resty* /tmp/openresty/sandbox/bin/
+
+        cp {DIR_BIN}/*.lua /tmp/openresty/sandbox/bin/
+        cp {DIR_BIN}/lapis /tmp/openresty/sandbox/bin/
+        cp {DIR_BIN}/moon* /tmp/openresty/sandbox/bin/
+
+        """
+
+        command = j.core.tools.text_replace(command)
+
+        j.sal.process.execute(command)
+        self._logger.info('building flist')
+        build_dir = '/tmp/openresty/'
+        tarfile = '/tmp/openresty.tar.gz'
+        j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, build_dir))
+
+        hub = j.clients.zhub.get(hub_instance)
+        hub.authenticate()
+        self._logger.info("uploading flist to the hub")
+        hub.upload(tarfile)
+
+        return tarfile
