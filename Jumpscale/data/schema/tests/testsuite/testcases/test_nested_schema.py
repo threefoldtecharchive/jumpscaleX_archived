@@ -11,7 +11,7 @@ class NestedSchemaTest(BaseTest):
 
     def test001_nested_concatenated_schema(self):
         """
-        SCM-041
+        SCM-043
         *Test case for concatenated nesting schema *
 
         **Test Scenario:**
@@ -73,7 +73,7 @@ class NestedSchemaTest(BaseTest):
 
     def test002_nested_sperated_schema(self):
         """
-        SCM-042
+        SCM-044
         *Test case for sperated nesting schema *
 
         **Test Scenario:**
@@ -139,3 +139,4 @@ class NestedSchemaTest(BaseTest):
         self.assertEqual(schema_obj3.address.street, street)
         self.assertEqual(schema_obj3.address.building, building)
         self.assertEqual(schema_obj3.grades, grades)
+        

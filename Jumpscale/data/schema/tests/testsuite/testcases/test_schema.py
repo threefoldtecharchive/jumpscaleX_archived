@@ -1090,3 +1090,45 @@ class SchemaTest(BaseTest):
         index = random.randint(0,3)
         schema_obj.colors = index + 1
         self.assertEqual(schema_obj.colors, colors[index])
+
+    def test022_validate_binary_type(self):
+        """
+        SCM-022
+        *Test case for validating binary type *
+
+        **Test Scenario:**
+
+        #. Create schema with binary parameter[P1], should succeed.
+        #. Try to set parameter[P1] with non binary type, should fail.
+        #. Try to set parameter[P1] with binary type, should succeed.
+        """
+        self.log("Create schema with binary parameter[P1], should succeed.")
+        scm = """
+        @url = test.schema
+        binary = (bin)
+        init_bin = b'this is binary' (bin)
+        """
+        schema = self.schema(scm)
+        schema_obj = schema.new()
+
+        self.log("Try to set parameter[P1] with non binary type, should fail.")
+        with self.assertRaises(Exception):
+            schema_obj.binary = self.random_string()
+
+        with self.assertRaises(Exception):
+            schema_obj.binary = random.randint(1, 1000)
+
+        with self.assertRaises(Exception): 
+            schema_obj.binary = random.uniform(1, 100)
+        
+        with self.assertRaises(Exception):
+            schema_obj.binary = [self.random_string().encode(), self.random_string().encode()]
+        
+        with self.assertRaises(Exception):
+            schema_obj.binary = {'binary': self.random_string().encode()}
+
+        self.log("Try to set parameter[P1] with binary type, should succeed.")
+        binary = self.random_string().encode()
+        schema_obj.binary = binary
+        self.assertEqual(schema_obj.binary, binary)
+        self.assertEqual(schema_obj.init_bin, b'this is binary')

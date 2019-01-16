@@ -11,7 +11,7 @@ class SchemaTest(BaseTest):
 
     def test001_validate_list_of_strings(self):
         """
-        SCM-022
+        SCM-023
         *Test case for validating list of strings *
 
         **Test Scenario:**
@@ -41,7 +41,7 @@ class SchemaTest(BaseTest):
     
     def test002_validate_list_of_integers(self):
         """
-        SCM-023
+        SCM-024
         *Test case for validating list of integers *
 
         **Test Scenario:**
@@ -71,7 +71,7 @@ class SchemaTest(BaseTest):
     
     def test003_validate_list_floats(self):
         """
-        SCM-024
+        SCM-025
         *Test case for validating list of floats *
 
         **Test Scenario:**
@@ -101,7 +101,7 @@ class SchemaTest(BaseTest):
     
     def test004_validate_list_of_boolean(self):
         """
-        SCM-025
+        SCM-026
         *Test case for validating list of boolean *
 
         **Test Scenario:**
@@ -130,7 +130,7 @@ class SchemaTest(BaseTest):
     
     def test005_validate_list_of_mobiles(self):
         """
-        SCM-026
+        SCM-027
         *Test case for validating list of mobiles *
 
         **Test Scenario:**
@@ -160,7 +160,7 @@ class SchemaTest(BaseTest):
     
     def test006_validate_list_of_emails(self):
         """
-        SCM-027
+        SCM-028
         *Test case for validating list of emails *
 
         **Test Scenario:**
@@ -190,7 +190,7 @@ class SchemaTest(BaseTest):
     
     def test007_validate_list_of_ipports(self):
         """
-        SCM-028
+        SCM-029
         *Test case for validating list of ipports *
 
         **Test Scenario:**
@@ -220,7 +220,7 @@ class SchemaTest(BaseTest):
     
     def test008_validate_list_of_ipaddrs(self):
         """
-        SCM-029
+        SCM-030
         *Test case for validating list of ipaddrs *
 
         **Test Scenario:**
@@ -250,7 +250,7 @@ class SchemaTest(BaseTest):
     
     def test009_validate_list_of_ipranges(self):
         """
-        SCM-030
+        SCM-031
         *Test case for validating list of ipranges *
 
         **Test Scenario:**
@@ -280,7 +280,7 @@ class SchemaTest(BaseTest):
 
     def test010_validate_list_of_dates(self):
         """
-        SCM-031
+        SCM-032
         *Test case for validating list of dates *
 
         **Test Scenario:**
@@ -320,7 +320,7 @@ class SchemaTest(BaseTest):
 
     def test011_validate_list_of_percents(self):
         """
-        SCM-032
+        SCM-033
         *Test case for validating list of percents *
 
         **Test Scenario:**
@@ -350,7 +350,7 @@ class SchemaTest(BaseTest):
 
     def test012_validate_list_of_urls(self):
         """
-        SCM-033
+        SCM-034
         *Test case for validating list of urls *
 
         **Test Scenario:**
@@ -381,7 +381,7 @@ class SchemaTest(BaseTest):
     @unittest.skip("can't reach the currency methods(in list) to change between them")
     def test013_validate_list_of_numerics(self):
         """
-        SCM-034
+        SCM-035
         *Test case for validating list of numerics *
 
         **Test Scenario:**
@@ -411,7 +411,7 @@ class SchemaTest(BaseTest):
     
     def test014_validate_list_of_guids(self):
         """
-        SCM-035
+        SCM-036
         *Test case for validating list of guids *
 
         **Test Scenario:**
@@ -441,7 +441,7 @@ class SchemaTest(BaseTest):
 
     def test015_validate_list_of_dicts(self):
         """
-        SCM-036
+        SCM-037
         *Test case for validating list of dicts *
 
         **Test Scenario:**
@@ -471,7 +471,7 @@ class SchemaTest(BaseTest):
 
     def test016_validate_list_of_sets(self):
         """
-        SCM-037
+        SCM-038
         *Test case for validating list of sets *
 
         **Test Scenario:**
@@ -501,7 +501,7 @@ class SchemaTest(BaseTest):
 
     def test017_validate_list_of_hashs(self):
         """
-        SCM-038
+        SCM-039
         *Test case for validating list of hashs *
 
         **Test Scenario:**
@@ -531,7 +531,7 @@ class SchemaTest(BaseTest):
 
     def test018_validate_list_of_multilines(self):
         """
-        SCM-039
+        SCM-040
         *Test case for validating list of multilines *
 
         **Test Scenario:**
@@ -562,7 +562,7 @@ class SchemaTest(BaseTest):
 
     def test019_validate_list_of_yaml(self):
         """
-        SCM-040
+        SCM-041
         *Test case for validating list of yaml *
 
         **Test Scenario:**
@@ -590,4 +590,34 @@ class SchemaTest(BaseTest):
         schema_obj.yaml_list = yaml_list
         self.assertEqual(schema_obj.yaml_list, yaml_list)
         self.assertEqual(schema_obj.list_yaml, yaml_list)
-        
+    
+    def test020_validate_list_of_binary(self):
+        """
+        SCM-042
+        *Test case for validating list of binary *
+
+        **Test Scenario:**
+
+        #. Create schema with list of binary parameter, should succeed.
+        #. Try to set parameter with non binary type, should fail.
+        #. Try to set parameter with binary type, should succeed.
+        """
+        self.log("Create schema with list of binary parameter, should succeed.")
+        scm = """
+        @url = test.schema
+        bin_list = (Lbin)
+        list_bin = [b'test', b'example'] (Lbin)
+        """
+        schema = self.schema(scm)
+        time.sleep(1)
+        schema_obj = schema.new()
+
+        self.log("Try to set parameter with non binary type, should fail.")
+        with self.assertRaises(Exception):
+            schema_obj.bin_list = [self.random_string().encode(), self.random_string()]
+
+        self.log("Try to set parameter with binary type, should succeed.")
+        bin_list = [self.random_string().encode(), self.random_string().encode()]
+        schema_obj.bin_list = bin_list
+        self.assertEqual(schema_obj.bin_list, bin_list)
+        self.assertEqual(schema_obj.list_bin, [b'test', b'example'])
