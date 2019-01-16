@@ -30,7 +30,7 @@ class ACL(Index_CLASS,MODEL_CLASS):
     def __init__(self):
         MODEL_CLASS.__init__(self, bcdb=bcdb,schema=schema,custom=True)
         Index_CLASS.__init__(self)
-        self.write_once = True
+        self.readonly = True
         self._init()
 
     @property
@@ -78,7 +78,7 @@ class ACL(Index_CLASS,MODEL_CLASS):
         change,rdict = do(groupids,rdict,"groups",rights,change)
 
         if change:
-            if self.write_once:
+            if self.readonly:
                 if acl.id is not None:
                     #means there is a change
                     acl.readonly=False #acl will become a new one, the id is removed

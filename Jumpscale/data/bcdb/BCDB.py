@@ -400,7 +400,7 @@ class BCDB(j.application.JSBaseClass):
             obj.id = id
             obj.acl_id = acl_id
             obj.model = model
-            if model.write_once:
+            if model.readonly:
                 obj.readonly = True  # means we fetched from DB, we need to make sure cannot be changed
             return obj
 

@@ -12,8 +12,9 @@ class ZDBAdminClient(ZDBClientBase):
         mode -- user,seq(uential) see
                     https://github.com/rivine/0-db/blob/master/README.md
         """
-        ZDBClientBase._init(self)
         self.admin = True
+        ZDBClientBase._init(self)
+
         self._system = None
         # self._logger_enable()
         if self.secret:

@@ -21,7 +21,9 @@ class JSBase:
             del obj
 
     def _class_init(self):
+
         if not hasattr(self.__class__,"_class_init_done"):
+            # print("_class init:%s"%self.__class__.__name__)
             #only needed to execute once, needs to be done at init time, class inheritance does not exist
             self.__class__._dirpath_ = ""           #path of the directory hosting this class
             self.__class__._logger_ = None          #logger attached to this class
@@ -60,7 +62,6 @@ class JSBase:
             self.__class__._dirpath_ = os.path.dirname(inspect.getfile(self.__class__))
         return self.__class__._dirpath_
 
-
     @property
     def _objid(self):
         if self._objid_ is None:
@@ -97,7 +98,7 @@ class JSBase:
         return self.__class__._logger_
 
     def _logger_enable(self):
-        self.__class__._logger_ = None
+        self.__class__._logger_ = j.logger.get(self.__class__._location,force=True)
         self._logger.level = 0
 
     @property

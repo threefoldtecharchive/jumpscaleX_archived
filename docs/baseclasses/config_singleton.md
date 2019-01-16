@@ -6,11 +6,14 @@
 
 ```python
 
-class CurrencyTools(j.application.JSBaseConfigsClass):
+class CurrencyLayerFactory(j.application.JSBaseConfigsClass):
 
-    _CHILDCLASS = CurrencyTool
+    _CHILDCLASS = CurrencyLayerSingleton
 
-class CurrencyTool(j.application.JSBaseConfigClass):
+
+class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
+
+    __jslocation__ = 'j.clients.currencylayer'
 
     _SCHEMATEXT = """
     @url = jumpscale.currencylayer.client
@@ -18,11 +21,12 @@ class CurrencyTool(j.application.JSBaseConfigClass):
     api_key_ = "" (S)
     """
 
-    __jslocation__ = 'j.clients.currencylayer'
-
     def __init__(self):
-        factory = CurrencyTools()
-        j.application.JSBaseConfigClass(self,name="main",factory=factory)
+        factory = CurrencyLayerFactory() #get access to factory, then give to only child = singleton
+        j.application.JSBaseConfigClass.__init__(self,name="main",factory=factory)
+
+    def _init(self):
+        #your initialization
 
 
 ```

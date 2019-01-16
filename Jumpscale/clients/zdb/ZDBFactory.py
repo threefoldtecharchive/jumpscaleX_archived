@@ -7,7 +7,6 @@ from Jumpscale import j
 from .ZDBAdminClient import ZDBAdminClient
 from .clients_impl import ZDBClientDirectMode, ZDBClientSeqMode, ZDBClientUserMode
 
-JSConfigBaseFactory = j.application.JSFactoryBaseClass
 
 
 _client_map = {
@@ -18,12 +17,12 @@ _client_map = {
 }
 
 
-class ZDBFactory(JSConfigBaseFactory):
+class ZDBFactory(j.application.JSBaseConfigsClass):
     __jslocation__ = "j.clients.zdb"
     _CHILDCLASS = ZDBAdminClient
 
     def client_admin_get(self, addr="localhost", port=9900, secret="123456", mode='seq'):
-        return ZDBAdminClient(addr=addr, port=port, secret=secret, mode=mode)
+        return ZDBAdminClient(factory=self,addr=addr, port=port, secret=secret,mode=mode)
 
     def client_get(self, nsname="test", addr="localhost", port=9900, secret="1234", mode="seq"):
         """
@@ -36,7 +35,7 @@ class ZDBFactory(JSConfigBaseFactory):
         if mode not in _client_map:
             return ValueError("mode %s not supported" % mode)
         klass = _client_map[mode]
-        return klass(addr=addr, port=port, secret=secret, nsname=nsname)
+        return klass(factory=self,addr=addr, port=port, secret=secret, nsname=nsname)
 
     def start_test_instance(self, destroydata=False, admin_secret="123456", namespaces_secret="1234"):
         """

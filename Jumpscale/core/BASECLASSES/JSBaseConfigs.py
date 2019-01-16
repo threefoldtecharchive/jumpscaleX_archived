@@ -11,8 +11,13 @@ class JSBaseConfigs(JSBase):
         self._model_ = None
         self._children = {}
 
+        self._class_init() #is needed to init class properties, needs to be first thing
+        JSBase.__init__(self,init=False)
+
         if not hasattr(self.__class__,"_CHILDCLASS"):
             raise RuntimeError("_CHILDCLASS needs to be specified")
+
+        self._init()
 
     def _model_get(self):
         if self._model_ is None:
@@ -43,7 +48,7 @@ class JSBaseConfigs(JSBase):
         return self._children[name]
 
 
-    def _Get(self,name=None,id=None,die=True ,create_new=True,childclass_name=None,**kwargs):
+    def _Get(self,name=None,id=None ,create_new=True,**kwargs):
         """
         :param id: id of the obj to find, is a unique id
         :param name: of the object, can be empty when searching based on id or the search criteria (kwargs)
@@ -187,11 +192,11 @@ class JSBaseConfigs(JSBase):
             x.append(i[0].upper()+i[1:].lower()+"(")
         return x
 
-    def __setattr__(self, name, value):
-        if name.startswith("_"):
-            self.__dict__[name]=value
-            return
-        raise RuntimeError("readonly")
+    def __setattr__(self, key, value):
+        # if key.startswith("_"):
+        #     self.__dict__[key]=value
+        #     return
+        self.__dict__[key]=value
 
     def __str__(self):
         out = "%s\n"%self.__jslocation__

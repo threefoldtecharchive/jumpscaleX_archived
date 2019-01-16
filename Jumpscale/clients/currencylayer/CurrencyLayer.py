@@ -19,7 +19,7 @@ class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
 
 
     def __init__(self):
-        factory = CurrencyLayerFactory()
+        factory = CurrencyLayerFactory() #get access to factory, then give to only child = singleton
         j.application.JSBaseConfigClass.__init__(self,name="main",factory=factory)
 
     def _init(self):

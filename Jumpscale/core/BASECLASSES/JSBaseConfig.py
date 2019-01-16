@@ -15,20 +15,29 @@ class JSBaseConfig(JSBase):
             JSBase._class_init(self)
 
 
-    def __init__(self,data, factory=None, **kwargs):
+    def __init__(self,data=None, factory=None, **kwargs):
         """
-        :param name: for the service
-        :param data, if specified will be used to populate this object, is the result of querying the model
-        :param factory, if there was a factory calling this init
-        :param kwargs: TO PASS on to the class who inherits from this
+        :param data, is a jsobject as result of jsX schema's
+        :param factory, don't forget to specify this
+        :param kwargs: will be updated in the self.data object
+
+        the self.data object is a jsobject (result of using the jsx schemas)
+
         """
         self._class_init() #is needed to init class properties, needs to be first thing
         JSBase.__init__(self,init=False)
 
-        self.data = data
         self._factory = factory
 
-        self._init(**kwargs)
+        if data:
+            if not hasattr(data,"_JSOBJ"):
+                raise RuntimeError("data should be a jsobj")
+            self.data = data
+            self.data_update(**kwargs)
+        else:
+            self.data = self._model.new(data=kwargs)
+
+        self._init()
 
         if "name" not in  self.data._ddict:
             raise RuntimeError("name needs to be specified in data")
@@ -106,7 +115,6 @@ class JSBaseConfig(JSBase):
         if attr in self._model.schema.propertynames:
             return self.data.__getattribute__(attr)
         return self.__getattribute__(attr)
-        # raise RuntimeError("could not find attribute:%s"%attr)
 
     def __dir__(self):
         r = self._model.schema.propertynames

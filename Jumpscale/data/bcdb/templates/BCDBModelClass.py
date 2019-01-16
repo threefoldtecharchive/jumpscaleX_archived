@@ -15,6 +15,6 @@ MODEL_CLASS = bcdb._BCDBModelClass
 class {{BASENAME}}(Index_CLASS,MODEL_CLASS):
     def __init__(self,bcdb,schema,reset=False):
         MODEL_CLASS.__init__(self, bcdb=bcdb,schema=schema,reset=reset)
-        self.write_once = False
+        self.readonly = False
         self._init()
 
