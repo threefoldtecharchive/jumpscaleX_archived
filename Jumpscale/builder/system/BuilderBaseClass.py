@@ -4,8 +4,6 @@ BaseClass = j.application.JSBaseClass
 
 
 class BuilderBaseClass(BaseClass):
-    Name = "base"
-
     def __init__(self):
         BaseClass.__init__(self,True)
         self.bins = []
@@ -49,7 +47,7 @@ class BuilderBaseClass(BaseClass):
                 dir = dir[1:]
             dir_dest = j.sal.fs.joinPaths(dest, dir)
             j.builder.tools.dir_ensure(dir_dest)
-            j.sal.fs.copyDirTree(dir, j.sal.fs.joinPaths(dest, dir))
+            j.sal.fs.copyDirTree(dir, dir_dest)
 
     def flist_create(self, hub_instance=None):
         """
@@ -68,18 +66,18 @@ class BuilderBaseClass(BaseClass):
         self.sandbox_create(sandbox_dir)
 
         self._logger.info('building flist')
-        build_dir = j.sal.fs.getTmpDirPath()
-        tarfile = '/tmp/{}.tar.gz'.format(self.Name)
+        tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
 
         j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, sandbox_dir))
 
         if hub_instance:
-            if not j.clients.zerohub.exists(hub_instance):
+            if not j.clients.zhub._exists(name=hub_instance):
                 raise j.exceptions.Input("hub instance %s does not exists, can't upload to the hub" % hub_instance)
-            hub = j.clients.zerohub.get(hub_instance)
-            hub.authentificate()
+            hub = j.clients.zhub.get(hub_instance)
+            hub.authenticate()
             self._logger.info("uploading flist to the hub")
             hub.upload(tarfile)
-            self._logger.info("uploaded at https://hub.gig.tech/%s/etcd-3.3.4.flist", hub.config.data['username'])
+            self._logger.info("uploaded at https://hub.grid.tf/{}/{}.flist".format(hub.username,
+                                                                                   self.NAME))
 
         return tarfile
