@@ -124,7 +124,7 @@ class BuilderZDB(j.builder.system._BaseClass):
         get client to zdb
 
         """
-        cl = j.clients.zdb.client_get(nsname=nsname, addr=self.addr, port=self.port, secret=secret, mode=self.mode)
+        cl = j.clients.zdb.get(name=self.name,nsname=nsname, addr=self.addr, port=self.port, secret=secret, mode=self.mode)
 
         assert cl.ping()
 
