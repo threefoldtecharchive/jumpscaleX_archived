@@ -11,11 +11,14 @@ class BuilderOpenResty(j.builder.system._BaseClass):
     def _init(self):
         self.BUILDDIR = j.core.tools.text_replace('{DIR_VAR}/build/')
         self.bins = [
-            j.core.tools.text_replace('{{DIR_BASE}}/bin/openresty'),
-            j.core.tools.text_replace('{{DIR_BASE}}/bin/lua')
+            j.core.tools.text_replace('{DIR_BASE}/bin/openresty'),
+            j.core.tools.text_replace('{DIR_BASE}/bin/lua'),
+            j.core.tools.text_replace('{DIR_BASE}/bin/resty'),
         ]
         self.dirs = {
-            j.core.tools.text_replace('{{DIR_BASE}}/cfg/openresty.cfg'): 'cfg/',
+            j.core.tools.text_replace('{DIR_BASE}/cfg/openresty.cfg'): 'cfg/',
+            j.core.tools.text_replace('{DIR_BASE}/cfg/mime.types'): 'cfg/',
+            str(j.core.tools.text_replace('{DIR_BASE}/openresty/')): 'openresty/'
         }
         self.new_dirs = ['var/pid/', 'var/log/']
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'openresty_startup.toml')
