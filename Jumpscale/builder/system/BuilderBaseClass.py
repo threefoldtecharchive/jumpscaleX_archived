@@ -49,7 +49,7 @@ class BuilderBaseClass(BaseClass):
 
         # copy dirs in self.dirs
         for src, dir_dest in self.dirs.items():
-            file = True if j.sal.fs.getBaseName(src) else False
+            file = True if j.sal.fs.isFile(src) else False
 
             # remove the first slash to make sure the path will join correctly
             dir_dest = dir_dest[1:] if dir_dest.startswith('/') else dir_dest
