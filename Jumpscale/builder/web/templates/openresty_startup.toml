@@ -3,3 +3,9 @@ name = "core.system"
 
 [startup.openresty.args]
 name = "/sandbox/bin/openresty"
+
+[startup.openresty.args.env]
+LUALIB = "/sandbox/openresty/lualib"
+LUA_PATH = "?.lua;$LUALIB/?/init.lua;$LUALIB/?.lua;$LUALIB/?/?.lua;$LUALIB/?/core.lua;/sandbox/openresty/lapis/?.lua"
+LUA_CPATH = "$LUALIB/?.so;./?.so"
+LAPIS_OPENRESTY = "$PBASE/bin/openresty"
