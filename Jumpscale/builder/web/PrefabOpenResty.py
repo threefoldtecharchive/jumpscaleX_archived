@@ -10,6 +10,14 @@ class PrefabOpenResty(j.builder.system._BaseClass):
 
     def _init(self):
         self.BUILDDIR = j.core.tools.text_replace("{DIR_VAR}/build/")
+        self.bins = [
+            j.core.tools.text_replace('{{DIR_BASE}}/bin/openresty'),
+            j.core.tools.text_replace('{{DIR_BASE}}/bin/lua')
+        ]
+        self.dirs = {j.core.tools.text_replace('{{DIR_BASE}}/cfg/openresty.cfg'): '/cfg/'}
+        self.new_dirs = ['/var/pid/', '/var/log/']
+        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'openresty_startup.toml')
+        self.new_files = {'startup.toml': j.sal.fs.readFile(startup_file)}
 
     def _build_prepare(self):
         j.builder.system.package.mdupdate()
@@ -156,63 +164,63 @@ class PrefabOpenResty(j.builder.system._BaseClass):
         j.sal.process.execute(C)
         # self.cleanup()
 
-    def flist_build(self, hub_instance):
-        """
-        js_shell 'j.builder.web.openresty.flist_build()'
-        :return:
-        """
-        self._build_prepare()
-        command = """
-        cd {DIR_VAR}/build/openresty
-        rm -rf /tmp/openresty/sandbox/
-        mkdir -p /tmp/openresty/sandbox/var/pid
-        mkdir -p /tmp/openresty/sandbox/var/log
-        ./configure \
-            --with-cc-opt="-I/usr/local/opt/openssl/include/ -I/usr/local/opt/pcre/include/" \
-            --with-ld-opt="-L/usr/local/opt/openssl/lib/ -L/usr/local/opt/pcre/lib/" \
-            --prefix="/tmp/openresty/sandbox/openresty" \
-            --sbin-path="/tmp/openresty/sandbox/bin/openresty" \
-            --modules-path="/sandbox/lib" \
-            --pid-path="/sandbox/var/pid/openresty.pid" \
-            --error-log-path="/sandbox/var/log/openresty.log" \
-            --lock-path="/sandbox/var/nginx.lock" \
-            --conf-path="/sandbox/cfg/openresty.cfg" \
-            -j8
-        make -j8
-        make install
-        rm -rf {DIR_VAR}/build/openresty
+    # def flist_build(self, hub_instance):
+    #     """
+    #     js_shell 'j.builder.web.openresty.flist_build()'
+    #     :return:
+    #     """
+    #     self._build_prepare()
+    #     command = """
+    #     cd {DIR_VAR}/build/openresty
+    #     rm -rf /tmp/openresty/sandbox/
+    #     mkdir -p /tmp/openresty/sandbox/var/pid
+    #     mkdir -p /tmp/openresty/sandbox/var/log
+    #     ./configure \
+    #         --with-cc-opt="-I/usr/local/opt/openssl/include/ -I/usr/local/opt/pcre/include/" \
+    #         --with-ld-opt="-L/usr/local/opt/openssl/lib/ -L/usr/local/opt/pcre/lib/" \
+    #         --prefix="/tmp/openresty/sandbox/openresty" \
+    #         --sbin-path="/tmp/openresty/sandbox/bin/openresty" \
+    #         --modules-path="/sandbox/lib" \
+    #         --pid-path="/sandbox/var/pid/openresty.pid" \
+    #         --error-log-path="/sandbox/var/log/openresty.log" \
+    #         --lock-path="/sandbox/var/nginx.lock" \
+    #         --conf-path="/sandbox/cfg/openresty.cfg" \
+    #         -j8
+    #     make -j8
+    #     make install
+    #     rm -rf {DIR_VAR}/build/openresty
 
-        """
-        command = j.builder.tools.replace(command)
-        command = j.core.tools.text_replace(command)
-        j.sal.process.execute(command)
+    #     """
+    #     command = j.builder.tools.replace(command)
+    #     command = j.core.tools.text_replace(command)
+    #     j.sal.process.execute(command)
 
-        command = """
-        set -ex
-        mkdir -p /tmp/openresty/sandbox/cfg
-        mkdir -p /tmp/openresty/sandbox/bin
-        cp {DIR_BASE}/cfg/openresty.cfg /tmp/openresty/sandbox/cfg/
+    #     command = """
+    #     set -ex
+    #     mkdir -p /tmp/openresty/sandbox/cfg
+    #     mkdir -p /tmp/openresty/sandbox/bin
+    #     cp {DIR_BASE}/cfg/openresty.cfg /tmp/openresty/sandbox/cfg/
 
-        cp /tmp/openresty/sandbox/openresty/luajit/bin/luajit /tmp/openresty/sandbox/bin/lua
-        cp /tmp/openresty/sandbox/openresty/bin/resty* /tmp/openresty/sandbox/bin/
+    #     cp /tmp/openresty/sandbox/openresty/luajit/bin/luajit /tmp/openresty/sandbox/bin/lua
+    #     cp /tmp/openresty/sandbox/openresty/bin/resty* /tmp/openresty/sandbox/bin/
 
-        cp {DIR_BIN}/*.lua /tmp/openresty/sandbox/bin/
-        cp {DIR_BIN}/lapis /tmp/openresty/sandbox/bin/
-        cp {DIR_BIN}/moon* /tmp/openresty/sandbox/bin/
+    #     cp {DIR_BIN}/*.lua /tmp/openresty/sandbox/bin/
+    #     cp {DIR_BIN}/lapis /tmp/openresty/sandbox/bin/
+    #     cp {DIR_BIN}/moon* /tmp/openresty/sandbox/bin/
 
-        """
+    #     """
 
-        command = j.core.tools.text_replace(command)
+    #     command = j.core.tools.text_replace(command)
 
-        j.sal.process.execute(command)
-        self._logger.info('building flist')
-        build_dir = '/tmp/openresty/'
-        tarfile = '/tmp/openresty.tar.gz'
-        j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, build_dir))
+    #     j.sal.process.execute(command)
+    #     self._logger.info('building flist')
+    #     build_dir = '/tmp/openresty/'
+    #     tarfile = '/tmp/openresty.tar.gz'
+    #     j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, build_dir))
 
-        hub = j.clients.zhub.get(hub_instance)
-        hub.authenticate()
-        self._logger.info("uploading flist to the hub")
-        hub.upload(tarfile)
+    #     hub = j.clients.zhub.get(hub_instance)
+    #     hub.authenticate()
+    #     self._logger.info("uploading flist to the hub")
+    #     hub.upload(tarfile)
 
-        return tarfile
+    #     return tarfile

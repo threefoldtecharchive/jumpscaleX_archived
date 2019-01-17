@@ -1,0 +1,5 @@
+[startup.openresty]
+name = "openresty"
+
+[startup.openresty.args]
+name = "/sandbox/bin/openresty"
