@@ -41,7 +41,7 @@ some tools
 
 ## Installing Jumpscale Core (NEW, need to test!!!)
 
-[see documentation](install/install.md)
+[see documentation](/docs/Installation/install.md)
 
 
 ## Usage
