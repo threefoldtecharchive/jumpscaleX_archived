@@ -111,10 +111,12 @@ class BuilderZDB(j.builder.system._BaseClass):
         """
 
         """
-        cl = j.clients.zdb.client_admin_get(addr=self.addr,
+        cl = j.clients.zdb.get(addr=self.addr,
                                             port=self.port,
                                             secret=self.adminsecret,
-                                            mode=self.mode)
+                                            mode=self.mode
+                                            name=self.name
+                                            admin=True)
         return cl
 
     def client_get(self, nsname="default", secret="1234"):

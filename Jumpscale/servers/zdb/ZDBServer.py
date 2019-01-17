@@ -47,7 +47,6 @@ class ZDBServer(j.application.JSBaseClass):
 
         """
 
-
         if not destroydata and j.sal.nettools.tcpPortConnectionTest(self.addr, self.port):
             r = j.clients.redis.get(ipaddr=self.addr, port=self.port)
             r.ping()
@@ -101,22 +100,19 @@ class ZDBServer(j.application.JSBaseClass):
     def datadir(self):
         return "/sandbox/var/zdb/%s/"%self.name
 
-    def client_admin_get(self):
+    def client_admin_get(self,name="test"):
         """
 
         """
-        cl = j.clients.zdb.client_admin_get(addr=self.addr,
-                                            port=self.port,
-                                            secret=self.adminsecret,
-                                            mode=self.mode)
+        cl = j.clients.zdb.get(name=name, addr=self.addr, port=self.port, secret=self.adminsecret, mode=self.mode, admin=True)
         return cl
 
-    def client_get(self, nsname="default", secret="1234"):
+    def client_get(self,name="test", nsname="default", secret="1234"):
         """
         get client to zdb
 
         """
-        cl = j.clients.zdb.client_get(nsname=nsname, addr=self.addr, port=self.port, secret=secret, mode=self.mode)
+        cl = j.clients.zdb.get(name=name, nsname=nsname, addr=self.addr, port=self.port, secret=secret, mode=self.mode)
 
         assert cl.ping()
 
