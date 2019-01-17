@@ -9,15 +9,15 @@ class PrefabOpenResty(j.builder.system._BaseClass):
     NAME = 'openresty'
 
     def _init(self):
-        self.BUILDDIR = j.core.tools.text_replace("{DIR_VAR}/build/")
+        self.BUILDDIR = j.core.tools.text_replace('{DIR_VAR}/build/')
         self.bins = [
             j.core.tools.text_replace('{{DIR_BASE}}/bin/openresty'),
             j.core.tools.text_replace('{{DIR_BASE}}/bin/lua')
         ]
-        self.dirs = {j.core.tools.text_replace('{{DIR_BASE}}/cfg/openresty.cfg'): '/cfg/'}
-        self.new_dirs = ['/var/pid/', '/var/log/']
+        self.dirs = {j.core.tools.text_replace('{{DIR_BASE}}/cfg/openresty.cfg'): 'cfg/'}
+        self.new_dirs = ['var/pid/', 'var/log/']
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'openresty_startup.toml')
-        self.new_files = {'startup.toml': j.sal.fs.readFile(startup_file)}
+        self.new_files = {'//startup.toml': j.sal.fs.readFile(startup_file)}
 
     def _build_prepare(self):
         j.builder.system.package.mdupdate()
