@@ -3,14 +3,16 @@ from Jumpscale import j
 
 class BuilderTraefik(j.builder.system._BaseClass):
     NAME = 'traefik'
-    VERSION = '1.7.7' # latest
+    VERSION = '1.7.7'  # latest
     URL = 'https://github.com/containous/traefik/releases/download/v{version}/traefik_{platform}-{arch}'
 
     def _init(self):
         self.go_runtime = self.b.runtimes.golang
         self.traefik_dir = self.go_runtime.package_path_get('containous/traefik')
+        self.bins = [self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)]
+        self.dirs = ['/etc/ssl/certs/ca-certificates.crt']
 
-    def install(self, reset=False):
+    def build(self, reset=False):
         """install traefik by getting the source from https://github.com/containous/traefik
             and building it.
 
@@ -84,4 +86,3 @@ class BuilderTraefik(j.builder.system._BaseClass):
         :type name: str, optional
         """
         self._test_run(name=name, obj_key='test_main')
-

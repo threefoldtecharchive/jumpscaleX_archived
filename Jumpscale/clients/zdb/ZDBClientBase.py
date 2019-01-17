@@ -72,10 +72,17 @@ class ZDBClientBase(JSBASE):
     def exists(self, key):
         return self.redis.execute_command("EXISTS", key) == 1
 
-    def delete(self, key):
+    def key_delete(self, key):
         if not key:
             raise ValueError("key must be provided")
         self.redis.execute_command("DEL", key)
+
+    def data_update(self, **kwargs):
+        # the mode cannot be changed as the childclass is different based on the mode, and so a new client needs to be created
+        if 'mode' in kwargs:
+            raise ValueError("Mode cannot be changed after client is created")
+        self.data.data_update(data=kwargs)
+        self.data.save()
 
     def flush(self, meta=None):
         """

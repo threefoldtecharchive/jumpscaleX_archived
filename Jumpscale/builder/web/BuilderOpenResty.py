@@ -5,12 +5,45 @@ from time import sleep
 
 
 
-class PrefabOpenResty(j.builder.system._BaseClass):
+class BuilderOpenResty(j.builder.system._BaseClass):
     NAME = 'openresty'
 
     def _init(self):
-        self.BUILDDIR = j.core.tools.text_replace("{DIR_VAR}/build/")
+        self.BUILDDIR = j.core.tools.text_replace('{DIR_VAR}/build/')
+        self.bins = [
+            j.core.tools.text_replace('{DIR_BASE}/bin/openresty'),
+            j.core.tools.text_replace('{DIR_BASE}/bin/lua'),
+            j.core.tools.text_replace('{DIR_BASE}/bin/resty'),
+            j.core.tools.text_replace('{DIR_BASE}/bin/restydoc'),
+            j.core.tools.text_replace('{DIR_BASE}/bin/restydoc-index'),
+            j.core.tools.text_replace('{DIR_BASE}/bin/lapis'),
+            j.core.tools.text_replace('{DIR_BASE}/bin/moon'),
+            j.core.tools.text_replace('{DIR_BASE}/bin/moonc')
+        ]
+        self.dirs = {
+            j.core.tools.text_replace('{DIR_BASE}/cfg/openresty.cfg'): 'cfg/',
+            j.core.tools.text_replace('{DIR_BASE}/cfg/mime.types'): 'cfg/',
+            j.core.tools.text_replace('{DIR_BASE}/openresty/'): 'openresty/',
+        }
+        lua_files = j.sal.fs.listFilesInDir(j.core.tools.text_replace('{DIR_BASE}/bin/'), filter='*.lua')
+        for file in lua_files:
+            self.dirs[file] = 'bin/'
 
+        self.new_dirs = ['var/pid/', 'var/log/']
+        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'openresty_startup.toml')
+        self.new_files = {'//startup.toml': j.sal.fs.readFile(startup_file)}
+
+    def _build_prepare(self):
+        j.builder.system.package.mdupdate()
+        j.builder.tools.package_install('build-essential libpcre3-dev libssl-dev zlib1g-dev')
+
+        j.builder.tools.dir_remove('{DIR_TEMP}/build/openresty')
+        j.core.tools.dir_ensure('{DIR_TEMP}/build/openresty')
+        url = 'https://openresty.org/download/openresty-1.13.6.2.tar.gz'
+        dest = j.core.tools.text_replace('{DIR_VAR}/build/openresty')
+        j.sal.fs.createDir(dest)
+        j.builder.tools.file_download(url, to=dest, overwrite=False, retry=3,
+                                      expand=True, minsizekb=1000, removeTopDir=True, deletedest=True)
 
     def build(self, reset=False):
         """
@@ -24,17 +57,7 @@ class PrefabOpenResty(j.builder.system._BaseClass):
         j.tools.bash.local.locale_check()
 
         if j.core.platformtype.myplatform.isUbuntu:
-            j.builder.system.package.mdupdate()
-            j.builder.tools.package_install("build-essential libpcre3-dev libssl-dev zlib1g-dev")
-
-            j.builder.tools.dir_remove("{DIR_TEMP}/build/openresty")
-            j.core.tools.dir_ensure("{DIR_TEMP}/build/openresty")
-            url="https://openresty.org/download/openresty-1.13.6.2.tar.gz"
-            dest = j.core.tools.text_replace("{DIR_VAR}/build/openresty")
-            j.sal.fs.createDir(dest)
-            j.builder.tools.file_download(url, to=dest, overwrite=False, retry=3,
-                        expand=True, minsizekb=1000, removeTopDir=True, deletedest=True)
-
+            self._build_prepare()
             C = """
             cd {DIR_VAR}/build/openresty
             mkdir -p /sandbox/var/pid

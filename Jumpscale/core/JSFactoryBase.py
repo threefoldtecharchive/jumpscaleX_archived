@@ -103,7 +103,7 @@ class JSFactoryBase(JSBase):
         if kwargs is not {}:
             data.data_update(data=kwargs)
 
-        child_class = self._childclass_selector(childclass_name=childclass_name)
+        child_class = self._childclass_selector(childclass_name=childclass_name, data=data)
 
         self._logger.debug("create child for %s: name:%s class:'%s' "%(self.__location__,name,childclass_name))
 
@@ -131,10 +131,13 @@ class JSFactoryBase(JSBase):
         self._children.pop(key)
 
 
-    def _childclass_selector(self,childclass_name=None):
+    def _childclass_selector(self,childclass_name=None, data=None):
         """
         gives a creator of a factory the ability to change the type of child to be returned
-        :return:
+
+        :param data: the data is passed to this method to make it possible to decide the type of the childclass from the config
+        see zdb client for an example
+        :return: the child class
         """
         if self.__class__._CHILDCLASS is None:
             raise RuntimeError("__class__._CHILDCLASS should be set")

@@ -6,13 +6,9 @@ from Jumpscale import j
 from ..ZDBClientBase import ZDBClientBase
 
 
-
+MODE = "seq"
 
 class ZDBClientSeqMode(ZDBClientBase):
-
-    def __init__(self, nsname, addr="localhost", port=9900, secret="", admin_secret=None):
-
-        super().__init__(nsname=nsname, addr=addr, port=port, mode="seq", secret=secret)
 
     def _key_encode(self, key):
         if key is None:
