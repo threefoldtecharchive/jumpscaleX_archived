@@ -259,3 +259,13 @@ def test_encode_currency():
     for tc in test_cases:
         result = encode_currency(tc['value'])
         assert tc['expected_result'] == result
+
+def test_encode_unknown_type():
+    with pytest.raises(ValueError):
+        encode(Exception('foo'))
+
+def test_encode_bool():
+    value = True
+    output = encode(value)
+    expected_output = bytearray(b'\x01')
+    assert output == expected_output, "Failed to encode boolean value to binary"

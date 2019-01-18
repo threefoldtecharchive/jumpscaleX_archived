@@ -194,7 +194,9 @@ def encode(value):
     # try to rivbin-encode the value based on its python type
     value_type = type(value)
     if value_type in (bytes, bytearray):
-        return bytearray().extend(value)
+        result = bytearray()
+        result.extend(value)
+        return result
     elif value_type is int:
         return encode_int(value)
     elif value_type is bool:
