@@ -173,7 +173,7 @@ class JSBaseConfigs(JSBase):
         if name.startswith("_"):
             return self.__getattribute__(name)
         if name.lower().rstrip("(") in METHODS:
-            return self.__getattribute__(name.lower().rstrip("("))
+            return self.__getattribute__("_"+name.rstrip("("))
         #else see if we can from the factory find the child object
         r =  self._Get(name=name,die=False)
         #if none means does not exist yet will have to create a new one
