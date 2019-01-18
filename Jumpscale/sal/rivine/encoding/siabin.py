@@ -1,7 +1,10 @@
 """
 Module implementing the siabin binary encoding,
 for the purposes of creating signatures only.
-Decoding of siabin-encoded data is now supported.
+
+Decoding of siabin-encoded data is not supported,
+and is out of scope for the rivine SAL
+(the official python library implementation of Rivine Light).
 
 https://github.com/threefoldtech/rivine/blob/18b19eac90f3cf9585a7ad4de4ecd612bee9c8e6/doc/encoding/SiaEncoding.md
 """

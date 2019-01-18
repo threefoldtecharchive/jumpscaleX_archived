@@ -1,7 +1,10 @@
 """
 Module implementing the rivbin binary encoding,
 for the purposes of creating signatures only.
-Decoding of rivbin-encoded data is now supported.
+
+Decoding of rivbin-encoded data is not supported,
+and is out of scope for the rivine SAL
+(the official python library implementation of Rivine Light).
 
 https://github.com/threefoldtech/rivine/blob/7c87733e250d0e195c87119208fe7ba15e762e4b/doc/encoding/RivineEncoding.md
 """
