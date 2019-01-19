@@ -9,6 +9,7 @@ from .BASECLASSES.JSBase import JSBase
 from .BASECLASSES.JSFactoryBase import JSFactoryBase
 from .BASECLASSES.JSBaseConfig import JSBaseConfig
 from .BASECLASSES.JSBaseConfigs import JSBaseConfigs
+from .BASECLASSES.JSBaseConfigParent import JSBaseConfigParent
 import gc
 import sys
 import types
@@ -137,6 +138,19 @@ class Application(object):
 
         """
         return JSBaseConfig
+
+    @property
+    def JSBaseConfigParentClass(self):
+        """
+        JSBase = j.application.JSBaseConfigParentClass
+        class myclass(JSBase):
+            def __init__(self):
+                JSBase.__init__(self)
+
+        """
+        return JSBaseConfigParent
+
+
 
     @property
     def JSBaseConfigsClass(self):

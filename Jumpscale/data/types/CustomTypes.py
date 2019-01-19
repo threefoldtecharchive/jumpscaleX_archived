@@ -11,6 +11,7 @@ from uuid import UUID
 from ipaddress import IPv4Address, IPv6Address
 from ipaddress import AddressValueError, NetmaskValueError
 from Jumpscale import j
+from datetime import datetime
 
 
 class Guid(String):
@@ -614,15 +615,15 @@ class Numeric(String):
         return "'%s'" % self.toString(value)
 
 
-class Date(String):
+class DateTime(String):
     '''
     internal representation is an epoch (int)
     '''
-    NAME = 'date'
+    NAME = 'datetime'
 
     def __init__(self):
         String.__init__(self)
-        self._RE = re.compile('[0-9]{4}/[0-9]{2}/[0-9]{2}')
+        self._RE = re.compile('[0-9]{4}/[0-9]{2}/[0-9]{2}')  #something wrong here is not valid for time
 
     def get_default(self):
         return 0
@@ -670,7 +671,10 @@ class Date(String):
         - year(4char)/month/day 22:50
         - +4h
         - -4h
-        in stead of h also supported: s (second) ,m (min) ,h (hour) ,d (day),w (week)
+        in stead of h also supported: s (second) ,m (min) ,h (hour) ,d (day),w (week), M (month), Y (year)
+
+        will return epoch
+
         """
         def date_process(dd):
             if "/" not in dd:
@@ -716,7 +720,7 @@ class Date(String):
             return (v, fstr)
 
         if j.data.types.string.check(v):
-
+            v=v.strip("\"").strip("'")
             if v.strip() in ["0", ""]:
                 return 0
 
@@ -747,7 +751,7 @@ class Date(String):
 
     def test(self):
         """
-        js_shell 'j.data.types.date.test()'
+        js_shell 'j.data.types.datetime.test()'
         """
         c = """
         11/30 22:50
@@ -767,8 +771,8 @@ class Date(String):
             epoch = self.clean(line)
             out += "%s -> %s\n" % (line, self.toString(epoch))
         out_compare = """
-        11/30 22:50 -> 2018/11/30 22:50:00
-        11/30 -> 2018/11/30 10:00:00
+        11/30 22:50 -> 2019/11/30 22:50:00
+        11/30 -> 2019/11/30 10:00:00
         1990/11/30 -> 1990/11/30 10:00:00
         1990/11/30 10am:50 -> 1990/11/30 10:50:00
         1990/11/30 10pm:50 -> 1990/11/30 22:50:00
@@ -780,3 +784,69 @@ class Date(String):
         out = j.core.text.strip(out)
         out_compare = j.core.text.strip(out_compare)
         assert out == out_compare
+
+class Date(DateTime):
+    '''
+    internal representation is an epoch (int)
+    '''
+    NAME = 'date'
+
+    def __init__(self):
+        String.__init__(self)
+        self._RE = re.compile('[0-9]{4}/[0-9]{2}/[0-9]{2}')
+
+    def clean(self, v):
+        """
+        support following formats:
+        - 0: means undefined date
+        - epoch = int  (will round to start of the day = 00h)
+        - month/day  (will be current year if specified this way)
+        - year(4char)/month/day
+        - year(2char)/month/day
+        - day/month/4char
+        - +4M
+        - -4Y
+        in stead of h also supported: s (second) ,m (min) ,h (hour) ,d (day),w (week), M (month), Y (year)
+
+        will return epoch
+
+        """
+        #am sure there are better ways how to do this but goes to beginning of day
+        v2 = DateTime.clean(self,v)
+        dt = datetime.fromtimestamp(v2)
+        dt2 = datetime(dt.year,dt.month,dt.day,0,0)
+        return int(dt2.strftime('%s'))
+
+    def toString(self, val, local=True):
+        val = self.clean(val)
+        if val == 0:
+            return ""
+        return j.data.time.epoch2HRDate(val, local=local)
+
+    def test(self):
+        """
+        js_shell 'j.data.types.date.test()'
+        """
+        c = """
+        11/30
+        1990/11/30
+        30/11/1990
+        """
+        c = j.core.text.strip(c)
+        out = ""
+        for line in c.split("\n"):
+            if line.strip() == "":
+                continue
+            epoch = self.clean(line)
+            out += "%s -> %s\n" % (line, self.toString(epoch))
+        out_compare = """
+        11/30 -> 2019/11/30
+        1990/11/30 -> 1990/11/30
+        30/11/1990 -> 1990/11/30
+        """
+        print(out)
+        out = j.core.text.strip(out)
+        out_compare = j.core.text.strip(out_compare)
+        assert out == out_compare
+
+

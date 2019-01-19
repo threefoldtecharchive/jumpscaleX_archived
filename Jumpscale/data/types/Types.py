@@ -35,6 +35,7 @@ class Types(j.application.JSBaseClass):
         self.json = JSON()
         self.email = Email()
         self.date = Date()
+        self.datetime = DateTime()
         self.numeric = Numeric()
         self.percent = Percent()
         self.hash = Hash()
@@ -62,6 +63,7 @@ class Types(j.application.JSBaseClass):
         self._json = JSON
         self._email = Email
         self._date = Date
+        self._datetime = DateTime
         self._numeric = Numeric
         self._percent = Percent
         self._hash = Hash
@@ -115,6 +117,7 @@ class Types(j.application.JSBaseClass):
         - b, bool,boolean
         - tel, mobile
         - d, date
+        - t, datetime
         - n, numeric
         - h, hash       #set of 2 int
         - p, percent
@@ -159,6 +162,8 @@ class Types(j.application.JSBaseClass):
             res = self._multiline
         elif ttype in ["d", "date"]:
             res = self._date
+        elif ttype in ["t", "datetime"]:
+            res = self._datetime
         elif ttype in ["h", "hash"]:
             res = self._hash
         elif ttype in ["p", "perc","percent"]:

@@ -199,7 +199,7 @@ class JSBaseConfigs(JSBase):
         self.__dict__[key]=value
 
     def __str__(self):
-        out = "%s\n"%self.__jslocation__
+        out = "%s\n"%self.__class__._location
         # out+="methods:\n"
         # for item in METHODS:
         #     out+=" - %s\n"%item

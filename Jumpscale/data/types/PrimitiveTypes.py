@@ -433,7 +433,11 @@ class Percent(Integer):
     xx%
     when int: is native format is multiples of 100 e.g. 1000 is 10%
     when string: is e.g. 99 which would be 99%
-    when float is e.g. 0.5 which would be 50%
+    when float is e.g. 50.0 which would be 50%
+    when float is e.g. 0.5 which would be 0.5% #be carefull
+
+    when using in multiplication don't forget to divide by 100
+
     '''
 
     NAME = 'percent'
@@ -453,7 +457,7 @@ class Percent(Integer):
         if Integer().check(value):
             return value
         elif Float().check(value):
-            return value * 100
+            return value
         else:
             raise RuntimeError(
                 "could not convert input to percent, input was:%s" %

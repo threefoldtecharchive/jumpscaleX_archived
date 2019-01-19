@@ -7,7 +7,9 @@ TIMES = {'s': 1,
          'm': 60,
          'h': 3600,
          'd': 3600 * 24,
-         'w': 3600 * 24 * 7
+         'w': 3600 * 24 * 7,
+         'M': int(3600 * 24 * 365 / 12),
+         'Y': 3600 * 24 * 365,
          }
 
 
@@ -187,6 +189,11 @@ class Time_(object):
         and an int which would be just be returned
         means 3 days ago 3 hours ago
         if 0 or '' then is now
+
+        supported:
+
+            s (second) ,m (min) ,h (hour) ,d (day),w (week), M (month), Y (year)
+
         """
         if txt is None or str(txt).strip() == "0":
             return self.getTimeEpoch()
