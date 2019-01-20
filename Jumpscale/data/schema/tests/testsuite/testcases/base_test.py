@@ -21,6 +21,5 @@ class BaseTest(TestCase):
         self.logger.info(msg)
 
     def random_string(self):
-        return str(uuid4()).replace('-', '')[:10]
+        return 's' + str(uuid4()).replace('-', '')[:10]
     
-
