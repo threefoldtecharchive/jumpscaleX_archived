@@ -21,7 +21,6 @@ class BuilderCoreDns(j.builder.system._BaseClass):
             return
         # install golang
         j.builder.runtimes.golang.install(reset=reset)
-        # j.sal.process.execute(cmd
         j.builder.runtimes.golang.get('github.com/coredns/coredns', install=False, update=False)
         # go to package path and build (for coredns)
         j.builder.runtimes.golang.execute(
@@ -32,10 +31,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
     def start(self, config_file=None, args=None):
         """Starts coredns with the configuration file provided
 
-        :param config_file: config file path e.g. ~/traefik.toml
-        :type config_file: str, optional
-        :param args: any additional arguments to be passed to traefik
-        :type args: dict, optional (e.g. {'api': '', 'api.dashboard': 'true'})
+        :param config_file: config file path e.g. ~/coredns.json
         :raises j.exceptions.RuntimeError: in case config file does not exist
         :return: tmux pane
         :rtype: tmux.Pane
