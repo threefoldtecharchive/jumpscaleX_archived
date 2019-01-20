@@ -2,10 +2,10 @@ from Jumpscale import j
 from .EtcdClient import EtcdClient
 
 
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class EtcdFactory(JSConfigFactory):
+class EtcdFactory(JSConfigs):
 
     __jslocation__ = "j.clients.etcd"
     _CHILDCLASS = EtcdClient

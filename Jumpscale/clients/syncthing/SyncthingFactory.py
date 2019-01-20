@@ -1,8 +1,8 @@
 from Jumpscale import j
 from .SyncthingClient import SyncthingClient
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class SyncthingFactory(JSConfigFactory):
+class SyncthingFactory(JSConfigs):
     __jslocation__ = "j.clients.syncthing"
     _CHILDCLASS = SyncthingClient

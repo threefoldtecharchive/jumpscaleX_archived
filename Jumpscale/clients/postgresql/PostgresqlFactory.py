@@ -8,10 +8,10 @@ from .PostgresqlClient import PostgresClient
 # import lib.html
 
 
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class PostgresqlFactory(JSConfigFactory):
+class PostgresqlFactory(JSConfigs):
     """
     """
     __jslocation__ = "j.clients.postgres"

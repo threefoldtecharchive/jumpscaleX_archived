@@ -1,9 +1,9 @@
 from Jumpscale import j
 from .RacktivityClient import RacktivityClient
 
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class RacktivityFactory(JSConfigFactory):
+class RacktivityFactory(JSConfigs):
     __jslocation__ = "j.clients.racktivity"
     _CHILDCLASS = RacktivityClient

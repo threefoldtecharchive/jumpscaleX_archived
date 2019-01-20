@@ -1,10 +1,10 @@
 from Jumpscale import j
 from .PortalClient import PortalClient
 
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class PortalClientFactory(JSConfigFactory):
+class PortalClientFactory(JSConfigs):
     __jslocation__ = "j.clients.portal"
     _CHILDCLASS = PortalClient
 

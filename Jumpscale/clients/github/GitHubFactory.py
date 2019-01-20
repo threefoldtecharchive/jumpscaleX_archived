@@ -1,10 +1,10 @@
 from .GithubClient import GitHubClient
 from Jumpscale import j
 
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class GitHubFactory(JSConfigFactory):
+class GitHubFactory(JSConfigs):
 
     __jslocation__ = "j.clients.github"
     _CHILDCLASS = GitHubClient
