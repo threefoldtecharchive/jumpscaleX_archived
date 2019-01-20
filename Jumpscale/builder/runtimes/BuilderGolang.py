@@ -37,7 +37,7 @@ class BuilderGolang(j.builder.system._BaseClass):
         self.go_root_bin = self.tools.joinpaths(self.go_root, 'bin')
         self.go_path_bin = self.tools.joinpaths(self.go_path, 'bin')
 
-    def execute(self, command, **kwargs):
+    def execute(self, command, timeout=900, **kwargs):
         """execute a command with the default profile sourced
            with GOROOT and GOPATH
 
@@ -48,7 +48,7 @@ class BuilderGolang(j.builder.system._BaseClass):
         """
         profile_source = 'source %s\n' % self.profile_default.pathProfile
         command = j.core.tools.text_replace(profile_source + command)
-        return j.sal.process.execute(command, **kwargs)
+        return j.sal.process.execute(command, timeout=timeout, **kwargs)
 
     @property
     def version(self):
@@ -87,7 +87,7 @@ class BuilderGolang(j.builder.system._BaseClass):
         :rtype: str
         """
         if j.core.platformtype.myplatform.is32bit:
-            return  '386'
+            return '386'
         return 'amd64'
 
     def install(self, reset=False):
