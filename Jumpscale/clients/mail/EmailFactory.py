@@ -1,8 +1,8 @@
 from .EmailClient import EmailClient
 from Jumpscale import j
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class EmailFactory(JSConfigFactory):
+class EmailFactory(JSConfigs):
     __jslocation__ = "j.clients.email"
     _CHILDCLASS = EmailClient

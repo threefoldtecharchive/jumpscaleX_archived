@@ -3,10 +3,10 @@ from influxdb import client as influxdb
 import requests
 from requests.auth import HTTPBasicAuth
 from .InfluxdbClient import InfluxClient
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class InfluxdbFactory(JSConfigFactory):
+class InfluxdbFactory(JSConfigs):
 
     """
     """

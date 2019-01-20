@@ -1,9 +1,9 @@
 from Jumpscale import j
 from .SQLAlchemy import Base, SQLAlchemy
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class SQLAlchemyFactory(JSConfigFactory):
+class SQLAlchemyFactory(JSConfigs):
     __jslocation__ = "j.clients.sqlalchemy"
     _CHILDCLASS = SQLAlchemy
 

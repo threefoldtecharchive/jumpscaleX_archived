@@ -2,9 +2,9 @@ import os
 from Jumpscale import j
 from .OauthInstance import OauthClient
 
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class OauthFactory(JSConfigFactory):
+class OauthFactory(JSConfigs):
     __jslocation__ = "j.clients.oauth"
     _CHILDCLASS = OauthClient

@@ -1,9 +1,9 @@
 from Jumpscale import j
 from .TrelloClient import TrelloClient
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class Trello(JSConfigFactory):
+class Trello(JSConfigs):
     __jslocation__ = 'j.clients.trello'
     _CHILDCLASS = TrelloClient
 
