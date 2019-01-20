@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import copy
 import getpass
 # import socket
@@ -16,6 +17,7 @@ from fcntl import F_GETFL, F_SETFL, fcntl
 from os import O_NONBLOCK, read
 from pathlib import Path
 from subprocess import Popen, check_output
+
 
 # Returns escape codes from format codes
 def esc(*x):
@@ -305,6 +307,8 @@ class Tools():
 
     _LogFormatter = LogFormatter
     _supported_editors = ["micro","mcedit","joe","vim","vi"]  #DONT DO AS SET  OR ITS SORTED
+    j = None
+    _shell = None
 
     @staticmethod
     def log(msg):
@@ -458,7 +462,7 @@ class Tools():
             return Tools.exists(linkpath)
         if found:
             return True
-        logger.debug('path %s does not exist' % str(path.encode("utf-8")))
+        # logger.debug('path %s does not exist' % str(path.encode("utf-8")))
         return False
 
     @staticmethod
@@ -481,13 +485,14 @@ class Tools():
 
         MyEnv.state_set("ubuntu_base_install")
 
+
+    def clear():
+        print(chr(27)+'[2j')
+        print('\033c')
+        print('\x1bc')
+
     @staticmethod
     def shell(loc=True):
-        try:
-            from IPython.terminal.embed import InteractiveShellEmbed
-        except:
-            Tools._installbase()
-        _shell = InteractiveShellEmbed(banner1= "", exit_msg="")
         if loc:
             import inspect
             curframe = inspect.currentframe()
@@ -495,7 +500,40 @@ class Tools():
             f = calframe[1]
             print("\n*** file: %s"%f.filename)
             print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
-        return _shell(stack_depth=2)
+
+        if Tools._shell is None:
+            try:
+                from IPython.terminal.embed import InteractiveShellEmbed
+            except:
+                Tools._installbase()
+            Tools._shell = InteractiveShellEmbed(banner1= "", exit_msg="")
+        return Tools._shell(stack_depth=2)
+
+
+    # @staticmethod
+    # def shell2(loc=True,exit=True):
+    #     if loc:
+    #         import inspect
+    #         curframe = inspect.currentframe()
+    #         calframe = inspect.getouterframes(curframe, 2)
+    #         f = calframe[1]
+    #         print("\n*** file: %s"%f.filename)
+    #         print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
+    #     from ptpython.repl import embed
+    #     Tools.clear()
+    #     history_filename="~/.jsx_history"
+    #     if not Tools.exists(history_filename):
+    #         Tools.file_write(history_filename,"")
+    #     if exit:
+    #         sys.exit(embed(globals(), locals(),configure=ptconfig,history_filename=history_filename))
+    #     else:
+    #         embed(globals(), locals(),configure=ptconfig,history_filename=history_filename)
+    #     # try:
+    #     #     from IPython.terminal.embed import InteractiveShellEmbed
+    #     # except:
+    #     #     Tools._installbase()
+    #     # _shell = InteractiveShellEmbed(banner1= "", exit_msg="")
+    #     # return _shell(stack_depth=2)
 
     @staticmethod
     def text_strip(content, ignorecomments=False,args={},replace=False,executor=None,colors=False):
@@ -1206,7 +1244,7 @@ class UbuntuInstall():
                 "grequests>=0.3.0",
                 "httplib2>=0.9.2",
                 "ipcalc>=1.99.0",
-                # "ipython<6.5.0>=6.0.0",
+                "ipython<6.5.0>=6.0.0",
                 "Jinja2>=2.9.6",
                 "libtmux>=0.7.1",
                 "msgpack-python>=0.4.8",
@@ -1238,11 +1276,7 @@ class UbuntuInstall():
                 "Unidecode>=0.04.19",
                 "watchdog>=0.8.3",
                 "bpython",
-                "pbkdf2",
-                "prompt_toolkit",
-                "ptpython",
-                "ptpdb",
-                "ptpython"
+                "pbkdf2"
             ],
 
             # level 1: in the middle
@@ -1652,7 +1686,7 @@ class JumpscaleInstaller():
     def __init__(self):
 
         self.account = "threefoldtech"
-        self.branch = ["master"]
+        self.branch = ["development_kosmos"]
         self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
     def install(self):
@@ -1763,20 +1797,20 @@ class JumpscaleInstaller():
         Tools.execute("cd /sandbox;source env.sh;js_init generate")
 
 
+
 formatter = LogFormatter()
 
 logger = logging.Logger("installer")
-logger.level = logging.DEBUG  #10 is debug
+logger.level = logging.INFO  #10 is debug
 
 log_handler = logging.StreamHandler()
-log_handler.setLevel(logging.DEBUG)
+log_handler.setLevel(logging.INFO)
 log_handler.setFormatter(formatter)
 logger.addHandler(log_handler)
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 MyEnv.logger = logger
-
 
 # print (Tools.text_replace("{BLUE} this is a test {BOLD}{RED} now red {RESET} go back to white",colors=True))
 

@@ -92,7 +92,7 @@ class JSBaseConfigs(JSBase):
         return self.__class__._CHILDCLASS
 
 
-    def _New(self,name,**kwargs):
+    def new(self,name,**kwargs):
         """
         :param name: for the service
         :param kwargs: the data elements
@@ -101,7 +101,7 @@ class JSBaseConfigs(JSBase):
         """
 
 
-    def _Get(self,name=None,id=None,die=True ,create_new=True,**kwargs):
+    def get(self,name=None,id=None,die=True ,create_new=True,**kwargs):
         """
         :param id: id of the obj to find, is a unique id
         :param name: of the object, can be empty when searching based on id or the search criteria (kwargs)
@@ -112,38 +112,38 @@ class JSBaseConfigs(JSBase):
         :return: the service
         """
 
-    def _Reset(self):
+    def reset(self):
         """
         will destroy all data in the DB, be carefull
         :return:
         """
 
-    def _Find(self,**kwargs):
+    def find(self,**kwargs):
         """
         :param kwargs: e.g. color="red",...
         :return: list of the config objects
         """
 
 
-    def _Count(self,**kwargs):
+    def count(self,**kwargs):
         """
         :param kwargs: e.g. color="red",...
         :return: list of the config objects
         """
 
 
-    def _FindData(self,**kwargs):
+    def findData(self,**kwargs):
         """
         :param kwargs: e.g. color="red",...
         :return: list of the data objects (the data of the model)
         """
 
-    def _Delete(self,name):
+    def delete(self,name):
         """
         deletes the config with the name specified
         """
 
-    def _Exists(self, **kwargs):
+    def exists(self, **kwargs):
         """
         """
 

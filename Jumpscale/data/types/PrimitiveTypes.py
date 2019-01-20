@@ -448,6 +448,7 @@ class Percent(Integer):
         used to change the value to a predefined standard for this type
         """
         if String().check(value):
+            value=value.strip("\"").strip("'")
             if "%" in value:
                 value = value.replace("%", "")
             if "." in value:

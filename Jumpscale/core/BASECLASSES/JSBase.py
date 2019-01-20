@@ -3,7 +3,8 @@ import inspect
 import os
 import copy
 import sys
-
+import inspect
+import types
 
 class JSBase:
 
@@ -42,7 +43,15 @@ class JSBase:
             else:
                 self.__class__._location = self.__class__.__name__.lower()
 
+            self.__class__._methods_ = []
+            self.__class__._properties_ = []
+            self.__class__._inspected_ = False
+
+            # print("classinit_2:%s"%self.__class__)
+            # print(self.__class__._properties_)
+
             self.__class__._class_init_done = True
+
 
     def __init__(self,init=True):
         self._class_init() #is needed to init class properties, needs to be first thing
@@ -106,6 +115,70 @@ class JSBase:
         if self._cache_ is None:
             self._cache_ = j.core.cache.get(self._objid, expiration=self._cache_expiration)
         return self._cache_
+
+    def _inspect(self):
+        if not self.__class__._inspected_:
+            # print("INSPECT:%s"%self.__class__)
+            assert self.__class__._methods_==[]
+            assert self.__class__._properties_==[]
+            for name,obj in  inspect.getmembers(self.__class__):
+                if name.startswith("_"):
+                    continue
+                elif inspect.ismethod(obj):
+                    self.__class__._methods_.append(name)
+                elif inspect.ismethoddescriptor(obj):
+                    j.shell()
+                    w
+                elif inspect.isfunction(obj):
+                    self.__class__._methods_.append(name)
+                elif inspect.isclass(obj):
+                    j.shell()
+                    w
+                elif inspect.isgetsetdescriptor(obj):
+                    j.shell()
+                    w
+                else:
+                    self.__class__._properties_.append(name)
+
+            for item in self.__dict__.keys():
+                if item.startswith("_"):
+                    continue
+                if item not in self._methods_:
+                    self.__class__._properties_.append(item)
+
+            self.__class__._inspected_ = True
+        # else:
+        #     print("not inspect:%s"%self.__class__)
+
+
+    def _properties(self):
+        self._inspect()
+            # methods = self._methods()
+            # r=[]
+            # for item in self.__dict__.keys():
+            #     if item.startswith("_"):
+            #         continue
+            #     if item not in methods:
+            #         self.__class__._properties_.append(item)
+        return self.__class__._properties_
+
+    def _methods(self):
+        self._inspect()
+        # if self.__class__._methods_ == []:
+        #     for item in dir(self):
+        #         if item.startswith("_"):
+        #             continue
+        #         possible_method = eval("self.%s"%item)
+        #         if isinstance(possible_method,types.MethodType) and item not in self.__class__._methods_:
+        #             self.__class__._methods_.append(item)
+        return self.__class__._methods_
+
+
+    def _properties_children(self):
+        return []
+
+    def _properties_model(self):
+        return []
 
     @property
     def _ddict(self):

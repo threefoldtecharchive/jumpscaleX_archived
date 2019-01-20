@@ -2,8 +2,6 @@ from Jumpscale import j
 
 from .JSBase import JSBase
 
-METHODS=["find","get","reset","count","delete","new","exists"]
-
 class JSBaseConfigs(JSBase):
 
     def __init__(self):
@@ -19,7 +17,16 @@ class JSBaseConfigs(JSBase):
 
         self._init()
 
-    def _model_get(self):
+    def _class_init(self):
+
+        if not hasattr(self.__class__,"_class_init_done"):
+
+            JSBase._class_init(self)
+
+            # print("classinit:%s"%self.__class__)
+
+    @property
+    def _model(self):
         if self._model_ is None:
             self._model_ = j.application.bcdb_system.model_get_from_schema(self.__class__._CHILDCLASS._SCHEMATEXT)
         return self._model_
@@ -32,7 +39,7 @@ class JSBaseConfigs(JSBase):
         return self.__class__._CHILDCLASS
 
 
-    def _New(self,name,**kwargs):
+    def new(self,name,**kwargs):
         """
         :param name: for the service
         :param kwargs: the data elements
@@ -48,7 +55,7 @@ class JSBaseConfigs(JSBase):
         return self._children[name]
 
 
-    def _Get(self,name=None,id=None ,create_new=True,**kwargs):
+    def get(self,name=None,id=None ,die=True, create_new=True,**kwargs):
         """
         :param id: id of the obj to find, is a unique id
         :param name: of the object, can be empty when searching based on id or the search criteria (kwargs)
@@ -65,13 +72,15 @@ class JSBaseConfigs(JSBase):
             data = self._model.get(obj_id=id)
 
         elif name:
-            res = self._FindData(name=name)
+            res = self.findData(name=name)
             if len(res)<1:
                 if create_new:
                     new = True
                     data = self._model.new(data=kwargs)
                     data.name=name
                 else:
+                    if not die:
+                        return
                     return self._error_input_raise("Did not find instance for:%s, name searched for:%s"%(self.__class__._location,name))
 
             elif len(res)>1:
@@ -79,7 +88,7 @@ class JSBaseConfigs(JSBase):
             else:
                 data=res[0]
         else:
-            res = self._FindData(**kwargs)
+            res = self.findData(**kwargs)
             if len(res)<1:
                 if create_new:
                     data = self._model.new(data=kwargs)
@@ -100,34 +109,34 @@ class JSBaseConfigs(JSBase):
 
         return self._children[name]
 
-    def _Reset(self):
+    def reset(self):
         """
         will destroy all data in the DB, be carefull
         :return:
         """
-        for item in self._Find():
+        for item in self.find():
             item.delete()
 
-    def _Find(self,**kwargs):
+    def find(self,**kwargs):
         """
         :param kwargs: e.g. color="red",...
         :return: list of the config objects
         """
         res=[]
-        for dataobj in self._FindData(**kwargs):
-            res.append(self._Get(id=dataobj.id))
+        for dataobj in self.findData(**kwargs):
+            res.append(self.get(id=dataobj.id))
         return res
 
 
-    def _Count(self,**kwargs):
+    def count(self,**kwargs):
         """
         :param kwargs: e.g. color="red",...
         :return: list of the config objects
         """
-        return len(self._FindData(**kwargs))
+        return len(self.findData(**kwargs))
 
 
-    def _FindData(self,**kwargs):
+    def findData(self,**kwargs):
         """
         :param kwargs: e.g. color="red",...
         :return: list of the data objects (the data of the model)
@@ -146,13 +155,13 @@ class JSBaseConfigs(JSBase):
             return self._model.get_all()
 
 
-    def _Delete(self,name):
-        o=self._Get(name)
+    def delete(self,name):
+        o=self.get(name)
         o.delete()
 
 
-    def _Exists(self, **kwargs):
-        res = self._FindData(**kwargs)
+    def exists(self, **kwargs):
+        res = self.findData(**kwargs)
         if len(res) > 1:
             raise RuntimeError("found too many items for :%s, args:\n%s\n%s" %(self.__class__.__name__, kwargs, res))
         elif len(res) == 1:
@@ -168,34 +177,26 @@ class JSBaseConfigs(JSBase):
 
     def __getattr__(self, name):
         #if private then just return
-        if name == "_model":
-            return self._model_get()
-        if name.startswith("_"):
+        if name.startswith("_") or name in self._methods() or name in self._properties():
             return self.__getattribute__(name)
-        if name.lower().rstrip("(") in METHODS:
-            return self.__getattribute__("_"+name.rstrip("("))
         #else see if we can from the factory find the child object
-        r =  self._Get(name=name,die=False)
+        r =  self.get(name=name,die=False,create_new=False)
         #if none means does not exist yet will have to create a new one
         if r is None:
-            r=m.new(name=name)
-
+            r=self.new(name=name)
         return r
 
-    def __dir__(self):
+    def _properties_children(self):
         #list the children from the factory
-        x = [item.name for item in self._children.values()]
-        for item in self._FindData():
+        x=[]
+        for key,item in self._children.items():
+            x.append(key)
+        for item in self.findData():
             if item.name not in x:
                 x.append(item.name)
-        for i in METHODS:
-            x.append(i[0].upper()+i[1:].lower()+"(")
         return x
 
     def __setattr__(self, key, value):
-        # if key.startswith("_"):
-        #     self.__dict__[key]=value
-        #     return
         self.__dict__[key]=value
 
     def __str__(self):

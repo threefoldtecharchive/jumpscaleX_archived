@@ -10,8 +10,15 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
     __jslocation__ = "j.clients.ssh"
     _CHILDCLASS = SSHClientBase
 
+
+
     def _init(self):
         self._clients = {}
+        self.iets = 1
+
+    @property
+    def p(self):
+        return 2
 
     def _childclass_selector(self):
         if j.core.platformtype.myplatform.isMac:
@@ -19,7 +26,7 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
         else:
             return SSHClient
 
-    def Test(self):
+    def test(self):
         '''
         js_shell 'j.clients.ssh.Test()'
         '''

@@ -14,6 +14,8 @@ class JSBaseConfig(JSBase):
 
             JSBase._class_init(self)
 
+            # print("classinit:%s"%self.__class__)
+
 
     def __init__(self,data=None, factory=None, **kwargs):
         """
@@ -42,11 +44,8 @@ class JSBaseConfig(JSBase):
         if "name" not in  self.data._ddict:
             raise RuntimeError("name needs to be specified in data")
 
-        self.key = "%s_%s"%(self.__class__.__name__,self.data.name)
+        self._key = "%s_%s"%(self.__class__.__name__,self.data.name)
 
-        #if factory specified, add us to the children of the factory
-        if self._factory:
-            self._factory._children[self.key] = self
 
 
     def _obj_cache_reset(self):
@@ -70,7 +69,7 @@ class JSBaseConfig(JSBase):
     def delete(self):
         self._model.delete(self.data)
         if self._factory:
-            self._factory._children.pop(self.key)
+            self._factory._children.pop(self.data.name)
 
     def save(self):
         self.data.save()
@@ -116,20 +115,10 @@ class JSBaseConfig(JSBase):
             return self.data.__getattribute__(attr)
         return self.__getattribute__(attr)
 
-    def __dir__(self):
-        r = self._model.schema.propertynames
-        for item in self.__dict__.keys():
-            # print("-%s"%item)
-            if item not in r:
-                r.append(item)
-        # for item in self.__class__.__dict__.keys():
-        #     # if isinstance(self.__dict__[item],types.MethodType):
-        #     if not item.startswith("_"):
-        #         if item in r:
-        #             r.pop(item)
-        #         item+="("
-        #         r.append(item)
-        return r
+
+    def _properties_model(self):
+        return self._model.schema.propertynames
+
 
     def __setattr__(self, key, value):
         if key.startswith("_") or key=="data":

@@ -38,6 +38,12 @@ def profileStop(pr):
 
 # pr=profileStart()
 
+spec = util.spec_from_file_location("IT", "/%s/core/InstallTools.py"%os.path.dirname(__file__))
+
+from .core.InstallTools import MyEnv
+from .core.InstallTools import UbuntuInstall
+from .core.InstallTools import JumpscaleInstaller
+from .core.InstallTools import Tools
 
 class Core():
     def __init__(self,j):
@@ -87,14 +93,38 @@ class Core():
                 self._isSandbox = False
         return self._isSandbox
 
+from .core.KosmosShell import *
 
 class Jumpscale():
 
     def __init__(self):
         self._shell = None
         self.exceptions = None
+        # Tools.j=self
 
-    def shell(self,name="",loc=True):
+    def shellk(self,loc=True,exit=False):
+
+
+        KosmosShellConfig.j = self
+
+        if loc:
+            import inspect
+            curframe = inspect.currentframe()
+            calframe = inspect.getouterframes(curframe, 2)
+            f = calframe[1]
+            print("\n*** file: %s"%f.filename)
+            print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
+        from ptpython.repl import embed
+        # Tools.clear()
+        history_filename="~/.jsx_history"
+        if not Tools.exists(history_filename):
+            Tools.file_write(history_filename,"")
+        if exit:
+            sys.exit(embed(globals(), locals(),configure=ptconfig,history_filename=history_filename))
+        else:
+            embed(globals(), locals(),configure=ptconfig,history_filename=history_filename)
+
+    def shell(self,loc=True,name=None):
         if self._shell == None:
             from IPython.terminal.embed import InteractiveShellEmbed
             if name is not "":
@@ -107,12 +137,13 @@ class Jumpscale():
             f = calframe[1]
             print("\n*** file: %s"%f.filename)
             print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
+        # self.clear()
         return self._shell(stack_depth=2)
 
     def debug(self):
         import urwid
         urwid.set_encoding("utf8")
-        from pudb import set_trace; set_trace()
+        from ptdb import set_trace; set_trace()
 
 
 
@@ -125,16 +156,10 @@ j.core._groups = {}
 rootdir = os.path.dirname(os.path.abspath(__file__))
 # print("- setup root directory: %s" % rootdir)
 
-spec = util.spec_from_file_location("IT", "/%s/core/InstallTools.py"%os.path.dirname(__file__))
-
-
-from .core.InstallTools import MyEnv
-from .core.InstallTools import UbuntuInstall
-from .core.InstallTools import JumpscaleInstaller
-from .core.InstallTools import Tools
 
 
 j.core.myenv = MyEnv
+
 j.core.myenv._init()
 
 
