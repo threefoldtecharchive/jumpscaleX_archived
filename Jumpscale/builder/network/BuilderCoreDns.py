@@ -24,7 +24,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         j.builder.runtimes.golang.get('github.com/coredns/coredns', install=False, update=False)
         # go to package path and build (for coredns)
         j.builder.runtimes.golang.execute(
-            'cd {} && git    add threefoldtech_coredns https://github.com/threefoldtech/coredns &&git fetch threefoldtech_coredns && git checkout threefoldtech_coredns/master && make'.format(self.package_path))
+            'cd {} && git remote add threefoldtech_coredns https://github.com/threefoldtech/coredns &&git fetch threefoldtech_coredns && git checkout threefoldtech_coredns/master && make'.format(self.package_path))
 
         self._done_set('install')
 
