@@ -6,7 +6,7 @@ from Jumpscale import j
 from ..ZDBClientBase import ZDBClientBase
 
 
-
+MODE = "seq"
 
 class ZDBClientSeqMode(ZDBClientBase):
 

@@ -7,8 +7,9 @@ from .CollectionTypes import *
 from .PrimitiveTypes import *
 from Jumpscale import j
 
+
 class Types(j.application.JSBaseClass):
-    
+
     __jslocation__ = "j.data.types"
 
     def _init(self):
@@ -99,14 +100,13 @@ class Types(j.application.JSBaseClass):
 
         """
         ttype = ttype.lower().strip()
-        if ttype in ["e","enum"]:
+        if ttype in ["e", "enum"]:
             cl = self._enumeration
-            cl= cl(values=kwargs["values"])
+            cl = cl(values=kwargs["values"])
             self.enumerations[cl._md5] = cl
             return self.enumerations[cl._md5]
         else:
             raise j.exceptions.RuntimeError("did not find custom type:'%s'" % ttype)
-
 
     def get(self, ttype, return_class=False):
         """
@@ -138,13 +138,13 @@ class Types(j.application.JSBaseClass):
         ttype = ttype.lower().strip()
         if ttype in ["s", "str", "string"]:
             res = self._string
-        elif ttype in ["i","int", "integer"]:
+        elif ttype in ["i", "int", "integer"]:
             res = self._int
-        elif ttype in ["f","float"]:
+        elif ttype in ["f", "float"]:
             res = self._float
-        elif ttype in ["o","obj","object"]:
+        elif ttype in ["o", "obj", "object"]:
             res = self._object
-        elif ttype in ["b","bool", "boolean"]:
+        elif ttype in ["b", "bool", "boolean"]:
             res = self._bool
         elif ttype in ["tel", "mobile"]:
             res = self._tel
@@ -166,18 +166,18 @@ class Types(j.application.JSBaseClass):
             res = self._datetime
         elif ttype in ["h", "hash"]:
             res = self._hash
-        elif ttype in ["p", "perc","percent"]:
+        elif ttype in ["p", "perc", "percent"]:
             res = self._percent
-        elif ttype in ["n", "num","numeric"]:
+        elif ttype in ["n", "num", "numeric"]:
             res = self._numeric
         elif ttype.startswith("l"):
-            tt = self._list() #need to create new instance
+            tt = self._list()  # need to create new instance
             if return_class:
                 raise RuntimeError("cannot return class if subtype specified")
-            if len(ttype)>1:
-                tt.SUBTYPE  = self.get(ttype[1:],return_class=True)()
+            if len(ttype) > 1:
+                tt.SUBTYPE = self.get(ttype[1:], return_class=True)()
                 return tt
-            elif len(ttype)==1:
+            elif len(ttype) == 1:
                 assert tt.SUBTYPE == None
                 return tt
         elif ttype == "dict":
@@ -190,8 +190,10 @@ class Types(j.application.JSBaseClass):
             res = self._set
         elif ttype == "guid":
             res = self._guid
-        elif ttype == "url" or ttype=="u":
+        elif ttype == "url" or ttype == "u":
             res = self._url
+        elif ttype in ["bin", "bytes"]:
+            res = self._bytes
         else:
             raise j.exceptions.RuntimeError("did not find type:'%s'" % ttype)
 
@@ -199,7 +201,6 @@ class Types(j.application.JSBaseClass):
             return res
         else:
             return res()
-
 
     def test(self, name=""):
         """
@@ -209,26 +210,25 @@ class Types(j.application.JSBaseClass):
         """
         self._test_run(name=name)
 
-
-    def fix(self,val,default):
+    def fix(self, val, default):
         """
         will convert val to type of default
 
         , separated string goes to [] if default = []
         """
-        if val is None or val == "" or val==[]:
+        if val is None or val == "" or val == []:
             return default
 
         if j.data.types.list.check(default):
-            res=[]
+            res = []
             if j.data.types.list.check(val):
                 for val0 in val:
                     if val0 not in res:
                         res.append(val0)
             else:
-                val=str(val).replace("'","")
+                val = str(val).replace("'", "")
                 if "," in val:
-                    val=[item.strip() for item in val.split(",")]
+                    val = [item.strip() for item in val.split(",")]
                     for val0 in val:
                         if val0 not in res:
                             res.append(val0)
@@ -236,14 +236,14 @@ class Types(j.application.JSBaseClass):
                     if val not in res:
                         res.append(val)
         elif j.data.types.bool.check(default):
-            if str(val).lower() in ['true',"1","y","yes"]:
-                res=True
+            if str(val).lower() in ['true', "1", "y", "yes"]:
+                res = True
             else:
-                res=False
+                res = False
         elif j.data.types.int.check(default):
-            res=int(val)
+            res = int(val)
         elif j.data.types.float.check(default):
-            res=int(val)
+            res = int(val)
         else:
-            res=str(val)
+            res = str(val)
         return res

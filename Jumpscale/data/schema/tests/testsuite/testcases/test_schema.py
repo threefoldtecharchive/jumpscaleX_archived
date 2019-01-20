@@ -492,7 +492,7 @@ class SchemaTest(BaseTest):
         minutes = random.randint(0, 59)
         am_or_pm = random.choice(['am', 'pm'])
         hours = hour_12 if am_or_pm == 'am' else hour_12 + 12
-        years = 1900 if year_2c >= 70 else 2000
+        years = 1900 if year_2c >= 69 else 2000
 
         date = datetime(datetime.now().year, month, day).timestamp()
         schema_obj.date = '{:02}/{:02}'.format(month, day)

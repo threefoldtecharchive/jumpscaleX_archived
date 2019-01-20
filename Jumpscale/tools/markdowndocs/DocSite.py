@@ -541,6 +541,8 @@ class DocSite(j.application.JSBaseClass):
         dest = self.outpath
         j.sal.fs.createDir(dest)
 
+        # copy errors file into the generated docs to be able to serve it using /wiki/<WIKI_NAME>#/errors
+        j.sal.fs.copyFile(self.error_file_path, dest)
 
         #NO NEED (also the ignore does not work well)
         # j.sal.fs.copyDirTree(self.path, self.outpath, overwriteFiles=True, ignoredir=['.*'], ignorefiles=[

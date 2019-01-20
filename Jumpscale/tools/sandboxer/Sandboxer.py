@@ -41,14 +41,16 @@ class Sandboxer(j.application.JSBaseClass):
             # FIXME : support OSX
             j.shell()
 
-    def _ldd(self, path, result=dict(), done=list()):
+    def _ldd(self, path, result=dict(), done=list(), exclude_sys_libs=True):
         self._logger.debug("find deb:%s" % path)
         if j.sal.fs.getFileExtension(path) in ["py", "pyc", "cfg", "bak", "txt",
                                                "png", "gif", "css", "js", "wiki", "spec", "sh", "jar", "xml", "lua"]:
             return result
-
-        exclude = ["libpthread.so", "libltdl.so", "libm.so", "libresolv.so",
+        if exclude_sys_libs:
+            exclude = ["libpthread.so", "libltdl.so", "libm.so", "libresolv.so", "libc.so", "libx", "libdl.so"
                    "libz.so", "libgcc", "librt", "libstdc++", "libapt", "libdbus", "libselinux"]
+        else:
+            exclude = []
 
         if path not in done:
             cmd = "ldd %s" % path
@@ -72,8 +74,7 @@ class Sandboxer(j.application.JSBaseClass):
                     continue
                 if lpath.find("not found")!=-1:
                     continue
-                if name.find("libc.so") != 0 and name.lower().find("libx") != 0 and name not in done \
-                        and name.find("libdl.so") != 0:
+                if name not in done:
                     excl = False
                     for toexeclude in exclude:
                         if name.lower().find(toexeclude.lower()) != -1:
@@ -90,7 +91,7 @@ class Sandboxer(j.application.JSBaseClass):
             done.append(path)
         return result
 
-    def _otool(self, path, result=dict(), done=list()):
+    def _otool(self, path, result=dict(), done=list(), exclude_sys_libs=True):
         """
         like ldd on linux but for osx
         :param path:
@@ -103,6 +104,8 @@ class Sandboxer(j.application.JSBaseClass):
             return result
 
         def excl(name):
+            if not exclude_sys_libs:
+                return False
             exclude=["libSystem","/System/Library/Frameworks/Core","libiconv.2.dylib","libnetwork.dylib",
                      "libutil.dylib","libc++.1.dylib","libxml2.2.dylib","binascii"]
             for toexeclude in exclude:
@@ -149,18 +152,18 @@ class Sandboxer(j.application.JSBaseClass):
 
         return result
 
-    def _libs_find(self, path):
+    def _libs_find(self, path, exclude_sys_libs=True):
         """
         not needed to use manually, is basically ldd
         """
         self._logger.info("find deb:%s" % path)
         if j.core.platformtype.myplatform.isMac:
-            result = self._otool(path, result=dict(), done=list())
+            result = self._otool(path, result=dict(), done=list(),exclude_sys_libs=exclude_sys_libs)
         else:
-            result = self._ldd(path, result=dict(), done=list())
+            result = self._ldd(path, result=dict(), done=list(),exclude_sys_libs=exclude_sys_libs)
         return result
 
-    def libs_sandbox(self, path, dest=None, recursive=True):
+    def libs_sandbox(self, path, dest=None, recursive=True,exclude_sys_libs=True):
         """
 
         js_shell 'j.tools.sandboxer.libs_sandbox(".",".",True)'
@@ -189,7 +192,7 @@ class Sandboxer(j.application.JSBaseClass):
 
         else:
             if (j.sal.fs.isFile(path) and j.sal.fs.isExecutable(path)) or j.sal.fs.getFileExtension(path) == "so":
-                result = self._libs_find(path)
+                result = self._libs_find(path, exclude_sys_libs=exclude_sys_libs)
                 for _,deb in list(result.items()):
                     deb.copyTo(dest)
 
