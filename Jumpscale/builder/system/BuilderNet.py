@@ -1,3 +1,4 @@
+import re
 from Jumpscale import j
 
 
@@ -37,7 +38,7 @@ class BuilderNet(j.builder.system._BaseClass):
 
         """
         result = []
-        if "linux" in j.builder.platformtype.platformtypes:
+        if "linux" in j.core.platformtype.myplatform.platformtypes:
             cmdlinux = 'netstat -lntp'
             _, out, _ = j.sal.process.execute(cmdlinux, showout=False)
             # to troubleshoot https://regex101.com/#python
@@ -65,7 +66,7 @@ class BuilderNet(j.builder.system._BaseClass):
                         d.pop("state")
                         result.append(d)
 
-        elif "darwin" in j.builder.platformtype.platformtypes:
+        elif "darwin" in j.core.platformtype.myplatform.platformtypes:
             # cmd='sudo netstat -anp tcp'
             # # out=j.sal.process.execute(cmd)
             # p = re.compile(u"tcp4 *(?P<rec>[0-9]*) *(?P<send>[0-9]*) *(?P<local>[0-9.*]*) *(?P<remote>[0-9.*]*) *LISTEN")
@@ -121,7 +122,7 @@ class BuilderNet(j.builder.system._BaseClass):
         # NOTE: ps -A seems to be the only way to not have the grep appearing
         # as well
         RE_SPACES = re.compile("[\s\t]+")
-        if "LEDE" in j.builder.platformtype.osname:
+        if "LEDE" in j.core.platformtype.myplatform.osname:
             cmd = "ps w | grep {0} ; true".format(name) if is_string else "ps w"
         else:
             cmd = "ps -A | grep {0} ; true".format(name) if is_string else "ps -A"
@@ -135,7 +136,7 @@ class BuilderNet(j.builder.system._BaseClass):
                 continue
 
             items_num = 4
-            if "LEDE" in j.builder.platformtype.osname:
+            if "LEDE" in j.core.platformtype.myplatform.osname:
                 items_num = 5
             line = RE_SPACES.split(line, items_num-1)
             # 3010 pts/1    00:00:07 gunicorn
@@ -145,7 +146,7 @@ class BuilderNet(j.builder.system._BaseClass):
             # message creep up the output)
             if len(line) < 4:
                 continue
-            if "LEDE" in j.builder.platformtype.osname:
+            if "LEDE" in j.core.platformtype.myplatform.osname:
                 pid, __user, __vsz, __stat, command = line
             else:
                 pid, tty, time, command = line
