@@ -14,7 +14,7 @@ class Coredns(Service):
     CoreDNS is a DNS server. It is written in Go
     """
 
-    def __init__(self, name, node, etcd_endpoint, etcd_password, zt_identity=None, nics=None, backplane='backplane'):
+    def __init__(self, name, node, etcd_endpoint, etcd_password, zt_identity=None, nics=None, backplane='backplane', domain=None):
         super().__init__(name, node, 'coredns', [DEFAULT_PORT])
         self.name = name
         self.node = node
@@ -22,8 +22,9 @@ class Coredns(Service):
         self.flist = 'https://hub.grid.tf/tf-official-apps/coredns.flist'
         self.etcd_endpoint = etcd_endpoint
         self.etcd_password = etcd_password
+        self.domain = domain
 
-        self._config_path = '/usr/bin/coredns.conf'
+        self._config_path = '/Corefile'
         self.zt_identity = zt_identity
         self.backplane = backplane
         self.nics = Nics(self)
@@ -67,6 +68,7 @@ class Coredns(Service):
         """
 
         logger.info('Creating coredns config for %s' % self.name)
+
         config = self._config_as_text()
         self.container.upload_content(self._config_path, config)
 
@@ -74,8 +76,7 @@ class Coredns(Service):
         """
         render the coredns config template
         """
-        return templates.render(
-            'coredns.conf', etcd_endpoint=self.etcd_endpoint).strip()
+        return templates.render('coredns.conf', etcd_endpoint=self.etcd_endpoint, domain=self.domain).strip()
 
     def start(self, timeout=TIMEOUT_DEPLOY):
         """
@@ -87,8 +88,9 @@ class Coredns(Service):
 
         logger.info('start coredns %s' % self.name)
 
+        self.deploy()
         self.create_config()
-        cmd = '/usr/bin/coredns -conf {}'.format(self._config_path)
+        cmd = '/coredns -conf {}'.format(self._config_path)
         # wait for coredns to start
         job = self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, timeout, 0.5):

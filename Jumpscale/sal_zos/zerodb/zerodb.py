@@ -40,7 +40,7 @@ class Zerodb(Service):
 
         self.node_port = node_port
         self.zt_identity = None
-        self.flist = 'https://hub.grid.tf/tf-autobuilder/threefoldtech-0-db-release-development.flist'
+        self.flist = 'https://hub.grid.tf/tf-official-apps/threefoldtech-0-db-release-1.0.0.flist'
 
         self._mode = mode
         self._sync = sync
@@ -280,6 +280,15 @@ class Zerodb(Service):
         result = self._redis.execute_command('NSLIST')
         return [namespace.decode('utf-8') for namespace in result]
 
+    def destroy(self):
+        super().destroy()
+
+        for sp in self.node.storagepools.list():
+            for fs in sp.list():
+                if fs.path == self.path:
+                    fs.delete()
+                    return
+
     @property
     def path(self):
         return self._path
@@ -325,4 +334,3 @@ class Zerodb(Service):
 
     def __repr__(self):
         return str(self)
-

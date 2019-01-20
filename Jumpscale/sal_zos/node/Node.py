@@ -36,8 +36,8 @@ class Node:
         # g8os client to talk to the node
         self._storage_addr = None
         self._name = None
-        self.addr = client.host
-        self.port = client.port
+        self.addr = client.config.data['host']
+        self.port = client.config.data['port']
         self.disks = Disks(self)
         self.storagepools = StoragePools(self)
         self.containers = Containers(self)
@@ -157,7 +157,8 @@ class Node:
 
     def get_nic_by_ip(self, addr):
         try:
-            res = next(nic for nic in self.client.info.nic() if any(addr == a['addr'].split('/')[0] for a in nic['addrs']))
+            res = next(nic for nic in self.client.info.nic() if any(
+                addr == a['addr'].split('/')[0] for a in nic['addrs']))
             return res
         except StopIteration:
             return None
@@ -175,7 +176,7 @@ class Node:
             for device in pool['devices']:
                 usedisks.append(device['path'])
         for disk in disks[::-1]:
-            if disk.devicename in usedisks or len(disk.partitions) > 0:
+            if disk.devicename in usedisks or len(disk.partitions) > 0 or disk.transport == 'usb':
                 continue
             if disk.type in priorities:
                 eligible[disk.type].append(disk)
@@ -285,7 +286,8 @@ class Node:
         # create the storage pool if we don't have one yet
         if zeroos_cache_sp is None:
             disk = self._eligible_zeroos_cache_disk(disks)
-            zeroos_cache_sp = self.storagepools.create(name, devices=disk.devicename, metadata_profile='single', data_profile='single', overwrite=True)
+            zeroos_cache_sp = self.storagepools.create(
+                name, device=disk.devicename, metadata_profile='single', data_profile='single', overwrite=True)
         zeroos_cache_sp.mount()
         try:
             zeroos_cache_sp.get('logs')
@@ -331,7 +333,8 @@ class Node:
                     logger.debug('   * Wiping disk {kname}'.format(**disk._disk_info))
                     jobs.append(self.client.system('dd if=/dev/zero of={} bs=1M count=50'.format(disk.devicename)))
             else:
-                logger.debug('   * Not wiping {device} mounted at {mountpoint}'.format(device=disk.devicename, mountpoint=disk.mountpoint))
+                logger.debug(
+                    '   * Not wiping {device} mounted at {mountpoint}'.format(device=disk.devicename, mountpoint=disk.mountpoint))
 
         # wait for wiping to complete
         for job in jobs:
@@ -402,4 +405,3 @@ class Node:
 
     def __hash__(self):
         return hash((self.addr, self.port))
-

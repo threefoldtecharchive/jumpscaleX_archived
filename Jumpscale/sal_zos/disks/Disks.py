@@ -208,4 +208,3 @@ class Disk(Mountable):
 
     def __eq__(self, other):
         return self.devicename == other.devicename
-
