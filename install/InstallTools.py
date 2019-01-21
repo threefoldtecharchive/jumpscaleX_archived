@@ -861,6 +861,14 @@ class Tools():
     #
 
     @staticmethod
+    def ask_yes_no(msg):
+        yno = input("%s : "%msg)
+        if str(yno).lower().strip() in ["1","y"]:
+            return True
+        return False
+
+
+    @staticmethod
     def cmd_installed(name):
         if not name in MyEnv._cmd_installed:
             MyEnv._cmd_installed[name] =  shutil.which(name) != None
@@ -1532,7 +1540,7 @@ class MyEnv():
     def install(force=False):
 
         #DONT USE THE SANDBOX
-        if MyEnv.config["INSYSTEM"]
+        if MyEnv.config["INSYSTEM"]:
             if MyEnv.platform() == "linux":
                 UbuntuInstall.do_all()
             else:
