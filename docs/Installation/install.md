@@ -20,7 +20,7 @@ required steps:
 brew install curl python3
 
 #create dir
-sudo mkdir -p /sandbox;sudo chown -R $USER:staff /sandbox
+sudo mkdir -p /sandbox; sudo chown -R "${USER}:staff" /sandbox
 
 #do the installation
 curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py
