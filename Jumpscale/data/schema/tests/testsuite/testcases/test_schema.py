@@ -225,7 +225,7 @@ class SchemaTest(BaseTest):
 
         self.log("Try to set parameter[P1] with non mobile type, should fail.")
         with self.assertRaises(Exception):
-            schema_obj.mobile = "+s{}".format(self.random_string())
+            schema_obj.mobile = self.random_string()
 
         with self.assertRaises(Exception):
             schema_obj.mobile = random.randint(10, 20)
@@ -606,7 +606,7 @@ class SchemaTest(BaseTest):
 
         self.log("Try to set parameter[P1] with non percent type, should fail.")
         with self.assertRaises(Exception):
-            schema_obj.percent = 's' + self.random_string()
+            schema_obj.percent = self.random_string()
 
         with self.assertRaises(Exception):
             schema_obj.percent = '10$'
