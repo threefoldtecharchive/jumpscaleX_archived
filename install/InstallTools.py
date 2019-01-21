@@ -1227,6 +1227,7 @@ class UbuntuInstall():
                 "blosc>=1.5.1",
                 "Brotli>=0.6.0",
                 "certifi",
+                "cython",
                 "click>=6.6",
                 "pygments-github-lexers",
                 "colored-traceback>=0.2.2",
