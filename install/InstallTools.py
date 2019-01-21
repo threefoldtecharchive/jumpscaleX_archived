@@ -1532,10 +1532,11 @@ class MyEnv():
     def install(force=False):
 
         #DONT USE THE SANDBOX
-        if MyEnv.platform() == "linux":
-            UbuntuInstall.do_all()
-        else:
-            OSXInstall.do_all()
+        if MyEnv.config["INSYSTEM"]
+            if MyEnv.platform() == "linux":
+                UbuntuInstall.do_all()
+            else:
+                OSXInstall.do_all()
 
         #will get the sandbox installed
         if force or not MyEnv.state_exists("myenv_install"):
