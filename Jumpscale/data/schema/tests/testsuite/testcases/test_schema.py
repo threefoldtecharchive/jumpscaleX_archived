@@ -25,6 +25,8 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         name = (S)
+        init_str_1 = "test string 1" (S)
+        init_str_2 = 'test string 2' (S)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -46,6 +48,8 @@ class SchemaTest(BaseTest):
         name = self.random_string()
         schema_obj.name = name
         self.assertEqual(schema_obj.name, name)
+        self.assertEqual(schema_obj.init_str_1, 'test string 1')
+        self.assertEqual(schema_obj.init_str_2, 'test string 2')
 
     def test002_validate_integer_type(self):
         """
@@ -62,6 +66,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         number = (I)
+        init_int = 123 (I)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -86,6 +91,7 @@ class SchemaTest(BaseTest):
         rand_num = random.randint(1, 1000)
         schema_obj.number = rand_num
         self.assertEqual(schema_obj.number, rand_num)
+        self.assertEqual(schema_obj.init_int, 123)
 
     def test003_validate_float_type(self):
         """
@@ -102,6 +108,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         number = (F)
+        init_float = 84.32 (F)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -123,6 +130,7 @@ class SchemaTest(BaseTest):
         rand_num = random.uniform(10, 20)
         schema_obj.number = rand_num
         self.assertEqual(schema_obj.number, rand_num)
+        self.assertEqual(schema_obj.init_float, 84.32)
 
     def test004_validate_boolean_type(self):
         """
@@ -132,18 +140,24 @@ class SchemaTest(BaseTest):
         **Test Scenario:**
 
         #. Create schema with boolean parameter[P1], should succeed.
-        #. Try to set parameter[P1] with non boolean type, should be False.
-        #. Try to set parameter[P1] with boolean type, should succeed.
+        #. Try to set parameter[P1] with False or non True value, should be False.
+        #. Try to set parameter[P1] with True value, should be True.
         """
         self.log("Create schema with boolean parameter[P1], should succeed.")
         scm = """
         @url = test.schema
         check = (B)
+        init_bool_1 = 'y' (B)
+        init_bool_2 = 1 (B)
+        init_bool_3 = 'yes' (B)
+        init_bool_4 = 'true' (B)
+        init_bool_5 = True (B)
+        init_bool_6 = 'n' (B)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
 
-        self.log("Try to set parameter[P1] with non boolean type, should be False.")
+        self.log("Try to set parameter[P1] with False or non True value, should be False.")
         schema_obj.check = False
         self.assertEqual(schema_obj.check, False)
 
@@ -161,8 +175,9 @@ class SchemaTest(BaseTest):
 
         schema_obj.check = {'number': True}
         self.assertEqual(schema_obj.check, False)
+        self.assertEqual(schema_obj.init_bool_6, False)
 
-        self.log("Try to set parameter[P1] with boolean type, should succeed.")
+        self.log("Try to set parameter[P1] with True value, should be True.")
         schema_obj.check = True
         self.assertEqual(schema_obj.check, True)
         
@@ -180,6 +195,11 @@ class SchemaTest(BaseTest):
 
         schema_obj.check = "true"
         self.assertEqual(schema_obj.check, True)
+        self.assertEqual(schema_obj.init_bool_1, True)
+        self.assertEqual(schema_obj.init_bool_2, True)
+        self.assertEqual(schema_obj.init_bool_3, True)
+        self.assertEqual(schema_obj.init_bool_4, True)
+        self.assertEqual(schema_obj.init_bool_5, True)
 
     def test005_validate_mobile_type(self):
         """
@@ -196,13 +216,16 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         mobile = (tel)
+        init_tel_1 = '464-4564-464' (tel)
+        init_tel_2 = '+45687941' (tel)
+        init_tel_3 = 468716420 (tel)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
 
         self.log("Try to set parameter[P1] with non mobile type, should fail.")
         with self.assertRaises(Exception):
-            schema_obj.mobile = "+s{}".format(self.random_string())
+            schema_obj.mobile = self.random_string()
 
         with self.assertRaises(Exception):
             schema_obj.mobile = random.randint(10, 20)
@@ -227,6 +250,9 @@ class SchemaTest(BaseTest):
 
         schema_obj.mobile = "464-4564-464"
         self.assertEqual(schema_obj.mobile, '4644564464')
+        self.assertEqual(schema_obj.init_tel_1, '4644564464')
+        self.assertEqual(schema_obj.init_tel_2, '+45687941')
+        self.assertEqual(schema_obj.init_tel_3, '468716420')
 
     def test006_validate_email_type(self):
         """
@@ -243,6 +269,8 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         email = (email)
+        init_email_1 = 'test.example@domain.com' (email)
+        init_email_2 = test.example@domain.com (email)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -272,6 +300,8 @@ class SchemaTest(BaseTest):
         self.log("Try to set parameter[P1] with email type, should succeed.")
         schema_obj.email = 'test.example@domain.com'
         self.assertEqual(schema_obj.email, 'test.example@domain.com')
+        self.assertEqual(schema_obj.init_email_1, 'test.example@domain.com')
+        self.assertEqual(schema_obj.init_email_2, 'test.example@domain.com')
 
     def test007_validate_ipport_type(self):
         """
@@ -288,6 +318,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         port = (ipport)
+        init_port = 12315 (ipport)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -312,6 +343,7 @@ class SchemaTest(BaseTest):
         port = random.randint(1, 10000)
         schema_obj.port = port
         self.assertEqual(schema_obj.port, port)
+        self.assertEqual(schema_obj.init_port, 12315)
 
     def test008_validate_ipaddr_type(self):
         """
@@ -328,11 +360,15 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         ip = (ipaddr)
+        init_ip_1 = '127.0.0.1' (ipaddr)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
 
         self.log("Try to set parameter[P1] with non ipaddr type, should fail.")
+        with self.assertRaises(Exception):
+            schema_obj.ip = random.randint(1, 100)
+
         with self.assertRaises(Exception):
             schema_obj.ip = random.uniform(1, 100)
         
@@ -350,15 +386,12 @@ class SchemaTest(BaseTest):
         
         with self.assertRaises(Exception):
             schema_obj.ip = {'number': random.randint(0, 255)}
-            
-        with self.assertRaises(Exception):
-            ip = '1.0.0.0'
-            schema_obj.ip = 256**3
 
         self.log("Try to set parameter[P1] with ipaddr type, should succeed.")
         ip = '10.15.{}.1'.format(random.randint(0, 255))
         schema_obj.ip = ip
         self.assertEqual(schema_obj.ip, ip)
+        self.assertEqual(schema_obj.init_ip_1, '127.0.0.1')
 
     def test009_validate_iprange_type(self):
         """
@@ -375,6 +408,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         iprange = (iprange)
+        init_iprange = '127.0.0.1/16' (iprange)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -411,6 +445,7 @@ class SchemaTest(BaseTest):
         iprange = '10.15.{}.1/24'.format(random.randint(0, 255))
         schema_obj.iprange = iprange
         self.assertEqual(schema_obj.iprange, iprange)
+        self.assertEqual(schema_obj.init_iprange, '127.0.0.1/16')
     
     def test010_validate_date_type(self):
         """
@@ -427,6 +462,9 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         date = (D)
+        init_date_1 = 01/01/2019 9pm:10 (D)
+        init_date_2 = '01/08/2018 8am:30' (D)
+        init_date_3 = 50 (D)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -475,6 +513,10 @@ class SchemaTest(BaseTest):
             schema_obj.date = {'date': random.randint(1, 9)}
 
         self.log("Try to set parameter[P1] with date type, should succeed.")
+        self.assertEqual(schema_obj.init_date_1, 1546377000)
+        self.assertEqual(schema_obj.init_date_2, 1533112200)
+        self.assertEqual(schema_obj.init_date_3, 50)
+
         date = 0
         schema_obj.date = date
         self.assertEqual(schema_obj.date, date)
@@ -535,7 +577,7 @@ class SchemaTest(BaseTest):
         added_hours_from_now = datetime.now().hour + added_hours if added_day == 0 else (datetime.now().hour + added_hours) % 24
         date = datetime(datetime.now().year, datetime.now().month, datetime.now().day + added_day, added_hours_from_now, datetime.now().minute, datetime.now().second).timestamp()
         schema_obj.date = '+{}h'.format(added_hours)
-        self.assertAlmostEqual(schema_obj.date, int(date), delta=3) 
+        self.assertAlmostEqual(schema_obj.date, int(date), delta=3)
 
     def test011_validate_percent_type(self):
         """
@@ -552,13 +594,19 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         percent = (percent)
+        init_percent_1 = 84 (percent)
+        init_percent_2 = 73.4 (percent)
+        init_percent_3 = '95' (percent)
+        init_percent_4 = '72.8' (percent)
+        init_percent_5 = '54%' (percent)
+        init_percent_6 = '64.44%' (percent)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
 
         self.log("Try to set parameter[P1] with non percent type, should fail.")
         with self.assertRaises(Exception):
-            schema_obj.percent = 's' + self.random_string()
+            schema_obj.percent = self.random_string()
 
         with self.assertRaises(Exception):
             schema_obj.percent = '10$'
@@ -599,6 +647,12 @@ class SchemaTest(BaseTest):
         percent = '{}%'.format(value)
         schema_obj.percent = percent
         self.assertEqual(schema_obj.percent, (value)*100)
+        self.assertEqual(schema_obj.init_percent_1, 84)
+        self.assertEqual(schema_obj.init_percent_2, 7340)
+        self.assertEqual(schema_obj.init_percent_3, 95)
+        self.assertEqual(schema_obj.init_percent_4, 7280)
+        self.assertEqual(schema_obj.init_percent_5, 54)
+        self.assertEqual(schema_obj.init_percent_6, 6444)
 
     def test012_validate_url_type(self):
         """
@@ -615,6 +669,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         site = (u)
+        init_url = 'test.example.com/home' (u)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -647,6 +702,7 @@ class SchemaTest(BaseTest):
 
         schema_obj.site = 'test.example.com/home'
         self.assertEqual(schema_obj.site, 'test.example.com/home')
+        self.assertEqual(schema_obj.init_url, 'test.example.com/home')
 
     def test013_validate_numeric_type(self):
         """
@@ -664,6 +720,9 @@ class SchemaTest(BaseTest):
         @url = test.schema
         number = (N)
         currency = (N)
+        init_numeric_1 = '10 usd' (N)
+        init_numeric_2 = 10 (N)
+        init_numeric_3 = 10.54 (N)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -679,18 +738,21 @@ class SchemaTest(BaseTest):
             schema_obj.currency = {'number': random.randint(1, 100)}
 
         self.log("Try to set parameter[P1] with numeric type, should succeed.")
-        name = random.randint(1, 1000)
-        schema_obj.name = name
-        self.assertEqual(schema_obj.name, name)
+        number = random.randint(1, 1000)
+        schema_obj.number = number
+        self.assertEqual(schema_obj.number_usd, number)
 
-        name = random.uniform(1, 1000)
-        schema_obj.name = name
-        self.assertEqual(schema_obj.name, name)
+        number = random.uniform(1, 1000)
+        schema_obj.number = number
+        self.assertEqual(schema_obj.number_usd, number)
 
         value = random.randint(1, 100)
         currency = '{} USD'.format(value)
         schema_obj.currency = currency
         self.assertEqual(schema_obj.currency_usd, value)
+        self.assertEqual(schema_obj.init_numeric_1_usd, 10)
+        self.assertEqual(schema_obj.init_numeric_2_usd, 10)
+        self.assertEqual(schema_obj.init_numeric_3_usd, 10.54)
 
     def test014_validate_currency_conversion(self):
         """
@@ -735,7 +797,9 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         guid = (guid)
-        """
+        init_guid_1 = bebe8b34-b12e-4fda-b00c-99979452b7bd (guid)
+        init_guid_2 = '84b022bd-2b00-4b62-8539-4ec07887bbe4' (guid)
+        """.format(str(uuid4()))
         schema = self.schema(scm)
         schema_obj = schema.new()
 
@@ -762,6 +826,8 @@ class SchemaTest(BaseTest):
         guid = str(uuid4())
         schema_obj.guid = guid
         self.assertEqual(schema_obj.guid, guid)
+        self.assertEqual(schema_obj.init_guid_1, 'bebe8b34-b12e-4fda-b00c-99979452b7bd')
+        self.assertEqual(schema_obj.init_guid_1, '84b022bd-2b00-4b62-8539-4ec07887bbe4')
 
     def test016_validate_dict_type(self):
         """
@@ -778,6 +844,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         info = (dict)
+        init_dict = {"number": 468} (dict)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -799,6 +866,7 @@ class SchemaTest(BaseTest):
         value = random.randint(1, 1000)
         schema_obj.info = {'number': value}
         self.assertEqual(schema_obj.info, {'number': value})
+        self.assertEqual(schema_obj.init_dict, {'number': 468})
 
     def test017_validate_set_type(self):
         """
@@ -815,6 +883,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         data = (set)
+        init_set = {1, 2, 3, 2} (set)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -833,17 +902,18 @@ class SchemaTest(BaseTest):
             schema_obj.data = {'number': random.randint(1, 1000)}
 
         self.log("Try to set parameter[P1] with set type, should succeed.")
-        int_list = {random.randint(1, 1000), random.randint(1, 1000)}
-        schema_obj.data = int_list
-        self.assertEqual(schema_obj.data, int_list)
+        int_set = {random.randint(1, 1000), random.randint(1, 1000)}
+        schema_obj.data = int_set
+        self.assertEqual(schema_obj.data, int_set)
 
-        float_list = {random.uniform(1, 100), random.uniform(1, 100)}
-        schema_obj.data = float_list
-        self.assertEqual(schema_obj.data, float_list)
+        float_set = {random.uniform(1, 100), random.uniform(1, 100)}
+        schema_obj.data = float_set
+        self.assertEqual(schema_obj.data, float_set)
 
-        str_list = {self.random_string(), self.random_string()}
-        schema_obj.data = str_list
-        self.assertEqual(schema_obj.data, str_list)
+        str_set = {self.random_string(), self.random_string()}
+        schema_obj.data = str_set
+        self.assertEqual(schema_obj.data, str_set)
+        self.assertEqual(schema_obj.init_set, {1, 2, 3})
     
     def test018_validate_hash_type(self):
         """
@@ -860,11 +930,15 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         data = (h)
+        init_hash = [46, 682] (h)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
 
-        self.log("Try to set parameter[P1] with non hash type, should fail.")    
+        self.log("Try to set parameter[P1] with non hash type, should fail.")   
+        with self.assertRaises(Exception):
+            schema_obj.data = [random.randint(1, 100), random.randint(10, 1000), random.randint(1, 500)]
+
         with self.assertRaises(Exception):
             schema_obj.data = self.random_string()
 
@@ -886,6 +960,7 @@ class SchemaTest(BaseTest):
         schema_obj.data = data
         self.assertEqual(schema_obj.data[0], data[0])
         self.assertEqual(schema_obj.data[1], data[1])
+        self.assertEqual(schema_obj.init_hash_2, (46, 682))
     
     def test019_validate_multiline_type(self):
         """
@@ -902,6 +977,8 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         lines = (multiline)
+        init_mline = "example \\n example2 \\n example3" (multiline)
+
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -925,6 +1002,7 @@ class SchemaTest(BaseTest):
         self.log("Try to set parameter[P1] with multiline type, should succeed.")
         schema_obj.lines = "example \n example2 \n example3"
         self.assertEqual(schema_obj.lines, "example \n example2 \n example3")
+        self.assertEqual(schema_obj.init_mline, "example \n example2 \n example3")
 
     def test020_validate_yaml_type(self):
         """
@@ -941,6 +1019,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         data = (yaml)
+        init_yaml = "example:     test1" (yaml)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -965,6 +1044,7 @@ class SchemaTest(BaseTest):
 
         schema_obj.data = "example:     test1"
         self.assertEqual(schema_obj.data, "example:     test1")
+        self.assertEqual(schema_obj.init_yaml, "example:     test1")
 
     def test021_validate_enum_type(self):
         """
@@ -1011,331 +1091,44 @@ class SchemaTest(BaseTest):
         schema_obj.colors = index + 1
         self.assertEqual(schema_obj.colors, colors[index])
 
-    def test022_validate_list_of_types_with_one_char_symbol(self):
+    def test022_validate_binary_type(self):
         """
         SCM-022
-        *Test case for validating list of type with one char symbol(string) *
+        *Test case for validating binary type *
 
         **Test Scenario:**
 
-        #. Create schema with list of strings parameter, should succeed.
-        #. Try to set parameter with non string type, should fail.
-        #. Try to set parameter with string type, should succeed.
+        #. Create schema with binary parameter[P1], should succeed.
+        #. Try to set parameter[P1] with non binary type, should fail.
+        #. Try to set parameter[P1] with binary type, should succeed.
         """
-        self.log("Create schema with list of strings parameter, should succeed.")
+        self.log("Create schema with binary parameter[P1], should succeed.")
         scm = """
         @url = test.schema
-        list_names = (LS)
+        binary = (bin)
+        init_bin = b'this is binary' (bin)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
 
-        self.log("Try to set parameter with non string type, should fail.")
+        self.log("Try to set parameter[P1] with non binary type, should fail.")
         with self.assertRaises(Exception):
-            schema_obj.list_names = [random.randint(1, 1000), self.random_string()]
+            schema_obj.binary = self.random_string()
 
-        self.log("Try to set parameter with string type, should succeed.")
-        list_names = [self.random_string(), self.random_string()]
-        schema_obj.list_names = list_names
-        self.assertEqual(schema_obj.list_names, list_names)
-    
-    def test023_validate_list_of_types_with_three_char_symbol(self):
-        """
-        SCM-023
-        *Test case for validating list of type with three char symbol(mobile) *
-
-        **Test Scenario:**
-
-        #. Create schema with list of mobiles parameter, should succeed.
-        #. Try to set parameter with non mobile type, should fail.
-        #. Try to set parameter with mobile type, should succeed.
-        """
-        self.log("Create schema with list of mobiles parameter, should succeed.")
-        scm = """
-        @url = test.schema
-        mobile_list = (Ltel)
-        """
-        schema = self.schema(scm)
-        schema_obj = schema.new()
-
-        self.log("Try to set parameter with non mobile type, should fail.")
         with self.assertRaises(Exception):
-            schema_obj.mobile_list = [random.uniform(1, 100), random.randint(100000, 1000000)]
+            schema_obj.binary = random.randint(1, 1000)
 
-        self.log("Try to set parameter with mobile type, should succeed.")
-        mobile_list = ['{}'.format(random.randint(100000, 1000000)), '{}'.format(random.randint(100000, 1000000))]
-        schema_obj.mobile_list = mobile_list
-        self.assertEqual(schema_obj.mobile_list, mobile_list)
-    
-    def test024_validate_list_of_types_with_four_char_symbol(self):
-        """
-        SCM-024
-        *Test case for validating list of type with four char symbol(guid) *
-
-        **Test Scenario:**
-
-        #. Create schema with list of guids parameter, should succeed.
-        #. Try to set parameter with non guid type, should fail.
-        #. Try to set parameter with guid type, should succeed.
-        """
-        self.log("Create schema with list of guids parameter, should succeed.")
-        scm = """
-        @url = test.schema
-        guid_list = (Lguid)
-        """
-        schema = self.schema(scm)
-        schema_obj = schema.new()
-
-        self.log("Try to set parameter with non guid type, should fail.")
+        with self.assertRaises(Exception): 
+            schema_obj.binary = random.uniform(1, 100)
+        
         with self.assertRaises(Exception):
-            schema_obj.guid_list = [str(uuid4())[:15], str(uuid4())]
-
-        self.log("Try to set parameter with guid type, should succeed.")
-        guid_list = [str(uuid4()), str(uuid4())]
-        schema_obj.guid_list = guid_list
-        self.assertEqual(schema_obj.guid_list, guid_list)
-
-    def test025_validate_list_of_types_with_five_char_symbol(self):
-        """
-        SCM-025
-        *Test case for validating list of type with five char symbol(email) *
-
-        **Test Scenario:**
-
-        #. Create schema with list of emails parameter, should succeed.
-        #. Try to set parameter with non email type, should fail.
-        #. Try to set parameter with email type, should succeed.
-        """
-        self.log("Create schema with list of emails parameter, should succeed.")
-        scm = """
-        @url = test.schema
-        email_list = (Lemail)
-        """
-        schema = self.schema(scm)
-        schema_obj = schema.new()
-
-        self.log("Try to set parameter with non email type, should fail.")
+            schema_obj.binary = [self.random_string().encode(), self.random_string().encode()]
+        
         with self.assertRaises(Exception):
-            schema_obj.email_list = [self.random_string(), self.random_string()]
+            schema_obj.binary = {'binary': self.random_string().encode()}
 
-        self.log("Try to set parameter with email type, should succeed.")
-        email_list = ['test1.example@domain.com', 'test2.example@domain.com']
-        schema_obj.email_list = email_list
-        self.assertEqual(schema_obj.email_list, email_list)
-
-    def test026_validate_list_of_types_with_six_char_symbol(self):
-        """
-        SCM-026
-        *Test case for validating list of type with six char symbol(ipport) *
-
-        **Test Scenario:**
-
-        #. Create schema with list of ipports parameter, should succeed.
-        #. Try to set parameter with non ipport type, should fail.
-        #. Try to set parameter with ipport type, should succeed.
-        """
-        self.log("Create schema with list of ipports parameter, should succeed.")
-        scm = """
-        @url = test.schema
-        port_list = (Lipport)
-        """
-        schema = self.schema(scm)
-        schema_obj = schema.new()
-
-        self.log("Try to set parameter with non ipport type, should fail.")
-        with self.assertRaises(Exception):
-            schema_obj.port_list = [self.random_string(), random.randint(1, 10000)]
-
-        self.log("Try to set parameter with ipport type, should succeed.")
-        port_list = [random.randint(1, 10000), random.randint(1, 10000)]
-        schema_obj.port_list = port_list
-        self.assertEqual(schema_obj.port_list, port_list)
-
-    def test027_validate_list_of_types_with_seven_char_symbol(self):
-        """
-        SCM-027
-        *Test case for validating list of type with seven char symbol(iprange) *
-
-        **Test Scenario:**
-
-        #. Create schema with list of ipranges parameter, should succeed.
-        #. Try to set parameter with non iprange type, should fail.
-        #. Try to set parameter with iprange type, should succeed.
-        """
-        self.log("Create schema with list of ipranges parameter, should succeed.")
-        scm = """
-        @url = test.schema
-        range_list = (Liprange)
-        """
-        schema = self.schema(scm)
-        schema_obj = schema.new()
-
-        self.log("Try to set parameter with non iprange type, should fail.")
-        with self.assertRaises(Exception):
-            schema_obj.range_list = [self.random_string(), '10.15.{}.1/24'.format(random.randint(0, 255))]
-
-        self.log("Try to set parameter with iprange type, should succeed.")
-        range_list = ['10.15.{}.1/24'.format(random.randint(0, 255)), '10.15.{}.1/24'.format(random.randint(0, 255))]
-        schema_obj.range_list = range_list
-        self.assertEqual(schema_obj.range_list, range_list)
-
-    def test028_validate_list_of_types_with_nine_char_symbol(self):
-        """
-        SCM-028
-        *Test case for validating list of type with nine char symbol(multiline) *
-
-        **Test Scenario:**
-
-        #. Create schema with list of multilines parameter, should succeed.
-        #. Try to set parameter with non multiline type, should fail.
-        #. Try to set parameter with multiline type, should succeed.
-        """
-        self.log("Create schema with list of multilines parameter, should succeed.")
-        scm = """
-        @url = test.schema
-        lines_list = (Lmultiline)
-        """
-        schema = self.schema(scm)
-        time.sleep(1)
-        schema_obj = schema.new()
-
-        self.log("Try to set parameter with non multiline type, should fail.")
-        with self.assertRaises(Exception):
-            schema_obj.lines_list = [random.randint(1, 1000), "example \n example2 \n example3"]
-
-        self.log("Try to set parameter with multiline type, should succeed.")
-        lines_list = ["example \n example2 \n example3", "example \n example2 \n example3"]
-        schema_obj.lines_list = lines_list
-        self.assertEqual(schema_obj.lines_list, lines_list)
-
-    def test029_nested_concatenated_schema(self):
-        """
-        SCM-029
-        *Test case for concatenated nesting schema *
-
-        **Test Scenario:**
-
-        #. Create three schemas on one schema with different datatypes, should succeed.
-        #. Set data to schema parameters, should succeed.
-        #. Check that data reflected correctly.
-        """
-        self.log("Create three schemas with different datatypes, should succeed.")
-        scm3 = """
-        @url = student.schema
-        name = (S)
-        numbers = (O) !phone.schema
-        address = (O) !address.schema
-        grades = (Lp)
-
-        @url = phone.schema
-        mobile_number = (tel)
-        home_number = (tel)
-
-        @url = address.schema
-        country = (S)
-        city = (S)
-        street = (S)
-        building = (I)
-        """
-
-        schema3 = self.schema(scm3)
-        schema_obj3 = schema3.new()
-
-        self.log("Set data to schema parameters, should succeed.")
-        name = self.random_string()
-        mobile_number = '{}'.format(random.randint(1000000000, 2000000000))
-        home_number = '{}'.format(random.randint(500000000, 900000000))
-        country = self.random_string()
-        city = self.random_string()
-        street = self.random_string()
-        building = random.randint(1, 100)
-        grades = [random.randint(50, 100), random.randint(50, 100)]
-
-        schema_obj3.name = name
-        schema_obj3.numbers.mobile_number = mobile_number
-        schema_obj3.numbers.home_number = home_number
-        schema_obj3.address.country = country
-        schema_obj3.address.city = city
-        schema_obj3.address.street = street
-        schema_obj3.address.building = building
-        schema_obj3.grades = grades
-
-        self.log("Check that data reflected correctly")
-        self.assertEqual(schema_obj3.name, name)
-        self.assertEqual(schema_obj3.numbers.mobile_number, mobile_number)
-        self.assertEqual(schema_obj3.numbers.home_number, home_number)
-        self.assertEqual(schema_obj3.address.country, country)
-        self.assertEqual(schema_obj3.address.city, city)
-        self.assertEqual(schema_obj3.address.street, street)
-        self.assertEqual(schema_obj3.address.building, building)
-        self.assertEqual(schema_obj3.grades, grades)
-
-    def test030_nested_sperated_schema(self):
-        """
-        SCM-030
-        *Test case for concatenated nesting schema *
-
-        **Test Scenario:**
-
-        #. Create three schemas on one schema with different datatypes, should succeed.
-        #. Set data to schema parameters, should succeed.
-        #. Check that data reflected correctly.
-        """
-        self.log("Create three schemas with different datatypes, should succeed.")
-        scm1 = """
-        @url = phone.schema
-        mobile_number = (tel)
-        home_number = (tel)
-        """
-        scm2 = """
-        @url = address.schema
-        country = (S)
-        city = (S)
-        street = (S)
-        building = (I)
-        """
-        scm3 = """
-        @url = student.schema
-        name = (S)
-        numbers = (O) !phone.schema
-        address = (O) !address.schema
-        grades = (Lp)
-        """ 
-        schema1 = self.schema(scm1)
-        schema_obj1 = schema1.new()
-
-        schema2 = self.schema(scm2)
-        schema_obj2 = schema2.new()
-
-        schema3 = self.schema(scm3)
-        schema_obj3 = schema3.new()
-
-        self.log("Set data to schema parameters, should succeed.")
-        name = self.random_string()
-        mobile_number = '{}'.format(random.randint(1000000000, 2000000000))
-        home_number = '{}'.format(random.randint(500000000, 900000000))
-        country = self.random_string()
-        city = self.random_string()
-        street = self.random_string()
-        building = random.randint(1, 100)
-        grades = [random.randint(50, 100), random.randint(50, 100)]
-
-        schema_obj3.name = name
-        schema_obj3.numbers.mobile_number = mobile_number
-        schema_obj3.numbers.home_number = home_number
-        schema_obj3.address.country = country
-        schema_obj3.address.city = city
-        schema_obj3.address.street = street
-        schema_obj3.address.building = building
-        schema_obj3.grades = grades
-
-        self.log("Check that data reflected correctly")
-        self.assertEqual(schema_obj3.name, name)
-        self.assertEqual(schema_obj3.numbers.mobile_number, mobile_number)
-        self.assertEqual(schema_obj3.numbers.home_number, home_number)
-        self.assertEqual(schema_obj3.address.country, country)
-        self.assertEqual(schema_obj3.address.city, city)
-        self.assertEqual(schema_obj3.address.street, street)
-        self.assertEqual(schema_obj3.address.building, building)
-        self.assertEqual(schema_obj3.grades, grades)
-    
+        self.log("Try to set parameter[P1] with binary type, should succeed.")
+        binary = self.random_string().encode()
+        schema_obj.binary = binary
+        self.assertEqual(schema_obj.binary, binary)
+        self.assertEqual(schema_obj.init_bin, b'this is binary')
