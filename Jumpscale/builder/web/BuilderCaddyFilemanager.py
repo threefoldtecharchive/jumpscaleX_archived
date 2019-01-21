@@ -5,6 +5,20 @@ class BuilderCaddyFilemanager(j.builder.system._BaseClass):
     NAME = 'filemanager'
     PLUGINS = ['iyo', 'filemanager']
 
+    def _init(self):
+        self.templates_dir = self.tools.joinpaths(
+            j.sal.fs.getDirName(__file__), 'templates')
+        self.bins = [self.tools.joinpaths(j.core.dirs.BINDIR, 'caddy')]
+        self.new_dirs = ['/var/log', 'filemanager/files']
+        self.dirs = {
+            self.tools.joinpaths(self.templates_dir, 'filemanager_caddyfile'): 'cfg/filemanager',
+        }
+        self.startup = j.sal.fs.readFile(
+            j.sal.fs.joinPaths(self.templates_dir, 'filemanager_startup.toml'))
+        self.absolute_dirs = {
+            '/etc/ssl/certs': '/etc/ssl/certs'
+        }
+
     def build(self, reset=False):
         """
         build caddy with iyo authentication and filemanager plugins

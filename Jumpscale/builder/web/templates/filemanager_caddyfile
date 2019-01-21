@@ -1,0 +1,17 @@
+{$node_addr}:{$filemanager_port}/ {
+    root /sandbox/filemanager/files
+    log /sandbox/var/log/caddy.log
+
+    filebrowser {
+        auth_method     noauth
+    }
+
+    oauth {
+        client_id       {$iyo_client_id}
+        client_secret   {$iyo_client_secret}
+
+        extra_scopes    user:email,user:name
+        redirect_url    http://{$node_addr}:{$filemanager_port}/_iyo_callback
+        authentication_required  /
+    }
+}
