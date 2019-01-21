@@ -960,11 +960,14 @@ class Tools():
                 """
             else:
                 if Tools.code_changed(REPO_DIR):
-                    if "GITMESSAGE" in os.environ:
-                        args["MESSAGE"] = os.environ["GITMESSAGE"]
+                    if Tools.ask_yes_no("\n**: found changes in repo '%s', do you want to commit?"%repo):
+                        if "GITMESSAGE" in os.environ:
+                            args["MESSAGE"] = os.environ["GITMESSAGE"]
+                        else:
+                            args["MESSAGE"] = input("\nprovide commit message: ")
+                            assert args["MESSAGE"].strip() != ""
                     else:
-
-                        args["MESSAGE"] = input("provide commit message python (or use env arg GITMESSAGE): ")
+                        sys.exit(1)
                     C="""
                     set -x
                     cd {REPO_DIR}
@@ -973,10 +976,16 @@ class Tools():
                     git pull
 
                     """
-
-            Tools.log("get code [git]: %s"%repo)
-            if C!="":
-                Tools.execute(C, args=args)
+                    Tools.log("get code & commit [git]: %s"%repo)
+                    Tools.execute(C, args=args)
+                elif pull:
+                    C="""
+                    set -x
+                    cd {REPO_DIR}
+                    git pull    
+                    """
+                    Tools.log("pull code [git]: %s"%repo)
+                    Tools.execute(C, args=args)
 
             def getbranch(args):
                 cmd = "cd {REPO_DIR}; git branch | grep \* | cut -d ' ' -f2"
@@ -1205,6 +1214,7 @@ class UbuntuInstall():
         Tools.execute(script, interactive=True)
         MyEnv.state_set("ubuntu_base_install")
 
+    @staticmethod
     def python_redis_install():
         if MyEnv.state_exists("python_redis_install"):
             return
@@ -1370,7 +1380,7 @@ class MyEnv():
 
     config = {}
     _sshagent_active = None
-    sandbox_python_active = False
+    sandbox_python_active = False #WHAT IS THIS?
     sandbox_lua_active = False
     config_changed = False
     _cmd_installed = {}
@@ -1545,6 +1555,10 @@ class MyEnv():
                 UbuntuInstall.do_all()
             else:
                 OSXInstall.do_all()
+            env_path = "~/.bash_profile"
+            if Tools.exists(env_path):
+                bashprofile = Tools.file_text_read()
+                Tools.shell()
 
         #will get the sandbox installed
         if force or not MyEnv.state_exists("myenv_install"):
@@ -1761,13 +1775,13 @@ class JumpscaleInstaller():
     def repos_get(self,force=False):
 
         for sourceName,destName in self._jumpscale_repos:
-            if MyEnv.sandbox_python_active:
-                pull=True
-            else:
-                pull=False
-            if force or not MyEnv.state_exists("jumpscale_repoget_%s"%sourceName):
-                Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
-                MyEnv.state_set("jumpscale_repoget_%s"%sourceName)
+            # if MyEnv.sandbox_python_active:
+            #     pull=True
+            # else:
+            #     pull=False
+            pull=True
+            Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
+            # MyEnv.state_set("jumpscale_repoget_%s"%sourceName)
 
     def repos_link(self):
         """
