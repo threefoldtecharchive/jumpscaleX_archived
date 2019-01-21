@@ -27,6 +27,7 @@ IT = spec.loader.load_module()
 insystem = input("\nDo you want to install in the system or using the sandbox?, default is the sandbox, if 1 or Y will be in system : ")
 if str(insystem).lower().strip() in ["1","y"]:
     IT.MyEnv.config["INSYSTEM"]=True
+    IT.Tools.execute("rm -f /sandbox/bin/pyth*")
     if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
         IT.Tools.delete(IT.MyEnv.state_file_path)
         IT.MyEnv.state_load()
