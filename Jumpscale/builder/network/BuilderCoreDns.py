@@ -10,7 +10,9 @@ class BuilderCoreDns(j.builder.system._BaseClass):
             'coredns', host='github.com/coredns')
 
         self.bins = [j.sal.fs.joinPaths(self.package_path, 'coredns')]
-        self.dirs = ['/etc/ssl/certs/']
+        self.dirs = {'/etc/ssl/certs/': '/etc/ssl/certs/'}
+        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'coredns_startup.toml')
+        self.startup = j.sal.fs.readFile(startup_file)
 
     def build(self, reset=False):
         """
