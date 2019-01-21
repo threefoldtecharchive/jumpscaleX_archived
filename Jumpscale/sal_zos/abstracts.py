@@ -168,6 +168,7 @@ class ZTNic(Nic):
         """
         if not self.client:
             return False
+        logger.info("authorizing {} on network {}".format(self._parent.name, self.networkid))
         network = self.client.network_get(self.networkid)
         network.member_add(publicidentity, self._parent.name)
         return True
@@ -234,7 +235,7 @@ class Nics(Collection):
         for nic in self:
             if nic.networkid == str(networkid) and nic.type == type_:
                 return nic
-        raise LookupError('No nic found with type id combination {}:'.format(type_, networkid))
+        raise LookupError('No nic found with type id combination {}:{}'.format(type_, networkid))
 
 
 class DynamicCollection:
@@ -358,6 +359,6 @@ class Service:
     def authorize_zt_nics(self):
         if not self.zt_identity:
             self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
-        zt_public = self.node.client.system('zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
+        zt_public = self.node.client.system(
+            'zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
         authorize_zerotiers(zt_public, self.nics)
-

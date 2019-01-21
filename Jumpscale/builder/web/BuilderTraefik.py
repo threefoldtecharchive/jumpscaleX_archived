@@ -10,7 +10,9 @@ class BuilderTraefik(j.builder.system._BaseClass):
         self.go_runtime = self.b.runtimes.golang
         self.traefik_dir = self.go_runtime.package_path_get('containous/traefik')
         self.bins = [self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)]
-        self.dirs = ['/etc/ssl/certs/ca-certificates.crt']
+        self.dirs = {'/etc/ssl/certs/ca-certificates.crt': '/etc/ssl/certs/'}
+        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'traefik_startup.toml')
+        self.startup = j.sal.fs.readFile(startup_file)
 
     def build(self, reset=False):
         """install traefik by getting the source from https://github.com/containous/traefik

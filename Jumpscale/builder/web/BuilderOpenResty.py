@@ -11,27 +11,27 @@ class BuilderOpenResty(j.builder.system._BaseClass):
     def _init(self):
         self.BUILDDIR = j.core.tools.text_replace('{DIR_VAR}/build/')
         self.bins = [
-            j.core.tools.text_replace('{DIR_BASE}/bin/openresty'),
-            j.core.tools.text_replace('{DIR_BASE}/bin/lua'),
-            j.core.tools.text_replace('{DIR_BASE}/bin/resty'),
-            j.core.tools.text_replace('{DIR_BASE}/bin/restydoc'),
-            j.core.tools.text_replace('{DIR_BASE}/bin/restydoc-index'),
-            j.core.tools.text_replace('{DIR_BASE}/bin/lapis'),
-            j.core.tools.text_replace('{DIR_BASE}/bin/moon'),
-            j.core.tools.text_replace('{DIR_BASE}/bin/moonc')
+            self.tools.joinpaths(j.core.dirs.BINDIR, 'openresty'),
+            self.tools.joinpaths(j.core.dirs.BINDIR, 'lua'),
+            self.tools.joinpaths(j.core.dirs.BINDIR, 'resty'),
+            self.tools.joinpaths(j.core.dirs.BINDIR, 'restydoc'),
+            self.tools.joinpaths(j.core.dirs.BINDIR, 'restydoc-index'),
+            self.tools.joinpaths(j.core.dirs.BINDIR, 'lapis'),
+            self.tools.joinpaths(j.core.dirs.BINDIR, 'moon'),
+            self.tools.joinpaths(j.core.dirs.BINDIR, 'moonc')
         ]
         self.dirs = {
-            j.core.tools.text_replace('{DIR_BASE}/cfg/openresty.cfg'): 'cfg/',
-            j.core.tools.text_replace('{DIR_BASE}/cfg/mime.types'): 'cfg/',
-            j.core.tools.text_replace('{DIR_BASE}/openresty/'): 'openresty/',
+            self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/openresty.cfg'): 'cfg/',
+            self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/mime.types'): 'cfg/',
+            self.tools.joinpaths(j.core.dirs.BASEDIR, 'openresty/'): 'openresty/',
         }
-        lua_files = j.sal.fs.listFilesInDir(j.core.tools.text_replace('{DIR_BASE}/bin/'), filter='*.lua')
+        lua_files = j.sal.fs.listFilesInDir(self.tools.joinpaths(j.core.dirs.BASEDIR, 'bin/'), filter='*.lua')
         for file in lua_files:
             self.dirs[file] = 'bin/'
 
         self.new_dirs = ['var/pid/', 'var/log/']
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'openresty_startup.toml')
-        self.new_files = {'//startup.toml': j.sal.fs.readFile(startup_file)}
+        self.startup = j.sal.fs.readFile(startup_file)
 
     def _build_prepare(self):
         j.builder.system.package.mdupdate()

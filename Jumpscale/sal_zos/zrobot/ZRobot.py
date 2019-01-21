@@ -6,8 +6,8 @@ class ZeroRobot:
     Zero robot
     """
 
-    def __init__(self, container, port=6600, telegram_bot_token=None, telegram_chat_id=0, template_repos=None, 
-            data_repo=None, config_repo=None, config_key=None, organization=None, auto_push=None, auto_push_interval=None):
+    def __init__(self, container, port=6600, telegram_bot_token=None, telegram_chat_id=0, template_repos=None,
+                 data_repo=None, config_repo=None, config_key=None, organization=None, auto_push=None, auto_push_interval=None):
         self.id = 'zbot.{}'.format(container.name)
         self.container = container
         self.port = port
@@ -32,7 +32,8 @@ class ZeroRobot:
             'data': self.data_repo,
             'config': self.config_repo
         }
-        cmd_line = "/usr/local/bin/zrobot server start --listen :{port} --data-repo {data} --config-repo {config}".format(**kwargs)
+        cmd_line = "/usr/local/bin/zrobot server start --listen :{port} --data-repo {data} --config-repo {config}".format(
+            **kwargs)
 
         if self.config_key:
             cmd_line += " --config-key %s" % self.config_key
@@ -67,7 +68,8 @@ class ZeroRobot:
             if time.time() > start + timeout:
                 container_client.job.kill(self.id, signal=9)
                 result = cmd.get()
-                raise RuntimeError("Zero robot failed to start within %s seconds!\nstdout: %s\nstderr: %s", (timeout, result.stdout, result.stdout))
+                raise RuntimeError("Zero robot failed to start within %s seconds!\nstdout: %s\nstderr: %s",
+                                   (timeout, result.stdout, result.stdout))
 
         self.container.node.client.nft.open_port(self.port)
 
@@ -86,4 +88,3 @@ class ZeroRobot:
         self.container.client.job.kill(self.id, signal=9)
 
         self.container.node.client.nft.drop_port(self.port)
-

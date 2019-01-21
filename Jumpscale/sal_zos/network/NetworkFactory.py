@@ -1,11 +1,13 @@
 from .Network import Network
-from Jumpscale import j
+from jumpscale import j
 
-JSBASE = j.application.JSBaseClass
+JSBASE = j.application.jsbase_get_class()
 
 
 class NetworkFactory(JSBASE):
-    __jslocation__ = "j.sal_zos.network"
+    def __init__(self):
+        self.__jslocation__ = "j.sal_zos.network"
+        JSBASE.__init__(self)
 
     @staticmethod
     def get(node):
@@ -15,4 +17,3 @@ class NetworkFactory(JSBASE):
             the sal layer 
         """
         return Network(node)
-

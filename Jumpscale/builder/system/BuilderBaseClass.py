@@ -6,10 +6,11 @@ BaseClass = j.application.JSBaseClass
 class BuilderBaseClass(BaseClass):
     def __init__(self):
         BaseClass.__init__(self, True)
-        self.bins = []  # list of binaries to copy to the sandbox
-        self.dirs = {}  # dict of files/dirs to copy to the sandbox. key is the source and value is the dest in the sandbox
-        self.new_dirs = []  # list of dirs to create in the sandbox
-        self.new_files = {}  # dict of new files to create. key is the location in the sandbox and the value is the content
+        self.bins = []  # list of binaries to copy to sandbox/bin/ in the flist
+        self.dirs = {}  # dict of files/dirs to copy to the sandbox/ in the flist. key is the source and value is the dest under sandbox/
+        self.new_dirs = []  # list of dirs to create under sandbox/ in the flist
+        self.new_files = {}  # dict of new files to create in the flist. key is the location under sandbox/ and the value is the content
+        self.startup = ''  # content of the startup script, placed at the root of the flist
         self._init()
 
     @property
@@ -32,17 +33,16 @@ class BuilderBaseClass(BaseClass):
         :type dest: str
         """
         # first we ensure the destination directory exists
-        if not dest.endswith('sandbox'):
-            dest = j.sal.fs.joinPaths(dest, 'sandbox')
-        j.builder.tools.dir_ensure(dest)
+        sandbox_dest = j.sal.fs.joinPaths(dest, 'sandbox')
+        j.builder.tools.dir_ensure(sandbox_dest)
 
         # copy binaries and lib dependencies
-        lib_dest = j.sal.fs.joinPaths(dest, 'lib')
+        lib_dest = j.sal.fs.joinPaths(sandbox_dest, 'lib')
         j.builder.tools.dir_ensure(lib_dest)
         for bin in self.bins:
-            j.tools.sandboxer.libs_sandbox(bin, lib_dest)
+            j.tools.sandboxer.libs_sandbox(bin, lib_dest, exclude_sys_libs=False)
 
-        bin_dest = j.sal.fs.joinPaths(dest, 'bin')
+        bin_dest = j.sal.fs.joinPaths(sandbox_dest, 'bin')
         j.builder.tools.dir_ensure(bin_dest)
         for bin in self.bins:
             j.sal.fs.copyFile(bin, j.sal.fs.joinPaths(bin_dest, j.sal.fs.getBaseName(bin)))
@@ -50,10 +50,7 @@ class BuilderBaseClass(BaseClass):
         # copy dirs in self.dirs
         for src, dir_dest in self.dirs.items():
             file = True if j.sal.fs.isFile(src) else False
-
-            # remove the first slash to make sure the path will join correctly
-            dir_dest = dir_dest[1:] if dir_dest.startswith('/') else dir_dest
-            dir_dest = j.sal.fs.joinPaths(dest, dir_dest)
+            dir_dest = j.sal.fs.joinPaths(sandbox_dest, self.tools.path_relative(dir_dest))
             j.builder.tools.dir_ensure(dir_dest)
 
             if file:
@@ -63,14 +60,14 @@ class BuilderBaseClass(BaseClass):
 
         # create dirs in self.new_dirs
         for dir_dest in self.new_dirs:
-            dir_dest = dir_dest[1:] if dir_dest.startswith('/') else dir_dest
-            dir_dest = j.sal.fs.joinPaths(dest, dir_dest)
+            dir_dest = j.sal.fs.joinPaths(sandbox_dest, self.tools.path_relative(dir_dest))
             j.builder.tools.dir_ensure(dir_dest)
 
         # create files in self.new_files
         for file_dest, content in self.new_files.items():
-            file_dest = file_dest[1:] if file_dest.startswith('/') else file_dest
-            file_dest = j.sal.fs.joinPaths(dest, file_dest)
+            file_dest = j.sal.fs.joinPaths(sandbox_dest, self.tools.path_relative(file_dest))
+            dir = j.sal.fs.getDirName(file_dest)
+            j.builder.tools.dir_ensure(dir)
             j.builder.tools.file_ensure(file_dest)
             j.builder.tools.file_write(file_dest, content)
 
@@ -89,6 +86,11 @@ class BuilderBaseClass(BaseClass):
         """
         sandbox_dir = "/tmp/builders/{}".format(self.NAME)
         self.sandbox_create(sandbox_dir)
+
+        if self.startup:
+            file_dest = j.sal.fs.joinPaths(sandbox_dir, '.startup.toml')
+            j.builder.tools.file_ensure(file_dest)
+            j.builder.tools.file_write(file_dest, self.startup)
 
         self._logger.info('building flist')
         tarfile = '/tmp/{}.tar.gz'.format(self.NAME)

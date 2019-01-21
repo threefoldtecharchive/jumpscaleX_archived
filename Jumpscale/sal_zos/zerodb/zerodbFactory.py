@@ -20,4 +20,3 @@ class ZerodbFactory(JSBASE):
             the sal layer
         """
         return Zerodb(node=node, name=name, node_port=node_port, path=path, mode=mode, sync=sync, admin=admin)
-

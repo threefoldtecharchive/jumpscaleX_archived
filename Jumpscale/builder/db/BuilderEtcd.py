@@ -10,6 +10,8 @@ class BuilderEtcd(j.builder.system._BaseClass):
             j.sal.fs.joinPaths(self.package_path, 'bin', 'etcd'),
             j.sal.fs.joinPaths(self.package_path, 'bin', 'etcdctl')
         ]
+        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'etcd_startup.toml')
+        self.startup = j.sal.fs.readFile(startup_file)
 
     def build(self, reset=False):
         """
