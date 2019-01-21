@@ -40,7 +40,7 @@ class BuilderBaseClass(BaseClass):
         lib_dest = j.sal.fs.joinPaths(sandbox_dest, 'lib')
         j.builder.tools.dir_ensure(lib_dest)
         for bin in self.bins:
-            j.tools.sandboxer.libs_sandbox(bin, lib_dest)
+            j.tools.sandboxer.libs_sandbox(bin, lib_dest, exclude_sys_libs=False)
 
         bin_dest = j.sal.fs.joinPaths(sandbox_dest, 'bin')
         j.builder.tools.dir_ensure(bin_dest)
