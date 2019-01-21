@@ -66,6 +66,8 @@ class BuilderBaseClass(BaseClass):
         # create files in self.new_files
         for file_dest, content in self.new_files.items():
             file_dest = j.sal.fs.joinPaths(sandbox_dest, self.tools.path_relative(file_dest))
+            dir = j.sal.fs.getDirName(file_dest)
+            j.builder.tools.dir_ensure(dir)
             j.builder.tools.file_ensure(file_dest)
             j.builder.tools.file_write(file_dest, content)
 
