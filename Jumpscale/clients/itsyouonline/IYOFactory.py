@@ -19,7 +19,7 @@ class IYOFactory(j.application.JSBaseConfigsClass):
     def default(self):
         """ return default itsyou.online instance"""
         if self._default is None:
-            self._default = self.get()
+            self._default = self.get(name="default")
         return self._default
 
     def test(self):

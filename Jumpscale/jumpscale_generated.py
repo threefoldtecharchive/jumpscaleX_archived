@@ -4273,7 +4273,6 @@ class group_sal_zos(JSGroup):
         self._disks = None
         self._ftpclient = None
         self._etcd = None
-        self._pubsub = None
         self._ippoolmanager = None
         self._node = None
         self._coredns = None
@@ -4723,27 +4722,6 @@ class group_sal_zos(JSGroup):
             #     return None
             # print("OK")
         return self._etcd
-    @property
-    def pubsub(self):
-        if self._pubsub is None:
-            # print("LOAD:PubsubFactory")
-            from Jumpscale.sal_zos.Pubsub.PubsubFactory import PubsubFactory
-            # try:
-            #     from Jumpscale.sal_zos.Pubsub.PubsubFactory import PubsubFactory
-            # except Exception as e:
-            #     msg = j.core.application.error_init("import", "Jumpscale.sal_zos.Pubsub.PubsubFactory", e)
-            #     raise e
-            # # print("RUN:PubsubFactory")
-
-            self._pubsub =  PubsubFactory()
-
-            # try:
-            #     self._pubsub =  PubsubFactory()
-            # except Exception as e:
-            #     msg = j.core.application.error_init("execute","Jumpscale.sal_zos.Pubsub.PubsubFactory",e)
-            #     return None
-            # print("OK")
-        return self._pubsub
     @property
     def ippoolmanager(self):
         if self._ippoolmanager is None:

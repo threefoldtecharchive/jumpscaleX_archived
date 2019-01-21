@@ -14,11 +14,6 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
 
     def _init(self):
         self._clients = {}
-        self.iets = 1
-
-    @property
-    def p(self):
-        return 2
 
     def _childclass_selector(self):
         if j.core.platformtype.myplatform.isMac:

@@ -73,6 +73,7 @@ class JSBaseConfigs(JSBase):
 
         elif name:
             res = self.findData(name=name)
+
             if len(res)<1:
                 if create_new:
                     new = True

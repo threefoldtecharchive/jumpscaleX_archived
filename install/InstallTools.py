@@ -1244,7 +1244,7 @@ class UbuntuInstall():
                 "grequests>=0.3.0",
                 "httplib2>=0.9.2",
                 "ipcalc>=1.99.0",
-                "ipython<6.5.0>=6.0.0",
+                "ipython",
                 "Jinja2>=2.9.6",
                 "libtmux>=0.7.1",
                 "msgpack-python>=0.4.8",
@@ -1276,7 +1276,9 @@ class UbuntuInstall():
                 "Unidecode>=0.04.19",
                 "watchdog>=0.8.3",
                 "bpython",
-                "pbkdf2"
+                "pbkdf2",
+                'ptpython',
+
             ],
 
             # level 1: in the middle

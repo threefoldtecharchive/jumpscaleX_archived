@@ -124,7 +124,7 @@ class Jumpscale():
         else:
             embed(globals(), locals(),configure=ptconfig,history_filename=history_filename)
 
-    def shell(self,loc=True,name=None):
+    def shell(self,loc=True,name=None,stack_depth=2):
         if self._shell == None:
             from IPython.terminal.embed import InteractiveShellEmbed
             if name is not "":
@@ -138,7 +138,7 @@ class Jumpscale():
             print("\n*** file: %s"%f.filename)
             print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
         # self.clear()
-        return self._shell(stack_depth=2)
+        return self._shell(stack_depth=stack_depth)
 
     def debug(self):
         import urwid
