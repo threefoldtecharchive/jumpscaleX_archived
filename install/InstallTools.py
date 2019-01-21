@@ -1529,16 +1529,19 @@ class MyEnv():
 
     @staticmethod
     def install(force=False):
+
+        #DONT USE THE SANDBOX
+        if MyEnv.platform() == "linux":
+            UbuntuInstall.do_all()
+        else:
+            OSXInstall.do_all()
+
         #will get the sandbox installed
         if force or not MyEnv.state_exists("myenv_install"):
 
             if MyEnv.config["INSYSTEM"]:
 
-                #DONT USE THE SANDBOX
-                if MyEnv.platform() == "linux":
-                    UbuntuInstall.do_all()
-                else:
-                    OSXInstall.do_all()
+
 
                 Tools.code_github_get(repo="sandbox_base", branch=["master"])
 
