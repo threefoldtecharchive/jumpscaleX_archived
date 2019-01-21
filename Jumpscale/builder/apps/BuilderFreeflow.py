@@ -24,8 +24,11 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         ]
         self.bins.extend(j.builder.db.mariadb.bins)
 
-        self.new_files = {"//.startup.toml": self.startup_script}
+        self.new_files = dict()
         self.new_files.update(j.builder.db.mariadb.new_files)
+
+        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'freeflow_startup.toml')
+        self.startup = j.sal.fs.readFile(startup_file)
 
 
     def build(self):
