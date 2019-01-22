@@ -1,7 +1,7 @@
 '''Definition of several collection types (list, dict, set,...)'''
 
 from Jumpscale import j
-
+import msgpack
 
 from Jumpscale.data.types.PrimitiveTypes import (String, StringMultiLine, Bytes,
                                                  Boolean, Integer,
@@ -102,9 +102,6 @@ class Dictionary():
 
     def get_default(self):
         return dict()
-        # if self._default is NO_DEFAULT:
-        #     return dict()
-        # return dict(self._default)
 
     def fromString(self, s):
         """
@@ -114,14 +111,16 @@ class Dictionary():
             return s
         else:
             s = s.replace("''", '"')
-            j.data.serializers.json.loads(s)
+            s = msgpack.packb(s, use_bin_type=True)
             return s
 
     def toData(self, v):
         return self.clean(v)
 
     def toString(self, v):
-        return j.data.serializers.json.dumps(v, True, True)
+        if j.data.types.dict.check(v):
+            return v
+        return msgpack.unpackb(v, raw=False)
 
     def clean(self, v):
         if not self.check(v):
@@ -136,6 +135,9 @@ class Dictionary():
         produce the python code which represents this value
         """
         return str(value)
+
+    def toHR(self, v):
+        return self.toString(v)
 
 
 class List():
