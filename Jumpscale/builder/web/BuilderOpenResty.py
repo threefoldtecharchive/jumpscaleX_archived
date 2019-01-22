@@ -4,7 +4,6 @@ import textwrap
 from time import sleep
 
 
-
 class BuilderOpenResty(j.builder.system._BaseClass):
     NAME = 'openresty'
 
