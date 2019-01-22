@@ -579,7 +579,7 @@ class Tools():
         return content
 
     @staticmethod
-    def text_replace(content,args=None,executor=None,ignorecomments=False,text_strip=True,colors=False):
+    def text_replace(content,args=None,executor=None,ignorecomments=False,text_strip=True,colors=True):
         """
 
         j.core.tools.text_replace
@@ -594,6 +594,17 @@ class Tools():
         performance is +100k per sec
 
         will call the strip if
+
+        following colors will be replaced e.g. use {RED} to get red color.
+
+        MYCOLORS =   { "RED":"\033[1;31m",
+                "BLUE":"\033[1;34m",
+                "CYAN":"\033[1;36m",
+                "GREEN":"\033[0;32m",
+                "RESET":"\033[0;0m",
+                "BOLD":"\033[;1m",
+                "REVERSE":"\033[;7m"}
+
 
         """
         if args is None:
@@ -681,7 +692,7 @@ class Tools():
             MyEnv.logger.debug("execbash:\n'''%s\n%s'''\n" % (path, command))
             command2 = ""
             if die:
-                command2 = "set -ex\n"
+                command2 = "set -e\n"
             if cwd:
                 command2 += "cd %s\n" % cwd
             command2+=command
@@ -1555,10 +1566,21 @@ class MyEnv():
                 UbuntuInstall.do_all()
             else:
                 OSXInstall.do_all()
-            env_path = "~/.bash_profile"
+            env_path = "%s/.bash_profile"%MyEnv.config["DIR_HOME"]
             if Tools.exists(env_path):
-                bashprofile = Tools.file_text_read()
-                Tools.shell()
+                bashprofile = Tools.file_text_read(env_path)
+                cmd = "source /sandbox/env.sh"
+                if bashprofile.find(cmd)==-1:
+                    bashprofile+="\n%s\n"%cmd
+                    Tools.file_write(env_path,bashprofile)
+        else:
+            env_path = "%s/.bash_profile"%MyEnv.config["DIR_HOME"]
+            if Tools.exists(env_path):
+                bashprofile = Tools.file_text_read(env_path)
+                cmd = "source /sandbox/env.sh"
+                if bashprofile.find(cmd)!=-1:
+                    bashprofile = bashprofile.replace(cmd,"")
+                    Tools.file_write(env_path,bashprofile)
 
         #will get the sandbox installed
         if force or not MyEnv.state_exists("myenv_install"):

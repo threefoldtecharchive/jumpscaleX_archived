@@ -49,6 +49,7 @@ class group_clients(JSGroup):
         self._influxdb = None
         self._btc_electrum = None
         self._tfchain = None
+        self._tfchain_old = None
         self._sshagent = None
         self._ssh = None
         self._racktivity = None
@@ -755,11 +756,11 @@ class group_clients(JSGroup):
     def tfchain(self):
         if self._tfchain is None:
             # print("LOAD:TfchainClientFactory")
-            from Jumpscale.clients.blockchain.tfchain.TfchainClientFactory import TfchainClientFactory
+            from Jumpscale.clients.blockchain.tfchain.TFChainClientFactory import TfchainClientFactory
             # try:
-            #     from Jumpscale.clients.blockchain.tfchain.TfchainClientFactory import TfchainClientFactory
+            #     from Jumpscale.clients.blockchain.tfchain.TFChainClientFactory import TfchainClientFactory
             # except Exception as e:
-            #     msg = j.core.application.error_init("import", "Jumpscale.clients.blockchain.tfchain.TfchainClientFactory", e)
+            #     msg = j.core.application.error_init("import", "Jumpscale.clients.blockchain.tfchain.TFChainClientFactory", e)
             #     raise e
             # # print("RUN:TfchainClientFactory")
 
@@ -768,10 +769,31 @@ class group_clients(JSGroup):
             # try:
             #     self._tfchain =  TfchainClientFactory()
             # except Exception as e:
-            #     msg = j.core.application.error_init("execute","Jumpscale.clients.blockchain.tfchain.TfchainClientFactory",e)
+            #     msg = j.core.application.error_init("execute","Jumpscale.clients.blockchain.tfchain.TFChainClientFactory",e)
             #     return None
             # print("OK")
         return self._tfchain
+    @property
+    def tfchain_old(self):
+        if self._tfchain_old is None:
+            # print("LOAD:TfchainClientFactory")
+            from Jumpscale.clients.blockchain.tfchain_old.TfchainClientFactory import TfchainClientFactory
+            # try:
+            #     from Jumpscale.clients.blockchain.tfchain_old.TfchainClientFactory import TfchainClientFactory
+            # except Exception as e:
+            #     msg = j.core.application.error_init("import", "Jumpscale.clients.blockchain.tfchain_old.TfchainClientFactory", e)
+            #     raise e
+            # # print("RUN:TfchainClientFactory")
+
+            self._tfchain_old =  TfchainClientFactory()
+
+            # try:
+            #     self._tfchain_old =  TfchainClientFactory()
+            # except Exception as e:
+            #     msg = j.core.application.error_init("execute","Jumpscale.clients.blockchain.tfchain_old.TfchainClientFactory",e)
+            #     return None
+            # print("OK")
+        return self._tfchain_old
     @property
     def sshagent(self):
         if self._sshagent is None:
@@ -2452,6 +2474,7 @@ class group_data(JSGroup):
         self._timeinterval = None
         self._schema = None
         self._serializers = None
+        self._rivine = None
         self._nacl = None
         self._bcdb = None
         self._dict_editor = None
@@ -2878,6 +2901,27 @@ class group_data(JSGroup):
             #     return None
             # print("OK")
         return self._serializers
+    @property
+    def rivine(self):
+        if self._rivine is None:
+            # print("LOAD:RivineDataFactory")
+            from Jumpscale.data.rivine.RivineDataFactory import RivineDataFactory
+            # try:
+            #     from Jumpscale.data.rivine.RivineDataFactory import RivineDataFactory
+            # except Exception as e:
+            #     msg = j.core.application.error_init("import", "Jumpscale.data.rivine.RivineDataFactory", e)
+            #     raise e
+            # # print("RUN:RivineDataFactory")
+
+            self._rivine =  RivineDataFactory()
+
+            # try:
+            #     self._rivine =  RivineDataFactory()
+            # except Exception as e:
+            #     msg = j.core.application.error_init("execute","Jumpscale.data.rivine.RivineDataFactory",e)
+            #     return None
+            # print("OK")
+        return self._rivine
     @property
     def nacl(self):
         if self._nacl is None:

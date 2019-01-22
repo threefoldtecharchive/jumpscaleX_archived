@@ -1,12 +1,5 @@
 """
 This modules defines types related to signatures
-
-TODO: same names as in : /sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/clients/blockchain/tfchain/types/signatures_rivine.py
-
-make sure there are methods on j.clients.tfchain.types.
-
-ONLY use from j.clients.tfchain.types. in code further
-
 """
 
 from clients.blockchain.rivine.encoding import binary as rbinary

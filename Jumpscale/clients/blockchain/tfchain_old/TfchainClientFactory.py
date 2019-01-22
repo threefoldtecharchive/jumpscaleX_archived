@@ -22,14 +22,13 @@ from clients.blockchain.rivine.types.unlockhash import UnlockHash
 
 from clients.blockchain.rivine.errors import WalletAlreadyExistsException
 
-JSConfigBaseFactory = j.application.JSFactoryBaseClass
 
 
-class TfchainClientFactory(JSConfigBaseFactory):
+class TfchainClientFactory(j.application.JSBaseConfigsClass):
     """
     Factory class to get a tfchain client object
     """
-    __jslocation__ = "j.clients.tfchain"
+    __jslocation__ = "j.clients.tfchain_old"
     _CHILDCLASS = TfchainClient
 
     def _init(self):
@@ -150,7 +149,7 @@ class TfchainClientFactory(JSConfigBaseFactory):
         """
         if not explorers:
             explorers = []
-        if self.exists(wallet_name):
+        if self.exists(name=wallet_name):
             raise WalletAlreadyExistsException(wallet_name)
         data = {
             'network': network.name.lower(),

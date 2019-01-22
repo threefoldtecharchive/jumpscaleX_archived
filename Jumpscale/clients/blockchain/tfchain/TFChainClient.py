@@ -3,26 +3,30 @@ Tfchain Client
 """
 
 from Jumpscale import j
-from json import dumps
 
 from clients.blockchain.tfchain.errors import InvalidTfchainNetwork, NoExplorerNetworkAddresses
-from clients.blockchain.tfchain.TfchainNetwork import TfchainNetwork
+
 from clients.blockchain.rivine.RivineWallet import RivineWallet
 
-TEMPLATE = """
-network = "{}"
-seed_ = ""
-explorers = {}
-password = ""
-nr_keys_per_seed = 1
-""".format(
-    TfchainNetwork.STANDARD.name.lower(),
-    dumps(TfchainNetwork.STANDARD.official_explorers()))
 
-JSConfigBase = j.application.JSBaseConfigClass
+EXPLORER_NODES_STD = [
+                'https://explorer.threefoldtoken.com',
+                'https://explorer2.threefoldtoken.com',
+                'https://explorer3.threefoldtoken.com',
+                'https://explorer4.threefoldtoken.com',
+            ]
+
+EXPLORER_NODES_TEST = [
+                'https://explorer.testnet.threefoldtoken.com',
+                'https://explorer2.testnet.threefoldtoken.com',
+            ]
+
+EXPLORER_NODES_DEV = [
+                'http://localhost:23112'
+            ]
 
 
-class TfchainClient(JSConfigBase):
+class TFChainClient(j.application.JSBaseConfigClass):
     """
     Tfchain client object
     """
@@ -30,19 +34,29 @@ class TfchainClient(JSConfigBase):
         @url = jumpscale.tfchain.client
         name* = "" (S)
         network = "" (LS)
-        seed_ = "" (S)
-        explorers = "" (S)
+        seed = "" (S)
+        network_type = "STD,TEST,DEV" (E)
         password = "" (S)
-        nr_keys_per_seed = 1 (I)
+        nr_keys_per_seed = 1 (I)       
+        minimum_minerfee = 100000000 (I)
+        explorer_nodes = (LO) !jumpscale.tfchain.explorer
+        
+        @url = jumpscale.tfchain.explorer
+        addr = "" (S)
+        port = 443 (I)
+        
         """
 
-    def _init(self):
-        """
-        Initializes a new Tfchain Client
-        """
-        self._wallet = None
-        self.network = TfchainNetwork.STANDARD.name.lower()
-        self.explorers = dumps(TfchainNetwork.STANDARD.official_explorers())
+
+    def _data_trigger_new(self):
+        if self.network_type in ["DEV"]:
+            self.minimum_minerfee = 1000000000
+
+
+    @property
+    def explorer_addresses(self):
+        j.shell()
+
 
     @property
     def wallet(self):

@@ -31,10 +31,3 @@ class TfchainNetwork(str, Enum):
             ]
         return []
     
-    """
-    returns the minimum miner fee as expected by a tfchain network
-    """
-    def minimum_minerfee(self):
-        if self is TfchainNetwork.DEVNET:
-            return 1000000000
-        return 100000000
