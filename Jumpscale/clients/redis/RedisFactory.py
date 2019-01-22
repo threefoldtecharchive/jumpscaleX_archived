@@ -21,9 +21,10 @@ class RedisFactory(j.application.JSBaseClass):
         # self._logger_enable()
 
     def _cache_clear(self):
-        """
+        '''
         clear the cache formed by the functions get() and getQueue()
-        """
+
+        '''
         self._redis = {}
         self._redisq = {}
         self._config = {}
@@ -49,20 +50,36 @@ class RedisFactory(j.application.JSBaseClass):
             ping=True,
             die=True,
             **args):
-        """
-        get an instance of redis client, store it in cache so we could easily retrieve it later
+        '''get an instance of redis client, store it in cache so we could easily retrieve it later
 
-        :param ipaddr: used to form the key when no unixsocket
-        :param port: used to form the key when no unixsocket
-        :param fromcache: if False, will create a new one instead of checking cache
-        :param unixsocket: path of unixsocket to be used while creating Redis
+        :param ipaddr: used to form the key when no unixsocket, defaults to "localhost"
+        :type ipaddr: str, optional
+        :param port: used to form the key when no unixsocket, defaults to 6379
+        :type port: int, optional
+        :param password: defaults to ""
+        :type password: str, optional
+        :param fromcache: if False, will create a new one instead of checking cache, defaults to True
+        :type fromcache: bool, optional
+        :param unixsocket: path of unixsocket to be used while creating Redis, defaults to None
+        :type unixsocket: [type], optional
+
+        :param ssl_certfile: [description], defaults to None
+        :type ssl_certfile: [type], optional
+        :param ssl_keyfile: [description], defaults to None
+        :type ssl_keyfile: [type], optional
+        :param timeout: [description], defaults to 10
+        :type timeout: int, optional
+        :param ping: [description], defaults to True
+        :type ping: bool, optional
+        :param die: [description], defaults to True
+        :type die: bool, optional
 
         other arguments to redis: ssl_cert_reqs=None, ssl_ca_certs=None
 
-        set_patch is needed when using the client for gedis
-
-        """
-
+        :raises RuntimeError: Redis didnt reply on given ipaddr and port 
+        :return: redis
+        :rtype: [type]
+        '''
         if unixsocket is None:
             key = "%s_%s" % (ipaddr, port)
         else:
@@ -111,15 +128,22 @@ class RedisFactory(j.application.JSBaseClass):
         client.response_callbacks['DEL'] = lambda r: r
 
     def queue_get(self, name, redisclient=None, namespace="queues", fromcache=True):
-        """
-        get an instance of redis queue, store it in cache so we can easily retrieve it later
+        '''get an instance of redis queue, store it in cache so we can easily retrieve it later
+
+        :param name:  name of queue
+        :type name: str
+        :param redisclient: [description], defaults to None
+        :type redisclient: [type], optional
+        :param namespace: value of namespace for the queue, defaults to "queues"
+        :type namespace: str, optional
+        :param fromcache: if False, will create a new one instead of checking cache, defaults to True
+        :type fromcache: bool, optional
+        :return: RedisQueue
+        :rtype: [type]
 
         :param ipaddr: used to form the key when no unixsocket
         :param port: used to form the key when no unixsocket
-        :param name: name of the queue
-        :param namespace: value of namespace for the queue
-        :param fromcache: if False, will create a new one instead of checking cache
-        """
+        '''
         if "host" not in redisclient.connection_pool.connection_kwargs:
             ipaddr = redisclient.connection_pool.connection_kwargs["path"]
             port = 0
@@ -142,18 +166,20 @@ class RedisFactory(j.application.JSBaseClass):
             return '%s/redis.sock' % j.dirs.TMPDIR
 
     def core_get(self, reset=False):
-        """
-
+        '''
         js_shell 'j.clients.redis.core_get(reset=False)'
-
 
         will try to create redis connection to {DIR_TEMP}/redis.sock or /sandbox/var/redis.sock  if sandbox
         if that doesn't work then will look for std redis port
         if that does not work then will return None
 
+        :param reset: stop redis, defaults to False
+        :type reset: bool, optional
+        :raises RuntimeError: redis couldn't be started
+        :return: redis instance
+        :rtype: Redis
+        '''
 
-
-        """
         if reset:
             self.core_stop()
 
@@ -170,9 +196,13 @@ class RedisFactory(j.application.JSBaseClass):
             time.sleep(0.05)
 
     def core_stop(self):
-        """
+        '''
         kill core redis
-        """
+
+        :raises RuntimeError: redis wouldn't be stopped
+        :return: True if redis is not running
+        :rtype: bool
+        '''
         j.sal.process.execute("redis-cli -s %s shutdown" % self.unix_socket_path, die=False, showout=False)
         j.sal.process.execute("redis-cli shutdown", die=False, showout=False)
         nr = 0
@@ -184,6 +214,13 @@ class RedisFactory(j.application.JSBaseClass):
             time.sleep(0.05)
 
     def core_running(self):
+        '''Get status of redis whether it is currently running or not 
+
+        :raises e: did not answer
+        :return: True if redis is running, False if redis is not running
+        :rtype: bool
+        '''
+
         if j.core.isSandbox:
             if not j.sal.fs.exists(self.unix_socket_path):
                 return False
@@ -201,8 +238,7 @@ class RedisFactory(j.application.JSBaseClass):
         return False
 
     def _core_start(self, timeout=20, reset=False):
-        """
-
+        '''
         js_shell "j.clients.redis.core_get(reset=True)"
 
         installs and starts a redis instance in separate ProcessLookupError
@@ -211,7 +247,16 @@ class RedisFactory(j.application.JSBaseClass):
         in sandbox will run in:
             /sandbox/var/redis.sock
 
-        """
+        :param timeout:  defaults to 20
+        :type timeout: int, optional
+        :param reset: reset redis, defaults to False
+        :type reset: bool, optional
+        :raises RuntimeError: redis server not found after install
+        :raises RuntimeError: platform not supported for start redis
+        :raises j.exceptions.Timeout: Couldn't start redis server
+        :return: redis instance
+        :rtype: Redis
+        '''
 
         if reset == False:
             if self.core_running():

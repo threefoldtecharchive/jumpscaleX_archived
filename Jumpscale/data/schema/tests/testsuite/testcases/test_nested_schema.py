@@ -139,4 +139,3 @@ class NestedSchemaTest(BaseTest):
         self.assertEqual(schema_obj3.address.street, street)
         self.assertEqual(schema_obj3.address.building, building)
         self.assertEqual(schema_obj3.grades, grades)
-        

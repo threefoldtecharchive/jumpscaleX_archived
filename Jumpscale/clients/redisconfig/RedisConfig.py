@@ -22,12 +22,22 @@ class RedisConfig(j.application.JSBaseConfigClass):
 
     @property
     def ssl_certfile_path(self):
+        '''
+        :return: ssl_certificate file path
+        :rtype: str
+        '''
+
         p = j.sal.fs.getDirName(self.ssl_keypath) + "cert.pem"
         if self.sslkey:
             return p
 
     @property
     def ssl_keyfile_path(self):
+        '''
+        :return: ssl_key file path
+        :rtype: str
+        '''
+
         p = j.sal.fs.getDirName(self.ssl_keypath) + "key.pem"
         if self.sslkey:
             return p
@@ -39,16 +49,30 @@ class RedisConfig(j.application.JSBaseConfigClass):
             if self.unixsocket == "":
                 self.unixsocket = None
 
-            self._redis = j.clients.redis.get(
-                ipaddr=self.addr, port=self.port, password=self.password_,
-                unixsocket=self.unixsocket, ardb_patch=self.ardb_patch,
-                set_patch=self.set_patch, ssl=self.ssl,
-                ssl_keyfile=self.ssl_keyfile_path, ssl_certfile=self.ssl_certfile_path,
-                ssl_cert_reqs=None, ssl_ca_certs=None)
+            if self.ssl:
+                self._redis = j.clients.redis.get(
+                    ipaddr=self.addr, port=self.port, password=self.password_,
+                    unixsocket=self.unixsocket, ardb_patch=self.ardb_patch,
+                    set_patch=self.set_patch, ssl=self.ssl,
+                    ssl_keyfile=self.ssl_keyfile_path, ssl_certfile=self.ssl_certfile_path,
+                    ssl_cert_reqs=None, ssl_ca_certs=None)
+            else:
+                self._redis = j.clients.redis.get(
+                    ipaddr=self.addr, port=self.port, password=self.password_,
+                    unixsocket=self.unixsocket, ardb_patch=self.ardb_patch,
+                    set_patch=self.set_patch, ssl=self.ssl,
+                    ssl_cert_reqs=None, ssl_ca_certs=None)
 
         return self._redis
 
     def ssl_keys_save(self, ssl_keyfile, ssl_certfile):
+        '''
+        :param ssl_keyfile: ssl_key file path
+        :type ssl_keyfile: str
+        :param ssl_certfile: ssl_certificate
+        :type ssl_certfile: str
+        '''
+
         if j.sal.fs.exists(ssl_keyfile):
             ssl_keyfile = j.sal.fs.readFile(ssl_keyfile)
         if j.sal.fs.exists(ssl_certfile):

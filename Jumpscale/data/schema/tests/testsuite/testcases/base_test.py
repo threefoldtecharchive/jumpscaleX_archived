@@ -22,4 +22,3 @@ class BaseTest(TestCase):
 
     def random_string(self):
         return 's' + str(uuid4()).replace('-', '')[:10]
-    

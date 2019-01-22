@@ -8,22 +8,32 @@ class BuilderGolang(j.builder.system._BaseClass):
     DOWNLOAD_URL = 'https://dl.google.com/go/go{version}.{platform}-{arch}.tar.gz'
 
     def reset(self):
-        if self.profile_default.envExists("GOROOT"):
-            go_root = self.profile_default.envGet("GOROOT")
+        if self.profile_default.envExists('GOROOT'):
+            go_root = self.profile_default.envGet('GOROOT')
             self.profile_default.pathDelete(go_root)
             self.profile_js.pathDelete(go_root)
-        if self.profile_default.envExists("GOPATH"):
-            go_path = self.profile_default.envGet("GOPATH")
+        if self.profile_default.envExists('GOPATH'):
+            go_path = self.profile_default.envGet('GOPATH')
             self.profile_default.pathDelete(go_path)
 
-        self.profile_default.deleteAll("GOROOT")
-        self.profile_js.deleteAll("GOROOT")
-        self.profile_default.deleteAll("GOPATH")
-        self.profile_js.deleteAll("GOPATH")
+        if self.env.envExists('GOROOT'):
+            go_root = self.env.envGet('GOROOT')
+            self.env.pathDelete(go_root)
+        if self.env.envExists('GOPATH'):
+            go_path = self.env.envGet('GOPATH')
+            self.env.pathDelete(go_path)
+
+        self.profile_default.deleteAll('GOROOT')
+        self.profile_js.deleteAll('GOROOT')
+        self.profile_default.deleteAll('GOPATH')
+        self.profile_js.deleteAll('GOPATH')
+        self.env.deleteAll('GOROOT')
+        self.env.deleteAll('GOPATH')
 
         # ALWAYS SAVE THE DEFAULT FIRST !!!
         self.profile_default.save()
         self.profile_js.save()
+        self.env.save()
 
     def _init(self):
         self.base_dir = j.core.tools.text_replace('{DIR_BASE}')
@@ -31,6 +41,7 @@ class BuilderGolang(j.builder.system._BaseClass):
         self.bash = j.tools.bash.get()
         self.profile_default = self.bash.profileDefault
         self.profile_js = self.bash.profileJS
+        self.env = self.bash.profileGet(self.tools.joinpaths(self.base_dir, 'env.sh'))
 
         self.go_root = self.tools.joinpaths(self.base_dir, 'go')
         self.go_path = self.tools.joinpaths(self.base_dir, 'go_proj')
@@ -46,7 +57,7 @@ class BuilderGolang(j.builder.system._BaseClass):
         :return: execution result (return code, output, error)
         :rtype: tuple
         """
-        profile_source = 'source %s\n' % self.profile_default.pathProfile
+        profile_source = 'source %s\n' % self.env.pathProfile
         command = j.core.tools.text_replace(profile_source + command)
         return j.sal.process.execute(command, **kwargs)
 
@@ -109,12 +120,11 @@ class BuilderGolang(j.builder.system._BaseClass):
         self.execute('rm -rf $GOPATH', die=True)
         j.core.tools.dir_ensure(self.go_path)
 
-        profile = self.profile_default
-        profile.envSet('GOROOT', self.go_root)
-        profile.envSet('GOPATH', self.go_path)
-        profile.addPath(self.go_root_bin)
-        profile.addPath(self.go_path_bin)
-        profile.save()
+        self.env.envSet('GOROOT', self.go_root)
+        self.env.envSet('GOPATH', self.go_path)
+        self.env.addPath(self.go_root_bin)
+        self.env.addPath(self.go_path_bin)
+        self.env.save()
 
         self.tools.file_download(
             download_url, self.go_root, overwrite=False, retry=3,

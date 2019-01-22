@@ -101,11 +101,11 @@ class Minio(Service):
         pools = sorted(pools, key=lambda p: p.used)
         fs = None
         for sp in pools:
-        try:
-            fs = sp.get(self._id)
-        except ValueError:
+            try:
+                fs = sp.get(self._id)
+            except ValueError:
                 try:
-            fs = sp.create(self._id)
+                    fs = sp.create(self._id)
                 except Exception as err:
                     logger.warning('couldn create storage pool filesystem: %s\nTrying another disk' % str(err))
                     continue
@@ -183,11 +183,11 @@ class Minio(Service):
         super().destroy()
 
         for sp in self.node.storagepools.list():
-        try:
-            fs = sp.get(self._id)
-            fs.delete()
+            try:
+                fs = sp.get(self._id)
+                fs.delete()
                 break
-        except ValueError:
+            except ValueError:
                 continue
 
     def check_and_repair(self):
