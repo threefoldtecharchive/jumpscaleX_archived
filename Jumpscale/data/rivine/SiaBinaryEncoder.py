@@ -7,28 +7,41 @@ class IntegerOutOfRange(Exception):
 
 _INT_UPPERLIMIT = pow(2, 64) - 1
 
+from abc import ABC, abstractmethod
+
+class SiaBinaryObjectEncoderBase(ABC):
+    @abstractmethod
+    def sia_binary_encode(self, encoder):
+        """
+        sia_binary_encode encodes this object as a byte-slice,
+        using the primitive encoding functions provided by the SiaBinaryEncoder module,
+        resulting in a custom and/or complex byteslice,
+        encoded according to the siabin encoding specification.
+        """
+        pass
+
 class SiaBinaryEncoder(j.application.JSBaseClass):
     """
     Module implementing the siabin binary encoding,
     for the purposes of creating signatures only.
 
     Decoding of siabin-encoded data is not supported,
-    and is out of scope for the rivine SAL
-    (the official python library implementation of Rivine Light).
+    and is out of scope for the siabin data encoding module.
 
+    official specification can be found at
     https://github.com/threefoldtech/rivine/blob/18b19eac90f3cf9585a7ad4de4ecd612bee9c8e6/doc/encoding/SiaEncoding.md
-
-    siabin_encode encodes this object as a byte-slice,
-    using the primitive encoding functions provided by the siabin library,
-    resulting in a custom and/or complex byteslice,
-    encoded according to the siabin encoding specification.
-
     """
 
-    
-    def encode_int(self,value):
+    def _init(self):
+        self._data = bytearray()
+
+    @property
+    def data(self):
+        return self._data
+
+    def add_int(self, value):
         """
-        Encode an integer as 8 bytes, using little-endianness,
+        Add an encoded integer as 8 bytes, using little-endianness,
         as specified by the siabin encoding specification.
 
         @param value: int value that fits in maximum 8 bytes
@@ -39,52 +52,48 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
             raise IntegerOutOfRange("integer {} is out of lower range of 0".format(value))
         if value > _INT_UPPERLIMIT:
             raise IntegerOutOfRange("integer {} is out of upper range of {}".format(value, _INT_UPPERLIMIT))
-        return value.to_bytes(8, byteorder='little')
+        self._data += value.to_bytes(8, byteorder='little')
 
-    def encode_array(self,value):
+    def add_array(self, value):
         """
-        Encode an iterateble value as an array,
+        Add an iterateble value as an array, encoding each element
         as specified by the siabin encoding specification.
 
         @param value: the iterateble object to be siabin-encoded as an array
         """
         if type(value) is str:
-            return value.encode('utf-8')
+            self._data += value.encode('utf-8')
         try:
             result = bytearray()
             for element in value:
-                result.extend(encode(element))
+                self.add(element)
             return result
         except TypeError:
             raise TypeError("value cannot be encoded as an array")
 
-    def encode_slice(self,value):
+    def add_slice(self,value):
         """
-        Encode an iterateble value as a slice,
+        Add an encoded iterateble value as a slice,
         as specified by the siabin encoding specification.
 
         @param value: the iterateble object to be siabin-encoded as a slice
         """
         if type(value) is str:
-            result = bytearray(encode_int(len(value)))
-            result.extend(value.encode('utf-8'))
-            return result
-        try:
-            elements = bytearray()
+            self.add_int(len(value))
+            self._data += value.encode('utf-8')
+        elif type(value) in (bytes, bytearray):
+            self.add_int(len(value))
+            self._data += value
+        else:
             length = 0
-            for element in value:
-                elements.extend(encode(element))
+            for _ in value:
                 length += 1
-            result = bytearray(encode_int(length))
-            result.extend(elements)
-            return result
-        except TypeError:
-            pass
-        raise TypeError("value cannot be encoded as a slice")
+            self.add_int(length)
+            self.add_array(value)
 
-    def encode_currency(self,value):
+    def add_currency(self,value):
         """
-        Encode an integer as a currency value, using big-endianness,
+        Add an integer, encoding it as a currency value, using big-endianness,
         as specified by the siabin encoding specification.
 
         Remark that this value is encoded using big-endianness
@@ -102,11 +111,12 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
         nbytes, rem = divmod(value.bit_length(), 8)
         if rem:
             nbytes += 1
-        return encode_all(nbytes, value.to_bytes(nbytes, byteorder='big'))
+        self.add_int(nbytes)
+        self._data += value.to_bytes(nbytes, byteorder='big')
 
-    def encode(self,value):
+    def add(self,value):
         """
-        Encode a value as specified by the siabin encoding specification,
+        add a value as specified by the siabin encoding specification,
         automatically matching the value's type with a matching siabin type.
 
         Use a specific encoding function if you want to make sure you
@@ -118,40 +128,34 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
         # if the value implements the SiabinEncoder interface,
         # we ignore the underlying type and use the custom-defined logic
         # as provided by the SiabinEncoder object
-        if isinstance(value, SiabinEncoder):
-            result = value.siabin_encode()
-            if type(result) not in (bytes, bytearray):
-                raise ValueError("expected siabin-encoded value to be a bytearray, but instead was {}".format(type(value)))
-            return result
+        if isinstance(value, SiaBinaryObjectEncoderBase):
+            value.sia_binary_encode(encoder=self)
+            return
 
         # try to siabin-encode the value based on its python type
         value_type = type(value)
         if value_type in (bytes, bytearray):
-            result = bytearray()
-            result.extend(value)
-            return result
+            self.add_slice(value)
         elif value_type is int:
-            return encode_int(value)
+            self.add_int(value)
         elif value_type is bool:
-            return bytearray([1]) if value else bytearray([0])
+            self._data += bytearray([1]) if value else bytearray([0])
+        else:
+            # try to siabin-encode the value as a slice
+            try:
+                return self.add_slice(value)
+            except TypeError:
+                pass
+            raise ValueError("cannot siabin-encode value with unsupported type {}".format(value_type))
 
-        # try to siabin-encode the value as a slice
-        try:
-            return encode_slice(value)
-        except TypeError:
-            pass
-        raise ValueError("cannot siabin-encode value with unsupported type {}".format(value_type))
-
-    def encode_all(self,*values):
+    def add_all(self, *values):
         """
-        Encode values, one by one, as specified by the siabin encoding specification,
+        Add values, one by one, and encode each as specified by the siabin encoding specification,
         automatically matching each value's type with a matching siabin type.
 
         Each value is encoded one after another within a single bytearray.
 
         @param values: the values to be siabin-encoded
         """
-        result = bytearray()
         for value in values:
-            result.extend(encode(value))
-        return result
+            self.add(value)
