@@ -1,7 +1,6 @@
 '''Definition of several collection types (list, dict, set,...)'''
 
 from Jumpscale import j
-import msgpack
 
 from Jumpscale.data.types.PrimitiveTypes import (String, StringMultiLine, Bytes,
                                                  Boolean, Integer,
@@ -30,21 +29,21 @@ class YAML(String):
         return ""
 
     def clean(self, value):
-
         if value is None:
             value = self.get_default()
+
         elif not self.check(value):
             raise ValueError("Invalid value for yaml: %s" % value)
+        value = j.data.types.string.clean(value)
         return value
 
     def fromString(self, s):
         """
         return string from a dict
         """
-        if j.data.types.dict.check(s):
+        if j.data.types.yaml.check(s):
             return s
         else:
-            # s = s.replace("''", '"')
             j.data.serializers.yaml.loads(s)
             return s
 
@@ -98,7 +97,10 @@ class Dictionary():
 
     def check(self, value):
         '''Check whether provided value is a dict'''
-        return isinstance(value, dict)
+        if isinstance(value, dict):
+            return True
+        value_loads = j.data.serializers.msgpack.loads(value)
+        return value_loads
 
     def get_default(self):
         return dict()
@@ -107,20 +109,18 @@ class Dictionary():
         """
         return string from a dict
         """
-        if j.data.types.dict.check(s):
-            return s
-        else:
-            s = s.replace("''", '"')
-            s = msgpack.packb(s, use_bin_type=True)
-            return s
+        s = s.replace("''", '"')
+        j.data.serializers.msgpack.dumps(s)
+        return s
 
     def toData(self, v):
         return self.clean(v)
 
     def toString(self, v):
-        if j.data.types.dict.check(v):
+        if isinstance(v, dict):
             return v
-        return msgpack.unpackb(v, raw=False)
+        else:
+            return j.data.serializers.msgpack.loads(v)
 
     def clean(self, v):
         if not self.check(v):
@@ -342,7 +342,7 @@ class Hash(List):
         elif j.data.types.bytes.check(value):
             if len(value) is not 8:
                 raise RuntimeError("bytes should be len 8")
-            #means is byte
+            # means is byte
             return struct.unpack("II", b"aaaadddd")
 
         elif j.data.types.string.check(value):
