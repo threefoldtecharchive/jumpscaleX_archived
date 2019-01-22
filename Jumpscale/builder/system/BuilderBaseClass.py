@@ -11,6 +11,7 @@ class BuilderBaseClass(BaseClass):
         self.new_dirs = []  # list of dirs to create under sandbox/ in the flist
         self.new_files = {}  # dict of new files to create in the flist. key is the location under sandbox/ and the value is the content
         self.startup = ''  # content of the startup script, placed at the root of the flist
+        self.root_files = {}
         self._init()
 
     @property
@@ -91,6 +92,14 @@ class BuilderBaseClass(BaseClass):
             file_dest = j.sal.fs.joinPaths(sandbox_dir, '.startup.toml')
             j.builder.tools.file_ensure(file_dest)
             j.builder.tools.file_write(file_dest, self.startup)
+
+        # create files in self.root_files
+        for file_dest, content in self.root_files.items():
+            file_dest = j.sal.fs.joinPaths(sandbox_dir, self.tools.path_relative(file_dest))
+            dir = j.sal.fs.getDirName(file_dest)
+            j.builder.tools.dir_ensure(dir)
+            j.builder.tools.file_ensure(file_dest)
+            j.builder.tools.file_write(file_dest, content)
 
         ld_dest = j.sal.fs.joinPaths(sandbox_dir, 'lib64/')
         j.builder.tools.dir_ensure(ld_dest)

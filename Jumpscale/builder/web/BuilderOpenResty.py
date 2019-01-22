@@ -31,6 +31,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         self.new_dirs = ['var/pid/', 'var/log/']
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'openresty_startup.toml')
         self.startup = j.sal.fs.readFile(startup_file)
+        self.new_files = {'etc/passwd': 'nobody:x:65534:65534:nobody:/:/sandbox/bin/openresty'}
 
     def _build_prepare(self):
         j.builder.system.package.mdupdate()
