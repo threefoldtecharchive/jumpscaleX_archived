@@ -86,7 +86,7 @@ class StringMultiLine(String):
 
     def check(self, value):
         '''Check whether provided value is a string and has \n inside'''
-        return isinstance(value, str) and "\n" in value
+        return isinstance(value, str) and ("\\n" in value or "\n" in value)
 
     def clean(self, value):
         """
@@ -154,9 +154,10 @@ class Bytes():
     def fromString(self, s):
         """
         """
-        if not isinstance(s, str):
+        value = j.data.types.string.clean(s)
+        if not isinstance(value, str):
             raise ValueError("Should be string:%s" % s)
-        return s.encode()
+        return value.encode()
 
     def toString(self, v):
         v = self.clean(v)
@@ -453,7 +454,7 @@ class Percent(Integer):
         if Integer().check(value):
             return value
         elif Float().check(value):
-            return value * 100
+            return round(value * 100)
         else:
             raise RuntimeError(
                 "could not convert input to percent, input was:%s" %

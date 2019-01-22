@@ -269,7 +269,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         email = (email)
-        init_email_1 = 'test.example@domain.com' (email)
+        init_email_1 = test.example@domain.com (email)
         init_email_2 = test.example@domain.com (email)
         """
         schema = self.schema(scm)
@@ -463,8 +463,8 @@ class SchemaTest(BaseTest):
         @url = test.schema
         date = (D)
         init_date_1 = 01/01/2019 9pm:10 (D)
-        init_date_2 = '01/08/2018 8am:30' (D)
-        init_date_3 = 50 (D)
+        init_date_2 = 01/08/2018 8am:30 (D)
+        init_date_3 = 05/03/1994 (D)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -515,7 +515,7 @@ class SchemaTest(BaseTest):
         self.log("Try to set parameter[P1] with date type, should succeed.")
         self.assertEqual(schema_obj.init_date_1, 1546377000)
         self.assertEqual(schema_obj.init_date_2, 1533112200)
-        self.assertEqual(schema_obj.init_date_3, 50)
+        self.assertEqual(schema_obj.init_date_3, 762825600)
 
         date = 0
         schema_obj.date = date
@@ -596,10 +596,10 @@ class SchemaTest(BaseTest):
         percent = (percent)
         init_percent_1 = 84 (percent)
         init_percent_2 = 73.4 (percent)
-        init_percent_3 = '95' (percent)
-        init_percent_4 = '72.8' (percent)
-        init_percent_5 = '54%' (percent)
-        init_percent_6 = '64.44%' (percent)
+        init_percent_3 = 95 (percent)
+        init_percent_4 = 72.8 (percent)
+        init_percent_5 = 54% (percent)
+        init_percent_6 = 64.44% (percent)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -624,10 +624,10 @@ class SchemaTest(BaseTest):
         percent = random.randint(0, 250)
         schema_obj.percent = percent
         self.assertEqual(schema_obj.percent, percent)
-        
+
         percent = random.uniform(0, 250)
         schema_obj.percent = percent
-        self.assertEqual(schema_obj.percent, percent*100)
+        self.assertEqual(schema_obj.percent, round(percent*100))
         
         value = random.randint(1, 100)
         percent = '{}'.format(value)
@@ -642,11 +642,11 @@ class SchemaTest(BaseTest):
         value = random.uniform(1, 100)
         percent = '{}'.format(value)
         schema_obj.percent = percent
-        self.assertEqual(schema_obj.percent, value*100)
+        self.assertEqual(schema_obj.percent, round(value*100))
 
         percent = '{}%'.format(value)
         schema_obj.percent = percent
-        self.assertEqual(schema_obj.percent, (value)*100)
+        self.assertEqual(schema_obj.percent, round((value)*100))
         self.assertEqual(schema_obj.init_percent_1, 84)
         self.assertEqual(schema_obj.init_percent_2, 7340)
         self.assertEqual(schema_obj.init_percent_3, 95)
@@ -798,8 +798,8 @@ class SchemaTest(BaseTest):
         @url = test.schema
         guid = (guid)
         init_guid_1 = bebe8b34-b12e-4fda-b00c-99979452b7bd (guid)
-        init_guid_2 = '84b022bd-2b00-4b62-8539-4ec07887bbe4' (guid)
-        """.format(str(uuid4()))
+        init_guid_2 = 84b022bd-2b00-4b62-8539-4ec07887bbe4 (guid)
+        """
         schema = self.schema(scm)
         schema_obj = schema.new()
 
@@ -827,7 +827,7 @@ class SchemaTest(BaseTest):
         schema_obj.guid = guid
         self.assertEqual(schema_obj.guid, guid)
         self.assertEqual(schema_obj.init_guid_1, 'bebe8b34-b12e-4fda-b00c-99979452b7bd')
-        self.assertEqual(schema_obj.init_guid_1, '84b022bd-2b00-4b62-8539-4ec07887bbe4')
+        self.assertEqual(schema_obj.init_guid_2, '84b022bd-2b00-4b62-8539-4ec07887bbe4')
 
     def test016_validate_dict_type(self):
         """
@@ -1106,7 +1106,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         binary = (bin)
-        init_bin = b'this is binary' (bin)
+        init_bin = 'this is binary' (bin)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
