@@ -1,9 +1,9 @@
 {$node_addr}:{$filemanager_port}/ {
-    root /sandbox/filemanager/files
     log /sandbox/var/log/caddy.log
 
-    filebrowser {
+    filebrowser / /sandbox/filemanager/files {
         auth_method     noauth
+        database    /sandbox/cfg/filemanager/settings.db
     }
 
     oauth {
