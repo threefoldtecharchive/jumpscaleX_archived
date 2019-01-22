@@ -1,0 +1,20 @@
+[startup.coredns]
+name = "bash"
+protected = true #set protected to true to respawn the container if it crashed
+
+[startup.coredns.args]
+script = """
+echo '''. {
+    etcd $domain {
+        stubzones
+        path /hosts
+        endpoint $etcd_endpoint
+        fallthrough
+        debug
+    }
+    loadbalance
+    reload 5s
+}''' > coredns.conf
+
+/sandbox/bin/coredns -conf coredns.conf
+"""

@@ -561,6 +561,16 @@ class BuilderTools(j.builder.system._BaseClass):
     def joinpaths(self, *args):
         return j.sal.fs.joinPaths(*args)
 
+    def path_relative(self, path):
+        """Makes the path relative by removing the slash at the beginning if it exists
+
+        :param path: the path to change
+        :type path: str
+        :return: the path after removing the /
+        :rtype: str
+        """
+        return path[1:] if path.startswith('/') else path
+
     def dir_attribs(self, location, mode=None, owner=None, group=None, recursive=False, showout=False):
         """Updates the mode / owner / group for the given remote directory."""
         location = j.core.tools.text_replace(location)

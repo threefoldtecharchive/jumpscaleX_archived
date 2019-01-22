@@ -57,13 +57,17 @@ class Redis(redis.Redis):
         return RedisDict(self, key)
 
     def getQueue(self, name, namespace="queues", newconnection=False):
-        """
-        get redis queue
+        '''get redis queue
 
         :param name: name of the queue
-        :param namespace: namespace of the queue
-        :param newconnection: if True will create a new connection, if False will use an existing connection from the pool
-        """
+        :type name: str
+        :param namespace: namespace of the queue, defaults to "queues"
+        :type namespace: str, optional
+        :param newconnection: if True will create a new connection, if False will use an existing connection from the pool, defaults to False
+        :type newconnection: bool, optional
+        :return: RedisQueue
+        :rtype: [type]
+        '''
         if not newconnection:
             return RedisQueue(self, name, namespace=namespace)
         else:
@@ -71,13 +75,12 @@ class Redis(redis.Redis):
             return RedisQueue(client, name, namespace=namespace)
 
     def createStoredProcedure(self, path):
-        """
-        create stored procedure from path
+        '''create stored procedure from path
 
         :param path: the path where the stored procedure exist
-
-        :raises Exception when we can not find the stored procedure on the path
-        """
+        :type path: str
+        :raises Exception: when we can not find the stored procedure on the path
+        '''
         if not os.path.exists(path):
             path0 = os.path.join(os.getcwd(), path)
         if not os.path.exists(path0, followlinks=True):

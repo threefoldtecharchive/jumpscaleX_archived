@@ -12,33 +12,38 @@ class RedisQueue(JSConfigBase):
     """
 
     def _init(self):
-        """The default connection parameters are: host='localhost', port=9999, db=0"""
+        '''The default connection parameters are: host='localhost', port=9999, db=0
+        '''
         self.__db = self.redis
         self.key = '%s:%s' % (self.namespace, self.name)
 
     def qsize(self):
-        """Return the approximate size of the queue."""
+        '''Return the approximate size of the queue.
+
+        :return: approximate size of queue
+        :rtype: int
+        '''
         return self.__db.llen(self.key)
 
     @property
     def empty(self):
-        """Return True if the queue is empty, False otherwise."""
+        '''Return True if the queue is empty, False otherwise.'''
         return self.qsize() == 0
 
     def reset(self):
-        """
+        '''
         make empty
         :return:
-        """
+        '''
         while self.empty == False:
             self.get_nowait()
 
     def put(self, item):
-        """Put item into the queue."""
+        '''Put item into the queue.'''
         self.__db.rpush(self.key, item)
 
     def get(self, timeout=20):
-        """Remove and return an item from the queue."""
+        '''Remove and return an item from the queue.'''
         if timeout > 0:
             item = self.__db.blpop(self.key, timeout=timeout)
             if item:
@@ -48,7 +53,7 @@ class RedisQueue(JSConfigBase):
         return item
 
     def fetch(self, block=True, timeout=None):
-        """ Like get but without remove"""
+        '''Return an item from the queue without removing'''
         if block:
             item = self.__db.brpoplpush(self.key, self.key, timeout)
         else:

@@ -9,6 +9,22 @@ class BuilderMariadb(j.builder.system._BaseClass):
     NAME = 'mariadb'
     PORT = '3306'
 
+    def _init(self):
+        self.dirs = {
+            "/data/db": "/data/db",
+            "/var/run/mysqld": "/var/run/mysqld"
+        }
+        self.start_cmd = """
+                chown -R mysql.mysql /data/db/
+                chown -R mysql.mysql /var/run/mysqld
+                /usr/sbin/mysqld --basedir=/usr --datadir=/data/db \
+                --plugin-dir=/usr/lib/mysql/plugin --log-error=/dev/log/mysql/error.log \
+                --pid-file=/var/run/mysqld/mysqld.pid \
+                --socket=/var/run/mysqld/mysqld.sock --port={}""".format(self.PORT)
+        self.new_files = {
+            "/tmp/mysql_start.sh": self.start_cmd
+        }
+
     def install(self, start=False, reset=False):
         """install and configure mariadb
 
@@ -41,14 +57,7 @@ class BuilderMariadb(j.builder.system._BaseClass):
     def start(self):
         """Start mariadb
         """
-
-        cmd = '/usr/sbin/mysqld --basedir=/usr --datadir=/data/db \
-                --plugin-dir=/usr/lib/mysql/plugin --log-error=/dev/log/mysql/error.log \
-                --pid-file=/var/run/mysqld/mysqld.pid \
-                --socket=/var/run/mysqld/mysqld.sock --port={}'.format(self.PORT)
-
-        pm = j.builder.system.processmanager.get()
-        pm.ensure('mariadb', cmd=cmd)
+        j.tools.tmux.execute(self.start_cmd, pane="mariadb")
 
     def init(self):
         """Initialize the data directory
