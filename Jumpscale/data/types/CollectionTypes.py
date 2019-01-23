@@ -89,7 +89,7 @@ class JSON(String):
         return self.toString(v)
 
 
-class Dictionary():
+class Dictionary:
     '''Generic dictionary type'''
 
     NAME = 'dict'
@@ -99,8 +99,7 @@ class Dictionary():
         '''Check whether provided value is a dict'''
         if isinstance(value, dict):
             return True
-        value_loads = j.data.serializers.msgpack.loads(value)
-        return value_loads
+        return False
 
     def get_default(self):
         return dict()
@@ -109,18 +108,20 @@ class Dictionary():
         """
         return string from a dict
         """
-        s = s.replace("''", '"')
-        j.data.serializers.msgpack.dumps(s)
-        return s
+        return j.data.serializers.json.loads(s)
 
     def toData(self, v):
         return self.clean(v)
 
     def toString(self, v):
+        if isinstance(v, bytes):
+            v = j.data.serialzers.msgpack.loads(v)
         if isinstance(v, dict):
+            return j.data.serializers.json.dumps(v)
+        elif isinstance(v, str):
             return v
         else:
-            return j.data.serializers.msgpack.loads(v)
+            raise ValueError("Invalid dict value:{}".format(v))
 
     def clean(self, v):
         if not self.check(v):
@@ -138,6 +139,9 @@ class Dictionary():
 
     def toHR(self, v):
         return self.toString(v)
+
+    def capnp_schema_get(self, name, nr):
+        return "%s @%s :Data;" % (name, nr)
 
 
 class List():

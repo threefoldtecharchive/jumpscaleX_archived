@@ -271,6 +271,8 @@ class ModelOBJ():
         if "{{prop.name}}" in self._changed_items:
             {% if prop.jumpscaletype.NAME == "jsobject" %}
             ddict["{{prop.name_camel}}"] = self._changed_items["{{prop.name}}"]._data
+            {% elif prop.jumpscaletype.NAME == 'dict' %}
+            ddict["{{prop.name_camel}}"] = j.data.serializers.msgpack.dumps(self._changed_items["{{prop.name}}"])
             {% else %}
             ddict["{{prop.name_camel}}"] = {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
             {% endif %}
@@ -282,7 +284,7 @@ class ModelOBJ():
         except Exception as e:
             msg="\nERROR: could not create capnp message\n"
             try:
-                msg+=j.core.text.indent(j.data.serializers.json.dumps(ddict,sort_keys=True,indent=True),4)+"\n"
+                msg+=j.core.text.indent(str(j.data.serializers.msgpack.loads(ddict)),4)+"\n"
             except:
                 msg+=j.core.text.indent(str(ddict),4)+"\n"
             msg+="schema:\n"
