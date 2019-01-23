@@ -514,7 +514,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         guid_list = (Lguid)
-        list_guids = ['bebe8b34-b12e-4fda-b00c-99979452b7bd', "84b022bd-2b00-4b62-8539-4ec07887bbe4"] (Lguid)
+        list_guids = [bebe8b34-b12e-4fda-b00c-99979452b7bd, 84b022bd-2b00-4b62-8539-4ec07887bbe4] (Lguid)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -525,11 +525,11 @@ class SchemaTest(BaseTest):
         
         with self.assertRaises(Exception):
             schema_obj.guid_list.append(self.random_string())
-
         self.log("Try to set parameter with guid type, should succeed.")
         guid_list = [str(uuid4()), str(uuid4())]
         schema_obj.guid_list = guid_list
         self.assertEqual(schema_obj.guid_list, guid_list)
+        self.log("schema list %s"%schema_obj.list_guids)
         self.assertEqual(schema_obj.list_guids, ['bebe8b34-b12e-4fda-b00c-99979452b7bd', '84b022bd-2b00-4b62-8539-4ec07887bbe4'])
 
         value = str(uuid4())
