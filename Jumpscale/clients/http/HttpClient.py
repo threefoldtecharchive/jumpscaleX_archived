@@ -233,7 +233,7 @@ class Connection(JSBASE):
         return resp
 
 
-class HttpClient(j.application.JSFactoryBaseClass):
+class HttpClient(j.application.JSBaseClass):
     __jslocation__ = "j.clients.http"
 
     def getConnection(self):

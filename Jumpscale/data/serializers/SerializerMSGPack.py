@@ -13,4 +13,6 @@ class SerializerMSGPack(SerializerBase):
         return msgpack.packb(obj, use_bin_type=True)
 
     def loads(self, s):
-        return msgpack.unpackb(s, raw=False)
+        if isinstance(s, (bytes, bytearray)):
+            return msgpack.unpackb(s, raw=False)
+        return False
