@@ -303,7 +303,7 @@ MYCOLORS =   { "RED":"\033[1;31m",
                 "REVERSE":"\033[;7m"}
 
 
-class Tools():
+class Tools:
 
     _LogFormatter = LogFormatter
     _supported_editors = ["micro","mcedit","joe","vim","vi"]  #DONT DO AS SET  OR ITS SORTED
