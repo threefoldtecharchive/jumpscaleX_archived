@@ -14,3 +14,8 @@ class NoExplorerNetworkAddresses(Exception):
     """
     NoExplorerNetworkAddresses error
     """
+
+class InvalidSiaPublicKeySpecifier(Exception):
+    """
+    InvalidSiaPublicKeySpecifier error
+    """

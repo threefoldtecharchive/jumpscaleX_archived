@@ -4,10 +4,6 @@ Tfchain Client
 
 from Jumpscale import j
 
-from clients.blockchain.tfchain.errors import InvalidTfchainNetwork, NoExplorerNetworkAddresses
-
-from clients.blockchain.rivine.RivineWallet import RivineWallet
-
 
 EXPLORER_NODES_STD = [
                 'https://explorer.threefoldtoken.com',
@@ -33,74 +29,34 @@ class TFChainClient(j.application.JSBaseConfigClass):
     _SCHEMATEXT = """
         @url = jumpscale.tfchain.client
         name* = "" (S)
-        network = "" (LS)
-        seed = "" (S)
         network_type = "STD,TEST,DEV" (E)
         password = "" (S)
-        nr_keys_per_seed = 1 (I)       
         minimum_minerfee = 100000000 (I)
-        explorer_nodes = (LO) !jumpscale.tfchain.explorer
-        
-        @url = jumpscale.tfchain.explorer
-        addr = "" (S)
-        port = 443 (I)
-        
+        explorer_nodes = (LS)
         """
-
 
     def _data_trigger_new(self):
-        if self.network_type in ["DEV"]:
+        if self.network_type == "STD":
+            if len(self.explorer_nodes) == 0:
+                self.explorer_nodes = EXPLORER_NODES_STD
+        elif self.network_type == "TEST":
+            if len(self.explorer_nodes) == 0:
+                self.explorer_nodes = EXPLORER_NODES_TEST
+        elif self.network_type == "DEV":
             self.minimum_minerfee = 1000000000
+            if len(self.explorer_nodes) == 0:
+                self.explorer_nodes = EXPLORER_NODES_DEV
 
+    def transaction_get(self, txid):
+        txid = self._normalize_id(txid)
+        resp = j.clients.tfchain.explorer.get(urls=self.explorer_nodes, endpoint="/explorer/hashes/"+txid)
+        return resp
 
-    @property
-    def explorer_addresses(self):
-        j.shell()
-
-
-    @property
-    def wallet(self):
-        if self._wallet is None:
-            client = j.clients.tfchain.get(self.instance, create=False)
-            # Load the correct config params specific to the network
-            network = TfchainNetwork(self.network)
-            if not isinstance(network, TfchainNetwork):
-                raise InvalidTfchainNetwork(
-                    "invalid tfchain network specified")
-            minerfee = network.minimum_minerfee()
-            explorers = self.explorers
-            if not explorers:
-                explorers = network.official_explorers()
-                if not explorers:
-                    raise NoExplorerNetworkAddresses(
-                        "network {} has no official explorer networks and none were specified by callee".format(network.name.lower()))
-            # Load a wallet from a given seed. If no seed is given,
-            # generate a new one
-            seed = self.seed_
-            if seed == "":
-                seed = self.generate_seed()
-                # Save the seed in the config
-                data = dict(self.config.data)
-                data['seed_'] = seed
-                cl = j.clients.tfchain.get(instance=self.instance,
-                                           data=data,
-                                           create=True,
-                                           interactive=False)
-                cl.config.save()
-                # make sure to set the seed in the current object.
-                # if not, we'd have a random non persistent seed until
-                # the first reload
-                self.seed_ = seed
-            self._wallet = RivineWallet(seed=seed,
-                                        bc_networks=explorers,
-                                        bc_network_password=self.password,
-                                        nr_keys_per_seed=self.nr_keys_per_seed,
-                                        minerfee=minerfee,
-                                        client=client)
-        return self._wallet
-
-    def generate_seed(self):
-        """
-        Generate a new seed
-        """
-        return j.data.encryption.mnemonic.generate(strength=256)
+    def _normalize_id(self, id):
+        if isinstance(id, (bytes, bytearray)):
+            id = id.hex()
+        if type(id) is not str:
+            raise TypeError("ID has to be a string")
+        if len(id) != 64:
+            raise TypeError("ID has to be hex-encoded and have a fixed length of 64")
+        return id
