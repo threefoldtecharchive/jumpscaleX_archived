@@ -76,7 +76,7 @@ def test_main(self)
 
 ## Tutorials
 
-[Check Documentation](docs/howto/)
+[Check Documentation](docs/howto/README.md)
 
 
 ## Collaboration Conventions
