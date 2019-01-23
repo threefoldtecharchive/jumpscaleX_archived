@@ -4,6 +4,9 @@ dist: trusty
 services:
   - docker
 
+branch:
+  - test_travis
+  
 before_install:
   - docker build --rm -t jumpscale .
     
