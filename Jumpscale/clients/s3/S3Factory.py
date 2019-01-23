@@ -18,17 +18,6 @@ class S3Factory(JSConfigBase):
         p = j.tools.prefab.local
         p.runtimes.pip.install("minio")
 
-    def configure(self, instance, address, port, accesskey, secretkey, bucket="main"):
-        """
-        """
-        data = {}
-        data["address"] = address
-        data["port"] = port
-        data["accesskey_"] = accesskey
-        data["secretkey_"] = secretkey
-        data["bucket"] = bucket
-
-        return self.get(instance=instance, data=data)
 
     def test(self):
         """
@@ -36,5 +25,5 @@ class S3Factory(JSConfigBase):
         js_shell 'j.clients.s3.test()'
         """
 
-        client = self.get()
+        client = self.get(name="test")
         self._logger.debug(client.serversGet())

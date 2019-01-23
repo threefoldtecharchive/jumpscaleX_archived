@@ -33,7 +33,7 @@ class GridCapacityFactory(JSConfigFactory):
     @property
     def client(self):
         if self._api is None:
-            self.configure(instance="main")
+            self.get(name="main")
             self._api = self.get().api
         return self._api
 
@@ -62,14 +62,6 @@ class GridCapacityFactory(JSConfigFactory):
         is cached for 60 sec
         """
         return [item.as_dict() for item in self._farmers]
-
-    def configure(self, instance, base_uri="https://capacity.threefoldtoken.com"):
-        """
-        :param base_uri: Url for grid_capacity api
-        :type base_uri: str
-        """
-
-        return self.get(name=instance, base_uri=base_uri)
 
     def resource_units(self, reload=False):
         """

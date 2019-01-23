@@ -32,14 +32,15 @@ class TraefikClient(JSConfigBase):
         return self._etcd_client
 
     def proxy_create(self, name):
-        """
+        '''
         create a new reverse proxy
 
         :param name: name of your proxy, it needs to be unique inside the etcd cluster
-        :type name: string
-        :return: Proxy object
-        :rtype: sal.traefik.TraefikClient.Proxy
-        """
+        :type name: str
+        :raises ProxyNameConflictError: Proxy name already exists
+        :return: reverse proxy
+        :rtype: Object
+        '''
         if name in self.proxies:
             raise ProxyNameConflictError("a proxy named %s already exists")
 

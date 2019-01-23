@@ -26,6 +26,13 @@ class PacketNet(JSConfigBase):
 
     @property
     def client(self):
+        '''If client not set, a new client is created
+        
+        :raises RuntimeError: Auth token not configured
+        :return: client
+        :rtype: 
+        '''
+
         if not self._client:
             if not self.auth_token_:
                 raise RuntimeError(
@@ -35,6 +42,13 @@ class PacketNet(JSConfigBase):
 
     @property
     def projectid(self):
+        '''
+        :raises RuntimeError: Project with projectname not found
+        :raises RuntimeError: More than one project found
+        :return: project id
+        :rtype: str
+        '''
+
         if self._projectid is None:
             if self.projectname is not "":
                 for item in self.projects:
@@ -53,6 +67,11 @@ class PacketNet(JSConfigBase):
 
     @property
     def plans(self):
+        '''
+        :return: plans
+        :rtype: list
+        '''
+
         if self._plans is None:
             self._plans = self.client.list_plans()
             self._logger.debug("plans:%s" % self._plans)
@@ -60,6 +79,11 @@ class PacketNet(JSConfigBase):
 
     @property
     def facilities(self):
+        '''
+        :return: facilities
+        :rtype: list
+        '''
+
         if self._facilities is None:
             self._facilities = self.client.list_facilities()
             self._logger.debug("facilities:%s" % self._facilities)
@@ -67,6 +91,11 @@ class PacketNet(JSConfigBase):
 
     @property
     def operatingsystems(self):
+        '''
+        :return: operatin systems
+        :rtype: list
+        '''
+
         if self._oses is None:
             self._oses = self.client.list_operating_systems()
             self._logger.debug("operatingsystems:%s" % self._oses)
@@ -74,6 +103,11 @@ class PacketNet(JSConfigBase):
 
     @property
     def projects(self):
+        '''
+        :return: projects
+        :rtype: list
+        '''
+
         if self._projects is None:
             self._projects = self.client.list_projects()
             self._logger.debug("projects:%s" % self._projects)
@@ -81,24 +115,45 @@ class PacketNet(JSConfigBase):
 
     @property
     def devices(self):
+        '''
+        :return: devices
+        :rtype: list
+        '''
+
         if self._devices is None:
             self._devices = self.client.list_devices(self.projectid)
             self._logger.debug("devices:%s" % self._devices)
         return self._devices
 
     def getPlans(self):
+        '''List all services plans available to provision device on
+
+        :return: plans
+        :rtype: dict
+        '''
+
         res = {}
         for plan in self.plans:
             res[plan.slug] = (plan.name, plan.specs)
         return res
 
     def getFacilities(self):
+        '''List all datacenters/facilities for the given project
+
+        :return: facilities and their locations
+        :rtype: dict
+        '''
         res = {}
         for item in self.facilities:
             res[item.code] = item.name
         return res
 
     def getOperatingSystems(self):
+        '''List available operating systems
+
+        :return: operating systems
+        :rtype: dict
+        '''
         res = {}
         for item in self.operatingsystems:
             res[item.slug] = (item.name, item.distro,
@@ -106,18 +161,43 @@ class PacketNet(JSConfigBase):
         return res
 
     def getProjects(self):
+        '''List projects
+        
+        :return: projects
+        :rtype: dict
+        '''
+
         res = {}
         for item in self.projects:
             res[item.name] = (item.id, item.devices)
         return res
 
     def getDevices(self):
+        '''List devices for project
+        
+        :return: devices
+        :rtype: dict
+        '''
+
         res = {}
         for item in self.devices:
             res[item.hostname] = item
         return res
 
     def getDevice(self, name, id=None, die=False):
+        '''Get specific device
+        
+        :param name: device name
+        :type name: str
+        :param id:device id, defaults to None
+        :type id: str, optional
+        :param die: return None if no device was found, defaults to False
+        :type die: bool, optional
+        :raises RuntimeError: Device not found
+        :return: device
+        :rtype: dict
+        '''
+
         if id is None:
             if name in [item for item in self.getDevices()]:
                 return self.getDevices()[name]
@@ -129,6 +209,12 @@ class PacketNet(JSConfigBase):
         raise RuntimeError("could not find device:%s" % name)
 
     def removeDevice(self, name):
+        '''Remove a specific device
+        
+        :param name: device name
+        :type name: str
+        '''
+
         res = self.getDevice(name)
         if res is not None:
             self._devices = None
@@ -138,12 +224,31 @@ class PacketNet(JSConfigBase):
 
     def startDevice(self, hostname="removeMe", plan='baremetal_0', facility='ams1', os='ubuntu_17_04',
                     ipxeUrl=None, wait=True, remove=False, sshkey=""):
-        """
+        '''
         will delete if it exists when remove=True, otherwise will check if it exists, if yes will return device object
         if not will create
-
         example ipxeUrl = https://bootstrap.grid.tf/ipxe/zero-os-master-generic
-        """
+
+        :param hostname: name of host, defaults to "removeMe"
+        :type hostname: str, optional
+        :param plan: plan,  defaults to 'baremetal_0'
+        :type plan: str, optional
+        :param facility: facility of the project, defaults to 'ams1'
+        :type facility: str, optional
+        :param os: operating system, defaults to 'ubuntu_17_04'
+        :type os: str, optional
+        :param ipxeUrl: Url, defaults to None
+        :type ipxeUrl: str, optional
+        :param wait: defaults to True
+        :type wait: bool, optional
+        :param remove: defaults to False
+        :type remove: bool, optional
+        :param sshkey: defaults to ""
+        :type sshkey: str, optional
+        :return: device object if created
+        :rtype: Object
+        '''
+
         self._logger.info("start device:%s plan:%s os:%s facility:%s wait:%s" % (hostname, plan, os, facility, wait))
         if ipxeUrl is None:
             zerotierId = ""
@@ -155,11 +260,32 @@ class PacketNet(JSConfigBase):
 
     def startZeroOS(self, hostname="removeMe", plan='baremetal_0', facility='ams1', zerotierId="",
                     zerotierAPI="", wait=True, remove=False, params=None, branch='master'):
-        """
+        '''
         return (zero-os-client,pubIpAddress,zerotierIpAddress)
 
-        @param development: If True, development argument will be added to the ipxe command
-        """
+        :param hostname: defaults to "removeMe"
+        :type hostname: str, optional
+        :param plan: defaults to 'baremetal_0'
+        :type plan: str, optional
+        :param facility:  facility of the project, defaults to 'ams1'
+        :type facility: str, optional
+        :param zerotierId: defaults to ""
+        :type zerotierId: str, optional
+        :param zerotierAPI: defaults to ""
+        :type zerotierAPI: str, optional
+        :param wait: defaults to True
+        :type wait: bool, optional
+        :param remove: defaults to False
+        :type remove: bool, optional
+        :param params: defaults to None
+        :type params: [type], optional
+        :param branch: defaults to 'master'
+        :type branch: str, optional
+        :raises RuntimeError: zerotierId not specified
+        :raises RuntimeError: zerotierAPI not specified
+        :return: zero-os-client, pubIpAddress, zerotierIpAddress
+        :rtype: ,str,str
+        '''
         self._logger.info(
             "start device:%s plan:%s facility:%s zerotierId:%s wait:%s" % (hostname, plan, facility, zerotierId, wait)
         )

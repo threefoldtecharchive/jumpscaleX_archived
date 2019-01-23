@@ -20,10 +20,14 @@ class SSHAgent(j.application.JSBaseConfigClass):
 
     @property
     def keyname_default(self):
-        """
+        '''
         see if we can find the default sshkey in sshagent
-        :return:
-        """
+
+        :raises RuntimeError: sshkey not found in sshagent
+        :raises RuntimeError: more than one sshkey is found in sshagent
+        :return: default sshkey
+        :rtype: str
+        '''
         r = [j.sal.fs.getBaseName(item) for item in self.keys_list()]
         if len(r) == 0:
             raise RuntimeError("could not find sshkey in sshagent")
@@ -32,10 +36,15 @@ class SSHAgent(j.application.JSBaseConfigClass):
         return r[0]
 
     def key_load(self, duration=3600 * 24):
-        """
+        '''
         load the key on path
 
-        """
+        :param duration: duration, defaults to 3600*24
+        :type duration: int, optional
+        :raises RuntimeError: Path to load sshkey on couldn't be found
+        :return: sshAgent instance
+        :rtype: SSHAgent
+        '''
         if not j.sal.fs.exists(self.path):
             raise RuntimeError(
                 "Cannot find path:%sfor sshkey (private key)" % self.path)
@@ -74,7 +83,7 @@ class SSHAgent(j.application.JSBaseConfigClass):
         data = {}
         data["path"] = self.path
 
-        return self.get(instance=name, data=data)
+        return self.get(name=name, data=data)
 
     def profile_js_configure(self):
         '''
@@ -120,9 +129,9 @@ class SSHAgent(j.application.JSBaseConfigClass):
             'ssh-agent -a {}'.format(os.environ['SSH_AUTH_SOCK']), showout=False, die=True, timeout=1)
 
     def check(self):
-        """
+        '''
         will check that agent started if not will start it.
-        """
+        '''
         if "SSH_AUTH_SOCK" not in os.environ:
             self._init_ssh_env()
             # self.sshagent_init()
@@ -131,10 +140,17 @@ class SSHAgent(j.application.JSBaseConfigClass):
             self.sshagent_start()
 
     def key_path_get(self, keyname="", die=True):
-        """
+        '''
         Returns Path of public key that is loaded in the agent
-        @param keyname: name of key loaded to agent to get its path, if empty will check if there is 1 loaded
-        """
+
+        :param keyname: name of key loaded to agent to get its path, if empty will check if there is 1 loaded, defaults to ""
+        :type keyname: str, optional
+        :param die:Raise error if True,else do nothing, defaults to True
+        :type die: bool, optional
+        :raises RuntimeError: Key not found with given keyname
+        :return: path of public key
+        :rtype: str
+        '''
         keyname = j.sal.fs.getBaseName(keyname)
         for item in self.keys_list():
             if item.endswith(keyname):
@@ -145,10 +161,17 @@ class SSHAgent(j.application.JSBaseConfigClass):
                 keyname)
 
     def key_pub_get(self, keyname, die=True):
-        """
+        '''
         Returns Content of public key that is loaded in the agent
-        @param keyname: name of key loaded to agent to get content from
-        """
+
+        :param keyname: name of key loaded to agent to get content from
+        :type keyname: str
+        :param die: Raise error if True,else do nothing, defaults to True
+        :type die: bool, optional
+        :raises RuntimeError: Key not found with given keyname
+        :return: Content of public key
+        :rtype: str
+        '''
         keyname = j.sal.fs.getBaseName(keyname)
         for name, pubkey in self.keys_list(True):
             if name.endswith(keyname):
@@ -159,14 +182,16 @@ class SSHAgent(j.application.JSBaseConfigClass):
                 keyname)
 
     def keys_list(self, key_included=False):
-        """
-
+        '''
         js_shell 'print(j.clients.sshkey.keys_list())'
-
         list ssh keys from the agent
-        :param key_included:
+
+        :param key_included: defaults to False
+        :type key_included: bool, optional
+        :raises RuntimeError: Error during listing of keys
         :return: list of paths
-        """
+        :rtype: list
+        '''
         # check if we can get keys, if not try to load the ssh-agent (need to check on linux)
 
         if "SSH_AUTH_SOCK" not in os.environ:
@@ -187,9 +212,13 @@ class SSHAgent(j.application.JSBaseConfigClass):
             return list(map(lambda key: key[2], keys))
 
     def start(self):
-        """
+        '''
         start ssh-agent, kills other agents if more than one are found
-        """
+
+        :raises RuntimeError: Couldn't start ssh-agent
+        :raises RuntimeError: ssh-agent was not started while there was no error
+        :raises RuntimeError: Could not find pid items in ssh-add -l
+        '''
         socketpath = self.ssh_socket_path
 
         ssh_agents = j.sal.process.getPidsByFilter('ssh-agent')
@@ -242,10 +271,11 @@ class SSHAgent(j.application.JSBaseConfigClass):
         j.clients.sshkey._sshagent = None
 
     def available(self):
-        """
+        '''
         Check if agent available
-        :return: bool
-        """
+        :return: True if agent is available, False otherwise
+        :rtype: bool
+        '''
         if self._available is None:
             socket_path = self.ssh_socket_path
             if not j.sal.fs.exists(socket_path):
@@ -272,10 +302,12 @@ class SSHAgent(j.application.JSBaseConfigClass):
         return self._available
 
     def kill(self, socketpath=None):
-        """
+        '''
         Kill all agents if more than one is found
-        :param socketpath: socketpath
-        """
+
+        :param socketpath: socketpath, defaults to None
+        :type socketpath: str, optional
+        '''
         j.sal.process.killall("ssh-agent")
         socketpath = self.ssh_socket_path if not socketpath else socketpath
         j.sal.fs.remove(socketpath)

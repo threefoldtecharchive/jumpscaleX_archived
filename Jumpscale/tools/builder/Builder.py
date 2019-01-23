@@ -40,7 +40,6 @@ class Builder(j.application.JSBaseClass):
 
     def zos_get(self, zosclient_instance="builder", name=None):
         """
-        zos client needs to be configured before it can be used at j.clients.zos.configure(...
 
         connect to existing zero-os
         :param name: when empty will be same name as the instance of zosclient

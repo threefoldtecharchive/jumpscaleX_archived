@@ -26,15 +26,6 @@ class ZerotierFactory(JSConfigFactory):
         self.__imports__ = "zerotier"
         self.connections = {}
 
-    def configure(self, instance, token, nodeids="", networkid_default=""):
-        """
-        @PARAM networkid is optional
-        @PARAM nodeids is optional, comma separated list of nodeids, used to define your connection (you're a member of a network)
-        """
-        data = {}
-        data["token_"] = token
-        data["networkid"] = networkid_default
-        return self.get(instance=instance, data=data)
 
     def test(self):
         """
@@ -45,7 +36,7 @@ class ZerotierFactory(JSConfigFactory):
         # create a test client using a test token
         TOKEN = 'txBz8dHAyBy6tuPqhywhr9cR6ceacwWg'
 
-        zt_client = j.clients.zerotier.get(instance='testclient', data={'token_': TOKEN})
+        zt_client = j.clients.zerotier.get(name='testclient', token_=TOKEN})
 
         # make sure zerotier is installed and started
         # j.builder.network.zerotier.build()

@@ -40,19 +40,19 @@ class EmailClient(JSConfigClient):
     __repr__ = __str__
 
     def send(self, recipients, sender="", subject="", message="", files=None, mimetype=None):
-        """
-        @param recipients: Recipients of the message
-        @type recipients: mixed, string or list
-        @param sender: Sender of the email
-        @type sender: string
-        @param subject: Subject of the email
-        @type subject: string
-        @param message: Body of the email
-        @type message: string
-        @param files: List of paths to files to attach
-        @type files: list of strings
-        @param mimetype: Type of the body plain, html or None for autodetection
-        @type mimetype: string
+        """ Send an email to the recipients from the sender containing the message required and any attached files given by the paths in files
+        :param recipients: Recipients of the message
+        :type recipients: mixed, str or list
+        :param sender: Sender of the email
+        :type sender: str
+        :param subject: Subject of the email
+        :type subject: str
+        :param message: Body of the email
+        :type message: str
+        :param files: List of paths to files to attach
+        :type files: list of strings
+        :param mimetype: Type of the body plain, html or None for autodetection
+        :type mimetype: str
         """
         if not sender:
             sender = self._sender

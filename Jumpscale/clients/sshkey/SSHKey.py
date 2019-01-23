@@ -14,11 +14,11 @@ class SSHKey(j.application.JSBaseConfigClass):
         path = "" (S) #path of the private key
         """
 
-    def _init_new(self):
+    def _init(self):
 
         self._connected = None
 
-        if self.data.name == "":
+        if self.name == "":
             raise RuntimeError("need to specify name")
 
         if self.path == "":
@@ -41,14 +41,14 @@ class SSHKey(j.application.JSBaseConfigClass):
             self.privkey = j.sal.fs.readFile(self.path)
 
         self.save()
-        self.data.autosave = True  # means every write will be saved (is optional to set)
+        self.autosave = True  # means every write will be saved (is optional to set)
 
     def delete(self):
         """
         will delete from ~/.ssh dir as well as from config
         """
         self._logger.debug("delete:%s" % self.name)
-        self.data.delete()
+        self.delete()
         # self.delete_from_sshdir()
 
     def delete_from_sshdir(self):
@@ -56,10 +56,19 @@ class SSHKey(j.application.JSBaseConfigClass):
         j.sal.fs.remove("%s" % self.path)
 
     def write_to_sshdir(self):
+        '''
+        Write to ssh dir the private and public key
+        '''
         j.sal.fs.writeFile(self.path, self.privkey)
         j.sal.fs.writeFile(self.path + ".pub", self.pubkey)
 
     def generate(self, reset=False):
+        '''
+        Generate ssh key
+        
+        :param reset: if True, then delete old ssh key from dir, defaults to False
+        :type reset: bool, optional
+        '''
         self._logger.debug("generate ssh key")
         if reset:
             self.delete_from_sshdir()
@@ -72,26 +81,35 @@ class SSHKey(j.application.JSBaseConfigClass):
             cmd = 'ssh-keygen -t rsa -f %s -q -P "%s"' % (self.path, self.passphrase)
             j.sal.process.execute(cmd, timeout=10)
 
-        self._init_new()  # will load the info from fs
+        self._init()  # will load the info from fs
 
     def sign_ssh_data(self, data):
         return self.agent.sign_ssh_data(data)
 
     def load(self, duration=3600 * 24):
-        """
+        '''
         load ssh key in ssh-agent, if no ssh-agent is found, new ssh-agent will be started
-        """
+
+        :param duration: duration, defaults to 3600*24
+        :type duration: int, optional
+        '''
         self._logger.debug("load sshkey: %s for duration:%s" % (self.name, duration))
         j.clients.sshagent.key_load(self.path, passphrase=self.passphrase, duration=duration)
 
     def unload(self):
+        '''
+        Unload ssh key from ssh agent
+        '''
         cmd = "ssh-add -d %s " % (self.path)
         j.sal.process.executeInteractive(cmd)
 
     def is_loaded(self):
-        """
+        '''
         check if key is loaded in the ssh agent
-        """
+
+        :return: whether ssh key was loadeed in ssh agent or not
+        :rtype: bool
+        '''
         if self.name in j.clients.sshkey.listnames():
             self._logger.debug("ssh key: %s loaded", self.name)
             return True

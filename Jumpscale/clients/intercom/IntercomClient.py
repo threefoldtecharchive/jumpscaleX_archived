@@ -24,9 +24,12 @@ class IntercomClient(JSConfigClient):
         """
         sending an in-app message from an admin to user
 
-        :param body: (String) body of the email
-        :param admin_id: (String) id of sender admin
-        :param user_id: (String) id of user who will receive the message
+        :param body: body of the email
+        :type body: str
+        :param admin_id: id of sender admin
+        :type admin_id: str
+        :param user_id: id of user who will receive the message
+        :type user_id: str
         """
         self.api.messages.create(**{
             "message_type": "inapp",
@@ -45,11 +48,16 @@ class IntercomClient(JSConfigClient):
         """
         sending a mail message from an admin to user
 
-        :param subject:(String)  subject of the email
-        :param body: (String) body of the email
-        :param template: (String) has one of the 2 values "plain", or "personal"
-        :param admin_id: (String) id of sender admin
-        :param user_id: (String) id of user who will receive the message
+        :param subject: subject of the email
+        :param subject:str
+        :param body: body of the email
+        :param body:str
+        :param template: has one of the 2 values "plain", or "personal"
+        :param template:str
+        :param admin_id: id of sender admin
+        :param admin_id:str
+        :param user_id: id of user who will receive the message
+        :param user_id:str
         """
         self.api.messages.create(**{
             "message_type": "email",
