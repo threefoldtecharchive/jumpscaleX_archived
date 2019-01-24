@@ -8,7 +8,7 @@ def main(self):
 
     js_shell 'j.data.rivine.test(name="sia_limits")'
     """
-    e = j.data.rivine.encoder_sia_bin_get()
+    e = j.data.rivine.encoder_sia_get()
 
     # everything has limits, so do types,
     # that is what this test is about

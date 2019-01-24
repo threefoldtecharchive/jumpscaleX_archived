@@ -6,7 +6,7 @@ def main(self):
 
     js_shell 'j.data.rivine.test(name="sia_types")'
     """
-    e = j.data.rivine.encoder_sia_bin_get()
+    e = j.data.rivine.encoder_sia_get()
 
     # in the sia_basic test we saw we can
     # serialise anything using the add method.

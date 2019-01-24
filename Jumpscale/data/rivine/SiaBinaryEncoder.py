@@ -61,9 +61,9 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
 
         @param value: the iterateble object to be siabin-encoded as an array
         """
-        if type(value) is str:
+        if isinstance(value, str):
             self._data += value.encode('utf-8')
-        elif type(value) in (bytes, bytearray):
+        elif isinstance(value, (bytes, bytearray)):
             self._data += value
         else:
             try:
@@ -81,10 +81,10 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
 
         @param value: the iterateble object to be siabin-encoded as a slice
         """
-        if type(value) is str:
+        if isinstance(value, str):
             self.add_int(len(value))
             self._data += value.encode('utf-8')
-        elif type(value) in (bytes, bytearray):
+        elif isinstance(value, (bytes, bytearray)):
             self.add_int(len(value))
             self._data += value
         else:
@@ -113,20 +113,17 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
             return
 
         # try to siabin-encode the value based on its python type
-        value_type = type(value)
-        if value_type in (bytes, bytearray):
-            self.add_slice(value)
-        elif value_type is int:
-            self.add_int(value)
-        elif value_type is bool:
+        if isinstance(value, bool):
             self._data += bytearray([1]) if value else bytearray([0])
+        elif isinstance(value, int):
+            self.add_int(value)
         else:
             # try to siabin-encode the value as a slice
             try:
                 return self.add_slice(value)
             except TypeError:
                 pass
-            raise ValueError("cannot siabin-encode value with unsupported type {}".format(value_type))
+            raise ValueError("cannot siabin-encode value with unsupported type {}".format(type(value)))
 
     def add_all(self, *values):
         """

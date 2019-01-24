@@ -2,6 +2,7 @@ from Jumpscale import j
 
 from .types.PrimitiveTypes import BinaryData, Hash, Currency
 from .types.FulfillmentTypes import FulfillmentFactory
+from .types.ConditionTypes import ConditionFactory
 from .types.CryptoTypes import PublicKey, PublicKeySpecifier
 
 class TFChainTypesFactory(j.application.JSBaseClass):
@@ -15,6 +16,13 @@ class TFChainTypesFactory(j.application.JSBaseClass):
         Fulfillment types.
         """
         return FulfillmentFactory()
+
+    @property
+    def conditions(self):
+        """
+        Condition types.
+        """
+        return ConditionFactory()
     
     def currency_new(self, value=0):
         """
@@ -79,6 +87,3 @@ class TFChainTypesFactory(j.application.JSBaseClass):
         # as a slice, not an array
         assert str(self.binary_data_new()) == ''
         assert str(self.binary_data_new(b'1')) == '31'
-
-        # fulfillments can be created as well
-        assert str()

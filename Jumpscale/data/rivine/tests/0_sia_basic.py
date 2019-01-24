@@ -6,7 +6,7 @@ def main(self):
 
     js_shell 'j.data.rivine.test(name="sia_basic")'
     """
-    e = j.data.rivine.encoder_sia_bin_get()
+    e = j.data.rivine.encoder_sia_get()
 
     # you can add integers, booleans, iterateble objects, strings,
     # bytes and byte arrays. Dictionaries and objects are not supported.

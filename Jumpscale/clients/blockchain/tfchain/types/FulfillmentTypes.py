@@ -20,7 +20,7 @@ class FulfillmentFactory(j.application.JSBaseClass):
             return FulfillmentMultiSignature.from_json(obj)
         if ft == _FULFILLMENT_TYPE_ATOMIC_SWAP:
             return FulfillmentAtomicSwap.from_json(obj)
-        raise ValueError("unsupport fulfillment type {}".format(type))
+        raise ValueError("unsupport fulfillment type {}".format(ft))
 
     def single_signature_new(self, pub_key=None, signature=None):
         """

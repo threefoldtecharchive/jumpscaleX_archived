@@ -69,7 +69,7 @@ class Hash(BaseDataTypeClass):
 
     @classmethod
     def from_json(cls, obj):
-        if type(obj) is not str:
+        if not isinstance(obj, str):
             raise TypeError("hash is expected to be a string when part of a JSON object")
         return cls(value=obj)
     
@@ -78,15 +78,17 @@ class Hash(BaseDataTypeClass):
         return self._value
     @value.setter
     def value(self, value):
+        if isinstance(value, Hash):
+            self._value = value.value
+            return
         if not value:
             value = bytearray(b'\x00'*Hash._SIZE)
         else:
-            vt = type(value)
-            if vt is str:
+            if isinstance(value, str):
                 value = bytearray.fromhex(value)
-            elif vt is bytes:
+            elif isinstance(value, bytes):
                 value = bytearray(value)
-            elif vt is not bytearray:
+            elif isinstance(value, bytearray):
                 raise TypeError("hash can only be set to a str, bytes or bytearray")
         if len(value) != Hash._SIZE:
             raise TypeError('hash has to have a fixed length of {}'.format(Hash._SIZE))
@@ -123,7 +125,7 @@ class Currency(BaseDataTypeClass):
 
     @classmethod
     def from_json(cls, obj):
-        if type(obj) is not str:
+        if isinstance(obj, str):
             raise TypeError("currency is expected to be a string when part of a JSON object")
         return cls(value=obj)
     
@@ -132,12 +134,17 @@ class Currency(BaseDataTypeClass):
         return self._value
     @value.setter
     def value(self, value):
-        if type(value) is str:
+        if isinstance(value, Currency):
+            self._value = value.value
+            return
+        if isinstance(value, str):
             value = int(value)
-        elif type(value) is not int:
+        elif not isinstance(value, int):
             # float values are not allowed as our precision is high enough that
             # rounding errors can occur
             raise TypeError('currency can only be set to a str or int value')
+        else:
+            value = int(value)
         if value < 0:
             raise TypeError('currency cannot have a negative value')
         self._value = value

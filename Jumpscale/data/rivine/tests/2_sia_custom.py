@@ -6,7 +6,7 @@ def main(self):
 
     js_shell 'j.data.rivine.test(name="sia_custom")'
     """
-    e = j.data.rivine.encoder_sia_bin_get()
+    e = j.data.rivine.encoder_sia_get()
     
     # a class that provides a custom encoding logic for its types,
     # required in order to be able to encode Python objects

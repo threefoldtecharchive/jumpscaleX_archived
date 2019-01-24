@@ -3,6 +3,7 @@ from Jumpscale import j
 from .BaseDataType import BaseDataTypeClass
 from .PrimitiveTypes import Hash
 from .errors import InvalidPublicKeySpecifier
+from .ConditionTypes import UnlockHash, UnlockHashType
 
 from enum import IntEnum
 
@@ -81,6 +82,16 @@ class PublicKey(BaseDataTypeClass):
     
     json = __str__
 
+    def unlock_hash(self):
+        """
+        Return the unlock hash generated from this public key.
+        """
+        e = j.data.rivine.encoder_rivine_get()
+        e.add_int8(int(self._specifier))
+        e.add(self._hash)
+        hash = j.clients.tfchain.crypto.hash(e.data)
+        return UnlockHash(type=UnlockHashType.PUBLIC_KEY, hash=hash)
+
     @staticmethod
     def _pad_specifier(specifier):
         _SPECIFIER_SIZE = 16
@@ -97,5 +108,5 @@ class PublicKey(BaseDataTypeClass):
         """
         Encode this binary data according to the Rivine Binary Encoding format.
         """
-        encoder.add_int8(self._specifier)
+        encoder.add_int8(int(self._specifier))
         encoder.add(self._hash)

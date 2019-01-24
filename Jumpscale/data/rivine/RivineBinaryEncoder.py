@@ -73,16 +73,13 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
             return
 
         # try to rivbin-encode the value based on its python type
-        value_type = type(value)
-        if value_type in (bytes, bytearray):
-            self.add_slice(value)
-        elif value_type is int:
-            self.add_int64(value)
-        elif value_type is bool:
+        if isinstance(value, bool):
             if value:
                 self._data += bytearray([1])
             else:
                 self._data += bytearray([0])
+        elif isinstance(value, int):
+            self.add_int64(value)
         else:
             # try to rivbin-encode the value as a slice
             try:
@@ -90,7 +87,7 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
                 return
             except TypeError:
                 pass
-            raise ValueError("cannot rivbin-encode value with unsupported type {}".format(value_type))
+            raise ValueError("cannot rivbin-encode value with unsupported type {}".format(type(value)))
 
     def _check_int_type(self,value, limit):
         if not isinstance(value, int):
@@ -157,9 +154,9 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
 
         @param value: the iterateble object to be rivbin-encoded as an array
         """
-        if type(value) is str:
+        if isinstance(value, str):
             self._data += value.encode('utf-8')
-        elif type(value) in (bytes, bytearray):
+        elif isinstance(value, (bytes, bytearray)):
             self._data += value
         else:
             try:
@@ -176,10 +173,10 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
 
         @param value: the iterateble object to be rivbin-encoded as a slice
         """
-        if type(value) is str:
+        if isinstance(value, str):
             self._add_slice_length(len(value))
             self._data += value.encode('utf-8')
-        elif type(value) in (bytes, bytearray):
+        elif isinstance(value, (bytes, bytearray)):
             self._add_slice_length(len(value))
             self._data += value
         else:
@@ -215,21 +212,3 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
         """
         for value in values:
             self.add(value)
-
-    def add_currency(self,value):
-        """
-        Encode an integer as a currency value, using big-endianness,
-        as specified by the rivbin encoding specification.
-
-        Remark that this value is encoded using big-endianness
-        as the only primitive defined by the rivbin spec.
-
-        There is no size limit other than the limit defined by
-        the rivbin slice encoding specification.
-
-        @param value: int value that fits in four bytes
-        """
-        if type(value) is not int:
-            raise ValueError("cannot rivbin-encode currency as it is not an integer")
-        nbytes, rem = divmod(value.bit_length(), 8)
-        self.add_slice(value.to_bytes(nbytes+int(bool(rem)), byteorder='big'))

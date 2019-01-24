@@ -6,7 +6,7 @@ def main(self):
 
     js_shell 'j.data.rivine.test(name="rivine_types")'
     """
-    e = j.data.rivine.encoder_rivine_bin_get()
+    e = j.data.rivine.encoder_rivine_get()
 
     # in the rivine_basic test we saw we can
     # serialise anything using the add method.
