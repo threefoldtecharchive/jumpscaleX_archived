@@ -23,7 +23,6 @@ brew install curl python3
 sudo mkdir -p /sandbox; sudo chown -R "${USER}:staff" /sandbox
 
 #do the installation
-export INSYSTEM=1
 curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_kosmos/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py
 ```
 
@@ -32,10 +31,10 @@ curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_kosm
 On ubuntu should be very straight forward
 
 ```bash
-export INSYSTEM=1
 curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_kosmos/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py
 ```
 
+If you are a developer don't forget to load your SSH key for github.
 
 ## more info
 
