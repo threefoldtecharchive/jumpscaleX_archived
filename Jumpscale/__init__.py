@@ -1,6 +1,7 @@
 import os
 import socket
 import pytoml
+import inspect
 import sys
 from importlib import util
 os.environ["LC_ALL"]='en_US.UTF-8'
@@ -102,16 +103,28 @@ class Jumpscale():
         self.exceptions = None
         # Tools.j=self
 
-    def shellk(self,loc=True,exit=False):
 
+    def _locals_get(self,locals_):
+        def add(locals_, name,obj):
+            if name not in locals_:
+                locals_[name]=obj
+            return locals_
+        locals_ = add(locals_,"ssh",j.clients.ssh)
+        locals_ = add(locals_,"iyo",j.clients.itsyouonline)
+        # locals_ = add(locals_,"zos",j.kosmos.zos)
+
+        return locals_
+
+
+    def shell(self,loc=True,exit=False,locals_=None,globals_=None):
+
+        import inspect
 
         KosmosShellConfig.j = self
-
+        curframe = inspect.currentframe()
+        calframe = inspect.getouterframes(curframe, 2)
+        f = calframe[1]
         if loc:
-            import inspect
-            curframe = inspect.currentframe()
-            calframe = inspect.getouterframes(curframe, 2)
-            f = calframe[1]
             print("\n*** file: %s"%f.filename)
             print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
         from ptpython.repl import embed
@@ -119,12 +132,21 @@ class Jumpscale():
         history_filename="~/.jsx_history"
         if not Tools.exists(history_filename):
             Tools.file_write(history_filename,"")
+        # locals_= f.f_locals
+        # if curframe.f_back.f_back is not None:
+        #     locals_=curframe.f_back.f_back.f_locals
+        # else:
+        if not locals_:
+            locals_=curframe.f_back.f_locals
+        locals_=self._locals_get(locals_)
+        if not globals_:
+            globals_ = curframe.f_back.f_globals
         if exit:
-            sys.exit(embed(globals(), locals(),configure=ptconfig,history_filename=history_filename))
+            sys.exit(embed(globals_, locals_,configure=ptconfig,history_filename=history_filename))
         else:
-            embed(globals(), locals(),configure=ptconfig,history_filename=history_filename)
+            embed(globals_, locals_,configure=ptconfig,history_filename=history_filename)
 
-    def shell(self,loc=True,name=None,stack_depth=2):
+    def shelli(self,loc=True,name=None,stack_depth=2):
         if self._shell == None:
             from IPython.terminal.embed import InteractiveShellEmbed
             if name is not "":
@@ -238,8 +260,4 @@ if generated  and len(j.core.application.errors_init)>0:
 # time.sleep(1000)
 
 
-
-ssh = j.clients.ssh
-iyo = j.clients.itsyouonline
-# zos = j.kosmos.zos.instances
 

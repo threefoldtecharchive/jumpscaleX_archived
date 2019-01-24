@@ -19,9 +19,9 @@ class BuilderLua(j.builder.system._BaseClass):
         if self._done_check("build") and not reset:
             return
 
-        j.builder.system.package.install([
-            'libsqlite3-dev'
-        ])
+        if j.core.platformtype.myplatform.isUbuntu:
+            j.builder.system.package.install(['libsqlite3-dev'])
+
         #need openresty & openssl to start from
         j.builder.libs.openssl.build()
         j.builder.web.openresty.build()
@@ -122,6 +122,9 @@ class BuilderLua(j.builder.system._BaseClass):
         
         #various encryption
         luazen
+        
+        alt-getopt
+        
         """
 
         for line in C.split("\n"):
@@ -131,6 +134,8 @@ class BuilderLua(j.builder.system._BaseClass):
             if line.startswith("#"):
                 continue
             self.lua_rock_install(line)
+
+        j.shell()
 
 
         C="""

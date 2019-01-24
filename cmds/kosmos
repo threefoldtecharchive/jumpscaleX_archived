@@ -24,5 +24,5 @@ if len(args) == 1:
         toexec = toexec.strip("'\" ").strip("'\" ")
         exec(toexec)
 else:
-    j.shellk(loc=False)
+    j.shell(loc=False,locals_=locals(),globals_=globals())
 

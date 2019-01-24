@@ -200,16 +200,16 @@ class JSBaseConfigs(JSBase):
     def __setattr__(self, key, value):
         self.__dict__[key]=value
 
-    def __str__(self):
-        out = "%s\n"%self.__class__._location
-        # out+="methods:\n"
-        # for item in METHODS:
-        #     out+=" - %s\n"%item
-        # out+="instances:"
-        for item in self.__dir__():
-            # if item in METHODS:
-            #     continue
-            out+=" - %s\n"%item
-        return out
-
-    __repr__ = __str__
+    # def __str__(self):
+    #     out = "%s\n"%self.__class__._location
+    #     # out+="methods:\n"
+    #     # for item in METHODS:
+    #     #     out+=" - %s\n"%item
+    #     # out+="instances:"
+    #     for item in self.__dir__():
+    #         # if item in METHODS:
+    #         #     continue
+    #         out+=" - %s\n"%item
+    #     return out
+    #
+    # __repr__ = __str__

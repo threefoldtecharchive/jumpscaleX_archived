@@ -91,6 +91,25 @@ class JSBaseConfig(JSBase):
         pass
 
     def edit(self):
+        """
+
+        # header
+
+        ## subheader
+
+        - 1
+        - 2
+
+        edit data of object in editor
+
+        ```python
+        print ("")
+        a = 1
+        ```
+
+        :return:
+
+        """
         path = j.core.tools.text_replace("{DIR_TEMP}/js_baseconfig_%s.toml"%self.__class__._location)
         data_in = self.data._toml
         j.sal.fs.writeFile(path,data_in)

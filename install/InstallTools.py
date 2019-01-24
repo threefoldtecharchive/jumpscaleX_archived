@@ -873,6 +873,11 @@ class Tools:
 
     @staticmethod
     def ask_yes_no(msg):
+        """
+
+        :param msg: the msg to show when asking for y or no
+        :return: will return True if yes
+        """
         yno = input("%s : "%msg)
         if str(yno).lower().strip() in ["1","y"]:
             return True
@@ -1308,6 +1313,7 @@ class UbuntuInstall():
                 "bpython",
                 "pbkdf2",
                 'ptpython',
+                'pygments-markdown-lexer'
 
             ],
 

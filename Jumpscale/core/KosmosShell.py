@@ -1,10 +1,75 @@
 
 from ptpython.utils import get_jedi_script_from_document
 from prompt_toolkit.completion import Completer, Completion, PathCompleter
+import inspect
+
+try:
+    import pygments
+    from pygments_markdown_lexer import MarkdownLexer
+    from pygments import highlight
+    from pygments.formatters import Terminal256Formatter
+    from pygments.lexers import PythonLexer
+    formatter = Terminal256Formatter(linenos=True, cssclass="source",style=pygments.styles.get_style_by_name("fruity")) #vim
+    # from pygments.formatters import HtmlFormatter
+    markdownlexer_enabled = True
+except Exception as e:
+    print("NOFORMATTING")
+    markdownlexer_enabled = False
 
 class KosmosShellConfig():
 
     pass
+
+
+def get_object(tbc,locals_=None,globals_=None,walkback=False):
+
+
+    j = KosmosShellConfig.j
+
+    try:
+        obj=eval(tbc)
+        return obj
+    except Exception as e:
+        # print(e)
+        pass
+
+    tbc2 = tbc.split(".")[0]
+
+    obj = None
+    frame_ = inspect.currentframe()
+    if locals_ is None:
+        locals_ = frame_.f_locals
+        locals_ = j._locals_get(locals_)
+
+    if tbc2 in locals_:
+        obj=locals_[tbc2]
+
+    if not obj:
+
+        if not globals_:
+            globals_ = frame_.f_back.f_globals
+
+        if tbc2 in globals_:
+            obj=globals_[tbc2]
+
+    if not obj:
+
+        if walkback:
+            #now walk up to the frames
+            while obj is None and frame_:
+                locals_=frame_.f_locals
+
+                if tbc2 in locals_:
+                    obj=locals_[tbc2]
+                else:
+                    frame_=frame_.f_back
+
+    if "." in tbc:
+        tbc3=".".join(tbc.split(".")[1:])
+        obj2 = eval("obj.%s"%tbc3)
+        return obj2
+    return obj
+
 
 def get_completions(self, document, complete_event):
     """
@@ -12,29 +77,21 @@ def get_completions(self, document, complete_event):
     """
 
     j = KosmosShellConfig.j
-
+    obj = None
     tbc=document.current_line_before_cursor
-
-    if j and "." in tbc:
+    if "." in tbc:
         c=".".join(tbc.split(".")[:-1])
-        remainder = tbc[len(c)+1:]  #e.g. everything after j.clients.ssh.
 
-        obj=None
-        if c in self.get_locals():
-            obj = self.get_locals()[c]
-        elif c in self.get_globals():
-            obj = self.get_globals()[c]
-        else:
-            try:
-                o=eval(c)
-                if hasattr(o.__class__,"_methods_"):
-                    obj = o
-            except:
-                pass
+        try:
+            obj = get_object(c,self.get_locals(),self.get_globals())
+        except Exception as e:
+            print (e)
+        # print(obj)
+
+        remainder = tbc[len(c)+1:]  #e.g. everything after j.clients.ssh.
 
         if obj:
 
-            # print(dir(obj))
             if hasattr(obj.__class__,"_methods_"):
                 for x in obj._properties_children():
                     if x is None:
@@ -279,10 +336,34 @@ def ptconfig(repl):
 
     @repl.add_key_binding('?')
     def _(event):
+        j = KosmosShellConfig.j
         b = event.cli.current_buffer
-        lbc = b.document.current_line_before_cursor
+        tbc = b.document.current_line_before_cursor
+
+        obj = get_object(tbc,locals_=None,globals_=None,walkback=True)
+        if not obj:
+            return
+
+        d=inspect.getdoc(obj)
+        # from pudb import set_trace; set_trace()
+        if d:
+            if markdownlexer_enabled:
+                print("\n#### DOCU for %s\n"%tbc)
+                print(highlight(d, MarkdownLexer(), formatter))
+                print("\n")
+            else:
+                print("\n#### DOCU for %s\n"%tbc)
+                print(d)
+                print("\n")
+
+        #TODO:*1 is not good, needs to come in pane at bottomn but did not figure out how yet
+
+        # print(111)
+        # print([i for i in event.app.layout.__dict__.keys()])
+        # print(222)
+
         # b.delete_before_cursor(count=1)
-        print("NEED TO FIND A WAY HOW TO SHOW (GET FROM OBJ) HELP TEXT")
+        # print("NEED TO FIND A WAY HOW TO SHOW (GET FROM OBJ) HELP TEXT")
         # from prompt_toolkit.shortcuts import message_dialog
         # message_dialog(
         #     title='Example dialog window',

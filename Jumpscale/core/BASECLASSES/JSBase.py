@@ -182,14 +182,13 @@ class JSBase:
 
     @property
     def _ddict(self):
-        dd=copy.copy(self.__dict__)
-        remove=[]
-        for key,val in dd.items():
-            if key.startswith("_"):
-                remove.append(key)
-        for item in remove:
-            dd.pop(item)
-        return dd
+        res={}
+        for key in self.__dict__.keys():
+            if not key.startswith("_"):
+                v = self.__dict__[key]
+                if not isinstance(v,types.MethodType):
+                    res[key] = v
+        return res
 
     def _warning_raise(self,msg,e=None,cat=""):
         """
@@ -352,10 +351,12 @@ class JSBase:
         return res
 
     def __str__(self):
+        # out = str(self.__class__)+"\n"
+        out = "%s\n"%self.__class__._location
         try:
-            out = "%s\n%s\n"%(self.__class__,str(j.data.serializers.yaml.dumps(self._ddict)))
+            out += "%s\n%s\n"%(self.__class__,str(j.data.serializers.yaml.dumps(self._ddict)))
         except Exception as e:
-            out = str(self.__class__)+"\n"
+            pass
         return out
 
     __repr__ = __str__
