@@ -89,7 +89,7 @@ class PublicKey(BaseDataTypeClass):
         e = j.data.rivine.encoder_rivine_get()
         e.add_int8(int(self._specifier))
         e.add(self._hash)
-        hash = j.clients.tfchain.crypto.hash(e.data)
+        hash = bytearray.fromhex(j.data.hash.blake2_string(e.data))
         return UnlockHash(type=UnlockHashType.PUBLIC_KEY, hash=hash)
 
     @staticmethod

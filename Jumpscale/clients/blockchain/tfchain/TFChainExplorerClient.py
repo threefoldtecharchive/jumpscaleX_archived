@@ -5,6 +5,9 @@ Tfchain Client
 from Jumpscale import j
 
 from Jumpscale.clients.http.HttpClient import HTTPError
+
+# TODO: support a shuffle feature in the idGenerator module of JS
+#       or make sure we can do it using the already available generateRandomInt functionality
 import random
 
 class TFChainExplorerClient(j.application.JSBaseClass):

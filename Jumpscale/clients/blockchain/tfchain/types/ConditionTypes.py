@@ -295,7 +295,7 @@ class UnlockHash(BaseDataTypeClass):
         e = j.data.rivine.encoder_rivine_get()
         e.add_int8(int(self._type))
         e.add(self._hash)
-        return j.clients.tfchain.crypto.hash(e.data)
+        return bytearray.fromhex(j.data.hash.blake2_string(e.data))
 
     __repr__ = __str__
 
