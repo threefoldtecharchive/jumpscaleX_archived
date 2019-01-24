@@ -18,10 +18,10 @@ class RivineDataFactory(j.application.JSBaseClass):
     def BaseSiaObjectEncoder(self):
         return SiaBinaryObjectEncoderBase
 
-    def encoder_rivine_bin_get(self):
+    def encoder_rivine_get(self):
         return RivineBinaryEncoder()
 
-    def encoder_sia_bin_get(self):
+    def encoder_sia_get(self):
         return SiaBinaryEncoder()
 
     def test(self, name=''):

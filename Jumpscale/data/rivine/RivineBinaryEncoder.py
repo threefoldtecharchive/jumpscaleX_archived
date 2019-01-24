@@ -159,6 +159,8 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
         """
         if type(value) is str:
             self._data += value.encode('utf-8')
+        elif type(value) in (bytes, bytearray):
+            self._data += value
         else:
             try:
                 for element in value:

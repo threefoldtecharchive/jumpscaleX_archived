@@ -63,13 +63,16 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
         """
         if type(value) is str:
             self._data += value.encode('utf-8')
-        try:
-            result = bytearray()
-            for element in value:
-                self.add(element)
-            return result
-        except TypeError:
-            raise TypeError("value cannot be encoded as an array")
+        elif type(value) in (bytes, bytearray):
+            self._data += value
+        else:
+            try:
+                result = bytearray()
+                for element in value:
+                    self.add(element)
+                return result
+            except TypeError:
+                raise TypeError("value cannot be encoded as an array")
 
     def add_slice(self,value):
         """
@@ -90,29 +93,6 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
                 length += 1
             self.add_int(length)
             self.add_array(value)
-
-    def add_currency(self,value):
-        """
-        Add an integer, encoding it as a currency value, using big-endianness,
-        as specified by the siabin encoding specification.
-
-        Remark that this value is encoded using big-endianness
-        as the only primitive defined by the siabin spec.
-
-        There is no size limit other than the limit defined by
-        the siabin slice encoding specification.
-
-        @param value: int value that fits in four bytes
-        """
-        if type(value) is not int:
-            raise ValueError("cannot siabin-encode currency as it is not an integer")
-        if value < 0:
-            raise ValueError("negative currency values are not allowed in siabin-encoding")
-        nbytes, rem = divmod(value.bit_length(), 8)
-        if rem:
-            nbytes += 1
-        self.add_int(nbytes)
-        self._data += value.to_bytes(nbytes, byteorder='big')
 
     def add(self,value):
         """

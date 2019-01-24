@@ -4,8 +4,13 @@ Client factory for the Tfchain network, js entry point
 
 from Jumpscale import j
 
-from .TFChainExplorerClient import TFChainExplorerClient
 from .TFChainClient import TFChainClient
+
+from .TFChainExplorerClient import TFChainExplorerClient
+from .TFChainTransactionFactory import TFChainTransactionFactory
+from .TFChainTypesFactory import TFChainTypesFactory
+
+from .crypto.CryptoFactory import CryptoFactory
 
 class TfchainClientFactory(j.application.JSBaseConfigsClass):
     """
@@ -17,3 +22,15 @@ class TfchainClientFactory(j.application.JSBaseConfigsClass):
     @property
     def explorer(self):
         return TFChainExplorerClient()
+
+    @property
+    def transactions(self):
+        return TFChainTransactionFactory()
+
+    @property
+    def types(self):
+        return TFChainTypesFactory()
+
+    @property
+    def crypto(self):
+        return CryptoFactory()
