@@ -5,21 +5,21 @@ Tfchain Client
 from Jumpscale import j
 
 
-EXPLORER_NODES_STD = [
-                'https://explorer.threefoldtoken.com',
-                'https://explorer2.threefoldtoken.com',
-                'https://explorer3.threefoldtoken.com',
-                'https://explorer4.threefoldtoken.com',
-            ]
-
-EXPLORER_NODES_TEST = [
-                'https://explorer.testnet.threefoldtoken.com',
-                'https://explorer2.testnet.threefoldtoken.com',
-            ]
-
-EXPLORER_NODES_DEV = [
-                'http://localhost:23112'
-            ]
+_EXPLORER_NODES = {
+    "STD": [
+        'https://explorer.threefoldtoken.com',
+        'https://explorer2.threefoldtoken.com',
+        'https://explorer3.threefoldtoken.com',
+        'https://explorer4.threefoldtoken.com',
+    ],
+    "TEST": [
+        'https://explorer.testnet.threefoldtoken.com',
+        'https://explorer2.testnet.threefoldtoken.com',
+    ],
+    "DEV": [
+        'http://localhost:23112'
+    ],
+}
 
 
 class TFChainClient(j.application.JSBaseConfigClass):
@@ -30,29 +30,29 @@ class TFChainClient(j.application.JSBaseConfigClass):
         @url = jumpscale.tfchain.client
         name* = "" (S)
         network_type = "STD,TEST,DEV" (E)
-        password = "" (S)
         minimum_minerfee = 100000000 (I)
-        explorer_nodes = (LS)
+        explorer_nodes = (LO) !jumpscale.tfchain.client.explorer
+
+        @url = jumpscale.tfchain.client.explorer
+        address = "" (S)
+        password = "" (S)
         """
 
     def _data_trigger_new(self):
-        if self.network_type == "STD":
-            if len(self.explorer_nodes) == 0:
-                self.explorer_nodes = EXPLORER_NODES_STD
-        elif self.network_type == "TEST":
-            if len(self.explorer_nodes) == 0:
-                self.explorer_nodes = EXPLORER_NODES_TEST
-        elif self.network_type == "DEV":
+        if len(self.explorer_nodes) == 0:
+            for address in _EXPLORER_NODES[self.network_type]:
+                self.explorer_nodes.new().address = address
+        if self.network_type == "DEV":
             self.minimum_minerfee = 1000000000
-            if len(self.explorer_nodes) == 0:
-                self.explorer_nodes = EXPLORER_NODES_DEV
+        else:
+            self.minimum_minerfee = 100000000
 
     def transaction_get(self, txid):
         """
         Get a transaction from an available explorer Node.
         """
         txid = self._normalize_id(txid)
-        resp = j.clients.tfchain.explorer.get(urls=self.explorer_nodes, endpoint="/explorer/hashes/"+txid)
+        resp = j.clients.tfchain.explorer.get(nodes=self.explorer_nodes.pylist(), endpoint="/explorer/hashes/"+txid)
         resp = data = j.data.serializers.json.loads(resp)
         assert resp['hashtype'] == 'transactionid'
         resp = resp['transaction']
