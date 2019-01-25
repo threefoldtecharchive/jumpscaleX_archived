@@ -10,7 +10,7 @@ from .TFChainExplorerClient import TFChainExplorerClient
 from .TFChainTransactionFactory import TFChainTransactionFactory
 from .TFChainTypesFactory import TFChainTypesFactory
 
-class TfchainClientFactory(j.application.JSBaseConfigsClass):
+class TFChainClientFactory(j.application.JSBaseConfigsClass):
     """
     Factory class to get a tfchain client object
     """
