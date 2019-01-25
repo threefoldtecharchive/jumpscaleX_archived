@@ -48,9 +48,16 @@ class TFChainClient(j.application.JSBaseConfigClass):
                 self.explorer_nodes = EXPLORER_NODES_DEV
 
     def transaction_get(self, txid):
+        """
+        Get a transaction from an available explorer Node.
+        """
         txid = self._normalize_id(txid)
         resp = j.clients.tfchain.explorer.get(urls=self.explorer_nodes, endpoint="/explorer/hashes/"+txid)
-        return resp
+        resp = data = j.data.serializers.json.loads(resp)
+        assert resp['hashtype'] == 'transactionid'
+        resp = resp['transaction']
+        assert resp['id'] == txid
+        return j.clients.tfchain.transactions.from_json(obj=resp['rawtransaction'], id=resp['id'])
 
     def _normalize_id(self, id):
         if isinstance(id, (bytes, bytearray)):

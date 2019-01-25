@@ -2,10 +2,12 @@ from Jumpscale import j
 
 from .BaseDataType import BaseDataTypeClass
 
-class BinaryData(BaseDataTypeClass):
+from abc import abstractmethod
+
+class BaseBinaryData(BaseDataTypeClass):
     """
     BinaryData is the data type used for any binary data that is not a hash,
-    for example: signatures and arbitrary data
+    for example: signatures
     """
 
     def __init__(self, value=None):
@@ -17,7 +19,7 @@ class BinaryData(BaseDataTypeClass):
     @classmethod
     def from_json(cls, obj):
         if type(obj) is not str:
-            raise TypeError("binary data is expected to be a hex-encoded string when part of a JSON object")
+            raise TypeError("binary data is expected to be an encoded string when part of a JSON object")
         return cls(value=obj)
     
     @property
@@ -29,7 +31,7 @@ class BinaryData(BaseDataTypeClass):
         if vt is None:
             value = bytearray()
         elif vt is str:
-            value = bytearray.fromhex(value)
+            value = self.from_str(value)
         elif vt is bytes:
             value = bytearray(value)
         elif vt is not bytearray:
@@ -37,7 +39,7 @@ class BinaryData(BaseDataTypeClass):
         self._value = value
     
     def __str__(self):
-        return self._value.hex()
+        return self.to_str(self._value)
     
     __repr__ = __str__
     
@@ -54,6 +56,26 @@ class BinaryData(BaseDataTypeClass):
         Encode this binary data according to the Rivine Binary Encoding format.
         """
         encoder.add_slice(self._value)
+
+    @abstractmethod
+    def from_str(self, s):
+        pass
+    @abstractmethod
+    def to_str(self, value):
+        pass
+
+
+class BinaryData(BaseBinaryData):
+    def from_str(self, s):
+        return bytearray.fromhex(s)
+    def to_str(self, value):
+        return value.hex()
+    
+class RawData(BaseBinaryData):
+    def from_str(self, s):
+        return bytearray(j.data.serializers.base64.decode(s))
+    def to_str(self, value):
+        return j.data.serializers.base64.dumps(self.value)
 
 
 class Hash(BaseDataTypeClass):
@@ -125,8 +147,8 @@ class Currency(BaseDataTypeClass):
 
     @classmethod
     def from_json(cls, obj):
-        if isinstance(obj, str):
-            raise TypeError("currency is expected to be a string when part of a JSON object")
+        if not isinstance(obj, str):
+            raise TypeError("currency is expected to be a string when part of a JSON object, not type {}".format(type(obj)))
         return cls(value=obj)
     
     @property

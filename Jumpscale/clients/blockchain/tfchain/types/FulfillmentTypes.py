@@ -95,7 +95,7 @@ class FulfillmentBaseClass(BaseDataTypeClass):
     def sia_binary_encode(self, encoder):
         raise Exception("sia binary encoding not supported for fulfillments by this client")
     def rivine_binary_encode(self, encoder):
-        raise Exception("rivine binary encoding not supported fulfillments by this client")
+        raise Exception("rivine binary encoding not supported for fulfillments by this client")
 
 
 class FulfillmentSingleSignature(FulfillmentBaseClass):

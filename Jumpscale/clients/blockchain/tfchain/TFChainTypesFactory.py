@@ -1,6 +1,6 @@
 from Jumpscale import j
 
-from .types.PrimitiveTypes import BinaryData, Hash, Currency
+from .types.PrimitiveTypes import BinaryData, RawData, Hash, Currency
 from .types.FulfillmentTypes import FulfillmentFactory
 from .types.ConditionTypes import ConditionFactory
 from .types.CryptoTypes import PublicKey, PublicKeySpecifier
@@ -48,6 +48,14 @@ class TFChainTypesFactory(j.application.JSBaseClass):
         """
         return BinaryData(value=value)
 
+    def raw_data_new(self, value=None):
+        """
+        Create a new raw binary data value.
+        
+        @param value: bytearray, bytes or str that defines the hash value to be set, nil hash by default
+        """
+        return RawData(value=value)
+
     def public_key_new(self, hash=None):
         """
         Create a new NIL or ED25519 public key.
@@ -87,3 +95,7 @@ class TFChainTypesFactory(j.application.JSBaseClass):
         # as a slice, not an array
         assert str(self.binary_data_new()) == ''
         assert str(self.binary_data_new(b'1')) == '31'
+
+        # raw data is pretty much binary data, except that it is
+        # base64 encoded/decoded for str/json purposes
+        assert str(self.raw_data_new(b'data')) == 'ZGF0YQ=='

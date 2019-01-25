@@ -8,3 +8,8 @@ class InvalidPublicKeySpecifier(Exception):
     """
     InvalidPublicKeySpecifier error
     """
+
+class UnknownTransansactionVersion(Exception):
+    """
+    UnknownTransansactionVersion error
+    """
