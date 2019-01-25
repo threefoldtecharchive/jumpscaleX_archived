@@ -5,7 +5,7 @@ from .JSFactoryBase import JSFactoryBase
 class JSBaseConfigParent(JSBaseConfig,JSFactoryBase):
 
 
-    def __init__(self,data=None, factory=None, **kwargs):
+    def __init__(self,data=None, parent=None, **kwargs):
         """
         :param data, is a jsobject as result of jsX schema's
         :param factory, don't forget to specify this
@@ -15,7 +15,7 @@ class JSBaseConfigParent(JSBaseConfig,JSFactoryBase):
 
         """
         JSFactoryBase.__init__(self)
-        JSBaseConfig.__init__(self,data=data,factory=factory,**kwargs)
+        JSBaseConfig.__init__(self,data=data,parent=parent,**kwargs)
 
 
     def _class_init(self):

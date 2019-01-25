@@ -4,9 +4,11 @@ from .JSBase import JSBase
 
 class JSBaseConfigs(JSBase):
 
-    def __init__(self):
+    def __init__(self,parent=None):
 
         self._model_ = None
+        self._parent = parent
+
         self._children = {}
 
         self._class_init() #is needed to init class properties, needs to be first thing
@@ -49,7 +51,7 @@ class JSBaseConfigs(JSBase):
         kl = self._childclass_selector()
         data = self._model.new(data=kwargs)
         data.name = name
-        self._children[name] = kl(factory=self,data=data)
+        self._children[name] = kl(parent=self,data=data)
         self._children[name]._data_trigger_new()
         self._children[name]._isnew = True
         return self._children[name]
@@ -103,7 +105,7 @@ class JSBaseConfigs(JSBase):
                 data = res[0]
 
         kl = self._childclass_selector()
-        self._children[name] = kl(data=data,factory=self)
+        self._children[name] = kl(data=data,parent=self)
         if new:
             self._children[name]._data_trigger_new()
             self._children[name]._isnew = True

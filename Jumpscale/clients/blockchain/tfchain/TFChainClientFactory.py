@@ -10,6 +10,7 @@ from .TFChainExplorerClient import TFChainExplorerClient
 from .TFChainTransactionFactory import TFChainTransactionFactory
 from .TFChainTypesFactory import TFChainTypesFactory
 
+
 class TFChainClientFactory(j.application.JSBaseConfigsClass):
     """
     Factory class to get a tfchain client object
@@ -28,3 +29,10 @@ class TFChainClientFactory(j.application.JSBaseConfigsClass):
     @property
     def types(self):
         return TFChainTypesFactory()
+
+    def test(self):
+        """
+        js_shell 'j.clients.tfchain.test()'
+        :return:
+        """
+        j.shell()

@@ -17,7 +17,7 @@ class JSBaseConfig(JSBase):
             # print("classinit:%s"%self.__class__)
 
 
-    def __init__(self,data=None, factory=None, **kwargs):
+    def __init__(self,data=None, parent=None, **kwargs):
         """
         :param data, is a jsobject as result of jsX schema's
         :param factory, don't forget to specify this
@@ -29,7 +29,7 @@ class JSBaseConfig(JSBase):
         self._class_init() #is needed to init class properties, needs to be first thing
         JSBase.__init__(self,init=False)
 
-        self._factory = factory
+        self._parent = parent
 
         if data:
             if not hasattr(data,"_JSOBJ"):
@@ -58,9 +58,9 @@ class JSBaseConfig(JSBase):
 
     @property
     def _model(self):
-        if self._factory is None:
-            raise RuntimeError("cannot get model, because factory not specified in self._factory")
-        return self._factory._model
+        if self._parent is None:
+            raise RuntimeError("cannot get model, because factory not specified in self._parent")
+        return self._parent._model
 
     @property
     def _id(self):
@@ -68,8 +68,8 @@ class JSBaseConfig(JSBase):
 
     def delete(self):
         self._model.delete(self.data)
-        if self._factory:
-            self._factory._children.pop(self.data.name)
+        if self._parent:
+            self._parent._children.pop(self.data.name)
 
     def save(self):
         self.data.save()
@@ -116,7 +116,7 @@ class JSBaseConfig(JSBase):
         j.core.tools.file_edit(path)
         data_out = j.sal.fs.readFile(path)
         if data_in != data_out:
-            self._logger.debug("'%s' instance '%s' has been edited (changed)"%(self._factory.__jslocation__,self.data.name))
+            self._logger.debug("'%s' instance '%s' has been edited (changed)"%(self._parent.__jslocation__,self.data.name))
             data2 = j.data.serializers.toml.loads(data_out)
             self.data.data_update(data2)
         j.sal.fs.remove(path)

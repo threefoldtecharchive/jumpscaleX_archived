@@ -13,7 +13,7 @@ class JSFactoryBase(JSBase):
 
         self._factories = {}
         for kl in self.__class__._CHILDCLASSES:
-            obj=kl()
+            obj=kl(parent=self)
             # j.shell()
             if hasattr(kl,"_name"):
                 name = kl._name
