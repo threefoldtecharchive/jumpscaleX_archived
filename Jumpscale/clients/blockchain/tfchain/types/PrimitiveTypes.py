@@ -18,7 +18,7 @@ class BaseBinaryData(BaseDataTypeClass):
 
     @classmethod
     def from_json(cls, obj):
-        if type(obj) is not str:
+        if not isinstance(obj, str):
             raise TypeError("binary data is expected to be an encoded string when part of a JSON object")
         return cls(value=obj)
     
@@ -27,14 +27,13 @@ class BaseBinaryData(BaseDataTypeClass):
         return self._value
     @value.setter
     def value(self, value):
-        vt = type(value)
-        if vt is None:
+        if not value:
             value = bytearray()
-        elif vt is str:
+        elif isinstance(value, str):
             value = self.from_str(value)
-        elif vt is bytes:
+        elif isinstance(value, bytes):
             value = bytearray(value)
-        elif vt is not bytearray:
+        elif not isinstance(value, bytearray):
             raise TypeError("hash can only be set to a str, bytes or bytearray")
         self._value = value
     
@@ -110,7 +109,7 @@ class Hash(BaseDataTypeClass):
                 value = bytearray.fromhex(value)
             elif isinstance(value, bytes):
                 value = bytearray(value)
-            elif isinstance(value, bytearray):
+            elif not isinstance(value, bytearray):
                 raise TypeError("hash can only be set to a str, bytes or bytearray")
         if len(value) != Hash._SIZE:
             raise TypeError('hash has to have a fixed length of {}'.format(Hash._SIZE))

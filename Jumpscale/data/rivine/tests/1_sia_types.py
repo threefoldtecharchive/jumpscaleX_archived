@@ -19,5 +19,10 @@ def main(self):
     # known by all parties
     e.add_array([False,True,True])
 
+    # a single byte can be added as well
+    e.add_byte(6)
+    e.add_byte('4')
+    e.add_byte(b'2')
+
     # the result is a single bytearray
-    assert e.data == b'\x00\x01\x01'
+    assert e.data == b'\x00\x01\x01\x0642'

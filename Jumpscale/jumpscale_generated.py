@@ -755,19 +755,19 @@ class group_clients(JSGroup):
     @property
     def tfchain(self):
         if self._tfchain is None:
-            # print("LOAD:TfchainClientFactory")
-            from Jumpscale.clients.blockchain.tfchain.TFChainClientFactory import TfchainClientFactory
+            # print("LOAD:TFChainClientFactory")
+            from Jumpscale.clients.blockchain.tfchain.TFChainClientFactory import TFChainClientFactory
             # try:
-            #     from Jumpscale.clients.blockchain.tfchain.TFChainClientFactory import TfchainClientFactory
+            #     from Jumpscale.clients.blockchain.tfchain.TFChainClientFactory import TFChainClientFactory
             # except Exception as e:
             #     msg = j.core.application.error_init("import", "Jumpscale.clients.blockchain.tfchain.TFChainClientFactory", e)
             #     raise e
-            # # print("RUN:TfchainClientFactory")
+            # # print("RUN:TFChainClientFactory")
 
-            self._tfchain =  TfchainClientFactory()
+            self._tfchain =  TFChainClientFactory()
 
             # try:
-            #     self._tfchain =  TfchainClientFactory()
+            #     self._tfchain =  TFChainClientFactory()
             # except Exception as e:
             #     msg = j.core.application.error_init("execute","Jumpscale.clients.blockchain.tfchain.TFChainClientFactory",e)
             #     return None

@@ -55,12 +55,14 @@ class TFChainTransactionFactory(j.application.JSBaseClass):
         v1_txn_json = {"version":1,"data":{"coininputs":[{"parentid":"abcdef012345abcdef012345abcdef012345abcdef012345abcdef012345abcd","fulfillment":{"type":1,"data":{"publickey":"ed25519:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff","signature":"abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab"}}},{"parentid":"012345defabc012345defabc012345defabc012345defabc012345defabc0123","fulfillment":{"type":2,"data":{"publickey":"ed25519:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff","signature":"abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab","secret":"def789def789def789def789def789dedef789def789def789def789def789de"}}},{"parentid":"045645defabc012345defabc012345defabc012345defabc012345defabc0123","fulfillment":{"type":2,"data":{"publickey":"ed25519:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff","signature":"abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab","secret":"def789def789def789def789def789dedef789def789def789def789def789de"}}}],"coinoutputs":[{"value":"3","condition":{"type":1,"data":{"unlockhash":"0142e9458e348598111b0bc19bda18e45835605db9f4620616d752220ae8605ce0df815fd7570e"}}},{"value":"5","condition":{"type":1,"data":{"unlockhash":"01a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc353bdcf54be7d8"}}},{"value":"13","condition":{"type":2,"data":{"sender":"01654f96b317efe5fd6cd8ba1a394dce7b6ebe8c9621d6c44cbe3c8f1b58ce632a3216de71b23b","receiver":"01e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f70b1ccc65e2105","hashedsecret":"abc543defabc543defabc543defabc543defabc543defabc543defabc543defa","timelock":1522068743}}}],"minerfees":["1","2","3"],"arbitrarydata":"ZGF0YQ=="}}
         v1_txn = self.from_json(v1_txn_json)
         assert v1_txn.json() == v1_txn_json
+        assert v1_txn.signature_hash_get(0).hex() == '4175b7bc6c376493949df657ae7966b6bf01efabacdfc51da01fd8624a55b17b'
 
         # v0 Transactions are supported
         v0_txn_json = {"version":0,"data":{"coininputs":[{"parentid":"abcdef012345abcdef012345abcdef012345abcdef012345abcdef012345abcd","unlocker":{"type":1,"condition":{"publickey":"ed25519:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"},"fulfillment":{"signature":"abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab"}}}],"coinoutputs":[{"value":"3","unlockhash":"0142e9458e348598111b0bc19bda18e45835605db9f4620616d752220ae8605ce0df815fd7570e"},{"value":"5","unlockhash":"01a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc353bdcf54be7d8"}],"minerfees":["1","2","3"],"arbitrarydata":"ZGF0YQ=="}}
         v0_txn = self.from_json(v0_txn_json)
         expected_v0_txn_json_as_v1 = {"version":1,"data":{"coininputs":[{"parentid":"abcdef012345abcdef012345abcdef012345abcdef012345abcdef012345abcd","fulfillment":{"type":1,"data":{"publickey":"ed25519:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff","signature":"abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab"}}}],"coinoutputs":[{"value":"3","condition":{"type":1,"data":{"unlockhash":"0142e9458e348598111b0bc19bda18e45835605db9f4620616d752220ae8605ce0df815fd7570e"}}},{"value":"5","condition":{"type":1,"data":{"unlockhash":"01a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc353bdcf54be7d8"}}}],"minerfees":["1","2","3"],"arbitrarydata":"ZGF0YQ=="}}
         assert v0_txn.json() == expected_v0_txn_json_as_v1
+        assert v0_txn.signature_hash_get(0).hex() == 'e913e88d7c698ccc27ba130cf702cdb153e3088f403f8448cd16d121661942e5'
 
         # Coin Creation Transactions
 
@@ -68,11 +70,13 @@ class TFChainTransactionFactory(j.application.JSBaseClass):
         v128_txn_json = {"version":128,"data":{"nonce":"FoAiO8vN2eU=","mintfulfillment":{"type":1,"data":{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"bdf023fbe7e0efec584d254b111655e1c2f81b9488943c3a712b91d9ad3a140cb0949a8868c5f72e08ccded337b79479114bdb4ed05f94dfddb359e1a6124602"}},"mintcondition":{"type":1,"data":{"unlockhash":"01e78fd5af261e49643dba489b29566db53fa6e195fa0e6aad4430d4f06ce88b73e047fe6a0703"}},"minerfees":["1000000000"],"arbitrarydata":"YSBtaW50ZXIgZGVmaW5pdGlvbiB0ZXN0"}}
         v128_txn = self.from_json(v128_txn_json)
         assert v128_txn.json() == v128_txn_json
+        assert v128_txn.signature_hash_get(0).hex() == 'c0b865dd6980f377c9bc6fb195bca3cf169ea06e6bc658b29639bdb6fc387f8d'
 
         # v129 Transactions are supported
         v129_txn_json = {"version":129,"data":{"nonce":"1oQFzIwsLs8=","mintfulfillment":{"type":1,"data":{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"ad59389329ed01c5ee14ce25ae38634c2b3ef694a2bdfa714f73b175f979ba6613025f9123d68c0f11e8f0a7114833c0aab4c8596d4c31671ec8a73923f02305"}},"coinoutputs":[{"value":"500000000000000","condition":{"type":1,"data":{"unlockhash":"01e3cbc41bd3cdfec9e01a6be46a35099ba0e1e1b793904fce6aa5a444496c6d815f5e3e981ccf"}}}],"minerfees":["1000000000"],"arbitrarydata":"dGVzdC4uLiAxLCAyLi4uIDM="}}
         v129_txn = self.from_json(v129_txn_json)
         assert v129_txn.json() == v129_txn_json
+        assert v129_txn.signature_hash_get(0).hex() == '984ccc3da2107e86f67ef618886f9144040d84d9f65f617c64fa34de68c0018b'
 
         # 3Bot Transactions
 
@@ -99,7 +103,7 @@ class TransactionBaseClass(ABC, j.application.JSBaseClass):
         """
         txn = cls()
         assert txn.version == obj.get('version', -1)
-        txn.from_json_data_object(obj.get('data', {}))
+        txn._from_json_data_object(obj.get('data', {}))
         return txn
 
     @property
@@ -151,18 +155,33 @@ class TransactionBaseClass(ABC, j.application.JSBaseClass):
         with a max length of 83 bytes.
         """
         return bytearray()
+    
+    @abstractmethod
+    def _signature_hash_input_get(self, *extra_objects):
+        """
+        signature_hash_get is used to get the input
+        """
+        pass
+
+    def signature_hash_get(self, *extra_objects):
+        """
+        signature_hash_get is used to get the signature hash for this Transaction,
+        which are used to proof the authenticity of the transaction.
+        """
+        input = self._signature_hash_input_get(*extra_objects)
+        return bytearray.fromhex(j.data.hash.blake2_string(input))
 
     @abstractmethod
-    def from_json_data_object(self, data):
+    def _from_json_data_object(self, data):
         pass
 
     @abstractmethod
-    def json_data_object(self):
+    def _json_data_object(self):
         pass
     
     def json(self):
         obj = {'version': self.version}
-        data = self.json_data_object()
+        data = self._json_data_object()
         if data:
             obj['data'] = data
         return obj
@@ -183,6 +202,10 @@ class TransactionV1(TransactionBaseClass):
         self._coin_outputs = []
         self._miner_fees = []
         self._data = RawData()
+
+        # hidden flag, that indicates if this Txn was a Legacy v0 Txn or not,
+        # False by default as we do not wish to produce new legacy Txns, only decode existing ones
+        self._legacy = False
 
         super().__init__()
     
@@ -233,6 +256,7 @@ class TransactionV1(TransactionBaseClass):
         if 'arbitrarydata' in txn_data:
             txn._data = RawData.from_json(txn_data.get('arbitrarydata', None) or '')
 
+        txn._legacy = True
         return txn
 
 
@@ -286,14 +310,81 @@ class TransactionV1(TransactionBaseClass):
         if isinstance(value, RawData):
             value = value.value
         self._data.value = value
+    
+    def _signature_hash_input_get(self, *extra_objects):
+        if self._legacy:
+            return self._legacy_signature_hash_input_get(*extra_objects)
 
-    def from_json_data_object(self, data):
+        e = j.data.rivine.encoder_sia_get()
+
+        # encode the transaction version
+        e.add_byte(self.version)
+
+        # encode extra objects if exists
+        if extra_objects:
+            e.add_all(*extra_objects)
+
+        # encode the number of coins inputs
+        e.add(len(self.coin_inputs))
+        # encode coin inputs parent_ids
+        for ci in self.coin_inputs:
+            e.add(ci.parent_id)
+
+        # encode coin outputs
+        e.add_slice(self.coin_outputs)
+
+        # encode the number of blockstakes (input/output)
+        # NOTE: this is hardcoded at 0, as our client does not support block stakes for now,
+        #       should we ever need block stakes we can easily enough support those
+        e.add_all(0, 0)
+
+        # encode miner fees
+        e.add_slice(self.miner_fees)
+
+        # encode custom data
+        e.add(self.data)
+
+        # return the encoded data
+        return e.data
+    
+    def _legacy_signature_hash_input_get(self, *extra_objects):
+        e = j.data.rivine.encoder_sia_get()
+
+        # encode extra objects if exists
+        if extra_objects:
+            e.add_all(*extra_objects)
+
+        # encode coin inputs
+        for ci in self.coin_inputs:
+            e.add_all(ci.parent_id, ci.fulfillment.public_key.unlock_hash())
+
+        # encode coin outputs
+        e.add(len(self.coin_outputs))
+        for co in self.coin_outputs:
+            e.add_all(co.value, co.condition.unlockhash)
+
+        # encode the number of blockstakes outputs (number of inputs is not encoded in legacy format)
+        # NOTE: this is hardcoded at 0, as our client does not support block stakes for now,
+        #       should we ever need block stakes we can easily enough support those
+        e.add(0)
+
+        # encode miner fees
+        e.add_slice(self.miner_fees)
+
+        # encode custom data
+        e.add(self.data)
+
+        # return the encoded data
+        return e.data
+        
+
+    def _from_json_data_object(self, data):
         self._coin_inputs = [CoinInput.from_json(ci) for ci in data.get('coininputs', []) or []]
         self._coin_outputs = [CoinOutput.from_json(co) for co in data.get('coinoutputs', []) or []]
         self._miner_fees = [Currency.from_json(fee) for fee in data.get('minerfees', []) or []]
         self._data = RawData.from_json(data.get('arbitrarydata', None) or '')
 
-    def json_data_object(self):
+    def _json_data_object(self):
         return {
             'coininputs': [ci.json() for ci in self._coin_inputs],
             'coinoutputs': [co.json() for co in self._coin_outputs],
@@ -374,14 +465,42 @@ class TransactionV128(TransactionBaseClass):
         assert isinstance(value, FulfillmentBaseClass)
         self._mint_fulfillment = value
 
-    def from_json_data_object(self, data):
+    def _signature_hash_input_get(self, *extra_objects):
+        e = j.data.rivine.encoder_sia_get()
+
+        # encode the transaction version
+        e.add_byte(self.version)
+
+        # encode the specifier
+        e.add_array(b'minter defin tx\0')
+
+        # encode nonce
+        e.add_array(self._nonce.value)
+
+        # extra objects if any
+        if extra_objects:
+            e.add_all(*extra_objects)
+
+        # encode new mint condition
+        e.add(self.mint_condition)
+
+        # encode miner fees
+        e.add_slice(self.miner_fees)
+
+        # encode custom data
+        e.add(self.data)
+
+        # return the encoded data
+        return e.data
+
+    def _from_json_data_object(self, data):
         self._nonce = RawData.from_json(data.get('nonce', ''))
         self._mint_condition = j.clients.tfchain.types.conditions.from_json(data.get('mintcondition', {}))
         self._mint_fulfillment = j.clients.tfchain.types.fulfillments.from_json(data.get('mintfulfillment', {}))
         self._miner_fees = [Currency.from_json(fee) for fee in data.get('minerfees', []) or []]
         self._data = RawData.from_json(data.get('arbitrarydata', None) or '')
 
-    def json_data_object(self):
+    def _json_data_object(self):
         return {
             'nonce': self._nonce.json(),
             'mintfulfillment': self._mint_fulfillment.json(),
@@ -454,14 +573,43 @@ class TransactionV129(TransactionBaseClass):
     def coin_output_add(self, value, condition):
         self._coin_outputs.append(CoinOutput(value=value, condition=condition))
 
-    def from_json_data_object(self, data):
+    def _signature_hash_input_get(self, *extra_objects):
+        e = j.data.rivine.encoder_sia_get()
+
+        # encode the transaction version
+        e.add_byte(self.version)
+
+        # encode the specifier
+        e.add_array(b'coin mint tx\0\0\0\0')
+
+        # encode nonce
+        e.add_array(self._nonce.value)
+
+        # extra objects if any
+        if extra_objects:
+            e.add_all(*extra_objects)
+
+        # encode coin outputs
+        e.add_slice(self.coin_outputs)
+
+        # encode miner fees
+        e.add_slice(self.miner_fees)
+
+        # encode custom data
+        e.add(self.data)
+
+        # return the encoded data
+        return e.data
+
+
+    def _from_json_data_object(self, data):
         self._nonce = RawData.from_json(data.get('nonce', ''))
         self._mint_fulfillment = j.clients.tfchain.types.fulfillments.from_json(data.get('mintfulfillment', {}))
         self._coin_outputs = [CoinOutput.from_json(co) for co in data.get('coinoutputs', []) or []]
         self._miner_fees = [Currency.from_json(fee) for fee in data.get('minerfees', []) or []]
         self._data = RawData.from_json(data.get('arbitrarydata', None) or '')
 
-    def json_data_object(self):
+    def _json_data_object(self):
         return {
             'nonce': self._nonce.json(),
             'mintfulfillment': self._mint_fulfillment.json(),

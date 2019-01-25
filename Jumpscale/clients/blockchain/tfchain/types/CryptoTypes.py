@@ -86,23 +86,27 @@ class PublicKey(BaseDataTypeClass):
         """
         Return the unlock hash generated from this public key.
         """
-        e = j.data.rivine.encoder_rivine_get()
-        e.add_int8(int(self._specifier))
-        e.add(self._hash)
+        e = j.data.rivine.encoder_sia_get()
+        self.sia_binary_encode(e)
+        # need to encode again to add the length
+        data = e.data
+        e = j.data.rivine.encoder_sia_get()
+        e.add_slice(data)
         hash = bytearray.fromhex(j.data.hash.blake2_string(e.data))
         return UnlockHash(type=UnlockHashType.PUBLIC_KEY, hash=hash)
 
     @staticmethod
     def _pad_specifier(specifier):
         _SPECIFIER_SIZE = 16
-        return specifier.encode('utf-8') + b'\x00'*(_SPECIFIER_SIZE-len(specifier))
+        value = specifier.encode('utf-8')
+        return value + b'\0'*(_SPECIFIER_SIZE-len(value))
 
     def sia_binary_encode(self, encoder):
         """
         Encode this binary data according to the Sia Binary Encoding format.
         """
-        encoder.add_array(PublicKey._pad_specifier(self._specifier))
-        encoder.add_slice(self._hash)
+        encoder.add_array(PublicKey._pad_specifier(str(self._specifier)))
+        encoder.add_slice(self._hash.value)
     
     def rivine_binary_encode(self, encoder):
         """

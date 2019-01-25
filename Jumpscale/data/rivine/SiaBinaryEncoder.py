@@ -93,6 +93,25 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
                 length += 1
             self.add_int(length)
             self.add_array(value)
+    
+    def add_byte(self, value):
+        """
+        Add an encoded iterateble value as a single byte.
+
+        @param value: the value to be added as a single byte
+        """
+        if isinstance(value, int):
+            if value < 0 or value > 255:
+                raise ValueError("byte overflow: invaid value of {}".format(value))
+            self._data += value.to_bytes(1, byteorder='little')
+        else:
+            if isinstance(value, str):
+                value = value.encode('utf-8')
+            elif not isinstance(value, (bytes, bytearray)):
+                raise ValueError("value of type {} cannot be added as a single byte".format(type(value)))
+            if len(value) != 1:
+                raise ValueError("a single byte has to be accepted, amount of bytes given: {}".format(len(value)))
+            self._data += value
 
     def add(self,value):
         """

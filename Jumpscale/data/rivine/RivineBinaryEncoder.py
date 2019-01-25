@@ -200,6 +200,23 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
             self.add_int32(7 | length << 3)
         else:
             raise SliceLengthOutOfRange("slice length {} is out of range".format(length))
+    
+    def add_byte(self, value):
+        """
+        Add an encoded iterateble value as a single byte.
+
+        @param value: the value to be added as a single byte
+        """
+        if isinstance(value, int):
+            self.add_int8(int(value))
+        else:
+            if isinstance(value, str):
+                value = value.encode('utf-8')
+            elif not isinstance(value, (bytes, bytearray)):
+                raise ValueError("value of type {} cannot be added as a single byte".format(type(value)))
+            if len(value) != 1:
+                raise ValueError("a single byte has to be accepted, amount of bytes given: {}".format(len(value)))
+            self._data += value
 
     def add_all(self,*values):
         """

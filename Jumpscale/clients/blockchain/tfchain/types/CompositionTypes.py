@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .BaseDataType import BaseDataTypeClass
 
-from .PrimitiveTypes import BinaryData, Currency
+from .PrimitiveTypes import BinaryData, Hash, Currency
 from .FulfillmentTypes import FulfillmentBaseClass, FulfillmentSingleSignature 
 from .ConditionTypes import ConditionBaseClass, ConditionNil 
 
@@ -11,7 +11,7 @@ class CoinInput(BaseDataTypeClass):
     CoinIput class
     """
     def __init__(self, parent_id=None, fulfillment=None):
-        self._parent_id = BinaryData()
+        self._parent_id = Hash()
         self.parent_id = parent_id
         self._fulfillment = FulfillmentSingleSignature()
         self.fulfillment = fulfillment
@@ -19,7 +19,7 @@ class CoinInput(BaseDataTypeClass):
     @classmethod
     def from_json(cls, obj):
         return cls(
-            parent_id=BinaryData.from_json(obj['parentid']),
+            parent_id=Hash.from_json(obj['parentid']),
             fulfillment=j.clients.tfchain.types.fulfillments.from_json(obj['fulfillment']))
 
     @property
@@ -27,11 +27,11 @@ class CoinInput(BaseDataTypeClass):
         return self._parent_id
     @parent_id.setter
     def parent_id(self, value):
-        if isinstance(value, BinaryData):
+        if isinstance(value, Hash):
             self._parent_id.value = value.value
             return
         if not value:
-            self._parent_id = BinaryData()
+            self._parent_id = Hash()
         else:
             self._parent_id.value = value
     

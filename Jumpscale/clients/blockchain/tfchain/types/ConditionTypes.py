@@ -305,7 +305,7 @@ class UnlockHash(BaseDataTypeClass):
         """
         Encode this unlock hash according to the Sia Binary Encoding format.
         """
-        encoder.add_array(bytearray([int(self._type)]))
+        encoder.add_byte(int(self._type))
         encoder.add(self._hash)
     
     def rivine_binary_encode(self, encoder):
