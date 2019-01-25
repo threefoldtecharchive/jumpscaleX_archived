@@ -9,3 +9,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         @url = jumpscale.tfchain.wallet
         name* = "" (S)
         """
+
+    @property
+    def network_type(self):
+        return self._parent._parent.network_type

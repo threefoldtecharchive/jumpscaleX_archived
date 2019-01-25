@@ -2,11 +2,11 @@
 
 # j.application.JSBaseConfigClass
 
-is the base class for a config object 
+Is the base class for a config object.
 
 ## init
 
-```python3
+```python
 def __init__(self,data=None, factory=None, **kwargs):
     """
     :param data, is a jsobject as result of jsX schema's
@@ -18,12 +18,9 @@ def __init__(self,data=None, factory=None, **kwargs):
     """
 ```
 
-
-
 ## example
 
-```python3
-
+```python
 class ZDBClientBase(j.application.JSBaseConfigClass):
     ...
 
@@ -37,8 +34,8 @@ class ZDBAdminClient(ZDBClientBase):
 
 #to call
 ZDBAdminClient(factory=self,addr=addr, port=port, secret=secret,mode=mode)
-
 ```
 
-in this case we did not get a model obj first, we just passed the daa as arguments to the init function & this will have created a jsobject automatically.
+in this case we did not get a model object first,
+we just passed the data as arguments to the init function and this will have created a `JSObject`` automatically.
 
