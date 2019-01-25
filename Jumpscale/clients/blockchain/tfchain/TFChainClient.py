@@ -52,6 +52,8 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
     def transaction_get(self, txid):
         """
         Get a transaction from an available explorer Node.
+        
+        @param txid: the identifier (fixed string with a length of 64) that points to the desired transaction
         """
         txid = self._normalize_id(txid)
         resp = j.clients.tfchain.explorer.get(nodes=self.explorer_nodes.pylist(), endpoint="/explorer/hashes/"+txid)
