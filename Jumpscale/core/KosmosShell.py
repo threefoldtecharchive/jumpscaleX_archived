@@ -22,7 +22,14 @@ class KosmosShellConfig():
 
 
 def get_object(tbc,locals_=None,globals_=None,walkback=False):
-
+    """
+    tries starting from the string e.g. j.clients.ssh to get to an object out of the stack
+    :param tbc: the line on the console = text before cursor
+    :param locals_:
+    :param globals_:
+    :param walkback:
+    :return:
+    """
 
     j = KosmosShellConfig.j
 
@@ -33,7 +40,7 @@ def get_object(tbc,locals_=None,globals_=None,walkback=False):
         # print(e)
         pass
 
-    tbc2 = tbc.split(".")[0]
+    tbc2 = tbc.split(".")[0] #e.g. ssh.a becomes ssh, because I need to find the ssh object in the stack
 
     obj = None
     frame_ = inspect.currentframe()
@@ -418,3 +425,4 @@ def ptconfig(repl):
 
 
 
+#IS A LAYER ON TOP PTPYTHON
