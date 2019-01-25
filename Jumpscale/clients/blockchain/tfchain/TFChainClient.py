@@ -3,7 +3,7 @@ Tfchain Client
 """
 
 from Jumpscale import j
-from .TFChainWallets import TFChainWallets
+from .TFChainWalletFactory import TFChainWalletFactory
 
 _EXPLORER_NODES = {
     "STD": [
@@ -31,14 +31,14 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         name* = "" (S)
         network_type = "STD,TEST,DEV" (E)
         minimum_minerfee = 100000000 (I)
-        explorer_nodes = (LO) !jumpscale.tfchain.client.explorer
+        explorer_nodes = (LO) !jumpscale.tfchain.explorer
 
-        @url = jumpscale.tfchain.client.explorer
+        @url = jumpscale.tfchain.explorer
         address = "" (S)
         password = "" (S)
         """
 
-    _CHILDCLASSES = [TFChainWallets]
+    _CHILDCLASSES = [TFChainWalletFactory]
 
     def _data_trigger_new(self):
         if len(self.explorer_nodes) == 0:
