@@ -1,14 +1,14 @@
 
 # j.application.JSBaseConfigsClass
 
-is the base class for a collection of config objects.
-
+Is the base class for a collection of config objects,
+allowing you to create instances of the `_CHILDCLASS` on the fly.
 
 ## example
 
-no params for init.
+No params for init.
 
-```python3
+```python
 class SSHClientFactory(j.application.JSBaseConfigsClass):
 
     __jslocation__ = "j.clients.ssh"
@@ -71,8 +71,6 @@ sshclientparamiko
  "timeout": 60
 }
 ```
-
-
 
 ## methods
 
@@ -146,5 +144,24 @@ class JSBaseConfigs(JSBase):
     def exists(self, **kwargs):
         """
         """
+```
 
+## Custom name
+
+Should your `JSBaseConfigsClass` not be bound to a `__jslocation__` but be
+one of the `__CHILDCLASSES` of a `JSBaseConfigParentClass`, you can define the name under
+which it will appear (within the space of that `JSBaseConfigParentClass`
+by overriding the `_name` class property of the `JSBaseConfigsClass` in question.
+
+For example:
+
+```python
+from Jumpscale import j
+
+class CountryClass(j.application.JSBaseConfigsClass):
+    """
+    some text explaining what the class does
+    """
+    _CHILDCLASS = Province
+    _name = 'country`
 ```

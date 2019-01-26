@@ -92,7 +92,7 @@ def get_completions(self, document, complete_event):
         try:
             obj = get_object(c,self.get_locals(),self.get_globals())
         except Exception as e:
-            print (e)
+            return # print (e) # TODO: DISPLAY IN BOTTOM PANE
         # print(obj)
 
         remainder = tbc[len(c)+1:]  #e.g. everything after j.clients.ssh.

@@ -1,10 +1,10 @@
 
 ## Factory Base Class
 
-can have a __jslocation__ means will be attached somewhere in the jumpscale namespace
+Can have a `__jslocation__`, meaning it will be attached somewhere in the `Jumpscale` namespace.
 
-it can optionally be a container for 1 or more config(s) classes
-that is why its not _CHILDCLASS here but _CHILDCLASSES
+It can optionally be a container for one or more config classes,
+that is why it is not `_CHILDCLASS `here but `_CHILDCLASSES`.
 
 ```python
 from Jumpscale import j
@@ -16,18 +16,14 @@ class World(j.application.JSFactoryBaseClass):
 
     __jslocation__ = 'j.data.world'
 
-
     _CHILDCLASSES = [Cars,Ships]
 
     def _init(self):
         #this object properties to be set during initialization
         self.cars = Cars()
         self.ships = Ships()
-
-
 ```
 
-the CHILDCLASSES are one or more config(s) classes
+The `_CHILDCLASSES` are one or more config(s) classes, always defined as a (Python) List.
 
-a childclass can be a singleton
-
+A `childclass` can be a singleton.

@@ -188,7 +188,10 @@ class TransactionBaseClass(ABC, j.application.JSBaseClass):
 
     # TODO: check if we need a better string representation or if this is fine
     def __str__(self):
-        return j.data.serializers.json.dumps(self.json())
+        s = "transaction v{}".format(self.version)
+        if self.id:
+            s += " {}".format(self.id)
+        return s
     __repr__ = __str__
 
 
