@@ -14,17 +14,35 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         name* = "" (S)
         seed = "" (S)
         key_count = 1 (I)
+
+        key_scan_count = 3 (I)
         """
 
     def _init(self):
+        # stores all key pairs of this wallet in memory
         self._key_pairs = {}
+        # the primary address is kept as a seperate property,
+        # as we hint the user into using this primary address as much as possible,
+        # to keep things simple
         self._primary_address = ''
+
+        # when during scanning we find a used key,
+        # it might happen that one or more keys prior the used keys are not used,
+        # in this case we do want to increase the key_count,
+        # but will keep the unused keys in a seperate bucket, so we
+        # can use them first
+        self._unused_key_pairs = []
  
     def _data_trigger_new(self):
+        # provide sane defaults for the schema-based wallet config
         if self.seed == "":
             self.seed = j.data.encryption.mnemonic.generate(strength=256)
         if self.key_count < 1:
             self.key_count = 1
+        if self.key_scan_count < 0:
+            self.key_scan_count = 0
+
+        # generate keys
         keys_to_generate = self.key_count
         # generate the primary address
         self._primary_address = str(self._key_pair_new().unlock_hash())
@@ -105,7 +123,21 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             raise KeyError("wallet does not own unlock hash {}".format(unlock_hash))
         return key
 
-    def _key_pair_new(self):
+
+    def _key_pair_new(self, integrate=True):
+        """
+        Create a new key pair,
+        and integrate it by default as well into the wallet's key pair dictionary.
+        """
+        # if we have unused key pairs in-memory, use them first,
+        # only used when integrating is True,
+        # as we do not wish to use this feature when scanning
+        if integrate and len(self._unused_key_pairs) > 0:
+            key_pair = self._unused_key_pairs.pop(0)
+            self._key_pair_add(key_pair, add_count=False)
+            return key_pair
+
+        # otherwise create a new one
         e = j.data.rivine.encoder_sia_get()
         e.add_array(self.seed_entropy)
         e.add(self.key_count-1)
@@ -116,10 +148,29 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         key_pair = SpendableKey(
             public_key = j.clients.tfchain.types.public_key_new(hash=public_key.to_bytes()),
             private_key = private_key)
-        self._key_pairs[str(key_pair.unlock_hash())] = key_pair
-        self.key_count += 1
+
+        # if we wish to integrate (mostly when we're not scanning),
+        # we also add it to our wallets known key pairs
+        if integrate:
+            self._key_pair_add(key_pair)
 
         return key_pair
+
+    def _key_pair_add(self, key_pair, add_count=True):
+        """
+        A private utility function that is used by default
+        by the _key_pair_new wallet method to integrate a newly created key pair
+        into this wallet's key pair dictionary.
+
+        This method is seperate as we also scan for other keys during the fetching
+        of the balance of a wallet. When we do, we want to create new key pairs,
+        but only integrate them, if indeed we found the key (or a key after it) was used.
+        """
+        addr = str(key_pair.unlock_hash())
+        assert addr not in self._key_pairs
+        self._key_pairs[addr] = key_pair
+        if add_count:
+            self.key_count += 1
 
 
 class SpendableKey():
