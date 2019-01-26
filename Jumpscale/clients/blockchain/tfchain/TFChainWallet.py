@@ -3,7 +3,7 @@ from Jumpscale import j
 
 from ed25519 import SigningKey
 
-from .types.CryptoTypes import PublicKey
+from .types.CryptoTypes import PublicKey, UnlockHash
 
 class TFChainWallet(j.application.JSBaseConfigClass):
     """
@@ -18,13 +18,18 @@ class TFChainWallet(j.application.JSBaseConfigClass):
 
     def _init(self):
         self._key_pairs = {}
+        self._primary_address = ''
  
     def _data_trigger_new(self):
         if self.seed == "":
             self.seed = j.data.encryption.mnemonic.generate(strength=256)
         if self.key_count < 1:
             self.key_count = 1
-        for _ in range(self.key_count):
+        keys_to_generate = self.key_count
+        # generate the primary address
+        self._primary_address = str(self._key_pair_new().unlock_hash())
+        # generate the other addresses
+        for _ in range(keys_to_generate-1):
             self._key_pair_new()
 
     @property
@@ -60,6 +65,13 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         """
         return len(self._key_pairs)
 
+    @property
+    def address(self):
+        """
+        The primary address, the address generated with index 0.
+        """
+        return self._primary_address
+
     def address_new(self):
         """
         Generate a new wallet address,
@@ -70,7 +82,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         The public key is used for verification of signatures,
         that were created with the matching private key.
         """
-        return self._key_pair_new().unlock_hash()
+        return str(self._key_pair_new().unlock_hash())
 
     def public_key_new(self):
         """
@@ -79,10 +91,24 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         """
         return self._key_pair_new().public_key
 
+    def key_pair_get(self, unlock_hash):
+        """
+        Get the private/public key pair for the given unlock hash.
+        If the unlock has is not owned by this wallet a KeyError exception is raised.
+        """
+        if isinstance(unlock_hash, UnlockHash):
+            unlock_hash = str(unlock_hash)
+        else:
+            assert type(unlock_hash) is str
+        key = self._key_pairs.get(unlock_hash)
+        if key is None:
+            raise KeyError("wallet does not own unlock hash {}".format(unlock_hash))
+        return key
+
     def _key_pair_new(self):
         e = j.data.rivine.encoder_sia_get()
-        e.add(self.seed_entropy)
-        e.add(self.address_count)
+        e.add_array(self.seed_entropy)
+        e.add(self.key_count-1)
         seed_hash = bytes.fromhex(j.data.hash.blake2_string(e.data))
         private_key = SigningKey(seed_hash)
         public_key = private_key.get_verifying_key()
@@ -91,6 +117,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             public_key = j.clients.tfchain.types.public_key_new(hash=public_key.to_bytes()),
             private_key = private_key)
         self._key_pairs[str(key_pair.unlock_hash())] = key_pair
+        self.key_count += 1
 
         return key_pair
 

@@ -29,3 +29,10 @@ class TFChainClientFactory(j.application.JSBaseConfigsClass):
     @property
     def types(self):
         return TFChainTypesFactory()
+
+    def test(self, name=''):
+        """
+        js_shell 'j.clients.tfchain.test()'
+        :return:
+        """
+        self._test_run(name=name)
