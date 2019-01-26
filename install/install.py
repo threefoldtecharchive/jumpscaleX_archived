@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 
+
 print("")
 print("    Jumpscale Installer")
 print("")
@@ -20,9 +21,20 @@ if not os.path.exists(path):
 spec = util.spec_from_file_location("IT", path)
 IT = spec.loader.load_module()
 
+def dexec(cmd):
+    cmd2 = "docker exec -ti %s bash -c '%s'"%(dockername,cmd)
+    IT.Tools.execute(cmd2,interactive=True,showout=False,replace=False,asfile=True)
+
+def sshexec(cmd):
+    cmd2 = "ssh -t root@localhost -A -p 2224 '%s'"%cmd
+    IT.Tools.execute(cmd2,interactive=True,showout=False,replace=False,asfile=True)
+
 # FOR DEBUG purposes can install ipython & pip3 will allow us to use the shell
 # IT.UbuntuInstall.base_install()
 
+r=IT.Tools.ask_yes_no("s")
+IT.Tools.shell()
+w
 
 if len(sys.argv)>1:
     mychoice = int(sys.argv[-1])
@@ -100,9 +112,6 @@ if sshkey2:
 
 
 
-def dexec(cmd):
-    cmd2 = "docker exec -ti %s bash -c '%s'"%(dockername,cmd)
-    IT.Tools.execute(cmd2)
 
 if mychoice<4:
     if not IT.Tools.ask_yes_no("Is it ok to continue (y)"):
@@ -119,13 +128,13 @@ elif mychoice in [3]:
         names = IT.Tools.execute("docker container ls --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
         names = [i.strip("\"'") for i in names if i.strip()!=""]
         return names
-
+    exists=False
     if dockername in docker_names():
         if IT.Tools.ask_yes_no("docker:%s exists, ok to remove?"%dockername):
             IT.Tools.execute("docker rm -f %s"%dockername)
         else:
-            print("Cannot continue, docker machine exists.")
-            sys.exit(1)
+            exists = True
+
     cmd="""
             
     docker run --name {NAME} \
@@ -137,15 +146,21 @@ elif mychoice in [3]:
     --cap-add=DAC_OVERRIDE --cap-add=DAC_READ_SEARCH \
     -v {CODEDIR}:/sandbox/code phusion/baseimage:master
     """
-    IT.Tools.execute(cmd,args={"CODEDIR":codepath,"NAME":dockername},interactive=True)
+    print(" - Docker machine gets created: ")
+    if exists is False:
+        IT.Tools.execute(cmd,args={"CODEDIR":codepath,"NAME":dockername},interactive=True)
 
-    dexec('/etc/init.d/ssh start')
-    dexec('rm -f /etc/service/sshd/down')
-    dexec('apt update; apt upgrade -y; apt install mc -y')
-    dexec('rm /etc/service/sshd/down')
-
+    print(" - Docker machine OK")
+    print(" - Start SSH server")
     if sshkey:
         dexec('echo "%s" > /root/.ssh/authorized_keys'%sshkey2)
+    dexec("/usr/bin/ssh-keygen -A")
+    dexec('/etc/init.d/ssh start')
+    dexec('rm -f /etc/service/sshd/down')
+    print(" - Upgrade ubuntu")
+    dexec('apt update; apt upgrade -y; apt install mc -y')
+
+    IT.Tools.execute("rm -f ~/.ssh/known_hosts")  #rather dirty hack
 
     T="""
     Installer choice for jumpscale in the docker
@@ -157,9 +172,30 @@ elif mychoice in [3]:
      
     """
 
-    mychoice2 = int(IT.Tools.ask_choices(T,[1,2]))
+    mychoice2 = int(IT.Tools.ask_choices(T,[4,5]))
 
-    dexec('curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_kosmos/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py %s'%mychoice2)
+    IT.Tools.shell()
+
+    sshexec('curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_kosmos/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py %s'%mychoice2)
+
+    if mychoice2 == 4:
+        if IT.Tools.ask_yes_no("Do you want to install lua/nginx/openresty & wiki environment?"):
+            IT.Tools.shell()
+    elif mychoice2 == 3:
+        if IT.Tools.ask_yes_no("Do you want to install wiki environment?"):
+            IT.Tools.shell()
+
+    k = """
+    
+    # to login to the docker using ssh use:
+    ssh root@localhost -A -p 2224
+    
+    # or for kosmos shell  
+    ssh root@localhost -A -p 2224 'source /sandbox/env.sh;kosmos'
+     
+    """
+
+
 
 else:
     print ("choice:'%s' not supported."%mychoice)

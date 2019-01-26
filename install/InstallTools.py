@@ -329,9 +329,13 @@ class Tools:
     def _execute_interactive(cmd=None, args=None, die=True):
         if args is None:
             args = cmd.split(" ")
-        returncode = os.spawnvpe(os.P_WAIT, args[0], args, os.environ)
+        # else:
+        #     args[0] = shutil.which(args[0])
+
+        returncode = os.spawnlp(os.P_WAIT, args[0], *args)
         cmd=" ".join(args   )
         if returncode == 127:
+            Tools.shell()
             Tools.error_raise('{0}: command not found\n'.format(args[0]))
         if returncode>0 and returncode != 999:
             if die:
@@ -680,14 +684,14 @@ class Tools:
     def execute(command, showout=True, useShell=True, cwd=None, timeout=600,die=True,
                 async_=False, args=None, env=None,
                 interactive=False,self=None,
-                replace=True):
+                replace=True,asfile=False):
 
         if env is None:
             env={}
         if self is None:
             self = MyEnv
         command  = Tools.text_strip(command, args=args, replace=replace)
-        if "\n" in command:
+        if "\n" in command or asfile:
             path = Tools._file_path_tmp_get()
             MyEnv.logger.debug("execbash:\n'''%s\n%s'''\n" % (path, command))
             command2 = ""
@@ -697,18 +701,18 @@ class Tools:
                 command2 += "cd %s\n" % cwd
             command2+=command
             Tools.file_write(path, command2)
+            print(command2)
             command3 = "bash %s" % path
             res = Tools.execute(command3,showout=showout,useShell=useShell,cwd=cwd,
-                            timeout=timeout,die=die,env=env,self=self)
+                            timeout=timeout,die=die,env=env,self=self,interactive=interactive,asfile=False)
             Tools.delete(path)
             return res
         else:
 
-
             if interactive:
                 res = Tools._execute_interactive(cmd=command, die=die)
                 logger.debug("execute interactive:%s"%command)
-                Tools.shell()
+                return res
             else:
                 logger.debug("execute:%s"%command)
 
@@ -872,7 +876,7 @@ class Tools:
     #
 
     @staticmethod
-    def ask_choices(msg,choices=[]):
+    def ask_choices(msg,choices=[],default=None):
         msg = Tools.text_strip(msg)
         print(msg)
         if "\n" in msg:
@@ -881,6 +885,8 @@ class Tools:
         choices_txt = ",".join(choices)
         mychoice = input("make your choice (%s): "%choices_txt)
         while mychoice not in choices:
+            if mychoice.strip() == "" and default:
+                return default
             print ("ERROR: only choose %s please"%choices_txt)
             mychoice = input("make your choice (%s): "%choices_txt)
         return mychoice
@@ -892,7 +898,7 @@ class Tools:
         :param msg: the msg to show when asking for y or no
         :return: will return True if yes
         """
-        return Tools.ask_choices(msg,"y,n")
+        return Tools.ask_choices(msg,"y,n",default="y")in ["y",""]
 
     @staticmethod
     def ask_string(msg,default=None):
