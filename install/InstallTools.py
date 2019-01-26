@@ -981,9 +981,10 @@ class Tools:
         args["URL"] = url_ssh
         args["NAME"] = repo
 
+        if "GITPULL" in os.environ:
+            pull = str(os.environ["GITPULL"]) == "1"
 
         git_on_system = Tools.cmd_installed("git")
-
 
         if git_on_system and MyEnv.config["USEGIT"] and MyEnv.sshagent_active_check() and ((exists and foundgit) or not exists):
             #there is ssh-key loaded
@@ -998,11 +999,13 @@ class Tools:
                 set -ex
                 mkdir -p {ACCOUNT_DIR}
                 cd {ACCOUNT_DIR}
-                git clone {URL}
+                git clone  --depth 1 {URL}
                 cd {NAME}
                 """
+                Tools.log("get code [git] (first time): %s"%repo)
+                Tools.execute(C, args=args)
             else:
-                if Tools.code_changed(REPO_DIR):
+                if pull and Tools.code_changed(REPO_DIR):
                     if Tools.ask_yes_no("\n**: found changes in repo '%s', do you want to commit?"%repo):
                         if "GITMESSAGE" in os.environ:
                             args["MESSAGE"] = os.environ["GITMESSAGE"]
@@ -1033,34 +1036,38 @@ class Tools:
             def getbranch(args):
                 cmd = "cd {REPO_DIR}; git branch | grep \* | cut -d ' ' -f2"
                 rc,stdout,err = Tools.execute(cmd, die=False, args=args, interactive=False)
+                if rc>0:
+                    Tools.shell()
                 current_branch = stdout[1].strip()
                 Tools.log("Found branch: %s" % current_branch)
                 return current_branch
 
-            current_branch = getbranch(args=args)
+            if pull or exists is False:
 
-            ok=False
-            for branch_item in branch:
-                if ok:
-                    continue
+                current_branch = getbranch(args=args)
 
-                branch_item = branch_item.strip()
+                ok=False
+                for branch_item in branch:
+                    if ok:
+                        continue
 
-                if current_branch != branch_item:
-                    script="""
-                    set -ex
-                    cd {REPO_DIR}
-                    git checkout {BRANCH} -f
-                    exit 999
-                    """
-                    args["BRANCH"]=branch_item
-                    rc,out,err = Tools.execute(script,die=False, args=args,showout=True,interactive=False)
-                    if rc==999 or rc==231:
-                        ok=True
-                else:
-                    ok = True
+                    branch_item = branch_item.strip()
 
-            getbranch(args=args)
+                    if current_branch != branch_item:
+                        script="""
+                        set -ex
+                        cd {REPO_DIR}
+                        git checkout {BRANCH} -f
+                        exit 999
+                        """
+                        args["BRANCH"]=branch_item
+                        rc,out,err = Tools.execute(script,die=False, args=args,showout=True,interactive=False)
+                        if rc==999 or rc==231:
+                            ok=True
+                    else:
+                        ok = True
+
+                getbranch(args=args)
 
         else:
             Tools.log("get code [zip]: %s"%repo)

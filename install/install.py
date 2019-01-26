@@ -32,10 +32,6 @@ def sshexec(cmd):
 # FOR DEBUG purposes can install ipython & pip3 will allow us to use the shell
 # IT.UbuntuInstall.base_install()
 
-r=IT.Tools.ask_yes_no("s")
-IT.Tools.shell()
-w
-
 if len(sys.argv)>1:
     mychoice = int(sys.argv[-1])
 else:
@@ -101,6 +97,10 @@ elif mychoice == 1:
             IT.MyEnv.state_load()
     print("\n - jumpscale will be installed in the system")
 elif mychoice == 4:
+    if IT.Tools.ask_yes_no("Do you want to pull code changes from git?"):
+        os.environ["GITPULL"] = "1"
+    else:
+        os.environ["GITPULL"] = "0"
     IT.MyEnv.config["INSYSTEM"] = True
 else:
     #is sandbox (2)
@@ -158,7 +158,7 @@ elif mychoice in [3]:
     dexec('/etc/init.d/ssh start')
     dexec('rm -f /etc/service/sshd/down')
     print(" - Upgrade ubuntu")
-    dexec('apt update; apt upgrade -y; apt install mc -y')
+    dexec('apt update; apt upgrade -y; apt install mc git -y')
 
     IT.Tools.execute("rm -f ~/.ssh/known_hosts")  #rather dirty hack
 
@@ -173,8 +173,6 @@ elif mychoice in [3]:
     """
 
     mychoice2 = int(IT.Tools.ask_choices(T,[4,5]))
-
-    IT.Tools.shell()
 
     sshexec('curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_kosmos/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py %s'%mychoice2)
 
