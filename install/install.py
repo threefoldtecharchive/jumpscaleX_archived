@@ -24,35 +24,146 @@ IT = spec.loader.load_module()
 # IT.UbuntuInstall.base_install()
 
 
-insystem = input(
-    "\nDo you want to install in the system or using the sandbox?, default is the sandbox, if 1 or Y will be in system : ")
-if str(insystem).lower().strip() in ["1", "y"]:
+if len(sys.argv)>1:
+    mychoice = int(sys.argv[-1])
+else:
+
+    T="""
+    Installer choice for jumpscale
+    ------------------------------
+    
+    Do you want to install
+     - insystem         (ideal for development only in OSX & Ubuntu1804)        : 1
+     - using a sandbox  (only in OSX & Ubuntu1804)                              : 2
+     - using docker?                                                            : 3
+     
+    """
+
+    mychoice = int(IT.Tools.ask_choices(T,[1,2,3]))
+
+if mychoice<4:
+
+    if not IT.MyEnv.sshagent_active_check():
+        T="""
+        Did not find an SSH key in ssh-agent, is it ok to continue without?
+        It's recommended to have a SSH key as used on github loaded in your ssh-agent
+        If you don't have an ssh key it will not be possible to modify code, code will be checked out statically.
+        """
+        if not IT.Tools.ask_yes_no(default="y"):
+            print("Could not continue, load ssh key.")
+            sys.exit(1)
+        else:
+            sshkey2 = ""
+    else:
+        sshkey = IT.MyEnv.sshagent_key_get()
+        sshkey+=".pub"
+        if not IT.Tools.exists(sshkey):
+            print ("ERROR: could not find SSH key:%s"%sshkey)
+            sys.exit(1)
+        sshkey2 = IT.Tools.file_text_read(sshkey)
+else:
+    sshkey2 = ""
+
+
+if mychoice == 3:
+    dockername = IT.Tools.ask_string("What name do you want to use for your docker (default jsx): ",default="jsx")
+    if dockername == "":
+        dockername = "jsx"
+    if IT.Tools.exists("/sandbox/code"):
+        codepath = "/sandbox/code"
+    else:
+        codepath = "~/code"
+    if not IT.Tools.ask_yes_no("We will install code in %s, is this ok?"%codepath):
+        codepath = IT.Tools.ask_string("give path to the root of your code directory")
+    codepath=codepath.replace("~",IT.MyEnv.config["DIR_HOME"])
+    IT.Tools.dir_ensure(codepath)
+    print("\n - jumpscale will be installed using docker")
+    print(" - location of code path is: %s"%codepath)
+
+elif mychoice == 1:
     IT.MyEnv.config["INSYSTEM"] = True
     IT.Tools.execute("rm -f /sandbox/bin/pyth*")
-    if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
-        IT.Tools.delete(IT.MyEnv.state_file_path)
-        IT.MyEnv.state_load()
+    if IT.Tools.exists(IT.MyEnv.state_file_path):
+        if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
+            IT.Tools.delete(IT.MyEnv.state_file_path)
+            IT.MyEnv.state_load()
+    print("\n - jumpscale will be installed in the system")
+elif mychoice == 4:
+    IT.MyEnv.config["INSYSTEM"] = True
 else:
+    #is sandbox (2)
     IT.MyEnv.config["INSYSTEM"] = False
+    print("\n - Will install jumpscale in /sandbox")
 
-if not IT.MyEnv.sshagent_active_check():
-    print("\nDID NOT FIND KEY IN SSH-AGENT, is it ok to continue without?")
-    print("It's recommended to have a SSH key as used on github loaded in your ssh-agent")
-    print("If you don't have an ssh key it will not be possible to modify jumpscale code.")
+if sshkey2:
+    print(" - sshkey used will be: %s"%sshkey)
 
-print("\n\n - Will install jumpscale in /sandbox")
-if IT.MyEnv.config["INSYSTEM"]:
-    print(" - jumpscale will be installed in the system")
+
+
+def dexec(cmd):
+    cmd2 = "docker exec -ti %s bash -c '%s'"%(dockername,cmd)
+    IT.Tools.execute(cmd2)
+
+if mychoice<4:
+    if not IT.Tools.ask_yes_no("Is it ok to continue (y)"):
+        sys.exit(1)
+
+if mychoice in [1,2,4,5]:
+    installer = IT.JumpscaleInstaller()
+
+    installer.install()
+elif mychoice in [3]:
+
+
+    def docker_names():
+        names = IT.Tools.execute("docker container ls --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
+        names = [i.strip("\"'") for i in names if i.strip()!=""]
+        return names
+
+    if dockername in docker_names():
+        if IT.Tools.ask_yes_no("docker:%s exists, ok to remove?"%dockername):
+            IT.Tools.execute("docker rm -f %s"%dockername)
+        else:
+            print("Cannot continue, docker machine exists.")
+            sys.exit(1)
+    cmd="""
+            
+    docker run --name {NAME} \
+    --hostname jsx \
+    -d \
+    -p 2224:22 -p 6830-6850:6830-6850 \
+    --device=/dev/net/tun \
+    --cap-add=NET_ADMIN --cap-add=SYS_ADMIN \
+    --cap-add=DAC_OVERRIDE --cap-add=DAC_READ_SEARCH \
+    -v {CODEDIR}:/sandbox/code phusion/baseimage:master
+    """
+    IT.Tools.execute(cmd,args={"CODEDIR":codepath,"NAME":dockername},interactive=True)
+
+    dexec('/etc/init.d/ssh start')
+    dexec('rm -f /etc/service/sshd/down')
+    dexec('apt update; apt upgrade -y; apt install mc -y')
+    dexec('rm /etc/service/sshd/down')
+
+    if sshkey:
+        dexec('echo "%s" > /root/.ssh/authorized_keys'%sshkey2)
+
+    T="""
+    Installer choice for jumpscale in the docker
+    --------------------------------------------
+    
+    Do you want to install
+     - in system (development)                : 4
+     - using a sandbox                        : 5
+     
+    """
+
+    mychoice2 = int(IT.Tools.ask_choices(T,[1,2]))
+
+    dexec('curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_kosmos/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py %s'%mychoice2)
+
 else:
-    print(" - jumpscale will be installed as sandbox")
-print("")
-
-if not IT.Tools.ask_yes_no("Is it ok to continue, press 1 or Y"):
+    print ("choice:'%s' not supported."%mychoice)
     sys.exit(1)
-
-installer = IT.JumpscaleInstaller()
-
-installer.install()
 
 
 """

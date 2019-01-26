@@ -872,17 +872,38 @@ class Tools:
     #
 
     @staticmethod
+    def ask_choices(msg,choices=[]):
+        msg = Tools.text_strip(msg)
+        print(msg)
+        if "\n" in msg:
+            print()
+        choices = [str(i) for i in choices if i not in [None,"",","]]
+        choices_txt = ",".join(choices)
+        mychoice = input("make your choice (%s): "%choices_txt)
+        while mychoice not in choices:
+            print ("ERROR: only choose %s please"%choices_txt)
+            mychoice = input("make your choice (%s): "%choices_txt)
+        return mychoice
+
+    @staticmethod
     def ask_yes_no(msg):
         """
 
         :param msg: the msg to show when asking for y or no
         :return: will return True if yes
         """
-        yno = input("%s : "%msg)
-        if str(yno).lower().strip() in ["1","y"]:
-            return True
-        return False
+        return Tools.ask_choices(msg,"y,n")
 
+    @staticmethod
+    def ask_string(msg,default=None):
+        msg = Tools.text_strip(msg)
+        print(msg)
+        if "\n" in msg:
+            print()
+        txt = input()
+        if default and txt.strip()=="":
+            txt = default
+        return txt
 
     @staticmethod
     def cmd_installed(name):
@@ -1670,11 +1691,14 @@ class MyEnv():
         if MyEnv._sshagent_active is None:
             MyEnv._sshagent_active = len(Tools.execute("ssh-add -L",die=False,showout=False)[1])>40
         return MyEnv._sshagent_active
-        # try:
-        #     check_output(["pidof", "ssh-agent"])
-        # except Exception as e:
-        #     return False
-        # return True
+
+    @staticmethod
+    def sshagent_key_get():
+        """
+        check if the ssh agent is active
+        :return:
+        """
+        return Tools.execute("ssh-add -L",die=False,showout=False)[1].strip().split(" ")[-1].strip()
 
     @staticmethod
     def config_edit():
@@ -1767,6 +1791,9 @@ class JumpscaleInstaller():
         js_shell 'j.tools.console.echo("JumpscaleX IS OK.")'
         """
         Tools.execute(script,interactive=True)
+
+
+
 
     def remove_old_parts(self):
         tofind=["DigitalMe","Jumpscale","ZeroRobot"]
