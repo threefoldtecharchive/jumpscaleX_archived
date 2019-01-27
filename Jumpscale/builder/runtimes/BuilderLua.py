@@ -9,6 +9,7 @@ class BuilderLua(j.builder.system._BaseClass):
 
     def _init(self):
         self.BUILDDIR = j.core.tools.text_replace("{DIR_VAR}/build/")
+        self._logger_enable()
 
     def reset(self):
         """
