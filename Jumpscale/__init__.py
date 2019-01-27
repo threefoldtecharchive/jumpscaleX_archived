@@ -62,7 +62,7 @@ class Core():
                 from redis import StrictRedis
                 # print("CORE_REDIS")
                 if self.isSandbox:
-                    self._db = StrictRedis(unix_socket_path='/sandbox/var/redis.sock', db=0)
+                    self._db = StrictRedis(host='localhost', port=6379, unix_socket_path='/sandbox/var/redis.sock', db=0)
                 else:
                     self._db = StrictRedis(host='localhost', port=6379, db=0)
                 self._db.get("jumpscale.config")
@@ -109,8 +109,15 @@ class Jumpscale():
             if name not in locals_:
                 locals_[name]=obj
             return locals_
-        locals_ = add(locals_,"ssh",j.clients.ssh)
-        locals_ = add(locals_,"iyo",j.clients.itsyouonline)
+        try:
+            locals_ = add(locals_,"ssh",j.clients.ssh)
+        except:
+            pass
+        try:
+            locals_ = add(locals_,"iyo",j.clients.itsyouonline)
+        except:
+            pass
+
         # locals_ = add(locals_,"zos",j.kosmos.zos)
 
         return locals_
@@ -129,7 +136,7 @@ class Jumpscale():
             print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
         from ptpython.repl import embed
         # Tools.clear()
-        history_filename="~/.jsx_history"
+        history_filename="%s/.jsx_history"%MyEnv.config["DIR_HOME"]
         if not Tools.exists(history_filename):
             Tools.file_write(history_filename,"")
         # locals_= f.f_locals
@@ -173,7 +180,6 @@ class Jumpscale():
 j = Jumpscale()
 j.core = Core(j)
 j.core._groups = {}
-
 
 rootdir = os.path.dirname(os.path.abspath(__file__))
 # print("- setup root directory: %s" % rootdir)

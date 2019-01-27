@@ -178,12 +178,15 @@ elif mychoice in [3]:
 
     if mychoice2 == 4:
         if IT.Tools.ask_yes_no("Do you want to install lua/nginx/openresty & wiki environment?"):
+            IT.Tools.execute("js_shell 'j.builder.runtimes.lua.install()'")
             IT.Tools.shell()
     elif mychoice2 == 3:
         if IT.Tools.ask_yes_no("Do you want to install wiki environment?"):
             IT.Tools.shell()
 
     k = """
+    
+    install succesfull:
     
     # to login to the docker using ssh use:
     ssh root@localhost -A -p 2224
@@ -192,6 +195,7 @@ elif mychoice in [3]:
     ssh root@localhost -A -p 2224 'source /sandbox/env.sh;kosmos'
      
     """
+    print(IT.Tools.text_replace(k))
 
 
 

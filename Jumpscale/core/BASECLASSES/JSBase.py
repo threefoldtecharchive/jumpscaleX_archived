@@ -243,7 +243,7 @@ class JSBase:
         else:
             return j.core.db.hexists("done","%s:%s"%(self._objid,name))
 
-    def _done_set(self,name="",value=True):
+    def _done_set(self,name="",value="1"):
         if name=="":
             return j.core.db.hset("done",self._objid,value)
         else:
@@ -263,6 +263,8 @@ class JSBase:
         """
         if name=="":
             for item in j.core.db.hkeys("done"):
+                item=item.decode()
+                print("reset todo:%s"%item)
                 if item.find(self._objid)!=-1:
                     j.core.db.hdel("done",self._objid)
         else:
