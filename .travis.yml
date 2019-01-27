@@ -6,9 +6,17 @@ services:
 
 before_install:
   - docker build --rm -t jumpscale .
-
-script:
-  - docker run --rm -t jumpscale /bin/bash -c "source /sandbox/env.sh; pytest -v /sandbox/code/github/threefoldtech/jumpscaleX --ignore=/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/data/schema/; pytest -v /sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/data/schema/"
+    
+jobs:  
+  include:              
+    - name: "JumpscaleX"   # The first Tests stage job (jumpscalex and schema)
+      if: type != cron
+      script: 
+        - docker run --rm -t jumpscale /bin/bash -c "source /sandbox/env.sh; pytest -v /sandbox/code/github/threefoldtech/jumpscaleX --ignore=/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/data/schema/; pytest -v /sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/data/schema/"        
+    - name: "builders"     # names the second Tests stage job (builders)
+      if: type == cron
+      script: 
+        - docker run --rm -t jumpscale /bin/bash -c "source /sandbox/env.sh; pytest  --integration /sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/builder/"
 
 after_success:
-  - docker run --rm -t jumpscale /bin/bash -c "codecov"
+- docker run --rm -t jumpscale /bin/bash -c "codecov"
