@@ -28,12 +28,17 @@ curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/i
 
 ### Ubuntu
 
-- TODO:
+#### Docker installation
+```
+git clone https://github.com/threefoldtech/jumpscaleX.git
+cd jumpscaleX
+sudo docker build --rm -t threefoldtech/jsx .
+```
 
 
 ## more info
 
-see also [install/readme.md](../install/readme.md)
+see also [install/readme.md](../../install/README.md)
 
 ## with SSH key
 
