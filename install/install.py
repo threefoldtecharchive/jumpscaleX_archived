@@ -39,12 +39,12 @@ else:
     T="""
     Installer choice for jumpscale
     ------------------------------
-    
+
     Do you want to install
      - insystem         (ideal for development only in OSX & Ubuntu1804)        : 1
      - using a sandbox  (only in OSX & Ubuntu1804)                              : 2
      - using docker?                                                            : 3
-     
+
     """
 
     mychoice = int(IT.Tools.ask_choices(T,[1,2,3]))
@@ -57,7 +57,7 @@ if mychoice<4:
         It's recommended to have a SSH key as used on github loaded in your ssh-agent
         If you don't have an ssh key it will not be possible to modify code, code will be checked out statically.
         """
-        if not IT.Tools.ask_yes_no(default="y"):
+        if not IT.Tools.ask_yes_no(T, default="y"):
             print("Could not continue, load ssh key.")
             sys.exit(1)
         else:
@@ -136,7 +136,7 @@ elif mychoice in [3]:
             exists = True
 
     cmd="""
-            
+
     docker run --name {NAME} \
     --hostname jsx \
     -d \
@@ -165,11 +165,11 @@ elif mychoice in [3]:
     T="""
     Installer choice for jumpscale in the docker
     --------------------------------------------
-    
+
     Do you want to install
      - in system (development)                : 4
      - using a sandbox                        : 5
-     
+
     """
 
     mychoice2 = int(IT.Tools.ask_choices(T,[4,5]))
@@ -185,15 +185,15 @@ elif mychoice in [3]:
             IT.Tools.shell()
 
     k = """
-    
+
     install succesfull:
-    
+
     # to login to the docker using ssh use:
     ssh root@localhost -A -p 2224
-    
-    # or for kosmos shell  
+
+    # or for kosmos shell
     ssh root@localhost -A -p 2224 'source /sandbox/env.sh;kosmos'
-     
+
     """
     print(IT.Tools.text_replace(k))
 
