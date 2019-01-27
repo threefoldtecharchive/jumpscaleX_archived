@@ -919,7 +919,7 @@ class Text(object):
         text = text.strip(" [")
         text = text.strip(" ]")
 
-        text=text.strip("'").strip("\"").strip()
+        text=text.strip("\"").strip()
 
         if self.strip(text) == "":
             return []

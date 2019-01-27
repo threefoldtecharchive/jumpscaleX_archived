@@ -26,7 +26,7 @@ class Types(j.application.JSBaseClass):
         self.str = self.string
         self.bytes = Bytes()
         self.multiline = StringMultiLine()
-        self.set = Set()
+        # self.set = Set()
         self.ipaddr = IPAddress()
         self.ipaddress = IPAddress()
         self.iprange = IPRange()
@@ -36,6 +36,7 @@ class Types(j.application.JSBaseClass):
         self.json = JSON()
         self.email = Email()
         self.date = Date()
+        self.datetime = DateTime()
         self.numeric = Numeric()
         self.percent = Percent()
         self.hash = Hash()
@@ -54,7 +55,7 @@ class Types(j.application.JSBaseClass):
         self._string = String
         self._bytes = Bytes
         self._multiline = StringMultiLine
-        self._set = Set
+        # self._set = Set
         self._ipaddr = IPAddress
         self._iprange = IPRange
         self._ipport = IPPort
@@ -63,6 +64,7 @@ class Types(j.application.JSBaseClass):
         self._json = JSON
         self._email = Email
         self._date = Date
+        self._datetime = DateTime
         self._numeric = Numeric
         self._percent = Percent
         self._hash = Hash
@@ -115,6 +117,7 @@ class Types(j.application.JSBaseClass):
         - b, bool,boolean
         - tel, mobile
         - d, date
+        - t, datetime
         - n, numeric
         - h, hash       #set of 2 int
         - p, percent
@@ -127,7 +130,6 @@ class Types(j.application.JSBaseClass):
         - list
         - dict
         - yaml
-        - set
         - guid
         - url, u
         - e,enum        #enumeration
@@ -159,6 +161,8 @@ class Types(j.application.JSBaseClass):
             res = self._multiline
         elif ttype in ["d", "date"]:
             res = self._date
+        elif ttype in ["t", "datetime"]:
+            res = self._datetime
         elif ttype in ["h", "hash"]:
             res = self._hash
         elif ttype in ["p", "perc", "percent"]:
@@ -181,8 +185,8 @@ class Types(j.application.JSBaseClass):
             res = self._yaml
         elif ttype == "json":
             res = self._json
-        elif ttype == "set":
-            res = self._set
+        # elif ttype == "set":
+        #     res = self._set
         elif ttype == "guid":
             res = self._guid
         elif ttype == "url" or ttype == "u":

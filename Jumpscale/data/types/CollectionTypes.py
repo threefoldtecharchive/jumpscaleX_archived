@@ -31,7 +31,6 @@ class YAML(String):
     def clean(self, value):
         if value is None:
             value = self.get_default()
-
         elif not self.check(value):
             raise ValueError("Invalid value for yaml: %s" % value)
         value = j.data.types.string.clean(value)
@@ -89,7 +88,7 @@ class JSON(String):
         return self.toString(v)
 
 
-class Dictionary:
+class Dictionary(String):
     '''Generic dictionary type'''
 
     NAME = 'dict'
@@ -97,9 +96,7 @@ class Dictionary:
 
     def check(self, value):
         '''Check whether provided value is a dict'''
-        if isinstance(value, dict):
-            return True
-        return False
+        return isinstance(value, dict)
 
     def get_default(self):
         return dict()
@@ -108,25 +105,34 @@ class Dictionary:
         """
         return string from a dict
         """
-        return j.data.serializers.json.loads(s)
+        if j.data.types.dict.check(s):
+            return s
+        else:
+            return j.data.serializers.json.loads(s)
+
+    def clean(self, v=""):
+        """
+        supports binary, string & dict
+        if binary will use msgpack
+        if string will use json
+        :param v:
+        :return:
+        """
+        if j.data.types.bytes.check(v):
+            v = j.data.serializers.msgpack.loads(v)
+        elif j.data.types.string.check(v):
+            v = j.data.serializers.json.loads(v)
+        if not self.check(v):
+            raise RuntimeError("dict for clean needs to be bytes, string or dict")
+        return v
 
     def toData(self, v):
-        return self.clean(v)
+        v = self.clean(v)
+        return j.data.serializers.msgpack.dumps(v)
 
     def toString(self, v):
-        if isinstance(v, bytes):
-            v = j.data.serialzers.msgpack.loads(v)
-        if isinstance(v, dict):
-            return j.data.serializers.json.dumps(v)
-        elif isinstance(v, str):
-            return v
-        else:
-            raise ValueError("Invalid dict value:{}".format(v))
-
-    def clean(self, v):
-        if not self.check(v):
-            raise ValueError("Valid dict is required")
-        return v
+        v = self.clean(v)
+        return j.data.serializers.json.dumps(v, True, True)
 
     def toJSON(self, v):
         return self.toString(v)
@@ -145,7 +151,10 @@ class Dictionary:
 
 
 class List():
-    '''Generic list type'''
+    '''
+    Generic list & set type
+    in the self.clean there is a sort option
+    '''
     NAME = 'list'
     BASETYPE = 'list'
 
@@ -154,7 +163,7 @@ class List():
 
     def check(self, value):
         '''Check whether provided value is a list'''
-        return isinstance(value, (list, tuple))
+        return isinstance(value, (list, tuple, set))
         # self.list_check_1type(value)
 
     def get_default(self):
@@ -180,6 +189,7 @@ class List():
             v = ""
         if ttype is not None:
             ttype = ttype.NAME
+        v = v.replace('"', "'")
         v = j.core.text.getList(v, ttype)
         v = self.clean(v)
         if self.check(v):
@@ -297,7 +307,9 @@ class List():
 
 class Hash(List):
 
-    '''hash is 2 value list, represented as 2 times 4 bytes'''
+    '''
+    hash is 2 value list, represented as 2 times 4 bytes
+    '''
 
     NAME = 'hash'
     BASETYPE = 'string'
@@ -312,6 +324,11 @@ class Hash(List):
         return s
 
     def toString(self, value):
+        """
+        serialization to intnr:intnr
+        :param value:
+        :return:
+        """
         v0, v1 = self.clean(value)
         return "%s:%s" % (v0, v1)
 
@@ -319,7 +336,7 @@ class Hash(List):
         return isinstance(value, (list, tuple)) and len(value) == 2
 
     def get_default(self):
-        return "0:0"
+        return self.clean("0:0")
 
     def clean(self, value):
         """
@@ -329,13 +346,12 @@ class Hash(List):
         def bytesToInt(val):
             if j.data.types.bytes.check(val):
                 if len(val) is not 4:
-                    raise RuntimeError(
-                        "byte for first part of hash can only be 4 bytes")
+                    raise RuntimeError("hash parts can only be 4 bytes")
                 return struct.unpack("I", val)
             else:
                 return int(val)
 
-        if j.data.types.list.check(value) or j.data.types.set.check(value):
+        if j.data.types.list.check(value):
             # prob given as list or set of 2 which is the base representation
             if len(value) != 2:
                 raise RuntimeError("hash can only be list/set of 2")
@@ -378,35 +394,36 @@ class Hash(List):
             return "%s = %s" % (key, self.python_code_get(value))
 
 
-class Set(List):
-    '''Generic set type'''
+# TODO: why do we have a set, from our perspective a set & list should be same for novice users
 
-    NAME = 'set'
-    BASETYPE = 'set'
-
-    def check(self, value):
-        '''Check whether provided value is a set'''
-        if value == {}:
-            value = {"default"}
-
-        return isinstance(value, set)
-
-    def get_default(self):
-        return set()
-
-    def clean(self, value):
-        if not self.check(value):
-            raise ValueError("Valid set is required")
-        return value
-
-    def python_code_get(self, value, sort=False):
-        """
-        produce the python code which represents this value
-        """
-        value = self.clean(value)
-        out = "{ "
-        for item in value:
-            out += "%s, " % self.SUBTYPE.python_code_get(item)
-        out = out.strip(",")
-        out += " }"
-        return out
+# class Set(List):
+#     '''Generic set type'''
+#
+#     NAME = 'set'
+#     BASETYPE = 'set'
+#
+#     def check(self, value):
+#         '''Check whether provided value is a set'''
+#         if value == {}:
+#             value = {"default"}
+#
+#         return isinstance(value, set)
+#
+#     def get_default(self):
+#         return set()
+#
+#     def clean(self, value):
+#         if not self.check(value):
+#             raise ValueError("Valid set is required")
+#         return value
+#
+#     def python_code_get(self, value, sort=False):
+#         """
+#         produce the python code which represents this value
+#         """
+#         value = self.clean(value)
+#         out = "{ "
+#         for item in value:
+#             out += "%s, " % self.SUBTYPE.python_code_get(item)
+#         out = out.strip(",")
+#         out += " }"
