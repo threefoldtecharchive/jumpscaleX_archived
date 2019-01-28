@@ -11,7 +11,7 @@ class SchemaTest(BaseTest):
 
     def test001_validate_list_of_strings(self):
         """
-        SCM-023
+        SCM-022
         *Test case for validating list of strings *
 
         **Test Scenario:**
@@ -50,7 +50,7 @@ class SchemaTest(BaseTest):
     
     def test002_validate_list_of_integers(self):
         """
-        SCM-024
+        SCM-023
         *Test case for validating list of integers *
 
         **Test Scenario:**
@@ -89,7 +89,7 @@ class SchemaTest(BaseTest):
     
     def test003_validate_list_floats(self):
         """
-        SCM-025
+        SCM-024
         *Test case for validating list of floats *
 
         **Test Scenario:**
@@ -128,7 +128,7 @@ class SchemaTest(BaseTest):
     
     def test004_validate_list_of_boolean(self):
         """
-        SCM-026
+        SCM-025
         *Test case for validating list of boolean *
 
         **Test Scenario:**
@@ -159,7 +159,7 @@ class SchemaTest(BaseTest):
     
     def test005_validate_list_of_mobiles(self):
         """
-        SCM-027
+        SCM-026
         *Test case for validating list of mobiles *
 
         **Test Scenario:**
@@ -199,7 +199,7 @@ class SchemaTest(BaseTest):
     
     def test006_validate_list_of_emails(self):
         """
-        SCM-028
+        SCM-027
         *Test case for validating list of emails *
 
         **Test Scenario:**
@@ -239,7 +239,7 @@ class SchemaTest(BaseTest):
     
     def test007_validate_list_of_ipports(self):
         """
-        SCM-029
+        SCM-028
         *Test case for validating list of ipports *
 
         **Test Scenario:**
@@ -278,7 +278,7 @@ class SchemaTest(BaseTest):
     
     def test008_validate_list_of_ipaddrs(self):
         """
-        SCM-030
+        SCM-029
         *Test case for validating list of ipaddrs *
 
         **Test Scenario:**
@@ -316,7 +316,7 @@ class SchemaTest(BaseTest):
     
     def test009_validate_list_of_ipranges(self):
         """
-        SCM-031
+        SCM-030
         *Test case for validating list of ipranges *
 
         **Test Scenario:**
@@ -353,10 +353,9 @@ class SchemaTest(BaseTest):
         self.log("schema list %s" % schema_obj.list_ranges)
         self.assertEqual(schema_obj.list_ranges, ['127.0.0.1/24', "192.168.1.1/16"])
 
-    @unittest.skip("should be test dates only without any times")
     def test010_validate_list_of_dates(self):
         """
-        SCM-032
+        SCM-031
         *Test case for validating list of dates *
 
         **Test Scenario:**
@@ -368,8 +367,8 @@ class SchemaTest(BaseTest):
         self.log("Create schema with list of dates parameter, should succeed.")
         scm = """
         @url = test.schema
-        date_list = (LD)
-        list_dates = [05/03/1994, 01/01/2019] (LD)
+        date_list = (Lt)
+        list_dates = [05/03/1994 10am:53, '01/01/2019 9pm:10'] (Lt)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -392,18 +391,20 @@ class SchemaTest(BaseTest):
         date_1 = random.randint(1, 100)
         date_2 = datetime(datetime.now().year, month, day, hours, minutes).timestamp()
 
-        date_list = [date_1, '{}/{:02}/{:02} {:02}{}:{:02}'.format(year, month, day, hour_12, am_or_pm, minutes)]
+        date_list = [date_1, '{}/{:02}/{:02} {:02}{}:{:02}'.format(datetime.now().year, month, day, hour_12, am_or_pm, minutes)]
         schema_obj.date_list = date_list
         self.assertEqual(schema_obj.date_list, [date_1, date_2])
 
         value = '{}/{:02}/{:02} {:02}{}:{:02}'.format(year, month, day, hour_12, am_or_pm, minutes)
+        date_3 = datetime(year, month, day, hours, minutes).timestamp()
         schema_obj.date_list.append(value)
-        self.assertEqual(schema_obj.date_list, [date_1, date_2, date_2])
-        self.assertEqual(schema_obj.list_dates, [50, 1546377000])
+        self.assertEqual(schema_obj.date_list, [date_1, date_2, date_3])
+        self.log("schema list %s" % schema_obj.list_dates)
+        self.assertEqual(schema_obj.list_dates, [762864780, 1546377000])
 
     def test011_validate_list_of_percents(self):
         """
-        SCM-033
+        SCM-032
         *Test case for validating list of percents *
 
         **Test Scenario:**
@@ -443,7 +444,7 @@ class SchemaTest(BaseTest):
 
     def test012_validate_list_of_urls(self):
         """
-        SCM-034
+        SCM-033
         *Test case for validating list of urls *
 
         **Test Scenario:**
@@ -483,7 +484,7 @@ class SchemaTest(BaseTest):
     @unittest.skip("can't reach the currency methods(in list) to change between them")
     def test013_validate_list_of_numerics(self):
         """
-        SCM-035
+        SCM-034
         *Test case for validating list of numerics *
 
         **Test Scenario:**
@@ -514,7 +515,7 @@ class SchemaTest(BaseTest):
     
     def test014_validate_list_of_guids(self):
         """
-        SCM-036
+        SCM-035
         *Test case for validating list of guids *
 
         **Test Scenario:**
@@ -552,7 +553,7 @@ class SchemaTest(BaseTest):
 
     def test015_validate_list_of_dicts(self):
         """
-        SCM-037
+        SCM-036
         *Test case for validating list of dicts *
 
         **Test Scenario:**
@@ -590,48 +591,9 @@ class SchemaTest(BaseTest):
         schema_obj.dict_list.append(value)
         self.assertEqual(schema_obj.dict_list, dict_list)
 
-    @unittest.skip("we didn't have set type anymore")
-    def test016_validate_list_of_sets(self):
+    def test016_validate_list_of_hashs(self):
         """
-        SCM-038
-        *Test case for validating list of sets *
-
-        **Test Scenario:**
-
-        #. Create schema with list of sets parameter, should succeed.
-        #. Try to set parameter with non set type, should fail.
-        #. Try to set parameter with set type, should succeed.
-        """
-        self.log("Create schema with list of sets parameter, should succeed.")
-        scm = """
-        @url = test.schema
-        set_list = (Lset)
-        list_sets = [{1, 2, 3, 2}, {46, 284, 284, 259}] (Lset)
-        """
-        schema = self.schema(scm)
-        schema_obj = schema.new()
-
-        self.log("Try to set parameter with non set type, should fail.")
-        with self.assertRaises(Exception):
-            schema_obj.set_list = [self.random_string(), {1, 2, 3, 2}]
-        
-        with self.assertRaises(Exception):
-            schema_obj.set_list.append(self.random_string())
-
-        self.log("Try to set parameter with set type, should succeed.")
-        set_list = [{2, random.randint(1, 100), 2}, {random.randint(1, 100), random.randint(1, 100)}]
-        schema_obj.set_list = set_list
-        self.assertEqual(schema_obj.set_list, set_list)
-        self.assertEqual(schema_obj.list_sets, [{1, 2, 3, 2}, {46, 284, 284, 259}])
-        
-        value = {random.randint(1, 100), random.randint(1, 100)}
-        set_list.append(value)
-        schema_obj.set_list.append(value)
-        self.assertEqual(schema_obj.set_list, set_list)
-
-    def test017_validate_list_of_hashs(self):
-        """
-        SCM-039
+        SCM-037
         *Test case for validating list of hashs *
 
         **Test Scenario:**
@@ -669,9 +631,9 @@ class SchemaTest(BaseTest):
         schema_obj.hash_list.append(value)
         self.assertEqual(schema_obj.hash_list, hash_list)
 
-    def test018_validate_list_of_multilines(self):
+    def test017_validate_list_of_multilines(self):
         """
-        SCM-040
+        SCM-038
         *Test case for validating list of multilines *
 
         **Test Scenario:**
@@ -707,9 +669,9 @@ class SchemaTest(BaseTest):
         schema_obj.lines_list.append(value)
         self.assertEqual(schema_obj.lines_list, lines_list)
 
-    def test019_validate_list_of_yaml(self):
+    def test018_validate_list_of_yaml(self):
         """
-        SCM-041
+        SCM-039
         *Test case for validating list of yaml *
 
         **Test Scenario:**
@@ -749,9 +711,9 @@ class SchemaTest(BaseTest):
         self.log("schema list %s" % schema_obj.list_yaml)
         self.assertEqual(schema_obj.yaml_list, yaml_list)
 
-    def test020_validate_list_of_binary(self):
+    def test019_validate_list_of_binary(self):
         """
-        SCM-042
+        SCM-040
         *Test case for validating list of binary *
 
         **Test Scenario:**

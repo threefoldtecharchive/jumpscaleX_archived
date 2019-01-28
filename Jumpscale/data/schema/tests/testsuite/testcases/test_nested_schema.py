@@ -11,7 +11,7 @@ class NestedSchemaTest(BaseTest):
 
     def test001_nested_concatenated_schema(self):
         """
-        SCM-043
+        SCM-041
         *Test case for concatenated nesting schema *
 
         **Test Scenario:**
@@ -73,7 +73,7 @@ class NestedSchemaTest(BaseTest):
 
     def test002_nested_sperated_schema(self):
         """
-        SCM-044
+        SCM-042
         *Test case for sperated nesting schema *
 
         **Test Scenario:**
