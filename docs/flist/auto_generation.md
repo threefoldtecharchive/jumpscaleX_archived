@@ -11,3 +11,4 @@ For any builder you just need to set some attributes on the class of the builder
 - `new_files`: a dict of new files to create under /sandbox/, where the key is the location relative to /sandbox and the value is the content of the file.
 - `startup`: contents of /.startup.toml file.
 - `root_files`: a dict of new files to create under /, where the key is the location relative to / and the value is the content of the file.
+- `root_dirs`: a dict of directories or files to be copied as is under /, where the key is the location and the value is the destination

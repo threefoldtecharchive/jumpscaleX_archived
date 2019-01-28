@@ -10,9 +10,9 @@ class BuilderBaseClass(BaseClass):
         self.dirs = {}  # dict of files/dirs to copy to the sandbox/ in the flist. key is the source and value is the dest under sandbox/
         self.new_dirs = []  # list of dirs to create under sandbox/ in the flist
         self.new_files = {}  # dict of new files to create in the flist. key is the location under sandbox/ and the value is the content
-        self.absolute_dirs = {} # dict of paths to be copied as is. key is the location, and value is the dest (without sandbox)
         self.startup = ''  # content of the startup script, placed at the root of the flist
         self.root_files = {}
+        self.root_dirs = {} # dict of paths to be copied as is. key is the location, and value is the dest (without sandbox)
         self._init()
 
     @property
@@ -73,8 +73,8 @@ class BuilderBaseClass(BaseClass):
             j.builder.tools.file_ensure(file_dest)
             j.builder.tools.file_write(file_dest, content)
 
-    def copy_absolute(self, dest):
-        for src, to in self.absolute_dirs.items():
+    def copy_root_paths(self, dest):
+        for src, to in self.root_dirs.items():
             if self.tools.exists(src):
                 new_dest = self.tools.joinpaths(dest, self.tools.path_relative(to))
                 j.sal.fs.copyDirTree(src, new_dest)
@@ -94,7 +94,7 @@ class BuilderBaseClass(BaseClass):
         """
         sandbox_dir = "/tmp/builders/{}".format(self.NAME)
         self.sandbox_create(sandbox_dir)
-        self.copy_absolute(sandbox_dir)
+        self.copy_root_paths(sandbox_dir)
 
         if self.startup:
             file_dest = j.sal.fs.joinPaths(sandbox_dir, '.startup.toml')
