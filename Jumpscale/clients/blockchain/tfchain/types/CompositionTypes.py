@@ -10,11 +10,14 @@ class CoinInput(BaseDataTypeClass):
     """
     CoinIput class
     """
-    def __init__(self, parent_id=None, fulfillment=None):
+    def __init__(self, parent_id=None, fulfillment=None, parent_output=None):
         self._parent_id = Hash()
         self.parent_id = parent_id
         self._fulfillment = FulfillmentSingleSignature()
         self.fulfillment = fulfillment
+        # property that can be set if known, but which is not part of the actual CoinInput
+        self._parent_output = CoinOutput()
+        self.parent_output = parent_output
 
     @classmethod
     def from_json(cls, obj):
@@ -45,6 +48,17 @@ class CoinInput(BaseDataTypeClass):
         else:
             assert isinstance(value, FulfillmentBaseClass)
             self._fulfillment = value
+    
+    @property
+    def parent_output(self):
+        return self._parent_output
+    @parent_output.setter
+    def parent_output(self, value):
+        if not value:
+            self._parent_output = CoinOutput()
+        else:
+            assert isinstance(value, CoinOutput)
+            self._parent_output = value
 
     def json(self):
         return {
@@ -63,11 +77,15 @@ class CoinOutput(BaseDataTypeClass):
     """
     CoinOutput calss
     """
-    def __init__(self, value=None, condition=None):
+    def __init__(self, value=None, condition=None, id=None):
         self._value = Currency()
         self.value = value
         self._condition = ConditionNil()
         self.condition = condition
+        # property that can be set if known, but which is not part of the actual CoinOutput
+        self._id = Hash()
+        self.id = id
+        
 
     @classmethod
     def from_json(cls, obj):
@@ -98,6 +116,20 @@ class CoinOutput(BaseDataTypeClass):
         else:
             assert isinstance(value, ConditionBaseClass)
             self._condition = value
+
+    @property
+    def id(self):
+        return self._id
+    @id.setter
+    def id(self, value):
+        if isinstance(value, Hash):
+            self._id.value = value.value
+            return
+        if not value:
+            self._id = Hash()
+        else:
+            self._id.value = value
+
 
     def json(self):
         return {

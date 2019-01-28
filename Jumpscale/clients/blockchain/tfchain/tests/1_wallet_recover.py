@@ -1,8 +1,5 @@
 from Jumpscale import j
 
-import pytest
-
-@pytest.mark.integration
 def main(self):
     """
     to run:
