@@ -3,10 +3,10 @@ from Jumpscale import j
 
 from .HubDirectClient import HubDirectClient
 
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class HubDirectFactory(JSConfigFactory):
+class HubDirectFactory(JSConfigs):
     """
     """
     __jslocation__ = "j.clients.zhubdirect"

@@ -1,9 +1,9 @@
 from Jumpscale import j
 from .MongoEngineClient import MongoEngineClient
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class MongoEngineFactory(JSConfigFactory):
+class MongoEngineFactory(JSConfigs):
     __jslocation__ = "j.clients.mongoengine"
     _CHILDCLASS = MongoEngineClient
 

@@ -7,7 +7,7 @@ import time
 DEFAULT_BASE_URL = "https://itsyou.online/api"
 
 
-class IYOFactory(j.application.JSFactoryBaseClass):
+class IYOFactory(j.application.JSBaseConfigsClass):
     __jslocation__ = 'j.clients.itsyouonline'
     _CHILDCLASS = IYOClient
 
@@ -19,7 +19,7 @@ class IYOFactory(j.application.JSFactoryBaseClass):
     def default(self):
         """ return default itsyou.online instance"""
         if self._default is None:
-            self._default = self.get()
+            self._default = self.get(name="default")
         return self._default
 
     def test(self):

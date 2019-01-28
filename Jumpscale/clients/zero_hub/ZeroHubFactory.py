@@ -1,9 +1,9 @@
 from .ZeroHubClient import ZeroHubClient
 from Jumpscale import j
 
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class ZeroHubFactory(JSConfigFactory):
+class ZeroHubFactory(JSConfigs):
     __jslocation__ = "j.clients.zhub"
     _CHILDCLASS = ZeroHubClient

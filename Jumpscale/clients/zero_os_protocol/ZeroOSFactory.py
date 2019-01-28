@@ -3,7 +3,7 @@ from Jumpscale import j
 from .Client import Client
 
 
-class ZeroOSFactory(j.application.JSFactoryBaseClass):
+class ZeroOSFactory(j.application.JSBaseConfigsClass):
     """
     """
     _CHILDCLASS = Client
@@ -150,7 +150,18 @@ class ZeroOSFactory(j.application.JSFactoryBaseClass):
 
 
     def get_from_itsyouonline(self, name="default", iyo_instance="default",
-                              iyo_organization=None, host="localhost", port=6379, reset=False):
+                              iyo_organization=None, host="localhost", port=6379, reset=False,save=True):
+        """
+
+        :param name: name for this instance
+        :param iyo_instance: the instance name of the IYO client you will use
+        :param iyo_organization: the organization in IYO to connect
+        :param host: addr of the zos
+        :param port: por tof the zos (for the redis protocol)
+        :param reset: to refresh you'r jwt
+        :param save: if the resulting client will be stored on your bcdb
+        :return:
+        """
 
         if iyo_organization is None:
             raise RuntimeError("need to specify name of organization.")
@@ -163,6 +174,8 @@ class ZeroOSFactory(j.application.JSFactoryBaseClass):
         cl = self.get(name=name, host=host, port=port, password=jwt.jwt, ssl=True)
         print(cl)
         cl.ping()
+        if save:
+            cl.save()
         return cl
 
     def test(self):
@@ -172,7 +185,7 @@ class ZeroOSFactory(j.application.JSFactoryBaseClass):
         """
 
 
-        cl = self.get_from_itsyouonline(name="test", host="10.102.90.219", port=6379,iyo_organization="tf-production",reset=True)
+        cl = j.clients.zos.get_from_itsyouonline(name="default", host="10.102.90.219", port=6379,iyo_organization="tf-production",reset=True)
 
         j.shell()
 

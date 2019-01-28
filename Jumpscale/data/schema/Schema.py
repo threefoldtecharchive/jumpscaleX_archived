@@ -4,15 +4,12 @@ from copy import copy
 from .SchemaProperty import SchemaProperty
 from Jumpscale import j
 import sys
-sys.path.append("/sandbox/lib")
-
-
-JSBASE = j.application.JSBaseClass
+from Jumpscale import j
 
 
 class Schema(j.application.JSBaseClass):
     def __init__(self, text):
-        JSBASE.__init__(self)
+        j.application.JSBaseClass.__init__(self)
         self.properties = []
         self._systemprops = {}
         self.lists = []
@@ -165,13 +162,19 @@ class Schema(j.application.JSBaseClass):
                             self._error_raise("error (enum) on line:%s" % line_original, e=e)
                     else:
                         jumpscaletype = j.data.types.get(line_proptype)
-                        try:
-                            if line_wo_proptype == "" or line_wo_proptype is None:
-                                defvalue = jumpscaletype.get_default()
-                            else:
-                                defvalue = jumpscaletype.fromString(line_wo_proptype)
-                        except Exception as e:
-                            self._error_raise("error on line:%s" % line_original, e=e)
+
+                        if line_wo_proptype == "" or line_wo_proptype is None:
+                            defvalue = jumpscaletype.get_default()
+                        else:
+                            defvalue = jumpscaletype.fromString(line_wo_proptype)
+
+                        # try:
+                        #     if line_wo_proptype == "" or line_wo_proptype is None:
+                        #         defvalue = jumpscaletype.get_default()
+                        #     else:
+                        #         defvalue = jumpscaletype.fromString(line_wo_proptype)
+                        # except Exception as e:
+                        #     self._error_raise("error on line:%s" % line_original, e=e)
             else:
                 jumpscaletype, defvalue = self._proptype_get(line)
 

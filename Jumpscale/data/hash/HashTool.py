@@ -202,7 +202,7 @@ def blake2(s,digest_size=32):
     @type s: string
 
     @returns: blake2 hash of the input value
-    @rtype: number
+    @rtype: string
     '''
     if isinstance(s, str): # check string direct otherwise have to pass in j
         s = s.encode()

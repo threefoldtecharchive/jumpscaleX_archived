@@ -342,7 +342,7 @@ class Numeric(String):
 
         # if curtype0 not in j.clients.currencylayer.id2cur:
         #     raise RuntimeError("need to specify valid curtype, was:%s"%curtype)
-        currency = j.clients.currencylayer.get("main")
+        currency = j.clients.currencylayer
         curcode0 = currency.id2cur[curtype0]
         if not curcode0 == curcode:
             val = val / currency.cur2usd[curcode0]  # val now in usd
@@ -388,7 +388,7 @@ class Numeric(String):
                 val = int(val)
         else:
             mult = ""
-        currency = j.clients.currencylayer.get("main")
+        currency = j.clients.currencylayer
         if curtype is not currency.cur2id["usd"]:
             curcode = currency.id2cur[curtype]
         else:
@@ -414,8 +414,7 @@ class Numeric(String):
 
     def getCur(self, value):
         value = value.lower()
-        currency = j.clients.currencylayer.get("main")
-        for cur2 in list(currency.cur2usd.keys()):
+        for cur2 in list(j.clients.currencylayer.cur2usd.keys()):
                 # print(cur2)
             if value.find(cur2) != -1:
                     # print("FOUND:%s"%cur2)
@@ -517,7 +516,7 @@ class Numeric(String):
                     ttype = 3
                 else:
                     ttype = 1
-        currency = j.clients.currencylayer.get("main")
+        currency = j.clients.currencylayer
         curcat = currency.cur2id[cur2]
 
         if negative:
@@ -850,3 +849,5 @@ class Date(DateTime):
         out = j.core.text.strip(out)
         out_compare = j.core.text.strip(out_compare)
         assert out == out_compare
+
+

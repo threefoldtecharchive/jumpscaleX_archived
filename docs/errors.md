@@ -16,7 +16,7 @@ ERROR: Cannot find doc with name:docs._getting_your_feet_wet (nr docs found:0)
 - in doc: doc:_sidebar:/sandbox/code/github/threefoldtech/jumpscaleX/docs/_sidebar.md
 
 **ERROR:** problem with link:[AYS](docs/GettingYourFeetWet/AYS.md)
-ERROR: Cannot find doc with name:docs._getting_your_feet_wet._a_y_s (nr docs found:0)
+ERROR: Cannot find doc with name:docs._getting_your_feet_wet.ays (nr docs found:0)
 
 
 
@@ -52,7 +52,7 @@ ERROR: Cannot find doc with name:docs._getting_your_feet_wet._getting_your_feet_
 - in doc: doc:_sidebar:/sandbox/code/github/threefoldtech/jumpscaleX/docs/_sidebar.md
 
 **ERROR:** problem with link:[JSAtCommandLine](docs/GettingYourFeetWet/JSAtCommandLine.md)
-ERROR: Cannot find doc with name:docs._getting_your_feet_wet._j_s_at_command_line (nr docs found:0)
+ERROR: Cannot find doc with name:docs._getting_your_feet_wet.js_at_command_line (nr docs found:0)
 
 
 
@@ -64,7 +64,7 @@ ERROR: Cannot find doc with name:docs._getting_your_feet_wet._j_s_at_command_lin
 - in doc: doc:_sidebar:/sandbox/code/github/threefoldtech/jumpscaleX/docs/_sidebar.md
 
 **ERROR:** problem with link:[JShell](docs/GettingYourFeetWet/JShell.md)
-ERROR: Cannot find doc with name:docs._getting_your_feet_wet._j_shell (nr docs found:0)
+ERROR: Cannot find doc with name:docs._getting_your_feet_wet.j_shell (nr docs found:0)
 
 
 
@@ -100,7 +100,7 @@ ERROR: Cannot find doc with name:docs._getting_your_feet_wet._prefab (nr docs fo
 - in doc: doc:_sidebar:/sandbox/code/github/threefoldtech/jumpscaleX/docs/_sidebar.md
 
 **ERROR:** problem with link:[SALs](docs/GettingYourFeetWet/SALs.md)
-ERROR: Cannot find doc with name:docs._getting_your_feet_wet._s_a_ls (nr docs found:0)
+ERROR: Cannot find doc with name:docs._getting_your_feet_wet.sa_ls (nr docs found:0)
 
 
 
@@ -124,7 +124,7 @@ ERROR: Cannot find doc with name:docs._getting_your_feet_wet._tools (nr docs fou
 - in doc: doc:_sidebar:/sandbox/code/github/threefoldtech/jumpscaleX/docs/_sidebar.md
 
 **ERROR:** problem with link:[WaysToUseJS](docs/GettingYourFeetWet/WaysToUseJS.md)
-ERROR: Cannot find doc with name:docs._getting_your_feet_wet._ways_to_use_j_s (nr docs found:0)
+ERROR: Cannot find doc with name:docs._getting_your_feet_wet._ways_to_use_js (nr docs found:0)
 
 
 
@@ -160,7 +160,7 @@ ERROR: Cannot find doc with name:docs._installation._installation (nr docs found
 - in doc: doc:_sidebar:/sandbox/code/github/threefoldtech/jumpscaleX/docs/_sidebar.md
 
 **ERROR:** problem with link:[JSDevelopment](/docs/Installation/JSDevelopment.md)
-ERROR: Cannot find doc with name:docs._installation._j_s_development (nr docs found:0)
+ERROR: Cannot find doc with name:docs._installation.js_development (nr docs found:0)
 
 
 
@@ -280,7 +280,7 @@ ERROR: Cannot find doc with name:docs._introduction._why_jumpscale (nr docs foun
 - in doc: doc:_sidebar:/sandbox/code/github/threefoldtech/jumpscaleX/docs/_sidebar.md
 
 **ERROR:** problem with link:[JSLoader](/docs/JSLoader)
-ERROR: Cannot find doc with name:docs._j_s_loader (nr docs found:0)
+ERROR: Cannot find doc with name:docs.js_loader (nr docs found:0)
 
 
 
@@ -292,7 +292,7 @@ ERROR: Cannot find doc with name:docs._j_s_loader (nr docs found:0)
 - in doc: doc:_sidebar:/sandbox/code/github/threefoldtech/jumpscaleX/docs/_sidebar.md
 
 **ERROR:** problem with link:[JSLoader](/docs/JSLoader/JSLoader.md)
-ERROR: Cannot find doc with name:docs._j_s_loader._j_s_loader (nr docs found:0)
+ERROR: Cannot find doc with name:docs.js_loader.js_loader (nr docs found:0)
 
 
 
@@ -304,7 +304,7 @@ ERROR: Cannot find doc with name:docs._j_s_loader._j_s_loader (nr docs found:0)
 - in doc: doc:_sidebar:/sandbox/code/github/threefoldtech/jumpscaleX/docs/_sidebar.md
 
 **ERROR:** problem with link:[SAL](/docs/SAL)
-ERROR: Cannot find doc with name:docs._s_a_l (nr docs found:0)
+ERROR: Cannot find doc with name:docs.sal (nr docs found:0)
 
 
 
@@ -316,7 +316,7 @@ ERROR: Cannot find doc with name:docs._s_a_l (nr docs found:0)
 - in doc: doc:_sidebar:/sandbox/code/github/threefoldtech/jumpscaleX/docs/_sidebar.md
 
 **ERROR:** problem with link:[Docker](/docs/SAL/Docker.md)
-ERROR: Cannot find doc with name:docs._s_a_l._docker (nr docs found:0)
+ERROR: Cannot find doc with name:docs.sal._docker (nr docs found:0)
 
 
 
@@ -352,7 +352,7 @@ ERROR: Cannot find doc with name:docs.config._archive (nr docs found:0)
 - in doc: doc:_sidebar:/sandbox/code/github/threefoldtech/jumpscaleX/docs/_sidebar.md
 
 **ERROR:** problem with link:[Host_config_and_Dirs_config_OLD](/docs/config/_archive/Host_config_and_Dirs_config_OLD.md)
-ERROR: Cannot find doc with name:docs.config._archive._host_config_and_dirs_config_o_l_d (nr docs found:0)
+ERROR: Cannot find doc with name:docs.config._archive._host_config_and__dirs_config_old (nr docs found:0)
 
 
 
@@ -364,7 +364,7 @@ ERROR: Cannot find doc with name:docs.config._archive._host_config_and_dirs_conf
 - in doc: doc:_sidebar:/sandbox/code/github/threefoldtech/jumpscaleX/docs/_sidebar.md
 
 **ERROR:** problem with link:[how_to_add_config_OLD](/docs/config/_archive/how_to_add_config_OLD.md)
-ERROR: Cannot find doc with name:docs.config._archive.how_to_add_config_o_l_d (nr docs found:0)
+ERROR: Cannot find doc with name:docs.config._archive.how_to_add_config_old (nr docs found:0)
 
 
 
@@ -472,7 +472,7 @@ ERROR: Cannot find doc with name:docs.howto.sandbox_python_zeroos_container (nr 
 - in doc: doc:_sidebar:/sandbox/code/github/threefoldtech/jumpscaleX/docs/_sidebar.md
 
 **ERROR:** problem with link:[README](/docs/README.md)
-ERROR: Cannot find doc with name:docs._r_e_a_d_m_e (nr docs found:0)
+ERROR: Cannot find doc with name:docs.readme (nr docs found:0)
 
 
 
@@ -484,7 +484,19 @@ ERROR: Cannot find doc with name:docs._r_e_a_d_m_e (nr docs found:0)
 - in doc: doc:_sidebar:/sandbox/code/github/threefoldtech/jumpscaleX/docs/_sidebar.md
 
 **ERROR:** problem with link:[SUMMARY](/docs/SUMMARY.md)
-ERROR: Cannot find doc with name:docs._s_u_m_m_a_r_y (nr docs found:0)
+ERROR: Cannot find doc with name:docs.summary (nr docs found:0)
+
+
+
+
+```
+```
+## ERROR: readme
+
+- in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/baseclasses/readme.md
+
+**ERROR:** problem with link:[j.application.JSBaseClass](jsbase.md)
+ERROR: Cannot find doc with name:jsbase (nr docs found:0)
 
 
 
@@ -503,9 +515,20 @@ ERROR: Cannot find doc with name:install.readme (nr docs found:0)
 
 ```
 ```
-## ERROR: r_e_a_d_m_e
+## ERROR: readme
 
-- in doc: doc:r_e_a_d_m_e:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
+- in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
+
+**ERROR:** problem with link:[Jumpscale](http://www.jumpscale.com/) is an extensible and easy to use cloud automation solution, providing a huge library that supports executing a wide range of system operations. [Jumpscale](http://www.jumpscale.com/) is the evolution of Pylabs which was the basic building block for cloud automation originally developed by [Q-Layer](http://incubaid.com/successes/Q-Layer/)
+False
+
+
+
+```
+```
+## ERROR: readme
+
+- in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
 
 **ERROR:** problem with link:[Why Using Jumpscale](Introduction/WhyJumpscale.md)
 ERROR: Cannot find doc with name:introduction._why_jumpscale (nr docs found:0)
@@ -515,9 +538,9 @@ ERROR: Cannot find doc with name:introduction._why_jumpscale (nr docs found:0)
 
 ```
 ```
-## ERROR: r_e_a_d_m_e
+## ERROR: readme
 
-- in doc: doc:r_e_a_d_m_e:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
+- in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
 
 **ERROR:** problem with link:[Getting Your Feet Wet](GettingYourFeetWet/GettingYourFeetWet.md)
 ERROR: Cannot find doc with name:getting_your_feet_wet._getting_your_feet_wet (nr docs found:0)
@@ -527,20 +550,9 @@ ERROR: Cannot find doc with name:getting_your_feet_wet._getting_your_feet_wet (n
 
 ```
 ```
-## ERROR: r_e_a_d_m_e
+## ERROR: readme
 
-- in doc: doc:r_e_a_d_m_e:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
-
-**ERROR:** problem with link:[Bash tools](https://github.com/threefoldtech/jumpscale_/bash)
-link not alive:https://github.com/threefoldtech/jumpscale_/bash
-
-
-
-```
-```
-## ERROR: r_e_a_d_m_e
-
-- in doc: doc:r_e_a_d_m_e:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
+- in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
 
 **ERROR:** problem with link:[Bash tools](https://github.com/threefoldtech/jumpscale_/bash)
 False
@@ -549,20 +561,9 @@ False
 
 ```
 ```
-## ERROR: r_e_a_d_m_e
+## ERROR: readme
 
-- in doc: doc:r_e_a_d_m_e:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
-
-**ERROR:** problem with link:[Jumpscale Lib](https://github.com/threefoldtech/jumpscale_/lib)
-link not alive:https://github.com/threefoldtech/jumpscale_/lib
-
-
-
-```
-```
-## ERROR: r_e_a_d_m_e
-
-- in doc: doc:r_e_a_d_m_e:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
+- in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
 
 **ERROR:** problem with link:[Jumpscale Lib](https://github.com/threefoldtech/jumpscale_/lib)
 False
@@ -571,20 +572,9 @@ False
 
 ```
 ```
-## ERROR: r_e_a_d_m_e
+## ERROR: readme
 
-- in doc: doc:r_e_a_d_m_e:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
-
-**ERROR:** problem with link:[Jumpscale Prefab](https://github.com/threefoldtech/jumpscale_/prefab)
-link not alive:https://github.com/threefoldtech/jumpscale_/prefab
-
-
-
-```
-```
-## ERROR: r_e_a_d_m_e
-
-- in doc: doc:r_e_a_d_m_e:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
+- in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
 
 **ERROR:** problem with link:[Jumpscale Prefab](https://github.com/threefoldtech/jumpscale_/prefab)
 False
@@ -593,20 +583,9 @@ False
 
 ```
 ```
-## ERROR: r_e_a_d_m_e
+## ERROR: readme
 
-- in doc: doc:r_e_a_d_m_e:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
-
-**ERROR:** problem with link:[AtYourService](https://github.com/threefoldtech/jumpscale_/ays9)
-link not alive:https://github.com/threefoldtech/jumpscale_/ays9
-
-
-
-```
-```
-## ERROR: r_e_a_d_m_e
-
-- in doc: doc:r_e_a_d_m_e:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
+- in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
 
 **ERROR:** problem with link:[AtYourService](https://github.com/threefoldtech/jumpscale_/ays9)
 False
@@ -615,20 +594,9 @@ False
 
 ```
 ```
-## ERROR: r_e_a_d_m_e
+## ERROR: readme
 
-- in doc: doc:r_e_a_d_m_e:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
-
-**ERROR:** problem with link:[Jumpscale Portal](https://github.com/threefoldtech/jumpscale_/portal9)
-link not alive:https://github.com/threefoldtech/jumpscale_/portal9
-
-
-
-```
-```
-## ERROR: r_e_a_d_m_e
-
-- in doc: doc:r_e_a_d_m_e:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
+- in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
 
 **ERROR:** problem with link:[Jumpscale Portal](https://github.com/threefoldtech/jumpscale_/portal9)
 False

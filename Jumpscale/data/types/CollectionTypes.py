@@ -108,7 +108,9 @@ class Dictionary(String):
         if j.data.types.dict.check(s):
             return s
         else:
-            return j.data.serializers.json.loads(s)
+            s = s.replace("''", '"')
+            j.data.serializers.json.loads(s)
+            return s
 
     def clean(self, v=""):
         """
@@ -119,9 +121,9 @@ class Dictionary(String):
         :return:
         """
         if j.data.types.bytes.check(v):
-            v = j.data.serializers.msgpack.loads(v)
+            v=j.data.serializers.msgpack.loads(v)
         elif j.data.types.string.check(v):
-            v = j.data.serializers.json.loads(v)
+            v=j.data.serializers.json.loads(v)
         if not self.check(v):
             raise RuntimeError("dict for clean needs to be bytes, string or dict")
         return v

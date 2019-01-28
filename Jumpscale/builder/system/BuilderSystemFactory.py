@@ -21,6 +21,8 @@ class BuilderSystemPackage(j.application.JSBaseClass):
         self._ssh = None
         self._user = None
 
+        j.clients.redis.core_get()
+
     @property
     def package(self):
         if self._package is None:

@@ -24,5 +24,7 @@ if len(args) == 1:
         toexec = toexec.strip("'\" ").strip("'\" ")
         exec(toexec)
 else:
-    j.shell(loc=False)
+    # from IPython.terminal.embed import embed
+    # embed()
+    j.shelli(loc=False,stack_depth=2)
 

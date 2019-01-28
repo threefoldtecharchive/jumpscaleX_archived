@@ -1,9 +1,9 @@
 from Jumpscale import j
 from .GraphiteClient import GraphiteClient
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class GraphiteFactory(JSConfigFactory):
+class GraphiteFactory(JSConfigs):
 
     __jslocation__ = "j.clients.graphite"
     _CHILDCLASS = GraphiteClient

@@ -1,9 +1,9 @@
 from Jumpscale import j
 from .karkenClient import KrakenClient
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class KrakenFactory(JSConfigFactory):
+class KrakenFactory(JSConfigs):
     __jslocation__ = 'j.clients.kraken'
     _CHILDCLASS = KrakenClient
 

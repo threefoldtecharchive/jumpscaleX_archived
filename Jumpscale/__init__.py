@@ -1,6 +1,7 @@
 import os
 import socket
 import pytoml
+import inspect
 import sys
 from importlib import util
 os.environ["LC_ALL"]='en_US.UTF-8'
@@ -38,6 +39,12 @@ def profileStop(pr):
 
 # pr=profileStart()
 
+spec = util.spec_from_file_location("IT", "/%s/core/InstallTools.py"%os.path.dirname(__file__))
+
+from .core.InstallTools import MyEnv
+from .core.InstallTools import UbuntuInstall
+from .core.InstallTools import JumpscaleInstaller
+from .core.InstallTools import Tools
 
 class Core():
     def __init__(self,j):
@@ -55,7 +62,7 @@ class Core():
                 from redis import StrictRedis
                 # print("CORE_REDIS")
                 if self.isSandbox:
-                    self._db = StrictRedis(unix_socket_path='/sandbox/var/redis.sock', db=0)
+                    self._db = StrictRedis(host='localhost', port=6379, unix_socket_path='/sandbox/var/redis.sock', db=0)
                 else:
                     self._db = StrictRedis(host='localhost', port=6379, db=0)
                 self._db.get("jumpscale.config")
@@ -87,14 +94,66 @@ class Core():
                 self._isSandbox = False
         return self._isSandbox
 
+from .core.KosmosShell import *
 
 class Jumpscale():
 
     def __init__(self):
         self._shell = None
         self.exceptions = None
+        # Tools.j=self
 
-    def shell(self,name="",loc=True):
+
+    def _locals_get(self,locals_):
+        def add(locals_, name,obj):
+            if name not in locals_:
+                locals_[name]=obj
+            return locals_
+        try:
+            locals_ = add(locals_,"ssh",j.clients.ssh)
+        except:
+            pass
+        try:
+            locals_ = add(locals_,"iyo",j.clients.itsyouonline)
+        except:
+            pass
+
+        # locals_ = add(locals_,"zos",j.kosmos.zos)
+
+        return locals_
+
+
+    def shell(self,loc=True,exit=False,locals_=None,globals_=None):
+
+        import inspect
+
+        KosmosShellConfig.j = self
+        curframe = inspect.currentframe()
+        calframe = inspect.getouterframes(curframe, 2)
+        f = calframe[1]
+        if loc:
+            print("\n*** file: %s"%f.filename)
+            print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
+        from ptpython.repl import embed
+        # Tools.clear()
+        history_filename="%s/.jsx_history"%MyEnv.config["DIR_HOME"]
+        if not Tools.exists(history_filename):
+            Tools.file_write(history_filename,"")
+        # locals_= f.f_locals
+        # if curframe.f_back.f_back is not None:
+        #     locals_=curframe.f_back.f_back.f_locals
+        # else:
+        if not locals_:
+            locals_=curframe.f_back.f_locals
+        locals_=self._locals_get(locals_)
+        if not globals_:
+            globals_ = curframe.f_back.f_globals
+        if exit:
+            sys.exit(embed(globals_, locals_,configure=ptconfig,history_filename=history_filename))
+        else:
+            embed(globals_, locals_,configure=ptconfig,history_filename=history_filename)
+
+    def shelli(self,loc=True,name=None,stack_depth=2):
         if self._shell == None:
             from IPython.terminal.embed import InteractiveShellEmbed
             if name is not "":
@@ -107,12 +166,13 @@ class Jumpscale():
             f = calframe[1]
             print("\n*** file: %s"%f.filename)
             print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
-        return self._shell(stack_depth=2)
+        # self.clear()
+        return self._shell(stack_depth=stack_depth)
 
     def debug(self):
         import urwid
         urwid.set_encoding("utf8")
-        from pudb import set_trace; set_trace()
+        from ptdb import set_trace; set_trace()
 
 
 
@@ -121,20 +181,13 @@ j = Jumpscale()
 j.core = Core(j)
 j.core._groups = {}
 
-
 rootdir = os.path.dirname(os.path.abspath(__file__))
 # print("- setup root directory: %s" % rootdir)
 
-spec = util.spec_from_file_location("IT", "/%s/core/InstallTools.py"%os.path.dirname(__file__))
-
-
-from .core.InstallTools import MyEnv
-from .core.InstallTools import UbuntuInstall
-from .core.InstallTools import JumpscaleInstaller
-from .core.InstallTools import Tools
 
 
 j.core.myenv = MyEnv
+
 j.core.myenv._init()
 
 
@@ -213,8 +266,4 @@ if generated  and len(j.core.application.errors_init)>0:
 # time.sleep(1000)
 
 
-
-ssh = j.clients.ssh.instances
-iyo = j.clients.itsyouonline.instances
-# zos = j.kosmos.zos.instances
 

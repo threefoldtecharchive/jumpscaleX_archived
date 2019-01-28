@@ -3226,7 +3226,7 @@ hljs.registerLanguage('autoit', function(hljs) {
         'ArrayReverse ArraySearch ArrayShuffle ArraySort ArraySwap ' +
         'ArrayToClip ArrayToString ArrayTranspose ArrayTrim ' +
         'ArrayUnique Assert ChooseColor ChooseFont ' +
-        'ClipBoard_ChangeChain ClipBoard_Close ClipBoard_CountFormats ' +
+        'ClipBoard_ChangeChain ClipBoard_Close ClipBoardcountFormats ' +
         'ClipBoard_Empty ClipBoard_EnumFormats ClipBoard_FormatStr ' +
         'ClipBoard_GetData ClipBoard_GetDataEx ClipBoard_GetFormatName ' +
         'ClipBoard_GetOpenWindow ClipBoard_GetOwner ' +
@@ -3267,7 +3267,7 @@ hljs.registerLanguage('autoit', function(hljs) {
         'DebugBugReportEnv DebugCOMError DebugOut DebugReport ' +
         'DebugReportEx DebugReportVar DebugSetup Degree ' +
         'EventLog__Backup EventLog__Clear EventLog__Close ' +
-        'EventLog__Count EventLog__DeregisterSource EventLog__Full ' +
+        'EventLog_count EventLog__DeregisterSource EventLog__Full ' +
         'EventLog__Notify EventLog__Oldest EventLog__Open ' +
         'EventLog__OpenBackup EventLog__Read EventLog__RegisterSource ' +
         'EventLog__Report Excel_BookAttach Excel_BookClose ' +

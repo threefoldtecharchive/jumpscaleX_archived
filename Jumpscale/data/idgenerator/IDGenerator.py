@@ -72,6 +72,12 @@ class IDGenerator(j.application.JSBaseClass):
             out += r[p]
         return out
 
+    def generateXByteID(self, x):
+        out = bytearray()
+        for i in range(0, x):
+            out.append(self.generateRandomInt(0, 255))
+        return out
+
     def generatePasswd(self, x, al=string.printable):
         l = len(al)
         out = ""

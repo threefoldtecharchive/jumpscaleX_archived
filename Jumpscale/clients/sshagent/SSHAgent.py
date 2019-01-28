@@ -4,7 +4,7 @@ from Jumpscale.core.InstallTools import Tools
 import os
 
 
-class SSHAgent(j.application.JSBaseConfigClass):
+class SSHAgent(j.application.JSBaseClass):
 
     __jslocation__ = "j.clients.sshagent"
 

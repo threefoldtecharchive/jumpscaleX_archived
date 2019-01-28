@@ -271,7 +271,7 @@ class Profile(j.application.JSBaseClass):
             "Cannot find C.UTF-8, cannot fix locale's")
 
 
-class BashFactory(j.application.JSFactoryBaseClass):
+class BashFactory(j.application.JSBaseClass):
 
     __jslocation__ = "j.tools.bash"
 

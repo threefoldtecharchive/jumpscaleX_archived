@@ -6,7 +6,7 @@ from .api_service import ApiService
 from .http_client import HTTPClient
 
 JSConfigClient = j.application.JSBaseConfigClass
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
 class Client(JSConfigClient):
@@ -22,7 +22,7 @@ class Client(JSConfigClient):
         self.close = http_client.close
 
 
-class GridCapacityFactory(JSConfigFactory):
+class GridCapacityFactory(JSConfigs):
     __jslocation__ = "j.clients.threefold_directory"
     _CHILDCLASS = Client
 

@@ -36,7 +36,6 @@ class BuilderOpenResty(j.builder.system._BaseClass):
     def _build_prepare(self):
         j.builder.system.package.mdupdate()
         j.builder.tools.package_install('build-essential libpcre3-dev libssl-dev zlib1g-dev')
-
         j.builder.tools.dir_remove('{DIR_TEMP}/build/openresty')
         j.core.tools.dir_ensure('{DIR_TEMP}/build/openresty')
         url = 'https://openresty.org/download/openresty-1.13.6.2.tar.gz'
@@ -45,14 +44,39 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         j.builder.tools.file_download(url, to=dest, overwrite=False, retry=3,
                                       expand=True, minsizekb=1000, removeTopDir=True, deletedest=True)
 
+    def reset(self):
+        """
+        js_shell 'j.builder.web.openresty.reset()'
+        :return:
+        """
+        self._done_reset()
+
+        C = """
+        cd /sandbox        
+        rm -rf {DIR_VAR}/build/openresty
+        rm -f /sandbox/bin/lua*
+        rm -f /sandbox/bin/moon*
+        rm -f /sandbox/bin/openresty*
+        rm -f /sandbox/bin/resty*
+        rm -f /sandbox/bin/_moon*
+        rm -f /sandbox/bin/_lapis*
+        rm -f /sandbox/bin/lapis*
+        rm -rf /sandbox/openresty/
+
+        """
+        self.tools.run(C)
+
+
     def build(self, reset=False):
         """
         js_shell 'j.builder.web.openresty.build()'
-        :param install:
         :return:
         """
-        if self._done_check("build") and not reset:
+        if self._done_check("build") and not reset and j.sal.fs.exists("/sandbox/openresty"):
             return
+
+        if reset:
+            self.reset()
 
         j.tools.bash.local.locale_check()
 
@@ -80,9 +104,8 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             ln -s /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
 
             """
-            C = j.builder.tools.replace(C)
-            C = j.core.tools.text_replace(C)
-            j.sal.process.execute(C)
+            self.tools.run(C)
+
 
         else:
             #build with system openssl, no need to include custom build
@@ -115,21 +138,28 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             ln -s /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
 
             """
-            C = j.builder.tools.replace(C)
-            C = j.core.tools.text_replace(C)
-            j.sal.process.execute(C)
-
-
-        self.copy2sandbox_github()
+            self.tools.run(C)
 
         self._done_set("build")
 
 
-    def copy2sandbox_github(self):
+    def install(self,reset=False):
         """
-        js_shell 'j.builder.web.openresty.copy2sandbox_github()'
+        will build & install in sandbox
+        js_shell 'j.builder.web.openresty.install()'
         :return:
         """
+        self.build(reset=reset)
+        j.shell()
+
+
+    def copy_to_github(self,reset=False):
+        """
+        js_shell 'j.builder.web.openresty.copy_to_github(reset=True)'
+        js_shell 'j.builder.web.openresty.copy_to_github()'
+        :return:
+        """
+        self.build(reset=reset)
 
         if j.core.platformtype.myplatform.isUbuntu:
             CODE_SB_BIN=j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_ubuntu.git")
@@ -164,8 +194,6 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         cp {DIR_BIN}/openresty {CODE_SB_BIN}/base/bin/
         rm -f {CODE_SB_BASE}/base/bin/openresty
 
-
-
         """
         args={}
         args["CODE_SB_BIN"]=CODE_SB_BIN
@@ -173,7 +201,4 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         args["SRCBINDIR"]=j.core.tools.text_replace("{DIR_BASE}/openresty/bin")
         args["BINDIR"]=j.core.tools.text_replace("{DIR_BASE}/bin")
 
-        C=j.core.tools.text_replace(C, args=args)
-
-        j.sal.process.execute(C)
-        # self.cleanup()
+        self.tools.run(C,args=args)

@@ -2,10 +2,10 @@ from Jumpscale import j
 
 from .CoreDnsClient import CoreDnsClient
 
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class CoreDnsFactory(JSConfigFactory):
+class CoreDnsFactory(JSConfigs):
     __jslocation__ = "j.sal.coredns"
     _CHILDCLASS = CoreDnsClient
 

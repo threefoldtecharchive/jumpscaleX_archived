@@ -129,6 +129,11 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         print("Connection ok")
 
     def portforward_kill(self, localport):
+        """
+        kill the forward
+        :param localport:
+        :return:
+        """
         print("kill portforward %s" % localport)
         pm = j.builder.system.processmanager.get()
         pm.processmanager.stop('ssh_%s' % localport)

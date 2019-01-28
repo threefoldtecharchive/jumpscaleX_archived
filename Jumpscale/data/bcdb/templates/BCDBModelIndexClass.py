@@ -50,6 +50,7 @@ class {{BASENAME}}:
     def index_destroy(self):
         self.index.drop_table()
         self.index.create_table()
+        self._index_keys_destroy()
 
     {% endif %}
 
@@ -61,7 +62,7 @@ class {{BASENAME}}:
         if val not in ["",None]:
             val=str(val)
             # self._logger.debug("key:{{property_name}}:%s:%s"%(val,obj.id))
-            self._set_key("{{property_name}}",val,obj.id)
+            self._index_key_set("{{property_name}}",val,obj.id)
         {%- endfor %}
 
     def index_keys_delete(self,obj):
@@ -70,7 +71,7 @@ class {{BASENAME}}:
         if val not in ["",None]:
             val=str(val)
             self._logger.debug("delete key:{{property_name}}:%s:%s"%(val,obj.id))
-            self._delete_key("{{property_name}}",val,obj.id)
+            self._index_key_delete("{{property_name}}",val,obj.id)
         {%- endfor %}
 
 

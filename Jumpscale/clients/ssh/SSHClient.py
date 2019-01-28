@@ -89,7 +89,7 @@ class SSHClient(SSHClientBase):
     #     cfg['allow_agent'] = True
     #     cfg['banner_timeout'] = 5
     #     self.cfg = cfg
-    #     self.forward_agent = True
+    #     self._forward_agent = True
     #     self._client = client
     #     self._client.connect(**cfg)
 

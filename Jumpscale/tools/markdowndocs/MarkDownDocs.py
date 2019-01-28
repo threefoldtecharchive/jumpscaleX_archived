@@ -16,6 +16,9 @@ class MarkDownDocs(j.application.JSBaseClass):
     def __init__(self):
         self.__jslocation__ = "j.tools.markdowndocs"
         JSBASE.__init__(self)
+
+        j.clients.redis.core_get()
+
         self.__imports__ = "toml"
         self._macroPathsDone = []
         self._initOK = False

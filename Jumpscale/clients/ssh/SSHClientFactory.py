@@ -2,7 +2,7 @@
 from Jumpscale import j
 from .SSHClient import SSHClient
 from .SSHClientParamiko import SSHClientParamiko
-from .SSHClientBase import  SSHClientBase
+from .SSHClientBase import SSHClientBase
 
 class SSHClientFactory(j.application.JSFactoryBaseClass):
 

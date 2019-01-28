@@ -7,10 +7,9 @@ from .RedisQueue import RedisQueue
 from .Redis import Redis
 from Jumpscale import j
 
-JSConfigBaseFactory = j.application.JSFactoryBaseClass
 
 
-class RedisFactory(JSConfigBaseFactory):
+class RedisFactory(j.application.JSBaseClass):
 
     """
     """
@@ -51,7 +50,9 @@ class RedisFactory(JSConfigBaseFactory):
             ping=True,
             die=True,
             **args):
-        '''get an instance of redis client, store it in cache so we could easily retrieve it later
+        """
+
+        get an instance of redis client, store it in cache so we could easily retrieve it later
 
         :param ipaddr: used to form the key when no unixsocket, defaults to "localhost"
         :type ipaddr: str, optional
@@ -77,20 +78,21 @@ class RedisFactory(JSConfigBaseFactory):
 
         other arguments to redis: ssl_cert_reqs=None, ssl_ca_certs=None
 
-        :raises RuntimeError: Redis didnt reply on given ipaddr and port 
-        :return: redis
-        :rtype: [type]
-        '''
-        if unixsocket is None:
+        set_patch is needed when using the client for gedis
+
+        """
+
+        if ipaddr and port:
             key = "%s_%s" % (ipaddr, port)
         else:
+            assert unixsocket is not None
             key = unixsocket
 
         if key not in self._redis or not fromcache:
-            if unixsocket is None:
+            if ipaddr and port:
                 self._logger.debug("REDIS:%s:%s" % (ipaddr, port))
                 self._redis[key] = Redis(ipaddr, port, password=password, ssl=ssl, ssl_certfile=ssl_certfile,
-                                         ssl_keyfile=ssl_keyfile,
+                                         ssl_keyfile=ssl_keyfile,unix_socket_path=unixsocket,
                                          # socket_timeout=timeout,
                                          **args)
             else:
@@ -166,35 +168,48 @@ class RedisFactory(JSConfigBaseFactory):
         else:
             return '%s/redis.sock' % j.dirs.TMPDIR
 
-    def core_get(self, reset=False):
-        '''
+
+    def core_get(self, reset=False, tcp=True):
+        """
+
         js_shell 'j.clients.redis.core_get(reset=False)'
 
         will try to create redis connection to {DIR_TEMP}/redis.sock or /sandbox/var/redis.sock  if sandbox
         if that doesn't work then will look for std redis port
         if that does not work then will return None
 
+
+        :param tcp, if True then will also start tcp port on localhost on 6379
+
+
         :param reset: stop redis, defaults to False
         :type reset: bool, optional
         :raises RuntimeError: redis couldn't be started
         :return: redis instance
         :rtype: Redis
-        '''
+        """
 
         if reset:
             self.core_stop()
 
-        if not self.core_running():
-            self._core_start()
+        if not self.core_running(tcp=tcp):
+            self._core_start(tcp=tcp)
 
         nr = 0
         while True:
             self._logger.info("try to connect to redis of unixsocket:%s or tcp port 6379" % self.unix_socket_path)
             if self.core_running():
-                return self.get(ipaddr="", port=0, unixsocket=self.unix_socket_path)
+                if tcp:
+                    j.core._db = self.get(ipaddr="localhost", port=6379, unixsocket=self.unix_socket_path)
+                    break
+                else:
+                    j.core._db = self.get(ipaddr=None, port=None, unixsocket=self.unix_socket_path)
+                    break
             if nr > 200:
                 raise RuntimeError("could not start redis")
             time.sleep(0.05)
+
+        return j.core._db
 
     def core_stop(self):
         '''
@@ -214,13 +229,20 @@ class RedisFactory(JSConfigBaseFactory):
                 raise RuntimeError("could not stop redis")
             time.sleep(0.05)
 
-    def core_running(self):
-        '''Get status of redis whether it is currently running or not 
+
+    def core_running(self,tcp=True):
+
+        '''
+        Get status of redis whether it is currently running or not
 
         :raises e: did not answer
         :return: True if redis is running, False if redis is not running
         :rtype: bool
         '''
+
+        if tcp and j.sal.nettools.tcpPortConnectionTest("localhost", 6379):
+            r = self.get(ipaddr="localhost", port=6379)
+            return r.ping()
 
         if j.core.isSandbox:
             if not j.sal.fs.exists(self.unix_socket_path):
@@ -238,8 +260,10 @@ class RedisFactory(JSConfigBaseFactory):
                 return r.ping()
         return False
 
-    def _core_start(self, timeout=20, reset=False):
-        '''
+
+    def _core_start(self, tcp=True, timeout=20, reset=False):
+
+        """
         js_shell "j.clients.redis.core_get(reset=True)"
 
         installs and starts a redis instance in separate ProcessLookupError
@@ -257,10 +281,10 @@ class RedisFactory(JSConfigBaseFactory):
         :raises j.exceptions.Timeout: Couldn't start redis server
         :return: redis instance
         :rtype: Redis
-        '''
+        """
 
         if reset == False:
-            if self.core_running():
+            if self.core_running(tcp=tcp):
                 return self.core_get()
 
         if not j.core.isSandbox:
@@ -290,17 +314,7 @@ class RedisFactory(JSConfigBaseFactory):
 
         if reset:
             self.core_stop()
-        #
-        # if j.core.isSandbox:
-        #     cmd_="redis-server /sandbox/cfg/redis.conf"
-        #     stopcmd = "redis-cli -s /sandbox/cfg/redis.conf shutdown;rm -f /sandbox/var/redis.sock"
-        #     cmd = j.tools.tmux.cmd_get(name="redis",pane="p12",cmd=cmd_,
-        #                                stopcmd=stopcmd,
-        #                                process_strings=["redis-server"],
-        #                                window=tmux_window)
-        #     cmd.start(checkrunning=False)
-        #
-        # else:
+
         if "TMPDIR" in os.environ:
             tmpdir = os.environ["TMPDIR"]
         else:
@@ -313,7 +327,6 @@ class RedisFactory(JSConfigBaseFactory):
         limit_timeout = time.time() + timeout
         while time.time() < limit_timeout:
             if self.core_running():
-                # if tcpPortConnectionTest("localhost", 6379):
                 break
             time.sleep(0.1)
         else:

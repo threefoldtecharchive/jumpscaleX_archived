@@ -242,7 +242,7 @@ class Connection(JSBASE):
         return resp
 
 
-class HttpClient(j.application.JSFactoryBaseClass):
+class HttpClient(j.application.JSBaseClass):
     __jslocation__ = "j.clients.http"
 
     def getConnection(self):
@@ -265,7 +265,7 @@ class HttpClient(j.application.JSFactoryBaseClass):
         c = self.getConnection()
         return c.download(url, dest)
 
-    def get(self, url, dest):
+    def get(self, url):
         c = self.getConnection()
         return c.get(url)
 
