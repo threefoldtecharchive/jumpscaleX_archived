@@ -6,6 +6,9 @@ class BuilderCaddy(j.builder.system._BaseClass):
 
     def _init(self):
         self.go_runtme = j.builder.runtimes.golang
+        self.bins = [
+            self.tools.joinpaths(j.core.dirs.BINDIR, 'caddy')
+        ]
 
     def reset(self):
         self.stop()
