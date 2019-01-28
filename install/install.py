@@ -174,7 +174,7 @@ elif mychoice in [3]:
 
     mychoice2 = int(IT.Tools.ask_choices(T,[4,5]))
 
-    sshexec('curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_kosmos/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py %s'%mychoice2)
+    sshexec('curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py %s'%mychoice2)
 
     if mychoice2 == 4:
         if IT.Tools.ask_yes_no("Do you want to install lua/nginx/openresty & wiki environment?"):
