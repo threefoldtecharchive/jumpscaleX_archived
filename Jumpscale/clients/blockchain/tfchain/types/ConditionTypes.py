@@ -86,6 +86,7 @@ class ConditionFactory(j.application.JSBaseClass):
             assert cn.json() == {"type": 0}
             test_sia_encoded(cn, '000000000000000000')
             test_rivine_encoded(cn, '0000')
+            assert str(cn.unlockhash) == '000000000000000000000000000000000000000000000000000000000000000000000000000000'
 
         # UnlockHash conditions are supported
         uh_json = {"type":1,"data":{"unlockhash":"000000000000000000000000000000000000000000000000000000000000000000000000000000"}}
@@ -93,6 +94,7 @@ class ConditionFactory(j.application.JSBaseClass):
         assert cuh.json() == uh_json
         test_sia_encoded(cuh, '012100000000000000000000000000000000000000000000000000000000000000000000000000000000')
         test_rivine_encoded(cuh, '0142000000000000000000000000000000000000000000000000000000000000000000')
+        assert str(cuh.unlockhash) == '000000000000000000000000000000000000000000000000000000000000000000000000000000'
 
         # AtomicSwap conditions are supported
         as_json = {"type":2,"data":{"sender":"01e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f70b1ccc65e2105","receiver":"01a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc353bdcf54be7d8","hashedsecret":"abc543defabc543defabc543defabc543defabc543defabc543defabc543defa","timelock":1522068743}}
@@ -100,6 +102,7 @@ class ConditionFactory(j.application.JSBaseClass):
         assert cas.json() == as_json
         test_sia_encoded(cas, '026a0000000000000001e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35abc543defabc543defabc543defabc543defabc543defabc543defabc543defa07edb85a00000000')
         test_rivine_encoded(cas, '02d401e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35abc543defabc543defabc543defabc543defabc543defabc543defabc543defa07edb85a00000000')
+        assert str(cas.unlockhash) == '026e18a53ec6e571985ea7ed404a5d51cf03a72240065952034383100738627dbf949046789e30'
 
         # MultiSig conditions are supported
         ms_json = {"type":4,"data":{"unlockhashes":["01e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f70b1ccc65e2105","01a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc353bdcf54be7d8"],"minimumsignaturecount":2}}
@@ -107,6 +110,7 @@ class ConditionFactory(j.application.JSBaseClass):
         assert cms.json() == ms_json
         test_sia_encoded(cms, '0452000000000000000200000000000000020000000000000001e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35')
         test_rivine_encoded(cms, '049602000000000000000401e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35')
+        assert str(cms.unlockhash) == '0313a5abd192d1bacdd1eb518fc86987d3c3d1cfe3c5bed68ec4a86b93b2f05a89f67b89b07d71'
 
         # LockTime conditions are supported:
         # - wrapping a nil condition
@@ -115,18 +119,21 @@ class ConditionFactory(j.application.JSBaseClass):
         assert clt_n.json() == lt_n_json
         test_sia_encoded(clt_n, '0309000000000000000065cd1d0000000000')
         test_rivine_encoded(clt_n, '03120065cd1d0000000000')
+        assert str(clt_n.unlockhash) == '000000000000000000000000000000000000000000000000000000000000000000000000000000'
         # - wrapping an unlock hash condition
         lt_uh_json = {"type":3,"data":{"locktime":500000000,"condition":uh_json}}
         clt_uh = self.from_json(lt_uh_json)
         assert clt_uh.json() == lt_uh_json
         test_sia_encoded(clt_uh, '032a000000000000000065cd1d0000000001000000000000000000000000000000000000000000000000000000000000000000')
         test_rivine_encoded(clt_uh, '03540065cd1d0000000001000000000000000000000000000000000000000000000000000000000000000000')
+        assert str(clt_uh.unlockhash) == '000000000000000000000000000000000000000000000000000000000000000000000000000000'
         # - wrapping a multi-sig condition
         lt_ms_json = {"type":3,"data":{"locktime":500000000,"condition":ms_json}}
         clt_ms = self.from_json(lt_ms_json)
         assert clt_ms.json() == lt_ms_json
         test_sia_encoded(clt_ms, '035b000000000000000065cd1d00000000040200000000000000020000000000000001e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35')
         test_rivine_encoded(clt_ms, '03a80065cd1d000000000402000000000000000401e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35')
+        assert str(clt_ms.unlockhash) == '0313a5abd192d1bacdd1eb518fc86987d3c3d1cfe3c5bed68ec4a86b93b2f05a89f67b89b07d71'
 
 
 from abc import abstractmethod
@@ -144,6 +151,14 @@ class ConditionBaseClass(BaseDataTypeClass):
     @property
     @abstractmethod
     def type(self):
+        pass
+    
+    @property
+    @abstractmethod
+    def unlockhash(self):
+        """
+        The unlock hash for this condition.
+        """
         pass
 
     @abstractmethod
@@ -186,28 +201,6 @@ class ConditionBaseClass(BaseDataTypeClass):
         data_enc = j.data.rivine.encoder_rivine_get()
         self.rivine_binary_encode_data(data_enc)
         encoder.add_slice(data_enc.data)
-
-
-class ConditionNil(ConditionBaseClass):
-    """
-    ConditionNil class
-    """
-
-    @property
-    def type(self):
-        return _CONDITION_TYPE_NIL
-
-    def from_json_data_object(self, data):
-        assert data in (None, {})
-
-    def json_data_object(self):
-        return None
-    
-    def sia_binary_encode_data(self, encoder):
-        pass # nothing to do
-
-    def rivine_binary_encode_data(self, encoder):
-        pass # nothing to do
 
 
 from enum import IntEnum
@@ -316,6 +309,32 @@ class UnlockHash(BaseDataTypeClass):
         encoder.add(self._hash)
 
 
+class ConditionNil(ConditionBaseClass):
+    """
+    ConditionNil class
+    """
+
+    @property
+    def type(self):
+        return _CONDITION_TYPE_NIL
+
+    @property
+    def unlockhash(self):
+        return UnlockHash(type=UnlockHashType.NIL)
+
+    def from_json_data_object(self, data):
+        assert data in (None, {})
+
+    def json_data_object(self):
+        return None
+    
+    def sia_binary_encode_data(self, encoder):
+        pass # nothing to do
+
+    def rivine_binary_encode_data(self, encoder):
+        pass # nothing to do
+
+
 class ConditionUnlockHash(ConditionBaseClass):
     """
     ConditionUnlockHash class
@@ -372,6 +391,17 @@ class ConditionAtomicSwap(ConditionBaseClass):
     @property
     def type(self):
         return _CONDITION_TYPE_ATOMIC_SWAP
+
+    @property
+    def unlockhash(self):
+        e = j.data.rivine.encoder_rivine_get()
+        self.sia_binary_encode_data(e)
+        # need to encode again to add the length
+        data = e.data
+        e = j.data.rivine.encoder_sia_get()
+        e.add_slice(data)
+        hash = bytearray.fromhex(j.data.hash.blake2_string(e.data))
+        return UnlockHash(type=UnlockHashType.ATOMIC_SWAP, hash=hash)
 
     @property
     def sender(self):
@@ -462,6 +492,10 @@ class ConditionLockTime(ConditionBaseClass):
         return _CONDITION_TYPE_LOCKTIME
 
     @property
+    def unlockhash(self):
+        return self._condition.unlockhash
+
+    @property
     def condition(self):
         return self._condition
     @condition.setter
@@ -521,6 +555,16 @@ class ConditionMultiSignature(ConditionBaseClass):
     @property
     def type(self):
         return _CONDITION_TYPE_MULTI_SIG
+
+    @property
+    def unlockhash(self):
+        uhs = sorted(self.unlockhashes, key=lambda uh: str(uh))
+        tree = j.clients.tfchain.types.merkle_tree_new()
+        tree.push(j.data.rivine.sia_encode(len(uhs)))
+        for uh in uhs:
+            tree.push(j.data.rivine.sia_encode(uh))
+        tree.push(j.data.rivine.sia_encode(self.required_signatures))
+        return UnlockHash(type=UnlockHashType.MULTI_SIG, hash=tree.root())
 
     @property
     def unlockhashes(self):
