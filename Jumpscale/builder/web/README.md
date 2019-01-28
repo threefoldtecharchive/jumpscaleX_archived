@@ -10,7 +10,7 @@ A container should be created with the following environment variables:
 
 * node_addr: zero-os node address
 * filemanager_port
-* iyo_client_id: your [itsyou.online](https://itsyou.online) client id
+* iyo_client_id: your [itsyou.online](https://itsyou.online) client id ,you can find documentation for this [here](https://github.com/threefoldtech/jumpscaleX/blob/caddy_builder/Jumpscale/builder/web/IYO_id%26secret.md) 
 * iyo_client_secret: your [itsyou.online](https://itsyou.online) client secret
 
 for example using zero-os [python client](https://github.com/threefoldtech/0-core/blob/development/docs/interacting/python.md):
