@@ -395,6 +395,8 @@ class Hash(List):
         else:
             return "%s = %s" % (key, self.python_code_get(value))
 
+    def capnp_schema_get(self, name, nr):
+        return "%s @%s :Data;" % (name, nr)
 
 # TODO: why do we have a set, from our perspective a set & list should be same for novice users
 

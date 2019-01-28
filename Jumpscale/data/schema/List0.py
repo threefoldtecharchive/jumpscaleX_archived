@@ -133,7 +133,7 @@ class List0(MutableSequence):
     def __repr__(self):
         out = ""
         for item in self.pylist(subobj_format="D"):
-            out += "- %s\n" % item
+            out += "- %s\n" % str(item)
         if out.strip() == "":
             return "[]"
         return out

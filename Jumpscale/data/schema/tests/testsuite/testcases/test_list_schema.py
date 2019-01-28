@@ -527,7 +527,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         guid_list = (Lguid)
-        list_guids = [bebe8b34-b12e-4fda-b00c-99979452b7bd, 84b022bd-2b00-4b62-8539-4ec07887bbe4] (Lguid)
+        list_guids = ['bebe8b34-b12e-4fda-b00c-99979452b7bd', '84b022bd-2b00-4b62-8539-4ec07887bbe4'] (Lguid)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -568,6 +568,7 @@ class SchemaTest(BaseTest):
         list_dicts = [{'number1':10, 'number2':100}, {'number1':10, "number2": 12}] (Ldict)
         """
         schema = self.schema(scm)
+        time.sleep(1)
         schema_obj = schema.new()
 
         self.log("Try to set parameter with non dict type, should fail.")
@@ -580,6 +581,7 @@ class SchemaTest(BaseTest):
         self.log("Try to set parameter with dict type, should succeed.")
         dict_list = [{'number1':10, 'number2':100}, {'number1':10, "number2": 12}]
         schema_obj.dict_list = dict_list
+        self.log("schema list %s" % schema_obj.list_dicts)
         self.assertEqual(schema_obj.dict_list, dict_list)
         self.assertEqual(schema_obj.list_dicts, dict_list)
 
@@ -645,6 +647,7 @@ class SchemaTest(BaseTest):
         list_hashs = ["46:682", "10:861"] (Lh)
         """
         schema = self.schema(scm)
+        time.sleep(1)
         schema_obj = schema.new()
 
         self.log("Try to set parameter with non hashs type, should fail.")
@@ -658,6 +661,7 @@ class SchemaTest(BaseTest):
         hash_list = [(random.randint(1, 100), random.randint(1, 100)), (random.randint(1, 100), random.randint(1, 100))]
         schema_obj.hash_list = hash_list
         self.assertEqual(schema_obj.hash_list, hash_list)
+        self.log("schema list %s" % schema_obj.list_hashs)
         self.assertEqual(schema_obj.list_hashs, [(46, 682), (10, 861)])
 
         value = (random.randint(1, 100), random.randint(1, 100))
