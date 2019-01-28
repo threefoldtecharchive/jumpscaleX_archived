@@ -43,9 +43,9 @@ class GiteaClient(JSConfigBase):
         """
 
         if not self._api:
-            self._api = HTTPClient(base_uri=self.config.data["url"])
+            self._api = HTTPClient(base_uri=self.url)
             self._api.security_schemes.passthrough_client_token.set_authorization_header(
-                'token {}'.format(self.config.data["gitea_token_"]))
+                'token {}'.format(self.gitea_token_))
         return self._api
 
     def orgs_currentuser_list(self, refresh=False):

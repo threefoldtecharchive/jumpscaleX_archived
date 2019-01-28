@@ -1,9 +1,9 @@
 from Jumpscale import j
 from .MongoDBClient import MongoDBClient
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class MongoFactory(JSConfigFactory):
+class MongoFactory(JSConfigs):
     __jslocation__ = "j.clients.mongodb"
     _CHILDCLASS = MongoDBClient
 

@@ -1,9 +1,9 @@
 from Jumpscale import j
 from .TelegramBotClient import TelegramBot
 
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class TelegramBotFactory(JSConfigFactory):
+class TelegramBotFactory(JSConfigs):
     __jslocation__ = "j.clients.telegram_bot"
     _CHILDCLASS = TelegramBot

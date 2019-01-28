@@ -91,6 +91,13 @@ class Console(j.application.JSBaseClass):
             raise ValueError("Could not convert text to string in system class.")
         return line
 
+    def clear_screen(self):
+        """
+        will reset the terminal screen
+        :return:
+        """
+        print("\033[2J\033[;H")
+
     def formatMessage(self, message, prefix="", withStar=False, indent=0, width=0, removeemptylines=True):
         '''
         Reformat the message to display to the user and calculate length
@@ -98,6 +105,8 @@ class Console(j.application.JSBaseClass):
         @returns: Length of last line and message to display
         @rtype: tuple<number, string>
         '''
+
+        message = j.core.tools.text_replace(message)
 
         if indent == 0 or indent is None:
             indent = self.indent

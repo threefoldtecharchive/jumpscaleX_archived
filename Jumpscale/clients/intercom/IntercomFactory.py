@@ -2,10 +2,10 @@ from .IntercomClient import IntercomClient
 from Jumpscale import j
 
 
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class Intercom(JSConfigFactory):
+class Intercom(JSConfigs):
 
     __jslocation__ = "j.clients.intercom"
     _CHILDCLASS = IntercomClient

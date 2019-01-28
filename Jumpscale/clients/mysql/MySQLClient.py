@@ -26,6 +26,14 @@ class MySQLClient(JSConfigClient):
         return time_formatted
 
     def deleteRow(self, tablename, whereclause):
+        """ Delete rows from the given table given the conditions in the whereclause
+        :param tablename: name of the specified table in database
+        :type tablename: str
+        :param whereclause: condition where deletion of rows is based on
+        :type whereclause: str
+        :return: rows deleted
+        :rtype:
+        """
         Q = "DELETE FROM %s WHERE %s" % (tablename, whereclause)
         self.client.query(Q)
         result = self.client.use_result()
@@ -35,6 +43,16 @@ class MySQLClient(JSConfigClient):
         return result
 
     def select1(self, tablename, fieldname, whereclause):
+        """ Select rows from the given table given the conditions in the whereclause, showing the fields corresponding to the fieldname given
+        :param tablename: name of the specified table in database
+        :type tablename: str
+        :param fieldname: field name to filter output rows
+        :type fieldname: str
+        :param whereclause: condition where selection of rows is based on
+        :type whereclause: str
+        :return: rows selected
+        :rtype:
+        """
         Q = "SELECT %s FROM %s WHERE %s;" % (fieldname, tablename, whereclause)
         result = self.queryToListDict(Q)
         if len(result) == 0:

@@ -30,6 +30,10 @@ class EtcdClient(JSConfigClient):
 
     @property
     def api(self):
+        """ Get ETCD3 client object
+        :return: etcd3 client object
+        :rtype: Object
+        """
         if self._api is None:
             kwargs = {
                 'host': self.host,

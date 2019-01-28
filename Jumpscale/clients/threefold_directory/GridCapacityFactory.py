@@ -6,7 +6,7 @@ from .api_service import ApiService
 from .http_client import HTTPClient
 
 JSConfigClient = j.application.JSBaseConfigClass
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
 class Client(JSConfigClient):
@@ -22,7 +22,7 @@ class Client(JSConfigClient):
         self.close = http_client.close
 
 
-class GridCapacityFactory(JSConfigFactory):
+class GridCapacityFactory(JSConfigs):
     __jslocation__ = "j.clients.threefold_directory"
     _CHILDCLASS = Client
 
@@ -33,7 +33,7 @@ class GridCapacityFactory(JSConfigFactory):
     @property
     def client(self):
         if self._api is None:
-            self.configure(instance="main")
+            self.get(name="main")
             self._api = self.get().api
         return self._api
 
@@ -62,14 +62,6 @@ class GridCapacityFactory(JSConfigFactory):
         is cached for 60 sec
         """
         return [item.as_dict() for item in self._farmers]
-
-    def configure(self, instance, base_uri="https://capacity.threefoldtoken.com"):
-        """
-        :param base_uri: Url for grid_capacity api
-        :type base_uri: str
-        """
-
-        return self.get(name=instance, base_uri=base_uri)
 
     def resource_units(self, reload=False):
         """

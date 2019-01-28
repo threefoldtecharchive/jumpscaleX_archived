@@ -3,10 +3,8 @@ from .peeweeClient import PeeweeClient
 
 import importlib
 
-JSConfigFactory = j.application.JSFactoryBaseClass
 
-
-class PeeweeFactory(JSConfigFactory):
+class PeeweeFactory(j.application.JSBaseClass):
     """
     """
     __jslocation__ = "j.clients.peewee"
@@ -47,5 +45,7 @@ class PeeweeFactory(JSConfigFactory):
     #     raise RuntimeError("stop debug here")
 
     def resetCache(self):
+        '''Remove peewee keys and items from db
+        '''
         for item in j.core.db.keys("peewee.*"):
             j.core.db.delete(item)

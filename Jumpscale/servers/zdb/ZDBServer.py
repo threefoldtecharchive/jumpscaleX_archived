@@ -43,7 +43,7 @@ class ZDBServer(j.application.JSBaseClass):
         start zdb in tmux using this directory (use prefab)
         will only start when the server is not life yet
 
-        js_shell 'j.servers.zdb.start(reset=True)'
+        js_shell 'j.servers.zdb.start()'
 
         """
 

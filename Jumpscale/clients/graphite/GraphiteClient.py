@@ -32,6 +32,8 @@ class GraphiteClient(JSConfigClient):
     def send(self, msg):
         """
         e.g. foo.bar.baz 20
+        :param msg: message to be sent
+        :type msg: str
         """
         out = ""
         for line in msg.split("\n"):

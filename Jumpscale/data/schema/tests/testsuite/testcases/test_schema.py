@@ -269,7 +269,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         email = (email)
-        init_email_1 = 'test.example@domain.com' (email)
+        init_email_1 = test.example@domain.com (email)
         init_email_2 = test.example@domain.com (email)
         """
         schema = self.schema(scm)
@@ -462,9 +462,9 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         date = (D)
-        init_date_1 = 01/01/2019 9pm:10 (D)
-        init_date_2 = '01/08/2018 8am:30' (D)
-        init_date_3 = 50 (D)
+        init_date_1 = 01/01/2019  (D)
+        init_date_2 = 01/08/2018  (D)
+        init_date_3 = 05/03/1994 (D)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -513,71 +513,9 @@ class SchemaTest(BaseTest):
             schema_obj.date = {'date': random.randint(1, 9)}
 
         self.log("Try to set parameter[P1] with date type, should succeed.")
-        self.assertEqual(schema_obj.init_date_1, 1546377000)
-        self.assertEqual(schema_obj.init_date_2, 1533112200)
-        self.assertEqual(schema_obj.init_date_3, 50)
-
-        date = 0
-        schema_obj.date = date
-        self.assertEqual(schema_obj.date, date)
-
-        date = random.randint(1, 200)
-        schema_obj.date = date
-        self.assertEqual(schema_obj.date, date)
-
-        year = random.randint(1000, 2020)
-        year_2c = random.randint(1, 99)
-        month = random.randint(1, 12)
-        day = random.randint(1, 28)
-        hour = random.randint(0, 23)
-        hour_12 = random.randint(1, 11)
-        minutes = random.randint(0, 59)
-        am_or_pm = random.choice(['am', 'pm'])
-        hours = hour_12 if am_or_pm == 'am' else hour_12 + 12
-        years = 1900 if year_2c >= 69 else 2000
-
-        date = datetime(datetime.now().year, month, day).timestamp()
-        schema_obj.date = '{:02}/{:02}'.format(month, day)
-        self.assertEqual(schema_obj.date, int(date))
-
-        date = datetime(datetime.now().year, month, day, hour, minutes).timestamp()
-        schema_obj.date = '{:02}/{:02} {:02}:{:02}'.format(month, day, hour, minutes)
-        self.assertEqual(schema_obj.date, int(date))
-
-        date = datetime(year, month, day).timestamp()
-        schema_obj.date = '{}/{:02}/{:02}'.format(year, month, day)
-        self.assertEqual(schema_obj.date, int(date))
-
-        date = datetime(2016, 2, 29).timestamp()
-        schema_obj.date = '2016/02/29'
-        self.assertEqual(schema_obj.date, int(date))
-
-        date = datetime(year, month, day, hour, minutes).timestamp()
-        schema_obj.date = '{}/{:02}/{:02} {:02}:{:02}'.format(year, month, day, hour, minutes)
-        self.assertEqual(schema_obj.date, int(date))
-
-        date = datetime((year_2c + years), month, day).timestamp()
-        schema_obj.date = '{:02}/{:02}/{:02}'.format(year_2c, month, day)
-        self.assertEqual(schema_obj.date, int(date))
-
-        date = datetime((year_2c + years), month, day, hour, minutes).timestamp()
-        schema_obj.date = '{:02}/{:02}/{:02} {:02}:{:02}'.format(year_2c, month, day, hour, minutes)
-        self.assertEqual(schema_obj.date, int(date))
-
-        date = datetime(year, month, day, hours, minutes).timestamp()
-        schema_obj.date = '{}/{:02}/{:02} {:02}{}:{:02}'.format(year, month, day, hour_12, am_or_pm, minutes)
-        self.assertEqual(schema_obj.date, int(date))
-
-        date = datetime(year, month, day).timestamp()
-        schema_obj.date = '{:02}/{:02}/{}'.format(day, month, year)
-        self.assertEqual(schema_obj.date, int(date))
-
-        added_hours = random.randint(1, 12)
-        added_day = 0 if (datetime.now().hour + added_hours) / 24 < 1 else 1
-        added_hours_from_now = datetime.now().hour + added_hours if added_day == 0 else (datetime.now().hour + added_hours) % 24
-        date = datetime(datetime.now().year, datetime.now().month, datetime.now().day + added_day, added_hours_from_now, datetime.now().minute, datetime.now().second).timestamp()
-        schema_obj.date = '+{}h'.format(added_hours)
-        self.assertAlmostEqual(schema_obj.date, int(date), delta=3)
+        self.assertEqual(schema_obj.init_date_1, 1546300800)
+        self.assertEqual(schema_obj.init_date_2, 1533081600)
+        self.assertEqual(schema_obj.init_date_3, 762825600)
 
     def test011_validate_percent_type(self):
         """
@@ -596,10 +534,10 @@ class SchemaTest(BaseTest):
         percent = (percent)
         init_percent_1 = 84 (percent)
         init_percent_2 = 73.4 (percent)
-        init_percent_3 = '95' (percent)
-        init_percent_4 = '72.8' (percent)
-        init_percent_5 = '54%' (percent)
-        init_percent_6 = '64.44%' (percent)
+        init_percent_3 = 95 (percent)
+        init_percent_4 = 72.8 (percent)
+        init_percent_5 = 54% (percent)
+        init_percent_6 = 64.44% (percent)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -624,10 +562,10 @@ class SchemaTest(BaseTest):
         percent = random.randint(0, 250)
         schema_obj.percent = percent
         self.assertEqual(schema_obj.percent, percent)
-        
+
         percent = random.uniform(0, 250)
         schema_obj.percent = percent
-        self.assertEqual(schema_obj.percent, percent*100)
+        self.assertEqual(schema_obj.percent, round(percent*100))
         
         value = random.randint(1, 100)
         percent = '{}'.format(value)
@@ -642,11 +580,11 @@ class SchemaTest(BaseTest):
         value = random.uniform(1, 100)
         percent = '{}'.format(value)
         schema_obj.percent = percent
-        self.assertEqual(schema_obj.percent, value*100)
+        self.assertEqual(schema_obj.percent, round(value*100))
 
         percent = '{}%'.format(value)
         schema_obj.percent = percent
-        self.assertEqual(schema_obj.percent, (value)*100)
+        self.assertEqual(schema_obj.percent, round((value)*100))
         self.assertEqual(schema_obj.init_percent_1, 84)
         self.assertEqual(schema_obj.init_percent_2, 7340)
         self.assertEqual(schema_obj.init_percent_3, 95)
@@ -798,8 +736,8 @@ class SchemaTest(BaseTest):
         @url = test.schema
         guid = (guid)
         init_guid_1 = bebe8b34-b12e-4fda-b00c-99979452b7bd (guid)
-        init_guid_2 = '84b022bd-2b00-4b62-8539-4ec07887bbe4' (guid)
-        """.format(str(uuid4()))
+        init_guid_2 = 84b022bd-2b00-4b62-8539-4ec07887bbe4 (guid)
+        """
         schema = self.schema(scm)
         schema_obj = schema.new()
 
@@ -827,7 +765,7 @@ class SchemaTest(BaseTest):
         schema_obj.guid = guid
         self.assertEqual(schema_obj.guid, guid)
         self.assertEqual(schema_obj.init_guid_1, 'bebe8b34-b12e-4fda-b00c-99979452b7bd')
-        self.assertEqual(schema_obj.init_guid_1, '84b022bd-2b00-4b62-8539-4ec07887bbe4')
+        self.assertEqual(schema_obj.init_guid_2, '84b022bd-2b00-4b62-8539-4ec07887bbe4')
 
     def test016_validate_dict_type(self):
         """
@@ -868,6 +806,7 @@ class SchemaTest(BaseTest):
         self.assertEqual(schema_obj.info, {'number': value})
         self.assertEqual(schema_obj.init_dict, {'number': 468})
 
+    @unittest.skip("we didn't have set type anymore")
     def test017_validate_set_type(self):
         """
         SCM-017
@@ -930,7 +869,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         data = (h)
-        init_hash = [46, 682] (h)
+        init_hash = 46:682 (h)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -960,7 +899,7 @@ class SchemaTest(BaseTest):
         schema_obj.data = data
         self.assertEqual(schema_obj.data[0], data[0])
         self.assertEqual(schema_obj.data[1], data[1])
-        self.assertEqual(schema_obj.init_hash_2, (46, 682))
+        self.assertEqual(schema_obj.init_hash, (46, 682))
     
     def test019_validate_multiline_type(self):
         """
@@ -1106,7 +1045,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         binary = (bin)
-        init_bin = b'this is binary' (bin)
+        init_bin = 'this is binary' (bin)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()

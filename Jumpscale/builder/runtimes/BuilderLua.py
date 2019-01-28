@@ -10,6 +10,19 @@ class BuilderLua(j.builder.system._BaseClass):
     def _init(self):
         self.BUILDDIR = j.core.tools.text_replace("{DIR_VAR}/build/")
 
+    def reset(self):
+        """
+        js_shell 'j.builder.runtimes.lua.reset()'
+        :return:
+        """
+        self._done_reset()
+        j.builder.web.openresty.reset() #make sure openresty gets build properly
+        C = """
+        cd /sandbox
+
+        """
+        self.tools.run(C)
+
     def build(self, reset=True):
         """
         js_shell 'j.builder.runtimes.lua.build()'
@@ -19,9 +32,9 @@ class BuilderLua(j.builder.system._BaseClass):
         if self._done_check("build") and not reset:
             return
 
-        j.builder.system.package.install([
-            'libsqlite3-dev'
-        ])
+        if j.core.platformtype.myplatform.isUbuntu:
+            j.builder.system.package.install(['libsqlite3-dev'])
+
         #need openresty & openssl to start from
         j.builder.libs.openssl.build()
         j.builder.web.openresty.build()
@@ -44,10 +57,9 @@ class BuilderLua(j.builder.system._BaseClass):
         
         """
 
-        j.sal.process.execute(j.core.tools.text_replace(C))
+        self.tools.run(C)
 
         self.lua_rocks_install()
-        self.copy2sandbox_github()
 
         self._done_set("build")
 
@@ -122,6 +134,9 @@ class BuilderLua(j.builder.system._BaseClass):
         
         #various encryption
         luazen
+        
+        alt-getopt
+        
         """
 
         for line in C.split("\n"):
@@ -139,7 +154,7 @@ class BuilderLua(j.builder.system._BaseClass):
         rsync -rav /sandbox/var/build/luarocks/lua_modules/share/lua/5.1/ $LUALIB/
 
         """
-        j.sal.process.execute(j.core.tools.text_replace(C))
+        self.tools.run
 
 
 
@@ -184,15 +199,43 @@ class BuilderLua(j.builder.system._BaseClass):
         
     
         """
-        C = j.core.tools.text_replace(C)
-        print(C)
+        self.tools.run(C)
 
-        j.sal.process.execute(C)
-
-
-    def copy2sandbox_github(self):
+    def install(self,reset=False):
         """
-        js_shell 'j.builder.runtimes.lua.copy2sandbox_github()'
+        will build & install in sandbox
+        js_shell 'j.builder.runtimes.lua.install()'
+        :return:
+        """
+        self.build(reset=reset)
+        src = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/sandbox_base/tree/master/src/bin",pull=True)
+        C="""
+        
+        set -e
+        pushd /sandbox/openresty/bin 
+        cp resty /sandbox/bin/resty        
+        popd
+        
+        pushd /sandbox/var/build/luarocks/lua_modules/lib/luarocks/rocks-5.1/lapis/1.7.0-1/bin
+        cp lapis /sandbox/bin/_lapis.lua
+        popd
+        
+        pushd '/sandbox/var/build/luarocks/lua_modules/lib/luarocks/rocks-5.1/moonscript/0.5.0-1/bin'
+        cp moon /sandbox/bin/_moon.lua
+        cp moonc /sandbox/bin/_moonc.lua
+        popd
+    
+        """
+        self.tools.run(C)
+
+        j.sal.fs.copyDirTree(src,"/sandbox/bin/",rsyncdelete=False,recursive=False,overwriteFiles=True)
+
+        self._logger.info("install lua & openresty done.")
+
+
+    def copy_to_github(self):
+        """
+        js_shell 'j.builder.runtimes.lua.copy_to_github()'
         :return:
         """
         # assert self.executor.type=="local"

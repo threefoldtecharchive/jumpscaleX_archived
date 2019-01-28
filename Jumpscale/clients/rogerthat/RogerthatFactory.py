@@ -1,9 +1,9 @@
 from Jumpscale import j
 from .Rogerthat import Rogerthat
 
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class RogerthatFactory(JSConfigFactory):
+class RogerthatFactory(JSConfigs):
     __jslocation__ = "j.clients.rogerthat"
     _CHILDCLASS = Rogerthat

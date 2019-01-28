@@ -17,20 +17,27 @@ class TelegramBot(JSConfigClient):
         self._conn = HTTPSConnection("api.telegram.org")
 
     def config_check(self):
-        """
-        check the configuration if not what you want the class will barf & show you where it went wrong
-        """
+        '''check the configuration if not what you want the class will barf & show you where it went wrong
+
+        :return: Error message regarding issue with the configuration
+        :rtype: str
+        '''
+
         if not self.bot_token_:
             return "bot_token_ is not properly configured, cannot be empty"
 
     def send_message(self, chatid, text, parse_mode=None):
-        """
-        send_message sends text to chat id
-        :param chatid: Unique identifier for the target chat or username of the target channel
+        '''sends text to chat id
+
+        :param chatid:  Unique identifier for the target chat or username of the target channel
+        :type chatid: [type]
         :param text: Text of the message to be sent
-        :param parse_mode: See https://core.telegram.org/bots/api#sendmessage
+        :type text: str
+        :param parse_mode: See https://core.telegram.org/bots/api#sendmessage, defaults to None
+        :type parse_mode: stra, optional
         :return: result of sendMessage api
-        """
+        :rtype: [type]
+        '''
         params = dict(chat_id=chatid, text=text)
         if parse_mode is not None:
             params["parse_mode"] = parse_mode

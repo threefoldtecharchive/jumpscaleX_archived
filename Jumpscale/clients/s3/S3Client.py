@@ -4,7 +4,6 @@ import urllib3
 import certifi
 
 try:
-    # import boto3
     from minio import Minio
     from minio.error import (
         ResponseError,
@@ -28,12 +27,11 @@ class S3Client(JSConfigBase):
     port = 9000 (ipport)
     accesskey_ = "" (S)
     secretkey_ = "" (S)
-    bucket = "" (S)
+    bucket = "main" (S)
     bucket_ok = false (B)
     """
 
-    def _init_new(self):
-
+    def _init(self):
         # s3 = boto3.resource('s3',
         #                     endpoint_url='http://%s:%s' % (c["address"], c["port"]),
         #                     config=boto3.session.Config(signature_version='s3v4'),
@@ -52,8 +50,8 @@ class S3Client(JSConfigBase):
                 status_forcelist=[500, 502, 503, 504]
             )
         )
-
-        self._logger.info("open connection to minio:%s" % self.instance)
+        #Create Minio client
+        self._logger.info("open connection to minio:%s" % self)
         self.client = Minio('%s:%s' % (self.address, self.port),
                             access_key=self.accesskey_,
                             secret_key=self.secretkey_,
@@ -73,21 +71,79 @@ class S3Client(JSConfigBase):
             raise
 
     def upload(self, bucket_name, object_name, file_path, content_type='text/plain', meta_data=None):
+        '''Upload contents from a file specified by file_path, to object_name
+
+        :param bucket_name: name of bucket
+        :type bucket_name: str
+        :param object_name: name of object
+        :type object_name: str
+        :param file_path: local path from which object data will be read
+        :type file_path: str
+        :param content_type: content type of the object, defaults to 'text/plain'
+        :type content_type: str, optional
+        :param meta_data: additional metadata, defaults to None
+        :type meta_data: dict, optional
+        :raises ValueError: if file given by file_path is not found
+        :return: str
+        :rtype: Object etag computed by the minio server.
+        '''
         if not j.sal.fs.exists(file_path):
             raise ValueError("file: %s not found" % file_path)
         return self.client.fput_object(bucket_name, object_name, file_path, content_type, meta_data)
 
     def download(self, bucket_name, object_name, file_path):
+        '''Download and save the object as a file in the local filesystem
+
+        :param bucket_name: name of bucket
+        :type bucket_name: str
+        :param object_name: name of object
+        :type object_name: str
+        :param file_path: local path to which object data will be written
+        :type file_path: str
+        :return: object stat info (includes: size, etag, content_type,last_modified, metadata) 
+        :rtype: Object
+        '''
+
         return self.client.fget_object(bucket_name, object_name, file_path)
 
     def list_buckets(self):
+        '''List all buckets
+
+        :return: bucketList, bucket.name, bucket.creation_date
+        :rtype: function, str, date
+        '''
         return self.client.list_buckets()
 
     def list_objects(self, bucket_name, prefix=None, recursive=None):
+        '''List objects in a specific bucket
+        
+        :param bucket_name: name of bucket
+        :type bucket_name: str
+        :param prefix: prefix of the objects that should be listed, defaults to None
+        :type prefix: str, optional
+        :param recursive: True indicates recursive style listing and False indicates directory style listing delimited by '/', defaults to None
+        :type recursive: bool, optional
+        :return: Iterator for all the objects in the bucket (includes: bucket_name, object_name,is_dir, size, etag, last_modified)
+        :rtype: Object
+        '''
+
         return self.client.list_objects(bucket_name, prefix=prefix, recursive=recursive)
 
     def remove_bucket(self, bucket_name):
+        '''Remove a bucket.
+
+        :param bucket_name: name of bucket to be removed
+        :type bucket_name: str
+        '''
         return self.client.remove_bucket(bucket_name)
 
     def remove_object(self, bucket_name, object_name):
+        '''Remove object from bucket
+        
+        :param bucket_name: name of bucket
+        :type bucket_name: str
+        :param object_name: name of object to be removed
+        :type object_name: str
+        '''
+
         return self.client.remove_object(bucket_name, object_name)

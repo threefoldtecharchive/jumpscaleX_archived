@@ -3,7 +3,7 @@ from Jumpscale import j
 
 class BuilderTraefik(j.builder.system._BaseClass):
     NAME = 'traefik'
-    VERSION = '1.7.7'  # latest
+    VERSION = '1.7.7' # latest
     URL = 'https://github.com/containous/traefik/releases/download/v{version}/traefik_{platform}-{arch}'
 
     def _init(self):
@@ -88,3 +88,4 @@ class BuilderTraefik(j.builder.system._BaseClass):
         :type name: str, optional
         """
         self._test_run(name=name, obj_key='test_main')
+

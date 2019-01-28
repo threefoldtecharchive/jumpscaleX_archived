@@ -20,12 +20,12 @@ class SSHClientParamiko(SSHClientBase):
         SSHClientBase._init(self)
 
         if self.passwd:
-            self.forward_agent = False
-            self.look_for_keys = False
+            self._forward_agent = False
+            self._look_for_keys = False
             # self.key_filename = None
             self.passphrase = None
         else:
-            self.look_for_keys = True
+            self._look_for_keys = True
 
         # self._logger_enable()
 
@@ -142,7 +142,7 @@ class SSHClientParamiko(SSHClientBase):
 
         # if self.key_filename:
         #     self.allow_agent = True
-        #     self.look_for_keys = True
+        #     self._look_for_keys = True
         #     # if j.clients.ssh.SSHKeyGetPathFromAgent(self.key_filename, die=False) is not None and not self.passphrase:
         #     #     j.clients.ssh.ssh_keys_load(self.key_filename)
 
@@ -156,7 +156,7 @@ class SSHClientParamiko(SSHClientBase):
                 self._logger.debug("connect with password :%s" % self.passwd)
                 # self._logger.debug("connect with pkey :%s" % self.pkey)
                 self._logger.debug("connect with allow_agent :%s" %self.allow_agent)
-                self._logger.debug("connect with look_for_keys :%s" % self.look_for_keys)
+                self._logger.debug("connect with look_for_keys :%s" % self._look_for_keys)
                 self._logger.debug("Timeout is : %s " % self.timeout)
                 self._client_.connect(
                     self.addr,
@@ -165,7 +165,7 @@ class SSHClientParamiko(SSHClientBase):
                     password=self.passwd,
                     # pkey=self.pkey,
                     allow_agent=self.allow_agent,
-                    look_for_keys=self.look_for_keys,
+                    look_for_keys=self._look_for_keys,
                     timeout=2.0,
                     banner_timeout=3.0)
                 self._logger.info("connection ok")
@@ -204,7 +204,7 @@ class SSHClientParamiko(SSHClientBase):
 
         ch = self._transport.open_session()
 
-        if self.forward_agent:
+        if self._forward_agent:
             paramiko.agent.AgentRequestHandler(ch)
 
         # execute the command on the remote server

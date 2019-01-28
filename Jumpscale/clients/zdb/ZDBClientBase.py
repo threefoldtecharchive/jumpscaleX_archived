@@ -2,10 +2,8 @@
 from Jumpscale import j
 import redis
 
-JSBASE = j.application.JSBaseConfigClass
 
-
-class ZDBClientBase(JSBASE):
+class ZDBClientBase(j.application.JSBaseConfigClass):
     _SCHEMATEXT = """
     @url = jumpscale.zdb.client
     name* = "" (S)
@@ -26,6 +24,7 @@ class ZDBClientBase(JSBASE):
         """
         if self.admin:
             self.nsname = "default"
+
         self.type = "ZDB"
 
         self.redis = _patch_redis_client(j.clients.redis.get(

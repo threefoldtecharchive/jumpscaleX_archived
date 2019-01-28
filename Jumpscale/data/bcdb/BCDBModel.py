@@ -29,7 +29,7 @@ class BCDBModel(j.application.JSBaseClass):
             raise RuntimeError("bcdb should be set")
 
         self.bcdb = bcdb
-        self.__redis_key = None
+        self.__redis_prefix = None
         self.cache_expiration = cache_expiration
 
         self.schema = schema
@@ -43,7 +43,7 @@ class BCDBModel(j.application.JSBaseClass):
             self.key = self.schema.url
         self.key = self.key.replace(".", "_")
 
-        self.write_once = False
+        self.readonly = False
 
         self.autosave = False  # if set it will make sure data is automatically set from object
 
@@ -99,14 +99,14 @@ class BCDBModel(j.application.JSBaseClass):
         self.obj_cache = {}
 
     @property
-    def _redis_key(self):
+    def _redis_prefix(self):
         """
         keep a name to id mapping in the redis, that way we have a short name for the hset for the keys
         :return:
         """
-        if self.__redis_key is None:
-           self.__redis_key = self.bcdb._hset_index_key_get(self.schema)
-        return self.__redis_key
+        if self.__redis_prefix is None:
+           self.__redis_prefix = self.bcdb._hset_index_key_get(self.schema)
+        return self.__redis_prefix
 
     @queue_method
     def index_ready(self):
@@ -141,24 +141,24 @@ class BCDBModel(j.application.JSBaseClass):
 
     @queue_method
     def index_rebuild(self):
-        # need to remove index
         self.stop()
-        for obj in self.iterate():
+        self.index_destroy()
+        self._logger.warning("will rebuild index for:%s"%self)
+        for obj in self.iterate(die=False):
             self._set(obj, store=False)
 
     @queue_method
     def delete(self, obj):
-        if hasattr(obj, "_JSOBJ"):
-            obj_id = obj.id
-        else:
-            obj_id = obj
-        self.index_keys_delete(obj)
-        self._delete2(obj_id)
-        if obj_id in self.obj_cache:
-            self.obj_cache.pop(obj_id)
-        if self.index:
-            self.index_delete(obj_id)
-        self.id_delete(obj.id)
+        if not hasattr(obj, "_JSOBJ"):
+            obj = self.get(obj)
+        if obj.id is not None:
+            self.index_keys_delete(obj)
+            self._delete2(obj.id)
+            if obj.id in self.obj_cache:
+                self.obj_cache.pop(obj.id)
+            if self.index:
+                self.index_delete(obj.id)
+            self.id_delete(obj.id)
 
     def _delete2(self, obj_id):
         if not self.zdbclient:
@@ -201,7 +201,7 @@ class BCDBModel(j.application.JSBaseClass):
         obj.id = obj_id  # do not forget
         return self._set(obj)
 
-    def _set_key(self, property_name, val, obj_id):
+    def _index_key_set(self, property_name, val, obj_id):
         """
 
         :param property_name: property name to index
@@ -211,41 +211,45 @@ class BCDBModel(j.application.JSBaseClass):
         """
 
         key = "%s__%s" % (property_name, val)
-        ids = self._get_ids_from_key(key)
+        ids = self._index_key_getids(key)
         if obj_id is None:
             raise RuntimeError("id cannot be None")
         if obj_id not in ids:
             ids.append(obj_id)
         data = j.data.serializers.msgpack.dumps(ids)
-        hash = self._get_redis_key(key)
+        hash = self._index_key_redis_get(key)
         self._logger.debug("set key:%s (id:%s)" % (key, obj_id))
         j.clients.credis_core.hset(
-            self._redis_key+b":"+hash[0:2], hash[2:], data)
+            self._redis_prefix+b":"+hash[0:2], hash[2:], data)
 
-    def _delete_key(self, property_name, val, obj_id):
+    def _index_key_delete(self, property_name, val, obj_id):
 
         key = "%s__%s" % (property_name, val)
-        ids = self._get_ids_from_key(key)
+        ids = self._index_key_getids(key)
         if obj_id is None:
             raise RuntimeError("id cannot be None")
         if obj_id in ids:
             ids.pop(ids.index(obj_id))
-        hash = self._get_redis_key(key)
+        hash = self._index_key_redis_get(key)
         if ids == []:
             j.clients.credis_core.hdel(
-                self._redis_key+b":"+hash[0:2], hash[2:])
+                self._redis_prefix+b":"+hash[0:2], hash[2:])
         else:
             data = j.data.serializers.msgpack.dumps(ids)
-            hash = self._get_redis_key(key)
+            hash = self._index_key_redis_get(key)
             self._logger.debug("set key:%s (id:%s)" % (key, obj_id))
             j.clients.credis_core.hset(
-                self._redis_key+b":"+hash[0:2], hash[2:], data)
+                self._redis_prefix+b":"+hash[0:2], hash[2:], data)
 
-    def _get_ids_from_key(self, key):
-        hash = self._get_redis_key(key)
+    def _index_keys_destroy(self):
+        for key in j.clients.credis_core.keys(self._redis_prefix+b"*"):
+            j.clients.credis_core.delete(key)
+
+    def _index_key_getids(self, key):
+        hash = self._index_key_redis_get(key)
 
         r = j.clients.credis_core.hget(
-            self._redis_key+b":"+hash[0:2], hash[2:])
+            self._redis_prefix+b":"+hash[0:2], hash[2:])
         if r is not None:
             # means there is already one
             self._logger.debug("get key(exists):%s" % key)
@@ -257,7 +261,7 @@ class BCDBModel(j.application.JSBaseClass):
 
     def get_from_keys(self, delete_if_not_found=False, **args):
         """
-
+        is a the retrieval part of a very fast indexing system
         e.g.
         self.get_from_keys(name="myname")
         :return:
@@ -268,7 +272,7 @@ class BCDBModel(j.application.JSBaseClass):
         ids = []
         for propname, val in args.items():
             key = "%s__%s" % (propname, val)
-            ids = self._get_ids_from_key(key)
+            ids = self._index_key_getids(key)
             if ids_prev != []:
                 ids = [x for x in ids if x in ids_prev]
             ids_prev = ids
@@ -279,7 +283,7 @@ class BCDBModel(j.application.JSBaseClass):
             if res2 is None:
                 if delete_if_not_found:
                     for key, val in args.items():
-                        self._delete_key(key, val, id_)
+                        self._index_key_delete(key, val, id_)
                 else:
                     raise RuntimeError(
                         "backend data store out of sync with key index in redis (redis has it, backend not)")
@@ -294,21 +298,21 @@ class BCDBModel(j.application.JSBaseClass):
         :param key: key used to store
         :return:
         """
-        ids = self._get_ids_from_key(key)
+        ids = self._index_key_getids(key)
         if len(ids) == 1:
             return ids[0]
         elif len(ids) > 1:
             # need to fetch obj to see what is alike
             j.shell()
 
-    def _get_redis_key(self, key):
+    def _index_key_redis_get(self, key):
         """
         returns 10 bytes as key (non HR readable)
         :param key:
         :return:
         """
-        key2 = j.core.text.strip_to_ascii_dense(
-            key)+str(self.schema.sid)  # schema id needs to be in to make sure itd different key per schema
+        # schema id needs to be in to make sure itd different key per schema
+        key2 = j.core.text.strip_to_ascii_dense(key)+str(self.schema.sid)
         # can do 900k per second
         hash = blake2b(str(key2).encode(), digest_size=10).digest()
         return hash
@@ -344,9 +348,9 @@ class BCDBModel(j.application.JSBaseClass):
                         if obj.acl.hash != acl2.hash:
                             obj.acl.id = None
                             obj.acl.save()  # means there is acl but not same as in DB, need to save
-                            if obj.acl.write_once:
+                            if obj.acl.readonly:
                                 obj.acl.readonly = True
-                            self._cache_reset()
+                            self._obj_cache_reset()
                 obj.acl_id = obj.acl.id
 
             bdata = obj._data
@@ -362,7 +366,7 @@ class BCDBModel(j.application.JSBaseClass):
                     obj.id = self.bcdb.sqlclient.set(key=None, val=data)
                 else:
                     obj.id = self.zdbclient.set(data)
-                if self.write_once:
+                if self.readonly:
                     obj.readonly = True
                 self._logger.debug("NEW:\n%s" % obj)
             else:
@@ -462,12 +466,13 @@ class BCDBModel(j.application.JSBaseClass):
         pass
 
     def index_destroy(self):
-        pass
+        self._index_keys_destroy()
 
     def index_delete(self, obj):
-        if not j.data.types.int.check(obj):
-            obj = obj.id
-        self.index.delete_by_id(obj)
+        if self.index:
+            if not j.data.types.int.check(obj):
+                obj = obj.id
+            self.index.delete_by_id(obj)
 
     @queue_method_results
     def get(self, obj_id, return_as_capnp=False, usecache=True, die=True):
@@ -523,7 +528,6 @@ class BCDBModel(j.application.JSBaseClass):
         self.stop()
         j.sal.fs.remove(self._data_dir)
 
-
         tofind=self.bcdb._hset_index_key_get(self.schema)+b":*"
 
         for key in j.clients.credis_core.keys(tofind):
@@ -531,12 +535,19 @@ class BCDBModel(j.application.JSBaseClass):
 
         self._init_()
 
-    def iterate(self):
+    def iterate(self,die=True):
         """
         walk over objects which are of type of this model
         """
         for obj_id in self.id_iterator:
-            o = self.get(obj_id)
+            try:
+                o = self.get(obj_id)
+            except Exception as e:
+                if str(e).find("could not find obj")!=-1:
+                    self._logger.warning("warning: could not find object with id:%s in %s"%(obj_id, self))
+                    continue
+                else:
+                    raise e
             yield o
 
     def get_all(self):
@@ -552,7 +563,7 @@ class BCDBModel(j.application.JSBaseClass):
 
     def __str__(self):
         out = "model:%s\n" % self.schema.url
-        out += j.core.text.prefix("    ", self.schema.text)
+        # out += j.core.text.prefix("    ", self.schema.text)
         return out
 
     __repr__ = __str__

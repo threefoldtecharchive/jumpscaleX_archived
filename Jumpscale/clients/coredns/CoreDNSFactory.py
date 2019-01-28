@@ -5,10 +5,10 @@
 
 from Jumpscale import j
 from .CoreDNS import CoreDNS
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class CoreDNSFactory(JSConfigFactory):
+class CoreDNSFactory(JSConfigs):
 
     __jslocation__ = "j.clients.coredns"
     __jsbase__ = 'j.tools.configmanager._base_class_configs'
@@ -18,19 +18,6 @@ class CoreDNSFactory(JSConfigFactory):
     # def _child_class(self):
     #     return self._jsbase(('CoreDNS', '.CoreDNS'))
 
-    def configure(self, instance="main", etcdpath="/skydns",
-                  ):
-        """ :param instance:
-            :param etcdpath:
-            :return:
-        """
-
-        data = {}
-        data["etcdpath"] = etcdpath
-        #data["port"] = str(port)
-
-        return self.get(instance=instance, data=data, create=True,
-                        interactive=False)
 
     def test(self):
         d = j.clients.coredns.get()

@@ -17,16 +17,16 @@ class WebGateway(JSConfigBase):
     def _init(self):
 
         self.etcd = j.clients.etcd.get(self.etcd_instance)
-        self.traefik = j.clients.traefik.configure(self.name,
-                                                   host=self.etcd.host,
-                                                   port=self.etcd.port,
-                                                   user=self.etcd.user,
-                                                   password=self.etcd.password_)
-        self.coredns = j.clients.coredns.configure(self.name,
-                                                   host=self.etcd.host,
-                                                   port=self.etcd.port,
-                                                   user=self.etcd.user,
-                                                   password=self.etcd.password_)
+        self.traefik = j.clients.traefik.get(self.name,
+                                             host=self.etcd.host,
+                                             port=self.etcd.port,
+                                             user=self.etcd.user,
+                                             password=self.etcd.password_)
+        self.coredns = j.clients.coredns.get(self.name,
+                                             host=self.etcd.host,
+                                             port=self.etcd.port,
+                                             user=self.etcd.user,
+                                             password=self.etcd.password_)
         self.public_ips = self.public_ips or []
         self._services = None
 

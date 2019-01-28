@@ -33,33 +33,31 @@ class PostgresClient(JSConfigClient):
         self.cursor = None
 
     def cursor_get(self):
-        """Get client dict cursor
+        '''Get client dict cursor
         :return : clients
         :rtype : dict cursor
-        """
-
+        '''
         self.cursor = self.client.cursor()
 
     def execute(self, sql):
-        """Execute sql code
+        '''Execute sql code
         :param sql: sql code to be executed
         :type sql: str
         :return: psycopg2 client
         :rtype: dict cursor
-        """
+        '''
         if self.cursor is None:
             self.cursor_get()
         return self.cursor.execute(sql)
 
     def SQL_alchemy_client_get(self):
-        """
-        usage
-
+        ''' usage
         base,session=client.initsqlalchemy()
         session.add(base.classes.address(email_address="foo@bar.com", user=(base.classes.user(name="foo")))
         session.commit()
-
-        """
+        
+        :return: Base, session
+        '''
         Base = automap_base()
 
         # engine, suppose it has two models 'user' and 'address' set up
@@ -74,12 +72,13 @@ class PostgresClient(JSConfigClient):
         return Base, session
 
     def dump(self, path, tables_ignore=[]):
-        """Dump data from db to path/_shcema.sql
+        '''Dump data from db to path/_shcema.sql
+
         :param path: path
         :type path: str
-        :param tables_ignore: tables to be ignored and its records are not considered
-        :type tables_ignore: str
-        """
+        :param tables_ignore: tables to be ignored and its records are not considered, defaults to []
+        :type tables_ignore: list, optional
+        '''
         args = copy.copy(self.__dict__)
         j.sal.fs.createDir(path)
         base, session = self.initsqlalchemy()
@@ -101,14 +100,16 @@ class PostgresClient(JSConfigClient):
             j.sal.process.execute(cmd, showout=False)
 
     def restore(self, path, tables=[], schema=True):
-        """Restore db
+        '''Restore db
+
         :param path: path to import from
         :type path: str
-        :param tables: tables to be considered
-        :type tables: list
-        :param schema: schema exists
-        :type schema: bool
-        """
+        :param tables: tables to be considered, defaults to []
+        :type tables: list, optional
+        :param schema: schema exists, defaults to True
+        :type schema: bool, optional
+        :raises j.exceptions.Input: Path to import from not found
+        '''
         if not j.sal.fs.exists(path=path):
             raise j.exceptions.Input(
                 "cannot find path %s to import from." % path)

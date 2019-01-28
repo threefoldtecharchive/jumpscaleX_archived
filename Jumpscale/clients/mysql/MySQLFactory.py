@@ -4,10 +4,10 @@ import mysql.connector
 import time
 import calendar
 
-JSConfigFactory = j.application.JSFactoryBaseClass
+JSConfigs = j.application.JSBaseConfigsClass
 
 
-class MySQLFactory(JSConfigFactory):
+class MySQLFactory(JSConfigs):
     """
     """
     __jslocation__ = "j.clients.mysql"

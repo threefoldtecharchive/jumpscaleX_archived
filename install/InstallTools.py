@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import copy
 import getpass
 # import socket
@@ -16,6 +17,7 @@ from fcntl import F_GETFL, F_SETFL, fcntl
 from os import O_NONBLOCK, read
 from pathlib import Path
 from subprocess import Popen, check_output
+
 
 # Returns escape codes from format codes
 def esc(*x):
@@ -301,10 +303,12 @@ MYCOLORS =   { "RED":"\033[1;31m",
                 "REVERSE":"\033[;7m"}
 
 
-class Tools():
+class Tools:
 
     _LogFormatter = LogFormatter
     _supported_editors = ["micro","mcedit","joe","vim","vi"]  #DONT DO AS SET  OR ITS SORTED
+    j = None
+    _shell = None
 
     @staticmethod
     def log(msg):
@@ -325,9 +329,13 @@ class Tools():
     def _execute_interactive(cmd=None, args=None, die=True):
         if args is None:
             args = cmd.split(" ")
-        returncode = os.spawnvpe(os.P_WAIT, args[0], args, os.environ)
+        # else:
+        #     args[0] = shutil.which(args[0])
+
+        returncode = os.spawnlp(os.P_WAIT, args[0], *args)
         cmd=" ".join(args   )
         if returncode == 127:
+            Tools.shell()
             Tools.error_raise('{0}: command not found\n'.format(args[0]))
         if returncode>0 and returncode != 999:
             if die:
@@ -458,7 +466,7 @@ class Tools():
             return Tools.exists(linkpath)
         if found:
             return True
-        logger.debug('path %s does not exist' % str(path.encode("utf-8")))
+        # logger.debug('path %s does not exist' % str(path.encode("utf-8")))
         return False
 
     @staticmethod
@@ -481,13 +489,14 @@ class Tools():
 
         MyEnv.state_set("ubuntu_base_install")
 
+
+    def clear():
+        print(chr(27)+'[2j')
+        print('\033c')
+        print('\x1bc')
+
     @staticmethod
     def shell(loc=True):
-        try:
-            from IPython.terminal.embed import InteractiveShellEmbed
-        except:
-            Tools._installbase()
-        _shell = InteractiveShellEmbed(banner1= "", exit_msg="")
         if loc:
             import inspect
             curframe = inspect.currentframe()
@@ -495,7 +504,40 @@ class Tools():
             f = calframe[1]
             print("\n*** file: %s"%f.filename)
             print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
-        return _shell(stack_depth=2)
+
+        if Tools._shell is None:
+            try:
+                from IPython.terminal.embed import InteractiveShellEmbed
+            except:
+                Tools._installbase()
+            Tools._shell = InteractiveShellEmbed(banner1= "", exit_msg="")
+        return Tools._shell(stack_depth=2)
+
+
+    # @staticmethod
+    # def shell2(loc=True,exit=True):
+    #     if loc:
+    #         import inspect
+    #         curframe = inspect.currentframe()
+    #         calframe = inspect.getouterframes(curframe, 2)
+    #         f = calframe[1]
+    #         print("\n*** file: %s"%f.filename)
+    #         print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
+    #     from ptpython.repl import embed
+    #     Tools.clear()
+    #     history_filename="~/.jsx_history"
+    #     if not Tools.exists(history_filename):
+    #         Tools.file_write(history_filename,"")
+    #     if exit:
+    #         sys.exit(embed(globals(), locals(),configure=ptconfig,history_filename=history_filename))
+    #     else:
+    #         embed(globals(), locals(),configure=ptconfig,history_filename=history_filename)
+    #     # try:
+    #     #     from IPython.terminal.embed import InteractiveShellEmbed
+    #     # except:
+    #     #     Tools._installbase()
+    #     # _shell = InteractiveShellEmbed(banner1= "", exit_msg="")
+    #     # return _shell(stack_depth=2)
 
     @staticmethod
     def text_strip(content, ignorecomments=False,args={},replace=False,executor=None,colors=False):
@@ -541,7 +583,7 @@ class Tools():
         return content
 
     @staticmethod
-    def text_replace(content,args=None,executor=None,ignorecomments=False,text_strip=True,colors=False):
+    def text_replace(content,args=None,executor=None,ignorecomments=False,text_strip=True,colors=True):
         """
 
         j.core.tools.text_replace
@@ -556,6 +598,17 @@ class Tools():
         performance is +100k per sec
 
         will call the strip if
+
+        following colors will be replaced e.g. use {RED} to get red color.
+
+        MYCOLORS =   { "RED":"\033[1;31m",
+                "BLUE":"\033[1;34m",
+                "CYAN":"\033[1;36m",
+                "GREEN":"\033[0;32m",
+                "RESET":"\033[0;0m",
+                "BOLD":"\033[;1m",
+                "REVERSE":"\033[;7m"}
+
 
         """
         if args is None:
@@ -631,35 +684,35 @@ class Tools():
     def execute(command, showout=True, useShell=True, cwd=None, timeout=600,die=True,
                 async_=False, args=None, env=None,
                 interactive=False,self=None,
-                replace=True):
+                replace=True,asfile=False):
 
         if env is None:
             env={}
         if self is None:
             self = MyEnv
         command  = Tools.text_strip(command, args=args, replace=replace)
-        if "\n" in command:
+        if "\n" in command or asfile:
             path = Tools._file_path_tmp_get()
             MyEnv.logger.debug("execbash:\n'''%s\n%s'''\n" % (path, command))
             command2 = ""
             if die:
-                command2 = "set -ex\n"
+                command2 = "set -e\n"
             if cwd:
                 command2 += "cd %s\n" % cwd
             command2+=command
             Tools.file_write(path, command2)
+            print(command2)
             command3 = "bash %s" % path
             res = Tools.execute(command3,showout=showout,useShell=useShell,cwd=cwd,
-                            timeout=timeout,die=die,env=env,self=self)
+                            timeout=timeout,die=die,env=env,self=self,interactive=interactive,asfile=False)
             Tools.delete(path)
             return res
         else:
 
-
             if interactive:
                 res = Tools._execute_interactive(cmd=command, die=die)
                 logger.debug("execute interactive:%s"%command)
-                Tools.shell()
+                return res
             else:
                 logger.debug("execute:%s"%command)
 
@@ -823,6 +876,42 @@ class Tools():
     #
 
     @staticmethod
+    def ask_choices(msg,choices=[],default=None):
+        msg = Tools.text_strip(msg)
+        print(msg)
+        if "\n" in msg:
+            print()
+        choices = [str(i) for i in choices if i not in [None,"",","]]
+        choices_txt = ",".join(choices)
+        mychoice = input("make your choice (%s): "%choices_txt)
+        while mychoice not in choices:
+            if mychoice.strip() == "" and default:
+                return default
+            print ("ERROR: only choose %s please"%choices_txt)
+            mychoice = input("make your choice (%s): "%choices_txt)
+        return mychoice
+
+    @staticmethod
+    def ask_yes_no(msg, default='y'):
+        """
+
+        :param msg: the msg to show when asking for y or no
+        :return: will return True if yes
+        """
+        return Tools.ask_choices(msg,"y,n",default=default)in ["y",""]
+
+    @staticmethod
+    def ask_string(msg,default=None):
+        msg = Tools.text_strip(msg)
+        print(msg)
+        if "\n" in msg:
+            print()
+        txt = input()
+        if default and txt.strip()=="":
+            txt = default
+        return txt
+
+    @staticmethod
     def cmd_installed(name):
         if not name in MyEnv._cmd_installed:
             MyEnv._cmd_installed[name] =  shutil.which(name) != None
@@ -892,9 +981,10 @@ class Tools():
         args["URL"] = url_ssh
         args["NAME"] = repo
 
+        if "GITPULL" in os.environ:
+            pull = str(os.environ["GITPULL"]) == "1"
 
         git_on_system = Tools.cmd_installed("git")
-
 
         if git_on_system and MyEnv.config["USEGIT"] and MyEnv.sshagent_active_check() and ((exists and foundgit) or not exists):
             #there is ssh-key loaded
@@ -909,16 +999,21 @@ class Tools():
                 set -ex
                 mkdir -p {ACCOUNT_DIR}
                 cd {ACCOUNT_DIR}
-                git clone {URL}
+                git clone  --depth 1 {URL}
                 cd {NAME}
                 """
+                Tools.log("get code [git] (first time): %s"%repo)
+                Tools.execute(C, args=args)
             else:
-                if Tools.code_changed(REPO_DIR):
-                    if "GITMESSAGE" in os.environ:
-                        args["MESSAGE"] = os.environ["GITMESSAGE"]
+                if pull and Tools.code_changed(REPO_DIR):
+                    if Tools.ask_yes_no("\n**: found changes in repo '%s', do you want to commit?"%repo):
+                        if "GITMESSAGE" in os.environ:
+                            args["MESSAGE"] = os.environ["GITMESSAGE"]
+                        else:
+                            args["MESSAGE"] = input("\nprovide commit message: ")
+                            assert args["MESSAGE"].strip() != ""
                     else:
-
-                        args["MESSAGE"] = input("provide commit message python (or use env arg GITMESSAGE): ")
+                        sys.exit(1)
                     C="""
                     set -x
                     cd {REPO_DIR}
@@ -927,42 +1022,52 @@ class Tools():
                     git pull
 
                     """
-
-            Tools.log("get code [git]: %s"%repo)
-            if C!="":
-                Tools.execute(C, args=args)
+                    Tools.log("get code & commit [git]: %s"%repo)
+                    Tools.execute(C, args=args)
+                elif pull:
+                    C="""
+                    set -x
+                    cd {REPO_DIR}
+                    git pull
+                    """
+                    Tools.log("pull code [git]: %s"%repo)
+                    Tools.execute(C, args=args)
 
             def getbranch(args):
                 cmd = "cd {REPO_DIR}; git branch | grep \* | cut -d ' ' -f2"
                 rc,stdout,err = Tools.execute(cmd, die=False, args=args, interactive=False)
+                if rc>0:
+                    Tools.shell()
                 current_branch = stdout[1].strip()
                 Tools.log("Found branch: %s" % current_branch)
                 return current_branch
 
-            current_branch = getbranch(args=args)
+            if pull or exists is False:
 
-            ok=False
-            for branch_item in branch:
-                if ok:
-                    continue
+                current_branch = getbranch(args=args)
 
-                branch_item = branch_item.strip()
+                ok=False
+                for branch_item in branch:
+                    if ok:
+                        continue
 
-                if current_branch != branch_item:
-                    script="""
-                    set -ex
-                    cd {REPO_DIR}
-                    git checkout {BRANCH} -f
-                    exit 999
-                    """
-                    args["BRANCH"]=branch_item
-                    rc,out,err = Tools.execute(script,die=False, args=args,showout=True,interactive=False)
-                    if rc==999 or rc==231:
-                        ok=True
-                else:
-                    ok = True
+                    branch_item = branch_item.strip()
 
-            getbranch(args=args)
+                    if current_branch != branch_item:
+                        script="""
+                        set -ex
+                        cd {REPO_DIR}
+                        git checkout {BRANCH} -f
+                        exit 999
+                        """
+                        args["BRANCH"]=branch_item
+                        rc,out,err = Tools.execute(script,die=False, args=args,showout=True,interactive=False)
+                        if rc==999 or rc==231:
+                            ok=True
+                    else:
+                        ok = True
+
+                getbranch(args=args)
 
         else:
             Tools.log("get code [zip]: %s"%repo)
@@ -1159,6 +1264,7 @@ class UbuntuInstall():
         Tools.execute(script, interactive=True)
         MyEnv.state_set("ubuntu_base_install")
 
+    @staticmethod
     def python_redis_install():
         if MyEnv.state_exists("python_redis_install"):
             return
@@ -1189,6 +1295,7 @@ class UbuntuInstall():
                 "blosc>=1.5.1",
                 "Brotli>=0.6.0",
                 "certifi",
+                "cython",
                 "click>=6.6",
                 "pygments-github-lexers",
                 "colored-traceback>=0.2.2",
@@ -1206,7 +1313,7 @@ class UbuntuInstall():
                 "grequests>=0.3.0",
                 "httplib2>=0.9.2",
                 "ipcalc>=1.99.0",
-                "ipython<6.5.0>=6.0.0",
+                "ipython",
                 "Jinja2>=2.9.6",
                 "libtmux>=0.7.1",
                 "msgpack-python>=0.4.8",
@@ -1238,7 +1345,10 @@ class UbuntuInstall():
                 "Unidecode>=0.04.19",
                 "watchdog>=0.8.3",
                 "bpython",
-                "pbkdf2"
+                "pbkdf2",
+                'ptpython',
+                'pygments-markdown-lexer'
+
             ],
 
             # level 1: in the middle
@@ -1321,7 +1431,7 @@ class MyEnv():
 
     config = {}
     _sshagent_active = None
-    sandbox_python_active = False
+    sandbox_python_active = False #WHAT IS THIS?
     sandbox_lua_active = False
     config_changed = False
     _cmd_installed = {}
@@ -1489,16 +1599,35 @@ class MyEnv():
 
     @staticmethod
     def install(force=False):
+
+        #DONT USE THE SANDBOX
+        if MyEnv.config["INSYSTEM"]:
+            if MyEnv.platform() == "linux":
+                UbuntuInstall.do_all()
+            else:
+                OSXInstall.do_all()
+            env_path = "%s/.bash_profile"%MyEnv.config["DIR_HOME"]
+            if Tools.exists(env_path):
+                bashprofile = Tools.file_text_read(env_path)
+                cmd = "source /sandbox/env.sh"
+                if bashprofile.find(cmd)==-1:
+                    bashprofile+="\n%s\n"%cmd
+                    Tools.file_write(env_path,bashprofile)
+        else:
+            env_path = "%s/.bash_profile"%MyEnv.config["DIR_HOME"]
+            if Tools.exists(env_path):
+                bashprofile = Tools.file_text_read(env_path)
+                cmd = "source /sandbox/env.sh"
+                if bashprofile.find(cmd)!=-1:
+                    bashprofile = bashprofile.replace(cmd,"")
+                    Tools.file_write(env_path,bashprofile)
+
         #will get the sandbox installed
         if force or not MyEnv.state_exists("myenv_install"):
 
             if MyEnv.config["INSYSTEM"]:
 
-                #DONT USE THE SANDBOX
-                if MyEnv.platform() == "linux":
-                    UbuntuInstall.do_all()
-                else:
-                    OSXInstall.do_all()
+
 
                 Tools.code_github_get(repo="sandbox_base", branch=["master"])
 
@@ -1575,11 +1704,14 @@ class MyEnv():
         if MyEnv._sshagent_active is None:
             MyEnv._sshagent_active = len(Tools.execute("ssh-add -L",die=False,showout=False)[1])>40
         return MyEnv._sshagent_active
-        # try:
-        #     check_output(["pidof", "ssh-agent"])
-        # except Exception as e:
-        #     return False
-        # return True
+
+    @staticmethod
+    def sshagent_key_get():
+        """
+        check if the ssh agent is active
+        :return:
+        """
+        return Tools.execute("ssh-add -L",die=False,showout=False)[1].strip().split(" ")[-1].strip()
 
     @staticmethod
     def config_edit():
@@ -1648,7 +1780,7 @@ class JumpscaleInstaller():
     def __init__(self):
 
         self.account = "threefoldtech"
-        self.branch = ["master"]
+        self.branch = ["development_kosmos"]
         self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
     def install(self):
@@ -1672,6 +1804,9 @@ class JumpscaleInstaller():
         js_shell 'j.tools.console.echo("JumpscaleX IS OK.")'
         """
         Tools.execute(script,interactive=True)
+
+
+
 
     def remove_old_parts(self):
         tofind=["DigitalMe","Jumpscale","ZeroRobot"]
@@ -1708,13 +1843,13 @@ class JumpscaleInstaller():
     def repos_get(self,force=False):
 
         for sourceName,destName in self._jumpscale_repos:
-            if MyEnv.sandbox_python_active:
-                pull=True
-            else:
-                pull=False
-            if force or not MyEnv.state_exists("jumpscale_repoget_%s"%sourceName):
-                Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
-                MyEnv.state_set("jumpscale_repoget_%s"%sourceName)
+            # if MyEnv.sandbox_python_active:
+            #     pull=True
+            # else:
+            #     pull=False
+            pull=True
+            Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
+            # MyEnv.state_set("jumpscale_repoget_%s"%sourceName)
 
     def repos_link(self):
         """
@@ -1759,20 +1894,20 @@ class JumpscaleInstaller():
         Tools.execute("cd /sandbox;source env.sh;js_init generate")
 
 
+
 formatter = LogFormatter()
 
 logger = logging.Logger("installer")
-logger.level = logging.DEBUG  #10 is debug
+logger.level = logging.INFO  #10 is debug
 
 log_handler = logging.StreamHandler()
-log_handler.setLevel(logging.DEBUG)
+log_handler.setLevel(logging.INFO)
 log_handler.setFormatter(formatter)
 logger.addHandler(log_handler)
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 MyEnv.logger = logger
-
 
 # print (Tools.text_replace("{BLUE} this is a test {BOLD}{RED} now red {RESET} go back to white",colors=True))
 

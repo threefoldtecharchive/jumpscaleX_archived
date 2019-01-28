@@ -43,12 +43,11 @@ class zero_bootClient(JSConfigClient):
     """
 
     def _init(self):
-        self.sshclient = j.clients.ssh.get(
-            instance=self.sshclient_instance)
+        self.sshclient = j.clients.ssh.get(name=self.sshclient_instance)
         self.networks = Networks(self.sshclient)
         zerotier_instance = self.zerotier_instance
         if zerotier_instance:
-            ztier = j.clients.zerotier.get(instance=zerotier_instance)
+            ztier = j.clients.zerotier.get(name=zerotier_instance)
             network = self.networks.get()
             cidr = str(netaddr.IPNetwork(network.subnet).cidr)
             route = {'target': cidr, 'via': self.sshclient.addr}

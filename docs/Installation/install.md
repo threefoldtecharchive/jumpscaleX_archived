@@ -20,20 +20,26 @@ required steps:
 brew install curl python3
 
 #create dir
-sudo mkdir -p /sandbox;sudo chown -R $USER:staff /sandbox
+sudo mkdir -p /sandbox; sudo chown -R "${USER}:staff" /sandbox
 
 #do the installation
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_kosmos/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py
 ```
 
 ### Ubuntu
 
-- TODO:
+#### Docker installation
+```
+git clone https://github.com/threefoldtech/jumpscaleX.git
+cd jumpscaleX
+sudo docker build --rm -t threefoldtech/jsx .
+```
 
+If you are a developer don't forget to load your SSH key for github.
 
 ## more info
 
-see also [install/readme.md](../install/readme.md)
+see also [install/readme.md](../../install/README.md)
 
 ## with SSH key
 

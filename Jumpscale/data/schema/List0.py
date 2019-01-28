@@ -3,6 +3,7 @@ from Jumpscale import j
 
 from collections.abc import MutableSequence
 
+
 class List0(MutableSequence):
 
     def __init__(self, schema_property):
@@ -86,9 +87,10 @@ class List0(MutableSequence):
         |       H            |     DDict_HR       | [{valid': False, 'token_price': '5 EUR'}]                                         |
         +--------------------+--------------------+-----------------------------------------------------------------------------------+
         """
-        if self.schema_property.pointer_type is None:
+        if self._inner_list == []:
+            self._inner_list = self.schema_property.default
             return self._inner_list
-        else:
+        elif isinstance(self._inner_list[0], dict):
             if subobj_format == "J":
                 return [item._ddict_json for item in self._inner_list]
             elif subobj_format == "D":
@@ -97,6 +99,8 @@ class List0(MutableSequence):
                 return [item._ddict_hr for item in self._inner_list]
             else:
                 raise RuntimeError("only support type J,D,H")
+        else:
+            return self._inner_list
 
     def new(self, data=None):
         """
