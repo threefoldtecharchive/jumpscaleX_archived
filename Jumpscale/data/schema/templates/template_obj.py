@@ -345,7 +345,7 @@ class ModelOBJ():
             d["id"]=self.id
         if self.model is not None:
             d=self.model._dict_process_out(d)
-        return d
+        return str(d)
 
     @property
     def _ddict_json_hr(self):
