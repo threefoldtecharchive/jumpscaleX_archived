@@ -2,7 +2,7 @@ import re
 import time
 
 import netaddr
-from jumpscale import j
+from Jumpscale import j
 
 OVS_FLIST = 'https://hub.grid.tf/tf-autobuilder/threefoldtech-openvswitch-plugin-master.flist'
 
