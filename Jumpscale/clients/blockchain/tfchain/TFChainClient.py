@@ -75,7 +75,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             resp = resp['block']
         else:
             blockid = self._normalize_id(value)
-            resp = j.clients.tfchain.explorer.get(nodes=self.explorer_nodes.pylist(), endpoint="/explorer/hashes/"+value)
+            resp = j.clients.tfchain.explorer.get(nodes=self.explorer_nodes.pylist(), endpoint="/explorer/hashes/"+blockid)
             resp = j.data.serializers.json.loads(resp)
             assert resp['hashtype'] == 'blockid'
             resp = resp['block']
