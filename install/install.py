@@ -124,7 +124,7 @@ def ui():
             It's recommended to have a SSH key as used on github loaded in your ssh-agent
             If you don't have an ssh key it will not be possible to modify code, code will be checked out statically.
             """
-            if not IT.Tools.ask_yes_no(default="y"):
+            if not IT.Tools.ask_yes_no(msg=T, default="y"):
                 print("Could not continue, load ssh key.")
                 sys.exit(1)
             else:
