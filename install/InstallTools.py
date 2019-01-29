@@ -892,13 +892,13 @@ class Tools:
         return mychoice
 
     @staticmethod
-    def ask_yes_no(msg):
+    def ask_yes_no(msg, default='y'):
         """
 
         :param msg: the msg to show when asking for y or no
         :return: will return True if yes
         """
-        return Tools.ask_choices(msg,"y,n",default="y")in ["y",""]
+        return Tools.ask_choices(msg,"y,n",default=default)in ["y",""]
 
     @staticmethod
     def ask_string(msg,default=None):
@@ -1042,7 +1042,7 @@ class Tools:
                     C="""
                     set -x
                     cd {REPO_DIR}
-                    git pull    
+                    git pull
                     """
                     Tools.log("pull code [git]: %s"%repo)
                     Tools.execute(C, args=args)
