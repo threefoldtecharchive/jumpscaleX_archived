@@ -45,6 +45,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
 
         # generate keys
         keys_to_generate = self.key_count
+        self.key_count = 0
         # generate the primary address
         self._primary_address = str(self._key_pair_new().unlock_hash())
         # generate the other addresses
@@ -96,6 +97,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         """
         The balance "sheet" of the wallet.
         """
+        # TODO: support extra address key scanning, this call is the perfect opportunity to try that
         addresses = self.addresses
         balance = WalletsBalance()
         # collect info for all personal addresses
@@ -191,7 +193,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # otherwise create a new one
         e = j.data.rivine.encoder_sia_get()
         e.add_array(self.seed_entropy)
-        e.add(self.key_count-1)
+        e.add(self.key_count)
         seed_hash = bytes.fromhex(j.data.hash.blake2_string(e.data))
         private_key = SigningKey(seed_hash)
         public_key = private_key.get_verifying_key()
@@ -412,9 +414,6 @@ class WalletBalance(object):
         return result + self._human_readable_balance()
 
 from .types.ConditionTypes import ConditionMultiSignature
-
-# TODO: ensure that the entire code base of tfchain client returns as much as possible primitive types (e.g. str instead of UnlockHash),
-#       best to keep these internal types internal where possible (especially for the primitive types)
 
 class MultiSigWalletBalance(WalletBalance):
     def __init__(self, owners, signature_count):
