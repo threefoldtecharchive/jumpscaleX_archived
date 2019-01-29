@@ -345,7 +345,7 @@ class ModelOBJ():
             d["id"]=self.id
         if self.model is not None:
             d=self.model._dict_process_out(d)
-        return str(d)
+        return d
 
     @property
     def _ddict_json_hr(self):
@@ -408,6 +408,6 @@ class ModelOBJ():
         return j.data.serializers.msgpack.dumps(self._ddict)
 
     def __str__(self):
-        return j.data.serializers.json.dumps(self._ddict_hr,sort_keys=True, indent=True)
+        return j.data.serializers.json.dumps(str(self._ddict_hr),sort_keys=True, indent=True)
 
     __repr__ = __str__
