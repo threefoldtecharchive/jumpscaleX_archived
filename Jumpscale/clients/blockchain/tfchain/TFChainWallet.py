@@ -195,3 +195,12 @@ class SpendableKey():
 
     def unlock_hash(self):
         return self._public_key.unlock_hash()
+
+    def sign(self, hash):
+        """
+        Sign the given hash and return the public key used to sign.
+
+        @param hash: hash to be signed
+        """
+        sig = self._private_key.sign(hash)
+        return (sig, self._public_key)

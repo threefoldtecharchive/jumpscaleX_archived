@@ -5,6 +5,8 @@ from .types.FulfillmentTypes import FulfillmentFactory
 from .types.ConditionTypes import ConditionFactory
 from .types.CryptoTypes import PublicKey, PublicKeySpecifier
 
+from .crypto.MerkleTree import Tree
+
 class TFChainTypesFactory(j.application.JSBaseClass):
     """
     TFChain Types Factory class
@@ -73,6 +75,12 @@ class TFChainTypesFactory(j.application.JSBaseClass):
         @param obj: str that contains a nil str or a json string
         """
         return PublicKey.from_json(obj)
+
+    def merkle_tree_new(self):
+        """
+        Create a new MerkleTree
+        """
+        return Tree(hash_func=lambda o: bytes.fromhex(j.data.hash.blake2_string(o)))
 
     def test(self):
         """

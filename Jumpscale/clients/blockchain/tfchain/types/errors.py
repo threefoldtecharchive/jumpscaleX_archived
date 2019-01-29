@@ -13,3 +13,8 @@ class UnknownTransansactionVersion(Exception):
     """
     UnknownTransansactionVersion error
     """
+
+class ExplorerNoContent(Exception):
+    """
+    ExplorerNoContent error
+    """

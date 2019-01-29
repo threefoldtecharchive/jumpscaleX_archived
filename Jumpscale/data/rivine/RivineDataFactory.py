@@ -24,6 +24,16 @@ class RivineDataFactory(j.application.JSBaseClass):
     def encoder_sia_get(self):
         return SiaBinaryEncoder()
 
+    def rivine_encode(self, *values):
+        e = self.encoder_rivine_get()
+        e.add_all(*values)
+        return e.data
+
+    def sia_encode(self, *values):
+        e = self.encoder_sia_get()
+        e.add_all(*values)
+        return e.data
+
     def test(self, name=''):
         """
         js_shell 'j.data.rivine.test()'

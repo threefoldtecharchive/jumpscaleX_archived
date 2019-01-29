@@ -95,6 +95,7 @@ from abc import ABC, abstractmethod, abstractclassmethod
 class TransactionBaseClass(ABC, j.application.JSBaseClass):
     def __init__(self):
         self._id = None
+        self._unconfirmed = False
 
     @classmethod
     def from_json(cls, obj):
@@ -113,6 +114,14 @@ class TransactionBaseClass(ABC, j.application.JSBaseClass):
         Version of this Transaction.
         """
         pass
+    
+    @property
+    def unconfirmed(self):
+        return self._unconfirmed
+    @unconfirmed.setter
+    def unconfirmed(self, value):
+        assert isinstance(value, bool)
+        self._unconfirmed = bool(value)
     
     @property
     def id(self):
