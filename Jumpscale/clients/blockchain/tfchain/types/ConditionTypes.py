@@ -136,6 +136,39 @@ class ConditionFactory(j.application.JSBaseClass):
         assert str(clt_ms.unlockhash) == '0313a5abd192d1bacdd1eb518fc86987d3c3d1cfe3c5bed68ec4a86b93b2f05a89f67b89b07d71'
 
 
+class OutputLock():
+    # as defined by Rivine
+    _MIN_TIMESTAMP_VALUE = 500 * 1000 * 1000
+
+    def __init__(self, value=0):
+        assert isinstance(value ,int)
+        self._value = int(value)
+
+    def __int__(self):
+        return self._value
+
+    def __str__(self):
+        if self._value < OutputLock._MIN_TIMESTAMP_VALUE:
+            return str(self._value)
+        return j.data.time.epoch2HRDateTime(self._value)
+    __repr__ = __str__
+
+    @property
+    def value(self):
+        """
+        The internal lock (integral) value.
+        """
+        return self._value
+
+    def locked_check(self, height, time):
+        """
+        Check if the the output is still locked on the given block height/time.
+        """
+        if self._value < OutputLock._MIN_TIMESTAMP_VALUE:
+            return height < self._value
+        return time < self._value
+
+
 from abc import abstractmethod
 
 from .BaseDataType import BaseDataTypeClass
@@ -152,6 +185,10 @@ class ConditionBaseClass(BaseDataTypeClass):
     @abstractmethod
     def type(self):
         pass
+
+    @property
+    def lock(self):
+        return OutputLock()
     
     @property
     @abstractmethod
@@ -485,7 +522,7 @@ class ConditionLockTime(ConditionBaseClass):
         self._condition = ConditionUnlockHash()
         self.condition = condition
         self._lock_time = 0
-        self.locktime = locktime
+        self.lock = locktime
 
     @property
     def type(self):
@@ -494,6 +531,20 @@ class ConditionLockTime(ConditionBaseClass):
     @property
     def unlockhash(self):
         return self._condition.unlockhash
+
+    @property
+    def lock(self):
+        return OutputLock(self._lock_time)
+    @lock.setter
+    def lock(self, value):
+        if not value:
+            self._lock_time = 0
+        else:
+            assert isinstance(value, int)
+            value = int(value)
+            if value < 0:
+                value = 0
+            self._lock_time = value
 
     @property
     def condition(self):
@@ -506,22 +557,11 @@ class ConditionLockTime(ConditionBaseClass):
             assert isinstance(value, ConditionBaseClass)
             self._condition = value
 
-    @property
-    def lock_time(self):
-        return self._lock_time
-    @lock_time.setter
-    def lock_time(self, value):
-        if not value:
-            self._lock_time = 0
-        else:
-            assert isinstance(value, int)
-            self._lock_time = int(value)
-
     def from_json_data_object(self, data):
-        self.lock_time = int(data['locktime'])
+        self.lock = int(data['locktime'])
         cond = j.clients.tfchain.types.conditions.from_json(obj=data['condition'])
         assert cond.type in(_CONDITION_TYPE_UNLOCK_HASH, _CONDITION_TYPE_MULTI_SIG, _CONDITION_TYPE_NIL)
-        self._condition = cond
+        self.condition = cond
 
     def json_data_object(self):
         return {
