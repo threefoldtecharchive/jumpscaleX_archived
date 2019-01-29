@@ -9,7 +9,7 @@ rootdir = os.path.dirname(os.path.abspath(__file__))
 path = os.path.join(rootdir, "InstallTools.py")
 
 if not os.path.exists(path):
-    cmd = "cd %s;rm -f InstallTools.py;curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_kosmos/install/InstallTools.py?$RANDOM > InstallTools.py" % rootdir
+    cmd = "cd %s;rm -f InstallTools.py;curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/InstallTools.py?$RANDOM > InstallTools.py" % rootdir
     subprocess.call(cmd, shell=True)
 
 spec = util.spec_from_file_location("IT", path)
@@ -35,35 +35,35 @@ def help():
     T="""
     Jumpscale X Installer
     ---------------------
-    
+
     options
-    
+
     # type of installation
     -1 = in system install
     -2 = sandbox install
     -3 = install in a docker (make sure docker is installed)
-    
+
     -y = answer yes on every question (for unattended installs)
     -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install
-    
+
     -r = reinstall, basically means will try to re-do everything without removing (keep data)
-    
+
     -p = pull code from git, if not specified will only pull if code directory does not exist yet
-    
+
     -w = install the wiki at the end, which includes openresty, lapis, lua, ...
-    
+
     --name =  name of docker, only relevant when docker option used
 
     --codepath = "/sandbox/code" can overrule, is where the github code will be checked out
-    
+
     --portrange = 1 is the default means 8000-8099 on host gets mapped to 8000-8099 in docker
                   1 means 8100-8199 on host gets mapped to 8000-8099 in docker
                   2 means 8200-8299 on host gets mapped to 8000-8099 in docker
                   ...
-    --port = port of container SSH std is 9022 (normally not needed to use because is in portrange:22 e.g. 9122 if portrange 1) 
-    
+    --port = port of container SSH std is 9022 (normally not needed to use because is in portrange:22 e.g. 9122 if portrange 1)
+
     -h = this help
-    
+
     """
     print(IT.Tools.text_replace(T))
     sys.exit(0)
@@ -89,11 +89,11 @@ def ui():
             T="""
             Installer choice for jumpscale in the docker
             --------------------------------------------
-            
+
             Do you want to install
              - in system (development)                : 1
              - using a sandbox                        : 2
-             
+
             """
 
             mychoice = int(IT.Tools.ask_choices(T,[1,2]))
@@ -103,12 +103,12 @@ def ui():
             T="""
             Installer choice for jumpscale
             ------------------------------
-            
+
             Do you want to install
              - insystem         (ideal for development only in OSX & Ubuntu1804)        : 1
              - using a sandbox  (only in OSX & Ubuntu1804)                              : 2
              - using docker?                                                            : 3
-             
+
             """
 
             mychoice = int(IT.Tools.ask_choices(T,[1,2,3]))
@@ -207,10 +207,10 @@ def ui():
 
 
     T="""
-    
+
     Jumpscale X Installer
     ---------------------
-        
+
     """
     T=IT.Tools.text_replace(T)
 
@@ -289,7 +289,7 @@ elif "3" in args:
         IT.Tools.execute("docker rm -f %s"%args["name"])
 
     cmd="""
-            
+
     docker run --name {NAME} \
     --hostname {NAME} \
     -d \
@@ -334,18 +334,18 @@ elif "3" in args:
             args_txt+=" -%s"%item
     if "codepath" in args:
         args_txt+=" --codepath=%s"%args["codepath"]
-    sshexec('curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_kosmos/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py %s'%args_txt)
+    sshexec('curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py %s'%args_txt)
 
     k = """
-    
+
     install succesfull:
-    
+
     # to login to the docker using ssh use (if std port)
     ssh root@localhost -A -p {PORT}
-    
-    # or for kosmos shell  
+
+    # or for kosmos shell
     ssh root@localhost -A -p {PORT} 'source /sandbox/env.sh;kosmos'
-     
+
     """
     print(IT.Tools.text_replace(k,args=args))
 
