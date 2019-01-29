@@ -12,7 +12,7 @@ re_nondigit = re.compile(r'\D')
 re_float = re.compile(r'[0-9]*\.[0-9]+')
 re_digit = re.compile(r'[0-9]*')
 from builtins import str
-import ast
+
 try:
     import pygments.lexers
     # from pygments.formatters import get_formatter_by_name
@@ -901,32 +901,6 @@ class Text(object):
             text = text.replace(item, item2)
         return text
 
-    def _dict_parse(self ,item):
-        new_dict = {}
-        for element_key , element_value in zip(item.keys, item.values):
-            if isinstance(element_key, ast.Str):
-                new_dict.setdefault(element_key.s)
-                key = element_key.s
-            elif isinstance(element_key, ast.Num):
-                new_dict.setdefault(element_key.n)
-                key = element_key.n
-            elif isinstance(element_key, ast.NameConstant):
-                new_dict.setdefault(element_key.value)
-                key = element_key.value
-            elif isinstance(element_key, ast.Dict):
-                key = self._dict_parse(element_key)
-                new_dict.setdefault(key)
-
-            if isinstance(element_value, ast.Str):
-                new_dict[key] = element_value.s
-            elif isinstance(element_value, ast.Num):
-                new_dict[key] = element_value.n
-            elif isinstance(element_value, ast.NameConstant):
-                new_dict[key] = element_value.n
-            elif isinstance(element_value, ast.Dict):
-                new_dict[key] = self._dict_parse(element_value)
-        return new_dict
-
     def getList(self, text, ttype=None):
         """
         @type can be int,bool or float (otherwise its always str)
@@ -945,19 +919,13 @@ class Text(object):
         text = text.strip(" [")
         text = text.strip(" ]")
 
-        text=text.strip("\"").strip()
+        text=text.strip("'").strip("\"").strip()
 
         if self.strip(text) == "":
             return []
 
         text = self._dealWithQuote(text)  # to get ',' in '' not counting
-        tree = ast.parse(text)
-
-        if isinstance(tree.body[0].value.elts[0], ast.Dict):
-            text =[]
-            for item in tree.body[0].value.elts:
-                text.append(self._dict_parse(item))
-        elif "," in text:
+        if "," in text:
             text = text.split(",")
             text = [item.strip().strip("'").strip() for item in text if item.strip().strip("'").strip() is not ""]
         elif "\n" in text:

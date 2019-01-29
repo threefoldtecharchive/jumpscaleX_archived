@@ -1444,6 +1444,7 @@ j.core._groups["world"] = j.world
 class group_tools(JSGroup):
     def __init__(self):
         
+        self._kosmos = None
         self._tfbot = None
         self._sandboxer = None
         self._fixer = None
@@ -1489,6 +1490,27 @@ class group_tools(JSGroup):
         self._email = None
 
     
+    @property
+    def kosmos(self):
+        if self._kosmos is None:
+            # print("LOAD:Kosmos")
+            from DigitalMe.tools.kosmos.kosmos_OLD.Kosmos import Kosmos
+            # try:
+            #     from DigitalMe.tools.kosmos.kosmos_OLD.Kosmos import Kosmos
+            # except Exception as e:
+            #     msg = j.core.application.error_init("import", "DigitalMe.tools.kosmos.kosmos_OLD.Kosmos", e)
+            #     raise e
+            # # print("RUN:Kosmos")
+
+            self._kosmos =  Kosmos()
+
+            # try:
+            #     self._kosmos =  Kosmos()
+            # except Exception as e:
+            #     msg = j.core.application.error_init("execute","DigitalMe.tools.kosmos.kosmos_OLD.Kosmos",e)
+            #     return None
+            # print("OK")
+        return self._kosmos
     @property
     def tfbot(self):
         if self._tfbot is None:

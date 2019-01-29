@@ -134,8 +134,8 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             make -j8
             make install
             rm -rf {DIR_VAR}/build/openresty
-            rm /sandbox/bin/lua
-            ln -s /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
+            rm -f /sandbox/bin/lua
+            cp /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
 
             """
             self.tools.run(C)
@@ -150,7 +150,6 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         :return:
         """
         self.build(reset=reset)
-        j.shell()
 
 
     def copy_to_github(self,reset=False):

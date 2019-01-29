@@ -3,7 +3,6 @@ from Jumpscale import j
 
 from collections.abc import MutableSequence
 
-
 class List0(MutableSequence):
 
     def __init__(self, schema_property):
@@ -133,7 +132,7 @@ class List0(MutableSequence):
     def __repr__(self):
         out = ""
         for item in self.pylist(subobj_format="D"):
-            out += "- %s\n" % str(item)
+            out += "- %s\n" % item
         if out.strip() == "":
             return "[]"
         return out

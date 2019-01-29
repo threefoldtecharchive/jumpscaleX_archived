@@ -13,8 +13,7 @@ class SSHKeys(j.application.JSFactoryBaseClass):
         self.SSHKey = SSHKey  # is the child class, can have more than 1
 
     def knownhosts_remove(self, item):
-        '''Remove known hosts
-
+        """
         :param item: is ip addr or hostname to be removed from known_hosts
         :type item: str
         '''

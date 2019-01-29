@@ -623,7 +623,7 @@ class DateTime(String):
 
     def __init__(self):
         String.__init__(self)
-        self._RE = re.compile('[0-9]{4}/[0-9]{2}/[0-9]{2}')  # something wrong here is not valid for time
+        self._RE = re.compile('[0-9]{4}/[0-9]{2}/[0-9]{2}')  #something wrong here is not valid for time
 
     def get_default(self):
         return 0
@@ -720,7 +720,7 @@ class DateTime(String):
             return (v, fstr)
 
         if j.data.types.string.check(v):
-            v = v.strip("\"").strip("'")
+            v=v.strip("\"").strip("'")
             if v.strip() in ["0", ""]:
                 return 0
 
@@ -785,7 +785,6 @@ class DateTime(String):
         out_compare = j.core.text.strip(out_compare)
         assert out == out_compare
 
-
 class Date(DateTime):
     '''
     internal representation is an epoch (int)
@@ -812,10 +811,10 @@ class Date(DateTime):
         will return epoch
 
         """
-        # am sure there are better ways how to do this but goes to beginning of day
-        v2 = DateTime.clean(self, v)
+        #am sure there are better ways how to do this but goes to beginning of day
+        v2 = DateTime.clean(self,v)
         dt = datetime.fromtimestamp(v2)
-        dt2 = datetime(dt.year, dt.month, dt.day, 0, 0)
+        dt2 = datetime(dt.year,dt.month,dt.day,0,0)
         return int(dt2.strftime('%s'))
 
     def toString(self, val, local=True):

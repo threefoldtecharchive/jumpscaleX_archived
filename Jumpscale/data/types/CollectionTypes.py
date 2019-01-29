@@ -139,18 +139,8 @@ class Dictionary(String):
     def toJSON(self, v):
         return self.toString(v)
 
-    def python_code_get(self, value, sort=False):
-        """
-        produce the python code which represents this value
-        """
-        return str(value)
-
-    def toHR(self, v):
-        return self.toString(v)
-
     def capnp_schema_get(self, name, nr):
         return "%s @%s :Data;" % (name, nr)
-
 
 class List():
     '''
@@ -306,7 +296,6 @@ class List():
                 "", nr=0).split(":", 1)[1].rstrip(";").strip()
         return "%s @%s :List(%s);" % (name, nr, capnptype)
 
-
 class Hash(List):
 
     '''
@@ -353,7 +342,7 @@ class Hash(List):
             else:
                 return int(val)
 
-        if j.data.types.list.check(value):
+        if j.data.types.list.check(value):# or j.data.types.set.check(value):
             # prob given as list or set of 2 which is the base representation
             if len(value) != 2:
                 raise RuntimeError("hash can only be list/set of 2")
@@ -395,10 +384,8 @@ class Hash(List):
         else:
             return "%s = %s" % (key, self.python_code_get(value))
 
-    def capnp_schema_get(self, name, nr):
-        return "%s @%s :Data;" % (name, nr)
 
-# TODO: why do we have a set, from our perspective a set & list should be same for novice users
+#TODO: why do we have a set, from our perspective a set & list should be same for novice users
 
 # class Set(List):
 #     '''Generic set type'''
@@ -431,3 +418,4 @@ class Hash(List):
 #             out += "%s, " % self.SUBTYPE.python_code_get(item)
 #         out = out.strip(",")
 #         out += " }"
+#         return out

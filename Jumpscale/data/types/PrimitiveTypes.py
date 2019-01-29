@@ -154,10 +154,9 @@ class Bytes():
     def fromString(self, s):
         """
         """
-        value = j.data.types.string.clean(s)
-        if not isinstance(value, str):
+        if not isinstance(s, str):
             raise ValueError("Should be string:%s" % s)
-        return value.encode()
+        return s.encode()
 
     def toString(self, v):
         v = self.clean(v)
@@ -459,7 +458,7 @@ class Percent(Integer):
         if Integer().check(value):
             return value
         elif Float().check(value):
-            return round(value * 100)
+            return value
         else:
             raise RuntimeError(
                 "could not convert input to percent, input was:%s" %

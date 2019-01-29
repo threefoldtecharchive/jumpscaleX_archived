@@ -4,6 +4,7 @@ Tfchain Client
 
 from Jumpscale import j
 
+from .types.errors import ExplorerNoContent
 from Jumpscale.clients.http.HttpClient import HTTPError
 
 # TODO: support a shuffle feature in the idGenerator module of JS
@@ -42,6 +43,8 @@ class TFChainExplorerClient(j.application.JSBaseClass):
                 resp = j.clients.http.get(url=address+endpoint)
                 if resp.getcode() == 200:
                     return resp.readline()
+                if resp.getcode() == 204:
+                    raise ExplorerNoContent("nothing could be found at endpoint {}".format(endpoint))
             except HTTPError as e:
                 self._logger.debug("tfchain explorer get exception at endpoint {} on {}: {}".format(endpoint, address, e))
                 pass
