@@ -24,7 +24,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         list_names = (LS)
-        list_str = ['test', "example"] (LS)
+        list_str = ["test", "example"] (LS)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -431,7 +431,7 @@ class SchemaTest(BaseTest):
 
         self.log("Try to set parameter with percent type, should succeed.")        
         percent_list = [random.randint(1, 100), random.uniform(1, 100)]
-        check_list = [percent_list[0], round(percent_list[1]*100)]
+        check_list = [percent_list[0], percent_list[1]]
         schema_obj.percent_list = percent_list
         self.assertEqual(schema_obj.percent_list, check_list)
 
@@ -440,7 +440,7 @@ class SchemaTest(BaseTest):
         schema_obj.percent_list.append(value)
         self.assertEqual(schema_obj.percent_list, check_list)
         self.log("schema list %s" % schema_obj.list_percents)
-        self.assertEqual(schema_obj.list_percents, [84, 7340, 95, 7280, 54, 6444])
+        self.assertEqual(schema_obj.list_percents, [84, 73.40, 95, 72.80, 54, 64.44])
 
     def test012_validate_list_of_urls(self):
         """
@@ -551,6 +551,7 @@ class SchemaTest(BaseTest):
         schema_obj.guid_list.append(value)
         self.assertEqual(schema_obj.guid_list, guid_list)
 
+    @unittest.skip("can't need this type")
     def test015_validate_list_of_dicts(self):
         """
         SCM-036

@@ -154,6 +154,7 @@ class Bytes():
     def fromString(self, s):
         """
         """
+        s = j.data.types.string.clean(s)
         if not isinstance(s, str):
             raise ValueError("Should be string:%s" % s)
         return s.encode()
@@ -448,7 +449,7 @@ class Percent(Integer):
         used to change the value to a predefined standard for this type
         """
         if String().check(value):
-            value=value.strip("\"").strip("'")
+            value = value.strip("\"").strip("'")
             if "%" in value:
                 value = value.replace("%", "")
             if "." in value:
