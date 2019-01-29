@@ -97,10 +97,12 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         The balance "sheet" of the wallet.
         """
         addresses = self.addresses
-        balance = WalletBalance()
-        # collect outputs for all wallets
+        balance = WalletsBalance()
+        # collect info for all personal addresses
+        multisig_addresses = []
         for address in addresses:
             try:
+                # collect the inputs/outputs linked to this address for all found transactions
                 result = self._parent._parent.unlockhash_get(address)
                 for txn in result.transactions:
                     for ci in txn.coin_inputs:
@@ -109,10 +111,30 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                     for co in txn.coin_outputs:
                         if str(co.condition.unlockhash) == address:
                             balance.output_add(co, confirmed=(not txn.unconfirmed), spent=False)
+                # collect all multisig addresses
+                for address in result.multisig_addresses:
+                    multisig_addresses.append(str(address))
             except ExplorerNoContent:
                  # ignore this exception as it simply means
                  # the address has no activity yet on the chain
                 pass
+        # collect info for all multisig addresses
+        for address in multisig_addresses:
+            try:
+                # collect the inputs/outputs linked to this address for all found transactions
+                result = self._parent._parent.unlockhash_get(address)
+                for txn in result.transactions:
+                    for ci in txn.coin_inputs:
+                        if str(ci.parent_output.condition.unlockhash) == address:
+                            balance.multisig_output_add(address, ci.parent_output, confirmed=(not txn.unconfirmed), spent=True)
+                    for co in txn.coin_outputs:
+                        if str(co.condition.unlockhash) == address:
+                            balance.multisig_output_add(address, co, confirmed=(not txn.unconfirmed), spent=False)
+            except ExplorerNoContent:
+                 # ignore this exception as it simply means
+                 # the address has no activity yet on the chain
+                pass
+        # add the blockchain info for lock context
         info = self._parent._parent.blockchain_info_get()
         balance.chain_height = info.height
         balance.chain_time = info.timestamp
@@ -235,9 +257,7 @@ class SpendableKey():
         return (sig, self._public_key)
 
 
-# TODO: support multisig wallets
-
-class WalletBalance():
+class WalletBalance(object):
     def __init__(self):
         # personal wallet outputs
         self._outputs = {}
@@ -370,6 +390,17 @@ class WalletBalance():
             else:
                 self._outputs_unconfirmed[output.id] = output
 
+    def _human_readable_balance(self):
+        # report confirmed coins
+        result = "{} TFT available and {} TFT locked".format(self.available, self.locked)
+        # optionally report unconfirmed coins
+        unconfirmed = self.unconfirmed
+        unconfirmed_locked = self.unconfirmed_locked
+        if unconfirmed > 0 or unconfirmed_locked > 0:
+            result += "\nUnconfirmed: {} TFT available and {} TFT locked".format(unconfirmed, unconfirmed_locked)
+        # return report
+        return result
+
     def __repr__(self):
         # report chain context
         result = ""
@@ -377,12 +408,81 @@ class WalletBalance():
             result += "wallet balance on height {} at {}\n".format(self.chain_height, j.data.time.epoch2HRDateTime(self.chain_time))
         else:
             result += "wallet balance at an unknown time\n"
-        # report confirmed coins
-        result += "{} TFT available and {} TFT locked\n".format(self.available, self.locked)
-        # optionally report unconfirmed coins
-        unconfirmed = self.unconfirmed
-        unconfirmed_locked = self.unconfirmed_locked
-        if unconfirmed > 0 or unconfirmed_locked > 0:
-            result += "Unconfirmed: {} TFT available and {} TFT locked\n".format(unconfirmed, unconfirmed_locked)
-        # return report
+        # report context + balance
+        return result + self._human_readable_balance()
+
+from .types.ConditionTypes import ConditionMultiSignature
+
+# TODO: ensure that the entire code base of tfchain client returns as much as possible primitive types (e.g. str instead of UnlockHash),
+#       best to keep these internal types internal where possible (especially for the primitive types)
+
+class MultiSigWalletBalance(WalletBalance):
+    def __init__(self, owners, signature_count):
+        """
+        Creates a personal multi signature wallet.
+        """
+        assert signature_count >= 1
+        assert len(owners) >= signature_count
+        self._owners = owners
+        self._signature_count = signature_count
+        super().__init__()
+
+    @property
+    def address(self):
+        """
+        The address of this MultiSig Wallet
+        """
+        return str(ConditionMultiSignature(unlockhashes=self._owners, min_nr_sig=self._signature_count).unlockhash)
+
+    @property
+    def owners(self):
+        """
+        Owners of this MultiSignature Wallet
+        """
+        return [str(owner) for owner in self._owners]
+
+    @property
+    def signature_count(self):
+        """
+        Amount of signatures minimum required
+        """
+        return self._signature_count
+
+    def _human_readable_balance(self):
+        result = "MultiSignature ({}-of-{}) Wallet {}:\n".format(self.signature_count, len(self.owners), self.address)
+        result += "Owners: " + ", ".join(self.owners) +"\n"
+        result += super()._human_readable_balance()
+        return result
+
+class WalletsBalance(WalletBalance):
+    def __init__(self):
+        """
+        Creates a personal wallet, which also can have children wallets that are meant for
+        all MultiSignature wallets that are related to one or more addresses of the personal wallet.
+        """
+        self._wallets = {}
+        super().__init__()
+
+    @property
+    def wallets(self):
+        """
+        All multisig wallets linked to this wallet.
+        """
+        return self._wallets
+
+    def multisig_output_add(self, address, output, confirmed=True, spent=False):
+        """
+        Add an output to the MultiSignature Wallet's balance.
+        """
+        assert isinstance(output.condition, ConditionMultiSignature)
+        if not address in self._wallets:
+            self._wallets[address] = MultiSigWalletBalance(
+                owners=output.condition.unlockhashes,
+                signature_count=output.condition.required_signatures)
+        self._wallets[address].output_add(output, confirmed=confirmed, spent=spent)
+
+    def __repr__(self):
+        result = super().__repr__()
+        for wallet in self.wallets.values():
+            result += "\n\n" + wallet._human_readable_balance()
         return result

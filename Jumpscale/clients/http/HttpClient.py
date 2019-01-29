@@ -256,9 +256,9 @@ class HttpClient(j.application.JSBaseClass):
         c = self.getConnection()
         return c.download(url, dest)
 
-    def get(self, url):
+    def get(self, url, headers=None):
         c = self.getConnection()
-        return c.get(url)
+        return c.get(url, headers=headers)
 
     def test(self):
         """

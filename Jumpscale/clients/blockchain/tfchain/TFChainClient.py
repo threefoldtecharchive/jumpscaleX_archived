@@ -20,7 +20,7 @@ _EXPLORER_NODES = {
         'https://explorer2.testnet.threefoldtoken.com',
     ],
     "DEV": [
-        'http://localhost:23112'
+        'http://localhost:23110'
     ],
 }
 
@@ -144,10 +144,10 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             # append the transaction to the list of transactions
             transactions.append(transaction)
         # collect all multisig addresses
-        multisig_addresses = [UnlockHash.from_json(obj=uh) for uh in etxn.get('multisigaddresses', None) or []]
+        multisig_addresses = [UnlockHash.from_json(obj=uh) for uh in resp.get('multisigaddresses', None) or []]
         for addr in multisig_addresses:
             assert addr.type == UnlockHashType.MULTI_SIG
-        # TODO: support etxn.get('erc20info')
+        # TODO: support resp.get('erc20info')
         # return explorer data for the unlockhash
         return ExplorerUnlockhashResult(
             unlockhash=UnlockHash.from_json(unlockhash),

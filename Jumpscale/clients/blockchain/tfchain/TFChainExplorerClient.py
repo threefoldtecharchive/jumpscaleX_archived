@@ -38,9 +38,14 @@ class TFChainExplorerClient(j.application.JSBaseClass):
                     assert isinstance(node, str)
                     address = str(node)
                     password = ""
+                # this is required in order to be able to talk directly a  daemon
+                headers = {'User-Agent': 'Rivine-Agent'}
+                # if a password is set, also add it as Basic Authentication
                 if password:
-                    raise Exception("PASSWORD NOT SUPPORTED YET")
-                resp = j.clients.http.get(url=address+endpoint)
+                    credentials = j.data.serializers.base64.dumps((':' + password).encode('ascii'))
+                    headers['Authorization'] = 'Basic ' + credentials
+                # do the request and check the response
+                resp = j.clients.http.get(url=address+endpoint, headers=headers)
                 if resp.getcode() == 200:
                     return resp.readline()
                 if resp.getcode() == 204:
