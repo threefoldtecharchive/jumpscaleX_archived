@@ -917,6 +917,20 @@ class Tools:
             MyEnv._cmd_installed[name] =  shutil.which(name) != None
         return MyEnv._cmd_installed[name]
 
+    @staticmethod
+    def cmd_args_get():
+        res={}
+        for i in sys.argv[1:]:
+            if "=" in i:
+                name,val=i.split("=",1)
+                name = name.strip("-").strip().strip("-")
+                val = val.strip().strip("'").strip("\"").strip()
+                res[name.lower()]=val
+            elif i.strip()!="":
+                name = i.strip("-").strip().strip("-")
+                res[name.lower()]=True
+        return res
+
 
     @staticmethod
     def _code_location_get(account,repo):
@@ -996,14 +1010,14 @@ class Tools:
 
             if exists==False:
                 C="""
-                set -ex
+                set -e
                 mkdir -p {ACCOUNT_DIR}
                 cd {ACCOUNT_DIR}
                 git clone  --depth 1 {URL}
                 cd {NAME}
                 """
                 Tools.log("get code [git] (first time): %s"%repo)
-                Tools.execute(C, args=args)
+                Tools.execute(C, args=args,showout=False)
             else:
                 if pull and Tools.code_changed(REPO_DIR):
                     if Tools.ask_yes_no("\n**: found changes in repo '%s', do you want to commit?"%repo):

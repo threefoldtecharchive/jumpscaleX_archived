@@ -520,6 +520,17 @@ ERROR: Cannot find doc with name:install.readme (nr docs found:0)
 - in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
 
 **ERROR:** problem with link:[Jumpscale](http://www.jumpscale.com/) is an extensible and easy to use cloud automation solution, providing a huge library that supports executing a wide range of system operations. [Jumpscale](http://www.jumpscale.com/) is the evolution of Pylabs which was the basic building block for cloud automation originally developed by [Q-Layer](http://incubaid.com/successes/Q-Layer/)
+link not alive:http://incubaid.com/successes/Q-Layer/
+
+
+
+```
+```
+## ERROR: readme
+
+- in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
+
+**ERROR:** problem with link:[Jumpscale](http://www.jumpscale.com/) is an extensible and easy to use cloud automation solution, providing a huge library that supports executing a wide range of system operations. [Jumpscale](http://www.jumpscale.com/) is the evolution of Pylabs which was the basic building block for cloud automation originally developed by [Q-Layer](http://incubaid.com/successes/Q-Layer/)
 False
 
 
@@ -555,7 +566,29 @@ ERROR: Cannot find doc with name:getting_your_feet_wet._getting_your_feet_wet (n
 - in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
 
 **ERROR:** problem with link:[Bash tools](https://github.com/threefoldtech/jumpscale_/bash)
+link not alive:https://github.com/threefoldtech/jumpscale_/bash
+
+
+
+```
+```
+## ERROR: readme
+
+- in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
+
+**ERROR:** problem with link:[Bash tools](https://github.com/threefoldtech/jumpscale_/bash)
 False
+
+
+
+```
+```
+## ERROR: readme
+
+- in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
+
+**ERROR:** problem with link:[Jumpscale Lib](https://github.com/threefoldtech/jumpscale_/lib)
+link not alive:https://github.com/threefoldtech/jumpscale_/lib
 
 
 
@@ -577,6 +610,17 @@ False
 - in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
 
 **ERROR:** problem with link:[Jumpscale Prefab](https://github.com/threefoldtech/jumpscale_/prefab)
+link not alive:https://github.com/threefoldtech/jumpscale_/prefab
+
+
+
+```
+```
+## ERROR: readme
+
+- in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
+
+**ERROR:** problem with link:[Jumpscale Prefab](https://github.com/threefoldtech/jumpscale_/prefab)
 False
 
 
@@ -588,7 +632,29 @@ False
 - in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
 
 **ERROR:** problem with link:[AtYourService](https://github.com/threefoldtech/jumpscale_/ays9)
+link not alive:https://github.com/threefoldtech/jumpscale_/ays9
+
+
+
+```
+```
+## ERROR: readme
+
+- in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
+
+**ERROR:** problem with link:[AtYourService](https://github.com/threefoldtech/jumpscale_/ays9)
 False
+
+
+
+```
+```
+## ERROR: readme
+
+- in doc: doc:readme:/sandbox/code/github/threefoldtech/jumpscaleX/docs/README.md
+
+**ERROR:** problem with link:[Jumpscale Portal](https://github.com/threefoldtech/jumpscale_/portal9)
+link not alive:https://github.com/threefoldtech/jumpscale_/portal9
 
 
 

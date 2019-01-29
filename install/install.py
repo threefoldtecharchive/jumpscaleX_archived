@@ -3,14 +3,8 @@ import os
 import subprocess
 import sys
 
-
-print("")
-print("    Jumpscale Installer")
-print("")
-
 # get current install.py directory
 rootdir = os.path.dirname(os.path.abspath(__file__))
-# print("- setup root directory: %s" % rootdir)
 
 path = os.path.join(rootdir, "InstallTools.py")
 
@@ -22,138 +16,307 @@ spec = util.spec_from_file_location("IT", path)
 IT = spec.loader.load_module()
 
 def dexec(cmd):
-    cmd2 = "docker exec -ti %s bash -c '%s'"%(dockername,cmd)
+    cmd2 = "docker exec -ti %s bash -c '%s'"%(args["name"],cmd)
     IT.Tools.execute(cmd2,interactive=True,showout=False,replace=False,asfile=True)
 
 def sshexec(cmd):
-    cmd2 = "ssh -t root@localhost -A -p 2224 '%s'"%cmd
+    cmd2 = "ssh -t root@localhost -A -p %s '%s'"%(args["port"],cmd)
     IT.Tools.execute(cmd2,interactive=True,showout=False,replace=False,asfile=True)
+
+def docker_names():
+    names = IT.Tools.execute("docker container ls -a --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
+    names = [i.strip("\"'") for i in names if i.strip()!=""]
+    return names
 
 # FOR DEBUG purposes can install ipython & pip3 will allow us to use the shell
 # IT.UbuntuInstall.base_install()
 
-if len(sys.argv)>1:
-    mychoice = int(sys.argv[-1])
-else:
+def help():
+    T="""
+    Jumpscale X Installer
+    ---------------------
+    
+    options
+    
+    # type of installation
+    -1 = in system install
+    -2 = sandbox install
+    -3 = install in a docker (make sure docker is installed)
+    
+    -y = answer yes on every question (for unattended installs)
+    -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install
+    
+    -r = reinstall, basically means will try to re-do everything without removing (keep data)
+    
+    -p = pull code from git, if not specified will only pull if code directory does not exist yet
+    
+    -w = install the wiki at the end, which includes openresty, lapis, lua, ...
+    
+    --name =  name of docker, only relevant when docker option used
+
+    --codepath = "/sandbox/code" can overrule, is where the github code will be checked out
+    
+    --portrange = 1 is the default means 8000-8099 on host gets mapped to 8000-8099 in docker
+                  1 means 8100-8199 on host gets mapped to 8000-8099 in docker
+                  2 means 8200-8299 on host gets mapped to 8000-8099 in docker
+                  ...
+    --port = port of container SSH std is 9022 (normally not needed to use because is in portrange:22 e.g. 9122 if portrange 1) 
+    
+    -h = this help
+    
+    """
+    print(IT.Tools.text_replace(T))
+    sys.exit(0)
+
+
+def ui():
+
+    args= IT.Tools.cmd_args_get()
+
+    if "h" in args:
+        help()
+
+    if "incontainer" not in args:
+        rc,out,err=IT.Tools.execute("cat /proc/1/cgroup",die=False,showout=False)
+        if rc==0 and out.find("/docker/")!=-1:
+            args["incontainer"]=True
+            #means we are in a docker
+
+    if not "1" in args and not "2" in args and not "3" in args:
+
+        if "incontainer" in args:
+            #means we are inside a container
+            T="""
+            Installer choice for jumpscale in the docker
+            --------------------------------------------
+            
+            Do you want to install
+             - in system (development)                : 1
+             - using a sandbox                        : 2
+             
+            """
+
+            mychoice = int(IT.Tools.ask_choices(T,[1,2]))
+
+        else:
+
+            T="""
+            Installer choice for jumpscale
+            ------------------------------
+            
+            Do you want to install
+             - insystem         (ideal for development only in OSX & Ubuntu1804)        : 1
+             - using a sandbox  (only in OSX & Ubuntu1804)                              : 2
+             - using docker?                                                            : 3
+             
+            """
+
+            mychoice = int(IT.Tools.ask_choices(T,[1,2,3]))
+        args[str(mychoice)]=True
+
+    #SSHKEY handling
+    if "y" not in args:
+        #means interactive
+
+        if not IT.MyEnv.sshagent_active_check():
+            T="""
+            Did not find an SSH key in ssh-agent, is it ok to continue without?
+            It's recommended to have a SSH key as used on github loaded in your ssh-agent
+            If you don't have an ssh key it will not be possible to modify code, code will be checked out statically.
+            """
+            if not IT.Tools.ask_yes_no(default="y"):
+                print("Could not continue, load ssh key.")
+                sys.exit(1)
+            else:
+                sshkey2 = ""
+        else:
+            sshkey = IT.MyEnv.sshagent_key_get()
+            sshkey+=".pub"
+            if not IT.Tools.exists(sshkey):
+                print ("ERROR: could not find SSH key:%s"%sshkey)
+                sys.exit(1)
+            sshkey2 = IT.Tools.file_text_read(sshkey)
+    else:
+        sshkey2 = ""
+
+    args["sshkey"]=sshkey2
+
+    if not "codepath" in args:
+        if IT.Tools.exists("/sandbox/code"):
+            codepath = "/sandbox/code"
+        else:
+            codepath = "~/code"
+        codepath=codepath.replace("~",IT.MyEnv.config["DIR_HOME"])
+        args["codepath"] = codepath
+
+    if "y" not in args and "r" not in args and IT.Tools.exists(IT.MyEnv.state_file_path):
+        if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
+            args["r"]=True
+
+
+    if "3" in args: #means we want docker
+
+        container_exists = args["name"] in docker_names()
+        args["container_exists"]=container_exists
+
+        if "name" not in args:
+            dockername = IT.Tools.ask_string("What name do you want to use for your docker (default jsx): ",default="jsx")
+            if dockername == "":
+                dockername = "jsx"
+            args["name"] = dockername
+
+        if container_exists:
+            if "d" not in args:
+                if not "y" in args:
+                    if IT.Tools.ask_yes_no("docker:%s exists, ok to remove? Will otherwise keep and install inside."%args["name"]):
+                        args["d"]=True
+                else:
+                    #is not interactive and d was not given, so should not continue
+                    print("ERROR: cannot continue, docker: %s exists."%args["name"])
+                    sys.exit(1)
+
+        if "portrange" not in args:
+            if "y" in args:
+                args["portrange"] = 0
+            else:
+                if container_exists:
+                    args["portrange"] = int(IT.Tools.ask_choices("choose portrange, std = 0",[0,1,2,3,4,5,6,7,8,9]))
+
+        a=8000+int(args["portrange"])*100
+        b=8099+int(args["portrange"])*100
+        portrange_txt="%s-%s:8000-8099"%(a,b)
+        args["portrange_txt"] = "-p %s"%portrange_txt
+
+        if int(args["portrange"])>0 and "port" not in args:
+            args["port"] = 9000+int(args["portrange"])*100 + 22
+
+    else:
+        if "p" not in args:
+            #is not docker and not pull yet
+            if "y" not in args:
+                #not interactive ask
+                if IT.Tools.ask_yes_no("Do you want to pull code changes from git?"):
+                    args["p"]=True
+            else:
+                #default is pull
+                args["p"]=True
+
+    if "y" not in args and "w" not in args:
+        if IT.Tools.ask_yes_no("Do you want to install lua/nginx/openresty & wiki environment?"):
+            args["w"]=True
+
 
     T="""
-    Installer choice for jumpscale
-    ------------------------------
     
-    Do you want to install
-     - insystem         (ideal for development only in OSX & Ubuntu1804)        : 1
-     - using a sandbox  (only in OSX & Ubuntu1804)                              : 2
-     - using docker?                                                            : 3
-     
+    Jumpscale X Installer
+    ---------------------
+        
     """
+    T=IT.Tools.text_replace(T)
 
-    mychoice = int(IT.Tools.ask_choices(T,[1,2,3]))
 
-if mychoice<4:
+    if "3" in args:
+        T+=" - jumpscale will be installed using docker.\n"
+    elif "1" in args:
+         T+=" - jumpscale will be installed in the system.\n"
+    elif "2" in args:
+         T+=" - jumpscale will be installed using sandbox.\n"
+    if sshkey2:
+        T+= " - sshkey used will be: %s\n"%sshkey
 
-    if not IT.MyEnv.sshagent_active_check():
-        T="""
-        Did not find an SSH key in ssh-agent, is it ok to continue without?
-        It's recommended to have a SSH key as used on github loaded in your ssh-agent
-        If you don't have an ssh key it will not be possible to modify code, code will be checked out statically.
-        """
-        if not IT.Tools.ask_yes_no(default="y"):
-            print("Could not continue, load ssh key.")
+    T+=" - location of code path is: %s\n"%args["codepath"]
+    if "w" in args:
+        T+=" - will install wiki system at end\n"
+    if "3" in args:
+        T+=" - name of container is: %s\n"%args["name"]
+        if container_exists:
+            if "d" in args:
+                T+=" - will remove the docker, and recreate\n"
+            else:
+                T+=" - will keep the docker container and install inside\n"
+
+        T+=" - will map ssh port to: '%s'\n"%args["port"]
+        T+=" - will map portrange '%s' (8000-8100) always in container.\n"% portrange_txt
+
+    T+="\n"
+    print(T)
+
+    if "y" not in args:
+        if not IT.Tools.ask_yes_no("Ok to continue?"):
             sys.exit(1)
-        else:
-            sshkey2 = ""
-    else:
-        sshkey = IT.MyEnv.sshagent_key_get()
-        sshkey+=".pub"
-        if not IT.Tools.exists(sshkey):
-            print ("ERROR: could not find SSH key:%s"%sshkey)
-            sys.exit(1)
-        sshkey2 = IT.Tools.file_text_read(sshkey)
+
+    return args
+
+args = ui()
+
+if "r" in args:
+    #remove the state
+    IT.Tools.delete(IT.MyEnv.state_file_path)
+    IT.MyEnv.state_load()
+
+if "p" in args:
+    os.environ["GITPULL"] = "1"
 else:
-    sshkey2 = ""
+    os.environ["GITPULL"] = "0"
 
 
-if mychoice == 3:
-    dockername = IT.Tools.ask_string("What name do you want to use for your docker (default jsx): ",default="jsx")
-    if dockername == "":
-        dockername = "jsx"
-    if IT.Tools.exists("/sandbox/code"):
-        codepath = "/sandbox/code"
-    else:
-        codepath = "~/code"
-    if not IT.Tools.ask_yes_no("We will install code in %s, is this ok?"%codepath):
-        codepath = IT.Tools.ask_string("give path to the root of your code directory")
-    codepath=codepath.replace("~",IT.MyEnv.config["DIR_HOME"])
-    IT.Tools.dir_ensure(codepath)
-    print("\n - jumpscale will be installed using docker")
-    print(" - location of code path is: %s"%codepath)
 
-elif mychoice == 1:
+IT.Tools.dir_ensure(args["codepath"])
+
+if "1" in args:
     IT.MyEnv.config["INSYSTEM"] = True
     IT.Tools.execute("rm -f /sandbox/bin/pyth*")
-    if IT.Tools.exists(IT.MyEnv.state_file_path):
-        if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
-            IT.Tools.delete(IT.MyEnv.state_file_path)
-            IT.MyEnv.state_load()
-    print("\n - jumpscale will be installed in the system")
-elif mychoice == 4:
-    if IT.Tools.ask_yes_no("Do you want to pull code changes from git?"):
-        os.environ["GITPULL"] = "1"
-    else:
-        os.environ["GITPULL"] = "0"
-    IT.MyEnv.config["INSYSTEM"] = True
-else:
+
+elif "2" in args:
     #is sandbox (2)
     IT.MyEnv.config["INSYSTEM"] = False
-    print("\n - Will install jumpscale in /sandbox")
-
-if sshkey2:
-    print(" - sshkey used will be: %s"%sshkey)
 
 
-
-
-if mychoice<4:
-    if not IT.Tools.ask_yes_no("Is it ok to continue (y)"):
-        sys.exit(1)
-
-if mychoice in [1,2,4,5]:
+if "1" in args or "2" in args:
     installer = IT.JumpscaleInstaller()
-
     installer.install()
-elif mychoice in [3]:
+
+    if "w" in args:
+        if "1" in args:
+            #in system need to install the lua env
+            IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.builder.runtimes.lua.install()'")
+        IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.tools.markdowndocs.test()'")
 
 
-    def docker_names():
-        names = IT.Tools.execute("docker container ls --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
-        names = [i.strip("\"'") for i in names if i.strip()!=""]
-        return names
-    exists=False
-    if dockername in docker_names():
-        if IT.Tools.ask_yes_no("docker:%s exists, ok to remove?"%dockername):
-            IT.Tools.execute("docker rm -f %s"%dockername)
-        else:
-            exists = True
+elif "3" in args:
+
+    if args["container_exists"] and "d" in args:
+        IT.Tools.execute("docker rm -f %s"%args["name"])
 
     cmd="""
             
     docker run --name {NAME} \
-    --hostname jsx \
+    --hostname {NAME} \
     -d \
-    -p 2224:22 -p 6830-6850:6830-6850 \
+    -p {PORT}:22 {PORTRANGE} \
     --device=/dev/net/tun \
     --cap-add=NET_ADMIN --cap-add=SYS_ADMIN \
     --cap-add=DAC_OVERRIDE --cap-add=DAC_READ_SEARCH \
     -v {CODEDIR}:/sandbox/code phusion/baseimage:master
     """
     print(" - Docker machine gets created: ")
-    if exists is False:
-        IT.Tools.execute(cmd,args={"CODEDIR":codepath,"NAME":dockername},interactive=True)
+    if not args["container_exists"]:
+        if "port" not in args:
+            args["port"]=8022
+        IT.Tools.execute(cmd,args={"CODEDIR":args["codepath"],
+                                   "NAME":args["name"],
+                                   "PORT":args["port"],
+                                   "PORTRANGE":args["portrange_txt"]
+                                   },
+                         interactive=True)
 
-    print(" - Docker machine OK")
-    print(" - Start SSH server")
-    if sshkey:
-        dexec('echo "%s" > /root/.ssh/authorized_keys'%sshkey2)
+        print(" - Docker machine OK")
+        print(" - Start SSH server")
+    else:
+        print(" - Docker machine was already there.")
+
+    if "sshkey" in args:
+        dexec('echo "%s" > /root/.ssh/authorized_keys'%args["sshkey"])
     dexec("/usr/bin/ssh-keygen -A")
     dexec('/etc/init.d/ssh start')
     dexec('rm -f /etc/service/sshd/down')
@@ -162,40 +325,29 @@ elif mychoice in [3]:
 
     IT.Tools.execute("rm -f ~/.ssh/known_hosts")  #rather dirty hack
 
-    T="""
-    Installer choice for jumpscale in the docker
-    --------------------------------------------
-    
-    Do you want to install
-     - in system (development)                : 4
-     - using a sandbox                        : 5
-     
-    """
-
-    mychoice2 = int(IT.Tools.ask_choices(T,[4,5]))
-
-    sshexec('curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_kosmos/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py %s'%mychoice2)
-
-    if mychoice2 == 4:
-        if IT.Tools.ask_yes_no("Do you want to install lua/nginx/openresty & wiki environment?"):
-            IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.builder.runtimes.lua.install()'")
-            IT.Tools.shell()
-    elif mychoice2 == 3:
-        if IT.Tools.ask_yes_no("Do you want to install wiki environment?"):
-            IT.Tools.shell()
+    if "1" in args:
+        args_txt = "-1"
+    else:
+        args_txt = "-2"
+    for item in ["y","d","r","p","w"]:
+        if item in args:
+            args_txt+=" -%s"%item
+    if "codepath" in args:
+        args_txt+=" --codepath=%s"%args["codepath"]
+    sshexec('curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_kosmos/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py %s'%args_txt)
 
     k = """
     
     install succesfull:
     
-    # to login to the docker using ssh use:
-    ssh root@localhost -A -p 2224
+    # to login to the docker using ssh use (if std port)
+    ssh root@localhost -A -p {PORT}
     
     # or for kosmos shell  
-    ssh root@localhost -A -p 2224 'source /sandbox/env.sh;kosmos'
+    ssh root@localhost -A -p {PORT} 'source /sandbox/env.sh;kosmos'
      
     """
-    print(IT.Tools.text_replace(k))
+    print(IT.Tools.text_replace(k,args=args))
 
 
 
