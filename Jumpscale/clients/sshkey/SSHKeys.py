@@ -16,7 +16,7 @@ class SSHKeys(j.application.JSFactoryBaseClass):
         """
         :param item: is ip addr or hostname to be removed from known_hosts
         :type item: str
-        '''
+        """
         path = "{DIR_HOME}/.ssh/known_hosts"
         if j.sal.fs.exists(path):
             out = ""
