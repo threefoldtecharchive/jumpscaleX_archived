@@ -19,13 +19,6 @@ def object_to_dict(obj, found=None, path="", notfollow=[], depth=0, maxdepth=1, 
         found = set()
     mapper = class_mapper(obj.__class__)
 
-    # #to work with dates, but we don't use that
-    # def get_key_value (c):
-    #     if isinstance(getattr(obj, c), datetime):
-    #         return c,getattr(obj, c).isoformat()
-    #     else:
-    #         return c,getattr(obj, c)
-
     # if subprimkeyonly then we only return the primary key and not the other
     # properties of related objects
     if depth > 1 and subprimkeyonly:
@@ -113,6 +106,9 @@ class SQLAlchemy(JSConfigClient):
         self._initsql()
 
     def _initsql(self):
+        '''Initialize SQL
+        '''
+
         if self.engine is None:
             if self.sqlitepath != "":
                 if not j.sal.fs.exists(path=self.sqlitepath):
@@ -127,6 +123,12 @@ class SQLAlchemy(JSConfigClient):
             listen(Base, 'after_delete', self.removetoml, propagate=True)
 
     def resetDB(self):
+        '''Create and return a new Engine
+        
+        :return: engine
+        :rtype: Object
+        '''
+
         if self.sqlitepath != "":
             j.sal.fs.remove(self.sqlitepath)
             engine = create_engine('sqlite:///%s' %

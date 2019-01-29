@@ -42,9 +42,9 @@ class Ipmi(JSConfigBase):
 
     def power_status(self):
         """ Returns power status of ipmi host
-
-        Returns:
-            str -- power status of node ('on' or 'off')
+        :raises RuntimeError: if ipmitool returns something unexpected other than on or off status
+        :return: power status of node ('on')
+        :rtype: str
         """
         _, out, _ = j.tools.executorLocal.execute(
             "ipmitool -H {host} -U {user} -P {password} -p {port} chassis power status".format(

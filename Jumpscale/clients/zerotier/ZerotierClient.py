@@ -309,7 +309,7 @@ class ZerotierClient(JSConfigClient):
 
     @property
     def nodeids(self):
-        if "nodeids" in self.config.data:
+        if self.nodeids:
             return [item for item in self.nodeids.split(",") if item.strip() is not ""]
         return []
 

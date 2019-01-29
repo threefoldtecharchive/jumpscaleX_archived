@@ -86,7 +86,7 @@ class StringMultiLine(String):
 
     def check(self, value):
         '''Check whether provided value is a string and has \n inside'''
-        return isinstance(value, str) and "\n" in value
+        return isinstance(value, str) and ("\\n" in value or "\n" in value)
 
     def clean(self, value):
         """

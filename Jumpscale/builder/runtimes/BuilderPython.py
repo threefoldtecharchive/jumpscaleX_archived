@@ -75,7 +75,7 @@ class BuilderPython(j.builder.system._BaseClass):
                 script = j.core.tools.text_replace(script, args=self.__dict__)
             else:
                 # on ubuntu 1604 it was all working with default libs, no reason to do it ourselves
-                # j.builder.libs.openssl.build()
+                j.builder.libs.openssl.build()
                 j.builder.system.package.install([
                     'zlib1g-dev',
                     'libncurses5-dev',
@@ -134,16 +134,17 @@ class BuilderPython(j.builder.system._BaseClass):
         script = """
         source env.sh
         export PBASE=`pwd`
-        export PATH=$PATH:/usr/local/bin:/usr/bin:/bin
-        export LIBRARY_PATH="$LIBRARY_PATH:/usr/lib:/usr/local/lib:/lib:/lib/x86_64-linux-gnu"
+        export PATH=$PATH:{PATH_OPENSSL}/bin:/usr/local/bin:/usr/bin:/bin
+        export LIBRARY_PATH="$LIBRARY_PATH:{PATH_OPENSSL}/lib:/usr/lib:/usr/local/lib:/lib:/lib/x86_64-linux-gnu"
         export LD_LIBRARY_PATH="$LIBRARY_PATH"
 
-        export CPPPATH="$PBASE/include/python3.6m:/usr/include"
+        export CPPPATH="$PBASE/include/python3.6m:{PATH_OPENSSL}/include:/usr/include"
         export CPATH="$CPPPATH"
         export CFLAGS="-I$CPATH/"
         export CPPFLAGS="-I$CPATH/"
         export LDFLAGS="-L$LIBRARY_PATH/"
         """
+        script = script.format(PATH_OPENSSL=self.PATH_OPENSSL)
         j.sal.fs.writeFile("%s/envbuild.sh" % self.DIR_BUILD_L, script)
 
         script = """
@@ -197,13 +198,13 @@ class BuilderPython(j.builder.system._BaseClass):
 
         self._pip(j.core.installer_ubuntu.pips_list(),reset=reset)
 
-        # if not self.tools.isMac:
-        #     # raise NotImplementedError()
-        #     j.builder.zero_os.zos_stor_client.build(python_build=True)  # builds the zos_stor_client
-        #     self._pip(["g8storclient"])
+        if not self.tools.isMac:
+            # raise NotImplementedError()
+            j.builders.zero_os.zos_stor_client.build(python_build=True)  # builds the zos_stor_client
+            self._pip(["g8storclient"])
 
         # self.sandbox(deps=False)
-        # self._done_set("pipall")
+        self._done_set("pipall")
 
         self._logger.info("PIP DONE")
 

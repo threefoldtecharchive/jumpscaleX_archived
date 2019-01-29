@@ -20,6 +20,7 @@ class InfluxdbFactory(JSConfigs):
         hdiops,machine=unit42,datacenter=gent,type=new avg=25,max=37 1434059627
         temperature,machine=unit42,type=assembly external=25,internal=37 1434059627
         '''
+        :raises j.exceptions.RuntimeError: Failing to send data to influxdb
 
         """
         url = 'http://%s:%s/write?db=%s&precision=s' % (host, port, database)

@@ -45,5 +45,7 @@ class PeeweeFactory(j.application.JSBaseClass):
     #     raise RuntimeError("stop debug here")
 
     def resetCache(self):
+        '''Remove peewee keys and items from db
+        '''
         for item in j.core.db.keys("peewee.*"):
             j.core.db.delete(item)

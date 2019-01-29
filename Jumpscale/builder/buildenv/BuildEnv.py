@@ -37,9 +37,23 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
         if j.core.platformtype.myplatform.isMac:
             C = ""
         else:
-            C = "sudo net-tools python3 python3-distutils python3-psutil"
+            C = """
+            sudo
+            net-tools
+            python3
+            python3-distutils
+            python3-psutil
+            """
 
-        C += " openssl wget curl git mc tmux rsync"
+        C += """
+        openssl
+        wget
+        curl
+        git
+        mc
+        tmux
+        rsync
+        """
         j.builder.tools.package_install(C)
 
         ##j.builder.sandbox.profileJS.addPath("{DIR_BIN}")
@@ -59,7 +73,15 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
 
         """
 
-        C = "autoconf gcc make autoconf libtool pkg-config curl"
+        C = """
+        autoconf        
+        gcc
+        make        
+        autoconf
+        libtool
+        pkg-config
+        curl
+        """
         C=j.core.text.strip(C)
 
         if j.core.platformtype.myplatform.isMac:

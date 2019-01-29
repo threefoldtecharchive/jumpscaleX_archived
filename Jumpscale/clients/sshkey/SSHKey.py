@@ -56,10 +56,19 @@ class SSHKey(j.application.JSBaseConfigClass):
         j.sal.fs.remove("%s" % self.path)
 
     def write_to_sshdir(self):
+        '''
+        Write to ssh dir the private and public key
+        '''
         j.sal.fs.writeFile(self.path, self.privkey)
         j.sal.fs.writeFile(self.path + ".pub", self.pubkey)
 
     def generate(self, reset=False):
+        '''
+        Generate ssh key
+
+        :param reset: if True, then delete old ssh key from dir, defaults to False
+        :type reset: bool, optional
+        '''
         self._logger.debug("generate ssh key")
         if reset:
             self.delete_from_sshdir()
@@ -80,6 +89,9 @@ class SSHKey(j.application.JSBaseConfigClass):
     def load(self, duration=3600 * 24):
         """
         load ssh key in ssh-agent, if no ssh-agent is found, new ssh-agent will be started
+
+        :param duration: duration, defaults to 3600*24
+        :type duration: int, optional
         """
         self._logger.debug("load sshkey: %s for duration:%s" % (self.name, duration))
         j.clients.sshagent.key_load(self.path, passphrase=self.passphrase, duration=duration)
@@ -91,6 +103,9 @@ class SSHKey(j.application.JSBaseConfigClass):
     def is_loaded(self):
         """
         check if key is loaded in the ssh agent
+
+        :return: whether ssh key was loadeed in ssh agent or not
+        :rtype: bool
         """
         if self.name in j.clients.sshkey.listnames():
             self._logger.debug("ssh key: %s loaded", self.name)

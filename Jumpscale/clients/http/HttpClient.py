@@ -53,6 +53,15 @@ class Connection(JSBASE):
     def simpleAuth(self, url, username, password):
         """
         authorize with the given username and password on url
+        :param url:
+        :type url: str
+        :param username: username to authorize with
+        :type username: str
+        :param password: password for username
+        :type password: str
+        :raises RuntimeError: IOError is caught when failing to open url from the request 
+        :return: handle
+        :rtype:
         """
         req = urllib.request.Request(url)
         auth = '%s:%s' % (username, password)

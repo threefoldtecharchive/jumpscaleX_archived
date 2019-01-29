@@ -26,5 +26,5 @@ if len(args) == 1:
 else:
     # from IPython.terminal.embed import embed
     # embed()
-    j.shelli(loc=False,stack_depth=2)
+    j.shell(loc=False,stack_depth=2)
 

@@ -10,11 +10,6 @@ class Trello(JSConfigs):
     def install(self, reset=False):
         j.builder.runtimes.pip.install("py-trello", reset=reset)
 
-    def configure(self, instance="main", apikey="", secret="secret"):
-        data = {}
-        data["api_key_"] = apikey
-        data["secret_"] = secret
-        self.get(instance=instance, data=data)
 
     def test(self):
         """
@@ -26,5 +21,5 @@ class Trello(JSConfigs):
         get appkey: https://trello.com/app-key
 
         """
-        cl = self.get(instance="main")
+        cl = self.get(name="main")
         cl.test()

@@ -16,8 +16,10 @@ class KubernetesFactory(JSConfigBaseFactory):
         """
         create config file.
 
-        @param config ,, dict the configurations in dict format
-        @param path ,, str full path to location the file should be saved will default to HOMEDIR/.kube/config
+        :param config: the configurations in dict format
+        :type config: dict
+        :param path: full path to location the file should be saved will default to HOMEDIR/.kube/config
+        :type path: str
         """
         if not path:
             directory = '%s/.kube/' % j.dirs.HOMEDIR
