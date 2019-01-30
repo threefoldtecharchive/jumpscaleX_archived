@@ -37,10 +37,6 @@ def main(self):
 
     bdata = schema_test._data
 
-    schema_test2 = schema_object2.get(capnpbin=bdata)
-
-    assert schema_test._ddict == schema_test2._ddict
-
     print(schema_test._data)
 
     schema_test3 = schema_object3.get()

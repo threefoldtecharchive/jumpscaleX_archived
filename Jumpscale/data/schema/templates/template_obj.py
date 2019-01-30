@@ -124,7 +124,7 @@ class ModelOBJ():
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
         self._schema_{{prop.name}} = j.data.schema.get(url="{{prop.jumpscaletype.SUBTYPE}}")
-
+        
         if self._cobj_.{{prop.name_camel}}:
             self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.get(capnpbin=self._cobj_.{{prop.name_camel}})
         else:
@@ -395,7 +395,7 @@ class ModelOBJ():
 
     @property
     def _json(self):
-        return j.data.serializers.json.dumps(self._ddict,True,True)
+        return j.data.serializers.json.dumps(str(self._ddict),True,True)
 
     @property
     def _toml(self):

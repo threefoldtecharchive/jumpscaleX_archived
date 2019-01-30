@@ -20,7 +20,7 @@ _EXPLORER_NODES = {
         'https://explorer2.testnet.threefoldtoken.com',
     ],
     "DEV": [
-        'http://localhost:23112'
+        'http://localhost:23110'
     ],
 }
 
@@ -34,29 +34,31 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         name* = "" (S)
         network_type = "STD,TEST,DEV" (E)
         minimum_minerfee = 100000000 (I)
-        explorer_nodes = (LO) !jumpscale.tfchain.explorer
-
-        @url = jumpscale.tfchain.explorer
-        address = "" (S)
-        password = "" (S)
+        explorer_nodes = (LS) !jumpscale.tfchain.explorer
         """
 
     _CHILDCLASSES = [TFChainWalletFactory]
 
     def _data_trigger_new(self):
-        if len(self.explorer_nodes) == 0:
-            for address in _EXPLORER_NODES[self.network_type]:
-                self.explorer_nodes.new().address = address
         if self.network_type == "DEV":
             self.minimum_minerfee = 1000000000
         else:
             self.minimum_minerfee = 100000000
 
+    @property
+    def explorer_addresses(self):
+        """
+        Addresses of the explorers to use
+        """
+        if len(self.explorer_nodes) > 0:
+            return self.explorer_nodes.pylist()
+        return _EXPLORER_NODES[self.network_type]
+
     def blockchain_info_get(self):
         """
         Get the current blockchain info, using the last known block, as reported by an explorer.
         """
-        resp = j.clients.tfchain.explorer.get(nodes=self.explorer_nodes.pylist(), endpoint="/explorer")
+        resp = self._explorer_get(endpoint="/explorer")
         resp = j.data.serializers.json.loads(resp)
         blockid = Hash.from_json(obj=resp['blockid'])
         last_block = self.block_get(blockid)
@@ -70,12 +72,12 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         """
         # get the explorer block
         if isinstance(value, int):
-            resp = j.clients.tfchain.explorer.get(nodes=self.explorer_nodes.pylist(), endpoint="/explorer/blocks/{}".format(int(value)))
+            resp = self._explorer_get(endpoint="/explorer/blocks/{}".format(int(value)))
             resp = j.data.serializers.json.loads(resp)
             resp = resp['block']
         else:
             blockid = self._normalize_id(value)
-            resp = j.clients.tfchain.explorer.get(nodes=self.explorer_nodes.pylist(), endpoint="/explorer/hashes/"+blockid)
+            resp = self._explorer_get(endpoint="/explorer/hashes/"+blockid)
             resp = j.data.serializers.json.loads(resp)
             assert resp['hashtype'] == 'blockid'
             resp = resp['block']
@@ -118,7 +120,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         @param txid: the identifier (fixed string with a length of 64) that points to the desired transaction
         """
         txid = self._normalize_id(txid)
-        resp = j.clients.tfchain.explorer.get(nodes=self.explorer_nodes.pylist(), endpoint="/explorer/hashes/"+txid)
+        resp = self._explorer_get(endpoint="/explorer/hashes/"+txid)
         resp = j.data.serializers.json.loads(resp)
         assert resp['hashtype'] == 'transactionid'
         resp = resp['transaction']
@@ -133,7 +135,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         @param unlockhash: the unlockhash to look up transactions for in the explorer
         """
         unlockhash = self._normalize_unlockhash(unlockhash)
-        resp = j.clients.tfchain.explorer.get(nodes=self.explorer_nodes.pylist(), endpoint="/explorer/hashes/"+unlockhash)
+        resp = self._explorer_get(endpoint="/explorer/hashes/"+unlockhash)
         resp = j.data.serializers.json.loads(resp)
         assert resp['hashtype'] == 'unlockhash'
         # parse the transactions
@@ -144,10 +146,10 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             # append the transaction to the list of transactions
             transactions.append(transaction)
         # collect all multisig addresses
-        multisig_addresses = [UnlockHash.from_json(obj=uh) for uh in etxn.get('multisigaddresses', None) or []]
+        multisig_addresses = [UnlockHash.from_json(obj=uh) for uh in resp.get('multisigaddresses', None) or []]
         for addr in multisig_addresses:
             assert addr.type == UnlockHashType.MULTI_SIG
-        # TODO: support etxn.get('erc20info')
+        # TODO: support resp.get('erc20info')
         # return explorer data for the unlockhash
         return ExplorerUnlockhashResult(
             unlockhash=UnlockHash.from_json(unlockhash),
@@ -171,6 +173,13 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         transaction.unconfirmed = etxn.get('unconfirmed', False)
         # return the transaction
         return transaction
+
+    def _explorer_get(self, endpoint):
+        """
+        Private utility method that gets the data on the given endpoint,
+        put in a method so it can be overriden for Testing purposes.
+        """
+        return j.clients.tfchain.explorer.get(addresses=self.explorer_addresses, endpoint=endpoint)
 
     def _normalize_unlockhash(self, unlockhash):
         if isinstance(unlockhash, UnlockHash):

@@ -18,3 +18,8 @@ class ExplorerNoContent(Exception):
     """
     ExplorerNoContent error
     """
+
+class InsufficientFunds(Exception):
+    """
+    InsufficientFunds error
+    """

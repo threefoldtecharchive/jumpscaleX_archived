@@ -8,9 +8,9 @@ _extract_pattern = re.compile('\s*([^=]+)="([^"]*)"')
 
 JSBASE = j.application.JSBaseClass
 
-class LsblkError(Exception, JSBASE):
-    def __init__(self):
-        JSBASE.__init__(self)
+class LsblkError(Exception):
+    def __init__(self, message=''):
+        super().__init__(message)
 
 
 def _parse(output):
@@ -47,7 +47,7 @@ def lsblk(device=None, executor=None):
         command = COMMAND
         if device:
             command = '%s %s' % (COMMAND, device)
-        rc, output, err = executor.execute(command, checkok=False, showout=False)
+        rc, output, err = executor.execute(command, showout=False)
     except Exception as e:
         raise LsblkError(e)
 
