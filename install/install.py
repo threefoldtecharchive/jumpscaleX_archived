@@ -352,7 +352,7 @@ elif "3" in args:
 
 
 else:
-    print ("choice:'%s' not supported."%mychoice)
+    help()
     sys.exit(1)
 
 
