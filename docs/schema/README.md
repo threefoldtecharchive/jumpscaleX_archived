@@ -23,29 +23,36 @@ you can define the schema url like that.
 | String | S | can be any set of characters saved as string | "Hello !" |
 | Integer| I | can only be Integer numbers| 1, 2, 200, 1000 |
 | Float  | F | just like the primitive float | 1.123, 1.0, 100.99 |
-| Boolean| B | can only be True of False | True, False |
-| mobile |tel| can be set any mobile number| '+32 475.99.99.99' |
-| email |email| can be set any email | 'changeme@example.com' |
+| Boolean| B | can only be True of False |  y , 1 , yes , n , True, False |
+| mobile |tel| can be set any mobile number| '+32 475.99.99.99' , '464-4564-464' , 468716420  |
+| email |email| can be set any email | changeme@example.com |
 | ipport |ipport| can be set only port  | 53  |
 | ipaddress |ipaddr| can be set any IP Adress | '192.168.1.1' |
 | ipaddressrange |iprange| can be set any IP Adress with range | '192.168.1.1/24' |
-| Date   | D | date | 20/11/2018, +4h. see [date supported formats](#date_supported_formats)|
+| Date   | D | date | 20/11/2018 . see [date supported formats](#date_supported_formats)|
+| Date Time   | T | date with time | 01/01/2019 9pm:10. see [date time supported formats](#date_time_supported_formats)|
 | Numeric| N | can store any numeric data including currencies | 1, 1.12, 10 USD, 90%, 10.5 EUR| 
-| guid| guid | can store any guid   | '5b316587-7162-4bf1-99e6-fe53d9577cd0'| 
+| guid| guid | can store any guid   | 5b316587-7162-4bf1-99e6-fe53d9577cd0 | 
 | dict| dict | can store any dict type   | {"key":"value"} | 
-| yaml| yaml | can store any yaml    | example: - test1 |
-| multiline| multiline | string but with multiple lines   | 'example \n\n example2'|
-| hash| h | hash is 2 value list, represented as 2 times 4 bytes   | (0, 0)|
-| set| set | Generic set type'   | [1,2,3,4]|
+| yaml| yaml | can store any yaml    | "example:     test1" |
+| multiline| multiline | string but with multiple lines   | "example \\n example2 \\n example3" |
+| hash| h | hash is 2 value represented as 2 times 4 bytes   | 46:682 |
+| bytes | bin | stored as bytes directly   | 'this is binary' |
 | percent| p | to deal with percentages < 1 we multiply with 100 before storing   | 99 which would be 99% |
-| url| u | Generic url type   | www.example.com |
+| url| u | Generic url type   | www.example.com  , 'test.example.com/home'|
 
 
 
 
 ### <a name="date_supported_formats"></a> Date supported formats
-- 0: means undefined date
-- epoch = int
+- month/day  (will be current year if specified this way)
+- year(4char)/month/day
+- year(4char)/month/day
+- year(2char)/month/day
+- day/month/4char
+- year(4char)/month/day
+
+### <a name="date_time_supported_formats"></a> Date Time supported formats
 - month/day 22:50
 - month/day  (will be current year if specified this way)
 - year(4char)/month/day
@@ -63,6 +70,9 @@ example:
 ```
 list_of_floats = (LF) # can accept [1.1, 1.2, 1.3]
 list_of_strings = (LS) # can accept ["a", "aa", "aaa"]
+list_of_multiLines =  (Lmultiline) # can accept ["example \\n example2 \\n example4", "example \\n example2 \\n example3"]
+list_of_guids = (Lguid) # can accept ['bebe8b34-b12e-4fda-b00c-99979452b7bd', '84b022bd-2b00-4b62-8539-4ec07887bbe4'] 
+
 ```
 
 ### Complex data types
@@ -105,7 +115,7 @@ schema_object.token_price = "20 USD"
 schema_object.llist.append(1)
 schema_object.description = "something"
 ```
-### for a full example of using schema see the following [test script](schema_test.py)
+### for a full example of using schema see the following [test link](https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/data/schema/tests)
 
 
 ## Schema Test

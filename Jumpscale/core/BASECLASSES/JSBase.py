@@ -6,6 +6,7 @@ import sys
 import inspect
 import types
 
+
 class JSBase:
 
     def _obj_cache_reset(self):
@@ -18,22 +19,22 @@ class JSBase:
         self._cache_ = None
         self._objid_ = None
 
-        for key,obj in self.__dict__.items():
+        for key, obj in self.__dict__.items():
             del obj
 
-    def _class_init(self):
+    def _class_init(self, parent=None):
 
-        if not hasattr(self.__class__,"_class_init_done"):
+        if not hasattr(self.__class__, "_class_init_done"):
             # print("_class init:%s"%self.__class__.__name__)
-            #only needed to execute once, needs to be done at init time, class inheritance does not exist
-            self.__class__._dirpath_ = ""           #path of the directory hosting this class
-            self.__class__._logger_ = None          #logger attached to this class
-            self.__class__._cache_expiration = 3600 #expiration of the cache
+            # only needed to execute once, needs to be done at init time, class inheritance does not exist
+            self.__class__._dirpath_ = ""  # path of the directory hosting this class
+            self.__class__._logger_ = None  # logger attached to this class
+            self.__class__._cache_expiration = 3600  # expiration of the cache
             self.__class__._test_runs = {}
             self.__class__._test_runs_error = {}
 
             self.__class__.__name__ = j.core.text.strip_to_ascii_dense(str(self.__class__)).split(".")[-1].lower()
-            #short location name:
+            # short location name:
             if '__jslocation__' in self.__dict__:
                 self.__class__._location = self.__jslocation__
             elif '__jslocation__' in self.__class__.__dict__:
@@ -52,22 +53,20 @@ class JSBase:
 
             self.__class__._class_init_done = True
 
-
-    def __init__(self,init=True):
-        self._class_init() #is needed to init class properties, needs to be first thing
+    def __init__(self, init=True):
+        self._class_init()  # is needed to init class properties, needs to be first thing
 
         if init:
             self._init()
 
         self._obj_cache_reset()
 
-
     def _init(self):
         pass
 
     @property
     def _dirpath(self):
-        if self.__class__._dirpath_ =="":
+        if self.__class__._dirpath_ == "":
             self.__class__._dirpath_ = os.path.dirname(inspect.getfile(self.__class__))
         return self.__class__._dirpath_
 
@@ -75,29 +74,28 @@ class JSBase:
     def _objid(self):
         if self._objid_ is None:
             id = self.__class__._location
-            id2=""
+            id2 = ""
             try:
-                id2=self.data.name
+                id2 = self.data.name
             except:
                 pass
-            if id2=="":
+            if id2 == "":
                 try:
                     if self.data.id is not None:
                         id2 = self.data.id
                 except:
                     pass
-            if id2=="":
+            if id2 == "":
                 for item in ["instance", "_instance", "_id", "id", "name", "_name"]:
                     if item in self.__dict__ and self.__dict__[item]:
                         self._logger.debug("found extra for obj_id")
                         id2 = str(self.__dict__[item])
                         break
-            if id2!="":
-                self._objid_ = "%s_%s"%(id,id2)
+            if id2 != "":
+                self._objid_ = "%s_%s" % (id, id2)
             else:
                 self._objid_ = id
         return self._objid_
-
 
     @property
     def _logger(self):
@@ -107,7 +105,7 @@ class JSBase:
         return self.__class__._logger_
 
     def _logger_enable(self):
-        self.__class__._logger_ = j.logger.get(self.__class__._location,force=True)
+        self.__class__._logger_ = j.logger.get(self.__class__._location, force=True)
         self._logger.level = 0
 
     @property
@@ -119,9 +117,9 @@ class JSBase:
     def _inspect(self):
         if not self.__class__._inspected_:
             # print("INSPECT:%s"%self.__class__)
-            assert self.__class__._methods_==[]
-            assert self.__class__._properties_==[]
-            for name,obj in  inspect.getmembers(self.__class__):
+            assert self.__class__._methods_ == []
+            assert self.__class__._properties_ == []
+            for name, obj in inspect.getmembers(self.__class__):
                 if name.startswith("_"):
                     continue
                 elif inspect.ismethod(obj):
@@ -150,16 +148,15 @@ class JSBase:
         # else:
         #     print("not inspect:%s"%self.__class__)
 
-
     def _properties(self):
         self._inspect()
-            # methods = self._methods()
-            # r=[]
-            # for item in self.__dict__.keys():
-            #     if item.startswith("_"):
-            #         continue
-            #     if item not in methods:
-            #         self.__class__._properties_.append(item)
+        # methods = self._methods()
+        # r=[]
+        # for item in self.__dict__.keys():
+        #     if item.startswith("_"):
+        #         continue
+        #     if item not in methods:
+        #         self.__class__._properties_.append(item)
         return self.__class__._properties_
 
     def _methods(self):
@@ -173,7 +170,6 @@ class JSBase:
         #             self.__class__._methods_.append(item)
         return self.__class__._methods_
 
-
     def _properties_children(self):
         return []
 
@@ -182,15 +178,15 @@ class JSBase:
 
     @property
     def _ddict(self):
-        res={}
+        res = {}
         for key in self.__dict__.keys():
             if not key.startswith("_"):
                 v = self.__dict__[key]
-                if not isinstance(v,types.MethodType):
+                if not isinstance(v, types.MethodType):
                     res[key] = v
         return res
 
-    def _warning_raise(self,msg,e=None,cat=""):
+    def _warning_raise(self, msg, e=None, cat=""):
         """
 
         :param msg:
@@ -198,10 +194,10 @@ class JSBase:
         :param cat: any dot notation
         :return:
         """
-        msg="ERROR in %s\n"%self
-        msg+="msg\n"
+        msg = "ERROR in %s\n" % self
+        msg += "msg\n"
 
-    def _error_bug_raise(self,msg,e=None,cat=""):
+    def _error_bug_raise(self, msg, e=None, cat=""):
         """
 
         :param msg:
@@ -210,65 +206,65 @@ class JSBase:
         :return:
         """
         if cat == "":
-            out = "BUG: %s"%msg
+            out = "BUG: %s" % msg
         else:
-            out = "BUG (%s): %s "%(cat,msg)
-        out+=msg+"\n"
+            out = "BUG (%s): %s " % (cat, msg)
+        out += msg+"\n"
         raise RuntimeError(msg)
 
-    def _error_input_raise(self,msg,cat=""):
+    def _error_input_raise(self, msg, cat=""):
         if cat == "":
-            msg = "ERROR_INPUT: %s"%msg
+            msg = "ERROR_INPUT: %s" % msg
         else:
-            msg = "ERROR_INPUT (%s): %s "%(cat,msg)
+            msg = "ERROR_INPUT (%s): %s " % (cat, msg)
         raise RuntimeError(msg)
         j.shell()
         print()
         sys.exit(1)
 
-    def _error_monitor_raise(self,msg,cat=""):
+    def _error_monitor_raise(self, msg, cat=""):
         if cat == "":
-            msg = "ERROR_MONITOR: %s"%msg
+            msg = "ERROR_MONITOR: %s" % msg
         else:
-            msg = "ERROR_MONITOR (%s): %s "%(cat,msg)
+            msg = "ERROR_MONITOR (%s): %s " % (cat, msg)
         j.shell()
         print()
         sys.exit(1)
 
-    def _done_check(self,name="",reset=False):
+    def _done_check(self, name="", reset=False):
         if reset:
             self._done_reset(name=name)
-        if name=="":
-            return j.core.db.hexists("done",self._objid)
+        if name == "":
+            return j.core.db.hexists("done", self._objid)
         else:
-            return j.core.db.hexists("done","%s:%s"%(self._objid,name))
+            return j.core.db.hexists("done", "%s:%s" % (self._objid, name))
 
-    def _done_set(self,name="",value="1"):
-        if name=="":
-            return j.core.db.hset("done",self._objid,value)
+    def _done_set(self, name="", value="1"):
+        if name == "":
+            return j.core.db.hset("done", self._objid, value)
         else:
-            return j.core.db.hset("done","%s:%s"%(self._objid,name),value)
+            return j.core.db.hset("done", "%s:%s" % (self._objid, name), value)
 
-    def _done_get(self,name=""):
-        if name=="":
-            return j.core.db.hget("done",self._objid)
+    def _done_get(self, name=""):
+        if name == "":
+            return j.core.db.hget("done", self._objid)
         else:
-            return j.core.db.hget("done","%s:%s"%(self._objid,name))
+            return j.core.db.hget("done", "%s:%s" % (self._objid, name))
 
-    def _done_reset(self,name=""):
+    def _done_reset(self, name=""):
         """
         if name =="" then will remove all from this object
         :param name:
         :return:
         """
-        if name=="":
+        if name == "":
             for item in j.core.db.hkeys("done"):
-                item=item.decode()
-                print("reset todo:%s"%item)
-                if item.find(self._objid)!=-1:
-                    j.core.db.hdel("done",self._objid)
+                item = item.decode()
+                print("reset todo:%s" % item)
+                if item.find(self._objid) != -1:
+                    j.core.db.hdel("done", self._objid)
         else:
-            return j.core.db.hdel("done","%s:%s"%(self._objid,name))
+            return j.core.db.hdel("done", "%s:%s" % (self._objid, name))
 
     def _test_error(self, name, error):
         j.errorhandler.try_except_error_process(error, die=False)
@@ -302,17 +298,16 @@ class JSBase:
     def __test_run(self, name=None, obj_key="main", **kwargs):
 
         if name == '':
-            name=None
+            name = None
 
         self._logger_enable()
         if name is not None:
-            self._logger.info("##: TEST RUN: %s"%name.upper())
+            self._logger.info("##: TEST RUN: %s" % name.upper())
 
         if name is not None:
 
             if name.endswith(".py"):
                 name = name[:-3]
-
 
             tpath = "%s/tests/%s" % (self._dirpath, name)
             tpath = tpath.replace("//", "/")
@@ -354,9 +349,9 @@ class JSBase:
 
     def __str__(self):
         # out = str(self.__class__)+"\n"
-        out = "%s\n"%self.__class__._location
+        out = "%s\n" % self.__class__._location
         try:
-            out += "%s\n%s\n"%(self.__class__,str(j.data.serializers.yaml.dumps(self._ddict)))
+            out += "%s\n%s\n" % (self.__class__, str(j.data.serializers.yaml.dumps(self._ddict)))
         except Exception as e:
             pass
         return out
