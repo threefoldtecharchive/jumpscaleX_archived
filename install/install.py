@@ -350,12 +350,6 @@ elif "3" in args:
     print(IT.Tools.text_replace(k,args=args))
 
 
-
-else:
-    help()
-    sys.exit(1)
-
-
 """
 #TO TEST:
 python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py
