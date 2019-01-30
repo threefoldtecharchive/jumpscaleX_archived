@@ -50,3 +50,9 @@ def main(self):
     assert '01ffd7c884aa869056bfb832d957bb71a0005fee13c19046cebec84b3a5047ee8829eab070374b' in msbalance.owners
     assert '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a' in msbalance.owners
     assert msbalance.signature_count == 1
+
+    # a balance can be used for funding amounts
+    # (NOTE that is it up to you to ensure that your balance object is used only until it becomes out of date)
+    outputs, remainder = balance.fund(500)
+    assert str(remainder) == '499999999500'
+    assert str(sum([co.value for co in outputs])) == '500000000000'
