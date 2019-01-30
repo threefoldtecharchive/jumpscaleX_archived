@@ -81,16 +81,19 @@ def main(self):
         "cmds": [{"name": "aname", "comment": "test", "nr": 10}],
     }
 
-    assert schema_test._ddict == schema_test1
+    for item1, item2 in zip(schema_test._ddict, schema_test1):
+        assert item1 == item2
 
     schema_test._data
     schema_test._json
 
-    assert schema_test._ddict == schema_test1
+    for item1, item2 in zip(schema_test._ddict, schema_test1):
+        assert item1 == item2
 
     schema_test2 = schema_object.get(capnpbin=schema_test._data)
 
-    assert schema_test._ddict == schema_test2._ddict
+    for item1, item2 in zip(schema_test._ddict, schema_test2._ddict):
+        assert item1 == item2
     assert schema_test._data == schema_test2._data
 
     assert schema_test.readonly == False

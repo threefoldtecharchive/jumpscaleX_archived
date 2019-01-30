@@ -13,14 +13,14 @@ def main(self):
 
     toml = """
         enable = true
-        #unique name with dot notation for the package
+        # unique name with dot notation for the package
         name = "digitalme.base"
-        
-        
+
+
         [[loaders]]
         giturl = "https://github.com/threefoldtech/digital_me/tree/development960/packages/system/base"
         dest = ""
-        
+
         [[loaders]]
         giturl = "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/static"
         dest = "blueprints/base/static"
@@ -33,17 +33,17 @@ def main(self):
         enable = true (B)
         args = (LO) !jumpscale.digitalme.package.arg
         loaders= (LO) !jumpscale.digitalme.package.loader
-        
+
         @url =  jumpscale.digitalme.package.arg
         key = "" (S)
         val =  "" (S)
-        
+
         @url =  jumpscale.digitalme.package.loader
         giturl =  "" (S)
         dest =  "" (S)
         enable = true (B)
-        
-        ##ENDSCHEMA
+
+        # ENDSCHEMA
 
         """
 
@@ -54,7 +54,7 @@ def main(self):
 
     assert(
         j.core.text.strip_to_ascii_dense(str(data)) ==
-        "_args_enable_true_loaders_dest_enable_true_giturl_https_github.com_threefoldtech_digital_me_tree_development960_packages_system_base_dest_blueprints_base_static_enable_true_giturl_https_github.com_threefoldtech_jumpscale_weblibs_tree_master_static_name_digitalme.base")
+        "name_digitalme.base_enable_true_args_loaders_giturl_https_github.com_threefoldtech_digital_me_tree_development960_packages_system_base_dest_enable_true_giturl_https_github.com_threefoldtech_jumpscale_weblibs_tree_master_static_dest_blueprints_base_static_enable_true")
 
     self._logger.info("TEST DONE LOADDATA")
 

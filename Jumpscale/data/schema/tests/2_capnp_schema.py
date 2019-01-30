@@ -11,8 +11,8 @@ def main(self):
     schema0 = """
         @url = despiegk.test.group
         description = ""
-        llist = "" (LO) !despiegk.test.users
-        listnum = "" (LI)
+        llist =  (LO) !despiegk.test.users
+        listnum = (LI)
         """
 
     schema1 = """

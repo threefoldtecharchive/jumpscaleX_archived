@@ -16,9 +16,9 @@ def main(self):
         token_price = "10 USD" (N)
         cost_estimate = 0.0 #this is a comment
         llist = []
-        llist3 = "1,2,3" (LF)
-        llist4 = "1,2,3" (L)
-        llist5 = "1,2,3" (LI)
+        llist3 = [1,2,3] (LF)
+        llist4 = [1,2,3] (L)
+        llist5 = [1,2,3] (LI)
         U = 0.0
         #pool_type = "managed,unmanaged" (E)  #NOT DONE FOR NOW
         """
