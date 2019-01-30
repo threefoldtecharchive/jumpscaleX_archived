@@ -58,7 +58,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         """
         Get the current blockchain info, using the last known block, as reported by an explorer.
         """
-        resp = j.clients.tfchain.explorer.get(addresses=self.explorer_addresses, endpoint="/explorer")
+        resp = self._explorer_get(endpoint="/explorer")
         resp = j.data.serializers.json.loads(resp)
         blockid = Hash.from_json(obj=resp['blockid'])
         last_block = self.block_get(blockid)
@@ -72,12 +72,12 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         """
         # get the explorer block
         if isinstance(value, int):
-            resp = j.clients.tfchain.explorer.get(addresses=self.explorer_addresses, endpoint="/explorer/blocks/{}".format(int(value)))
+            resp = self._explorer_get(endpoint="/explorer/blocks/{}".format(int(value)))
             resp = j.data.serializers.json.loads(resp)
             resp = resp['block']
         else:
             blockid = self._normalize_id(value)
-            resp = j.clients.tfchain.explorer.get(addresses=self.explorer_addresses, endpoint="/explorer/hashes/"+blockid)
+            resp = self._explorer_get(endpoint="/explorer/hashes/"+blockid)
             resp = j.data.serializers.json.loads(resp)
             assert resp['hashtype'] == 'blockid'
             resp = resp['block']
@@ -120,7 +120,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         @param txid: the identifier (fixed string with a length of 64) that points to the desired transaction
         """
         txid = self._normalize_id(txid)
-        resp = j.clients.tfchain.explorer.get(addresses=self.explorer_addresses, endpoint="/explorer/hashes/"+txid)
+        resp = self._explorer_get(endpoint="/explorer/hashes/"+txid)
         resp = j.data.serializers.json.loads(resp)
         assert resp['hashtype'] == 'transactionid'
         resp = resp['transaction']
@@ -135,7 +135,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         @param unlockhash: the unlockhash to look up transactions for in the explorer
         """
         unlockhash = self._normalize_unlockhash(unlockhash)
-        resp = j.clients.tfchain.explorer.get(addresses=self.explorer_addresses, endpoint="/explorer/hashes/"+unlockhash)
+        resp = self._explorer_get(endpoint="/explorer/hashes/"+unlockhash)
         resp = j.data.serializers.json.loads(resp)
         assert resp['hashtype'] == 'unlockhash'
         # parse the transactions
@@ -173,6 +173,13 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         transaction.unconfirmed = etxn.get('unconfirmed', False)
         # return the transaction
         return transaction
+
+    def _explorer_get(self, endpoint):
+        """
+        Private utility method that gets the data on the given endpoint,
+        put in a method so it can be overriden for Testing purposes.
+        """
+        return j.clients.tfchain.explorer.get(addresses=self.explorer_addresses, endpoint=endpoint)
 
     def _normalize_unlockhash(self, unlockhash):
         if isinstance(unlockhash, UnlockHash):
