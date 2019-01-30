@@ -11,6 +11,10 @@ def main(self):
     c = j.clients.tfchain.new("mydevclient", network_type="DEV")
     # or simply `c = j.tfchain.clients.mydevclient`, should the client already exist
 
+    # for standard net you could also immediate create a new wallet using
+    # `c = j.tfchain.clients.mydevclient`, or the more explicit form
+    # `c = j.clients.tfchain.new("mydevclient", network_type="STD")`
+
     # create a new devnet wallet
     w = c.wallets.mywallet # is the implicit form of `c.wallets.new("mywallet")`
 

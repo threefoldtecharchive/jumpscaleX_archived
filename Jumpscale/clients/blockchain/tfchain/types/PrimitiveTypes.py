@@ -169,6 +169,46 @@ class Currency(BaseDataTypeClass):
         if value < 0:
             raise TypeError('currency cannot have a negative value')
         self._value = value
+
+    # operator overloading to allow currencies to be summed
+    def __radd__(self, other):
+        return Currency(value=self.value+other)
+    def __add__(self, other):
+        return Currency(value=self.value+other)
+
+    # operator overloading to allow currencies to be subtracted
+    def __rsub__(self, other):
+        return Currency(value=self.value-other)
+    def __sub__(self, other):
+        return Currency(value=self.value-other)
+
+    # operator overloading to allow currencies to be compared
+    def __lt__(self, other):
+        return self.value < other
+    def __le__(self, other):
+        if isinstance(other, Currency):
+            return self.value <= other.value
+        elif isinstance(other, (int, str)):
+            return self.value <= Currency(value=other)
+        else:
+            return NotImplemented
+    def __eq__(self, other):
+        return self.value == other
+    def __ne__(self, other):
+        return self.value != other
+    def __gt__(self, other):
+        return self.value > other
+    def __ge__(self, other):
+        if isinstance(other, Currency):
+            return self.value >= other.value
+        elif isinstance(other, (int, str)):
+            return self.value >= Currency(value=other)
+        else:
+            return NotImplemented
+
+    # allow our currency to be turned into an int
+    def __int__(self):
+        return self.value
     
     def __str__(self):
         return str(self._value)
