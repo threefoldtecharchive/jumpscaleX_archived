@@ -167,7 +167,7 @@ class BuilderSSH(j.builder.system._BaseClass):
         :type key: str
         :raises j.exceptions.Input: if the key is empty
         :raises j.exceptions.RuntimeError: if user is not found
-        :return: True if the key was added successfully or already exists, False otherwise
+        :return: True if the key already exists, False otherwise
         :rtype: bool
         """
         def add_newline(content):
