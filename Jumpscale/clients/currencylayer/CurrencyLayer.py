@@ -10,17 +10,15 @@ class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
 
     __jslocation__ = 'j.clients.currencylayer'
 
-
     _SCHEMATEXT = """
     @url = jumpscale.currencylayer.client
     name* = "" (S)
     api_key_ = "" (S)
     """
 
-
     def __init__(self):
-        factory = CurrencyLayerFactory() #get access to factory, then give to only child = singleton
-        j.application.JSBaseConfigClass.__init__(self,name="main",factory=factory)
+        factory = CurrencyLayerFactory()  # get access to factory, then give to only child = singleton
+        j.application.JSBaseConfigClass.__init__(self, name="main", parent=factory)
 
     def _init(self):
         self._data_cur = {}
@@ -149,12 +147,12 @@ class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
         """
         js_shell 'j.clients.currencylayer.test()'
         """
-        r=j.clients.currencylayer._Find()
+        r = j.clients.currencylayer._Find()
         j.shell()
         self._logger.info(self.cur2usd)
         assert 'aed' in self.cur2usd
 
+
 class CurrencyLayerFactory(j.application.JSBaseConfigsClass):
 
     _CHILDCLASS = CurrencyLayerSingleton
-

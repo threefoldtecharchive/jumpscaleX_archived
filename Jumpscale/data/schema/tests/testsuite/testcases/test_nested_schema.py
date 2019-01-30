@@ -3,15 +3,18 @@ from Jumpscale import j
 from unittest import TestCase
 from uuid import uuid4
 from datetime import datetime
-import random, time, unittest
+import random
+import time
+import unittest
+
 
 class NestedSchemaTest(BaseTest):
     def setUp(self):
-        super().setUp() 
+        super().setUp()
 
     def test001_nested_concatenated_schema(self):
         """
-        SCM-041
+        SCM-039
         *Test case for concatenated nesting schema *
 
         **Test Scenario:**
@@ -73,7 +76,7 @@ class NestedSchemaTest(BaseTest):
 
     def test002_nested_sperated_schema(self):
         """
-        SCM-042
+        SCM-040
         *Test case for sperated nesting schema *
 
         **Test Scenario:**
@@ -101,7 +104,7 @@ class NestedSchemaTest(BaseTest):
         numbers = (O) !phone.schema
         address = (O) !address.schema
         grades = (Lp)
-        """ 
+        """
         schema1 = self.schema(scm1)
         schema_obj1 = schema1.new()
 

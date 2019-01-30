@@ -121,9 +121,9 @@ class Dictionary(String):
         :return:
         """
         if j.data.types.bytes.check(v):
-            v=j.data.serializers.msgpack.loads(v)
+            v = j.data.serializers.msgpack.loads(v)
         elif j.data.types.string.check(v):
-            v=j.data.serializers.json.loads(v)
+            v = j.data.serializers.json.loads(v)
         if not self.check(v):
             raise RuntimeError("dict for clean needs to be bytes, string or dict")
         return v
@@ -139,8 +139,18 @@ class Dictionary(String):
     def toJSON(self, v):
         return self.toString(v)
 
+    def python_code_get(self, value):
+        """
+        produce the python code which represents this value
+        """
+        return self.toString(value)
+
+    def toHR(self, v):
+        return self.toString(v)
+
     def capnp_schema_get(self, name, nr):
         return "%s @%s :Data;" % (name, nr)
+
 
 class List():
     '''
@@ -296,6 +306,7 @@ class List():
                 "", nr=0).split(":", 1)[1].rstrip(";").strip()
         return "%s @%s :List(%s);" % (name, nr, capnptype)
 
+
 class Hash(List):
 
     '''
@@ -342,7 +353,7 @@ class Hash(List):
             else:
                 return int(val)
 
-        if j.data.types.list.check(value):# or j.data.types.set.check(value):
+        if j.data.types.list.check(value):  # or j.data.types.set.check(value):
             # prob given as list or set of 2 which is the base representation
             if len(value) != 2:
                 raise RuntimeError("hash can only be list/set of 2")
@@ -385,7 +396,7 @@ class Hash(List):
             return "%s = %s" % (key, self.python_code_get(value))
 
 
-#TODO: why do we have a set, from our perspective a set & list should be same for novice users
+# TODO: why do we have a set, from our perspective a set & list should be same for novice users
 
 # class Set(List):
 #     '''Generic set type'''

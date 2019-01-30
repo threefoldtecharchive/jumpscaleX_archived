@@ -3,11 +3,14 @@ from Jumpscale import j
 from unittest import TestCase
 from uuid import uuid4
 from datetime import datetime
-import random, time, unittest
+import random
+import time
+import unittest
+
 
 class SchemaTest(BaseTest):
     def setUp(self):
-        super().setUp() 
+        super().setUp()
 
     def test001_validate_list_of_strings(self):
         """
@@ -32,7 +35,7 @@ class SchemaTest(BaseTest):
         self.log("Try to set parameter with non string type, should fail.")
         with self.assertRaises(Exception):
             schema_obj.list_names = [random.randint(1, 1000), self.random_string()]
-        
+
         with self.assertRaises(Exception):
             schema_obj.list_names.append(random.randint(1, 1000))
 
@@ -47,7 +50,7 @@ class SchemaTest(BaseTest):
         self.assertEqual(schema_obj.list_names, list_names)
         self.log("schema list %s" % schema_obj.list_str)
         self.assertEqual(schema_obj.list_str, ['test', 'example'])
-    
+
     def test002_validate_list_of_integers(self):
         """
         SCM-023
@@ -71,7 +74,7 @@ class SchemaTest(BaseTest):
         self.log("Try to set parameter with non integer type, should fail.")
         with self.assertRaises(Exception):
             schema_obj.list_numbers = [random.randint(1, 1000), self.random_string()]
-        
+
         with self.assertRaises(Exception):
             schema_obj.list_numbers.append(self.random_string())
 
@@ -86,7 +89,7 @@ class SchemaTest(BaseTest):
         self.assertEqual(schema_obj.list_numbers, list_numbers)
         self.log("schema list %s" % schema_obj.list_int)
         self.assertEqual(schema_obj.list_int, [1, 2, 3])
-    
+
     def test003_validate_list_floats(self):
         """
         SCM-024
@@ -110,7 +113,7 @@ class SchemaTest(BaseTest):
         self.log("Try to set parameter with non float type, should fail.")
         with self.assertRaises(Exception):
             schema_obj.list_numbers = [random.uniform(1, 1000), self.random_string()]
-        
+
         with self.assertRaises(Exception):
             schema_obj.list_numbers.append(self.random_string())
 
@@ -125,7 +128,7 @@ class SchemaTest(BaseTest):
         self.assertEqual(schema_obj.list_numbers, list_numbers)
         self.log("schema list %s" % schema_obj.list_floats)
         self.assertEqual(schema_obj.list_floats, [1.5, 2.67, 3.7])
-    
+
     def test004_validate_list_of_boolean(self):
         """
         SCM-025
@@ -150,13 +153,13 @@ class SchemaTest(BaseTest):
         schema_obj.list_check = [random.uniform(2, 1000), self.random_string()]
         self.assertEqual(schema_obj.list_check, [False, False])
 
-        self.log("Try to set parameter[P1] with True value, should be True.") 
+        self.log("Try to set parameter[P1] with True value, should be True.")
         schema_obj.list_check = [1, 'yes', 'y', 'true', True, 'f']
         check = [True, True, True, True, True, False]
         self.assertEqual(schema_obj.list_check, check)
         self.log("schema list %s" % schema_obj.list_bool)
-        self.assertEqual(schema_obj.list_bool, [True,False])
-    
+        self.assertEqual(schema_obj.list_bool, [True, False])
+
     def test005_validate_list_of_mobiles(self):
         """
         SCM-026
@@ -181,7 +184,7 @@ class SchemaTest(BaseTest):
         self.log("Try to set parameter with non mobile type, should fail.")
         with self.assertRaises(Exception):
             schema_obj.mobile_list = [random.uniform(1, 100), random.randint(100000, 1000000)]
-        
+
         with self.assertRaises(Exception):
             schema_obj.mobile_list.append(random.uniform(1, 100))
 
@@ -196,7 +199,7 @@ class SchemaTest(BaseTest):
         self.assertEqual(schema_obj.mobile_list, mobile_list)
         self.log("schema list %s" % schema_obj.list_tel)
         self.assertEqual(schema_obj.list_tel, ['4644564464', '+45687941', '468716420'])
-    
+
     def test006_validate_list_of_emails(self):
         """
         SCM-027
@@ -236,7 +239,7 @@ class SchemaTest(BaseTest):
         schema_obj.email_list.append(value)
         self.log("schema list %s" % schema_obj.email_list)
         self.assertEqual(schema_obj.email_list, email_list)
-    
+
     def test007_validate_list_of_ipports(self):
         """
         SCM-028
@@ -275,7 +278,7 @@ class SchemaTest(BaseTest):
         self.assertEqual(schema_obj.port_list, port_list)
         self.log("schema list %s" % schema_obj.list_ports)
         self.assertEqual(schema_obj.list_ports, [3164, 15487])
-    
+
     def test008_validate_list_of_ipaddrs(self):
         """
         SCM-029
@@ -313,7 +316,7 @@ class SchemaTest(BaseTest):
         schema_obj.ip_list.append(value)
         self.log("schema list %s" % schema_obj.ip_list)
         self.assertEqual(schema_obj.ip_list, ip_list)
-    
+
     def test009_validate_list_of_ipranges(self):
         """
         SCM-030
@@ -391,7 +394,8 @@ class SchemaTest(BaseTest):
         date_1 = random.randint(1, 100)
         date_2 = datetime(datetime.now().year, month, day, hours, minutes).timestamp()
 
-        date_list = [date_1, '{}/{:02}/{:02} {:02}{}:{:02}'.format(datetime.now().year, month, day, hour_12, am_or_pm, minutes)]
+        date_list = [
+            date_1, '{}/{:02}/{:02} {:02}{}:{:02}'.format(datetime.now().year, month, day, hour_12, am_or_pm, minutes)]
         schema_obj.date_list = date_list
         self.assertEqual(schema_obj.date_list, [date_1, date_2])
 
@@ -429,7 +433,7 @@ class SchemaTest(BaseTest):
         with self.assertRaises(Exception):
             schema_obj.percent_list.append(self.random_string())
 
-        self.log("Try to set parameter with percent type, should succeed.")        
+        self.log("Try to set parameter with percent type, should succeed.")
         percent_list = [random.randint(1, 100), random.uniform(1, 100)]
         check_list = [percent_list[0], percent_list[1]]
         schema_obj.percent_list = percent_list
@@ -480,7 +484,7 @@ class SchemaTest(BaseTest):
         url_list.append(value)
         schema_obj.url_list.append(value)
         self.assertEqual(schema_obj.url_list, url_list)
-    
+
     @unittest.skip("can't reach the currency methods(in list) to change between them")
     def test013_validate_list_of_numerics(self):
         """
@@ -512,7 +516,7 @@ class SchemaTest(BaseTest):
         schema_obj.curr_list = curr_list
         # self.assertEqual(schema_obj.curr_list, curr_list)
         # self.assertEqual(schema_obj.list_numerics, curr_list)
-    
+
     def test014_validate_list_of_guids(self):
         """
         SCM-035
@@ -536,105 +540,25 @@ class SchemaTest(BaseTest):
         self.log("Try to set parameter with non guid type, should fail.")
         with self.assertRaises(Exception):
             schema_obj.guid_list = [str(uuid4())[:15], str(uuid4())]
-        
+
         with self.assertRaises(Exception):
             schema_obj.guid_list.append(self.random_string())
         self.log("Try to set parameter with guid type, should succeed.")
         guid_list = [str(uuid4()), str(uuid4())]
         schema_obj.guid_list = guid_list
         self.assertEqual(schema_obj.guid_list, guid_list)
-        self.log("schema list %s"%schema_obj.list_guids)
-        self.assertEqual(schema_obj.list_guids, ['bebe8b34-b12e-4fda-b00c-99979452b7bd', '84b022bd-2b00-4b62-8539-4ec07887bbe4'])
+        self.log("schema list %s" % schema_obj.list_guids)
+        self.assertEqual(schema_obj.list_guids, [
+                         'bebe8b34-b12e-4fda-b00c-99979452b7bd', '84b022bd-2b00-4b62-8539-4ec07887bbe4'])
 
         value = str(uuid4())
         guid_list.append(value)
         schema_obj.guid_list.append(value)
         self.assertEqual(schema_obj.guid_list, guid_list)
 
-    @unittest.skip("can't need this type")
-    def test015_validate_list_of_dicts(self):
+    def test015_validate_list_of_multilines(self):
         """
         SCM-036
-        *Test case for validating list of dicts *
-
-        **Test Scenario:**
-
-        #. Create schema with list of dicts parameter, should succeed.
-        #. Try to set parameter with non dict type, should fail.
-        #. Try to set parameter with dict type, should succeed.
-        """
-        self.log("Create schema with list of dicts parameter, should succeed.")
-        scm = """
-        @url = test.schema
-        dict_list = (Ldict)
-        list_dicts = [{'number1':10, 'number2':100}, {'number1':10, "number2": 12}] (Ldict)
-        """
-        schema = self.schema(scm)
-        time.sleep(1)
-        schema_obj = schema.new()
-
-        self.log("Try to set parameter with non dict type, should fail.")
-        with self.assertRaises(Exception):
-            schema_obj.dict_list = [self.random_string(), {'number1':10, "number2": 12}]
-
-        with self.assertRaises(Exception):
-            schema_obj.dict_list.append(self.random_string())
-
-        self.log("Try to set parameter with dict type, should succeed.")
-        dict_list = [{'number1':10, 'number2':100}, {'number1':10, "number2": 12}]
-        schema_obj.dict_list = dict_list
-        self.log("schema list %s" % schema_obj.list_dicts)
-        self.assertEqual(schema_obj.dict_list, dict_list)
-        self.assertEqual(schema_obj.list_dicts, dict_list)
-
-        value = {'number1':5, 'number2':4}
-        dict_list.append(value)
-        schema_obj.dict_list.append(value)
-        self.assertEqual(schema_obj.dict_list, dict_list)
-
-    def test016_validate_list_of_hashs(self):
-        """
-        SCM-037
-        *Test case for validating list of hashs *
-
-        **Test Scenario:**
-
-        #. Create schema with list of hashs parameter, should succeed.
-        #. Try to set parameter with non hash type, should fail.
-        #. Try to set parameter with hash type, should succeed.
-        """
-        self.log("Create schema with list of hashs parameter, should succeed.")
-        scm = """
-        @url = test.schema
-        hash_list = (Lh)
-        list_hashs = ["46:682", "10:861"] (Lh)
-        """
-        schema = self.schema(scm)
-        time.sleep(1)
-        schema_obj = schema.new()
-
-        self.log("Try to set parameter with non hashs type, should fail.")
-        with self.assertRaises(Exception):
-            schema_obj.hash_list = [self.random_string(), (10, 861)]
-        
-        with self.assertRaises(Exception):
-            schema_obj.hash_list.append(self.random_string())
-
-        self.log("Try to set parameter with hash type, should succeed.")
-        hash_list = [(random.randint(1, 100), random.randint(1, 100)), (random.randint(1, 100), random.randint(1, 100))]
-        schema_obj.hash_list = hash_list
-        self.assertEqual(schema_obj.hash_list, hash_list)
-        self.log("schema list %s" % schema_obj.list_hashs)
-        self.assertEqual(schema_obj.list_hashs, [(46, 682), (10, 861)])
-
-        value = (random.randint(1, 100), random.randint(1, 100))
-        hash_list.append(value)
-        schema_obj.hash_list.append(value)
-        self.assertEqual(schema_obj.hash_list, hash_list)
-
-    def test017_validate_list_of_multilines(self):
-        """
-        SCM-038
         *Test case for validating list of multilines *
 
         **Test Scenario:**
@@ -670,9 +594,9 @@ class SchemaTest(BaseTest):
         schema_obj.lines_list.append(value)
         self.assertEqual(schema_obj.lines_list, lines_list)
 
-    def test018_validate_list_of_yaml(self):
+    def test016_validate_list_of_yaml(self):
         """
-        SCM-039
+        SCM-037
         *Test case for validating list of yaml *
 
         **Test Scenario:**
@@ -694,7 +618,7 @@ class SchemaTest(BaseTest):
         self.log("Try to set parameter with non yaml type, should fail.")
         with self.assertRaises(Exception):
             schema_obj.yaml_list = [random.randint(1, 1000), self.random_string()]
-        
+
         with self.assertRaises(Exception):
             schema_obj.yaml_list.append(random.randint(1, 1000))
 
@@ -712,9 +636,9 @@ class SchemaTest(BaseTest):
         self.log("schema list %s" % schema_obj.list_yaml)
         self.assertEqual(schema_obj.yaml_list, yaml_list)
 
-    def test019_validate_list_of_binary(self):
+    def test017_validate_list_of_binary(self):
         """
-        SCM-040
+        SCM-038
         *Test case for validating list of binary *
 
         **Test Scenario:**
@@ -736,7 +660,7 @@ class SchemaTest(BaseTest):
         self.log("Try to set parameter with non binary type, should fail.")
         with self.assertRaises(Exception):
             schema_obj.bin_list = [self.random_string().encode(), self.random_string()]
-        
+
         with self.assertRaises(Exception):
             schema_obj.bin_list.append(random.randint(1, 1000))
 
