@@ -17,21 +17,34 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             self.tools.joinpaths(j.core.dirs.BINDIR, 'restydoc-index'),
             self.tools.joinpaths(j.core.dirs.BINDIR, 'lapis'),
             self.tools.joinpaths(j.core.dirs.BINDIR, 'moon'),
-            self.tools.joinpaths(j.core.dirs.BINDIR, 'moonc')
+            self.tools.joinpaths(j.core.dirs.BINDIR, 'moonc'),
         ]
         self.dirs = {
             self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/openresty.cfg'): 'cfg/',
             self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/mime.types'): 'cfg/',
             self.tools.joinpaths(j.core.dirs.BASEDIR, 'openresty/'): 'openresty/',
+            '/lib/x86_64-linux-gnu/libnss_files.so.2': 'lib',
         }
         lua_files = j.sal.fs.listFilesInDir(self.tools.joinpaths(j.core.dirs.BASEDIR, 'bin/'), filter='*.lua')
         for file in lua_files:
             self.dirs[file] = 'bin/'
 
+        # self.root_dirs = {
+        #     '/usr/bin/perl': 'usr/bin/',
+        #     '/usr/bin/env': 'usr/bin/',
+        #     '/bin/mkdir': 'bin/',
+        #     '/bin/touch': 'bin/',
+        #     '/bin/sh': 'bin/',
+        #     '/usr/lib/x86_64-linux-gnu/perl-base/': 'usr/lib/x86_64-linux-gnu/perl-base/',
+        # }
+
         self.new_dirs = ['var/pid/', 'var/log/']
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'openresty_startup.toml')
         self.startup = j.sal.fs.readFile(startup_file)
-        self.new_files = {'etc/passwd': 'nobody:x:65534:65534:nobody:/:/sandbox/bin/openresty'}
+        self.root_files = {
+            'etc/passwd': 'nobody:x:65534:65534:nobody:/:/sandbox/bin/openresty',
+            'etc/group': 'nogroup:x:65534:'
+        }
 
     def _build_prepare(self):
         j.builder.system.package.mdupdate()
@@ -52,7 +65,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         self._done_reset()
 
         C = """
-        cd /sandbox        
+        cd /sandbox
         rm -rf {DIR_VAR}/build/openresty
         rm -f /sandbox/bin/lua*
         rm -f /sandbox/bin/moon*
@@ -65,7 +78,6 @@ class BuilderOpenResty(j.builder.system._BaseClass):
 
         """
         self.tools.run(C)
-
 
     def build(self, reset=False):
         """

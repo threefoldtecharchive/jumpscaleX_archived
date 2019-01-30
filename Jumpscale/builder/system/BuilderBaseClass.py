@@ -12,7 +12,7 @@ class BuilderBaseClass(BaseClass):
         self.new_files = {}  # dict of new files to create in the flist. key is the location under sandbox/ and the value is the content
         self.startup = ''  # content of the startup script, placed at the root of the flist
         self.root_files = {}
-        self.root_dirs = {} # dict of paths to be copied as is. key is the location, and value is the dest (without sandbox)
+        self.root_dirs = {}  # dict of paths to be copied as is. key is the location, and value is the dest (without sandbox)
         self._init()
 
     @property
@@ -49,35 +49,45 @@ class BuilderBaseClass(BaseClass):
         for bin in self.bins:
             j.sal.fs.copyFile(bin, j.sal.fs.joinPaths(bin_dest, j.sal.fs.getBaseName(bin)))
 
-        # copy dirs in self.dirs
-        for src, dir_dest in self.dirs.items():
-            file = True if j.sal.fs.isFile(src) else False
-            dir_dest = j.sal.fs.joinPaths(sandbox_dest, self.tools.path_relative(dir_dest))
-            j.builder.tools.dir_ensure(dir_dest)
-
-            if file:
-                j.sal.fs.copyFile(src, dir_dest)
-            else:
-                j.sal.fs.copyDirTree(src, dir_dest)
-
         # create dirs in self.new_dirs
         for dir_dest in self.new_dirs:
             dir_dest = j.sal.fs.joinPaths(sandbox_dest, self.tools.path_relative(dir_dest))
             j.builder.tools.dir_ensure(dir_dest)
 
-        # create files in self.new_files
-        for file_dest, content in self.new_files.items():
-            file_dest = j.sal.fs.joinPaths(sandbox_dest, self.tools.path_relative(file_dest))
+        self.copy_dirs(self.dirs, sandbox_dest)
+        self.write_files(self.new_files, sandbox_dest)
+
+    def copy_dirs(self, dirs, dest):
+        """Copy dirs or files
+
+        :param dirs: a dict where the key is the source and the value is the destination
+        :type dirs: dict
+        :param dest: the root path to be appended to the paths in dirs
+        :type dest: str
+        """
+        for src, to in dirs.items():
+            file = True if j.sal.fs.isFile(src) else False
+            dir_dest = j.sal.fs.joinPaths(dest, self.tools.path_relative(to))
+            j.builder.tools.dir_ensure(dir_dest)
+            if file:
+                j.sal.fs.copyFile(src, dir_dest)
+            else:
+                j.sal.fs.copyDirTree(src, dir_dest)
+
+    def write_files(self, files, dest):
+        """write the files in <files> relative to <dest>
+
+        :param files: a dict where the key is the path and the value is the content of the file
+        :type files: dict
+        :param dest: the root path to be appended to the paths in files
+        :type dest: [str
+        """
+        for file_dest, content in files.items():
+            file_dest = j.sal.fs.joinPaths(dest, self.tools.path_relative(file_dest))
             dir = j.sal.fs.getDirName(file_dest)
             j.builder.tools.dir_ensure(dir)
             j.builder.tools.file_ensure(file_dest)
             j.builder.tools.file_write(file_dest, content)
-
-    def copy_root_paths(self, dest):
-        for src, to in self.root_dirs.items():
-            if self.tools.exists(src):
-                new_dest = self.tools.joinpaths(dest, self.tools.path_relative(to))
-                j.sal.fs.copyDirTree(src, new_dest)
 
     def flist_create(self, hub_instance=None):
         """
@@ -94,20 +104,13 @@ class BuilderBaseClass(BaseClass):
         """
         sandbox_dir = "/tmp/builders/{}".format(self.NAME)
         self.sandbox_create(sandbox_dir)
-        self.copy_root_paths(sandbox_dir)
+        self.copy_dirs(self.root_dirs, sandbox_dir)
+        self.write_files(self.root_files, sandbox_dir)
 
         if self.startup:
             file_dest = j.sal.fs.joinPaths(sandbox_dir, '.startup.toml')
             j.builder.tools.file_ensure(file_dest)
             j.builder.tools.file_write(file_dest, self.startup)
-
-        # create files in self.root_files
-        for file_dest, content in self.root_files.items():
-            file_dest = j.sal.fs.joinPaths(sandbox_dir, self.tools.path_relative(file_dest))
-            dir = j.sal.fs.getDirName(file_dest)
-            j.builder.tools.dir_ensure(dir)
-            j.builder.tools.file_ensure(file_dest)
-            j.builder.tools.file_write(file_dest, content)
 
         ld_dest = j.sal.fs.joinPaths(sandbox_dir, 'lib64/')
         j.builder.tools.dir_ensure(ld_dest)
