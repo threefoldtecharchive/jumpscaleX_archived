@@ -1,6 +1,18 @@
-
-from ptpython.utils import get_jedi_script_from_document
+from prompt_toolkit.buffer import Buffer
+from prompt_toolkit.document import Document
 from prompt_toolkit.completion import Completer, Completion, PathCompleter
+from prompt_toolkit.filters import is_done
+from prompt_toolkit.keys import Keys
+from prompt_toolkit.layout.containers import Window, ConditionalContainer
+from prompt_toolkit.layout.controls import BufferControl
+from prompt_toolkit.layout.dimension import Dimension
+from prompt_toolkit.lexers import SimpleLexer
+
+
+from ptpython.filters import ShowDocstring, PythonInputFilter
+from ptpython.prompt_style import PromptStyle
+from ptpython.utils import get_jedi_script_from_document
+
 import inspect
 
 try:
@@ -9,19 +21,21 @@ try:
     from pygments import highlight
     from pygments.formatters import Terminal256Formatter
     from pygments.lexers import PythonLexer
-    formatter = Terminal256Formatter(linenos=True, cssclass="source",style=pygments.styles.get_style_by_name("fruity")) #vim
+    formatter = Terminal256Formatter(linenos=True, cssclass="source",
+                                     style=pygments.styles.get_style_by_name("fruity"))  # vim
     # from pygments.formatters import HtmlFormatter
     markdownlexer_enabled = True
 except Exception as e:
     print("NOFORMATTING")
     markdownlexer_enabled = False
 
+
 class KosmosShellConfig():
 
     pass
 
 
-def get_object(tbc,locals_=None,globals_=None,walkback=False):
+def get_object(tbc, locals_=None, globals_=None, walkback=False):
     """
     tries starting from the string e.g. j.clients.ssh to get to an object out of the stack
     :param tbc: the line on the console = text before cursor
@@ -34,13 +48,13 @@ def get_object(tbc,locals_=None,globals_=None,walkback=False):
     j = KosmosShellConfig.j
 
     try:
-        obj=eval(tbc)
+        obj = eval(tbc)
         return obj
     except Exception as e:
         # print(e)
         pass
 
-    tbc2 = tbc.split(".")[0] #e.g. ssh.a becomes ssh, because I need to find the ssh object in the stack
+    tbc2 = tbc.split(".")[0]  # e.g. ssh.a becomes ssh, because I need to find the ssh object in the stack
 
     obj = None
     frame_ = inspect.currentframe()
@@ -49,7 +63,7 @@ def get_object(tbc,locals_=None,globals_=None,walkback=False):
         locals_ = j._locals_get(locals_)
 
     if tbc2 in locals_:
-        obj=locals_[tbc2]
+        obj = locals_[tbc2]
 
     if not obj:
 
@@ -57,24 +71,27 @@ def get_object(tbc,locals_=None,globals_=None,walkback=False):
             globals_ = frame_.f_back.f_globals
 
         if tbc2 in globals_:
-            obj=globals_[tbc2]
+            obj = globals_[tbc2]
 
     if not obj:
 
         if walkback:
-            #now walk up to the frames
+            # now walk up to the frames
             while obj is None and frame_:
-                locals_=frame_.f_locals
+                locals_ = frame_.f_locals
 
                 if tbc2 in locals_:
-                    obj=locals_[tbc2]
+                    obj = locals_[tbc2]
                 else:
-                    frame_=frame_.f_back
+                    frame_ = frame_.f_back
 
     if "." in tbc:
-        tbc3=".".join(tbc.split(".")[1:])
-        obj2 = eval("obj.%s"%tbc3)
-        return obj2
+        tbc3 = ".".join(tbc.split(".")[1:])
+        try:
+            obj2 = eval("obj.%s" % tbc3)
+            return obj2
+        except:
+            return
     return obj
 
 
@@ -85,50 +102,43 @@ def get_completions(self, document, complete_event):
 
     j = KosmosShellConfig.j
     obj = None
-    tbc=document.current_line_before_cursor
+    tbc = document.current_line_before_cursor
     if "." in tbc:
-        c=".".join(tbc.split(".")[:-1])
+        c = ".".join(tbc.split(".")[:-1])
 
         try:
-            obj = get_object(c,self.get_locals(),self.get_globals())
+            obj = get_object(c, self.get_locals(), self.get_globals())
         except Exception as e:
-            return # print (e) # TODO: DISPLAY IN BOTTOM PANE
+            return  # print (e) # TODO: DISPLAY IN BOTTOM PANE
         # print(obj)
 
-        remainder = tbc[len(c)+1:]  #e.g. everything after j.clients.ssh.
+        remainder = tbc[len(c)+1:]  # e.g. everything after j.clients.ssh.
 
         if obj:
 
-            if hasattr(obj.__class__,"_methods_"):
+            if hasattr(obj.__class__, "_methods_"):
                 for x in obj._properties_children():
                     if x is None:
                         continue
                     if x.startswith(remainder):
-                        x2=c+"."+x
-                        x3=x2[len(tbc):]
-                        yield Completion(x3, 0,display=x,display_meta=None, style='bg:ansigreen fg:ansiblack')
+                        x2 = c+"."+x
+                        x3 = x2[len(tbc):]
+                        yield Completion(x3, 0, display=x, display_meta=None, style='bg:ansigreen fg:ansiblack')
                 for x in obj._properties_model():
                     if x.startswith(remainder):
-                        x2=c+"."+x
-                        x3=x2[len(tbc):]
-                        yield Completion(x3, 0,display=x,display_meta=None, style='bg:ansiyellow fg:ansiblack')
+                        x2 = c+"."+x
+                        x3 = x2[len(tbc):]
+                        yield Completion(x3, 0, display=x, display_meta=None, style='bg:ansiyellow fg:ansiblack')
                 for x in obj._methods():
                     if x.startswith(remainder):
-                        x2=c+"."+x
-                        x3=x2[len(tbc):]
-                        yield Completion(x3, 0,display=x,display_meta=None, style='bg:ansiblue fg:ansiblack')
+                        x2 = c+"."+x
+                        x3 = x2[len(tbc):]
+                        yield Completion(x3, 0, display=x, display_meta=None, style='bg:ansiblue fg:ansiblack')
                 for x in obj._properties():
                     if x.startswith(remainder):
-                        x2=c+"."+x
-                        x3=x2[len(tbc):]
-                        yield Completion(x3, 0,display=x,display_meta=None, style='bg:ansired fg:ansiblack')
-            # else:
-            #     for x in dir(obj):
-            #         if x.startswith(remainder):
-            #             x2=c+"."+x
-            #             x3=x2[len(tbc):]
-            #             yield Completion(x3, 0,display=x,display_meta=None, style='bg:ansired fg:ansiblack')
-
+                        x2 = c+"."+x
+                        x3 = x2[len(tbc):]
+                        yield Completion(x3, 0, display=x, display_meta=None, style='bg:ansired fg:ansiblack')
                 return
 
     # Do Path completions
@@ -188,34 +198,52 @@ def get_completions(self, document, complete_event):
                 for c in completions:
                     if not c.name_with_symbols.startswith("_"):
                         yield Completion(c.name_with_symbols, len(c.complete) - len(c.name_with_symbols),
-                                display=c.name_with_symbols)
+                                         display=c.name_with_symbols)
+
+
+def get_doc_string(tbc):
+    obj = get_object(tbc, locals_=None, globals_=None, walkback=True)
+    if not obj:
+        return
+    return inspect.getdoc(obj)
+
+
+class HasDocString(PythonInputFilter):
+
+    def __call__(self):
+        tbc = self.python_input.default_buffer.document.current_line_before_cursor
+        return bool(get_doc_string(tbc)) and tbc.endswith('?')
+
+
+def setup_docstring_containers(repl):
+    # see ptpython.layout
+    parent_container = repl.app.layout.container.children[0].children[0]
+    # the same as ptpython containers, but without signature checking
+    parent_container.children.extend([
+        ConditionalContainer(
+            content=Window(
+                height=Dimension.exact(1),
+                char='\u2500',
+                style='class:separator'),
+            filter=HasDocString(repl) & ShowDocstring(repl) & ~is_done),
+        ConditionalContainer(
+            content=Window(
+                BufferControl(
+                    buffer=repl.docstring_buffer,
+                    lexer=SimpleLexer(style='class:docstring'),
+                    #lexer=PythonLexer,
+                ),
+                height=Dimension(max=12)),
+            filter=HasDocString(repl) & ShowDocstring(repl) & ~is_done),
+    ])
 
 
 def ptconfig(repl):
-
-    # from __future__ import unicode_literals
-    from pygments.token import Token
-    from ptpython.prompt_style import PromptStyle
-    from ptpython.layout import CompletionVisualisation
-    # from prompt_toolkit.filters import ViInsertMode
-    from prompt_toolkit.key_binding.key_processor import KeyPress
-    from prompt_toolkit.keys import Keys
-
-    repl.exit_message="We hope you had fun using te kosmos shell"
+    repl.exit_message = "We hope you had fun using te kosmos shell"
     repl.show_docstring = True
-
-    # Show function signature (bool).
-    repl.show_signature = False #not needed because is shown in bottomn
 
     # Show docstring (bool).
     repl.show_docstring = True
-
-    # Show the "[Meta+Enter] Execute" message when pressing [Enter] only
-    # inserts a newline instead of executing the code.
-    repl.show_meta_enter_message = True
-
-    # Show completions. (NONE, POP_UP, MULTI_COLUMN or TOOLBAR)
-    repl.completion_visualisation = CompletionVisualisation.MULTI_COLUMN
 
     # When CompletionVisualisation.POP_UP has been chosen, use this
     # scroll_offset in the completion menu.
@@ -227,69 +255,27 @@ def ptconfig(repl):
     # Show status bar.
     repl.show_status_bar = False
 
-    # When the sidebar is visible, also show the help text.
-    repl.show_sidebar_help = True
-
     # Highlight matching parethesis.
     repl.highlight_matching_parenthesis = True
-
-    # Line wrapping. (Instead of horizontal scrolling.)
-    repl.wrap_lines = True
 
     # Mouse support.
     repl.enable_mouse_support = True
 
-    # Complete while typing. (Don't require tab before the
-    # completion menu is shown.)
-    repl.complete_while_typing = True
-
-    # Vi mode.
-    repl.vi_mode = False
-
-    # Paste mode. (When True, don't insert whitespace after new line.)
-    repl.paste_mode = False
-
-    # Use the classic prompt. (Display '>>>' instead of 'In [1]'.)
-    repl.prompt_style = 'classic'  # 'classic' or 'ipython'
-
     # Don't insert a blank line after the output.
     repl.insert_blank_line_after_output = False
-
-    # History Search.
-    # When True, going back in history will filter the history on the records
-    # starting with the current input. (Like readline.)
-    # Note: When enable, please disable the `complete_while_typing` option.
-    #       otherwise, when there is a completion available, the arrows will
-    #       browse through the available completions instead of the history.
-    repl.enable_history_search = False
 
     # Enable auto suggestions. (Pressing right arrow will complete the input,
     # based on the history.)
     repl.enable_auto_suggest = True
 
-    # Enable open-in-editor. Pressing C-X C-E in emacs mode or 'v' in
-    # Vi navigation mode will open the input in the current editor.
-    repl.enable_open_in_editor = True
-
-    # Enable system prompt. Pressing meta-! will display the system prompt.
-    # Also enables Control-Z suspend.
-    repl.enable_system_bindings = True
-
     # Ask for confirmation on exit.
     repl.confirm_exit = False
 
-    # Enable input validation. (Don't try to execute when the input contains
-    # syntax errors.)
-    repl.enable_input_validation = True
 
     # Use this colorscheme for the code.
     repl.use_code_colorscheme('perldoc')
 
     # Set color depth (keep in mind that not all terminals support true color).
-
-    #repl.color_depth = 'DEPTH_1_BIT'  # Monochrome.
-    #repl.color_depth = 'DEPTH_4_BIT'  # ANSI colors only.
-    # repl.color_depth = 'DEPTH_8_BIT'  # The default, 256 colors.
     repl.color_depth = 'DEPTH_24_BIT'  # True color.
 
     # Syntax.
@@ -302,26 +288,6 @@ def ptconfig(repl):
         ' Pressing Control-B will insert "pdb.set_trace()" '
         event.cli.current_buffer.insert_text('\nimport pdb; pdb.set_trace()\n')
 
-    # Typing ControlE twice should also execute the current command.
-    # (Alternative for Meta-Enter.)
-    """
-    @repl.add_key_binding(Keys.ControlE, Keys.ControlE)
-    def _(event):
-        b = event.current_buffer
-        if b.accept_action.is_returnable:
-            b.accept_action.validate_and_handle(event.cli, b)
-    """
-
-
-    # Typing 'jj' in Vi Insert mode, should send escape. (Go back to navigation
-    # mode.)
-    """
-    @repl.add_key_binding('j', 'j', filter=ViInsertMode())
-    def _(event):
-        " Map 'jj' to Escape. "
-        event.cli.key_processor.feed(KeyPress(Keys.Escape))
-    """
-
     # Custom key binding for some simple autocorrection while typing.
 
     corrections = {
@@ -329,6 +295,7 @@ def ptconfig(repl):
         'pritn': 'print',
         'pr': 'print(',
     }
+
     @repl.add_key_binding(' ')
     def _(event):
         ' When a space is pressed. Check & correct word before cursor. '
@@ -340,72 +307,11 @@ def ptconfig(repl):
                 b.insert_text(corrections[w])
         b.insert_text(' ')
 
-
-    @repl.add_key_binding('?')
-    def _(event):
-        j = KosmosShellConfig.j
-        b = event.cli.current_buffer
-        tbc = b.document.current_line_before_cursor
-
-        obj = get_object(tbc,locals_=None,globals_=None,walkback=True)
-        if not obj:
-            return
-
-        d=inspect.getdoc(obj)
-        # from pudb import set_trace; set_trace()
-        if d:
-            if markdownlexer_enabled:
-                print("\n#### DOCU for %s\n"%tbc)
-                print(highlight(d, MarkdownLexer(), formatter))
-                print("\n")
-            else:
-                print("\n#### DOCU for %s\n"%tbc)
-                print(d)
-                print("\n")
-
-        #TODO:*1 is not good, needs to come in pane at bottomn but did not figure out how yet
-
-        # print(111)
-        # print([i for i in event.app.layout.__dict__.keys()])
-        # print(222)
-
-        # b.delete_before_cursor(count=1)
-        # print("NEED TO FIND A WAY HOW TO SHOW (GET FROM OBJ) HELP TEXT")
-        # from prompt_toolkit.shortcuts import message_dialog
-        # message_dialog(
-        #     title='Example dialog window',
-        #     text='Do you want to continue?\nPress ENTER to quit.')
-        # b.document.insert_after("THOS OS TEST")
-        # print(b.document.__dict__)
-        # print("\n'''")
-        # for i in range(10):
-        #     print(lbc)
-        # print("'''")
-
-    # class CustomPrompt(PromptStyle):
-    #     def in_tokens(self, cli):
-    #         return [
-    #             (Token.In, 'Input['),
-    #             (Token.In.Number, '%s' % repl.current_statement_index),
-    #             (Token.In, '] >>: '),
-    #         ]
-    #
-    #     def in2_tokens(self, cli, width):
-    #        return [
-    #             (Token.In, '...: '.rjust(width)),
-    #         ]
-    #
-    #     def out_tokens(self, cli):
-    #         return [
-    #             (Token.Out, 'Result['),
-    #             (Token.Out.Number, '%s' % repl.current_statement_index),
-    #             (Token.Out, ']: '),
-    #         ]
-
     class CustomPrompt(PromptStyle):
         """
         The classic Python prompt.
         """
+
         def in_prompt(self):
             return [('class:prompt', 'JSX> ')]
 
@@ -415,14 +321,25 @@ def ptconfig(repl):
         def out_prompt(self):
             return []
 
-
     repl.all_prompt_styles['custom'] = CustomPrompt()
     repl.prompt_style = 'custom'
 
     repl._completer.__class__.get_completions = get_completions
 
+    @repl.add_key_binding('?')
+    def _(event):
+        j = KosmosShellConfig.j
+        b = event.cli.current_buffer
+        tbc = b.document.current_line_before_cursor
 
+        d = get_doc_string(tbc)
+        if d:
+            #if markdownlexer_enabled:
+            #    d = highlight(d, MarkdownLexer(), formatter)
+            repl.docstring_buffer.reset(
+                document=Document(d, cursor_position=0)
+            )
+        else:
+            repl.docstring_buffer.reset()
 
-
-
-#IS A LAYER ON TOP PTPYTHON
+    setup_docstring_containers(repl)
