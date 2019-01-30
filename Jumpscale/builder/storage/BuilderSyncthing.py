@@ -9,7 +9,7 @@ class BuilderSyncthing(j.builder.system._BaseClass):
 
     @property
     def builddir(self):
-        return j.builder.tools.dir_paths['BUILDDIR'] + "/syncthing"
+        return "/tmp/builder/syncthing"
 
     def build(self, start=True, install=True, reset=False, version='v0.14.18'):
         """
@@ -24,23 +24,21 @@ class BuilderSyncthing(j.builder.system._BaseClass):
 
         # build
         url = "https://github.com/syncthing/syncthing.git"
-        if j.builder.tools.file_exists('{DIR_BASE}/go/src/github.com/syncthing/syncthing'):
-            j.builder.tools.dir_remove('{DIR_BASE}/go/src/github.com/syncthing/syncthing')
+        syncthing_path = j.core.tools.text_replace('{DIR_BASE}/go/src/github.com/syncthing/syncthing')
+        if j.builder.tools.file_exists(syncthing_path):
+            j.builder.tools.dir_remove(syncthing_path)
         dest = j.clients.git.pullGitRepo(url,
-                                                     dest='{DIR_BASE}/go/src/github.com/syncthing/syncthing',
-                                                     ssh=False,
-                                                     depth=1)
+                                     dest=syncthing_path,
+                                     ssh=False,
+                                     depth=1)
 
         if version is not None:
-            j.sal.process.execute("cd %s && go run build.go -version %s -no-upgrade" % (dest, version), profile=True)
+            j.builder.tools.run("cd %s && go run build.go -version %s -no-upgrade" % (dest, version))
         else:
-            j.sal.process.execute("cd %s && go run build.go" % dest, profile=True)
-
-        # j.core.tools.dir_ensure(self.builddir+"/cfg")
-        # j.core.tools.dir_ensure(self.builddir+"/bin")
+            j.builder.tools.run("cd %s && go run build.go" % dest)
 
         j.builder.tools.copyTree(
-            '{DIR_BASE}/go/src/github.com/syncthing/syncthing/bin',
+            syncthing_path + "/bin",
             self.builddir + "/bin",
             keepsymlinks=False,
             deletefirst=True,
@@ -55,7 +53,7 @@ class BuilderSyncthing(j.builder.system._BaseClass):
         self._done_set("build")
 
         if install:
-            self.install(start=start)
+            self.install(start=start, reset=reset)
 
     def install(self, start=True, reset=False, homedir=""):
         """
@@ -66,12 +64,12 @@ class BuilderSyncthing(j.builder.system._BaseClass):
             return
 
         self.build()
-        j.builder.system.python_pip.install("syncthing")
+        # j.builder.system.python_pip.install("syncthing")
 
-        j.core.tools.dir_ensure("$CFGDIR/syncthing")
+        j.core.tools.dir_ensure(j.core.tools.text_replace("{DIR_CFG}/syncthing"))
         # j.sal.fs.writeFile("$CFGDIR/syncthing/syncthing.xml", config)
 
-        j.builder.tools.copyTree(self.builddir + "/bin", "{DIR_BIN}")
+        j.builder.tools.copyTree(self.builddir + "/bin", j.core.tools.text_replace("{DIR_BIN}"))
 
         self._done_set("install")
 
@@ -81,18 +79,18 @@ class BuilderSyncthing(j.builder.system._BaseClass):
     def start(self, reset=False):
 
         if reset:
-            j.sal.process.execute("killall syncthing", die=False)
-            j.sal.process.execute("rm -rf $CFGDIR/syncthing")
+            j.builder.tools.run("killall syncthing")
+            j.builder.tools.run(j.core.tools.text_replace("rm -rf {DIR_CFG}/syncthing"))
 
-        if j.builder.tools.dir_exists("$CFGDIR/syncthing") == False:
-            j.sal.process.execute(cmd="rm -rf $CFGDIR/syncthing;cd {DIR_BIN};./syncthing -generate  $CFGDIR/syncthing")
-        pm = j.builder.system.processmanager.get("tmux")
-        pm.ensure(name="syncthing", cmd="./syncthing -home  $CFGDIR/syncthing", path="{DIR_BIN}")
+        if j.builder.tools.dir_exists(j.core.tools.text_replace("{DIR_CFG}/syncthing")) == False:
+            j.builder.tools.run(j.core.tools.text_replace("rm -rf {DIR_CFG}/syncthing;cd {DIR_BIN};./syncthing -generate  {DIR_CFG}/syncthing"))
+        cmd = j.tools.tmux.cmd_get(name="syncthing", window="syncthing", cmd=j.core.tools.text_replace("./syncthing -home  {DIR_CFG}/syncthing"), path=j.core.tools.text_replace("{DIR_BIN}"))
+        cmd.start()
 
     @property
     def apikey(self):
         import xml.etree.ElementTree as etree
-        tree = etree.parse(j.core.tools.text_replace("$CFGDIR/syncthing/config.xml"))
+        tree = etree.parse(j.core.tools.text_replace("{DIR_CFG}/syncthing/config.xml"))
         r = tree.getroot()
         for item in r:
             if item.tag == "gui":
@@ -102,16 +100,13 @@ class BuilderSyncthing(j.builder.system._BaseClass):
                         return item2.text
 
     def stop(self):
-        pm = j.builder.system.processmanager.get("tmux")
-        pm.stop("syncthing")
+        cmd = j.tools.tmux._find_procs_by_name("syncthing")
+        cmd.stop()
 
     def getApiClient(self):
-        from IPython import embed
-        self._logger.info("DEBUG NOW u8")
-        embed()
-        raise RuntimeError("stop debug here")
-        import syncthing
-        sync = syncthing.Syncthing(api_key=self.apikey, host="127.0.0.1", port=8384)
+        #TODO : not te be tested
+        from syncthing import Syncthing
+        sync = Syncthing(api_key=self.apikey, host="127.0.0.1", port=8384)
         sync.sys.config()
         return sync
 
