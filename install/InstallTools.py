@@ -984,15 +984,18 @@ class Tools:
 
     @staticmethod
     def code_github_get(repo, account="threefoldtech", branch=["master"], pull=True):
+        if  MyEnv.sshagent_active_check():
+            url = "git@github.com:%s/%s.git"
+        else:
+            url = "https://github.com/%s/%s.git"
 
-        url_ssh="git@github.com:%s/%s.git"%(account,repo)
-
+        repo_url = url % (account, repo)
         exists,foundgit,dontpull,ACCOUNT_DIR,REPO_DIR=Tools._code_location_get(account=account,repo=repo)
 
         args={}
         args["ACCOUNT_DIR"]= ACCOUNT_DIR
         args["REPO_DIR"]= REPO_DIR
-        args["URL"] = url_ssh
+        args["URL"] = repo_url
         args["NAME"] = repo
 
         if "GITPULL" in os.environ:
@@ -1000,7 +1003,7 @@ class Tools:
 
         git_on_system = Tools.cmd_installed("git")
 
-        if git_on_system and MyEnv.config["USEGIT"] and MyEnv.sshagent_active_check() and ((exists and foundgit) or not exists):
+        if git_on_system and MyEnv.config["USEGIT"] and ((exists and foundgit) or not exists):
             #there is ssh-key loaded
             #or there is a dir with .git inside and exists
             #or it does not exist yet

@@ -122,7 +122,7 @@ def ui():
             T="""
             Did not find an SSH key in ssh-agent, is it ok to continue without?
             It's recommended to have a SSH key as used on github loaded in your ssh-agent
-            If you don't have an ssh key it will not be possible to modify code, code will be checked out statically.
+            If the SSH key is not found, repositories will be cloned using https
             """
             if not IT.Tools.ask_yes_no(msg=T, default="y"):
                 print("Could not continue, load ssh key.")
