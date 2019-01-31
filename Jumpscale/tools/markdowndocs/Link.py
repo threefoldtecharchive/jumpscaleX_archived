@@ -5,6 +5,11 @@ import copy
 
 JSBASE = j.application.JSBaseClass
 
+
+# Some links that needs to be skipped from verifying because the crawling is forbidden
+SKIPPED_LINKS = ['t.me', 'chat.grid.tf', 'linkedin.com', 'docs.grid.tf', 'btc-alpha',
+                 'kraken.com', 'bitoasis.net', 'cex.io',  'itsyou.online', 'skype:']
+
 class Link(j.application.JSBaseClass):
     def __init__(self,doc, source):
         JSBASE.__init__(self)        
@@ -152,6 +157,8 @@ class Link(j.application.JSBaseClass):
 
     def link_verify(self):
         def do():
+            if any(link in self.link_source for link in SKIPPED_LINKS):
+                return True
             self._logger.info("check link exists:%s"%self.link_source)
             if not j.clients.http.ping(self.link_source_original):
                 self.error("link not alive:%s"%self.link_source_original)                

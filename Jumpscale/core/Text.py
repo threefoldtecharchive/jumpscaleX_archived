@@ -71,7 +71,7 @@ class Text(object):
         return "".join([char for char in str(text) if ((ord(char) > 31 and ord(char) < 127) or ord(char) == 10)])
 
     def convert_to_snake_case(self, text):
-        converted_string = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', text)
+        converted_string = re.sub('([^/_.])([A-Z][a-z]+)', r'\1_\2', text)
         return re.sub('([a-z0-9])([A-Z])', r'\1_\2', converted_string).lower()
 
 
