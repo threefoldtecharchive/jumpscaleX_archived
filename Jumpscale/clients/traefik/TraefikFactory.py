@@ -3,7 +3,7 @@ from Jumpscale import j
 from .TraefikClient import (Backend, BackendServer, Frontend, FrontendRule,
                             TraefikClient)
 
-JSConfigBaseFactory = j.application.JSFactoryBaseClass
+JSConfigBaseFactory = j.application.JSBaseConfigsClass
 
 
 class TraefikFactory(JSConfigBaseFactory):
