@@ -43,4 +43,4 @@ def main(self):
     # the private public key pair, for a given unlock hash, is available as well,
     # but is meant for dev purposes, not for an end-user
     for address in w.addresses:
-        assert address == str(w.key_pair_get(address).unlock_hash())
+        assert address == str(w.key_pair_get(address).unlockhash)

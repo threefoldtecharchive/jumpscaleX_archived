@@ -12,8 +12,6 @@ class BaseBinaryData(BaseDataTypeClass):
 
     def __init__(self, value=None):
         self._value = None
-        if value == None:
-            value = bytearray()
         self.value = value
 
     @classmethod
@@ -173,6 +171,9 @@ class Currency(BaseDataTypeClass):
         return self._value
     @value.setter
     def value(self, value):
+        if value is None:
+            self._value = 0
+            return
         if isinstance(value, Currency):
             self._value = value.value
             return
@@ -181,7 +182,7 @@ class Currency(BaseDataTypeClass):
         elif not isinstance(value, int):
             # float values are not allowed as our precision is high enough that
             # rounding errors can occur
-            raise TypeError('currency can only be set to a str or int value')
+            raise TypeError('currency can only be set to a str or int value, not type {}'.format(type(value)))
         else:
             value = int(value)
         if value < 0:

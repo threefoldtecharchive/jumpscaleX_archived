@@ -138,7 +138,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             transaction = transaction.json()
         resp = self._explorer_post(endpoint="/transactionpool/transactions", data=transaction)
         resp = j.data.serializers.json.loads(resp)
-        return Hash(value=resp.get('transactionid'))
+        return str(Hash(value=resp.get('transactionid')))
     
     def unlockhash_get(self, unlockhash):
         """
@@ -237,7 +237,7 @@ class ExplorerBlockchainInfo():
         """
         ID of last known block.
         """
-        return self.last_block.id
+        return str(self.last_block.id)
     
     @property
     def height(self):
@@ -255,7 +255,7 @@ class ExplorerBlockchainInfo():
 
     def __repr__(self):
         return "Block {} at height {}, published on {}, is the last known block.".format(
-            str(self.blockid), self.height, j.data.time.epoch2HRDateTime(self.timestamp))
+            self.blockid, self.height, j.data.time.epoch2HRDateTime(self.timestamp))
 
 
 class ExplorerUnlockhashResult():
@@ -310,14 +310,14 @@ class ExplorerBlock():
         """
         Identifier of this block.
         """
-        return self._id
+        return str(self._id)
 
     @property
     def parentid(self):
         """
         Identifier the parent of this block.
         """
-        return self._parentid
+        return str(self._parentid)
 
     @property
     def height(self):
@@ -366,7 +366,7 @@ class ExplorerMinerPayout():
         """
         Identifier of this miner payout.
         """
-        return self._id
+        return str(self._id)
 
     @property
     def value(self):
@@ -380,7 +380,7 @@ class ExplorerMinerPayout():
         """
         Unlock hash that received this miner payout's value.
         """
-        return self._unlockhash
+        return str(self._unlockhash)
     
     def __str__(self):
         return str(self.id)

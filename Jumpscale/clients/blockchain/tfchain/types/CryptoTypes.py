@@ -82,7 +82,7 @@ class PublicKey(BaseDataTypeClass):
     
     json = __str__
 
-    def unlock_hash(self):
+    def unlockhash(self):
         """
         Return the unlock hash generated from this public key.
         """
