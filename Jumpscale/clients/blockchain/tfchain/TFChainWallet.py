@@ -172,6 +172,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         @param lock: optional lock that can be used to lock the sent amount to a specific time or block height
         @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
         """
+        amount = Currency(value=amount)
         if amount <= 0:
             raise ValueError("no amount is defined to be sent")
 
@@ -504,24 +505,23 @@ class WalletBalance(object):
         """
         available_outputs = self.available_outputs
         available_outputs.sort(key=lambda co: co.value)
-        collected = 0
+        collected = Currency(value=0)
         outputs = []
         for co in available_outputs:
-            ivalue = int(co.value)
-            if ivalue >= amount:
+            if co.value >= amount:
                 outputs = [co]
-                collected = ivalue
+                collected = co.value
                 break
-            collected += ivalue
+            collected += co.value
             outputs.append(co)
             if len(outputs) > 99:
                 # to not reach the input limit
-                collected -= int(outputs.pop(0).value)
+                collected -= outputs.pop(0).value
             if collected >= amount:
                 break
         if collected < amount:
             raise InsufficientFunds("not enough funds available in the wallet to fund the requested amount")
-        return (outputs, Currency(value=collected-amount))
+        return (outputs, collected-amount)
 
     def output_add(self, output, confirmed=True, spent=False):
         """
