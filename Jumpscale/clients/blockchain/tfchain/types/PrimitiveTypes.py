@@ -195,12 +195,22 @@ class Currency(BaseDataTypeClass):
         other = Currency._op_other_as_currency(other)
         value = self.value + other.value
         return Currency(value=value)
+    __radd__ = __add__
+    def __iadd__(self, other):
+        other = Currency._op_other_as_currency(other)
+        self.value += other.value
+        return self
 
     # operator overloading to allow currencies to be subtracted
     def __sub__(self, other):
         other = Currency._op_other_as_currency(other)
         value = self.value - other.value
         return Currency(value=value)
+    __rsub__ = __sub__
+    def __isub__(self, other):
+        other = Currency._op_other_as_currency(other)
+        self.value -= other.value
+        return self
 
     # operator overloading to allow currencies to be compared
     def __lt__(self, other):

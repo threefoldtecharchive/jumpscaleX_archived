@@ -343,6 +343,11 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         self._key_pairs[addr] = key_pair
         if add_count:
             self.key_count += 1
+        # clear cache, as it will no longer be up to date
+        self._clear_cache()
+
+    def _clear_cache(self):
+        self._cached_balance = None
 
 
 class SpendableKey():

@@ -42,6 +42,8 @@ class TFChainExplorerClient(j.application.JSBaseClass):
                     raise ExplorerNoContent("nothing could be found at endpoint {}".format(endpoint))
                 raise ExplorerCallError("call to {} resulted in error {}".format(endpoint, resp.getcode()))
             except HTTPError as e:
+                if e.status_code == 400 and b'unrecognized hash' in e.msg:
+                    raise ExplorerNoContent("nothing could be found at endpoint {}".format(endpoint))
                 if e.status_code:
                     raise ExplorerCallError("call to {} resulted in an error {}: {}".format(endpoint, e.status_code, e.msg))
                 self._logger.debug("tfchain explorer get exception at endpoint {} on {}: {}".format(endpoint, address, e))
