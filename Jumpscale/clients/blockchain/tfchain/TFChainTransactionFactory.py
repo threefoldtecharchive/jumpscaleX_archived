@@ -178,7 +178,7 @@ class TransactionBaseClass(ABC, j.application.JSBaseClass):
         which are used to proof the authenticity of the transaction.
         """
         input = self._signature_hash_input_get(*extra_objects)
-        return bytearray.fromhex(j.data.hash.blake2_string(input))
+        return bytes.fromhex(j.data.hash.blake2_string(input))
 
     @abstractmethod
     def _from_json_data_object(self, data):
@@ -283,13 +283,26 @@ class TransactionV1(TransactionBaseClass):
         used as funding for coin outputs, fees and any other kind of coin output.
         """
         return self._coin_inputs
+    @coin_inputs.setter
+    def coin_inputs(self, value):
+        self._coin_inputs = []
+        if not value:
+            return
+        for ci in value:
+            self.coin_input_add(ci.parent_id, ci.fulfillment, parent_output=ci.parent_output)
 
-    def coin_input_add(self, parent_id, fulfillment):
-        self._coin_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
+    def coin_input_add(self, parent_id, fulfillment, parent_output=None):
+        ci = CoinInput(parent_id=parent_id, fulfillment=fulfillment)
+        ci.parent_output = parent_output
+        self._coin_inputs.append(ci)
 
-    def coin_output_add(self, value, condition):
-        self._coin_outputs.append(CoinOutput(value=value, condition=condition))
+    def coin_output_add(self, value, condition, id=None):
+        co = CoinOutput(value=value, condition=condition)
+        co.id = id
+        self._coin_outputs.append(co)
 
+    def miner_fee_add(self, value):
+        self._miner_fees.append(Currency(value=value))
 
     @property
     def coin_outputs(self):
@@ -298,6 +311,13 @@ class TransactionV1(TransactionBaseClass):
         funded by the Transaction's coin inputs.
         """
         return self._coin_outputs
+    @coin_outputs.setter
+    def coin_outputs(self, value):
+        self._coin_outputs = []
+        if not value:
+            return
+        for co in value:
+            self.coin_output_add(co.value, co.condition, id=co.id)
 
     @property
     def miner_fees(self):
@@ -321,6 +341,9 @@ class TransactionV1(TransactionBaseClass):
             return
         if isinstance(value, RawData):
             value = value.value
+        elif isinstance(value, str):
+            value = value.encode('utf-8')
+        assert len(value) <= 83
         self._data.value = value
     
     def _signature_hash_input_get(self, *extra_objects):

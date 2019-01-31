@@ -34,7 +34,7 @@ class BaseBinaryData(BaseDataTypeClass):
         elif isinstance(value, bytes):
             value = bytearray(value)
         elif not isinstance(value, bytearray):
-            raise TypeError("hash can only be set to a str, bytes or bytearray")
+            raise TypeError("binary data can only be set to a str, bytes or bytearray, not {}".format(type(value)))
         self._value = value
     
     def __str__(self):
@@ -110,7 +110,7 @@ class Hash(BaseDataTypeClass):
             elif isinstance(value, bytes):
                 value = bytearray(value)
             elif not isinstance(value, bytearray):
-                raise TypeError("hash can only be set to a str, bytes or bytearray")
+                raise TypeError("hash can only be set to a str, bytes or bytearray, not {}".format(type(value)))
         if len(value) != Hash._SIZE:
             raise TypeError('hash has to have a fixed length of {}'.format(Hash._SIZE))
         self._value = value
@@ -212,9 +212,27 @@ class Currency(BaseDataTypeClass):
     
     def __str__(self):
         return str(self._value)
+
+    def totft(self, with_unit=False):
+        """
+        Turn this Currency value into a str TFT unit-based value,
+        optionally with the currency notation.
+        """
+        s = str(self)
+        l = len(s)
+        if l > 9:
+            s = s[:l-9] + '.' + s[-9:]
+        else:
+            s = '0.' + s
+        s = s.rstrip('0')
+        if s[-1] == '.':
+            s = s[:-1]
+        if with_unit:
+            return s + ' TFT'
+        return s
     
     def __repr__(self):
-        return self.__str__() + ' TFT' # TODO, make more human readable
+        return self.totft(with_unit=True)
     
     json = __str__
 
