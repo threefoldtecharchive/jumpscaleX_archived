@@ -1,33 +1,19 @@
+import inspect
+
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.document import Document
-from prompt_toolkit.completion import Completer, Completion, PathCompleter
+from prompt_toolkit.completion import Completion
 from prompt_toolkit.filters import is_done
 from prompt_toolkit.keys import Keys
-from prompt_toolkit.layout.containers import Window, ConditionalContainer
+from prompt_toolkit.layout.containers import ConditionalContainer, Window
 from prompt_toolkit.layout.controls import BufferControl
 from prompt_toolkit.layout.dimension import Dimension
-from prompt_toolkit.lexers import SimpleLexer
-
-
+from prompt_toolkit.lexers import PygmentsLexer
 from ptpython.filters import ShowDocstring, PythonInputFilter
 from ptpython.prompt_style import PromptStyle
 from ptpython.utils import get_jedi_script_from_document
+from pygments.lexers import PythonLexer
 
-import inspect
-
-try:
-    import pygments
-    from pygments_markdown_lexer import MarkdownLexer
-    from pygments import highlight
-    from pygments.formatters import Terminal256Formatter
-    from pygments.lexers import PythonLexer
-    formatter = Terminal256Formatter(linenos=True, cssclass="source",
-                                     style=pygments.styles.get_style_by_name("fruity"))  # vim
-    # from pygments.formatters import HtmlFormatter
-    markdownlexer_enabled = True
-except Exception as e:
-    print("NOFORMATTING")
-    markdownlexer_enabled = False
 
 
 class KosmosShellConfig():
@@ -212,7 +198,7 @@ class HasDocString(PythonInputFilter):
 
     def __call__(self):
         tbc = self.python_input.default_buffer.document.current_line_before_cursor
-        return bool(get_doc_string(tbc)) and tbc.endswith('?')
+        return bool(get_doc_string(tbc)) and len(self.python_input.docstring_buffer.text)
 
 
 def setup_docstring_containers(repl):
@@ -230,8 +216,7 @@ def setup_docstring_containers(repl):
             content=Window(
                 BufferControl(
                     buffer=repl.docstring_buffer,
-                    lexer=SimpleLexer(style='class:docstring'),
-                    #lexer=PythonLexer,
+                    lexer=PygmentsLexer(PythonLexer),
                 ),
                 height=Dimension(max=12)),
             filter=HasDocString(repl) & ShowDocstring(repl) & ~is_done),
@@ -334,11 +319,7 @@ def ptconfig(repl):
 
         d = get_doc_string(tbc)
         if d:
-            #if markdownlexer_enabled:
-            #    d = highlight(d, MarkdownLexer(), formatter)
-            repl.docstring_buffer.reset(
-                document=Document(d, cursor_position=0)
-            )
+            repl.docstring_buffer.reset(document=Document(d, cursor_position=0))
         else:
             repl.docstring_buffer.reset()
 
