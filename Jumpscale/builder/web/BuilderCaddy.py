@@ -5,10 +5,8 @@ class BuilderCaddy(j.builder.system._BaseClass):
     NAME = "caddy"
 
     def _init(self):
-        self.go_runtme = j.builder.runtimes.golang
-        self.bins = [
-            self.tools.joinpaths(j.core.dirs.BINDIR, 'caddy')
-        ]
+        self.go_runtime = j.builder.runtimes.golang
+        self.bins = [self.tools.joinpaths(self.go_runtime.go_path_bin, 'caddy')]
 
     def reset(self):
         self.stop()
@@ -31,16 +29,16 @@ class BuilderCaddy(j.builder.system._BaseClass):
         if self._done_check('build', reset):
             return
 
-        if not self.go_runtme.is_installed:
-            self.go_runtme.install()
+        if not self.go_runtime.is_installed:
+            self.go_runtime.install()
 
         # build caddy from source using our caddyman
         j.clients.git.pullGitRepo("https://github.com/incubaid/caddyman", dest="/tmp/caddyman")
-        j.sal.process.execute("cd /tmp/caddyman && chmod u+x caddyman.sh")
+        self.go_runtime.execute("cd /tmp/caddyman && chmod u+x caddyman.sh")
         if not plugins:
             plugins = ["iyo"]
         cmd = "/tmp/caddyman/caddyman.sh install {plugins}".format(plugins=" ".join(plugins))
-        j.sal.process.execute(cmd, timeout=60*60)
+        self.go_runtime.execute(cmd, timeout=60*60)
         self._done_set('build')
 
     def install(self, plugins=None, reset=False):
