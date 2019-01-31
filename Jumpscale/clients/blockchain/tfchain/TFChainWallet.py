@@ -119,6 +119,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         for result in results:
             result = result.get()
             address = str(result.unlockhash)
+            print("process address {}...".format(address))
             for txn in result.transactions:
                 for ci in txn.coin_inputs:
                     if str(ci.parent_output.condition.unlockhash) == address:
@@ -135,6 +136,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         for result in results:
             result = result.get()
             address = str(result.unlockhash)
+            print("process multisig address {}...".format(address))
             # collect the inputs/outputs linked to this address for all found transactions
             for txn in result.transactions:
                 for ci in txn.coin_inputs:

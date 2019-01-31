@@ -5,7 +5,6 @@ Tfchain Client
 from Jumpscale import j
 
 import multiprocessing
-from gevent.pool import Pool
 
 from .TFChainWalletFactory import TFChainWalletFactory
 from .types.ConditionTypes import UnlockHash, UnlockHashType
@@ -200,7 +199,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         processes = self.max_workers
         if processes <= 0:
             processes = multiprocessing.cpu_count()*2
-        return Pool(size=processes)
+        return multiprocessing.Pool(processes=processes)
 
 
 # class to maintain the API of an async result,
