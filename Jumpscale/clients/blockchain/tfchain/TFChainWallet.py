@@ -488,18 +488,16 @@ class WalletBalance(object):
         """
         Total available coins.
         """
-        # TODO: figure out why sum doesn't return a Currency value
-        return Currency(value=sum([co.value for co in self.available_outputs]))
+        return sum([co.value for co in self.available_outputs])
 
     @property
     def locked(self):
         """
         Total available coins that are locked.
         """
-        # TODO: figure out why sum doesn't return a Currency value
         if self.chain_time > 0 and self.chain_height > 0:
-            return Currency(value=sum([co.value for co in self._outputs.values()
-                if co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)]))
+            return sum([co.value for co in self._outputs.values()
+                if co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)])
         else:
             return Currency(value=0) # impossible to know for sure without a complete context
 
@@ -508,22 +506,20 @@ class WalletBalance(object):
         """
         Total unconfirmed coins, available for spending.
         """
-        # TODO: figure out why sum doesn't return a Currency value
         if self.chain_time > 0 and self.chain_height > 0:
-            return Currency(value=sum([co.value for co in self._outputs_unconfirmed.values()
-                if not co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)]))
+            return sum([co.value for co in self._outputs_unconfirmed.values()
+                if not co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)])
         else:
-            return Currency(value=sum([co.value for co in self._outputs_unconfirmed.values()]))
+            return sum([co.value for co in self._outputs_unconfirmed.values()])
 
     @property
     def unconfirmed_locked(self):
         """
         Total unconfirmed coins that are locked, and thus not available for spending.
         """
-        # TODO: figure out why sum doesn't return a Currency value
         if self.chain_time > 0 and self.chain_height > 0:
-            return Currency(value=sum([co.value for co in self._outputs_unconfirmed.values()
-                if co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)]))
+            return sum([co.value for co in self._outputs_unconfirmed.values()
+                if co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)])
         else:
             return Currency(value=0) # impossible to know for sure without a complete context
 
