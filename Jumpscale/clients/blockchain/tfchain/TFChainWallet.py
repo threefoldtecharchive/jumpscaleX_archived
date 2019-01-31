@@ -3,7 +3,7 @@ from Jumpscale import j
 
 from ed25519 import SigningKey
 
-from .types.PrimitiveTypes import Currency
+from .types.PrimitiveTypes import Currency, Hash
 from .types.CryptoTypes import PublicKey, UnlockHash
 from .types.errors import ExplorerNoContent
 from .types.errors import InsufficientFunds
@@ -106,7 +106,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         """
         # first get chain info, so we can check if the current balance is still fine
         info = self._parent._parent.blockchain_info_get()
-        if self._cached_balance and self._cached_balance.chain_height == info.height:
+        if self._cached_balance and self._cached_balance.chain_blockid == info.blockid:
             return self._cached_balance
 
         # TODO: support extra address key scanning, this call is the perfect opportunity to try that
@@ -151,6 +151,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # add the blockchain info for lock context
         balance.chain_height = info.height
         balance.chain_time = info.timestamp
+        balance.chain_blockid = info.blockid
         # cache the balance
         self._cached_balance = balance
         # return the balance
@@ -393,6 +394,28 @@ class WalletBalance(object):
         # balance chain context
         self._chain_time = 0
         self._chain_height = 0
+        self._chain_blockid = Hash()
+
+    @property
+    def chain_blockid(self):
+        """
+        Blockchain block ID, as defined by the last known block.
+        """
+        return self._chain_blockid
+    @chain_blockid.setter
+    def chain_blockid(self, value):
+        """
+        Set the blockchain block ID, such that applications that which to cache this
+        balance object could ensure that the last block is still the same as the
+        last known block known by this balance instance.
+        """
+        if not value:
+            self._chain_blockid = Hash()
+            return
+        if isinstance(value, Hash):
+            self._chain_blockid.value = value.value
+        else:
+            self._chain_blockid.value = value
 
     @property
     def chain_time(self):

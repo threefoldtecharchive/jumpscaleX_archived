@@ -122,6 +122,24 @@ class Hash(BaseDataTypeClass):
     
     json = __str__
 
+    def __eq__(self, other):
+        other = Hash._op_other_as_hash(other)
+        return self.value == other.value
+    def __ne__(self, other):
+        other = Hash._op_other_as_hash(other)
+        return self.value != other.value
+
+    def __hash__(self):
+        return hash(str(self))
+
+    @staticmethod
+    def _op_other_as_hash(other):
+        if isinstance(other, (str, bytes)):
+            other = Hash(value=other)
+        elif not isinstance(other, Hash):
+            raise TypeError("Hash of type {} is not supported".format(type(other)))
+        return other
+
     def sia_binary_encode(self, encoder):
         """
         Encode this hash according to the Sia Binary Encoding format.
