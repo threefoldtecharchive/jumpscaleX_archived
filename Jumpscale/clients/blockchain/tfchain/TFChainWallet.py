@@ -112,42 +112,40 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # TODO: support extra address key scanning, this call is the perfect opportunity to try that
         addresses = self.addresses
         balance = WalletsBalance()
+
         # collect info for all personal addresses
         multisig_addresses = []
-        for address in addresses:
-            try:
-                # collect the inputs/outputs linked to this address for all found transactions
-                result = self._unlockhash_get(address)
-                for txn in result.transactions:
-                    for ci in txn.coin_inputs:
-                        if str(ci.parent_output.condition.unlockhash) == address:
-                            balance.output_add(ci.parent_output, confirmed=(not txn.unconfirmed), spent=True)
-                    for co in txn.coin_outputs:
-                        if str(co.condition.unlockhash) == address:
-                            balance.output_add(co, confirmed=(not txn.unconfirmed), spent=False)
-                # collect all multisig addresses
-                for address in result.multisig_addresses:
-                    multisig_addresses.append(str(address))
-            except ExplorerNoContent:
-                 # ignore this exception as it simply means
-                 # the address has no activity yet on the chain
-                pass
+        results = self._unlockhash_get_all(*addresses)
+        for result in results:
+            result = result.get()
+            address = str(result.unlockhash)
+            print("process address {}...".format(address))
+            for txn in result.transactions:
+                for ci in txn.coin_inputs:
+                    if str(ci.parent_output.condition.unlockhash) == address:
+                        balance.output_add(ci.parent_output, confirmed=(not txn.unconfirmed), spent=True)
+                for co in txn.coin_outputs:
+                    if str(co.condition.unlockhash) == address:
+                        balance.output_add(co, confirmed=(not txn.unconfirmed), spent=False)
+            # collect all multisig addresses
+            for address in result.multisig_addresses:
+                multisig_addresses.append(str(address))
+
         # collect info for all multisig addresses
-        for address in multisig_addresses:
-            try:
-                # collect the inputs/outputs linked to this address for all found transactions
-                result = self._unlockhash_get(address)
-                for txn in result.transactions:
-                    for ci in txn.coin_inputs:
-                        if str(ci.parent_output.condition.unlockhash) == address:
-                            balance.multisig_output_add(address, ci.parent_output, confirmed=(not txn.unconfirmed), spent=True)
-                    for co in txn.coin_outputs:
-                        if str(co.condition.unlockhash) == address:
-                            balance.multisig_output_add(address, co, confirmed=(not txn.unconfirmed), spent=False)
-            except ExplorerNoContent:
-                 # ignore this exception as it simply means
-                 # the address has no activity yet on the chain
-                pass
+        results = self._unlockhash_get_all(*multisig_addresses)
+        for result in results:
+            result = result.get()
+            address = str(result.unlockhash)
+            print("process multisig address {}...".format(address))
+            # collect the inputs/outputs linked to this address for all found transactions
+            for txn in result.transactions:
+                for ci in txn.coin_inputs:
+                    if str(ci.parent_output.condition.unlockhash) == address:
+                        balance.multisig_output_add(address, ci.parent_output, confirmed=(not txn.unconfirmed), spent=True)
+                for co in txn.coin_outputs:
+                    if str(co.condition.unlockhash) == address:
+                        balance.multisig_output_add(address, co, confirmed=(not txn.unconfirmed), spent=False)
+
         # add the blockchain info for lock context
         balance.chain_height = info.height
         balance.chain_time = info.timestamp
@@ -286,6 +284,9 @@ class TFChainWallet(j.application.JSBaseConfigClass):
 
     def _unlockhash_get(self, address):
         return self._parent._parent.unlockhash_get(address)
+
+    def _unlockhash_get_all(self, *addresses):
+        return self._parent._parent.unlockhash_get_all(*addresses)
 
     def _transaction_put(self, transaction):
         return self._parent._parent.transaction_put(transaction)

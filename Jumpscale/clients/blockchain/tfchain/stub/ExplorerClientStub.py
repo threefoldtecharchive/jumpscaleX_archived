@@ -20,19 +20,19 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         assert isinstance(value, str) and len(value) > 2
         self._chain_info = value
     
-    def explorer_get(self, endpoint):
+    def explorer_get(self, addresses, endpoint):
         """
         Get explorer data from the stub client for the specified endpoint.
         """
-        hash_template = re.compile(r'^.*/explorer/hashes/(.+)$')
+        hash_template = re.compile(r'^/explorer/hashes/(.+)$')
         match = hash_template.match(endpoint)
         if match:
             return self.hash_get(match.group(1))
-        hash_template = re.compile(r'^.*/explorer/blocks/(\d+)$')
+        hash_template = re.compile(r'^/explorer/blocks/(\d+)$')
         match = hash_template.match(endpoint)
         if match:
             return self.block_get(int(match.group(1)))
-        info_template = re.compile(r'^.*/explorer$')
+        info_template = re.compile(r'^/explorer$')
         if info_template.match(endpoint):
             return self.chain_info
         raise Exception("invalid endpoint {}".format(endpoint))
