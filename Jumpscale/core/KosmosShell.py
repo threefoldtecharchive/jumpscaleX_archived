@@ -197,10 +197,7 @@ def get_doc_string(tbc):
 class HasDocString(PythonInputFilter):
 
     def __call__(self):
-        tbc = self.python_input.default_buffer.document.current_line_before_cursor
-        has_doc = get_doc_string(tbc) is not None
-        buffer_not_empty = len(self.python_input.docstring_buffer.text) > 0
-        return has_doc and buffer_not_empty
+        return len(self.python_input.docstring_buffer.text) > 0
 
 
 def setup_docstring_containers(repl):
