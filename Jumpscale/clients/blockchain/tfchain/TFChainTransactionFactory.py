@@ -14,9 +14,21 @@ class TFChainTransactionFactory(j.application.JSBaseClass):
 
     def new(self):
         """
-        Creates and return a default transaction.
+        Creates and returns a default transaction.
         """
         return TransactionV1()
+
+    def mint_definition_new(self):
+        """
+        Creates and returns an empty Mint Definition transaction.
+        """
+        return TransactionV128()
+
+    def mint_coin_creation_new(self):
+        """
+        Creates and returns an empty Mint CoinCreation transaction.
+        """
+        return TransactionV129()
 
     def from_json(self, obj, id=None):
         """
@@ -307,6 +319,26 @@ class TransactionBaseClass(ABC):
             self.data,
         )
         return encoder.data
+
+    def signature_requests_new(self):
+        """
+        Returns all signature requests still open for this Transaction.
+        """
+        requests = []
+        for (index, ci) in enumerate(self.coin_inputs):
+            input_hash = self.signature_hash_get(index)
+            requests += ci.signature_requests_new(input_hash=input_hash)
+        for (index, bsi) in enumerate(self.blockstake_inputs):
+            input_hash = self.signature_hash_get(index)
+            requests += bsi.signature_requests_new(input_hash=input_hash)
+        return requests + self._extra_signature_requests_new()
+
+    def _extra_signature_requests_new(self):
+        """
+        Optional signature requests that can be defined by the transaction,
+        outside of the ordinary, returns an empty list by default.
+        """
+        return []
 
 
 from .types.CompositionTypes import CoinInput, CoinOutput, BlockstakeInput, BlockstakeOutput
@@ -693,6 +725,9 @@ class TransactionV128(TransactionBaseClass):
         self._data = RawData()
         self._nonce = RawData(j.data.idgenerator.generateXByteID(8))
 
+        # current mint condition
+        self._parent_mint_condition = None
+
         super().__init__()
 
     @property
@@ -736,6 +771,20 @@ class TransactionV128(TransactionBaseClass):
             return
         assert isinstance(value, ConditionBaseClass)
         self._mint_condition = value
+
+    @property
+    def parent_mint_condition(self):
+        """
+        Retrieve the parent mint condition which will be set
+        """
+        return self._parent_mint_condition or ConditionNil()
+    @parent_mint_condition.setter
+    def parent_mint_condition(self, value):
+        if not value:
+            self._parent_mint_condition = ConditionNil()
+            return
+        assert isinstance(value, ConditionBaseClass)
+        self._parent_mint_condition = value
 
     @property
     def mint_fulfillment(self):
@@ -811,6 +860,15 @@ class TransactionV128(TransactionBaseClass):
             'minerfees': [fee.json() for fee in self._miner_fees],
             'arbitrarydata': self._data.json(),
         }
+    
+    def _extra_signature_requests_new(self):
+        if self._parent_mint_condition is None:
+            return [] # nothing to be signed
+        input_hash = self.signature_hash_get(0) # hardcoded to 0 (legacy)
+        return self._mint_fulfillment.signature_requests_new(
+            input_hash=input_hash,
+            parent_condition=self._parent_mint_condition,
+        )
 
 class TransactionV129(TransactionBaseClass):
     _SPECIFIER = b'coin mint tx\0\0\0\0'
@@ -821,6 +879,9 @@ class TransactionV129(TransactionBaseClass):
         self._miner_fees = []
         self._data = RawData()
         self._nonce = RawData(j.data.idgenerator.generateXByteID(8))
+
+        # current mint condition
+        self._parent_mint_condition = None
 
         super().__init__()
 
@@ -888,6 +949,21 @@ class TransactionV129(TransactionBaseClass):
             return
         assert isinstance(value, FulfillmentBaseClass)
         self._mint_fulfillment = value
+
+    @property
+    def parent_mint_condition(self):
+        """
+        Retrieve the parent mint condition which will be set
+        """
+        return self._parent_mint_condition or ConditionNil()
+    @parent_mint_condition.setter
+    def parent_mint_condition(self, value):
+        if not value:
+            self._parent_mint_condition = ConditionNil()
+            return
+        assert isinstance(value, ConditionBaseClass)
+        self._parent_mint_condition = value
+
     def _signature_hash_input_get(self, *extra_objects):
         e = j.data.rivine.encoder_sia_get()
 
@@ -945,3 +1021,12 @@ class TransactionV129(TransactionBaseClass):
             'minerfees': [fee.json() for fee in self._miner_fees],
             'arbitrarydata': self._data.json(),
         }
+    
+    def _extra_signature_requests_new(self):
+        if self._parent_mint_condition is None:
+            return [] # nothing to be signed
+        input_hash = self.signature_hash_get(0) # hardcoded to 0 (legacy)
+        return self._mint_fulfillment.signature_requests_new(
+            input_hash=input_hash,
+            parent_condition=self._parent_mint_condition,
+        )

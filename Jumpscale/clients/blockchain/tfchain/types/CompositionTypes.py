@@ -4,7 +4,7 @@ from .BaseDataType import BaseDataTypeClass
 
 from .PrimitiveTypes import BinaryData, Hash, Currency, Blockstake
 from .FulfillmentTypes import FulfillmentBaseClass, FulfillmentSingleSignature 
-from .ConditionTypes import ConditionBaseClass, ConditionNil 
+from .ConditionTypes import ConditionBaseClass, ConditionNil
 
 class CoinInput(BaseDataTypeClass):
     """
@@ -48,11 +48,11 @@ class CoinInput(BaseDataTypeClass):
     
     @property
     def parent_output(self):
-        return self._parent_output
+        return self._parent_output or CoinOutput()
     @parent_output.setter
     def parent_output(self, value):
-        if not value:
-            self._parent_output = CoinOutput()
+        if value is None:
+            self._parent_output = None
         else:
             assert isinstance(value, CoinOutput)
             self._parent_output = value
@@ -74,6 +74,16 @@ class CoinInput(BaseDataTypeClass):
         Encode this CoinInput according to the Rivine Binary Encoding format.
         """
         encoder.add_all(self._parent_id, self._fulfillment)
+
+    def signature_requests_new(self, input_hash):
+        if self._parent_output is None:
+            # no requestsd get created if the parent output is not set,
+            # this allows for partial Tx signings
+            return []
+        return self._fulfillment.signature_requests_new(
+            input_hash=input_hash,
+            parent_condition=self._parent_output.condition,
+        )
 
 
 class CoinOutput(BaseDataTypeClass):

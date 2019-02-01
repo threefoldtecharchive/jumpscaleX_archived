@@ -170,6 +170,26 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             transactions=transactions,
             multisig_addresses=multisig_addresses)
     
+    def mint_condition_get(self, height=None):
+        """
+        Get the latest (coin) mint condition or the (coin) mint condition at the specified block height.
+
+        @param height: if defined the block height at which to look up the (coin) mint condition (if none latest block will be used)
+        """
+        # define the endpoint
+        endpoint = "/explorer/mintcondition"
+        if height is not None:
+            assert isinstance(height, (int, str))
+            height = int(height)
+            endpoint += "/%d"%(height)
+
+        # get the mint condition
+        resp = self._explorer_get(endpoint=endpoint)
+        resp = j.data.serializers.json.loads(resp)
+
+        # return the decoded mint condition
+        return j.clients.tfchain.types.conditions.from_json(obj=resp['mintcondition'])
+
     def _transaction_from_explorer_transaction(self, etxn):
         # parse the transactions
         transaction = j.clients.tfchain.transactions.from_json(obj=etxn['rawtransaction'], id=etxn['id'])

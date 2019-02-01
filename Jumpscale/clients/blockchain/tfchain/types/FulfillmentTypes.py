@@ -2,11 +2,78 @@ from Jumpscale import j
 
 from .BaseDataType import BaseDataTypeClass
 from .CryptoTypes import PublicKey
-from .PrimitiveTypes import BinaryData
+from .PrimitiveTypes import BinaryData, Hash
+from .ConditionTypes import UnlockHash, ConditionNil, ConditionUnlockHash, ConditionAtomicSwap, ConditionMultiSignature
 
 _FULFULLMENT_TYPE_SINGLE_SIG = 1
 _FULFILLMENT_TYPE_ATOMIC_SWAP = 2
 _FULFILLMENT_TYPE_MULTI_SIG = 3
+
+from abc import ABC, abstractmethod
+
+class SignatureCallbackBase(ABC):
+    @abstractmethod
+    def signature_add(self, public_key, signature):
+        pass
+
+class SignatureRequest():
+    """
+    SignatureRequest can be used to create a one-time-use individual sign request.
+    """
+    def __init__(self, unlockhash, input_hash, callback):
+        # set defined properties
+        assert isinstance(unlockhash, UnlockHash)
+        self._unlockhash = unlockhash
+        assert isinstance(input_hash, Hash)
+        self._input_hash = input_hash
+        assert isinstance(callback, SignatureCallbackBase)
+        self._callback = callback
+        # property to ensure this request is only fulfilled once
+        self._signed = False
+
+    @property
+    def fulfilled(self):
+        """
+        Returns True if this request was already fulfilled,
+        False otherwise.
+        """
+        return self._signed
+
+    @property
+    def wallet_address(self):
+        """
+        Returns the wallet address of the owner who requested the signature.
+        """
+        return str(self._unlockhash)
+
+    @property
+    def input_hash(self):
+        """
+        Returns the input hash that has to be used in order to sign this request.
+        """
+        return self._input_hash
+
+    def signature_fulfill(self, public_key, signature):
+        """
+        Fulfill the signature, once and once only.
+        """
+        # guarantee base conditions
+        assert not self._signed
+
+        # ensure public key is the key of the wallet who owns this request
+        assert isinstance(public_key, PublicKey)
+        assert self.wallet_address == str(public_key.unlockhash())
+        # ensure signature is of the correct type
+        if isinstance(signature, (bytearray, bytes)):
+            signature = BinaryData(value=signature)
+        else:
+            assert isinstance(signature, BinaryData)
+        
+        # add the signature to the callback
+        self._callback.signature_add(public_key=public_key, signature=signature)
+        # ensure this was the one and only time we signed
+        self._signed = True
+
 
 class FulfillmentFactory(j.application.JSBaseClass):
     """
@@ -82,10 +149,7 @@ class FulfillmentFactory(j.application.JSBaseClass):
         test_sia_encoded(msf, '0308010000000000000200000000000000656432353531390000000000000000002000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff4000000000000000abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab656432353531390000000000000000002000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff4000000000000000abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab')
         test_rivine_encoded(msf, '0315030401ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab')
 
-
-from abc import abstractmethod
-
-class FulfillmentBaseClass(BaseDataTypeClass):
+class FulfillmentBaseClass(SignatureCallbackBase, BaseDataTypeClass):
     @classmethod
     def from_json(cls, obj):
         ff = cls()
@@ -138,6 +202,10 @@ class FulfillmentBaseClass(BaseDataTypeClass):
         self.rivine_binary_encode_data(data_enc)
         encoder.add_slice(data_enc.data)
 
+    @abstractmethod
+    def signature_requests_new(self, parent_condition):
+        pass
+
 class FulfillmentSingleSignature(FulfillmentBaseClass):
     """
     SingleSignature Fulfillment, used to unlock
@@ -177,6 +245,13 @@ class FulfillmentSingleSignature(FulfillmentBaseClass):
             self._signature = BinaryData(value=value.value)
         else:
             self._signature = BinaryData(value=value)
+
+    def signature_add(self, public_key, signature):
+        """
+        Implements SignatureCallbackBase.
+        """
+        self.public_key = public_key
+        self.signature = signature
     
     def from_json_data_object(self, data):
         self._pub_key = PublicKey.from_json(data['publickey'])
@@ -193,6 +268,13 @@ class FulfillmentSingleSignature(FulfillmentBaseClass):
 
     def rivine_binary_encode_data(self, encoder):
         encoder.add_all(self._pub_key, self._signature)
+
+    def signature_requests_new(self, input_hash, parent_condition):
+        assert isinstance(parent_condition, (ConditionNil, ConditionUnlockHash))
+        unlockhash = parent_condition.unlockhash
+        if str(unlockhash) == str(self.public_key.unlockhash()):
+            return [] # nothing to do
+        return [SignatureRequest(unlockhash=unlockhash, input_hash=input_hash, callback=self)]
 
 
 class FulfillmentMultiSignature(FulfillmentBaseClass):
@@ -223,7 +305,14 @@ class FulfillmentMultiSignature(FulfillmentBaseClass):
             self.add_pair(pair.public_key, pair.signature)
 
     def add_pair(self, public_key, signature):
+        spk = str(public_key)
+        for pair in self._pairs:
+            if str(pair.public_key) == spk:
+                raise ValueError("cannot add public_key {} as it already exists within a pair of this MultiSignature Fulfillment".format(spk))
         self._pairs.append(PublicKeySignaturePair(public_key=public_key, signature=signature))
+
+    # Implements SignatureCallbackBase.
+    signature_add = add_pair
 
     def from_json_data_object(self, data):
         self._pairs = []
@@ -240,6 +329,15 @@ class FulfillmentMultiSignature(FulfillmentBaseClass):
 
     def rivine_binary_encode_data(self, encoder):
         encoder.add(self._pairs)
+
+    def signature_requests_new(self, input_hash, parent_condition):
+        assert isinstance(parent_condition, ConditionMultiSignature)
+        requests = []
+        signed = [str(pair.public_key.unlockhash()) for pair in self._pairs]
+        for unlockhash in parent_condition.unlockhashes:
+            if str(unlockhash) not in signed:
+                requests.append(SignatureRequest(unlockhash=unlockhash, input_hash=input_hash, callback=self))
+        return requests
 
 
 class PublicKeySignaturePair(BaseDataTypeClass):
@@ -353,6 +451,13 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
         else:
             self._secret = BinaryData(value=value)
 
+    def signature_add(self, public_key, signature):
+        """
+        Implements SignatureCallbackBase.
+        """
+        self.public_key = public_key
+        self.signature = signature
+
     def from_json_data_object(self, data):
         self._pub_key = PublicKey.from_json(data['publickey'])
         self._signature = BinaryData.from_json(data['signature'])
@@ -372,3 +477,12 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
     def rivine_binary_encode_data(self, encoder):
         encoder.add_all(self._pub_key, self._signature)
         encoder.add_array(self._secret.value)
+
+    def signature_requests_new(self, input_hash, parent_condition):
+        assert isinstance(parent_condition, ConditionAtomicSwap)
+        requests = []
+        signee = str(self._pub_key.unlockhash())
+        for unlockhash in [parent_condition.sender, parent_condition.receiver]:
+            if str(unlockhash) != signee:
+                requests.append(SignatureRequest(unlockhash=unlockhash, input_hash=input_hash, callback=self))
+        return requests
