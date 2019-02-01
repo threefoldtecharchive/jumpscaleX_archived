@@ -28,6 +28,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         self.async_ = False
         self._private = None
         self._connected = None
+        self._executor = None
 
         self._client_ = None
         self._transport_ = None

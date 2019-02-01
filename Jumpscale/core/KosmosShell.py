@@ -99,8 +99,7 @@ def get_completions(self, document, complete_event):
         try:
             obj = get_object(c, self.get_locals(), self.get_globals())
         except Exception as e:
-            return  # print (e) # TODO: DISPLAY IN BOTTOM PANE
-        # print(obj)
+            return
 
         remainder = tbc[len(c)+1:]  # e.g. everything after j.clients.ssh.
         if remainder.startswith("__"): #then we want to show private methods
@@ -204,11 +203,21 @@ def get_completions(self, document, complete_event):
 
 
 def get_doc_string(tbc):
+    j = KosmosShellConfig.j
     obj = get_object(tbc, locals_=None, globals_=None, walkback=True)
     if not obj:
         print("DID NOT FIND OBJ:%s"%tbc)
         return
-    return inspect.getdoc(obj)
+    m=""
+    for line in inspect.getsource(obj).strip("\n").split("\n"):
+        m+="%s\n"%line
+        if ":" in line:
+            break
+    m=j.core.tools.text_strip(m) #to remove trailing spaces
+    m+="\n"
+    m+= inspect.getdoc(obj)
+    return m
+
 
 
 class HasDocString(PythonInputFilter):
@@ -314,8 +323,8 @@ def ptconfig(repl):
     # Set color depth (keep in mind that not all terminals support true color).
     repl.color_depth = 'DEPTH_24_BIT'  # True color.
 
-    # Syntax should not be highlighted because we do it already
-    repl.enable_syntax_highlighting = False
+
+    repl.enable_syntax_highlighting = True
 
     repl.min_brightness = 0.3
 
