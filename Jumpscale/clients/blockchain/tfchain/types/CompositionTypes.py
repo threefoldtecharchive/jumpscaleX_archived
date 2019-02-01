@@ -10,9 +10,9 @@ class CoinInput(BaseDataTypeClass):
     """
     CoinIput class
     """
-    def __init__(self, parent_id=None, fulfillment=None, parent_output=None):
+    def __init__(self, parentid=None, fulfillment=None, parent_output=None):
         self._parent_id = None
-        self.parent_id = parent_id
+        self.parentid = parentid
         self._fulfillment = None
         self.fulfillment = fulfillment
         # property that can be set if known, but which is not part of the actual CoinInput
@@ -22,14 +22,14 @@ class CoinInput(BaseDataTypeClass):
     @classmethod
     def from_json(cls, obj):
         return cls(
-            parent_id=Hash.from_json(obj['parentid']),
+            parentid=Hash.from_json(obj['parentid']),
             fulfillment=j.clients.tfchain.types.fulfillments.from_json(obj['fulfillment']))
 
     @property
-    def parent_id(self):
+    def parentid(self):
         return self._parent_id
-    @parent_id.setter
-    def parent_id(self, value):
+    @parentid.setter
+    def parentid(self, value):
         if isinstance(value, Hash):
             self._parent_id = Hash(value=value.value)
             return

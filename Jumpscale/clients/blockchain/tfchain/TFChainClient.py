@@ -176,7 +176,9 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         coininputoutputs = etxn.get('coininputoutputs', None) or []
         assert len(transaction.coin_inputs) == len(coininputoutputs)
         for (idx, co) in enumerate(coininputoutputs):
-            transaction.coin_inputs[idx].parent_output = CoinOutput.from_json(obj=co)
+            co = CoinOutput.from_json(obj=co)
+            co.id = transaction.coin_inputs[idx].parentid
+            transaction.coin_inputs[idx].parent_output = co
         # add the coin output ids
         coinoutputids = etxn.get('coinoutputids', None) or []
         assert len(transaction.coin_outputs) == len(coinoutputids)

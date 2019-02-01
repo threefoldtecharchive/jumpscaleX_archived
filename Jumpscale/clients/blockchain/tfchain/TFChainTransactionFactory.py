@@ -289,7 +289,7 @@ class TransactionV1(TransactionBaseClass):
         if not value:
             return
         for ci in value:
-            self.coin_input_add(ci.parent_id, ci.fulfillment, parent_output=ci.parent_output)
+            self.coin_input_add(ci.parentid, ci.fulfillment, parent_output=ci.parent_output)
 
     @property
     def coin_outputs(self):
@@ -306,8 +306,8 @@ class TransactionV1(TransactionBaseClass):
         for co in value:
             self.coin_output_add(co.value, co.condition, id=co.id)
 
-    def coin_input_add(self, parent_id, fulfillment, parent_output=None):
-        ci = CoinInput(parent_id=parent_id, fulfillment=fulfillment)
+    def coin_input_add(self, parentid, fulfillment, parent_output=None):
+        ci = CoinInput(parentid=parentid, fulfillment=fulfillment)
         ci.parent_output = parent_output
         self._coin_inputs.append(ci)
 
@@ -363,7 +363,7 @@ class TransactionV1(TransactionBaseClass):
         e.add(len(self.coin_inputs))
         # encode coin inputs parent_ids
         for ci in self.coin_inputs:
-            e.add(ci.parent_id)
+            e.add(ci.parentid)
 
         # encode coin outputs
         e.add_slice(self.coin_outputs)
@@ -391,7 +391,7 @@ class TransactionV1(TransactionBaseClass):
 
         # encode coin inputs
         for ci in self.coin_inputs:
-            e.add_all(ci.parent_id, ci.fulfillment.public_key.unlockhash())
+            e.add_all(ci.parentid, ci.fulfillment.public_key.unlockhash())
 
         # encode coin outputs
         e.add(len(self.coin_outputs))
