@@ -57,6 +57,7 @@ class Syncer(j.application.JSBaseConfigClass):
             item.delete()
         j.application.JSBaseConfigClass.delete(self)
 
+
     @property
     def executor(self):
         if not self._executor:
@@ -94,9 +95,6 @@ class Syncer(j.application.JSBaseConfigClass):
         """
         sync all code to the remote destinations, uses config as set in jumpscale.toml
 
-        paths is [path1, path2,...] or [["/src",'/dest'],["/src2",'/dest2']]
-
-        can use {} (the dir paths in the dir's
 
 
         """
@@ -127,6 +125,7 @@ class Syncer(j.application.JSBaseConfigClass):
             self._logger.info("monitor:%s" % source)
             observer.schedule(event_handler, source, recursive=True)
         observer.start()
+        print("WE ARE MONITORING")
         try:
             while True:
                 time.sleep(0.1)

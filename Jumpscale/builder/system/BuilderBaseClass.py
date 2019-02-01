@@ -5,7 +5,7 @@ BaseClass = j.application.JSBaseClass
 
 class BuilderBaseClass(BaseClass):
     def __init__(self):
-        BaseClass.__init__(self, True)
+        BaseClass.__init__(self)
         self.bins = []  # list of binaries to copy to sandbox/bin/ in the flist
         self.dirs = {}  # dict of files/dirs to copy to the sandbox/ in the flist. key is the source and value is the dest under sandbox/
         self.new_dirs = []  # list of dirs to create under sandbox/ in the flist

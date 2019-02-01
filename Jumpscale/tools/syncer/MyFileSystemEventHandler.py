@@ -23,8 +23,6 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
                 raise RuntimeError("cannot have : in source")
             self.sync_paths_src.append(j.builder.tools.replace(source))
             self.sync_paths_dest.append(j.builder.tools.replace(dest))
-            #THERE IS ISSUE WITH PATHS when not sandbox
-            # self.sync_paths_dest.append(self.syncer.node.prefab.core.replace(dest))
 
     def path_dest_get(self,src):
         nr=0
@@ -37,7 +35,8 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
         raise RuntimeError("did not find:%s"%src)
 
     def handler(self, event, action="copy"):
-        self._logger.debug("%s:%s" % (event, action))
+        # self._logger.debug("%s:%s" % (event, action))
+        ftp =  self.syncer.ssh_client.sftp
         changedfile = event.src_path
         if event.is_directory:
             if changedfile.find("/.git") != -1:
@@ -48,11 +47,11 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
                 return
             if event.event_type == "modified":
                 return
-            self.syncer.sync(paths=self.syncer.sync_paths,monitor=False)
+            self.syncer.sync(monitor=False)
         else:
 
             error = False
-            node = self.syncer.node
+
             if error is False:
                 if changedfile.find("/.git") != -1:
                     return
@@ -64,18 +63,20 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
                 e = ""
 
                 if action == "copy":
-                    self._logger.debug("copy: %s %s:%s" % (changedfile, node, dest))
+                    self._logger.debug("copy: %s:%s" % (changedfile, dest))
                     try:
-                        node.sftp.put(changedfile, dest)
+                        ftp.put(changedfile, dest)
                     except Exception as e:
+                        j.shell()
                         self._logger.debug("** ERROR IN COPY, WILL SYNC ALL")
                         self._logger.debug(str(e))
                         error = True
                 elif action == "delete":
-                    self._logger.debug("delete: %s %s:%s" % (changedfile, node, dest))
+                    self._logger.debug("delete: %s:%s" % (changedfile, dest))
                     try:
-                        node.sftp.remove(dest)
+                        ftp.remove(dest)
                     except Exception as e:
+                        j.shell()
                         if "No such file" in str(e):
                             return
                         else:
@@ -90,7 +91,7 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
                         self._logger.debug(e)
                     except BaseException:
                         pass
-                    node.sync()
+                    self.syncer.sync(monitor=False)
                     error = False
 
     def on_moved(self, event):
