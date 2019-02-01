@@ -25,6 +25,8 @@ class BCDBModel(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
+        self._kosmosinstance = None
+
         if bcdb is None:
             raise RuntimeError("bcdb should be set")
 
@@ -49,7 +51,7 @@ class BCDBModel(j.application.JSBaseClass):
 
         # self._logger_enable()
 
-        self._modifiers = []
+        self._triggers = []
 
         self.custom = custom
         self._init_()
@@ -84,16 +86,26 @@ class BCDBModel(j.application.JSBaseClass):
 
         self._init_index()  # goal is to be overruled by users
 
-    def modifier_add(self, method):
+    def trigger_add(self, method):
         """
-        will call the method as follows before doing a set in DB
-            method(model,obj)
+        see docs/baseclasses/data_mgmt_on_obj.md
 
         :param method:
         :return:
         """
-        if method not in self._modifiers:
-            self._modifiers.append(method)
+        if method not in self._triggers:
+            self._triggers.append(method)
+
+    def triggers_call(self,obj, action=None, propertyname=None):
+        """
+        will go over all triggers and call them with arguments given
+        see docs/baseclasses/data_mgmt_on_obj.md
+
+        """
+        model = self
+        kosmosinstance = self._kosmosinstance
+        for method in self._triggers:
+            method(model,obj,kosmosinstance=kosmosinstance, action=action, propertyname=propertyname)
 
     def cache_reset(self):
         self.obj_cache = {}
@@ -151,6 +163,7 @@ class BCDBModel(j.application.JSBaseClass):
     def delete(self, obj):
         if not hasattr(obj, "_JSOBJ"):
             obj = self.get(obj)
+        self.triggers_call(obj=obj, action="delete")
         if obj.id is not None:
             self.index_keys_delete(obj)
             self._delete2(obj.id)
@@ -164,7 +177,9 @@ class BCDBModel(j.application.JSBaseClass):
         if not self.zdbclient:
             self.bcdb.sqlclient.delete(key=obj_id)
         else:
-            return self.zdbclient.delete(obj_id)
+            self.zdbclient.delete(obj_id)
+
+
 
     def check(self, obj):
         if not hasattr(obj, "_JSOBJ"):
@@ -318,16 +333,12 @@ class BCDBModel(j.application.JSBaseClass):
         return hash
 
     @queue_method_results
-    def _set(self, obj, index=True, set_pre=True, store=True):
+    def _set(self, obj, index=True, store=True):
         """
         :param obj
         :return: obj
         """
         self.check(obj)
-
-        # prepare
-        if set_pre:
-            store, obj = self._set_pre(obj)
 
         if store:
 
@@ -359,6 +370,8 @@ class BCDBModel(j.application.JSBaseClass):
             l = [self.schema.sid, obj.acl_id, bdata_encrypted]
             data = j.data.serializers.msgpack.dumps(l)
 
+            self.triggers_call(obj, action="set_pre")
+
             # PUT DATA IN DB
             if obj.id is None:
                 # means a new one
@@ -379,7 +392,7 @@ class BCDBModel(j.application.JSBaseClass):
                         if str(e).find("only update authorized") != -1:
                             raise RuntimeError(
                                 "cannot update object:%s\n with id:%s, does not exist" % (obj, obj.id))
-                        raise e
+                        raise
 
         if index:
             self.index_set(obj)
@@ -389,6 +402,8 @@ class BCDBModel(j.application.JSBaseClass):
                 bin_id = struct.pack("<I", obj.id)
                 j.sal.fs.writeFile(self._ids_file_path, bin_id, append=True)
                 self._ids_last = obj.id
+
+        self.triggers_call(obj=obj, action="set_post")
 
         return obj
 
@@ -439,25 +454,16 @@ class BCDBModel(j.application.JSBaseClass):
         if data:
             data = self._dict_process_in(data)
         if data or capnpbin:
-            obj = self.schema.get(data=data, capnpbin=capnpbin)
+            obj = self.schema.get(data=data, capnpbin=capnpbin,model=self)
         else:
             obj = self.schema.new()
-        obj.model = self
+            obj.model = self
         obj = self._methods_add(obj)
+        self.triggers_call(obj=obj, action="new")
         return obj
 
     def _methods_add(self, obj):
         return obj
-
-    def _set_pre(self, obj):
-        """
-
-        :param obj:
-        :return: True,obj when want to store
-        """
-        for modifier in self._modifiers:
-            modifier(self, obj)
-        return True, obj
 
     def index_set(self, obj):
         pass
@@ -511,6 +517,9 @@ class BCDBModel(j.application.JSBaseClass):
         obj = self.bcdb._unserialize(
             obj_id, data, return_as_capnp=return_as_capnp, model=self)
         # self.obj_cache[obj_id] = (j.data.time.epoch, obj)  #FOR NOW NO CACHE, UNSAFE
+
+        self.triggers_call(obj=obj, action="get")
+
         return obj
 
     def delete_all(self):

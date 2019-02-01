@@ -6,22 +6,20 @@ class JSBaseConfigs(JSBase):
 
     def __init__(self,parent=None):
 
-
-
         self._model_ = None
         self._parent = parent
 
         self._children = {}
 
         self._class_init() #is needed to init class properties, needs to be first thing
-        JSBase.__init__(self,init=False)
+        JSBase.__init__(self)
 
         if not hasattr(self.__class__,"_CHILDCLASS"):
             raise RuntimeError("_CHILDCLASS needs to be specified")
 
-        self._init()
-
         self.__objcat_name = "instances"
+        self._logger_enable()
+
 
     def _class_init(self):
 
@@ -34,10 +32,11 @@ class JSBaseConfigs(JSBase):
     @property
     def _model(self):
         if self._model_ is None:
+            # self._logger.debug("Get model for %s"%self.__class__._location)
             self._model_ = j.application.bcdb_system.model_get_from_schema(self.__class__._CHILDCLASS._SCHEMATEXT)
         return self._model_
 
-    def _childclass_selector(self):
+    def _childclass_selector(self,**kwargs):
         """
         allow custom implementation of which child class to use
         :return:
@@ -52,12 +51,13 @@ class JSBaseConfigs(JSBase):
         :param childclass_name, if different typen of childclass, specify its name
         :return: the service
         """
-        kl = self._childclass_selector()
+        kl = self._childclass_selector(**kwargs)
         data = self._model.new(data=kwargs)
         data.name = name
         self._children[name] = kl(parent=self,data=data)
-        self._children[name]._data_trigger_new()
         self._children[name]._isnew = True
+        self._children[name]._init(**kwargs) #supposed to be used by person who developers kosmos clients, ...
+        self._children[name]._init2(**kwargs) #used by the developers of the base classes
         return self._children[name]
 
 
@@ -108,11 +108,12 @@ class JSBaseConfigs(JSBase):
             else:
                 data = res[0]
 
-        kl = self._childclass_selector()
+        kl = self._childclass_selector(**kwargs)
         self._children[name] = kl(data=data,parent=self)
         if new:
-            self._children[name]._data_trigger_new()
             self._children[name]._isnew = True
+
+        self._children[name]._init(**kwargs)
 
         return self._children[name]
 

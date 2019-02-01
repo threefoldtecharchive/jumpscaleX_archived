@@ -15,9 +15,10 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
     _CHILDCLASS = SSHClientBase
 
     def _init(self):
-        self._clients = {}
+        #custom initialization
+        self._something = {}
 
-    def _childclass_selector(self):
+    def _childclass_selector(self,**kwargs):
         #EXAMPLE WHERE WE CHOOSE OTHER CHILD DEPENDING ENVIRONMENT
         if j.core.platformtype.myplatform.isMac:
             return SSHClientParamiko

@@ -33,7 +33,7 @@ def action(func):
     return wrapper_action
 
 
-class JSServiceBase(JSBaseConfig):
+class JSBaseService(JSBaseConfig):
 
 
     _MODEL = None

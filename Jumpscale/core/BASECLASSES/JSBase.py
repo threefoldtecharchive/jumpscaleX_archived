@@ -44,8 +44,6 @@ class JSBase:
             else:
                 self.__class__._location = self.__class__.__name__.lower()
 
-            self.__class__.__name__ = ""
-
             self.__class__._methods_ = []
             self.__class__._properties_ = []
             self.__class__._inspected_ = False
@@ -55,18 +53,22 @@ class JSBase:
 
             self.__class__._class_init_done = True
 
-    def __init__(self, init=True):
+    def __init__(self):
 
         self.__objcat_name = ""
 
         self._class_init()  # is needed to init class properties, needs to be first thing
 
-        if init:
-            self._init()
-
         self._obj_cache_reset()
 
     def _init(self):
+        pass
+
+    def _init2(self):
+        """
+        happens after _init by the caller of the object, meant to be used by developers of the base classes
+        :return:
+        """
         pass
 
     @property

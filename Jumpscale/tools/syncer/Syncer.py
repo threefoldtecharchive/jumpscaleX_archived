@@ -4,39 +4,53 @@ from watchdog.observers import Observer
 from .MyFileSystemEventHandler import MyFileSystemEventHandler
 
 
+
+
+
 class Syncer(j.application.JSBaseConfigClass):
+    """
+    make sure there is an ssh client first, can be done by
+
+    j.clients.ssh.get...
+
+    :param name:
+    :param ssh_client_name: name as used in j.clients.ssh
+    :param paths: specified as
+        e.g.  "{DIR_CODE}/github/threefoldtech/0-robot:{DIR_TEMP}/0-robot,..."
+        e.g.  "{DIR_CODE}/github/threefoldtech/0-robot,..."
+        can use the {} arguments
+        if destination not specified then is same as source
+
+    if not specified is:
+        paths = "{DIR_CODE}/github/threefoldtech/jumpscaleX,{DIR_CODE}/github/threefoldtech/digitalmeX"
+
+    """
     _SCHEMATEXT = """
         @url = jumpscale.syncer.1
         name* = ""
         sshclient_name = ""
         paths = (LS)
-        ignoredir = (LS)        
+        ignoredir = (LS)
+        t = ""     
         """
 
-    def _init(self):
+    def _init(self,sshclient_name=None,ssh_client=None):
 
-        j.application.JSBaseConfigClass._init(self)
-
-        self.ssh_client = j.clients.ssh.get(name=self.sshclient_name)
+        if ssh_client:
+            self.ssh_client = ssh_client
+        elif sshclient_name:
+            self.ssh_client = j.clients.ssh.get(name=self.sshclient_name)
+        else:
+            raise RuntimeError("need sshclient_name or ssh_client")
 
         self.IGNOREDIR = [".git", ".github"]
         self._executor = None
 
+        # self.paths = []
+        if self._isnew and self.paths==[]:
+            self.paths.append("{DIR_CODE}/github/threefoldtech/jumpscaleX")
+            self.paths.append("{DIR_CODE}/github/threefoldtech/digitalmeX")
 
-    def data_update(self,**kwargs):
-        if "paths" in kwargs:
-            paths = kwargs["paths"]
-            if not j.data.types.list.check(paths):
-                paths2=[]
-                for item in paths.split(","):
-                    item=item.strip()
-                    if not item.startswith("/") and not item.startswith("{") :
-                        item=j.sal.fs.getcwd()+"/"+item
-                    item = item.replace("//","/")
-                    paths2.append(item)
-                kwargs["paths"]=paths2
-        self.data.data_update(kwargs)
-        self.data.save()
 
     def delete(self):
         for item in j.clients.ssh.find(name=self.data.sshclient_name):
@@ -56,6 +70,11 @@ class Syncer(j.application.JSBaseConfigClass):
         """
         res=[]
         for item in self.paths:
+
+            if not item.startswith("/") and not item.startswith("{") :
+                item=j.sal.fs.getcwd()+"/"+item
+            item = item.replace("//","/")
+
             items = item.split(":")
             if len(items)==1:
                 src = items[0]

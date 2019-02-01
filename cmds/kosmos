@@ -24,7 +24,7 @@ if len(args) == 1:
     else:
         toexec = args[0]
         toexec = toexec.strip("'\" ").strip("'\" ")
-        exec(toexec)
+        exec(toexec,globals(),j._locals_get({}))
 else:
     j.shell(loc=False,locals_=locals(),globals_=globals())
 

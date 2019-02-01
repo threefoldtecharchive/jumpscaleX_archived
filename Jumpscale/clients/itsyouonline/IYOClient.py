@@ -38,8 +38,9 @@ class IYOClient(j.application.JSBaseConfigClass):
         
         """
 
-    def _data_trigger_new(self):
+    def _init(self):
         # self.delete()
+        self.reset()
         if self.application_id is "" or self.secret is "":
             self.application_id = j.tools.console.askString(
                 "Please provide itsyouonline application id:\ncan find on https://itsyou.online/#/settings\n")
@@ -47,8 +48,8 @@ class IYOClient(j.application.JSBaseConfigClass):
                 "Please provide itsyouonline secret:\ncan find on https://itsyou.online/#/settings\n")
             self.save()
 
-    def _init(self):
-        self.reset()
+
+
 
     @property
     def client(self):

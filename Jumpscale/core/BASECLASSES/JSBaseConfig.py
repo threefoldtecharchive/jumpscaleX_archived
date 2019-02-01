@@ -27,9 +27,17 @@ class JSBaseConfig(JSBase):
         """
 
         self._class_init()  # is needed to init class properties, needs to be first thing
-        JSBase.__init__(self, init=False)
+        JSBase.__init__(self)
+
+        self._isnew = False
 
         self._parent = parent
+
+        assert parent not in [None,""]
+
+        self._model = self._parent._model
+        self._model._kosmosinstance = self
+
 
         if data:
             if not hasattr(data, "_JSOBJ"):
@@ -39,10 +47,12 @@ class JSBaseConfig(JSBase):
         else:
             self.data = self._model.new(data=kwargs)
 
-        self._init()
-
         if "name" not in self.data._ddict:
             raise RuntimeError("name needs to be specified in data")
+
+    def _init2(self):
+
+        JSBase._init2(self)
 
         self._key = "%s_%s" % (self.__class__.__name__, self.data.name)
 
@@ -56,11 +66,6 @@ class JSBaseConfig(JSBase):
         JSBase._obj_cache_reset(self)
         self.__dict__["_data"] = None
 
-    @property
-    def _model(self):
-        if self._parent is None:
-            raise RuntimeError("cannot get model, because factory not specified in self._parent")
-        return self._parent._model
 
     @property
     def _id(self):
@@ -81,18 +86,14 @@ class JSBaseConfig(JSBase):
         :param kwargs:
         :return:
         """
-
+        ddict = self.data._ddict
         self.data.data_update(data=kwargs)
+
         #TODO: REEM was not ok, cannot do this
         # for prop, val in self.data._ddict.items():
         #     setattr(self, prop, val)
         # self.data.save()
 
-    def _data_trigger_new(self):
-        pass
-
-    def _data_trigger_delete(self):
-        pass
 
     def edit(self):
         """
@@ -115,14 +116,17 @@ class JSBaseConfig(JSBase):
             self.data.data_update(data2)
         j.sal.fs.remove(path)
 
-    def view(self):
-        path = j.core.tools.text_replace("{DIR_TEMP}/js_baseconfig_%s.toml" % self.__class__._location)
-        data_in = self.data._toml
-        j.tools.formatters.print_toml(data_in)
+    # def view(self):
+    #     path = j.core.tools.text_replace("{DIR_TEMP}/js_baseconfig_%s.toml" % self.__class__._location)
+    #     data_in = self.data._toml
+    #     j.tools.formatters.print_toml(data_in)
 
     def __getattr__(self, attr):
         if attr.startswith("_"):
-            return self.__getattribute__(attr)
+            try:
+                return self.__getattribute__(attr)
+            except Exception as e:
+                raise RuntimeError(str(e))
         if attr in self._model.schema.propertynames:
             return self.data.__getattribute__(attr)
         return self.__getattribute__(attr)

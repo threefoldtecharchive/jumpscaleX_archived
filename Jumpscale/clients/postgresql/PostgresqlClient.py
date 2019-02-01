@@ -22,12 +22,7 @@ class PostgresClient(JSConfigClient):
     dbname = "" (S)
     """
 
-    def _init_new(self):
-        self.ipaddr = self.ipaddr
-        self.port = self.port
-        self.login = self.login
-        self.passwd = self.passwd_
-        self.dbname = self.dbname
+    def _init(self):
         self.client = psycopg2.connect("dbname='%s' user='%s' host='%s' password='%s' port='%s'" % (
             self.dbname, self.login, self.ipaddr, self.passwd, self.port))
         self.cursor = None

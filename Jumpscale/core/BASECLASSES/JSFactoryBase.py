@@ -26,8 +26,6 @@ class JSFactoryBase(JSBase):
 
         JSBase.__init__(self)
 
-        self._init()
-
         self.__objcat_name = "factory"
 
     def _class_init(self):

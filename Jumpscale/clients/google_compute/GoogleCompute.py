@@ -16,21 +16,17 @@ class GoogleCompute(JSBASE):
     projectName = "constant-carver-655" (S)
     """
 
-    def _init_new(self):
+    def _init(self, zone=None, projectName=None):
+
         self.credentials = None
         self.service = None
         self._projects = None
         self._instances = None
         self._images = {}
-
-    def _init(self, zone=None, projectName=None):
-        if zone is not None:
-            self.zone = zone
-        if projectName is not None:
-            self.projectName = projectName
+        self.zone = zone
+        self.projectName = projectName
         self.credentials = GoogleCredentials.get_application_default()
-        self.service = discovery.build(
-            'compute', 'v1', credentials=self.credentials)
+        self.service = discovery.build('compute', 'v1', credentials=self.credentials)
 
     @property
     def project(self):
@@ -51,8 +47,7 @@ class GoogleCompute(JSBASE):
             for instance in response['items']:
                 # pprint(instance)
                 res.append(instance)
-            request = self.service.instances().list_next(
-                previous_request=request, previous_response=response)
+            request = self.service.instances().list_next(previous_request=request, previous_response=response)
         return res
 
     def images_list(self):
@@ -68,8 +63,7 @@ class GoogleCompute(JSBASE):
             for image in response['items']:
                 res.append(image)
                 pprint(image)
-            request = self.service.images().list_next(
-                previous_request=request, previous_response=response)
+            request = self.service.images().list_next(previous_request=request, previous_response=response)
 
         return res
 

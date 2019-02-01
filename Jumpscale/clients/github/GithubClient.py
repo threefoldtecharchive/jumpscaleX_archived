@@ -14,22 +14,23 @@ class GitHubClient(JSConfigClient):
         @url = jumpscale.github.client
         name* = "" (S)
         login = "" (S)
-        token_ = "" (S)
-        password_ = "" (S)
+        token = "" (S)
+        password = "" (S)
         """
 
-    def _int(self):
-        if not (self.token_ or (self.login and self.password_)):
-            raise RuntimeError("Missing Github token_ or login/password_")
+    def _init(self):
 
-        login_or_token = self.token_ or self.login
-        password_ = self.password_ if self.password_ != "" else None
-        self.api = github.Github(login_or_token, password_, per_page=100)
-
-    def _data_trigger_new(self):
         self.users = {}
         self.repos = {}
         self.milestones = {}
+
+        if not (self.token or (self.login and self.password)):
+            raise RuntimeError("Missing Github token or login/password")
+
+
+        login_or_token = self.token or self.login
+        password = self.password if self.password != "" else None
+        self.api = github.Github(login_or_token, password, per_page=100)
 
     # def getRepo(self, fullname):
     #     """

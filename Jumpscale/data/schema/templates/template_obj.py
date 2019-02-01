@@ -8,6 +8,7 @@ class ModelOBJ():
 
         if data is None:
             data = {}
+        self.id = None
         self._schema = schema
         self._capnp_schema = schema._capnp_schema
         self.model = model
@@ -37,9 +38,8 @@ class ModelOBJ():
         if not keepid:
             #means we are overwriting id, need to remove from cache
             if self.model is not None and self.model.obj_cache is not None:
-                if self.id in self.model.obj_cache:
+                if self.id is not None and self.id in self.model.obj_cache:
                     self.model.obj_cache.pop(self.id)
-            self.id = None
 
         if not keepacl:
             self.acl_id = 0
@@ -163,9 +163,13 @@ class ModelOBJ():
         {% else %} 
         #will make sure that the input args are put in right format
         val = {{prop.js_typelocation}}.clean(val)  #is important because needs to come in right format e.g. binary for numeric
-        self._changed_items["{{prop.name}}"] = val
-        if self.autosave:
-            self.save()
+        if val != self.{{prop.name}}:
+            self._changed_items["{{prop.name}}"] = val
+            if self.model:
+                # self._logger.debug("change:{{prop.name}} %s"%(val))
+                self.model.triggers_call(obj=self, action="change", propertyname="{{prop.name}}")
+            if self.autosave:
+                self.save()
         {% endif %}
 
     {% if prop.jumpscaletype.NAME == "numeric" %}
@@ -211,7 +215,7 @@ class ModelOBJ():
         if self.model:
             if self.readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s"%self)
-            print (self.model.__class__.__name__)
+            # print (self.model.__class__.__name__)
             if not self.model.__class__.__name__=="acl" and self.acl is not None:
                 if self.acl.id is None:
                     self.acl.save()

@@ -171,6 +171,8 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
         jwt = iyo.jwt_get(name=jwt_name, scope="user:memberof:%s" % iyo_organization,
                           reset=reset)  # there should be enough protection in here to refresh
 
+        # print(jwt)
+
         cl = self.get(name=name, host=host, port=port, password=jwt.jwt, ssl=True)
         print(cl)
         cl.ping()
@@ -187,5 +189,9 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
         cl = j.clients.zos.get_from_itsyouonline(
             name="default", host="10.102.90.219", port=6379, iyo_organization="tf-production", reset=True)
 
+        print(cl)
+
         # use j.clients.zoscmd... to start a local zos
         # connect client to zos do quite some tests
+
+        j.shell()

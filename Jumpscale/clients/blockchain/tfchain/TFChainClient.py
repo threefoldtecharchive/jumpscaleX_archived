@@ -40,7 +40,8 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
 
     _CHILDCLASSES = [TFChainWalletFactory]
 
-    def _data_trigger_new(self):
+    def _init(self):
+
         if self.network_type == "DEV":
             self.minimum_minerfee = 1000000000
         else:

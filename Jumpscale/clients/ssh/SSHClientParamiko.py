@@ -207,8 +207,8 @@ class SSHClientParamiko(SSHClientBase):
 
         ch = self._transport.open_session()
 
-        if self._forward_agent:
-            paramiko.agent.AgentRequestHandler(ch)
+        # if self._forward_agent:
+        #     paramiko.agent.AgentRequestHandler(ch)
 
         # execute the command on the remote server
         ch.exec_command(cmd)

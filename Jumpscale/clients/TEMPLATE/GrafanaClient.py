@@ -17,11 +17,6 @@ class GrafanaClient(j.application.JSBaseClass):
     def _init(self):
         self._httpclient = None
 
-    def _data_trigger_new(self):
-        pass
-
-        self.name
-
     def ping(self):
         pass
 

@@ -47,8 +47,8 @@ class TFChainBaseClient(j.application.JSBaseConfigClass):
         """
 
 
-    def _data_trigger_new(self):
-        if self.network_type in ["DEV"]:
+    def _init(self):
+        if self._isself.network_type in ["DEV"]:
             self.minimum_minerfee = 1000000000
 
 

@@ -12,13 +12,6 @@ class GrafanaComponent(j.application.JSBaseConfigClass):
         secret = "" (S)
         """
 
-    def _init(self):
-        pass
-        #called for each instance (new or not)
-
-    def _data_trigger_new(self):
-        pass
-        #called for each new instance
 
     def start(self):
         self.cache.delete("stop") #make sure that we will redo the stop action
