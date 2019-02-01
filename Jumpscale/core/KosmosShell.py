@@ -89,8 +89,12 @@ def get_completions(self, document, complete_event):
     j = KosmosShellConfig.j
     obj = None
     tbc = document.current_line_before_cursor
+
     if "." in tbc:
         c = ".".join(tbc.split(".")[:-1])
+
+        obj = get_object(c, self.get_locals(), self.get_globals())
+
 
         try:
             obj = get_object(c, self.get_locals(), self.get_globals())
@@ -99,6 +103,7 @@ def get_completions(self, document, complete_event):
         # print(obj)
 
         remainder = tbc[len(c)+1:]  # e.g. everything after j.clients.ssh.
+        methods_private = remainder.startswith("_") #then we want to show private methods
 
         if obj:
 
@@ -115,7 +120,7 @@ def get_completions(self, document, complete_event):
                         x2 = c+"."+x
                         x3 = x2[len(tbc):]
                         yield Completion(x3, 0, display=x, display_meta=None, style='bg:ansiyellow fg:ansiblack')
-                for x in obj._methods():
+                for x in obj._methods(private=methods_private):
                     if x.startswith(remainder):
                         x2 = c+"."+x
                         x3 = x2[len(tbc):]

@@ -120,21 +120,18 @@ class JSBase:
             assert self.__class__._methods_ == []
             assert self.__class__._properties_ == []
             for name, obj in inspect.getmembers(self.__class__):
-                if name.startswith("_"):
-                    continue
-                elif inspect.ismethod(obj):
+                if inspect.ismethod(obj):
                     self.__class__._methods_.append(name)
+                # elif name.startswith("_"):
+                #     continue
                 elif inspect.ismethoddescriptor(obj):
-                    j.shell()
-                    w
+                    continue
                 elif inspect.isfunction(obj):
                     self.__class__._methods_.append(name)
                 elif inspect.isclass(obj):
-                    j.shell()
-                    w
+                    self.__class__._properties_.append(name)
                 elif inspect.isgetsetdescriptor(obj):
-                    j.shell()
-                    w
+                    continue
                 else:
                     self.__class__._properties_.append(name)
 
@@ -148,7 +145,7 @@ class JSBase:
         # else:
         #     print("not inspect:%s"%self.__class__)
 
-    def _properties(self):
+    def _properties(self,private=False):
         self._inspect()
         # methods = self._methods()
         # r=[]
@@ -157,9 +154,12 @@ class JSBase:
         #         continue
         #     if item not in methods:
         #         self.__class__._properties_.append(item)
-        return self.__class__._properties_
+        if private:
+            return self.__class__._properties_
+        else:
+            return [item for item in self.__class__._properties_ if not item.startswith("_")]
 
-    def _methods(self):
+    def _methods(self,private=False):
         self._inspect()
         # if self.__class__._methods_ == []:
         #     for item in dir(self):
@@ -168,7 +168,10 @@ class JSBase:
         #         possible_method = eval("self.%s"%item)
         #         if isinstance(possible_method,types.MethodType) and item not in self.__class__._methods_:
         #             self.__class__._methods_.append(item)
-        return self.__class__._methods_
+        if private:
+            return self.__class__._methods_
+        else:
+            return [item for item in self.__class__._methods_ if not item.startswith("_")]
 
     def _properties_children(self):
         return []

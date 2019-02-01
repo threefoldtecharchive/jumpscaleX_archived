@@ -157,7 +157,6 @@ class JSBaseConfigs(JSBase):
         else:
             return self._model.get_all()
 
-
     def delete(self,name):
         o=self.get(name)
         o.delete()
@@ -202,16 +201,19 @@ class JSBaseConfigs(JSBase):
     def __setattr__(self, key, value):
         self.__dict__[key]=value
 
-    # def __str__(self):
-    #     out = "%s\n"%self.__class__._location
-    #     # out+="methods:\n"
-    #     # for item in METHODS:
-    #     #     out+=" - %s\n"%item
-    #     # out+="instances:"
-    #     for item in self.__dir__():
-    #         # if item in METHODS:
-    #         #     continue
-    #         out+=" - %s\n"%item
-    #     return out
-    #
-    # __repr__ = __str__
+    def __str__(self):
+        j.shell()
+        out = "{RED}##%s{RESET}\n"%self.__class__._location
+        out+="methods:\n"
+        out+="instances:"
+        for item in self.__dir__():
+            # if item in METHODS:
+            #     continue
+            out+=" - %s\n"%item
+        METHODS= self._methods()
+        if len(METHODS)<10:
+            for item in METHODS:
+                out+=" - %s\n"%item
+        return out
+
+    __repr__ = __str__
