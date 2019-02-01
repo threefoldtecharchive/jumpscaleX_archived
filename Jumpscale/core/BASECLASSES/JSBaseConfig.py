@@ -78,9 +78,11 @@ class JSBaseConfig(JSBase):
         :param kwargs:
         :return:
         """
+
         self.data.data_update(data=kwargs)
-        for prop, val in self.data._ddict.items():
-            setattr(self, prop, val)
+        #TODO: REEM was not ok, cannot do this
+        # for prop, val in self.data._ddict.items():
+        #     setattr(self, prop, val)
         # self.data.save()
 
     def _data_trigger_new(self):
@@ -149,11 +151,12 @@ class JSBaseConfig(JSBase):
         self.__dict__[key] = value
 
     def __str__(self):
-        try:
-            out = "%s\n%s\n" % (self.__class__.__name__, self.data)
-        except:
-            out = str(self.__class__)+"\n"
-            out += j.core.text.prefix(" - ", self.data)
+        out = "{RED}## Instance: "
+        out += self.__class__.__name__
+        out += "{GRAY}\n"
+        out += self.data._hr_get()
+        out += "{RESET}\n\n"
+        out = j.core.tools.text_replace(out)
         return out
 
     __repr__ = __str__

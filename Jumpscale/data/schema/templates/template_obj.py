@@ -96,8 +96,11 @@ class ModelOBJ():
         """
         out = "\n"
         res = self._ddict_hr_get(exclude=exclude)
-        for key, item in res.items():
-            out += "%-20s: %s\n" % (key, item)
+        keys = [name for name in res.keys()]
+        keys.sort()
+        for key in keys:
+            item = res[key]
+            out += "- %-20s: %s\n" % (key, item)
         return out
 
 

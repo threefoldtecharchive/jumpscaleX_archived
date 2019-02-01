@@ -126,6 +126,12 @@ def get_completions(self, document, complete_event):
                         x3 = x2[len(tbc):]
                         yield Completion(x3, 0, display=x, display_meta=None, style='bg:ansired fg:ansiblack')
                 return
+            # else:
+            #     for x in dir(obj):
+            #         if x.startswith(remainder):
+            #             x2=c+"."+x
+            #             x3=x2[len(tbc):]
+            #             yield Completion(x3, 0,display=x,display_meta=None, style='bg:ansired fg:ansiblack')
 
     # Do Path completions
     if complete_event.completion_requested or self._complete_path_while_typing(document):
@@ -239,22 +245,60 @@ def ptconfig(repl):
     # Show status bar.
     repl.show_status_bar = False
 
+    # When the sidebar is visible, also show the help text.
+    # repl.show_sidebar_help = True
+
     # Highlight matching parethesis.
     repl.highlight_matching_parenthesis = True
+
+    # Line wrapping. (Instead of horizontal scrolling.)
+    repl.wrap_lines = True
 
     # Mouse support.
     repl.enable_mouse_support = True
 
+    # Complete while typing. (Don't require tab before the
+    # completion menu is shown.)
+    # repl.complete_while_typing = True
+
+    # Vi mode.
+    repl.vi_mode = False
+
+    # Paste mode. (When True, don't insert whitespace after new line.)
+    repl.paste_mode = False
+
+    # Use the classic prompt. (Display '>>>' instead of 'In [1]'.)
+    repl.prompt_style = 'classic'  # 'classic' or 'ipython'
+
     # Don't insert a blank line after the output.
     repl.insert_blank_line_after_output = False
+
+    # History Search.
+    # When True, going back in history will filter the history on the records
+    # starting with the current input. (Like readline.)
+    # Note: When enable, please disable the `complete_while_typing` option.
+    #       otherwise, when there is a completion available, the arrows will
+    #       browse through the available completions instead of the history.
+    # repl.enable_history_search = False
 
     # Enable auto suggestions. (Pressing right arrow will complete the input,
     # based on the history.)
     repl.enable_auto_suggest = True
 
+    # Enable open-in-editor. Pressing C-X C-E in emacs mode or 'v' in
+    # Vi navigation mode will open the input in the current editor.
+    # repl.enable_open_in_editor = True
+
+    # Enable system prompt. Pressing meta-! will display the system prompt.
+    # Also enables Control-Z suspend.
+    repl.enable_system_bindings = False
+
     # Ask for confirmation on exit.
     repl.confirm_exit = False
 
+    # Enable input validation. (Don't try to execute when the input contains
+    # syntax errors.)
+    # repl.enable_input_validation = True
 
     # Use this colorscheme for the code.
     repl.use_code_colorscheme('perldoc')
@@ -271,6 +315,26 @@ def ptconfig(repl):
     def _(event):
         ' Pressing Control-B will insert "pdb.set_trace()" '
         event.cli.current_buffer.insert_text('\nimport pdb; pdb.set_trace()\n')
+
+    # Typing ControlE twice should also execute the current command.
+    # (Alternative for Meta-Enter.)
+    """
+    @repl.add_key_binding(Keys.ControlE, Keys.ControlE)
+    def _(event):
+        b = event.current_buffer
+        if b.accept_action.is_returnable:
+            b.accept_action.validate_and_handle(event.cli, b)
+    """
+
+
+    # Typing 'jj' in Vi Insert mode, should send escape. (Go back to navigation
+    # mode.)
+    """
+    @repl.add_key_binding('j', 'j', filter=ViInsertMode())
+    def _(event):
+        " Map 'jj' to Escape. "
+        event.cli.key_processor.feed(KeyPress(Keys.Escape))
+    """
 
     # Custom key binding for some simple autocorrection while typing.
 

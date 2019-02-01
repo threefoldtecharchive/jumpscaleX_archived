@@ -40,6 +40,7 @@ COLORS = [
     'blue',
     'purple',
     'cyan',
+    'gray',
     'white'
 ]
 
@@ -298,6 +299,8 @@ MYCOLORS =   { "RED":"\033[1;31m",
                 "BLUE":"\033[1;34m",
                 "CYAN":"\033[1;36m",
                 "GREEN":"\033[0;32m",
+                "GRAY":"\033[0;37m",
+                "YELLOW":"\033[0;33m",
                 "RESET":"\033[0;0m",
                 "BOLD":"\033[;1m",
                 "REVERSE":"\033[;7m"}
