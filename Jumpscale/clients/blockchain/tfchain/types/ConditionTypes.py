@@ -25,6 +25,43 @@ class ConditionFactory(j.application.JSBaseClass):
             return ConditionMultiSignature.from_json(obj)
         raise ValueError("unsupport condition type {}".format(ct))
 
+    def from_recipient(self, recipient, lock_time=0):
+        """
+        Create automatically a recipient condition based on any accepted pythonic value (combo).
+        """
+
+        # define base condition
+        if isinstance(recipient, ConditionBaseClass):
+            condition = recipient
+        else:
+            condition = None
+            if recipient is None:
+                # free-for-all wallet
+                condition = self.nil_new()
+            elif isinstance(recipient, (UnlockHash, str)):
+                # single sig wallet
+                condition = self.unlockhash_new(unlockhash=recipient)
+            elif isinstance(recipient, list):
+                # multisig to an all-for-all wallet
+                condition = self.multi_signature_new(min_nr_sig=len(recipient), unlockhashes=recipient)
+            elif isinstance(recipient, tuple):
+                # multisig wallet with custom x-of-n definition
+                assert len(recipient) == 2
+                # allow (sigs,hashes) as well as (hashes,sigs)
+                if isinstance(recipient[0], int):
+                    condition = self.multi_signature_new(min_nr_sig=recipient[0], unlockhashes=recipient[1])
+                else:
+                    condition = self.multi_signature_new(min_nr_sig=recipient[1], unlockhashes=recipient[0])
+            else:
+                raise TypeError("invalid type for recipient parameter: {}", type(recipient))
+        
+        # if lock is defined, define it as a locktime value
+        if lock_time:
+            condition = self.locktime_new(lock_time=lock_time, condition=condition)
+
+        # return condition
+        return condition
+
 
     def nil_new(self):
         """
@@ -378,6 +415,7 @@ class ConditionUnlockHash(ConditionBaseClass):
     """
     def __init__(self, unlockhash=None):
         self._unlockhash = UnlockHash()
+        self.unlockhash = unlockhash
 
     @property
     def type(self):
@@ -390,10 +428,13 @@ class ConditionUnlockHash(ConditionBaseClass):
     def unlockhash(self, value):
         if not value:
             self._unlockhash = UnlockHash()
-        else:
-            assert isinstance(value, UnlockHash)
-            assert value.type in (UnlockHashType.PUBLIC_KEY, UnlockHashType.NIL)
+            return
+        if isinstance(value, UnlockHash):
             self._unlockhash = value
+            return
+        if isinstance(value, bytes):
+            value = value.tohex()
+        self._unlockhash = UnlockHash.from_json(value)
 
     def from_json_data_object(self, data):
         self.unlockhash = UnlockHash.from_json(data['unlockhash'])

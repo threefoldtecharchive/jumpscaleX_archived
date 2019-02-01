@@ -1,5 +1,6 @@
 from Jumpscale import j
 from .DocSite import DocSite
+import gevent
 
 
 import imp
@@ -182,7 +183,7 @@ class MarkDownDocs(j.application.JSBaseClass):
         else:
             return None
 
-    def webserver(self):
+    def webserver(self, sync=False):
         url = "https://github.com/threefoldfoundation/lapis-wiki"
         server_path = j.clients.git.getContentPathFromURLorPath(url)
         url = "https://github.com/threefoldtech/jumpscale_weblibs"
@@ -191,6 +192,35 @@ class MarkDownDocs(j.application.JSBaseClass):
                          overwriteTarget=False)
         cmd = "cd {0} && moonc . && lapis server".format(server_path)
         j.tools.tmux.execute(cmd, reset=False)
+
+        if sync:
+            thread = gevent.spawn(self.syncer)
+            gevent.joinall([thread])
+
+    def syncer(self):
+        print("syncer started, will reload every 5 mins")
+        while True:
+            print("Reloading")
+            self.load_wikis()
+            gevent.sleep(1)
+
+    def load_wikis(self):
+        url = "https://github.com/threefoldfoundation/info_tokens/tree/master/docs"
+        tf_tokens = self.load(url, name="tokens")
+        tf_tokens.write()
+
+        url = "https://github.com/threefoldfoundation/info_foundation/tree/master/docs"
+        tf_foundation = self.load(url, name="foundation")
+        tf_foundation.write()
+
+        url = "https://github.com/threefoldfoundation/info_grid/tree/master/docs"
+        tf_grid = self.load(url, name="grid")
+        tf_grid.write()
+
+        url = "https://github.com/threefoldfoundation/info_tech/tree/master/docs"
+        tf_tech = self.load(url, name="tech")
+        tf_tech.write()
+
 
     def test(self):
         """

@@ -1,12 +1,18 @@
 
 from Jumpscale import j
 
+from functools import reduce
+
 from ed25519 import SigningKey
 
-from .types.PrimitiveTypes import Currency
+from .types.PrimitiveTypes import Currency, Hash
 from .types.CryptoTypes import PublicKey, UnlockHash
 from .types.errors import ExplorerNoContent
 from .types.errors import InsufficientFunds
+from .types.CompositionTypes import CoinOutput, CoinInput
+from .types.ConditionTypes import ConditionNil, ConditionUnlockHash, ConditionLockTime
+
+_DEFAULT_KEY_SCAN_COUNT = 3
 
 class TFChainWallet(j.application.JSBaseConfigClass):
     """
@@ -18,7 +24,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         seed = "" (S)
         key_count = 1 (I)
 
-        key_scan_count = 3 (I)
+        key_scan_count = -1 (I)
         """
 
     def _init(self):
@@ -35,21 +41,21 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # but will keep the unused keys in a seperate bucket, so we
         # can use them first
         self._unused_key_pairs = []
- 
-    def _data_trigger_new(self):
+
+        # cache balance so we only update when the block chain info changes
+        self._cached_balance = None
+
         # provide sane defaults for the schema-based wallet config
         if self.seed == "":
             self.seed = j.data.encryption.mnemonic.generate(strength=256)
         if self.key_count < 1:
             self.key_count = 1
-        if self.key_scan_count < 0:
-            self.key_scan_count = 0
 
         # generate keys
         keys_to_generate = self.key_count
         self.key_count = 0
         # generate the primary address
-        self._primary_address = str(self._key_pair_new().unlock_hash())
+        self._primary_address = str(self._key_pair_new().unlockhash)
         # generate the other addresses
         for _ in range(keys_to_generate-1):
             self._key_pair_new()
@@ -99,7 +105,11 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         """
         The balance "sheet" of the wallet.
         """
-        # TODO: support extra address key scanning, this call is the perfect opportunity to try that
+        # first get chain info, so we can check if the current balance is still fine
+        info = self._parent._parent.blockchain_info_get()
+        if self._cached_balance and self._cached_balance.chain_blockid == info.blockid:
+            return self._cached_balance
+
         addresses = self.addresses
         balance = WalletsBalance()
         # collect info for all personal addresses
@@ -107,7 +117,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         for address in addresses:
             try:
                 # collect the inputs/outputs linked to this address for all found transactions
-                result = self._parent._parent.unlockhash_get(address)
+                result = self._unlockhash_get(address)
                 for txn in result.transactions:
                     for ci in txn.coin_inputs:
                         if str(ci.parent_output.condition.unlockhash) == address:
@@ -122,11 +132,69 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                  # ignore this exception as it simply means
                  # the address has no activity yet on the chain
                 pass
+
+        # try some extra key scanning, to see if other keys have been used
+        # if we already have unsused keys, no scanning is done however
+        if len(self._unused_key_pairs) == 0 and self.key_scan_count != 0:
+            # use the defined count or the default one
+            count = self.key_scan_count
+            if count < 0:
+                count = _DEFAULT_KEY_SCAN_COUNT
+            # generate the key pairs, without integrating them already
+            # loop, and do this until now more are found:
+            while True:
+                pairs = []
+                used_pairs = []
+                for offset in range(count):
+                    pairs.append(self._key_pair_new(integrate=False, offset=offset))
+                for pair in pairs:
+                    address = str(pair.unlockhash)
+                    try:
+                        # collect the inputs/outputs linked to this address for all found transactions
+                        result = self._unlockhash_get(address)
+                        for txn in result.transactions:
+                            for ci in txn.coin_inputs:
+                                if str(ci.parent_output.condition.unlockhash) == address:
+                                    balance.output_add(ci.parent_output, confirmed=(not txn.unconfirmed), spent=True)
+                            for co in txn.coin_outputs:
+                                if str(co.condition.unlockhash) == address:
+                                    balance.output_add(co, confirmed=(not txn.unconfirmed), spent=False)
+                        # register this pair as a known index
+                        used_pairs.append(True)
+                        # collect all multisig addresses
+                        for address in result.multisig_addresses:
+                            multisig_addresses.append(str(address))
+                    except ExplorerNoContent:
+                        # ignore this exception as it simply means
+                        # the address has no activity yet on the chain
+                        used_pairs.append(False)
+                        pass
+                # check if any address was found
+                if not reduce(lambda a, b: a or b, used_pairs):
+                    break
+
+                last_index = 0
+                for idx, pair in enumerate(pairs):
+                    if used_pairs[idx]:
+                        last_index = idx
+                        self._key_pair_add(pair, add_count=False)
+                    else:
+                        self._unused_key_pairs.append(pair)
+                # remove the unused pairs that came after the last known index
+                self._unused_key_pairs = self._unused_key_pairs[:-count+last_index]
+                # update the new key count
+                self.key_count += last_index + 1
+
+                # if the last pair is not used, we can stop scanning
+                if not used_pairs[-1]:
+                    break
+                # otherwise continue
+
         # collect info for all multisig addresses
         for address in multisig_addresses:
             try:
                 # collect the inputs/outputs linked to this address for all found transactions
-                result = self._parent._parent.unlockhash_get(address)
+                result = self._unlockhash_get(address)
                 for txn in result.transactions:
                     for ci in txn.coin_inputs:
                         if str(ci.parent_output.condition.unlockhash) == address:
@@ -139,11 +207,78 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                  # the address has no activity yet on the chain
                 pass
         # add the blockchain info for lock context
-        info = self._parent._parent.blockchain_info_get()
         balance.chain_height = info.height
         balance.chain_time = info.timestamp
+        balance.chain_blockid = info.blockid
+        # cache the balance
+        self._cached_balance = balance
         # return the balance
         return balance
+
+    def coins_send(self, recipient, amount, lock=None, data=None):
+        """
+        Send the specified amount of coins to the given recipient,
+        optionally locked. Arbitrary data can be attached as well if desired.
+
+        The recipient is one of:
+            - None: recipient is the Free-For-All wallet
+            - str (or unlockhash): recipient is a personal wallet
+            - list: recipient is a MultiSig wallet where all owners (specified as a list of addresses) have to sign
+            - tuple (addresses, sigcount): recipient is a sigcount-of-addresscount MultiSig wallet
+        
+        @param recipient: see explanation above
+        @param amount: int that defines the amount of coins to be sent note that 1 TFT == 1000000000
+        @param lock: optional lock that can be used to lock the sent amount to a specific time or block height
+        @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
+        """
+        amount = Currency(value=amount)
+        if amount <= 0:
+            raise ValueError("no amount is defined to be sent")
+
+        # define recipient
+        recipient = j.clients.tfchain.types.conditions.from_recipient(recipient, lock_time=lock)
+
+        # fund amount
+        balance = self.balance
+        minerfee = self._miner_fee_get()
+        outputs, remainder = balance.fund(amount+minerfee)
+
+        # create transaction
+        txn = j.clients.tfchain.transactions.new()
+        # add main coin output
+        txn.coin_output_add(value=amount, condition=recipient)
+        # add refund coin output if needed
+        if remainder > 0:
+            txn.coin_output_add(value=remainder, condition=j.clients.tfchain.types.conditions.unlockhash_new(unlockhash=self.address))
+        # add the miner fee
+        txn.miner_fee_add(minerfee)
+
+        # add the coin inputs
+        txn.coin_inputs = self.coin_inputs_from(outputs)
+        
+        # if there is data to be added, add it as well
+        if data:
+            txn.data = data
+
+        # sign all inputs of the transaction
+        for idx, ci in enumerate(txn.coin_inputs):
+            address = str(ci.parent_output.condition.unlockhash)
+            keypair = self.key_pair_get(address)
+            signhash = txn.signature_hash_get(idx)
+            ci.fulfillment.signature, _ = keypair.sign(signhash)
+
+        # submit the transaction
+        txn.id = self._transaction_put(transaction=txn)
+
+        # update balance
+        for ci in txn.coin_inputs:
+            balance.output_add(ci.parent_output, confirmed=False, spent=True)
+        addresses = self.addresses
+        for co in txn.coin_outputs:
+            if str(co.condition.unlockhash) in addresses:
+                balance.output_add(co, confirmed=False, spent=False)
+        # and return the created/submitted transaction for optional user consumption
+        return txn
 
     def address_new(self):
         """
@@ -155,7 +290,37 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         The public key is used for verification of signatures,
         that were created with the matching private key.
         """
-        return str(self._key_pair_new().unlock_hash())
+        return str(self._key_pair_new().unlockhash)
+    
+    def coin_inputs_from(self, outputs):
+        """
+        Transform the given coin outputs, owned by this wallet,
+        into coin inputs.
+        """
+        inputs = []
+        for co in outputs:
+            assert isinstance(co, CoinOutput)
+            fulfillment = self.fulfillment_from(co.condition)
+            ci = CoinInput(parent_id=co.id, fulfillment=fulfillment)
+            ci.parent_output = co
+            inputs.append(ci)
+        return inputs
+
+    def fulfillment_from(self, condition):
+        """
+        Get a matching fulfillment from a given condition,
+        only possible if the condition is "owned" by this wallet.
+        """
+        if isinstance(condition, ConditionLockTime):
+            condition = condition.condition
+        if isinstance(condition, ConditionNil):
+            pair = self.key_pair_get(self.address)
+            return j.clients.tfchain.types.fulfillments.single_signature_new(pub_key=pair.public_key)
+        elif isinstance(condition, ConditionUnlockHash):
+            pair = self.key_pair_get(str(condition.unlockhash))
+            return j.clients.tfchain.types.fulfillments.single_signature_new(pub_key=pair.public_key)
+        else:
+            raise TypeError("given condition is invalid: {}", type(condition))
 
     def public_key_new(self):
         """
@@ -164,22 +329,33 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         """
         return self._key_pair_new().public_key
 
-    def key_pair_get(self, unlock_hash):
+    def key_pair_get(self, unlockhash):
         """
         Get the private/public key pair for the given unlock hash.
         If the unlock has is not owned by this wallet a KeyError exception is raised.
         """
-        if isinstance(unlock_hash, UnlockHash):
-            unlock_hash = str(unlock_hash)
+        if isinstance(unlockhash, UnlockHash):
+            unlockhash = str(unlockhash)
         else:
-            assert type(unlock_hash) is str
-        key = self._key_pairs.get(unlock_hash)
+            assert type(unlockhash) is str
+        key = self._key_pairs.get(unlockhash)
         if key is None:
-            raise KeyError("wallet does not own unlock hash {}".format(unlock_hash))
+            raise KeyError("wallet does not own unlock hash {}".format(unlockhash))
         return key
 
+    def _unlockhash_get(self, address):
+        return self._parent._parent.unlockhash_get(address)
 
-    def _key_pair_new(self, integrate=True):
+    def _transaction_put(self, transaction):
+        return self._parent._parent.transaction_put(transaction)
+        
+    def _miner_fee_get(self):
+        """
+        The (minimum) miner fee as defined by the TFChain client.
+        """
+        return self._parent._parent.minimum_minerfee
+
+    def _key_pair_new(self, integrate=True, offset=0):
         """
         Create a new key pair,
         and integrate it by default as well into the wallet's key pair dictionary.
@@ -195,7 +371,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # otherwise create a new one
         e = j.data.rivine.encoder_sia_get()
         e.add_array(self.seed_entropy)
-        e.add(self.key_count)
+        e.add(self.key_count+offset)
         seed_hash = bytes.fromhex(j.data.hash.blake2_string(e.data))
         private_key = SigningKey(seed_hash)
         public_key = private_key.get_verifying_key()
@@ -207,11 +383,11 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # if we wish to integrate (mostly when we're not scanning),
         # we also add it to our wallets known key pairs
         if integrate:
-            self._key_pair_add(key_pair)
+            self._key_pair_add(key_pair, add_count=True, offset=offset)
 
         return key_pair
 
-    def _key_pair_add(self, key_pair, add_count=True):
+    def _key_pair_add(self, key_pair, add_count=True, offset=0):
         """
         A private utility function that is used by default
         by the _key_pair_new wallet method to integrate a newly created key pair
@@ -221,11 +397,16 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         of the balance of a wallet. When we do, we want to create new key pairs,
         but only integrate them, if indeed we found the key (or a key after it) was used.
         """
-        addr = str(key_pair.unlock_hash())
+        addr = str(key_pair.unlockhash)
         assert addr not in self._key_pairs
         self._key_pairs[addr] = key_pair
         if add_count:
-            self.key_count += 1
+            self.key_count += 1+offset
+        # clear cache, as it will no longer be up to date
+        self._clear_cache()
+
+    def _clear_cache(self):
+        self._cached_balance = None
 
 
 class SpendableKey():
@@ -248,8 +429,9 @@ class SpendableKey():
     def private_key(self):
         return self._private_key
 
-    def unlock_hash(self):
-        return self._public_key.unlock_hash()
+    @property
+    def unlockhash(self):
+        return self._public_key.unlockhash()
 
     def sign(self, hash):
         """
@@ -271,6 +453,28 @@ class WalletBalance(object):
         # balance chain context
         self._chain_time = 0
         self._chain_height = 0
+        self._chain_blockid = Hash()
+
+    @property
+    def chain_blockid(self):
+        """
+        Blockchain block ID, as defined by the last known block.
+        """
+        return self._chain_blockid
+    @chain_blockid.setter
+    def chain_blockid(self, value):
+        """
+        Set the blockchain block ID, such that applications that which to cache this
+        balance object could ensure that the last block is still the same as the
+        last known block known by this balance instance.
+        """
+        if not value:
+            self._chain_blockid = Hash()
+            return
+        if isinstance(value, Hash):
+            self._chain_blockid.value = value.value
+        else:
+            self._chain_blockid.value = value
 
     @property
     def chain_time(self):
@@ -343,7 +547,7 @@ class WalletBalance(object):
         """
         Total available coins.
         """
-        return sum([co.value for co in self.available_outputs])
+        return sum([co.value for co in self.available_outputs]) or Currency()
 
     @property
     def locked(self):
@@ -352,9 +556,9 @@ class WalletBalance(object):
         """
         if self.chain_time > 0 and self.chain_height > 0:
             return sum([co.value for co in self._outputs.values()
-                if co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)])
+                if co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)]) or Currency()
         else:
-            return 0 # impossible to know for sure without a complete context
+            return Currency(value=0) # impossible to know for sure without a complete context
 
     @property
     def unconfirmed(self):
@@ -363,7 +567,7 @@ class WalletBalance(object):
         """
         if self.chain_time > 0 and self.chain_height > 0:
             return sum([co.value for co in self._outputs_unconfirmed.values()
-                if not co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)])
+                if not co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)]) or Currency()
         else:
             return sum([co.value for co in self._outputs_unconfirmed.values()])
 
@@ -374,9 +578,9 @@ class WalletBalance(object):
         """
         if self.chain_time > 0 and self.chain_height > 0:
             return sum([co.value for co in self._outputs_unconfirmed.values()
-                if co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)])
+                if co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)]) or Currency()
         else:
-            return 0 # impossible to know for sure without a complete context
+            return Currency(value=0) # impossible to know for sure without a complete context
 
     def fund(self, amount):
         """
@@ -384,56 +588,60 @@ class WalletBalance(object):
         """
         available_outputs = self.available_outputs
         available_outputs.sort(key=lambda co: co.value)
-        collected = 0
+        collected = Currency(value=0)
         outputs = []
         for co in available_outputs:
-            ivalue = int(co.value)
-            if ivalue >= amount:
+            if co.value >= amount:
                 outputs = [co]
-                collected = ivalue
+                collected = co.value
                 break
-            collected += ivalue
+            collected += co.value
             outputs.append(co)
             if len(outputs) > 99:
                 # to not reach the input limit
-                collected -= int(outputs.pop(0).value)
+                collected -= outputs.pop(0).value
             if collected >= amount:
                 break
         if collected < amount:
             raise InsufficientFunds("not enough funds available in the wallet to fund the requested amount")
-        return (outputs, Currency(value=collected-amount))
+        return (outputs, collected-amount)
 
     def output_add(self, output, confirmed=True, spent=False):
         """
         Add an output to the Wallet's balance.
         """
         if confirmed: # confirmed outputs
-            if output.id in self._outputs_spent:
-                return # nothing to do, already registered as spent
             if spent:
                 self._outputs_spent[output.id] = output
-                if output.id in self._outputs: # delete from available outputs if prior registered
-                    del self._outputs[output.id]
-            else:
+                # delete from other output lists if prior registered
+                self._outputs.pop(output.id, None)
+                self._outputs_unconfirmed.pop(output.id, None)
+                self._outputs_unconfirmed_spent.pop(output.id, None)
+            elif output.id not in self._outputs_spent and output.id not in self._outputs_unconfirmed_spent:
                 self._outputs[output.id] = output
+                # delete from other output lists if prior registered
+                self._outputs_unconfirmed.pop(output.id, None)
         else: # unconfirmed outputs
-            if output.id in self._outputs_unconfirmed_spent:
-                return # nothing to do, already registered as spent
             if spent:
                 self._outputs_unconfirmed_spent[output.id] = output
-                if output.id in self._outputs_unconfirmed: # delete from unconfirmed outputs if prior registered
-                    del self._outputs_unconfirmed[output.id]
-            else:
+                # delete from other output lists if prior registered
+                self._outputs_unconfirmed.pop(output.id, None)
+                self._outputs.pop(output.id, None)
+                self._outputs_spent.pop(output.id, None)
+            elif output.id not in self._outputs_spent and output.id not in self._outputs_unconfirmed_spent:
                 self._outputs_unconfirmed[output.id] = output
 
     def _human_readable_balance(self):
         # report confirmed coins
-        result = "{} TFT available and {} TFT locked".format(self.available, self.locked)
+        result = "{} available and {} locked".format(self.available.totft(with_unit=True), self.locked.totft(with_unit=True))
         # optionally report unconfirmed coins
         unconfirmed = self.unconfirmed
         unconfirmed_locked = self.unconfirmed_locked
         if unconfirmed > 0 or unconfirmed_locked > 0:
-            result += "\nUnconfirmed: {} TFT available and {} TFT locked".format(unconfirmed, unconfirmed_locked)
+            result += "\nUnconfirmed: {} available {} locked".format(unconfirmed.totft(with_unit=True), unconfirmed_locked.totft(with_unit=True))
+        unconfirmed_spent = Currency(value=sum([co.value for co in self._outputs_unconfirmed_spent.values()]))
+        if unconfirmed_spent > 0:
+            result += "\nUnconfirmed Balance Deduction: -{}".format(unconfirmed_spent.totft(with_unit=True))
         # return report
         return result
 

@@ -125,7 +125,7 @@ class TransactionBaseClass(ABC, j.application.JSBaseClass):
     
     @property
     def id(self):
-        return self._id
+        return str(self._id)
     @id.setter
     def id(self, id):
         if type(id) is type(self._id):
@@ -163,7 +163,7 @@ class TransactionBaseClass(ABC, j.application.JSBaseClass):
         Optional binary data attached to this Transaction,
         with a max length of 83 bytes.
         """
-        return bytearray()
+        return bytes()
     
     @abstractmethod
     def _signature_hash_input_get(self, *extra_objects):
@@ -178,7 +178,7 @@ class TransactionBaseClass(ABC, j.application.JSBaseClass):
         which are used to proof the authenticity of the transaction.
         """
         input = self._signature_hash_input_get(*extra_objects)
-        return bytearray.fromhex(j.data.hash.blake2_string(input))
+        return bytes.fromhex(j.data.hash.blake2_string(input))
 
     @abstractmethod
     def _from_json_data_object(self, data):
@@ -283,13 +283,13 @@ class TransactionV1(TransactionBaseClass):
         used as funding for coin outputs, fees and any other kind of coin output.
         """
         return self._coin_inputs
-
-    def coin_input_add(self, parent_id, fulfillment):
-        self._coin_inputs.append(CoinInput(parent_id=parent_id, fulfillment=fulfillment))
-
-    def coin_output_add(self, value, condition):
-        self._coin_outputs.append(CoinOutput(value=value, condition=condition))
-
+    @coin_inputs.setter
+    def coin_inputs(self, value):
+        self._coin_inputs = []
+        if not value:
+            return
+        for ci in value:
+            self.coin_input_add(ci.parent_id, ci.fulfillment, parent_output=ci.parent_output)
 
     @property
     def coin_outputs(self):
@@ -298,6 +298,26 @@ class TransactionV1(TransactionBaseClass):
         funded by the Transaction's coin inputs.
         """
         return self._coin_outputs
+    @coin_outputs.setter
+    def coin_outputs(self, value):
+        self._coin_outputs = []
+        if not value:
+            return
+        for co in value:
+            self.coin_output_add(co.value, co.condition, id=co.id)
+
+    def coin_input_add(self, parent_id, fulfillment, parent_output=None):
+        ci = CoinInput(parent_id=parent_id, fulfillment=fulfillment)
+        ci.parent_output = parent_output
+        self._coin_inputs.append(ci)
+
+    def coin_output_add(self, value, condition, id=None):
+        co = CoinOutput(value=value, condition=condition)
+        co.id = id
+        self._coin_outputs.append(co)
+
+    def miner_fee_add(self, value):
+        self._miner_fees.append(Currency(value=value))
 
     @property
     def miner_fees(self):
@@ -321,6 +341,9 @@ class TransactionV1(TransactionBaseClass):
             return
         if isinstance(value, RawData):
             value = value.value
+        elif isinstance(value, str):
+            value = value.encode('utf-8')
+        assert len(value) <= 83
         self._data.value = value
     
     def _signature_hash_input_get(self, *extra_objects):
@@ -368,7 +391,7 @@ class TransactionV1(TransactionBaseClass):
 
         # encode coin inputs
         for ci in self.coin_inputs:
-            e.add_all(ci.parent_id, ci.fulfillment.public_key.unlock_hash())
+            e.add_all(ci.parent_id, ci.fulfillment.public_key.unlockhash())
 
         # encode coin outputs
         e.add(len(self.coin_outputs))
@@ -477,6 +500,9 @@ class TransactionV128(TransactionBaseClass):
         assert isinstance(value, FulfillmentBaseClass)
         self._mint_fulfillment = value
 
+    def miner_fee_add(self, value):
+        self._miner_fees.append(Currency(value=value))
+
     def _signature_hash_input_get(self, *extra_objects):
         e = j.data.rivine.encoder_sia_get()
 
@@ -567,6 +593,21 @@ class TransactionV129(TransactionBaseClass):
         funded by the Transaction's coin inputs.
         """
         return self._coin_outputs
+    @coin_outputs.setter
+    def coin_outputs(self, value):
+        self._coin_outputs = []
+        if not value:
+            return
+        for co in value:
+            self.coin_output_add(co.value, co.condition, id=co.id)
+
+    def coin_output_add(self, value, condition, id=None):
+        co = CoinOutput(value=value, condition=condition)
+        co.id = id
+        self._coin_outputs.append(co)
+
+    def miner_fee_add(self, value):
+        self._miner_fees.append(Currency(value=value))
 
     @property
     def mint_fulfillment(self):
@@ -581,9 +622,6 @@ class TransactionV129(TransactionBaseClass):
             return
         assert isinstance(value, FulfillmentBaseClass)
         self._mint_fulfillment = value
-    
-    def coin_output_add(self, value, condition):
-        self._coin_outputs.append(CoinOutput(value=value, condition=condition))
 
     def _signature_hash_input_get(self, *extra_objects):
         e = j.data.rivine.encoder_sia_get()

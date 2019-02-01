@@ -3,7 +3,7 @@ from Jumpscale import j
 from .SSHKey import SSHKey
 
 
-class SSHKeys(j.application.JSFactoryBaseClass):
+class SSHKeys(j.application.JSBaseConfigsClass):
 
     __jslocation__ = "j.clients.sshkey"
     _CHILDCLASS = SSHKey

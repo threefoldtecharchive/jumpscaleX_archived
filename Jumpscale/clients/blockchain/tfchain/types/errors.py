@@ -19,6 +19,11 @@ class ExplorerNoContent(Exception):
     ExplorerNoContent error
     """
 
+class ExplorerCallError(Exception):
+    """
+    ExplorerCallError error
+    """
+
 class InsufficientFunds(Exception):
     """
     InsufficientFunds error

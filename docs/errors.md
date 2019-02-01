@@ -503,6 +503,17 @@ ERROR: Cannot find doc with name:jsbase (nr docs found:0)
 
 ```
 ```
+## ERROR: sandbox_python_zeroos_container
+
+- in doc: doc:sandbox_python_zeroos_container:/sandbox/code/github/threefoldtech/jumpscaleX/docs/howto/sandbox_python_zeroos_container.md
+
+**ERROR:** problem with link:![Screenshot](mergedflist)
+found unsupported image file: extension:
+
+
+
+```
+```
 ## ERROR: install
 
 - in doc: doc:install:/sandbox/code/github/threefoldtech/jumpscaleX/docs/Installation/install.md

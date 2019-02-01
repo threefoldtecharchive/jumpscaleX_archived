@@ -10,7 +10,7 @@ from pprint import pprint as print
 
 # TODO: (phase 2): export/import a full repo (with issues, milestones & labels) (per repo)
 
-JSConfigBase = j.application.JSFactoryBaseClass
+JSConfigBase = j.application.JSBaseConfigsClass
 JSBASE = j.application.JSBaseClass
 
 

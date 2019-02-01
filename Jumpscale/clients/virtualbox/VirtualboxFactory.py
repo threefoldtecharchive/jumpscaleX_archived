@@ -4,7 +4,7 @@ from Jumpscale import j
 
 from .VirtualboxClient import VirtualboxClient
 
-JSBASE = j.application.JSFactoryBaseClass
+JSBASE = j.application.JSBaseConfigsClass
 
 
 class VirtualboxFactory(j.application.JSBaseClass):
