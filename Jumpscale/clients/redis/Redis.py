@@ -52,11 +52,13 @@ class RedisDict(dict):
 class Redis(redis.Redis):
     hgetalldict = redis.Redis.hgetall
     dbtype = 'RDB'
+    _storedprocedures_to_sha = {}
+    _redis-cli_path = None
 
-    def getDict(self, key):
+    def dict_get(self, key):
         return RedisDict(self, key)
 
-    def getQueue(self, name, namespace="queues", newconnection=False):
+    def queue_get(self, name, namespace="queues", newconnection=False):
         '''get redis queue
 
         :param name: name of the queue
@@ -74,19 +76,86 @@ class Redis(redis.Redis):
             client = redis.Redis(**self.connection_pool.connection_kwargs)
             return RedisQueue(client, name, namespace=namespace)
 
-    def createStoredProcedure(self, path):
+    def storedprocedure_register(self, name, nrkeys, path):
         '''create stored procedure from path
 
         :param path: the path where the stored procedure exist
         :type path: str
         :raises Exception: when we can not find the stored procedure on the path
-        '''
-        if not os.path.exists(path):
-            path0 = os.path.join(os.getcwd(), path)
-        if not os.path.exists(path0, followlinks=True):
-            raise Exception("cannot find stored procedure on path:%s" % path)
-        lua = ''
-        with open(path) as f:
-            lua = f.read()
 
-        return self.register_script(lua)
+        will return the sha
+
+        to use the stored procedure do
+
+        redisclient.evalsha(sha,3,"a","b","c")  3 is for nr of keys, then the args
+
+        the stored procedure can be found in hset storedprocedures:$name has inside a json with
+
+        is json encoded dict
+         - script: ...
+         - sha: ...
+         - nrkeys: ...
+
+        there is also storedprocedures_sha -> sha without having to decode json
+
+        '''
+        lua = j.sal.fs.readFile(path)
+
+        script =  self.register_script(lua)
+
+        sha = script.sha.encode()
+
+        dd = {}
+        dd["sha"] = sha
+        dd["script"] = lua
+        dd["nrkeys"] = nrkeys
+        dd["path"] = path
+
+        data =  j.data.serializers.json.dumps(dd)
+
+        self.hset("storedprocedures",name,data)
+        self.hset("storedprocedures_sha",name,sha)
+
+        self.__class__._storedprocedures_to_sha = {}
+
+        return dd
+
+    def storedprocedure_delete(self, name):
+        self.hdel("storedprocedures",name)
+        #TODO: unload script
+        j.shell()
+
+
+
+    @property
+    def _redis_cli_path(self):
+        if not self._redis-cli_path:
+            cmd="redis-cli_"
+
+    def redis_cmd_execute(self,command,*args):
+        rediscmd = 
+
+    def _sp_data(self,name):
+        if name not in self.__class__._storedprocedures_to_sha:
+            data = self.hget("storedprocedures",name)
+            data2 = j.data.serializers.json.loads(data)
+            self.__class__._storedprocedures_to_sha[name] = data2
+        return self.__class__._storedprocedures_to_sha[name]
+
+    def storedprocedure_execute(self,name,*args):
+        """
+
+        :param name:
+        :param args:
+        :return:
+        """
+
+        data = self._sp_data(name)
+        return self.evalsha(data["sha"],data["nrkeys"],*args)
+
+
+
+    def storedprocedure_debug(self,name,*args):
+        data = self._sp_data(name)
+        j.shell()
+

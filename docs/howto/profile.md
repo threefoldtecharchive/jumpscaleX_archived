@@ -1,5 +1,6 @@
 
 # graphical
+
 ## OSX preparation 
 
 ```bash

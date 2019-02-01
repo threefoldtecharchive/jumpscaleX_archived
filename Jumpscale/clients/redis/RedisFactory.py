@@ -331,3 +331,11 @@ class RedisFactory(j.application.JSBaseClass):
             time.sleep(0.1)
         else:
             raise j.exceptions.Timeout("Couldn't start redis server")
+
+    def test(self, name=""):
+        """
+        it's run all tests
+        js_shell 'j.clients.redis.test()'
+
+        """
+        self._test_run(name=name)
