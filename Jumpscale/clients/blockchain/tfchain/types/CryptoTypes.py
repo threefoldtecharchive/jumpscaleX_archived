@@ -70,7 +70,7 @@ class PublicKey(BaseDataTypeClass):
 
     @property
     def hash(self):
-        return self.hash
+        return self._hash
     @hash.setter
     def hash(self, value):
         self._hash.value = value

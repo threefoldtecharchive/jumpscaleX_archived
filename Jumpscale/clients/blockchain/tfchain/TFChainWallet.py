@@ -7,8 +7,7 @@ from ed25519 import SigningKey
 
 from .types.PrimitiveTypes import Currency, Hash
 from .types.CryptoTypes import PublicKey, UnlockHash
-from .types.errors import ExplorerNoContent
-from .types.errors import InsufficientFunds
+from .types.errors import ExplorerNoContent, InsufficientFunds, ExplorerCallError
 from .types.CompositionTypes import CoinOutput, CoinInput
 from .types.ConditionTypes import ConditionNil, ConditionUnlockHash, ConditionLockTime
 
@@ -274,10 +273,10 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         for ci in txn.coin_inputs:
             balance.output_add(ci.parent_output, confirmed=False, spent=True)
         addresses = self.addresses
-        for co in txn.coin_outputs:
-            # TODO: have to support coin output ID manually here,
-            #       as we cannot rely on the explorer to do it for us at this point
+        for idx, co in enumerate(txn.coin_outputs):
             if str(co.condition.unlockhash) in addresses:
+                # add the id to the coin_output, so we can track it has been spent
+                co.id = txn.coin_outputid_new(idx)
                 balance.output_add(co, confirmed=False, spent=False)
         # and return the created/submitted transaction for optional user consumption
         return txn
@@ -618,7 +617,6 @@ class WalletBalance(object):
         outputs_available = self.outputs_unconfirmed_available
         outputs_available.sort(key=lambda co: co.value, reverse=True)
         for co in outputs_available:
-            j.shell()
             if co.value >= amount:
                 outputs = [co]
                 collected = co.value
@@ -650,14 +648,13 @@ class WalletBalance(object):
                 self._outputs[output.id] = output
                 # delete from other output lists if prior registered
                 self._outputs_unconfirmed.pop(output.id, None)
-        else: # unconfirmed outputs
+        elif output.id not in self._outputs_spent: # unconfirmed outputs
             if spent:
                 self._outputs_unconfirmed_spent[output.id] = output
                 # delete from other output lists if prior registered
                 self._outputs_unconfirmed.pop(output.id, None)
                 self._outputs.pop(output.id, None)
-                self._outputs_spent.pop(output.id, None)
-            elif output.id not in self._outputs_spent and output.id not in self._outputs_unconfirmed_spent:
+            elif output.id not in self._outputs_unconfirmed_spent:
                 self._outputs_unconfirmed[output.id] = output
 
     def _human_readable_balance(self):

@@ -39,6 +39,9 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
     def data(self):
         return self._data
 
+    def reset(self):
+        self._data = bytearray()
+
     def add_int(self, value):
         """
         Add an encoded integer as 8 bytes, using little-endianness,

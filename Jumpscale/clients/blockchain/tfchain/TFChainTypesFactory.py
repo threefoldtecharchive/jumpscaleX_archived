@@ -1,6 +1,6 @@
 from Jumpscale import j
 
-from .types.PrimitiveTypes import BinaryData, RawData, Hash, Currency
+from .types.PrimitiveTypes import BinaryData, RawData, Hash, Currency, Blockstake
 from .types.FulfillmentTypes import FulfillmentFactory
 from .types.ConditionTypes import ConditionFactory
 from .types.CryptoTypes import PublicKey, PublicKeySpecifier
@@ -33,6 +33,14 @@ class TFChainTypesFactory(j.application.JSBaseClass):
         @param value: str or int that defines the value to be set, 0 by default
         """
         return Currency(value=value)
+
+    def blockstake_new(self, value=0):
+        """
+        Create a new block stake value.
+
+        @param value: str or int that defines the value to be set, 0 by default
+        """
+        return Blockstake(value=value)
 
     def hash_new(self, value=None):
         """
@@ -114,3 +122,9 @@ class TFChainTypesFactory(j.application.JSBaseClass):
         # raw data is pretty much binary data, except that it is
         # base64 encoded/decoded for str/json purposes
         assert str(self.raw_data_new(b'data')) == 'ZGF0YQ=='
+
+        # block stake values can be created from both
+        # int and str values, but are never allowed to be negative
+        assert str(self.blockstake_new()) == '0'
+        assert str(self.blockstake_new(value=123)) == '123'
+        assert str(self.blockstake_new(value='1')) == '1'
