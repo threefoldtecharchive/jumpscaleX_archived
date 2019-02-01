@@ -7,6 +7,7 @@ from .TFChainWalletFactory import TFChainWalletFactory
 from .types.ConditionTypes import UnlockHash, UnlockHashType
 from .types.PrimitiveTypes import Hash, Currency
 from .types.CompositionTypes import CoinOutput
+from .TFChainTransactionFactory import TransactionBaseClass
 
 _EXPLORER_NODES = {
     "STD": [
@@ -126,6 +127,18 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         resp = resp['transaction']
         assert resp['id'] == txid
         return self._transaction_from_explorer_transaction(resp)
+
+    def transaction_put(self, transaction):
+        """
+        Submit a transaction to an available explorer Node.
+
+        @param transaction: the transaction to push to the client transaction pool
+        """
+        if isinstance(transaction, TransactionBaseClass):
+            transaction = transaction.json()
+        resp = self._explorer_post(endpoint="/transactionpool/transactions", data=transaction)
+        resp = j.data.serializers.json.loads(resp)
+        return str(Hash(value=resp.get('transactionid')))
     
     def unlockhash_get(self, unlockhash):
         """
@@ -177,9 +190,16 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
     def _explorer_get(self, endpoint):
         """
         Private utility method that gets the data on the given endpoint,
-        put in a method so it can be overriden for Testing purposes.
+        but in a method so it can be overriden for Testing purposes.
         """
         return j.clients.tfchain.explorer.get(addresses=self.explorer_addresses, endpoint=endpoint)
+
+    def _explorer_post(self, endpoint, data):
+        """
+        Private utility method that sets the data on the given endpoint,
+        but in a method so it can be overriden for Testing purposes.
+        """
+        return j.clients.tfchain.explorer.post(addresses=self.explorer_addresses, endpoint=endpoint, data=data)
 
     def _normalize_unlockhash(self, unlockhash):
         if isinstance(unlockhash, UnlockHash):
@@ -217,7 +237,7 @@ class ExplorerBlockchainInfo():
         """
         ID of last known block.
         """
-        return self.last_block.id
+        return str(self.last_block.id)
     
     @property
     def height(self):
@@ -235,7 +255,7 @@ class ExplorerBlockchainInfo():
 
     def __repr__(self):
         return "Block {} at height {}, published on {}, is the last known block.".format(
-            str(self.blockid), self.height, j.data.time.epoch2HRDateTime(self.timestamp))
+            self.blockid, self.height, j.data.time.epoch2HRDateTime(self.timestamp))
 
 
 class ExplorerUnlockhashResult():
@@ -290,14 +310,14 @@ class ExplorerBlock():
         """
         Identifier of this block.
         """
-        return self._id
+        return str(self._id)
 
     @property
     def parentid(self):
         """
         Identifier the parent of this block.
         """
-        return self._parentid
+        return str(self._parentid)
 
     @property
     def height(self):
@@ -346,7 +366,7 @@ class ExplorerMinerPayout():
         """
         Identifier of this miner payout.
         """
-        return self._id
+        return str(self._id)
 
     @property
     def value(self):
@@ -360,7 +380,7 @@ class ExplorerMinerPayout():
         """
         Unlock hash that received this miner payout's value.
         """
-        return self._unlockhash
+        return str(self._unlockhash)
     
     def __str__(self):
         return str(self.id)

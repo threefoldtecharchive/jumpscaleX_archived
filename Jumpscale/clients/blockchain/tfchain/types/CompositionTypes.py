@@ -11,12 +11,12 @@ class CoinInput(BaseDataTypeClass):
     CoinIput class
     """
     def __init__(self, parent_id=None, fulfillment=None, parent_output=None):
-        self._parent_id = Hash()
+        self._parent_id = None
         self.parent_id = parent_id
-        self._fulfillment = FulfillmentSingleSignature()
+        self._fulfillment = None
         self.fulfillment = fulfillment
         # property that can be set if known, but which is not part of the actual CoinInput
-        self._parent_output = CoinOutput()
+        self._parent_output = None
         self.parent_output = parent_output
 
     @classmethod
@@ -31,12 +31,9 @@ class CoinInput(BaseDataTypeClass):
     @parent_id.setter
     def parent_id(self, value):
         if isinstance(value, Hash):
-            self._parent_id.value = value.value
+            self._parent_id = Hash(value=value.value)
             return
-        if not value:
-            self._parent_id = Hash()
-        else:
-            self._parent_id.value = value
+        self._parent_id = Hash(value=value)
     
     @property
     def fulfillment(self):
@@ -78,12 +75,12 @@ class CoinOutput(BaseDataTypeClass):
     CoinOutput calss
     """
     def __init__(self, value=None, condition=None, id=None):
-        self._value = Currency()
+        self._value = None
         self.value = value
-        self._condition = ConditionNil()
+        self._condition = None
         self.condition = condition
         # property that can be set if known, but which is not part of the actual CoinOutput
-        self._id = Hash()
+        self._id = None
         self.id = id
         
 
@@ -101,10 +98,7 @@ class CoinOutput(BaseDataTypeClass):
         if isinstance(value, Currency):
             self._value = value
             return
-        if not value:
-            self._value = Currency()
-        else:
-            self._value.value = value
+        self._value = Currency(value=value)
     
     @property
     def condition(self):
@@ -123,12 +117,9 @@ class CoinOutput(BaseDataTypeClass):
     @id.setter
     def id(self, value):
         if isinstance(value, Hash):
-            self._id.value = value.value
+            self._id = Hash(value=value.value)
             return
-        if not value:
-            self._id = Hash()
-        else:
-            self._id.value = value
+        self._id = Hash(value=value)
 
 
     def json(self):

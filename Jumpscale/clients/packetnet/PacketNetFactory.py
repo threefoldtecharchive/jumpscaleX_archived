@@ -1,7 +1,7 @@
 from Jumpscale import j
 from .PacketNet import PacketNet
 
-JSConfigBaseFactory = j.application.JSFactoryBaseClass
+JSConfigBaseFactory = j.application.JSBaseConfigsClass
 
 
 class PacketNetFactory(JSConfigBaseFactory):

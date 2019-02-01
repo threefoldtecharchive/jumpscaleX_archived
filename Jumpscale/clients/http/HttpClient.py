@@ -269,6 +269,14 @@ class HttpClient(j.application.JSBaseClass):
         c = self.getConnection()
         return c.get(url, headers=headers)
 
+    def post(self, url, data=None, headers=None):
+        c = self.getConnection()
+        return c.post(url, data=data, headers=headers)
+
+    def put(self, url, data=None, headers=None):
+        c = self.getConnection()
+        return c.put(url, data=data, headers=headers)
+
     def test(self):
         """
         js_shell 'j.clients.http.test()'

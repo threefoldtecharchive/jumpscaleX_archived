@@ -1,5 +1,5 @@
 from Jumpscale import j
-
+from urllib.parse import urlparse
 from .Client import Client
 
 
@@ -11,7 +11,6 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
 
     def _init(self):
         self.connections = {}
-
 
     # def list(self, prefix=''):
     #     return j.clients.zos.list(prefix=prefix)
@@ -42,9 +41,9 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
         resp.raise_for_status()
         u = urlparse(node.robot_address)
         node = self.get(node_id)
-        if node.client.host != u.hostname:
-            node.client.host = u.hostname
-            node.client.save()
+        if node.host != u.hostname:
+            node.host = u.hostname
+            node.save()
         return self.get(node_id)
 
     def zero_node_ovh_install(self, OVHHostName, OVHClient, zerotierNetworkID, zerotierClient):
@@ -87,8 +86,9 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
 
         return ip_pub, ipaddr_priv
 
-    def zero_node_packetnet_install(self, packetnetClient, zerotierClient, project_name,
-                                    plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.grid.tf/ipxe/master'):
+    def zero_node_packetnet_install(
+            self, packetnetClient, zerotierClient, project_name, plan_type, location, server_name, zerotierNetworkID,
+            ipxe_base='https://bootstrap.grid.tf/ipxe/master'):
         """
         packetnetClient = j.clients.packetnet.get('TOKEN')
         zerotierClient = j.clients.zerotier.get(name='main', data={'token': 'TOKEN'})
@@ -148,9 +148,8 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
 
         return ip_pub, ipaddr_priv
 
-
     def get_from_itsyouonline(self, name="default", iyo_instance="default",
-                              iyo_organization=None, host="localhost", port=6379, reset=False,save=True):
+                              iyo_organization=None, host="localhost", port=6379, reset=False, save=True):
         """
 
         :param name: name for this instance
@@ -166,10 +165,11 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
         if iyo_organization is None:
             raise RuntimeError("need to specify name of organization.")
 
-        jwt_name = j.core.text.strip_to_ascii_dense("zos_%s"%iyo_organization)
+        jwt_name = j.core.text.strip_to_ascii_dense("zos_%s" % iyo_organization)
 
         iyo = j.clients.itsyouonline.get(name=iyo_instance)
-        jwt = iyo.jwt_get(name=jwt_name,scope="user:memberof:%s"%iyo_organization,reset=reset)  # there should be enough protection in here to refresh
+        jwt = iyo.jwt_get(name=jwt_name, scope="user:memberof:%s" % iyo_organization,
+                          reset=reset)  # there should be enough protection in here to refresh
 
         cl = self.get(name=name, host=host, port=port, password=jwt.jwt, ssl=True)
         print(cl)
@@ -184,10 +184,8 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
         :return:
         """
 
-
-        cl = j.clients.zos.get_from_itsyouonline(name="default", host="10.102.90.219", port=6379,iyo_organization="tf-production",reset=True)
-
-        j.shell()
+        cl = j.clients.zos.get_from_itsyouonline(
+            name="default", host="10.102.90.219", port=6379, iyo_organization="tf-production", reset=True)
 
         # use j.clients.zoscmd... to start a local zos
         # connect client to zos do quite some tests

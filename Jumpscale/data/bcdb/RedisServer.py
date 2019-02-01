@@ -11,8 +11,8 @@ JSBASE = j.application.JSBaseClass
 
 
 class RedisServer(j.application.JSBaseClass):
-    def __init__(self,bcdb, addr="localhost",port=6380,secret="123456"):
-        JSBASE.__init__(self)
+
+    def _init(self,bcdb=None, addr="localhost",port=6380,secret="123456"):
         self.bcdb = bcdb
         self._sig_handler = []
         # self._logger_enable()

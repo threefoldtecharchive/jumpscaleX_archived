@@ -3,7 +3,7 @@ from Jumpscale import j
 from .RedisConfig import RedisConfig
 
 
-JSConfigBase = j.application.JSFactoryBaseClass
+JSConfigBase = j.application.JSBaseConfigsClass
 
 
 class RedisConfigFactory(JSConfigBase):
