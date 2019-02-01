@@ -18,10 +18,7 @@ class World(j.application.JSFactoryBaseClass):
 
     _CHILDCLASSES = [Cars,Ships]
 
-    def _init(self):
-        #this object properties to be set during initialization
-        self.cars = Cars()
-        self.ships = Ships()
+
 ```
 
 The `_CHILDCLASSES` are one or more config(s) classes, always defined as a (Python) List.
