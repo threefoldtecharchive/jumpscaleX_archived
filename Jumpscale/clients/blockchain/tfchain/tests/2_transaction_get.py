@@ -25,7 +25,7 @@ def main(self):
     assert str(txn.id) == '96df1e34533ffcd42ee1db995e165538edd275ba0c065ef9293ead84ff923eec'
     assert txn.version == 1 # in reality it is 0, but the JSX tfchain client converts v0 transactions automatically to v1 transactions
     assert len(txn.coin_inputs) == 1
-    assert str(txn.coin_inputs[0].parent_id) == 'c1df239aba64ca0c6a241ddf18f3dd18b75e2c650874dd4c8c7dbbb56bd73683'
+    assert str(txn.coin_inputs[0].parentid) == 'c1df239aba64ca0c6a241ddf18f3dd18b75e2c650874dd4c8c7dbbb56bd73683'
     assert len(txn.coin_outputs) == 2
     assert str(txn.coin_outputs[0].value) == '1000000000000000'
     assert str(txn.coin_outputs[1].condition.unlockhash) == '0175c11c8124e325cdba4f6843e917ba90519e9580adde5b10de5a7cabcc3251292194c5a0e6d2'

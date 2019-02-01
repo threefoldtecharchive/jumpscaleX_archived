@@ -275,6 +275,8 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             balance.output_add(ci.parent_output, confirmed=False, spent=True)
         addresses = self.addresses
         for co in txn.coin_outputs:
+            # TODO: have to support coin output ID manually here,
+            #       as we cannot rely on the explorer to do it for us at this point
             if str(co.condition.unlockhash) in addresses:
                 balance.output_add(co, confirmed=False, spent=False)
         # and return the created/submitted transaction for optional user consumption
@@ -301,7 +303,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         for co in outputs:
             assert isinstance(co, CoinOutput)
             fulfillment = self.fulfillment_from(co.condition)
-            ci = CoinInput(parent_id=co.id, fulfillment=fulfillment)
+            ci = CoinInput(parentid=co.id, fulfillment=fulfillment)
             ci.parent_output = co
             inputs.append(ci)
         return inputs
@@ -507,12 +509,6 @@ class WalletBalance(object):
         self._chain_height = int(value)
 
     @property
-    def outputs(self):
-        """
-        Available (coin) outputs.
-        """
-        return self._outputs
-    @property
     def outputs_spent(self):
         """
         Spent (coin) outputs.
@@ -521,9 +517,19 @@ class WalletBalance(object):
     @property
     def outputs_unconfirmed(self):
         """
-        Unconfirmed (coin) outputs, available for spending.
+        Unconfirmed (coin) outputs, available for spending or locked.
         """
         return self._outputs_unconfirmed
+    @property
+    def outputs_unconfirmed_available(self):
+        """
+        Unconfirmed (coin) outputs, available for spending.
+        """
+        if self.chain_time > 0 and self.chain_height > 0:
+            return [co for co in self._outputs_unconfirmed.values()
+                if not co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)]
+        else:
+            return list(self._outputs_unconfirmed.values())
     @property
     def outputs_unconfirmed_spent(self):
         """
@@ -532,7 +538,7 @@ class WalletBalance(object):
         return self._outputs_unconfirmed_spent
 
     @property
-    def available_outputs(self):
+    def outputs_available(self):
         """
         Total available (coin) outputs.
         """
@@ -547,7 +553,7 @@ class WalletBalance(object):
         """
         Total available coins.
         """
-        return sum([co.value for co in self.available_outputs]) or Currency()
+        return sum([co.value for co in self.outputs_available]) or Currency()
 
     @property
     def locked(self):
@@ -586,11 +592,12 @@ class WalletBalance(object):
         """
         Fund the specified amount with the available outputs of this wallet's balance.
         """
-        available_outputs = self.available_outputs
-        available_outputs.sort(key=lambda co: co.value)
+        outputs_available = self.outputs_available
+        outputs_available.sort(key=lambda co: co.value)
         collected = Currency(value=0)
         outputs = []
-        for co in available_outputs:
+        # try to fund only with confirmed outputs, if possible
+        for co in outputs_available:
             if co.value >= amount:
                 outputs = [co]
                 collected = co.value
@@ -602,6 +609,28 @@ class WalletBalance(object):
                 collected -= outputs.pop(0).value
             if collected >= amount:
                 break
+        
+        if collected >= amount:
+            # if we already have sufficient, we stop now
+            return (outputs, collected-amount)
+
+        # use unconfirmed balance, not ideal, but acceptable
+        outputs_available = self.outputs_unconfirmed_available
+        outputs_available.sort(key=lambda co: co.value, reverse=True)
+        for co in outputs_available:
+            j.shell()
+            if co.value >= amount:
+                outputs = [co]
+                collected = co.value
+                break
+            collected += co.value
+            outputs.append(co)
+            if len(outputs) > 99:
+                # to not reach the input limit
+                collected -= outputs.pop(0).value
+            if collected >= amount:
+                break
+        # if we still didn't manage to fund enough, there is nothing we can do
         if collected < amount:
             raise InsufficientFunds("not enough funds available in the wallet to fund the requested amount")
         return (outputs, collected-amount)
