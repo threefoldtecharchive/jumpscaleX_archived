@@ -53,7 +53,7 @@ class Redis(redis.Redis):
     hgetalldict = redis.Redis.hgetall
     dbtype = 'RDB'
     _storedprocedures_to_sha = {}
-    _redis-cli_path = None
+    _redis_cli_path_ = None
 
     def dict_get(self, key):
         return RedisDict(self, key)
@@ -98,6 +98,9 @@ class Redis(redis.Redis):
 
         there is also storedprocedures_sha -> sha without having to decode json
 
+        tips on lua in redis:
+        https://redis.io/commands/eval
+
         '''
         lua = j.sal.fs.readFile(path)
 
@@ -129,11 +132,34 @@ class Redis(redis.Redis):
 
     @property
     def _redis_cli_path(self):
-        if not self._redis-cli_path:
-            cmd="redis-cli_"
+        if not self.__class__._redis_cli_path_:
 
-    def redis_cmd_execute(self,command,*args):
-        rediscmd = 
+            if j.core.tools.cmd_installed("redis-cli_"):
+                self.__class__._redis_cli_path_ =  "redis-cli_"
+            else:
+                self.__class__._redis_cli_path_ =  "redis-cli"
+        return self.__class__._redis_cli_path_
+
+    def redis_cmd_execute(self,command,debug=False,debugsync=False,*args):
+        """
+
+        :param command:
+        :param args:
+        :return:
+        """
+        rediscmd = self._redis_cli_path
+        if debug:
+            rediscmd+= " --ldb"
+        elif debugsync:
+            rediscmd+= " --ldb-sync-mode"
+        rediscmd+= " --%s"%command
+        for arg in args:
+            rediscmd+= " %s"%arg
+        print(rediscmd)
+
+        rc,out,err = j.sal.process.execute(rediscmd,interactive=True)
+        return out
+
 
     def _sp_data(self,name):
         if name not in self.__class__._storedprocedures_to_sha:
@@ -156,6 +182,20 @@ class Redis(redis.Redis):
 
 
     def storedprocedure_debug(self,name,*args):
+        """
+        to see how to use the debugger see https://redis.io/topics/ldb
+
+        to break put: redis.breakpoint() inside your lua code
+        to continue: do 'c'
+
+
+        :param name: name of the sp to execute
+        :param args: args to it
+        :return:
+        """
         data = self._sp_data(name)
-        j.shell()
+        path = data["path"]
+        out = self.redis_cmd_execute("eval",True,False,path,*args)
+
+        return out
 

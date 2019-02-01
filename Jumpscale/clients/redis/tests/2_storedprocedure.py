@@ -24,6 +24,13 @@ def main(self):
     res = r.storedprocedure_execute("test1","a","b","c")
     assert res == b'OK abc'
 
-    r.storedprocedure_debug("test1","a","b","c")
+    # r.storedprocedure_debug("test1","a",1,"c")
 
-    j.shell()
+    for i in range(10000):
+        res = r.storedprocedure_execute("test1","a",1,i)
+
+
+    assert r.hlen("logs:data:a") == 1000
+
+
+    print ("OK")
