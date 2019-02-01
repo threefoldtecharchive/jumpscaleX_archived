@@ -17,6 +17,8 @@ class JSBaseConfigParent(JSBaseConfig,JSFactoryBase):
         JSFactoryBase.__init__(self)
         JSBaseConfig.__init__(self,data=data,parent=parent,**kwargs)
 
+        self.__objcat_name = "factory_with_config"
+
 
     def _class_init(self):
         JSFactoryBase._class_init(self)

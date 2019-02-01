@@ -25,6 +25,7 @@ class JSBaseConfig(JSBase):
         the self.data object is a jsobject (result of using the jsx schemas)
 
         """
+
         self._class_init()  # is needed to init class properties, needs to be first thing
         JSBase.__init__(self, init=False)
 
@@ -44,6 +45,8 @@ class JSBaseConfig(JSBase):
             raise RuntimeError("name needs to be specified in data")
 
         self._key = "%s_%s" % (self.__class__.__name__, self.data.name)
+
+        self.__objcat_name = "instance"
 
     def _obj_cache_reset(self):
         """
@@ -94,19 +97,8 @@ class JSBaseConfig(JSBase):
     def edit(self):
         """
 
-        # header
-
-        ## subheader
-
-        - 1
-        - 2
-
         edit data of object in editor
-
-        ```python
-        print ("")
-        a = 1
-        ```
+        chosen editor in env var: "EDITOR" will be used
 
         :return:
 
@@ -151,12 +143,17 @@ class JSBaseConfig(JSBase):
         self.__dict__[key] = value
 
     def __str__(self):
-        out = "{RED}## Instance: "
-        out += self.__class__.__name__
+        out = "## "
+        out += "{BLUE}%s{RESET} "%self.__class__._location
+        out += "{GRAY}Instance: "
+        out += "{RED}'%s'{RESET} "%self.name
         out += "{GRAY}\n"
         out += self.data._hr_get()
         out += "{RESET}\n\n"
         out = j.core.tools.text_replace(out)
-        return out
+
+        #TODO: *1 dirty hack, the ansi codes are not printed, need to check why
+        print (out)
+        return ""
 
     __repr__ = __str__

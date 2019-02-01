@@ -2,6 +2,9 @@ from Jumpscale import j
 
 
 class SSHClientBase(j.application.JSBaseConfigClass):
+    """
+    is an ssh client
+    """
 
     _SCHEMATEXT = """
         @url = jumpscale.sshkey.1

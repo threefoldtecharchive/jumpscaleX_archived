@@ -28,6 +28,8 @@ class JSFactoryBase(JSBase):
 
         self._init()
 
+        self.__objcat_name = "factory"
+
     def _class_init(self):
 
         if hasattr(self.__class__, "_CHILDCLASS"):

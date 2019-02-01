@@ -6,6 +6,8 @@ class JSBaseConfigs(JSBase):
 
     def __init__(self,parent=None):
 
+
+
         self._model_ = None
         self._parent = parent
 
@@ -18,6 +20,8 @@ class JSBaseConfigs(JSBase):
             raise RuntimeError("_CHILDCLASS needs to be specified")
 
         self._init()
+
+        self.__objcat_name = "instances"
 
     def _class_init(self):
 
@@ -201,19 +205,3 @@ class JSBaseConfigs(JSBase):
     def __setattr__(self, key, value):
         self.__dict__[key]=value
 
-    def __str__(self):
-        j.shell()
-        out = "{RED}##%s{RESET}\n"%self.__class__._location
-        out+="methods:\n"
-        out+="instances:"
-        for item in self.__dir__():
-            # if item in METHODS:
-            #     continue
-            out+=" - %s\n"%item
-        METHODS= self._methods()
-        if len(METHODS)<10:
-            for item in METHODS:
-                out+=" - %s\n"%item
-        return out
-
-    __repr__ = __str__

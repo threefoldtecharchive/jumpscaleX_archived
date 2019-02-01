@@ -103,7 +103,12 @@ def get_completions(self, document, complete_event):
         # print(obj)
 
         remainder = tbc[len(c)+1:]  # e.g. everything after j.clients.ssh.
-        methods_private = remainder.startswith("_") #then we want to show private methods
+        if remainder.startswith("__"): #then we want to show private methods
+            prefix = "__"
+        elif remainder.startswith("_"): #then we want to show private methods
+            prefix = "_"
+        else:
+            prefix = ""
 
         if obj:
 
@@ -120,16 +125,16 @@ def get_completions(self, document, complete_event):
                         x2 = c+"."+x
                         x3 = x2[len(tbc):]
                         yield Completion(x3, 0, display=x, display_meta=None, style='bg:ansiyellow fg:ansiblack')
-                for x in obj._methods(private=methods_private):
+                for x in obj._methods(prefix=prefix):
                     if x.startswith(remainder):
                         x2 = c+"."+x
                         x3 = x2[len(tbc):]
                         yield Completion(x3, 0, display=x, display_meta=None, style='bg:ansiblue fg:ansiblack')
-                for x in obj._properties():
+                for x in obj._properties(prefix=prefix):
                     if x.startswith(remainder):
                         x2 = c+"."+x
                         x3 = x2[len(tbc):]
-                        yield Completion(x3, 0, display=x, display_meta=None, style='bg:ansired fg:ansiblack')
+                        yield Completion(x3, 0, display=x, display_meta=None, style='bg:ansigray fg:ansiblack')
                 return
             # else:
             #     for x in dir(obj):
@@ -201,6 +206,7 @@ def get_completions(self, document, complete_event):
 def get_doc_string(tbc):
     obj = get_object(tbc, locals_=None, globals_=None, walkback=True)
     if not obj:
+        print("DID NOT FIND OBJ:%s"%tbc)
         return
     return inspect.getdoc(obj)
 
@@ -235,9 +241,6 @@ def setup_docstring_containers(repl):
 
 def ptconfig(repl):
     repl.exit_message = "We hope you had fun using te kosmos shell"
-    repl.show_docstring = True
-
-    # Show docstring (bool).
     repl.show_docstring = True
 
     # When CompletionVisualisation.POP_UP has been chosen, use this
@@ -311,13 +314,15 @@ def ptconfig(repl):
     # Set color depth (keep in mind that not all terminals support true color).
     repl.color_depth = 'DEPTH_24_BIT'  # True color.
 
-    # Syntax.
-    repl.enable_syntax_highlighting = True
+    # Syntax should not be highlighted because we do it already
+    repl.enable_syntax_highlighting = False
+
+    repl.min_brightness = 0.3
 
     # Add custom key binding for PDB.
 
     @repl.add_key_binding(Keys.ControlB)
-    def _(event):
+    def _debug_event(event):
         ' Pressing Control-B will insert "pdb.set_trace()" '
         event.cli.current_buffer.insert_text('\nimport pdb; pdb.set_trace()\n')
 
@@ -380,15 +385,51 @@ def ptconfig(repl):
     repl._completer.__class__.get_completions = get_completions
 
     @repl.add_key_binding('?')
-    def _(event):
+    def _docevent(event):
         j = KosmosShellConfig.j
         b = event.cli.current_buffer
-        tbc = b.document.current_line_before_cursor
-
+        tbc = b.document.current_line_before_cursor.rstrip("(")
         d = get_doc_string(tbc)
         if d:
             repl.docstring_buffer.reset(document=Document(d, cursor_position=0))
         else:
             repl.docstring_buffer.reset()
+    #
+    # #ONCE THE ? WORKS WE CAN REMOVE BELOW
+    # try:
+    #     import pygments
+    #     from pygments_markdown_lexer import MarkdownLexer
+    #     from pygments import highlight
+    #     from pygments.formatters import Terminal256Formatter
+    #     from pygments.lexers import PythonLexer
+    #     formatter = Terminal256Formatter(linenos=True, cssclass="source",style=pygments.styles.get_style_by_name("fruity")) #vim
+    #     # from pygments.formatters import HtmlFormatter
+    #     markdownlexer_enabled = True
+    # except Exception as e:
+    #     print("NOFORMATTING")
+    #     markdownlexer_enabled = False
+    #
+    # @repl.add_key_binding('?')
+    # def _esclmark(event):
+    #     j = KosmosShellConfig.j
+    #     b = event.cli.current_buffer
+    #     tbc = b.document.current_line_before_cursor
+    #
+    #     obj = get_object(tbc,locals_=None,globals_=None,walkback=True)
+    #     if not obj:
+    #         print("DID NOT FIND OBJECT TO SHOW DOCU")
+    #         return
+    #
+    #     d=inspect.getdoc(obj)
+    #     # from pudb import set_trace; set_trace()
+    #     if d:
+    #         if markdownlexer_enabled:
+    #             print("\n#### DOCU for %s\n"%tbc)
+    #             print(highlight(d, MarkdownLexer(), formatter))
+    #             print("\n")
+    #         else:
+    #             print("\n#### DOCU for %s\n"%tbc)
+    #             print(d)
+    #             print("\n")
 
     setup_docstring_containers(repl)

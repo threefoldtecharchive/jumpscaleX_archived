@@ -44,6 +44,8 @@ class JSBase:
             else:
                 self.__class__._location = self.__class__.__name__.lower()
 
+            self.__class__.__name__ = ""
+
             self.__class__._methods_ = []
             self.__class__._properties_ = []
             self.__class__._inspected_ = False
@@ -54,6 +56,9 @@ class JSBase:
             self.__class__._class_init_done = True
 
     def __init__(self, init=True):
+
+        self.__objcat_name = ""
+
         self._class_init()  # is needed to init class properties, needs to be first thing
 
         if init:
@@ -145,33 +150,26 @@ class JSBase:
         # else:
         #     print("not inspect:%s"%self.__class__)
 
-    def _properties(self,private=False):
+    def _properties(self,prefix=""):
         self._inspect()
-        # methods = self._methods()
-        # r=[]
-        # for item in self.__dict__.keys():
-        #     if item.startswith("_"):
-        #         continue
-        #     if item not in methods:
-        #         self.__class__._properties_.append(item)
-        if private:
-            return self.__class__._properties_
-        else:
-            return [item for item in self.__class__._properties_ if not item.startswith("_")]
 
-    def _methods(self,private=False):
-        self._inspect()
-        # if self.__class__._methods_ == []:
-        #     for item in dir(self):
-        #         if item.startswith("_"):
-        #             continue
-        #         possible_method = eval("self.%s"%item)
-        #         if isinstance(possible_method,types.MethodType) and item not in self.__class__._methods_:
-        #             self.__class__._methods_.append(item)
-        if private:
-            return self.__class__._methods_
+        if prefix=="_":
+            return [item for item in self.__class__._properties_ if
+                    (item.startswith("_") and not item.startswith("__") and not item.endswith("_"))]
+        if prefix=="":
+            return [item for item in self.__class__._properties_ if not item.startswith("_")]
         else:
+            return [item for item in self.__class__._properties_ if item.startswith(prefix)]
+
+    def _methods(self,prefix=""):
+        self._inspect()
+        if prefix=="_":
+            return [item for item in self.__class__._methods_ if
+                    (item.startswith("_") and not item.startswith("__") and not item.endswith("_"))]
+        if prefix=="":
             return [item for item in self.__class__._methods_ if not item.startswith("_")]
+        else:
+            return [item for item in self.__class__._methods_ if item.startswith(prefix)]
 
     def _properties_children(self):
         return []
@@ -350,13 +348,37 @@ class JSBase:
         self.__class__._test_runs[name] = res
         return res
 
+
     def __str__(self):
-        # out = str(self.__class__)+"\n"
-        out = "%s\n" % self.__class__._location
-        try:
-            out += "%s\n%s\n" % (self.__class__, str(j.data.serializers.yaml.dumps(self._ddict)))
-        except Exception as e:
-            pass
-        return out
+
+
+        out = "## {GRAY}%s {RED}%s{BLUE} %s{RESET}\n\n"%(self.__objcat_name,self.__class__._location,self.__class__.__name__)
+
+        def add(name,color,items,out):
+            if len(items)>0:
+                out+="{%s}### %s:\n"%(color,name)
+                if len(items)<20:
+                    for item in items:
+                        out+=" - %s\n"%item
+                else:
+                    out+=" - ...\n"
+            out+="\n"
+            return out
+
+        out = add("children","GREEN",self._properties_children(),out)
+        out = add("data","YELLOW",self._properties_model(),out)
+        out = add("methods","BLUE",self._methods(),out)
+        out = add("properties","GRAY",self._properties(),out)
+
+        out+="{RESET}"
+
+
+        out = j.core.tools.text_replace(out)
+        print(out)
+
+        #TODO: *1 dirty hack, the ansi codes are not printed, need to check why
+        return ""
+
+
 
     __repr__ = __str__

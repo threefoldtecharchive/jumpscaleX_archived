@@ -15,6 +15,9 @@ from .StreamReader import StreamReader
 
 
 class SSHClientParamiko(SSHClientBase):
+    """
+    is an ssh client
+    """
 
     def _init(self):
         SSHClientBase._init(self)
