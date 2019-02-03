@@ -13,5 +13,6 @@
         extra_scopes    user:email,user:name
         redirect_url    http://{$node_addr}:{$filemanager_port}/_iyo_callback
         authentication_required  /
+        organizations   /   ${iyo_client_id}
     }
 }
