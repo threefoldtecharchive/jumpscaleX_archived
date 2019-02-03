@@ -26,7 +26,7 @@ class Watcher:
         self.observer.start()
         try:
             while True:
-                gevent.sleep(1)
+                gevent.sleep()
         except KeyboardInterrupt:
             self.observer.stop()
         self.observer.join()
@@ -257,7 +257,7 @@ class MarkDownDocs(j.application.JSBaseClass):
             threads.append(gevent.spawn(watcher.start))
 
             gevent.joinall(threads)
-git 
+
     def syncer(self):
         print("syncer started, will reload every 5 mins")
         while True:
