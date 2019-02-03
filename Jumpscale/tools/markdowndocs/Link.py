@@ -8,7 +8,8 @@ JSBASE = j.application.JSBaseClass
 
 # Some links that needs to be skipped from verifying because the crawling is forbidden
 SKIPPED_LINKS = ['t.me', 'chat.grid.tf', 'linkedin.com', 'docs.grid.tf', 'btc-alpha',
-                 'kraken.com', 'bitoasis.net', 'cex.io',  'itsyou.online', 'skype:']
+                 'kraken.com', 'bitoasis.net', 'cex.io',  'itsyou.online', 'skype:',
+                 'medium.com', "mailto:"]
 
 class Link(j.application.JSBaseClass):
     def __init__(self,doc, source):

@@ -1,13 +1,69 @@
 from Jumpscale import j
 from .DocSite import DocSite
 import gevent
-
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 import imp
 import time
 import sys
 
 JSBASE = j.application.JSBaseClass
+
+class Watcher:
+    """
+    a class to watch all dirs loaded in the docsite and reload it once changed
+    """
+    def __init__(self, docsites):
+        print("initializing watcher for paths: {}".format(docsites))
+        event_handler = DocsiteChangeHandler(self)
+        self.observer = PausingObserver()
+        for _, docsite in docsites.items():
+            self.observer.schedule(event_handler, docsite.path, recursive=True)
+
+    def start(self):
+        print("started watcher")
+        self.observer.start()
+        try:
+            while True:
+                gevent.sleep(1)
+        except KeyboardInterrupt:
+            self.observer.stop()
+        self.observer.join()
+
+
+class PausingObserver(Observer):
+    def dispatch_events(self, *args, **kwargs):
+        if not getattr(self, '_is_paused', False):
+            super(PausingObserver, self).dispatch_events(*args, **kwargs)
+
+    def pause(self):
+        self._is_paused = True
+
+    def resume(self):
+        time.sleep(5)  # allow interim events to be queued
+        self.event_queue.queue.clear()
+        self._is_paused = False
+
+
+class DocsiteChangeHandler(FileSystemEventHandler):
+
+    def __init__(self, watcher):
+        FileSystemEventHandler.__init__(self)
+        self.watcher = watcher
+
+    def on_modified(self, event):
+        docsite = self.get_docsite_from_path(event.src_path)
+        if docsite:
+            site = j.tools.markdowndocs.load(docsite.path, docsite.name)
+            self.watcher.observer.pause()
+            site.write()
+            self.watcher.observer.resume()
+
+    def get_docsite_from_path(self, path):
+        for _, docsite in self.watcher.docsites.items():
+            if path in docsite.path:
+                return docsite
 
 
 class MarkDownDocs(j.application.JSBaseClass):
@@ -183,7 +239,7 @@ class MarkDownDocs(j.application.JSBaseClass):
         else:
             return None
 
-    def webserver(self, sync=False):
+    def webserver(self, watch=True):
         url = "https://github.com/threefoldfoundation/lapis-wiki"
         server_path = j.clients.git.getContentPathFromURLorPath(url)
         url = "https://github.com/threefoldtech/jumpscale_weblibs"
@@ -193,16 +249,21 @@ class MarkDownDocs(j.application.JSBaseClass):
         cmd = "cd {0} && moonc . && lapis server".format(server_path)
         j.tools.tmux.execute(cmd, reset=False)
 
-        if sync:
-            thread = gevent.spawn(self.syncer)
-            gevent.joinall([thread])
+        if watch:
+            watcher = Watcher(self.docsites)
+
+            threads = list()
+            threads.append(gevent.spawn(self.syncer))
+            threads.append(gevent.spawn(watcher.start))
+
+            gevent.joinall(threads)
 
     def syncer(self):
         print("syncer started, will reload every 5 mins")
         while True:
             print("Reloading")
             self.load_wikis()
-            gevent.sleep(1)
+            gevent.sleep(300)
 
     def load_wikis(self):
         url = "https://github.com/threefoldfoundation/info_tokens/tree/master/docs"

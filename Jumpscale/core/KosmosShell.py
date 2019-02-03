@@ -15,7 +15,6 @@ from ptpython.utils import get_jedi_script_from_document
 from pygments.lexers import PythonLexer
 
 
-
 class KosmosShellConfig():
 
     pass
@@ -95,16 +94,15 @@ def get_completions(self, document, complete_event):
 
         obj = get_object(c, self.get_locals(), self.get_globals())
 
-
         try:
             obj = get_object(c, self.get_locals(), self.get_globals())
         except Exception as e:
             return
 
         remainder = tbc[len(c)+1:]  # e.g. everything after j.clients.ssh.
-        if remainder.startswith("__"): #then we want to show private methods
+        if remainder.startswith("__"):  # then we want to show private methods
             prefix = "__"
-        elif remainder.startswith("_"): #then we want to show private methods
+        elif remainder.startswith("_"):  # then we want to show private methods
             prefix = "_"
         else:
             prefix = ""
@@ -206,18 +204,21 @@ def get_doc_string(tbc):
     j = KosmosShellConfig.j
     obj = get_object(tbc, locals_=None, globals_=None, walkback=True)
     if not obj:
-        print("DID NOT FIND OBJ:%s"%tbc)
         return
-    m=""
-    for line in inspect.getsource(obj).strip("\n").split("\n"):
-        m+="%s\n"%line
-        if ":" in line:
-            break
-    m=j.core.tools.text_strip(m) #to remove trailing spaces
-    m+="\n"
-    m+= inspect.getdoc(obj)
-    return m
 
+    signature = ''
+    try:
+        signature = inspect.signature(obj)
+        signature = obj.__name__  + str(signature)
+    except (ValueError, TypeError):
+        # no signature can be provided or it's not supported e.g.
+        # a built-in functions or not a module/class/function...
+        pass
+
+    doc = inspect.getdoc(obj) or ''
+    if not signature:
+        return doc
+    return '\n\n'.join([signature, doc])
 
 
 class HasDocString(PythonInputFilter):
@@ -229,6 +230,9 @@ class HasDocString(PythonInputFilter):
 def setup_docstring_containers(repl):
     # see ptpython.layout
     parent_container = repl.app.layout.container.children[0].children[0]
+    # remove ptpython docstring containers, we have ours now
+    parent_container.children = parent_container.children[:-2]
+
     # the same as ptpython containers, but without signature checking
     parent_container.children.extend([
         ConditionalContainer(
@@ -323,7 +327,6 @@ def ptconfig(repl):
     # Set color depth (keep in mind that not all terminals support true color).
     repl.color_depth = 'DEPTH_24_BIT'  # True color.
 
-
     repl.enable_syntax_highlighting = True
 
     repl.min_brightness = 0.3
@@ -334,26 +337,6 @@ def ptconfig(repl):
     def _debug_event(event):
         ' Pressing Control-B will insert "pdb.set_trace()" '
         event.cli.current_buffer.insert_text('\nimport pdb; pdb.set_trace()\n')
-
-    # Typing ControlE twice should also execute the current command.
-    # (Alternative for Meta-Enter.)
-    """
-    @repl.add_key_binding(Keys.ControlE, Keys.ControlE)
-    def _(event):
-        b = event.current_buffer
-        if b.accept_action.is_returnable:
-            b.accept_action.validate_and_handle(event.cli, b)
-    """
-
-
-    # Typing 'jj' in Vi Insert mode, should send escape. (Go back to navigation
-    # mode.)
-    """
-    @repl.add_key_binding('j', 'j', filter=ViInsertMode())
-    def _(event):
-        " Map 'jj' to Escape. "
-        event.cli.key_processor.feed(KeyPress(Keys.Escape))
-    """
 
     # Custom key binding for some simple autocorrection while typing.
 
@@ -374,6 +357,17 @@ def ptconfig(repl):
                 b.insert_text(corrections[w])
         b.insert_text(' ')
 
+    @repl.add_key_binding('?')
+    def _docevent(event):
+        j = KosmosShellConfig.j
+        b = event.cli.current_buffer
+        tbc = b.document.current_line_before_cursor.rstrip("(")
+        d = get_doc_string(tbc)
+        if d:
+            repl.docstring_buffer.reset(document=Document(d, cursor_position=0))
+        else:
+            repl.docstring_buffer.reset()
+
     class CustomPrompt(PromptStyle):
         """
         The classic Python prompt.
@@ -392,53 +386,5 @@ def ptconfig(repl):
     repl.prompt_style = 'custom'
 
     repl._completer.__class__.get_completions = get_completions
-
-    @repl.add_key_binding('?')
-    def _docevent(event):
-        j = KosmosShellConfig.j
-        b = event.cli.current_buffer
-        tbc = b.document.current_line_before_cursor.rstrip("(")
-        d = get_doc_string(tbc)
-        if d:
-            repl.docstring_buffer.reset(document=Document(d, cursor_position=0))
-        else:
-            repl.docstring_buffer.reset()
-    #
-    # #ONCE THE ? WORKS WE CAN REMOVE BELOW
-    # try:
-    #     import pygments
-    #     from pygments_markdown_lexer import MarkdownLexer
-    #     from pygments import highlight
-    #     from pygments.formatters import Terminal256Formatter
-    #     from pygments.lexers import PythonLexer
-    #     formatter = Terminal256Formatter(linenos=True, cssclass="source",style=pygments.styles.get_style_by_name("fruity")) #vim
-    #     # from pygments.formatters import HtmlFormatter
-    #     markdownlexer_enabled = True
-    # except Exception as e:
-    #     print("NOFORMATTING")
-    #     markdownlexer_enabled = False
-    #
-    # @repl.add_key_binding('?')
-    # def _esclmark(event):
-    #     j = KosmosShellConfig.j
-    #     b = event.cli.current_buffer
-    #     tbc = b.document.current_line_before_cursor
-    #
-    #     obj = get_object(tbc,locals_=None,globals_=None,walkback=True)
-    #     if not obj:
-    #         print("DID NOT FIND OBJECT TO SHOW DOCU")
-    #         return
-    #
-    #     d=inspect.getdoc(obj)
-    #     # from pudb import set_trace; set_trace()
-    #     if d:
-    #         if markdownlexer_enabled:
-    #             print("\n#### DOCU for %s\n"%tbc)
-    #             print(highlight(d, MarkdownLexer(), formatter))
-    #             print("\n")
-    #         else:
-    #             print("\n#### DOCU for %s\n"%tbc)
-    #             print(d)
-    #             print("\n")
 
     setup_docstring_containers(repl)
