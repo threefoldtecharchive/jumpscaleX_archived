@@ -51,6 +51,9 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
     def data(self):
         return self._data
 
+    def reset(self):
+        self._data = bytearray()
+
     def add(self, value):
         """
         Add a value, after encoding it as specified by the rivbin encoding specification,

@@ -2,11 +2,78 @@ from Jumpscale import j
 
 from .BaseDataType import BaseDataTypeClass
 from .CryptoTypes import PublicKey
-from .PrimitiveTypes import BinaryData
+from .PrimitiveTypes import BinaryData, Hash
+from .ConditionTypes import UnlockHash, ConditionNil, ConditionUnlockHash, ConditionAtomicSwap, ConditionMultiSignature
 
 _FULFULLMENT_TYPE_SINGLE_SIG = 1
 _FULFILLMENT_TYPE_ATOMIC_SWAP = 2
 _FULFILLMENT_TYPE_MULTI_SIG = 3
+
+from abc import ABC, abstractmethod
+
+class SignatureCallbackBase(ABC):
+    @abstractmethod
+    def signature_add(self, public_key, signature):
+        pass
+
+class SignatureRequest():
+    """
+    SignatureRequest can be used to create a one-time-use individual sign request.
+    """
+    def __init__(self, unlockhash, input_hash, callback):
+        # set defined properties
+        assert isinstance(unlockhash, UnlockHash)
+        self._unlockhash = unlockhash
+        assert isinstance(input_hash, Hash)
+        self._input_hash = input_hash
+        assert isinstance(callback, SignatureCallbackBase)
+        self._callback = callback
+        # property to ensure this request is only fulfilled once
+        self._signed = False
+
+    @property
+    def fulfilled(self):
+        """
+        Returns True if this request was already fulfilled,
+        False otherwise.
+        """
+        return self._signed
+
+    @property
+    def wallet_address(self):
+        """
+        Returns the wallet address of the owner who requested the signature.
+        """
+        return str(self._unlockhash)
+
+    @property
+    def input_hash(self):
+        """
+        Returns the input hash that has to be used in order to sign this request.
+        """
+        return self._input_hash
+
+    def signature_fulfill(self, public_key, signature):
+        """
+        Fulfill the signature, once and once only.
+        """
+        # guarantee base conditions
+        assert not self._signed
+
+        # ensure public key is the key of the wallet who owns this request
+        assert isinstance(public_key, PublicKey)
+        assert self.wallet_address == str(public_key.unlockhash())
+        # ensure signature is of the correct type
+        if isinstance(signature, (bytearray, bytes)):
+            signature = BinaryData(value=signature)
+        else:
+            assert isinstance(signature, BinaryData)
+        
+        # add the signature to the callback
+        self._callback.signature_add(public_key=public_key, signature=signature)
+        # ensure this was the one and only time we signed
+        self._signed = True
+
 
 class FulfillmentFactory(j.application.JSBaseClass):
     """
@@ -49,22 +116,40 @@ class FulfillmentFactory(j.application.JSBaseClass):
         js_shell 'j.clients.tfchain.types.fulfillments.test()'
         """
 
+        # some util test methods
+        def test_encoded(encoder, obj, expected):
+            encoder.add(obj)
+            output = encoder.data.hex()
+            if expected != output:
+                msg = "{} != {}".format(expected, output)
+                raise Exception("unexpected encoding result: " + msg)
+        def test_sia_encoded(obj, expected):
+            test_encoded(j.data.rivine.encoder_sia_get(), obj, expected)
+        def test_rivine_encoded(obj, expected):
+            test_encoded(j.data.rivine.encoder_rivine_get(), obj, expected)
+
         # single signature fulfillments are supported
         ss_json = {"type":1,"data":{"publickey":"ed25519:dda39750fff2d869badc797aaad1dea8c6bcf943879421c58ac8d8e2072d5b5f","signature":"818dfccee2cb7dbe4156169f8e1c5be49a3f6d83a4ace310863d7b3b698748e3e4d12522fc1921d5eccdc108b36c84d769a9cf301e969bb05db1de9295820300"}}
-        assert self.from_json(ss_json).json() == ss_json
+        ssf = self.from_json(ss_json)
+        assert ssf.json() == ss_json
+        test_sia_encoded(ssf, '018000000000000000656432353531390000000000000000002000000000000000dda39750fff2d869badc797aaad1dea8c6bcf943879421c58ac8d8e2072d5b5f4000000000000000818dfccee2cb7dbe4156169f8e1c5be49a3f6d83a4ace310863d7b3b698748e3e4d12522fc1921d5eccdc108b36c84d769a9cf301e969bb05db1de9295820300')
+        test_rivine_encoded(ssf, '01c401dda39750fff2d869badc797aaad1dea8c6bcf943879421c58ac8d8e2072d5b5f80818dfccee2cb7dbe4156169f8e1c5be49a3f6d83a4ace310863d7b3b698748e3e4d12522fc1921d5eccdc108b36c84d769a9cf301e969bb05db1de9295820300')
 
         # atomic swap fulfillments are supported
         as_json = {"type":2,"data":{"publickey":"ed25519:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff","signature":"abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab","secret":"def789def789def789def789def789dedef789def789def789def789def789de"}}
-        assert self.from_json(as_json).json() == as_json
+        asf = self.from_json(as_json)
+        assert asf.json() == as_json
+        test_sia_encoded(asf, '02a000000000000000656432353531390000000000000000002000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff4000000000000000abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabdef789def789def789def789def789dedef789def789def789def789def789de')
+        test_rivine_encoded(asf, '02090201ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabdef789def789def789def789def789dedef789def789def789def789def789de')
 
         # multi signature fulfillments are supported
         ms_json = {"type":3,"data":{"pairs":[{"publickey":"ed25519:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff","signature":"abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab"},{"publickey":"ed25519:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff","signature":"abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab"}]}}
-        assert self.from_json(ms_json).json() == ms_json
+        msf = self.from_json(ms_json)
+        assert msf.json() == ms_json
+        test_sia_encoded(msf, '0308010000000000000200000000000000656432353531390000000000000000002000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff4000000000000000abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab656432353531390000000000000000002000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff4000000000000000abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab')
+        test_rivine_encoded(msf, '0315030401ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab01ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab')
 
-
-from abc import abstractmethod
-
-class FulfillmentBaseClass(BaseDataTypeClass):
+class FulfillmentBaseClass(SignatureCallbackBase, BaseDataTypeClass):
     @classmethod
     def from_json(cls, obj):
         ff = cls()
@@ -91,12 +176,35 @@ class FulfillmentBaseClass(BaseDataTypeClass):
             'data': self.json_data_object(),
         }
 
-    # binary encoding is not supported for fulfillments, as this client does not require it
-    def sia_binary_encode(self, encoder):
-        raise Exception("sia binary encoding not supported for fulfillments by this client")
-    def rivine_binary_encode(self, encoder):
-        raise Exception("rivine binary encoding not supported for fulfillments by this client")
+    @abstractmethod
+    def sia_binary_encode_data(self, encoder):
+        pass
 
+    def sia_binary_encode(self, encoder):
+        """
+        Encode this Fulfillment according to the Sia Binary Encoding format.
+        """
+        encoder.add_array(bytearray([int(self.type)]))
+        data_enc = j.data.rivine.encoder_sia_get()
+        self.sia_binary_encode_data(data_enc)
+        encoder.add_slice(data_enc.data)
+
+    @abstractmethod
+    def rivine_binary_encode_data(self, encoder):
+        pass
+
+    def rivine_binary_encode(self, encoder):
+        """
+        Encode this Fulfillment according to the Rivine Binary Encoding format.
+        """
+        encoder.add_int8(int(self.type))
+        data_enc = j.data.rivine.encoder_rivine_get()
+        self.rivine_binary_encode_data(data_enc)
+        encoder.add_slice(data_enc.data)
+
+    @abstractmethod
+    def signature_requests_new(self, parent_condition):
+        pass
 
 class FulfillmentSingleSignature(FulfillmentBaseClass):
     """
@@ -134,9 +242,16 @@ class FulfillmentSingleSignature(FulfillmentBaseClass):
         if not value:
             self._signature = BinaryData()
         elif type(value) is BinaryData:
-            self._signature = value
+            self._signature = BinaryData(value=value.value)
         else:
             self._signature = BinaryData(value=value)
+
+    def signature_add(self, public_key, signature):
+        """
+        Implements SignatureCallbackBase.
+        """
+        self.public_key = public_key
+        self.signature = signature
     
     def from_json_data_object(self, data):
         self._pub_key = PublicKey.from_json(data['publickey'])
@@ -147,6 +262,19 @@ class FulfillmentSingleSignature(FulfillmentBaseClass):
             'publickey': self._pub_key.json(),
             'signature': self._signature.json()
         }
+
+    def sia_binary_encode_data(self, encoder):
+        encoder.add_all(self._pub_key, self._signature)
+
+    def rivine_binary_encode_data(self, encoder):
+        encoder.add_all(self._pub_key, self._signature)
+
+    def signature_requests_new(self, input_hash, parent_condition):
+        assert isinstance(parent_condition, (ConditionNil, ConditionUnlockHash))
+        unlockhash = parent_condition.unlockhash
+        if str(unlockhash) == str(self.public_key.unlockhash()):
+            return [] # nothing to do
+        return [SignatureRequest(unlockhash=unlockhash, input_hash=input_hash, callback=self)]
 
 
 class FulfillmentMultiSignature(FulfillmentBaseClass):
@@ -168,32 +296,105 @@ class FulfillmentMultiSignature(FulfillmentBaseClass):
     @property
     def pairs(self):
         return self._pairs
+    @pairs.setter
+    def pairs(self, value):
+        self._pairs = []
+        if not value:
+            return
+        for pair in value:
+            self.add_pair(pair.public_key, pair.signature)
 
     def add_pair(self, public_key, signature):
-        if not public_key:
-            public_key = PublicKey()
-        else:
-            assert type(public_key) is PublicKey
-        if not signature:
-            signature = BinaryData()
-        elif not type(signature) is BinaryData:
-            signature = BinaryData(value=signature)
-        self._pairs.append((public_key, signature))
+        spk = str(public_key)
+        for pair in self._pairs:
+            if str(pair.public_key) == spk:
+                raise ValueError("cannot add public_key {} as it already exists within a pair of this MultiSignature Fulfillment".format(spk))
+        self._pairs.append(PublicKeySignaturePair(public_key=public_key, signature=signature))
+
+    # Implements SignatureCallbackBase.
+    signature_add = add_pair
 
     def from_json_data_object(self, data):
         self._pairs = []
         for pair in data['pairs']:
-            pk = PublicKey.from_json(pair['publickey'])
-            sig = BinaryData.from_json(pair['signature'])
-            self._pairs.append((pk, sig))
+            self._pairs.append(PublicKeySignaturePair.from_json(pair))
 
     def json_data_object(self):
         return {
-            'pairs': [{
-                'publickey': pk.json(),
-                'signature': sig.json(),
-            } for pk, sig in self._pairs],
+            'pairs': [pair.json() for pair in self._pairs],
         }
+    
+    def sia_binary_encode_data(self, encoder):
+        encoder.add(self._pairs)
+
+    def rivine_binary_encode_data(self, encoder):
+        encoder.add(self._pairs)
+
+    def signature_requests_new(self, input_hash, parent_condition):
+        assert isinstance(parent_condition, ConditionMultiSignature)
+        requests = []
+        signed = [str(pair.public_key.unlockhash()) for pair in self._pairs]
+        for unlockhash in parent_condition.unlockhashes:
+            if str(unlockhash) not in signed:
+                requests.append(SignatureRequest(unlockhash=unlockhash, input_hash=input_hash, callback=self))
+        return requests
+
+
+class PublicKeySignaturePair(BaseDataTypeClass):
+    """
+    PublicKeySignaturePair class
+    """
+    def __init__(self, public_key=None, signature=None):
+        self._public_key = None
+        self.public_key = public_key
+        self._signature = None
+        self.signature = signature
+
+    @classmethod
+    def from_json(cls, obj):
+        return cls(
+            public_key=PublicKey.from_json(obj['publickey']),
+            signature=BinaryData.from_json(obj['signature']))
+
+    @property
+    def public_key(self):
+        return self._public_key
+    @public_key.setter
+    def public_key(self, pk):
+        if pk is None:
+            self._public_key = PublicKey()
+            return
+        assert isinstance(pk, PublicKey)
+        self._public_key = PublicKey(specifier=pk.specifier, hash=pk.hash)
+
+    @property
+    def signature(self):
+        return self._signature
+    @signature.setter
+    def signature(self, value):
+        if isinstance(value, BinaryData):
+            self._signature = BinaryData(value=value.value)
+        else:
+            self._signature = BinaryData(value=value)
+
+    def json(self):
+        return {
+            'publickey': self._public_key.json(),
+            'signature': self._signature.json()
+        }
+
+    def sia_binary_encode(self, encoder):
+        """
+        Encode this PublicKeySignature Pair according to the Sia Binary Encoding format.
+        """
+        encoder.add_all(self._public_key, self._signature)
+
+    def rivine_binary_encode(self, encoder):
+        """
+        Encode this PublicKeySignature Pair according to the Rivine Binary Encoding format.
+        """
+        encoder.add_all(self._public_key, self._signature)
+
 
 # Legacy AtomicSwap Fulfillments are not supported,
 # as these are not used on any active TFChain network
@@ -250,6 +451,13 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
         else:
             self._secret = BinaryData(value=value)
 
+    def signature_add(self, public_key, signature):
+        """
+        Implements SignatureCallbackBase.
+        """
+        self.public_key = public_key
+        self.signature = signature
+
     def from_json_data_object(self, data):
         self._pub_key = PublicKey.from_json(data['publickey'])
         self._signature = BinaryData.from_json(data['signature'])
@@ -261,3 +469,20 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
             'signature': self._signature.json(),
             'secret': self._secret.json()
         }
+
+    def sia_binary_encode_data(self, encoder):
+        encoder.add_all(self._pub_key, self._signature)
+        encoder.add_array(self._secret.value)
+
+    def rivine_binary_encode_data(self, encoder):
+        encoder.add_all(self._pub_key, self._signature)
+        encoder.add_array(self._secret.value)
+
+    def signature_requests_new(self, input_hash, parent_condition):
+        assert isinstance(parent_condition, ConditionAtomicSwap)
+        requests = []
+        signee = str(self._pub_key.unlockhash())
+        for unlockhash in [parent_condition.sender, parent_condition.receiver]:
+            if str(unlockhash) != signee:
+                requests.append(SignatureRequest(unlockhash=unlockhash, input_hash=input_hash, callback=self))
+        return requests

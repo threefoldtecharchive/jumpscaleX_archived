@@ -7,12 +7,20 @@ from ed25519 import SigningKey
 
 from .types.PrimitiveTypes import Currency, Hash
 from .types.CryptoTypes import PublicKey, UnlockHash
-from .types.errors import ExplorerNoContent
-from .types.errors import InsufficientFunds
+from .types.errors import ExplorerNoContent, InsufficientFunds, ExplorerCallError
 from .types.CompositionTypes import CoinOutput, CoinInput
 from .types.ConditionTypes import ConditionNil, ConditionUnlockHash, ConditionLockTime
 
 _DEFAULT_KEY_SCAN_COUNT = 3
+
+# TODO: Implement New Signing Strategy:
+#   Step 1: create and fill Tx (and if needed fund)
+#   Step 2: create new empty coin inputs (remove the current coin input strategy, instead do the creation as empties directly from the ConditionTypes)
+#   Step 3: add whatever other info that might be needed (e.g. parent_mint_condition for minter Transactions)
+#   Step 4: create signature requests
+#   Step 5: fulfill all signatures that can be fulfilled
+# For coins_send, it is expected that all requests can be fulfilled,
+# for the minter transactions it might at times be acceptable that one or multiple requests cannot be fulfilled.
 
 class TFChainWallet(j.application.JSBaseConfigClass):
     """
@@ -60,6 +68,26 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         for _ in range(keys_to_generate-1):
             self._key_pair_new()
 
+        # add sub-apis
+        self._minter = TFChainMinter(wallet=self)
+    
+    @property
+    def minter(self):
+        """
+        Minter used to update the (Coin) Minter Definition
+        as well as to mint new coins, only useable if this wallet
+        has (co-)ownership over the current (coin) minter definition.
+        """
+        return self._minter
+
+    @property
+    def client(self):
+        """
+        Returns the TFChain Client that owns this wallet,
+        and through which this wallet communicates with Explorer nodes.
+        """
+        return self._parent._parent
+
     @property
     def network_type(self):
         """
@@ -68,7 +96,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
 
         Changing the network type has to be done from the parent TFChain client.
         """
-        return self._parent._parent.network_type
+        return self.client.network_type
 
     @property
     def seed_entropy(self):
@@ -106,7 +134,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         The balance "sheet" of the wallet.
         """
         # first get chain info, so we can check if the current balance is still fine
-        info = self._parent._parent.blockchain_info_get()
+        info = self.client.blockchain_info_get()
         if self._cached_balance and self._cached_balance.chain_blockid == info.blockid:
             return self._cached_balance
 
@@ -225,9 +253,17 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             - str (or unlockhash): recipient is a personal wallet
             - list: recipient is a MultiSig wallet where all owners (specified as a list of addresses) have to sign
             - tuple (addresses, sigcount): recipient is a sigcount-of-addresscount MultiSig wallet
+
+        The amount can be a str or an int:
+            - when it is an int, you are defining the amount in the smallest unit (that is 1 == 0.000000001 TFT)
+            - when defining as a str you can use the following space-stripped and case-insentive formats:
+                - '123456789': same as when defining the amount as an int
+                - '123.456': define the amount in TFT (that is '123.456' == 123.456 TFT == 123456000000)
+                - '123456 TFT': define the amount in TFT (that is '123456 TFT' == 123456 TFT == 123456000000000)
+                - '123.456 TFT': define the amount in TFT (that is '123.456 TFT' == 123.456 TFT == 123456000000)
         
         @param recipient: see explanation above
-        @param amount: int that defines the amount of coins to be sent note that 1 TFT == 1000000000
+        @param amount: int or str that defines the amount of TFT to set, see explanation above
         @param lock: optional lock that can be used to lock the sent amount to a specific time or block height
         @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
         """
@@ -240,7 +276,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
 
         # fund amount
         balance = self.balance
-        minerfee = self._miner_fee_get()
+        minerfee = self.client.minimum_minerfee
         outputs, remainder = balance.fund(amount+minerfee)
 
         # create transaction
@@ -274,10 +310,10 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         for ci in txn.coin_inputs:
             balance.output_add(ci.parent_output, confirmed=False, spent=True)
         addresses = self.addresses
-        for co in txn.coin_outputs:
-            # TODO: have to support coin output ID manually here,
-            #       as we cannot rely on the explorer to do it for us at this point
+        for idx, co in enumerate(txn.coin_outputs):
             if str(co.condition.unlockhash) in addresses:
+                # add the id to the coin_output, so we can track it has been spent
+                co.id = txn.coin_outputid_new(idx)
                 balance.output_add(co, confirmed=False, spent=False)
         # and return the created/submitted transaction for optional user consumption
         return txn
@@ -346,16 +382,10 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         return key
 
     def _unlockhash_get(self, address):
-        return self._parent._parent.unlockhash_get(address)
+        return self.client.unlockhash_get(address)
 
     def _transaction_put(self, transaction):
-        return self._parent._parent.transaction_put(transaction)
-        
-    def _miner_fee_get(self):
-        """
-        The (minimum) miner fee as defined by the TFChain client.
-        """
-        return self._parent._parent.minimum_minerfee
+        return self.client.transaction_put(transaction)
 
     def _key_pair_new(self, integrate=True, offset=0):
         """
@@ -409,6 +439,99 @@ class TFChainWallet(j.application.JSBaseConfigClass):
 
     def _clear_cache(self):
         self._cached_balance = None
+
+from .types.ConditionTypes import ConditionMultiSignature
+from .types.FulfillmentTypes import FulfillmentMultiSignature, PublicKeySignaturePair
+
+class TFChainMinter():
+    """
+    TFChainMinter contains all Coin Minting logic.
+    """
+
+    def __init__(self, wallet):
+        self._wallet = wallet
+
+    # TODO: adapt to new signing strategy
+    def definition_set(self, minter, data=None):
+        """
+        Redefine the current minter definition.
+        Arbitrary data can be attached as well if desired.
+
+        The minter is one of:
+            - str (or unlockhash): minter is a personal wallet
+            - list: minter is a MultiSig wallet where all owners (specified as a list of addresses) have to sign
+            - tuple (addresses, sigcount): minter is a sigcount-of-addresscount MultiSig wallet
+        
+        @param minter: see explanation above
+        @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
+        """
+        # create empty Mint Definition Txn, with a newly generated Nonce set already
+        txn = j.clients.tfchain.transactions.mint_definition_new()
+
+        # add the minimum miner fee
+        txn.miner_fee_add(self._minium_miner_fee)
+
+        # set the new mint condition
+        txn.mint_condition = j.clients.tfchain.types.conditions.from_recipient(minter)
+
+        # optionally set the data
+        if data is not None:
+            txn.data = data
+
+        # get the current mint condition
+        mc = self._current_mint_condition_get()
+        submit = False # only submit if we know we can submit
+        if isinstance(mc, ConditionMultiSignature):
+            # sign for all addresses we can sign
+            mf = FulfillmentMultiSignature()
+            signhash = txn.signature_hash_get(0) # hardcoded to '0' in tfchain (legacy)
+            for uh in mc.unlockhashes:
+                try:
+                    address = str(uh)
+                    keypair = self._wallet.key_pair_get(address)
+                    signature, pk = keypair.sign(signhash)
+                    mf.add_pair(public_key=pk, signature=signature)
+                except KeyError:
+                    pass # ignore, as this is possible\
+            txn.mint_fulfillment = mf
+            # raise a key error if pairs is 0
+            # as that meant we cannot do anything
+            lp = len(mf.pairs)
+            if lp == 0:
+                raise KeyError("wallet does not own any of the possible MultiSig addresses defined by the current MintCondition")
+            # submit if we have enough signatures
+            submit = (len(mf.pairs) >= mc.required_signatures)
+        else:
+            mf = self._wallet.fulfillment_from(condition=mc)
+            address = str(mc.unlockhash)
+            keypair = self._wallet.key_pair_get(address)
+            signhash = txn.signature_hash_get(0) # hardcoded to '0' in tfchain (legacy)
+            mf.signature, _ = keypair.sign(signhash)
+            txn.mint_fulfillment = mf
+            submit = True
+
+        # submit the transaction if possible
+        if submit:
+            txn.id = self._wallet.client.transaction_put(txn)
+
+        # return the txn, as well as the submit status as a boolean
+        return (txn, submit)
+
+    # TODO:
+    # define the coins_new Txn method
+
+    @property
+    def _minium_miner_fee(self):
+        """
+        Returns the minimum miner fee
+        """
+        return self._wallet.client.minimum_minerfee
+
+    def _current_mint_condition_get(self):
+        """
+        Get the current mind condition from the parent TFChain client.
+        """
+        return self._wallet.client.mint_condition_get()
 
 
 class SpendableKey():
@@ -618,7 +741,6 @@ class WalletBalance(object):
         outputs_available = self.outputs_unconfirmed_available
         outputs_available.sort(key=lambda co: co.value, reverse=True)
         for co in outputs_available:
-            j.shell()
             if co.value >= amount:
                 outputs = [co]
                 collected = co.value
@@ -650,14 +772,13 @@ class WalletBalance(object):
                 self._outputs[output.id] = output
                 # delete from other output lists if prior registered
                 self._outputs_unconfirmed.pop(output.id, None)
-        else: # unconfirmed outputs
+        elif output.id not in self._outputs_spent: # unconfirmed outputs
             if spent:
                 self._outputs_unconfirmed_spent[output.id] = output
                 # delete from other output lists if prior registered
                 self._outputs_unconfirmed.pop(output.id, None)
                 self._outputs.pop(output.id, None)
-                self._outputs_spent.pop(output.id, None)
-            elif output.id not in self._outputs_spent and output.id not in self._outputs_unconfirmed_spent:
+            elif output.id not in self._outputs_unconfirmed_spent:
                 self._outputs_unconfirmed[output.id] = output
 
     def _human_readable_balance(self):

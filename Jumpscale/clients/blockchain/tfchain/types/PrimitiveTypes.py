@@ -4,6 +4,16 @@ from .BaseDataType import BaseDataTypeClass
 
 from abc import abstractmethod
 
+# TODO:
+# Binary data should be one class with following options:
+#   * Fixed-size or not (important for binary encoding) (1)
+#   * format for str encoding (hex or base64) (2)
+# We achieve (2) currently by using sub-classes, but (1) we support manually in the classes
+# that own such binary data.
+#
+# ^ From this perspective is a hash just a fixed-size binary data
+#   (in which case we do want to specify the size for validation)
+
 class BaseBinaryData(BaseDataTypeClass):
     """
     BinaryData is the data type used for any binary data that is not a hash,
@@ -19,7 +29,7 @@ class BaseBinaryData(BaseDataTypeClass):
         if not isinstance(obj, str):
             raise TypeError("binary data is expected to be an encoded string when part of a JSON object")
         return cls(value=obj)
-    
+
     @property
     def value(self):
         return self._value
@@ -262,7 +272,7 @@ class Currency(BaseDataTypeClass):
     # allow our currency to be turned into an int
     def __int__(self):
         return self.value
-    
+
     def __str__(self):
         return str(self._value)
 
@@ -298,10 +308,76 @@ class Currency(BaseDataTypeClass):
             nbytes += 1
         encoder.add_int(nbytes)
         encoder.add_array(self._value.to_bytes(nbytes, byteorder='big'))
-    
+
     def rivine_binary_encode(self, encoder):
         """
         Encode this currency according to the Rivine Binary Encoding format.
+        """
+        nbytes, rem = divmod(self._value.bit_length(), 8)
+        if rem:
+            nbytes += 1
+        encoder.add_slice(self._value.to_bytes(nbytes, byteorder='big'))
+
+
+class Blockstake(BaseDataTypeClass):
+    """
+    TFChain Blockstake Object.
+    """
+    def __init__(self, value=0):
+        self._value = 0
+        self.value = value
+
+    @classmethod
+    def from_json(cls, obj):
+        if not isinstance(obj, str):
+            raise TypeError("block stake is expected to be a string when part of a JSON object, not type {}".format(type(obj)))
+        return cls(value=obj)
+    
+    @property
+    def value(self):
+        return self._value
+    @value.setter
+    def value(self, value):
+        if value is None:
+            self._value = 0
+            return
+        if isinstance(value, Currency):
+            self._value = value.value
+            return
+        if isinstance(value, str):
+            value = int(value)
+        elif not isinstance(value, int):
+            # float values are not allowed as our precision is high enough that
+            # rounding errors can occur
+            raise TypeError('block stake can only be set to a str or int value, not type {}'.format(type(value)))
+        else:
+            value = int(value)
+        if value < 0:
+            raise TypeError('block stake cannot have a negative value')
+        self._value = value
+
+    # allow our block stake to be turned into an int
+    def __int__(self):
+        return self.value
+    
+    def __str__(self):
+        return str(self._value)
+    __repr__ = __str__
+    json = __str__
+
+    def sia_binary_encode(self, encoder):
+        """
+        Encode this block stake (==Currency) according to the Sia Binary Encoding format.
+        """
+        nbytes, rem = divmod(self._value.bit_length(), 8)
+        if rem:
+            nbytes += 1
+        encoder.add_int(nbytes)
+        encoder.add_array(self._value.to_bytes(nbytes, byteorder='big'))
+    
+    def rivine_binary_encode(self, encoder):
+        """
+        Encode this block stake (==Currency) according to the Rivine Binary Encoding format.
         """
         nbytes, rem = divmod(self._value.bit_length(), 8)
         if rem:
