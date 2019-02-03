@@ -13,303 +13,259 @@ class JSGroup():
 
 
 
-class group_clients(JSGroup):
+class group_builder(JSGroup):
     def __init__(self):
         
-        self._gedis = None
-        self._multicast = None
-        self._gedis_backend = None
-        self._syncthing = None
-        self._postgres = None
-        self._s3 = None
-        self._zhub = None
-        self._portal = None
-        self._ovh = None
-        self._oauth = None
-        self._redis_config = None
-        self._telegram_bot = None
-        self._mongoengine = None
-        self._mongodb = None
-        self._currencylayer = None
-        self._tarantool = None
-        self._zos = None
-        self._redis = None
-        self._credis_core = None
-        self._email = None
-        self._sendgrid = None
-        self._openvcloud = None
-        self._intercom = None
         self.__template = None
-        self._itsyouonline = None
-        self._grafana = None
-        self._zstor = None
-        self._zerostor = None
-        self._sqlalchemy = None
-        self._virtualbox = None
-        self._influxdb = None
-        self._btc_electrum = None
-        self._tfchain = None
-        self._tfchain_old = None
-        self._sshagent = None
-        self._ssh = None
-        self._racktivity = None
-        self._gitea = None
-        self._github = None
-        self._google_compute = None
-        self._http = None
-        self._peewee = None
-        self._rogerthat = None
-        self._mysql = None
-        self._zboot = None
-        self._webgateway = None
-        self._etcd = None
-        self._zhubdirect = None
-        self._threefold_directory = None
-        self._kraken = None
-        self._btc_alpha = None
-        self._trello = None
-        self._sshkey = None
-        self._zerotier = None
-        self._kubernetes = None
-        self._coredns = None
-        self._ipmi = None
-        self._graphite = None
-        self._zdb = None
-        self._git = None
-        self._traefik = None
-        self._packetnet = None
+        self._apps = None
+        self._blockchain = None
+        self._buildenv = None
+        self._db = None
+        self._libs = None
+        self._libs = None
+        self.__template = None
+        self._monitoring = None
+        self._network = None
+        self._runtimes = None
+        self._storage = None
+        self._system = None
+        self._systemtools = None
+        self._tools = None
+        self._web = None
 
     
     @property
-    def gedis(self):
-        if self._gedis is None:
-            from DigitalMe.clients.gedis.GedisClientFactory import GedisClientFactory
-            self._gedis =  GedisClientFactory()
-            if hasattr(self._gedis,"_init"):
-                self._gedis._init()
-            if hasattr(self._gedis,"_init2"):
-                self._gedis._init2()
-        return self._gedis
+    def _template(self):
+        if self.__template is None:
+            from Jumpscale.builder.TEMPLATE.BuilderGrafanaFactory import GrafanaFactory
+            self.__template =  GrafanaFactory()
+            if hasattr(self.__template,"_init"):
+                self.__template._init()
+            if hasattr(self.__template,"_init2"):
+                self.__template._init2()
+        return self.__template
     @property
-    def multicast(self):
-        if self._multicast is None:
-            from DigitalMe.clients.multicast.MulticastFactory import MulticastFactory
-            self._multicast =  MulticastFactory()
-            if hasattr(self._multicast,"_init"):
-                self._multicast._init()
-            if hasattr(self._multicast,"_init2"):
-                self._multicast._init2()
-        return self._multicast
+    def apps(self):
+        if self._apps is None:
+            from Jumpscale.builder.apps.BuilderAppsFactory import BuilderAppsFactory
+            self._apps =  BuilderAppsFactory()
+            if hasattr(self._apps,"_init"):
+                self._apps._init()
+            if hasattr(self._apps,"_init2"):
+                self._apps._init2()
+        return self._apps
     @property
-    def gedis_backend(self):
-        if self._gedis_backend is None:
-            from DigitalMe.clients.gedis_backends.GedisBackendClientFactory import GedisBackendClientFactory
-            self._gedis_backend =  GedisBackendClientFactory()
-            if hasattr(self._gedis_backend,"_init"):
-                self._gedis_backend._init()
-            if hasattr(self._gedis_backend,"_init2"):
-                self._gedis_backend._init2()
-        return self._gedis_backend
+    def blockchain(self):
+        if self._blockchain is None:
+            from Jumpscale.builder.blockchain.BuilderBlockchainFactory import BuilderBlockchainFactory
+            self._blockchain =  BuilderBlockchainFactory()
+            if hasattr(self._blockchain,"_init"):
+                self._blockchain._init()
+            if hasattr(self._blockchain,"_init2"):
+                self._blockchain._init2()
+        return self._blockchain
     @property
-    def syncthing(self):
-        if self._syncthing is None:
-            from Jumpscale.clients.syncthing.SyncthingFactory import SyncthingFactory
-            self._syncthing =  SyncthingFactory()
-            if hasattr(self._syncthing,"_init"):
-                self._syncthing._init()
-            if hasattr(self._syncthing,"_init2"):
-                self._syncthing._init2()
-        return self._syncthing
+    def buildenv(self):
+        if self._buildenv is None:
+            from Jumpscale.builder.buildenv.BuildEnv import BuildEnv
+            self._buildenv =  BuildEnv()
+            if hasattr(self._buildenv,"_init"):
+                self._buildenv._init()
+            if hasattr(self._buildenv,"_init2"):
+                self._buildenv._init2()
+        return self._buildenv
     @property
-    def postgres(self):
-        if self._postgres is None:
-            from Jumpscale.clients.postgresql.PostgresqlFactory import PostgresqlFactory
-            self._postgres =  PostgresqlFactory()
-            if hasattr(self._postgres,"_init"):
-                self._postgres._init()
-            if hasattr(self._postgres,"_init2"):
-                self._postgres._init2()
-        return self._postgres
+    def db(self):
+        if self._db is None:
+            from Jumpscale.builder.db.BuildDBFactory import BuildDBFactory
+            self._db =  BuildDBFactory()
+            if hasattr(self._db,"_init"):
+                self._db._init()
+            if hasattr(self._db,"_init2"):
+                self._db._init2()
+        return self._db
     @property
-    def s3(self):
-        if self._s3 is None:
-            from Jumpscale.clients.s3.S3Factory import S3Factory
-            self._s3 =  S3Factory()
-            if hasattr(self._s3,"_init"):
-                self._s3._init()
-            if hasattr(self._s3,"_init2"):
-                self._s3._init2()
-        return self._s3
+    def libs(self):
+        if self._libs is None:
+            from Jumpscale.builder.libs.BuilderLibs import BuilderLibs
+            self._libs =  BuilderLibs()
+            if hasattr(self._libs,"_init"):
+                self._libs._init()
+            if hasattr(self._libs,"_init2"):
+                self._libs._init2()
+        return self._libs
     @property
-    def zhub(self):
-        if self._zhub is None:
-            from Jumpscale.clients.zero_hub.ZeroHubFactory import ZeroHubFactory
-            self._zhub =  ZeroHubFactory()
-            if hasattr(self._zhub,"_init"):
-                self._zhub._init()
-            if hasattr(self._zhub,"_init2"):
-                self._zhub._init2()
-        return self._zhub
+    def libs(self):
+        if self._libs is None:
+            from Jumpscale.builder.libs.BuilderLibsFactory import BuilderLibsFactory
+            self._libs =  BuilderLibsFactory()
+            if hasattr(self._libs,"_init"):
+                self._libs._init()
+            if hasattr(self._libs,"_init2"):
+                self._libs._init2()
+        return self._libs
     @property
-    def portal(self):
-        if self._portal is None:
-            from Jumpscale.clients.portal.PortalClientFactory import PortalClientFactory
-            self._portal =  PortalClientFactory()
-            if hasattr(self._portal,"_init"):
-                self._portal._init()
-            if hasattr(self._portal,"_init2"):
-                self._portal._init2()
-        return self._portal
+    def _template(self):
+        if self.__template is None:
+            from Jumpscale.builder.monitoring.BuilderGrafanaFactory import BuilderGrafanaFactory
+            self.__template =  BuilderGrafanaFactory()
+            if hasattr(self.__template,"_init"):
+                self.__template._init()
+            if hasattr(self.__template,"_init2"):
+                self.__template._init2()
+        return self.__template
     @property
-    def ovh(self):
-        if self._ovh is None:
-            from Jumpscale.clients.ovh.OVHFactory import OVHFactory
-            self._ovh =  OVHFactory()
-            if hasattr(self._ovh,"_init"):
-                self._ovh._init()
-            if hasattr(self._ovh,"_init2"):
-                self._ovh._init2()
-        return self._ovh
+    def monitoring(self):
+        if self._monitoring is None:
+            from Jumpscale.builder.monitoring.BuilderMonitoringFactory import BuilderMonitoringFactory
+            self._monitoring =  BuilderMonitoringFactory()
+            if hasattr(self._monitoring,"_init"):
+                self._monitoring._init()
+            if hasattr(self._monitoring,"_init2"):
+                self._monitoring._init2()
+        return self._monitoring
     @property
-    def oauth(self):
-        if self._oauth is None:
-            from Jumpscale.clients.oauth.OauthFactory import OauthFactory
-            self._oauth =  OauthFactory()
-            if hasattr(self._oauth,"_init"):
-                self._oauth._init()
-            if hasattr(self._oauth,"_init2"):
-                self._oauth._init2()
-        return self._oauth
+    def network(self):
+        if self._network is None:
+            from Jumpscale.builder.network.BuilderNetworkFactory import BuilderNetworkFactory
+            self._network =  BuilderNetworkFactory()
+            if hasattr(self._network,"_init"):
+                self._network._init()
+            if hasattr(self._network,"_init2"):
+                self._network._init2()
+        return self._network
     @property
-    def redis_config(self):
-        if self._redis_config is None:
-            from Jumpscale.clients.redisconfig.RedisConfigFactory import RedisConfigFactory
-            self._redis_config =  RedisConfigFactory()
-            if hasattr(self._redis_config,"_init"):
-                self._redis_config._init()
-            if hasattr(self._redis_config,"_init2"):
-                self._redis_config._init2()
-        return self._redis_config
+    def runtimes(self):
+        if self._runtimes is None:
+            from Jumpscale.builder.runtimes.BuilderRuntimesFactory import BuilderRuntimesFactory
+            self._runtimes =  BuilderRuntimesFactory()
+            if hasattr(self._runtimes,"_init"):
+                self._runtimes._init()
+            if hasattr(self._runtimes,"_init2"):
+                self._runtimes._init2()
+        return self._runtimes
     @property
-    def telegram_bot(self):
-        if self._telegram_bot is None:
-            from Jumpscale.clients.telegram_bot.TelegramBotFactory import TelegramBotFactory
-            self._telegram_bot =  TelegramBotFactory()
-            if hasattr(self._telegram_bot,"_init"):
-                self._telegram_bot._init()
-            if hasattr(self._telegram_bot,"_init2"):
-                self._telegram_bot._init2()
-        return self._telegram_bot
+    def storage(self):
+        if self._storage is None:
+            from Jumpscale.builder.storage.BuilderStorageFactory import BuilderAppsFactory
+            self._storage =  BuilderAppsFactory()
+            if hasattr(self._storage,"_init"):
+                self._storage._init()
+            if hasattr(self._storage,"_init2"):
+                self._storage._init2()
+        return self._storage
     @property
-    def mongoengine(self):
-        if self._mongoengine is None:
-            from Jumpscale.clients.mongodbclient.MongoEngineFactory import MongoEngineFactory
-            self._mongoengine =  MongoEngineFactory()
-            if hasattr(self._mongoengine,"_init"):
-                self._mongoengine._init()
-            if hasattr(self._mongoengine,"_init2"):
-                self._mongoengine._init2()
-        return self._mongoengine
+    def system(self):
+        if self._system is None:
+            from Jumpscale.builder.system.BuilderSystemFactory import BuilderSystemPackage
+            self._system =  BuilderSystemPackage()
+            if hasattr(self._system,"_init"):
+                self._system._init()
+            if hasattr(self._system,"_init2"):
+                self._system._init2()
+        return self._system
     @property
-    def mongodb(self):
-        if self._mongodb is None:
-            from Jumpscale.clients.mongodbclient.MongoFactory import MongoFactory
-            self._mongodb =  MongoFactory()
-            if hasattr(self._mongodb,"_init"):
-                self._mongodb._init()
-            if hasattr(self._mongodb,"_init2"):
-                self._mongodb._init2()
-        return self._mongodb
+    def systemtools(self):
+        if self._systemtools is None:
+            from Jumpscale.builder.systemtools.BuilderSystemToolsFactory import BuilderSystemToolsFactory
+            self._systemtools =  BuilderSystemToolsFactory()
+            if hasattr(self._systemtools,"_init"):
+                self._systemtools._init()
+            if hasattr(self._systemtools,"_init2"):
+                self._systemtools._init2()
+        return self._systemtools
     @property
-    def currencylayer(self):
-        if self._currencylayer is None:
-            from Jumpscale.clients.currencylayer.CurrencyLayer import CurrencyLayerSingleton
-            self._currencylayer =  CurrencyLayerSingleton()
-            if hasattr(self._currencylayer,"_init"):
-                self._currencylayer._init()
-            if hasattr(self._currencylayer,"_init2"):
-                self._currencylayer._init2()
-        return self._currencylayer
+    def tools(self):
+        if self._tools is None:
+            from Jumpscale.builder.tools.BuilderTools import BuilderTools
+            self._tools =  BuilderTools()
+            if hasattr(self._tools,"_init"):
+                self._tools._init()
+            if hasattr(self._tools,"_init2"):
+                self._tools._init2()
+        return self._tools
     @property
-    def tarantool(self):
-        if self._tarantool is None:
-            from Jumpscale.clients.tarantool.TarantoolFactory import TarantoolFactory
-            self._tarantool =  TarantoolFactory()
-            if hasattr(self._tarantool,"_init"):
-                self._tarantool._init()
-            if hasattr(self._tarantool,"_init2"):
-                self._tarantool._init2()
-        return self._tarantool
-    @property
-    def zos(self):
-        if self._zos is None:
-            from Jumpscale.clients.zero_os_protocol.ZeroOSFactory import ZeroOSFactory
-            self._zos =  ZeroOSFactory()
-            if hasattr(self._zos,"_init"):
-                self._zos._init()
-            if hasattr(self._zos,"_init2"):
-                self._zos._init2()
-        return self._zos
-    @property
-    def redis(self):
-        if self._redis is None:
-            from Jumpscale.clients.redis.RedisFactory import RedisFactory
-            self._redis =  RedisFactory()
-            if hasattr(self._redis,"_init"):
-                self._redis._init()
-            if hasattr(self._redis,"_init2"):
-                self._redis._init2()
-        return self._redis
-    @property
-    def credis_core(self):
-        if self._credis_core is None:
-            from Jumpscale.clients.redis.RedisCoreClient import RedisCoreClient
-            self._credis_core =  RedisCoreClient()
-            if hasattr(self._credis_core,"_init"):
-                self._credis_core._init()
-            if hasattr(self._credis_core,"_init2"):
-                self._credis_core._init2()
-        return self._credis_core
-    @property
-    def email(self):
-        if self._email is None:
-            from Jumpscale.clients.mail.EmailFactory import EmailFactory
-            self._email =  EmailFactory()
-            if hasattr(self._email,"_init"):
-                self._email._init()
-            if hasattr(self._email,"_init2"):
-                self._email._init2()
-        return self._email
-    @property
-    def sendgrid(self):
-        if self._sendgrid is None:
-            from Jumpscale.clients.mail.sendgrid.SendGridClient import SendGridClient
-            self._sendgrid =  SendGridClient()
-            if hasattr(self._sendgrid,"_init"):
-                self._sendgrid._init()
-            if hasattr(self._sendgrid,"_init2"):
-                self._sendgrid._init2()
-        return self._sendgrid
-    @property
-    def openvcloud(self):
-        if self._openvcloud is None:
-            from Jumpscale.clients.openvcloud.OVCFactory import OVCClientFactory
-            self._openvcloud =  OVCClientFactory()
-            if hasattr(self._openvcloud,"_init"):
-                self._openvcloud._init()
-            if hasattr(self._openvcloud,"_init2"):
-                self._openvcloud._init2()
-        return self._openvcloud
-    @property
-    def intercom(self):
-        if self._intercom is None:
-            from Jumpscale.clients.intercom.IntercomFactory import Intercom
-            self._intercom =  Intercom()
-            if hasattr(self._intercom,"_init"):
-                self._intercom._init()
-            if hasattr(self._intercom,"_init2"):
-                self._intercom._init2()
-        return self._intercom
+    def web(self):
+        if self._web is None:
+            from Jumpscale.builder.web.BuilderWebFactory import BuilderWebFactory
+            self._web =  BuilderWebFactory()
+            if hasattr(self._web,"_init"):
+                self._web._init()
+            if hasattr(self._web,"_init2"):
+                self._web._init2()
+        return self._web
+
+j.builder = group_builder()
+j.core._groups["builder"] = j.builder
+
+
+class group_clients(JSGroup):
+    def __init__(self):
+        
+        self.__template = None
+        self._btc_electrum = None
+        self._tfchain = None
+        self._tfchain_old = None
+        self._btc_alpha = None
+        self._coredns = None
+        self._currencylayer = None
+        self._etcd = None
+        self._git = None
+        self._gitea = None
+        self._github = None
+        self._google_compute = None
+        self._grafana = None
+        self._graphite = None
+        self._http = None
+        self._influxdb = None
+        self._intercom = None
+        self._ipmi = None
+        self._itsyouonline = None
+        self._kraken = None
+        self._kubernetes = None
+        self._email = None
+        self._sendgrid = None
+        self._mongoengine = None
+        self._mongodb = None
+        self._mysql = None
+        self._oauth = None
+        self._openvcloud = None
+        self._ovh = None
+        self._packetnet = None
+        self._peewee = None
+        self._portal = None
+        self._postgres = None
+        self._racktivity = None
+        self._credis_core = None
+        self._redis = None
+        self._redis_config = None
+        self._rogerthat = None
+        self._s3 = None
+        self._sqlalchemy = None
+        self._ssh = None
+        self._sshagent = None
+        self._sshkey = None
+        self._syncthing = None
+        self._tarantool = None
+        self._telegram_bot = None
+        self._threefold_directory = None
+        self._traefik = None
+        self._trello = None
+        self._virtualbox = None
+        self._webgateway = None
+        self._zdb = None
+        self._zboot = None
+        self._zhub = None
+        self._zhubdirect = None
+        self._zos = None
+        self._zstor = None
+        self._zerostor = None
+        self._zerotier = None
+        self._gedis = None
+        self._gedis_backend = None
+        self._multicast = None
+
+    
     @property
     def _template(self):
         if self.__template is None:
@@ -320,76 +276,6 @@ class group_clients(JSGroup):
             if hasattr(self.__template,"_init2"):
                 self.__template._init2()
         return self.__template
-    @property
-    def itsyouonline(self):
-        if self._itsyouonline is None:
-            from Jumpscale.clients.itsyouonline.IYOFactory import IYOFactory
-            self._itsyouonline =  IYOFactory()
-            if hasattr(self._itsyouonline,"_init"):
-                self._itsyouonline._init()
-            if hasattr(self._itsyouonline,"_init2"):
-                self._itsyouonline._init2()
-        return self._itsyouonline
-    @property
-    def grafana(self):
-        if self._grafana is None:
-            from Jumpscale.clients.grafana.GrafanaFactory import GrafanaFactory
-            self._grafana =  GrafanaFactory()
-            if hasattr(self._grafana,"_init"):
-                self._grafana._init()
-            if hasattr(self._grafana,"_init2"):
-                self._grafana._init2()
-        return self._grafana
-    @property
-    def zstor(self):
-        if self._zstor is None:
-            from Jumpscale.clients.zero_stor.ZeroStorFactory import ZeroStorFactory
-            self._zstor =  ZeroStorFactory()
-            if hasattr(self._zstor,"_init"):
-                self._zstor._init()
-            if hasattr(self._zstor,"_init2"):
-                self._zstor._init2()
-        return self._zstor
-    @property
-    def zerostor(self):
-        if self._zerostor is None:
-            from Jumpscale.clients.zero_stor.ZeroStorFactoryDeprecated import ZeroStorFactoryDeprecated
-            self._zerostor =  ZeroStorFactoryDeprecated()
-            if hasattr(self._zerostor,"_init"):
-                self._zerostor._init()
-            if hasattr(self._zerostor,"_init2"):
-                self._zerostor._init2()
-        return self._zerostor
-    @property
-    def sqlalchemy(self):
-        if self._sqlalchemy is None:
-            from Jumpscale.clients.sqlalchemy.SQLAlchemyFactory import SQLAlchemyFactory
-            self._sqlalchemy =  SQLAlchemyFactory()
-            if hasattr(self._sqlalchemy,"_init"):
-                self._sqlalchemy._init()
-            if hasattr(self._sqlalchemy,"_init2"):
-                self._sqlalchemy._init2()
-        return self._sqlalchemy
-    @property
-    def virtualbox(self):
-        if self._virtualbox is None:
-            from Jumpscale.clients.virtualbox.VirtualboxFactory import VirtualboxFactory
-            self._virtualbox =  VirtualboxFactory()
-            if hasattr(self._virtualbox,"_init"):
-                self._virtualbox._init()
-            if hasattr(self._virtualbox,"_init2"):
-                self._virtualbox._init2()
-        return self._virtualbox
-    @property
-    def influxdb(self):
-        if self._influxdb is None:
-            from Jumpscale.clients.influxdb.InfluxdbFactory import InfluxdbFactory
-            self._influxdb =  InfluxdbFactory()
-            if hasattr(self._influxdb,"_init"):
-                self._influxdb._init()
-            if hasattr(self._influxdb,"_init2"):
-                self._influxdb._init2()
-        return self._influxdb
     @property
     def btc_electrum(self):
         if self._btc_electrum is None:
@@ -421,35 +307,55 @@ class group_clients(JSGroup):
                 self._tfchain_old._init2()
         return self._tfchain_old
     @property
-    def sshagent(self):
-        if self._sshagent is None:
-            from Jumpscale.clients.sshagent.SSHAgent import SSHAgent
-            self._sshagent =  SSHAgent()
-            if hasattr(self._sshagent,"_init"):
-                self._sshagent._init()
-            if hasattr(self._sshagent,"_init2"):
-                self._sshagent._init2()
-        return self._sshagent
+    def btc_alpha(self):
+        if self._btc_alpha is None:
+            from Jumpscale.clients.btc_alpha.BTCFactory import GitHubFactory
+            self._btc_alpha =  GitHubFactory()
+            if hasattr(self._btc_alpha,"_init"):
+                self._btc_alpha._init()
+            if hasattr(self._btc_alpha,"_init2"):
+                self._btc_alpha._init2()
+        return self._btc_alpha
     @property
-    def ssh(self):
-        if self._ssh is None:
-            from Jumpscale.clients.ssh.SSHClientFactory import SSHClientFactory
-            self._ssh =  SSHClientFactory()
-            if hasattr(self._ssh,"_init"):
-                self._ssh._init()
-            if hasattr(self._ssh,"_init2"):
-                self._ssh._init2()
-        return self._ssh
+    def coredns(self):
+        if self._coredns is None:
+            from Jumpscale.clients.coredns.CoreDNSFactory import CoreDNSFactory
+            self._coredns =  CoreDNSFactory()
+            if hasattr(self._coredns,"_init"):
+                self._coredns._init()
+            if hasattr(self._coredns,"_init2"):
+                self._coredns._init2()
+        return self._coredns
     @property
-    def racktivity(self):
-        if self._racktivity is None:
-            from Jumpscale.clients.racktivity.RacktivityFactory import RacktivityFactory
-            self._racktivity =  RacktivityFactory()
-            if hasattr(self._racktivity,"_init"):
-                self._racktivity._init()
-            if hasattr(self._racktivity,"_init2"):
-                self._racktivity._init2()
-        return self._racktivity
+    def currencylayer(self):
+        if self._currencylayer is None:
+            from Jumpscale.clients.currencylayer.CurrencyLayer import CurrencyLayerSingleton
+            self._currencylayer =  CurrencyLayerSingleton()
+            if hasattr(self._currencylayer,"_init"):
+                self._currencylayer._init()
+            if hasattr(self._currencylayer,"_init2"):
+                self._currencylayer._init2()
+        return self._currencylayer
+    @property
+    def etcd(self):
+        if self._etcd is None:
+            from Jumpscale.clients.etcd.EtcdFactory import EtcdFactory
+            self._etcd =  EtcdFactory()
+            if hasattr(self._etcd,"_init"):
+                self._etcd._init()
+            if hasattr(self._etcd,"_init2"):
+                self._etcd._init2()
+        return self._etcd
+    @property
+    def git(self):
+        if self._git is None:
+            from Jumpscale.clients.git.GitFactory import GitFactory
+            self._git =  GitFactory()
+            if hasattr(self._git,"_init"):
+                self._git._init()
+            if hasattr(self._git,"_init2"):
+                self._git._init2()
+        return self._git
     @property
     def gitea(self):
         if self._gitea is None:
@@ -481,175 +387,15 @@ class group_clients(JSGroup):
                 self._google_compute._init2()
         return self._google_compute
     @property
-    def http(self):
-        if self._http is None:
-            from Jumpscale.clients.http.HttpClient import HttpClient
-            self._http =  HttpClient()
-            if hasattr(self._http,"_init"):
-                self._http._init()
-            if hasattr(self._http,"_init2"):
-                self._http._init2()
-        return self._http
-    @property
-    def peewee(self):
-        if self._peewee is None:
-            from Jumpscale.clients.peewee.PeeweeFactory import PeeweeFactory
-            self._peewee =  PeeweeFactory()
-            if hasattr(self._peewee,"_init"):
-                self._peewee._init()
-            if hasattr(self._peewee,"_init2"):
-                self._peewee._init2()
-        return self._peewee
-    @property
-    def rogerthat(self):
-        if self._rogerthat is None:
-            from Jumpscale.clients.rogerthat.RogerthatFactory import RogerthatFactory
-            self._rogerthat =  RogerthatFactory()
-            if hasattr(self._rogerthat,"_init"):
-                self._rogerthat._init()
-            if hasattr(self._rogerthat,"_init2"):
-                self._rogerthat._init2()
-        return self._rogerthat
-    @property
-    def mysql(self):
-        if self._mysql is None:
-            from Jumpscale.clients.mysql.MySQLFactory import MySQLFactory
-            self._mysql =  MySQLFactory()
-            if hasattr(self._mysql,"_init"):
-                self._mysql._init()
-            if hasattr(self._mysql,"_init2"):
-                self._mysql._init2()
-        return self._mysql
-    @property
-    def zboot(self):
-        if self._zboot is None:
-            from Jumpscale.clients.zero_boot.ZerobootFactory import ZerobootFactory
-            self._zboot =  ZerobootFactory()
-            if hasattr(self._zboot,"_init"):
-                self._zboot._init()
-            if hasattr(self._zboot,"_init2"):
-                self._zboot._init2()
-        return self._zboot
-    @property
-    def webgateway(self):
-        if self._webgateway is None:
-            from Jumpscale.clients.webgateway.WebGatewayFactory import WebGatewayFactory
-            self._webgateway =  WebGatewayFactory()
-            if hasattr(self._webgateway,"_init"):
-                self._webgateway._init()
-            if hasattr(self._webgateway,"_init2"):
-                self._webgateway._init2()
-        return self._webgateway
-    @property
-    def etcd(self):
-        if self._etcd is None:
-            from Jumpscale.clients.etcd.EtcdFactory import EtcdFactory
-            self._etcd =  EtcdFactory()
-            if hasattr(self._etcd,"_init"):
-                self._etcd._init()
-            if hasattr(self._etcd,"_init2"):
-                self._etcd._init2()
-        return self._etcd
-    @property
-    def zhubdirect(self):
-        if self._zhubdirect is None:
-            from Jumpscale.clients.zero_hub_direct.HubDirectFactory import HubDirectFactory
-            self._zhubdirect =  HubDirectFactory()
-            if hasattr(self._zhubdirect,"_init"):
-                self._zhubdirect._init()
-            if hasattr(self._zhubdirect,"_init2"):
-                self._zhubdirect._init2()
-        return self._zhubdirect
-    @property
-    def threefold_directory(self):
-        if self._threefold_directory is None:
-            from Jumpscale.clients.threefold_directory.GridCapacityFactory import GridCapacityFactory
-            self._threefold_directory =  GridCapacityFactory()
-            if hasattr(self._threefold_directory,"_init"):
-                self._threefold_directory._init()
-            if hasattr(self._threefold_directory,"_init2"):
-                self._threefold_directory._init2()
-        return self._threefold_directory
-    @property
-    def kraken(self):
-        if self._kraken is None:
-            from Jumpscale.clients.kraken.KrakenFactory import KrakenFactory
-            self._kraken =  KrakenFactory()
-            if hasattr(self._kraken,"_init"):
-                self._kraken._init()
-            if hasattr(self._kraken,"_init2"):
-                self._kraken._init2()
-        return self._kraken
-    @property
-    def btc_alpha(self):
-        if self._btc_alpha is None:
-            from Jumpscale.clients.btc_alpha.BTCFactory import GitHubFactory
-            self._btc_alpha =  GitHubFactory()
-            if hasattr(self._btc_alpha,"_init"):
-                self._btc_alpha._init()
-            if hasattr(self._btc_alpha,"_init2"):
-                self._btc_alpha._init2()
-        return self._btc_alpha
-    @property
-    def trello(self):
-        if self._trello is None:
-            from Jumpscale.clients.trello.TrelloFactory import Trello
-            self._trello =  Trello()
-            if hasattr(self._trello,"_init"):
-                self._trello._init()
-            if hasattr(self._trello,"_init2"):
-                self._trello._init2()
-        return self._trello
-    @property
-    def sshkey(self):
-        if self._sshkey is None:
-            from Jumpscale.clients.sshkey.SSHKeys import SSHKeys
-            self._sshkey =  SSHKeys()
-            if hasattr(self._sshkey,"_init"):
-                self._sshkey._init()
-            if hasattr(self._sshkey,"_init2"):
-                self._sshkey._init2()
-        return self._sshkey
-    @property
-    def zerotier(self):
-        if self._zerotier is None:
-            from Jumpscale.clients.zerotier.ZerotierFactory import ZerotierFactory
-            self._zerotier =  ZerotierFactory()
-            if hasattr(self._zerotier,"_init"):
-                self._zerotier._init()
-            if hasattr(self._zerotier,"_init2"):
-                self._zerotier._init2()
-        return self._zerotier
-    @property
-    def kubernetes(self):
-        if self._kubernetes is None:
-            from Jumpscale.clients.kubernetes.KubernetesFactory import KubernetesFactory
-            self._kubernetes =  KubernetesFactory()
-            if hasattr(self._kubernetes,"_init"):
-                self._kubernetes._init()
-            if hasattr(self._kubernetes,"_init2"):
-                self._kubernetes._init2()
-        return self._kubernetes
-    @property
-    def coredns(self):
-        if self._coredns is None:
-            from Jumpscale.clients.coredns.CoreDNSFactory import CoreDNSFactory
-            self._coredns =  CoreDNSFactory()
-            if hasattr(self._coredns,"_init"):
-                self._coredns._init()
-            if hasattr(self._coredns,"_init2"):
-                self._coredns._init2()
-        return self._coredns
-    @property
-    def ipmi(self):
-        if self._ipmi is None:
-            from Jumpscale.clients.ipmi.IpmiFactory import IpmiFactory
-            self._ipmi =  IpmiFactory()
-            if hasattr(self._ipmi,"_init"):
-                self._ipmi._init()
-            if hasattr(self._ipmi,"_init2"):
-                self._ipmi._init2()
-        return self._ipmi
+    def grafana(self):
+        if self._grafana is None:
+            from Jumpscale.clients.grafana.GrafanaFactory import GrafanaFactory
+            self._grafana =  GrafanaFactory()
+            if hasattr(self._grafana,"_init"):
+                self._grafana._init()
+            if hasattr(self._grafana,"_init2"):
+                self._grafana._init2()
+        return self._grafana
     @property
     def graphite(self):
         if self._graphite is None:
@@ -661,25 +407,335 @@ class group_clients(JSGroup):
                 self._graphite._init2()
         return self._graphite
     @property
-    def zdb(self):
-        if self._zdb is None:
-            from Jumpscale.clients.zdb.ZDBFactory import ZDBFactory
-            self._zdb =  ZDBFactory()
-            if hasattr(self._zdb,"_init"):
-                self._zdb._init()
-            if hasattr(self._zdb,"_init2"):
-                self._zdb._init2()
-        return self._zdb
+    def http(self):
+        if self._http is None:
+            from Jumpscale.clients.http.HttpClient import HttpClient
+            self._http =  HttpClient()
+            if hasattr(self._http,"_init"):
+                self._http._init()
+            if hasattr(self._http,"_init2"):
+                self._http._init2()
+        return self._http
     @property
-    def git(self):
-        if self._git is None:
-            from Jumpscale.clients.git.GitFactory import GitFactory
-            self._git =  GitFactory()
-            if hasattr(self._git,"_init"):
-                self._git._init()
-            if hasattr(self._git,"_init2"):
-                self._git._init2()
-        return self._git
+    def influxdb(self):
+        if self._influxdb is None:
+            from Jumpscale.clients.influxdb.InfluxdbFactory import InfluxdbFactory
+            self._influxdb =  InfluxdbFactory()
+            if hasattr(self._influxdb,"_init"):
+                self._influxdb._init()
+            if hasattr(self._influxdb,"_init2"):
+                self._influxdb._init2()
+        return self._influxdb
+    @property
+    def intercom(self):
+        if self._intercom is None:
+            from Jumpscale.clients.intercom.IntercomFactory import Intercom
+            self._intercom =  Intercom()
+            if hasattr(self._intercom,"_init"):
+                self._intercom._init()
+            if hasattr(self._intercom,"_init2"):
+                self._intercom._init2()
+        return self._intercom
+    @property
+    def ipmi(self):
+        if self._ipmi is None:
+            from Jumpscale.clients.ipmi.IpmiFactory import IpmiFactory
+            self._ipmi =  IpmiFactory()
+            if hasattr(self._ipmi,"_init"):
+                self._ipmi._init()
+            if hasattr(self._ipmi,"_init2"):
+                self._ipmi._init2()
+        return self._ipmi
+    @property
+    def itsyouonline(self):
+        if self._itsyouonline is None:
+            from Jumpscale.clients.itsyouonline.IYOFactory import IYOFactory
+            self._itsyouonline =  IYOFactory()
+            if hasattr(self._itsyouonline,"_init"):
+                self._itsyouonline._init()
+            if hasattr(self._itsyouonline,"_init2"):
+                self._itsyouonline._init2()
+        return self._itsyouonline
+    @property
+    def kraken(self):
+        if self._kraken is None:
+            from Jumpscale.clients.kraken.KrakenFactory import KrakenFactory
+            self._kraken =  KrakenFactory()
+            if hasattr(self._kraken,"_init"):
+                self._kraken._init()
+            if hasattr(self._kraken,"_init2"):
+                self._kraken._init2()
+        return self._kraken
+    @property
+    def kubernetes(self):
+        if self._kubernetes is None:
+            from Jumpscale.clients.kubernetes.KubernetesFactory import KubernetesFactory
+            self._kubernetes =  KubernetesFactory()
+            if hasattr(self._kubernetes,"_init"):
+                self._kubernetes._init()
+            if hasattr(self._kubernetes,"_init2"):
+                self._kubernetes._init2()
+        return self._kubernetes
+    @property
+    def email(self):
+        if self._email is None:
+            from Jumpscale.clients.mail.EmailFactory import EmailFactory
+            self._email =  EmailFactory()
+            if hasattr(self._email,"_init"):
+                self._email._init()
+            if hasattr(self._email,"_init2"):
+                self._email._init2()
+        return self._email
+    @property
+    def sendgrid(self):
+        if self._sendgrid is None:
+            from Jumpscale.clients.mail.sendgrid.SendGridClient import SendGridClient
+            self._sendgrid =  SendGridClient()
+            if hasattr(self._sendgrid,"_init"):
+                self._sendgrid._init()
+            if hasattr(self._sendgrid,"_init2"):
+                self._sendgrid._init2()
+        return self._sendgrid
+    @property
+    def mongoengine(self):
+        if self._mongoengine is None:
+            from Jumpscale.clients.mongodbclient.MongoEngineFactory import MongoEngineFactory
+            self._mongoengine =  MongoEngineFactory()
+            if hasattr(self._mongoengine,"_init"):
+                self._mongoengine._init()
+            if hasattr(self._mongoengine,"_init2"):
+                self._mongoengine._init2()
+        return self._mongoengine
+    @property
+    def mongodb(self):
+        if self._mongodb is None:
+            from Jumpscale.clients.mongodbclient.MongoFactory import MongoFactory
+            self._mongodb =  MongoFactory()
+            if hasattr(self._mongodb,"_init"):
+                self._mongodb._init()
+            if hasattr(self._mongodb,"_init2"):
+                self._mongodb._init2()
+        return self._mongodb
+    @property
+    def mysql(self):
+        if self._mysql is None:
+            from Jumpscale.clients.mysql.MySQLFactory import MySQLFactory
+            self._mysql =  MySQLFactory()
+            if hasattr(self._mysql,"_init"):
+                self._mysql._init()
+            if hasattr(self._mysql,"_init2"):
+                self._mysql._init2()
+        return self._mysql
+    @property
+    def oauth(self):
+        if self._oauth is None:
+            from Jumpscale.clients.oauth.OauthFactory import OauthFactory
+            self._oauth =  OauthFactory()
+            if hasattr(self._oauth,"_init"):
+                self._oauth._init()
+            if hasattr(self._oauth,"_init2"):
+                self._oauth._init2()
+        return self._oauth
+    @property
+    def openvcloud(self):
+        if self._openvcloud is None:
+            from Jumpscale.clients.openvcloud.OVCFactory import OVCClientFactory
+            self._openvcloud =  OVCClientFactory()
+            if hasattr(self._openvcloud,"_init"):
+                self._openvcloud._init()
+            if hasattr(self._openvcloud,"_init2"):
+                self._openvcloud._init2()
+        return self._openvcloud
+    @property
+    def ovh(self):
+        if self._ovh is None:
+            from Jumpscale.clients.ovh.OVHFactory import OVHFactory
+            self._ovh =  OVHFactory()
+            if hasattr(self._ovh,"_init"):
+                self._ovh._init()
+            if hasattr(self._ovh,"_init2"):
+                self._ovh._init2()
+        return self._ovh
+    @property
+    def packetnet(self):
+        if self._packetnet is None:
+            from Jumpscale.clients.packetnet.PacketNetFactory import PacketNetFactory
+            self._packetnet =  PacketNetFactory()
+            if hasattr(self._packetnet,"_init"):
+                self._packetnet._init()
+            if hasattr(self._packetnet,"_init2"):
+                self._packetnet._init2()
+        return self._packetnet
+    @property
+    def peewee(self):
+        if self._peewee is None:
+            from Jumpscale.clients.peewee.PeeweeFactory import PeeweeFactory
+            self._peewee =  PeeweeFactory()
+            if hasattr(self._peewee,"_init"):
+                self._peewee._init()
+            if hasattr(self._peewee,"_init2"):
+                self._peewee._init2()
+        return self._peewee
+    @property
+    def portal(self):
+        if self._portal is None:
+            from Jumpscale.clients.portal.PortalClientFactory import PortalClientFactory
+            self._portal =  PortalClientFactory()
+            if hasattr(self._portal,"_init"):
+                self._portal._init()
+            if hasattr(self._portal,"_init2"):
+                self._portal._init2()
+        return self._portal
+    @property
+    def postgres(self):
+        if self._postgres is None:
+            from Jumpscale.clients.postgresql.PostgresqlFactory import PostgresqlFactory
+            self._postgres =  PostgresqlFactory()
+            if hasattr(self._postgres,"_init"):
+                self._postgres._init()
+            if hasattr(self._postgres,"_init2"):
+                self._postgres._init2()
+        return self._postgres
+    @property
+    def racktivity(self):
+        if self._racktivity is None:
+            from Jumpscale.clients.racktivity.RacktivityFactory import RacktivityFactory
+            self._racktivity =  RacktivityFactory()
+            if hasattr(self._racktivity,"_init"):
+                self._racktivity._init()
+            if hasattr(self._racktivity,"_init2"):
+                self._racktivity._init2()
+        return self._racktivity
+    @property
+    def credis_core(self):
+        if self._credis_core is None:
+            from Jumpscale.clients.redis.RedisCoreClient import RedisCoreClient
+            self._credis_core =  RedisCoreClient()
+            if hasattr(self._credis_core,"_init"):
+                self._credis_core._init()
+            if hasattr(self._credis_core,"_init2"):
+                self._credis_core._init2()
+        return self._credis_core
+    @property
+    def redis(self):
+        if self._redis is None:
+            from Jumpscale.clients.redis.RedisFactory import RedisFactory
+            self._redis =  RedisFactory()
+            if hasattr(self._redis,"_init"):
+                self._redis._init()
+            if hasattr(self._redis,"_init2"):
+                self._redis._init2()
+        return self._redis
+    @property
+    def redis_config(self):
+        if self._redis_config is None:
+            from Jumpscale.clients.redisconfig.RedisConfigFactory import RedisConfigFactory
+            self._redis_config =  RedisConfigFactory()
+            if hasattr(self._redis_config,"_init"):
+                self._redis_config._init()
+            if hasattr(self._redis_config,"_init2"):
+                self._redis_config._init2()
+        return self._redis_config
+    @property
+    def rogerthat(self):
+        if self._rogerthat is None:
+            from Jumpscale.clients.rogerthat.RogerthatFactory import RogerthatFactory
+            self._rogerthat =  RogerthatFactory()
+            if hasattr(self._rogerthat,"_init"):
+                self._rogerthat._init()
+            if hasattr(self._rogerthat,"_init2"):
+                self._rogerthat._init2()
+        return self._rogerthat
+    @property
+    def s3(self):
+        if self._s3 is None:
+            from Jumpscale.clients.s3.S3Factory import S3Factory
+            self._s3 =  S3Factory()
+            if hasattr(self._s3,"_init"):
+                self._s3._init()
+            if hasattr(self._s3,"_init2"):
+                self._s3._init2()
+        return self._s3
+    @property
+    def sqlalchemy(self):
+        if self._sqlalchemy is None:
+            from Jumpscale.clients.sqlalchemy.SQLAlchemyFactory import SQLAlchemyFactory
+            self._sqlalchemy =  SQLAlchemyFactory()
+            if hasattr(self._sqlalchemy,"_init"):
+                self._sqlalchemy._init()
+            if hasattr(self._sqlalchemy,"_init2"):
+                self._sqlalchemy._init2()
+        return self._sqlalchemy
+    @property
+    def ssh(self):
+        if self._ssh is None:
+            from Jumpscale.clients.ssh.SSHClientFactory import SSHClientFactory
+            self._ssh =  SSHClientFactory()
+            if hasattr(self._ssh,"_init"):
+                self._ssh._init()
+            if hasattr(self._ssh,"_init2"):
+                self._ssh._init2()
+        return self._ssh
+    @property
+    def sshagent(self):
+        if self._sshagent is None:
+            from Jumpscale.clients.sshagent.SSHAgent import SSHAgent
+            self._sshagent =  SSHAgent()
+            if hasattr(self._sshagent,"_init"):
+                self._sshagent._init()
+            if hasattr(self._sshagent,"_init2"):
+                self._sshagent._init2()
+        return self._sshagent
+    @property
+    def sshkey(self):
+        if self._sshkey is None:
+            from Jumpscale.clients.sshkey.SSHKeys import SSHKeys
+            self._sshkey =  SSHKeys()
+            if hasattr(self._sshkey,"_init"):
+                self._sshkey._init()
+            if hasattr(self._sshkey,"_init2"):
+                self._sshkey._init2()
+        return self._sshkey
+    @property
+    def syncthing(self):
+        if self._syncthing is None:
+            from Jumpscale.clients.syncthing.SyncthingFactory import SyncthingFactory
+            self._syncthing =  SyncthingFactory()
+            if hasattr(self._syncthing,"_init"):
+                self._syncthing._init()
+            if hasattr(self._syncthing,"_init2"):
+                self._syncthing._init2()
+        return self._syncthing
+    @property
+    def tarantool(self):
+        if self._tarantool is None:
+            from Jumpscale.clients.tarantool.TarantoolFactory import TarantoolFactory
+            self._tarantool =  TarantoolFactory()
+            if hasattr(self._tarantool,"_init"):
+                self._tarantool._init()
+            if hasattr(self._tarantool,"_init2"):
+                self._tarantool._init2()
+        return self._tarantool
+    @property
+    def telegram_bot(self):
+        if self._telegram_bot is None:
+            from Jumpscale.clients.telegram_bot.TelegramBotFactory import TelegramBotFactory
+            self._telegram_bot =  TelegramBotFactory()
+            if hasattr(self._telegram_bot,"_init"):
+                self._telegram_bot._init()
+            if hasattr(self._telegram_bot,"_init2"):
+                self._telegram_bot._init2()
+        return self._telegram_bot
+    @property
+    def threefold_directory(self):
+        if self._threefold_directory is None:
+            from Jumpscale.clients.threefold_directory.GridCapacityFactory import GridCapacityFactory
+            self._threefold_directory =  GridCapacityFactory()
+            if hasattr(self._threefold_directory,"_init"):
+                self._threefold_directory._init()
+            if hasattr(self._threefold_directory,"_init2"):
+                self._threefold_directory._init2()
+        return self._threefold_directory
     @property
     def traefik(self):
         if self._traefik is None:
@@ -691,18 +747,1725 @@ class group_clients(JSGroup):
                 self._traefik._init2()
         return self._traefik
     @property
-    def packetnet(self):
-        if self._packetnet is None:
-            from Jumpscale.clients.packetnet.PacketNetFactory import PacketNetFactory
-            self._packetnet =  PacketNetFactory()
-            if hasattr(self._packetnet,"_init"):
-                self._packetnet._init()
-            if hasattr(self._packetnet,"_init2"):
-                self._packetnet._init2()
-        return self._packetnet
+    def trello(self):
+        if self._trello is None:
+            from Jumpscale.clients.trello.TrelloFactory import Trello
+            self._trello =  Trello()
+            if hasattr(self._trello,"_init"):
+                self._trello._init()
+            if hasattr(self._trello,"_init2"):
+                self._trello._init2()
+        return self._trello
+    @property
+    def virtualbox(self):
+        if self._virtualbox is None:
+            from Jumpscale.clients.virtualbox.VirtualboxFactory import VirtualboxFactory
+            self._virtualbox =  VirtualboxFactory()
+            if hasattr(self._virtualbox,"_init"):
+                self._virtualbox._init()
+            if hasattr(self._virtualbox,"_init2"):
+                self._virtualbox._init2()
+        return self._virtualbox
+    @property
+    def webgateway(self):
+        if self._webgateway is None:
+            from Jumpscale.clients.webgateway.WebGatewayFactory import WebGatewayFactory
+            self._webgateway =  WebGatewayFactory()
+            if hasattr(self._webgateway,"_init"):
+                self._webgateway._init()
+            if hasattr(self._webgateway,"_init2"):
+                self._webgateway._init2()
+        return self._webgateway
+    @property
+    def zdb(self):
+        if self._zdb is None:
+            from Jumpscale.clients.zdb.ZDBFactory import ZDBFactory
+            self._zdb =  ZDBFactory()
+            if hasattr(self._zdb,"_init"):
+                self._zdb._init()
+            if hasattr(self._zdb,"_init2"):
+                self._zdb._init2()
+        return self._zdb
+    @property
+    def zboot(self):
+        if self._zboot is None:
+            from Jumpscale.clients.zero_boot.ZerobootFactory import ZerobootFactory
+            self._zboot =  ZerobootFactory()
+            if hasattr(self._zboot,"_init"):
+                self._zboot._init()
+            if hasattr(self._zboot,"_init2"):
+                self._zboot._init2()
+        return self._zboot
+    @property
+    def zhub(self):
+        if self._zhub is None:
+            from Jumpscale.clients.zero_hub.ZeroHubFactory import ZeroHubFactory
+            self._zhub =  ZeroHubFactory()
+            if hasattr(self._zhub,"_init"):
+                self._zhub._init()
+            if hasattr(self._zhub,"_init2"):
+                self._zhub._init2()
+        return self._zhub
+    @property
+    def zhubdirect(self):
+        if self._zhubdirect is None:
+            from Jumpscale.clients.zero_hub_direct.HubDirectFactory import HubDirectFactory
+            self._zhubdirect =  HubDirectFactory()
+            if hasattr(self._zhubdirect,"_init"):
+                self._zhubdirect._init()
+            if hasattr(self._zhubdirect,"_init2"):
+                self._zhubdirect._init2()
+        return self._zhubdirect
+    @property
+    def zos(self):
+        if self._zos is None:
+            from Jumpscale.clients.zero_os_protocol.ZeroOSFactory import ZeroOSFactory
+            self._zos =  ZeroOSFactory()
+            if hasattr(self._zos,"_init"):
+                self._zos._init()
+            if hasattr(self._zos,"_init2"):
+                self._zos._init2()
+        return self._zos
+    @property
+    def zstor(self):
+        if self._zstor is None:
+            from Jumpscale.clients.zero_stor.ZeroStorFactory import ZeroStorFactory
+            self._zstor =  ZeroStorFactory()
+            if hasattr(self._zstor,"_init"):
+                self._zstor._init()
+            if hasattr(self._zstor,"_init2"):
+                self._zstor._init2()
+        return self._zstor
+    @property
+    def zerostor(self):
+        if self._zerostor is None:
+            from Jumpscale.clients.zero_stor.ZeroStorFactoryDeprecated import ZeroStorFactoryDeprecated
+            self._zerostor =  ZeroStorFactoryDeprecated()
+            if hasattr(self._zerostor,"_init"):
+                self._zerostor._init()
+            if hasattr(self._zerostor,"_init2"):
+                self._zerostor._init2()
+        return self._zerostor
+    @property
+    def zerotier(self):
+        if self._zerotier is None:
+            from Jumpscale.clients.zerotier.ZerotierFactory import ZerotierFactory
+            self._zerotier =  ZerotierFactory()
+            if hasattr(self._zerotier,"_init"):
+                self._zerotier._init()
+            if hasattr(self._zerotier,"_init2"):
+                self._zerotier._init2()
+        return self._zerotier
+    @property
+    def gedis(self):
+        if self._gedis is None:
+            from DigitalMe.clients.gedis.GedisClientFactory import GedisClientFactory
+            self._gedis =  GedisClientFactory()
+            if hasattr(self._gedis,"_init"):
+                self._gedis._init()
+            if hasattr(self._gedis,"_init2"):
+                self._gedis._init2()
+        return self._gedis
+    @property
+    def gedis_backend(self):
+        if self._gedis_backend is None:
+            from DigitalMe.clients.gedis_backends.GedisBackendClientFactory import GedisBackendClientFactory
+            self._gedis_backend =  GedisBackendClientFactory()
+            if hasattr(self._gedis_backend,"_init"):
+                self._gedis_backend._init()
+            if hasattr(self._gedis_backend,"_init2"):
+                self._gedis_backend._init2()
+        return self._gedis_backend
+    @property
+    def multicast(self):
+        if self._multicast is None:
+            from DigitalMe.clients.multicast.MulticastFactory import MulticastFactory
+            self._multicast =  MulticastFactory()
+            if hasattr(self._multicast,"_init"):
+                self._multicast._init()
+            if hasattr(self._multicast,"_init2"):
+                self._multicast._init2()
+        return self._multicast
 
 j.clients = group_clients()
 j.core._groups["clients"] = j.clients
+
+
+class group_sal(JSGroup):
+    def __init__(self):
+        
+        self._coredns = None
+        self._bind = None
+        self._btrfs = None
+        self._disklayout = None
+        self._dnsmasq = None
+        self._fs = None
+        self._fswalker = None
+        self._hostsfile = None
+        self._kvm = None
+        self._netconfig = None
+        self._nettools = None
+        self._nfs = None
+        self._nginx = None
+        self._nic = None
+        self._openvswitch = None
+        self._process = None
+        self._qemu_img = None
+        self._rsync = None
+        self._samba = None
+        self._sshd = None
+        self._ssl = None
+        self._tls = None
+        self._ubuntu = None
+        self._ufw = None
+        self._unix = None
+        self._windows = None
+        self._docker = None
+
+    
+    @property
+    def coredns(self):
+        if self._coredns is None:
+            from Jumpscale.clients.coredns.alternative.CoreDnsFactory import CoreDnsFactory
+            self._coredns =  CoreDnsFactory()
+            if hasattr(self._coredns,"_init"):
+                self._coredns._init()
+            if hasattr(self._coredns,"_init2"):
+                self._coredns._init2()
+        return self._coredns
+    @property
+    def bind(self):
+        if self._bind is None:
+            from Jumpscale.sal.bind.BindDNS import BindDNS
+            self._bind =  BindDNS()
+            if hasattr(self._bind,"_init"):
+                self._bind._init()
+            if hasattr(self._bind,"_init2"):
+                self._bind._init2()
+        return self._bind
+    @property
+    def btrfs(self):
+        if self._btrfs is None:
+            from Jumpscale.sal.btrfs.BtrfsExtension import BtfsExtensionFactory
+            self._btrfs =  BtfsExtensionFactory()
+            if hasattr(self._btrfs,"_init"):
+                self._btrfs._init()
+            if hasattr(self._btrfs,"_init2"):
+                self._btrfs._init2()
+        return self._btrfs
+    @property
+    def disklayout(self):
+        if self._disklayout is None:
+            from Jumpscale.sal.disklayout.DiskManager import DiskManager
+            self._disklayout =  DiskManager()
+            if hasattr(self._disklayout,"_init"):
+                self._disklayout._init()
+            if hasattr(self._disklayout,"_init2"):
+                self._disklayout._init2()
+        return self._disklayout
+    @property
+    def dnsmasq(self):
+        if self._dnsmasq is None:
+            from Jumpscale.sal.dnsmasq.DnsmasqFactory import DnsmasqFactory
+            self._dnsmasq =  DnsmasqFactory()
+            if hasattr(self._dnsmasq,"_init"):
+                self._dnsmasq._init()
+            if hasattr(self._dnsmasq,"_init2"):
+                self._dnsmasq._init2()
+        return self._dnsmasq
+    @property
+    def fs(self):
+        if self._fs is None:
+            from Jumpscale.sal.fs.SystemFS import SystemFS
+            self._fs =  SystemFS()
+            if hasattr(self._fs,"_init"):
+                self._fs._init()
+            if hasattr(self._fs,"_init2"):
+                self._fs._init2()
+        return self._fs
+    @property
+    def fswalker(self):
+        if self._fswalker is None:
+            from Jumpscale.sal.fs.SystemFSWalker import SystemFSWalker
+            self._fswalker =  SystemFSWalker()
+            if hasattr(self._fswalker,"_init"):
+                self._fswalker._init()
+            if hasattr(self._fswalker,"_init2"):
+                self._fswalker._init2()
+        return self._fswalker
+    @property
+    def hostsfile(self):
+        if self._hostsfile is None:
+            from Jumpscale.sal.hostfile.HostFile import HostFile
+            self._hostsfile =  HostFile()
+            if hasattr(self._hostsfile,"_init"):
+                self._hostsfile._init()
+            if hasattr(self._hostsfile,"_init2"):
+                self._hostsfile._init2()
+        return self._hostsfile
+    @property
+    def kvm(self):
+        if self._kvm is None:
+            from Jumpscale.sal.kvm.KVM import KVM
+            self._kvm =  KVM()
+            if hasattr(self._kvm,"_init"):
+                self._kvm._init()
+            if hasattr(self._kvm,"_init2"):
+                self._kvm._init2()
+        return self._kvm
+    @property
+    def netconfig(self):
+        if self._netconfig is None:
+            from Jumpscale.sal.netconfig.Netconfig import Netconfig
+            self._netconfig =  Netconfig()
+            if hasattr(self._netconfig,"_init"):
+                self._netconfig._init()
+            if hasattr(self._netconfig,"_init2"):
+                self._netconfig._init2()
+        return self._netconfig
+    @property
+    def nettools(self):
+        if self._nettools is None:
+            from Jumpscale.sal.nettools.NetTools import NetTools
+            self._nettools =  NetTools()
+            if hasattr(self._nettools,"_init"):
+                self._nettools._init()
+            if hasattr(self._nettools,"_init2"):
+                self._nettools._init2()
+        return self._nettools
+    @property
+    def nfs(self):
+        if self._nfs is None:
+            from Jumpscale.sal.nfs.NFS import NFS
+            self._nfs =  NFS()
+            if hasattr(self._nfs,"_init"):
+                self._nfs._init()
+            if hasattr(self._nfs,"_init2"):
+                self._nfs._init2()
+        return self._nfs
+    @property
+    def nginx(self):
+        if self._nginx is None:
+            from Jumpscale.sal.nginx.Nginx import NginxFactory
+            self._nginx =  NginxFactory()
+            if hasattr(self._nginx,"_init"):
+                self._nginx._init()
+            if hasattr(self._nginx,"_init2"):
+                self._nginx._init2()
+        return self._nginx
+    @property
+    def nic(self):
+        if self._nic is None:
+            from Jumpscale.sal.nic.UnixNetworkManager import UnixNetworkManager
+            self._nic =  UnixNetworkManager()
+            if hasattr(self._nic,"_init"):
+                self._nic._init()
+            if hasattr(self._nic,"_init2"):
+                self._nic._init2()
+        return self._nic
+    @property
+    def openvswitch(self):
+        if self._openvswitch is None:
+            from Jumpscale.sal.openvswitch.NetConfigFactory import NetConfigFactory
+            self._openvswitch =  NetConfigFactory()
+            if hasattr(self._openvswitch,"_init"):
+                self._openvswitch._init()
+            if hasattr(self._openvswitch,"_init2"):
+                self._openvswitch._init2()
+        return self._openvswitch
+    @property
+    def process(self):
+        if self._process is None:
+            from Jumpscale.sal.process.SystemProcess import SystemProcess
+            self._process =  SystemProcess()
+            if hasattr(self._process,"_init"):
+                self._process._init()
+            if hasattr(self._process,"_init2"):
+                self._process._init2()
+        return self._process
+    @property
+    def qemu_img(self):
+        if self._qemu_img is None:
+            from Jumpscale.sal.qemu_img.Qemu_img import QemuImg
+            self._qemu_img =  QemuImg()
+            if hasattr(self._qemu_img,"_init"):
+                self._qemu_img._init()
+            if hasattr(self._qemu_img,"_init2"):
+                self._qemu_img._init2()
+        return self._qemu_img
+    @property
+    def rsync(self):
+        if self._rsync is None:
+            from Jumpscale.sal.rsync.RsyncFactory import RsyncFactory
+            self._rsync =  RsyncFactory()
+            if hasattr(self._rsync,"_init"):
+                self._rsync._init()
+            if hasattr(self._rsync,"_init2"):
+                self._rsync._init2()
+        return self._rsync
+    @property
+    def samba(self):
+        if self._samba is None:
+            from Jumpscale.sal.samba.Samba import Samba
+            self._samba =  Samba()
+            if hasattr(self._samba,"_init"):
+                self._samba._init()
+            if hasattr(self._samba,"_init2"):
+                self._samba._init2()
+        return self._samba
+    @property
+    def sshd(self):
+        if self._sshd is None:
+            from Jumpscale.sal.sshd.SSHD import SSHD
+            self._sshd =  SSHD()
+            if hasattr(self._sshd,"_init"):
+                self._sshd._init()
+            if hasattr(self._sshd,"_init2"):
+                self._sshd._init2()
+        return self._sshd
+    @property
+    def ssl(self):
+        if self._ssl is None:
+            from Jumpscale.sal.ssl.SSLFactory import SSLFactory
+            self._ssl =  SSLFactory()
+            if hasattr(self._ssl,"_init"):
+                self._ssl._init()
+            if hasattr(self._ssl,"_init2"):
+                self._ssl._init2()
+        return self._ssl
+    @property
+    def tls(self):
+        if self._tls is None:
+            from Jumpscale.sal.tls.TLSFactory import TLSFactory
+            self._tls =  TLSFactory()
+            if hasattr(self._tls,"_init"):
+                self._tls._init()
+            if hasattr(self._tls,"_init2"):
+                self._tls._init2()
+        return self._tls
+    @property
+    def ubuntu(self):
+        if self._ubuntu is None:
+            from Jumpscale.sal.ubuntu.Ubuntu import Ubuntu
+            self._ubuntu =  Ubuntu()
+            if hasattr(self._ubuntu,"_init"):
+                self._ubuntu._init()
+            if hasattr(self._ubuntu,"_init2"):
+                self._ubuntu._init2()
+        return self._ubuntu
+    @property
+    def ufw(self):
+        if self._ufw is None:
+            from Jumpscale.sal.ufw.UFWManager import UFWManager
+            self._ufw =  UFWManager()
+            if hasattr(self._ufw,"_init"):
+                self._ufw._init()
+            if hasattr(self._ufw,"_init2"):
+                self._ufw._init2()
+        return self._ufw
+    @property
+    def unix(self):
+        if self._unix is None:
+            from Jumpscale.sal.unix.Unix import UnixSystem
+            self._unix =  UnixSystem()
+            if hasattr(self._unix,"_init"):
+                self._unix._init()
+            if hasattr(self._unix,"_init2"):
+                self._unix._init2()
+        return self._unix
+    @property
+    def windows(self):
+        if self._windows is None:
+            from Jumpscale.sal.windows.Windows import WindowsSystem
+            self._windows =  WindowsSystem()
+            if hasattr(self._windows,"_init"):
+                self._windows._init()
+            if hasattr(self._windows,"_init2"):
+                self._windows._init2()
+        return self._windows
+    @property
+    def docker(self):
+        if self._docker is None:
+            from Jumpscale.tools.docker.Docker import Docker
+            self._docker =  Docker()
+            if hasattr(self._docker,"_init"):
+                self._docker._init()
+            if hasattr(self._docker,"_init2"):
+                self._docker._init2()
+        return self._docker
+
+j.sal = group_sal()
+j.core._groups["sal"] = j.sal
+
+
+class group_data(JSGroup):
+    def __init__(self):
+        
+        self._bcdb = None
+        self._cachelru = None
+        self._capnp = None
+        self._dict_editor = None
+        self._docs = None
+        self._encryption = None
+        self._hash = None
+        self._html = None
+        self._idgenerator = None
+        self._indexfile = None
+        self._inifile = None
+        self._latex = None
+        self._markdown = None
+        self._nacl = None
+        self._randomnames = None
+        self._regex = None
+        self._rivine = None
+        self._schema = None
+        self._serializers = None
+        self._time = None
+        self._timeinterval = None
+        self._treemanager = None
+        self._types = None
+        self._worksheets = None
+        self._nltk = None
+
+    
+    @property
+    def bcdb(self):
+        if self._bcdb is None:
+            from Jumpscale.data.bcdb.BCDBFactory import BCDBFactory
+            self._bcdb =  BCDBFactory()
+            if hasattr(self._bcdb,"_init"):
+                self._bcdb._init()
+            if hasattr(self._bcdb,"_init2"):
+                self._bcdb._init2()
+        return self._bcdb
+    @property
+    def cachelru(self):
+        if self._cachelru is None:
+            from Jumpscale.data.cachelru.LRUCacheFactory import LRUCacheFactory
+            self._cachelru =  LRUCacheFactory()
+            if hasattr(self._cachelru,"_init"):
+                self._cachelru._init()
+            if hasattr(self._cachelru,"_init2"):
+                self._cachelru._init2()
+        return self._cachelru
+    @property
+    def capnp(self):
+        if self._capnp is None:
+            from Jumpscale.data.capnp.Capnp import Capnp
+            self._capnp =  Capnp()
+            if hasattr(self._capnp,"_init"):
+                self._capnp._init()
+            if hasattr(self._capnp,"_init2"):
+                self._capnp._init2()
+        return self._capnp
+    @property
+    def dict_editor(self):
+        if self._dict_editor is None:
+            from Jumpscale.data.dicteditor.DictEditor import DictEditorFactory
+            self._dict_editor =  DictEditorFactory()
+            if hasattr(self._dict_editor,"_init"):
+                self._dict_editor._init()
+            if hasattr(self._dict_editor,"_init2"):
+                self._dict_editor._init2()
+        return self._dict_editor
+    @property
+    def docs(self):
+        if self._docs is None:
+            from Jumpscale.data.docs.DocsFactory import DocsFactory
+            self._docs =  DocsFactory()
+            if hasattr(self._docs,"_init"):
+                self._docs._init()
+            if hasattr(self._docs,"_init2"):
+                self._docs._init2()
+        return self._docs
+    @property
+    def encryption(self):
+        if self._encryption is None:
+            from Jumpscale.data.encryption.EncryptionFactory import EncryptionFactory
+            self._encryption =  EncryptionFactory()
+            if hasattr(self._encryption,"_init"):
+                self._encryption._init()
+            if hasattr(self._encryption,"_init2"):
+                self._encryption._init2()
+        return self._encryption
+    @property
+    def hash(self):
+        if self._hash is None:
+            from Jumpscale.data.hash.HashTool import HashTool
+            self._hash =  HashTool()
+            if hasattr(self._hash,"_init"):
+                self._hash._init()
+            if hasattr(self._hash,"_init2"):
+                self._hash._init2()
+        return self._hash
+    @property
+    def html(self):
+        if self._html is None:
+            from Jumpscale.data.html.HTMLFactory import HTMLFactory
+            self._html =  HTMLFactory()
+            if hasattr(self._html,"_init"):
+                self._html._init()
+            if hasattr(self._html,"_init2"):
+                self._html._init2()
+        return self._html
+    @property
+    def idgenerator(self):
+        if self._idgenerator is None:
+            from Jumpscale.data.idgenerator.IDGenerator import IDGenerator
+            self._idgenerator =  IDGenerator()
+            if hasattr(self._idgenerator,"_init"):
+                self._idgenerator._init()
+            if hasattr(self._idgenerator,"_init2"):
+                self._idgenerator._init2()
+        return self._idgenerator
+    @property
+    def indexfile(self):
+        if self._indexfile is None:
+            from Jumpscale.data.indexFile.IndexFiles import IndexDB
+            self._indexfile =  IndexDB()
+            if hasattr(self._indexfile,"_init"):
+                self._indexfile._init()
+            if hasattr(self._indexfile,"_init2"):
+                self._indexfile._init2()
+        return self._indexfile
+    @property
+    def inifile(self):
+        if self._inifile is None:
+            from Jumpscale.data.inifile.IniFile import InifileTool
+            self._inifile =  InifileTool()
+            if hasattr(self._inifile,"_init"):
+                self._inifile._init()
+            if hasattr(self._inifile,"_init2"):
+                self._inifile._init2()
+        return self._inifile
+    @property
+    def latex(self):
+        if self._latex is None:
+            from Jumpscale.data.latex.Latex import Latex
+            self._latex =  Latex()
+            if hasattr(self._latex,"_init"):
+                self._latex._init()
+            if hasattr(self._latex,"_init2"):
+                self._latex._init2()
+        return self._latex
+    @property
+    def markdown(self):
+        if self._markdown is None:
+            from Jumpscale.data.markdown.MarkdownFactory import MarkdownFactory
+            self._markdown =  MarkdownFactory()
+            if hasattr(self._markdown,"_init"):
+                self._markdown._init()
+            if hasattr(self._markdown,"_init2"):
+                self._markdown._init2()
+        return self._markdown
+    @property
+    def nacl(self):
+        if self._nacl is None:
+            from Jumpscale.data.nacl.NACLFactory import NACLFactory
+            self._nacl =  NACLFactory()
+            if hasattr(self._nacl,"_init"):
+                self._nacl._init()
+            if hasattr(self._nacl,"_init2"):
+                self._nacl._init2()
+        return self._nacl
+    @property
+    def randomnames(self):
+        if self._randomnames is None:
+            from Jumpscale.data.random_names.RandomNames import RandomNames
+            self._randomnames =  RandomNames()
+            if hasattr(self._randomnames,"_init"):
+                self._randomnames._init()
+            if hasattr(self._randomnames,"_init2"):
+                self._randomnames._init2()
+        return self._randomnames
+    @property
+    def regex(self):
+        if self._regex is None:
+            from Jumpscale.data.regex.RegexTools import RegexTools
+            self._regex =  RegexTools()
+            if hasattr(self._regex,"_init"):
+                self._regex._init()
+            if hasattr(self._regex,"_init2"):
+                self._regex._init2()
+        return self._regex
+    @property
+    def rivine(self):
+        if self._rivine is None:
+            from Jumpscale.data.rivine.RivineDataFactory import RivineDataFactory
+            self._rivine =  RivineDataFactory()
+            if hasattr(self._rivine,"_init"):
+                self._rivine._init()
+            if hasattr(self._rivine,"_init2"):
+                self._rivine._init2()
+        return self._rivine
+    @property
+    def schema(self):
+        if self._schema is None:
+            from Jumpscale.data.schema.SchemaFactory import SchemaFactory
+            self._schema =  SchemaFactory()
+            if hasattr(self._schema,"_init"):
+                self._schema._init()
+            if hasattr(self._schema,"_init2"):
+                self._schema._init2()
+        return self._schema
+    @property
+    def serializers(self):
+        if self._serializers is None:
+            from Jumpscale.data.serializers.SerializersFactory import SerializersFactory
+            self._serializers =  SerializersFactory()
+            if hasattr(self._serializers,"_init"):
+                self._serializers._init()
+            if hasattr(self._serializers,"_init2"):
+                self._serializers._init2()
+        return self._serializers
+    @property
+    def time(self):
+        if self._time is None:
+            from Jumpscale.data.time.Time import Time_
+            self._time =  Time_()
+            if hasattr(self._time,"_init"):
+                self._time._init()
+            if hasattr(self._time,"_init2"):
+                self._time._init2()
+        return self._time
+    @property
+    def timeinterval(self):
+        if self._timeinterval is None:
+            from Jumpscale.data.time.TimeInterval import TimeInterval
+            self._timeinterval =  TimeInterval()
+            if hasattr(self._timeinterval,"_init"):
+                self._timeinterval._init()
+            if hasattr(self._timeinterval,"_init2"):
+                self._timeinterval._init2()
+        return self._timeinterval
+    @property
+    def treemanager(self):
+        if self._treemanager is None:
+            from Jumpscale.data.treemanager.Treemanager import TreemanagerFactory
+            self._treemanager =  TreemanagerFactory()
+            if hasattr(self._treemanager,"_init"):
+                self._treemanager._init()
+            if hasattr(self._treemanager,"_init2"):
+                self._treemanager._init2()
+        return self._treemanager
+    @property
+    def types(self):
+        if self._types is None:
+            from Jumpscale.data.types.Types import Types
+            self._types =  Types()
+            if hasattr(self._types,"_init"):
+                self._types._init()
+            if hasattr(self._types,"_init2"):
+                self._types._init2()
+        return self._types
+    @property
+    def worksheets(self):
+        if self._worksheets is None:
+            from Jumpscale.data.worksheets.Sheets import Sheets
+            self._worksheets =  Sheets()
+            if hasattr(self._worksheets,"_init"):
+                self._worksheets._init()
+            if hasattr(self._worksheets,"_init2"):
+                self._worksheets._init2()
+        return self._worksheets
+    @property
+    def nltk(self):
+        if self._nltk is None:
+            from DigitalMe.data.nltk.NLTK import NLTKFactory
+            self._nltk =  NLTKFactory()
+            if hasattr(self._nltk,"_init"):
+                self._nltk._init()
+            if hasattr(self._nltk,"_init2"):
+                self._nltk._init2()
+        return self._nltk
+
+j.data = group_data()
+j.core._groups["data"] = j.data
+
+
+class group_tools(JSGroup):
+    def __init__(self):
+        
+        self._email = None
+        self._flist = None
+        self._issuemanager = None
+        self._numtools = None
+        self._tarfile = None
+        self._zipfile = None
+        self._bash = None
+        self._aggregator = None
+        self._realityprocess = None
+        self._notapplicableyet = None
+        self._capacity = None
+        self._codeloader = None
+        self._code = None
+        self._code = None
+        self._console = None
+        self._cython = None
+        self._dash = None
+        self._dnstools = None
+        self._executor = None
+        self._executorLocal = None
+        self._expect = None
+        self._fixer = None
+        self._formatters = None
+        self._imagelib = None
+        self._jinja2 = None
+        self._legal_contracts = None
+        self._markdowndocs = None
+        self._memusagetest = None
+        self._objectinspector = None
+        self._offliner = None
+        self._rexplorer = None
+        self._path = None
+        self._performancetrace = None
+        self._reportlab = None
+        self._sandboxer = None
+        self._storybot = None
+        self._syncer = None
+        self._team_manager = None
+        self._timer = None
+        self._tmux = None
+        self._typechecker = None
+        self._tfbot = None
+        self._kosmos = None
+
+    
+    @property
+    def email(self):
+        if self._email is None:
+            from Jumpscale.data.email.Email import EmailTool
+            self._email =  EmailTool()
+            if hasattr(self._email,"_init"):
+                self._email._init()
+            if hasattr(self._email,"_init2"):
+                self._email._init2()
+        return self._email
+    @property
+    def flist(self):
+        if self._flist is None:
+            from Jumpscale.data.flist.FListFactory import FListFactory
+            self._flist =  FListFactory()
+            if hasattr(self._flist,"_init"):
+                self._flist._init()
+            if hasattr(self._flist,"_init2"):
+                self._flist._init2()
+        return self._flist
+    @property
+    def issuemanager(self):
+        if self._issuemanager is None:
+            from Jumpscale.data.issuemanager.IssueManager import IssueManager
+            self._issuemanager =  IssueManager()
+            if hasattr(self._issuemanager,"_init"):
+                self._issuemanager._init()
+            if hasattr(self._issuemanager,"_init2"):
+                self._issuemanager._init2()
+        return self._issuemanager
+    @property
+    def numtools(self):
+        if self._numtools is None:
+            from Jumpscale.data.numtools.NumTools import NumTools
+            self._numtools =  NumTools()
+            if hasattr(self._numtools,"_init"):
+                self._numtools._init()
+            if hasattr(self._numtools,"_init2"):
+                self._numtools._init2()
+        return self._numtools
+    @property
+    def tarfile(self):
+        if self._tarfile is None:
+            from Jumpscale.data.tarfile.TarFile import TarFileFactory
+            self._tarfile =  TarFileFactory()
+            if hasattr(self._tarfile,"_init"):
+                self._tarfile._init()
+            if hasattr(self._tarfile,"_init2"):
+                self._tarfile._init2()
+        return self._tarfile
+    @property
+    def zipfile(self):
+        if self._zipfile is None:
+            from Jumpscale.data.zip.ZipFile import ZipFileFactory
+            self._zipfile =  ZipFileFactory()
+            if hasattr(self._zipfile,"_init"):
+                self._zipfile._init()
+            if hasattr(self._zipfile,"_init2"):
+                self._zipfile._init2()
+        return self._zipfile
+    @property
+    def bash(self):
+        if self._bash is None:
+            from Jumpscale.sal.bash.BashFactory import BashFactory
+            self._bash =  BashFactory()
+            if hasattr(self._bash,"_init"):
+                self._bash._init()
+            if hasattr(self._bash,"_init2"):
+                self._bash._init2()
+        return self._bash
+    @property
+    def aggregator(self):
+        if self._aggregator is None:
+            from Jumpscale.tools.aggregator.Aggregator import Aggregator
+            self._aggregator =  Aggregator()
+            if hasattr(self._aggregator,"_init"):
+                self._aggregator._init()
+            if hasattr(self._aggregator,"_init2"):
+                self._aggregator._init2()
+        return self._aggregator
+    @property
+    def realityprocess(self):
+        if self._realityprocess is None:
+            from Jumpscale.tools.aggregator.RealityProcess import RealitProcess
+            self._realityprocess =  RealitProcess()
+            if hasattr(self._realityprocess,"_init"):
+                self._realityprocess._init()
+            if hasattr(self._realityprocess,"_init2"):
+                self._realityprocess._init2()
+        return self._realityprocess
+    @property
+    def notapplicableyet(self):
+        if self._notapplicableyet is None:
+            from Jumpscale.tools.builder.Builder import Builder
+            self._notapplicableyet =  Builder()
+            if hasattr(self._notapplicableyet,"_init"):
+                self._notapplicableyet._init()
+            if hasattr(self._notapplicableyet,"_init2"):
+                self._notapplicableyet._init2()
+        return self._notapplicableyet
+    @property
+    def capacity(self):
+        if self._capacity is None:
+            from Jumpscale.tools.capacity.Factory import Factory
+            self._capacity =  Factory()
+            if hasattr(self._capacity,"_init"):
+                self._capacity._init()
+            if hasattr(self._capacity,"_init2"):
+                self._capacity._init2()
+        return self._capacity
+    @property
+    def codeloader(self):
+        if self._codeloader is None:
+            from Jumpscale.tools.codeloader.CodeLoader import CodeLoader
+            self._codeloader =  CodeLoader()
+            if hasattr(self._codeloader,"_init"):
+                self._codeloader._init()
+            if hasattr(self._codeloader,"_init2"):
+                self._codeloader._init2()
+        return self._codeloader
+    @property
+    def code(self):
+        if self._code is None:
+            from Jumpscale.tools.codeloader.CodeTools import CodeTools
+            self._code =  CodeTools()
+            if hasattr(self._code,"_init"):
+                self._code._init()
+            if hasattr(self._code,"_init2"):
+                self._code._init2()
+        return self._code
+    @property
+    def code(self):
+        if self._code is None:
+            from Jumpscale.tools.codetools.CodeTools import CodeTools
+            self._code =  CodeTools()
+            if hasattr(self._code,"_init"):
+                self._code._init()
+            if hasattr(self._code,"_init2"):
+                self._code._init2()
+        return self._code
+    @property
+    def console(self):
+        if self._console is None:
+            from Jumpscale.tools.console.Console import Console
+            self._console =  Console()
+            if hasattr(self._console,"_init"):
+                self._console._init()
+            if hasattr(self._console,"_init2"):
+                self._console._init2()
+        return self._console
+    @property
+    def cython(self):
+        if self._cython is None:
+            from Jumpscale.tools.cython.CythonFactory import CythonFactory
+            self._cython =  CythonFactory()
+            if hasattr(self._cython,"_init"):
+                self._cython._init()
+            if hasattr(self._cython,"_init2"):
+                self._cython._init2()
+        return self._cython
+    @property
+    def dash(self):
+        if self._dash is None:
+            from Jumpscale.tools.dash.DASH import DASH
+            self._dash =  DASH()
+            if hasattr(self._dash,"_init"):
+                self._dash._init()
+            if hasattr(self._dash,"_init2"):
+                self._dash._init2()
+        return self._dash
+    @property
+    def dnstools(self):
+        if self._dnstools is None:
+            from Jumpscale.tools.dnstools.DNSTools import DNSTools
+            self._dnstools =  DNSTools()
+            if hasattr(self._dnstools,"_init"):
+                self._dnstools._init()
+            if hasattr(self._dnstools,"_init2"):
+                self._dnstools._init2()
+        return self._dnstools
+    @property
+    def executor(self):
+        if self._executor is None:
+            from Jumpscale.tools.executor.ExecutorFactory import ExecutorFactory
+            self._executor =  ExecutorFactory()
+            if hasattr(self._executor,"_init"):
+                self._executor._init()
+            if hasattr(self._executor,"_init2"):
+                self._executor._init2()
+        return self._executor
+    @property
+    def executorLocal(self):
+        if self._executorLocal is None:
+            from Jumpscale.tools.executor.ExecutorLocal import ExecutorLocal
+            self._executorLocal =  ExecutorLocal()
+            if hasattr(self._executorLocal,"_init"):
+                self._executorLocal._init()
+            if hasattr(self._executorLocal,"_init2"):
+                self._executorLocal._init2()
+        return self._executorLocal
+    @property
+    def expect(self):
+        if self._expect is None:
+            from Jumpscale.tools.expect.Expect import ExpectTool
+            self._expect =  ExpectTool()
+            if hasattr(self._expect,"_init"):
+                self._expect._init()
+            if hasattr(self._expect,"_init2"):
+                self._expect._init2()
+        return self._expect
+    @property
+    def fixer(self):
+        if self._fixer is None:
+            from Jumpscale.tools.fixer.Fixer import Fixer
+            self._fixer =  Fixer()
+            if hasattr(self._fixer,"_init"):
+                self._fixer._init()
+            if hasattr(self._fixer,"_init2"):
+                self._fixer._init2()
+        return self._fixer
+    @property
+    def formatters(self):
+        if self._formatters is None:
+            from Jumpscale.tools.formatters.FormattersFactory import FormattersFactory
+            self._formatters =  FormattersFactory()
+            if hasattr(self._formatters,"_init"):
+                self._formatters._init()
+            if hasattr(self._formatters,"_init2"):
+                self._formatters._init2()
+        return self._formatters
+    @property
+    def imagelib(self):
+        if self._imagelib is None:
+            from Jumpscale.tools.imagelib.ImageLib import ImageLib
+            self._imagelib =  ImageLib()
+            if hasattr(self._imagelib,"_init"):
+                self._imagelib._init()
+            if hasattr(self._imagelib,"_init2"):
+                self._imagelib._init2()
+        return self._imagelib
+    @property
+    def jinja2(self):
+        if self._jinja2 is None:
+            from Jumpscale.tools.jinja2.Jinja2 import Jinja2
+            self._jinja2 =  Jinja2()
+            if hasattr(self._jinja2,"_init"):
+                self._jinja2._init()
+            if hasattr(self._jinja2,"_init2"):
+                self._jinja2._init2()
+        return self._jinja2
+    @property
+    def legal_contracts(self):
+        if self._legal_contracts is None:
+            from Jumpscale.tools.legal_contracts.LegalContractsFactory import LegalContractsFactory
+            self._legal_contracts =  LegalContractsFactory()
+            if hasattr(self._legal_contracts,"_init"):
+                self._legal_contracts._init()
+            if hasattr(self._legal_contracts,"_init2"):
+                self._legal_contracts._init2()
+        return self._legal_contracts
+    @property
+    def markdowndocs(self):
+        if self._markdowndocs is None:
+            from Jumpscale.tools.markdowndocs.MarkDownDocs import MarkDownDocs
+            self._markdowndocs =  MarkDownDocs()
+            if hasattr(self._markdowndocs,"_init"):
+                self._markdowndocs._init()
+            if hasattr(self._markdowndocs,"_init2"):
+                self._markdowndocs._init2()
+        return self._markdowndocs
+    @property
+    def memusagetest(self):
+        if self._memusagetest is None:
+            from Jumpscale.tools.memusagetest.MemUsageTest import MemUsageTest
+            self._memusagetest =  MemUsageTest()
+            if hasattr(self._memusagetest,"_init"):
+                self._memusagetest._init()
+            if hasattr(self._memusagetest,"_init2"):
+                self._memusagetest._init2()
+        return self._memusagetest
+    @property
+    def objectinspector(self):
+        if self._objectinspector is None:
+            from Jumpscale.tools.objectinspector.ObjectInspector import ObjectInspector
+            self._objectinspector =  ObjectInspector()
+            if hasattr(self._objectinspector,"_init"):
+                self._objectinspector._init()
+            if hasattr(self._objectinspector,"_init2"):
+                self._objectinspector._init2()
+        return self._objectinspector
+    @property
+    def offliner(self):
+        if self._offliner is None:
+            from Jumpscale.tools.offliner.Offliner import Offliner
+            self._offliner =  Offliner()
+            if hasattr(self._offliner,"_init"):
+                self._offliner._init()
+            if hasattr(self._offliner,"_init2"):
+                self._offliner._init2()
+        return self._offliner
+    @property
+    def rexplorer(self):
+        if self._rexplorer is None:
+            from Jumpscale.tools.offliner.Rexplorer import Rexplorer
+            self._rexplorer =  Rexplorer()
+            if hasattr(self._rexplorer,"_init"):
+                self._rexplorer._init()
+            if hasattr(self._rexplorer,"_init2"):
+                self._rexplorer._init2()
+        return self._rexplorer
+    @property
+    def path(self):
+        if self._path is None:
+            from Jumpscale.tools.path.PathFactory import PathFactory
+            self._path =  PathFactory()
+            if hasattr(self._path,"_init"):
+                self._path._init()
+            if hasattr(self._path,"_init2"):
+                self._path._init2()
+        return self._path
+    @property
+    def performancetrace(self):
+        if self._performancetrace is None:
+            from Jumpscale.tools.performancetrace.PerformanceTrace import PerformanceTraceFactory
+            self._performancetrace =  PerformanceTraceFactory()
+            if hasattr(self._performancetrace,"_init"):
+                self._performancetrace._init()
+            if hasattr(self._performancetrace,"_init2"):
+                self._performancetrace._init2()
+        return self._performancetrace
+    @property
+    def reportlab(self):
+        if self._reportlab is None:
+            from Jumpscale.tools.reportlab.ReportlabFactory import ReportlabFactory
+            self._reportlab =  ReportlabFactory()
+            if hasattr(self._reportlab,"_init"):
+                self._reportlab._init()
+            if hasattr(self._reportlab,"_init2"):
+                self._reportlab._init2()
+        return self._reportlab
+    @property
+    def sandboxer(self):
+        if self._sandboxer is None:
+            from Jumpscale.tools.sandboxer.Sandboxer import Sandboxer
+            self._sandboxer =  Sandboxer()
+            if hasattr(self._sandboxer,"_init"):
+                self._sandboxer._init()
+            if hasattr(self._sandboxer,"_init2"):
+                self._sandboxer._init2()
+        return self._sandboxer
+    @property
+    def storybot(self):
+        if self._storybot is None:
+            from Jumpscale.tools.storybot.StoryBotFactory import StoryBotFactory
+            self._storybot =  StoryBotFactory()
+            if hasattr(self._storybot,"_init"):
+                self._storybot._init()
+            if hasattr(self._storybot,"_init2"):
+                self._storybot._init2()
+        return self._storybot
+    @property
+    def syncer(self):
+        if self._syncer is None:
+            from Jumpscale.tools.syncer.SyncerFactory import SyncerFactory
+            self._syncer =  SyncerFactory()
+            if hasattr(self._syncer,"_init"):
+                self._syncer._init()
+            if hasattr(self._syncer,"_init2"):
+                self._syncer._init2()
+        return self._syncer
+    @property
+    def team_manager(self):
+        if self._team_manager is None:
+            from Jumpscale.tools.teammgr.Teammgr import Teammgr
+            self._team_manager =  Teammgr()
+            if hasattr(self._team_manager,"_init"):
+                self._team_manager._init()
+            if hasattr(self._team_manager,"_init2"):
+                self._team_manager._init2()
+        return self._team_manager
+    @property
+    def timer(self):
+        if self._timer is None:
+            from Jumpscale.tools.timer.Timer import TIMER
+            self._timer =  TIMER()
+            if hasattr(self._timer,"_init"):
+                self._timer._init()
+            if hasattr(self._timer,"_init2"):
+                self._timer._init2()
+        return self._timer
+    @property
+    def tmux(self):
+        if self._tmux is None:
+            from Jumpscale.tools.tmux.Tmux import Tmux
+            self._tmux =  Tmux()
+            if hasattr(self._tmux,"_init"):
+                self._tmux._init()
+            if hasattr(self._tmux,"_init2"):
+                self._tmux._init2()
+        return self._tmux
+    @property
+    def typechecker(self):
+        if self._typechecker is None:
+            from Jumpscale.tools.typechecker.TypeChecker import TypeCheckerFactory
+            self._typechecker =  TypeCheckerFactory()
+            if hasattr(self._typechecker,"_init"):
+                self._typechecker._init()
+            if hasattr(self._typechecker,"_init2"):
+                self._typechecker._init2()
+        return self._typechecker
+    @property
+    def tfbot(self):
+        if self._tfbot is None:
+            from DigitalMe.tools.tfbot.TFBotFactory import TFBotFactory
+            self._tfbot =  TFBotFactory()
+            if hasattr(self._tfbot,"_init"):
+                self._tfbot._init()
+            if hasattr(self._tfbot,"_init2"):
+                self._tfbot._init2()
+        return self._tfbot
+    @property
+    def kosmos(self):
+        if self._kosmos is None:
+            from DigitalMe.tools.kosmos.kosmos_OLD.Kosmos import Kosmos
+            self._kosmos =  Kosmos()
+            if hasattr(self._kosmos,"_init"):
+                self._kosmos._init()
+            if hasattr(self._kosmos,"_init2"):
+                self._kosmos._init2()
+        return self._kosmos
+
+j.tools = group_tools()
+j.core._groups["tools"] = j.tools
+
+
+class group_data_units(JSGroup):
+    def __init__(self):
+        
+        self._sizes = None
+
+    
+    @property
+    def sizes(self):
+        if self._sizes is None:
+            from Jumpscale.data.numtools.units.Units import Bytes
+            self._sizes =  Bytes()
+            if hasattr(self._sizes,"_init"):
+                self._sizes._init()
+            if hasattr(self._sizes,"_init2"):
+                self._sizes._init2()
+        return self._sizes
+
+j.data_units = group_data_units()
+j.core._groups["data_units"] = j.data_units
+
+
+class group_sal_zos(JSGroup):
+    def __init__(self):
+        
+        self._etcd = None
+        self._capacity = None
+        self._containers = None
+        self._coredns = None
+        self._disks = None
+        self._farm = None
+        self._ftpclient = None
+        self._gateway = None
+        self._grafana = None
+        self._hypervisor = None
+        self._influx = None
+        self._ippoolmanager = None
+        self._minio = None
+        self._mongodb = None
+        self._network = None
+        self._node = None
+        self._primitives = None
+        self._sandbox = None
+        self._stats_collector = None
+        self._storagepools = None
+        self._tfchain = None
+        self._traefik = None
+        self._vm = None
+        self._zerodb = None
+        self._zt_bootstrap = None
+        self._zrobot = None
+        self._zstor = None
+
+    
+    @property
+    def etcd(self):
+        if self._etcd is None:
+            from Jumpscale.sal_zos.ETCD.ETCDFactory import ETCDFactory
+            self._etcd =  ETCDFactory()
+            if hasattr(self._etcd,"_init"):
+                self._etcd._init()
+            if hasattr(self._etcd,"_init2"):
+                self._etcd._init2()
+        return self._etcd
+    @property
+    def capacity(self):
+        if self._capacity is None:
+            from Jumpscale.sal_zos.capacity.CapacityFactory import CapacityFactory
+            self._capacity =  CapacityFactory()
+            if hasattr(self._capacity,"_init"):
+                self._capacity._init()
+            if hasattr(self._capacity,"_init2"):
+                self._capacity._init2()
+        return self._capacity
+    @property
+    def containers(self):
+        if self._containers is None:
+            from Jumpscale.sal_zos.container.ContainerFactory import ContainerFactory
+            self._containers =  ContainerFactory()
+            if hasattr(self._containers,"_init"):
+                self._containers._init()
+            if hasattr(self._containers,"_init2"):
+                self._containers._init2()
+        return self._containers
+    @property
+    def coredns(self):
+        if self._coredns is None:
+            from Jumpscale.sal_zos.coredns.CorednsFactory import CorednsFactory
+            self._coredns =  CorednsFactory()
+            if hasattr(self._coredns,"_init"):
+                self._coredns._init()
+            if hasattr(self._coredns,"_init2"):
+                self._coredns._init2()
+        return self._coredns
+    @property
+    def disks(self):
+        if self._disks is None:
+            from Jumpscale.sal_zos.disks.DisksFactory import DisksFactory
+            self._disks =  DisksFactory()
+            if hasattr(self._disks,"_init"):
+                self._disks._init()
+            if hasattr(self._disks,"_init2"):
+                self._disks._init2()
+        return self._disks
+    @property
+    def farm(self):
+        if self._farm is None:
+            from Jumpscale.sal_zos.farm.FarmFactory import FarmFactory
+            self._farm =  FarmFactory()
+            if hasattr(self._farm,"_init"):
+                self._farm._init()
+            if hasattr(self._farm,"_init2"):
+                self._farm._init2()
+        return self._farm
+    @property
+    def ftpclient(self):
+        if self._ftpclient is None:
+            from Jumpscale.sal_zos.ftpClient.ftpFactory import FtpFactory
+            self._ftpclient =  FtpFactory()
+            if hasattr(self._ftpclient,"_init"):
+                self._ftpclient._init()
+            if hasattr(self._ftpclient,"_init2"):
+                self._ftpclient._init2()
+        return self._ftpclient
+    @property
+    def gateway(self):
+        if self._gateway is None:
+            from Jumpscale.sal_zos.gateway.gatewayFactory import GatewayFactory
+            self._gateway =  GatewayFactory()
+            if hasattr(self._gateway,"_init"):
+                self._gateway._init()
+            if hasattr(self._gateway,"_init2"):
+                self._gateway._init2()
+        return self._gateway
+    @property
+    def grafana(self):
+        if self._grafana is None:
+            from Jumpscale.sal_zos.grafana.grafanaFactory import GrafanaFactory
+            self._grafana =  GrafanaFactory()
+            if hasattr(self._grafana,"_init"):
+                self._grafana._init()
+            if hasattr(self._grafana,"_init2"):
+                self._grafana._init2()
+        return self._grafana
+    @property
+    def hypervisor(self):
+        if self._hypervisor is None:
+            from Jumpscale.sal_zos.hypervisor.HypervisorFactory import HypervisorFactory
+            self._hypervisor =  HypervisorFactory()
+            if hasattr(self._hypervisor,"_init"):
+                self._hypervisor._init()
+            if hasattr(self._hypervisor,"_init2"):
+                self._hypervisor._init2()
+        return self._hypervisor
+    @property
+    def influx(self):
+        if self._influx is None:
+            from Jumpscale.sal_zos.influxdb.influxdbFactory import InfluxDBFactory
+            self._influx =  InfluxDBFactory()
+            if hasattr(self._influx,"_init"):
+                self._influx._init()
+            if hasattr(self._influx,"_init2"):
+                self._influx._init2()
+        return self._influx
+    @property
+    def ippoolmanager(self):
+        if self._ippoolmanager is None:
+            from Jumpscale.sal_zos.ip_pool_manager.IPPoolManagerFactory import IPPoolManagerFactory
+            self._ippoolmanager =  IPPoolManagerFactory()
+            if hasattr(self._ippoolmanager,"_init"):
+                self._ippoolmanager._init()
+            if hasattr(self._ippoolmanager,"_init2"):
+                self._ippoolmanager._init2()
+        return self._ippoolmanager
+    @property
+    def minio(self):
+        if self._minio is None:
+            from Jumpscale.sal_zos.minio.MinioFactory import MinioFactory
+            self._minio =  MinioFactory()
+            if hasattr(self._minio,"_init"):
+                self._minio._init()
+            if hasattr(self._minio,"_init2"):
+                self._minio._init2()
+        return self._minio
+    @property
+    def mongodb(self):
+        if self._mongodb is None:
+            from Jumpscale.sal_zos.mongodb.MongodbFactory import MongodbFactory
+            self._mongodb =  MongodbFactory()
+            if hasattr(self._mongodb,"_init"):
+                self._mongodb._init()
+            if hasattr(self._mongodb,"_init2"):
+                self._mongodb._init2()
+        return self._mongodb
+    @property
+    def network(self):
+        if self._network is None:
+            from Jumpscale.sal_zos.network.NetworkFactory import NetworkFactory
+            self._network =  NetworkFactory()
+            if hasattr(self._network,"_init"):
+                self._network._init()
+            if hasattr(self._network,"_init2"):
+                self._network._init2()
+        return self._network
+    @property
+    def node(self):
+        if self._node is None:
+            from Jumpscale.sal_zos.node.NodeFactory import PrimitivesFactory
+            self._node =  PrimitivesFactory()
+            if hasattr(self._node,"_init"):
+                self._node._init()
+            if hasattr(self._node,"_init2"):
+                self._node._init2()
+        return self._node
+    @property
+    def primitives(self):
+        if self._primitives is None:
+            from Jumpscale.sal_zos.primitives.PrimitivesFactory import PrimitivesFactory
+            self._primitives =  PrimitivesFactory()
+            if hasattr(self._primitives,"_init"):
+                self._primitives._init()
+            if hasattr(self._primitives,"_init2"):
+                self._primitives._init2()
+        return self._primitives
+    @property
+    def sandbox(self):
+        if self._sandbox is None:
+            from Jumpscale.sal_zos.sandbox.ZOSSandboxFactory import ZOSSandboxFactory
+            self._sandbox =  ZOSSandboxFactory()
+            if hasattr(self._sandbox,"_init"):
+                self._sandbox._init()
+            if hasattr(self._sandbox,"_init2"):
+                self._sandbox._init2()
+        return self._sandbox
+    @property
+    def stats_collector(self):
+        if self._stats_collector is None:
+            from Jumpscale.sal_zos.stats_collector.stats_collector_factory import StatsCollectorFactory
+            self._stats_collector =  StatsCollectorFactory()
+            if hasattr(self._stats_collector,"_init"):
+                self._stats_collector._init()
+            if hasattr(self._stats_collector,"_init2"):
+                self._stats_collector._init2()
+        return self._stats_collector
+    @property
+    def storagepools(self):
+        if self._storagepools is None:
+            from Jumpscale.sal_zos.storage.StorageFactory import ContainerFactory
+            self._storagepools =  ContainerFactory()
+            if hasattr(self._storagepools,"_init"):
+                self._storagepools._init()
+            if hasattr(self._storagepools,"_init2"):
+                self._storagepools._init2()
+        return self._storagepools
+    @property
+    def tfchain(self):
+        if self._tfchain is None:
+            from Jumpscale.sal_zos.tfchain.TfChainFactory import TfChainFactory
+            self._tfchain =  TfChainFactory()
+            if hasattr(self._tfchain,"_init"):
+                self._tfchain._init()
+            if hasattr(self._tfchain,"_init2"):
+                self._tfchain._init2()
+        return self._tfchain
+    @property
+    def traefik(self):
+        if self._traefik is None:
+            from Jumpscale.sal_zos.traefik.TraefikFactory import TraefikFactory
+            self._traefik =  TraefikFactory()
+            if hasattr(self._traefik,"_init"):
+                self._traefik._init()
+            if hasattr(self._traefik,"_init2"):
+                self._traefik._init2()
+        return self._traefik
+    @property
+    def vm(self):
+        if self._vm is None:
+            from Jumpscale.sal_zos.vm.ZOS_VMFactory import ZOS_VMFactory
+            self._vm =  ZOS_VMFactory()
+            if hasattr(self._vm,"_init"):
+                self._vm._init()
+            if hasattr(self._vm,"_init2"):
+                self._vm._init2()
+        return self._vm
+    @property
+    def zerodb(self):
+        if self._zerodb is None:
+            from Jumpscale.sal_zos.zerodb.zerodbFactory import ZerodbFactory
+            self._zerodb =  ZerodbFactory()
+            if hasattr(self._zerodb,"_init"):
+                self._zerodb._init()
+            if hasattr(self._zerodb,"_init2"):
+                self._zerodb._init2()
+        return self._zerodb
+    @property
+    def zt_bootstrap(self):
+        if self._zt_bootstrap is None:
+            from Jumpscale.sal_zos.zerotier_bootstrap.ZerotierBootstrapFactory import ZerotierBootstrapFactory
+            self._zt_bootstrap =  ZerotierBootstrapFactory()
+            if hasattr(self._zt_bootstrap,"_init"):
+                self._zt_bootstrap._init()
+            if hasattr(self._zt_bootstrap,"_init2"):
+                self._zt_bootstrap._init2()
+        return self._zt_bootstrap
+    @property
+    def zrobot(self):
+        if self._zrobot is None:
+            from Jumpscale.sal_zos.zrobot.ZRobotFactory import ZeroRobotFactory
+            self._zrobot =  ZeroRobotFactory()
+            if hasattr(self._zrobot,"_init"):
+                self._zrobot._init()
+            if hasattr(self._zrobot,"_init2"):
+                self._zrobot._init2()
+        return self._zrobot
+    @property
+    def zstor(self):
+        if self._zstor is None:
+            from Jumpscale.sal_zos.zstor.ZStorFactory import ZeroStorFactory
+            self._zstor =  ZeroStorFactory()
+            if hasattr(self._zstor,"_init"):
+                self._zstor._init()
+            if hasattr(self._zstor,"_init2"):
+                self._zstor._init2()
+        return self._zstor
+
+j.sal_zos = group_sal_zos()
+j.core._groups["sal_zos"] = j.sal_zos
+
+
+class group_servers(JSGroup):
+    def __init__(self):
+        
+        self._errbot = None
+        self._etcd = None
+        self._capacity = None
+        self._jsrun = None
+        self._openresty = None
+        self._web = None
+        self._zdb = None
+        self._redis_logger = None
+        self._digitalme = None
+        self._dns = None
+        self._gedis = None
+        self._myjobs = None
+        self._raftserver = None
+
+    
+    @property
+    def errbot(self):
+        if self._errbot is None:
+            from Jumpscale.servers.errbot.ErrBotFactory import ErrBotFactory
+            self._errbot =  ErrBotFactory()
+            if hasattr(self._errbot,"_init"):
+                self._errbot._init()
+            if hasattr(self._errbot,"_init2"):
+                self._errbot._init2()
+        return self._errbot
+    @property
+    def etcd(self):
+        if self._etcd is None:
+            from Jumpscale.servers.etcd.EtcdServer import EtcdServer
+            self._etcd =  EtcdServer()
+            if hasattr(self._etcd,"_init"):
+                self._etcd._init()
+            if hasattr(self._etcd,"_init2"):
+                self._etcd._init2()
+        return self._etcd
+    @property
+    def capacity(self):
+        if self._capacity is None:
+            from Jumpscale.servers.grid_capacity.CapacityFactory import CapacityFactory
+            self._capacity =  CapacityFactory()
+            if hasattr(self._capacity,"_init"):
+                self._capacity._init()
+            if hasattr(self._capacity,"_init2"):
+                self._capacity._init2()
+        return self._capacity
+    @property
+    def jsrun(self):
+        if self._jsrun is None:
+            from Jumpscale.servers.jsrun.JSRun import JSRun
+            self._jsrun =  JSRun()
+            if hasattr(self._jsrun,"_init"):
+                self._jsrun._init()
+            if hasattr(self._jsrun,"_init2"):
+                self._jsrun._init2()
+        return self._jsrun
+    @property
+    def openresty(self):
+        if self._openresty is None:
+            from Jumpscale.servers.openresty.OpenRestyFactory import OpenRestyFactory
+            self._openresty =  OpenRestyFactory()
+            if hasattr(self._openresty,"_init"):
+                self._openresty._init()
+            if hasattr(self._openresty,"_init2"):
+                self._openresty._init2()
+        return self._openresty
+    @property
+    def web(self):
+        if self._web is None:
+            from Jumpscale.servers.webserver.JSWebServers import JSWebServers
+            self._web =  JSWebServers()
+            if hasattr(self._web,"_init"):
+                self._web._init()
+            if hasattr(self._web,"_init2"):
+                self._web._init2()
+        return self._web
+    @property
+    def zdb(self):
+        if self._zdb is None:
+            from Jumpscale.servers.zdb.ZDBServer import ZDBServer
+            self._zdb =  ZDBServer()
+            if hasattr(self._zdb,"_init"):
+                self._zdb._init()
+            if hasattr(self._zdb,"_init2"):
+                self._zdb._init2()
+        return self._zdb
+    @property
+    def redis_logger(self):
+        if self._redis_logger is None:
+            from Jumpscale.servers.redis.RedisServer import RedisLoggingServer
+            self._redis_logger =  RedisLoggingServer()
+            if hasattr(self._redis_logger,"_init"):
+                self._redis_logger._init()
+            if hasattr(self._redis_logger,"_init2"):
+                self._redis_logger._init2()
+        return self._redis_logger
+    @property
+    def digitalme(self):
+        if self._digitalme is None:
+            from DigitalMe.servers.digitalme.DigitalMe import DigitalMe
+            self._digitalme =  DigitalMe()
+            if hasattr(self._digitalme,"_init"):
+                self._digitalme._init()
+            if hasattr(self._digitalme,"_init2"):
+                self._digitalme._init2()
+        return self._digitalme
+    @property
+    def dns(self):
+        if self._dns is None:
+            from DigitalMe.servers.dns.DNSServerFactory import DNSServerFactory
+            self._dns =  DNSServerFactory()
+            if hasattr(self._dns,"_init"):
+                self._dns._init()
+            if hasattr(self._dns,"_init2"):
+                self._dns._init2()
+        return self._dns
+    @property
+    def gedis(self):
+        if self._gedis is None:
+            from DigitalMe.servers.gedis.GedisFactory import GedisFactory
+            self._gedis =  GedisFactory()
+            if hasattr(self._gedis,"_init"):
+                self._gedis._init()
+            if hasattr(self._gedis,"_init2"):
+                self._gedis._init2()
+        return self._gedis
+    @property
+    def myjobs(self):
+        if self._myjobs is None:
+            from DigitalMe.servers.myjobs.MyJobs import MyJobs
+            self._myjobs =  MyJobs()
+            if hasattr(self._myjobs,"_init"):
+                self._myjobs._init()
+            if hasattr(self._myjobs,"_init2"):
+                self._myjobs._init2()
+        return self._myjobs
+    @property
+    def raftserver(self):
+        if self._raftserver is None:
+            from DigitalMe.servers.raft.RaftServerFactory import RaftServerFactory
+            self._raftserver =  RaftServerFactory()
+            if hasattr(self._raftserver,"_init"):
+                self._raftserver._init()
+            if hasattr(self._raftserver,"_init2"):
+                self._raftserver._init2()
+        return self._raftserver
+
+j.servers = group_servers()
+j.core._groups["servers"] = j.servers
+
+
+class group_tutorials(JSGroup):
+    def __init__(self):
+        
+        self._base = None
+
+    
+    @property
+    def base(self):
+        if self._base is None:
+            from Jumpscale.tutorials.base.Tutorial import Tutorial
+            self._base =  Tutorial()
+            if hasattr(self._base,"_init"):
+                self._base._init()
+            if hasattr(self._base,"_init2"):
+                self._base._init2()
+        return self._base
+
+j.tutorials = group_tutorials()
+j.core._groups["tutorials"] = j.tutorials
 
 
 class group_world(JSGroup):
@@ -737,489 +2500,6 @@ j.world = group_world()
 j.core._groups["world"] = j.world
 
 
-class group_tools(JSGroup):
-    def __init__(self):
-        
-        self._kosmos = None
-        self._tfbot = None
-        self._sandboxer = None
-        self._fixer = None
-        self._legal_contracts = None
-        self._imagelib = None
-        self._markdowndocs = None
-        self._jinja2 = None
-        self._performancetrace = None
-        self._code = None
-        self._codeloader = None
-        self._offliner = None
-        self._rexplorer = None
-        self._path = None
-        self._aggregator = None
-        self._realityprocess = None
-        self._timer = None
-        self._cython = None
-        self._formatters = None
-        self._capacity = None
-        self._team_manager = None
-        self._memusagetest = None
-        self._objectinspector = None
-        self._dnstools = None
-        self._tmux = None
-        self._dash = None
-        self._executor = None
-        self._executorLocal = None
-        self._storybot = None
-        self._syncer = None
-        self._code = None
-        self._reportlab = None
-        self._notapplicableyet = None
-        self._typechecker = None
-        self._console = None
-        self._expect = None
-        self._bash = None
-        self._flist = None
-        self._tarfile = None
-        self._zipfile = None
-        self._numtools = None
-        self._issuemanager = None
-        self._email = None
-
-    
-    @property
-    def kosmos(self):
-        if self._kosmos is None:
-            from DigitalMe.tools.kosmos.kosmos_OLD.Kosmos import Kosmos
-            self._kosmos =  Kosmos()
-            if hasattr(self._kosmos,"_init"):
-                self._kosmos._init()
-            if hasattr(self._kosmos,"_init2"):
-                self._kosmos._init2()
-        return self._kosmos
-    @property
-    def tfbot(self):
-        if self._tfbot is None:
-            from DigitalMe.tools.tfbot.TFBotFactory import TFBotFactory
-            self._tfbot =  TFBotFactory()
-            if hasattr(self._tfbot,"_init"):
-                self._tfbot._init()
-            if hasattr(self._tfbot,"_init2"):
-                self._tfbot._init2()
-        return self._tfbot
-    @property
-    def sandboxer(self):
-        if self._sandboxer is None:
-            from Jumpscale.tools.sandboxer.Sandboxer import Sandboxer
-            self._sandboxer =  Sandboxer()
-            if hasattr(self._sandboxer,"_init"):
-                self._sandboxer._init()
-            if hasattr(self._sandboxer,"_init2"):
-                self._sandboxer._init2()
-        return self._sandboxer
-    @property
-    def fixer(self):
-        if self._fixer is None:
-            from Jumpscale.tools.fixer.Fixer import Fixer
-            self._fixer =  Fixer()
-            if hasattr(self._fixer,"_init"):
-                self._fixer._init()
-            if hasattr(self._fixer,"_init2"):
-                self._fixer._init2()
-        return self._fixer
-    @property
-    def legal_contracts(self):
-        if self._legal_contracts is None:
-            from Jumpscale.tools.legal_contracts.LegalContractsFactory import LegalContractsFactory
-            self._legal_contracts =  LegalContractsFactory()
-            if hasattr(self._legal_contracts,"_init"):
-                self._legal_contracts._init()
-            if hasattr(self._legal_contracts,"_init2"):
-                self._legal_contracts._init2()
-        return self._legal_contracts
-    @property
-    def imagelib(self):
-        if self._imagelib is None:
-            from Jumpscale.tools.imagelib.ImageLib import ImageLib
-            self._imagelib =  ImageLib()
-            if hasattr(self._imagelib,"_init"):
-                self._imagelib._init()
-            if hasattr(self._imagelib,"_init2"):
-                self._imagelib._init2()
-        return self._imagelib
-    @property
-    def markdowndocs(self):
-        if self._markdowndocs is None:
-            from Jumpscale.tools.markdowndocs.MarkDownDocs import MarkDownDocs
-            self._markdowndocs =  MarkDownDocs()
-            if hasattr(self._markdowndocs,"_init"):
-                self._markdowndocs._init()
-            if hasattr(self._markdowndocs,"_init2"):
-                self._markdowndocs._init2()
-        return self._markdowndocs
-    @property
-    def jinja2(self):
-        if self._jinja2 is None:
-            from Jumpscale.tools.jinja2.Jinja2 import Jinja2
-            self._jinja2 =  Jinja2()
-            if hasattr(self._jinja2,"_init"):
-                self._jinja2._init()
-            if hasattr(self._jinja2,"_init2"):
-                self._jinja2._init2()
-        return self._jinja2
-    @property
-    def performancetrace(self):
-        if self._performancetrace is None:
-            from Jumpscale.tools.performancetrace.PerformanceTrace import PerformanceTraceFactory
-            self._performancetrace =  PerformanceTraceFactory()
-            if hasattr(self._performancetrace,"_init"):
-                self._performancetrace._init()
-            if hasattr(self._performancetrace,"_init2"):
-                self._performancetrace._init2()
-        return self._performancetrace
-    @property
-    def code(self):
-        if self._code is None:
-            from Jumpscale.tools.codeloader.CodeTools import CodeTools
-            self._code =  CodeTools()
-            if hasattr(self._code,"_init"):
-                self._code._init()
-            if hasattr(self._code,"_init2"):
-                self._code._init2()
-        return self._code
-    @property
-    def codeloader(self):
-        if self._codeloader is None:
-            from Jumpscale.tools.codeloader.CodeLoader import CodeLoader
-            self._codeloader =  CodeLoader()
-            if hasattr(self._codeloader,"_init"):
-                self._codeloader._init()
-            if hasattr(self._codeloader,"_init2"):
-                self._codeloader._init2()
-        return self._codeloader
-    @property
-    def offliner(self):
-        if self._offliner is None:
-            from Jumpscale.tools.offliner.Offliner import Offliner
-            self._offliner =  Offliner()
-            if hasattr(self._offliner,"_init"):
-                self._offliner._init()
-            if hasattr(self._offliner,"_init2"):
-                self._offliner._init2()
-        return self._offliner
-    @property
-    def rexplorer(self):
-        if self._rexplorer is None:
-            from Jumpscale.tools.offliner.Rexplorer import Rexplorer
-            self._rexplorer =  Rexplorer()
-            if hasattr(self._rexplorer,"_init"):
-                self._rexplorer._init()
-            if hasattr(self._rexplorer,"_init2"):
-                self._rexplorer._init2()
-        return self._rexplorer
-    @property
-    def path(self):
-        if self._path is None:
-            from Jumpscale.tools.path.PathFactory import PathFactory
-            self._path =  PathFactory()
-            if hasattr(self._path,"_init"):
-                self._path._init()
-            if hasattr(self._path,"_init2"):
-                self._path._init2()
-        return self._path
-    @property
-    def aggregator(self):
-        if self._aggregator is None:
-            from Jumpscale.tools.aggregator.Aggregator import Aggregator
-            self._aggregator =  Aggregator()
-            if hasattr(self._aggregator,"_init"):
-                self._aggregator._init()
-            if hasattr(self._aggregator,"_init2"):
-                self._aggregator._init2()
-        return self._aggregator
-    @property
-    def realityprocess(self):
-        if self._realityprocess is None:
-            from Jumpscale.tools.aggregator.RealityProcess import RealitProcess
-            self._realityprocess =  RealitProcess()
-            if hasattr(self._realityprocess,"_init"):
-                self._realityprocess._init()
-            if hasattr(self._realityprocess,"_init2"):
-                self._realityprocess._init2()
-        return self._realityprocess
-    @property
-    def timer(self):
-        if self._timer is None:
-            from Jumpscale.tools.timer.Timer import TIMER
-            self._timer =  TIMER()
-            if hasattr(self._timer,"_init"):
-                self._timer._init()
-            if hasattr(self._timer,"_init2"):
-                self._timer._init2()
-        return self._timer
-    @property
-    def cython(self):
-        if self._cython is None:
-            from Jumpscale.tools.cython.CythonFactory import CythonFactory
-            self._cython =  CythonFactory()
-            if hasattr(self._cython,"_init"):
-                self._cython._init()
-            if hasattr(self._cython,"_init2"):
-                self._cython._init2()
-        return self._cython
-    @property
-    def formatters(self):
-        if self._formatters is None:
-            from Jumpscale.tools.formatters.FormattersFactory import FormattersFactory
-            self._formatters =  FormattersFactory()
-            if hasattr(self._formatters,"_init"):
-                self._formatters._init()
-            if hasattr(self._formatters,"_init2"):
-                self._formatters._init2()
-        return self._formatters
-    @property
-    def capacity(self):
-        if self._capacity is None:
-            from Jumpscale.tools.capacity.Factory import Factory
-            self._capacity =  Factory()
-            if hasattr(self._capacity,"_init"):
-                self._capacity._init()
-            if hasattr(self._capacity,"_init2"):
-                self._capacity._init2()
-        return self._capacity
-    @property
-    def team_manager(self):
-        if self._team_manager is None:
-            from Jumpscale.tools.teammgr.Teammgr import Teammgr
-            self._team_manager =  Teammgr()
-            if hasattr(self._team_manager,"_init"):
-                self._team_manager._init()
-            if hasattr(self._team_manager,"_init2"):
-                self._team_manager._init2()
-        return self._team_manager
-    @property
-    def memusagetest(self):
-        if self._memusagetest is None:
-            from Jumpscale.tools.memusagetest.MemUsageTest import MemUsageTest
-            self._memusagetest =  MemUsageTest()
-            if hasattr(self._memusagetest,"_init"):
-                self._memusagetest._init()
-            if hasattr(self._memusagetest,"_init2"):
-                self._memusagetest._init2()
-        return self._memusagetest
-    @property
-    def objectinspector(self):
-        if self._objectinspector is None:
-            from Jumpscale.tools.objectinspector.ObjectInspector import ObjectInspector
-            self._objectinspector =  ObjectInspector()
-            if hasattr(self._objectinspector,"_init"):
-                self._objectinspector._init()
-            if hasattr(self._objectinspector,"_init2"):
-                self._objectinspector._init2()
-        return self._objectinspector
-    @property
-    def dnstools(self):
-        if self._dnstools is None:
-            from Jumpscale.tools.dnstools.DNSTools import DNSTools
-            self._dnstools =  DNSTools()
-            if hasattr(self._dnstools,"_init"):
-                self._dnstools._init()
-            if hasattr(self._dnstools,"_init2"):
-                self._dnstools._init2()
-        return self._dnstools
-    @property
-    def tmux(self):
-        if self._tmux is None:
-            from Jumpscale.tools.tmux.Tmux import Tmux
-            self._tmux =  Tmux()
-            if hasattr(self._tmux,"_init"):
-                self._tmux._init()
-            if hasattr(self._tmux,"_init2"):
-                self._tmux._init2()
-        return self._tmux
-    @property
-    def dash(self):
-        if self._dash is None:
-            from Jumpscale.tools.dash.DASH import DASH
-            self._dash =  DASH()
-            if hasattr(self._dash,"_init"):
-                self._dash._init()
-            if hasattr(self._dash,"_init2"):
-                self._dash._init2()
-        return self._dash
-    @property
-    def executor(self):
-        if self._executor is None:
-            from Jumpscale.tools.executor.ExecutorFactory import ExecutorFactory
-            self._executor =  ExecutorFactory()
-            if hasattr(self._executor,"_init"):
-                self._executor._init()
-            if hasattr(self._executor,"_init2"):
-                self._executor._init2()
-        return self._executor
-    @property
-    def executorLocal(self):
-        if self._executorLocal is None:
-            from Jumpscale.tools.executor.ExecutorLocal import ExecutorLocal
-            self._executorLocal =  ExecutorLocal()
-            if hasattr(self._executorLocal,"_init"):
-                self._executorLocal._init()
-            if hasattr(self._executorLocal,"_init2"):
-                self._executorLocal._init2()
-        return self._executorLocal
-    @property
-    def storybot(self):
-        if self._storybot is None:
-            from Jumpscale.tools.storybot.StoryBotFactory import StoryBotFactory
-            self._storybot =  StoryBotFactory()
-            if hasattr(self._storybot,"_init"):
-                self._storybot._init()
-            if hasattr(self._storybot,"_init2"):
-                self._storybot._init2()
-        return self._storybot
-    @property
-    def syncer(self):
-        if self._syncer is None:
-            from Jumpscale.tools.syncer.SyncerFactory import SyncerFactory
-            self._syncer =  SyncerFactory()
-            if hasattr(self._syncer,"_init"):
-                self._syncer._init()
-            if hasattr(self._syncer,"_init2"):
-                self._syncer._init2()
-        return self._syncer
-    @property
-    def code(self):
-        if self._code is None:
-            from Jumpscale.tools.codetools.CodeTools import CodeTools
-            self._code =  CodeTools()
-            if hasattr(self._code,"_init"):
-                self._code._init()
-            if hasattr(self._code,"_init2"):
-                self._code._init2()
-        return self._code
-    @property
-    def reportlab(self):
-        if self._reportlab is None:
-            from Jumpscale.tools.reportlab.ReportlabFactory import ReportlabFactory
-            self._reportlab =  ReportlabFactory()
-            if hasattr(self._reportlab,"_init"):
-                self._reportlab._init()
-            if hasattr(self._reportlab,"_init2"):
-                self._reportlab._init2()
-        return self._reportlab
-    @property
-    def notapplicableyet(self):
-        if self._notapplicableyet is None:
-            from Jumpscale.tools.builder.Builder import Builder
-            self._notapplicableyet =  Builder()
-            if hasattr(self._notapplicableyet,"_init"):
-                self._notapplicableyet._init()
-            if hasattr(self._notapplicableyet,"_init2"):
-                self._notapplicableyet._init2()
-        return self._notapplicableyet
-    @property
-    def typechecker(self):
-        if self._typechecker is None:
-            from Jumpscale.tools.typechecker.TypeChecker import TypeCheckerFactory
-            self._typechecker =  TypeCheckerFactory()
-            if hasattr(self._typechecker,"_init"):
-                self._typechecker._init()
-            if hasattr(self._typechecker,"_init2"):
-                self._typechecker._init2()
-        return self._typechecker
-    @property
-    def console(self):
-        if self._console is None:
-            from Jumpscale.tools.console.Console import Console
-            self._console =  Console()
-            if hasattr(self._console,"_init"):
-                self._console._init()
-            if hasattr(self._console,"_init2"):
-                self._console._init2()
-        return self._console
-    @property
-    def expect(self):
-        if self._expect is None:
-            from Jumpscale.tools.expect.Expect import ExpectTool
-            self._expect =  ExpectTool()
-            if hasattr(self._expect,"_init"):
-                self._expect._init()
-            if hasattr(self._expect,"_init2"):
-                self._expect._init2()
-        return self._expect
-    @property
-    def bash(self):
-        if self._bash is None:
-            from Jumpscale.sal.bash.BashFactory import BashFactory
-            self._bash =  BashFactory()
-            if hasattr(self._bash,"_init"):
-                self._bash._init()
-            if hasattr(self._bash,"_init2"):
-                self._bash._init2()
-        return self._bash
-    @property
-    def flist(self):
-        if self._flist is None:
-            from Jumpscale.data.flist.FListFactory import FListFactory
-            self._flist =  FListFactory()
-            if hasattr(self._flist,"_init"):
-                self._flist._init()
-            if hasattr(self._flist,"_init2"):
-                self._flist._init2()
-        return self._flist
-    @property
-    def tarfile(self):
-        if self._tarfile is None:
-            from Jumpscale.data.tarfile.TarFile import TarFileFactory
-            self._tarfile =  TarFileFactory()
-            if hasattr(self._tarfile,"_init"):
-                self._tarfile._init()
-            if hasattr(self._tarfile,"_init2"):
-                self._tarfile._init2()
-        return self._tarfile
-    @property
-    def zipfile(self):
-        if self._zipfile is None:
-            from Jumpscale.data.zip.ZipFile import ZipFileFactory
-            self._zipfile =  ZipFileFactory()
-            if hasattr(self._zipfile,"_init"):
-                self._zipfile._init()
-            if hasattr(self._zipfile,"_init2"):
-                self._zipfile._init2()
-        return self._zipfile
-    @property
-    def numtools(self):
-        if self._numtools is None:
-            from Jumpscale.data.numtools.NumTools import NumTools
-            self._numtools =  NumTools()
-            if hasattr(self._numtools,"_init"):
-                self._numtools._init()
-            if hasattr(self._numtools,"_init2"):
-                self._numtools._init2()
-        return self._numtools
-    @property
-    def issuemanager(self):
-        if self._issuemanager is None:
-            from Jumpscale.data.issuemanager.IssueManager import IssueManager
-            self._issuemanager =  IssueManager()
-            if hasattr(self._issuemanager,"_init"):
-                self._issuemanager._init()
-            if hasattr(self._issuemanager,"_init2"):
-                self._issuemanager._init2()
-        return self._issuemanager
-    @property
-    def email(self):
-        if self._email is None:
-            from Jumpscale.data.email.Email import EmailTool
-            self._email =  EmailTool()
-            if hasattr(self._email,"_init"):
-                self._email._init()
-            if hasattr(self._email,"_init2"):
-                self._email._init2()
-        return self._email
-
-j.tools = group_tools()
-j.core._groups["tools"] = j.tools
-
-
 class group_kosmos(JSGroup):
     def __init__(self):
         
@@ -1239,1286 +2519,6 @@ class group_kosmos(JSGroup):
 
 j.kosmos = group_kosmos()
 j.core._groups["kosmos"] = j.kosmos
-
-
-class group_data(JSGroup):
-    def __init__(self):
-        
-        self._nltk = None
-        self._encryption = None
-        self._cachelru = None
-        self._inifile = None
-        self._types = None
-        self._randomnames = None
-        self._worksheets = None
-        self._treemanager = None
-        self._hash = None
-        self._indexfile = None
-        self._markdown = None
-        self._latex = None
-        self._capnp = None
-        self._html = None
-        self._docs = None
-        self._regex = None
-        self._time = None
-        self._timeinterval = None
-        self._schema = None
-        self._serializers = None
-        self._rivine = None
-        self._nacl = None
-        self._bcdb = None
-        self._dict_editor = None
-        self._idgenerator = None
-
-    
-    @property
-    def nltk(self):
-        if self._nltk is None:
-            from DigitalMe.data.nltk.NLTK import NLTKFactory
-            self._nltk =  NLTKFactory()
-            if hasattr(self._nltk,"_init"):
-                self._nltk._init()
-            if hasattr(self._nltk,"_init2"):
-                self._nltk._init2()
-        return self._nltk
-    @property
-    def encryption(self):
-        if self._encryption is None:
-            from Jumpscale.data.encryption.EncryptionFactory import EncryptionFactory
-            self._encryption =  EncryptionFactory()
-            if hasattr(self._encryption,"_init"):
-                self._encryption._init()
-            if hasattr(self._encryption,"_init2"):
-                self._encryption._init2()
-        return self._encryption
-    @property
-    def cachelru(self):
-        if self._cachelru is None:
-            from Jumpscale.data.cachelru.LRUCacheFactory import LRUCacheFactory
-            self._cachelru =  LRUCacheFactory()
-            if hasattr(self._cachelru,"_init"):
-                self._cachelru._init()
-            if hasattr(self._cachelru,"_init2"):
-                self._cachelru._init2()
-        return self._cachelru
-    @property
-    def inifile(self):
-        if self._inifile is None:
-            from Jumpscale.data.inifile.IniFile import InifileTool
-            self._inifile =  InifileTool()
-            if hasattr(self._inifile,"_init"):
-                self._inifile._init()
-            if hasattr(self._inifile,"_init2"):
-                self._inifile._init2()
-        return self._inifile
-    @property
-    def types(self):
-        if self._types is None:
-            from Jumpscale.data.types.Types import Types
-            self._types =  Types()
-            if hasattr(self._types,"_init"):
-                self._types._init()
-            if hasattr(self._types,"_init2"):
-                self._types._init2()
-        return self._types
-    @property
-    def randomnames(self):
-        if self._randomnames is None:
-            from Jumpscale.data.random_names.RandomNames import RandomNames
-            self._randomnames =  RandomNames()
-            if hasattr(self._randomnames,"_init"):
-                self._randomnames._init()
-            if hasattr(self._randomnames,"_init2"):
-                self._randomnames._init2()
-        return self._randomnames
-    @property
-    def worksheets(self):
-        if self._worksheets is None:
-            from Jumpscale.data.worksheets.Sheets import Sheets
-            self._worksheets =  Sheets()
-            if hasattr(self._worksheets,"_init"):
-                self._worksheets._init()
-            if hasattr(self._worksheets,"_init2"):
-                self._worksheets._init2()
-        return self._worksheets
-    @property
-    def treemanager(self):
-        if self._treemanager is None:
-            from Jumpscale.data.treemanager.Treemanager import TreemanagerFactory
-            self._treemanager =  TreemanagerFactory()
-            if hasattr(self._treemanager,"_init"):
-                self._treemanager._init()
-            if hasattr(self._treemanager,"_init2"):
-                self._treemanager._init2()
-        return self._treemanager
-    @property
-    def hash(self):
-        if self._hash is None:
-            from Jumpscale.data.hash.HashTool import HashTool
-            self._hash =  HashTool()
-            if hasattr(self._hash,"_init"):
-                self._hash._init()
-            if hasattr(self._hash,"_init2"):
-                self._hash._init2()
-        return self._hash
-    @property
-    def indexfile(self):
-        if self._indexfile is None:
-            from Jumpscale.data.indexFile.IndexFiles import IndexDB
-            self._indexfile =  IndexDB()
-            if hasattr(self._indexfile,"_init"):
-                self._indexfile._init()
-            if hasattr(self._indexfile,"_init2"):
-                self._indexfile._init2()
-        return self._indexfile
-    @property
-    def markdown(self):
-        if self._markdown is None:
-            from Jumpscale.data.markdown.MarkdownFactory import MarkdownFactory
-            self._markdown =  MarkdownFactory()
-            if hasattr(self._markdown,"_init"):
-                self._markdown._init()
-            if hasattr(self._markdown,"_init2"):
-                self._markdown._init2()
-        return self._markdown
-    @property
-    def latex(self):
-        if self._latex is None:
-            from Jumpscale.data.latex.Latex import Latex
-            self._latex =  Latex()
-            if hasattr(self._latex,"_init"):
-                self._latex._init()
-            if hasattr(self._latex,"_init2"):
-                self._latex._init2()
-        return self._latex
-    @property
-    def capnp(self):
-        if self._capnp is None:
-            from Jumpscale.data.capnp.Capnp import Capnp
-            self._capnp =  Capnp()
-            if hasattr(self._capnp,"_init"):
-                self._capnp._init()
-            if hasattr(self._capnp,"_init2"):
-                self._capnp._init2()
-        return self._capnp
-    @property
-    def html(self):
-        if self._html is None:
-            from Jumpscale.data.html.HTMLFactory import HTMLFactory
-            self._html =  HTMLFactory()
-            if hasattr(self._html,"_init"):
-                self._html._init()
-            if hasattr(self._html,"_init2"):
-                self._html._init2()
-        return self._html
-    @property
-    def docs(self):
-        if self._docs is None:
-            from Jumpscale.data.docs.DocsFactory import DocsFactory
-            self._docs =  DocsFactory()
-            if hasattr(self._docs,"_init"):
-                self._docs._init()
-            if hasattr(self._docs,"_init2"):
-                self._docs._init2()
-        return self._docs
-    @property
-    def regex(self):
-        if self._regex is None:
-            from Jumpscale.data.regex.RegexTools import RegexTools
-            self._regex =  RegexTools()
-            if hasattr(self._regex,"_init"):
-                self._regex._init()
-            if hasattr(self._regex,"_init2"):
-                self._regex._init2()
-        return self._regex
-    @property
-    def time(self):
-        if self._time is None:
-            from Jumpscale.data.time.Time import Time_
-            self._time =  Time_()
-            if hasattr(self._time,"_init"):
-                self._time._init()
-            if hasattr(self._time,"_init2"):
-                self._time._init2()
-        return self._time
-    @property
-    def timeinterval(self):
-        if self._timeinterval is None:
-            from Jumpscale.data.time.TimeInterval import TimeInterval
-            self._timeinterval =  TimeInterval()
-            if hasattr(self._timeinterval,"_init"):
-                self._timeinterval._init()
-            if hasattr(self._timeinterval,"_init2"):
-                self._timeinterval._init2()
-        return self._timeinterval
-    @property
-    def schema(self):
-        if self._schema is None:
-            from Jumpscale.data.schema.SchemaFactory import SchemaFactory
-            self._schema =  SchemaFactory()
-            if hasattr(self._schema,"_init"):
-                self._schema._init()
-            if hasattr(self._schema,"_init2"):
-                self._schema._init2()
-        return self._schema
-    @property
-    def serializers(self):
-        if self._serializers is None:
-            from Jumpscale.data.serializers.SerializersFactory import SerializersFactory
-            self._serializers =  SerializersFactory()
-            if hasattr(self._serializers,"_init"):
-                self._serializers._init()
-            if hasattr(self._serializers,"_init2"):
-                self._serializers._init2()
-        return self._serializers
-    @property
-    def rivine(self):
-        if self._rivine is None:
-            from Jumpscale.data.rivine.RivineDataFactory import RivineDataFactory
-            self._rivine =  RivineDataFactory()
-            if hasattr(self._rivine,"_init"):
-                self._rivine._init()
-            if hasattr(self._rivine,"_init2"):
-                self._rivine._init2()
-        return self._rivine
-    @property
-    def nacl(self):
-        if self._nacl is None:
-            from Jumpscale.data.nacl.NACLFactory import NACLFactory
-            self._nacl =  NACLFactory()
-            if hasattr(self._nacl,"_init"):
-                self._nacl._init()
-            if hasattr(self._nacl,"_init2"):
-                self._nacl._init2()
-        return self._nacl
-    @property
-    def bcdb(self):
-        if self._bcdb is None:
-            from Jumpscale.data.bcdb.BCDBFactory import BCDBFactory
-            self._bcdb =  BCDBFactory()
-            if hasattr(self._bcdb,"_init"):
-                self._bcdb._init()
-            if hasattr(self._bcdb,"_init2"):
-                self._bcdb._init2()
-        return self._bcdb
-    @property
-    def dict_editor(self):
-        if self._dict_editor is None:
-            from Jumpscale.data.dicteditor.DictEditor import DictEditorFactory
-            self._dict_editor =  DictEditorFactory()
-            if hasattr(self._dict_editor,"_init"):
-                self._dict_editor._init()
-            if hasattr(self._dict_editor,"_init2"):
-                self._dict_editor._init2()
-        return self._dict_editor
-    @property
-    def idgenerator(self):
-        if self._idgenerator is None:
-            from Jumpscale.data.idgenerator.IDGenerator import IDGenerator
-            self._idgenerator =  IDGenerator()
-            if hasattr(self._idgenerator,"_init"):
-                self._idgenerator._init()
-            if hasattr(self._idgenerator,"_init2"):
-                self._idgenerator._init2()
-        return self._idgenerator
-
-j.data = group_data()
-j.core._groups["data"] = j.data
-
-
-class group_servers(JSGroup):
-    def __init__(self):
-        
-        self._gedis = None
-        self._digitalme = None
-        self._myjobs = None
-        self._raftserver = None
-        self._dns = None
-        self._errbot = None
-        self._openresty = None
-        self._redis_logger = None
-        self._web = None
-        self._etcd = None
-        self._capacity = None
-        self._zdb = None
-        self._jsrun = None
-
-    
-    @property
-    def gedis(self):
-        if self._gedis is None:
-            from DigitalMe.servers.gedis.GedisFactory import GedisFactory
-            self._gedis =  GedisFactory()
-            if hasattr(self._gedis,"_init"):
-                self._gedis._init()
-            if hasattr(self._gedis,"_init2"):
-                self._gedis._init2()
-        return self._gedis
-    @property
-    def digitalme(self):
-        if self._digitalme is None:
-            from DigitalMe.servers.digitalme.DigitalMe import DigitalMe
-            self._digitalme =  DigitalMe()
-            if hasattr(self._digitalme,"_init"):
-                self._digitalme._init()
-            if hasattr(self._digitalme,"_init2"):
-                self._digitalme._init2()
-        return self._digitalme
-    @property
-    def myjobs(self):
-        if self._myjobs is None:
-            from DigitalMe.servers.myjobs.MyJobs import MyJobs
-            self._myjobs =  MyJobs()
-            if hasattr(self._myjobs,"_init"):
-                self._myjobs._init()
-            if hasattr(self._myjobs,"_init2"):
-                self._myjobs._init2()
-        return self._myjobs
-    @property
-    def raftserver(self):
-        if self._raftserver is None:
-            from DigitalMe.servers.raft.RaftServerFactory import RaftServerFactory
-            self._raftserver =  RaftServerFactory()
-            if hasattr(self._raftserver,"_init"):
-                self._raftserver._init()
-            if hasattr(self._raftserver,"_init2"):
-                self._raftserver._init2()
-        return self._raftserver
-    @property
-    def dns(self):
-        if self._dns is None:
-            from DigitalMe.servers.dns.DNSServerFactory import DNSServerFactory
-            self._dns =  DNSServerFactory()
-            if hasattr(self._dns,"_init"):
-                self._dns._init()
-            if hasattr(self._dns,"_init2"):
-                self._dns._init2()
-        return self._dns
-    @property
-    def errbot(self):
-        if self._errbot is None:
-            from Jumpscale.servers.errbot.ErrBotFactory import ErrBotFactory
-            self._errbot =  ErrBotFactory()
-            if hasattr(self._errbot,"_init"):
-                self._errbot._init()
-            if hasattr(self._errbot,"_init2"):
-                self._errbot._init2()
-        return self._errbot
-    @property
-    def openresty(self):
-        if self._openresty is None:
-            from Jumpscale.servers.openresty.OpenRestyFactory import OpenRestyFactory
-            self._openresty =  OpenRestyFactory()
-            if hasattr(self._openresty,"_init"):
-                self._openresty._init()
-            if hasattr(self._openresty,"_init2"):
-                self._openresty._init2()
-        return self._openresty
-    @property
-    def redis_logger(self):
-        if self._redis_logger is None:
-            from Jumpscale.servers.redis.RedisServer import RedisLoggingServer
-            self._redis_logger =  RedisLoggingServer()
-            if hasattr(self._redis_logger,"_init"):
-                self._redis_logger._init()
-            if hasattr(self._redis_logger,"_init2"):
-                self._redis_logger._init2()
-        return self._redis_logger
-    @property
-    def web(self):
-        if self._web is None:
-            from Jumpscale.servers.webserver.JSWebServers import JSWebServers
-            self._web =  JSWebServers()
-            if hasattr(self._web,"_init"):
-                self._web._init()
-            if hasattr(self._web,"_init2"):
-                self._web._init2()
-        return self._web
-    @property
-    def etcd(self):
-        if self._etcd is None:
-            from Jumpscale.servers.etcd.EtcdServer import EtcdServer
-            self._etcd =  EtcdServer()
-            if hasattr(self._etcd,"_init"):
-                self._etcd._init()
-            if hasattr(self._etcd,"_init2"):
-                self._etcd._init2()
-        return self._etcd
-    @property
-    def capacity(self):
-        if self._capacity is None:
-            from Jumpscale.servers.grid_capacity.CapacityFactory import CapacityFactory
-            self._capacity =  CapacityFactory()
-            if hasattr(self._capacity,"_init"):
-                self._capacity._init()
-            if hasattr(self._capacity,"_init2"):
-                self._capacity._init2()
-        return self._capacity
-    @property
-    def zdb(self):
-        if self._zdb is None:
-            from Jumpscale.servers.zdb.ZDBServer import ZDBServer
-            self._zdb =  ZDBServer()
-            if hasattr(self._zdb,"_init"):
-                self._zdb._init()
-            if hasattr(self._zdb,"_init2"):
-                self._zdb._init2()
-        return self._zdb
-    @property
-    def jsrun(self):
-        if self._jsrun is None:
-            from Jumpscale.servers.jsrun.JSRun import JSRun
-            self._jsrun =  JSRun()
-            if hasattr(self._jsrun,"_init"):
-                self._jsrun._init()
-            if hasattr(self._jsrun,"_init2"):
-                self._jsrun._init2()
-        return self._jsrun
-
-j.servers = group_servers()
-j.core._groups["servers"] = j.servers
-
-
-class group_sal(JSGroup):
-    def __init__(self):
-        
-        self._coredns = None
-        self._docker = None
-        self._qemu_img = None
-        self._btrfs = None
-        self._nettools = None
-        self._ssl = None
-        self._disklayout = None
-        self._nic = None
-        self._nfs = None
-        self._sshd = None
-        self._hostsfile = None
-        self._rsync = None
-        self._unix = None
-        self._tls = None
-        self._samba = None
-        self._nginx = None
-        self._netconfig = None
-        self._kvm = None
-        self._windows = None
-        self._ufw = None
-        self._bind = None
-        self._fswalker = None
-        self._fs = None
-        self._ubuntu = None
-        self._openvswitch = None
-        self._dnsmasq = None
-        self._process = None
-
-    
-    @property
-    def coredns(self):
-        if self._coredns is None:
-            from Jumpscale.clients.coredns.alternative.CoreDnsFactory import CoreDnsFactory
-            self._coredns =  CoreDnsFactory()
-            if hasattr(self._coredns,"_init"):
-                self._coredns._init()
-            if hasattr(self._coredns,"_init2"):
-                self._coredns._init2()
-        return self._coredns
-    @property
-    def docker(self):
-        if self._docker is None:
-            from Jumpscale.tools.docker.Docker import Docker
-            self._docker =  Docker()
-            if hasattr(self._docker,"_init"):
-                self._docker._init()
-            if hasattr(self._docker,"_init2"):
-                self._docker._init2()
-        return self._docker
-    @property
-    def qemu_img(self):
-        if self._qemu_img is None:
-            from Jumpscale.sal.qemu_img.Qemu_img import QemuImg
-            self._qemu_img =  QemuImg()
-            if hasattr(self._qemu_img,"_init"):
-                self._qemu_img._init()
-            if hasattr(self._qemu_img,"_init2"):
-                self._qemu_img._init2()
-        return self._qemu_img
-    @property
-    def btrfs(self):
-        if self._btrfs is None:
-            from Jumpscale.sal.btrfs.BtrfsExtension import BtfsExtensionFactory
-            self._btrfs =  BtfsExtensionFactory()
-            if hasattr(self._btrfs,"_init"):
-                self._btrfs._init()
-            if hasattr(self._btrfs,"_init2"):
-                self._btrfs._init2()
-        return self._btrfs
-    @property
-    def nettools(self):
-        if self._nettools is None:
-            from Jumpscale.sal.nettools.NetTools import NetTools
-            self._nettools =  NetTools()
-            if hasattr(self._nettools,"_init"):
-                self._nettools._init()
-            if hasattr(self._nettools,"_init2"):
-                self._nettools._init2()
-        return self._nettools
-    @property
-    def ssl(self):
-        if self._ssl is None:
-            from Jumpscale.sal.ssl.SSLFactory import SSLFactory
-            self._ssl =  SSLFactory()
-            if hasattr(self._ssl,"_init"):
-                self._ssl._init()
-            if hasattr(self._ssl,"_init2"):
-                self._ssl._init2()
-        return self._ssl
-    @property
-    def disklayout(self):
-        if self._disklayout is None:
-            from Jumpscale.sal.disklayout.DiskManager import DiskManager
-            self._disklayout =  DiskManager()
-            if hasattr(self._disklayout,"_init"):
-                self._disklayout._init()
-            if hasattr(self._disklayout,"_init2"):
-                self._disklayout._init2()
-        return self._disklayout
-    @property
-    def nic(self):
-        if self._nic is None:
-            from Jumpscale.sal.nic.UnixNetworkManager import UnixNetworkManager
-            self._nic =  UnixNetworkManager()
-            if hasattr(self._nic,"_init"):
-                self._nic._init()
-            if hasattr(self._nic,"_init2"):
-                self._nic._init2()
-        return self._nic
-    @property
-    def nfs(self):
-        if self._nfs is None:
-            from Jumpscale.sal.nfs.NFS import NFS
-            self._nfs =  NFS()
-            if hasattr(self._nfs,"_init"):
-                self._nfs._init()
-            if hasattr(self._nfs,"_init2"):
-                self._nfs._init2()
-        return self._nfs
-    @property
-    def sshd(self):
-        if self._sshd is None:
-            from Jumpscale.sal.sshd.SSHD import SSHD
-            self._sshd =  SSHD()
-            if hasattr(self._sshd,"_init"):
-                self._sshd._init()
-            if hasattr(self._sshd,"_init2"):
-                self._sshd._init2()
-        return self._sshd
-    @property
-    def hostsfile(self):
-        if self._hostsfile is None:
-            from Jumpscale.sal.hostfile.HostFile import HostFile
-            self._hostsfile =  HostFile()
-            if hasattr(self._hostsfile,"_init"):
-                self._hostsfile._init()
-            if hasattr(self._hostsfile,"_init2"):
-                self._hostsfile._init2()
-        return self._hostsfile
-    @property
-    def rsync(self):
-        if self._rsync is None:
-            from Jumpscale.sal.rsync.RsyncFactory import RsyncFactory
-            self._rsync =  RsyncFactory()
-            if hasattr(self._rsync,"_init"):
-                self._rsync._init()
-            if hasattr(self._rsync,"_init2"):
-                self._rsync._init2()
-        return self._rsync
-    @property
-    def unix(self):
-        if self._unix is None:
-            from Jumpscale.sal.unix.Unix import UnixSystem
-            self._unix =  UnixSystem()
-            if hasattr(self._unix,"_init"):
-                self._unix._init()
-            if hasattr(self._unix,"_init2"):
-                self._unix._init2()
-        return self._unix
-    @property
-    def tls(self):
-        if self._tls is None:
-            from Jumpscale.sal.tls.TLSFactory import TLSFactory
-            self._tls =  TLSFactory()
-            if hasattr(self._tls,"_init"):
-                self._tls._init()
-            if hasattr(self._tls,"_init2"):
-                self._tls._init2()
-        return self._tls
-    @property
-    def samba(self):
-        if self._samba is None:
-            from Jumpscale.sal.samba.Samba import Samba
-            self._samba =  Samba()
-            if hasattr(self._samba,"_init"):
-                self._samba._init()
-            if hasattr(self._samba,"_init2"):
-                self._samba._init2()
-        return self._samba
-    @property
-    def nginx(self):
-        if self._nginx is None:
-            from Jumpscale.sal.nginx.Nginx import NginxFactory
-            self._nginx =  NginxFactory()
-            if hasattr(self._nginx,"_init"):
-                self._nginx._init()
-            if hasattr(self._nginx,"_init2"):
-                self._nginx._init2()
-        return self._nginx
-    @property
-    def netconfig(self):
-        if self._netconfig is None:
-            from Jumpscale.sal.netconfig.Netconfig import Netconfig
-            self._netconfig =  Netconfig()
-            if hasattr(self._netconfig,"_init"):
-                self._netconfig._init()
-            if hasattr(self._netconfig,"_init2"):
-                self._netconfig._init2()
-        return self._netconfig
-    @property
-    def kvm(self):
-        if self._kvm is None:
-            from Jumpscale.sal.kvm.KVM import KVM
-            self._kvm =  KVM()
-            if hasattr(self._kvm,"_init"):
-                self._kvm._init()
-            if hasattr(self._kvm,"_init2"):
-                self._kvm._init2()
-        return self._kvm
-    @property
-    def windows(self):
-        if self._windows is None:
-            from Jumpscale.sal.windows.Windows import WindowsSystem
-            self._windows =  WindowsSystem()
-            if hasattr(self._windows,"_init"):
-                self._windows._init()
-            if hasattr(self._windows,"_init2"):
-                self._windows._init2()
-        return self._windows
-    @property
-    def ufw(self):
-        if self._ufw is None:
-            from Jumpscale.sal.ufw.UFWManager import UFWManager
-            self._ufw =  UFWManager()
-            if hasattr(self._ufw,"_init"):
-                self._ufw._init()
-            if hasattr(self._ufw,"_init2"):
-                self._ufw._init2()
-        return self._ufw
-    @property
-    def bind(self):
-        if self._bind is None:
-            from Jumpscale.sal.bind.BindDNS import BindDNS
-            self._bind =  BindDNS()
-            if hasattr(self._bind,"_init"):
-                self._bind._init()
-            if hasattr(self._bind,"_init2"):
-                self._bind._init2()
-        return self._bind
-    @property
-    def fswalker(self):
-        if self._fswalker is None:
-            from Jumpscale.sal.fs.SystemFSWalker import SystemFSWalker
-            self._fswalker =  SystemFSWalker()
-            if hasattr(self._fswalker,"_init"):
-                self._fswalker._init()
-            if hasattr(self._fswalker,"_init2"):
-                self._fswalker._init2()
-        return self._fswalker
-    @property
-    def fs(self):
-        if self._fs is None:
-            from Jumpscale.sal.fs.SystemFS import SystemFS
-            self._fs =  SystemFS()
-            if hasattr(self._fs,"_init"):
-                self._fs._init()
-            if hasattr(self._fs,"_init2"):
-                self._fs._init2()
-        return self._fs
-    @property
-    def ubuntu(self):
-        if self._ubuntu is None:
-            from Jumpscale.sal.ubuntu.Ubuntu import Ubuntu
-            self._ubuntu =  Ubuntu()
-            if hasattr(self._ubuntu,"_init"):
-                self._ubuntu._init()
-            if hasattr(self._ubuntu,"_init2"):
-                self._ubuntu._init2()
-        return self._ubuntu
-    @property
-    def openvswitch(self):
-        if self._openvswitch is None:
-            from Jumpscale.sal.openvswitch.NetConfigFactory import NetConfigFactory
-            self._openvswitch =  NetConfigFactory()
-            if hasattr(self._openvswitch,"_init"):
-                self._openvswitch._init()
-            if hasattr(self._openvswitch,"_init2"):
-                self._openvswitch._init2()
-        return self._openvswitch
-    @property
-    def dnsmasq(self):
-        if self._dnsmasq is None:
-            from Jumpscale.sal.dnsmasq.DnsmasqFactory import DnsmasqFactory
-            self._dnsmasq =  DnsmasqFactory()
-            if hasattr(self._dnsmasq,"_init"):
-                self._dnsmasq._init()
-            if hasattr(self._dnsmasq,"_init2"):
-                self._dnsmasq._init2()
-        return self._dnsmasq
-    @property
-    def process(self):
-        if self._process is None:
-            from Jumpscale.sal.process.SystemProcess import SystemProcess
-            self._process =  SystemProcess()
-            if hasattr(self._process,"_init"):
-                self._process._init()
-            if hasattr(self._process,"_init2"):
-                self._process._init2()
-        return self._process
-
-j.sal = group_sal()
-j.core._groups["sal"] = j.sal
-
-
-class group_tutorials(JSGroup):
-    def __init__(self):
-        
-        self._base = None
-
-    
-    @property
-    def base(self):
-        if self._base is None:
-            from Jumpscale.tutorials.base.Tutorial import Tutorial
-            self._base =  Tutorial()
-            if hasattr(self._base,"_init"):
-                self._base._init()
-            if hasattr(self._base,"_init2"):
-                self._base._init2()
-        return self._base
-
-j.tutorials = group_tutorials()
-j.core._groups["tutorials"] = j.tutorials
-
-
-class group_data_units(JSGroup):
-    def __init__(self):
-        
-        self._sizes = None
-
-    
-    @property
-    def sizes(self):
-        if self._sizes is None:
-            from Jumpscale.data.numtools.units.Units import Bytes
-            self._sizes =  Bytes()
-            if hasattr(self._sizes,"_init"):
-                self._sizes._init()
-            if hasattr(self._sizes,"_init2"):
-                self._sizes._init2()
-        return self._sizes
-
-j.data_units = group_data_units()
-j.core._groups["data_units"] = j.data_units
-
-
-class group_builder(JSGroup):
-    def __init__(self):
-        
-        self._systemtools = None
-        self._tools = None
-        self._web = None
-        self._network = None
-        self._runtimes = None
-        self.__template = None
-        self._storage = None
-        self._libs = None
-        self._libs = None
-        self._blockchain = None
-        self._system = None
-        self._db = None
-        self._monitoring = None
-        self.__template = None
-        self._apps = None
-        self._buildenv = None
-
-    
-    @property
-    def systemtools(self):
-        if self._systemtools is None:
-            from Jumpscale.builder.systemtools.BuilderSystemToolsFactory import BuilderSystemToolsFactory
-            self._systemtools =  BuilderSystemToolsFactory()
-            if hasattr(self._systemtools,"_init"):
-                self._systemtools._init()
-            if hasattr(self._systemtools,"_init2"):
-                self._systemtools._init2()
-        return self._systemtools
-    @property
-    def tools(self):
-        if self._tools is None:
-            from Jumpscale.builder.tools.BuilderTools import BuilderTools
-            self._tools =  BuilderTools()
-            if hasattr(self._tools,"_init"):
-                self._tools._init()
-            if hasattr(self._tools,"_init2"):
-                self._tools._init2()
-        return self._tools
-    @property
-    def web(self):
-        if self._web is None:
-            from Jumpscale.builder.web.BuilderWebFactory import BuilderWebFactory
-            self._web =  BuilderWebFactory()
-            if hasattr(self._web,"_init"):
-                self._web._init()
-            if hasattr(self._web,"_init2"):
-                self._web._init2()
-        return self._web
-    @property
-    def network(self):
-        if self._network is None:
-            from Jumpscale.builder.network.BuilderNetworkFactory import BuilderNetworkFactory
-            self._network =  BuilderNetworkFactory()
-            if hasattr(self._network,"_init"):
-                self._network._init()
-            if hasattr(self._network,"_init2"):
-                self._network._init2()
-        return self._network
-    @property
-    def runtimes(self):
-        if self._runtimes is None:
-            from Jumpscale.builder.runtimes.BuilderRuntimesFactory import BuilderRuntimesFactory
-            self._runtimes =  BuilderRuntimesFactory()
-            if hasattr(self._runtimes,"_init"):
-                self._runtimes._init()
-            if hasattr(self._runtimes,"_init2"):
-                self._runtimes._init2()
-        return self._runtimes
-    @property
-    def _template(self):
-        if self.__template is None:
-            from Jumpscale.builder.TEMPLATE.BuilderGrafanaFactory import GrafanaFactory
-            self.__template =  GrafanaFactory()
-            if hasattr(self.__template,"_init"):
-                self.__template._init()
-            if hasattr(self.__template,"_init2"):
-                self.__template._init2()
-        return self.__template
-    @property
-    def storage(self):
-        if self._storage is None:
-            from Jumpscale.builder.storage.BuilderStorageFactory import BuilderAppsFactory
-            self._storage =  BuilderAppsFactory()
-            if hasattr(self._storage,"_init"):
-                self._storage._init()
-            if hasattr(self._storage,"_init2"):
-                self._storage._init2()
-        return self._storage
-    @property
-    def libs(self):
-        if self._libs is None:
-            from Jumpscale.builder.libs.BuilderLibs import BuilderLibs
-            self._libs =  BuilderLibs()
-            if hasattr(self._libs,"_init"):
-                self._libs._init()
-            if hasattr(self._libs,"_init2"):
-                self._libs._init2()
-        return self._libs
-    @property
-    def libs(self):
-        if self._libs is None:
-            from Jumpscale.builder.libs.BuilderLibsFactory import BuilderLibsFactory
-            self._libs =  BuilderLibsFactory()
-            if hasattr(self._libs,"_init"):
-                self._libs._init()
-            if hasattr(self._libs,"_init2"):
-                self._libs._init2()
-        return self._libs
-    @property
-    def blockchain(self):
-        if self._blockchain is None:
-            from Jumpscale.builder.blockchain.BuilderBlockchainFactory import BuilderBlockchainFactory
-            self._blockchain =  BuilderBlockchainFactory()
-            if hasattr(self._blockchain,"_init"):
-                self._blockchain._init()
-            if hasattr(self._blockchain,"_init2"):
-                self._blockchain._init2()
-        return self._blockchain
-    @property
-    def system(self):
-        if self._system is None:
-            from Jumpscale.builder.system.BuilderSystemFactory import BuilderSystemPackage
-            self._system =  BuilderSystemPackage()
-            if hasattr(self._system,"_init"):
-                self._system._init()
-            if hasattr(self._system,"_init2"):
-                self._system._init2()
-        return self._system
-    @property
-    def db(self):
-        if self._db is None:
-            from Jumpscale.builder.db.BuildDBFactory import BuildDBFactory
-            self._db =  BuildDBFactory()
-            if hasattr(self._db,"_init"):
-                self._db._init()
-            if hasattr(self._db,"_init2"):
-                self._db._init2()
-        return self._db
-    @property
-    def monitoring(self):
-        if self._monitoring is None:
-            from Jumpscale.builder.monitoring.BuilderMonitoringFactory import BuilderMonitoringFactory
-            self._monitoring =  BuilderMonitoringFactory()
-            if hasattr(self._monitoring,"_init"):
-                self._monitoring._init()
-            if hasattr(self._monitoring,"_init2"):
-                self._monitoring._init2()
-        return self._monitoring
-    @property
-    def _template(self):
-        if self.__template is None:
-            from Jumpscale.builder.monitoring.BuilderGrafanaFactory import BuilderGrafanaFactory
-            self.__template =  BuilderGrafanaFactory()
-            if hasattr(self.__template,"_init"):
-                self.__template._init()
-            if hasattr(self.__template,"_init2"):
-                self.__template._init2()
-        return self.__template
-    @property
-    def apps(self):
-        if self._apps is None:
-            from Jumpscale.builder.apps.BuilderAppsFactory import BuilderAppsFactory
-            self._apps =  BuilderAppsFactory()
-            if hasattr(self._apps,"_init"):
-                self._apps._init()
-            if hasattr(self._apps,"_init2"):
-                self._apps._init2()
-        return self._apps
-    @property
-    def buildenv(self):
-        if self._buildenv is None:
-            from Jumpscale.builder.buildenv.BuildEnv import BuildEnv
-            self._buildenv =  BuildEnv()
-            if hasattr(self._buildenv,"_init"):
-                self._buildenv._init()
-            if hasattr(self._buildenv,"_init2"):
-                self._buildenv._init2()
-        return self._buildenv
-
-j.builder = group_builder()
-j.core._groups["builder"] = j.builder
-
-
-class group_sal_zos(JSGroup):
-    def __init__(self):
-        
-        self._farm = None
-        self._zt_bootstrap = None
-        self._stats_collector = None
-        self._zrobot = None
-        self._zerodb = None
-        self._network = None
-        self._grafana = None
-        self._minio = None
-        self._mongodb = None
-        self._storagepools = None
-        self._influx = None
-        self._primitives = None
-        self._capacity = None
-        self._containers = None
-        self._zstor = None
-        self._vm = None
-        self._sandbox = None
-        self._tfchain = None
-        self._disks = None
-        self._ftpclient = None
-        self._etcd = None
-        self._ippoolmanager = None
-        self._node = None
-        self._coredns = None
-        self._hypervisor = None
-        self._traefik = None
-        self._gateway = None
-
-    
-    @property
-    def farm(self):
-        if self._farm is None:
-            from Jumpscale.sal_zos.farm.FarmFactory import FarmFactory
-            self._farm =  FarmFactory()
-            if hasattr(self._farm,"_init"):
-                self._farm._init()
-            if hasattr(self._farm,"_init2"):
-                self._farm._init2()
-        return self._farm
-    @property
-    def zt_bootstrap(self):
-        if self._zt_bootstrap is None:
-            from Jumpscale.sal_zos.zerotier_bootstrap.ZerotierBootstrapFactory import ZerotierBootstrapFactory
-            self._zt_bootstrap =  ZerotierBootstrapFactory()
-            if hasattr(self._zt_bootstrap,"_init"):
-                self._zt_bootstrap._init()
-            if hasattr(self._zt_bootstrap,"_init2"):
-                self._zt_bootstrap._init2()
-        return self._zt_bootstrap
-    @property
-    def stats_collector(self):
-        if self._stats_collector is None:
-            from Jumpscale.sal_zos.stats_collector.stats_collector_factory import StatsCollectorFactory
-            self._stats_collector =  StatsCollectorFactory()
-            if hasattr(self._stats_collector,"_init"):
-                self._stats_collector._init()
-            if hasattr(self._stats_collector,"_init2"):
-                self._stats_collector._init2()
-        return self._stats_collector
-    @property
-    def zrobot(self):
-        if self._zrobot is None:
-            from Jumpscale.sal_zos.zrobot.ZRobotFactory import ZeroRobotFactory
-            self._zrobot =  ZeroRobotFactory()
-            if hasattr(self._zrobot,"_init"):
-                self._zrobot._init()
-            if hasattr(self._zrobot,"_init2"):
-                self._zrobot._init2()
-        return self._zrobot
-    @property
-    def zerodb(self):
-        if self._zerodb is None:
-            from Jumpscale.sal_zos.zerodb.zerodbFactory import ZerodbFactory
-            self._zerodb =  ZerodbFactory()
-            if hasattr(self._zerodb,"_init"):
-                self._zerodb._init()
-            if hasattr(self._zerodb,"_init2"):
-                self._zerodb._init2()
-        return self._zerodb
-    @property
-    def network(self):
-        if self._network is None:
-            from Jumpscale.sal_zos.network.NetworkFactory import NetworkFactory
-            self._network =  NetworkFactory()
-            if hasattr(self._network,"_init"):
-                self._network._init()
-            if hasattr(self._network,"_init2"):
-                self._network._init2()
-        return self._network
-    @property
-    def grafana(self):
-        if self._grafana is None:
-            from Jumpscale.sal_zos.grafana.grafanaFactory import GrafanaFactory
-            self._grafana =  GrafanaFactory()
-            if hasattr(self._grafana,"_init"):
-                self._grafana._init()
-            if hasattr(self._grafana,"_init2"):
-                self._grafana._init2()
-        return self._grafana
-    @property
-    def minio(self):
-        if self._minio is None:
-            from Jumpscale.sal_zos.minio.MinioFactory import MinioFactory
-            self._minio =  MinioFactory()
-            if hasattr(self._minio,"_init"):
-                self._minio._init()
-            if hasattr(self._minio,"_init2"):
-                self._minio._init2()
-        return self._minio
-    @property
-    def mongodb(self):
-        if self._mongodb is None:
-            from Jumpscale.sal_zos.mongodb.MongodbFactory import MongodbFactory
-            self._mongodb =  MongodbFactory()
-            if hasattr(self._mongodb,"_init"):
-                self._mongodb._init()
-            if hasattr(self._mongodb,"_init2"):
-                self._mongodb._init2()
-        return self._mongodb
-    @property
-    def storagepools(self):
-        if self._storagepools is None:
-            from Jumpscale.sal_zos.storage.StorageFactory import ContainerFactory
-            self._storagepools =  ContainerFactory()
-            if hasattr(self._storagepools,"_init"):
-                self._storagepools._init()
-            if hasattr(self._storagepools,"_init2"):
-                self._storagepools._init2()
-        return self._storagepools
-    @property
-    def influx(self):
-        if self._influx is None:
-            from Jumpscale.sal_zos.influxdb.influxdbFactory import InfluxDBFactory
-            self._influx =  InfluxDBFactory()
-            if hasattr(self._influx,"_init"):
-                self._influx._init()
-            if hasattr(self._influx,"_init2"):
-                self._influx._init2()
-        return self._influx
-    @property
-    def primitives(self):
-        if self._primitives is None:
-            from Jumpscale.sal_zos.primitives.PrimitivesFactory import PrimitivesFactory
-            self._primitives =  PrimitivesFactory()
-            if hasattr(self._primitives,"_init"):
-                self._primitives._init()
-            if hasattr(self._primitives,"_init2"):
-                self._primitives._init2()
-        return self._primitives
-    @property
-    def capacity(self):
-        if self._capacity is None:
-            from Jumpscale.sal_zos.capacity.CapacityFactory import CapacityFactory
-            self._capacity =  CapacityFactory()
-            if hasattr(self._capacity,"_init"):
-                self._capacity._init()
-            if hasattr(self._capacity,"_init2"):
-                self._capacity._init2()
-        return self._capacity
-    @property
-    def containers(self):
-        if self._containers is None:
-            from Jumpscale.sal_zos.container.ContainerFactory import ContainerFactory
-            self._containers =  ContainerFactory()
-            if hasattr(self._containers,"_init"):
-                self._containers._init()
-            if hasattr(self._containers,"_init2"):
-                self._containers._init2()
-        return self._containers
-    @property
-    def zstor(self):
-        if self._zstor is None:
-            from Jumpscale.sal_zos.zstor.ZStorFactory import ZeroStorFactory
-            self._zstor =  ZeroStorFactory()
-            if hasattr(self._zstor,"_init"):
-                self._zstor._init()
-            if hasattr(self._zstor,"_init2"):
-                self._zstor._init2()
-        return self._zstor
-    @property
-    def vm(self):
-        if self._vm is None:
-            from Jumpscale.sal_zos.vm.ZOS_VMFactory import ZOS_VMFactory
-            self._vm =  ZOS_VMFactory()
-            if hasattr(self._vm,"_init"):
-                self._vm._init()
-            if hasattr(self._vm,"_init2"):
-                self._vm._init2()
-        return self._vm
-    @property
-    def sandbox(self):
-        if self._sandbox is None:
-            from Jumpscale.sal_zos.sandbox.ZOSSandboxFactory import ZOSSandboxFactory
-            self._sandbox =  ZOSSandboxFactory()
-            if hasattr(self._sandbox,"_init"):
-                self._sandbox._init()
-            if hasattr(self._sandbox,"_init2"):
-                self._sandbox._init2()
-        return self._sandbox
-    @property
-    def tfchain(self):
-        if self._tfchain is None:
-            from Jumpscale.sal_zos.tfchain.TfChainFactory import TfChainFactory
-            self._tfchain =  TfChainFactory()
-            if hasattr(self._tfchain,"_init"):
-                self._tfchain._init()
-            if hasattr(self._tfchain,"_init2"):
-                self._tfchain._init2()
-        return self._tfchain
-    @property
-    def disks(self):
-        if self._disks is None:
-            from Jumpscale.sal_zos.disks.DisksFactory import DisksFactory
-            self._disks =  DisksFactory()
-            if hasattr(self._disks,"_init"):
-                self._disks._init()
-            if hasattr(self._disks,"_init2"):
-                self._disks._init2()
-        return self._disks
-    @property
-    def ftpclient(self):
-        if self._ftpclient is None:
-            from Jumpscale.sal_zos.ftpClient.ftpFactory import FtpFactory
-            self._ftpclient =  FtpFactory()
-            if hasattr(self._ftpclient,"_init"):
-                self._ftpclient._init()
-            if hasattr(self._ftpclient,"_init2"):
-                self._ftpclient._init2()
-        return self._ftpclient
-    @property
-    def etcd(self):
-        if self._etcd is None:
-            from Jumpscale.sal_zos.ETCD.ETCDFactory import ETCDFactory
-            self._etcd =  ETCDFactory()
-            if hasattr(self._etcd,"_init"):
-                self._etcd._init()
-            if hasattr(self._etcd,"_init2"):
-                self._etcd._init2()
-        return self._etcd
-    @property
-    def ippoolmanager(self):
-        if self._ippoolmanager is None:
-            from Jumpscale.sal_zos.ip_pool_manager.IPPoolManagerFactory import IPPoolManagerFactory
-            self._ippoolmanager =  IPPoolManagerFactory()
-            if hasattr(self._ippoolmanager,"_init"):
-                self._ippoolmanager._init()
-            if hasattr(self._ippoolmanager,"_init2"):
-                self._ippoolmanager._init2()
-        return self._ippoolmanager
-    @property
-    def node(self):
-        if self._node is None:
-            from Jumpscale.sal_zos.node.NodeFactory import PrimitivesFactory
-            self._node =  PrimitivesFactory()
-            if hasattr(self._node,"_init"):
-                self._node._init()
-            if hasattr(self._node,"_init2"):
-                self._node._init2()
-        return self._node
-    @property
-    def coredns(self):
-        if self._coredns is None:
-            from Jumpscale.sal_zos.coredns.CorednsFactory import CorednsFactory
-            self._coredns =  CorednsFactory()
-            if hasattr(self._coredns,"_init"):
-                self._coredns._init()
-            if hasattr(self._coredns,"_init2"):
-                self._coredns._init2()
-        return self._coredns
-    @property
-    def hypervisor(self):
-        if self._hypervisor is None:
-            from Jumpscale.sal_zos.hypervisor.HypervisorFactory import HypervisorFactory
-            self._hypervisor =  HypervisorFactory()
-            if hasattr(self._hypervisor,"_init"):
-                self._hypervisor._init()
-            if hasattr(self._hypervisor,"_init2"):
-                self._hypervisor._init2()
-        return self._hypervisor
-    @property
-    def traefik(self):
-        if self._traefik is None:
-            from Jumpscale.sal_zos.traefik.TraefikFactory import TraefikFactory
-            self._traefik =  TraefikFactory()
-            if hasattr(self._traefik,"_init"):
-                self._traefik._init()
-            if hasattr(self._traefik,"_init2"):
-                self._traefik._init2()
-        return self._traefik
-    @property
-    def gateway(self):
-        if self._gateway is None:
-            from Jumpscale.sal_zos.gateway.gatewayFactory import GatewayFactory
-            self._gateway =  GatewayFactory()
-            if hasattr(self._gateway,"_init"):
-                self._gateway._init()
-            if hasattr(self._gateway,"_init2"):
-                self._gateway._init2()
-        return self._gateway
-
-j.sal_zos = group_sal_zos()
-j.core._groups["sal_zos"] = j.sal_zos
 
 
 

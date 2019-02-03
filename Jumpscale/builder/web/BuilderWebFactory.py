@@ -13,11 +13,13 @@ class BuilderWebFactory(j.builder.system._BaseFactoryClass):
         from .BuilderOpenResty import BuilderOpenResty
         from .BuilderCaddy import BuilderCaddy
         from .BuilderCaddyFilemanager import BuilderCaddyFilemanager
+        from .BuilderLapis import BuilderLapis
 
         self.nginx = BuilderNGINX()
         self.openresty = BuilderOpenResty()
         self.traefik = BuilderTraefik()
         self.caddy = BuilderCaddy()
         self.filemanager = BuilderCaddyFilemanager()
+        self.lapis = BuilderLapis()
 
         #TODO:*1

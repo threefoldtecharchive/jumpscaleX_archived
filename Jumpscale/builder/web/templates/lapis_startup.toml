@@ -1,0 +1,33 @@
+[startup.lapisnew]
+name = "core.system"
+running_delay = -1
+
+[startup.lapisnew.args]
+name = "/sandbox/bin/lapis"
+args = ["new"]
+
+[startup.lapisnew.args.env]
+LUALIB = "/sandbox/openresty/lualib"
+LUA_PATH = "?.lua;/sandbox/openresty/lualib/?/init.lua;/sandbox/openresty/lualib/?.lua;/sandbox/openresty/lualib/?/?.lua;/sandbox/openresty/lualib/?/core.lua;/sandbox/openresty/lapis/?.lua"
+LUA_CPATH = "/sandbox/openresty/lualib/?.so;./?.so"
+LAPIS_OPENRESTY = "/sandbox/bin/openresty"
+LD_LIBRARY_PATH = "/sandbox/lib/"
+PATH = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/sandbox/bin"
+PBASE = "/sandbox"
+
+[startup.lapisserver]
+name = "core.system"
+after = ["lapisnew"]
+
+[startup.lapisserver.args]
+name = "/sandbox/bin/lapis"
+args = ["server"]
+
+[startup.lapisserver.args.env]
+LUALIB = "/sandbox/openresty/lualib"
+LUA_PATH = "?.lua;/sandbox/openresty/lualib/?/init.lua;/sandbox/openresty/lualib/?.lua;/sandbox/openresty/lualib/?/?.lua;/sandbox/openresty/lualib/?/core.lua;/sandbox/openresty/lapis/?.lua"
+LUA_CPATH = "/sandbox/openresty/lualib/?.so;./?.so"
+LAPIS_OPENRESTY = "/sandbox/bin/openresty"
+LD_LIBRARY_PATH = "/sandbox/lib/"
+PATH = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/sandbox/bin"
+PBASE = "/sandbox"
