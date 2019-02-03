@@ -67,3 +67,35 @@ results in
 
 ![](images/logexample.png)
 
+
+## how to call logging on class
+
+```
+self._log_debug('List files in directory with path: %s' % path,_levelup=3)
+```
+
+note the _levelup argument, allows you to choose a source of code levels up, very handy for JS supporting classes. Std = 1
+
+## logging configuration
+
+```toml
+#if debug on then will log all
+DEBUG = true
+
+LOGGER_INCLUDE = ['*']
+LOGGER_EXCLUDE = ['sal.fs']
+LOGGER_LEVEL = 15
+# if false then will not show on console (also not in debug)
+LOGGER_CONSOLE = false 
+# will log to redis server
+LOGGER_REDIS = true
+```
+
+when logging to redis server, consult using
+
+```
+j.clients.logger.tail()
+```
+
+will show everything going on
+

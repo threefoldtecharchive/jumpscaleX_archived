@@ -1,10 +1,14 @@
 
 
-# integrated
+# integrated (recommended)
 
+```python
+pr = j.core.profileStart()
+#do stuff
+j.core.profileStop(pr)
+```
 
-
-# alternatives
+# alternatives (more complex)
 
 ## graphical
 

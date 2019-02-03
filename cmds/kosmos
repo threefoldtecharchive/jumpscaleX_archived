@@ -26,6 +26,7 @@ if len(args) == 1:
         toexec = toexec.strip("'\" ").strip("'\" ")
         exec(toexec,globals(),j._locals_get({}))
 else:
+
     j.data.bcdb #needed to make sure we have bcdb running, needed for code completion
     j.shell(loc=False,locals_=locals(),globals_=globals())
 

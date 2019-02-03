@@ -51,6 +51,8 @@ class BCDB(j.application.JSBaseClass):
         # self._logger_enable()
         self._init_(reset=reset, stop=False)
 
+        j.data.nacl.default
+
     @property
     def sqlclient(self):
         if self._sqlclient is None:
@@ -385,8 +387,8 @@ class BCDB(j.application.JSBaseClass):
             schema_id, acl_id, bdata_encrypted = res
             if model:
                 if schema_id != model.schema.sid:
-                    j.shell()
-                    raise RuntimeError("fetched an object with if from other model.")
+                    self._log_warning("schema id in db not same as in mem")
+                    # raise RuntimeError("fetched an object with if from other model.")
             else:
                 model = self.meta.model_get_from_id(schema_id, bcdb=self)
         else:

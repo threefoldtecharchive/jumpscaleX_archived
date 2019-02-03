@@ -3,7 +3,7 @@ from Jumpscale import j
 # import gevent
 
 
-class RedisCoreClient(j.application.JSBaseClass):
+class RedisCoreClient_old(j.application.JSBaseClass):
 
     __jslocation__ = "j.clients.credis_core"
 

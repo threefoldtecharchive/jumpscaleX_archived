@@ -26,15 +26,6 @@ class group_{{jsgroup.name}}(JSGroup):
         if self._{{module.jname}} is None:
             from {{module.importlocation}} import {{module.name}}
             self._{{module.jname}} =  {{module.name}}()
-            # print("load:%s{{module.jname}}")
-            if hasattr(self._{{module.jname}},"_init"):
-                self._{{module.jname}}._init()
-                # print("init:%s{{module.jname}}")
-            else:
-                from pudb import set_trace; set_trace()
-            if hasattr(self._{{module.jname}},"_init2"):
-                self._{{module.jname}}._init2()
-                # print("init2:%s{{module.jname}}")
         return self._{{module.jname}}
     {%- endfor %}
 

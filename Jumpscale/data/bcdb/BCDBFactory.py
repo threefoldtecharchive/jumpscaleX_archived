@@ -12,6 +12,7 @@ class BCDBFactory(j.application.JSBaseClass):
     __jslocation__ = "j.data.bcdb"
 
     def _init(self):
+        self._log_debug("bcdb starts")
         self.bcdb_instances = {}  #key is the name
         self._path = j.sal.fs.getDirName(os.path.abspath(__file__))
 
@@ -20,7 +21,7 @@ class BCDBFactory(j.application.JSBaseClass):
 
         j.clients.redis.core_get() #just to make sure the redis got started
 
-        # self._logger_enable()
+
 
     def new(self, name, zdbclient=None,reset=False):
         self._log_debug("new bcdb:%s"%name)

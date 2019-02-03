@@ -3,7 +3,6 @@ import copy
 import getpass
 # import socket
 import grp
-import logging
 import os
 import random
 import select
@@ -18,59 +17,236 @@ from os import O_NONBLOCK, read
 from pathlib import Path
 from subprocess import Popen, check_output
 
-
-# # Returns escape codes from format codes
-# def esc(*x):
-#     return '\033[' + ';'.join(x) + 'm'
-#
-#
-# # The initial list of escape codes
-# escape_codes = {
-#     'reset': esc('0'),
-#     'bold': esc('01'),
-#     'thin': esc('02')
-# }
-#
-# # The color names
-# COLORS = [
-#     'black',
-#     'red',
-#     'green',
-#     'yellow',
-#     'blue',
-#     'purple',
-#     'cyan',
-#     'gray',
-#     'white'
-# ]
-#
-# PREFIXES = [
-#     # Foreground without prefix
-#     ('3', ''), ('01;3', 'bold_'), ('02;3', 'thin_'),
-#
-#     # Foreground with fg_ prefix
-#     ('3', 'fg_'), ('01;3', 'fg_bold_'), ('02;3', 'fg_thin_'),
-#
-#     # Background with bg_ prefix - bold/light works differently
-#     ('4', 'bg_'), ('10', 'bg_bold_'),
-# ]
-#
-# for prefix, prefix_name in PREFIXES:
-#     for code, name in enumerate(COLORS):
-#         escape_codes[prefix_name + name] = esc(prefix + str(code))
-
-
-# def parse_colors(sequence):
-#     """Return escape codes from a color sequence."""
-#     return ''.join(escape_codes[n] for n in sequence.split(',') if n)
-
-
-# __all__ = ('escape_codes', 'default_log_colors', 'ColoredFormatter',
-#            'LevelFormatter', 'TTYColoredFormatter')
-
-
-
 import inspect
+
+try:
+    import redis
+except:
+    redis = False
+
+if redis:
+    class RedisQueue():
+
+        def __init__(self,redis,key):
+            self.__db = redis
+            self.key = key
+
+        def qsize(self):
+            '''Return the approximate size of the queue.
+
+            :return: approximate size of queue
+            :rtype: int
+            '''
+            return self.__db.llen(self.key)
+
+        @property
+        def empty(self):
+            '''Return True if the queue is empty, False otherwise.'''
+            return self.qsize() == 0
+
+        def reset(self):
+            '''
+            make empty
+            :return:
+            '''
+            while self.empty == False:
+                self.get_nowait()
+
+        def put(self, item):
+            '''Put item into the queue.'''
+            self.__db.rpush(self.key, item)
+
+        def get(self, timeout=20):
+            '''Remove and return an item from the queue.'''
+            if timeout > 0:
+                item = self.__db.blpop(self.key, timeout=timeout)
+                if item:
+                    item = item[1]
+            else:
+                item = self.__db.lpop(self.key)
+            return item
+
+        def fetch(self, block=True, timeout=None):
+            '''Return an item from the queue without removing'''
+            if block:
+                item = self.__db.brpoplpush(self.key, self.key, timeout)
+            else:
+                item = self.__db.lindex(self.key, 0)
+            return item
+
+        def set_expire(self, time):
+            self.__db.expire(self.key, time)
+
+        def get_nowait(self):
+            """Equivalent to get(False)."""
+            return self.get(False)
+
+    class Redis(redis.Redis):
+
+        _storedprocedures_to_sha = {}
+        _redis_cli_path_ = None
+
+        def __init__(self,*args,**kwargs):
+            redis.Redis.__init__(self,*args,**kwargs)
+            self._storedprocedures_to_sha = {}
+
+        def dict_get(self, key):
+            return RedisDict(self, key)
+
+        def queue_get(self, key):
+            '''get redis queue
+            '''
+            return RedisQueue(self, key)
+
+        def storedprocedure_register(self, name, nrkeys, path_or_content):
+            '''create stored procedure from path
+
+            :param path: the path where the stored procedure exist
+            :type path_or_content: str which is the lua content or the path
+            :raises Exception: when we can not find the stored procedure on the path
+
+            will return the sha
+
+            to use the stored procedure do
+
+            redisclient.evalsha(sha,3,"a","b","c")  3 is for nr of keys, then the args
+
+            the stored procedure can be found in hset storedprocedures:$name has inside a json with
+
+            is json encoded dict
+             - script: ...
+             - sha: ...
+             - nrkeys: ...
+
+            there is also storedprocedures_sha -> sha without having to decode json
+
+            tips on lua in redis:
+            https://redis.io/commands/eval
+
+            '''
+
+
+
+            if "\n" not in path_or_content:
+                f = open(path_or_content, "r")
+                lua = f.read()
+                path = path_or_content
+            else:
+                lua = path_or_content
+                path = ""
+
+            script =  self.register_script(lua)
+
+            dd = {}
+            dd["sha"] = script.sha
+            dd["script"] = lua
+            dd["nrkeys"] = nrkeys
+            dd["path"] = path
+
+            data = json.dumps(dd)
+
+            self.hset("storedprocedures",name,data)
+            self.hset("storedprocedures_sha",name,script.sha)
+
+            self._storedprocedures_to_sha = {}
+
+            # sha = self._sp_data(name)["sha"]
+            # assert self.script_exists(sha)[0]
+
+            return script
+
+        def storedprocedure_delete(self, name):
+            self.hdel("storedprocedures",name)
+            self.hdel("storedprocedures_sha",name)
+            self._storedprocedures_to_sha = {}
+
+
+        @property
+        def _redis_cli_path(self):
+            if not self.__class__._redis_cli_path_:
+                from Jumpscale import j
+                if j.core.tools.cmd_installed("redis-cli_"):
+                    self.__class__._redis_cli_path_ =  "redis-cli_"
+                else:
+                    self.__class__._redis_cli_path_ =  "redis-cli"
+            return self.__class__._redis_cli_path_
+
+        def redis_cmd_execute(self,command,debug=False,debugsync=False,keys=[],args=[]):
+            """
+
+            :param command:
+            :param args:
+            :return:
+            """
+            from Jumpscale import j
+            rediscmd = self._redis_cli_path
+            if debug:
+                rediscmd+= " --ldb"
+            elif debugsync:
+                rediscmd+= " --ldb-sync-mode"
+            rediscmd+= " --%s"%command
+            for key in keys:
+                rediscmd+= " %s"%key
+            if len(args)>0:
+                rediscmd+= " , "
+                for arg in args:
+                    rediscmd+= " %s"%arg
+            print(rediscmd)
+
+            rc,out,err = j.sal.process.execute(rediscmd,interactive=True)
+            return out
+
+
+        def _sp_data(self,name):
+            if name not in self._storedprocedures_to_sha:
+                data = self.hget("storedprocedures",name)
+                data2 = json.loads(data)
+                self._storedprocedures_to_sha[name] = data2
+            return self._storedprocedures_to_sha[name]
+
+        def storedprocedure_execute(self,name,*args):
+            """
+
+            :param name:
+            :param args:
+            :return:
+            """
+
+            data = self._sp_data(name)
+            sha = data["sha"]#.encode()
+            assert isinstance(sha, (str))
+            # assert isinstance(sha, (bytes, bytearray))
+            from Jumpscale import j
+            j.shell()
+            return self.evalsha(sha,data["nrkeys"],*args)
+            # self.eval(data["script"],data["nrkeys"],*args)
+            # return self.execute_command("EVALSHA",sha,data["nrkeys"],*args)
+
+        def storedprocedure_debug(self,name,*args):
+            """
+            to see how to use the debugger see https://redis.io/topics/ldb
+
+            to break put: redis.breakpoint() inside your lua code
+            to continue: do 'c'
+
+
+            :param name: name of the sp to execute
+            :param args: args to it
+            :return:
+            """
+            data = self._sp_data(name)
+            path = data["path"]
+            if path =="":
+                from pudb import set_trace; set_trace()
+
+            nrkeys = data['nrkeys']
+            args2 = args[nrkeys:]
+            keys = args[:nrkeys]
+
+            out = self.redis_cmd_execute("eval %s"%path,debug=True,keys=keys,args=args)
+
+            return out
+
 
 class Tools:
 
@@ -79,7 +255,7 @@ class Tools:
     _shell = None
 
     @staticmethod
-    def log(msg,cat="",level=10,data=None,context=None):
+    def log(msg,cat="",level=10,data=None,context=None,_deeper=False):
         """
 
         :param msg:
@@ -93,7 +269,11 @@ class Tools:
 
         :return:
         """
-        frame_ = inspect.currentframe().f_back
+        if _deeper:
+            frame_ = inspect.currentframe().f_back
+        else:
+            frame_ = inspect.currentframe().f_back.f_back
+
         fname = frame_.f_code.co_filename.split("/")[-1]
         defname = frame_.f_code.co_name
         linenr= frame_.f_code.co_firstlineno
@@ -112,6 +292,31 @@ class Tools:
         logdict["data"] = data
 
         Tools.log2stdout(logdict)
+
+    @staticmethod
+    def redis_client_get(addr='localhost',port=6379, unix_socket_path="/sandbox/var/redis.sock",die=True):
+
+        if not redis:
+            raise RuntimeError("redis python lib not installed, do pip3 install redis")
+        try:
+            cl = Redis(unix_socket_path=unix_socket_path, db=0)
+            cl.ping()
+        except Exception as e:
+            cl = None
+            if addr == "" and die:
+                raise e
+        else:
+            return cl
+
+        try:
+            cl = Redis(host=addr, port=port, db=0)
+            cl.ping()
+        except Exception as e:
+            if die:
+                raise e
+            cl = None
+
+        return cl
 
     @staticmethod
     def _isUnix():
@@ -216,7 +421,7 @@ class Tools:
         @param path: string (File path required to be removed)
         """
         path = Tools.text_replace(path)
-        logger.debug('Remove file with path: %s' % path)
+        Tools.log('Remove file with path: %s' % path)
         if os.path.islink(path):
             os.unlink(path)
         if not Tools.exists(path):
@@ -258,14 +463,14 @@ class Tools:
         except (OSError, AttributeError):
             pass
         if found and followlinks and stat.S_ISLNK(st.st_mode):
-            logger.debug('path %s exists' % str(path.encode("utf-8")))
+            Tools.log('path %s exists' % str(path.encode("utf-8")))
             linkpath = os.readlink(path)
             if linkpath[0]!="/":
                 linkpath = os.path.join(Tools.path_parent(path), linkpath)
             return Tools.exists(linkpath)
         if found:
             return True
-        # logger.debug('path %s does not exist' % str(path.encode("utf-8")))
+        # Tools.log('path %s does not exist' % str(path.encode("utf-8")))
         return False
 
     @staticmethod
@@ -384,7 +589,7 @@ class Tools:
         return content
 
     @staticmethod
-    def text_replace(content,args=None,executor=None,ignorecomments=False,text_strip=True,colors=False):
+    def text_replace(content,args=None,executor=None,ignorecomments=False,text_strip=True,colors=True):
         """
 
         j.core.tools.text_replace
@@ -583,7 +788,7 @@ class Tools:
         command  = Tools.text_strip(command, args=args, replace=replace)
         if "\n" in command or asfile:
             path = Tools._file_path_tmp_get()
-            MyEnv.logger.debug("execbash:\n'''%s\n%s'''\n" % (path, command))
+            Tools.log("execbash:\n'''%s\n%s'''\n" % (path, command))
             command2 = ""
             if die:
                 command2 = "set -e\n"
@@ -601,10 +806,10 @@ class Tools:
 
             if interactive:
                 res = Tools._execute_interactive(cmd=command, die=die)
-                logger.debug("execute interactive:%s"%command)
+                Tools.log("execute interactive:%s"%command)
                 return res
             else:
-                logger.debug("execute:%s"%command)
+                Tools.log("execute:%s"%command)
 
             os.environ["PYTHONUNBUFFERED"] = "1" #WHY THIS???
 
@@ -666,7 +871,7 @@ class Tools:
                     def readout(stream):
                         line= stream.read().decode()
                         if showout:
-                            # MyEnv.logger.debug(line)
+                            # Tools.log(line)
                             print(line)
 
 
@@ -706,7 +911,7 @@ class Tools:
                             if p.poll():
                                 p.terminate()
 
-                        MyEnv.logger.warning("process killed because of timeout")
+                        Tools.log("process killed because of timeout",level=30)
                         return (-2, out, err)
 
                     # Read out process streams, but don't block
@@ -716,11 +921,11 @@ class Tools:
             rc = -1 if p.returncode < 0 else p.returncode
 
             if rc<0 or rc>0:
-                MyEnv.logger.debug('system.process.run ended, exitcode was %d' % rc)
+                Tools.log('system.process.run ended, exitcode was %d' % rc)
             if out!="":
-                MyEnv.logger.debug('system.process.run stdout:\n%s' % out)
+                Tools.log('system.process.run stdout:\n%s' % out)
             if err!="":
-                MyEnv.logger.debug('system.process.run stderr:\n%s' % err)
+                Tools.log('system.process.run stderr:\n%s' % err)
 
             if die and rc!=0:
                 msg="\nCould not execute:"
@@ -1367,7 +1572,8 @@ class MyEnv():
         'ERROR': '{RED}{TIME}{RESET} {filename:<18}-{linenr:4d}: {message}{RESET}',
         'CRITICAL':'{RED}{TIME} {filename:<18}-{linenr:4d}: {message}{RESET} ',
     }
-    
+
+    db = Tools.redis_client_get(die=False)
 
 
     @staticmethod
@@ -1521,8 +1727,8 @@ class MyEnv():
             MyEnv.sandbox_python_active=False
 
 
-        MyEnv.log_includes = MyEnv.config.get("LOGGER_INCLUDE",[])
-        MyEnv.log_excludes = MyEnv.config.get("LOGGER_EXCLUDE",[])
+        MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE",[]) if i.strip().strip("'\'") != ""]
+        MyEnv.log_excludes = [i for i in MyEnv.config.get("LOGGER_EXCLUDE",[]) if i.strip().strip("'\'") != ""]
         MyEnv.log_loglevel = MyEnv.config.get("LOGGER_LEVEL",100)
         MyEnv.log_console = MyEnv.config.get("LOGGER_CONSOLE",True)
         MyEnv.log_redis = MyEnv.config.get("LOGGER_REDIS",False)
@@ -1718,7 +1924,7 @@ class JumpscaleInstaller():
     def __init__(self):
 
         self.account = "threefoldtech"
-        self.branch = ["master"]
+        self.branch = ["development"]
         self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
     def install(self):
@@ -1833,30 +2039,7 @@ class JumpscaleInstaller():
 
 
 
-# formatter = LogFormatter()
-#
-# logger = logging.Logger("installer")
-# logger.level = logging.INFO  #10 is debug
-#
-# log_handler = logging.StreamHandler()
-# log_handler.setLevel(logging.INFO)
-# log_handler.setFormatter(formatter)
-# logger.addHandler(log_handler)
-#
-# logging.basicConfig(level=logging.INFO)
-#
-# MyEnv.logger = logger
-
-# print (Tools.text_replace("{BLUE} this is a test {BOLD}{RED} now red {RESET} go back to white",colors=True))
-
-# MyEnv.logger.debug("test")
-# MyEnv.logger.info("test")
-# MyEnv.logger.error("test")
-# MyEnv.logger.critical("test \033[94m other color")
-
-
 MyEnv._init()
-
 
 
 

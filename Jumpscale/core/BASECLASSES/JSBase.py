@@ -23,7 +23,7 @@ class JSBase:
     def _class_init(self, topclass=True):
 
         if not hasattr(self.__class__, "_class_init_done"):
-            print("_class init:%s"%self.__class__.__name__)
+            # print("_class init:%s"%self.__class__.__name__)
             # only needed to execute once, needs to be done at init time, class inheritance does not exist
             self.__class__._dirpath_ = ""  # path of the directory hosting this class
             # self.__class__._logger_ = None  # logger attached to this class
@@ -76,21 +76,25 @@ class JSBase:
             self._log_init()
 
     def _log_init(self):
-        print ("%s:loginit"%self.__class__._name)
+        # print ("%s:loginit"%self.__class__._name)
+        if j.core.myenv.config.get("DEBUG",False):
+            self._logger_minlevel_set(1)
+            return
+
         incl = False
         if "*" in j.core.myenv.log_includes:
             incl = True
         else:
             for item in j.core.myenv.log_includes:
                 item=item.replace("*","")
-                if self.__class__._location.startswith(item):
+                if self.__class__._location.find(item)!=-1:
                     incl=True
         if "*" in j.core.myenv.log_excludes:
             incl = False
         else:
             for item in j.core.myenv.log_excludes:
                 item=item.replace("*","")
-                if self.__class__._location.startswith(item):
+                if self.__class__._location.find(item)!=-1:
                     incl=False
 
         if incl:
@@ -261,22 +265,22 @@ class JSBase:
     def _print(self,msg,cat=""):
         self._log(msg,cat=cat,level=15)
 
-    def _log_debug(self,msg,cat="",data=None):
-        self._log(msg,cat=cat,level=10,data=data)
+    def _log_debug(self,msg,cat="",data=None,_levelup=1):
+        self._log(msg,cat=cat,level=10,data=data,_levelup=_levelup)
 
-    def _log_info(self,msg,cat="",data=None):
-        self._log(msg,cat=cat,level=20,data=data)
+    def _log_info(self,msg,cat="",data=None,_levelup=1):
+        self._log(msg,cat=cat,level=20,data=data,_levelup=_levelup)
 
-    def _log_warning(self,msg,cat="",data=None):
-        self._log(msg,cat=cat,level=30,data=data)
+    def _log_warning(self,msg,cat="",data=None,_levelup=1):
+        self._log(msg,cat=cat,level=30,data=data,_levelup=_levelup)
 
-    def _log_error(self,msg,cat="",data=None):
-        self._log(msg,cat=cat,level=40,data=data)
+    def _log_error(self,msg,cat="",data=None,_levelup=1):
+        self._log(msg,cat=cat,level=40,data=data,_levelup=_levelup)
 
-    def _log_critical(self,msg,cat="",data=None):
-        self._log(msg,cat=cat,level=50,data=data)
+    def _log_critical(self,msg,cat="",data=None,_levelup=1):
+        self._log(msg,cat=cat,level=50,data=data,_levelup=_levelup)
 
-    def _log(self,msg,cat="",level=10,data=None):
+    def _log(self,msg,cat="",level=10,data=None,context="",_levelup=1):
         """
 
         :param msg: what you want to log
@@ -301,9 +305,14 @@ class JSBase:
             return
 
         frame_ = inspect.currentframe().f_back
+        levelup = 0
+        while frame_ and levelup<_levelup:
+            frame_ = frame_.f_back
+            levelup+=1
+
         fname = frame_.f_code.co_filename.split("/")[-1]
         defname = frame_.f_code.co_name
-        linenr= frame_.f_code.co_firstlineno
+        linenr= frame_.f_lineno
 
         # while obj is None and frame_:
         #     locals_ = frame_.f_locals
@@ -313,14 +322,17 @@ class JSBase:
         #     else:
         #         frame_ = frame_.f_back
 
-        if self._logsource_obj._location:
-            context = "%s:%s"%(self._logsource_obj._location,defname)
-        else:
-            context = "def:%s"%(defname)
+        if self._location not in [None,""]:
+            if not self._location.endswith(self._name):
+                context = "%s:%s:%s"%(self._location,self._name,defname)
+            else:
+                context = "%s:%s"%(self._location,defname)
+        if context=="":
+            context = defname
 
         logdict={}
         logdict["linenr"] = linenr
-        logdict["processid"] = self._j.application.appname
+        logdict["processid"] = j.application.appname
         logdict["message"] = msg
         logdict["filepath"] = fname
         logdict["level"] = level
@@ -331,7 +343,7 @@ class JSBase:
         if j.application.logger:
             j.application.logger._process(logdict)
         else:
-            self._j.core.tools.log2stdout(logdict)
+            j.core.tools.log2stdout(logdict)
 
     ################
 
