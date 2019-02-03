@@ -16,9 +16,7 @@ class Watcher:
     """
     def __init__(self, docsites):
         print("initializing watcher for paths: {}".format(docsites))
-        event_handler = DocsiteChangeHandler()
-        event_handler.register_docsites(docsites)
-        event_handler.register_watcher(self)
+        event_handler = DocsiteChangeHandler(self)
         self.observer = PausingObserver()
         for _, docsite in docsites.items():
             self.observer.schedule(event_handler, docsite.path, recursive=True)
@@ -28,10 +26,11 @@ class Watcher:
         self.observer.start()
         try:
             while True:
-                time.sleep(1)
+                gevent.sleep(1)
         except KeyboardInterrupt:
             self.observer.stop()
         self.observer.join()
+
 
 class PausingObserver(Observer):
     def dispatch_events(self, *args, **kwargs):
@@ -46,7 +45,13 @@ class PausingObserver(Observer):
         self.event_queue.queue.clear()
         self._is_paused = False
 
+
 class DocsiteChangeHandler(FileSystemEventHandler):
+
+    def __init__(self, watcher):
+        FileSystemEventHandler.__init__(self)
+        self.watcher = watcher
+
     def on_modified(self, event):
         docsite = self.get_docsite_from_path(event.src_path)
         if docsite:
@@ -55,16 +60,11 @@ class DocsiteChangeHandler(FileSystemEventHandler):
             site.write()
             self.watcher.observer.resume()
 
-    def register_docsites(self, docsites):
-        self.docsites = docsites
-
-    def register_watcher(self, watcher):
-        self.watcher = watcher
-
     def get_docsite_from_path(self, path):
-        for _, docsite in self.docsites.items():
+        for _, docsite in self.watcher.docsites.items():
             if path in docsite.path:
                 return docsite
+
 
 class MarkDownDocs(j.application.JSBaseClass):
     """
@@ -251,14 +251,19 @@ class MarkDownDocs(j.application.JSBaseClass):
 
         if watch:
             watcher = Watcher(self.docsites)
-            watcher.start()
 
+            threads = list()
+            threads.append(gevent.spawn(self.syncer))
+            threads.append(gevent.spawn(watcher.start))
+
+            gevent.joinall(threads)
+git 
     def syncer(self):
         print("syncer started, will reload every 5 mins")
         while True:
             print("Reloading")
             self.load_wikis()
-            gevent.sleep(1)
+            gevent.sleep(300)
 
     def load_wikis(self):
         url = "https://github.com/threefoldfoundation/info_tokens/tree/master/docs"
