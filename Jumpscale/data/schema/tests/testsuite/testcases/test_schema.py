@@ -575,13 +575,6 @@ class SchemaTest(BaseTest):
         schema_obj.date_time = '{:02}/{:02}/{}'.format(day, month, year)
         self.assertEqual(schema_obj.date_time, int(date_time))
 
-        added_hours = random.randint(1, 12)
-        added_day = 0 if (datetime.now().hour + added_hours) / 24 < 1 else 1
-        added_hours_from_now = datetime.now().hour + added_hours if added_day == 0 else (datetime.now().hour + added_hours) % 24
-        date_time = datetime(datetime.now().year, datetime.now().month, datetime.now().day + added_day, added_hours_from_now, datetime.now().minute, datetime.now().second).timestamp()
-        schema_obj.date_time = '+{}h'.format(added_hours)
-        self.assertAlmostEqual(schema_obj.date_time, int(date_time), delta=3)
-
     def test011_validate_percent_type(self):
         """
         SCM-011
