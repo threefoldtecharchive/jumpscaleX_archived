@@ -53,7 +53,7 @@ class Session(j.application.JSBaseClass):
                     self.window_remove("ignore")
                 return window
 
-        self._logger.debug("create window:%s" % name)
+        self._log_debug("create window:%s" % name)
         res = self.mgmt.new_window(name, start_directory=start_directory, attach=attach)
 
         window = Window(self, res)

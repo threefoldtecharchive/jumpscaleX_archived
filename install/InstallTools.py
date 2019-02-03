@@ -19,303 +19,99 @@ from pathlib import Path
 from subprocess import Popen, check_output
 
 
-# Returns escape codes from format codes
-def esc(*x):
-    return '\033[' + ';'.join(x) + 'm'
+# # Returns escape codes from format codes
+# def esc(*x):
+#     return '\033[' + ';'.join(x) + 'm'
+#
+#
+# # The initial list of escape codes
+# escape_codes = {
+#     'reset': esc('0'),
+#     'bold': esc('01'),
+#     'thin': esc('02')
+# }
+#
+# # The color names
+# COLORS = [
+#     'black',
+#     'red',
+#     'green',
+#     'yellow',
+#     'blue',
+#     'purple',
+#     'cyan',
+#     'gray',
+#     'white'
+# ]
+#
+# PREFIXES = [
+#     # Foreground without prefix
+#     ('3', ''), ('01;3', 'bold_'), ('02;3', 'thin_'),
+#
+#     # Foreground with fg_ prefix
+#     ('3', 'fg_'), ('01;3', 'fg_bold_'), ('02;3', 'fg_thin_'),
+#
+#     # Background with bg_ prefix - bold/light works differently
+#     ('4', 'bg_'), ('10', 'bg_bold_'),
+# ]
+#
+# for prefix, prefix_name in PREFIXES:
+#     for code, name in enumerate(COLORS):
+#         escape_codes[prefix_name + name] = esc(prefix + str(code))
 
 
-# The initial list of escape codes
-escape_codes = {
-    'reset': esc('0'),
-    'bold': esc('01'),
-    'thin': esc('02')
-}
-
-# The color names
-COLORS = [
-    'black',
-    'red',
-    'green',
-    'yellow',
-    'blue',
-    'purple',
-    'cyan',
-    'gray',
-    'white'
-]
-
-PREFIXES = [
-    # Foreground without prefix
-    ('3', ''), ('01;3', 'bold_'), ('02;3', 'thin_'),
-
-    # Foreground with fg_ prefix
-    ('3', 'fg_'), ('01;3', 'fg_bold_'), ('02;3', 'fg_thin_'),
-
-    # Background with bg_ prefix - bold/light works differently
-    ('4', 'bg_'), ('10', 'bg_bold_'),
-]
-
-for prefix, prefix_name in PREFIXES:
-    for code, name in enumerate(COLORS):
-        escape_codes[prefix_name + name] = esc(prefix + str(code))
-
-
-def parse_colors(sequence):
-    """Return escape codes from a color sequence."""
-    return ''.join(escape_codes[n] for n in sequence.split(',') if n)
+# def parse_colors(sequence):
+#     """Return escape codes from a color sequence."""
+#     return ''.join(escape_codes[n] for n in sequence.split(',') if n)
 
 
 # __all__ = ('escape_codes', 'default_log_colors', 'ColoredFormatter',
 #            'LevelFormatter', 'TTYColoredFormatter')
 
-# The default colors to use for the debug levels
-default_log_colors = {
-    'DEBUG': 'white',
-    'INFO': 'green',
-    'WARNING': 'yellow',
-    'ERROR': 'red',
-    'CRITICAL': 'bold_red',
-}
-
-# # The default format to use for each style
-# default_formats = {
-#     '%': '%(log_color)s%(levelname)s:%(name)s:%(message)s',
-#     '{': '{log_color}{levelname}:{name}:{message}',
-#     '$': '${log_color}${levelname}:${name}:${message}'
-# }
-#
-
-class ColoredRecord(object):
-    """
-    Wraps a LogRecord, adding named escape codes to the internal dict.
-
-    The internal dict is used when formatting the message (by the PercentStyle,
-    StrFormatStyle, and StringTemplateStyle classes).
-    """
-
-    def __init__(self, record):
-        """Add attributes from the escape_codes dict and the record."""
-        self.__dict__.update(escape_codes)
-        self.__dict__.update(record.__dict__)
-
-        # Keep a reference to the original record so ``__getattr__`` can
-        # access functions that are not in ``__dict__``
-        self.__record = record
-
-    def __getattr__(self, name):
-        return getattr(self.__record, name)
 
 
-class ColoredFormatter(logging.Formatter):
-    """
-    A formatter that allows colors to be placed in the format string.
-
-    Intended to help in creating more readable logging output.
-    """
-
-    def __init__(self, fmt=None, datefmt=None, style='%',
-                 log_colors=None, reset=True,
-                 secondary_log_colors=None):
-        """
-        Set the format and colors the ColoredFormatter will use.
-
-        The ``fmt``, ``datefmt`` and ``style`` args are passed on to the
-        ``logging.Formatter`` constructor.
-
-        The ``secondary_log_colors`` argument can be used to create additional
-        ``log_color`` attributes. Each key in the dictionary will set
-        ``{key}_log_color``, using the value to select from a different
-        ``log_colors`` set.
-
-        :Parameters:
-        - fmt (str): The format string to use
-        - datefmt (str): A format string for the date
-        - log_colors (dict):
-            A mapping of log level names to color names
-        - reset (bool):
-            Implicitly append a color reset to all records unless False
-        - style ('%' or '{' or '$'):
-            The format style to use. (*No meaning prior to Python 3.2.*)
-        - secondary_log_colors (dict):
-            Map secondary ``log_color`` attributes. (*New in version 2.6.*)
-        """
-        if fmt is None:
-            print("USE DEFAULT FORMATS IN COLORED FORMATTER")
-            fmt = default_formats[style]
-
-        super(ColoredFormatter, self).__init__(fmt, datefmt, style)
-
-        self.log_colors = (log_colors if log_colors is not None else default_log_colors)
-        self.secondary_log_colors = secondary_log_colors
-        self.reset = reset
-
-    def color(self, log_colors, level_name):
-        """Return escape codes from a ``log_colors`` dict."""
-        return parse_colors(log_colors.get(level_name, ""))
-
-    def format(self, record):
-        """Format a message from a record object."""
-        record = ColoredRecord(record)
-        record.log_color = self.color(self.log_colors, record.levelname)
-
-        # Set secondary log colors
-        if self.secondary_log_colors:
-            for name, log_colors in self.secondary_log_colors.items():
-                color = self.color(log_colors, record.levelname)
-                setattr(record, name + '_log_color', color)
-
-        # Format the message
-        message = super(ColoredFormatter, self).format(record)
-
-        # Add a reset code to the end of the message
-        # (if it wasn't explicitly added in format str)
-        if self.reset and not message.endswith(escape_codes['reset']):
-            message += escape_codes['reset']
-
-        return message
-
-
-class LevelFormatter(ColoredFormatter):
-    """An extension of ColoredFormatter that uses per-level format strings."""
-
-    def __init__(self, fmt=None, datefmt=None, style='%',
-                 log_colors=None, reset=True,
-                 secondary_log_colors=None):
-        """
-        Set the per-loglevel format that will be used.
-
-        Supports fmt as a dict. All other args are passed on to the
-        ``colorlog.ColoredFormatter`` constructor.
-
-        :Parameters:
-        - fmt (dict):
-            A mapping of log levels (represented as strings, e.g. 'WARNING') to
-            different formatters. (*New in version 2.7.0)
-        (All other parameters are the same as in colorlog.ColoredFormatter)
-
-        Example:
-
-        formatter = LevelFormatter(fmt={
-            'DEBUG':'%(log_color)s%(msg)s (%(module)s:%(lineno)d)',
-            'INFO': '%(log_color)s%(msg)s',
-            'WARNING': '%(log_color)sWARN: %(msg)s (%(module)s:%(lineno)d)',
-            'ERROR': '%(log_color)sERROR: %(msg)s (%(module)s:%(lineno)d)',
-            'CRITICAL': '%(log_color)sCRIT: %(msg)s (%(module)s:%(lineno)d)',
-        })
-        """
-        ColoredFormatter.__init__(self,
-            fmt=fmt, datefmt=datefmt, style=style, log_colors=log_colors,
-            reset=reset, secondary_log_colors=secondary_log_colors)
-        self.style = style
-        self.fmt = fmt
-
-    def format(self, record):
-        """Customize the message format based on the log level."""
-        if isinstance(self.fmt, dict):
-            self._fmt = self.fmt[record.levelname]
-            if sys.version_info > (3, 2):
-                # Update self._style because we've changed self._fmt
-                # (code based on stdlib's logging.Formatter.__init__())
-                if self.style not in logging._STYLES:
-                    raise ValueError('Style must be one of: %s' % ','.join(
-                        logging._STYLES.keys()))
-                self._style = logging._STYLES[self.style][0](self._fmt)
-
-        if sys.version_info > (2, 7):
-            message = super(LevelFormatter, self).format(record)
-        else:
-            message = ColoredFormatter.format(self, record)
-
-        return message
-
-
-class TTYColoredFormatter(LevelFormatter):
-    """
-    Blanks all color codes if not running under a TTY.
-
-    This is useful when you want to be able to pipe colorlog output to a file.
-    """
-
-    def __init__(self, *args, **kwargs):
-        """Overwrite the `reset` argument to False if stream is not a TTY."""
-        self.stream = kwargs.pop('stream', sys.stdout)
-
-        # Both `reset` and `isatty` must be true to insert reset codes.
-        kwargs['reset'] = kwargs.get('reset', True) and self.stream.isatty()
-
-        LevelFormatter.__init__(self, *args, **kwargs)
-
-    def color(self, log_colors, level_name):
-        """Only returns colors if STDOUT is a TTY."""
-        if not self.stream.isatty():
-            log_colors = {}
-        return ColoredFormatter.color(self, log_colors, level_name)
-
-#see https://github.com/borntyping/python-colorlog
-class LogFormatter(TTYColoredFormatter):
-
-    def __init__(self, fmt=None, datefmt=None, style="{"):
-        if fmt is None:
-            # fmt = MyEnv.FORMAT_LOG
-            # '{cyan!s}{asctime!s}{reset!s} - {filename:<18}:{name:12}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}'
-            fmt = {
-                'DEBUG': MyEnv.FORMAT_LOG,
-                'INFO': '{yellow!s}* {message!s}',
-                'WARNING': '{purple!s}* {message!s}',
-                # 'ERROR': '{red!s}{asctime!s}{reset!s} - {filename:<18}:{name:15}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}',
-                'ERROR': '{red!s}{asctime!s}{reset!s} {filename:<18}:-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}',
-                'CRITICAL':'{red!s}* {message!s}',
-            }
-        if datefmt is None:
-            datefmt = MyEnv.FORMAT_TIME
-
-
-
-        super(LogFormatter, self).__init__(
-            fmt=fmt,
-            datefmt=datefmt,
-            reset=False,
-            log_colors={
-                'DEBUG': 'cyan',
-                'INFO': 'green',
-                'WARNING': 'yellow',
-                'ERROR': 'red',
-                'CRITICAL': 'red,bg_white',
-            },
-            secondary_log_colors={},
-            style=style)
-        self.length = 20
-
-    def format(self, record):
-        if len(record.pathname) > self.length:
-            record.pathname = "..." + record.pathname[-self.length:]
-        if len(record.name) > 15:
-            record.name = record.name[-15:]
-        if len(record.name) > 25:
-            record.name = ""
-        return super(LogFormatter, self).format(record)
-
-MYCOLORS =   { "RED":"\033[1;31m",
-                "BLUE":"\033[1;34m",
-                "CYAN":"\033[1;36m",
-                "GREEN":"\033[0;32m",
-                "GRAY":"\033[0;37m",
-                "YELLOW":"\033[0;33m",
-                "RESET":"\033[0;0m",
-                "BOLD":"\033[;1m",
-                "REVERSE":"\033[;7m"}
-
+import inspect
 
 class Tools:
 
-    _LogFormatter = LogFormatter
     _supported_editors = ["micro","mcedit","joe","vim","vi"]  #DONT DO AS SET  OR ITS SORTED
     j = None
     _shell = None
 
     @staticmethod
-    def log(msg):
-        logging.debug(msg)
+    def log(msg,cat="",level=10,data=None,context=None):
+        """
+
+        :param msg:
+        :param level:
+            - CRITICAL 	50
+            - ERROR 	40
+            - WARNING 	30
+            - INFO 	    20
+            - STDOUT 	15
+            - DEBUG 	10
+
+        :return:
+        """
+        frame_ = inspect.currentframe().f_back
+        fname = frame_.f_code.co_filename.split("/")[-1]
+        defname = frame_.f_code.co_name
+        linenr= frame_.f_code.co_firstlineno
+
+        logdict={}
+        logdict["linenr"] = linenr
+        logdict["processid"] = MyEnv.appname
+        logdict["message"] = msg
+        logdict["filepath"] = fname
+        logdict["level"] = level
+        if context:
+            logdict["context"] = context
+        else:
+            logdict["context"] = defname
+        logdict["cat"] = cat
+        logdict["data"] = data
+
+        Tools.log2stdout(logdict)
 
     @staticmethod
     def _isUnix():
@@ -542,6 +338,8 @@ class Tools:
     #     # _shell = InteractiveShellEmbed(banner1= "", exit_msg="")
     #     # return _shell(stack_depth=2)
 
+
+
     @staticmethod
     def text_strip(content, ignorecomments=False,args={},replace=False,executor=None,colors=False):
         """
@@ -586,7 +384,7 @@ class Tools:
         return content
 
     @staticmethod
-    def text_replace(content,args=None,executor=None,ignorecomments=False,text_strip=True,colors=True):
+    def text_replace(content,args=None,executor=None,ignorecomments=False,text_strip=True,colors=False):
         """
 
         j.core.tools.text_replace
@@ -604,14 +402,14 @@ class Tools:
 
         following colors will be replaced e.g. use {RED} to get red color.
 
-        MYCOLORS =   { "RED":"\033[1;31m",
-                "BLUE":"\033[1;34m",
-                "CYAN":"\033[1;36m",
-                "GREEN":"\033[0;32m",
-                "RESET":"\033[0;0m",
-                "BOLD":"\033[;1m",
-                "REVERSE":"\033[;7m"}
-
+        MYCOLORS =
+                "RED",
+                "BLUE",
+                "CYAN",
+                "GREEN",
+                "RESET",
+                "BOLD",
+                "REVERSE"
 
         """
         if args is None:
@@ -624,7 +422,7 @@ class Tools:
                 args.update(MyEnv.config)
 
             if colors:
-                args.update(MYCOLORS)
+                args.update(MyEnv.MYCOLORS)
 
             content = content.format(**args)
 
@@ -633,6 +431,95 @@ class Tools:
 
         return content
 
+
+
+
+    @staticmethod
+    def log2stdout(logdict):
+        """
+
+        :param logdict:
+
+            logdict["linenr"]
+            logdict["processid"]
+            logdict["message"]
+            logdict["filepath"]
+            logdict["level"]
+            logdict["context"]
+            logdict["cat"]
+            logdict["data"]
+            logdict["epoch"]
+
+        :return:
+        """
+
+
+        if "epoch" in logdict:
+            timetuple = time.localtime(logdict["epoch"])
+        else:
+            timetuple = time.localtime(time.time())
+        logdict ["TIME"] = time.strftime(MyEnv.FORMAT_TIME, timetuple)
+
+        if logdict["level"]<11:
+            LOGCAT = "DEBUG"
+        elif logdict["level"]==15:
+            LOGCAT = "STDOUT"
+        elif logdict["level"]<21:
+            LOGCAT = "INFO"
+        elif logdict["level"]<31:
+            LOGCAT = "WARNING"
+        elif logdict["level"]<41:
+            LOGCAT = "ERROR"
+        else:
+            LOGCAT = "CRITICAL"
+
+
+
+        LOGFORMAT = MyEnv.LOGFORMAT[LOGCAT]
+
+        logdict.update(MyEnv.MYCOLORS)
+
+        if len (logdict["filepath"])> 18:
+            logdict["filename"] = logdict["filepath"][len(logdict["filepath"])-18:]
+        else:
+            logdict["filename"] = logdict["filepath"]
+
+        msg = LOGFORMAT.format(**logdict)
+
+        print(msg)
+
+
+
+
+
+    @staticmethod
+    def pprint(content, ignorecomments=False, text_strip=False,args=None,colors=True,indent=0):
+        """
+
+        :param content: what to print
+        :param ignorecomments: ignore #... on line
+        :param text_strip: remove spaces at start of line
+        :param args: replace args {} is template construct
+        :param colors:
+        :param indent:
+
+
+        MYCOLORS =
+                "RED",
+                "BLUE",
+                "CYAN",
+                "GREEN",
+                "RESET",
+                "BOLD",
+                "REVERSE"
+
+        """
+
+        content = Tools.text_replace(content,args=args,text_strip=text_strip,
+                                     ignorecomments=ignorecomments,colors=colors)
+        if indent>0:
+            content = Tools.text_indent(content)
+        print(content)
 
     @staticmethod
     def text_indent(content, nspaces=4, wrap=180, strip=True, indentchar=" ",args=None):
@@ -1180,7 +1067,7 @@ class Tools:
                 val=True
             elif str(val).find("[")!=-1:
                 val2 = str(val).strip("[").strip("]")
-                val = [item.strip().strip("'").strip().strip("\"").strip() for item in val2.split(",")]
+                val = [item.strip().strip("'").strip().strip("\"").strip() for item in val2.split(",") if item.strip()!=""]
             else:
                 try:
                     val=int(val)
@@ -1457,9 +1344,31 @@ class MyEnv():
     _cmd_installed = {}
     state = None
     __init = False
-    # FORMAT_LOG =  '{cyan!s}{asctime!s}{reset!s} - {filename:<18}:{name:12}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}'
-    FORMAT_LOG =  '{cyan!s}{asctime!s}{reset!s}  {filename:<18}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}'
+
+    appname = "installer"
+
     FORMAT_TIME = "%a%d %H:%M"
+
+    MYCOLORS =   { "RED":"\033[1;31m",
+                "BLUE":"\033[1;34m",
+                "CYAN":"\033[1;36m",
+                "GREEN":"\033[0;32m",
+                "GRAY":"\033[0;37m",
+                "YELLOW":"\033[0;33m",
+                "RESET":"\033[0;0m",
+                "BOLD":"\033[;1m",
+                "REVERSE":"\033[;7m"}
+    
+    LOGFORMAT = {
+        'DEBUG':'{CYAN}{TIME}{RESET} {filename:<18}-{linenr:4d}: {message}{RESET}',
+        'STDOUT': '{message}',
+        'INFO': '{YELLOW}* {message}{RESET}',
+        'WARNING': '{BLUE}* {message}{RESET}',
+        'ERROR': '{RED}{TIME}{RESET} {filename:<18}-{linenr:4d}: {message}{RESET}',
+        'CRITICAL':'{RED}{TIME} {filename:<18}-{linenr:4d}: {message}{RESET} ',
+    }
+    
+
 
     @staticmethod
     def platform():
@@ -1510,10 +1419,11 @@ class MyEnv():
         config["DEBUG"] = False
         config["SSH_AGENT"] = False
 
-        config["LOGGER_ENABLE"] = True
         config["LOGGER_INCLUDE"] = []
         config["LOGGER_EXCLUDE"] = ["sal.fs"]
-        config["LOGGER_LEVEL"] = 10
+        config["LOGGER_LEVEL"] = 15 #means std out & plus gets logged
+        config["LOGGER_CONSOLE"] = True
+        config["LOGGER_REDIS"] = True
 
         if "INSYSTEM" in os.environ:
             if str(os.environ["INSYSTEM"]).lower().strip() in ["1","true","yes","y"]:
@@ -1599,11 +1509,6 @@ class MyEnv():
                 args["GROUPNAME"] = grp.getgrgid(gid)[0]
                 Tools.execute(script,interactive=True,args=args)
 
-
-            installed = Tools.cmd_installed("git") and Tools.cmd_installed("ssh-agent")
-            MyEnv.config["SSH_AGENT"]=installed
-            MyEnv.config_save()
-
                 # and
             if not os.path.exists(MyEnv.config["DIR_TEMP"]):
                 os.makedirs(MyEnv.config["DIR_TEMP"],exist_ok=True)
@@ -1614,6 +1519,19 @@ class MyEnv():
             MyEnv.sandbox_python_active=True
         else:
             MyEnv.sandbox_python_active=False
+
+
+        MyEnv.log_includes = MyEnv.config.get("LOGGER_INCLUDE",[])
+        MyEnv.log_excludes = MyEnv.config.get("LOGGER_EXCLUDE",[])
+        MyEnv.log_loglevel = MyEnv.config.get("LOGGER_LEVEL",100)
+        MyEnv.log_console = MyEnv.config.get("LOGGER_CONSOLE",True)
+        MyEnv.log_redis = MyEnv.config.get("LOGGER_REDIS",False)
+
+        installed = Tools.cmd_installed("git") and Tools.cmd_installed("ssh-agent")
+        MyEnv.config["SSH_AGENT"]=installed
+        MyEnv.config_save()
+
+
 
         MyEnv.__init = True
 
@@ -1915,19 +1833,19 @@ class JumpscaleInstaller():
 
 
 
-formatter = LogFormatter()
-
-logger = logging.Logger("installer")
-logger.level = logging.INFO  #10 is debug
-
-log_handler = logging.StreamHandler()
-log_handler.setLevel(logging.INFO)
-log_handler.setFormatter(formatter)
-logger.addHandler(log_handler)
-
-logging.basicConfig(level=logging.INFO)
-
-MyEnv.logger = logger
+# formatter = LogFormatter()
+#
+# logger = logging.Logger("installer")
+# logger.level = logging.INFO  #10 is debug
+#
+# log_handler = logging.StreamHandler()
+# log_handler.setLevel(logging.INFO)
+# log_handler.setFormatter(formatter)
+# logger.addHandler(log_handler)
+#
+# logging.basicConfig(level=logging.INFO)
+#
+# MyEnv.logger = logger
 
 # print (Tools.text_replace("{BLUE} this is a test {BOLD}{RED} now red {RESET} go back to white",colors=True))
 
@@ -1938,6 +1856,9 @@ MyEnv.logger = logger
 
 
 MyEnv._init()
+
+
+
 
 try:
     from colored_traceback import add_hook

@@ -231,7 +231,7 @@ class BuilderLua(j.builder.system._BaseClass):
 
         j.sal.fs.copyDirTree(src,"/sandbox/bin/",rsyncdelete=False,recursive=False,overwriteFiles=True)
 
-        self._logger.info("install lua & openresty done.")
+        self._log_info("install lua & openresty done.")
 
 
     def copy_to_github(self):

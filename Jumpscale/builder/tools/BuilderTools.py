@@ -182,7 +182,7 @@ class BuilderTools(j.builder.system._BaseClass):
                     url, to, user, minsp, retry, timeout)
                 if self.file_exists(to):
                     cmd += " -C -"
-                self._logger.info(cmd)
+                self._log_info(cmd)
                 j.sal.fs.remove("%s.downloadok" % to)
                 rc, out, err = self.run(cmd, die=False, timeout=timeout)
                 if rc == 33:  # resume is not support try again withouth resume
@@ -208,7 +208,7 @@ class BuilderTools(j.builder.system._BaseClass):
         return to
 
     def file_expand(self, path, destination="", removeTopDir=False):
-        self._logger.info("file_expand:%s" % path)
+        self._log_info("file_expand:%s" % path)
         path = j.core.tools.text_replace(path)
         base = j.sal.fs.getBaseName(path)
         if base.endswith(".tgz"):
@@ -575,8 +575,8 @@ class BuilderTools(j.builder.system._BaseClass):
         """Updates the mode / owner / group for the given remote directory."""
         location = j.core.tools.text_replace(location)
         if showout:
-            # self._logger.info("set dir attributes:%s"%location)
-            self._logger.debug('set dir attributes:%s"%location')
+            # self._log_info("set dir attributes:%s"%location)
+            self._log_debug('set dir attributes:%s"%location')
         recursive = recursive and "-R " or ""
         if mode:
             self.run('chmod %s %s %s' %
@@ -667,8 +667,8 @@ class BuilderTools(j.builder.system._BaseClass):
 
         out = self.run(cmd, showout=False)[1]
 
-        # self._logger.info(cmd)
-        self._logger.debug(cmd)
+        # self._log_info(cmd)
+        self._log_debug(cmd)
 
         paths = []
         for item in out.split("\n"):
@@ -706,7 +706,7 @@ class BuilderTools(j.builder.system._BaseClass):
         """
         @param profile, execute the bash profile first
         """
-        self._logger.info(cmd)
+        self._log_info(cmd)
         if cmd.strip() == "":
             raise RuntimeError("cmd cannot be empty")
         if not env:

@@ -4,35 +4,34 @@ from .JSBase import JSBase
 
 class JSBaseConfigs(JSBase):
 
-    def __init__(self,parent=None):
+    def __init__(self,parent=None, topclass=True):
+        JSBase.__init__(self,parent=parent, topclass=False)
 
         self._model_ = None
-        self._parent = parent
 
         self._children = {}
 
-        self._class_init() #is needed to init class properties, needs to be first thing
-        JSBase.__init__(self)
-
-        if not hasattr(self.__class__,"_CHILDCLASS"):
-            raise RuntimeError("_CHILDCLASS needs to be specified")
-
-        self.__objcat_name = "instances"
-        self._logger_enable()
-
+        if topclass:
+            self._init()
+            self._init2()
 
     def _class_init(self):
 
         if not hasattr(self.__class__,"_class_init_done"):
 
+            if not hasattr(self.__class__,"_CHILDCLASS"):
+                raise RuntimeError("_CHILDCLASS needs to be specified")
+
+            #always needs to be in this order at end
             JSBase._class_init(self)
+            self.__class__.__objcat_name = "instances"
 
             # print("classinit:%s"%self.__class__)
 
     @property
     def _model(self):
         if self._model_ is None:
-            # self._logger.debug("Get model for %s"%self.__class__._location)
+            # self._log_debug("Get model for %s"%self.__class__._location)
             self._model_ = j.application.bcdb_system.model_get_from_schema(self.__class__._CHILDCLASS._SCHEMATEXT)
         return self._model_
 
@@ -195,6 +194,8 @@ class JSBaseConfigs(JSBase):
 
     def _properties_children(self):
         #list the children from the factory
+        if not j.data._bcdb:
+            return []
         x=[]
         for key,item in self._children.items():
             x.append(key)

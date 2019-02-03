@@ -10,7 +10,7 @@ def property_js(func):
     def wrapper_action(*args, **kwargs):
         self=args[0]
         args=args[1:]
-        self._logger.debug(str(func))
+        self._log_debug(str(func))
         if self._running is None:
             self.service_manage()
         name= func.__name__
@@ -25,7 +25,7 @@ def property_js(func):
             self.action_queue.put((func,args,kwargs,event,action.id))
             event.wait(1000.0) #will wait for processing
             res = j.data.serializers.msgpack.loads(action.result)
-            self._logger.debug("METHOD EXECUTED OK")
+            self._log_debug("METHOD EXECUTED OK")
             return action
     return wrapper_action
 

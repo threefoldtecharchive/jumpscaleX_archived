@@ -116,7 +116,7 @@ class BuilderBaseClass(BaseClass):
         j.builder.tools.dir_ensure(ld_dest)
         j.sal.fs.copyFile('/lib64/ld-linux-x86-64.so.2', ld_dest)
 
-        self._logger.info('building flist')
+        self._log_info('building flist')
         tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
 
         j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, sandbox_dir))
@@ -126,9 +126,9 @@ class BuilderBaseClass(BaseClass):
                 raise j.exceptions.Input("hub instance %s does not exists, can't upload to the hub" % hub_instance)
             hub = j.clients.zhub.get(hub_instance)
             hub.authenticate()
-            self._logger.info("uploading flist to the hub")
+            self._log_info("uploading flist to the hub")
             hub.upload(tarfile)
-            self._logger.info("uploaded at https://hub.grid.tf/{}/{}.flist".format(hub.username,
+            self._log_info("uploaded at https://hub.grid.tf/{}/{}.flist".format(hub.username,
                                                                                    self.NAME))
 
         return tarfile

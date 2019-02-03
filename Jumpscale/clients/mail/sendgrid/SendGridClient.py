@@ -50,10 +50,10 @@ class SendGridClient(j.application.JSBaseClass):
         try:
             response = sg.client.mail.send.post(request_body=mail.get())
         except Exception as e:
-            self._logger.info(e)
+            self._log_info(e)
             raise e
 
-        self._logger.info("Email sent..")
+        self._log_info("Email sent..")
         return response.status_code, response.body
 
     def test(self):
@@ -70,7 +70,7 @@ class SendGridClient(j.application.JSBaseClass):
 
         statCode, body = self.send(SENDER, SUBJECT, MESSAGE, [RECIPENT], MESSAGE_TYPE, attachments=[attachment])
 
-        self._logger.info(statCode)
+        self._log_info(statCode)
 
 
     def build_attachment(self, attachment):

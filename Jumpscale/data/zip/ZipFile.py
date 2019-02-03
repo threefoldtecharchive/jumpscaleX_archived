@@ -108,7 +108,7 @@ class ZipFile(j.application.JSBaseClass):
 
             data = self._zip.read(f)
             # We need binary write
-            self._logger.info('Writing file %s' % outfile_path)
+            self._log_info('Writing file %s' % outfile_path)
             fd = open(outfile_path, 'wb')
             fd.write(data)
             fd.close()

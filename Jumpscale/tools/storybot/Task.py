@@ -32,7 +32,6 @@ class Task():
         self.state = state
         self.body = body
         self._update_func = update_func
-        self._logger = j.logger.get("j.tools.StoryBot")
 
     def __repr__(self):
         return self.description
@@ -102,7 +101,7 @@ class Task():
         try:
             new_body = _check_broken_links(self.body, self.LIST_TITLE, self.url)
         except RuntimeError as err:
-            self._logger.error("Something went wrong checking for broken urls: %s" % err)
+            self._log_error("Something went wrong checking for broken urls: %s" % err)
             return self.body
 
         if self.body != new_body:

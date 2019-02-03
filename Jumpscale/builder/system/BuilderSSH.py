@@ -9,17 +9,17 @@ class BuilderSSH(j.builder.system._BaseClass):
     #     login = 'root'
     #     res = []
     #     for item in self.scan(ip_range=ip_range):
-    #         self._logger.info('test for login/passwd on %s' % item)
+    #         self._log_info('test for login/passwd on %s' % item)
     #         try:
     #             client = j.clients.ssh.new(addr=item, port=port, login=login, passwd=passwd, timeout=1, die=False)
     #         except Exception as e:
-    #             self._logger.info('  NOT OK')
+    #             self._log_info('  NOT OK')
     #             continue
     #         executor = j.tools.executor.getSSHBased(item, port, login, passwd, checkok=True)
     #         if onlyplatform:
     #             if not str(executor.prefab.platformtype).startswith(onlyplatform):
     #                 continue
-    #         self._logger.info('  RESPONDED!!!')
+    #         self._log_info('  RESPONDED!!!')
     #         res.append(item)
     #     return res
 
@@ -242,7 +242,7 @@ class BuilderSSH(j.builder.system._BaseClass):
         """
         Removes all keys and known hosts
         """
-        self._logger.info('clean known hosts/autorized keys')
+        self._log_info('clean known hosts/autorized keys')
         j.core.tools.dir_ensure('/root/.ssh')
         j.builder.tools.dir_remove('/root/.ssh/known_hosts')
         j.builder.tools.dir_remove('/root/.ssh/authorized_keys')
@@ -261,20 +261,20 @@ class BuilderSSH(j.builder.system._BaseClass):
         :raises j.exceptions.RuntimeError: raises an error if any of the keys are empty
         """
         # leave here is to make sure we have a backdoor for when something goes wrong further
-        self._logger.info('create backdoor')
+        self._log_info('create backdoor')
         j.builder.system.user.ensure(backdoorlogin, passwd=backdoorpasswd, home=None, uid=None,
                                      gid=None, shell=None, fullname=None, encrypted_passwd=True, group='root')
         j.sal.process.execute('rm -fr /home/%s/.ssh/' % backdoorlogin)
         j.builder.system.group.user_add('sudo', '$(system.backdoor.login)')
 
-        self._logger.info('test backdoor')
+        self._log_info('test backdoor')
         j.tools.executor.getSSHBased(addr='$(node.tcp.addr)', port=int('$(ssh.port)'), login='$(system.backdoor.login)',
                                      passwd=backdoorpasswd, debug=False, checkok=True, allow_agent=False,
                                      look_for_keys=False)
         # make sure the backdoor is working
-        self._logger.info('backdoor is working (with passwd)')
+        self._log_info('backdoor is working (with passwd)')
 
-        self._logger.info('make sure some required packages are installed')
+        self._log_info('make sure some required packages are installed')
         j.builder.tools.package_install('openssl')
         j.builder.tools.package_install('rsync')
 
@@ -285,11 +285,11 @@ class BuilderSSH(j.builder.system._BaseClass):
                 raise j.exceptions.RuntimeError('ssh.key.public cannot be empty')
             self.authorize('root', pub)
 
-        self._logger.info('add git repos to known hosts')
+        self._log_info('add git repos to known hosts')
         j.sal.process.execute('ssh-keyscan github.com >> /root/.ssh/known_hosts')
         j.sal.process.execute('ssh-keyscan git.aydo.com >> /root/.ssh/known_hosts')
 
-        self._logger.info('enable access done.')
+        self._log_info('enable access done.')
 
     def sshagent_add(self, path, removeFirst=True):
         """Add key to ssh agent
@@ -300,7 +300,7 @@ class BuilderSSH(j.builder.system._BaseClass):
         :type removeFirst: bool, optional
         :raises j.exceptions.RuntimeError: raises runtime error if it fails to remove it first
         """
-        self._logger.info('add ssh key to ssh-agent: %s' % path)
+        self._log_info('add ssh key to ssh-agent: %s' % path)
         if removeFirst:
             j.sal.process.execute('ssh-add -d "%s"' % path, die=False, showout=False)
             _, keys, _ = j.sal.process.execute('ssh-add -l', die=False, showout=False)
@@ -315,7 +315,7 @@ class BuilderSSH(j.builder.system._BaseClass):
         :type path: str
         :raises j.exceptions.RuntimeError: raises runtime error if it fails to remove it
         """
-        self._logger.info('remove ssh key to ssh-agent: %s' % path)
+        self._log_info('remove ssh key to ssh-agent: %s' % path)
         j.sal.process.execute('ssh-add -d "%s"' % path, die=False, showout=False)
         _, keys, _ = j.sal.process.execute('ssh-add -l', showout=False)
         if path in keys:

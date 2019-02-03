@@ -74,5 +74,5 @@ class ElectrumClientFactory(JSConfigBaseFactory):
                                                                  wallet._config['electrum_path'],
                                                                  wallet._wallet_path)
 
-        self._logger.info("Loading wallet {} using command: {}".format(wallet._name, cmd))
+        self._log_info("Loading wallet {} using command: {}".format(wallet._name, cmd))
         j.tools.prefab.local.core.run(cmd)

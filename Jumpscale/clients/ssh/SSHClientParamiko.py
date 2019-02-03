@@ -107,11 +107,11 @@ class SSHClientParamiko(SSHClientBase):
         try:
             self.sftp.put(local_file, remote_file)
         except Exception as error:
-            self._logger.error("Error occured copying file %s to remote destination "
+            self._log_error("Error occured copying file %s to remote destination "
                               "%s:%s - %s",
                               local_file, self.host, remote_file, error)
             raise error
-        self._logger.debug("Copied local file %s to remote destination %s",
+        self._log_debug("Copied local file %s to remote destination %s",
                          local_file, remote_file)
 
     @property
@@ -128,10 +128,10 @@ class SSHClientParamiko(SSHClientBase):
         if self.addr == "" or self.port == 0:
             raise RuntimeError("addr or port cannot be empty.")
 
-        self._logger.debug("Test sync ssh connection to %s:%s:%s" % (self.addr, self.port, self.login))
+        self._log_debug("Test sync ssh connection to %s:%s:%s" % (self.addr, self.port, self.login))
 
         if j.sal.nettools.waitConnectionTest(self.addr, self.port, self.timeout) is False:
-            self._logger.error("Cannot connect to ssh server %s:%s with login:%s and using sshkey:%s" %
+            self._log_error("Cannot connect to ssh server %s:%s with login:%s and using sshkey:%s" %
                               (self.addr, self.port, self.login, self.sshkey_name))
             raise RuntimeError("Could not connect to addr:'%s' port:'%s'"%(self.addr,self.port))
 
@@ -153,14 +153,14 @@ class SSHClientParamiko(SSHClientBase):
 
         while start + self.timeout > j.data.time.getTimeEpoch():
             try:
-                self._logger.info("connect to:%s" % self.addr)
-                self._logger.debug("connect with port :%s" % self.port)
-                self._logger.debug("connect with username :%s" % self.login)
-                self._logger.debug("connect with password :%s" % self.passwd)
-                # self._logger.debug("connect with pkey :%s" % self.pkey)
-                self._logger.debug("connect with allow_agent :%s" %self.allow_agent)
-                self._logger.debug("connect with look_for_keys :%s" % self._look_for_keys)
-                self._logger.debug("Timeout is : %s " % self.timeout)
+                self._log_info("connect to:%s" % self.addr)
+                self._log_debug("connect with port :%s" % self.port)
+                self._log_debug("connect with username :%s" % self.login)
+                self._log_debug("connect with password :%s" % self.passwd)
+                # self._log_debug("connect with pkey :%s" % self.pkey)
+                self._log_debug("connect with allow_agent :%s" %self.allow_agent)
+                self._log_debug("connect with look_for_keys :%s" % self._look_for_keys)
+                self._log_debug("Timeout is : %s " % self.timeout)
                 self._client_.connect(
                     self.addr,
                     int(self.port),
@@ -171,19 +171,19 @@ class SSHClientParamiko(SSHClientBase):
                     look_for_keys=self._look_for_keys,
                     timeout=2.0,
                     banner_timeout=3.0)
-                self._logger.info("connection ok")
+                self._log_info("connection ok")
                 return self._client_
             except BadAuthenticationType as e:
                 raise e
             except (BadHostKeyException, AuthenticationException) as e:
-                self._logger.error(
+                self._log_error(
                     "Authentification error. Aborting connection : %s" % str(e))
-                self._logger.error(str(e))
+                self._log_error(str(e))
                 raise j.exceptions.RuntimeError(str(e))
 
             except (SSHException, socket.error) as e:
-                self._logger.error("Unexpected error in socket connection for ssh. Aborting connection and try again.")
-                self._logger.error(e)
+                self._log_error("Unexpected error in socket connection for ssh. Aborting connection and try again.")
+                self._log_error(e)
                 self._client_.close()
                 # self.reset()
                 time.sleep(0.1)
@@ -243,11 +243,11 @@ class SSHClientParamiko(SSHClientBase):
                 line = j.core.text.toAscii(line)
                 if chan == 'O':
                     if showout:
-                        self._logger.debug(line.rstrip())
+                        self._log_debug(line.rstrip())
                     out.write(line)
                 elif chan == 'E':
                     if showout:
-                        self._logger.error(line.rstrip())
+                        self._log_error(line.rstrip())
                     err.write(line)
             except queue.Empty:
                 pass

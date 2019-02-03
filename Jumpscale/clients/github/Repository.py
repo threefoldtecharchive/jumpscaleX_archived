@@ -103,7 +103,7 @@ class GithubRepo(j.application.JSBaseClass):
                     nameNew = replacelabels[item.name.lower()]
                     if nameNew not in self.labelnames:
                         color = self.getColor(name)
-                        self._logger.info(
+                        self._log_info(
                             "change label in repo: %s oldlabel:'%s' to:'%s' color:%s" %
                             (self.fullname, item.name, nameNew, color))
                         item.edit(nameNew, color)
@@ -123,7 +123,7 @@ class GithubRepo(j.application.JSBaseClass):
             if name not in self.labelnames:
                 # does not exist yet in repo
                 color = self.getColor(name)
-                self._logger.info(
+                self._log_info(
                     "create label: %s %s %s" %
                     (self.fullname, name, color))
                 self.api.create_label(name, color)
@@ -135,7 +135,7 @@ class GithubRepo(j.application.JSBaseClass):
             labelstowalk = copy.copy(self.labels)
             for item in labelstowalk:
                 if item.name not in labels2set:
-                    self._logger.info("delete label: %s %s" %
+                    self._log_info("delete label: %s %s" %
                                      (self.fullname, item.name))
                     ignoreDeleteDo = False
                     for filteritem in ignoreDelete:
@@ -149,12 +149,12 @@ class GithubRepo(j.application.JSBaseClass):
         labelstowalk = copy.copy(self.labels)
         for item in labelstowalk:
             # we recognise the label
-            self._logger.info(
+            self._log_info(
                 "check color of repo:%s labelname:'%s'" %
                 (self.fullname, item.name))
             color = self.getColor(item.name)
             if item.color != color:
-                self._logger.info(
+                self._log_info(
                     "change label color for repo %s %s" %
                     (item.name, color))
                 item.edit(item.name, color)
@@ -162,7 +162,7 @@ class GithubRepo(j.application.JSBaseClass):
 
     def getLabel(self, name):
         for item in self.labels:
-            self._logger.info("%s:look for name:'%s'" % (item.name, name))
+            self._log_info("%s:look for name:'%s'" % (item.name, name))
             if item.name == name:
                 return item
         raise j.exceptions.Input("Dit not find label: '%s'" % name)
@@ -297,7 +297,7 @@ class GithubRepo(j.application.JSBaseClass):
             return None
 
     def createMilestone(self, name, title, description="", deadline="", owner=""):
-        self._logger.debug(
+        self._log_debug(
             'Attempt to create milestone "%s" [%s] deadline %s' % (name, title, deadline))
 
         def getBody(descr, name, owner):
@@ -323,7 +323,7 @@ class GithubRepo(j.application.JSBaseClass):
         else:
             due = j.data.time.epoch2pythonDateTime(
                 int(j.data.time.getEpochFuture(deadline)))
-            self._logger.info("Create milestone on %s: %s" % (self, title))
+            self._log_info("Create milestone on %s: %s" % (self, title))
             body = getBody(description.strip(), name, owner)
             # workaround for https://github.com/PyGithub/PyGithub/issues/396
             milestone = self.api.create_milestone(
@@ -335,13 +335,13 @@ class GithubRepo(j.application.JSBaseClass):
     def deleteMilestone(self, name):
         if name.strip() == "":
             raise j.exceptions.Input("Name cannot be empty.")
-        self._logger.info("Delete milestone on %s: '%s'" % (self, name))
+        self._log_info("Delete milestone on %s: '%s'" % (self, name))
         try:
             ms = self.getMilestone(name)
             ms.api.delete()
             self._milestones = []
         except Input:
-            self._logger.info(
+            self._log_info(
                 "Milestone '%s' doesn't exist. no need to delete" % name)
 
     def _labelSubset(self, cat):
@@ -417,7 +417,7 @@ class GithubRepo(j.application.JSBaseClass):
         except UnknownObjectException:
             pass
 
-        self._logger.debug('Updating file "%s"' % path)
+        self._log_debug('Updating file "%s"' % path)
         self.api._requester.requestJsonAndCheck(
             'PUT',
             self.api.url + '/contents/' + path,

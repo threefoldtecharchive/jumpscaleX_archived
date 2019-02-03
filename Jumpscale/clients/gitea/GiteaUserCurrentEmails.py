@@ -18,7 +18,7 @@ class GiteaUserCurrentEmails(j.application.JSBaseClass):
             self.client.api.user.userAddEmail({'emails':emails})
             return True
         except Exception as e:
-            self._logger.debug(e.response.content)
+            self._log_debug(e.response.content)
             return False
 
     def remove(self, emails):
@@ -26,7 +26,7 @@ class GiteaUserCurrentEmails(j.application.JSBaseClass):
             self.client.api.user.userDeleteEmail({'emails':emails})
             return True
         except Exception as e:
-            self._logger.debug(e.response.content)
+            self._log_debug(e.response.content)
             return False
 
     def __next__(self):

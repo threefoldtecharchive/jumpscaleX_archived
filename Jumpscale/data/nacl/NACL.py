@@ -22,7 +22,7 @@ class NACL(j.application.JSBaseClass):
                 break
             except nacl.exceptions.CryptoError as e:
                 print(e)
-                self._logger.warning("ERROR in decrypting")
+                self._log_warning("ERROR in decrypting")
                 secret = j.tools.console.askPassword("issue in decrypting the private key, try other secret")
 
     def reset(self,privkey=None,secret=None):
@@ -38,7 +38,7 @@ class NACL(j.application.JSBaseClass):
 
         self.path = j.core.tools.text_replace("{DIR_CFG}/nacl")
         j.sal.fs.createDir(self.path)
-        self._logger.debug("NACL uses path:'%s'" % self.path)
+        self._log_debug("NACL uses path:'%s'" % self.path)
 
         path_encryptor_for_secret="{DIR_VAR}/myprocess_%s.log"%name
         if reset:
@@ -148,7 +148,7 @@ class NACL(j.application.JSBaseClass):
         privkey = self.privkey.encode()
         return j.data.encryption.mnemonic.to_mnemonic(privkey)
         # if not j.sal.fs.exists(self.path_words):
-        #     self._logger.info("GENERATED words")
+        #     self._log_info("GENERATED words")
         #     words = j.data.encryption.mnemonic_generate()
         #     words = self.encryptSymmetric(words)
         #     self.file_write_hex(self.path_words,words)

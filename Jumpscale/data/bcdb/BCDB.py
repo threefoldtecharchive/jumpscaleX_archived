@@ -98,7 +98,7 @@ class BCDB(j.application.JSBaseClass):
         self.group = self.model_add(GROUP())
 
         # self._logger_enable()
-        # self._logger.info("BCDB INIT DONE:%s" % self.name)
+        # self._log_info("BCDB INIT DONE:%s" % self.name)
 
     def redis_server_start(self, port=6380, secret="123456"):
 
@@ -108,7 +108,7 @@ class BCDB(j.application.JSBaseClass):
 
     def _data_process(self):
         # needs gevent loop to process incoming data
-        self._logger.info("DATAPROCESSOR STARTS")
+        self._log_info("DATAPROCESSOR STARTS")
         while True:
             method, args, kwargs, event, returnid = self.queue.get()
             if args == ["STOP"]:
@@ -120,7 +120,7 @@ class BCDB(j.application.JSBaseClass):
                 event.set()
         self.dataprocessor_greenlet = None
         event.set()
-        self._logger.warning("DATAPROCESSOR STOPS")
+        self._log_warning("DATAPROCESSOR STOPS")
 
     def dataprocessor_start(self):
         """
@@ -200,14 +200,14 @@ class BCDB(j.application.JSBaseClass):
         j.sal.fs.remove(self._data_dir)
 
     def stop(self):
-        self._logger.info("STOP BCDB")
+        self._log_info("STOP BCDB")
         if self.dataprocessor_greenlet is not None:
             self.dataprocessor_greenlet.kill()
         self.dataprocessor_greenlet = None
 
     def index_rebuild(self):
 
-        self._logger.warning("REBUILD INDEX")
+        self._log_warning("REBUILD INDEX")
         self.meta.reset()
         for url, model in self.models.items():
             if model.bcdb != self:
@@ -254,10 +254,10 @@ class BCDB(j.application.JSBaseClass):
         if j.data.types.str.check(schema):
             schema_text = schema
             schema = j.data.schema.get(schema_text)
-            self._logger.debug(
+            self._log_debug(
                 "model get from schema:%s, original was text." % schema.url)
         else:
-            self._logger.debug("model get from schema:%s" % schema.url)
+            self._log_debug("model get from schema:%s" % schema.url)
             if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
                 raise RuntimeError(
                     "schema needs to be of type: j.data.schema.SCHEMA_CLASS")
@@ -287,7 +287,7 @@ class BCDB(j.application.JSBaseClass):
         :return: class of the model which is used for indexing
 
         """
-        self._logger.debug("generate schema:%s" % schema.url)
+        self._log_debug("generate schema:%s" % schema.url)
         if path_parent:
             name = j.sal.fs.getBaseName(path_parent)[:-3]
             dir_path = j.sal.fs.getDirName(path_parent)
@@ -324,7 +324,7 @@ class BCDB(j.application.JSBaseClass):
         is path to python file which represents the model
 
         """
-        self._logger.debug("model get from file:%s" % path)
+        self._log_debug("model get from file:%s" % path)
         obj_key = j.sal.fs.getBaseName(path)[:-3]
         cl = j.tools.codeloader.load(obj_key=obj_key, path=path, reload=False)
         model = cl()
@@ -338,7 +338,7 @@ class BCDB(j.application.JSBaseClass):
         :param path:
         :return: None
         """
-        self._logger.debug("models_add:%s" % path)
+        self._log_debug("models_add:%s" % path)
 
         if not j.sal.fs.isDir(path):
             raise RuntimeError(
@@ -385,6 +385,7 @@ class BCDB(j.application.JSBaseClass):
             schema_id, acl_id, bdata_encrypted = res
             if model:
                 if schema_id != model.schema.sid:
+                    j.shell()
                     raise RuntimeError("fetched an object with if from other model.")
             else:
                 model = self.meta.model_get_from_id(schema_id, bcdb=self)

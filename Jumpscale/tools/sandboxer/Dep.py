@@ -32,7 +32,7 @@ class Dep(j.application.JSBaseClass):
         dest = dest.replace("//", "/")
         j.sal.fs.createDir(j.sal.fs.getDirName(dest))
         if dest != self.path:  # don't copy to myself
-            # self._logger.debug("DEPCOPY: %s %s" % (self.path, dest))
+            # self._log_debug("DEPCOPY: %s %s" % (self.path, dest))
             if not j.sal.fs.exists(dest):
                 j.sal.fs.copyFile(self.path, dest)
 

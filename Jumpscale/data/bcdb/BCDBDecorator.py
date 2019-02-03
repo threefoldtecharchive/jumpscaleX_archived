@@ -11,7 +11,7 @@ def queue_method(func):
         self=args[0]
         if self.bcdb.dataprocessor_greenlet is None:
             self.bcdb.dataprocessor_start()
-        # self._logger.debug(str(func))
+        # self._log_debug(str(func))
         if skip_for_debug or "noqueue" in kwargs:
             if "noqueue" in kwargs:
                 kwargs.pop("noqueue")
@@ -21,7 +21,7 @@ def queue_method(func):
             event=Event()
             j.data.bcdb.latest.queue.put((func,args,kwargs, event,None))
             event.wait(1000.0) #will wait for processing
-            # self._logger.debug("OK")
+            # self._log_debug("OK")
             return
     return wrapper_queue_method
 
@@ -30,7 +30,7 @@ def queue_method_results(func):
         self=args[0]
         if self.bcdb.dataprocessor_greenlet is None:
             self.bcdb.dataprocessor_start()
-        # self._logger.debug(str(func))
+        # self._log_debug(str(func))
         if skip_for_debug or  "noqueue" in kwargs:
             if "noqueue" in kwargs:
                 kwargs.pop("noqueue")
@@ -45,7 +45,7 @@ def queue_method_results(func):
             j.data.bcdb.latest.results_id+=1
             j.data.bcdb.latest.queue.put((func,args,kwargs, event,id))
             event.wait(1000.0) #will wait for processing
-            # self._logger.debug("OK")
+            # self._log_debug("OK")
             res = j.data.bcdb.latest.results[id]
             j.data.bcdb.latest.results.pop(id)
             return res

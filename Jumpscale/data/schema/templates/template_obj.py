@@ -166,7 +166,7 @@ class ModelOBJ():
         if val != self.{{prop.name}}:
             self._changed_items["{{prop.name}}"] = val
             if self.model:
-                # self._logger.debug("change:{{prop.name}} %s"%(val))
+                # self._log_debug("change:{{prop.name}} %s"%(val))
                 self.model.triggers_call(obj=self, action="change", propertyname="{{prop.name}}")
             if self.autosave:
                 self.save()
@@ -225,7 +225,7 @@ class ModelOBJ():
             if self._changed:
                 o=self.model._set(self)
                 self.id = o.id
-                # self._logger.debug("MODEL CHANGED, SAVE DONE")
+                # self._log_debug("MODEL CHANGED, SAVE DONE")
                 return o
 
             return self

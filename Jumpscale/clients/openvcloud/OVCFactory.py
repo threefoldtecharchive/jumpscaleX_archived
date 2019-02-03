@@ -50,10 +50,10 @@ class OVCClientFactory(JSConfigBaseFactory):
         """
         self._logger_enable()
         cl = j.clients.openvcloud.getFromParams("be-gen-1.demo.greenitglobe.com")
-        self._logger.info(cl.config)
+        self._log_info(cl.config)
 
-        self._logger.info("locations")
-        self._logger.info(cl.locations)
+        self._log_info("locations")
+        self._log_info(cl.locations)
 
-        self._logger.info("images")
-        self._logger.info(cl.get_available_images())
+        self._log_info("images")
+        self._log_info(cl.get_available_images())

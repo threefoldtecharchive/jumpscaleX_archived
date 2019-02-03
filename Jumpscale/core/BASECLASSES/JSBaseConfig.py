@@ -5,18 +5,8 @@ import types
 
 class JSBaseConfig(JSBase):
 
-    def _class_init(self):
 
-        if not hasattr(self.__class__, "_class_init_done"):
-
-            if not hasattr(self.__class__, "_SCHEMATEXT"):
-                raise RuntimeError("need _SCHEMATEXT as class property.\n%s" % (HELPTEXT))
-
-            JSBase._class_init(self)
-
-            # print("classinit:%s"%self.__class__)
-
-    def __init__(self, data=None, parent=None, **kwargs):
+    def __init__(self, data=None, parent=None, topclass=True, **kwargs):
         """
         :param data, is a jsobject as result of jsX schema's
         :param factory, don't forget to specify this
@@ -25,13 +15,9 @@ class JSBaseConfig(JSBase):
         the self.data object is a jsobject (result of using the jsx schemas)
 
         """
-
-        self._class_init()  # is needed to init class properties, needs to be first thing
-        JSBase.__init__(self)
+        JSBase.__init__(self,parent=parent, topclass=False)
 
         self._isnew = False
-
-        self._parent = parent
 
         assert parent not in [None,""]
 
@@ -50,13 +36,29 @@ class JSBaseConfig(JSBase):
         if "name" not in self.data._ddict:
             raise RuntimeError("name needs to be specified in data")
 
+        if topclass:
+            self._init()
+            self._init2()
+
+
+    def _class_init(self):
+
+        if not hasattr(self.__class__, "_class_init_done"):
+
+            if not hasattr(self.__class__, "_SCHEMATEXT"):
+                raise RuntimeError("need _SCHEMATEXT as class property.\n")
+
+            #always needs to be in this order at end
+            JSBase._class_init(self)
+            self.__class__.__objcat_name = "instance"
+
+            # print("classinit:%s"%self.__class__)
+
     def _init2(self):
-
-        JSBase._init2(self)
-
         self._key = "%s_%s" % (self.__class__.__name__, self.data.name)
 
-        self.__objcat_name = "instance"
+        #always needs to be last
+        JSBase._init2(self)
 
     def _obj_cache_reset(self):
         """
@@ -110,7 +112,7 @@ class JSBaseConfig(JSBase):
         j.core.tools.file_edit(path)
         data_out = j.sal.fs.readFile(path)
         if data_in != data_out:
-            self._logger.debug("'%s' instance '%s' has been edited (changed)" %
+            self._log_debug("'%s' instance '%s' has been edited (changed)" %
                                (self._parent.__jslocation__, self.data.name))
             data2 = j.data.serializers.toml.loads(data_out)
             self.data.data_update(data2)
@@ -141,7 +143,7 @@ class JSBaseConfig(JSBase):
 
         if "data" in self.__dict__ and key in self._model.schema.propertynames:
             # if value != self.data.__getattribute__(key):
-            self._logger.debug("SET:%s:%s" % (key, value))
+            self._log_debug("SET:%s:%s" % (key, value))
             self.__dict__["data"].__setattr__(key, value)
 
         self.__dict__[key] = value

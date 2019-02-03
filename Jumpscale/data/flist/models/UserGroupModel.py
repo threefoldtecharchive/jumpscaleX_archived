@@ -13,7 +13,7 @@ class UserGroupModel(ModelBase):
     def key(self):
         if self._key == "":
             from IPython import embed
-            self._logger.debug("DEBUG NOW generate key UserGroup")
+            self._log_debug("DEBUG NOW generate key UserGroup")
             embed()
             raise RuntimeError("stop debug here")
         return self._key

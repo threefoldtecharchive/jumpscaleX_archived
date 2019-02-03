@@ -1,13 +1,114 @@
 from Jumpscale import j
-import inspect
 import os
-import copy
-import sys
+# import copy
+# import sys
 import inspect
 import types
 
 
 class JSBase:
+
+    def __init__(self, parent=None, topclass=True):
+        """
+        :param parent: parent is object calling us
+        :param topclass: if True means no-one inherits from us
+        """
+        self._parent = parent
+        self._class_init()  # is needed to init class properties
+
+        if topclass:
+            self._init()
+            self._init2()
+
+    def _class_init(self, topclass=True):
+
+        if not hasattr(self.__class__, "_class_init_done"):
+            print("_class init:%s"%self.__class__.__name__)
+            # only needed to execute once, needs to be done at init time, class inheritance does not exist
+            self.__class__._dirpath_ = ""  # path of the directory hosting this class
+            # self.__class__._logger_ = None  # logger attached to this class
+
+            self.__class__._cache_expiration = 3600  # expiration of the cache
+            self.__class__._test_runs = {}
+            self.__class__._test_runs_error = {}
+
+            self.__class__._name = j.core.text.strip_to_ascii_dense(str(self.__class__)).split(".")[-1].lower()
+            # short location name:
+            if '__jslocation__' in self.__dict__:
+                self.__class__._location = self.__jslocation__
+            elif '__jslocation__' in self.__class__.__dict__:
+                self.__class__._location = self.__class__.__jslocation__
+            elif '__jscorelocation__' in self.__dict__:
+                self.__class__._location = self.__jslocation__
+            else:
+                self.__class__._location = None
+                parent = self._parent
+                while parent is not None:
+                    if hasattr(parent,"__jslocation__"):
+                        self.__class__._location = parent.__jslocation__
+                        break
+                    parent = parent._parent
+                if self.__class__._location is None:
+                    self.__class__._location = self.__class__._name
+
+            #walk to all parents, let them know that there are child classes
+            self.__class__._class_children = []
+            parent = self._parent
+            while parent is not None:
+                if parent.__class__ not in parent._class_children:
+                    parent._class_children.append(parent.__class__)
+                parent = parent._parent
+
+
+            self.__class__._methods_ = []
+            self.__class__._properties_ = []
+            self.__class__._inspected_ = False
+
+            # print("classinit_2:%s"%self.__class__)
+            # print(self.__class__._properties_)
+
+            self.__class__._logger_level = 100
+            self.__class__.__objcat_name = ""
+
+            self.__class__._class_init_done = True
+
+            #lets make sure the initial loglevel gets set
+            self._log_init()
+
+    def _log_init(self):
+        print ("%s:loginit"%self.__class__._name)
+        incl = False
+        if "*" in j.core.myenv.log_includes:
+            incl = True
+        else:
+            for item in j.core.myenv.log_includes:
+                item=item.replace("*","")
+                if self.__class__._location.startswith(item):
+                    incl=True
+        if "*" in j.core.myenv.log_excludes:
+            incl = False
+        else:
+            for item in j.core.myenv.log_excludes:
+                item=item.replace("*","")
+                if self.__class__._location.startswith(item):
+                    incl=False
+
+        if incl:
+            self._logger_minlevel_set(j.core.myenv.log_loglevel)
+        else:
+            self._logger_minlevel_set(100)
+
+
+    def _init(self):
+        pass
+
+
+    def _init2(self):
+        """
+        happens after _init by the caller of the object, meant to be used by developers of the base classes
+        :return:
+        """
+        self._obj_cache_reset()
 
     def _obj_cache_reset(self):
         """
@@ -21,55 +122,6 @@ class JSBase:
 
         for key, obj in self.__dict__.items():
             del obj
-
-    def _class_init(self, parent=None):
-
-        if not hasattr(self.__class__, "_class_init_done"):
-            # print("_class init:%s"%self.__class__.__name__)
-            # only needed to execute once, needs to be done at init time, class inheritance does not exist
-            self.__class__._dirpath_ = ""  # path of the directory hosting this class
-            self.__class__._logger_ = None  # logger attached to this class
-            self.__class__._cache_expiration = 3600  # expiration of the cache
-            self.__class__._test_runs = {}
-            self.__class__._test_runs_error = {}
-
-            self.__class__.__name__ = j.core.text.strip_to_ascii_dense(str(self.__class__)).split(".")[-1].lower()
-            # short location name:
-            if '__jslocation__' in self.__dict__:
-                self.__class__._location = self.__jslocation__
-            elif '__jslocation__' in self.__class__.__dict__:
-                self.__class__._location = self.__class__.__jslocation__
-            elif '__jscorelocation__' in self.__dict__:
-                self.__class__._location = self.__jslocation__
-            else:
-                self.__class__._location = self.__class__.__name__.lower()
-
-            self.__class__._methods_ = []
-            self.__class__._properties_ = []
-            self.__class__._inspected_ = False
-
-            # print("classinit_2:%s"%self.__class__)
-            # print(self.__class__._properties_)
-
-            self.__class__._class_init_done = True
-
-    def __init__(self):
-
-        self.__objcat_name = ""
-
-        self._class_init()  # is needed to init class properties, needs to be first thing
-
-        self._obj_cache_reset()
-
-    def _init(self):
-        pass
-
-    def _init2(self):
-        """
-        happens after _init by the caller of the object, meant to be used by developers of the base classes
-        :return:
-        """
-        pass
 
     @property
     def _dirpath(self):
@@ -95,7 +147,7 @@ class JSBase:
             if id2 == "":
                 for item in ["instance", "_instance", "_id", "id", "name", "_name"]:
                     if item in self.__dict__ and self.__dict__[item]:
-                        self._logger.debug("found extra for obj_id")
+                        self._log_debug("found extra for obj_id")
                         id2 = str(self.__dict__[item])
                         break
             if id2 != "":
@@ -104,16 +156,31 @@ class JSBase:
                 self._objid_ = id
         return self._objid_
 
-    @property
-    def _logger(self):
-        if self.__class__._logger_ is None:
-            self.__class__._logger_ = j.logger.get(self.__class__._location)
-            self.__class__._logger_._parent = self
-        return self.__class__._logger_
 
     def _logger_enable(self):
-        self.__class__._logger_ = j.logger.get(self.__class__._location, force=True)
-        self._logger.level = 0
+        self._logger_minlevel_set(0)
+
+    def _logger_minlevel_set(self,minlevel):
+        """
+        make sure that logging above minlevel will happen, std = 100
+
+        always done on all classes of the self.location e.g. j.clients.ssh (children, ...)
+
+        :return:
+        """
+
+        parent = self._parent
+        while parent is not None:
+            parent._logger_minlevel_set(minlevel)
+            parent = parent._parent
+
+        for kl in self.__class__._class_children:
+            print("%s:minlevel:%s"%(kl,minlevel))
+            kl.minlevel = minlevel
+
+        self.__class__._logger_level = minlevel
+
+
 
     @property
     def _cache(self):
@@ -189,50 +256,84 @@ class JSBase:
                     res[key] = v
         return res
 
-    def _warning_raise(self, msg, e=None, cat=""):
+    ################
+
+    def _print(self,msg,cat=""):
+        self._log(msg,cat=cat,level=15)
+
+    def _log_debug(self,msg,cat="",data=None):
+        self._log(msg,cat=cat,level=10,data=data)
+
+    def _log_info(self,msg,cat="",data=None):
+        self._log(msg,cat=cat,level=20,data=data)
+
+    def _log_warning(self,msg,cat="",data=None):
+        self._log(msg,cat=cat,level=30,data=data)
+
+    def _log_error(self,msg,cat="",data=None):
+        self._log(msg,cat=cat,level=40,data=data)
+
+    def _log_critical(self,msg,cat="",data=None):
+        self._log(msg,cat=cat,level=50,data=data)
+
+    def _log(self,msg,cat="",level=10,data=None):
         """
 
-        :param msg:
-        :param e: the python error e.g. after try: except:
-        :param cat: any dot notation
+        :param msg: what you want to log
+        :param cat: any dot notation category
+        :param level: level of the log
         :return:
+
+        can use {RED}, {RESET}, ... see color codes
+
+        levels:
+
+        - CRITICAL 	50
+        - ERROR 	40
+        - WARNING 	30
+        - INFO 	    20
+        - STDOUT 	15
+        - DEBUG 	10
+
         """
-        msg = "ERROR in %s\n" % self
-        msg += "msg\n"
 
-    def _error_bug_raise(self, msg, e=None, cat=""):
-        """
+        if level < self.__class__._logger_level:
+            return
 
-        :param msg:
-        :param e: the python error e.g. after try: except:
-        :param cat: any dot notation
-        :return:
-        """
-        if cat == "":
-            out = "BUG: %s" % msg
+        frame_ = inspect.currentframe().f_back
+        fname = frame_.f_code.co_filename.split("/")[-1]
+        defname = frame_.f_code.co_name
+        linenr= frame_.f_code.co_firstlineno
+
+        # while obj is None and frame_:
+        #     locals_ = frame_.f_locals
+        #
+        #     if tbc2 in locals_:
+        #         obj = locals_[tbc2]
+        #     else:
+        #         frame_ = frame_.f_back
+
+        if self._logsource_obj._location:
+            context = "%s:%s"%(self._logsource_obj._location,defname)
         else:
-            out = "BUG (%s): %s " % (cat, msg)
-        out += msg+"\n"
-        raise RuntimeError(msg)
+            context = "def:%s"%(defname)
 
-    def _error_input_raise(self, msg, cat=""):
-        if cat == "":
-            msg = "ERROR_INPUT: %s" % msg
-        else:
-            msg = "ERROR_INPUT (%s): %s " % (cat, msg)
-        raise RuntimeError(msg)
-        j.shell()
-        print()
-        sys.exit(1)
+        logdict={}
+        logdict["linenr"] = linenr
+        logdict["processid"] = self._j.application.appname
+        logdict["message"] = msg
+        logdict["filepath"] = fname
+        logdict["level"] = level
+        logdict["context"] = context
+        logdict["cat"] = cat
+        logdict["data"] = data
 
-    def _error_monitor_raise(self, msg, cat=""):
-        if cat == "":
-            msg = "ERROR_MONITOR: %s" % msg
+        if j.application.logger:
+            j.application.logger._process(logdict)
         else:
-            msg = "ERROR_MONITOR (%s): %s " % (cat, msg)
-        j.shell()
-        print()
-        sys.exit(1)
+            self._j.core.tools.log2stdout(logdict)
+
+    ################
 
     def _done_check(self, name="", reset=False):
         if reset:
@@ -292,10 +393,10 @@ class JSBase:
         res = self.__test_run(name=name, obj_key=obj_key, **kwargs)
         if self.__class__._test_runs_error != {}:
             for key, e in self.__class__._test_runs_error.items():
-                self._logger.error("ERROR FOR TEST: %s\n%s" % (key, e))
-            self._logger.error("SOME TESTS DIT NOT COMPLETE SUCCESFULLY")
+                self._log_error("ERROR FOR TEST: %s\n%s" % (key, e))
+            self._log_error("SOME TESTS DIT NOT COMPLETE SUCCESFULLY")
         else:
-            self._logger.info("ALL TESTS OK")
+            self._log_info("ALL TESTS OK")
         return res
 
     def __test_run(self, name=None, obj_key="main", **kwargs):
@@ -305,7 +406,7 @@ class JSBase:
 
         self._logger_enable()
         if name is not None:
-            self._logger.info("##: TEST RUN: %s" % name.upper())
+            self._log_info("##: TEST RUN: %s" % name.upper())
 
         if name is not None:
 
@@ -329,7 +430,7 @@ class JSBase:
                 return self._test_error(
                     name, RuntimeError("Could not find, test:%s in %s/tests/" % (name, self._dirpath)))
 
-            self._logger.debug("##: path: %s\n\n" % tpath)
+            self._log_debug("##: path: %s\n\n" % tpath)
         else:
             items = [j.sal.fs.getBaseName(item) for item in
                      j.sal.fs.listFilesInDir("%s/tests" % self._dirpath, recursive=False, filter="*.py")]
@@ -340,7 +441,7 @@ class JSBase:
             return
 
         method = j.tools.codeloader.load(obj_key=obj_key, path=tpath)
-        self._logger.debug("##:LOAD: path: %s\n\n" % tpath)
+        self._log_debug("##:LOAD: path: %s\n\n" % tpath)
         try:
             res = method(self=self, **kwargs)
         except Exception as e:

@@ -113,7 +113,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
 
         # TODO: *1 reload does not work yet
         # if self.reload(configpath=configpath) == True:
-        #     self._logger.info("caddy already started, will reload")
+        #     self._log_info("caddy already started, will reload")
         #     return
         pm = j.builder.system.processmanager.get()
         pm.stop("caddy")  # will also kill

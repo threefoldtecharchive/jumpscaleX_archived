@@ -17,6 +17,8 @@ import time
 class JSGroup():
     pass
 
+
+
 class Application(object):
 
     def __init__(self,j):
@@ -28,18 +30,31 @@ class Application(object):
         self.state = "UNKNOWN"
         self.appname = 'UNKNOWN'
 
+        self.logger = None
+
         self._debug = None
 
         self._systempid = None
 
         self.interactive = True
-        self._logger = None
+
         self.schemas = None
 
         self.errors_init = []
         self._bcdb_system = None
 
         self._JSGroup = JSGroup
+
+        self.appname = "unknown"
+
+    @property
+    def appname(self):
+        return self._j.core.myenv.appname
+
+    @appname.setter
+    def appname(self,val):
+        self._j.core.myenv.appname = val
+
 
     @property
     def bcdb_system(self):
@@ -95,16 +110,6 @@ class Application(object):
                 raise RuntimeError(msg)
         return "%s:%s:%s"%(cat,obj,error)
 
-
-    @property
-    def logger(self):
-        if self._logger is None:
-            self._logger = self._j.logger.get("application")
-        return self._logger
-
-    @logger.setter
-    def logger(self, newlogger):
-        self._logger = newlogger
 
     @property
     def JSBaseClass(self):
@@ -191,7 +196,7 @@ class Application(object):
 
     def break_into_jshell(self, msg="DEBUG NOW"):
         if self.debug is True:
-            self._logger.debug(msg)
+            self._log_debug(msg)
             from IPython import embed
             embed()
         else:
@@ -229,7 +234,7 @@ class Application(object):
         # Set state
         self.state = "RUNNING"
 
-        # self._logger.info("***Application started***: %s" % self.appname)
+        # self._log_info("***Application started***: %s" % self.appname)
 
     def stop(self, exitcode=0, stop=True):
         '''Stop the application cleanly using a given exitcode
@@ -249,7 +254,7 @@ class Application(object):
         # Since we call os._exit, the exithandler of IPython is not called.
         # We need it to save command history, and to clean up temp files used by
         # IPython itself.
-        # self._logger.debug("Stopping Application %s" % self.appname)
+        # self._log_debug("Stopping Application %s" % self.appname)
         try:
             __IPYTHON__.atexit_operations()
         except BaseException:
@@ -288,13 +293,13 @@ class Application(object):
     #             return 0
     #         if self._j.core.platformtype.myplatform.isLinux:
     #             command = "ps -o pcpu %d | grep -E --regex=\"[0.9]\"" % pid
-    #             self._logger.debug("getCPUusage on linux with: %s" % command)
+    #             self._log_debug("getCPUusage on linux with: %s" % command)
     #             exitcode, output, err = self._j.sal.process.execute(
     #                 command, True, False)
     #             return output
     #         elif self._j.core.platformtype.myplatform.isSolaris():
     #             command = 'ps -efo pcpu,pid |grep %d' % pid
-    #             self._logger.debug("getCPUusage on linux with: %s" % command)
+    #             self._log_debug("getCPUusage on linux with: %s" % command)
     #             exitcode, output, err = self._j.sal.process.execute(
     #                 command, True, False)
     #             cpuUsage = output.split(' ')[1]
@@ -349,6 +354,9 @@ class Application(object):
 
 
     def _walk_obj(self,obj):
+        j.shell()
+
+        _factories
 
         if isinstance(obj,JSFactoryBase):
 

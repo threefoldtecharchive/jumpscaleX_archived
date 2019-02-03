@@ -19,18 +19,18 @@ class ZDBAdminClient(ZDBClientBase):
         # self._logger_enable()
         if self.secret:
             # authentication should only happen in zdbadmin client
-            self._logger.debug("AUTH in namespace %s" % (self.nsname))
+            self._log_debug("AUTH in namespace %s" % (self.nsname))
             self.redis.execute_command("AUTH", self.secret)
 
     def namespace_exists(self, name):
         try:
             self.redis.execute_command("NSINFO", name)
-            # self._logger.debug("namespace_exists:%s" % name)
+            # self._log_debug("namespace_exists:%s" % name)
             return True
         except Exception as e:
             if not "Namespace not found" in str(e):
                 raise RuntimeError("could not check namespace:%s, error:%s" % (name, e))
-            # self._logger.debug("namespace_NOTexists:%s" % name)
+            # self._log_debug("namespace_NOTexists:%s" % name)
             return False
 
     def namespaces_list(self):
@@ -47,9 +47,9 @@ class ZDBAdminClient(ZDBClientBase):
         :param die:
         :return:
         """
-        self._logger.debug("namespace_new:%s" % name)
+        self._log_debug("namespace_new:%s" % name)
         if self.namespace_exists(name):
-            self._logger.debug("namespace exists")
+            self._log_debug("namespace exists")
             if die:
                 raise RuntimeError("namespace already exists:%s" % name)
             # now return std client
@@ -57,15 +57,15 @@ class ZDBAdminClient(ZDBClientBase):
 
         self.redis.execute_command("NSNEW", name)
         if secret is not "":
-            self._logger.debug("set secret")
+            self._log_debug("set secret")
             self.redis.execute_command("NSSET", name, "password", secret)
             self.redis.execute_command("NSSET", name, "public", "no")
 
         if maxsize is not 0:
-            self._logger.debug("set maxsize")
+            self._log_debug("set maxsize")
             self.redis.execute_command("NSSET", name, "maxsize", maxsize)
 
-        self._logger.debug("connect client")
+        self._log_debug("connect client")
 
         ns = j.clients.zdb.client_get(addr=self.addr, port=self.port, mode=self.mode, secret=secret, nsname=name)
 
@@ -78,7 +78,7 @@ class ZDBAdminClient(ZDBClientBase):
 
     def namespace_delete(self, name):
         if self.namespace_exists(name):
-            self._logger.debug("namespace_delete:%s" % name)
+            self._log_debug("namespace_delete:%s" % name)
             self.redis.execute_command("NSDEL", name)
 
     def reset(self, ignore=[]):

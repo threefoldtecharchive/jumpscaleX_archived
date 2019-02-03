@@ -13,7 +13,7 @@ def action(func):
     def wrapper_action(*args, **kwargs):
         self=args[0]
         args=args[1:]
-        self._logger.debug(str(func))
+        self._log_debug(str(func))
         if self._running is None:
             self.service_manage()
         name= func.__name__
@@ -28,7 +28,7 @@ def action(func):
             self.action_queue.put((func,args,kwargs,event,action.id))
             event.wait(1000.0) #will wait for processing
             res = j.data.serializers.msgpack.loads(action.result)
-            self._logger.debug("METHOD EXECUTED OK")
+            self._log_debug("METHOD EXECUTED OK")
             return action
     return wrapper_action
 
@@ -194,13 +194,13 @@ class JSBaseService(JSBaseConfig):
 
 
     def _main(self):
-        self._logger.info("%s:mainloop started"%self)
+        self._log_info("%s:mainloop started"%self)
         #make sure communication is only 1 way
         #TODO: put metadata
         while True:
             func,args,kwargs,event,action_id=self.action_queue.get()
             a=self.actions[action_id]
-            self._logger.info("action execute:\n%s"%a)
+            self._log_info("action execute:\n%s"%a)
             a.time_start = j.data.time.epoch
             res = func(self,*args,**kwargs)
             print("main res:%s"%res)

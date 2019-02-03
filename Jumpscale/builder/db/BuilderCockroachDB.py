@@ -18,7 +18,7 @@ class BuilderCockroachDB(j.builder.system._BaseClass):
         url = 'https://binaries.cockroachdb.com/cockroach-latest.linux-amd64.tgz'
         dest = "{DIR_TEMP}/cockroach-latest.linux-amd64"
 
-        self._logger.info('Downloading CockroachDB.')
+        self._log_info('Downloading CockroachDB.')
         j.builder.tools.file_download(
             url, to="{DIR_TEMP}", overwrite=False, expand=True)
         tarpaths = j.builder.tools.find(

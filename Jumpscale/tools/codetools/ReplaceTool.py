@@ -102,7 +102,7 @@ class ReplaceTool(j.application.JSBaseClass):
 
     def synonymsPrint(self):
         for syn in self.synonyms:
-            self._logger.debug(syn)
+            self._log_debug(syn)
 
     def synonymAdd(self, name='', simpleSearch='', regexFind='', regexFindForReplace='',
                    replaceWith='', replaceExclude=''):
@@ -166,7 +166,7 @@ class ReplaceTool(j.application.JSBaseClass):
     #     def replaceinside(matchobj):
     #         match = matchobj.group()
     #         # we found a match now
-    #         # self._logger.debug "regex:%s match:%s replace:%s" % (searchitem[1],match,searchitem[2])
+    #         # self._log_debug "regex:%s match:%s replace:%s" % (searchitem[1],match,searchitem[2])
     #         if match.find("|") == -1:
     #             match = re.sub("( *\])|(\[ *)", "", match)
     #             toreplace = searchitem[2]
@@ -197,7 +197,7 @@ class ReplaceTool(j.application.JSBaseClass):
                 continue
             C2=self.replace(C)
             if C!=C2:
-                self._logger.debug("replaced %s in dir for: %s" % (item, path))
+                self._log_debug("replaced %s in dir for: %s" % (item, path))
                 j.sal.fs.writeFile(item,C2)
 
     # def replaceInConfluence(self, text):
@@ -207,7 +207,7 @@ class ReplaceTool(j.application.JSBaseClass):
     #     def replaceinside(matchobj):
     #         match = matchobj.group()
     #         # we found a match now
-    #         # self._logger.debug "regex:%s match:%s replace:%s" % (searchitem[1],match,searchitem[2])
+    #         # self._log_debug "regex:%s match:%s replace:%s" % (searchitem[1],match,searchitem[2])
     #         if match.find("|") == -1:
     #             match = re.sub("( *\])|(\[ *)", "", match)
     #             match = re.sub(syn.regexFind, syn.replaceWith, match)

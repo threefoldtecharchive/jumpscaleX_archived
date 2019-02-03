@@ -58,7 +58,7 @@ class RedisServer(j.application.JSBaseClass):
         for h in self._sig_handler:
             h.cancel()
 
-        self._logger.info('stopping server')
+        self._log_info('stopping server')
         self.redis_server.stop()
 
     def handle_redis(self, socket, address):
@@ -69,27 +69,27 @@ class RedisServer(j.application.JSBaseClass):
         try:
             self._handle_redis(socket, address, parser, response)
         except ConnectionError as err:
-            self._logger.info('connection error: {}'.format(str(err)))
+            self._log_info('connection error: {}'.format(str(err)))
         finally:
             parser.on_disconnect()
-            self._logger.info('close connection from {}'.format(address))
+            self._log_info('close connection from {}'.format(address))
 
     def _handle_redis(self, socket, address, parser, response):
 
-        self._logger.info('connection from {}'.format(address))
+        self._log_info('connection from {}'.format(address))
         socket.namespace = "system"
 
         while True:
             request = parser.read_request()
 
-            self._logger.debug("%s:%s" % (socket.namespace, request))
+            self._log_debug("%s:%s" % (socket.namespace, request))
 
             if request is None:
-                self._logger.debug("connection lost or tcp test")
+                self._log_debug("connection lost or tcp test")
                 break
 
             if not request:  # empty list request
-                self._logger.debug("EMPTYLIST")
+                self._log_debug("EMPTYLIST")
                 continue
 
             cmd = request[0]
@@ -130,7 +130,7 @@ class RedisServer(j.application.JSBaseClass):
                 redis_cmd = request[0].decode().lower()
                 args = request[1:] if len(request) > 1 else []
                 args = [x.decode() for x in args]
-                self._logger.debug("cmd:%s args:%s"%(redis_cmd,args))
+                self._log_debug("cmd:%s args:%s"%(redis_cmd,args))
 
                 if redis_cmd == "del":
                     redis_cmd = "delete"
@@ -191,7 +191,7 @@ class RedisServer(j.application.JSBaseClass):
 
     def set(self, response, key, val):
         cat, url, key, model = self._split(key)
-        self._logger.debug("set:%s:%s:%s"%(cat, url, key))
+        self._log_debug("set:%s:%s:%s"%(cat, url, key))
         if cat == "objects":
             if url == "":
                 response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
@@ -210,7 +210,7 @@ class RedisServer(j.application.JSBaseClass):
 
     def get(self, response, key):
         cat, url, key, model = self._split(key)
-        self._logger.debug("get:%s:%s:%s"%(cat, url, key))
+        self._log_debug("get:%s:%s:%s"%(cat, url, key))
         if model is "":
             raise RuntimeError("did not find model from key, maybe models not loaded:%s"%key)
 
@@ -235,7 +235,7 @@ class RedisServer(j.application.JSBaseClass):
 
     def delete(self, response, key):
         cat, url, key, model = self._split(key)
-        self._logger.debug("delete:%s:%s:%s"%(cat, url, key))
+        self._log_debug("delete:%s:%s:%s"%(cat, url, key))
         if url == "" or cat == "schemas" or model == '':
             #DO NOT DELETE SCHEMAS
             response.encode("0")
@@ -281,7 +281,7 @@ class RedisServer(j.application.JSBaseClass):
 
     def hset(self, response, key, id, val):
         cat, url, _, model = self._split(key)
-        self._logger.debug("hset:%s:%s"%(cat, url))
+        self._log_debug("hset:%s:%s"%(cat, url))
         if cat != 'objects':
             response.error("category %s not valid" % cat)
             return
@@ -311,7 +311,7 @@ class RedisServer(j.application.JSBaseClass):
 
     def hget(self, response, key, id):
         cat, url, _, model = self._split(key)
-        self._logger.debug("hget:%s:%s"%(cat, url))
+        self._log_debug("hget:%s:%s"%(cat, url))
         if cat != 'objects':
             response.error("category %s not valid" % cat)
             return
@@ -330,7 +330,7 @@ class RedisServer(j.application.JSBaseClass):
 
     def hdel(self, response, key, id):
         cat, url, _, model = self._split(key)
-        self._logger.debug("hdel:%s:%s"%(cat, url))
+        self._log_debug("hdel:%s:%s"%(cat, url))
         if cat != 'objects':
             response.error("category %s not valid" % cat)
             return
@@ -352,7 +352,7 @@ class RedisServer(j.application.JSBaseClass):
 
     def hlen(self, response, key):
         cat, url, _, model = self._split(key)
-        self._logger.debug("hlen:%s:%s"%(cat, url))
+        self._log_debug("hlen:%s:%s"%(cat, url))
         if cat != 'objects':
             response.error("category %s not valid" % cat)
             return

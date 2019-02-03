@@ -45,7 +45,7 @@ class SystemFSWalker(j.application.JSBaseClass):
 
     @staticmethod
     def _findhelper(arg, path):
-        self._logger.debug(path)
+        self._log_debug(path)
         arg.append(path)
 
     @staticmethod

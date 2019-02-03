@@ -141,11 +141,11 @@ class DocSite(j.application.JSFactoryBaseClass,j.application.JSBaseConfigClass):
             return True
 
         def callbackFunctionFile(path, arg):
-            self._logger.debug("file:%s"%path)
+            self._log_debug("file:%s"%path)
             ext = j.sal.fs.getFileExtension(path).lower()
             base = j.sal.fs.getBaseName(path)
             if ext == "md":
-                self._logger.debug("found md:%s"%path)
+                self._log_debug("found md:%s"%path)
                 name = base[:-3].lower()  # remove extension
                 doc = self.get_doc(name=name,path=path,create_new=True)
                 j.shell()
@@ -154,7 +154,7 @@ class DocSite(j.application.JSFactoryBaseClass,j.application.JSBaseConfigClass):
                 #     self.docs[base.lower()] = doc
                 self._docs[doc.name_dot_lower] = doc
             elif ext in ["html","htm"]:
-                self._logger.debug("found html:%s"%path)
+                self._log_debug("found html:%s"%path)
                 # raise RuntimeError()
                 # l = len(ext)+1
                 # base = base[:-l]  # remove extension
@@ -166,13 +166,13 @@ class DocSite(j.application.JSFactoryBaseClass,j.application.JSBaseConfigClass):
 
                 if ext in ["png", "jpg", "jpeg", "pdf", "docx", "doc", "xlsx", "xls", \
                             "ppt", "pptx", "mp4","css","js","mov"]:
-                    self._logger.debug("found file:%s"%path)
+                    self._log_debug("found file:%s"%path)
                     base=self._clean(base)
                     if base in self._files:
                         raise j.exceptions.Input(message="duplication file in %s,%s" %  (self, path))
                     self._files[base] = path
                 # else:
-                #     self._logger.debug("found other:%s"%path)
+                #     self._log_debug("found other:%s"%path)
                 #     l = len(ext)+1
                 #     base = base[:-l]  # remove extension
                 #     doc = DocBase(path, base, docsite=self)
@@ -202,10 +202,10 @@ class DocSite(j.application.JSFactoryBaseClass,j.application.JSBaseConfigClass):
             if not key in self._errors:
                 errormsg3 = "```\n%s\n```\n"%errormsg2
                 j.sal.fs.writeFile(filename=self._error_file_path, contents=errormsg3, append=True)
-                self._logger.error(errormsg2)
+                self._log_error(errormsg2)
                 doc.errors.append(errormsg)
         else:
-            self._logger.error("DEBUG NOW raise error")
+            self._log_error("DEBUG NOW raise error")
             raise RuntimeError("stop debug here")
 
     @property

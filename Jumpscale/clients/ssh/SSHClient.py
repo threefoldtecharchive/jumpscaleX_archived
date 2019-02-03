@@ -11,7 +11,7 @@ class SSHClient(SSHClientBase):
 
     def _init(self):
         SSHClientBase._init(self)
-        self._logger = j.logger.get("ssh client: %s:%s(%s)" % (self.addr_variable, self.port, self.login))
+        self._logger_prefix = "ssh client: %s:%s(%s)" % (self.addr_variable, self.port, self.login)
 
     @property
     def _client(self):
@@ -48,11 +48,11 @@ class SSHClient(SSHClientBase):
                     printer(line)
             return buffer
 
-        out = _consume_stream(stdout, self._logger.debug)
-        err = _consume_stream(stderr, self._logger.error)
+        out = _consume_stream(stdout, self._log_debug)
+        err = _consume_stream(stderr, self._log_error)
         self._client.wait_finished(channel)
-        _consume_stream(stdout, self._logger.debug, out)
-        _consume_stream(stderr, self._logger.error, err)
+        _consume_stream(stdout, self._log_debug, out)
+        _consume_stream(stderr, self._log_error, err)
 
         rc = channel.get_exit_status()
         output = out.getvalue()

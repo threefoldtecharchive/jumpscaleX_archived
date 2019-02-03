@@ -58,9 +58,9 @@ class GiteaUsers(j.application.JSBaseClass):
             self.client.api.users.userCheckFollowing(follower, followee)
         except Exception as e:
             if e.response.status_code == 404:
-                self._logger.debug('follower or followee not found')
+                self._log_debug('follower or followee not found')
             else:
-                self._logger.debug(e.response.content)
+                self._log_debug(e.response.content)
             return False
         return True
 

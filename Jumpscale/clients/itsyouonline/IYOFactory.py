@@ -31,32 +31,32 @@ class IYOFactory(j.application.JSBaseConfigsClass):
         client = j.clients.itsyouonline.get(name="test")
         jwt = client.jwt_get(scope="user:admin")
         username = jwt.username
-        self._logger.debug("Creating a test organization")
+        self._log_debug("Creating a test organization")
         test_globa_id = "test_org"
         client.api.organizations.CreateNewOrganization(
             {"globalid": test_globa_id, "owners": [jwt.username], "dns": [], "includes": [], "includesuborgsof": [],
              "members": [], "orgmemmbers": [], "orgowners": [], "publicKeys": [], "requiredscopes": []})
-        self._logger.debug("getting the test organization details")
+        self._log_debug("getting the test organization details")
         org = client.api.organizations.GetOrganization(test_globa_id)
         assert org.data.globalid == test_globa_id
-        self._logger.debug("deleting the test organization")
+        self._log_debug("deleting the test organization")
         res = client.api.organizations.DeleteOrganization(test_globa_id)
         assert res.ok
 
 
         # Read all the API keys registered for your user
-        self._logger.debug("list all API keys")
+        self._log_debug("list all API keys")
         for key in client.api.users.ListAPIKeys(username).data:
-            self._logger.debug("label: %s" % key.label)
-            self._logger.debug("app ID %s" % key.applicationid)
+            self._log_debug("label: %s" % key.label)
+            self._log_debug("app ID %s" % key.applicationid)
 
         # Create a new API key (is really a developer way though)
         from requests.exceptions import HTTPError
         try:
             key = client.api.users.AddApiKey({"label": 'test'}, username).data
-            self._logger.debug("create new API key: ")
-            self._logger.debug("label: %s" % key.label)
-            self._logger.debug("app ID %s" % key.applicationid)
+            self._log_debug("create new API key: ")
+            self._log_debug("label: %s" % key.label)
+            self._log_debug("app ID %s" % key.applicationid)
         except HTTPError as err:
             # example of how to deal with exceptions
             if err.response.status_code == 409:
@@ -68,7 +68,7 @@ class IYOFactory(j.application.JSBaseConfigsClass):
         key_labels = [k.label for k in client.api.users.ListAPIKeys(username).data]
         assert 'test' in key_labels
 
-        self._logger.debug("delete api key")
+        self._log_debug("delete api key")
         client.api.users.DeleteAPIkey('test', username)
 
         key_labels = [k.label for k in client.api.users.ListAPIKeys(username).data]

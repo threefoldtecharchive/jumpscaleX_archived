@@ -70,7 +70,7 @@ class MarkDownDocs(j.application.JSBaseClass):
         """
         @param pathOrUrl can be existing path or url
         """
-        self._logger.info("load macros:%s"%pathOrUrl)
+        self._log_info("load macros:%s"%pathOrUrl)
 
         path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
 
@@ -83,7 +83,7 @@ class MarkDownDocs(j.application.JSBaseClass):
                 name = j.sal.fs.getBaseName(path0)[:-3] #find name, remove .py
                 self._macros[name] = j.tools.jinja2.code_python_render(obj_key=name, path=path0,reload=False, objForHash=name)
         # else:
-        #     self._logger.debug("macros not loaded, already there")
+        #     self._log_debug("macros not loaded, already there")
 
     def load(self, path="", name=""):
         self.macros_load()

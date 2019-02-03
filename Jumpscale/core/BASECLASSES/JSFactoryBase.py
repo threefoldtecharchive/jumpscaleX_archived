@@ -5,11 +5,8 @@ from .JSBase import JSBase
 
 class JSFactoryBase(JSBase):
 
-    def __init__(self):
-
-        self._class_init()  # is needed to init class properties, needs to be first thing
-
-        self._logger_enable()
+    def __init__(self,parent=None, topclass=True):
+        JSBase.__init__(self,parent=parent, topclass=False)
 
         self._factories = {}
         for kl in self.__class__._CHILDCLASSES:
@@ -22,21 +19,23 @@ class JSFactoryBase(JSBase):
             self.__dict__[name] = obj
             self._factories[name] = obj
 
-        self._obj_cache_reset()
-
-        JSBase.__init__(self)
-
-        self.__objcat_name = "factory"
+        if topclass:
+            self._init()
+            self._init2()
 
     def _class_init(self):
 
-        if hasattr(self.__class__, "_CHILDCLASS"):
-            self.__class__._CHILDCLASSES = [self.__class__._CHILDCLASS]
+        if not hasattr(self.__class__, "_class_init_done"):
 
-        if not hasattr(self.__class__, "_CHILDCLASSES"):
-            raise RuntimeError("need _CHILDCLASSES as class property for:%s" % self)
+            if hasattr(self.__class__, "_CHILDCLASS"):
+                self.__class__._CHILDCLASSES = [self.__class__._CHILDCLASS]
 
-        JSBase._class_init(self, parent=self)
+            if not hasattr(self.__class__, "_CHILDCLASSES"):
+                raise RuntimeError("need _CHILDCLASSES as class property for:%s" % self)
+
+            #always needs to be in this order at end
+            JSBase._class_init(self)
+            self.__class__.__objcat_name = "factory"
 
     def _obj_cache_reset(self):
         """

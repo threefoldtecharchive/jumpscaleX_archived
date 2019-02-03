@@ -214,7 +214,7 @@ class UnixSystem(j.application.JSBaseClass):
         @param pid: process id
         """
 
-        self._logger.info('Killing process group of %d' % pid)
+        self._log_info('Killing process group of %d' % pid)
         import signal
         os.killpg(os.getpgid(pid), signal.SIGKILL)
 
@@ -232,7 +232,7 @@ class UnixSystem(j.application.JSBaseClass):
         """
         if not group:
             group = 'root'
-        self._logger.info('Chown %s:%s %s' % (user, group, path))
+        self._log_info('Chown %s:%s %s' % (user, group, path))
         uid = pwd.getpwnam(user).pw_uid
         if group is None:
             gid = grp.getgrnam(group).gr_gid
@@ -248,7 +248,7 @@ class UnixSystem(j.application.JSBaseClass):
         """
         Chmod based on system.fs.walk
         """
-        self._logger.info('Chmod %s' % root)
+        self._log_info('Chmod %s' % root)
         if j.sal.fs.isFile(root):
             os.chmod(root, mode)
         else:
@@ -339,7 +339,7 @@ class UnixSystem(j.application.JSBaseClass):
         return s
 
     def _prepareCommand(self, command, username):
-        self._logger.debug('Attempt to run %s as user %s' % (command, username))
+        self._log_debug('Attempt to run %s as user %s' % (command, username))
         try:
             pwent = pwd.getpwnam(username)
         except KeyError:
@@ -366,7 +366,7 @@ class UnixSystem(j.application.JSBaseClass):
         if not path or not j.sal.fs.checkDirParam(path):
             raise ValueError('Path %s is invalid' % path)
 
-        self._logger.info('Change root to %s' % path)
+        self._log_info('Change root to %s' % path)
         os.chroot(path)
 
     def addSystemUser(self, username, groupname=None, shell="/bin/bash", homedir=None):
@@ -381,7 +381,7 @@ class UnixSystem(j.application.JSBaseClass):
         '''
 
         if not j.sal.unix.unixUserExists(username):
-            self._logger.info(
+            self._log_info(
                 "User [%s] does not exist, creating an entry" % username)
 
             command = "useradd"
@@ -407,7 +407,7 @@ class UnixSystem(j.application.JSBaseClass):
                 j.sal.fs.chmod(homedir, 0o700)
 
         else:
-            self._logger.warning("User %s already exists" % username)
+            self._log_warning("User %s already exists" % username)
 
     def addSystemGroup(self, groupname):
         ''' Add a group to the system
@@ -418,14 +418,14 @@ class UnixSystem(j.application.JSBaseClass):
         @type groupname : string
         '''
         if not j.sal.unix.unixGroupExists(groupname):
-            self._logger.info("Group [%s] does not exist, creating an entry" % groupname)
+            self._log_info("Group [%s] does not exist, creating an entry" % groupname)
             exitCode, stdout, stderr = j.sal.process.execute("groupadd %s" % groupname)
 
             if exitCode:
                 output = '\n'.join(('Stdout:', stdout, 'Stderr:', stderr, ))
                 raise j.exceptions.RuntimeError('Failed to add group %s, error: %s' % (groupname, output))
         else:
-            self._logger.warning("Group %s already exists" % groupname)
+            self._log_warning("Group %s already exists" % groupname)
 
     def addUserToGroup(self, username, groupname):
         assert j.sal.unix.unixUserExists(username), \

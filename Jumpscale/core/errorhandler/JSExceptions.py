@@ -48,6 +48,7 @@ class BaseJSException(Exception):
         return msg.strip()
 
 
+
     def __str__(self):
         if self.cat is not "":
             out = "ERROR: %s ((%s)\n" % (self.message, self.cat)

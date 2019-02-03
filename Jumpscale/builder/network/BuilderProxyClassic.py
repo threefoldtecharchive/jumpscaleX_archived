@@ -173,10 +173,10 @@ class BuilderProxyClassic(j.builder.system._BaseClass):
 
         self.start()
 
-        self._logger.info("http://config.privoxy.org/")
-        self._logger.info("http://config.privoxy.org/show-status")
-        self._logger.info("http://config.privoxy.org/show-request")
-        self._logger.info("http://config.privoxy.org/show-url-info")
+        self._log_info("http://config.privoxy.org/")
+        self._log_info("http://config.privoxy.org/show-status")
+        self._log_info("http://config.privoxy.org/show-request")
+        self._log_info("http://config.privoxy.org/show-url-info")
 
     def start(self):
 
@@ -339,10 +339,10 @@ class BuilderProxyClassic(j.builder.system._BaseClass):
 
         _, cmd, _ = j.sal.process.execute("which polipo")
 
-        self._logger.info("INSTALL OK")
-        self._logger.info("to see status: point webbrowser to")
-        self._logger.info("http://%s:%s/polipo/status?" % (j.builder.tools.executor.addr, port))
-        self._logger.info(
+        self._log_info("INSTALL OK")
+        self._log_info("to see status: point webbrowser to")
+        self._log_info("http://%s:%s/polipo/status?" % (j.builder.tools.executor.addr, port))
+        self._log_info(
             "configure your webproxy client to use %s on tcp port %s" %
             (j.builder.tools.executor.addr, port))
 

@@ -53,7 +53,7 @@ class Rogerthat(JSConfigClient):
             result = j.data.serializers.json.loads(response.read())
             return result
         else:
-            self._logger.error('Server error when executing send_message')
+            self._log_error('Server error when executing send_message')
             return False
 
     def checkFlag(self, flags, flag):

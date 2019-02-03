@@ -31,6 +31,6 @@ def main(self):
     print(schema_object1._capnp_schema)
     print(schema_object0._capnp_schema)
 
-    self._logger.info("TEST DONE CAPNP")
+    self._log_info("TEST DONE CAPNP")
 
     return ("OK")

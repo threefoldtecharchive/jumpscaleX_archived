@@ -178,9 +178,9 @@ class BuilderWordpress(j.builder.system._BaseClass):
         
         rc, _, _ = j.sal.process.execute('tar -czvf {} {}'.format(backup_tar_name, backup_path))
         if rc == 0:
-            self._logger.info('Backup done successfuly')
+            self._log_info('Backup done successfuly')
         else:
-            self._logger.info('an error happened while compressing your backup')
+            self._log_info('an error happened while compressing your backup')
         
         # clean up
         j.builder.tools.dir_remove(backup_path)

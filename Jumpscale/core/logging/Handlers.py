@@ -2,13 +2,18 @@ import logging
 import time
 import os
 
+try:
+    import ujson as json
+except:
+    import json
+
 import logging
 from logging.handlers import TimedRotatingFileHandler
 from logging.handlers import MemoryHandler
 
 # XXX not used? from .Filter import ModuleFilter
 from .LimitFormatter import LimitFormatter
-
+import inspect
 # FILE_FORMAT = '%(asctime)s - %(pathname)s:%(lineno)d - %(levelname)-8s - %(message)s'
 
 
@@ -50,8 +55,8 @@ class Handlers():
 
     def redisHandler(self, redis_client=None):
         if redis_client is None:
-            self.redis_client = self._j.core.db
-        raise RuntimeError("need to implement redishandler")
+            redis_client = self._j.core.db
+        return RedisHandler(redis_client,j=self._j)
 
     @property
     def memoryHandler(self):
@@ -73,6 +78,76 @@ class Handlers():
             self._telegramHandler.setFormatter(TelegramFormatter())
             self._all.append(self._telegramHandler)
         return self._telegramHandler
+
+
+class RedisHandler(logging.Handler):
+    """
+    Handler to forward logs to a redis server
+    send to the server
+
+    ## dict keys:
+
+    - processid : a string id can be a pid or any other identification of the log
+    - cat   : optional category for log
+    - level : levels see https://docs.python.org/3/library/logging.html#levels
+    - linenr : nr in file where log comes from
+    - filepath : path where the log comes from
+    - context : where did the message come from e.g. def name
+    - message : content of the message
+    - data : additional data e.g. stacktrace, depending context can be different
+    - hash: optional, 16-32 bytes unique for this message normally e.g. md5 of eg. concatenation of important fields
+
+    ### lOGGING LEVELS:
+
+    - CRITICAL 	50
+    - ERROR 	40
+    - WARNING 	30
+    - INFO 	    20
+    - DEBUG 	10
+    - NOTSET 	0
+
+
+    """
+
+    def __init__(self, redis_client,j):
+        """
+        """
+        self._j = j
+        super(RedisHandler, self).__init__()
+        self.redis_client = redis_client
+
+        _dirpath = os.path.dirname(inspect.getfile(self.__class__))
+
+        lua_path = "%s/log.lua"%_dirpath
+
+        dd = self.redis_client.storedprocedure_register("log",0,lua_path)
+
+        self._send("log started",context="redishandler")
+
+    def emit(self, record):
+
+        if record.levelno>39:
+            from pudb import set_trace; set_trace()
+        if record.args != ():
+            from pudb import set_trace; set_trace()
+
+        self._send(record.msg,linenr=record.lineno,filepath=record.filename,
+                   level=record.levelno,context=record.funcName)
+
+    def _send(self,message,linenr=0,filepath="",level=10,context=""):
+
+        record2={}
+        record2["linenr"] = linenr
+        record2["processid"] = self._j.application.appname
+        record2["message"] = message
+        record2["filepath"] = filepath
+        record2["level"] = level
+        record2["context"] = context
+        record3 = json.dumps(record2)
+        self.redis_client.storedprocedure_execute("log",record3)
+        # self.redis_client.storedprocedure_debug("log","'%s'"%record3)
+
+
 
 
 class TelegramHandler(logging.Handler):

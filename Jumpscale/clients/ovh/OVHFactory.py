@@ -59,7 +59,7 @@ class OVHFactory(JSConfigBaseFactory):
         js_shell 'j.clients.ovh.test()'
         """
         client = self.get()
-        self._logger.debug(client.servers_list())
+        self._log_debug(client.servers_list())
 
         # TODO:*1 connect to ovh * boot zero-os
         # connect the client to zero-os

@@ -56,6 +56,6 @@ def main(self):
         j.core.text.strip_to_ascii_dense(str(data)) ==
         "name_digitalme.base_enable_true_args_loaders_giturl_https_github.com_threefoldtech_digital_me_tree_development960_packages_system_base_dest_enable_true_giturl_https_github.com_threefoldtech_jumpscale_weblibs_tree_master_static_dest_blueprints_base_static_enable_true")
 
-    self._logger.info("TEST DONE LOADDATA")
+    self._log_info("TEST DONE LOADDATA")
 
     return ("OK")

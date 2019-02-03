@@ -211,5 +211,5 @@ def main(self):
     # assert len(j.sal.fs.listDirsInDir("{DIR_BASE}/var/bcdb/test2"))==0
     # assert len(j.sal.fs.listDirsInDir("{DIR_VAR}/bcdb/test2"))==0
 
-    self._logger.info("TEST DONE")
+    self._log_info("TEST DONE")
     return ("OK")

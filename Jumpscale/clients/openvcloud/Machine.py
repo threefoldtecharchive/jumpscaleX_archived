@@ -76,7 +76,7 @@ class Machine(j.application.JSBaseClass):
         self.client.api.cloudapi.machines.reset(machineId=self.id)
 
     def delete(self):
-        self._logger.info("Machine delete:%s" % self)
+        self._log_info("Machine delete:%s" % self)
         self.client.api.cloudapi.machines.delete(machineId=self.id)
         j.tools.nodemgr.delete(self.name)
         self.deleted = True
@@ -434,7 +434,7 @@ class Machine(j.application.JSBaseClass):
                 pubip = self.ipaddr_public
 
             if sshport is None:
-                self._logger.debug("did not find ssh portforward: will create")
+                self._log_debug("did not find ssh portforward: will create")
                 if not self._ssh_enabled:
                     self.portforward_create(None, 22)
                     self._ssh_enabled = True

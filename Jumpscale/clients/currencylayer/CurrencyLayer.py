@@ -57,17 +57,17 @@ class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
                     data['USDXRP'] = cc.get_price('USD', 'XRP')['USD']['XRP']
                     data['USDBTC'] = 1/cc.get_price('BTC', 'USD')['BTC']['USD']
 
-                    self._logger.error("fetch currency from internet")
+                    self._log_error("fetch currency from internet")
                     return data
                 elif not self.fallback:
                     raise RuntimeError("api key for currency layer "
                                        "needs to be specified")
                 else:
-                    self._logger.warning("currencylayer api_key not set, "
+                    self._log_warning("currencylayer api_key not set, "
                                          "use fake local data.")
 
             if self.fake or self.fallback:
-                self._logger.warning("cannot reach: currencylayer.com, "
+                self._log_warning("cannot reach: currencylayer.com, "
                                      "use fake local data.")
                 from .currencies import currencies
                 return currencies
@@ -149,7 +149,7 @@ class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
         """
         r = j.clients.currencylayer._Find()
         j.shell()
-        self._logger.info(self.cur2usd)
+        self._log_info(self.cur2usd)
         assert 'aed' in self.cur2usd
 
 

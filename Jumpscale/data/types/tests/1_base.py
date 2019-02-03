@@ -43,6 +43,6 @@ def main(self):
 
     assert e._jumpscale_location=="j.data.types.enumerations['6d9fe6d18a520e26fce3841a7065c93b']"
 
-    # self._logger.info("TEST DONE")
+    # self._log_info("TEST DONE")
 
     return ("OK")

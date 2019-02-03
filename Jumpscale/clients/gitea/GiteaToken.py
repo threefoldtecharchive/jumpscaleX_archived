@@ -73,7 +73,7 @@ class GiteaToken(j.application.JSBaseClass):
         is_valid, err = self._validate(create=True)
 
         if not commit or not is_valid:
-            self._logger.debug(err)
+            self._log_debug(err)
             return is_valid
 
         try:
@@ -89,8 +89,8 @@ class GiteaToken(j.application.JSBaseClass):
             return True, ''
         except Exception as e:
             if e.response.status_code == 401:
-                self._logger.debug('not authorized')
-                self._logger.error('#FIX ME: THIS API not working')
+                self._log_debug('not authorized')
+                self._log_error('#FIX ME: THIS API not working')
             return False
 
     def __repr__ (self):

@@ -36,6 +36,6 @@ def main(self):
 
     assert p2.running==False
 
-    self._logger.info("OPENRESTY TEST DONE")
+    self._log_info("OPENRESTY TEST DONE")
 
     return ("OK")

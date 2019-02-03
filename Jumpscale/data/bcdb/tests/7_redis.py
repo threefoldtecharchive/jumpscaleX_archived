@@ -51,24 +51,24 @@ def main(self):
         llist4 = "1,2,3" (L)
         """
         schema = j.core.text.strip(schema)
-        self._logger.debug("set schema to 'despiegk.test2'")
+        self._log_debug("set schema to 'despiegk.test2'")
         redis_cl.set("schemas:despiegk.test2", schema)
-        self._logger.debug('compare schema')
+        self._log_debug('compare schema')
         schema2 = redis_cl.get("schemas:despiegk.test2")
         # test schemas are same
 
         assert _compare_strings(schema, schema2)
 
-        self._logger.debug("delete data")
+        self._log_debug("delete data")
         # removes the data mainly tested on sqlite db now
         redis_cl.delete("objects:despiegk.test2")
 
-        self._logger.debug('there should be 0 objects')
+        self._log_debug('there should be 0 objects')
         assert redis_cl.hlen("objects:despiegk.test2") == 0
 
         schema = j.data.schema.get(schema)
 
-        self._logger.debug("add objects")
+        self._log_debug("add objects")
 
         def get_obj(i):
             schema_obj = schema.new()
@@ -92,13 +92,13 @@ def main(self):
             id = redis_cl.hset("objects:despiegk.test2", "new", o._json)
 
         if zdb:
-            self._logger.debug("validate list")
+            self._log_debug("validate list")
             cl = j.clients.zdb.client_get()
             assert cl.list() == [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
         id = int(id.decode())
 
-        self._logger.debug("validate added objects")
+        self._log_debug("validate added objects")
         # there should be 10 items now there
         assert redis_cl.hlen("objects:despiegk.test2") == 10
         assert redis_cl.hdel("objects:despiegk.test2", 5) == 1
@@ -108,7 +108,7 @@ def main(self):
             "objects:despiegk.test2", "5")
 
         if zdb:
-            self._logger.debug("validate list2")
+            self._log_debug("validate list2")
             assert cl.list() == [0, 2, 3, 4, 6, 7, 8, 9, 10, 11]
 
         # the i's are moving around don't know why, is ok I guess (despiegk)
@@ -119,7 +119,7 @@ def main(self):
 
         assert json == json2
 
-        self._logger.debug("update obj")
+        self._log_debug("update obj")
         o.name = "UPDATE"
         ret = redis_cl.hset("objects:despiegk.test2", id, o._json)
         assert id == int(ret.decode())  # checks right id is returned
@@ -151,7 +151,7 @@ def main(self):
 
         assert ddict["id"] == 3
 
-        self._logger.debug("clean up database")
+        self._log_debug("clean up database")
         redis_cl.delete("objects:despiegk.test2")
 
         # there should be 0 objects
@@ -178,7 +178,7 @@ def main(self):
     sqlite_test()
     zdb_test()
 
-    self._logger.debug("TEST OK")
+    self._log_debug("TEST OK")
 
     return ("OK")
 

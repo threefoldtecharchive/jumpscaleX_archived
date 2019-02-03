@@ -47,7 +47,7 @@ class SSHKey(j.application.JSBaseConfigClass):
         """
         will delete from ~/.ssh dir as well as from config
         """
-        self._logger.debug("delete:%s" % self.name)
+        self._log_debug("delete:%s" % self.name)
         self.data.delete()
         # self.delete_from_sshdir()
 
@@ -69,7 +69,7 @@ class SSHKey(j.application.JSBaseConfigClass):
         :param reset: if True, then delete old ssh key from dir, defaults to False
         :type reset: bool, optional
         '''
-        self._logger.debug("generate ssh key")
+        self._log_debug("generate ssh key")
         if reset:
             self.delete_from_sshdir()
         else:
@@ -93,7 +93,7 @@ class SSHKey(j.application.JSBaseConfigClass):
         :param duration: duration, defaults to 3600*24
         :type duration: int, optional
         """
-        self._logger.debug("load sshkey: %s for duration:%s" % (self.name, duration))
+        self._log_debug("load sshkey: %s for duration:%s" % (self.name, duration))
         j.clients.sshagent.key_load(self.path, passphrase=self.passphrase, duration=duration)
 
     def unload(self):
@@ -108,8 +108,8 @@ class SSHKey(j.application.JSBaseConfigClass):
         :rtype: bool
         """
         if self.name in j.clients.sshkey.listnames():
-            self._logger.debug("ssh key: %s loaded", self.name)
+            self._log_debug("ssh key: %s loaded", self.name)
             return True
 
-        self._logger.debug("ssh key: %s is not loaded", self.name)
+        self._log_debug("ssh key: %s is not loaded", self.name)
         return False

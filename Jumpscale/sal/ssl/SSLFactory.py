@@ -189,10 +189,10 @@ class SSLFactory(JSBASE):
         try:
             ctx.check_privatekey()
         except OpenSSL.SSL.Error:
-            self._logger.debug('Incorrect key')
+            self._log_debug('Incorrect key')
             return False
         else:
-            self._logger.debug('Key matches certificate')
+            self._log_debug('Key matches certificate')
         return True
 
     def bundle(self, certificate, key, certification_chain=(), passphrase=None):
@@ -251,4 +251,3 @@ class SSLFactory(JSBASE):
         :type name: str, optional
         """
         self._test_run(name=name, obj_key='test_main')
-        

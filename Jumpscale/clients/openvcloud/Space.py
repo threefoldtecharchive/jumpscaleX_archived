@@ -74,14 +74,14 @@ class Space(Authorizables):
         timeout = j.data.time.epoch + 100
 
         while self._model["status"] == 'DEPLOYING' and j.data.time.epoch < timeout:
-            self._logger.debug(
+            self._log_debug(
                 "Cloudspace is still deploying, checking again in a second"
             )
             time.sleep(1)
             self.refresh()
 
         while not self._model['publicipaddress'] and j.data.time.epoch < timeout:
-            self._logger.debug(
+            self._log_debug(
                 "Cloudspace is still deploying, waiting for pub ip addr."
             )
             time.sleep(1)
@@ -265,7 +265,7 @@ class Space(Authorizables):
             - RuntimeError if machine name contains spaces
             - RuntimeError if machine name contains underscores
         """
-        self._logger.debug("Create machine:%s:%s:%s" %
+        self._log_debug("Create machine:%s:%s:%s" %
                           (name, image, sshkeyname))
         if ' ' in name:
             raise RuntimeError('Name cannot contain spaces')
@@ -276,7 +276,7 @@ class Space(Authorizables):
         if sizeId is None:
             sizeId = self.size_find_id(memsize, vcpus)
 
-        self._logger.info("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
+        self._log_info("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
                          (self.id, name, sizeId, imageId, disksize))
 
         if authorize_ssh:
@@ -310,7 +310,7 @@ class Space(Authorizables):
                                                         datadisks=datadisks,
                                                         description=description,
                                                         userdata=userdata)
-            self._logger.info("machine created.")
+            self._log_info("machine created.")
         except Exception as err:
             if err.response.status_code == 409:
                 # machine already exist, continue to the next step

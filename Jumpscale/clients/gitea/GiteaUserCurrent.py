@@ -19,7 +19,7 @@ class GiteaUserCurrent(GiteaUser):
             return True
         except Exception as e:
             if e.response.status_code == 404:
-                self._logger.debug('username does not exist')
+                self._log_debug('username does not exist')
             return False
 
     def unfollow(self, username):
@@ -31,7 +31,7 @@ class GiteaUserCurrent(GiteaUser):
             return True
         except Exception as e:
             if e.response.status_code == 404:
-                self._logger.debug('username does not exist')
+                self._log_debug('username does not exist')
             return False
 
     @property
@@ -60,7 +60,7 @@ class GiteaUserCurrent(GiteaUser):
             return True
         except Exception as e:
             if e.response.status_code != 404:
-                self._logger.debug('username does not exist')
+                self._log_debug('username does not exist')
             return False
 
     @property

@@ -71,7 +71,7 @@ class BuilderEtcd(j.builder.system._BaseClass):
         """
         self.sandbox()
 
-        self._logger.info('building flist')
+        self._log_info('building flist')
         build_dir = j.sal.fs.getTmpDirPath()
         tarfile = '/tmp/etcd-3.3.4.tar.gz'
         bin_dir = j.sal.fs.joinPaths(build_dir, 'bin')
@@ -86,8 +86,8 @@ class BuilderEtcd(j.builder.system._BaseClass):
                 raise j.exceptions.Input("hub instance %s does not exists, can't upload to the hub" % hub_instance)
             hub = j.clients.zerohub.get(hub_instance)
             hub.authentificate()
-            self._logger.info("uploading flist to the hub")
+            self._log_info("uploading flist to the hub")
             hub.upload(tarfile)
-            self._logger.info("uploaded at https://hub.gig.tech/%s/etcd-3.3.4.flist", hub.config.data['username'])
+            self._log_info("uploaded at https://hub.gig.tech/%s/etcd-3.3.4.flist", hub.config.data['username'])
 
         return tarfile

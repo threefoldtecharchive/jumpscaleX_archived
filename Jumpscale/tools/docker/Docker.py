@@ -195,11 +195,11 @@ class Docker(j.application.JSBaseClass):
     def _init_aysfs(self, fs, dockname):
         if fs.isUnique():
             if not fs.isRunning():
-                self._logger.info('starting unique aysfs: %s' % fs.getName())
+                self._log_info('starting unique aysfs: %s' % fs.getName())
                 fs.start()
 
             else:
-                self._logger.info(
+                self._log_info(
                     'skipping aysfs: %s (unique running)' % fs.getName())
 
         else:
@@ -207,7 +207,7 @@ class Docker(j.application.JSBaseClass):
             if fs.isRunning():
                 fs.stop()
 
-            self._logger.info('starting aysfs: %s' % fs.getName())
+            self._log_info('starting aysfs: %s' % fs.getName())
             fs.start()
 
     def create(
@@ -247,7 +247,7 @@ class Docker(j.application.JSBaseClass):
             raise ValueError("SSH can't be enabled without myinit.")
 
         name = name.lower().strip()
-        self._logger.info(("create:%s" % name))
+        self._log_info(("create:%s" % name))
 
         running = [item.name for item in self.containers_running]
 
@@ -260,7 +260,7 @@ class Docker(j.application.JSBaseClass):
                         "Cannot create machine with name %s, because it does already exists.")
         else:
             if self.exists(name):
-                self._logger.info("remove existing container %s" % name)
+                self._log_info("remove existing container %s" % name)
                 container = self.container_get(name)
                 if container:
                     container.destroy()
@@ -294,7 +294,7 @@ class Docker(j.application.JSBaseClass):
                 for port in range(9022, 9190):
                     if not j.sal.nettools.tcpPortConnectionTest(self.docker_host, port):
                         portsdict[22] = port
-                        self._logger.info(("ssh port will be on:%s" % port))
+                        self._log_info(("ssh port will be on:%s" % port))
                         break
 
         volsdict = {}
@@ -305,7 +305,7 @@ class Docker(j.application.JSBaseClass):
                 volsdict[str(key).strip()] = str(val).strip()
 
         if sharecode and j.sal.fs.exists(path="/opt/code"):
-            self._logger.info("share jumpscale code enable")
+            self._log_info("share jumpscale code enable")
             if "/opt/code" not in volsdict:
                 volsdict["/opt/code"] = "/opt/code"
 
@@ -326,9 +326,9 @@ class Docker(j.application.JSBaseClass):
                 key, val = item.split(":", 1)
                 volsdictro[str(key).strip()] = str(val).strip()
 
-        self._logger.info("Volumes map:")
+        self._log_info("Volumes map:")
         for src1, dest1 in list(volsdict.items()):
-            self._logger.info(" %-20s %s" % (src1, dest1))
+            self._log_info(" %-20s %s" % (src1, dest1))
 
         binds = {}
         binds2 = []
@@ -346,19 +346,19 @@ class Docker(j.application.JSBaseClass):
             volskeys.append(key)
 
         if base not in self.images_get():
-            self._logger.info("download docker image %s" % base)
+            self._log_info("download docker image %s" % base)
             self.pull(base)
 
         if command == "" and (base.startswith("jumpscale/ubuntu1604") or myinit is True):
             command = "sh -c \" /sbin/my_init -- bash -l\""
         else:
             command = None
-        self._logger.info(("install docker with name '%s'" % name))
+        self._log_info(("install docker with name '%s'" % name))
 
         if vols != "":
-            self._logger.info("Volumes")
-            self._logger.info(volskeys)
-            self._logger.info(binds)
+            self._log_info("Volumes")
+            self._log_info(volskeys)
+            self._log_info(binds)
 
         hostname = name.replace('_', '-')
         
@@ -572,7 +572,7 @@ class Docker(j.application.JSBaseClass):
                 message = line['errorDetail']['message']
                 raise j.exceptions.RuntimeError(message)
             if output:
-                self._logger.info(s)
+                self._log_info(s)
             out.append(s)
 
         client.timeout = previous_timeout
@@ -595,7 +595,7 @@ class Docker(j.application.JSBaseClass):
             if 'stream' in line:
                 line = line['stream'].strip()
                 if output:
-                    self._logger.info(line)
+                    self._log_info(line)
                 out.append(line)
 
         return "\n".join(out)

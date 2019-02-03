@@ -89,7 +89,7 @@ class Window(j.application.JSBaseClass):
             pane.kill()
         # if len(self.session.windows.keys()) < 2:
         #     self.session.window_get(name="ignore")
-        # self._logger.debug("KILL %s" % self.name)
+        # self._log_debug("KILL %s" % self.name)
         try:
             self.mgmt.kill_window()
         except:

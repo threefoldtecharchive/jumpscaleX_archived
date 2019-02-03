@@ -58,7 +58,7 @@ class ZDBServer(j.application.JSBaseClass):
         self.tmuxcmd.start()
 
 
-        self._logger.info("waiting for zdb server to start on (%s:%s)" % (self.addr, self.port))
+        self._log_info("waiting for zdb server to start on (%s:%s)" % (self.addr, self.port))
 
         res = j.sal.nettools.waitConnectionTest(self.addr, self.port)
         if res is False:
@@ -67,7 +67,7 @@ class ZDBServer(j.application.JSBaseClass):
         self.client_admin_get() #should also do a test, so we know if we can't connect
 
     def stop(self):
-        self._logger.info("stop zdb")
+        self._log_info("stop zdb")
         self.tmuxcmd.stop()
 
 
@@ -92,7 +92,7 @@ class ZDBServer(j.application.JSBaseClass):
 
     def destroy(self):
         self.stop()
-        self._logger.info("destroy zdb")
+        self._log_info("destroy zdb")
         j.sal.fs.remove(self.datadir)
         # ipath = self.datadir+ "bcdbindex.db" % self.name
 

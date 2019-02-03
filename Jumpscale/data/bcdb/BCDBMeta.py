@@ -40,11 +40,11 @@ class BCDBMeta(j.application.JSBaseClass):
                 else:
                     data = j.sal.fs.readFile(self._meta_local_path, binary=True)
             if data is None:
-                self._logger.debug("save, empty schema")
+                self._log_debug("save, empty schema")
                 self._data = self._schema.new()
                 self._data.name = self.bcdb.name
             else:
-                self._logger.debug("schemas load from db")
+                self._log_debug("schemas load from db")
                 self._data = self._schema.get(capnpbin=data)
 
             if self._data.name != self.bcdb.name:
@@ -73,7 +73,7 @@ class BCDBMeta(j.application.JSBaseClass):
     def save(self):
         if self._data is None:
             self.data
-        self._logger.debug("save:\n%s" % self.data)
+        self._log_debug("save:\n%s" % self.data)
         if self.bcdb.zdbclient is not None:
             # if self.bcdb.zdbclient.get(b'\x00\x00\x00\x00') == None:
             if self.bcdb.zdbclient.get(0) == None:
@@ -140,7 +140,7 @@ class BCDBMeta(j.application.JSBaseClass):
             raise RuntimeError(
                 "schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
-        self._logger.debug("schema set in meta:%s" % schema.url)
+        self._log_debug("schema set in meta:%s" % schema.url)
         schema_existing = self.schema_get_from_url(schema.url, die=False)
         if schema_existing is not None:  # means exists
             if schema_existing._md5 == schema._md5:
@@ -153,7 +153,7 @@ class BCDBMeta(j.application.JSBaseClass):
         s.sid = self._schema_last_id
         s.text = schema.text  # + "\n"  # only 1 \n at end
         s.md5 = j.data.hash.md5_string(s.text)
-        self._logger.info("new schema in meta:\n%s" % self.data)
+        self._log_info("new schema in meta:\n%s" % self.data)
         self.save()
         self.url2sid[s.url] = s.sid
         schema.sid = s.sid

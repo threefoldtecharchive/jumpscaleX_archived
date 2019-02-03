@@ -25,7 +25,7 @@ class EtcdClient(JSConfigClient):
     """
 
     def _init(self):
-        self._logger.debug(self.user)
+        self._log_debug(self.user)
         self._api = None
 
     @property

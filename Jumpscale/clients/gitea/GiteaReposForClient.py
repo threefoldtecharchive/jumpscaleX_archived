@@ -26,7 +26,7 @@ class GiteaReposForClient(j.application.JSBaseClass):
             page_size = 150
 
         if mode not in ["fork", "source", "mirror", "collaborative"]:
-            self._logger.error('Only modes allowed [fork, source, mirror, collaborative]')
+            self._log_error('Only modes allowed [fork, source, mirror, collaborative]')
             return []
 
         result = []
@@ -40,7 +40,7 @@ class GiteaReposForClient(j.application.JSBaseClass):
         ).json()
 
         if not items['ok']:
-            self._logger.error('Response error')
+            self._log_error('Response error')
             return []
 
         for item in items['data']:
@@ -75,9 +75,9 @@ class GiteaReposForClient(j.application.JSBaseClass):
             return r
         except Exception as e:
             if e.response.status_code == 404:
-                self._logger.error('id not found')
+                self._log_error('id not found')
             else:
-                self._logger.error(e.response.content)
+                self._log_error(e.response.content)
 
     def __repr__ (self):
         return "<General Repos finder and getter (by ID)>"

@@ -104,7 +104,7 @@ class BuilderApache2(j.builder.system._BaseClass):
         j.core.tools.dir_ensure("%s/apache2/sites-enabled/" % j.dirs.CFGDIR)
         j.core.tools.dir_ensure("{DIR_BASE}/apps/apache2/sites-available")
         j.core.tools.dir_ensure("{DIR_BASE}/apps/apache2/sites-enabled")
-        #self._logger.info("Config to be written = ", conffile)
+        #self._log_info("Config to be written = ", conffile)
         j.sal.fs.writeFile("{DIR_BASE}/apps/apache2/conf/httpd.conf", conffile)
 
     def start(self):

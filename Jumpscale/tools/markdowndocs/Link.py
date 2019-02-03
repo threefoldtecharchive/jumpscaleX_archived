@@ -33,7 +33,7 @@ class Link(j.application.JSBaseClass):
     def error(self,msg):
         self.error_msg = msg
         msg="**ERROR:** problem with link:%s\n%s"%(self.source,msg)        
-        # self._logger.error(msg)
+        # self._log_error(msg)
         self.docsite.error_raise(msg, doc=self.doc)
         self.doc._content = self.doc._content.replace(self.source,msg) 
         return msg
@@ -149,7 +149,7 @@ class Link(j.application.JSBaseClass):
     def download(self,dest):
         if not "http" in self.link_source:
             return
-        self._logger.info("download:%s\n%s"%(self.link_source_original,dest))
+        self._log_info("download:%s\n%s"%(self.link_source_original,dest))
         ddir = j.sal.fs.getDirName(dest)
         if not j.sal.fs.exists(dest):
             cmd = "cd %s;rm -f %s;curl '%s' -o '%s'"%(ddir,dest,self.link_source_original,dest) #cannot use primitive something wrong sometimes with ssl verification
@@ -159,7 +159,7 @@ class Link(j.application.JSBaseClass):
         def do():
             if any(link in self.link_source for link in SKIPPED_LINKS):
                 return True
-            self._logger.info("check link exists:%s"%self.link_source)
+            self._log_info("check link exists:%s"%self.link_source)
             if not j.clients.http.ping(self.link_source_original):
                 self.error("link not alive:%s"%self.link_source_original)                
                 return False

@@ -233,7 +233,7 @@ class LibvirtUtil(j.application.JSBaseClass):
             is_root_volume = self._isRootVolume(
                 domain, snapshotfile['file'].path)
             if not is_root_volume:
-                self._logger.debug('Blockcommit from %s to %s' % (snapshotfile[
+                self._log_debug('Blockcommit from %s to %s' % (snapshotfile[
                       'file'].path, snapshotfile['file'].backing_file_path))
                 result = domain.blockCommit(snapshotfile['name'], snapshotfile[
                                             'file'].backing_file_path, snapshotfile['file'].path)
@@ -246,7 +246,7 @@ class LibvirtUtil(j.application.JSBaseClass):
                 todelete.append(snapshotfile['file'].backing_file_path)
                 if not new_base:
                     continue
-                    self._logger.debug('Blockrebase from %s' % new_base)
+                    self._log_debug('Blockrebase from %s' % new_base)
                 flags = libvirt.VIR_DOMAIN_BLOCK_REBASE_COPY | libvirt.VIR_DOMAIN_BLOCK_REBASE_REUSE_EXT | libvirt.VIR_DOMAIN_BLOCK_REBASE_SHALLOW
                 result = domain.blockRebase(
                     snapshotfile['name'], new_base, flags)
@@ -312,7 +312,7 @@ class LibvirtUtil(j.application.JSBaseClass):
 
     def _block_job_info(self, domain, path):
         status = domain.blockJobInfo(path, 0)
-        self._logger.debug(status)
+        self._log_debug(status)
         try:
             cur = status.get('cur', 0)
             end = status.get('end', 0)

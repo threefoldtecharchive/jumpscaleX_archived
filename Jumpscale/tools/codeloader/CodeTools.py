@@ -91,8 +91,8 @@ class CodeTools(j.application.JSBaseClass):
         print info like source code of class
         """
         filepath, linenr, sourcecode = self.classInfoGet(classs)
-        self._logger.debug(("line:%s in path:%s" % (linenr, filepath)))
-        self._logger.debug(sourcecode)
+        self._log_debug(("line:%s in path:%s" % (linenr, filepath)))
+        self._log_debug(sourcecode)
 
     def classInfoGet(self, classs):
         """
@@ -302,7 +302,7 @@ class CodeTools(j.application.JSBaseClass):
                 return data
             else:
                 #from core.Shell import ipshellDebug,ipshell
-                # self._logger.debug "DEBUG NOW Can only convert object to dict with properties basic types or inherited of ClassBase"
+                # self._log_debug "DEBUG NOW Can only convert object to dict with properties basic types or inherited of ClassBase"
                 # ipshell()
                 if dieOnUnknown:
                     raise j.exceptions.RuntimeError(
@@ -330,7 +330,7 @@ class CodeTools(j.application.JSBaseClass):
     def pprint(self, obj):
         result = self.object2yaml(obj)
         result = result.replace("!!python/unicode", "")
-        self._logger.debug(result)
+        self._log_debug(result)
 
     def deIndent(self, content, level=1):
         for i in range(0, level):

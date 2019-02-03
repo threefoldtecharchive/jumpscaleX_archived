@@ -143,7 +143,7 @@ class BCDBModel(j.application.JSBaseClass):
             self.bcdb.sqlclient.close()
             self.bcdb._sqlclient = None
 
-        self._logger.info("DATAPROCESSOR & SQLITE STOPPED OK")
+        self._log_info("DATAPROCESSOR & SQLITE STOPPED OK")
         return True
 
     # def start(self):
@@ -155,7 +155,7 @@ class BCDBModel(j.application.JSBaseClass):
     def index_rebuild(self):
         self.stop()
         self.index_destroy()
-        self._logger.warning("will rebuild index for:%s"%self)
+        self._log_warning("will rebuild index for:%s"%self)
         for obj in self.iterate(die=False):
             self._set(obj, store=False)
 
@@ -233,7 +233,7 @@ class BCDBModel(j.application.JSBaseClass):
             ids.append(obj_id)
         data = j.data.serializers.msgpack.dumps(ids)
         hash = self._index_key_redis_get(key)
-        self._logger.debug("set key:%s (id:%s)" % (key, obj_id))
+        self._log_debug("set key:%s (id:%s)" % (key, obj_id))
         j.clients.credis_core.hset(
             self._redis_prefix+b":"+hash[0:2], hash[2:], data)
 
@@ -252,7 +252,7 @@ class BCDBModel(j.application.JSBaseClass):
         else:
             data = j.data.serializers.msgpack.dumps(ids)
             hash = self._index_key_redis_get(key)
-            self._logger.debug("set key:%s (id:%s)" % (key, obj_id))
+            self._log_debug("set key:%s (id:%s)" % (key, obj_id))
             j.clients.credis_core.hset(
                 self._redis_prefix+b":"+hash[0:2], hash[2:], data)
 
@@ -267,10 +267,10 @@ class BCDBModel(j.application.JSBaseClass):
             self._redis_prefix+b":"+hash[0:2], hash[2:])
         if r is not None:
             # means there is already one
-            self._logger.debug("get key(exists):%s" % key)
+            self._log_debug("get key(exists):%s" % key)
             ids = j.data.serializers.msgpack.loads(r)
         else:
-            self._logger.debug("get key(new):%s" % key)
+            self._log_debug("get key(new):%s" % key)
             ids = []
         return ids
 
@@ -381,7 +381,7 @@ class BCDBModel(j.application.JSBaseClass):
                     obj.id = self.zdbclient.set(data)
                 if self.readonly:
                     obj.readonly = True
-                self._logger.debug("NEW:\n%s" % obj)
+                self._log_debug("NEW:\n%s" % obj)
             else:
                 if not self.zdbclient:
                     self.bcdb.sqlclient.set(key=obj.id, val=data)
@@ -527,7 +527,7 @@ class BCDBModel(j.application.JSBaseClass):
             self._delete2(obj_id)
 
     def reset(self):
-        self._logger.warning("reset:%s" % self.key)
+        self._log_warning("reset:%s" % self.key)
         if self.zdbclient:
             self.delete_all()  # only for zdb relevant
 
@@ -553,7 +553,7 @@ class BCDBModel(j.application.JSBaseClass):
                 o = self.get(obj_id)
             except Exception as e:
                 if str(e).find("could not find obj")!=-1:
-                    self._logger.warning("warning: could not find object with id:%s in %s"%(obj_id, self))
+                    self._log_warning("warning: could not find object with id:%s in %s"%(obj_id, self))
                     continue
                 else:
                     raise e

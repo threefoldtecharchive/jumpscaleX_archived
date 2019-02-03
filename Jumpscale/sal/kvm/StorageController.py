@@ -53,7 +53,7 @@ class StorageController(BaseKVMComponent):
                 self.controller.executor.execute(cmd)
             pool = self.controller.get_template('pool.xml').render(
                 pool_name=pool_name, basepath=self.controller.base_path)
-            self._logger.debug(pool)
+            self._log_debug(pool)
             self.controller.connection.storagePoolCreateXML(pool, 0)
         storagepool = self.controller.connection.storagePoolLookupByName(pool_name)
         return storagepool

@@ -169,7 +169,7 @@ class Connection(JSBASE):
             if meta_length:
                 file_size = int(meta_length[0])
             if report:
-                self._logger.debug(("Downloading: {0} Bytes: {1}".format(url, file_size)))
+                self._log_debug(("Downloading: {0} Bytes: {1}".format(url, file_size)))
 
             file_size_dl = 0
             block_sz = 8192
@@ -186,7 +186,7 @@ class Connection(JSBASE):
                         status += "   [{0:6.2f}%]".format(
                             file_size_dl * 100 / file_size)
                     status += chr(13)
-                    self._logger.debug(status)
+                    self._log_debug(status)
 
     def _updateUrlParams(self, url, **kwargs):
         """

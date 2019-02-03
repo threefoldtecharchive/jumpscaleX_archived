@@ -65,7 +65,7 @@ class NetworkMember():
         """
         # check if the network is private/public, it does not make sense to authorize on public nets
         if self._network.config['private'] is False:
-            self._logger.warn('Cannot authorize on public network.')
+            self._log_warn('Cannot authorize on public network.')
             return
         if self.data['config']['authorized'] != authorize:
             data = copy.deepcopy(self.data)
@@ -78,11 +78,11 @@ class NetworkMember():
                 time.sleep(2)
                 timeout_ -= 2
             if self.data['config']['authorized'] != authorize:
-                self._logger.warn(
+                self._log_warn(
                     '{}uthorization request sent but data is not updated after {} seconds'.format(
                         'A' if authorize else 'Dea', timeout))
         else:
-            self._logger.info("Member {}/{} already {}".format(self._network.id,
+            self._log_info("Member {}/{} already {}".format(self._network.id,
                                                                self.address, 'authorized' if authorize else 'deauthorized'))
 
     def authorize(self, timeout=30):
@@ -149,7 +149,7 @@ class ZeroTierNetwork():
         resp = self._client.network.listMembers(id=self.id)
         if resp.status_code != 200:
             msg = 'Failed to list network memebers. Error: {}'.format(resp.text)
-            self._logger.error(msg)
+            self._log_error(msg)
             raise RuntimeError(msg)
         items = resp.json()
 
@@ -178,7 +178,7 @@ class ZeroTierNetwork():
         filters = [address, name, public_ip, private_ip]
         if not any(filters):
             msg = 'At least one filter need to be specified'
-            self._logger.error(msg)
+            self._log_error(msg)
             raise RuntimeError(msg)
 
         filters_map = dict(zip(['nodeId', 'name', 'physicalAddress', 'private_ip'], filters))
@@ -195,7 +195,7 @@ class ZeroTierNetwork():
 
         if result is None:
             msg = 'Cannot find a member that match the provided filters'
-            self._logger.error(msg)
+            self._log_error(msg)
             raise RuntimeError(msg)
         return result
 
@@ -215,7 +215,7 @@ class ZeroTierNetwork():
         resp = self._client.network.deleteMember(address=address, id=self.id)
         if resp.status_code != 200:
             msg = 'Failed to delete member. Error: {}'.format(resp.text)
-            self._logger.error(msg)
+            self._log_error(msg)
             raise RuntimeError(msg)
 
         return True
@@ -231,7 +231,7 @@ class ZeroTierNetwork():
         resp = self._client.network.getNetwork(id=self.id)
         if resp.status_code != 200:
             msg = 'Failed to retrieve network routes. Error: {}'.format(resp.text)
-            self._logger.error(msg)
+            self._log_error(msg)
             raise j.exceptions.RuntimeError(msg)
         return resp.json()['config']['routes']
 
@@ -263,7 +263,7 @@ class ZeroTierNetwork():
             resp = self._client.network.updateNetwork(data=config, id=self.id)
             if resp.status_code != 200:
                 msg = 'Failed to remove route. Error: {}'.format(resp.text)
-                self._logger.error(msg)
+                self._log_error(msg)
                 raise j.exceptions.RuntimeError(msg)
 
     def add_route(self, route):
@@ -279,7 +279,7 @@ class ZeroTierNetwork():
             resp = self._client.network.updateNetwork(data=config, id=self.id)
             if resp.status_code != 200:
                 msg = 'Failed to add route. Error: {}'.format(resp.text)
-                self._logger.error(msg)
+                self._log_error(msg)
                 raise j.exceptions.RuntimeError(msg)
 
     def __str__(self):
@@ -320,7 +320,7 @@ class ZerotierClient(JSConfigClient):
         resp = self.client.network.listNetworks()
         if resp.status_code != 200:
             msg = 'Failed to list networks. Error: {}'.format(resp.text)
-            self._logger.error(msg)
+            self._log_error(msg)
             raise RuntimeError(msg)
         return self._network_creates_from_dict(items=resp.json())
 
@@ -338,7 +338,7 @@ class ZerotierClient(JSConfigClient):
         resp = self.client.network.getNetwork(id=network_id)
         if resp.status_code != 200:
             msg = 'Failed to retrieve network. Error: {}'.format(resp.text)
-            self._logger.error(msg)
+            self._log_error(msg)
             raise RuntimeError(msg)
         return self._network_creates_from_dict(items=[resp.json()])[0]
 
@@ -392,7 +392,7 @@ class ZerotierClient(JSConfigClient):
         resp = self.client.network.createNetwork(data=data)
         if resp.status_code != 200:
             msg = "Failed to create network. Error: {}".format(resp.text)
-            self._logger.error(msg)
+            self._log_error(msg)
             raise RuntimeError(msg)
         return self._network_creates_from_dict([resp.json()])[0]
 
@@ -405,7 +405,7 @@ class ZerotierClient(JSConfigClient):
         resp = self.client.network.deleteNetwork(id=network_id)
         if resp.status_code != 200:
             msg = "Failed to delete network. Error: {}".format(resp.text)
-            self._logger.error(msg)
+            self._log_error(msg)
             raise RuntimeError(msg)
         return True
 

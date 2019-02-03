@@ -212,7 +212,7 @@ class Profile(j.application.JSBaseClass):
         # make sure we include our custom profile in the default
         if includeInDefaultProfile is True:
             if self.pathProfile != self.bash.profileDefault.pathProfile:
-                self._logger.debug(
+                self._log_debug(
                     "INCLUDE IN DEFAULT PROFILE:%s" %
                     self.pathProfile)
                 out = ""
@@ -250,7 +250,7 @@ class Profile(j.application.JSBaseClass):
             a = self.bash.env.get('LC_ALL') == 'C.UTF-8'
             b = self.bash.env.get('LANG') == 'C.UTF-8'
         if (a and b) != True:
-            self._logger.debug(
+            self._log_debug(
                 "WARNING: locale has been fixed, please do: "
                 "`source ~/.profile_js`")
             self.locale_fix()

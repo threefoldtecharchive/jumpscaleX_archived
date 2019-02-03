@@ -19,7 +19,7 @@ class BuilderRedis(j.builder.system._BaseClass):
 
         """Building and installing redis"""
         if reset is False and self.isInstalled():
-            self._logger.info(
+            self._log_info(
                 'Redis is already installed, pass reset=True to reinstall.')
             return
 
@@ -89,7 +89,7 @@ class BuilderRedis(j.builder.system._BaseClass):
                                 unixsocket=unixsocket)
         # return if redis is already running
         if self.is_running(ip_address=ip, port=port, path='{DIR_BIN}', password=password, unixsocket=unixsocket):
-            self._logger.info('Redis is already running!')
+            self._log_info('Redis is already running!')
             return
 
         _, c_path = self._get_paths(name)

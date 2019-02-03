@@ -61,7 +61,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
         """
         if self._done_check("mdupdate", reset):
             return
-        self._logger.info("packages mdupdate")
+        self._log_info("packages mdupdate")
         if j.core.platformtype.myplatform.isUbuntu:
             j.sal.process.execute("apt-get update")
         elif j.builder.tools.isAlpine:
@@ -81,7 +81,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
         if self._done_check("upgrade", reset):
             return
         self.mdupdate()
-        self._logger.info("packages upgrade")
+        self._log_info("packages upgrade")
         if j.core.platformtype.myplatform.isUbuntu:
             if distupgrade:
                 raise NotImplementedError()
@@ -124,12 +124,12 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
 
             key = "install_%s" % package
             if self._done_check(key, reset):
-                self._logger.info("package:%s already installed"%package)
+                self._log_info("package:%s already installed"%package)
                 continue
             todo.append(package)
             print("+ install: %s" % package)
 
-            self._logger.info("prepare to install:%s" % package)
+            self._log_info("prepare to install:%s" % package)
 
             if j.core.platformtype.myplatform.isUbuntu:
                 cmd += "%s install %s\n" % (CMD_APT_GET, package)

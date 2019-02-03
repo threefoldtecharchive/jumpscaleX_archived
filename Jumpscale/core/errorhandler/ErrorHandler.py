@@ -49,6 +49,7 @@ class ErrorHandler():
         self.excepthook(ttype, err, tb, die=die)
 
     def _error_process(self, err, tb_text=""):
+        # self._j.shell()
         if self._j.application.schemas:
             self._j.tools.alerthandler.log(err, tb_text=tb_text)
         return err

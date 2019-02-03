@@ -165,7 +165,7 @@ class Console(j.application.JSBaseClass):
             print(msg)
         # j.logger.inlog=False
         if log:
-            self._logger.info(msg)
+            self._log_info(msg)
             # j.logger.log(msg,1)
 
     def echoListItem(self, msg):

@@ -64,7 +64,7 @@ class GiteaOrg(j.application.JSBaseClass):
         :rtype: object
         """
 
-        self._logger.info("repo:get:%s" % name)
+        self._log_info("repo:get:%s" % name)
         if name not in self._repos_get().keys():
             raise RuntimeError("cannot find repo with name:%s in %s" % (name, self))
         data = self._repos_get()[name]
@@ -79,9 +79,9 @@ class GiteaOrg(j.application.JSBaseClass):
         :rtype: tuple
         """
 
-        self._logger.info("repo:new:%s" % name)
+        self._log_info("repo:new:%s" % name)
         if name in self._repos_get().keys():
-            self._logger.debug("no need to create repo on gitea, exists:%s"%name)
+            self._log_debug("no need to create repo on gitea, exists:%s"%name)
             return self._repos_get()[name]
         else:
 

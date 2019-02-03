@@ -90,7 +90,7 @@ class NACLFactory(j.application.JSBaseClass):
     #         data["words"] = words
     #         data2 = j.data.serializers.json.dumps(data)
     #         data3 = self.default.encryptSymmetric(data2)
-    #         self._logger.debug("remember secret,words")
+    #         self._log_debug("remember secret,words")
     #         j.core.db.set("nacl.meta", data3, ex=3600)
     #
     # def encrypt(self, secret="", message="", words="", interactive=False):
@@ -316,7 +316,7 @@ class NACLFactory(j.application.JSBaseClass):
         b = cl.decrypt(a, hex=True)
         assert b == b"something"
 
-        self._logger.info("TEST OK")
+        self._log_info("TEST OK")
 
     def test_perf(self):
         """

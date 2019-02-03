@@ -96,7 +96,7 @@ class Person(j.application.JSBaseClass):
             if len(C) > 100:
                 return
 
-        self._logger.debug("readmefix")
+        self._log_debug("readmefix")
 
         from IPython import embed
         embed(colors='Linux')
@@ -149,11 +149,11 @@ class Person(j.application.JSBaseClass):
         if bn != bn_org:
 
             if j.sal.fs.isLink(self.path):
-                self._logger.debug("path_fix")
+                self._log_debug("path_fix")
                 j.sal.fs.renameFile(self.path, newdest)
             else:
                 newdest = j.sal.fs.getDirName(self.path).rstrip("/") + "/" + bn
-                self._logger.debug("rename dir from %s to %s" % (self.path, newdest))
+                self._log_debug("rename dir from %s to %s" % (self.path, newdest))
                 j.sal.fs.renameDir(self.path, newdest)
             self.path = newdest
             self.name = bn
@@ -187,7 +187,7 @@ class Person(j.application.JSBaseClass):
     def toml_fix(self):
         if self.link:
             return
-            self._logger.debug("PROCESS FIX:%s" % self)
+            self._log_debug("PROCESS FIX:%s" % self)
 
         def process(newtoml, name):
             toml_path = "%s/%s.toml" % (self.path, name)

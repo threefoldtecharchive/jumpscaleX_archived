@@ -44,7 +44,7 @@ class TFChainExplorerClient(j.application.JSBaseClass):
                     raise ExplorerNoContent("nothing could be found at endpoint {}".format(endpoint))
                 if e.status_code:
                     raise ExplorerCallError("call to {} resulted in an error {}: {}".format(endpoint, e.status_code, e.msg))
-                self._logger.debug("tfchain explorer get exception at endpoint {} on {}: {}".format(endpoint, address, e))
+                self._log_debug("tfchain explorer get exception at endpoint {} on {}: {}".format(endpoint, address, e))
                 pass
         raise Exception("no explorer was available to fetch endpoint {}".format(endpoint))
 
@@ -84,7 +84,7 @@ class TFChainExplorerClient(j.application.JSBaseClass):
             except HTTPError as e:
                 if e.status_code:
                     raise ExplorerCallError("call to {} resulted in an error {}: {}".format(endpoint, e.status_code, e.msg))
-                self._logger.debug("tfchain explorer get exception at endpoint {} on {}: {}".format(endpoint, address, e))
+                self._log_debug("tfchain explorer get exception at endpoint {} on {}: {}".format(endpoint, address, e))
                 pass
         raise Exception("no explorer was available to fetch endpoint {}".format(endpoint))
 

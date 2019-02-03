@@ -23,7 +23,7 @@ def main(self):
         # model has now been added to the DB
         m = bcdb.model_get_from_schema(schema)
 
-        self._logger.info("POPULATE DATA")
+        self._log_info("POPULATE DATA")
 
         for i in range(10):
             u = bcdb.user.new()
@@ -41,12 +41,12 @@ def main(self):
             g.user_members = [x for x in range(i + 1)]
             g.save()
 
-        self._logger.info("ALL DATA INSERTED (DONE)")
+        self._log_info("ALL DATA INSERTED (DONE)")
 
-        self._logger.info("walk over all data")
+        self._log_info("walk over all data")
         l = bcdb.get_all()
 
-        self._logger.info("walked over all data (DONE)")
+        self._log_info("walked over all data (DONE)")
 
         assert len(l) == 20
         assert bcdb.acl.autosave is False
@@ -66,7 +66,7 @@ def main(self):
 
         assert a.acl.hash == '328cce44fbfa164e1858a8796fc79226'
 
-        self._logger.debug("MODIFY RIGHTS")
+        self._log_debug("MODIFY RIGHTS")
         a.acl.rights_set(userids=[1], rights="r")
         a.save()
         assert a.acl.readonly
@@ -100,4 +100,4 @@ def main(self):
     bcdb = j.data.bcdb.new(name="test", zdbclient=None, reset=True)
     do(bcdb)
 
-    self._logger.info("ACL TESTS ALL DONE")
+    self._log_info("ACL TESTS ALL DONE")

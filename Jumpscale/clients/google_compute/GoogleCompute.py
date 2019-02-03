@@ -144,7 +144,7 @@ class GoogleCompute(JSBASE):
             }
         }
 
-        self._logger.debug(config)
+        self._log_debug(config)
 
         res = self.service.instances().insert(project=self.projectName,
                                               zone=self.zone, body=config).execute()

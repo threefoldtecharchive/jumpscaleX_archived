@@ -37,8 +37,8 @@ class SyncthingClient(JSConfigClient):
         self._config = None
 
     def executeBashScript(self, cmds, die=True):
-        self._logger.debug("execute cmd on %s" % self.addr)
-        self._logger.debug(cmds)
+        self._log_debug("execute cmd on %s" % self.addr)
+        self._log_debug(cmds)
         if self.addr == "localhost":
             return j.sal.process.execute(content=cmds, die=die)
         else:
@@ -95,25 +95,25 @@ class SyncthingClient(JSConfigClient):
         C = C.replace("$apikey", self.syncthing_apikey)
         res = self.executeBashScript(C)
 
-        self._logger.debug("check if we can find syncthing on right port: %s:%s" %
+        self._log_debug("check if we can find syncthing on right port: %s:%s" %
                            (self.addr, self.port))
         if j.sal.nettools.waitConnectionTest(self.addr, self.port, timeout=10) is False:
             raise j.exceptions.RuntimeError(
                 "Could not find syncthing on %s:%s, tcp port test" % (self.addr, self.port))
 
-            self._logger.debug(self.status_get())
+            self._log_debug(self.status_get())
 
     def restart(self):
-        self._logger.debug("set config")
+        self._log_debug("set config")
         pprint.pprint(self._config)
         self.config_set()
-        self._logger.debug("restart")
+        self._log_debug("restart")
 
         res = self.api_call("system/restart", get=False)
-        self._logger.debug("wait for connection")
+        self._log_debug("wait for connection")
         time.sleep(0.5)
         j.sal.nettools.waitConnectionTest(self.addr, self.port, timeout=2)
-        self._logger.debug("connection reestablished")
+        self._log_debug("connection reestablished")
 
     def status_get(self):
         return self.api_call("system/status")
@@ -163,7 +163,7 @@ class SyncthingClient(JSConfigClient):
                     res.append(folder)
             self._config["folders"] = res
             if len(res) != x:
-                self._logger.debug('deleted folder:%s' % name)
+                self._log_debug('deleted folder:%s' % name)
                 # self.config_set()
 
     def config_delete_device(self, name):
@@ -177,25 +177,25 @@ class SyncthingClient(JSConfigClient):
                     res.append(folder)
             self._config["devices"] = res
             if len(res) != x:
-                self._logger.debug('deleted devices:%s' % name)
+                self._log_debug('deleted devices:%s' % name)
                 # self.config_set()
 
     def config_delete_all_folders(self):
         config = self.config_get()
         # remove the folder
         self._config["folders"] = []
-        self._logger.debug('deleted all folder')
+        self._log_debug('deleted all folder')
         # self.config_set()
 
     def config_delete_all_devices(self):
         config = self.config_get()
         # remove the folder
         self._config["devices"] = []
-        self._logger.debug('deleted all devices')
+        self._log_debug('deleted all devices')
         # self.config_set()
 
     def config_add_device(self, name, deviceid, replace=True, introducer=False, compression='always'):
-        self._logger.debug("add device:%s" % name)
+        self._log_debug("add device:%s" % name)
         name = name.lower()
         config = self.config_get()
         if self.config_exists_device(name):
@@ -219,7 +219,7 @@ class SyncthingClient(JSConfigClient):
 
         config["devices"].append(device)
 
-        self._logger.debug("device set:%s" % name)
+        self._log_debug("device set:%s" % name)
 
         # self.config_set()
         return device
@@ -263,7 +263,7 @@ class SyncthingClient(JSConfigClient):
                   'versioning': {'params': {}, 'type': ''}}
         config["folders"].append(folder)
 
-        self._logger.debug("folder set:%s" % name)
+        self._log_debug("folder set:%s" % name)
 
         self.executeBashScript("mkdir -p %s" % path)
         self.restart()
@@ -297,7 +297,7 @@ class SyncthingClient(JSConfigClient):
         timeout = 10
         start = time.time()
         ok = False
-        self._logger.debug(url)
+        self._log_debug(url)
         while time.time() < (start + timeout) and ok is False:
             try:
                 if get:
@@ -307,20 +307,20 @@ class SyncthingClient(JSConfigClient):
                                       json=data, timeout=2)
                 ok = True
             except Exception as e:
-                self._logger.warn(
+                self._log_warn(
                     "Warning, Error in API call, will retry:\n%s" % e)
-                self._logger.warn("retry API CALL %s" % url)
+                self._log_warn("retry API CALL %s" % url)
                 time.sleep(0.2)
 
         if ok is False or r.ok is False:
-            self._logger.error("%s" % (url))
-            self._logger.error(endpoint)
-            self._logger.error(request_body)
+            self._log_error("%s" % (url))
+            self._log_error(endpoint)
+            self._log_error(request_body)
             raise j.exceptions.RuntimeError("Error in rest call: %s" % r)
 
         if get and endpoint != '/system/version':
             return r.json()
 
-        self._logger.debug("OK")
+        self._log_debug("OK")
 
         return r.content

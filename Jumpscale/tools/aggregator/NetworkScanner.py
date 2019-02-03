@@ -12,7 +12,7 @@ class NetworkScanner(j.application.JSBaseClass):
         JSBASE.__init__(self)
         code, _, _ = j.sal.process.execute('which nmap', showout=False, die=False)
         if code != 0:
-            self._logger.info('nmap not found, installing...')
+            self._log_info('nmap not found, installing...')
             j.builder.system.package.install('nmap')
 
         self._ports = ','.join([str(port) for port in ports])

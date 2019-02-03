@@ -62,7 +62,7 @@ class TLS(JSBASE):
         cert_path = ca_cert_path + '.pem'
         key_path = ca_cert_path + '-key.pem'
         output = 'certificate generated at %s and key at %s' % (cert_path, key_path)
-        self._logger.debug(output)
+        self._log_debug(output)
 
         return (cert_path, key_path)
 
@@ -92,7 +92,7 @@ class TLS(JSBASE):
         csr_path = self.cwd.joinpath('%s.csr' % name)
         key_path = self.cwd.joinpath('%s-key.pem' % name)
         output = 'certificate signing request generated at %s and key at %s' % (csr_path, key_path)
-        self._logger.debug(output)
+        self._log_debug(output)
 
         return (csr_path, key_path)
 
@@ -118,7 +118,7 @@ class TLS(JSBASE):
         cert_path = self.cwd.joinpath('%s.pem' % name)
         output = 'certificate created at %s' % cert_path
 
-        self._logger.debug(output)
+        self._log_debug(output)
 
         return cert_path
 
@@ -156,7 +156,7 @@ class TLS(JSBASE):
         key_path = self.cwd.joinpath('%s-key.pem' % name)
 
         output = 'certificate generated at %s and key at %s' % (cert_path, key_path)
-        self._logger.debug(output)
+        self._log_debug(output)
 
         return (cert_path, key_path)
 

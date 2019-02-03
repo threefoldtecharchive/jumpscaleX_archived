@@ -31,7 +31,7 @@ class RedisFactory(j.application.JSBaseClass):
 
     @property
     def _REDIS_CLIENT_CLASS(self):
-        self._logger.debug("REDIS CLASS")
+        self._log_debug("REDIS CLASS")
         return Redis
 
     def get(
@@ -90,13 +90,13 @@ class RedisFactory(j.application.JSBaseClass):
 
         if key not in self._redis or not fromcache:
             if ipaddr and port:
-                self._logger.debug("REDIS:%s:%s" % (ipaddr, port))
+                self._log_debug("REDIS:%s:%s" % (ipaddr, port))
                 self._redis[key] = Redis(ipaddr, port, password=password, ssl=ssl, ssl_certfile=ssl_certfile,
                                          ssl_keyfile=ssl_keyfile,unix_socket_path=unixsocket,
                                          # socket_timeout=timeout,
                                          **args)
             else:
-                self._logger.debug("REDIS:%s" % unixsocket)
+                self._log_debug("REDIS:%s" % unixsocket)
                 self._redis[key] = Redis(unix_socket_path=unixsocket,
                                          # socket_timeout=timeout,
                                          password=password,
@@ -197,7 +197,7 @@ class RedisFactory(j.application.JSBaseClass):
 
         nr = 0
         while True:
-            self._logger.info("try to connect to redis of unixsocket:%s or tcp port 6379" % self.unix_socket_path)
+            self._log_info("try to connect to redis of unixsocket:%s or tcp port 6379" % self.unix_socket_path)
             if self.core_running():
                 if tcp:
                     j.core._db = self.get(ipaddr="localhost", port=6379, unixsocket=self.unix_socket_path)
@@ -322,7 +322,7 @@ class RedisFactory(j.application.JSBaseClass):
         cmd = "mkdir -p /sandbox/var;redis-server --unixsocket /sandbox/var/redis.sock " \
               "--port 6379 " \
               "--maxmemory 100000000 --daemonize yes"
-        self._logger.info(cmd)
+        self._log_info(cmd)
         j.sal.process.execute(cmd)
         limit_timeout = time.time() + timeout
         while time.time() < limit_timeout:

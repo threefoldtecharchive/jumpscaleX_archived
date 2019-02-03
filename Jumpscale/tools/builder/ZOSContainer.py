@@ -98,17 +98,17 @@ class ZOSContainer(j.application.JSBaseConfigClass):
         self.progress=[] #make sure we don't remember old stuff
         self.model_save()
 
-        self._logger.warning("A")
+        self._log_warning("A")
         self.nics=[]
         #TODO: something wrong here, it keeps on adding nics, have no idea why
         if len(self.nics) == 0:
-            self._logger.warning("ADDNIC")
+            self._log_warning("ADDNIC")
             nic = self.nics.new()
             nic.type = "default"
             self.model_save()
         # j.shell()
 
-        self._logger.info("create container: %s %s sshport:%s \nnics:\n%s"%
+        self._log_info("create container: %s %s sshport:%s \nnics:\n%s"%
                          (self.name,self.flist,self.sshport,self.nics_dict))
 
 
@@ -158,7 +158,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
         info = self.zosclient.client.container.list()[str(self._container_id)]['container']
         while "pid" not in info:
             time.sleep(0.1)
-            self._logger.debug("waiting for container to start")
+            self._log_debug("waiting for container to start")
         self.pid = info["pid"]
         self.container_id = str(self._container_id)
         self.model_save()
@@ -221,7 +221,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
                         continue
                     raise e
 
-            self._logger.info("ssh connected")
+            self._log_info("ssh connected")
             key = j.clients.sshkey.list()[0]
 
             sshclient.ssh_authorize(user="root", key=key)
@@ -229,9 +229,9 @@ class ZOSContainer(j.application.JSBaseConfigClass):
             self.authorized = True
             self.model_save()
 
-            self._logger.info('container deployed')
-            self._logger.info("to connect to it do: 'ssh root@%s -p %s' (password: rooter)" % (self.zos_private_address,self.port))
-            self._logger.info("can also connect using js_node toolset, recommended: 'js_node ssh -i %s'"%self.name)
+            self._log_info('container deployed')
+            self._log_info("to connect to it do: 'ssh root@%s -p %s' (password: rooter)" % (self.zos_private_address,self.port))
+            self._log_info("can also connect using js_node toolset, recommended: 'js_node ssh -i %s'"%self.name)
         if j.clients.ssh.get('builder').sshkey:
             key_path =j.clients.ssh.get('builder').sshkey.path
             keyname_paths=os.path.split(key_path)
@@ -263,10 +263,10 @@ class ZOSContainer(j.application.JSBaseConfigClass):
         return self.sshport
 
     # def zero_os_private(self, node):
-    #     self._logger.debug("resolving private virtualbox address")
+    #     self._log_debug("resolving private virtualbox address")
     #
     #     private = j.clients.virtualbox.zero_os_private_address(node)
-    #     self._logger.info("virtualbox machine private address: %s" % private)
+    #     self._log_info("virtualbox machine private address: %s" % private)
     #
     #     node = j.clients.zos.get('builder_private', data={'host': private})
     #     node.client.ping()

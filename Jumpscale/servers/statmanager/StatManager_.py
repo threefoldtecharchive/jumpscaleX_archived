@@ -75,7 +75,7 @@ class StatManager(j.application.JSBaseClass):
                 if key in self.historyObjsMod and self.historyObjsMod[key]:
                     obj = self.historyObjs[key]
                     nrItemsIn5MinRow, nrItemsInHourRow = self.getNrItemsRow(key)
-                    self._logger.debug(("save: %s" % (obj.guid)))
+                    self._log_debug(("save: %s" % (obj.guid)))
                     # trim values out of range
                     if nrItemsIn5MinRow != 0:
                         test = now5min - nrItemsIn5MinRow
@@ -112,7 +112,7 @@ class StatManager(j.application.JSBaseClass):
         return data
 
     def cleanCache(self):
-        self._logger.debug("clean cache")
+        self._log_debug("clean cache")
         ttime = self.getEpoch()
         try:
             for key in list(self.historyObjs.keys()):

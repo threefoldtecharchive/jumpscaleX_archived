@@ -7,7 +7,7 @@ class {{BASENAME}}:
     def _init_index(self):
         self.index = None
         {%- if index.active %}
-        self._logger.info("init index:%s"%self.schema.url)
+        self._log_info("init index:%s"%self.schema.url)
 
         p = j.clients.peewee
 
@@ -61,7 +61,7 @@ class {{BASENAME}}:
         val = obj.{{property_name}}
         if val not in ["",None]:
             val=str(val)
-            # self._logger.debug("key:{{property_name}}:%s:%s"%(val,obj.id))
+            # self._log_debug("key:{{property_name}}:%s:%s"%(val,obj.id))
             self._index_key_set("{{property_name}}",val,obj.id)
         {%- endfor %}
 
@@ -70,7 +70,7 @@ class {{BASENAME}}:
         val = obj.{{property_name}}
         if val not in ["",None]:
             val=str(val)
-            self._logger.debug("delete key:{{property_name}}:%s:%s"%(val,obj.id))
+            self._log_debug("delete key:{{property_name}}:%s:%s"%(val,obj.id))
             self._index_key_delete("{{property_name}}",val,obj.id)
         {%- endfor %}
 

@@ -167,7 +167,7 @@ class BuilderTarantool(j.builder.system._BaseClass):
 
         luapath = prefab.core.replace('{DIR_TEMP}/tarantool.lua')
 
-        self._logger.info('write lua startup to:%s' % luapath)
+        self._log_info('write lua startup to:%s' % luapath)
 
         prefab.core.file_write(luapath, LUA)
 

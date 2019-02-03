@@ -59,10 +59,10 @@ class SSHAgent(j.application.JSBaseClass):
         # otherwise the expect script will fail
         path0 = j.sal.fs.pathNormalize(self.path)
 
-        self._logger.info("load ssh key: %s" % path0)
+        self._log_info("load ssh key: %s" % path0)
         j.sal.fs.chmod(self.path, 0o600)
         if self.passphrase:
-            self._logger.debug("load with passphrase")
+            self._log_debug("load with passphrase")
             C = """
                 echo "exec cat" > ap-cat.sh
                 chmod a+x ap-cat.sh
@@ -136,7 +136,7 @@ class SSHAgent(j.application.JSBaseClass):
             self._init_ssh_env()
             # self.sshagent_init()
         if not self.available():
-            self._logger.info('Will start agent')
+            self._log_info('Will start agent')
             self.sshagent_start()
 
     def key_path_get(self, keyname="", die=True):
@@ -230,7 +230,7 @@ class SSHAgent(j.application.JSBaseClass):
         if not j.sal.fs.exists(socketpath):
             j.sal.fs.createDir(j.sal.fs.getParent(socketpath))
             # ssh-agent not loaded
-            self._logger.info("load ssh agent")
+            self._log_info("load ssh agent")
             rc, out, err = j.sal.process.execute("ssh-agent -a %s" % socketpath,
                                                  die=False,
                                                  showout=False,
@@ -250,7 +250,7 @@ class SSHAgent(j.application.JSBaseClass):
 
                 # print(piditems)
                 if len(piditems) < 1:
-                    self._logger.debug("results was: %s", out)
+                    self._log_debug("results was: %s", out)
                     raise RuntimeError("Cannot find items in ssh-add -l")
 
                 self._init_ssh_env()
@@ -312,7 +312,7 @@ class SSHAgent(j.application.JSBaseClass):
         socketpath = self.ssh_socket_path if not socketpath else socketpath
         j.sal.fs.remove(socketpath)
         j.sal.fs.remove(j.sal.fs.joinPaths('/tmp', "ssh-agent-pid"))
-        self._logger.debug("ssh-agent killed")
+        self._log_debug("ssh-agent killed")
 
     def test(self):
         """
@@ -323,7 +323,7 @@ class SSHAgent(j.application.JSBaseClass):
         # TODO:1 broken
 
         # self._logger_enable()
-        self._logger.info("sshkeys:%s" % j.clients.sshkey.listnames())
+        self._log_info("sshkeys:%s" % j.clients.sshkey.listnames())
 
         self.sshagent_kill()  # goal is to kill & make sure it get's loaded automatically
 

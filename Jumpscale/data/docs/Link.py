@@ -28,7 +28,7 @@ class Link(JSBASE):
     def error(self,msg):
         self.error_msg = msg
         msg="**ERROR:** problem with link:%s\n%s"%(self.source,msg)
-        # self._logger.error(msg)
+        # self._log_error(msg)
         self.docsite.error_raise(msg, doc=self.doc)
         self.doc._content = self.doc._content.replace(self.source,msg)
         return msg
@@ -133,7 +133,7 @@ class Link(JSBASE):
 
     def download(self):
         def do():
-            self._logger.info("image download")
+            self._log_info("image download")
             if self.link_verify():
                 link_descr = self._clean(self.link_descr)
                 name=""
@@ -146,7 +146,7 @@ class Link(JSBASE):
 
                 self.link_source = "%s.%s"%(name,self.extension) #will be replaced with this name
 
-                self._logger.info("download:%s\n%s"%(self.link_source_original,dest))
+                self._log_info("download:%s\n%s"%(self.link_source_original,dest))
                 try:
                     j.clients.http.download(self.link_source_original,dest)
                 except Exception as e:
@@ -157,7 +157,7 @@ class Link(JSBASE):
                     from IPython import embed;embed(colors='Linux')
                     k
                 self.replace_in_doc()
-                self._logger.info ("download done")
+                self._log_info ("download done")
             return "OK"
         self._cache.get("download:%s"%self.link_source_original, method=do, expire=600)
 
@@ -175,7 +175,7 @@ class Link(JSBASE):
                             self.error("link in error state:%s"%self.link_source_original)
                             return False
 
-            self._logger.info("check link exists:%s"%self.link_source)
+            self._log_info("check link exists:%s"%self.link_source)
             if not j.clients.http.ping(self.link_source_original):
                 self.error("link not alive:%s"%self.link_source_original)
                 return False
@@ -186,7 +186,7 @@ class Link(JSBASE):
             return False
 
     def replace_in_doc(self):
-        self._logger.info("replace_in_doc")
+        self._log_info("replace_in_doc")
         self.doc._content = self.doc._content.replace(self.source,self.markdown)
         self.source = self.markdown #there is a new source now
         print(678)

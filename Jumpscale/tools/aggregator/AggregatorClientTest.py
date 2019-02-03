@@ -92,7 +92,7 @@ class AggregatorClientTest(j.application.JSBaseClass):
             start_time = time.time()
             totals = 0
             max = 0
-            self._logger.info("Injecting %s points for minute %s", points, minute)
+            self._log_info("Injecting %s points for minute %s", points, minute)
             start = time.time()
             for i in range(points):
                 val = random.randint(lower, upper)
@@ -102,10 +102,10 @@ class AggregatorClientTest(j.application.JSBaseClass):
                 # always use the `now` as time stamp so we have control which values are lying in this minute
                 aggregator.measure(key, "random", "mode:test", val, timestamp=stamp)
                 if time.time() - start > 5:
-                    self._logger.info("Injected %d%% points for minute %s", (i / points) * 100, minute)
+                    self._log_info("Injected %d%% points for minute %s", (i / points) * 100, minute)
                     start = time.time()
 
-            self._logger.info("Finished %s points for minute %s", points, minute)
+            self._log_info("Finished %s points for minute %s", points, minute)
             rate = points / (time.time() - start_time)
             # 4b- Keep track of the actual reported values for comparison later on with the expected values.
             actuals.append({

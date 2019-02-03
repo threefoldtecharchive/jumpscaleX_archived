@@ -43,7 +43,7 @@ class NetTools(JSBASE):
         will return false if not successfull (timeout in sec)
 
         """
-        self._logger.debug(
+        self._log_debug(
             "test tcp connection to '%s' on port %s" % (ipaddr, port))
         if ipaddr.strip() == "localhost":
             ipaddr = "127.0.0.1"
@@ -60,7 +60,7 @@ class NetTools(JSBASE):
         will test that port is not active
         will return false if not successfull (timeout)
         """
-        self._logger.debug(
+        self._log_debug(
             "test tcp connection to '%s' on port %s" % (ipaddr, port))
         if ipaddr.strip() == "localhost":
             ipaddr = "127.0.0.1"
@@ -108,7 +108,7 @@ class NetTools(JSBASE):
             raise ValueError(
                 "Port cannot be bigger then 65535 or lower then 0")
 
-        self._logger.debug(
+        self._log_debug(
             'Checking whether a service is running on port %d' % port)
 
         if j.core.platformtype.myplatform.isLinux:
@@ -319,7 +319,7 @@ class NetTools(JSBASE):
                 command, showout=False, die=False)
             if exitcode != 0:
                 # temporary plumb the interface to lookup its mac
-                self._logger.warning(
+                self._log_warning(
                     "Interface %s is down. Temporarily plumbing it to be able to lookup its nic type" % interface)
                 j.sal.process.execute('%s plumb' % command, showout=False)
                 exitcode, output, err = j.sal.process.execute(
@@ -479,7 +479,7 @@ class NetTools(JSBASE):
         while gwexists():
             removegw()
             time.sleep(1)
-            self._logger.debug("try to delete def gw")
+            self._log_debug("try to delete def gw")
             counter += 1
             if counter > 10:
                 raise j.exceptions.RuntimeError("cannot delete def gw")
@@ -639,7 +639,7 @@ class NetTools(JSBASE):
                 command, showout=False, die=False)
             if exitcode != 0:
                 # temporary plumb the interface to lookup its mac
-                self._logger.warning(
+                self._log_warning(
                     "Interface %s is down. Temporarily plumbing it to be able to lookup its MAC address" % interface)
                 j.sal.process.execute('%s plumb' % command, showout=False)
                 exitcode, output, err = j.sal.process.execute(
@@ -778,23 +778,23 @@ class NetTools(JSBASE):
                     except BaseException:
                         return False
                     if not isinstance(ipList[i], int):
-                        self._logger.warning(
+                        self._log_warning(
                             '[%s] is not a valid ip address, octects should be integers' % ipaddress)
                         return False
                 if max(ipList) < 256:
-                    self._logger.warning(
+                    self._log_warning(
                         '[%s] is a valid ip address' % ipaddress)
                     return True
                 else:
-                    self._logger.warning(
+                    self._log_warning(
                         '[%s] is not a valid ip address, octetcs should be less than 256' % ipaddress)
                     return False
             else:
-                self._logger.warning(
+                self._log_warning(
                     '[%s] is not a valid ip address, ip should contain 4 octets' % ipaddress)
                 return False
         else:
-            self._logger.warning('[%s] is not a valid ip address' % ipaddress)
+            self._log_warning('[%s] is not a valid ip address' % ipaddress)
             return False
 
     def pingMachine(self, ip, pingtimeout=60, recheck=False, allowhostname=True):
@@ -809,7 +809,7 @@ class NetTools(JSBASE):
             if not j.sal.nettools.validateIpAddress(ip):
                 raise ValueError('ERROR: invalid ip address passed:[%s]' % ip)
 
-        self._logger.debug('pingMachine %s, timeout=%d, recheck=%s' %
+        self._log_debug('pingMachine %s, timeout=%d, recheck=%s' %
                           (ip, pingtimeout, str(recheck)))
 
         start = time.time()
@@ -834,11 +834,11 @@ class NetTools(JSBASE):
                 raise j.exceptions.RuntimeError('Platform is not supported')
             if exitcode == 0:
                 pingsucceeded = True
-                self._logger.debug('Machine with ip:[%s] is pingable' % ip)
+                self._log_debug('Machine with ip:[%s] is pingable' % ip)
                 return True
             time.sleep(1)
         if not pingsucceeded:
-            self._logger.debug("Could not ping machine with ip:[%s]" % ip)
+            self._log_debug("Could not ping machine with ip:[%s]" % ip)
             return False
 
     def downloadIfNonExistent(self, url, destination_file_path, md5_checksum=None,
@@ -898,7 +898,7 @@ class NetTools(JSBASE):
                 filename = localpath
             else:
                 raise ValueError('Local path is an invalid path')
-        self._logger.debug('Downloading url %s to local path %s' %
+        self._log_debug('Downloading url %s to local path %s' %
                           (url, filename))
         from urllib.request import FancyURLopener
         from urllib.parse import splittype
@@ -934,7 +934,7 @@ class NetTools(JSBASE):
                     '://')[0] + '://%s:%s@' % (username, passwd) + url.split('://')[1]
             if filename != '-':
                 urlopener.retrieve(url, filename, None, None)
-                self._logger.debug(
+                self._log_debug(
                     'URL %s is downloaded to local path %s' % (url, filename))
                 return
             else:
@@ -1004,13 +1004,13 @@ class NetTools(JSBASE):
         if commit:
             self.commit(device)
         else:
-            self._logger.info('Do NOT FORGET TO COMMIT')
+            self._log_info('Do NOT FORGET TO COMMIT')
 
     def commit(self, device=None):
         #- make sure loopback exist
         if j.core.platformtype.myplatform.isMac:
             if device:
-                self._logger.info('Restarting interface %s' % device)
+                self._log_info('Restarting interface %s' % device)
                 j.sal.process.execute('ifconfig %s down && ifconfig %s up' % (device, device))
         elif j.core.platformtype.myplatform.isLinux:
             content = 'auto lo\niface lo inet loopback\n'
@@ -1018,9 +1018,9 @@ class NetTools(JSBASE):
 
             j.sal.process.execute('service networking restart')
             if device:
-                self._logger.info('Restarting interface %s' % device)
+                self._log_info('Restarting interface %s' % device)
                 j.sal.process.execute('ifdown %s && ifup %s' % (device, device))
-        self._logger.info('DONE')
+        self._log_info('DONE')
 
     def netobject_get(self, device):
         n = self.networkinfo_get(device)

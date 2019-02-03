@@ -12,18 +12,18 @@ class BCDBFactory(j.application.JSBaseClass):
     __jslocation__ = "j.data.bcdb"
 
     def _init(self):
-
+        self.bcdb_instances = {}  #key is the name
         self._path = j.sal.fs.getDirName(os.path.abspath(__file__))
+
         self._code_generation_dir = None
         self.latest=None
-        self.bcdb_instances = {}  #key is the name
 
         j.clients.redis.core_get() #just to make sure the redis got started
 
         # self._logger_enable()
 
     def new(self, name, zdbclient=None,reset=False):
-        self._logger.debug("new bcdb:%s"%name)
+        self._log_debug("new bcdb:%s"%name)
         if zdbclient!=None and j.data.types.string.check(zdbclient):
             raise RuntimeError("zdbclient cannot be str")
         self.bcdb_instances[name] = BCDB(zdbclient=zdbclient,name=name,reset=reset)
@@ -112,7 +112,7 @@ class BCDBFactory(j.application.JSBaseClass):
             if path not in sys.path:
                 sys.path.append(path)
             j.sal.fs.touch(j.sal.fs.joinPaths(path, "__init__.py"))
-            self._logger.debug("codegendir:%s" % path)
+            self._log_debug("codegendir:%s" % path)
             self._code_generation_dir = path
         return self._code_generation_dir
 
@@ -152,7 +152,7 @@ class BCDBFactory(j.application.JSBaseClass):
         schemaobj = j.data.schema.get(schema)
         bcdb.model_get_from_schema(schemaobj)
 
-        self._logger.debug("bcdb already exists")
+        self._log_debug("bcdb already exists")
 
         model = bcdb.model_get("despiegk.test")
 

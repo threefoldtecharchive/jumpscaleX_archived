@@ -22,8 +22,8 @@ class KrakenClient(JSConfigClient):
     def test(self):
 
         k = self.api
-        self._logger.debug("open orders")
-        self._logger.debug(k.get_open_orders())
+        self._log_debug("open orders")
+        self._log_debug(k.get_open_orders())
 
-        self._logger.debug("get account balance")
-        self._logger.debug(k.get_account_balance())
+        self._log_debug("get account balance")
+        self._log_debug(k.get_account_balance())

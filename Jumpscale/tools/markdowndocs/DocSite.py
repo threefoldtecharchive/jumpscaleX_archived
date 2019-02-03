@@ -54,12 +54,12 @@ class DocSite(j.application.JSBaseClass):
         self.outpath = j.core.tools.text_replace("{DIR_VAR}/docsites/{NAME}",args={"NAME":self.name})
 
         self._logger_enable()
-        self._logger.level=1
+        self._log_level=1
 
         self._git=None
         self._loaded = False
 
-        self._logger.info("found:%s"%self)
+        self._log_info("found:%s"%self)
 
     def _clean(self,name):
         assert j.data.types.string.check(name)
@@ -186,18 +186,18 @@ class DocSite(j.application.JSBaseClass):
         def callbackFunctionFile(path, arg):
             if path.find("error.md")!=-1:
                 return
-            self._logger.debug("file:%s"%path)
+            self._log_debug("file:%s"%path)
             ext = j.sal.fs.getFileExtension(path).lower()
             base = j.sal.fs.getBaseName(path)
             if ext == "md":
-                self._logger.debug("found md:%s"%path)
+                self._log_debug("found md:%s"%path)
                 base = base[:-3]  # remove extension
                 doc = Doc(path, base, docsite=self)
                 # if base not in self.docs:
                 #     self.docs[base.lower()] = doc
                 self._docs[doc.name_dot_lower] = doc
             elif ext in ["html","htm"]:
-                self._logger.debug("found html:%s"%path)
+                self._log_debug("found html:%s"%path)
                 l = len(ext)+1
                 base = base[:-l]  # remove extension
                 doc = Doc(path, base, docsite=self)
@@ -207,7 +207,7 @@ class DocSite(j.application.JSBaseClass):
             else:
                 self.file_add(path)
                 # else:
-                #     self._logger.debug("found other:%s"%path)
+                #     self._log_debug("found other:%s"%path)
                 #     l = len(ext)+1
                 #     base = base[:-l]  # remove extension
                 #     doc = DocBase(path, base, docsite=self)
@@ -233,7 +233,7 @@ class DocSite(j.application.JSBaseClass):
         base = j.sal.fs.getBaseName(path)
         if ext in ["png", "jpg", "jpeg", "pdf", "docx", "doc", "xlsx", "xls", \
                     "ppt", "pptx", "mp4","css","js","mov"]:
-            self._logger.debug("found file:%s"%path)
+            self._log_debug("found file:%s"%path)
             base=self._clean(base)
             if duplication_test and base in self._files:
                 raise j.exceptions.Input(message="duplication file in %s,%s" %  (self, path))
@@ -246,10 +246,10 @@ class DocSite(j.application.JSBaseClass):
             if not key in self._errors:
                 errormsg3 = "```\n%s\n```\n"%errormsg2
                 j.sal.fs.writeFile(filename=self.error_file_path, contents=errormsg3, append=True)
-                self._logger.error(errormsg2)
+                self._log_error(errormsg2)
                 doc.errors.append(errormsg)
         else:
-            self._logger.error("DEBUG NOW raise error")
+            self._log_error("DEBUG NOW raise error")
             raise RuntimeError("stop debug here")
 
 
@@ -365,7 +365,7 @@ class DocSite(j.application.JSBaseClass):
         self.load(reset=reset)
         if j.data.types.list.check(url):
             url = "/".join(url)
-        self._logger.debug("sidebar_get:%s"%url)
+        self._log_debug("sidebar_get:%s"%url)
         if url in self._sidebars:
             return self._sidebars[url]
 
@@ -505,7 +505,7 @@ class DocSite(j.application.JSBaseClass):
         keys.sort()
         for key in keys:
             doc = self.doc_get(key,die=True)
-            self._logger.info("verify:%s"%doc)
+            self._log_info("verify:%s"%doc)
             try:
                 doc.markdown #just to trigger the error checking
             except Exception as e:

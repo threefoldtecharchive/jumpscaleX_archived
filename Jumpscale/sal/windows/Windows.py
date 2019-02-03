@@ -170,12 +170,12 @@ class WindowsSystem(j.application.JSBaseClass):
         fullpath = os.path.abspath(dirpath)
         driveLetter = os.path.splitdrive(fullpath)[0]
         if not self.isNTFSVolume(driveLetter):
-            self._logger.warning("Skipped file permissions update - filesystem for [%s] is not NTFS" % dirpath)
+            self._log_warning("Skipped file permissions update - filesystem for [%s] is not NTFS" % dirpath)
             return
 
         def _grantFile(fileName, securityDescriptor):
             '''Set security on a file'''
-            self._logger.info("granting all access to everyone on %s" % fileName)
+            self._log_info("granting all access to everyone on %s" % fileName)
             win32security.SetFileSecurity(fileName, win32security.DACL_SECURITY_INFORMATION, securityDescriptor)
 
         def _grantDir(dirpath, securityDescriptor):
@@ -349,7 +349,7 @@ class WindowsSystem(j.application.JSBaseClass):
                     value = value[1:-1]  # Remove leading and trailing quote
 
                 # Write the value to the registry
-                self._logger.info("Adding '%s' to registry in key '%s' with value '%s' and type '%s'" %
+                self._log_info("Adding '%s' to registry in key '%s' with value '%s' and type '%s'" %
                                  (param, section, value, valueType))
                 self.setValueFromRegKey(section, param, value, valueType)
 
@@ -518,7 +518,7 @@ class WindowsSystem(j.application.JSBaseClass):
         @param passwd(optional): password of the user
         raise an exception if user already exists
         """
-        self._logger.info('Adding system user %s' % userName)
+        self._log_info('Adding system user %s' % userName)
 
         if self.isSystemUser(userName):
             raise ValueError('User %s Already Exist' % userName)
@@ -535,21 +535,21 @@ class WindowsSystem(j.application.JSBaseClass):
 
         if self.isSystemUser(userName):
 
-            self._logger.info('User %s Added successfully' % userN)
+            self._log_info('User %s Added successfully' % userN)
 
     def isSystemUser(self, userName):
         """
         Check if user is valid system User
         @param userName: name of the user
         """
-        self._logger.info('Checking if user %s exists' % userName)
+        self._log_info('Checking if user %s exists' % userName)
 
         if userName in self.listSystemUsers():
-            self._logger.info('User %s exists' % userName)
+            self._log_info('User %s exists' % userName)
 
             return True
 
-        self._logger.info('User %s doesnt exist' % userName)
+        self._log_info('User %s doesnt exist' % userName)
 
         return False
 
@@ -558,7 +558,7 @@ class WindowsSystem(j.application.JSBaseClass):
         List system users
         @return: list of system user names
         """
-        self._logger.info('Listing System Users')
+        self._log_info('Listing System Users')
 
         users = [entry['name'] for entry in win32net.NetUserEnum(None, 0)[0]]
 
@@ -569,17 +569,17 @@ class WindowsSystem(j.application.JSBaseClass):
         Delete a system user
         @param userName: name of the user to delete
         """
-        self._logger.info('Deleting User %s' % userName)
+        self._log_info('Deleting User %s' % userName)
 
         if self.isSystemUser(userName):
             win32net.NetUserDel(None, userName)
 
             if not self.isSystemUser(userName):
-                self._logger.info('User %s deleted successfully' % userName)
+                self._log_info('User %s deleted successfully' % userName)
 
                 return True
 
-            self._logger.info('Failed to delete user %s' % userName)
+            self._log_info('Failed to delete user %s' % userName)
 
         else:
             raise j.exceptions.RuntimeError("User %s is not a system user" % userName)
@@ -591,7 +591,7 @@ class WindowsSystem(j.application.JSBaseClass):
         @return: security identifier of the user
         @rtype: string
         """
-        self._logger.info('Getting User %s\'s SID' % userName)
+        self._log_info('Getting User %s\'s SID' % userName)
 
         if self.isSystemUser(userName) or userName == 'everyone':
 
@@ -599,7 +599,7 @@ class WindowsSystem(j.application.JSBaseClass):
             pySid = info[0]
             sid = win32security.ConvertSidToStringSid(pySid)
 
-            self._logger.info('User\'s SID is %s' % str(sid))
+            self._log_info('User\'s SID is %s' % str(sid))
 
             return sid
 
@@ -620,7 +620,7 @@ class WindowsSystem(j.application.JSBaseClass):
         pgDataDir = j.sal.fs.joinPaths(j.dirs.BASEDIR, 'apps','postgresql8', 'Data')
         j.system.windows.createService(serviceName, displayName , '%s\\pg_ctl.exe','runservice -W -N %s -D %s'%(serviceName, pgDataDir))
         """
-        self._logger.info('Creating Service %s' % serviceName)
+        self._log_info('Creating Service %s' % serviceName)
 
         if not j.sal.fs.isFile(binPath):
             raise ValueError('binPath %s is not a valid file' % binPath)
@@ -667,7 +667,7 @@ class WindowsSystem(j.application.JSBaseClass):
             win32service.CloseServiceHandle(hscm)
 
         if self.isServiceInstalled(serviceName):
-            self._logger.info('Service %s Created Successfully' % serviceName)
+            self._log_info('Service %s Created Successfully' % serviceName)
             return True
 
     def removeService(self, serviceName):
@@ -688,7 +688,7 @@ class WindowsSystem(j.application.JSBaseClass):
         win32service.CloseServiceHandle(serviceHandler)
 
         if not self.isServiceInstalled(serviceName):
-            self._logger.info('Service %s removed Successfully' % serviceName)
+            self._log_info('Service %s removed Successfully' % serviceName)
 
             return True
 
@@ -700,7 +700,7 @@ class WindowsSystem(j.application.JSBaseClass):
         @rtype: boolean
         """
         isRunning = win32serviceutil.QueryServiceStatus(serviceName)[1] == win32service.SERVICE_RUNNING
-        self._logger.info('Service %s isRunning = %s' % (serviceName, isRunning))
+        self._log_info('Service %s isRunning = %s' % (serviceName, isRunning))
 
         return isRunning
 
@@ -709,15 +709,15 @@ class WindowsSystem(j.application.JSBaseClass):
         Check if service is installed
         @rtype: boolean
         """
-        self._logger.info('Checking if service %s is installed' % serviceName)
+        self._log_info('Checking if service %s is installed' % serviceName)
 
         if serviceName in self.listServices():
 
-            self._logger.info('Service %s is installed' % serviceName)
+            self._log_info('Service %s is installed' % serviceName)
 
             return True
 
-        self._logger.info('Service %s is not installed' % serviceName)
+        self._log_info('Service %s is not installed' % serviceName)
 
         return False
 
@@ -726,7 +726,7 @@ class WindowsSystem(j.application.JSBaseClass):
         List all services installed
         @return: list of service names installed
         """
-        self._logger.info('Listing services installed')
+        self._log_info('Listing services installed')
 
         services = self._wmi.InstancesOf('Win32_Service')
         serviceNames = [service.Properties_('Name').Value for service in services]
@@ -749,10 +749,10 @@ class WindowsSystem(j.application.JSBaseClass):
             if self.isServiceRunning(serviceName):
                 return True
 
-            self._logger.info('Failed to start service %s ' % serviceName)
+            self._log_info('Failed to start service %s ' % serviceName)
 
         else:
-            self._logger.info('Service %s is already running' % serviceName)
+            self._log_info('Service %s is already running' % serviceName)
 
         return False
 
@@ -772,17 +772,17 @@ class WindowsSystem(j.application.JSBaseClass):
 
                 return True
 
-            self._logger.info('Failed to stop service %s' % serviceName)
+            self._log_info('Failed to stop service %s' % serviceName)
 
         else:
-            self._logger.info('Service %s is not running' % serviceName)
+            self._log_info('Service %s is not running' % serviceName)
 
     def listRunningProcessesIds(self):
         """
         List Running Processes Ids
         @return: list of running processes ids
         """
-        self._logger.info('Listing Running Processes ids')
+        self._log_info('Listing Running Processes ids')
 
         runningProcesses = win32process.EnumProcesses()
 
@@ -793,7 +793,7 @@ class WindowsSystem(j.application.JSBaseClass):
         List Running Processes names
         @return: list of running processes names,cmdlines & ids
         """
-        self._logger.info('Listing Running processes names')
+        self._log_info('Listing Running processes names')
 
         # j.sal.process.execute()
         processes = self._wmi.InstancesOf('Win32_Process')
@@ -859,14 +859,14 @@ class WindowsSystem(j.application.JSBaseClass):
         @type: int
         @rtype: boolean
         """
-        self._logger.info('Checking if pid %s is alive' % pid)
+        self._log_info('Checking if pid %s is alive' % pid)
 
         if pid in self.listRunningProcessesIds():
-            self._logger.info('Pid %s is alive' % pid)
+            self._log_info('Pid %s is alive' % pid)
 
             return True
 
-        self._logger.info('Pid %s is not alive' % pid)
+        self._log_info('Pid %s is not alive' % pid)
 
         return False
 
@@ -878,17 +878,17 @@ class WindowsSystem(j.application.JSBaseClass):
         @return: the pid (or None if Failed)
         @rtype: int
         """
-        self._logger.info('Retreiving the pid of process %s' % process)
+        self._log_info('Retreiving the pid of process %s' % process)
 
         processInfo = self._wmi.ExecQuery('select * from Win32_Process where Name="%s"' % process)
 
         if len(processInfo) > 0:
             pid = processInfo[0].Properties_('ProcessId').Value
-            self._logger.info('Process %s\'s id is %d' % (process, pid))
+            self._log_info('Process %s\'s id is %d' % (process, pid))
 
             return pid
 
-        self._logger.info('Failed to retreive the pid of process %s' % process)
+        self._log_info('Failed to retreive the pid of process %s' % process)
 
         return None
 
@@ -904,14 +904,14 @@ class WindowsSystem(j.application.JSBaseClass):
         processInfo = self._wmi.ExecQuery('select * from Win32_Process where Name="%s"' % process)
 
         if len(processInfo) >= min:
-            self._logger.info('Process %s is running with %d threads' % (process, min))
+            self._log_info('Process %s is running with %d threads' % (process, min))
             return 0
 
         elif len(processInfo) == 0:
-            self._logger.info('Process %s is not running' % (process))
+            self._log_info('Process %s is not running' % (process))
 
         else:
-            self._logger.info('Process %s is running with %d thread(s)' % (process, len(processInfo)))
+            self._log_info('Process %s is running with %d thread(s)' % (process, len(processInfo)))
 
         return 1
 
@@ -922,7 +922,7 @@ class WindowsSystem(j.application.JSBaseClass):
         @param process: (str) the process that should have the pid
         @return status: (int) 0 when ok, 1 when not ok.
         """
-        self._logger.info('Check if process %s\'s Id is %d' % (process, pid))
+        self._log_info('Check if process %s\'s Id is %d' % (process, pid))
 
         processInfo = self._wmi.ExecQuery('select * from Win32_Process where Name="%s"' % process)
 
@@ -934,7 +934,7 @@ class WindowsSystem(j.application.JSBaseClass):
                 if processId == pid:
                     return 0
 
-        self._logger.info('Process %s\'s Id is %d and not %d' % (process, processId, pid))
+        self._log_info('Process %s\'s Id is %d and not %d' % (process, processId, pid))
 
         return 1
 
@@ -957,7 +957,7 @@ class WindowsSystem(j.application.JSBaseClass):
         @param dir: path of the dir
         @param userName: name of the user to add to the acl of the dir tree
         """
-        self._logger.info('Granting access to Dir Tree %s' % dirPath)
+        self._log_info('Granting access to Dir Tree %s' % dirPath)
 
         if j.sal.fs.isDir(dirPath):
             self.grantAccessToFile(dirPath, userName)
@@ -965,7 +965,7 @@ class WindowsSystem(j.application.JSBaseClass):
             for subDir in j.sal.fswalker.walkExtended(dirPath, recurse=1):
                 self.grantAccessToFile(subDir, userName)
         else:
-            self._logger.info('%s is not a valid directory' % dirPath)
+            self._log_info('%s is not a valid directory' % dirPath)
             raise IOError('Directory %s does not exist' % dirPath)
 
     def grantAccessToFile(self, filePath, userName='everyone'):
@@ -974,7 +974,7 @@ class WindowsSystem(j.application.JSBaseClass):
         @param file: path of the file/dir
         @param userName: name of the user to add to the acl of the file/dir
         """
-        self._logger.info('Granting access to file %s' % filePath)
+        self._log_info('Granting access to file %s' % filePath)
         import ntsecuritycon as con
         if j.sal.fs.isFile(filePath) or j.sal.fs.isDir(filePath):
 
@@ -989,7 +989,7 @@ class WindowsSystem(j.application.JSBaseClass):
             win32security.SetFileSecurity(filePath, win32security.DACL_SECURITY_INFORMATION, sd)
 
         else:
-            self._logger.info('File/Directory %s is not valid' % filePath)
+            self._log_info('File/Directory %s is not valid' % filePath)
 
             raise IOError('FilePath %s does not exist' % filePath)
 
@@ -1004,7 +1004,7 @@ class WindowsSystem(j.application.JSBaseClass):
                 if force:
                     fileMode = win32file.GetFileAttributesW(dirPath)
                     for file in j.sal.fswalk.walk(dirPath, recurse=1):
-                        self._logger.info('Changing attributes on %s' % fileMode)
+                        self._log_info('Changing attributes on %s' % fileMode)
                         win32file.SetFileAttributesW(file, fileMode & ~win32file.FILE_ATTRIBUTE_HIDDEN)
                 if errorHandler is not None:
                     shutil.rmtree(dirPath, onerror=errorHandler)

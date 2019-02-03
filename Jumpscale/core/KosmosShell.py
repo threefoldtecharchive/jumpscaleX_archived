@@ -156,43 +156,43 @@ def get_completions(self, document, complete_event):
         script = get_jedi_script_from_document(document, self.get_locals(), self.get_globals())
 
         if script:
-            completions = script.completions()
+            e=None
             try:
                 completions = script.completions()
-            except TypeError:
+            except TypeError as e:
                 # Issue #9: bad syntax causes completions() to fail in jedi.
                 # https://github.com/jonathanslenders/python-prompt-toolkit/issues/9
                 pass
-            except UnicodeDecodeError:
+            except UnicodeDecodeError as e:
                 # Issue #43: UnicodeDecodeError on OpenBSD
                 # https://github.com/jonathanslenders/python-prompt-toolkit/issues/43
                 pass
-            except AttributeError:
+            except AttributeError as e:
                 # Jedi issue #513: https://github.com/davidhalter/jedi/issues/513
                 pass
-            except ValueError:
+            except ValueError as e:
                 # Jedi issue: "ValueError: invalid \x escape"
                 pass
-            except KeyError:
+            except KeyError as e:
                 # Jedi issue: "KeyError: u'a_lambda'."
                 # https://github.com/jonathanslenders/ptpython/issues/89
                 pass
-            except IOError:
+            except IOError as e:
                 # Jedi issue: "IOError: No such file or directory."
                 # https://github.com/jonathanslenders/ptpython/issues/71
                 pass
-            except AssertionError:
+            except AssertionError as e:
                 # In jedi.parser.__init__.py: 227, in remove_last_newline,
                 # the assertion "newline.value.endswith('\n')" can fail.
                 pass
-            except SystemError:
+            except SystemError as e:
                 # In jedi.api.helpers.py: 144, in get_stack_at_position
                 # raise SystemError("This really shouldn't happen. There's a bug in Jedi.")
                 pass
-            except NotImplementedError:
+            except NotImplementedError as e:
                 # See: https://github.com/jonathanslenders/ptpython/issues/223
                 pass
-            except Exception:
+            except Exception as e:
                 # Supress all other Jedi exceptions.
                 pass
             else:
@@ -200,6 +200,10 @@ def get_completions(self, document, complete_event):
                     if not c.name_with_symbols.startswith("_"):
                         yield Completion(c.name_with_symbols, len(c.complete) - len(c.name_with_symbols),
                                          display=c.name_with_symbols)
+            if e is not None:
+                print(e)
+                j.loggers.logger_redis.error(e)
+
 
 
 def get_doc_string(tbc):

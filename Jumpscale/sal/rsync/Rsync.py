@@ -163,7 +163,7 @@ class RsyncServer(j.application.JSBaseClass):
                     roles = [item.strip() for item in roles.split(",")]
                     for role in roles:
                         destdir = self.rolesdir.joinpath(role, catpath.basename(), relpath)
-                        self._logger.debug(("link: %s->%s" % (path, destdir)))
+                        self._log_debug(("link: %s->%s" % (path, destdir)))
                         path.symlink(destdir)
                         # j.sal.fs.createDir(destdir)
                         # for item in j.sal.fs.listFilesInDir(path, recursive=False, exclude=["*.pyc",".roles"], followSymlinks=False, listSymlinks=False):
@@ -194,7 +194,7 @@ class RsyncClient(j.application.JSBaseClass):
             return
         j.tools.path.get(dest).mkdir_p()
         cmd = "rsync -av %s %s %s" % (src, dest, self.options)
-        self._logger.debug(cmd)
+        self._log_debug(cmd)
         self._local.execute(cmd)
 
     def syncToServer(self, src, dest):
@@ -203,7 +203,7 @@ class RsyncClient(j.application.JSBaseClass):
         if src == dest:
             return
         cmd = "rsync -av %s %s %s" % (src, dest, self.options)
-        self._logger.debug(cmd)
+        self._log_debug(cmd)
         self._local.execute(cmd)
 
 
@@ -225,5 +225,5 @@ class RsyncClientSecret(RsyncClient):
         if src == dest:
             return
         cmd = "rsync %s %s %s" % (src, dest, self.options)
-        self._logger.debug(cmd)
+        self._log_debug(cmd)
         self._local.execute(cmd)

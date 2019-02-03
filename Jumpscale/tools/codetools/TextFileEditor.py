@@ -42,7 +42,7 @@ class TextFileEditor(j.application.JSBaseClass):
         @param excludes
         @return [linenr,line]
         """
-        # self._logger.info("try to find 1 line which matches the specified includes %s & excludes %s" %
+        # self._log_info("try to find 1 line which matches the specified includes %s & excludes %s" %
         #                  (includes, excludes), 8)
         result = []
         linenr = 0
@@ -214,7 +214,7 @@ class TextFileEditor(j.application.JSBaseClass):
                 line = j.data.regex.replace(
                     ignoreRegex, ignoreRegex, "", line).rstrip()
                 line = line + add
-                self._logger.debug(("CH:%s" % line))
+                self._log_debug(("CH:%s" % line))
                 done = True
             if done is False and line.find(tofind) != -1 and  \
                (ignoreRegex is not None and not j.data.regex.match(ignoreRegex, line)):

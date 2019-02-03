@@ -661,7 +661,7 @@ class FList:
         def procFile(dirobj, type, name, subobj, args):
             fullpath = "%s/%s/%s" % (self.rootpath,
                                      dirobj.dbobj.location, name)
-            self._logger.info("[+] uploading: %s" % fullpath)
+            self._log_info("[+] uploading: %s" % fullpath)
             hashs = g8storclient.encrypt(fullpath)
 
             if hashs is None:
@@ -752,7 +752,7 @@ class FList:
             # to_upload += [base64.b64decode(key).decode('utf-8') for key in keys]
             to_upload += keys
 
-        self._logger.info("[+] %d chunks to upload" % len(to_upload))
+        self._log_info("[+] %d chunks to upload" % len(to_upload))
 
         if len(to_upload) == 0:
             return
@@ -780,16 +780,16 @@ class FList:
 
             # if this pack is more than 20MB, uploading it
             if currentsize > 20 * 1024 * 1024:
-                self._logger.info("[+] uploading part of the data...")
+                self._log_info("[+] uploading part of the data...")
                 try:
                     directclient.insert.insert_put(upload)
                     currentsize = 0
                 except Exception as e:
                     # weird error. could be an existing chunk undetected by
                     # previous check
-                    self._logger.error(e)
+                    self._log_error(e)
 
-        self._logger.info("[+] uploading last data...")
+        self._log_info("[+] uploading last data...")
         directclient.api.insert.insert_put(upload)
 
     def destroy(self):

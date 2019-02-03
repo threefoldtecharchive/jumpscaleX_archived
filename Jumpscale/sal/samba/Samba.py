@@ -30,7 +30,7 @@ class SMBUser(j.application.JSBaseClass):
     def _format(self, output):
         if output[0].startswith("Warning:"):
             if self._verbose:
-                self._logger.debug(output[0])
+                self._log_debug(output[0])
 
             return False
 

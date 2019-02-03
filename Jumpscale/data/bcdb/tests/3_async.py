@@ -44,6 +44,6 @@ def main(self):
 
     assert model.bcdb.queue.empty()
 
-    self._logger.info("TEST DONE")
+    self._log_info("TEST DONE")
 
     return ("OK")

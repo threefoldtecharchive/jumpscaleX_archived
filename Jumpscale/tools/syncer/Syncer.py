@@ -101,7 +101,7 @@ class Syncer(j.application.JSBaseConfigClass):
 
         for item in self._get_paths():
             source,dest = item
-            self._logger.info("upload:%s to %s"%(source,dest))
+            self._log_info("upload:%s to %s"%(source,dest))
             self.executor.upload(source, dest, recursive=True, createdir=True,
                                  rsyncdelete=True, ignoredir=self.IGNOREDIR, ignorefiles=None)
 
@@ -122,7 +122,7 @@ class Syncer(j.application.JSBaseConfigClass):
         observer = Observer()
         for item in self._get_paths():
             source,dest = item
-            self._logger.info("monitor:%s" % source)
+            self._log_info("monitor:%s" % source)
             observer.schedule(event_handler, source, recursive=True)
         observer.start()
         print("WE ARE MONITORING")

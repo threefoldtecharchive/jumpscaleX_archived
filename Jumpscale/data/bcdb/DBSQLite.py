@@ -12,9 +12,9 @@ class DBSQLite(j.application.JSBaseClass):
         self._dbpath = j.sal.fs.joinPaths(bcdb._data_dir, "sqlite.db")
 
         if j.sal.fs.exists(self._dbpath):
-            self._logger.debug("EXISTING SQLITEDB in %s"%self._dbpath)
+            self._log_debug("EXISTING SQLITEDB in %s"%self._dbpath)
         else:
-            self._logger.debug("NEW SQLITEDB in %s"%self._dbpath)
+            self._log_debug("NEW SQLITEDB in %s"%self._dbpath)
 
         self.sqlitedb = j.clients.peewee.SqliteDatabase(self._dbpath)
         if  self.sqlitedb.is_closed():
@@ -66,7 +66,7 @@ class DBSQLite(j.application.JSBaseClass):
          self._table_model.delete_by_id(key)
 
     # def reset(self):
-    #     self._logger.info("RESET FOR KVS")
+    #     self._log_info("RESET FOR KVS")
     #     self._table_model.delete().execute()
     #     self._table_model.create_table()
     #     assert self._table_model.select().count() == 0

@@ -1,59 +1,24 @@
+
 import redis
 import os
 import json
 from .RedisQueue import RedisQueue
-from Jumpscale import j
+# from Jumpscale import j
 
+import json
 
 # NOTE: We don't use J here because this file
 # is imported during the bootstrap process where J is not available
-
-class RedisDict(dict):
-
-    def __init__(self, client, key):
-        self._key = key
-        self._client = client
-
-    def __getitem__(self, key):
-        value = self._client.hget(self._key, key)
-        return json.loads(value)
-
-    def __setitem__(self, key, value):
-        value = json.dumps(value)
-        self._client.hset(self._key, key, value)
-
-    def __contains__(self, key):
-        return self._client.hexists(self._key, key)
-
-    def __repr__(self):
-        return repr(self._client.hgetall(self._key))
-
-    def copy(self):
-        result = dict()
-        allkeys = self._client.hgetalldict(self._key)
-        for key, value in list(allkeys.items()):
-            result[key] = json.loads(value)
-        return result
-
-    def pop(self, key):
-        value = self._client.hget(self._key, key)
-        self._client.hdel(self._key, key)
-        return json.loads(value)
-
-    def keys(self):
-        return self._client.hkeys(self._key)
-
-    def iteritems(self):
-        allkeys = self._client.hgetalldict(self._key)
-        for key, value in list(allkeys.items()):
-            yield key, json.loads(value)
-
 
 class Redis(redis.Redis):
     hgetalldict = redis.Redis.hgetall
     dbtype = 'RDB'
     _storedprocedures_to_sha = {}
     _redis_cli_path_ = None
+
+    def __init__(self,*args,**kwargs):
+        redis.Redis.__init__(self,*args,**kwargs)
+        self._storedprocedures_to_sha = {}
 
     def dict_get(self, key):
         return RedisDict(self, key)
@@ -76,11 +41,11 @@ class Redis(redis.Redis):
             client = redis.Redis(**self.connection_pool.connection_kwargs)
             return RedisQueue(client, name, namespace=namespace)
 
-    def storedprocedure_register(self, name, nrkeys, path):
+    def storedprocedure_register(self, name, nrkeys, path_or_content):
         '''create stored procedure from path
 
         :param path: the path where the stored procedure exist
-        :type path: str
+        :type path_or_content: str which is the lua content or the path
         :raises Exception: when we can not find the stored procedure on the path
 
         will return the sha
@@ -102,59 +67,73 @@ class Redis(redis.Redis):
         https://redis.io/commands/eval
 
         '''
-        lua = j.sal.fs.readFile(path)
+
+
+
+        if "\n" not in path_or_content:
+            f = open(path_or_content, "r")
+            lua = f.read()
+            path = path_or_content
+        else:
+            lua = path_or_content
+            path = ""
 
         script =  self.register_script(lua)
 
-        sha = script.sha.encode()
-
         dd = {}
-        dd["sha"] = sha
+        dd["sha"] = script.sha
         dd["script"] = lua
         dd["nrkeys"] = nrkeys
         dd["path"] = path
 
-        data =  j.data.serializers.json.dumps(dd)
+        data = json.dumps(dd)
 
         self.hset("storedprocedures",name,data)
-        self.hset("storedprocedures_sha",name,sha)
+        self.hset("storedprocedures_sha",name,script.sha)
 
-        self.__class__._storedprocedures_to_sha = {}
+        self._storedprocedures_to_sha = {}
 
-        return dd
+        # sha = self._sp_data(name)["sha"]
+        # assert self.script_exists(sha)[0]
+
+        return script
 
     def storedprocedure_delete(self, name):
         self.hdel("storedprocedures",name)
-        #TODO: unload script
-        j.shell()
-
+        self.hdel("storedprocedures_sha",name)
+        self._storedprocedures_to_sha = {}
 
 
     @property
     def _redis_cli_path(self):
         if not self.__class__._redis_cli_path_:
-
+            from Jumpscale import j
             if j.core.tools.cmd_installed("redis-cli_"):
                 self.__class__._redis_cli_path_ =  "redis-cli_"
             else:
                 self.__class__._redis_cli_path_ =  "redis-cli"
         return self.__class__._redis_cli_path_
 
-    def redis_cmd_execute(self,command,debug=False,debugsync=False,*args):
+    def redis_cmd_execute(self,command,debug=False,debugsync=False,keys=[],args=[]):
         """
 
         :param command:
         :param args:
         :return:
         """
+        from Jumpscale import j
         rediscmd = self._redis_cli_path
         if debug:
             rediscmd+= " --ldb"
         elif debugsync:
             rediscmd+= " --ldb-sync-mode"
         rediscmd+= " --%s"%command
-        for arg in args:
-            rediscmd+= " %s"%arg
+        for key in keys:
+            rediscmd+= " %s"%key
+        if len(args)>0:
+            rediscmd+= " , "
+            for arg in args:
+                rediscmd+= " %s"%arg
         print(rediscmd)
 
         rc,out,err = j.sal.process.execute(rediscmd,interactive=True)
@@ -162,11 +141,11 @@ class Redis(redis.Redis):
 
 
     def _sp_data(self,name):
-        if name not in self.__class__._storedprocedures_to_sha:
+        if name not in self._storedprocedures_to_sha:
             data = self.hget("storedprocedures",name)
-            data2 = j.data.serializers.json.loads(data)
-            self.__class__._storedprocedures_to_sha[name] = data2
-        return self.__class__._storedprocedures_to_sha[name]
+            data2 = json.loads(data)
+            self._storedprocedures_to_sha[name] = data2
+        return self._storedprocedures_to_sha[name]
 
     def storedprocedure_execute(self,name,*args):
         """
@@ -177,9 +156,14 @@ class Redis(redis.Redis):
         """
 
         data = self._sp_data(name)
-        return self.evalsha(data["sha"],data["nrkeys"],*args)
-
-
+        sha = data["sha"]#.encode()
+        assert isinstance(sha, (str))
+        # assert isinstance(sha, (bytes, bytearray))
+        from Jumpscale import j
+        j.shell()
+        return self.evalsha(sha,data["nrkeys"],*args)
+        # self.eval(data["script"],data["nrkeys"],*args)
+        # return self.execute_command("EVALSHA",sha,data["nrkeys"],*args)
 
     def storedprocedure_debug(self,name,*args):
         """
@@ -195,7 +179,14 @@ class Redis(redis.Redis):
         """
         data = self._sp_data(name)
         path = data["path"]
-        out = self.redis_cmd_execute("eval",True,False,path,*args)
+        if path =="":
+            from pudb import set_trace; set_trace()
+
+        nrkeys = data['nrkeys']
+        args2 = args[nrkeys:]
+        keys = args[:nrkeys]
+
+        out = self.redis_cmd_execute("eval %s"%path,debug=True,keys=keys,args=args)
 
         return out
 

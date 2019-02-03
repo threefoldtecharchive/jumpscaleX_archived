@@ -127,7 +127,7 @@ class GeventWSServer(j.application.JSBaseClass):
                 return None
 
     def start(self):
-        self._logger.info('started on %s' % self.port, 2, 'rogerthat')
+        self._log_info('started on %s' % self.port, 2, 'rogerthat')
         self.server.serve_forever()
 
 

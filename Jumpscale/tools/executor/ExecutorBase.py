@@ -118,12 +118,6 @@ class ExecutorBase(j.application.JSBaseClass):
         self._state_on_system = None
 
     @property
-    def logger(self):
-        if self._logger is None:
-            self._logger = j.logger.get("executor")
-        return self._logger
-
-    @property
     def id(self):
         if self._id is None:
             raise RuntimeError("self._id cannot be None")
@@ -201,7 +195,7 @@ class ExecutorBase(j.application.JSBaseClass):
         if sudo:
             cmds = self.sudo_cmd(cmds)
 
-        self._logger.debug(cmds)
+        self._log_debug(cmds)
 
         return cmds
 
@@ -257,7 +251,7 @@ class ExecutorBase(j.application.JSBaseClass):
         """
         if self._state_on_system == None:
 
-            self._logger.debug("stateonsystem for non local:%s" % self)
+            self._log_debug("stateonsystem for non local:%s" % self)
             C = """
             set +ex
             ls "/sandbox"  > /dev/null 2>&1 && echo 'ISSANDBOX = 1' || echo 'ISSANDBOX = 0'
@@ -399,7 +393,7 @@ class ExecutorBase(j.application.JSBaseClass):
         if "cfg_state" in self.state_on_system:
             self.state._state = self.state_on_system["cfg_state"]
 
-        self._logger.debug("initenv done on executor base")
+        self._log_debug("initenv done on executor base")
 
     @property
     def platformtype(self):
@@ -412,7 +406,7 @@ class ExecutorBase(j.application.JSBaseClass):
         return self._cache
 
     def file_read(self, path):
-        self._logger.debug("file read:%s" % path)
+        self._log_debug("file read:%s" % path)
         rc, out, err = self.execute("cat %s" % path, showout=False)
         return out
 
@@ -451,7 +445,7 @@ class ExecutorBase(j.application.JSBaseClass):
         """
 
         if showout:
-            self._logger.debug("file write:%s" % path)
+            self._log_debug("file write:%s" % path)
 
         if len(content) > 100000:
             # when contents are too big, bash will crash
@@ -669,4 +663,4 @@ class ExecutorBase(j.application.JSBaseClass):
 
         assert contentbig == content2
 
-        self._logger.debug("TEST for executor done")
+        self._log_debug("TEST for executor done")

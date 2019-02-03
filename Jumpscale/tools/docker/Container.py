@@ -158,7 +158,7 @@ class Container(j.application.JSBaseClass):
                 self.stop()
             self.client.remove_container(self.id)
         except Exception as e:
-            self._logger.error("could not kill:%s" % self.id)
+            self._log_error("could not kill:%s" % self.id)
         finally:
             if self.id in j.sal.docker._containers:
                 del j.sal.docker._containers[self.id]

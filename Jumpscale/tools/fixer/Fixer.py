@@ -85,7 +85,7 @@ class Fixer(j.application.JSBaseClass):
 
 
     def line_process(self,line):
-        # self._logger.debug("lineprocess:%s"%line)
+        # self._log_debug("lineprocess:%s"%line)
         return self.replacer.line_process(line)
 
 

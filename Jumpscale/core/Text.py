@@ -410,7 +410,7 @@ class Text(object):
                 regex = None
 
             if len(descr) > 30 and ttype not in ('dict', 'multiline'):
-                self._logger.info(descr)
+                self._log_info(descr)
                 descr = ""
 
             # print "type:'%s'"%ttype
@@ -458,7 +458,7 @@ class Text(object):
 
             elif ttype == "bool":
                 if descr != "":
-                    self._logger.info(descr)
+                    self._log_info(descr)
                 result = self._j.tools.console.askYesNo()
                 if result:
                     result = True

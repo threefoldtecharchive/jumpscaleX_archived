@@ -30,14 +30,14 @@ class JSRunProcess(j.application.JSBaseClass):
         raise RuntimeError(msg)
 
     def stop(self):
-        self._logger.warning("stop:\n%s"%self)
+        self._log_warning("stop:\n%s"%self)
         if self.stopcmd:
             cmd = j.tools.jinja2.template_render(text=self.stopcmd, args=self._ddict)
-            self._logger.warning("stopcmd:%s"%cmd)
+            self._log_warning("stopcmd:%s"%cmd)
             rc,out,err=j.sal.process.execute(cmd,die=False)
             time.sleep(0.2)
         if self.pid:
-            self._logger.info("found process to stop:%s"%self.pid)
+            self._log_info("found process to stop:%s"%self.pid)
             j.sal.process.kill(self.pid)
             time.sleep(0.2)
         if self.process_strings!=[]:
@@ -45,7 +45,7 @@ class JSRunProcess(j.application.JSBaseClass):
                 pids = j.sal.process.getPidsByFilter(pstring)
                 while pids!=[]:
                     for pid in pids:
-                        self._logger.debug("warning:%s"%pid)
+                        self._log_debug("warning:%s"%pid)
                         j.sal.process.kill(pid)
                     time.sleep(0.2)
                     pids = j.sal.process.getPidsByFilter(pstring)
@@ -77,7 +77,7 @@ class JSRunProcess(j.application.JSBaseClass):
                 if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost",port=port)==False:
                     nr+=1
             if nr==len(self.ports):
-                self._logger.info("IS HALTED %s"%self.name)
+                self._log_info("IS HALTED %s"%self.name)
                 return True
             if onetime:
                 break
@@ -97,7 +97,7 @@ class JSRunProcess(j.application.JSBaseClass):
                 if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost",port=port):
                     nr+=1
             if nr==len(self.ports):
-                self._logger.info("IS RUNNING %s"%self.name)
+                self._log_info("IS RUNNING %s"%self.name)
                 return True
             if onetime:
                 break
@@ -113,7 +113,7 @@ class JSRunProcess(j.application.JSBaseClass):
             self.stop()
         else:
             if self.running:
-                self._logger.info("no need to start was already started:%s"%self.name)
+                self._log_info("no need to start was already started:%s"%self.name)
                 return
 
         self._pid = None
@@ -130,7 +130,7 @@ class JSRunProcess(j.application.JSBaseClass):
             cmd+="cd %s\n"%self.path
         cmd+="%s\n"%self.cmd
 
-        self._logger.debug("\n%s"%cmd)
+        self._log_debug("\n%s"%cmd)
 
 
         j.sal.fs.writeFile(tpath,cmd)
@@ -142,7 +142,7 @@ class JSRunProcess(j.application.JSBaseClass):
 
         else:
             cmd2= "jsrun -f -n %s '%s'\n"%(self.name,tpath)
-            self._logger.debug(cmd2)
+            self._log_debug(cmd2)
             rc,out,err=j.sal.process.execute(cmd2,die=False)
             if rc>0:
                 if err.find("session exists")!=-1:

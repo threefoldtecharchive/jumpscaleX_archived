@@ -25,7 +25,7 @@ class HostFile(JSBASE):
             filecontents = filecontents.replace(search_obj.group(0), '')
             j.sal.fs.writeFile(self._host_filepath, filecontents)
         else:
-            self._logger.warning('Ip address %s not found in hosts file' % ip)
+            self._log_warning('Ip address %s not found in hosts file' % ip)
 
     def ip_exists(self, ip):
         """Check if ip is in the hostsfile

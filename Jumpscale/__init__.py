@@ -208,9 +208,9 @@ from .core.Dirs import Dirs
 j.dirs = Dirs(j)
 j.core.dirs = j.dirs
 
-from .core.logging.LoggerFactory import LoggerFactory
-j.logger = LoggerFactory(j)
-j.core.logger = j.logger
+# from .core.logging.LoggerFactory import LoggerFactory
+# j.logger = LoggerFactory(j)
+# j.core.logger = j.logger
 
 from .core.Application import Application
 j.application = Application(j)
@@ -251,7 +251,13 @@ ipath = j.core.tools.text_replace("{DIR_BASE}/lib/jumpscale/Jumpscale")
 if ipath not in sys.path:
     sys.path.append(ipath)
 
+from .tools.logger.LoggerInstanceBase import LoggerInstanceBase
+j.core._LOGGING_BASE_CLASS = LoggerInstanceBase
+
+
 import jumpscale_generated
+
+
 
 if generated  and len(j.core.application.errors_init)>0:
     print("THERE ARE ERRORS: look in /tmp/jumpscale/ERRORS_report.md")
@@ -264,6 +270,7 @@ if generated  and len(j.core.application.errors_init)>0:
 
 # import time
 # time.sleep(1000)
+
 
 
 

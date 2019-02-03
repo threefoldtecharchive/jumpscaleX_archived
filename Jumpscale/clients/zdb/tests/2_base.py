@@ -45,7 +45,7 @@ def main(self):
     for id, data in cl.iterate():
         if id == 0:
             continue
-        self._logger.debug("%s:%s" % (id, data))
+        self._log_debug("%s:%s" % (id, data))
         result[id] = data
 
     assert {1: b'rss', 2: b'b'} == result
@@ -54,7 +54,7 @@ def main(self):
 
     assert cl.exists(id2)
 
-    self._logger.debug("write 10000 entries")
+    self._log_debug("write 10000 entries")
 
     def dumpdata(self):
 
@@ -73,7 +73,7 @@ def main(self):
 
     dumpdata(self)  # is in default namespace
 
-    self._logger.debug("count:%s" % cl.count)
+    self._log_debug("count:%s" % cl.count)
 
     nsname = "newnamespace"
 
@@ -108,7 +108,7 @@ def main(self):
     nritems = 10000
     j.tools.timer.start("zdb")
 
-    self._logger.debug("perftest for 10.000 records, should get above 5k per sec, +10k expected")
+    self._log_debug("perftest for 10.000 records, should get above 5k per sec, +10k expected")
     for i in range(nritems):
         id = cl.set(b"a")
 
@@ -116,5 +116,5 @@ def main(self):
 
     assert res>5000
 
-    self._logger.info("PERF TEST SEQ OK")
+    self._log_info("PERF TEST SEQ OK")
     return "OK"

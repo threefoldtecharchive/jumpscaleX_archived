@@ -26,4 +26,4 @@ class S3Factory(JSConfigBase):
         """
 
         client = self.get(name="test")
-        self._logger.debug(client.serversGet())
+        self._log_debug(client.serversGet())
