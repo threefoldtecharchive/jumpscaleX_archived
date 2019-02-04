@@ -14,20 +14,22 @@ class LoggerFactory(j.application.JSBaseClass):
 
     @debug.setter
     def debug(self,value):
-        assert j.data.types.bool(value)
-        j.core.myenv.config["DEBUG"]=value
-        j.core.myenv.config_save()
+        assert j.data.types.bool.check(value)
+        config = {}
+        config["DEBUG"]=value
+        self.config = config
         self.reload()
 
     @property
     def config(self):
+
         res={}
         for name in j.core.myenv.config.keys():
             if name.startswith("LOGGER") or name=="DEBUG":
                 res[name]=j.core.myenv.config[name]
         return res
 
-    @debug.setter
+    @config.setter
     def config(self,value):
         """
 
@@ -46,12 +48,15 @@ class LoggerFactory(j.application.JSBaseClass):
         :param value: dict with config properties, can be all or some of the above
         :return:
         """
-        assert j.data.types.dict(value)
+        assert j.data.types.dict.check(value)
         for name in j.core.myenv.config.keys():
             if name.startswith("LOGGER") or name=="DEBUG":
                 if name in value:
-                    j.core.myenv.config[name] = value[name]
+                    if j.core.myenv.config[name] != value[name]:
+                        self._log_debug("changed in config: %s:%s"%(name,value[name]))
+                        j.core.myenv.config[name] = value[name]
         j.core.myenv.config_save()
+        self.reload()
 
     def reload(self):
         """
