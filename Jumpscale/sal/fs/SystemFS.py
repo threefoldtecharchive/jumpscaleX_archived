@@ -1125,8 +1125,6 @@ class SystemFS(j.application.JSBaseClass):
         else:
             with open(filename, encoding=encoding) as fp:
                 data = fp.read()
-
-        self._log_debug('File %s is closed after reading' % filename)
         return data
 
 

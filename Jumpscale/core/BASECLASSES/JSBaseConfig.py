@@ -38,7 +38,7 @@ class JSBaseConfig(JSBase):
 
         if topclass:
             self._init()
-            self._init2()
+            self._init2(**kwargs)
 
 
     def _class_init(self):
@@ -54,11 +54,11 @@ class JSBaseConfig(JSBase):
 
             # print("classinit:%s"%self.__class__)
 
-    def _init2(self):
-        self._key = "%s_%s" % (self.__class__.__name__, self.data.name)
+    def _init2(self,**kwargs):
+        self._key = "%s:%s:%s" % (self.__class__._location,self.__class__._name, self.data.name)
 
         #always needs to be last
-        JSBase._init2(self)
+        JSBase._init2(self,**kwargs)
 
     def _obj_cache_reset(self):
         """

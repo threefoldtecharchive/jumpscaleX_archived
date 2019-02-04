@@ -4,7 +4,7 @@ from .JSBase import JSBase
 
 class JSBaseConfigs(JSBase):
 
-    def __init__(self,parent=None, topclass=True):
+    def __init__(self,parent=None, topclass=True,**kwargs):
         JSBase.__init__(self,parent=parent, topclass=False)
 
         self._model_ = None
@@ -13,7 +13,7 @@ class JSBaseConfigs(JSBase):
 
         if topclass:
             self._init()
-            self._init2()
+            self._init2(**kwargs)
 
     def _class_init(self):
 
@@ -53,10 +53,8 @@ class JSBaseConfigs(JSBase):
         kl = self._childclass_selector(**kwargs)
         data = self._model.new(data=kwargs)
         data.name = name
-        self._children[name] = kl(parent=self,data=data)
+        self._children[name] = kl(parent=self,data=data,**kwargs)
         self._children[name]._isnew = True
-        self._children[name]._init(**kwargs) #supposed to be used by person who developers kosmos clients, ...
-        self._children[name]._init2(**kwargs) #used by the developers of the base classes
         return self._children[name]
 
 
@@ -70,6 +68,7 @@ class JSBaseConfigs(JSBase):
         :param childclass_name, if different typen of childclass, specify its name, needs to be implemented in _childclass_selector
         :return: the service
         """
+        self._log_debug("get child:'%s' with id:%s from '%s'"%(name,id,self._name),data=kwargs)
         if name is not None and name in self._children:
             return self._children[name]
         new = False
@@ -108,11 +107,10 @@ class JSBaseConfigs(JSBase):
                 data = res[0]
 
         kl = self._childclass_selector(**kwargs)
-        self._children[name] = kl(data=data,parent=self)
+        self._children[name] = kl(data=data,parent=self,**kwargs)
         if new:
             self._children[name]._isnew = True
 
-        self._children[name]._init(**kwargs)
 
         return self._children[name]
 
@@ -121,6 +119,7 @@ class JSBaseConfigs(JSBase):
         will destroy all data in the DB, be carefull
         :return:
         """
+        self._log_debug("reset all data")
         for item in self.find():
             item.delete()
 

@@ -5,7 +5,7 @@ from .JSBase import JSBase
 
 class JSFactoryBase(JSBase):
 
-    def __init__(self,parent=None, topclass=True):
+    def __init__(self,parent=None, topclass=True,**kwargs):
         JSBase.__init__(self,parent=parent, topclass=False)
 
         self._factories = {}
@@ -21,7 +21,7 @@ class JSFactoryBase(JSBase):
 
         if topclass:
             self._init()
-            self._init2()
+            self._init2(**kwargs)
 
     def _class_init(self):
 

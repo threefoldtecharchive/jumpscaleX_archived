@@ -33,13 +33,13 @@ def action(func):
     return wrapper_action
 
 
-class JSBaseService(JSBaseConfig):
+class JSBaseService(j.application.JSBaseClass):
 
 
     _MODEL = None
 
 
-    def __init__(self,id=None,key=None,servicepool=None):
+    def __init__(self,id=None,key=None,servicepool=None,**kwargs):
 
         j.application.JSBaseClass.__init__(self)
 
@@ -54,6 +54,10 @@ class JSBaseService(JSBaseConfig):
         self._key = None
         self._running = None
         self.action_queue = queue.Queue()
+
+        if topclass:
+            self._init()
+            self._init2(**kwargs)
 
 
 

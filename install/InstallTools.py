@@ -19,6 +19,31 @@ from subprocess import Popen, check_output
 
 import inspect
 
+serializer=None
+try:
+    import yaml
+    def serializer(data):
+        return yaml.dump(
+            data,
+            default_flow_style=False,
+            default_style='',
+            indent=4,
+            line_break="\n")
+except:
+    pass
+if not serializer:
+    try:
+        import json
+        def serializer(data):
+            return json.dumps(data, ensure_ascii=False, sort_keys=True, indent=True)
+    except:
+        pass
+
+if not serializer:
+    def serializer(data):
+        return str(data)
+
+
 try:
     import redis
 except:
@@ -289,6 +314,11 @@ class Tools:
         else:
             logdict["context"] = defname
         logdict["cat"] = cat
+
+        if data and isinstance(data,dict):
+            if "password" in data or "secret" in data or "passwd" in data:
+                data["password"]="***"
+
         logdict["data"] = data
 
         Tools.log2stdout(logdict)
@@ -684,17 +714,31 @@ class Tools:
 
         logdict.update(MyEnv.MYCOLORS)
 
-        if len (logdict["filepath"])> 18:
+        if len (logdict["filepath"])> 16:
             logdict["filename"] = logdict["filepath"][len(logdict["filepath"])-18:]
         else:
             logdict["filename"] = logdict["filepath"]
+
+        if len (logdict["context"])> 35:
+            logdict["context"] = logdict["context"][len(logdict["context"])-34:]
+        if logdict["context"].startswith("_"):
+            logdict["context"]=""
+        elif logdict["context"].startswith(":"):
+            logdict["context"]=""
+
+
 
         msg = LOGFORMAT.format(**logdict)
 
         print(msg)
 
-
-
+        if logdict["data"] not in ["",None]:
+            if isinstance(logdict["data"],dict):
+                data = serializer(logdict["data"])
+            else:
+                data = logdict["data"]
+            data=Tools.text_indent(data,10,strip=True)
+            print (data.rstrip())
 
 
     @staticmethod
@@ -744,6 +788,7 @@ class Tools:
         str|unicode : string indented by ntabs and nspaces.
 
         """
+        content=str(content)
         if args is not None:
             content = Tools.text_replace(content,args=args)
         if strip:
@@ -1539,6 +1584,8 @@ class UbuntuInstall():
     #     """
     #     Tools.execute(script,interactive=True)
 
+LOGFORMATBASE = '{CYAN}{TIME} {filename:<16}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}'
+
 class MyEnv():
 
     config = {}
@@ -1563,14 +1610,14 @@ class MyEnv():
                 "RESET":"\033[0;0m",
                 "BOLD":"\033[;1m",
                 "REVERSE":"\033[;7m"}
-    
+
     LOGFORMAT = {
-        'DEBUG':'{CYAN}{TIME}{RESET} {filename:<18}-{linenr:4d}: {message}{RESET}',
+        'DEBUG':LOGFORMATBASE.replace("{COLOR}","{CYAN}"),
         'STDOUT': '{message}',
-        'INFO': '{YELLOW}* {message}{RESET}',
-        'WARNING': '{BLUE}* {message}{RESET}',
-        'ERROR': '{RED}{TIME}{RESET} {filename:<18}-{linenr:4d}: {message}{RESET}',
-        'CRITICAL':'{RED}{TIME} {filename:<18}-{linenr:4d}: {message}{RESET} ',
+        'INFO': '{BLUE}* {message}{RESET}',
+        'WARNING': LOGFORMATBASE.replace("{COLOR}","{BLUE}"),
+        'ERROR': LOGFORMATBASE.replace("{COLOR}","{RED}"),
+        'CRITICAL': '{RED}{TIME} {filename:<16} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}',
     }
 
     db = Tools.redis_client_get(die=False)
@@ -1622,7 +1669,7 @@ class MyEnv():
         config["DIR_BIN"] = "/sandbox/bin"
         config["DIR_APPS"] = "/sandbox/apps"
         config["USEGIT"] = True
-        config["DEBUG"] = False
+        config["DEBUG"] = True
         config["SSH_AGENT"] = False
 
         config["LOGGER_INCLUDE"] = []

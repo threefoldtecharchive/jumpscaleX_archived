@@ -8,7 +8,7 @@ import types
 
 class JSBase:
 
-    def __init__(self, parent=None, topclass=True):
+    def __init__(self, parent=None, topclass=True,**kwargs):
         """
         :param parent: parent is object calling us
         :param topclass: if True means no-one inherits from us
@@ -16,9 +16,10 @@ class JSBase:
         self._parent = parent
         self._class_init()  # is needed to init class properties
 
+
         if topclass:
             self._init()
-            self._init2()
+            self._init2(**kwargs)
 
     def _class_init(self, topclass=True):
 
@@ -32,7 +33,8 @@ class JSBase:
             self.__class__._test_runs = {}
             self.__class__._test_runs_error = {}
 
-            self.__class__._name = j.core.text.strip_to_ascii_dense(str(self.__class__)).split(".")[-1].lower()
+            if not hasattr(self.__class__,"_name"):
+                self.__class__._name = j.core.text.strip_to_ascii_dense(str(self.__class__)).split(".")[-1].lower()
             # short location name:
             if '__jslocation__' in self.__dict__:
                 self.__class__._location = self.__jslocation__
@@ -72,6 +74,8 @@ class JSBase:
 
             self.__class__._class_init_done = True
 
+            self._key = "%s:%s" % (self.__class__._location,self.__class__._name)
+
             #lets make sure the initial loglevel gets set
             self._log_init()
 
@@ -107,22 +111,23 @@ class JSBase:
         pass
 
 
-    def _init2(self):
+    def _init2(self,**kwargs):
         """
         happens after _init by the caller of the object, meant to be used by developers of the base classes
         :return:
         """
         self._obj_cache_reset()
+        self._key = "%s:%s" % (self.__class__._location,self.__class__._name) #needs to be done 2, first in class init
+
 
     def _obj_cache_reset(self):
         """
         this empties the runtime state of an obj and the logger and the testruns
         :return:
         """
-        self.__class__._logger_ = None
+
         self.__class__._test_runs = {}
         self._cache_ = None
-        self._objid_ = None
 
         for key, obj in self.__dict__.items():
             del obj
@@ -133,32 +138,6 @@ class JSBase:
             self.__class__._dirpath_ = os.path.dirname(inspect.getfile(self.__class__))
         return self.__class__._dirpath_
 
-    @property
-    def _objid(self):
-        if self._objid_ is None:
-            id = self.__class__._location
-            id2 = ""
-            try:
-                id2 = self.data.name
-            except:
-                pass
-            if id2 == "":
-                try:
-                    if self.data.id is not None:
-                        id2 = self.data.id
-                except:
-                    pass
-            if id2 == "":
-                for item in ["instance", "_instance", "_id", "id", "name", "_name"]:
-                    if item in self.__dict__ and self.__dict__[item]:
-                        self._log_debug("found extra for obj_id")
-                        id2 = str(self.__dict__[item])
-                        break
-            if id2 != "":
-                self._objid_ = "%s_%s" % (id, id2)
-            else:
-                self._objid_ = id
-        return self._objid_
 
 
     def _logger_enable(self):
@@ -179,7 +158,7 @@ class JSBase:
             parent = parent._parent
 
         for kl in self.__class__._class_children:
-            print("%s:minlevel:%s"%(kl,minlevel))
+            # print("%s:minlevel:%s"%(kl,minlevel))
             kl.minlevel = minlevel
 
         self.__class__._logger_level = minlevel
@@ -322,13 +301,13 @@ class JSBase:
         #     else:
         #         frame_ = frame_.f_back
 
-        if self._location not in [None,""]:
-            if not self._location.endswith(self._name):
-                context = "%s:%s:%s"%(self._location,self._name,defname)
-            else:
-                context = "%s:%s"%(self._location,defname)
-        if context=="":
-            context = defname
+        # if self._location not in [None,""]:
+        #     if not self._location.endswith(self._name):
+        #         context = "%s:%s:%s"%(self._location,self._name,defname)
+        #     else:
+        #         context = "%s:%s"%(self._location,defname)
+        # if context=="":
+        #     context = defname
 
         logdict={}
         logdict["linenr"] = linenr
@@ -336,8 +315,13 @@ class JSBase:
         logdict["message"] = msg
         logdict["filepath"] = fname
         logdict["level"] = level
-        logdict["context"] = context
+        logdict["context"] = self._key
         logdict["cat"] = cat
+
+        if data and isinstance(data,dict):
+            if "password" in data or "secret" in data or "passwd" in data:
+                data["password"]="***"
+
         logdict["data"] = data
 
         if j.application.logger:
@@ -376,7 +360,7 @@ class JSBase:
         if name == "":
             for item in j.core.db.hkeys("done"):
                 item = item.decode()
-                print("reset todo:%s" % item)
+                # print("reset todo:%s" % item)
                 if item.find(self._objid) != -1:
                     j.core.db.hdel("done", self._objid)
         else:

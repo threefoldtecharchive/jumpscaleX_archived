@@ -99,7 +99,7 @@ class Schema(j.application.JSBaseClass):
         get schema object from schema text
         """
 
-        self._log_debug("load schema:\n%s" % text)
+        self._log_debug("load schema",data=text)
 
         self.text = j.core.text.strip(text)
 
@@ -189,7 +189,7 @@ class Schema(j.application.JSBaseClass):
         nr = 0
         for line in text.split("\n"):
             line = line.strip()
-            self._log_debug("L:%s" % line)
+            # self._log_debug("L:%s" % line)
             nr += 1
             if line.strip() == "":
                 continue

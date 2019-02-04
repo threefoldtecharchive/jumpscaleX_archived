@@ -19,7 +19,7 @@ class JSBaseConfigParent(JSBaseConfig,JSFactoryBase):
 
         if topclass:
             self._init()
-            self._init2()
+            self._init2(**kwargs)
 
     def _class_init(self):
 
