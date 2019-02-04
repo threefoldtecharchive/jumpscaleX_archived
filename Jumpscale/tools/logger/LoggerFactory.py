@@ -10,6 +10,9 @@ class LoggerFactory(j.application.JSBaseConfigsClass):
     _LoggerInstance = LoggerInstance
 
 
+    def
+
+
     def test(self,name="base"):
         '''
         js_shell 'j.tools.logger.test()'
