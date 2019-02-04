@@ -353,22 +353,19 @@ class Application(object):
 
 
 
-    def _walk_obj(self,obj):
-        j.shell()
-
-        _factories
-
-        if isinstance(obj,JSFactoryBase):
-
-            for key,obj2 in obj._children.items():
-                self._walk_obj(obj2)
-
-            print("- factory empty %s"%(obj._objid))
-            obj._obj_cache_reset()
-
-        if isinstance(obj,JSBase):
-            print("- base empty %s"%(obj._objid))
-            obj._obj_cache_reset()
+    def _iterate_rootobj(self,obj=None):
+        if obj is None:
+            for key,item in self._j.__dict__.items():
+                if key.startswith("_"):
+                    continue
+                if key in ["exceptions","core","dirs","application","data_units","errorhandler"]:
+                    continue
+                self._j.core.tools.log("iterate jumpscale factory:%s"%key)
+                for key2,item2 in item.__dict__.items():
+                    # self._j.core.tools.log("iterate rootobj:%s"%key2)
+                    if item2 is not None:
+                        self._j.core.tools.log("yield obj:%s"%item2._key)
+                        yield item2
 
     #
     # def _get_referents(self,obj,level=0,done=[]):

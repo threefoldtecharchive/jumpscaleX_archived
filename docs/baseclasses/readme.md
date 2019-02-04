@@ -10,16 +10,13 @@
 - [j.application.JSBaseConfigClass](config.md)
 - [j.application.JSBaseConfigsClass](configs.md)
 
-## special cases
-
-- [singletons](config_singleton.md)
 
 ## properties available on all base classes
 
 
 - _location  : e.g. j.clients.ssh, is always the location name of the highest parent 
 - _name : name of the class itself in lowercase
-_ _key: is a unique key per object based on _location,_name and if relevant "name" of model inside, is used in the logger
+- _key: is a unique key per object based on _location,_name and if relevant "name" of model inside, is used in the logger
 
 ### logging on a jumpscale object
 
@@ -63,3 +60,8 @@ class MyClass(JSBase):
 ```
 
 do not implement your own __init__() !!!
+
+
+## special cases
+
+- [singletons](config_singleton.md)

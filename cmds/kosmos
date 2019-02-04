@@ -18,7 +18,7 @@ options, args = parser.parse_known_args()
 
 
 if len(args) == 1:
-    if j.sal.fs.exists(args[0]):
+    if "(" not in args[0] and j.sal.fs.exists(args[0]):
         from importlib.machinery import SourceFileLoader
         mymodule = SourceFileLoader('main', args[0]).load_module()
     else:

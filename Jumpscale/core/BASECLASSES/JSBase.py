@@ -79,7 +79,13 @@ class JSBase:
             #lets make sure the initial loglevel gets set
             self._log_init()
 
-    def _log_init(self):
+    def _log_init(self,children=False):
+        """
+
+        :param children: means will reset the log level on children classes
+
+        :return:
+        """
         # print ("%s:loginit"%self.__class__._name)
         if j.core.myenv.config.get("DEBUG",False):
             self._logger_minlevel_set(1)
@@ -102,10 +108,17 @@ class JSBase:
                     incl=False
 
         if incl:
-            self._logger_minlevel_set(j.core.myenv.log_loglevel)
-        else:
-            self._logger_minlevel_set(100)
+            minlevel = j.core.myenv.log_loglevel
 
+        else:
+            minlevel = 100
+
+        self._logger_minlevel_set(minlevel)
+
+        if children:
+            for kl in self.__class__._class_children:
+                print("%s:minlevel:%s"%(kl,minlevel))
+                kl.minlevel = minlevel
 
     def _init(self):
         pass
@@ -162,6 +175,7 @@ class JSBase:
             kl.minlevel = minlevel
 
         self.__class__._logger_level = minlevel
+
 
 
 
