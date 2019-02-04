@@ -280,7 +280,7 @@ class Tools:
     _shell = None
 
     @staticmethod
-    def log(msg,cat="",level=10,data=None,context=None,_deeper=False):
+    def log(msg,cat="",level=10,data=None,context=None,_deeper=False,stdout=True,redis=True):
         """
 
         :param msg:
@@ -321,7 +321,8 @@ class Tools:
 
         logdict["data"] = data
 
-        Tools.log2stdout(logdict)
+        if stdout:
+            Tools.log2stdout(logdict)
 
     @staticmethod
     def redis_client_get(addr='localhost',port=6379, unix_socket_path="/sandbox/var/redis.sock",die=True):
@@ -742,7 +743,7 @@ class Tools:
 
 
     @staticmethod
-    def pprint(content, ignorecomments=False, text_strip=False,args=None,colors=True,indent=0):
+    def pprint(content, ignorecomments=False, text_strip=False,args=None,colors=True,indent=0,end="\n"):
         """
 
         :param content: what to print
@@ -768,7 +769,8 @@ class Tools:
                                      ignorecomments=ignorecomments,colors=colors)
         if indent>0:
             content = Tools.text_indent(content)
-        print(content)
+        Tools.log(content,level=15,stdout=False)
+        print(content,end=end)
 
     @staticmethod
     def text_indent(content, nspaces=4, wrap=180, strip=True, indentchar=" ",args=None):
@@ -906,7 +908,7 @@ class Tools:
                         # Add data to cache
                         data.append(line)
                         if showout:
-                            print(line, end="")
+                            Tools.pprint(line, end="")
 
                     # Fold cache and return
                     return ''.join(data)
@@ -917,7 +919,7 @@ class Tools:
                         line= stream.read().decode()
                         if showout:
                             # Tools.log(line)
-                            print(line)
+                            Tools.pprint(line,end="")
 
 
             if timeout < 0:
@@ -967,10 +969,10 @@ class Tools:
 
             if rc<0 or rc>0:
                 Tools.log('system.process.run ended, exitcode was %d' % rc)
-            if out!="":
-                Tools.log('system.process.run stdout:\n%s' % out)
-            if err!="":
-                Tools.log('system.process.run stderr:\n%s' % err)
+            # if out!="":
+            #     Tools.log('system.process.run stdout:\n%s' % out)
+            # if err!="":
+            #     Tools.log('system.process.run stderr:\n%s' % err)
 
             if die and rc!=0:
                 msg="\nCould not execute:"

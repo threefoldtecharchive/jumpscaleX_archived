@@ -2,6 +2,9 @@ from importlib import util
 import os
 import subprocess
 import sys
+import inspect
+
+BRANCH = "development"
 
 # get current install.py directory
 rootdir = os.path.dirname(os.path.abspath(__file__))
@@ -86,6 +89,7 @@ def ui():
 
 
     if "incontainer" not in args:
+
         rc,out,err=IT.Tools.execute("cat /proc/1/cgroup",die=False,showout=False)
         if rc==0 and out.find("/docker/")!=-1:
             args["incontainer"]=True
@@ -123,21 +127,17 @@ def ui():
             mychoice = int(IT.Tools.ask_choices(T,[1,2,3]))
         args[str(mychoice)]=True
 
-    #SSHKEY handling
-    if "y" not in args:
-        #means interactive
+    #means interactive
 
+    if not args["incontainer"]:
         if not IT.MyEnv.sshagent_active_check():
             T="""
             Did not find an SSH key in ssh-agent, is it ok to continue without?
             It's recommended to have a SSH key as used on github loaded in your ssh-agent
             If the SSH key is not found, repositories will be cloned using https
             """
-            if not IT.Tools.ask_yes_no(msg=T, default="y"):
-                print("Could not continue, load ssh key.")
-                sys.exit(1)
-            else:
-                sshkey2 = ""
+            print("Could not continue, load ssh key.")
+            sys.exit(1)
         else:
             sshkey = IT.MyEnv.sshagent_key_get()
             sshkey+=".pub"
@@ -145,10 +145,8 @@ def ui():
                 print ("ERROR: could not find SSH key:%s"%sshkey)
                 sys.exit(1)
             sshkey2 = IT.Tools.file_text_read(sshkey)
-    else:
-        sshkey2 = ""
 
-    args["sshkey"]=sshkey2
+        args["sshkey"]=sshkey2
 
     if not "codepath" in args:
         if IT.Tools.exists("/sandbox/code"):
@@ -224,8 +222,8 @@ def ui():
                 if IT.Tools.ask_yes_no("Do you want to pull code changes from git?"):
                     args["p"]=True
             else:
-                #default is pull
-                args["p"]=True
+                #default is not pull
+                args["p"]=False
 
     if "y" not in args and "w" not in args:
         if IT.Tools.ask_yes_no("Do you want to install lua/nginx/openresty & wiki environment?"):
@@ -247,7 +245,7 @@ def ui():
          T+=" - jumpscale will be installed in the system.\n"
     elif "2" in args:
          T+=" - jumpscale will be installed using sandbox.\n"
-    if sshkey2:
+    if not "incontainer" in args and sshkey2:
         T+= " - sshkey used will be: %s\n"%sshkey
 
     T+=" - location of code path is: %s\n"%args["codepath"]
@@ -284,7 +282,7 @@ if "r" in args:
     IT.MyEnv.state_load()
 
 if "p" in args:
-    os.environ["GITPULL"] = "1"
+    os.environ["GITPULL"] = "%s"%(args["p"])
 else:
     os.environ["GITPULL"] = "0"
 
@@ -350,6 +348,7 @@ elif "3" in args:
 
     if "sshkey" in args:
         dexec('echo "%s" > /root/.ssh/authorized_keys'%args["sshkey"])
+
     dexec("/usr/bin/ssh-keygen -A")
     dexec('/etc/init.d/ssh start')
     dexec('rm -f /etc/service/sshd/down')
@@ -367,17 +366,30 @@ elif "3" in args:
             args_txt+=" -%s"%item
     if "codepath" in args:
         args_txt+=" --codepath=%s"%args["codepath"]
-    sshexec('curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py %s'%args_txt)
+
+    cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py -1 -y"
+
+    IT.Tools.execute(cmd,interactive=True)
+    IT.Tools.shell()
+
+
+    # dirpath = os.path.dirname(inspect.getfile(IT))
+    #
+    # for item in ["install.py","InstallTools.py"]:
+    #     src1 = "%s/%s"%(dirpath,item)
+    #     cmd = "scp -P %s %s root@localhost:/tmp/" %(args["port"],src1)
+    #     IT.Tools.execute(cmd)
+    # cmd = "cd /tmp;python3 install.py -1 -y"
 
     k = """
 
     install succesfull:
 
     # to login to the docker using ssh use (if std port)
-    ssh root@localhost -A -p {PORT}
+    ssh root@localhost -A -p {port}
 
     # or for kosmos shell
-    ssh root@localhost -A -p {PORT} 'source /sandbox/env.sh;kosmos'
+    ssh root@localhost -A -p {port} 'source /sandbox/env.sh;kosmos'
 
     """
     print(IT.Tools.text_replace(k,args=args))
