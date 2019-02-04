@@ -17,6 +17,7 @@ class Watcher:
     def __init__(self, docsites):
         print("initializing watcher for paths: {}".format(docsites))
         event_handler = DocsiteChangeHandler(self)
+        self.docsites = docsites
         self.observer = PausingObserver()
         for _, docsite in docsites.items():
             self.observer.schedule(event_handler, docsite.path, recursive=True)
