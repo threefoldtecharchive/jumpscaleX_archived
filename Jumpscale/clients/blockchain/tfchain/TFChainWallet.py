@@ -10,6 +10,7 @@ from .types.CryptoTypes import PublicKey, UnlockHash
 from .types.errors import ExplorerNoContent, InsufficientFunds, ExplorerCallError
 from .types.CompositionTypes import CoinOutput, CoinInput
 from .types.ConditionTypes import ConditionNil, ConditionUnlockHash, ConditionLockTime
+from .TFChainTransactionFactory import TransactionBaseClass
 
 _DEFAULT_KEY_SCAN_COUNT = 3
 
@@ -323,6 +324,76 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                 balance.output_add(co, confirmed=False, spent=False)
         # and return the created/submitted transaction for optional user consumption
         return txn
+
+    def transaction_sign(self, txn, submit=True):
+        """
+        Sign in all places of the transaction where it is still possible,
+        and on which the wallet has authority to do so.
+
+        Returns (txn, signed), with the second value of the pair indicating
+        if this wallet has added any signatures in this call and the first
+        pair value being the (decoded) and up-to-date transaction value.
+
+        @param txn: transaction to sign, a JSON-encoded txn or already loaded in-memory as a valid Transaction type
+        """
+        # validate and/or normalize txn parameter
+        if isinstance(txn, (str, dict)):
+            txn = j.clients.tfchain.transactions.from_json(txn)
+        elif not isinstance(txn, TransactionBaseClass):
+            raise TypeError("txn value has invalid type {} and cannot be signed".format(type(txn)))
+
+        # return early if already fulfilled
+        if txn.is_fulfilled():
+            return (txn, False)
+
+        # check all parentids from the specified coin inputs,
+        # and set the coin outputs for the ones this wallet knows about
+        # and that are still unspent
+        if len(txn.coin_inputs) > 0:
+            balance = self.balance
+            cco = dict([(co.id, co) for co in balance.outputs_available])
+            uco = dict([(co.id, co) for co in balance.outputs_unconfirmed_available])
+            for ci in txn.coin_inputs:
+                if ci.parentid in cco:
+                    ci.parent_output = cco[ci.parentid]
+                elif ci.parentid in uco:
+                    ci.parent_output = uco[ci.parentid]
+
+        # generate the signature requests
+        sig_requests = txn.signature_requests_new()
+        if len(sig_requests) == 0:
+            # possible if the wallet does not own any of the still required signatures,
+            # or for example because the wallet does not know about the parent outputs of
+            # the inputs still to be signed
+            return (txn, False)
+
+        # fulfill the signature requests that we can fulfill
+        signature_count = 0
+        for request in sig_requests:
+            try:
+                key_pair = self.key_pair_get(request.wallet_address)
+                signature, public_key = key_pair.sign(request.input_hash)
+                request.signature_fulfill(public_key=public_key, signature=signature)
+                signature_count += 1
+            except KeyError:
+                pass # this is acceptable due to how we directly try the key_pair_get method
+
+        # check if fulfilled, and if so, we'll submit unless the callee does not want that
+        is_fulfilled = txn.is_fulfilled()
+        if is_fulfilled and submit:
+            txn.id = self._transaction_put(transaction=txn)
+            # update balance
+            for ci in txn.coin_inputs:
+                balance.output_add(ci.parent_output, confirmed=False, spent=True)
+            addresses = self.addresses
+            for idx, co in enumerate(txn.coin_outputs):
+                if str(co.condition.unlockhash) in addresses:
+                    # add the id to the coin_output, so we can track it has been spent
+                    co.id = txn.coin_outputid_new(idx)
+                    balance.output_add(co, confirmed=False, spent=False)
+
+        # return whether we have signed and if this txn is fulfilled
+        return (txn, (signature_count>0))
 
     def address_new(self):
         """
