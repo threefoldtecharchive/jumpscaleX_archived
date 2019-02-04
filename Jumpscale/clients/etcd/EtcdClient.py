@@ -2,7 +2,7 @@ import socket
 
 import gevent.socket
 
-import etcd3
+from etcd3 import Client
 from Jumpscale import j
 
 JSConfigClient = j.application.JSBaseConfigClass
@@ -34,6 +34,8 @@ class EtcdClient(JSConfigClient):
         :return: etcd3 client object
         :rtype: Object
         """
+        import ipdb
+        ipdb.set_trace()
         if self._api is None:
             kwargs = {
                 'host': self.host,
@@ -44,7 +46,7 @@ class EtcdClient(JSConfigClient):
                     'user': self.user,
                     'password': self.password_
                 })
-            self._api = etcd3.client(**kwargs)
+            self._api = Client(**kwargs)
         return self._api
 
     def put(self, key, value):
@@ -63,21 +65,25 @@ class EtcdClient(JSConfigClient):
     def delete(self, key):
         return self.api.delete(key)
 
-    def backup(self, file_obj="snapshot.db", dir="/root", remote="172.0.0.1", AWS_ACCESS_KEY_ID="",
-               AWS_SECRET_ACCESS_KEY=""):
-        self.api.snapshot("{}/{}".format(dir, file_obj))
+    def backup(self, file_obj="snapshot.db", dirs="/root", remote="", AWS_ACCESS_KEY_ID="",
+               AWS_SECRET_ACCESS_KEY="", password="rooter", backet="etcd"):
+
+        f = open("{}/{}".format(dirs, file_obj), "wb")
+        with open("password.txt", "w+") as fpass:
+            fpass.write(password)
+        self.api.snapshot(f)
 
         if remote:
             rc, _, _ = j.builder.tools.run("which restic")
-            if rc != 0:
-                print("please make sure that restic is installed")
-                return
-            env = {
-                'AWS_ACCESS_KEY_ID': AWS_ACCESS_KEY_ID,
-                'AWS_SECRET_ACCESS_KEY': AWS_SECRET_ACCESS_KEY
-            }
-            j.builder.tools.run("restic -r s3:{}/etcd_backup init".format(remote), env=env)
-            return j.builder.tools.run(
-                "restic -r s3:{}/etcd_backup --verbose backup {}/{}".format(remote, dir, file_obj), env=env)
-
-        return "{}/{}".format(dir, file_obj)
+        if rc != 0:
+            print("please make sure that restic is installed")
+            return
+        env = {
+            'AWS_ACCESS_KEY_ID': AWS_ACCESS_KEY_ID,
+            'AWS_SECRET_ACCESS_KEY': AWS_SECRET_ACCESS_KEY
+        }
+        j.builder.tools.run("restic -r s3:{}/{} init -p password.txt".format(remote, backet), env=env)
+        j.builder.tools.run(
+            "restic -r s3:{}/{} backup {}/{} -p password.txt".format(remote, backet, dirs, file_obj), env=env)
+        j.builder.tools.run("rm password.txt")
+        return "{}/{}".format(dirs, file_obj)
