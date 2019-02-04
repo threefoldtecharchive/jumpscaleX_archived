@@ -84,4 +84,5 @@ class EtcdClient(JSConfigClient):
         j.builder.tools.run(
             "restic -r s3:{}/{} backup {}/{} -p password.txt".format(remote, backet, dirs, file_obj), env=env)
         j.builder.tools.run("rm password.txt")
+        f_obj.close()
         return "{}/{}".format(dirs, file_obj)
