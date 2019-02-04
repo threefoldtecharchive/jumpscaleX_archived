@@ -671,11 +671,14 @@ class ConditionMultiSignature(ConditionBaseClass):
         return self._unlockhashes
         
     def add_unlockhash(self, uh):
-        if not uh:
+        if uh is None:
             self._unlockhashes.append(UnlockHash())
-        else:
-            assert isinstance(uh, UnlockHash)
+        elif isinstance(uh, UnlockHash):
             self._unlockhashes.append(uh)
+        elif isinstance(uh, str):
+            self._unlockhashes.append(UnlockHash.from_json(uh))
+        else:
+            raise TypeError("cannot add UnlockHash with invalid type {}".format(type(uh)))
 
     @property
     def required_signatures(self):

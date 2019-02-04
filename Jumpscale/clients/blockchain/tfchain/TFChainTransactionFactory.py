@@ -558,18 +558,20 @@ class TransactionV1(TransactionBaseClass):
         Optional binary data attached to this Transaction,
         with a max length of 83 bytes.
         """
+        if self._data is None:
+            return RawData()
         return self._data
     @data.setter
     def data(self, value):
-        if not value:
-            self._data = RawData()
+        if value is None:
+            self._data = None
             return
         if isinstance(value, RawData):
             value = value.value
         elif isinstance(value, str):
             value = value.encode('utf-8')
         assert len(value) <= 83
-        self._data.value = value
+        self._data = RawData(value=value)
     
     def _signature_hash_input_get(self, *extra_objects):
         if self._legacy:
@@ -739,10 +741,10 @@ class TransactionV128(TransactionBaseClass):
     _SPECIFIER = b'minter defin tx\0'
 
     def __init__(self):
-        self._mint_fulfillment = FulfillmentSingleSignature()
-        self._mint_condition = ConditionNil()
+        self._mint_fulfillment = None
+        self._mint_condition = None
         self._miner_fees = []
-        self._data = RawData()
+        self._data = None
         self._nonce = RawData(j.data.idgenerator.generateXByteID(8))
 
         # current mint condition
@@ -768,26 +770,33 @@ class TransactionV128(TransactionBaseClass):
         Optional binary data attached to this Transaction,
         with a max length of 83 bytes.
         """
+        if self._data is None:
+            return RawData()
         return self._data
     @data.setter
     def data(self, value):
-        if not value:
-            self._data = RawData()
+        if value is None:
+            self._data = None
             return
         if isinstance(value, RawData):
             value = value.value
-        self._data.value = value
+        elif isinstance(value, str):
+            value = value.encode('utf-8')
+        assert len(value) <= 83
+        self._data = RawData(value=value)
 
     @property
     def mint_condition(self):
         """
         Retrieve the new mint condition which will be set
         """
+        if self._mint_condition is None:
+            return ConditionNil()
         return self._mint_condition
     @mint_condition.setter
     def mint_condition(self, value):
-        if not value:
-            self._mint_condition = ConditionNil()
+        if value is None:
+            self._mint_condition = None
             return
         assert isinstance(value, ConditionBaseClass)
         self._mint_condition = value
@@ -797,25 +806,32 @@ class TransactionV128(TransactionBaseClass):
         """
         Retrieve the parent mint condition which will be set
         """
-        return self._parent_mint_condition or ConditionNil()
+        if self._parent_mint_condition is None:
+            return ConditionNil()
+        return self._parent_mint_condition
     @parent_mint_condition.setter
     def parent_mint_condition(self, value):
-        if not value:
-            self._parent_mint_condition = ConditionNil()
+        if value is None:
+            self._parent_mint_condition = None
             return
         assert isinstance(value, ConditionBaseClass)
         self._parent_mint_condition = value
+
+    def mint_fulfillment_defined(self):
+        return self._mint_fulfillment is not None
 
     @property
     def mint_fulfillment(self):
         """
         Retrieve the current mint fulfillment
         """
+        if self._mint_fulfillment is None:
+            return FulfillmentSingleSignature()
         return self._mint_fulfillment
     @mint_fulfillment.setter
     def mint_fulfillment(self, value):
-        if not value:
-            self._mint_fulfillment = FulfillmentSingleSignature()
+        if value is None:
+            self._mint_fulfillment = None
             return
         assert isinstance(value, FulfillmentBaseClass)
         self._mint_fulfillment = value
@@ -875,16 +891,16 @@ class TransactionV128(TransactionBaseClass):
     def _json_data_object(self):
         return {
             'nonce': self._nonce.json(),
-            'mintfulfillment': self._mint_fulfillment.json(),
-            'mintcondition': self._mint_condition.json(),
+            'mintfulfillment': self.mint_fulfillment.json(),
+            'mintcondition': self.mint_condition.json(),
             'minerfees': [fee.json() for fee in self._miner_fees],
-            'arbitrarydata': self._data.json(),
+            'arbitrarydata': self.data.json(),
         }
     
     def _extra_signature_requests_new(self):
         if self._parent_mint_condition is None:
             return [] # nothing to be signed
-        input_hash = self.signature_hash_get(0) # hardcoded to 0 (legacy)
+        input_hash = self.signature_hash_get() # hardcoded to no extra objects
         return self._mint_fulfillment.signature_requests_new(
             input_hash=input_hash,
             parent_condition=self._parent_mint_condition,
@@ -899,10 +915,10 @@ class TransactionV129(TransactionBaseClass):
     _SPECIFIER = b'coin mint tx\0\0\0\0'
 
     def __init__(self):
-        self._mint_fulfillment = FulfillmentSingleSignature()
+        self._mint_fulfillment = None
         self._coin_outputs = []
         self._miner_fees = []
-        self._data = RawData()
+        self._data = None
         self._nonce = RawData(j.data.idgenerator.generateXByteID(8))
 
         # current mint condition
@@ -928,15 +944,20 @@ class TransactionV129(TransactionBaseClass):
         Optional binary data attached to this Transaction,
         with a max length of 83 bytes.
         """
+        if self._data is None:
+            return RawData()
         return self._data
     @data.setter
     def data(self, value):
-        if not value:
-            self._data = RawData()
+        if value is None:
+            self._data = None
             return
         if isinstance(value, RawData):
             value = value.value
-        self._data.value = value
+        elif isinstance(value, str):
+            value = value.encode('utf-8')
+        assert len(value) <= 83
+        self._data = RawData(value=value)
 
     @property
     def coin_outputs(self):
@@ -961,30 +982,37 @@ class TransactionV129(TransactionBaseClass):
     def miner_fee_add(self, value):
         self._miner_fees.append(Currency(value=value))
 
+    def mint_fulfillment_defined(self):
+        return self._mint_fulfillment is not None
+
     @property
     def mint_fulfillment(self):
         """
         Retrieve the current mint fulfillment
         """
+        if self._mint_fulfillment is None:
+            return FulfillmentSingleSignature()
         return self._mint_fulfillment
     @mint_fulfillment.setter
     def mint_fulfillment(self, value):
-        if not value:
-            self._mint_fulfillment = FulfillmentSingleSignature()
-            return
-        assert isinstance(value, FulfillmentBaseClass)
-        self._mint_fulfillment = value
+        if value is None:
+            self._mint_fulfillment = None
+        else:
+            assert isinstance(value, FulfillmentBaseClass)
+            self._mint_fulfillment = value
 
     @property
     def parent_mint_condition(self):
         """
         Retrieve the parent mint condition which will be set
         """
-        return self._parent_mint_condition or ConditionNil()
+        if self._parent_mint_condition is None:
+            return ConditionNil()
+        return self._parent_mint_condition
     @parent_mint_condition.setter
     def parent_mint_condition(self, value):
-        if not value:
-            self._parent_mint_condition = ConditionNil()
+        if value is None:
+            self._parent_mint_condition = None
             return
         assert isinstance(value, ConditionBaseClass)
         self._parent_mint_condition = value
@@ -1041,16 +1069,16 @@ class TransactionV129(TransactionBaseClass):
     def _json_data_object(self):
         return {
             'nonce': self._nonce.json(),
-            'mintfulfillment': self._mint_fulfillment.json(),
-            'coinoutputs': [co.json() for co in self._coin_outputs],
-            'minerfees': [fee.json() for fee in self._miner_fees],
-            'arbitrarydata': self._data.json(),
+            'mintfulfillment': self.mint_fulfillment.json(),
+            'coinoutputs': [co.json() for co in self.coin_outputs],
+            'minerfees': [fee.json() for fee in self.miner_fees],
+            'arbitrarydata': self.data.json(),
         }
     
     def _extra_signature_requests_new(self):
         if self._parent_mint_condition is None:
             return [] # nothing to be signed
-        input_hash = self.signature_hash_get(0) # hardcoded to 0 (legacy)
+        input_hash = self.signature_hash_get() # hardcoded to no extra objects
         return self._mint_fulfillment.signature_requests_new(
             input_hash=input_hash,
             parent_condition=self._parent_mint_condition,

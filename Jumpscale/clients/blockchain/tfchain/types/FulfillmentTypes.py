@@ -103,7 +103,7 @@ class FulfillmentFactory(j.application.JSBaseClass):
         if isinstance(condition, ConditionAtomicSwap):
             return FulfillmentAtomicSwap()
         icondition = condition.unwrap()
-        if isinstance(icondition, (ConditionUnlockHash, ConditionNil, None)):
+        if isinstance(icondition, (ConditionUnlockHash, ConditionNil)):
             return FulfillmentSingleSignature()
         if isinstance(icondition, ConditionMultiSignature):
             return FulfillmentMultiSignature()

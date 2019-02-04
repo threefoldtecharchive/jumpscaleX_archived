@@ -10,9 +10,16 @@ from .types.CryptoTypes import PublicKey, UnlockHash
 from .types.errors import ExplorerNoContent, InsufficientFunds, ExplorerCallError
 from .types.CompositionTypes import CoinOutput, CoinInput
 from .types.ConditionTypes import ConditionNil, ConditionUnlockHash, ConditionLockTime
-from .TFChainTransactionFactory import TransactionBaseClass
+from .TFChainTransactionFactory import TransactionBaseClass, TransactionV128, TransactionV129
 
 _DEFAULT_KEY_SCAN_COUNT = 3
+
+# TODO:
+# * Debug: MinterDefinition MultiSig Signature
+#       => Error: Could not publish transaction: HTTP 400 error: error after call to /wallet/transactions: failed to fulfill mint condition: invalid signature
+#       => Example Tx that fails: {"version":128,"data":{"nonce":"WaaiOtDAQPI=","mintfulfillment":{"type":3,"data":{"pairs":[{"publickey":"ed25519:89ba466d80af1b453a435175dbba6da7718e9cb19c64c0ed41fca3e6982e3636","signature":"4d8059905bf63e17186db1ec74475dfb6c1b2934ccb5b22393053714bf6cc26f460bae4dfec7a060f7b4e94caefe4f929c912b0b47e7510b1e99d3e24dfae701"},{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"c701b1088fd4f2cc14aa8381a5446029a3283127377595841f893ac3e91a111d3ca130d8f46b08bb8aaf22eed8f909591aa3c0dd183877ba394b074acfca8802"}]}},"mintcondition":{"type":1,"data":{"unlockhash":"0107e83d2bd8a7aad7ab0af0c0a0f1f116fb42335f64eeeb5ed1b76bd63e62ce59a3872a7279ab"}},"minerfees":["1000000000"],"arbitrarydata":"b25lIHRvIHJ1bGUgdGhlbSBhbGw="}}
+# * Make lock more user-friendly to be used (e.g. also accept durations and time strings)
+# * Provide Atomic Swap support
 
 class TFChainWallet(j.application.JSBaseConfigClass):
     """
@@ -350,6 +357,15 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                 elif ci.parentid in uco:
                     ci.parent_output = uco[ci.parentid]
 
+        # check for specific transaction types, as to
+        # be able to add whatever content we know we can add
+        if isinstance(txn, (TransactionV128, TransactionV129)):
+            # set the parent mint condition
+            txn.parent_mint_condition = self.client.mint_condition_get()
+            # define the current fulfillment if it is not defined
+            if not txn.mint_fulfillment_defined():
+                txn.mint_fulfillment = j.clients.tfchain.types.fulfillments.from_condition(txn.parent_mint_condition)
+
         # generate the signature requests
         sig_requests = txn.signature_requests_new()
         if len(sig_requests) == 0:
@@ -519,7 +535,6 @@ class TFChainMinter():
     def __init__(self, wallet):
         self._wallet = wallet
 
-    # TODO: adapt to new signing strategy
     def definition_set(self, minter, data=None):
         """
         Redefine the current minter definition.
@@ -546,47 +561,103 @@ class TFChainMinter():
         if data is not None:
             txn.data = data
 
-        # get the current mint condition
-        mc = self._current_mint_condition_get()
-        submit = False # only submit if we know we can submit
-        if isinstance(mc, ConditionMultiSignature):
-            # sign for all addresses we can sign
-            mf = FulfillmentMultiSignature()
-            signhash = txn.signature_hash_get(0) # hardcoded to '0' in tfchain (legacy)
-            for uh in mc.unlockhashes:
-                try:
-                    address = str(uh)
-                    keypair = self._wallet.key_pair_get(address)
-                    signature, pk = keypair.sign(signhash)
-                    mf.add_pair(public_key=pk, signature=signature)
-                except KeyError:
-                    pass # ignore, as this is possible\
-            txn.mint_fulfillment = mf
-            # raise a key error if pairs is 0
-            # as that meant we cannot do anything
-            lp = len(mf.pairs)
-            if lp == 0:
-                raise KeyError("wallet does not own any of the possible MultiSig addresses defined by the current MintCondition")
-            # submit if we have enough signatures
-            submit = (len(mf.pairs) >= mc.required_signatures)
-        else:
-            mf = self._wallet.fulfillment_from(condition=mc)
-            address = str(mc.unlockhash)
-            keypair = self._wallet.key_pair_get(address)
-            signhash = txn.signature_hash_get(0) # hardcoded to '0' in tfchain (legacy)
-            mf.signature, _ = keypair.sign(signhash)
-            txn.mint_fulfillment = mf
-            submit = True
+        # get and set the current mint condition
+        txn.parent_mint_condition = self._current_mint_condition_get()
+        # create a raw fulfillment based on the current mint condition
+        txn.mint_fulfillment = j.clients.tfchain.types.fulfillments.from_condition(txn.parent_mint_condition)
 
-        # submit the transaction if possible
+        # get all signature requests
+        sig_requests = txn.signature_requests_new()
+        assert len(sig_requests) > 0
+
+        # fulfill the signature requests that we can fulfill
+        signature_count = 0
+        for request in sig_requests:
+            try:
+                key_pair = self._wallet.key_pair_get(request.wallet_address)
+                signature, public_key = key_pair.sign(request.input_hash)
+                request.signature_fulfill(public_key=public_key, signature=signature)
+                signature_count += 1
+            except KeyError:
+                pass # this is acceptable due to how we directly try the key_pair_get method
+
+        submit = txn.is_fulfilled()
         if submit:
-            txn.id = self._wallet.client.transaction_put(txn)
+            txn.id = self._transaction_put(transaction=txn)
 
         # return the txn, as well as the submit status as a boolean
         return (txn, submit)
 
-    # TODO:
-    # define the coins_new Txn method
+    def coins_new(self, recipient, amount, lock=None, data=None):
+        """
+        Create new (amount of) coins and give them to the defined recipient.
+        Arbitrary data can be attached as well if desired.
+
+        The recipient is one of:
+            - None: recipient is the Free-For-All wallet
+            - str (or unlockhash): recipient is a personal wallet
+            - list: recipient is a MultiSig wallet where all owners (specified as a list of addresses) have to sign
+            - tuple (addresses, sigcount): recipient is a sigcount-of-addresscount MultiSig wallet
+
+        The amount can be a str or an int:
+            - when it is an int, you are defining the amount in the smallest unit (that is 1 == 0.000000001 TFT)
+            - when defining as a str you can use the following space-stripped and case-insentive formats:
+                - '123456789': same as when defining the amount as an int
+                - '123.456': define the amount in TFT (that is '123.456' == 123.456 TFT == 123456000000)
+                - '123456 TFT': define the amount in TFT (that is '123456 TFT' == 123456 TFT == 123456000000000)
+                - '123.456 TFT': define the amount in TFT (that is '123.456 TFT' == 123.456 TFT == 123456000000)
+
+        @param recipient: see explanation above
+        @param amount: int or str that defines the amount of TFT to set, see explanation above
+        @param lock: optional lock that can be used to lock the sent amount to a specific time or block height
+        @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
+        """
+        # create empty Mint Definition Txn, with a newly generated Nonce set already
+        txn = j.clients.tfchain.transactions.mint_coin_creation_new()
+
+        # add the minimum miner fee
+        txn.miner_fee_add(self._minium_miner_fee)
+
+        # parse the output
+        amount = Currency(value=amount)
+        if amount <= 0:
+            raise ValueError("no amount is defined to be sent")
+
+        # define recipient
+        recipient = j.clients.tfchain.types.conditions.from_recipient(recipient, lock_time=lock)
+        # and add it is the output
+        txn.coin_output_add(value=amount, condition=recipient)
+
+        # optionally set the data
+        if data is not None:
+            txn.data = data
+
+        # get and set the current mint condition
+        txn.parent_mint_condition = self._current_mint_condition_get()
+        # create a raw fulfillment based on the current mint condition
+        txn.mint_fulfillment = j.clients.tfchain.types.fulfillments.from_condition(txn.parent_mint_condition)
+
+        # get all signature requests
+        sig_requests = txn.signature_requests_new()
+        assert len(sig_requests) > 0
+
+        # fulfill the signature requests that we can fulfill
+        signature_count = 0
+        for request in sig_requests:
+            try:
+                key_pair = self._wallet.key_pair_get(request.wallet_address)
+                signature, public_key = key_pair.sign(request.input_hash)
+                request.signature_fulfill(public_key=public_key, signature=signature)
+                signature_count += 1
+            except KeyError:
+                pass # this is acceptable due to how we directly try the key_pair_get method
+
+        submit = txn.is_fulfilled()
+        if submit:
+            txn.id = self._transaction_put(transaction=txn)
+
+        # return the txn, as well as the submit status as a boolean
+        return (txn, submit)
 
     @property
     def _minium_miner_fee(self):
@@ -600,6 +671,14 @@ class TFChainMinter():
         Get the current mind condition from the parent TFChain client.
         """
         return self._wallet.client.mint_condition_get()
+
+    def _transaction_put(self, transaction):
+        """
+        Submit the transaction to the network using the parent's wallet client.
+
+        Returns the transaction ID.
+        """
+        return self._wallet._transaction_put(transaction=transaction)
 
 
 class SpendableKey():
