@@ -7,10 +7,10 @@ from Jumpscale import j
 
 JSConfigClient = j.application.JSBaseConfigClass
 
-
 if socket.socket is gevent.socket.socket:
     # this is needed when running from within 0-robot
     import grpc.experimental.gevent as grpc_gevent
+
     grpc_gevent.init_gevent()
 
 
@@ -62,3 +62,22 @@ class EtcdClient(JSConfigClient):
 
     def delete(self, key):
         return self.api.delete(key)
+
+    def backup(self, file_obj="snapshot.db", dir="/root", remote="172.0.0.1", AWS_ACCESS_KEY_ID="",
+               AWS_SECRET_ACCESS_KEY=""):
+        self.api.snapshot("{}/{}".format(dir, file_obj))
+
+        if remote:
+            rc, _, _ = j.builder.tools.run("which restic")
+            if rc != 0:
+                print("please make sure that restic is installed")
+                return
+            env = {
+                'AWS_ACCESS_KEY_ID': AWS_ACCESS_KEY_ID,
+                'AWS_SECRET_ACCESS_KEY': AWS_SECRET_ACCESS_KEY
+            }
+            j.builder.tools.run("restic -r s3:{}/etcd_backup init".format(remote), env=env)
+            return j.builder.tools.run(
+                "restic -r s3:{}/etcd_backup --verbose backup {}/{}".format(remote, dir, file_obj), env=env)
+
+        return "{}/{}".format(dir, file_obj)
