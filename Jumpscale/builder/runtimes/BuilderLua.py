@@ -36,46 +36,42 @@ class BuilderLua(j.builder.system._BaseClass):
         if j.core.platformtype.myplatform.isUbuntu:
             j.builder.system.package.install(['libsqlite3-dev'])
 
-        #need openresty & openssl to start from
-        j.builder.libs.openssl.build()
-        j.builder.web.openresty.build()
-
         j.tools.bash.local.locale_check()
-
+        #need openresty & openssl to start from
+        j.builder.web.openresty.build(reset)
+        j.builder.libs.openssl.build(reset)
 
         url="https://luarocks.org/releases/luarocks-3.0.4.tar.gz"
         dest = j.core.tools.text_replace("{DIR_VAR}/build/luarocks")
         j.sal.fs.createDir(dest)
         j.builder.tools.file_download(url, to=dest, overwrite=False, retry=3,
                     expand=True, minsizekb=100, removeTopDir=True, deletedest=True)
-        C="""                
+        C="""
         cd {DIR_VAR}/build/luarocks
-        ./configure --prefix=/sandbox/openresty/luarocks --with-lua=/sandbox/openresty/luajit 
+        ./configure --prefix=/sandbox/openresty/luarocks --with-lua=/sandbox/openresty/luajit
         make build
         make install
-        
+
         cp /sandbox/var/build/luarocks/luarocks /sandbox/bin/luarocks
-        
+
         """
 
         self.tools.run(C)
 
-        self.lua_rocks_install()
+        self.lua_rocks_install(reset)
 
         self._done_set("build")
 
 
     def lua_rock_install(self,name,reset=False):
-
         if self._done_check("lua_rock_install_%s"%name) and not reset:
             return
 
-        C = "source /sandbox/env.sh;luarocks install $NAME OPENSSL_DIR=/sandbox/var/build/openssl CRYPTO_DIR=/sandbox/var/build/openssl"
+        C = "luarocks install $NAME OPENSSL_DIR=/sandbox/var/build/openssl CRYPTO_DIR=/sandbox/var/build/openssl"
         C = C.replace("$NAME",name)
         j.sal.process.execute(j.core.tools.text_replace(C))
 
         self._done_set("lua_rock_install_%s"%name)
-
 
     def lua_rocks_install(self,reset=False):
         """
@@ -90,16 +86,16 @@ class BuilderLua(j.builder.system._BaseClass):
 
         C="""
         luaossl
-        luasec 
+        luasec
         lapis
         moonscript
         lapis-console
         LuaFileSystem
-        LuaSocket 
-        lua-geoip 
+        luasocket
+        lua-geoip
         lua-cjson
-        lua-term 
-        penlight 
+        lua-term
+        penlight
         lpeg
         mediator_lua
         # luajwt
@@ -111,33 +107,33 @@ class BuilderLua(j.builder.system._BaseClass):
 
         LuaRestyRedis
         lua-resty-qless
-        
+
         lua-capnproto
         lua-toml
-        
+
         lua-resty-exec
-        
+
         lua-resty-influx
         lua-resty-repl
 
 
         lua-resty-iputils
 
-        lsqlite3 
-        
+        lsqlite3
+
         bcrypt
         md5
-        
+
         date
         uuid
         lua-resty-cookie
         lua-path
-        
+
         #various encryption
         luazen
-        
+
         alt-getopt
-        
+
         """
 
         for line in C.split("\n"):
@@ -146,7 +142,7 @@ class BuilderLua(j.builder.system._BaseClass):
                 continue
             if line.startswith("#"):
                 continue
-            self.lua_rock_install(line)
+            self.lua_rock_install(line, reset)
 
 
         C="""
@@ -155,7 +151,7 @@ class BuilderLua(j.builder.system._BaseClass):
         rsync -rav /sandbox/var/build/luarocks/lua_modules/share/lua/5.1/ $LUALIB/
 
         """
-        self.tools.run
+        self.tools.run(C)
 
 
 
@@ -182,9 +178,9 @@ class BuilderLua(j.builder.system._BaseClass):
         :return:
         """
         C="""
-        
+
         set -ex
-        
+
         rm -rf /sandbox/openresty/luajit/lib/lua
         rm -rf /sandbox/openresty/luajit/lib/luarocks
         rm -rf /sandbox/openresty/luajit/lib/pkgconfig
@@ -197,8 +193,8 @@ class BuilderLua(j.builder.system._BaseClass):
         rm -rf  /sandbox/var/build
         rm -rf  /sandbox/root
         mkdir -p /sandbox/root
-        
-    
+
+
         """
         self.tools.run(C)
 
@@ -209,23 +205,23 @@ class BuilderLua(j.builder.system._BaseClass):
         :return:
         """
         self.build(reset=reset)
-        src = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/sandbox_base/tree/master/src/bin",pull=True)
+        src = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/sandbox_base/tree/master/base/bin",pull=True)
         C="""
-        
+
         set -e
-        pushd /sandbox/openresty/bin 
-        cp resty /sandbox/bin/resty        
+        pushd /sandbox/openresty/bin
+        cp resty /sandbox/bin/resty
         popd
-        
+
         pushd /sandbox/var/build/luarocks/lua_modules/lib/luarocks/rocks-5.1/lapis/1.7.0-1/bin
         cp lapis /sandbox/bin/_lapis.lua
         popd
-        
+
         pushd '/sandbox/var/build/luarocks/lua_modules/lib/luarocks/rocks-5.1/moonscript/0.5.0-1/bin'
         cp moon /sandbox/bin/_moon.lua
         cp moonc /sandbox/bin/_moonc.lua
         popd
-    
+
         """
         self.tools.run(C)
 

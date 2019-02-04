@@ -26,7 +26,7 @@ class Watcher:
         self.observer.start()
         try:
             while True:
-                gevent.sleep()
+                gevent.sleep(1)
         except KeyboardInterrupt:
             self.observer.stop()
         self.observer.join()

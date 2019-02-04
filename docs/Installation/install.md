@@ -36,10 +36,6 @@ curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/i
 
 If you are a developer don't forget to load your SSH key for github.
 
-## more info
-
-see also [install/readme.md](../install/readme.md)
-
 ## with SSH key
 
 should add your ssh key in your github account 

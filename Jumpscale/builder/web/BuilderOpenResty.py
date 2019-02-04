@@ -29,15 +29,6 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         for file in lua_files:
             self.dirs[file] = 'bin/'
 
-        # self.root_dirs = {
-        #     '/usr/bin/perl': 'usr/bin/',
-        #     '/usr/bin/env': 'usr/bin/',
-        #     '/bin/mkdir': 'bin/',
-        #     '/bin/touch': 'bin/',
-        #     '/bin/sh': 'bin/',
-        #     '/usr/lib/x86_64-linux-gnu/perl-base/': 'usr/lib/x86_64-linux-gnu/perl-base/',
-        # }
-
         self.new_dirs = ['var/pid/', 'var/log/']
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'openresty_startup.toml')
         self.startup = j.sal.fs.readFile(startup_file)
@@ -49,8 +40,8 @@ class BuilderOpenResty(j.builder.system._BaseClass):
     def _build_prepare(self):
         j.builder.system.package.mdupdate()
         j.builder.tools.package_install('build-essential libpcre3-dev libssl-dev zlib1g-dev')
-        j.builder.tools.dir_remove('{DIR_TEMP}/build/openresty')
-        j.core.tools.dir_ensure('{DIR_TEMP}/build/openresty')
+        j.builder.tools.dir_remove('{DIR_VAR}/build/openresty')
+        j.core.tools.dir_ensure('{DIR_VAR}/build/openresty')
         url = 'https://openresty.org/download/openresty-1.13.6.2.tar.gz'
         dest = j.core.tools.text_replace('{DIR_VAR}/build/openresty')
         j.sal.fs.createDir(dest)
