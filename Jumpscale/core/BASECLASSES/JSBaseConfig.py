@@ -127,6 +127,8 @@ class JSBaseConfig(JSBase):
         if attr.startswith("_"):
             try:
                 return self.__getattribute__(attr)
+            except AttributeError as e:
+                raise e # attribute errors needs to be raised as-is, otherwise we get in trouble when using `hasattr`
             except Exception as e:
                 raise RuntimeError(str(e))
         if attr in self._model.schema.propertynames:
