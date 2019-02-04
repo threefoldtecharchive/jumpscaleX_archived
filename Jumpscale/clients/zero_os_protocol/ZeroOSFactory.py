@@ -191,7 +191,8 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
 
         print(cl)
 
+        print(cl.ping())
+
         # use j.clients.zoscmd... to start a local zos
         # connect client to zos do quite some tests
 
-        j.shell()

@@ -3,6 +3,13 @@
 
 ### example
 
+
+#### basic docker install
+
+```
+python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py -3 --portrange=3 --name=test -d -y -c
+```
+
 #### start from an image
 
 ```

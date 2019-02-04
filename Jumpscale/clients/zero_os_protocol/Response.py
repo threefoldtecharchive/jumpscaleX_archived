@@ -261,8 +261,7 @@ class Response():
                 if not v is None:
                     payload = json.loads(v.decode())
                     r = Return(payload)
-                    self._log_debug('%s << %s, stdout="%s", stderr="%s", data="%s"',
-                                 self._id, r.state, r.stdout, r.stderr, r.data[:1000])
+                    print('%s << %s, stdout="%s", stderr="%s", data="%s"',self._id, r.state, r.stdout, r.stderr, r.data[:1000])
                     return r
             except TimeoutError:
                 pass
