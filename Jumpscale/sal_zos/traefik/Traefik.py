@@ -4,7 +4,7 @@ from .. import templates
 from ..abstracts import Nics, Service
 from ..globals import TIMEOUT_DEPLOY
 
-logger = j.logger.get(__name__)
+
 DEFAULT_PORT_HTTP = 80
 DEFAULT_PORT_HTTPS = 443
 
@@ -71,7 +71,7 @@ class Traefik(Service):
         """
         create configuration of traefik and upload it in the container
         """
-        logger.info('Creating traefik config for %s' % self.name)
+        self._log_info('Creating traefik config for %s' % self.name)
         config = self._config_as_text()
         self.container.upload_content(self._config_path, config)
 
@@ -91,7 +91,7 @@ class Traefik(Service):
         if self.is_running():
             return
 
-        logger.info('start traefik %s' % self.name)
+        self._log_info('start traefik %s' % self.name)
 
         self.deploy()
         self.create_config()

@@ -9,7 +9,7 @@ from watchdog.observers import Observer
 class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
     def __init__(self):
         JSBASE.__init__(self)
-        self._logger_enable()
+
         if j.tools.develop.node_active is not None:
             self.nodes = [j.tools.develop.node_active]
         else:

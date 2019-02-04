@@ -18,7 +18,7 @@ class Sandboxer(j.application.JSBaseClass):
 
         self.original_size = 0
         self.new_size = 0
-        self._logger_enable()
+
 
     def sandbox_build(self,reset=False):
         """

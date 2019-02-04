@@ -65,7 +65,7 @@ class GDriveFile(j.application.JSBaseClass):
             self.__dict__.update(j.data.serializers.json.loads(json))
 
         except BaseException:
-            j.clients.gdrive.logger.warning("description was wrong format, was not json, lets re-write")
+            j.clients.gdrive.self._log_warning("description was wrong format, was not json, lets re-write")
             self.changed = True
             self.description = json  # the old description
 

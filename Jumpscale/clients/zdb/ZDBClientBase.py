@@ -32,7 +32,7 @@ class ZDBClientBase(j.application.JSBaseConfigClass):
 
         self.nsname = self.nsname.lower().strip()
 
-        self._logger_enable()
+
 
         if not self.admin:
             #     #only passwd in admin mode !

@@ -101,7 +101,7 @@ class MarkDownDocs(j.application.JSBaseClass):
         #lets make sure we have default macros
         self.macros_load()
 
-        self._logger_enable()
+
 
     def _git_get(self, path):
         if path not in self._git_repos:

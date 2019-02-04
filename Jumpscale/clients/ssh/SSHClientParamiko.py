@@ -30,7 +30,7 @@ class SSHClientParamiko(SSHClientBase):
         else:
             self._look_for_keys = True
 
-        # self._logger_enable()
+        #
 
     def _test_local_agent(self):
         """

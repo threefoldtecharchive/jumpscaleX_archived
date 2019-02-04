@@ -7,7 +7,7 @@ import grp
 import g8storclient
 from Jumpscale import j
 
-logger = j.logger.get(__name__)
+
 
 
 class Path:
@@ -94,7 +94,7 @@ class Path:
         """
         copy a file from the local filesystem into the flist
         """
-        logger.debug('copy file from %s to %s', src, os.path.join(self.abspath, os.path.basename(src)))
+        self._log_debug('copy file from %s to %s', src, os.path.join(self.abspath, os.path.basename(src)))
         return self._add_file(src)
 
     def copytree(self, src):
@@ -125,7 +125,7 @@ class Path:
         create a new directory
         """
         dir = self._add_dir(name)
-        logger.debug('create directory at %s', dir.abspath)
+        self._log_debug('create directory at %s', dir.abspath)
         return dir
 
     def files(self, pattern=None):
@@ -307,7 +307,7 @@ class Path:
             new_inode.attributes.file = new_inode.attributes.init('file')
             new_inode.attributes.file.blockSize = 128  # FIXME ?
             fullpath = os.path.abspath(src)
-            logger.debug("[+] populating: %s" % fullpath)
+            self._log_debug("[+] populating: %s" % fullpath)
             hashs = g8storclient.encrypt(fullpath)
 
             if hashs is None:

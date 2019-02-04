@@ -20,7 +20,7 @@ from clients.blockchain.rivine.const import \
 DURATION_REGX_PATTERN = '^(?P<hours>\d*)h(?P<minutes>\d*)m(?P<seconds>\d*)s$'
 DURATION_TEMPLATE = 'XXhXXmXXs'
 
-logger = j.logger.get(__name__)
+
 
 
 #TODO: check which ones are still used
@@ -248,15 +248,15 @@ class RivineUtils:
                 res = requests.post(url, headers=headers, auth=auth, json=data, timeout=30)
             except requests.exceptions.ConnectionError as ex:
                 logger.warn(msg)
-                logger.debug('error with tx: {}'.format(str(data)))
+                self._log_debug('error with tx: {}'.format(str(data)))
                 continue
             if res.status_code != 200:
                 msg = 'Failed to commit transaction to chain network.{}'.format(res.text)
                 logger.warn('{} {}'.format(msg, res.text))
-                logger.debug('error with tx: {}'.format(str(data)))
+                self._log_debug('error with tx: {}'.format(str(data)))
             else:
                 transaction.id = res.json()['transactionid']
-                logger.info('Transaction committed successfully')
+                self._log_info('Transaction committed successfully')
                 return transaction.id
         if res:
             raise BackendError('{} {}'.format(msg, res.text))
@@ -276,7 +276,7 @@ class RivineUtils:
             for coin_input in coininputs:
                 parentid = coin_input.get('parentid')
                 if parentid in unspent_coin_outputs:
-                    logger.debug('Found a spent address {}'.format(parentid))
+                    self._log_debug('Found a spent address {}'.format(parentid))
                     del unspent_coin_outputs[parentid]
 
     @staticmethod

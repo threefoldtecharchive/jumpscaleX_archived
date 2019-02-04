@@ -2,7 +2,7 @@ from Jumpscale import j
 from Jumpscale.sal_zos.utils import authorize_zerotiers
 
 
-logger = j.logger.get(__name__)
+
 
 
 class Mountable():
@@ -168,7 +168,7 @@ class ZTNic(Nic):
         """
         if not self.client:
             return False
-        logger.info("authorizing {} on network {}".format(self._parent.name, self.networkid))
+        self._log_info("authorizing {} on network {}".format(self._parent.name, self.networkid))
         network = self.client.network_get(self.networkid)
         network.member_add(publicidentity, self._parent.name)
         return True
@@ -328,7 +328,7 @@ class Service:
             self.container.client.job.unschedule(self._id)
             self.container.client.job.kill(self._id)
             if not j.tools.timer.execute_until(lambda: not self.is_running(), timeout, 0.5):
-                logger.warning('Failed to gracefully stop {} server: {}'.format(self._type, self.name))
+                self._log_warning('Failed to gracefully stop {} server: {}'.format(self._type, self.name))
 
         self.container.stop()
         self._container = None

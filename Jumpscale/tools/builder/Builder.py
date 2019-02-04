@@ -14,7 +14,7 @@ class Builder(j.application.JSBaseClass):
         self._zos_client = None
         self._clients={}
         self._containers={}
-        self._logger_enable()
+
 
 
     def zos_iso_download(self, zerotierinstance="",overwrite=True):

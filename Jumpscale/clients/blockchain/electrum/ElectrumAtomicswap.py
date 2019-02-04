@@ -4,7 +4,7 @@ Electrum module to implement atomicswap support
 from Jumpscale import j
 import json
 
-logger = j.logger.get(__name__)
+
 
 class ElectrumAtomicswap:
     """
@@ -38,7 +38,7 @@ class ElectrumAtomicswap:
                                                                  self._data_dir,
                                                                  self._wallet_path)
 
-        logger.info("Loading wallet {} using command: {}".format(self._wallet_name, cmd))
+        self._log_info("Loading wallet {} using command: {}".format(self._wallet_name, cmd))
         self._prefab.core.run(cmd)
 
 
@@ -60,7 +60,7 @@ class ElectrumAtomicswap:
                     participant_address,
                     amount
         )
-        logger.info("Initiating a new atomicswap contract using command: {}".format(cmd))
+        self._log_info("Initiating a new atomicswap contract using command: {}".format(cmd))
         _, out, _= self._prefab.core.run(cmd)
         return json.loads(out)
 
@@ -82,7 +82,7 @@ class ElectrumAtomicswap:
                     amount,
                     secret_hash
         )
-        logger.info("Participating in an atomicswap contract using command: {}".format(cmd))
+        self._log_info("Participating in an atomicswap contract using command: {}".format(cmd))
         _, out, _= self._prefab.core.run(cmd)
         return json.loads(out)
 
@@ -102,7 +102,7 @@ class ElectrumAtomicswap:
                     contract,
                     contract_transaction
         )
-        logger.info("Auditing an atomicswap contract using command: {}".format(cmd))
+        self._log_info("Auditing an atomicswap contract using command: {}".format(cmd))
         _, out, _= self._prefab.core.run(cmd)
         return json.loads(out)
 
@@ -122,7 +122,7 @@ class ElectrumAtomicswap:
                     contract,
                     contract_transaction
         )
-        logger.info("Refunding an atomicswap contract using command: {}".format(cmd))
+        self._log_info("Refunding an atomicswap contract using command: {}".format(cmd))
         _, out, _= self._prefab.core.run(cmd)
         return json.loads(out)
 
@@ -144,7 +144,7 @@ class ElectrumAtomicswap:
                     contract_transaction,
                     secret
         )
-        logger.info("Redeeming the atomicswap contract using command: {}".format(cmd))
+        self._log_info("Redeeming the atomicswap contract using command: {}".format(cmd))
         _, out, _= self._prefab.core.run(cmd)
         return json.loads(out)
 
@@ -164,6 +164,6 @@ class ElectrumAtomicswap:
                     redemption_transaction,
                     secret_hash
         )
-        logger.info("Extracting secret from an atomicswap contract using command: {}".format(cmd))
+        self._log_info("Extracting secret from an atomicswap contract using command: {}".format(cmd))
         _, out, _= self._prefab.core.run(cmd)
         return json.loads(out)

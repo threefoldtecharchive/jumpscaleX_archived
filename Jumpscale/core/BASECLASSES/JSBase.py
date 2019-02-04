@@ -416,7 +416,7 @@ class JSBase:
         if name == '':
             name = None
 
-        self._logger_enable()
+
         if name is not None:
             self._log_info("##: TEST RUN: %s" % name.upper())
 

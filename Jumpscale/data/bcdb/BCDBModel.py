@@ -49,7 +49,7 @@ class BCDBModel(j.application.JSBaseClass):
 
         self.autosave = False  # if set it will make sure data is automatically set from object
 
-        # self._logger_enable()
+        #
 
         self._triggers = []
 

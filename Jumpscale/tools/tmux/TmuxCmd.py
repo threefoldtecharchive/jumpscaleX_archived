@@ -17,7 +17,7 @@ class TmuxCmd(j.application.JSBaseClass):
         self.timeout = 60
         self.stopcmd = stopcmd
         self.process_strings = process_strings
-        self._logger_enable()
+
         self._pid = None
         tdir = j.sal.fs.joinPaths(j.sal.fs.joinPaths(j.dirs.VARDIR,"tmuxcmds"))
         j.sal.fs.createDir(tdir)
@@ -30,7 +30,7 @@ class TmuxCmd(j.application.JSBaseClass):
         else:
             self.__dict__.update(j.data.serializers.toml.load(tpath))
 
-        self._logger_enable()
+
         self._pane = j.tools.tmux.pane_get(window=window_name,pane=pane_name,reset=False)
 
 

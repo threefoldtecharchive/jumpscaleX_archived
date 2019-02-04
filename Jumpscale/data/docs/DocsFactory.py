@@ -9,7 +9,7 @@ class DocsFactory(j.application.JSFactoryBaseClass):
     _CHILDCLASS = DocSite
 
     def _init(self):
-        self._logger_enable()
+
         self._bcdb = j.data.bcdb.new("docs") #will be a BCDB custom for this one using sqlite
         self._macros_modules = {}
         self._macros = {}

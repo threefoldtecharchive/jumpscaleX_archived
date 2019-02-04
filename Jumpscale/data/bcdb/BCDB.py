@@ -48,7 +48,7 @@ class BCDB(j.application.JSBaseClass):
         self.dataprocessor_greenlet = None
 
         self.meta = BCDBMeta(self)
-        # self._logger_enable()
+        #
         self._init_(reset=reset, stop=False)
 
         j.data.nacl.default
@@ -99,7 +99,7 @@ class BCDB(j.application.JSBaseClass):
         self.user = self.model_add(USER())
         self.group = self.model_add(GROUP())
 
-        # self._logger_enable()
+        #
         # self._log_info("BCDB INIT DONE:%s" % self.name)
 
     def redis_server_start(self, port=6380, secret="123456"):

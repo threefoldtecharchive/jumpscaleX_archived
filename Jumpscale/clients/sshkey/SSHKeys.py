@@ -31,6 +31,6 @@ class SSHKeys(j.application.JSBaseConfigsClass):
         js_shell 'j.clients.sshkey.test()'
         """
 
-        self._logger_enable()
+
         j.shell()
         # TODO:

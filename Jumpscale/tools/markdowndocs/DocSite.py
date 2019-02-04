@@ -53,7 +53,7 @@ class DocSite(j.application.JSBaseClass):
 
         self.outpath = j.core.tools.text_replace("{DIR_VAR}/docsites/{NAME}",args={"NAME":self.name})
 
-        self._logger_enable()
+
         self._log_level=1
 
         self._git=None

@@ -11,7 +11,7 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
         JSBASE.__init__(self)
         self.syncer = syncer
         self.paths = syncer.paths
-        self._logger_enable()
+
         self.sync_paths_src=[]
         self.sync_paths_dest=[]
         for source in self.paths:

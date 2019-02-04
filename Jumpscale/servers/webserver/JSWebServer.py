@@ -36,7 +36,7 @@ class JSWebServer(j.application.JSBaseClass):
 
         self.path_blueprints = j.sal.fs.joinPaths(j.dirs.VARDIR,"dm_packages","blueprints")
 
-        self._logger_enable()
+
 
     def start(self, debug=False):
         self._log_info("start")

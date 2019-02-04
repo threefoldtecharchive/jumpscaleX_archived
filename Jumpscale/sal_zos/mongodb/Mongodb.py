@@ -5,7 +5,7 @@ from random import SystemRandom
 from string import ascii_uppercase
 from string import digits
 
-logger = j.logger.get(__name__)
+
 
 
 DEF_PORTS = {
@@ -42,7 +42,7 @@ class Mongod:
         """
 
         if not self.is_running():
-            logger.info('start a member of the replica set "{}"'.format(self.replica_set))
+            self._log_info('start a member of the replica set "{}"'.format(self.replica_set))
 
         # ensure directory
         self.container.client.filesystem.mkdir(self.dir)
@@ -74,7 +74,7 @@ class Mongod:
         if not self.is_running():
             raise RuntimeError('Cannot initialize replica set, "{}" mongodb instance is not running'.format(self.replica_set))
 
-        logger.info('init replica set {}'.format(self.replica_set))
+        self._log_info('init replica set {}'.format(self.replica_set))
 
         # add current host to the list of hosts
         hosts.append('{}:{}'.format(self.ip, self.port))
@@ -388,7 +388,7 @@ class Mongos:
         if self.is_running():
             return
 
-        logger.info('start mongos service')
+        self._log_info('start mongos service')
     
         cmd = "mongos --configdb {}/{}  --bind_ip localhost,{} --port {}".format(
                 config_replica_set, ','.join(config_hosts), self.ip, self.port)

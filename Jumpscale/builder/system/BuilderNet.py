@@ -6,7 +6,7 @@ class BuilderNet(j.builder.system._BaseClass):
 
 
     def __init(self):
-        self._logger_enable()
+
 
 
     def tcpport_check(self, port, prefix=""):

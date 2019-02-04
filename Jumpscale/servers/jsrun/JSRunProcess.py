@@ -15,7 +15,7 @@ class JSRunProcess(j.application.JSBaseClass):
         self.timeout = 60
         self.stopcmd = stopcmd
         self.process_strings = process_strings
-        self._logger_enable()
+
         self._pid = None
         j.sal.fs.createDir(j.sal.fs.joinPaths(j.dirs.TMPDIR,"jumpscale","jsrun"))
         tpath = j.sal.fs.joinPaths(j.dirs.TMPDIR,"jumpscale","jsrun",self.name+".toml")

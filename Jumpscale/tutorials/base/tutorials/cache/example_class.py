@@ -10,7 +10,7 @@ class TutorialCacheClass(j.application.JSBaseClass):
         JSBASE.__init__(self)
         self.value = 1
 
-        # self._logger_enable()
+        #
 
 
     def amounts_servers_active(self,reload=False):

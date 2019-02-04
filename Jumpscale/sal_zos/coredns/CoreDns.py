@@ -5,7 +5,7 @@ from .. import templates
 from ..abstracts import Nics, Service
 from ..globals import TIMEOUT_DEPLOY
 
-logger = j.logger.get(__name__)
+
 DEFAULT_PORT = 53
 
 
@@ -67,7 +67,7 @@ class Coredns(Service):
         create configuration of coredns and upload it in the container
         """
 
-        logger.info('Creating coredns config for %s' % self.name)
+        self._log_info('Creating coredns config for %s' % self.name)
 
         config = self._config_as_text()
         self.container.upload_content(self._config_path, config)
@@ -86,7 +86,7 @@ class Coredns(Service):
         if self.is_running():
             return
 
-        logger.info('start coredns %s' % self.name)
+        self._log_info('start coredns %s' % self.name)
 
         self.deploy()
         self.create_config()

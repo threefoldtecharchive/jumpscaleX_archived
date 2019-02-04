@@ -19,7 +19,7 @@ class Fixer(j.application.JSBaseClass):
         JSBASE.__init__(self)
         self.generator = JSGenerator(j)
         self.replacer = FixerReplacer()
-        self._logger_enable()
+
 
 
     def _find_changes(self):

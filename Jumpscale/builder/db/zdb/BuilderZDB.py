@@ -17,7 +17,7 @@ class BuilderZDB(j.builder.system._BaseClass):
         """
 
     def _init(self):
-        self._logger_enable()
+
 
     def configure(self, name="main", addr="127.0.0.1", port=9900, datadir="", mode="seq", adminsecret="123456"):
         self.name = name

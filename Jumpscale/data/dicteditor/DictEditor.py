@@ -50,7 +50,7 @@ class DictEditorFactory(j.application.JSFactoryBaseClass):
     __jslocation__ = "j.data.dict_editor"
 
     def _init(self):
-        self._logger_enable()
+
 
     def get(self,ddict):
         """

@@ -36,7 +36,7 @@ class FixerReplacer(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
         self.rules=[]
-        self._logger_enable()
+
 
         for rule in DO.split("\n"):
             if rule.strip()=="":

@@ -4,7 +4,7 @@ from Jumpscale import j
 class BuilderPython(j.builder.system._BaseClass):
     def _init(self):
 
-        self._logger_enable()
+
 
         self.DIR_BUILD_L = j.core.tools.text_replace("{DIR_VAR}/build/python3")
         j.sal.fs.createDir(self.DIR_BUILD_L)

@@ -182,7 +182,6 @@ class Expect(j.application.JSBaseClass):
 
     def __init__(self, cmd=""):
         JSBASE.__init__(self)
-        j.logger.addConsoleLogCategory("expect")
         PIPE = subprocess.PIPE
         self._prompt = ""
 

@@ -11,7 +11,7 @@ from clients.blockchain.rivine.types.transaction import TransactionFactory
 from clients.blockchain.rivine.const import \
     MINER_PAYOUT_MATURITY_WINDOW, TIMELOCK_CONDITION_HEIGHT_LIMIT, NIL_UNLOCK_HASH
 
-logger = j.logger.get(__name__)
+
 
 # TODO: simplify this function a lot or eliminate it,
 #       the logic chain in this function is really convoluted...
@@ -101,14 +101,14 @@ def collect_miner_fees(address, blocks, height):
         blocks = {}
     for block_info in blocks:
         if block_info.get('height', None) and block_info['height'] + MINER_PAYOUT_MATURITY_WINDOW >= height:
-            logger.info('Ignoring miner payout that has not matured yet')
+            self._log_info('Ignoring miner payout that has not matured yet')
             continue
         # mineroutputs can exist in the dictionary but with value None
         mineroutputs = block_info.get('rawblock', {}).get('minerpayouts', [])
         if mineroutputs:
             for index, minerpayout in enumerate(mineroutputs):
                 if minerpayout.get('unlockhash') == address:
-                    logger.info('Found miner output with value {}'.format(minerpayout.get('value')))
+                    self._log_info('Found miner output with value {}'.format(minerpayout.get('value')))
                     result[block_info['minerpayoutids'][index]] = {
                         'value': minerpayout['value'],
                         'condition':{
@@ -165,7 +165,7 @@ def collect_transaction_outputs(current_height, address, transactions, unconfirm
                 condition_ulh = get_unlockhash_from_output(output=utxo, address=address, current_height=current_height)
 
                 if address in condition_ulh['locked'] or address in condition_ulh['unlocked']:
-                    logger.debug('Found transaction output for address {}'.format(address))
+                    self._log_debug('Found transaction output for address {}'.format(address))
                     if txn_info['coinoutputids'][index] in unconfirmed_txs:
                         logger.warn("Transaction output is part of an unconfirmed tansaction. Ignoring it...")
                         continue

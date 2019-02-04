@@ -15,7 +15,7 @@ class RedisServer(j.application.JSBaseClass):
     def _init(self,bcdb=None, addr="localhost",port=6380,secret="123456"):
         self.bcdb = bcdb
         self._sig_handler = []
-        # self._logger_enable()
+        #
         self.host = addr
         self.port = port  # 1 port higher than the std port
         self.secret = secret

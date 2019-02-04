@@ -9,7 +9,7 @@ import g8storclient
 import tarfile
 import base64
 
-logger = j.logger.get(__name__)
+
 
 
 class FlistManipulatorFactory:
@@ -88,7 +88,7 @@ class Manipulator:
 
     def export(self):
         output = self.output_path+'.tgz'
-        logger.info("export the flist at %s", output)
+        self._log_info("export the flist at %s", output)
 
         with tarfile.open(output, 'w:gz') as tar:
             tar.add(self.output_path)
@@ -109,7 +109,7 @@ class Manipulator:
             if not os.path.exists(path):
                 raise RuntimeError('file not found %s' % path)
 
-            logger.debug("hash %s", path)
+            self._log_debug("hash %s", path)
             hashs = g8storclient.encrypt(path)
 
             if hashs is None:
@@ -117,7 +117,7 @@ class Manipulator:
 
             for hash in hashs:
                 if not backend.exists(hash['hash']):
-                    logger.debug("upload %s", path)
+                    self._log_debug("upload %s", path)
                     backend.set(hash['hash'], hash['data'])
 
         return self.export()
@@ -144,14 +144,14 @@ class Manipulator:
         # let's adding all missing keys
         to_upload.extend(missing_keys)
 
-        logger.info("[+] %d chunks to upload" % len(to_upload))
+        self._log_info("[+] %d chunks to upload" % len(to_upload))
 
         if len(to_upload) == 0:
             return
 
         # filter the has_data dict to only keep what needs to be uploaded
         upload = {k: v for k, v in hash_data.items() if k in to_upload}
-        logger.info("[+] uploading last data...")
+        self._log_info("[+] uploading last data...")
         directclient.insert(upload)
 
         return self.export()

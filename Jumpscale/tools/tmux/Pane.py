@@ -16,7 +16,7 @@ class Pane(j.application.JSBaseClass):
             self.name_set(name)
         else:
             self.name = self.mgmt.get("pane_title")
-        # self._logger_enable()
+        #
 
     # @property
     # def name(self):

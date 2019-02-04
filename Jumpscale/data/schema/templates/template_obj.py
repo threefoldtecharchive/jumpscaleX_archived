@@ -216,7 +216,7 @@ class ModelOBJ():
             if self.readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s"%self)
             # print (self.model.__class__.__name__)
-            if not self.model.__class__.__name__=="acl" and self.acl is not None:
+            if not self.model.__class__._name=="acl" and self.acl is not None:
                 if self.acl.id is None:
                     self.acl.save()
                 if self.acl.id != self.acl_id:

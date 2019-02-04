@@ -48,7 +48,7 @@ class OVCClientFactory(JSConfigBaseFactory):
         """
         js_shell 'j.clients.openvcloud.test()'
         """
-        self._logger_enable()
+
         cl = j.clients.openvcloud.getFromParams("be-gen-1.demo.greenitglobe.com")
         self._log_info(cl.config)
 

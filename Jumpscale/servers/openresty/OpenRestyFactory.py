@@ -9,7 +9,7 @@ class OpenRestyFactory(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
-        self._logger_enable()
+
         self._cmd = None
 
 

@@ -424,12 +424,12 @@ class OVHClient(JSConfigBase):
     #
     #     cl = OVHClient
     #
-    #     logger.debug("booting server {} to zero-os".format(OVHHostName))
+    #     self._log_debug("booting server {} to zero-os".format(OVHHostName))
     #     task = cl.zero_os_boot(target=OVHHostName, zerotierNetworkID=zerotierNetworkID)
-    #     logger.debug("waiting for {} to reboote".format(OVHHostName))
+    #     self._log_debug("waiting for {} to reboote".format(OVHHostName))
     #     cl.server_wait_reboot(OVHHostName, task['taskId'])
     #     ip_pub = cl.server_detail_get(OVHHostName)["ip"]
-    #     logger.info("ip addr is:%s" % ip_pub)
+    #     self._log_info("ip addr is:%s" % ip_pub)
     #
     #     while True:
     #         try:
@@ -439,14 +439,14 @@ class OVHClient(JSConfigBase):
     #             break
     #         except RuntimeError as e:
     #             # case where we don't find the member in zerotier
-    #             logger.error(e)
+    #             self._log_error(e)
     #             time.sleep(1)
     #         except IndexError as e:
     #             # case were we the member doesn't have a private ip
-    #             logger.error("please authorize the server with the public ip %s in the zerotier network" % ip_pub)
+    #             self._log_error("please authorize the server with the public ip %s in the zerotier network" % ip_pub)
     #             time.sleep(1)
     #
-    #     logger.debug("server found: %s" % member['id'])
-    #     logger.debug("zerotier IP: %s" % ipaddr_priv)
+    #     self._log_debug("server found: %s" % member['id'])
+    #     self._log_debug("zerotier IP: %s" % ipaddr_priv)
     #
     #     return ip_pub, ipaddr_priv

@@ -26,7 +26,7 @@ class BCDBMeta(j.application.JSBaseClass):
         self._meta_local_path = j.sal.fs.joinPaths(
             self.bcdb._data_dir, "meta.db")
         self._schema = j.data.schema.get(SCHEMA)
-        # self._logger_enable()
+        #
         self.reset()
 
     @property

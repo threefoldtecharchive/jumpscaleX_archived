@@ -14,7 +14,7 @@ class VirtualboxClient(j.application.JSBaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)
-        self._logger_enable()
+
         self.vms={}
         self.disks = {}
 

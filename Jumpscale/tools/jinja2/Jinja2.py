@@ -12,7 +12,7 @@ class Jinja2(j.application.JSBaseClass):
     def _init(self):
         self._codegendir = j.core.tools.text_replace("{DIR_VAR}/CODEGEN")
 
-        # self._logger_enable()
+        #
         self.reset(destroyall=False)
 
     def reset(self, destroyall=True):

@@ -12,7 +12,7 @@ class VirtualboxVM(j.application.JSBaseClass):
         self.client = j.clients.virtualbox.client
         self.name = name
         self._guid = ""
-        self._logger_enable()
+
 
     def _cmd(self, cmd):
         cmd = "VBoxManage %s" % cmd

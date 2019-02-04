@@ -31,7 +31,7 @@ class DBSQLite(j.application.JSBaseClass):
             value = p.BlobField()
 
         self._table_model = KVS
-        # self._logger_enable()
+        #
         self._table_model.create_table()
 
     def set(self,key,val):

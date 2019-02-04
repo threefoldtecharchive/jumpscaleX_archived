@@ -16,7 +16,7 @@ class ZDBAdminClient(ZDBClientBase):
         ZDBClientBase._init(self)
 
         self._system = None
-        # self._logger_enable()
+        #
         if self.secret:
             # authentication should only happen in zdbadmin client
             self._log_debug("AUTH in namespace %s" % (self.nsname))

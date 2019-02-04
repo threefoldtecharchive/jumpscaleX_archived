@@ -379,15 +379,15 @@ class PacketNet(JSConfigBase):
   #               break
   #           except RuntimeError as e:
   #               # case where we don't find the member in zerotier
-  #               logger.error(e)
+  #               self._log_error(e)
   #               time.sleep(1)
   #           except IndexError as e:
   #               # case were we the member doesn't have a private ip
-  #               logger.error("please authorize the server with the public ip %s in the zerotier network" % ip_pub[0])
+  #               self._log_error("please authorize the server with the public ip %s in the zerotier network" % ip_pub[0])
   #               time.sleep(1)
   #
-  #       logger.debug("server found: %s" % device.id)
-  #       logger.debug("zerotier IP: %s" % ipaddr_priv)
+  #       self._log_debug("server found: %s" % device.id)
+  #       self._log_debug("zerotier IP: %s" % ipaddr_priv)
   #
   #       return ip_pub, ipaddr_priv
   #

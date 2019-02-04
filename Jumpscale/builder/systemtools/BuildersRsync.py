@@ -6,7 +6,7 @@ class BuilderRsync()
 
 
     def __init(self):
-        self._logger_enable()
+
         self.BUILDDIRL = j.core.tools.text_replace("{DIR_VAR}/build/rsync/")
         self.VERSION = 'rsync-3.1.2'
 

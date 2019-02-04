@@ -9,7 +9,7 @@ class ErrBotFactory(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
-        self._logger_enable()
+
 
 
     def start(self,reset=False):

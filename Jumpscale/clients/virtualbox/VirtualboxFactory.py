@@ -11,7 +11,7 @@ class VirtualboxFactory(j.application.JSBaseClass):
     __jslocation__ = "j.clients.virtualbox"
 
     def _init(self):
-        self._logger_enable()
+
         self._client = None
 
     def get(self):

@@ -42,7 +42,7 @@ from .errors import RESTAPIError, BackendError,\
 InsufficientWalletFundsError, NonExistingOutputError,\
 NotEnoughSignaturesFound, InvalidUnlockHashChecksumError
 
-logger = j.logger.get(__name__)
+
 
 class RivineWallet:
     """
@@ -235,7 +235,7 @@ class RivineWallet:
         # Start by clearing any (possibly outdated info)
         self._addressis_info = {}
         current_chain_height = self._get_current_chain_height()
-        logger.info('Current chain height is: {}'.format(current_chain_height))
+        self._log_info('Current chain height is: {}'.format(current_chain_height))
         # remove unconfirmed outputs from prior iteration
         self._unconfirmed_unspent_coin_outputs = {}
         self._unconfirmed_locked_coin_outputs = {}
@@ -644,7 +644,7 @@ class RivineWallet:
 
         @param transaction: Transaction object to be signed
         """
-        logger.info("Signing Transaction")
+        self._log_info("Signing Transaction")
         for index, input in enumerate(transaction.coin_inputs):
             if input.parent_id in self._unspent_coin_outputs:
                 #@TODO improve the parsing of outputs its duplicated now in too many places

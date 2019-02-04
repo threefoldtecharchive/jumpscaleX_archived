@@ -1,6 +1,6 @@
 from Jumpscale import j
 
-logger = j.logger.get('schema.log')
+
 
 class Schema:
     def __init__(self, schema):

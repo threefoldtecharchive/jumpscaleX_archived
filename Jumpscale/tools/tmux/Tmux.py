@@ -18,7 +18,7 @@ class Tmux(j.application.JSBaseClass):
         self._server = None
         self._session = None
         self._windows_active = {}
-        self._logger_enable()
+
 
 
     @property

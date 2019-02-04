@@ -7,7 +7,7 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
 
 
     def _init(self):
-        self._logger_enable()
+
         self.BUILDDIRL = j.core.tools.text_replace("{DIR_VAR}/build/openssl")
         self.CODEDIRL = j.core.tools.text_replace("{DIR_VAR}/build/code/openssl")
 

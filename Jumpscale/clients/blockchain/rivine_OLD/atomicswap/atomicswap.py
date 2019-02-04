@@ -11,7 +11,7 @@ from clients.blockchain.rivine.types.unlockconditions import ATOMICSWAP_CONDITIO
 from clients.blockchain.rivine.const import HASTINGS_TFT_VALUE, ATOMICSWAP_SECRET_SIZE, MINIMUM_TRANSACTION_FEE
 from clients.blockchain.rivine.types.transaction import TransactionFactory, DEFAULT_TRANSACTION_VERSION, HASHTYPE_COINOUTPUT_ID
 
-logger = j.logger.get(__name__)
+
 
 class AtomicSwapManager:
     """
@@ -226,7 +226,7 @@ class AtomicSwapManager:
         @param transaction_id: Transaction id from the atomicswap contract
         """
         txn_id = self._spend_atomicswap_contract(transaction_id=transaction_id)
-        logger.info("Refund executed successfully. Transaction ID: {}".format(txn_id))
+        self._log_info("Refund executed successfully. Transaction ID: {}".format(txn_id))
         return txn_id
 
 
@@ -239,5 +239,5 @@ class AtomicSwapManager:
         @param secret: Atomicswap secert
         """
         txn_id = self._spend_atomicswap_contract(transaction_id=transaction_id, secret=secret)
-        logger.info("Redeem executed successfully. Transaction ID: {}".format(txn_id))
+        self._log_info("Redeem executed successfully. Transaction ID: {}".format(txn_id))
         return txn_id

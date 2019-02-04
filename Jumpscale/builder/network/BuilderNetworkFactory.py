@@ -6,7 +6,7 @@ class BuilderNetworkFactory(j.builder.system._BaseFactoryClass):
     __jslocation__ = "j.builder.network"
 
     def _init(self):
-        self._logger_enable()
+
         self._zerotier = None
         self._coredns = None
 
