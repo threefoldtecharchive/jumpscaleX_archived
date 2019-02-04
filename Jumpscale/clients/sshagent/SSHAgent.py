@@ -12,7 +12,6 @@ class SSHAgent(j.application.JSBaseClass):
         @url = jumpscale.sshagent.client
         name* = "" (S)
         passphrase = "" (S)
-        path = "" (S)
         """
 
     def _init(self):
@@ -322,9 +321,6 @@ class SSHAgent(j.application.JSBaseClass):
 
         """
 
-        # TODO:1 broken
-
-        #
         self._log_info("sshkeys:%s" % j.clients.sshkey.listnames())
 
         self.sshagent_kill()  # goal is to kill & make sure it get's loaded automatically
