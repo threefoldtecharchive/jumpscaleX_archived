@@ -28,6 +28,11 @@ def docker_names():
     names = [i.strip("\"'") for i in names if i.strip()!=""]
     return names
 
+def image_names():
+    names = IT.Tools.execute("docker images --format='{{.Repository}}:{{.Tag}}'",showout=False,replace=False)[1].split("\n")
+    names = [i.strip("\"'") for i in names if i.strip()!=""]
+    return names
+
 # FOR DEBUG purposes can install ipython & pip3 will allow us to use the shell
 # IT.UbuntuInstall.base_install()
 
@@ -44,6 +49,7 @@ def help():
     -3 = install in a docker (make sure docker is installed)
 
     -y = answer yes on every question (for unattended installs)
+    -c = will confirm all filled in questions at the end (useful when using -y)
     -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install
 
     -r = reinstall, basically means will try to re-do everything without removing (keep data)
@@ -52,13 +58,15 @@ def help():
 
     -w = install the wiki at the end, which includes openresty, lapis, lua, ...
 
-    --name =  name of docker, only relevant when docker option used
+    --name = name of docker, only relevant when docker option used
 
     --codepath = "/sandbox/code" can overrule, is where the github code will be checked out
 
     --portrange = 1 is the default means 8000-8099 on host gets mapped to 8000-8099 in docker
                   1 means 8100-8199 on host gets mapped to 8000-8099 in docker
                   2 means 8200-8299 on host gets mapped to 8000-8099 in docker
+                  
+    --image=/path/to/image.tar or name of image (use docker images) 
                   ...
     --port = port of container SSH std is 9022 (normally not needed to use because is in portrange:22 e.g. 9122 if portrange 1)
 
@@ -75,6 +83,7 @@ def ui():
 
     if "h" in args:
         help()
+
 
     if "incontainer" not in args:
         rc,out,err=IT.Tools.execute("cat /proc/1/cgroup",die=False,showout=False)
@@ -156,6 +165,9 @@ def ui():
 
     if "3" in args: #means we want docker
 
+        if "name" not in args:
+            args["name"] = "default"
+
         container_exists = args["name"] in docker_names()
         args["container_exists"]=container_exists
 
@@ -170,10 +182,22 @@ def ui():
                 if not "y" in args:
                     if IT.Tools.ask_yes_no("docker:%s exists, ok to remove? Will otherwise keep and install inside."%args["name"]):
                         args["d"]=True
+                # else:
+                #     #is not interactive and d was not given, so should not continue
+                #     print("ERROR: cannot continue, docker: %s exists."%args["name"])
+                #     sys.exit(1)
+
+        if "image" in args:
+            if ":" not in args["image"]:
+                args["image"]="%s:latest"%args["image"]
+            if args["image"] not in image_names():
+                if IT.Tools.exists(args["image"]):
+                    IT.Tools.shell()
+                    w
                 else:
-                    #is not interactive and d was not given, so should not continue
-                    print("ERROR: cannot continue, docker: %s exists."%args["name"])
+                    print("Cannot continue, image '%s' specified does not exist."%args["image"])
                     sys.exit(1)
+            args["d"]=True
 
         if "portrange" not in args:
             if "y" in args:
@@ -181,13 +205,15 @@ def ui():
             else:
                 if container_exists:
                     args["portrange"] = int(IT.Tools.ask_choices("choose portrange, std = 0",[0,1,2,3,4,5,6,7,8,9]))
+                else:
+                    args["portrange"] = 0
 
         a=8000+int(args["portrange"])*100
         b=8099+int(args["portrange"])*100
         portrange_txt="%s-%s:8000-8099"%(a,b)
         args["portrange_txt"] = "-p %s"%portrange_txt
 
-        if int(args["portrange"])>0 and "port" not in args:
+        if "port" not in args:
             args["port"] = 9000+int(args["portrange"])*100 + 22
 
     else:
@@ -235,13 +261,16 @@ def ui():
             else:
                 T+=" - will keep the docker container and install inside\n"
 
+        if "image" in args:
+            T+=" - will use docker image: '%s'\n"%args["image"]
+
         T+=" - will map ssh port to: '%s'\n"%args["port"]
         T+=" - will map portrange '%s' (8000-8100) always in container.\n"% portrange_txt
 
     T+="\n"
     print(T)
 
-    if "y" not in args:
+    if "c" in args or "y" not in args:
         if not IT.Tools.ask_yes_no("Ok to continue?"):
             sys.exit(1)
 
@@ -287,6 +316,7 @@ elif "3" in args:
 
     if args["container_exists"] and "d" in args:
         IT.Tools.execute("docker rm -f %s"%args["name"])
+        args["container_exists"] = False
 
     cmd="""
 
@@ -297,16 +327,19 @@ elif "3" in args:
     --device=/dev/net/tun \
     --cap-add=NET_ADMIN --cap-add=SYS_ADMIN \
     --cap-add=DAC_OVERRIDE --cap-add=DAC_READ_SEARCH \
-    -v {CODEDIR}:/sandbox/code phusion/baseimage:master
+    -v {CODEDIR}:/sandbox/code {IMAGE}
     """
     print(" - Docker machine gets created: ")
+    if "image" not in args:
+        args["image"] = "phusion/baseimage:master"
     if not args["container_exists"]:
         if "port" not in args:
             args["port"]=8022
         IT.Tools.execute(cmd,args={"CODEDIR":args["codepath"],
                                    "NAME":args["name"],
                                    "PORT":args["port"],
-                                   "PORTRANGE":args["portrange_txt"]
+                                   "PORTRANGE":args["portrange_txt"],
+                                   "IMAGE":args["image"]
                                    },
                          interactive=True)
 

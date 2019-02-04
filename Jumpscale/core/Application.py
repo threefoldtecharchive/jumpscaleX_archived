@@ -364,7 +364,7 @@ class Application(object):
                 for key2,item2 in item.__dict__.items():
                     # self._j.core.tools.log("iterate rootobj:%s"%key2)
                     if item2 is not None:
-                        self._j.core.tools.log("yield obj:%s"%item2._key)
+                        # self._j.core.tools.log("yield obj:%s"%item2._key)
                         yield item2
 
     #

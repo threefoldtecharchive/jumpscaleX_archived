@@ -36,7 +36,7 @@ curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/i
 
 If you are a developer don't forget to load your SSH key for github.
 
-## with SSH key
+## of you're a developer make sure you SSH key has been loaded
 
 should add your ssh key in your github account 
 
@@ -45,24 +45,62 @@ to see if SSL key has been loaded
 ssh-add -L
 ``` 
 
+## how to use non interactive 
+
 ```bash
-export USEGIT=1
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py
+python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py -h
 ```
 
-there are some env variables which can be used
 ```
-#makes sure that we use python & libraries from the system (in other words not the sandbox)
-export INSYSTEM=1
+Jumpscale X Installer
+---------------------
 
-#force not to use git, download with curl (if git not installed then it will automatically use curl)
-export USEGIT=0
+options
 
-#if there are changes done in the code dir, and you are e.g. testing this installer you can use this env var to give a commit message
-export GITMESSAGE=
+# type of installation
+-1 = in system install
+-2 = sandbox install
+-3 = install in a docker (make sure docker is installed)
+
+-y = answer yes on every question (for unattended installs)
+-c = will confirm all filled in questions at the end (useful when using -y)
+-d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install
+
+-r = reinstall, basically means will try to re-do everything without removing (keep data)
+
+-p = pull code from git, if not specified will only pull if code directory does not exist yet
+
+-w = install the wiki at the end, which includes openresty, lapis, lua, ...
+
+--name = name of docker, only relevant when docker option used
+
+--codepath = "/sandbox/code" can overrule, is where the github code will be checked out
+
+--portrange = 1 is the default means 8000-8099 on host gets mapped to 8000-8099 in docker
+                1 means 8100-8199 on host gets mapped to 8000-8099 in docker
+                2 means 8200-8299 on host gets mapped to 8000-8099 in docker
+                
+--image=/path/to/image.tar or name of image (use docker images) 
+                ...
+--port = port of container SSH std is 9022 (normally not needed to use because is in portrange:22 e.g. 9122 if portrange 1)
+
+-h = this help
 ```
 
-- to use
+e.g.
+
+```
+python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py 
+```
+
+### if you already have your code checked out you can use
+
+```bash
+python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py
+```
+
+
+## to use
 
 ```bash
 source /sandbox/env.sh

@@ -18,7 +18,6 @@ class LoggerFactory(j.application.JSBaseClass):
         config = {}
         config["DEBUG"]=value
         self.config = config
-        self.reload()
 
     @property
     def config(self):
@@ -49,14 +48,17 @@ class LoggerFactory(j.application.JSBaseClass):
         :return:
         """
         assert j.data.types.dict.check(value)
+        changed=False
         for name in j.core.myenv.config.keys():
             if name.startswith("LOGGER") or name=="DEBUG":
                 if name in value:
                     if j.core.myenv.config[name] != value[name]:
+                        changed=True
                         self._log_debug("changed in config: %s:%s"%(name,value[name]))
                         j.core.myenv.config[name] = value[name]
-        j.core.myenv.config_save()
-        self.reload()
+        if changed:
+            j.core.myenv.config_save()
+            self.reload()
 
     def reload(self):
         """
@@ -64,7 +66,6 @@ class LoggerFactory(j.application.JSBaseClass):
         will walk over jsbase classes & reload the logging config
         :return:
         """
-        j.clients.ssh.a
         for obj in j.application._iterate_rootobj():
             obj._log_init(children=True)
             # self._print(obj._key)
