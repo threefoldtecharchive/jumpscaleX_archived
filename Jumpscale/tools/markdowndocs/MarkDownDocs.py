@@ -54,6 +54,8 @@ class DocsiteChangeHandler(FileSystemEventHandler):
         self.watcher = watcher
 
     def on_modified(self, event):
+        if event.is_directory or event.src_path.endswith(".swp"):
+            return
         docsite = self.get_docsite_from_path(event.src_path)
         if docsite:
             site = j.tools.markdowndocs.load(docsite.path, docsite.name)
@@ -61,9 +63,20 @@ class DocsiteChangeHandler(FileSystemEventHandler):
             site.write()
             self.watcher.observer.resume()
 
+    def on_deleted(self, event):
+        if event.src_path.endswith(".swp"):
+            return
+        docsite = self.get_docsite_from_path(event.src_path)
+        file_dir = event.src_path.split(docsite.path)[1]
+        if file_dir.startswith('/'):
+            file_dir = file_dir[1:]
+        file_dir = file_dir.lower()
+        file_dir = j.sal.fs.joinPaths(docsite.outpath, file_dir)
+        j.sal.fs.remove(file_dir)
+
     def get_docsite_from_path(self, path):
         for _, docsite in self.watcher.docsites.items():
-            if path in docsite.path:
+            if docsite.path in path:
                 return docsite
 
 
