@@ -373,7 +373,7 @@ elif "3" in args:
     cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py %s"%args_txt
 
     dexec(cmd)
-    IT.Tools.shell()
+
 
 
     # dirpath = os.path.dirname(inspect.getfile(IT))
@@ -390,11 +390,12 @@ elif "3" in args:
 
     # to login to the docker using ssh use (if std port)
     ssh root@localhost -A -p {port}
-
-    # or for kosmos shell
-    ssh root@localhost -A -p {port} 'source /sandbox/env.sh;kosmos'
-
     """
+    #
+    # # or for kosmos shell
+    # ssh root@localhost -A -p {port} 'source /sandbox/env.sh;kosmos'
+    #
+    # """
     print(IT.Tools.text_replace(k,args=args))
 
 
