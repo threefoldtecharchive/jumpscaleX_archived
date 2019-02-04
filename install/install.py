@@ -94,6 +94,8 @@ def ui():
         if rc==0 and out.find("/docker/")!=-1:
             args["incontainer"]=True
             #means we are in a docker
+        else:
+            args["incontainer"]=False
 
     if not "1" in args and not "2" in args and not "3" in args:
 
