@@ -2,7 +2,7 @@ import socket
 
 import gevent.socket
 
-from etcd3 import Client
+import etcd3
 from Jumpscale import j
 
 JSConfigClient = j.application.JSBaseConfigClass
@@ -46,7 +46,7 @@ class EtcdClient(JSConfigClient):
                     'user': self.user,
                     'password': self.password_
                 })
-            self._api = Client(**kwargs)
+            self._api = etcd3.client(**kwargs)
         return self._api
 
     def put(self, key, value):
