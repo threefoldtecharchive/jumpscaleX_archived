@@ -180,7 +180,7 @@ class RedisFactory(j.application.JSBaseClass):
             if j.core.db.ping() and j.core._db_fakeredis is False:
                 return j.core.db
 
-            self._log_info("try to connect to redis of unixsocket:%s or tcp port 6379" % self.unix_socket_path)
+            self._log_info("try to connect to redis of unixsocket or tcp port 6379")
 
             if nr > 200:
                 raise RuntimeError("could not start redis")
