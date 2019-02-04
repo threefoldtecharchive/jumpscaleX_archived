@@ -4,7 +4,7 @@ running_delay = -1
 
 [startup.lapisnew.args]
 name = "/sandbox/bin/lapis"
-args = ["new"]
+args = ["new", "--lua"]
 
 [startup.lapisnew.args.env]
 LUALIB = "/sandbox/openresty/lualib"
