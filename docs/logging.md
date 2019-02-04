@@ -1,6 +1,6 @@
 ## Logging
 
-### how to call
+### how to use
 
 #### if class inherits from JSBASE (should be all classes we work on)
 
@@ -51,6 +51,11 @@ def _log(self,msg,cat="",level=10,data=None,context="",_levelup=1):
     """
 ```
 
+#### _print
+
+DO NOT USE print(....) in jumpscale but use self._print
+will make sure logging happens
+
 #### data
 
 - will be stored in logging aggregator (redis)
@@ -76,6 +81,11 @@ j.core.tools.log("mylog",cat="cat",level=40)
 j.core.tools.log("mylog",cat="cat",level=50)
 ```
 
+### LOGGING COLORS
+
+see [How to color text when printing]("How to color text when printing.md")
+
+
 ### LOGGING LEVELS:
 
 - CRITICAL 	50
@@ -87,7 +97,7 @@ j.core.tools.log("mylog",cat="cat",level=50)
 - NOTSET 	0
 
 
-## logging configuration
+### logging configuration
 
 ```toml
 #if debug on then will log all
@@ -106,11 +116,11 @@ see /sandbox/cfg/jumpscale_config.toml
 
 ### log impl details
 
-### dict keys:
+#### dict keys:
 
 - processid : a string id can be a pid or any other identification of the log
 - cat   : optional category for log
-- level : levels see https://docs.python.org/3/library/logging.html#levels
+- level : levels see above
 - linenr : nr in file where log comes from
 - filepath : path where the log comes from
 - context : where did the message come from e.g. def name
@@ -118,23 +128,6 @@ see /sandbox/cfg/jumpscale_config.toml
 - data : additional data e.g. stacktrace, depending context can be different
 - hash: optional, 16-32 bytes unique for this message normally e.g. md5 of eg. concatenation of important fields
 
-
-
-## how to call logging on class
-
-```
-self._log_debug('List files in directory with path: %s' % path,_levelup=3)
-```
-
-
-
-when logging to redis server, consult using
-
-```
-j.clients.logger.tail()
-```
-
-will show everything going on
 
 ### how to log everything (debug mode)
 
@@ -145,22 +138,13 @@ Will also make sure redis is running for core functions
 
 This will put full jumpscale in a debug mode.
 
-### redis
+### use logging redis aggregator (NOT DONE)
 
-if there is a core redis then all logging will also happen to redis if 'LOGGER_REDIS' in config file set.
-Max 2000 logentries are kept per process.
+when logging to redis server, consult using
 
-#### to listen to logs going to redis
+```
+j.clients.logger.tail()
+```
 
-#### how are logs stored in redis
-
-- hset: log:$log_id:$log_prefix log_id thedata, which is msgpack
-
-### logger prefix (FIX)
-
-on classes who inherit from our jsbase class you can use self._logger_prefix
-this prefix will then be  used for all log statements, this makes it easy to search for logs later
-
-if not filled in then the prefix will be self._location which will give good idea where log comes from
-
+will show everything going on
 

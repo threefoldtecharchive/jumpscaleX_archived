@@ -19,14 +19,15 @@
 
 - _location  : e.g. j.clients.ssh, is always the location name of the highest parent 
 - _name : name of the class itself in lowercase
-- _logger_level: std 100, 100 means no logging, 0 is all logging
-  - 10 means logs debugs and up
-  - 15 means logs stdout & above, ...
-
+_ _key: is a unique key per object based on _location,_name and if relevant "name" of model inside, is used in the logger
 
 ### logging on a jumpscale object
 
 - _logger_enable() will make sure self._logger_level = 0 (is for all classes related to self._location
+- _logger_minlevel_set(100), 100 means no logging, 0 is all logging
+  - 10 means logs debugs and up
+  - 15 means logs stdout & above, ...
+  - will configure child & parent classes as well as object (in same jumpscale location)
 
 - _log_debug : method to log a debug statement
 - _print : print to stdout but also log
@@ -34,10 +35,6 @@
 - _log_warning : method to log a warning statement
 - _log_error : method to log an error statement
 - _log_critical : method to log a critical statement
-
-it will record the context for the log statements as
-
-- self._location:self._name if self._name not in self._location
 
 
 ### how do baseclasses call each other
@@ -50,7 +47,7 @@ it will record the context for the log statements as
     - the most base class is called last
 
 
-### 
+### create your own classes
 
 if you create your own classes who inherit from JSBase (which should be all)
 use following patern
