@@ -35,40 +35,44 @@ class SSHAgent(j.application.JSBaseClass):
             raise RuntimeError("found more than 1 sshkey in sshagent")
         return r[0]
 
-    def key_load(self, duration=3600 * 24):
+    def key_load(self,path="",passphrase="", duration=3600 * 24):
         '''
         load the key on path
 
+        :param path: path for ssh-key
+        :type path: str
+        :param passphrase: passphrase for ssh-key, defaults to ""
+        :type passphrase: str
         :param duration: duration, defaults to 3600*24
         :type duration: int, optional
         :raises RuntimeError: Path to load sshkey on couldn't be found
         :return: sshAgent instance
         :rtype: SSHAgent
         '''
-        if not j.sal.fs.exists(self.path):
+        if not j.sal.fs.exists(path):
             raise RuntimeError(
-                "Cannot find path:%sfor sshkey (private key)" % self.path)
+                "Cannot find path:%sfor sshkey (private key)" % path)
 
         self.check()
 
-        name = j.sal.fs.getBaseName(self.path)
+        name = j.sal.fs.getBaseName(path)
 
         if name in [j.sal.fs.getBaseName(item) for item in self.keys_list()]:
             return
 
         # otherwise the expect script will fail
-        path0 = j.sal.fs.pathNormalize(self.path)
+        path0 = j.sal.fs.pathNormalize(path)
 
         self._log_info("load ssh key: %s" % path0)
-        j.sal.fs.chmod(self.path, 0o600)
-        if self.passphrase:
+        j.sal.fs.chmod(path, 0o600)
+        if passphrase:
             self._log_debug("load with passphrase")
             C = """
                 echo "exec cat" > ap-cat.sh
                 chmod a+x ap-cat.sh
                 export DISPLAY=1
-                echo {self.passphrase} | SSH_ASKPASS=./ap-cat.sh ssh-add -t {duration} {path}
-                """.format(path=path0, passphrase=self.passphrase, duration=duration)
+                echo {passphrase} | SSH_ASKPASS=./ap-cat.sh ssh-add -t {duration} {path}
+                """.format(path=path0, passphrase=passphrase, duration=duration)
             try:
                 j.sal.process.execute(C, showout=False)
             finally:
@@ -80,10 +84,8 @@ class SSHAgent(j.application.JSBaseClass):
 
         self._sshagent = None  # to make sure it gets loaded again
 
-        data = {}
-        data["path"] = self.path
 
-        return self.get(name=name, data=data)
+        return self
 
     def profile_js_configure(self):
         '''

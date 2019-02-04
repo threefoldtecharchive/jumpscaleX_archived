@@ -18,7 +18,7 @@ class SSHKey(j.application.JSBaseConfigClass):
 
         self._connected = None
 
-        if self.data.name == "":
+        if self.name == "":
             raise RuntimeError("need to specify name")
 
         if self.path == "":
@@ -33,7 +33,7 @@ class SSHKey(j.application.JSBaseConfigClass):
         if not self.pubkey:
             path = '%s.pub' % (self.path)
             if not j.sal.fs.exists(path):
-                cmd = 'ssh-keygen -f {} -y > {}'.format(self.path, path)
+                cmd = 'ssh-keygen -f {} -N "{}"'.format(self.path, self.passphrase)
                 j.sal.process.execute(cmd)
             self.pubkey = j.sal.fs.readFile(path)
 
@@ -41,14 +41,14 @@ class SSHKey(j.application.JSBaseConfigClass):
             self.privkey = j.sal.fs.readFile(self.path)
 
         self.save()
-        self.data.autosave = True  # means every write will be saved (is optional to set)
+        self.autosave = True  # means every write will be saved (is optional to set)
 
     def delete(self):
         """
-        will delete from ~/.ssh dir as well as from config
+        will delete from from config
         """
         self._log_debug("delete:%s" % self.name)
-        self.data.delete()
+        j.application.JSBaseConfigClass.delete(self)
         # self.delete_from_sshdir()
 
     def delete_from_sshdir(self):
@@ -81,6 +81,8 @@ class SSHKey(j.application.JSBaseConfigClass):
             cmd = 'ssh-keygen -t rsa -f %s -q -P "%s"' % (self.path, self.passphrase)
             j.sal.process.execute(cmd, timeout=10)
 
+        self.pubkey=""
+        self.privkey=""
         self._init()  # will load the info from fs
 
     def sign_ssh_data(self, data):
@@ -107,7 +109,7 @@ class SSHKey(j.application.JSBaseConfigClass):
         :return: whether ssh key was loadeed in ssh agent or not
         :rtype: bool
         """
-        if self.name in j.clients.sshkey.listnames():
+        if self.path in j.clients.sshagent.keys_list():
             self._log_debug("ssh key: %s loaded", self.name)
             return True
 
