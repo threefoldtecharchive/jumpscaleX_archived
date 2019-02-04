@@ -25,6 +25,7 @@ _EXPLORER_NODES = {
     ],
 }
 
+_CHAIN_NETWORK_TYPES = sorted(['STD', 'TEST', 'DEV'])
 
 class TFChainClient(j.application.JSBaseConfigParentClass):
     """
@@ -34,17 +35,10 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         @url = jumpscale.tfchain.client
         name* = "" (S)
         network_type = "STD,TEST,DEV" (E)
-        minimum_minerfee = 100000000 (I)
         explorer_nodes = (LS) !jumpscale.tfchain.explorer
         """
 
     _CHILDCLASSES = [TFChainWalletFactory]
-
-    def _init(self):
-        if self.network_type == "DEV":
-            self.minimum_minerfee = 1000000000
-        else:
-            self.minimum_minerfee = 100000000
 
     @property
     def explorer_addresses(self):
@@ -53,7 +47,25 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         """
         if len(self.explorer_nodes) > 0:
             return self.explorer_nodes.pylist()
-        return _EXPLORER_NODES[self.network_type]
+        return _EXPLORER_NODES[self.network]
+
+    @property
+    def network(self):
+        # TODO: REMOVE THIS HACK,
+        #       used to work fine as-is, but it seems JSX now also can return Enum values
+        #       as raw integers, which breaks my default logic here,
+        #       only occurs when loaded from a saved instance,
+        #       so there must be something going wrong during decoding.
+        if isinstance(self.network_type, int):
+            assert self.network_type >= 1 and self.network_type <= len(_CHAIN_NETWORK_TYPES)
+            self.network_type = _CHAIN_NETWORK_TYPES[self.network_type-1]
+        return self.network_type
+
+    @property
+    def minimum_minerfee(self):
+        if self.network == "DEV":
+            return 1000000000
+        return 100000000
 
     def blockchain_info_get(self):
         """

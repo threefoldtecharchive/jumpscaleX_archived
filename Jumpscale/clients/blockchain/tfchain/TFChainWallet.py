@@ -96,7 +96,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
 
         Changing the network type has to be done from the parent TFChain client.
         """
-        return self.client.network_type
+        return self.client.network
 
     @property
     def seed_entropy(self):
