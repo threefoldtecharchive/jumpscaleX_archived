@@ -328,7 +328,10 @@ class Tools:
     def redis_client_get(addr='localhost',port=6379, unix_socket_path="/sandbox/var/redis.sock",die=True):
 
         if not redis:
-            raise RuntimeError("redis python lib not installed, do pip3 install redis")
+            if die:
+                raise RuntimeError("redis python lib not installed, do pip3 install redis")
+            else:
+                return None
         try:
             cl = Redis(unix_socket_path=unix_socket_path, db=0)
             cl.ping()

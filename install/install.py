@@ -359,19 +359,20 @@ elif "3" in args:
 
     IT.Tools.execute("rm -f ~/.ssh/known_hosts")  #rather dirty hack
 
-    if "1" in args:
-        args_txt = "-1"
-    else:
-        args_txt = "-2"
-    for item in ["y","d","r","p","w"]:
+    # if "2" in args:
+    #     args_txt = "-2"
+    # else:
+    #for now only support for insystem
+    args_txt = "-1"
+    for item in ["y","r","p","w"]:
         if item in args:
             args_txt+=" -%s"%item
     if "codepath" in args:
         args_txt+=" --codepath=%s"%args["codepath"]
 
-    cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py -1 -y"
+    cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py %s"%args_txt
 
-    IT.Tools.execute(cmd,interactive=True)
+    dexec(cmd)
     IT.Tools.shell()
 
 
