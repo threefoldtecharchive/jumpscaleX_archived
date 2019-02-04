@@ -14,15 +14,6 @@ from .TFChainTransactionFactory import TransactionBaseClass
 
 _DEFAULT_KEY_SCAN_COUNT = 3
 
-# TODO: Implement New Signing Strategy:
-#   Step 1: create and fill Tx (and if needed fund)
-#   Step 2: create new empty coin inputs (remove the current coin input strategy, instead do the creation as empties directly from the ConditionTypes)
-#   Step 3: add whatever other info that might be needed (e.g. parent_mint_condition for minter Transactions)
-#   Step 4: create signature requests
-#   Step 5: fulfill all signatures that can be fulfilled
-# For coins_send, it is expected that all requests can be fulfilled,
-# for the minter transactions it might at times be acceptable that one or multiple requests cannot be fulfilled.
-
 class TFChainWallet(j.application.JSBaseConfigClass):
     """
     Tfchain Wallet object
@@ -945,7 +936,7 @@ class WalletsBalance(WalletBalance):
         """
         Add an output to the MultiSignature Wallet's balance.
         """
-        assert isinstance(output.condition, ConditionMultiSignature)
+        assert isinstance(output.condition.unwrap(), ConditionMultiSignature)
         if not address in self._wallets:
             self._wallets[address] = MultiSigWalletBalance(
                 owners=output.condition.unlockhashes,
