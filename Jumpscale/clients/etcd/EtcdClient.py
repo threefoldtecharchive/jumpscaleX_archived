@@ -34,8 +34,6 @@ class EtcdClient(JSConfigClient):
         :return: etcd3 client object
         :rtype: Object
         """
-        import ipdb
-        ipdb.set_trace()
         if self._api is None:
             kwargs = {
                 'host': self.host,
@@ -68,10 +66,10 @@ class EtcdClient(JSConfigClient):
     def backup(self, file_obj="snapshot.db", dirs="/root", remote="", AWS_ACCESS_KEY_ID="",
                AWS_SECRET_ACCESS_KEY="", password="rooter", backet="etcd"):
 
-        f = open("{}/{}".format(dirs, file_obj), "wb")
-        with open("password.txt", "w+") as fpass:
-            fpass.write(password)
-        self.api.snapshot(f)
+        f_obj = open("{}/{}".format(dirs, file_obj), "wb")
+        j.sal.fs.writeFile("password.txt", password)
+
+        self.api.snapshot(f_obj)
 
         if remote:
             rc, _, _ = j.builder.tools.run("which restic")
