@@ -1,11 +1,13 @@
 from Jumpscale import j
 
+from functools import reduce
+
+from .types.errors import UnknownTransansactionVersion
+
 _LEGACY_TRANSACTION_V0 = 0
 _TRANSACTION_V1 = 1
 _TRANSACTION_V128_MINTER_DEFINITION = 128
 _TRANSACTION_V129_COIN_CREATION = 129
-
-from .types.errors import UnknownTransansactionVersion
 
 class TFChainTransactionFactory(j.application.JSBaseClass):
     """
@@ -339,6 +341,24 @@ class TransactionBaseClass(ABC):
         outside of the ordinary, returns an empty list by default.
         """
         return []
+
+    def is_fulfilled(self):
+        """
+        Returns if the entire transaction is fulfilled,
+        meaning it has all the required signatures in all the required places.
+        """
+        return reduce(
+            (lambda r, ci: r and ci.is_fulfilled()),
+            self.coin_inputs, self._extra_is_fulfilled())
+
+    def _extra_is_fulfilled(self):
+        """
+        Optional check that can be defined by specific transactions,
+        in case there are signatures required in other scenarios.
+
+        Returns True by default.
+        """
+        return True
 
 
 from .types.CompositionTypes import CoinInput, CoinOutput, BlockstakeInput, BlockstakeOutput
@@ -870,6 +890,11 @@ class TransactionV128(TransactionBaseClass):
             parent_condition=self._parent_mint_condition,
         )
 
+    def _extra_is_fulfilled(self):
+        if self._parent_mint_condition is None:
+            return False
+        return self.mint_fulfillment.is_fulfilled(parent_condition=self._parent_mint_condition)
+
 class TransactionV129(TransactionBaseClass):
     _SPECIFIER = b'coin mint tx\0\0\0\0'
 
@@ -1030,3 +1055,8 @@ class TransactionV129(TransactionBaseClass):
             input_hash=input_hash,
             parent_condition=self._parent_mint_condition,
         )
+
+    def _extra_is_fulfilled(self):
+        if self._parent_mint_condition is None:
+            return False
+        return self.mint_fulfillment.is_fulfilled(parent_condition=self._parent_mint_condition)

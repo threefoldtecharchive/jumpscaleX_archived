@@ -35,6 +35,9 @@ class BaseBinaryData(BaseDataTypeClass):
         return self._value
     @value.setter
     def value(self, value):
+        if isinstance(value, BaseBinaryData):
+            self._value = value.value
+            return
         if not value:
             value = bytearray()
         elif isinstance(value, str):

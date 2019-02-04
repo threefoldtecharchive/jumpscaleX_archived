@@ -25,6 +25,15 @@ class CoinInput(BaseDataTypeClass):
             parentid=Hash.from_json(obj['parentid']),
             fulfillment=j.clients.tfchain.types.fulfillments.from_json(obj['fulfillment']))
 
+    @classmethod
+    def from_coin_output(cls, co):
+        assert isinstance(co, CoinOutput)
+        ci = cls(
+            parentid=co.id,
+            fulfillment=j.clients.tfchain.types.fulfillments.from_condition(co.condition))
+        ci.parent_output = co
+        return ci
+
     @property
     def parentid(self):
         return self._parent_id
@@ -76,6 +85,11 @@ class CoinInput(BaseDataTypeClass):
         encoder.add_all(self._parent_id, self._fulfillment)
 
     def signature_requests_new(self, input_hash):
+        """
+        Returns all signature requests that can be generated for this Coin Inputs,
+        only possible if the parent (coin) output is defined and when there
+        are still signatures required.
+        """
         if self._parent_output is None:
             # no requestsd get created if the parent output is not set,
             # this allows for partial Tx signings
@@ -84,6 +98,14 @@ class CoinInput(BaseDataTypeClass):
             input_hash=input_hash,
             parent_condition=self._parent_output.condition,
         )
+
+    def is_fulfilled(self):
+        """
+        Returns true if this CoinInput is fulfilled.
+        """
+        if self._parent_output is None:
+            return False
+        return self._fulfillment.is_fulfilled(self._parent_output.condition)
 
 
 class CoinOutput(BaseDataTypeClass):
@@ -176,6 +198,15 @@ class BlockstakeInput(BaseDataTypeClass):
             parentid=Hash.from_json(obj['parentid']),
             fulfillment=j.clients.tfchain.types.fulfillments.from_json(obj['fulfillment']))
 
+    @classmethod
+    def from_blockstake_output(cls, bso):
+        assert isinstance(bso, CoinOutput)
+        bsi = cls(
+            parentid=bso.id,
+            fulfillment=j.clients.tfchain.types.fulfillments.from_condition(bso.condition))
+        bsi.parent_output = bso
+        return bsi
+
     @property
     def parentid(self):
         return self._parent_id
@@ -225,6 +256,29 @@ class BlockstakeInput(BaseDataTypeClass):
         Encode this BlockstakeInput according to the Rivine Binary Encoding format.
         """
         encoder.add_all(self._parent_id, self._fulfillment)
+
+    def signature_requests_new(self, input_hash):
+        """
+        Returns all signature requests that can be generated for this Blockstake Inputs,
+        only possible if the parent (blockstake) output is defined and when there
+        are still signatures required.
+        """
+        if self._parent_output is None:
+            # no requestsd get created if the parent output is not set,
+            # this allows for partial Tx signings
+            return []
+        return self._fulfillment.signature_requests_new(
+            input_hash=input_hash,
+            parent_condition=self._parent_output.condition,
+        )
+
+    def is_fulfilled(self):
+        """
+        Returns true if this BlockstakeInput is fulfilled.
+        """
+        if self._parent_output is None:
+            return False
+        return self._fulfillment.is_fulfilled(self._parent_output.condition)
 
 
 class BlockstakeOutput(BaseDataTypeClass):

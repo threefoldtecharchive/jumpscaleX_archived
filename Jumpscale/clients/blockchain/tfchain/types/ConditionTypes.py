@@ -6,6 +6,8 @@ _CONDITION_TYPE_ATOMIC_SWAP = 2
 _CONDITION_TYPE_LOCKTIME = 3
 _CONDITION_TYPE_MULTI_SIG = 4
 
+from .PrimitiveTypes import BinaryData
+
 class ConditionFactory(j.application.JSBaseClass):
     """
     Condition Factory class
@@ -235,6 +237,13 @@ class ConditionBaseClass(BaseDataTypeClass):
         """
         pass
 
+    def unwrap(self):
+        """
+        Return the most inner condition, should it apply to this condition,
+        otherwise the condition itself will be returned.
+        """
+        return self
+
     @abstractmethod
     def from_json_data_object(self, data):
         pass
@@ -414,7 +423,7 @@ class ConditionUnlockHash(ConditionBaseClass):
     ConditionUnlockHash class
     """
     def __init__(self, unlockhash=None):
-        self._unlockhash = UnlockHash()
+        self._unlockhash = None
         self.unlockhash = unlockhash
 
     @property
@@ -423,11 +432,13 @@ class ConditionUnlockHash(ConditionBaseClass):
 
     @property
     def unlockhash(self):
+        if self._unlockhash is None:
+            return UnlockHash()
         return self._unlockhash
     @unlockhash.setter
     def unlockhash(self, value):
-        if not value:
-            self._unlockhash = UnlockHash()
+        if value is None:
+            self._unlockhash = None
             return
         if isinstance(value, UnlockHash):
             self._unlockhash = value
@@ -441,14 +452,14 @@ class ConditionUnlockHash(ConditionBaseClass):
 
     def json_data_object(self):
         return {
-            'unlockhash': self._unlockhash.json(),
+            'unlockhash': self.unlockhash.json(),
         }
     
     def sia_binary_encode_data(self, encoder):
-        encoder.add(self._unlockhash)
+        encoder.add(self.unlockhash)
 
     def rivine_binary_encode_data(self, encoder):
-        encoder.add(self._unlockhash)
+        encoder.add(self.unlockhash)
 
 
 class ConditionAtomicSwap(ConditionBaseClass):
@@ -457,11 +468,11 @@ class ConditionAtomicSwap(ConditionBaseClass):
     """
     # TODO: replace lock_time with a user_friendly option that can define durations in a more human-readable way
     def __init__(self, sender=None, receiver=None, hashed_secret=None, lock_time=0):
-        self._sender = UnlockHash()
+        self._sender = None
         self.sender = sender
-        self._receiver = UnlockHash()
+        self._receiver = None
         self.receiver = receiver
-        self._hashed_secret = j.clients.tfchain.types.binary_data_new()
+        self._hashed_secret = None
         self.hashed_secret = hashed_secret
         self._lock_time = 0
         self.lock_time = lock_time
@@ -483,11 +494,13 @@ class ConditionAtomicSwap(ConditionBaseClass):
 
     @property
     def sender(self):
+        if self._sender is None:
+            return UnlockHash()
         return self._sender
     @sender.setter
     def sender(self, value):
-        if not value:
-            self._sender = UnlockHash()
+        if value is None:
+            self._sender = None
         else:
             assert isinstance(value, UnlockHash)
             assert value.type in (UnlockHashType.PUBLIC_KEY, UnlockHashType.NIL)
@@ -495,11 +508,13 @@ class ConditionAtomicSwap(ConditionBaseClass):
 
     @property
     def receiver(self):
+        if self._receiver is None:
+            return UnlockHash()
         return self._receiver
     @receiver.setter
     def receiver(self, value):
-        if not value:
-            self._receiver = UnlockHash()
+        if value is None:
+            self._receiver = None
         else:
             assert isinstance(value, UnlockHash)
             assert value.type in (UnlockHashType.PUBLIC_KEY, UnlockHashType.NIL)
@@ -507,16 +522,15 @@ class ConditionAtomicSwap(ConditionBaseClass):
     
     @property
     def hashed_secret(self):
+        if self._hashed_secret is None:
+            return BinaryData()
         return self._hashed_secret
     @hashed_secret.setter
     def hashed_secret(self, value):
-        if not value:
-            self._hashed_secret = j.clients.tfchain.types.binary_data_new()
+        if value is None:
+            self._hashed_secret = None
         else:
-            if type(value) is type(self._hashed_secret):
-                self._hashed_secret = value
-            else:
-                self._hashed_secret.value = value
+            self._hashed_secret = BinaryData(value=value)
 
     @property
     def lock_time(self):
@@ -537,20 +551,20 @@ class ConditionAtomicSwap(ConditionBaseClass):
 
     def json_data_object(self):
         return {
-            'sender': self._sender.json(),
-            'receiver': self._receiver.json(),
-            'hashedsecret': self._hashed_secret.json(),
-            'timelock': self._lock_time,
+            'sender': self.sender.json(),
+            'receiver': self.receiver.json(),
+            'hashedsecret': self.hashed_secret.json(),
+            'timelock': self.lock_time,
         }
 
     def sia_binary_encode_data(self, encoder):
-        encoder.add_all(self._sender, self._receiver)
-        encoder.add_array(self._hashed_secret.value)
+        encoder.add_all(self.sender, self.receiver)
+        encoder.add_array(self.hashed_secret.value)
         encoder.add(self.lock_time)
 
     def rivine_binary_encode_data(self, encoder):
-        encoder.add_all(self._sender, self._receiver)
-        encoder.add_array(self._hashed_secret.value)
+        encoder.add_all(self.sender, self.receiver)
+        encoder.add_array(self.hashed_secret.value)
         encoder.add(self.lock_time)
 
 
@@ -560,7 +574,7 @@ class ConditionLockTime(ConditionBaseClass):
     """
     # TODO: replace lock_time with a user_friendly option that can define durations in a more human-readable way
     def __init__(self, condition=None, locktime=0):
-        self._condition = ConditionUnlockHash()
+        self._condition = None
         self.condition = condition
         self._lock_time = 0
         self.lock = locktime
@@ -571,7 +585,7 @@ class ConditionLockTime(ConditionBaseClass):
 
     @property
     def unlockhash(self):
-        return self._condition.unlockhash
+        return self.condition.unlockhash
 
     @property
     def lock(self):
@@ -589,14 +603,19 @@ class ConditionLockTime(ConditionBaseClass):
 
     @property
     def condition(self):
+        if self._condition is None:
+            return ConditionUnlockHash()
         return self._condition
     @condition.setter
     def condition(self, value):
-        if not value:
-            self._condition = ConditionUnlockHash()
+        if value is None:
+            self._condition = None
         else:
             assert isinstance(value, ConditionBaseClass)
             self._condition = value
+
+    def unwrap(self):
+        return self.condition
 
     def from_json_data_object(self, data):
         self.lock = int(data['locktime'])
@@ -607,18 +626,18 @@ class ConditionLockTime(ConditionBaseClass):
     def json_data_object(self):
         return {
             'locktime': self._lock_time,
-            'condition': self._condition.json(),
+            'condition': self.condition.json(),
         }
 
     def sia_binary_encode_data(self, encoder):
         encoder.add(self._lock_time)
-        encoder.add_array(bytearray([int(self._condition.type)]))
-        self._condition.sia_binary_encode_data(encoder)
+        encoder.add_array(bytearray([int(self.condition.type)]))
+        self.condition.sia_binary_encode_data(encoder)
 
     def rivine_binary_encode_data(self, encoder):
         encoder.add(self._lock_time)
-        encoder.add_int8(int(self._condition.type))
-        self._condition.rivine_binary_encode_data(encoder)
+        encoder.add_int8(int(self.condition.type))
+        self.condition.rivine_binary_encode_data(encoder)
 
 class ConditionMultiSignature(ConditionBaseClass):
     """

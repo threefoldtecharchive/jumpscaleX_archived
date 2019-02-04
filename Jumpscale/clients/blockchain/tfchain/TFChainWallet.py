@@ -277,7 +277,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # fund amount
         balance = self.balance
         minerfee = self.client.minimum_minerfee
-        outputs, remainder = balance.fund(amount+minerfee)
+        inputs, remainder = balance.fund(amount+minerfee)
 
         # create transaction
         txn = j.clients.tfchain.transactions.new()
@@ -290,18 +290,24 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         txn.miner_fee_add(minerfee)
 
         # add the coin inputs
-        txn.coin_inputs = self.coin_inputs_from(outputs)
+        txn.coin_inputs = inputs
         
         # if there is data to be added, add it as well
         if data:
             txn.data = data
 
-        # sign all inputs of the transaction
-        for idx, ci in enumerate(txn.coin_inputs):
-            address = str(ci.parent_output.condition.unlockhash)
-            keypair = self.key_pair_get(address)
-            signhash = txn.signature_hash_get(idx)
-            ci.fulfillment.signature, _ = keypair.sign(signhash)
+        # generate the signature requests
+        sig_requests = txn.signature_requests_new()
+        assert len(sig_requests) > 0
+
+        # fulfill the signature requests
+        for request in sig_requests:
+            key_pair = self.key_pair_get(request.wallet_address)
+            signature, public_key = key_pair.sign(request.input_hash)
+            request.signature_fulfill(public_key=public_key, signature=signature)
+
+        # txn should be fulfilled now
+        assert txn.is_fulfilled()
 
         # submit the transaction
         txn.id = self._transaction_put(transaction=txn)
@@ -564,6 +570,9 @@ class SpendableKey():
 
         @param hash: hash to be signed
         """
+        if not isinstance(hash, Hash):
+            hash = Hash(value=hash)
+        hash = bytes(hash.value)
         sig = self._private_key.sign(hash)
         return (sig, self._public_key)
 
@@ -735,7 +744,7 @@ class WalletBalance(object):
         
         if collected >= amount:
             # if we already have sufficient, we stop now
-            return (outputs, collected-amount)
+            return ([CoinInput.from_coin_output(co) for co in outputs], collected-amount)
 
         # use unconfirmed balance, not ideal, but acceptable
         outputs_available = self.outputs_unconfirmed_available
@@ -755,7 +764,7 @@ class WalletBalance(object):
         # if we still didn't manage to fund enough, there is nothing we can do
         if collected < amount:
             raise InsufficientFunds("not enough funds available in the wallet to fund the requested amount")
-        return (outputs, collected-amount)
+        return ([CoinInput.from_coin_output(co) for co in outputs], collected-amount)
 
     def output_add(self, output, confirmed=True, spent=False):
         """
