@@ -364,7 +364,15 @@ class BCDBModel(j.application.JSBaseClass):
                             self._obj_cache_reset()
                 obj.acl_id = obj.acl.id
 
-            bdata = obj._data
+            try:
+                bdata = obj._data
+            except Exception as e:
+                if str(e).find("has no such member")!=-1:
+                    msg = str(e).split("no such member",1)[1].split("stack:")
+                    raise RuntimeError("Could not serialize capnnp message:%s"%msg)
+                else:
+                    raise e
+
             bdata_encrypted = j.data.nacl.default.encryptSymmetric(bdata)
 
             l = [self.schema.sid, obj.acl_id, bdata_encrypted]

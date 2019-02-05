@@ -175,16 +175,18 @@ class RedisFactory(j.application.JSBaseClass):
             j.core._db = None
             self._core_start(tcp=tcp)
 
-        nr = 0
-        while True:
-            if j.core.db.ping() and j.core._db_fakeredis is False:
-                return j.core.db
-
-            self._log_info("try to connect to redis of unixsocket or tcp port 6379")
-
-            if nr > 200:
-                raise RuntimeError("could not start redis")
-            time.sleep(0.05)
+        # nr = 0
+        # while True:
+        #     if j.core.db and j.core.db.ping() and j.core._db_fakeredis is False:
+        #         return j.core.db
+        #
+        #     self._log_info("try to connect to redis on unixsocket or tcp port 6379")
+        #
+        #     nr+=1
+        #
+        #     if nr > 20:
+        #         raise RuntimeError("could not start redis")
+        #     time.sleep(0.1)
 
         return j.core._db
 
@@ -300,6 +302,8 @@ class RedisFactory(j.application.JSBaseClass):
             time.sleep(0.1)
         else:
             raise j.exceptions.Timeout("Couldn't start redis server")
+
+        j.core._db = None
 
     def test(self, name=""):
         """
