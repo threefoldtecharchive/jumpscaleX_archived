@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from functools import reduce
 
-from .types.errors import UnknownTransansactionVersion
+from .types.Errors import UnknownTransansactionVersion
 
 _LEGACY_TRANSACTION_V0 = 0
 _TRANSACTION_V1 = 1
@@ -129,6 +129,17 @@ class TFChainTransactionFactory(j.application.JSBaseClass):
         # v146 Transactions are supported
         # TODO
 
+        # ERC20 Transactions
+
+        # v208 Transactions are supported
+        # TODO
+
+        # v209 Transactions are supported
+        # TODO
+
+        # v210 Transactions are supported
+        # TODO
+
 from abc import ABC, abstractmethod, abstractclassmethod
 
 from .types.PrimitiveTypes import Hash
@@ -144,7 +155,9 @@ class TransactionBaseClass(ABC):
         Create this transaction from a raw JSON Tx
         """
         txn = cls()
-        assert txn.version == obj.get('version', -1)
+        tv = obj.get('version', -1)
+        if txn.version != tv:
+            raise ValueError("transaction is expected to be of version {}, not version {}".format(txn.version, tv))
         txn._from_json_data_object(obj.get('data', {}))
         return txn
 
@@ -161,7 +174,8 @@ class TransactionBaseClass(ABC):
         return self._unconfirmed
     @unconfirmed.setter
     def unconfirmed(self, value):
-        assert isinstance(value, bool)
+        if not isinstance(value, bool):
+            raise TypeError("unconfirmed status of a Transaction is expected to be of type bool, not {}".format(type(bool)))
         self._unconfirmed = bool(value)
     
     @property
@@ -404,7 +418,9 @@ class TransactionV1(TransactionBaseClass):
         Class method to decode v1 Tx from a legacy v0 Tx.
         """
 
-        assert _LEGACY_TRANSACTION_V0 == obj.get('version', -1)
+        tv = obj.get('version', -1)
+        if _LEGACY_TRANSACTION_V0 != tv:
+            raise ValueError("legacy v0 transaction is expected to be of version {}, not version {}".format(_LEGACY_TRANSACTION_V0, tv))
         txn = cls()
 
         if 'data' not in obj:
@@ -588,7 +604,8 @@ class TransactionV1(TransactionBaseClass):
             value = value.value
         elif isinstance(value, str):
             value = value.encode('utf-8')
-        assert len(value) <= 83
+        if len(value) > 83:
+            raise ValueError("arbitrary data can have a maximum bytes length of 83, {} exceeds this limit".format(len(value)))
         self._data = RawData(value=value)
     
     def _signature_hash_input_get(self, *extra_objects):
@@ -800,7 +817,8 @@ class TransactionV128(TransactionBaseClass):
             value = value.value
         elif isinstance(value, str):
             value = value.encode('utf-8')
-        assert len(value) <= 83
+        if len(value) > 83:
+            raise ValueError("arbitrary data can have a maximum bytes length of 83, {} exceeds this limit".format(len(value)))
         self._data = RawData(value=value)
 
     @property
@@ -816,7 +834,8 @@ class TransactionV128(TransactionBaseClass):
         if value is None:
             self._mint_condition = None
             return
-        assert isinstance(value, ConditionBaseClass)
+        if not isinstance(value, ConditionBaseClass):
+            raise TypeError("MintDefinition (v128) Transaction's mint condition has to be a subtype of ConditionBaseClass, not {}".format(type(value)))
         self._mint_condition = value
 
     @property
@@ -832,7 +851,8 @@ class TransactionV128(TransactionBaseClass):
         if value is None:
             self._parent_mint_condition = None
             return
-        assert isinstance(value, ConditionBaseClass)
+        if not isinstance(value, ConditionBaseClass):
+            raise TypeError("MintDefinition (v128) Transaction's parent mint condition has to be a subtype of ConditionBaseClass, not {}".format(type(value)))
         self._parent_mint_condition = value
 
     def mint_fulfillment_defined(self):
@@ -851,7 +871,8 @@ class TransactionV128(TransactionBaseClass):
         if value is None:
             self._mint_fulfillment = None
             return
-        assert isinstance(value, FulfillmentBaseClass)
+        if not isinstance(value, FulfillmentBaseClass):
+            raise TypeError("MintDefinition (v128) Transaction's mint fulfillment has to be a subtype of FulfillmentBaseClass, not {}".format(type(value)))
         self._mint_fulfillment = value
 
     def miner_fee_add(self, value):
@@ -973,7 +994,8 @@ class TransactionV129(TransactionBaseClass):
             value = value.value
         elif isinstance(value, str):
             value = value.encode('utf-8')
-        assert len(value) <= 83
+        if len(value) > 83:
+            raise ValueError("arbitrary data can have a maximum bytes length of 83, {} exceeds this limit".format(len(value)))
         self._data = RawData(value=value)
 
     @property
@@ -1014,9 +1036,10 @@ class TransactionV129(TransactionBaseClass):
     def mint_fulfillment(self, value):
         if value is None:
             self._mint_fulfillment = None
-        else:
-            assert isinstance(value, FulfillmentBaseClass)
-            self._mint_fulfillment = value
+            return
+        if not isinstance(value, FulfillmentBaseClass):
+            raise TypeError("CoinCreation (v129) Transaction's mint fulfillment has to be a subtype of FulfillmentBaseClass, not {}".format(type(value)))
+        self._mint_fulfillment = value
 
     @property
     def parent_mint_condition(self):
@@ -1031,7 +1054,8 @@ class TransactionV129(TransactionBaseClass):
         if value is None:
             self._parent_mint_condition = None
             return
-        assert isinstance(value, ConditionBaseClass)
+        if not isinstance(value, ConditionBaseClass):
+            raise TypeError("CoinCreation (v129) Transaction's parent mint condition has to be a subtype of ConditionBaseClass, not {}".format(type(value)))
         self._parent_mint_condition = value
 
     def _signature_hash_input_get(self, *extra_objects):

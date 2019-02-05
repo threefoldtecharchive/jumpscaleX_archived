@@ -27,7 +27,8 @@ class CoinInput(BaseDataTypeClass):
 
     @classmethod
     def from_coin_output(cls, co):
-        assert isinstance(co, CoinOutput)
+        if not isinstance(co, CoinOutput):
+            raise TypeError("invalid co parameter, expected value of type CoinOutput, not {}".format(type(co)))
         ci = cls(
             parentid=co.id,
             fulfillment=j.clients.tfchain.types.fulfillments.from_condition(co.condition))
@@ -49,11 +50,12 @@ class CoinInput(BaseDataTypeClass):
         return self._fulfillment
     @fulfillment.setter
     def fulfillment(self, value):
-        if not value:
+        if value is None:
             self._fulfillment = FulfillmentSingleSignature()
-        else:
-            assert isinstance(value, FulfillmentBaseClass)
-            self._fulfillment = value
+            return
+        if not isinstance(value, FulfillmentBaseClass):
+            raise TypeError("cannot assign value of type {} as a  CoinInput's fulfillment (expected: FulfillmentBaseClass)".format(type(value)))
+        self._fulfillment = value
     
     @property
     def parent_output(self):
@@ -62,9 +64,10 @@ class CoinInput(BaseDataTypeClass):
     def parent_output(self, value):
         if value is None:
             self._parent_output = None
-        else:
-            assert isinstance(value, CoinOutput)
-            self._parent_output = value
+            return
+        if not isinstance(value, CoinOutput):
+            raise TypeError("cannot assign value of type {} as a CoinInput's parent output (expected: CoinOutput)".format(type(value)))
+        self._parent_output = value
 
     def json(self):
         return {
@@ -143,11 +146,12 @@ class CoinOutput(BaseDataTypeClass):
         return self._condition
     @condition.setter
     def condition(self, value):
-        if not value:
+        if value is None:
             self._condition = ConditionNil()
-        else:
-            assert isinstance(value, ConditionBaseClass)
-            self._condition = value
+            return
+        if not isinstance(value, ConditionBaseClass):
+            raise TypeError("cannot assign value of type {} as a CoinOutput's condition (expected: ConditionBaseClass subtype)".format(type(value)))
+        self._condition = value
 
     @property
     def id(self):
@@ -200,7 +204,8 @@ class BlockstakeInput(BaseDataTypeClass):
 
     @classmethod
     def from_blockstake_output(cls, bso):
-        assert isinstance(bso, CoinOutput)
+        if not isinstance(bso, BlockstakeOutput):
+            raise TypeError("invalid type of bso {} (expected: BlockstakeOutput)".format(type(bso)))
         bsi = cls(
             parentid=bso.id,
             fulfillment=j.clients.tfchain.types.fulfillments.from_condition(bso.condition))
@@ -222,22 +227,24 @@ class BlockstakeInput(BaseDataTypeClass):
         return self._fulfillment
     @fulfillment.setter
     def fulfillment(self, value):
-        if not value:
+        if value is None:
             self._fulfillment = FulfillmentSingleSignature()
-        else:
-            assert isinstance(value, FulfillmentBaseClass)
-            self._fulfillment = value
+            return
+        if not isinstance(value, FulfillmentBaseClass):
+            raise TypeError("cannot assign value of type {} as a BlockstakeInput's fulfillment (expected: FulfillmentBaseClass subtype)".format(type(value)))
+        self._fulfillment = value
 
     @property
     def parent_output(self):
         return self._parent_output
     @parent_output.setter
     def parent_output(self, value):
-        if not value:
+        if value is None:
             self._parent_output = BlockstakeOutput()
-        else:
-            assert isinstance(value, BlockstakeOutput)
-            self._parent_output = value
+            return
+        if not isinstance(value, BlockstakeOutput):
+            raise TypeError("cannot assign value of type {} as a BlockstakeInput's parent output (expected: BlockstakeOutput)".format(type(value)))
+        self._parent_output = value
 
     def json(self):
         return {
@@ -316,11 +323,12 @@ class BlockstakeOutput(BaseDataTypeClass):
         return self._condition
     @condition.setter
     def condition(self, value):
-        if not value:
+        if value is None:
             self._condition = ConditionNil()
-        else:
-            assert isinstance(value, ConditionBaseClass)
-            self._condition = value
+            return
+        if not isinstance(value, ConditionBaseClass):
+            raise TypeError("cannot assign value of type {} as a BlockstakeOutput's condition (expected: ConditionBaseClass subtype)".format(type(value)))
+        self._condition = value
 
     @property
     def id(self):

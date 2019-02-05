@@ -7,16 +7,19 @@ from ed25519 import SigningKey
 
 from .types.PrimitiveTypes import Currency, Hash
 from .types.CryptoTypes import PublicKey, UnlockHash, UnlockHashType
-from .types.errors import ExplorerNoContent, InsufficientFunds, ExplorerCallError
+from .types.Errors import ExplorerNoContent, InsufficientFunds
 from .types.CompositionTypes import CoinOutput, CoinInput
 from .types.ConditionTypes import ConditionNil, ConditionUnlockHash, ConditionLockTime
+
 from .TFChainTransactionFactory import TransactionBaseClass, TransactionV128, TransactionV129
 
 _DEFAULT_KEY_SCAN_COUNT = 3
 
 # TODO:
 # * Make lock more user-friendly to be used (e.g. also accept durations and time strings)
+# * Provide ERC20 Support
 # * Provide Atomic Swap support
+# * Provide 3Bot Registration (Management) Support
 
 # TODO (TESTS, for now already manually tested and confirmed):
 # * Send Coins (single sig and multi sig, with data and lock, as well as without)
@@ -323,7 +326,8 @@ class TFChainWallet(j.application.JSBaseConfigClass):
 
         # generate the signature requests
         sig_requests = txn.signature_requests_new()
-        assert len(sig_requests) > 0
+        if len(sig_requests) == 0:
+            raise Exception("BUG: sig requests should not be empty at this point, please fix or report as an issue")
 
         # fulfill the signature requests that we can fulfill
         for request in sig_requests:
@@ -453,36 +457,6 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         that were created with the matching private key.
         """
         return str(self._key_pair_new().unlockhash)
-    
-    def coin_inputs_from(self, outputs):
-        """
-        Transform the given coin outputs, owned by this wallet,
-        into coin inputs.
-        """
-        inputs = []
-        for co in outputs:
-            assert isinstance(co, CoinOutput)
-            fulfillment = self.fulfillment_from(co.condition)
-            ci = CoinInput(parentid=co.id, fulfillment=fulfillment)
-            ci.parent_output = co
-            inputs.append(ci)
-        return inputs
-
-    def fulfillment_from(self, condition):
-        """
-        Get a matching fulfillment from a given condition,
-        only possible if the condition is "owned" by this wallet.
-        """
-        if isinstance(condition, ConditionLockTime):
-            condition = condition.condition
-        if isinstance(condition, ConditionNil):
-            pair = self.key_pair_get(self.address)
-            return j.clients.tfchain.types.fulfillments.single_signature_new(pub_key=pair.public_key)
-        elif isinstance(condition, ConditionUnlockHash):
-            pair = self.key_pair_get(str(condition.unlockhash))
-            return j.clients.tfchain.types.fulfillments.single_signature_new(pub_key=pair.public_key)
-        else:
-            raise TypeError("given condition is invalid: {}", type(condition))
 
     def public_key_new(self):
         """
@@ -496,10 +470,9 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         Get the private/public key pair for the given unlock hash.
         If the unlock has is not owned by this wallet a KeyError exception is raised.
         """
-        if isinstance(unlockhash, UnlockHash):
-            unlockhash = str(unlockhash)
-        else:
-            assert type(unlockhash) is str
+        if not isinstance(unlockhash, (str, UnlockHash)):
+            raise TypeError("unlockhash cannot be of type {}".format(type(unlockhash)))
+        unlockhash = str(unlockhash)
         key = self._key_pairs.get(unlockhash)
         if key is None:
             raise KeyError("wallet does not own unlock hash {}".format(unlockhash))
@@ -554,7 +527,8 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         but only integrate them, if indeed we found the key (or a key after it) was used.
         """
         addr = str(key_pair.unlockhash)
-        assert addr not in self._key_pairs
+        if addr in self._key_pairs:
+            raise KeyError("wallet already contains a key pair for unlock hash {}".format(addr))
         self._key_pairs[addr] = key_pair
         if add_count:
             self.key_count += 1+offset
@@ -608,7 +582,8 @@ class TFChainMinter():
 
         # get all signature requests
         sig_requests = txn.signature_requests_new()
-        assert len(sig_requests) > 0
+        if len(sig_requests) == 0:
+            raise Exception("BUG: sig requests should not be empty at this point, please fix or report as an issue")
 
         # fulfill the signature requests that we can fulfill
         for request in sig_requests:
@@ -680,7 +655,8 @@ class TFChainMinter():
 
         # get all signature requests
         sig_requests = txn.signature_requests_new()
-        assert len(sig_requests) > 0
+        if len(sig_requests) == 0:
+            raise Exception("BUG: sig requests should not be empty at this point, please fix or report as an issue")
 
         # fulfill the signature requests that we can fulfill
         for request in sig_requests:
@@ -735,9 +711,11 @@ class SpendableKey():
     """
 
     def __init__(self, public_key, private_key):
-        assert isinstance(public_key, PublicKey)
+        if not isinstance(public_key, PublicKey):
+            raise TypeError("public key cannot be of type {} (expected: PublicKey)".format(type(public_key)))
         self._public_key = public_key
-        assert isinstance(private_key, SigningKey)
+        if not isinstance(private_key, SigningKey):
+            raise TypeError("private key cannot be of type {} (expected: SigningKey)".format(type(private_key)))
         self._private_key = private_key
 
     @property
@@ -809,7 +787,8 @@ class WalletBalance(object):
         Set the blockchain time, such that the balance object can report
         locked/unlocked outputs correctly for outputs that are locked by time.
         """
-        assert isinstance(value, int)
+        if not isinstance(value, int):
+            raise TypeError("WalletBalance's chain time cannot be of type {} (expected: int)".format(type(value)))
         self._chain_time = int(value)
 
     @property
@@ -824,7 +803,8 @@ class WalletBalance(object):
         Set the blockchain height, such that the balance object can report
         locked/unlocked outputs correctly for outputs that are locked by height.
         """
-        assert isinstance(value, int)
+        if not isinstance(value, int):
+            raise TypeError("WalletBalance's chain height cannot be of type {} (expected: int)".format(type(value)))
         self._chain_height = int(value)
 
     @property
@@ -970,8 +950,12 @@ class MultiSigWalletBalance(WalletBalance):
         """
         Creates a personal multi signature wallet.
         """
-        assert signature_count >= 1
-        assert len(owners) >= signature_count
+        if not isinstance(signature_count, int):
+            raise TypeError("signature count of a MultiSigWallet is expected to be of type int, not {}".format(type(signature_count)))
+        if signature_count < 1:
+            raise ValueError("signature count of a MultiSigWallet has to be at least 1, cannot be {}".format(signature_count))
+        if len(owners) < signature_count:
+            raise ValueError("the amount of owners ({}) cannot be lower than the specified signature count ({})".format(len(owners), signature_count))
         self._owners = owners
         self._signature_count = signature_count
         super().__init__()
@@ -1023,7 +1007,9 @@ class WalletsBalance(WalletBalance):
         """
         Add an output to the MultiSignature Wallet's balance.
         """
-        assert isinstance(output.condition.unwrap(), ConditionMultiSignature)
+        oc = output.condition.unwrap()
+        if not isinstance(oc, ConditionMultiSignature):
+            raise TypeError("multi signature's output condition cannot be of type {} (expected: ConditionMultiSignature)".format(type(oc)))
         if not address in self._wallets:
             self._wallets[address] = MultiSigWalletBalance(
                 owners=output.condition.unlockhashes,

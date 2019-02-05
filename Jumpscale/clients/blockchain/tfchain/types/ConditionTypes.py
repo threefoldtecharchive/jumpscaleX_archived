@@ -48,7 +48,8 @@ class ConditionFactory(j.application.JSBaseClass):
                 condition = self.multi_signature_new(min_nr_sig=len(recipient), unlockhashes=recipient)
             elif isinstance(recipient, tuple):
                 # multisig wallet with custom x-of-n definition
-                assert len(recipient) == 2
+                if len(recipient) != 2:
+                    raise ValueError("recipient is expected to be a tupple of 2 values in the form (sigcount,hashes) or (hashes,sigcount), cannot be of length {}".format(len(recipient)))
                 # allow (sigs,hashes) as well as (hashes,sigs)
                 if isinstance(recipient[0], int):
                     condition = self.multi_signature_new(min_nr_sig=recipient[0], unlockhashes=recipient[1])
@@ -180,7 +181,8 @@ class OutputLock():
     _MIN_TIMESTAMP_VALUE = 500 * 1000 * 1000
 
     def __init__(self, value=0):
-        assert isinstance(value ,int)
+        if not isinstance(value ,int):
+            raise TypeError("OutputLock's value has to be of type int, not {}".format(type(value)))
         self._value = int(value)
 
     def __int__(self):
@@ -216,7 +218,9 @@ class ConditionBaseClass(BaseDataTypeClass):
     @classmethod
     def from_json(cls, obj):
         ff = cls()
-        assert ff.type == obj.get('type', 0)
+        ct = obj.get('type', 0)
+        if ff.type != ct:
+            raise ValueError("condition is expected to be of type {}, not {}".format(ff.type, ct))
         ff.from_json_data_object(obj.get('data', {}))
         return ff
 
@@ -298,8 +302,8 @@ class UnlockHashType(IntEnum):
     def from_json(cls, obj):
         if type(obj) is str:
             obj = int(obj)
-        else:
-            assert type(obj) is int
+        elif not isinstance(obj, int):
+            raise TypeError("UnlockHashType is expected to be JSON-encoded as an int, not {}".format(type(obj)))
         return cls(obj) # int -> enum
 
     def json(self):
@@ -327,19 +331,24 @@ class UnlockHash(BaseDataTypeClass):
 
     @classmethod
     def from_json(cls, obj):
-        assert type(obj) is str
-        assert len(obj) == UnlockHash._TOTAL_SIZE_HEX
+        if not isinstance(obj, str):
+            raise TypeError("UnlockHash is expected to be JSON-encoded as an str, not {}".format(type(obj)))
+        if len(obj) != UnlockHash._TOTAL_SIZE_HEX:
+            raise ValueError("UnlockHash is expexcted to be of length {} when JSON-encoded, not of length {}".format(UnlockHash._TOTAL_SIZE_HEX, len(obj)))
 
         t = UnlockHashType(int(obj[:UnlockHash._TYPE_SIZE_HEX]))
         h = j.clients.tfchain.types.hash_new(value=obj[UnlockHash._TYPE_SIZE_HEX:UnlockHash._TYPE_SIZE_HEX+UnlockHash._HASH_SIZE_HEX])
         uh = cls(type=t, hash=h)
         
         if t == UnlockHashType.NIL:
-            assert h.value == (b'\x00'*UnlockHash._HASH_SIZE)
+            expectedNH = b'\x00'*UnlockHash._HASH_SIZE
+            if h.value != expectedNH:
+                raise ValueError("unexpected nil hash {}".format(h.value.hex()))
         else:
             expected_checksum = uh._checksum()[:UnlockHash._CHECKSUM_SIZE].hex()
             checksum = obj[-UnlockHash._CHECKSUM_SIZE_HEX:]
-            assert expected_checksum == checksum
+            if expected_checksum != checksum:
+                raise ValueError("unexpected checksum {}, expected {}".format(checksum, expected_checksum))
 
         return uh
     
@@ -350,8 +359,8 @@ class UnlockHash(BaseDataTypeClass):
     def type(self, value):
         if value == None:
             value = UnlockHashType.NIL
-        else:
-            assert isinstance(value, UnlockHashType)
+        elif not isinstance(value, UnlockHashType):
+            raise TypeError("UnlockHash's type has to be of type UnlockHashType, not {}".format(type(value)))
         self._type = value
 
     @property
@@ -424,7 +433,8 @@ class ConditionNil(ConditionBaseClass):
         return UnlockHash(type=UnlockHashType.NIL)
 
     def from_json_data_object(self, data):
-        assert data in (None, {})
+        if data not in (None, {}):
+            raise ValueError("unexpected JSON-encoded nil condition {} (type: {})".format(data, type(data)))
 
     def json_data_object(self):
         return None
@@ -520,8 +530,10 @@ class ConditionAtomicSwap(ConditionBaseClass):
         if value is None:
             self._sender = None
         else:
-            assert isinstance(value, UnlockHash)
-            assert value.type in (UnlockHashType.PUBLIC_KEY, UnlockHashType.NIL)
+            if not isinstance(value, UnlockHash):
+                raise TypeError("Atomic Swap's sender unlock hash has to be of type UnlockHash, not {}".format(type(value)))
+            if value.type not in (UnlockHashType.PUBLIC_KEY, UnlockHashType.NIL):
+                raise ValueError("Atomic Swap's sender unlock hash type cannot be {} (expected: 0 or 1)".format(value.type))
             self._sender = value
 
     @property
@@ -534,8 +546,10 @@ class ConditionAtomicSwap(ConditionBaseClass):
         if value is None:
             self._receiver = None
         else:
-            assert isinstance(value, UnlockHash)
-            assert value.type in (UnlockHashType.PUBLIC_KEY, UnlockHashType.NIL)
+            if not isinstance(value, UnlockHash):
+                raise TypeError("Atomic Swap's receiver unlock hash has to be of type UnlockHash, not {}".format(type(value)))
+            if value.type not in (UnlockHashType.PUBLIC_KEY, UnlockHashType.NIL):
+                raise ValueError("Atomic Swap's receiver unlock hash type cannot be {} (expected: 0 or 1)".format(value.type))
             self._receiver = value
     
     @property
@@ -555,11 +569,12 @@ class ConditionAtomicSwap(ConditionBaseClass):
         return self._lock_time
     @lock_time.setter
     def lock_time(self, value):
-        if not value:
+        if value is None:
             self._lock_time = 0
-        else:
-            assert isinstance(value, int)
-            self._lock_time = int(value)
+            return
+        if not isinstance(value, int):
+            raise TypeError("ConditionAtomicSwap's LockTime is expected to be of type int, not {}".format(type(value)))
+        self._lock_time = int(value)
 
     def from_json_data_object(self, data):
         self.sender = UnlockHash.from_json(data['sender'])
@@ -610,14 +625,15 @@ class ConditionLockTime(ConditionBaseClass):
         return OutputLock(self._lock_time)
     @lock.setter
     def lock(self, value):
-        if not value:
+        if value is None:
             self._lock_time = 0
-        else:
-            assert isinstance(value, int)
-            value = int(value)
-            if value < 0:
-                value = 0
-            self._lock_time = value
+            return
+        if not isinstance(value, int):
+            raise TypeError("ConditionLockTime's lock is expected to be of type int, not {}".format(type(value)))
+        value = int(value)
+        if value < 0:
+            value = 0
+        self._lock_time = value
 
     @property
     def condition(self):
@@ -628,9 +644,10 @@ class ConditionLockTime(ConditionBaseClass):
     def condition(self, value):
         if value is None:
             self._condition = None
-        else:
-            assert isinstance(value, ConditionBaseClass)
-            self._condition = value
+            return
+        if not isinstance(value, ConditionBaseClass):
+            raise TypeError("ConditionLockTime's condition is expected to be a subtype of ConditionBaseClass, not of type {}".format(type(value)))
+        self._condition = value
 
     def unwrap(self):
         return self.condition
@@ -638,7 +655,8 @@ class ConditionLockTime(ConditionBaseClass):
     def from_json_data_object(self, data):
         self.lock = int(data['locktime'])
         cond = j.clients.tfchain.types.conditions.from_json(obj=data['condition'])
-        assert cond.type in(_CONDITION_TYPE_UNLOCK_HASH, _CONDITION_TYPE_MULTI_SIG, _CONDITION_TYPE_NIL)
+        if cond.type not in(_CONDITION_TYPE_UNLOCK_HASH, _CONDITION_TYPE_MULTI_SIG, _CONDITION_TYPE_NIL):
+            raise ValueError("internal condition of ConditionLockTime cannot be of type {}".format(cond.type))
         self.condition = cond
 
     def json_data_object(self):
@@ -703,11 +721,12 @@ class ConditionMultiSignature(ConditionBaseClass):
         return self._min_nr_sig
     @required_signatures.setter
     def required_signatures(self, value):
-        if not value:
+        if value is None:
             self._min_nr_sig = 0
-        else:
-            assert isinstance(value, int)
-            self._min_nr_sig = int(value)
+            return
+        if not isinstance(value, int):
+            raise TypeError("ConditionMultiSignature's required signatures value is expected to be of type int, not {}".format(type(value)))
+        self._min_nr_sig = int(value)
 
     def from_json_data_object(self, data):
         self._min_nr_sig = int(data['minimumsignaturecount'])

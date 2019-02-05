@@ -3,11 +3,12 @@ Tfchain Client
 """
 
 from Jumpscale import j
-from .TFChainWalletFactory import TFChainWalletFactory
 from .types.ConditionTypes import UnlockHash, UnlockHashType
 from .types.PrimitiveTypes import Hash, Currency
 from .types.CompositionTypes import CoinOutput
+from .types.Errors import ExplorerInvalidResponse
 from .TFChainTransactionFactory import TransactionBaseClass
+from .TFChainWalletFactory import TFChainWalletFactory
 
 _EXPLORER_NODES = {
     "STD": [
@@ -57,7 +58,6 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         #       only occurs when loaded from a saved instance,
         #       so there must be something going wrong during decoding.
         if isinstance(self.network_type, int):
-            assert self.network_type >= 1 and self.network_type <= len(_CHAIN_NETWORK_TYPES)
             self.network_type = _CHAIN_NETWORK_TYPES[self.network_type-1]
         return self.network_type
 
@@ -83,48 +83,59 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         
         @param value: the identifier or height that points to the desired block
         """
-        # get the explorer block
-        if isinstance(value, int):
-            resp = self._explorer_get(endpoint="/explorer/blocks/{}".format(int(value)))
-            resp = j.data.serializers.json.loads(resp)
-            resp = resp['block']
-        else:
-            blockid = self._normalize_id(value)
-            resp = self._explorer_get(endpoint="/explorer/hashes/"+blockid)
-            resp = j.data.serializers.json.loads(resp)
-            assert resp['hashtype'] == 'blockid'
-            resp = resp['block']
-            assert resp['blockid'] == blockid
-        # parse the transactions
-        transactions = []
-        for etxn in resp['transactions']:
-            # parse the explorer transaction
-            transaction = self._transaction_from_explorer_transaction(etxn)
-            # append the transaction to the list of transactions
-            transactions.append(transaction)
-        rawblock = resp['rawblock']
-        # parse the parent id
-        parentid = Hash.from_json(obj=rawblock['parentid'])
-        # parse the miner payouts
-        miner_payouts = []
-        minerpayoutids = resp.get('minerpayoutids', None) or []
-        eminerpayouts = rawblock.get('minerpayouts', None) or []
-        assert len(eminerpayouts) == len(minerpayoutids)
-        for idx, mp in enumerate(eminerpayouts):
-            id = Hash.from_json(minerpayoutids[idx])
-            value = Currency.from_json(mp['value'])
-            unlockhash = UnlockHash.from_json(mp['unlockhash'])
-            miner_payouts.append(ExplorerMinerPayout(id=id, value=value, unlockhash=unlockhash))
-        # get the timestamp and height
-        height = int(resp['height'])
-        timestamp = int(rawblock['timestamp'])
-        # get the block's identifier
-        blockid = Hash.from_json(resp['blockid'])
-        # return the block, as reported by the explorer
-        return ExplorerBlock(
-            id=blockid, parentid=parentid,
-            height=height, timestamp=timestamp,
-            transactions=transactions, miner_payouts=miner_payouts)
+        endpoint = "/explorer/?"
+        resp = {}
+        try:
+            # get the explorer block
+            if isinstance(value, int):
+                endpoint = "/explorer/blocks/{}".format(int(value))
+                resp = self._explorer_get(endpoint=endpoint)
+                resp = j.data.serializers.json.loads(resp)
+                resp = resp['block']
+            else:
+                blockid = self._normalize_id(value)
+                endpoint = "/explorer/hashes/"+blockid
+                resp = self._explorer_get(endpoint=endpoint)
+                resp = j.data.serializers.json.loads(resp)
+                if resp['hashtype'] != 'blockid':
+                    raise ExplorerInvalidResponse("expected hash type 'blockid' not '{}'".format(resp['hashtype']), endpoint, resp)
+                resp = resp['block']
+                if resp['blockid'] != blockid:
+                    raise ExplorerInvalidResponse("expected block ID '{}' not '{}'".format(blockid, resp['blockid']), endpoint, resp)
+            # parse the transactions
+            transactions = []
+            for etxn in resp['transactions']:
+                # parse the explorer transaction
+                transaction = self._transaction_from_explorer_transaction(etxn, endpoint=endpoint, resp=resp)
+                # append the transaction to the list of transactions
+                transactions.append(transaction)
+            rawblock = resp['rawblock']
+            # parse the parent id
+            parentid = Hash.from_json(obj=rawblock['parentid'])
+            # parse the miner payouts
+            miner_payouts = []
+            minerpayoutids = resp.get('minerpayoutids', None) or []
+            eminerpayouts = rawblock.get('minerpayouts', None) or []
+            if len(eminerpayouts) != len(minerpayoutids):
+                raise ExplorerInvalidResponse("amount of miner payouts and payout ids are not matching: {} != {}".format(len(eminerpayouts), len(minerpayoutids)), endpoint, resp)
+            for idx, mp in enumerate(eminerpayouts):
+                id = Hash.from_json(minerpayoutids[idx])
+                value = Currency.from_json(mp['value'])
+                unlockhash = UnlockHash.from_json(mp['unlockhash'])
+                miner_payouts.append(ExplorerMinerPayout(id=id, value=value, unlockhash=unlockhash))
+            # get the timestamp and height
+            height = int(resp['height'])
+            timestamp = int(rawblock['timestamp'])
+            # get the block's identifier
+            blockid = Hash.from_json(resp['blockid'])
+            # return the block, as reported by the explorer
+            return ExplorerBlock(
+                id=blockid, parentid=parentid,
+                height=height, timestamp=timestamp,
+                transactions=transactions, miner_payouts=miner_payouts)
+        except KeyError as msg:
+            # return a KeyError as an invalid Explorer Response
+            raise ExplorerInvalidResponse(msg, endpoint, resp)
 
     def transaction_get(self, txid):
         """
@@ -133,12 +144,19 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         @param txid: the identifier (fixed string with a length of 64) that points to the desired transaction
         """
         txid = self._normalize_id(txid)
-        resp = self._explorer_get(endpoint="/explorer/hashes/"+txid)
+        endpoint = "/explorer/hashes/"+txid
+        resp = self._explorer_get(endpoint=endpoint)
         resp = j.data.serializers.json.loads(resp)
-        assert resp['hashtype'] == 'transactionid'
-        resp = resp['transaction']
-        assert resp['id'] == txid
-        return self._transaction_from_explorer_transaction(resp)
+        try:
+            if resp['hashtype'] != 'transactionid':
+                raise ExplorerInvalidResponse("expected hash type 'transactionid' not '{}'".format(resp['hashtype']), endpoint, resp)
+            resp = resp['transaction']
+            if resp['id'] != txid:
+                raise ExplorerInvalidResponse("expected transaction ID '{}' not '{}'".format(txid, resp['id']), endpoint, resp)
+            return self._transaction_from_explorer_transaction(resp, endpoint=endpoint, resp=resp)
+        except KeyError as msg:
+            # return a KeyError as an invalid Explorer Response
+            raise ExplorerInvalidResponse(msg, endpoint, resp)
 
     def transaction_put(self, transaction):
         """
@@ -148,9 +166,14 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         """
         if isinstance(transaction, TransactionBaseClass):
             transaction = transaction.json()
-        resp = self._explorer_post(endpoint="/transactionpool/transactions", data=transaction)
+        endpoint = "/transactionpool/transactions"
+        resp = self._explorer_post(endpoint=endpoint, data=transaction)
         resp = j.data.serializers.json.loads(resp)
-        return str(Hash(value=resp.get('transactionid')))
+        try:
+            return str(Hash(value=resp['transactionid']))
+        except KeyError as msg:
+            # return a KeyError as an invalid Explorer Response
+            raise ExplorerInvalidResponse(msg, endpoint, resp)
     
     def unlockhash_get(self, unlockhash):
         """
@@ -160,26 +183,33 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         @param unlockhash: the unlockhash to look up transactions for in the explorer
         """
         unlockhash = self._normalize_unlockhash(unlockhash)
-        resp = self._explorer_get(endpoint="/explorer/hashes/"+unlockhash)
+        endpoint = "/explorer/hashes/"+unlockhash
+        resp = self._explorer_get(endpoint=endpoint)
         resp = j.data.serializers.json.loads(resp)
-        assert resp['hashtype'] == 'unlockhash'
-        # parse the transactions
-        transactions = []
-        for etxn in resp['transactions']:
-            # parse the explorer transaction
-            transaction = self._transaction_from_explorer_transaction(etxn)
-            # append the transaction to the list of transactions
-            transactions.append(transaction)
-        # collect all multisig addresses
-        multisig_addresses = [UnlockHash.from_json(obj=uh) for uh in resp.get('multisigaddresses', None) or []]
-        for addr in multisig_addresses:
-            assert addr.type == UnlockHashType.MULTI_SIG
-        # TODO: support resp.get('erc20info')
-        # return explorer data for the unlockhash
-        return ExplorerUnlockhashResult(
-            unlockhash=UnlockHash.from_json(unlockhash),
-            transactions=transactions,
-            multisig_addresses=multisig_addresses)
+        try:
+            if resp['hashtype'] != 'unlockhash':
+                raise ExplorerInvalidResponse("expected hash type 'unlockhash' not '{}'".format(resp['hashtype']), endpoint, resp)
+            # parse the transactions
+            transactions = []
+            for etxn in resp['transactions']:
+                # parse the explorer transaction
+                transaction = self._transaction_from_explorer_transaction(etxn, endpoint=endpoint, resp=resp)
+                # append the transaction to the list of transactions
+                transactions.append(transaction)
+            # collect all multisig addresses
+            multisig_addresses = [UnlockHash.from_json(obj=uh) for uh in resp.get('multisigaddresses', None) or []]
+            for addr in multisig_addresses:
+                if addr.type != UnlockHashType.MULTI_SIG:
+                    raise ExplorerInvalidResponse("invalid unlock hash type {} for MultiSignature Address (expected: 3)".format(addr.type), endpoint, resp)
+            # TODO: support resp.get('erc20info')
+            # return explorer data for the unlockhash
+            return ExplorerUnlockhashResult(
+                unlockhash=UnlockHash.from_json(unlockhash),
+                transactions=transactions,
+                multisig_addresses=multisig_addresses)
+        except KeyError as msg:
+            # return a KeyError as an invalid Explorer Response
+            raise ExplorerInvalidResponse(msg, endpoint, resp)
     
     def mint_condition_get(self, height=None):
         """
@@ -190,7 +220,8 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         # define the endpoint
         endpoint = "/explorer/mintcondition"
         if height is not None:
-            assert isinstance(height, (int, str))
+            if not isinstance(height, (int, str)):
+                raise TypeError("invalid block height given")
             height = int(height)
             endpoint += "/%d"%(height)
 
@@ -198,22 +229,30 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         resp = self._explorer_get(endpoint=endpoint)
         resp = j.data.serializers.json.loads(resp)
 
-        # return the decoded mint condition
-        return j.clients.tfchain.types.conditions.from_json(obj=resp['mintcondition'])
+        try:
+            # return the decoded mint condition
+            return j.clients.tfchain.types.conditions.from_json(obj=resp['mintcondition'])
+        except KeyError as msg:
+            # return a KeyError as an invalid Explorer Response
+            raise ExplorerInvalidResponse(msg, endpoint, resp)
 
-    def _transaction_from_explorer_transaction(self, etxn):
+    def _transaction_from_explorer_transaction(self, etxn, endpoint="/?", resp=None): # keyword parameters for error handling purposes only
+        if resp is None:
+            resp = {}
         # parse the transactions
         transaction = j.clients.tfchain.transactions.from_json(obj=etxn['rawtransaction'], id=etxn['id'])
         # add the parent (coin) outputs
         coininputoutputs = etxn.get('coininputoutputs', None) or []
-        assert len(transaction.coin_inputs) == len(coininputoutputs)
+        if len(transaction.coin_inputs) != len(coininputoutputs):
+            raise ExplorerInvalidResponse("amount of coin inputs and parent outputs are not matching: {} != {}".format(len(transaction.coin_inputs), len(coininputoutputs)), endpoint, resp)
         for (idx, co) in enumerate(coininputoutputs):
             co = CoinOutput.from_json(obj=co)
             co.id = transaction.coin_inputs[idx].parentid
             transaction.coin_inputs[idx].parent_output = co
         # add the coin output ids
         coinoutputids = etxn.get('coinoutputids', None) or []
-        assert len(transaction.coin_outputs) == len(coinoutputids)
+        if len(transaction.coin_outputs) != len(coinoutputids):
+            raise ExplorerInvalidResponse("amount of coin outputs and output identifiers are not matching: {} != {}".format(len(transaction.coin_outputs), len(coinoutputids)), endpoint, resp)
         for (idx, id) in enumerate(coinoutputids):
             transaction.coin_outputs[idx].id = Hash.from_json(obj=id)
         # set the unconfirmed state
