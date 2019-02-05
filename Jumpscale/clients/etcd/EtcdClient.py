@@ -1,6 +1,7 @@
 import socket
 
 import gevent.socket
+import warnings
 
 import etcd3
 from Jumpscale import j
@@ -67,22 +68,28 @@ class EtcdClient(JSConfigClient):
                AWS_SECRET_ACCESS_KEY="", password="rooter", backet="etcd"):
 
         f_obj = open("{}/{}".format(dirs, file_obj), "wb")
-        j.sal.fs.writeFile("password.txt", password)
 
         self.api.snapshot(f_obj)
 
         if remote:
             rc, _, _ = j.builder.tools.run("which restic")
-        if rc != 0:
-            print("please make sure that restic is installed")
-            return
-        env = {
-            'AWS_ACCESS_KEY_ID': AWS_ACCESS_KEY_ID,
-            'AWS_SECRET_ACCESS_KEY': AWS_SECRET_ACCESS_KEY
-        }
-        j.builder.tools.run("restic -r s3:{}/{} init -p password.txt".format(remote, backet), env=env)
-        j.builder.tools.run(
-            "restic -r s3:{}/{} backup {}/{} -p password.txt".format(remote, backet, dirs, file_obj), env=env)
-        j.builder.tools.run("rm password.txt")
+            if rc != 0:
+                print("please make sure that restic is installed")
+                return
+            j.sal.fs.writeFile("password.txt", password)
+            env = {
+                'AWS_ACCESS_KEY_ID': AWS_ACCESS_KEY_ID,
+                'AWS_SECRET_ACCESS_KEY': AWS_SECRET_ACCESS_KEY
+            }
+
+            try:
+                j.builder.tools.run("restic -r s3:{}/{} init -p password.txt".format(remote, backet), env=env)
+            except:
+                warnings.warn("this backet already exist", category=DeprecationWarning)
+
+            j.builder.tools.run(
+                "restic -r s3:{}/{} backup {}/{} -p password.txt".format(remote, backet, dirs, file_obj), env=env)
+
+            j.sal.fs.remove("password.txt")
         f_obj.close()
         return "{}/{}".format(dirs, file_obj)
