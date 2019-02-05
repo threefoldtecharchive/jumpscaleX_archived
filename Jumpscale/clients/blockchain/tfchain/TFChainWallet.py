@@ -15,11 +15,12 @@ from .TFChainTransactionFactory import TransactionBaseClass, TransactionV128, Tr
 _DEFAULT_KEY_SCAN_COUNT = 3
 
 # TODO:
-# * Debug: MinterDefinition MultiSig Signature
-#       => Error: Could not publish transaction: HTTP 400 error: error after call to /wallet/transactions: failed to fulfill mint condition: invalid signature
-#       => Example Tx that fails: {"version":128,"data":{"nonce":"WaaiOtDAQPI=","mintfulfillment":{"type":3,"data":{"pairs":[{"publickey":"ed25519:89ba466d80af1b453a435175dbba6da7718e9cb19c64c0ed41fca3e6982e3636","signature":"4d8059905bf63e17186db1ec74475dfb6c1b2934ccb5b22393053714bf6cc26f460bae4dfec7a060f7b4e94caefe4f929c912b0b47e7510b1e99d3e24dfae701"},{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"c701b1088fd4f2cc14aa8381a5446029a3283127377595841f893ac3e91a111d3ca130d8f46b08bb8aaf22eed8f909591aa3c0dd183877ba394b074acfca8802"}]}},"mintcondition":{"type":1,"data":{"unlockhash":"0107e83d2bd8a7aad7ab0af0c0a0f1f116fb42335f64eeeb5ed1b76bd63e62ce59a3872a7279ab"}},"minerfees":["1000000000"],"arbitrarydata":"b25lIHRvIHJ1bGUgdGhlbSBhbGw="}}
 # * Make lock more user-friendly to be used (e.g. also accept durations and time strings)
 # * Provide Atomic Swap support
+
+# TODO (TESTS, for now already manually tested and confirmed):
+# * Send Coins (single sig and multi sig, with data and lock, as well as without)
+# * Minter Transactions (single sig and multi sig)
 
 class TFChainWallet(j.application.JSBaseConfigClass):
     """
@@ -295,7 +296,10 @@ class TFChainWallet(j.application.JSBaseConfigClass):
 
         # define the refund condition
         if refund is None: # automatically choose a refund condition if none is given
-            refund = suggested_refund
+            if suggested_refund is None:
+                refund = j.clients.tfchain.types.conditions.unlockhash_new(unlockhash=self.address)
+            else:
+                refund = suggested_refund
         else:
             # use the given refund condition (defined as a recipient)
             refund = j.clients.tfchain.types.conditions.from_recipient(refund)
@@ -325,24 +329,22 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         for request in sig_requests:
             try:
                 key_pair = self.key_pair_get(request.wallet_address)
-                signature, public_key = key_pair.sign(request.input_hash)
-                request.signature_fulfill(public_key=public_key, signature=signature)
+                input_hash = request.input_hash_new(public_key=key_pair.public_key)
+                signature = key_pair.sign(input_hash)
+                request.signature_fulfill(public_key=key_pair.public_key, signature=signature)
             except KeyError:
                 pass # this is acceptable due to how we directly try the key_pair_get method
 
         # txn should be fulfilled now
         submit = txn.is_fulfilled()
         if submit:
-            for request in sig_requests:
-                print(request.wallet_address, str(request.input_hash))
-            print(txn.json())
             # submit the transaction
             txn.id = self._transaction_put(transaction=txn)
 
             # update balance
             for ci in txn.coin_inputs:
                 balance.output_add(ci.parent_output, confirmed=False, spent=True)
-            addresses = self.addresses
+            addresses = self.addresses + list(balance.wallets.keys())
             for idx, co in enumerate(txn.coin_outputs):
                 if str(co.condition.unlockhash) in addresses:
                     # add the id to the coin_output, so we can track it has been spent
@@ -370,22 +372,27 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         elif not isinstance(txn, TransactionBaseClass):
             raise TypeError("txn value has invalid type {} and cannot be signed".format(type(txn)))
 
-        # return early if already fulfilled
-        if txn.is_fulfilled():
-            return (txn, False)
+        balance = self.balance
 
         # check all parentids from the specified coin inputs,
         # and set the coin outputs for the ones this wallet knows about
         # and that are still unspent
         if len(txn.coin_inputs) > 0:
-            balance = self.balance
-            cco = dict([(co.id, co) for co in balance.outputs_available])
-            uco = dict([(co.id, co) for co in balance.outputs_unconfirmed_available])
+            # collect all known outputs
+            known_outputs = {}
+            for co in balance.outputs_available:
+                known_outputs[co.id] = co
+            for co in balance.outputs_unconfirmed_available:
+                known_outputs[co.id] = co
+            for wallet in balance.wallets.values():
+                for co in wallet.outputs_available:
+                    known_outputs[co.id] = co
+                for co in wallet.outputs_unconfirmed_available:
+                    known_outputs[co.id] = co
+            # mark the coin inputs that are known as available outputs by this wallet
             for ci in txn.coin_inputs:
-                if ci.parentid in cco:
-                    ci.parent_output = cco[ci.parentid]
-                elif ci.parentid in uco:
-                    ci.parent_output = uco[ci.parentid]
+                if ci.parentid in known_outputs:
+                    ci.parent_output = known_outputs[ci.parentid]
 
         # check for specific transaction types, as to
         # be able to add whatever content we know we can add
@@ -409,8 +416,9 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         for request in sig_requests:
             try:
                 key_pair = self.key_pair_get(request.wallet_address)
-                signature, public_key = key_pair.sign(request.input_hash)
-                request.signature_fulfill(public_key=public_key, signature=signature)
+                input_hash = request.input_hash_new(public_key=key_pair.public_key)
+                signature = key_pair.sign(input_hash)
+                request.signature_fulfill(public_key=key_pair.public_key, signature=signature)
                 signature_count += 1
             except KeyError:
                 pass # this is acceptable due to how we directly try the key_pair_get method
@@ -420,10 +428,11 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         submit = (submit and is_fulfilled)
         if submit:
             txn.id = self._transaction_put(transaction=txn)
+            addresses = self.addresses + list(balance.wallets.keys())
             # update balance
             for ci in txn.coin_inputs:
-                balance.output_add(ci.parent_output, confirmed=False, spent=True)
-            addresses = self.addresses
+                if str(ci.parent_output.condition.unlockhash) in addresses:
+                    balance.output_add(ci.parent_output, confirmed=False, spent=True)
             for idx, co in enumerate(txn.coin_outputs):
                 if str(co.condition.unlockhash) in addresses:
                     # add the id to the coin_output, so we can track it has been spent
@@ -605,8 +614,9 @@ class TFChainMinter():
         for request in sig_requests:
             try:
                 key_pair = self._wallet.key_pair_get(request.wallet_address)
-                signature, public_key = key_pair.sign(request.input_hash)
-                request.signature_fulfill(public_key=public_key, signature=signature)
+                input_hash = request.input_hash_new(public_key=key_pair.public_key)
+                signature = key_pair.sign(input_hash)
+                request.signature_fulfill(public_key=key_pair.public_key, signature=signature)
             except KeyError:
                 pass # this is acceptable due to how we directly try the key_pair_get method
 
@@ -647,6 +657,8 @@ class TFChainMinter():
         # add the minimum miner fee
         txn.miner_fee_add(self._minium_miner_fee)
 
+        balance = self._wallet.balance
+
         # parse the output
         amount = Currency(value=amount)
         if amount <= 0:
@@ -674,14 +686,22 @@ class TFChainMinter():
         for request in sig_requests:
             try:
                 key_pair = self._wallet.key_pair_get(request.wallet_address)
-                signature, public_key = key_pair.sign(request.input_hash)
-                request.signature_fulfill(public_key=public_key, signature=signature)
+                input_hash = request.input_hash_new(public_key=key_pair.public_key)
+                signature = key_pair.sign(input_hash)
+                request.signature_fulfill(public_key=key_pair.public_key, signature=signature)
             except KeyError:
                 pass # this is acceptable due to how we directly try the key_pair_get method
 
         submit = txn.is_fulfilled()
         if submit:
             txn.id = self._transaction_put(transaction=txn)
+            # update balance of wallet
+            addresses = self._wallet.addresses + list(balance.wallets.keys())
+            for idx, co in enumerate(txn.coin_outputs):
+                if str(co.condition.unlockhash) in addresses:
+                    # add the id to the coin_output, so we can track it has been spent
+                    co.id = txn.coin_outputid_new(idx)
+                    balance.output_add(co, confirmed=False, spent=False)
 
         # return the txn, as well as the submit status as a boolean
         return (txn, submit)
@@ -734,15 +754,14 @@ class SpendableKey():
 
     def sign(self, hash):
         """
-        Sign the given hash and return the public key used to sign.
+        Sign the given hash and return the signature.
 
         @param hash: hash to be signed
         """
         if not isinstance(hash, Hash):
             hash = Hash(value=hash)
         hash = bytes(hash.value)
-        sig = self._private_key.sign(hash)
-        return (sig, self._public_key)
+        return self._private_key.sign(hash)
 
 
 class WalletBalance(object):
@@ -807,6 +826,14 @@ class WalletBalance(object):
         """
         assert isinstance(value, int)
         self._chain_height = int(value)
+
+    @property
+    def active(self):
+        """
+        Returns if this balance is active,
+        meaning it has available outputs to spend (confirmed or not).
+        """
+        return len(self._outputs) > 0 or len(self._outputs_unconfirmed) > 0
 
     @property
     def outputs_spent(self):
@@ -1003,10 +1030,20 @@ class WalletsBalance(WalletBalance):
                 signature_count=output.condition.required_signatures)
         self._wallets[address].output_add(output, confirmed=confirmed, spent=spent)
 
+    def output_add(self, output, confirmed=True, spent=False):
+        """
+        Add an output to the Wallet's balance.
+        """
+        uh = output.condition.unlockhash
+        if uh.type == UnlockHashType.MULTI_SIG:
+            return self.multisig_output_add(address=str(uh), output=output, confirmed=confirmed, spent=spent)
+        return super().output_add(output=output, confirmed=confirmed, spent=spent)
+
     def __repr__(self):
         result = super().__repr__()
         for wallet in self.wallets.values():
-            result += "\n\n" + wallet._human_readable_balance()
+            if wallet.active: # only display active wallets in the Human (shell) Representation
+                result += "\n\n" + wallet._human_readable_balance()
         return result
 
     def fund(self, amount, source=None):

@@ -129,7 +129,6 @@ class TFChainTransactionFactory(j.application.JSBaseClass):
         # v146 Transactions are supported
         # TODO
 
-
 from abc import ABC, abstractmethod, abstractclassmethod
 
 from .types.PrimitiveTypes import Hash
@@ -328,11 +327,11 @@ class TransactionBaseClass(ABC):
         """
         requests = []
         for (index, ci) in enumerate(self.coin_inputs):
-            input_hash = self.signature_hash_get(index)
-            requests += ci.signature_requests_new(input_hash=input_hash)
+            f = InputSignatureHashFactory(self, index).signature_hash_new
+            requests += ci.signature_requests_new(input_hash_func=f)
         for (index, bsi) in enumerate(self.blockstake_inputs):
-            input_hash = self.signature_hash_get(index)
-            requests += bsi.signature_requests_new(input_hash=input_hash)
+            f = InputSignatureHashFactory(self, index).signature_hash_new
+            requests += bsi.signature_requests_new(input_hash_func=f)
         return requests + self._extra_signature_requests_new()
 
     def _extra_signature_requests_new(self):
@@ -359,6 +358,25 @@ class TransactionBaseClass(ABC):
         Returns True by default.
         """
         return True
+
+
+class InputSignatureHashFactory():
+    """
+    Class that can be used by Transaction consumers,
+    to generate a factory that can provide the signature_hash_func callback
+    used during the creation of signature requests,
+    only useful if some extra objects needs to be included that are outside the Txn scope.
+    """
+    def __init__(self, txn, *extra_objects):
+        if not isinstance(txn, TransactionBaseClass):
+            raise TypeError("txn has an invalid type {}".format(type(txn)))
+        self._txn = txn
+        self._extra_objects = extra_objects
+
+    def signature_hash_new(self, *extra_objects):
+        objects = list(self._extra_objects)
+        objects += extra_objects
+        return self._txn.signature_hash_get(*objects)
 
 
 from .types.CompositionTypes import CoinInput, CoinOutput, BlockstakeInput, BlockstakeOutput
@@ -900,9 +918,8 @@ class TransactionV128(TransactionBaseClass):
     def _extra_signature_requests_new(self):
         if self._parent_mint_condition is None:
             return [] # nothing to be signed
-        input_hash = self.signature_hash_get() # hardcoded to no extra objects
         return self._mint_fulfillment.signature_requests_new(
-            input_hash=input_hash,
+            input_hash_func=self.signature_hash_get, # no extra objects are to be included within txn scope
             parent_condition=self._parent_mint_condition,
         )
 
@@ -1078,9 +1095,8 @@ class TransactionV129(TransactionBaseClass):
     def _extra_signature_requests_new(self):
         if self._parent_mint_condition is None:
             return [] # nothing to be signed
-        input_hash = self.signature_hash_get() # hardcoded to no extra objects
         return self._mint_fulfillment.signature_requests_new(
-            input_hash=input_hash,
+            input_hash_func=self.signature_hash_get, # no extra objects are to be included within txn scope
             parent_condition=self._parent_mint_condition,
         )
 

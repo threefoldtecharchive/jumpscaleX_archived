@@ -20,16 +20,14 @@ class SignatureRequest():
     """
     SignatureRequest can be used to create a one-time-use individual sign request.
     """
-    def __init__(self, unlockhash, input_hash, callback):
+    def __init__(self, unlockhash, input_hash_gen, callback):
         # set defined properties
         if not isinstance(unlockhash, UnlockHash):
             raise TypeError("signature request requires an unlock hash of Type UnlockHash, not: {}".format(type(unlockhash)))
         self._unlockhash = unlockhash
-        if isinstance(input_hash, (str, bytearray, bytes)):
-            input_hash = Hash(value=input_hash)
-        elif not isinstance(input_hash, Hash):
-            raise TypeError("signature request requires an input hash of Type Hash, not: {}".format(type(input_hash)))
-        self._input_hash = input_hash
+        if not callable(input_hash_gen):
+            raise TypeError("signature request requires a generator function with the signature `f(PublicKey) -> Hash")
+        self._input_hash_gen = input_hash_gen
         if not isinstance(callback, SignatureCallbackBase):
             raise TypeError("signature request requires a callback of Type SignatureCallbackBase, not: {}".format(type(unlockhash)))
         self._callback = callback
@@ -51,12 +49,16 @@ class SignatureRequest():
         """
         return str(self._unlockhash)
 
-    @property
-    def input_hash(self):
+    def input_hash_new(self, public_key):
         """
-        Returns the input hash that has to be used in order to sign this request.
+        Create an input hash for the public key of the fulfiller.
         """
-        return self._input_hash
+        input_hash = self._input_hash_gen(public_key)
+        if isinstance(input_hash, (str, bytearray, bytes)):
+            input_hash = Hash(value=input_hash)
+        elif not isinstance(input_hash, Hash):
+            raise TypeError("signature request requires an input hash of Type Hash, not: {}".format(type(input_hash)))
+        return input_hash
 
     def signature_fulfill(self, public_key, signature):
         """
@@ -228,7 +230,7 @@ class FulfillmentBaseClass(SignatureCallbackBase, BaseDataTypeClass):
         encoder.add_slice(data_enc.data)
 
     @abstractmethod
-    def signature_requests_new(self, parent_condition):
+    def signature_requests_new(self, input_hash_func, parent_condition):
         pass
 
     @abstractmethod
@@ -306,13 +308,18 @@ class FulfillmentSingleSignature(FulfillmentBaseClass):
     def rivine_binary_encode_data(self, encoder):
         encoder.add_all(self.public_key, self.signature)
 
-    def signature_requests_new(self, input_hash, parent_condition):
+    def signature_requests_new(self, input_hash_func, parent_condition):
         parent_condition = parent_condition.unwrap()
         assert isinstance(parent_condition, (ConditionNil, ConditionUnlockHash))
         unlockhash = parent_condition.unlockhash
         if str(unlockhash) == str(self.public_key.unlockhash()):
             return [] # nothing to do
-        return [SignatureRequest(unlockhash=unlockhash, input_hash=input_hash, callback=self)]
+        # define the input_hash_new generator function,
+        # used to create the input hash for creating the signature
+        def input_hash_gen(public_key):
+            return input_hash_func()
+        # create the only signature request
+        return [SignatureRequest(unlockhash=unlockhash, input_hash_gen=input_hash_gen, callback=self)]
 
     def is_fulfilled(self, parent_condition):
         parent_condition = parent_condition.unwrap()
@@ -373,14 +380,19 @@ class FulfillmentMultiSignature(FulfillmentBaseClass):
     def rivine_binary_encode_data(self, encoder):
         encoder.add(self._pairs)
 
-    def signature_requests_new(self, input_hash, parent_condition):
+    def signature_requests_new(self, input_hash_func, parent_condition):
         parent_condition = parent_condition.unwrap()
         assert isinstance(parent_condition, ConditionMultiSignature)
         requests = []
         signed = [str(pair.public_key.unlockhash()) for pair in self._pairs]
+        # define the input_hash_new generator function,
+        # used to create the input hash for creating the signature
+        def input_hash_gen(public_key):
+            return input_hash_func(public_key)
+        # create a signature hash for all signees that haven't signed yet
         for unlockhash in parent_condition.unlockhashes:
             if str(unlockhash) not in signed:
-                requests.append(SignatureRequest(unlockhash=unlockhash, input_hash=input_hash, callback=self))
+                requests.append(SignatureRequest(unlockhash=unlockhash, input_hash_gen=input_hash_gen, callback=self))
         return requests
 
     def is_fulfilled(self, parent_condition):
@@ -533,13 +545,18 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
         encoder.add_all(self.public_key, self.signature)
         encoder.add_array(self.secret.value)
 
-    def signature_requests_new(self, input_hash, parent_condition):
+    def signature_requests_new(self, input_hash_func, parent_condition):
         assert isinstance(parent_condition, ConditionAtomicSwap)
         requests = []
         signee = str(self.public_key.unlockhash())
+        # define the input_hash_new generator function,
+        # used to create the input hash for creating the signature
+        def input_hash_gen(public_key):
+            return input_hash_func(public_key)
+        # create a signature hash for all signees that haven't signed yet
         for unlockhash in [parent_condition.sender, parent_condition.receiver]:
             if str(unlockhash) != signee:
-                requests.append(SignatureRequest(unlockhash=unlockhash, input_hash=input_hash, callback=self))
+                requests.append(SignatureRequest(unlockhash=unlockhash, input_hash_gen=input_hash_gen, callback=self))
         return requests
 
     def is_fulfilled(self, parent_condition):

@@ -84,7 +84,7 @@ class CoinInput(BaseDataTypeClass):
         """
         encoder.add_all(self._parent_id, self._fulfillment)
 
-    def signature_requests_new(self, input_hash):
+    def signature_requests_new(self, input_hash_func):
         """
         Returns all signature requests that can be generated for this Coin Inputs,
         only possible if the parent (coin) output is defined and when there
@@ -95,7 +95,7 @@ class CoinInput(BaseDataTypeClass):
             # this allows for partial Tx signings
             return []
         return self._fulfillment.signature_requests_new(
-            input_hash=input_hash,
+            input_hash_func=input_hash_func,
             parent_condition=self._parent_output.condition,
         )
 
@@ -257,7 +257,7 @@ class BlockstakeInput(BaseDataTypeClass):
         """
         encoder.add_all(self._parent_id, self._fulfillment)
 
-    def signature_requests_new(self, input_hash):
+    def signature_requests_new(self, input_hash_func):
         """
         Returns all signature requests that can be generated for this Blockstake Inputs,
         only possible if the parent (blockstake) output is defined and when there
@@ -268,7 +268,7 @@ class BlockstakeInput(BaseDataTypeClass):
             # this allows for partial Tx signings
             return []
         return self._fulfillment.signature_requests_new(
-            input_hash=input_hash,
+            input_hash_func=input_hash_func,
             parent_condition=self._parent_output.condition,
         )
 
