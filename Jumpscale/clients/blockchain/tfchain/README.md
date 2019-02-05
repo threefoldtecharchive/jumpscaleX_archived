@@ -128,3 +128,56 @@ w.coins_send(
 # and cannot be greater than the amount of people you are sending to
 # optionally you can still attach data and a lock to it of course
 ```
+
+Optionally you can use the `refund` parameter to define the recipient of the refund, should a refund be required:
+
+```python
+w.coins_send(
+    recipient='01f7e0686b2d38b3dee9295416857b06037a632ffe1d769153abcd522ab03d6a11b2a7d9383214',
+    amount='100.0',
+    refund='01e64ddf014e030e612e7ad2d7f5297f7e74e31100bdf4d194ff23754b622e5f0083d4bedcc18d')
+```
+
+By default the primary wallet address will be used for refunds (`w.address`).
+Refunds are required in case the sum of the defined amount and minimum transaction fee
+is smaller than the sum value of the used coin inputs.
+
+### Multi-Signature Wallet
+
+You use your regular wallet to manage and use your co-owned Multi-Signature wallets.
+
+#### Check your balance:
+
+The balance contains and reports the balance reports and outputs for all the Multi-Signatures
+co-owned by your wallet as well.
+
+```python
+w.balance # human-readable printed in shell by default
+# it does return however a very useful object
+# should you want to inspect individual (coin) outputs
+```
+
+#### Send Coins
+
+You send coins from your Multi-Signature wallet through your regular wallet,
+by specifying the Multi-Signature wallet address of choice as the `source` parameter of your `coins_send` call:
+
+```python
+w.coins_send(
+    recipient='01f7e0686b2d38b3dee9295416857b06037a632ffe1d769153abcd522ab03d6a11b2a7d9383214',
+    amount='100 TFT',
+    source='039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a',
+# optionally you can still attach a lock and data,
+# and the recipient is still as flexible as previously defined.
+#
+# specify the optional 'refund' parameter if you do not want it to refund to the
+# 039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a Multi-Signature Wallet,
+# should a refund be required.
+```
+
+The `coins_send` call will return a pair `(txn, submitted)`, where the second value indicates if the value
+was submitted. It is possible that there were not enough signatures collected, and that
+other co-owners of you wallet still have to sign. If so you have to pass the returned transaction (`txn`) to them.
+
+Using this client one can signs (and submit if possible)
+a transaction using the `w.transaction_sign(txn)` method.

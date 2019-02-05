@@ -6,7 +6,7 @@ from functools import reduce
 from ed25519 import SigningKey
 
 from .types.PrimitiveTypes import Currency, Hash
-from .types.CryptoTypes import PublicKey, UnlockHash
+from .types.CryptoTypes import PublicKey, UnlockHash, UnlockHashType
 from .types.errors import ExplorerNoContent, InsufficientFunds, ExplorerCallError
 from .types.CompositionTypes import CoinOutput, CoinInput
 from .types.ConditionTypes import ConditionNil, ConditionUnlockHash, ConditionLockTime
@@ -251,7 +251,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # return the balance
         return balance
 
-    def coins_send(self, recipient, amount, lock=None, data=None):
+    def coins_send(self, recipient, amount, source=None, refund=None, lock=None, data=None):
         """
         Send the specified amount of coins to the given recipient,
         optionally locked. Arbitrary data can be attached as well if desired.
@@ -269,9 +269,15 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                 - '123.456': define the amount in TFT (that is '123.456' == 123.456 TFT == 123456000000)
                 - '123456 TFT': define the amount in TFT (that is '123456 TFT' == 123456 TFT == 123456000000000)
                 - '123.456 TFT': define the amount in TFT (that is '123.456 TFT' == 123.456 TFT == 123456000000)
+
+        Returns (txn, submitted), with the second value of the pair indicating
+        if this wallet has added any signatures in this call and the first
+        pair value being the transaction created (and if possible submitted).
         
         @param recipient: see explanation above
         @param amount: int or str that defines the amount of TFT to set, see explanation above
+        @param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
+        @param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
         @param lock: optional lock that can be used to lock the sent amount to a specific time or block height
         @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
         """
@@ -285,7 +291,14 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # fund amount
         balance = self.balance
         minerfee = self.client.minimum_minerfee
-        inputs, remainder = balance.fund(amount+minerfee)
+        inputs, remainder, suggested_refund = balance.fund(amount+minerfee, source=source)
+
+        # define the refund condition
+        if refund is None: # automatically choose a refund condition if none is given
+            refund = suggested_refund
+        else:
+            # use the given refund condition (defined as a recipient)
+            refund = j.clients.tfchain.types.conditions.from_recipient(refund)
 
         # create transaction
         txn = j.clients.tfchain.transactions.new()
@@ -293,7 +306,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         txn.coin_output_add(value=amount, condition=recipient)
         # add refund coin output if needed
         if remainder > 0:
-            txn.coin_output_add(value=remainder, condition=j.clients.tfchain.types.conditions.unlockhash_new(unlockhash=self.address))
+            txn.coin_output_add(value=remainder, condition=refund)
         # add the miner fee
         txn.miner_fee_add(minerfee)
 
@@ -308,38 +321,46 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         sig_requests = txn.signature_requests_new()
         assert len(sig_requests) > 0
 
-        # fulfill the signature requests
+        # fulfill the signature requests that we can fulfill
         for request in sig_requests:
-            key_pair = self.key_pair_get(request.wallet_address)
-            signature, public_key = key_pair.sign(request.input_hash)
-            request.signature_fulfill(public_key=public_key, signature=signature)
+            try:
+                key_pair = self.key_pair_get(request.wallet_address)
+                signature, public_key = key_pair.sign(request.input_hash)
+                request.signature_fulfill(public_key=public_key, signature=signature)
+            except KeyError:
+                pass # this is acceptable due to how we directly try the key_pair_get method
 
         # txn should be fulfilled now
-        assert txn.is_fulfilled()
+        submit = txn.is_fulfilled()
+        if submit:
+            for request in sig_requests:
+                print(request.wallet_address, str(request.input_hash))
+            print(txn.json())
+            # submit the transaction
+            txn.id = self._transaction_put(transaction=txn)
 
-        # submit the transaction
-        txn.id = self._transaction_put(transaction=txn)
+            # update balance
+            for ci in txn.coin_inputs:
+                balance.output_add(ci.parent_output, confirmed=False, spent=True)
+            addresses = self.addresses
+            for idx, co in enumerate(txn.coin_outputs):
+                if str(co.condition.unlockhash) in addresses:
+                    # add the id to the coin_output, so we can track it has been spent
+                    co.id = txn.coin_outputid_new(idx)
+                    balance.output_add(co, confirmed=False, spent=False)
+            # and return the created/submitted transaction for optional user consumption
 
-        # update balance
-        for ci in txn.coin_inputs:
-            balance.output_add(ci.parent_output, confirmed=False, spent=True)
-        addresses = self.addresses
-        for idx, co in enumerate(txn.coin_outputs):
-            if str(co.condition.unlockhash) in addresses:
-                # add the id to the coin_output, so we can track it has been spent
-                co.id = txn.coin_outputid_new(idx)
-                balance.output_add(co, confirmed=False, spent=False)
-        # and return the created/submitted transaction for optional user consumption
-        return txn
+        return (txn, submit)
 
     def transaction_sign(self, txn, submit=True):
         """
         Sign in all places of the transaction where it is still possible,
         and on which the wallet has authority to do so.
 
-        Returns (txn, signed), with the second value of the pair indicating
+        Returns (txn, signed, submitted), with the second value of the pair indicating
         if this wallet has added any signatures in this call and the first
-        pair value being the (decoded) and up-to-date transaction value.
+        pair value being the (decoded) and up-to-date transaction value,
+        and the third value indicating if this transaction was submitted.
 
         @param txn: transaction to sign, a JSON-encoded txn or already loaded in-memory as a valid Transaction type
         """
@@ -381,7 +402,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             # possible if the wallet does not own any of the still required signatures,
             # or for example because the wallet does not know about the parent outputs of
             # the inputs still to be signed
-            return (txn, False)
+            return (txn, False, False)
 
         # fulfill the signature requests that we can fulfill
         signature_count = 0
@@ -396,7 +417,8 @@ class TFChainWallet(j.application.JSBaseConfigClass):
 
         # check if fulfilled, and if so, we'll submit unless the callee does not want that
         is_fulfilled = txn.is_fulfilled()
-        if is_fulfilled and submit:
+        submit = (submit and is_fulfilled)
+        if submit:
             txn.id = self._transaction_put(transaction=txn)
             # update balance
             for ci in txn.coin_inputs:
@@ -408,8 +430,8 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                     co.id = txn.coin_outputid_new(idx)
                     balance.output_add(co, confirmed=False, spent=False)
 
-        # return whether we have signed and if this txn is fulfilled
-        return (txn, (signature_count>0))
+        # return up-to-date Txn, as well as if we signed and submitted
+        return (txn, (signature_count>0), submit)
 
     def address_new(self):
         """
@@ -870,52 +892,6 @@ class WalletBalance(object):
         else:
             return Currency(value=0) # impossible to know for sure without a complete context
 
-    def fund(self, amount):
-        """
-        Fund the specified amount with the available outputs of this wallet's balance.
-        """
-        outputs_available = self.outputs_available
-        outputs_available.sort(key=lambda co: co.value)
-        collected = Currency(value=0)
-        outputs = []
-        # try to fund only with confirmed outputs, if possible
-        for co in outputs_available:
-            if co.value >= amount:
-                outputs = [co]
-                collected = co.value
-                break
-            collected += co.value
-            outputs.append(co)
-            if len(outputs) > 99:
-                # to not reach the input limit
-                collected -= outputs.pop(0).value
-            if collected >= amount:
-                break
-        
-        if collected >= amount:
-            # if we already have sufficient, we stop now
-            return ([CoinInput.from_coin_output(co) for co in outputs], collected-amount)
-
-        # use unconfirmed balance, not ideal, but acceptable
-        outputs_available = self.outputs_unconfirmed_available
-        outputs_available.sort(key=lambda co: co.value, reverse=True)
-        for co in outputs_available:
-            if co.value >= amount:
-                outputs = [co]
-                collected = co.value
-                break
-            collected += co.value
-            outputs.append(co)
-            if len(outputs) > 99:
-                # to not reach the input limit
-                collected -= outputs.pop(0).value
-            if collected >= amount:
-                break
-        # if we still didn't manage to fund enough, there is nothing we can do
-        if collected < amount:
-            raise InsufficientFunds("not enough funds available in the wallet to fund the requested amount")
-        return ([CoinInput.from_coin_output(co) for co in outputs], collected-amount)
-
     def output_add(self, output, confirmed=True, spent=False):
         """
         Add an output to the Wallet's balance.
@@ -1036,3 +1012,154 @@ class WalletsBalance(WalletBalance):
         for wallet in self.wallets.values():
             result += "\n\n" + wallet._human_readable_balance()
         return result
+
+    def fund(self, amount, source=None):
+        """
+        Fund the specified amount with the available outputs of this wallet's balance.
+        """
+        # collect addresses and multisig addresses
+        addresses = set()
+        ms_addresses = set()
+        refund = None
+        if source is None:
+            for co in self.outputs_available:
+                addresses.add(co.condition.unlockhash)
+            for co in self.outputs_unconfirmed_available:
+                addresses.add(co.condition.unlockhash)
+        else:
+            # if only one address is given, transform it into an acceptable list
+            if not isinstance(source, list):
+                if isinstance(source, str):
+                    source = UnlockHash.from_json(source)
+                elif not isinstance(source, UnlockHash):
+                    raise TypeError("cannot add source address from type {}".format(type(source)))
+                source = [source]
+            # add one or multiple personal/multisig addresses
+            for value in source:
+                if isinstance(value, str):
+                    value = UnlockHash.from_json(value)
+                elif not isinstance(value, UnlockHash):
+                    raise TypeError("cannot add source address from type {}".format(type(value)))
+                if value.type == UnlockHashType.MULTI_SIG:
+                    ms_addresses.add(value)
+                elif value.type == UnlockHashType.PUBLIC_KEY:
+                    addresses.add(value)
+                else:
+                    raise TypeError("cannot add source addres with unsupported UnlockHashType {}".format(value.type))
+            if len(source) == 1:
+                if source[0].type == UnlockHashType.PUBLIC_KEY:
+                    refund = j.clients.tfchain.types.conditions.unlockhash_new(unlockhash=source[0])
+                else:
+                    addr = str(source[0])
+                    if addr in self.wallets:
+                        wallet = self.wallets[addr]
+                        refund = j.clients.tfchain.types.conditions.multi_signature_new(min_nr_sig=wallet.signature_count, unlockhashes=wallet.owners)
+
+
+        # ensure at least one address is defined
+        if len(addresses) == 0 and len(ms_addresses) == 0:
+            raise InsufficientFunds("no addresses defined or linked to this wallet")
+
+        # if personal addresses are given, try to use these first
+        # as these are the easiest kind to deal with
+        if len(addresses) == 0:
+            outputs, collected = ([], Currency()) # start with nothing
+        else:
+            outputs, collected = self._fund_individual(amount, addresses)
+
+        if collected >= amount:
+            # if we already have sufficient, we stop now
+            return ([CoinInput.from_coin_output(co) for co in outputs], collected-amount, refund)
+
+        if len(ms_addresses) == 0:
+            # if no ms_addresses were defined,
+            raise InsufficientFunds("not enough funds available in the individual wallet to fund the requested amount")
+        # otherwise keep going for multisig addresses
+        outputs, collected = self._fund_multisig(amount, ms_addresses, outputs=outputs, collected=collected)
+
+        # if we still didn't manage to fund enough, there is nothing we can do
+        if collected < amount:
+            raise InsufficientFunds("not enough funds available in the wallets to fund the requested amount")
+        return ([CoinInput.from_coin_output(co) for co in outputs], collected-amount, refund)
+
+    def _fund_individual(self, amount, addresses):
+        outputs_available = [co for co in self.outputs_available if co.condition.unlockhash in addresses]
+        outputs_available.sort(key=lambda co: co.value)
+        collected = Currency(value=0)
+        outputs = []
+        # try to fund only with confirmed outputs, if possible
+        for co in outputs_available:
+            if co.value >= amount:
+                return [co], co.value
+            collected += co.value
+            outputs.append(co)
+            if len(outputs) > 99:
+                # to not reach the input limit
+                collected -= outputs.pop(0).value
+            if collected >= amount:
+                return outputs, collected
+
+        if collected >= amount:
+            # if we already have sufficient, we stop now
+            return outputs, collected
+
+        # use unconfirmed balance, not ideal, but acceptable
+        outputs_available = [co for co in self.outputs_unconfirmed_available if co.condition.unlockhash in addresses]
+        outputs_available.sort(key=lambda co: co.value, reverse=True)
+        for co in outputs_available:
+            if co.value >= amount:
+                return [co], co.value
+            collected += co.value
+            outputs.append(co)
+            if len(outputs) > 99:
+                # to not reach the input limit
+                collected -= outputs.pop(0).value
+            if collected >= amount:
+                return outputs, collected
+
+        # we return whatever we have collected, no matter if it is sufficient
+        return outputs, collected
+
+    def _fund_multisig(self, amount, addresses, outputs=None, collected=None):
+        if outputs is None:
+            outputs = []
+        if collected is None:
+            collected = Currency()
+        for address, wallet in self.wallets.items():
+            if UnlockHash.from_json(address) not in addresses:
+                continue # nothing to do here
+
+            outputs_available = wallet.outputs_available
+            outputs_available.sort(key=lambda co: co.value)
+            # try to fund only with confirmed outputs, if possible
+            for co in outputs_available:
+                if co.value >= amount:
+                    return [co], co.value
+
+                collected += co.value
+                outputs.append(co)
+                if len(outputs) > 99:
+                    # to not reach the input limit
+                    collected -= outputs.pop(0).value
+                if collected >= amount:
+                    return outputs, collected
+
+            if collected >= amount:
+                # if we already have sufficient, we stop now
+                return outputs, collected
+
+            # use unconfirmed balance, not ideal, but acceptable
+            outputs_available = wallet.outputs_unconfirmed_available
+            outputs_available.sort(key=lambda co: co.value, reverse=True)
+            for co in outputs_available:
+                if co.value >= amount:
+                    return [co], co.value
+                collected += co.value
+                outputs.append(co)
+                if len(outputs) > 99:
+                    # to not reach the input limit
+                    collected -= outputs.pop(0).value
+                if collected >= amount:
+                    return outputs, collected
+        # we return whatever we have collected, no matter if it is sufficient
+        return outputs, collected

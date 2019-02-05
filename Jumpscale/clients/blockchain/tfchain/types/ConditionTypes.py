@@ -356,7 +356,7 @@ class UnlockHash(BaseDataTypeClass):
 
     @property
     def hash(self):
-        return self.hash
+        return self._hash
     @hash.setter
     def hash(self, value):
         self._hash.value = value
@@ -376,6 +376,24 @@ class UnlockHash(BaseDataTypeClass):
     __repr__ = __str__
 
     json = __str__
+
+    def __eq__(self, other):
+        other = UnlockHash._op_other_as_unlockhash(other)
+        return self.type == other.type and self.hash == other.hash
+    def __ne__(self, other):
+        other = UnlockHash._op_other_as_unlockhash(other)
+        return self.type != other.type or self.hash != other.hash
+
+    def __hash__(self):
+        return hash(str(self))
+
+    @staticmethod
+    def _op_other_as_unlockhash(other):
+        if isinstance(other, str):
+            other = UnlockHash.from_json(other)
+        elif not isinstance(other, UnlockHash):
+            raise TypeError("UnlockHash of type {} is not supported".format(type(other)))
+        return other
 
     def sia_binary_encode(self, encoder):
         """
