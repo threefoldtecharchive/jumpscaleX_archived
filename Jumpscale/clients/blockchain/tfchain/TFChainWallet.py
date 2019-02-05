@@ -602,13 +602,11 @@ class TFChainMinter():
         assert len(sig_requests) > 0
 
         # fulfill the signature requests that we can fulfill
-        signature_count = 0
         for request in sig_requests:
             try:
                 key_pair = self._wallet.key_pair_get(request.wallet_address)
                 signature, public_key = key_pair.sign(request.input_hash)
                 request.signature_fulfill(public_key=public_key, signature=signature)
-                signature_count += 1
             except KeyError:
                 pass # this is acceptable due to how we directly try the key_pair_get method
 
@@ -673,13 +671,11 @@ class TFChainMinter():
         assert len(sig_requests) > 0
 
         # fulfill the signature requests that we can fulfill
-        signature_count = 0
         for request in sig_requests:
             try:
                 key_pair = self._wallet.key_pair_get(request.wallet_address)
                 signature, public_key = key_pair.sign(request.input_hash)
                 request.signature_fulfill(public_key=public_key, signature=signature)
-                signature_count += 1
             except KeyError:
                 pass # this is acceptable due to how we directly try the key_pair_get method
 
