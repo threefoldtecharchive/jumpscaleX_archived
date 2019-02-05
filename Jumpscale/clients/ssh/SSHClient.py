@@ -21,7 +21,7 @@ class SSHClient(SSHClientBase):
             if pkey:
                 passwd = self.sshkey_obj.passphrase
 
-            from pssh.ssh2_client import SSHClient as PSSHClient
+            from pssh.clients import SSHClient as PSSHClient
             PSSHClient = functools.partial(PSSHClient, retry_delay=1)
 
             self._client_ = PSSHClient(self.addr_variable,
