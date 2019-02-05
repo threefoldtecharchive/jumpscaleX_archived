@@ -128,6 +128,15 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         return self._primary_address
 
     @property
+    def addresses_multisig(self):
+        """
+        The multi signature wallet addresses co-owned and linked to this wallet,
+        as reported by the internal balance reporter.
+        """
+        balance = self.balance
+        return list(balance.wallets.keys())
+
+    @property
     def balance(self):
         """
         The balance "sheet" of the wallet.
