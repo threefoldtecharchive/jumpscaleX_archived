@@ -41,15 +41,16 @@ class ZDBFactory(j.application.JSBaseConfigsClass):
         return klass(factory=self,addr=addr, port=port, secret=secret, nsname=nsname)
 
 
-    def _childclass_selector(self, childclass_name=None, data=None):
-        if data is None:
+    def _childclass_selector(self, **kwargs):
+        # j.shell()
+        if kwargs is None:
             return ZDBClientBase
-        if data.admin:
+        if "admin" in kwargs:
             return ZDBAdminClient
         else:
-            if data.mode not in _client_map:
-                raise ValueError("mode '%s' not supported" % data.mode)
-            return _client_map[data.mode]
+            if kwargs.get("mode", "seq") not in _client_map:
+                raise ValueError("mode '%s' not supported" % kwargs["mode"])
+            return _client_map[kwargs.get("mode", "seq")]
 
     def start_test_instance(self, destroydata=False, admin_secret="123456", namespaces_secret="1234"):
         """

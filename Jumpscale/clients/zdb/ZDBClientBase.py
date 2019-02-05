@@ -78,7 +78,7 @@ class ZDBClientBase(j.application.JSBaseConfigClass):
 
     def data_update(self, **kwargs):
         # the mode cannot be changed as the childclass is different based on the mode, and so a new client needs to be created
-        if 'mode' in kwargs:
+        if 'mode' in kwargs and not kwargs['mode'] == self.mode:
             raise ValueError("Mode cannot be changed after client is created")
         self.data.data_update(data=kwargs)
         self.data.save()
