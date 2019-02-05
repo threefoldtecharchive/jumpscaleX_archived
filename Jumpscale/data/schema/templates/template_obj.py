@@ -95,7 +95,7 @@ class ModelOBJ():
         human readable test format
         """
         out = "\n"
-        res = self._ddict_hr_get(exclude=exclude)
+        res = self._ddict_hr
         keys = [name for name in res.keys()]
         keys.sort()
         for key in keys:
