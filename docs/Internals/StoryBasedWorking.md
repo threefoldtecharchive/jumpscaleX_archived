@@ -1,7 +1,7 @@
 
 ## principles
 
-- only work when story exists or critical bug where in scrum was defined we need to work on it
+- only work items attached to story (in other words story needs to exist) or critical bug where in scrum was defined we need to work on it
 - story = issue with lavel type_story
 
 ### reporting
