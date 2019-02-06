@@ -6,6 +6,15 @@ See [./tests](./tests) directory for documented tests that explain a lot of this
 
 All methods have docstrings, _read_ them.
 
+## Summary
+
+1. [Client](#client): how to create, save and use a TFChain client:
+    1. [Create a Wallet](#create-a-wallet): how to create a wallet (attached to a TFChain client)
+2. [Wallet](#wallet): how to save and use a TFChain wallet:
+    1. [Check your balance](#check-your-balance)
+    2. [Send Coins](#send-coins)
+3. [Multi-Signature-Wallet](#multi-signature-wallet): learn how to view and manage Multi-Signature Wallets from your TFChain wallet
+
 ### Client
 
 Create a client as follows:
