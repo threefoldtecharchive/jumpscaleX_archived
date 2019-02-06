@@ -1,12 +1,15 @@
 from Jumpscale import j
 
+from datetime import datetime, timedelta
+
+from .PrimitiveTypes import BinaryData
+from .Time import parse_time_str
+
 _CONDITION_TYPE_NIL = 0
 _CONDITION_TYPE_UNLOCK_HASH = 1
 _CONDITION_TYPE_ATOMIC_SWAP = 2
 _CONDITION_TYPE_LOCKTIME = 3
 _CONDITION_TYPE_MULTI_SIG = 4
-
-from .PrimitiveTypes import BinaryData
 
 class ConditionFactory(j.application.JSBaseClass):
     """
@@ -183,18 +186,29 @@ class OutputLock():
     # as defined by Rivine
     _MIN_TIMESTAMP_VALUE = 500 * 1000 * 1000
 
-    def __init__(self, value=0):
-        if not isinstance(value ,int):
-            raise TypeError("OutputLock's value has to be of type int, not {}".format(type(value)))
-        self._value = int(value)
+    def __init__(self, value=None):
+        if value is None:
+            self._value = 0
+        elif isinstance(value, int):
+            if value < 0:
+                raise ValueError("output lock value cannot be negative")
+            self._value = int(value)
+        elif isinstance(value, str):
+            self._value = parse_time_str(value)
+        elif isinstance(value, timedelta):
+            self._value = int(datetime.now().timestamp()) + int(value.total_seconds())
+        elif isinstance(value, datetime):
+            self._value = int(value.timestamp())
+        else:
+            raise TypeError("cannot set OutputLock using invalid type {}".format(type(value)))
 
     def __int__(self):
         return self._value
 
     def __str__(self):
-        if self._value < OutputLock._MIN_TIMESTAMP_VALUE:
-            return str(self._value)
-        return j.data.time.epoch2HRDateTime(self._value)
+        if self.is_timestamp:
+            return j.data.time.epoch2HRDateTime(self._value)
+        return str(self._value)
     __repr__ = __str__
 
     @property
@@ -204,13 +218,20 @@ class OutputLock():
         """
         return self._value
 
+    @property
+    def is_timestamp(self):
+        """
+        Returns whether or not this value is a timestamp.
+        """
+        return self._value >= OutputLock._MIN_TIMESTAMP_VALUE
+
     def locked_check(self, height, time):
         """
         Check if the the output is still locked on the given block height/time.
         """
-        if self._value < OutputLock._MIN_TIMESTAMP_VALUE:
-            return height < self._value
-        return time < self._value
+        if self.is_timestamp:
+            return time < self._value
+        return height < self._value
 
 
 from abc import abstractmethod
@@ -497,15 +518,14 @@ class ConditionAtomicSwap(ConditionBaseClass):
     """
     ConditionAtomicSwap class
     """
-    # TODO: replace lock_time with a user_friendly option that can define durations in a more human-readable way
-    def __init__(self, sender=None, receiver=None, hashed_secret=None, lock_time=0):
+    def __init__(self, sender=None, receiver=None, hashed_secret=None, lock_time=None):
         self._sender = None
         self.sender = sender
         self._receiver = None
         self.receiver = receiver
         self._hashed_secret = None
         self.hashed_secret = hashed_secret
-        self._lock_time = 0
+        self._lock_time = None
         self.lock_time = lock_time
 
     @property
@@ -569,15 +589,15 @@ class ConditionAtomicSwap(ConditionBaseClass):
 
     @property
     def lock_time(self):
+        if self._lock_time is None:
+            return 0
         return self._lock_time
     @lock_time.setter
     def lock_time(self, value):
-        if value is None:
-            self._lock_time = 0
-            return
-        if not isinstance(value, int):
-            raise TypeError("ConditionAtomicSwap's LockTime is expected to be of type int, not {}".format(type(value)))
-        self._lock_time = int(value)
+        lock = OutputLock(value=value)
+        if not lock.is_timestamp:
+            raise TypeError("ConditionAtomicSwap only accepts timestamps as the lock value, not block heights: {} is invalid".format(value))
+        self._lock_time = lock.value
 
     def from_json_data_object(self, data):
         self.sender = UnlockHash.from_json(data['sender'])
@@ -608,11 +628,10 @@ class ConditionLockTime(ConditionBaseClass):
     """
     ConditionLockTime class
     """
-    # TODO: replace lock_time with a user_friendly option that can define durations in a more human-readable way
-    def __init__(self, condition=None, locktime=0):
+    def __init__(self, condition=None, locktime=None):
         self._condition = None
         self.condition = condition
-        self._lock_time = 0
+        self._lock = None
         self.lock = locktime
 
     @property
@@ -625,18 +644,12 @@ class ConditionLockTime(ConditionBaseClass):
 
     @property
     def lock(self):
-        return OutputLock(self._lock_time)
+        if self._lock is None:
+            return OutputLock()
+        return self._lock
     @lock.setter
     def lock(self, value):
-        if value is None:
-            self._lock_time = 0
-            return
-        if not isinstance(value, int):
-            raise TypeError("ConditionLockTime's lock is expected to be of type int, not {}".format(type(value)))
-        value = int(value)
-        if value < 0:
-            value = 0
-        self._lock_time = value
+        self._lock = OutputLock(value=value)
 
     @property
     def condition(self):
