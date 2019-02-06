@@ -119,11 +119,13 @@ class ModelOBJ():
         :return:
         """
         self._changed_items = {}
+        #LIST
         {% for ll in obj.lists %}
         self._{{ll.name}} = List0(self._schema.property_{{ll.name}})
         for capnpbin in self._cobj_.{{ll.name_camel}}:
             self._{{ll.name}}.new(data=capnpbin)
         {% endfor %}
+        #PROP
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
         self._schema_{{prop.name}} = j.data.schema.get(url="{{prop.jumpscaletype.SUBTYPE}}")
@@ -294,7 +296,7 @@ class ModelOBJ():
             except:
                 msg+=j.core.text.indent(str(ddict),4)+"\n"
             msg+="schema:\n"
-            msg+=j.core.text.indent(str(self._schema.capnp_schema),4)+"\n"
+            msg+=j.core.text.indent(str(self._schema._capnp_schema),4)+"\n"
             msg+="error was:\n%s\n"%e
             raise RuntimeError(msg)
 

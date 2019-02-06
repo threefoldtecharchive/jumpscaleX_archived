@@ -24,7 +24,7 @@ class ModelBase(j.application.JSBaseClass):
         #         raise j.exceptions.Input("Key needs to be length 16,32,64")
 
         if new:
-            self.dbobj = self.collection.capnp_schema.new_message()
+            self.dbobj = self.collection._capnp_schema.new_message()
             self._post_init()
             if key != "":
                 self._key = key
@@ -73,7 +73,7 @@ class ModelBase(j.application.JSBaseClass):
             self.dbobj = self.collection._db.get(key)
         else:
             buff = self.collection._db.get(key)
-            self.dbobj = self.collection.capnp_schema.from_bytes(buff, builder=True)
+            self.dbobj = self.collection._capnp_schema.from_bytes(buff, builder=True)
 
     # TODO: *2 would be nice that this works, but can't get it to work, something recursive
     # def __setattr__(self, attr, val):
@@ -150,7 +150,7 @@ class ModelBase(j.application.JSBaseClass):
         """
         if "key" in ddict:
             self.key = ddict[key]
-        self.dbobj = self.collection.capnp_schema.new_message(**ddict)
+        self.dbobj = self.collection._capnp_schema.new_message(**ddict)
 
     @property
     def dictJson(self):

@@ -24,6 +24,7 @@ class BCDB(j.application.JSBaseClass):
         """
         JSBASE.__init__(self)
 
+
         if name is None:
             raise RuntimeError("name needs to be specified")
 
@@ -48,7 +49,7 @@ class BCDB(j.application.JSBaseClass):
         self.dataprocessor_greenlet = None
 
         self.meta = BCDBMeta(self)
-        #
+
         self._init_(reset=reset, stop=False)
 
         j.data.nacl.default
@@ -265,8 +266,7 @@ class BCDB(j.application.JSBaseClass):
                     "schema needs to be of type: j.data.schema.SCHEMA_CLASS")
             schema_text = schema.text
 
-        r = self.meta.model_get_from_md5(
-            j.data.hash.md5_string(schema_text), die=False)
+        r = self.meta.model_get_from_md5(j.data.hash.md5_string(schema_text), die=False)
         if r is not None:
             return r
 

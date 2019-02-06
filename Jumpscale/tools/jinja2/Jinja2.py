@@ -1,6 +1,6 @@
 from Jumpscale import j
 import os
-from jinja2 import Template
+from jinja2 import Template,StrictUndefined
 
 
 class Jinja2(j.application.JSBaseClass):
@@ -54,7 +54,7 @@ class Jinja2(j.application.JSBaseClass):
             md5 = j.data.hash.md5_string(text)
 
         if md5 not in self._hash_to_template:
-            self._hash_to_template[md5] = Template(text)
+            self._hash_to_template[md5] = Template(text,undefined=StrictUndefined)
             self._hash_to_template[md5].md5 = md5
 
         return self._hash_to_template[md5]
@@ -213,6 +213,7 @@ class Jinja2(j.application.JSBaseClass):
         """
         js_shell 'j.tools.jinja2.test()'
         """
+        raise RuntimeError("need to go to jumpscaleX something, also tests are really not tests, need to be better")
 
         src = j.clients.git.getContentPathFromURLorPath(
             "https://github.com/threefoldtech/jumpscale_lib/tree/development/apps/example")

@@ -4,6 +4,7 @@ JSBASE = j.application.JSBaseClass
 import socket
 
 
+#DO NEVER USE CONFIG MANAGEMENT CLASSES
 class ZDBServer(j.application.JSBaseClass):
 
     def __init__(self):
@@ -104,10 +105,13 @@ class ZDBServer(j.application.JSBaseClass):
         """
 
         """
-        cl = j.clients.zdb.get(name=name, addr=self.addr, port=self.port, secret=self.adminsecret, mode=self.mode, admin=True)
+        cl = j.clients.zdb.client_admin_get(addr=self.addr,
+                                            port=self.port,
+                                            secret=self.adminsecret,
+                                            mode=self.mode)
         return cl
 
-    def client_get(self,name="test", nsname="default", secret="1234"):
+    def client_get(self, nsname="default", secret="1234"):
         """
         get client to zdb
 

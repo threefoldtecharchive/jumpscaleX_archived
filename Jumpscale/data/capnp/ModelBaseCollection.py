@@ -38,13 +38,13 @@ class ModelBaseCollection(j.application.JSBaseClass):
 
         self.category = category
         self.namespace = namespace if namespace else category
-        self.capnp_schema = schema
+        self._capnp_schema = schema
 
-        self.propnames = [item for item in self.capnp_schema.schema.fields.keys()]
+        self.propnames = [item for item in self._capnp_schema.schema.fields.keys()]
 
         self._listConstructors = {}
 
-        for field in self.capnp_schema.schema.fields_list:
+        for field in self._capnp_schema.schema.fields_list:
             try:
                 str(field.schema)
             except BaseException:
@@ -63,7 +63,7 @@ class ModelBaseCollection(j.application.JSBaseClass):
                     # subTypeName = str(field.schema.elementType).split(".")[-1].split(">")[0]
                     try:
                         self._listConstructors[field.proto.name] = eval(
-                            "self.capnp_schema.%s.new_message" % subTypeName)
+                            "self._capnp_schema.%s.new_message" % subTypeName)
                     except BaseException:
                         continue
 
@@ -111,7 +111,7 @@ class ModelBaseCollection(j.application.JSBaseClass):
 
     @property
     def objType(self):
-        return self.capnp_schema.schema.node.displayName
+        return self._capnp_schema.schema.node.displayName
 
     def new(self, key=""):
         model = self.modelBaseClass(key=key, new=True, collection=self)

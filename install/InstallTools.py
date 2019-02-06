@@ -793,6 +793,8 @@ class Tools:
         str|unicode : string indented by ntabs and nspaces.
 
         """
+        if content is None:
+            raise RuntimeError("content cannot be None")
         content=str(content)
         if args is not None:
             content = Tools.text_replace(content,args=args)
@@ -800,9 +802,8 @@ class Tools:
             content = Tools.text_strip(content)
         if wrap > 0:
             content = Tools.text_wrap(content, wrap)
+
             # flatten = True
-        if content is None:
-            return
         ind = indentchar * nspaces
         out = ""
         for line in content.split("\n"):

@@ -411,7 +411,7 @@ class JSBase:
         j.errorhandler.try_except_error_process(error, die=False)
         self.__class__._test_runs_error[name] = error
 
-    def _test_run(self, name="", obj_key="main", **kwargs):
+    def _test_run(self, name="", obj_key="main", die=True, **kwargs):
         """
 
         :param name: name of file to execute can be e.g. 10_test_my.py or 10_test_my or subtests/test1.py
@@ -427,7 +427,7 @@ class JSBase:
 
         """
 
-        res = self.__test_run(name=name, obj_key=obj_key, **kwargs)
+        res = self.__test_run(name=name, obj_key=obj_key, die=die, **kwargs)
         if self.__class__._test_runs_error != {}:
             for key, e in self.__class__._test_runs_error.items():
                 self._log_error("ERROR FOR TEST: %s\n%s" % (key, e))
@@ -436,7 +436,7 @@ class JSBase:
             self._log_info("ALL TESTS OK")
         return res
 
-    def __test_run(self, name=None, obj_key="main", **kwargs):
+    def __test_run(self, name=None, obj_key="main", die=True, **kwargs):
 
         if name == '':
             name = None
@@ -479,13 +479,16 @@ class JSBase:
 
         method = j.tools.codeloader.load(obj_key=obj_key, path=tpath)
         self._log_debug("##:LOAD: path: %s\n\n" % tpath)
-        try:
+        if die:
             res = method(self=self, **kwargs)
-        except Exception as e:
-            j.errorhandler.try_except_error_process(e, die=False)
-            self.__class__._test_runs_error[name] = e
-            return e
-        self.__class__._test_runs[name] = res
+        else:
+            try:
+                res = method(self=self, **kwargs)
+            except Exception as e:
+                j.errorhandler.try_except_error_process(e, die=False)
+                self.__class__._test_runs_error[name] = e
+                return e
+            self.__class__._test_runs[name] = res
         return res
 
 

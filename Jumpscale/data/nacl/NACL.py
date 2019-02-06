@@ -51,10 +51,17 @@ class NACL(j.application.JSBaseClass):
         sb=nacl.secret.SecretBox(key)
         redis_key="secret_%s"%name
 
+
         if reset:
             j.core.db.delete(redis_key)
 
         r = j.core.db.get(redis_key)
+        if r:
+            try:
+                secret = sb.decrypt(r)
+            except Exception as e:
+                r = None
+
         if r is None:
             if not secret:
                 secret = j.tools.console.askPassword("Provide a strong secret which will be used to encrypt/decrypt your private key")
@@ -64,8 +71,8 @@ class NACL(j.application.JSBaseClass):
             r = sb.encrypt(secret)
             j.core.db.set(redis_key,r)
 
-        secret = sb.decrypt(r)
-
+        r = j.core.db.get(redis_key)
+        secret = sb.decrypt(r) #this to doublecheck
 
         self._box = nacl.secret.SecretBox(secret)  #used to decrypt the private key
 

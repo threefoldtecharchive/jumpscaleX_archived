@@ -24,9 +24,22 @@ class SchemaProperty(j.application.JSBaseClass):
 
     @property
     def default_as_python_code(self):
+        #default already set when parsing the schema
         if self.default == "''" or self.default == "\"\"":
             self.default = ""
-        return self.jumpscaletype.python_code_get(self.default)
+        try:
+            return self.jumpscaletype.python_code_get(self.default)
+        except Exception as e:
+            print(str(e))
+            raise RuntimeError(e)
+
+        # if self.jumpscaletype.NAME == "enum":
+        #     return self.jumpscaletype.python_code_get(self.jumpscaletype.get_default())
+        # res = self.jumpscaletype.python_code_get(self.default)
+        # self._log_debug(res)
+        # if str(res).find("7200")!=-1:
+        #     j.shell()
+        # return res
 
     @property
     def name_camel(self):

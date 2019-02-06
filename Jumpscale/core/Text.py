@@ -203,7 +203,7 @@ class Text(object):
         str|unicode : string indented by ntabs and nspaces.
 
         """
-        self._j.core.tools.text_strip(instr, ignorecomments=True, args={})
+        return self._j.core.tools.text_strip(instr, ignorecomments=True, args={})
 
     def toUnicode(self, value, codec='utf-8'):
         if isinstance(value, str):

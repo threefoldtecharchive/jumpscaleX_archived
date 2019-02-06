@@ -478,7 +478,10 @@ class Numeric(String):
             # dirty trick to see if value can be float, if not will look for currencies
             v = float(value)
             cur2 = "usd"
-        except Exception as e:
+        except ValueError as e:
+            cur2 = None
+
+        if cur2 is None:
             value, cur2 = self.getCur(value)
 
         if value.find("k") != -1:
@@ -660,7 +663,7 @@ class DateTime(String):
     def clean(self, v):
         """
         support following formats:
-        - 0: means undefined date
+        - None, 0: means undefined date
         - epoch = int
         - month/day 22:50
         - month/day  (will be current year if specified this way)
@@ -718,10 +721,13 @@ class DateTime(String):
                 else:
                     fstr = "%H:%M:%S"
             return (v, fstr)
+        
+        if v is None:
+            v=0
 
         if j.data.types.string.check(v):
-            v=v.strip("\"").strip("'")
-            if v.strip() in ["0", ""]:
+            v=v.replace("'","").replace("\"","").strip()
+            if v.strip() in ["0", "",0]:
                 return 0
 
             if "+" in v or "-" in v:
@@ -772,18 +778,27 @@ class DateTime(String):
             out += "%s -> %s\n" % (line, self.toString(epoch))
         out_compare = """
         11/30 22:50 -> 2019/11/30 22:50:00
-        11/30 -> 2019/11/30 10:00:00
-        1990/11/30 -> 1990/11/30 10:00:00
+        11/30 -> 2019/11/30 00:00:00
+        1990/11/30 -> 1990/11/30 00:00:00
         1990/11/30 10am:50 -> 1990/11/30 10:50:00
         1990/11/30 10pm:50 -> 1990/11/30 22:50:00
         1990/11/30 22:50 -> 1990/11/30 22:50:00
-        30/11/1990 -> 1990/11/30 10:00:00
+        30/11/1990 -> 1990/11/30 00:00:00
         30/11/1990 10pm:50 -> 1990/11/30 22:50:00
         """
         print(out)
         out = j.core.text.strip(out)
         out_compare = j.core.text.strip(out_compare)
         assert out == out_compare
+
+        assert self.clean(0) == 0
+        
+        self.clean("-0s") == j.data.time.epoch
+
+        self.clean("'0'") == 0
+
+
+        print("test j.data.types.date.datetime() ok")
 
 class Date(DateTime):
     '''
@@ -811,6 +826,10 @@ class Date(DateTime):
         will return epoch
 
         """
+        if isinstance(v,str):
+            v=v.replace("'","").replace("\"","").strip()
+        if v in [0,"0",None,""]:
+            return 0
         #am sure there are better ways how to do this but goes to beginning of day
         v2 = DateTime.clean(self,v)
         dt = datetime.fromtimestamp(v2)
@@ -849,4 +868,9 @@ class Date(DateTime):
         out_compare = j.core.text.strip(out_compare)
         assert out == out_compare
 
+        assert self.clean(0) == 0
+        assert self.clean("") == 0
 
+        self.clean("-0s") == j.data.time.epoch
+
+        print("test j.data.types.date.test() ok")

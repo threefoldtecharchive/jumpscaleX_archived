@@ -118,6 +118,7 @@ def main(self):
     """
 
     o = j.data.schema.get(schema).new()
+
     assert o.bool1 == True
     assert o.bool2 == True
     assert o.bool3 == False

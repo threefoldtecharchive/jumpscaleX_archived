@@ -41,6 +41,7 @@ class Schema(j.application.JSBaseClass):
 
         j.data.schema.schemas[self.url] = self
 
+
     @property
     def _path(self):
         return j.sal.fs.getDirName(os.path.abspath(__file__))
@@ -147,6 +148,7 @@ class Schema(j.application.JSBaseClass):
 
             if "(" in line:
                 line_proptype = line.split("(")[1].split(")")[0].strip().lower()
+                self._log_debug("line:%s; lineproptype:'%s'"%(line_original,line_proptype))
                 line_wo_proptype = line.split("(")[0].strip()
                 if line_proptype == "o":
                     # special case where we have subject directly attached
@@ -162,13 +164,10 @@ class Schema(j.application.JSBaseClass):
                             self._error_raise("error (enum) on line:%s" % line_original, e=e)
                     else:
                         jumpscaletype = j.data.types.get(line_proptype)
-                        try:
-                            if line_wo_proptype == "" or line_wo_proptype is None:
-                                defvalue = jumpscaletype.get_default()
-                            else:
-                                defvalue = jumpscaletype.fromString(line_wo_proptype)
-                        except Exception as e:
-                            self._error_raise("error on line:%s" % line_original, e=e)
+                        if line_wo_proptype == "" or line_wo_proptype is None:
+                            defvalue = jumpscaletype.get_default()
+                        else:
+                            defvalue = jumpscaletype.fromString(line_wo_proptype)
             else:
                 jumpscaletype, defvalue = self._proptype_get(line)
 
@@ -183,7 +182,7 @@ class Schema(j.application.JSBaseClass):
         nr = 0
         for line in text.split("\n"):
             line = line.strip()
-            # self._log_debug("L:%s" % line)
+            self._log_debug("L:%s" % line)
             nr += 1
             if line.strip() == "":
                 continue
@@ -229,7 +228,7 @@ class Schema(j.application.JSBaseClass):
         if not self._capnp:
             tpath = "%s/templates/schema.capnp" % self._path
             _capnp_schema_text = j.tools.jinja2.template_render(
-                path=tpath, reload=False, obj=self, objForHash=self._md5)
+                    path=tpath, reload=False, obj=self, objForHash=self._md5)
             self._capnp = j.data.capnp.getSchemaFromText(_capnp_schema_text)
         return self._capnp
 

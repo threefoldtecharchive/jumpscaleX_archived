@@ -8,6 +8,11 @@ def main(self):
     js_shell 'j.data.types.test(name="base")'
     """
 
+    j.data.types.datetime.test()
+    j.data.types.date.test()
+    j.data.types.numeric.test()
+
+
     e = j.data.types.get_custom("e",values="yellow,blue,red")
 
     assert str(e)=="ENNUM: BLUE,RED,YELLOW (default:YELLOW)"

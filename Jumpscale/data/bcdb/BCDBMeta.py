@@ -23,8 +23,7 @@ class BCDBMeta(j.application.JSBaseClass):
     def __init__(self, bcdb):
         JSBASE.__init__(self)
         self.bcdb = bcdb
-        self._meta_local_path = j.sal.fs.joinPaths(
-            self.bcdb._data_dir, "meta.db")
+        self._meta_local_path = j.sal.fs.joinPaths(self.bcdb._data_dir,"meta.db")
         self._schema = j.data.schema.get(SCHEMA)
         #
         self.reset()
@@ -100,8 +99,7 @@ class BCDBMeta(j.application.JSBaseClass):
                     self.sid2schema[schema_id].sid = schema_id
                     return self.sid2schema[schema_id]
             if die:
-                raise RuntimeError(
-                    "schema_id does not exist in db:%s" % schema_id)
+                raise RuntimeError("schema_id does not exist in db:%s"%schema_id)
         return self.sid2schema[schema_id]
 
     def schema_get_from_url(self, url, die=True):
@@ -115,11 +113,9 @@ class BCDBMeta(j.application.JSBaseClass):
     def model_get_from_id(self, schema_id, bcdb=None):
         if schema_id not in self.sid2model:
             if bcdb is None:
-                raise RuntimeError(
-                    "need to specify bcdb when getting model from schema:%s" % schema_id)
+                raise RuntimeError("need to specify bcdb when getting model from schema:%s"%schema_id)
             schema = self.schema_get_from_id(schema_id)
-            self.sid2model[schema_id] = bcdb.model_get_from_schema(
-                schema=schema)
+            self.sid2model[schema_id] = bcdb.model_get_from_schema(schema=schema)
             self.bcdb.models[schema.url] = self.sid2model[schema_id]
         return self.sid2model[schema_id]
 
@@ -137,8 +133,7 @@ class BCDBMeta(j.application.JSBaseClass):
 
     def schema_set(self, schema):
         if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
-            raise RuntimeError(
-                "schema needs to be of type: j.data.schema.SCHEMA_CLASS")
+            raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
 
         self._log_debug("schema set in meta:%s" % schema.url)
         schema_existing = self.schema_get_from_url(schema.url, die=False)

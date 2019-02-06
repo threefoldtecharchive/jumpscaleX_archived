@@ -46,10 +46,10 @@ class ZDBClientBase(j.application.JSBaseClass):
             #DO NOT AUTOMATICALLY CREATE THE NAMESPACE !!!!!
             #only go inside namespace if not in admin mode
             if self.secret is "":
-                self._logger.debug("select namespace:%s with NO secret" % (self.nsname))
+                self._log_debug("select namespace:%s with NO secret" % (self.nsname))
                 self.redis.execute_command("SELECT", self.nsname)
             else:
-                self._logger.debug("select namespace:%s with a secret" % (self.nsname))
+                self._log_debug("select namespace:%s with a secret" % (self.nsname))
                 self.redis.execute_command("SELECT", self.nsname, self.secret)
 
 
