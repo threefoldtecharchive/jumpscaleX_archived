@@ -21,7 +21,8 @@ class WebGateway(JSConfigBase):
                                              host=self.etcd.host,
                                              port=self.etcd.port,
                                              user=self.etcd.user,
-                                             password=self.etcd.password_)
+                                             password=self.etcd.password_,
+                                             etcd_instance=self.etcd_instance)
         self.coredns = j.clients.coredns.get(self.name,
                                              host=self.etcd.host,
                                              port=self.etcd.port,
