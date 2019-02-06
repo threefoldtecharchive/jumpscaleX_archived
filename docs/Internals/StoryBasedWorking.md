@@ -17,5 +17,6 @@
 - branchname development_$revelantname
 - sometimes multiple story cards can have same branchname
 - use pull request, leave open untill all stories linked to this branch are done (can merge in into development whenever useful & reviewed)
+- put the branchname without development_ in the title in [] e.g. development_builder would be [builder] at end of title
 
 
