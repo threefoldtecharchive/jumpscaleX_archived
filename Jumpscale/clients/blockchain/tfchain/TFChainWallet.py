@@ -921,15 +921,15 @@ class WalletBalance(object):
 
     def _human_readable_balance(self):
         # report confirmed coins
-        result = "{} available and {} locked".format(self.available.totft(with_unit=True), self.locked.totft(with_unit=True))
+        result = "{} available and {} locked".format(self.available.str(with_unit=True), self.locked.str(with_unit=True))
         # optionally report unconfirmed coins
         unconfirmed = self.unconfirmed
         unconfirmed_locked = self.unconfirmed_locked
         if unconfirmed > 0 or unconfirmed_locked > 0:
-            result += "\nUnconfirmed: {} available {} locked".format(unconfirmed.totft(with_unit=True), unconfirmed_locked.totft(with_unit=True))
+            result += "\nUnconfirmed: {} available {} locked".format(unconfirmed.str(with_unit=True), unconfirmed_locked.str(with_unit=True))
         unconfirmed_spent = Currency(value=sum([co.value for co in self._outputs_unconfirmed_spent.values()]))
         if unconfirmed_spent > 0:
-            result += "\nUnconfirmed Balance Deduction: -{}".format(unconfirmed_spent.totft(with_unit=True))
+            result += "\nUnconfirmed Balance Deduction: -{}".format(unconfirmed_spent.str(with_unit=True))
         # return report
         return result
 

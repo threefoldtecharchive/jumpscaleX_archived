@@ -80,10 +80,10 @@ To a single person:
 ```python
 w.coins_send(
     recipient='01f7e0686b2d38b3dee9295416857b06037a632ffe1d769153abcd522ab03d6a11b2a7d9383214',
-    amount='100 TFT')
+    amount=100)
 # equivalent amount specifications:
-#   - also as a string: '100 tft', '100.0', '100.0 TFT', '100000000000'
-#   - as an int: 100000000000
+#   - as a string: '100 tft', '100.0', '100.0 TFT', '100'
+#   - as a Decimal: Decimal('100')
 ```
 
 With a timelock:

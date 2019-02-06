@@ -103,10 +103,14 @@ class TFChainTypesFactory(j.application.JSBaseClass):
         # in the string versions you can also add the TFT currency notation,
         # or use decimal notation to express the currency in the TFT Currency Unit,
         # rather than the primitive unit
-        assert str(self.currency_new(value='1 TFT')) == '1000000000'
-        assert str(self.currency_new(value='0.123456789')) == '123456789'
-        assert str(self.currency_new(value='9.123456789')) == '9123456789'
-        assert str(self.currency_new(value='1.0 tft')) == '1000000000'
+        assert str(self.currency_new(value='1 TFT')) == '1'
+        assert str(self.currency_new(value='0.123456789')) == '0.123456789'
+        assert str(self.currency_new(value='9.123456789')) == '9.123456789'
+        assert str(self.currency_new(value='1234.34')) == '1234.34'
+        assert str(self.currency_new(value='1.00000')) == '1'
+        assert str(self.currency_new(value='1.0 tft')) == '1'
+        assert str(self.currency_new(value=1)) == '1'
+        assert str(self.currency_new(value=12344)) == '12344'
 
         # hash values can be created directly from binary data,
         # or from a hex-encoded string, by default the nil hash will be created

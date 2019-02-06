@@ -1,6 +1,7 @@
 from Jumpscale import j
 
 from .BaseDataType import BaseDataTypeClass
+from .Errors import CurrencyPrecisionOverflow, CurrencyNegativeValue
 
 from abc import abstractmethod
 
@@ -164,63 +165,51 @@ class Hash(BaseDataTypeClass):
         encoder.add_array(self._value)
 
 from math import floor
+from decimal import Decimal
 
 class Currency(BaseDataTypeClass):
     """
     TFChain Currency Object.
     """
-    def __init__(self, value=0):
-        self._value = 0
+    def __init__(self, value=None):
+        self._value = None
         self.value = value
 
     @classmethod
     def from_json(cls, obj):
         if not isinstance(obj, str):
             raise TypeError("currency is expected to be a string when part of a JSON object, not type {}".format(type(obj)))
-        return cls(value=obj)
+        c = cls()
+        c.value = Decimal(obj) * Decimal('0.000000001')
+        return c
     
     @property
     def value(self):
+        if self._value is None:
+            return Decimal()
         return self._value
     @value.setter
     def value(self, value):
         if value is None:
-            self._value = 0
+            self._value = None
             return
         if isinstance(value, Currency):
             self._value = value.value
             return
-        if isinstance(value, str):
-            value = self._parse_str(value)
-        elif not isinstance(value, int):
-            # float values are not allowed as our precision is high enough that
-            # rounding errors can occur
-            raise TypeError('currency can only be set to a str or int value, not type {}'.format(type(value)))
-        else:
-            value = int(value)
-        if value < 0:
-            raise TypeError('currency cannot have a negative value')
-        self._value = value
-
-    def _parse_str(self, value):
-        """
-        Parse a Currency str, either as a TFT value (with unit and/or with decimal notation),
-        or as a string-encoded unit value.
-        """
-        value = value.upper().strip()
-        if len(value) >= 4 and value[-3:] == 'TFT':
-            value = value[:-3].rstrip()
-            if '.' not in value:
-                value += '.'
-        if '.' in value:
-            whole, integral = value.split(sep='.', maxsplit=1)
-            lintegral = len(integral)
-            if lintegral > 9:
-                raise ValueError("Currency can only have a precision of maximum 9 decimals, not {}".format(lintegral))
-            if lintegral < 9:
-                integral += '0'*(9-lintegral)
-            return int(whole+integral)
-        return int(value)
+        if isinstance(value, (int, str, Decimal)):
+            if isinstance(value, str):
+                value = value.upper().strip()
+                if len(value) >= 4 and value[-3:] == 'TFT':
+                    value = value[:-3].rstrip()
+            d = Decimal(value)
+            sign, _, exp = d.as_tuple()
+            if exp < -9:
+                raise CurrencyPrecisionOverflow(d)
+            if sign != 0:
+                raise CurrencyNegativeValue(d)
+            self._value = d
+            return
+        raise TypeError("cannot set value of type {} as Currency (invalid type)".format(type(value)))
 
     # operator overloading to allow currencies to be summed
     def __add__(self, other):
@@ -274,52 +263,55 @@ class Currency(BaseDataTypeClass):
 
     # allow our currency to be turned into an int
     def __int__(self):
-        return self.value
+        s = "{:.9f}".format(self.value).replace(".", "")
+        return int(s)
 
     def __str__(self):
-        return str(self._value)
+        return self.str()
 
-    def totft(self, with_unit=False):
+    def str(self, with_unit=False):
         """
         Turn this Currency value into a str TFT unit-based value,
         optionally with the currency notation.
+
+        @param with_unit: include the TFT currency suffix unit with the str
         """
-        s = str(self)
-        l = len(s)
-        if l > 9:
-            s = s[:l-9] + '.' + s[-9:]
-        else:
-            s = '0.' + '0'*(9-l) + s
-        s = s.rstrip('0')
+        s = "{:.9f}".format(self.value)
+        s = s.rstrip("0 ")
         if s[-1] == '.':
             s = s[:-1]
+        if len(s) == 0:
+            s = "0"
         if with_unit:
-            return s + ' TFT'
+            s += " TFT"
         return s
     
     def __repr__(self):
-        return self.totft(with_unit=True)
+        return self.str(with_unit=True)
     
-    json = __str__
+    def json(self):
+        return str(int(self))
 
     def sia_binary_encode(self, encoder):
         """
         Encode this currency according to the Sia Binary Encoding format.
         """
-        nbytes, rem = divmod(self._value.bit_length(), 8)
+        value = int(self)
+        nbytes, rem = divmod(value.bit_length(), 8)
         if rem:
             nbytes += 1
         encoder.add_int(nbytes)
-        encoder.add_array(self._value.to_bytes(nbytes, byteorder='big'))
+        encoder.add_array(value.to_bytes(nbytes, byteorder='big'))
 
     def rivine_binary_encode(self, encoder):
         """
         Encode this currency according to the Rivine Binary Encoding format.
         """
-        nbytes, rem = divmod(self._value.bit_length(), 8)
+        value = int(self)
+        nbytes, rem = divmod(value.bit_length(), 8)
         if rem:
             nbytes += 1
-        encoder.add_slice(self._value.to_bytes(nbytes, byteorder='big'))
+        encoder.add_slice(value.to_bytes(nbytes, byteorder='big'))
 
 
 class Blockstake(BaseDataTypeClass):
