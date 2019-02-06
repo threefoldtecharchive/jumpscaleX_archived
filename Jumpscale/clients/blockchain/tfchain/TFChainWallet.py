@@ -16,7 +16,6 @@ from .TFChainTransactionFactory import TransactionBaseClass, TransactionV128, Tr
 _DEFAULT_KEY_SCAN_COUNT = 3
 
 # TODO:
-# * Make lock more user-friendly to be used (e.g. also accept durations and time strings)
 # * Provide ERC20 Support
 # * Provide Atomic Swap support
 # * Provide 3Bot Registration (Management) Support
@@ -274,6 +273,10 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                 - '123456 TFT': define the amount in TFT (that is '123456 TFT' == 123456 TFT == 123456000000000)
                 - '123.456 TFT': define the amount in TFT (that is '123.456 TFT' == 123.456 TFT == 123456000000)
 
+        The lock can be a str, or int:
+            - when it is an int it represents either a block height or an epoch timestamp (in seconds)
+            - when a str it can be a Jumpscale Datetime (e.g. '12:00:10', '31/10/2012 12:30', ...) or a Jumpscale Duration (e.g. '+ 2h', '+7d12h', ...)
+
         Returns (txn, submitted), with the second value of the pair indicating
         if this wallet has added any signatures in this call and the first
         pair value being the transaction created (and if possible submitted).
@@ -282,7 +285,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         @param amount: int or str that defines the amount of TFT to set, see explanation above
         @param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
         @param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
-        @param lock: optional lock that can be used to lock the sent amount to a specific time or block height
+        @param lock: optional lock that can be used to lock the sent amount to a specific time or block height, see explation above
         @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
         """
         amount = Currency(value=amount)
@@ -290,7 +293,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             raise ValueError("no amount is defined to be sent")
 
         # define recipient
-        recipient = j.clients.tfchain.types.conditions.from_recipient(recipient, lock_time=lock)
+        recipient = j.clients.tfchain.types.conditions.from_recipient(recipient, lock=lock)
 
         # fund amount
         balance = self.balance
@@ -621,9 +624,13 @@ class TFChainMinter():
                 - '123456 TFT': define the amount in TFT (that is '123456 TFT' == 123456 TFT == 123456000000000)
                 - '123.456 TFT': define the amount in TFT (that is '123.456 TFT' == 123.456 TFT == 123456000000)
 
+        The lock can be a str, or int:
+            - when it is an int it represents either a block height or an epoch timestamp (in seconds)
+            - when a str it can be a Jumpscale Datetime (e.g. '12:00:10', '31/10/2012 12:30', ...) or a Jumpscale Duration (e.g. '+ 2h', '+7d12h', ...)
+
         @param recipient: see explanation above
         @param amount: int or str that defines the amount of TFT to set, see explanation above
-        @param lock: optional lock that can be used to lock the sent amount to a specific time or block height
+        @param lock: optional lock that can be used to lock the sent amount to a specific time or block height, see explation above
         @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
         """
         # create empty Mint Definition Txn, with a newly generated Nonce set already
@@ -640,7 +647,7 @@ class TFChainMinter():
             raise ValueError("no amount is defined to be sent")
 
         # define recipient
-        recipient = j.clients.tfchain.types.conditions.from_recipient(recipient, lock_time=lock)
+        recipient = j.clients.tfchain.types.conditions.from_recipient(recipient, lock=lock)
         # and add it is the output
         txn.coin_output_add(value=amount, condition=recipient)
 

@@ -91,11 +91,30 @@ With a timelock:
 ```python
 w.coins_send(
     recipient='01f7e0686b2d38b3dee9295416857b06037a632ffe1d769153abcd522ab03d6a11b2a7d9383214',
-    amount=100000000000
-    lock=1549064679) # TODO: support more human-friendly approaches for the lock parameter
+    amount='100 TFT',
+    lock='01/02/2019 23:44:39') # can also be defined as an epoch timestamp: 1549064679
 ```
 
-With some data:
+A timelock can also be defined by specifying a duration relative to now:
+
+```python
+w.coins_send(
+    recipient='01f7e0686b2d38b3dee9295416857b06037a632ffe1d769153abcd522ab03d6a11b2a7d9383214',
+    amount='200.30',
+    lock='+7d') # you can use any of these 4 units, each 1 time: d (day), h (hours), m (minutes), s (seconds)
+    # other, more full example: '+ 7d12h30m42s'
+```
+
+A timelock can also be defined by specifying a block height:
+
+```python
+w.coins_send(
+    recipient='01f7e0686b2d38b3dee9295416857b06037a632ffe1d769153abcd522ab03d6a11b2a7d9383214',
+    amount='10000',
+    lock=42000) # will unlock at block height 42000
+```
+
+When sending coins you can also attach some data:
 
 ```python
 w.coins_send(
@@ -123,7 +142,7 @@ w.coins_send(
     recipient=([
         '01f7e0686b2d38b3dee9295416857b06037a632ffe1d769153abcd522ab03d6a11b2a7d9383214',
         '01e64ddf014e030e612e7ad2d7f5297f7e74e31100bdf4d194ff23754b622e5f0083d4bedcc18d',
-    ], 1), amount='100.0')
+    ], 1), amount=100)
 # signature count has to be at least 1,
 # and cannot be greater than the amount of people you are sending to
 # optionally you can still attach data and a lock to it of course
@@ -134,7 +153,7 @@ Optionally you can use the `refund` parameter to define the recipient of the ref
 ```python
 w.coins_send(
     recipient='01f7e0686b2d38b3dee9295416857b06037a632ffe1d769153abcd522ab03d6a11b2a7d9383214',
-    amount='100.0',
+    amount=250,
     refund='01e64ddf014e030e612e7ad2d7f5297f7e74e31100bdf4d194ff23754b622e5f0083d4bedcc18d')
 ```
 
@@ -165,7 +184,7 @@ by specifying the Multi-Signature wallet address of choice as the `source` param
 ```python
 w.coins_send(
     recipient='01f7e0686b2d38b3dee9295416857b06037a632ffe1d769153abcd522ab03d6a11b2a7d9383214',
-    amount='100 TFT',
+    amount=10,
     source='039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a',
 # optionally you can still attach a lock and data,
 # and the recipient is still as flexible as previously defined.
