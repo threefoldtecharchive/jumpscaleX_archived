@@ -133,9 +133,9 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
                 id=blockid, parentid=parentid,
                 height=height, timestamp=timestamp,
                 transactions=transactions, miner_payouts=miner_payouts)
-        except KeyError as msg:
+        except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
-            raise ExplorerInvalidResponse(msg, endpoint, resp)
+            raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
 
     def transaction_get(self, txid):
         """
@@ -154,9 +154,9 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             if resp['id'] != txid:
                 raise ExplorerInvalidResponse("expected transaction ID '{}' not '{}'".format(txid, resp['id']), endpoint, resp)
             return self._transaction_from_explorer_transaction(resp, endpoint=endpoint, resp=resp)
-        except KeyError as msg:
+        except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
-            raise ExplorerInvalidResponse(msg, endpoint, resp)
+            raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
 
     def transaction_put(self, transaction):
         """
@@ -171,9 +171,9 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         resp = j.data.serializers.json.loads(resp)
         try:
             return str(Hash(value=resp['transactionid']))
-        except KeyError as msg:
+        except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
-            raise ExplorerInvalidResponse(msg, endpoint, resp)
+            raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
     
     def unlockhash_get(self, unlockhash):
         """
@@ -207,9 +207,9 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
                 unlockhash=UnlockHash.from_json(unlockhash),
                 transactions=transactions,
                 multisig_addresses=multisig_addresses)
-        except KeyError as msg:
+        except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
-            raise ExplorerInvalidResponse(msg, endpoint, resp)
+            raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
     
     def mint_condition_get(self, height=None):
         """
@@ -232,9 +232,9 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         try:
             # return the decoded mint condition
             return j.clients.tfchain.types.conditions.from_json(obj=resp['mintcondition'])
-        except KeyError as msg:
+        except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
-            raise ExplorerInvalidResponse(msg, endpoint, resp)
+            raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
 
     def _transaction_from_explorer_transaction(self, etxn, endpoint="/?", resp=None): # keyword parameters for error handling purposes only
         if resp is None:
