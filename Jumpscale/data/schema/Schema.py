@@ -162,19 +162,13 @@ class Schema(j.application.JSBaseClass):
                             self._error_raise("error (enum) on line:%s" % line_original, e=e)
                     else:
                         jumpscaletype = j.data.types.get(line_proptype)
-
-                        if line_wo_proptype == "" or line_wo_proptype is None:
-                            defvalue = jumpscaletype.get_default()
-                        else:
-                            defvalue = jumpscaletype.fromString(line_wo_proptype)
-
-                        # try:
-                        #     if line_wo_proptype == "" or line_wo_proptype is None:
-                        #         defvalue = jumpscaletype.get_default()
-                        #     else:
-                        #         defvalue = jumpscaletype.fromString(line_wo_proptype)
-                        # except Exception as e:
-                        #     self._error_raise("error on line:%s" % line_original, e=e)
+                        try:
+                            if line_wo_proptype == "" or line_wo_proptype is None:
+                                defvalue = jumpscaletype.get_default()
+                            else:
+                                defvalue = jumpscaletype.fromString(line_wo_proptype)
+                        except Exception as e:
+                            self._error_raise("error on line:%s" % line_original, e=e)
             else:
                 jumpscaletype, defvalue = self._proptype_get(line)
 
