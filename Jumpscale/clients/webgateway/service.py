@@ -17,7 +17,10 @@ class Service:
     @property
     def proxy(self):
         if not self._proxy:
-            self._proxy = self._traefik.proxies.get(self.name)
+            try:
+                self._proxy = self._traefik.proxies.get(self.name)
+            except:
+                pass
         return self._proxy
 
     def _deploy_dns(self, domain):
