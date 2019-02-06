@@ -4,6 +4,7 @@ from .BaseDataType import BaseDataTypeClass
 from .CryptoTypes import PublicKey
 from .PrimitiveTypes import BinaryData, Hash
 from .ConditionTypes import UnlockHash, ConditionNil, ConditionUnlockHash, ConditionAtomicSwap, ConditionMultiSignature
+from .Errors import DoubleSignError
 
 _FULFULLMENT_TYPE_SINGLE_SIG = 1
 _FULFILLMENT_TYPE_ATOMIC_SWAP = 2
@@ -20,16 +21,14 @@ class SignatureRequest():
     """
     SignatureRequest can be used to create a one-time-use individual sign request.
     """
-    def __init__(self, unlockhash, input_hash, callback):
+    def __init__(self, unlockhash, input_hash_gen, callback):
         # set defined properties
         if not isinstance(unlockhash, UnlockHash):
             raise TypeError("signature request requires an unlock hash of Type UnlockHash, not: {}".format(type(unlockhash)))
         self._unlockhash = unlockhash
-        if isinstance(input_hash, (str, bytearray, bytes)):
-            input_hash = Hash(value=input_hash)
-        elif not isinstance(input_hash, Hash):
-            raise TypeError("signature request requires an input hash of Type Hash, not: {}".format(type(input_hash)))
-        self._input_hash = input_hash
+        if not callable(input_hash_gen):
+            raise TypeError("signature request requires a generator function with the signature `f(PublicKey) -> Hash")
+        self._input_hash_gen = input_hash_gen
         if not isinstance(callback, SignatureCallbackBase):
             raise TypeError("signature request requires a callback of Type SignatureCallbackBase, not: {}".format(type(unlockhash)))
         self._callback = callback
@@ -51,28 +50,36 @@ class SignatureRequest():
         """
         return str(self._unlockhash)
 
-    @property
-    def input_hash(self):
+    def input_hash_new(self, public_key):
         """
-        Returns the input hash that has to be used in order to sign this request.
+        Create an input hash for the public key of the fulfiller.
         """
-        return self._input_hash
+        input_hash = self._input_hash_gen(public_key)
+        if isinstance(input_hash, (str, bytearray, bytes)):
+            input_hash = Hash(value=input_hash)
+        elif not isinstance(input_hash, Hash):
+            raise TypeError("signature request requires an input hash of Type Hash, not: {}".format(type(input_hash)))
+        return input_hash
 
     def signature_fulfill(self, public_key, signature):
         """
         Fulfill the signature, once and once only.
         """
         # guarantee base conditions
-        assert not self._signed
+        if self.fulfilled:
+            raise DoubleSignError("SignatureRequest is already fulfilled for address {}".format(self.wallet_address))
 
         # ensure public key is the key of the wallet who owns this request
-        assert isinstance(public_key, PublicKey)
-        assert self.wallet_address == str(public_key.unlockhash())
+        if not isinstance(public_key, PublicKey):
+            raise TypeError("public key is expected to be of type PublicKey, not {}".format(type(public_key)))
+        address = str(public_key.unlockhash())
+        if self.wallet_address != address:
+            raise ValueError("signature request cannot be fulfilled using address {}, expected address {}".format(address, self.wallet_address))
         # ensure signature is of the correct type
         if isinstance(signature, (bytearray, bytes)):
             signature = BinaryData(value=signature)
-        else:
-            assert isinstance(signature, BinaryData)
+        elif not isinstance(signature, BinaryData):
+            raise TypeError("unexpected type for signature, expected bytearray, bytes or Binarydata, but not {}".format(type(signature)))
         
         # add the signature to the callback
         self._callback.signature_add(public_key=public_key, signature=signature)
@@ -178,7 +185,9 @@ class FulfillmentBaseClass(SignatureCallbackBase, BaseDataTypeClass):
     @classmethod
     def from_json(cls, obj):
         ff = cls()
-        assert ff.type == obj.get('type', 0)
+        t = obj.get('type', 0)
+        if ff.type != t:
+            raise ValueError("invalid fulfillment type {}, expected it to be of type {}".format(t, ff.type))
         ff.from_json_data_object(obj.get('data', {}))
         return ff
 
@@ -228,7 +237,7 @@ class FulfillmentBaseClass(SignatureCallbackBase, BaseDataTypeClass):
         encoder.add_slice(data_enc.data)
 
     @abstractmethod
-    def signature_requests_new(self, parent_condition):
+    def signature_requests_new(self, input_hash_func, parent_condition):
         pass
 
     @abstractmethod
@@ -265,9 +274,10 @@ class FulfillmentSingleSignature(FulfillmentBaseClass):
     def public_key(self, value):
         if value is None:
             self._pub_key = None
-        else:
-            assert type(value) is PublicKey
-            self._pub_key = value
+            return
+        if not isinstance(value, PublicKey):
+            raise TypeError("cannot assign value of type {} as FulfillmentSingleSignature's public key (expected type: PublicKey)".format(type(value)))
+        self._pub_key = PublicKey(specifier=value.specifier, hash=value.hash)
     
     @property
     def signature(self):
@@ -306,17 +316,26 @@ class FulfillmentSingleSignature(FulfillmentBaseClass):
     def rivine_binary_encode_data(self, encoder):
         encoder.add_all(self.public_key, self.signature)
 
-    def signature_requests_new(self, input_hash, parent_condition):
+    def signature_requests_new(self, input_hash_func, parent_condition):
+        if not callable(input_hash_func):
+            raise TypeError("expected input hash generator func with signature `f(*extra_objects) -> Hash`, not P{".format(type(input_hash_func)))
         parent_condition = parent_condition.unwrap()
-        assert isinstance(parent_condition, (ConditionNil, ConditionUnlockHash))
+        if not isinstance(parent_condition, (ConditionNil, ConditionUnlockHash)):
+            raise TypeError("parent condition of FulfillmentSingleSignature cannot be of type {}".format(type(parent_condition)))
         unlockhash = parent_condition.unlockhash
         if str(unlockhash) == str(self.public_key.unlockhash()):
             return [] # nothing to do
-        return [SignatureRequest(unlockhash=unlockhash, input_hash=input_hash, callback=self)]
+        # define the input_hash_new generator function,
+        # used to create the input hash for creating the signature
+        def input_hash_gen(public_key):
+            return input_hash_func()
+        # create the only signature request
+        return [SignatureRequest(unlockhash=unlockhash, input_hash_gen=input_hash_gen, callback=self)]
 
     def is_fulfilled(self, parent_condition):
         parent_condition = parent_condition.unwrap()
-        assert isinstance(parent_condition, (ConditionNil, ConditionUnlockHash))
+        if not isinstance(parent_condition, (ConditionNil, ConditionUnlockHash)):
+            raise TypeError("parent condition of FulfillmentSingleSignature cannot be of type {}".format(type(parent_condition)))
         return self._signature is not None
 
 
@@ -373,19 +392,28 @@ class FulfillmentMultiSignature(FulfillmentBaseClass):
     def rivine_binary_encode_data(self, encoder):
         encoder.add(self._pairs)
 
-    def signature_requests_new(self, input_hash, parent_condition):
+    def signature_requests_new(self, input_hash_func, parent_condition):
+        if not callable(input_hash_func):
+            raise TypeError("expected input hash generator func with signature `f(*extra_objects) -> Hash`, not P{".format(type(input_hash_func)))
         parent_condition = parent_condition.unwrap()
-        assert isinstance(parent_condition, ConditionMultiSignature)
+        if not isinstance(parent_condition, ConditionMultiSignature):
+            raise TypeError("parent condition of FulfillmentMultiSignature cannot be of type {}".format(type(parent_condition)))
         requests = []
         signed = [str(pair.public_key.unlockhash()) for pair in self._pairs]
+        # define the input_hash_new generator function,
+        # used to create the input hash for creating the signature
+        def input_hash_gen(public_key):
+            return input_hash_func(public_key)
+        # create a signature hash for all signees that haven't signed yet
         for unlockhash in parent_condition.unlockhashes:
             if str(unlockhash) not in signed:
-                requests.append(SignatureRequest(unlockhash=unlockhash, input_hash=input_hash, callback=self))
+                requests.append(SignatureRequest(unlockhash=unlockhash, input_hash_gen=input_hash_gen, callback=self))
         return requests
 
     def is_fulfilled(self, parent_condition):
         parent_condition = parent_condition.unwrap()
-        assert isinstance(parent_condition, ConditionMultiSignature)
+        if not isinstance(parent_condition, ConditionMultiSignature):
+            raise TypeError("parent condition of FulfillmentMultiSignature cannot be of type {}".format(type(parent_condition)))
         return len(self._pairs) >= parent_condition.required_signatures
 
 
@@ -413,7 +441,8 @@ class PublicKeySignaturePair(BaseDataTypeClass):
         if pk is None:
             self._public_key = PublicKey()
             return
-        assert isinstance(pk, PublicKey)
+        if not isinstance(pk, PublicKey):
+            raise TypeError("cannot assign value of type {} as PublicKeySignaturePair's public key (expected type: PublicKey)".format(type(pk)))
         self._public_key = PublicKey(specifier=pk.specifier, hash=pk.hash)
 
     @property
@@ -474,9 +503,10 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
     def public_key(self, value):
         if value is None:
             self._pub_key = None
-        else:
-            assert type(value) is PublicKey
-            self._pub_key = value
+            return
+        if not isinstance(value, PublicKey):
+            raise TypeError("cannot assign value of type {} as FulfillmentAtomicSwap's public key (expected type: PublicKey)".format(type(value)))
+        self._pub_key = PublicKey(specifier=value.specifier, hash=value.hash)
 
     @property
     def signature(self):
@@ -533,15 +563,24 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
         encoder.add_all(self.public_key, self.signature)
         encoder.add_array(self.secret.value)
 
-    def signature_requests_new(self, input_hash, parent_condition):
-        assert isinstance(parent_condition, ConditionAtomicSwap)
+    def signature_requests_new(self, input_hash_func, parent_condition):
+        if not callable(input_hash_func):
+            raise TypeError("expected input hash generator func with signature `f(*extra_objects) -> Hash`, not P{".format(type(input_hash_func)))
+        if not isinstance(parent_condition, ConditionAtomicSwap):
+            raise TypeError("parent condition of FulfillmentAtomicSwap cannot be of type {}".format(type(parent_condition)))
         requests = []
         signee = str(self.public_key.unlockhash())
+        # define the input_hash_new generator function,
+        # used to create the input hash for creating the signature
+        def input_hash_gen(public_key):
+            return input_hash_func(public_key)
+        # create a signature hash for all signees that haven't signed yet
         for unlockhash in [parent_condition.sender, parent_condition.receiver]:
             if str(unlockhash) != signee:
-                requests.append(SignatureRequest(unlockhash=unlockhash, input_hash=input_hash, callback=self))
+                requests.append(SignatureRequest(unlockhash=unlockhash, input_hash_gen=input_hash_gen, callback=self))
         return requests
 
     def is_fulfilled(self, parent_condition):
-        assert isinstance(parent_condition, ConditionAtomicSwap)
+        if not isinstance(parent_condition, ConditionAtomicSwap):
+            raise TypeError("parent condition of FulfillmentAtomicSwap cannot be of type {}".format(type(parent_condition)))
         return self._secret is not None and self._signature is not None

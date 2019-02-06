@@ -37,4 +37,6 @@ curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/i
 ssh-keygen -f ~/.ssh/id_rsa -P ''
 eval `ssh-agent -s`
 ssh-add ~/.ssh/id_rsa
-tar -cpzf "/tmp/archives/JSX.tar.gz" --exclude tmp --exclude dev --exclude sys --exclude proc  /
+#change in permission
+chown root:root /tmp
+tar -cpzf "/tmp/archives/JSX.tar.gz" --exclude dev --exclude sys --exclude proc  /

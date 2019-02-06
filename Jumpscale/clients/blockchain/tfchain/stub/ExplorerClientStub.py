@@ -2,7 +2,7 @@ from Jumpscale import j
 
 import re
 
-from Jumpscale.clients.blockchain.tfchain.types.errors import ExplorerNoContent
+from Jumpscale.clients.blockchain.tfchain.types.Errors import ExplorerNoContent
 
 class TFChainExplorerGetClientStub(j.application.JSBaseClass):
     def __init__(self):
@@ -43,7 +43,7 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         """
         assert isinstance(height, int)
         if not height in self._blocks:
-            raise ExplorerNoContent("no content found for block {}".format(height))
+            raise ExplorerNoContent("no content found for block {}".format(height), endpoint="/explorer/blocks/{}".format(height))
         return self._blocks[height]
 
     def block_add(self, height, resp):
@@ -60,7 +60,7 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         """
         assert isinstance(hash, str)
         if not hash in self._hashes:
-            raise ExplorerNoContent("no content found for hash {}".format(hash))
+            raise ExplorerNoContent("no content found for hash {}".format(hash), endpoint="/explorer/hashes/{}".format(str(hash)))
         return self._hashes[hash]
     
     def hash_add(self, hash, resp):

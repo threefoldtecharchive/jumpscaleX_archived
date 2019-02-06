@@ -54,6 +54,7 @@ def main(self):
 
     # a balance can be used for funding amounts
     # (NOTE that is it up to you to ensure that your balance object is used only until it becomes out of date)
-    inputs, remainder = balance.fund('1.2345')
+    inputs, remainder, suggested_refund = balance.fund('1.2345')
     assert remainder.totft() == '196.7655'
     assert sum([ci.parent_output.value for ci in inputs]).totft() == '198'
+    assert suggested_refund == None # no refund is suggested, as there are too many sources to pick from (2)

@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from .BaseDataType import BaseDataTypeClass
 from .PrimitiveTypes import Hash
-from .errors import InvalidPublicKeySpecifier
+from .Errors import InvalidPublicKeySpecifier
 from .ConditionTypes import UnlockHash, UnlockHashType
 
 from enum import IntEnum
@@ -40,7 +40,7 @@ class PublicKey(BaseDataTypeClass):
 
     def __init__(self, specifier=None, hash=None):
         self._specifier = PublicKeySpecifier.NIL
-        self._hash = j.clients.tfchain.types.hash_new()
+        self._hash = None
 
         self.specifier = specifier
         self.hash = hash
@@ -49,9 +49,11 @@ class PublicKey(BaseDataTypeClass):
     def from_json(cls, obj):
         if not obj:
             return cls()
-        assert type(obj) is str
+        if not isinstance(obj, str):
+            raise TypeError("expected JSON-encoded PublicKey to be a string, not {}".format(type(obj)))
         parts = obj.split(sep=':', maxsplit=2)
-        assert len(parts) == 2
+        if len(parts) != 2:
+            raise ValueError("invalid JSON-encoded PublicKey: {}".format(obj))
         pk = cls()
         pk._specifier = PublicKeySpecifier.from_json(parts[0])
         pk._hash = Hash.from_json(parts[1])
@@ -64,19 +66,26 @@ class PublicKey(BaseDataTypeClass):
     def specifier(self, value):
         if value == None:
             value = PublicKeySpecifier.NIL
-        else:
-            assert isinstance(value, PublicKeySpecifier)
+        elif not isinstance(value, PublicKeySpecifier):
+            raise TypeError("expected value to be a PublicKeySpecifier, not {}".format(type(value)))
         self._specifier = value
 
     @property
     def hash(self):
+        if self._hash is None:
+            return Hash()
         return self._hash
     @hash.setter
     def hash(self, value):
-        self._hash.value = value
+        if value is None:
+            self._hash = None
+        elif isinstance(value, Hash):
+            self._hash = value
+        else:
+            self._hash = Hash(value=value)
 
     def __str__(self):
-        return str(self._specifier) + ':' + str(self._hash)
+        return str(self.specifier) + ':' + str(self.hash)
     
     __repr__ = __str__
     
@@ -105,12 +114,12 @@ class PublicKey(BaseDataTypeClass):
         """
         Encode this binary data according to the Sia Binary Encoding format.
         """
-        encoder.add_array(PublicKey._pad_specifier(str(self._specifier)))
-        encoder.add_slice(self._hash.value)
+        encoder.add_array(PublicKey._pad_specifier(str(self.specifier)))
+        encoder.add_slice(self.hash.value)
     
     def rivine_binary_encode(self, encoder):
         """
         Encode this binary data according to the Rivine Binary Encoding format.
         """
-        encoder.add_int8(int(self._specifier))
-        encoder.add(self._hash)
+        encoder.add_int8(int(self.specifier))
+        encoder.add(self.hash)
