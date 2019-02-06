@@ -609,7 +609,7 @@ class TFChainMinter():
 
         The recipient is one of:
             - None: recipient is the Free-For-All wallet
-            - str (or unlockhash): recipient is a personal wallet
+            - str (or unlockhash/bytes/bytearray): recipient is a personal wallet
             - list: recipient is a MultiSig wallet where all owners (specified as a list of addresses) have to sign
             - tuple (addresses, sigcount): recipient is a sigcount-of-addresscount MultiSig wallet
 

@@ -43,6 +43,9 @@ class ConditionFactory(j.application.JSBaseClass):
             elif isinstance(recipient, (UnlockHash, str)):
                 # single sig wallet
                 condition = self.unlockhash_new(unlockhash=recipient)
+            elif isinstance(recipient, (bytes, bytearray)):
+                # single sig wallet
+                condition = self.unlockhash_new(unlockhash=recipient.hex())
             elif isinstance(recipient, list):
                 # multisig to an all-for-all wallet
                 condition = self.multi_signature_new(min_nr_sig=len(recipient), unlockhashes=recipient)

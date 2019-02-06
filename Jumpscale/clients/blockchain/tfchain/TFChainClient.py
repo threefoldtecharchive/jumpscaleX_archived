@@ -175,14 +175,20 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             # return a KeyError as an invalid Explorer Response
             raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
     
-    def unlockhash_get(self, unlockhash):
+    def unlockhash_get(self, target):
         """
-        Get all transactions linked to the given unlockhash,
-        as well as other information such as the multisig addresses linked to the given unlockhash.
+        Get all transactions linked to the given unlockhash (target),
+        as well as other information such as the multisig addresses linked to the given unlockhash (target).
 
-        @param unlockhash: the unlockhash to look up transactions for in the explorer
+        target can be any of:
+            - None: unlockhash of the Free-For-All wallet will be used
+            - str (or unlockhash/bytes/bytearray): target is assumed to be the unlockhash of a personal wallet
+            - list: target is assumed to be the addresses of a MultiSig wallet where all owners (specified as a list of addresses) have to sign
+            - tuple (addresses, sigcount): target is a sigcount-of-addresscount MultiSig wallet
+
+        @param target: the target wallet to look up transactions for in the explorer, see above for more info
         """
-        unlockhash = self._normalize_unlockhash(unlockhash)
+        unlockhash = str(j.clients.tfchain.types.conditions.from_recipient(target).unlockhash)
         endpoint = "/explorer/hashes/"+unlockhash
         resp = self._explorer_get(endpoint=endpoint)
         resp = j.data.serializers.json.loads(resp)
@@ -273,19 +279,6 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         but in a method so it can be overriden for Testing purposes.
         """
         return j.clients.tfchain.explorer.post(addresses=self.explorer_addresses, endpoint=endpoint, data=data)
-
-    def _normalize_unlockhash(self, unlockhash):
-        if isinstance(unlockhash, UnlockHash):
-            return str(unlockhash)
-
-        if isinstance(unlockhash, (bytes, bytearray)):
-            unlockhash = unlockhash.hex()
-        elif isinstance(unlockhash, str):
-            unlockhash = str(unlockhash)
-        else:
-            raise TypeError("Unlock hash has to be a string-like or Hash type")
-
-        return str(UnlockHash.from_json(unlockhash))
 
     def _normalize_id(self, id):
         if isinstance(id, Hash):
