@@ -216,7 +216,7 @@ w.coins_send(
 Optionally you can use the `refund` parameter to define the recipient of the refund, should a refund be required:
 
 ```python
-w.coins_send(
+(txn, submitted) = w.coins_send(
     recipient='01f7e0686b2d38b3dee9295416857b06037a632ffe1d769153abcd522ab03d6a11b2a7d9383214',
     amount=250,
     refund='01e64ddf014e030e612e7ad2d7f5297f7e74e31100bdf4d194ff23754b622e5f0083d4bedcc18d')
@@ -247,7 +247,7 @@ You send coins from your Multi-Signature wallet through your regular wallet,
 by specifying the Multi-Signature wallet address of choice as the `source` parameter of your `coins_send` call:
 
 ```python
-w.coins_send(
+(txn, submitted) = w.coins_send(
     recipient='01f7e0686b2d38b3dee9295416857b06037a632ffe1d769153abcd522ab03d6a11b2a7d9383214',
     amount=10,
     source='039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a',
