@@ -157,13 +157,8 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             try:
                 # collect the inputs/outputs linked to this address for all found transactions
                 result = self._unlockhash_get(address)
-                for txn in result.transactions:
-                    for ci in txn.coin_inputs:
-                        if str(ci.parent_output.condition.unlockhash) == address:
-                            balance.output_add(ci.parent_output, confirmed=(not txn.unconfirmed), spent=True)
-                    for co in txn.coin_outputs:
-                        if str(co.condition.unlockhash) == address:
-                            balance.output_add(co, confirmed=(not txn.unconfirmed), spent=False)
+                uh_balance = result.balance(info=info)
+                balance = balance.balance_add(uh_balance)
                 # collect all multisig addresses
                 for address in result.multisig_addresses:
                     multisig_addresses.append(str(address))
@@ -191,13 +186,9 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                     try:
                         # collect the inputs/outputs linked to this address for all found transactions
                         result = self._unlockhash_get(address)
-                        for txn in result.transactions:
-                            for ci in txn.coin_inputs:
-                                if str(ci.parent_output.condition.unlockhash) == address:
-                                    balance.output_add(ci.parent_output, confirmed=(not txn.unconfirmed), spent=True)
-                            for co in txn.coin_outputs:
-                                if str(co.condition.unlockhash) == address:
-                                    balance.output_add(co, confirmed=(not txn.unconfirmed), spent=False)
+                        uh_balance = result.balance(info=info)
+                        balance = balance.balance_add(uh_balance)
+
                         # register this pair as a known index
                         used_pairs.append(True)
                         # collect all multisig addresses
@@ -234,21 +225,12 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             try:
                 # collect the inputs/outputs linked to this address for all found transactions
                 result = self._unlockhash_get(address)
-                for txn in result.transactions:
-                    for ci in txn.coin_inputs:
-                        if str(ci.parent_output.condition.unlockhash) == address:
-                            balance.multisig_output_add(address, ci.parent_output, confirmed=(not txn.unconfirmed), spent=True)
-                    for co in txn.coin_outputs:
-                        if str(co.condition.unlockhash) == address:
-                            balance.multisig_output_add(address, co, confirmed=(not txn.unconfirmed), spent=False)
+                uh_balance = result.balance(info=info)
+                balance = balance.balance_add(uh_balance)
             except ExplorerNoContent:
                  # ignore this exception as it simply means
                  # the address has no activity yet on the chain
                 pass
-        # add the blockchain info for lock context
-        balance.chain_height = info.height
-        balance.chain_time = info.timestamp
-        balance.chain_blockid = info.blockid
         # cache the balance
         self._cached_balance = balance
         # return the balance
@@ -925,6 +907,53 @@ class WalletBalance(object):
                 self._outputs.pop(output.id, None)
             elif output.id not in self._outputs_unconfirmed_spent:
                 self._outputs_unconfirmed[output.id] = output
+    
+    @property
+    def _base(self):
+        """
+        Private helper utility to return this class as a new and pure WalletBalance object
+        """
+        b = WalletBalance()
+        b._outputs = self._outputs
+        b._outputs_spent = self._outputs_spent
+        b._outputs_unconfirmed = self._outputs_unconfirmed
+        b._outputs_unconfirmed_spent = self._outputs_unconfirmed_spent
+        b._chain_blockid = self._chain_blockid
+        b._chain_height = self._chain_height
+        b._chain_time = self._chain_time
+        return b
+
+    def balance_add(self, other):
+        """
+        Merge the content of the other balance into this balance.
+        If other is None, this call results in a no-op.
+
+        Always assign the result, as it could other than self,
+        should the class type be changed in order to add all content correctly.
+        """
+        if other is None:
+            return self
+        if isinstance(other, (WalletsBalance, MultiSigWalletBalance)):
+            return WalletsBalance().balance_add(self).balance_add(other)
+        if not isinstance(other, WalletBalance):
+            raise TypeError("other balance has to be of type wallet balance")
+        # another balance is defined, create a new balance that will contain our merge
+        # merge the chain info
+        if self.chain_height >= other.chain_height:
+            if self.chain_time < other.chain_time:
+                raise ValueError("chain time and chain height of balances do not match")
+        else:
+            if self.chain_time >= other.chain_time:
+                raise ValueError("chain time and chain height of balances do not match")
+            self.chain_time = other.chain_time
+            self.chain_height = other.chain_height
+            self.chain_blockid = other.chain_blockid
+        # merge the outputs
+        for attr in ['_outputs', '_outputs_spent', '_outputs_unconfirmed', '_outputs_unconfirmed_spent']:
+            d = getattr(self, attr, {})
+            for id, output in getattr(other, attr, {}).items():
+                d[id] = output
+        return self
 
     def _human_readable_balance(self):
         # report confirmed coins
@@ -988,6 +1017,26 @@ class MultiSigWalletBalance(WalletBalance):
         """
         return self._signature_count
 
+    def balance_add(self, other):
+        """
+        Merge the content of the other balance into this balance.
+        If other is None, this call results in a no-op.
+
+        Always assign the result, as it could other than self,
+        should the class type be changed in order to add all content correctly.
+        """
+        if other is None:
+            return self
+        if not isinstance(other, MultiSigWalletBalance):
+            if isinstance(other, (WalletBalance, WalletsBalance)):
+                return WalletsBalance().balance_add(self).balance_add(self)
+            # can only merge 2 multi-signature wallet balances
+            raise TypeError("other balance has to be of type multi-signature wallet balance")
+        if self.address != other.addres:
+            raise ValueError("other balance is for a different MultiSignature Wallet, cannot be merged")
+        # piggy-back on the super class for the actual merge logic
+        return super().balance_add(other._base)
+
     def _human_readable_balance(self):
         result = "MultiSignature ({}-of-{}) Wallet {}:\n".format(self.signature_count, len(self.owners), self.address)
         result += "Owners: " + ", ".join(self.owners) +"\n"
@@ -1031,6 +1080,42 @@ class WalletsBalance(WalletBalance):
         if uh.type == UnlockHashType.MULTI_SIG:
             return self.multisig_output_add(address=str(uh), output=output, confirmed=confirmed, spent=spent)
         return super().output_add(output=output, confirmed=confirmed, spent=spent)
+
+    def balance_add(self, other):
+        """
+        Merge the content of the other balance into this balance.
+        If other is None, this call results in a no-op.
+
+        Always assign the result, as it could other than self,
+        should the class type be changed in order to add all content correctly.
+        """
+        if other is None:
+            return self
+        if not isinstance(other, WalletBalance):
+            raise TypeError("other balance has to be of type wallet balance")
+        if isinstance(other, MultiSigWalletBalance):
+            self._merge_multisig_wallet_balance(other.address, other)
+            return self
+        # piggy-back on the super class for the actual output merge logic
+        b = super().balance_add(other._base)
+        if b != self:
+            raise Exception("BUG: instance shouldn't have changed, please fix or report")
+        if not isinstance(other, WalletsBalance):
+            return b # return as nothing else can be merged
+        # merge all the multi-signature wallets
+        for addr, balance in other._wallets.items():
+            b._merge_multisig_wallet_balance(addr, balance)
+        # return the merged balance
+        return b
+    
+    def _merge_multisig_wallet_balance(self, address, balance):
+        """
+        Assign or merge a multi-sig wallet balance
+        """
+        if address not in self._wallets:
+            self._wallets[address] = balance
+            return
+        self._wallets[address] = self._wallets[address].merge(balance)
 
     def __repr__(self):
         result = super().__repr__()
