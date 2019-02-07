@@ -1,6 +1,6 @@
 # Syncing host to remote machines
 
-## SSH from host
+## (SSH from host)
 1) **Create SSHKEY client instance**
     ```
     j.clients.sshkey.get(name=sshkey_test_name,
@@ -26,6 +26,7 @@
     ```
     if *True* then the ssh connection is alive, otherwise *False*
 
+## (Sync host to remote)
 3) **Create Syncer instance**
     ```
     syncer_client = j.tools.syncer.get(name=syncer_test,
