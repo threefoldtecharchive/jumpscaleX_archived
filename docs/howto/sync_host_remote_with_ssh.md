@@ -26,6 +26,15 @@
     ```
     if *True* then the ssh connection is alive, otherwise *False*
 
+If sshkey and client are already created. The instance can be set or updated in *kosmos* using the following:
+```
+j.clients.sshkey.sshkey_test_name.path = path_to_ssh_key
+
+j.clients.ssh.ssh_test_name.addr = remote_machine_IP
+j.clients.ssh.ssh_test_name.port = remote_machine_port
+j.clients.ssh.ssh_test_name.sshkey_name = sshkey_test_name
+```
+
 ## (Sync host to remote)
 3) **Create Syncer instance**
     ```
