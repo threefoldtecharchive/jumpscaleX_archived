@@ -484,8 +484,8 @@ class TransactionV1(TransactionBaseClass):
                 txn._blockstake_outputs.append(bso)
 
         if 'minerfees' in txn_data:
-            for minerfee in (txn_data['minerfees'] or []) :
-                txn._miner_fees.append(Currency.from_json(minerfee))
+            for miner_fee in (txn_data['minerfees'] or []) :
+                txn._miner_fees.append(Currency.from_json(miner_fee))
         if 'arbitrarydata' in txn_data:
             txn._data = RawData.from_json(txn_data.get('arbitrarydata', None) or '')
 
@@ -698,7 +698,7 @@ class TransactionV1(TransactionBaseClass):
             'blockstakeinputs': [bsi.json() for bsi in self._blockstake_inputs],
             'blockstakeoutputs': [bso.json() for bso in self._blockstake_outputs],
             'minerfees': [fee.json() for fee in self._miner_fees],
-            'arbitrarydata': self._data.json(),
+            'arbitrarydata': self.data.json(),
         }
         keys = list(obj.keys())
         for key in keys:

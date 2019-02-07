@@ -63,7 +63,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         return self.network_type
 
     @property
-    def minimum_minerfee(self):
+    def minimum_miner_fee(self):
         if self.network == "DEV":
             return j.clients.tfchain.types.currency_new('1')
         return j.clients.tfchain.types.currency_new('0.1')

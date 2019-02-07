@@ -10,6 +10,7 @@ All methods have docstrings, _read_ them.
 
 1. [Client](#client): how to create, save and use a TFChain client:
     1. [Create a Wallet](#create-a-wallet): how to create a wallet (attached to a TFChain client)
+    2. [Unlockhash Get](#unlockhash-get): how to get information for addresses that do not belong to you
 2. [Wallet](#wallet): how to save and use a TFChain wallet:
     1. [Check your balance](#check-your-balance)
     2. [Send Coins](#send-coins)
@@ -71,6 +72,51 @@ as transactions by ID (`c.transaction_get`) and more.
 
 Create a TFChain client in Kosmos to explore all its options or check out 
 the [./tests](./tests) directory for documented tests.
+
+##### Unlockhash Get
+
+One can get all transactions and if applicable linked Multi-Signature Wallet addressed linked to a given Wallet Address
+by using the `c.unlockhash_get` method:
+
+```python
+# the only parameter of `unlockhash_get` is as flexible as the recipient of the `w.coins_send` method (see for more info further in this doc)
+result = c.unlockhash_get('01f7e0686b2d38b3dee9295416857b06037a632ffe1d769153abcd522ab03d6a11b2a7d9383214')
+result.unlockhash # the unlockhash defined (or generated using the defined value)
+result.transactions # a list of all transactions somehow linked to the given unlockhash (value)
+result.multisig_addresses # a list of all Multi-Signature Wallet addresses linked to this wallet, only if applicable
+```
+
+From the result of `c.unlockhash_get` method one can compute the balance as follows:
+
+```python
+balance = result.balance() # human-readable printed in shell by default
+# it does return however a very useful object
+# should you want to inspect individual (coin) outputs
+```
+
+> Did you know that multiple balances can be merged?
+> ```python
+> balance = balance.balance_add(other_balance)
+> ```
+
+Finally, should it be desired, one can drain all available outputs of a balance object as follows:
+
+```python
+txns = balance.drain(recipient='01e64ddf014e030e612e7ad2d7f5297f7e74e31100bdf4d194ff23754b622e5f0083d4bedcc18d')
+# a list of created transactions, empty if no outputs were available,
+# each transaction will be filled as much as possible (taking into account the max coin inputs per transactions accepteable).
+```
+
+If unconfirmed avalable coin outputs should be drained with the confirmed coin outputs one can do so as follows:
+
+```python
+txns = balance.drain(recipient='01e64ddf014e030e612e7ad2d7f5297f7e74e31100bdf4d194ff23754b622e5f0083d4bedcc18d', unconfirmed=True)
+# see the docs for the full info, but FYI: you can also attach optional data as well as an optional lock
+```
+
+Draining can for example be useful if you want to stop using a certain wallet and want to make
+sure all outputs can be transferred are immediately transferred to your new wallet (`w.balance.drain`).
+It can also be used to drain all available outputs of the Free-For-All Wallet (`c.unlockhash_get(None).balance()`).
 
 ### Wallet
 

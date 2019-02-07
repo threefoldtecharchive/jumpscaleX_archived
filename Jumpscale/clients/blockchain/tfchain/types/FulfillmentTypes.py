@@ -3,7 +3,7 @@ from Jumpscale import j
 from .BaseDataType import BaseDataTypeClass
 from .CryptoTypes import PublicKey
 from .PrimitiveTypes import BinaryData, Hash
-from .ConditionTypes import UnlockHash, ConditionNil, ConditionUnlockHash, ConditionAtomicSwap, ConditionMultiSignature
+from .ConditionTypes import UnlockHash, UnlockHashType, ConditionNil, ConditionUnlockHash, ConditionAtomicSwap, ConditionMultiSignature
 from .Errors import DoubleSignError
 
 _FULFULLMENT_TYPE_SINGLE_SIG = 1
@@ -73,7 +73,7 @@ class SignatureRequest():
         if not isinstance(public_key, PublicKey):
             raise TypeError("public key is expected to be of type PublicKey, not {}".format(type(public_key)))
         address = str(public_key.unlockhash())
-        if self.wallet_address != address:
+        if self._unlockhash.type != UnlockHashType.NIL and self.wallet_address != address: # only check if the request is not using a NIL Condition
             raise ValueError("signature request cannot be fulfilled using address {}, expected address {}".format(address, self.wallet_address))
         # ensure signature is of the correct type
         if isinstance(signature, (bytearray, bytes)):

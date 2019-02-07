@@ -15,6 +15,8 @@ from .TFChainTransactionFactory import TransactionBaseClass, TransactionV128, Tr
 
 _DEFAULT_KEY_SCAN_COUNT = 3
 
+_MAX_RIVINE_TRANSACTION_INPUTS = 99
+
 # TODO:
 # * Provide ERC20 Support
 # * Provide Atomic Swap support
@@ -279,8 +281,8 @@ class TFChainWallet(j.application.JSBaseConfigClass):
 
         # fund amount
         balance = self.balance
-        minerfee = self.client.minimum_minerfee
-        inputs, remainder, suggested_refund = balance.fund(amount+minerfee, source=source)
+        miner_fee = self.client.minimum_miner_fee
+        inputs, remainder, suggested_refund = balance.fund(amount+miner_fee, source=source)
 
         # define the refund condition
         if refund is None: # automatically choose a refund condition if none is given
@@ -300,7 +302,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         if remainder > 0:
             txn.coin_output_add(value=remainder, condition=refund)
         # add the miner fee
-        txn.miner_fee_add(minerfee)
+        txn.miner_fee_add(miner_fee)
 
         # add the coin inputs
         txn.coin_inputs = inputs
@@ -458,7 +460,10 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         if not isinstance(unlockhash, (str, UnlockHash)):
             raise TypeError("unlockhash cannot be of type {}".format(type(unlockhash)))
         unlockhash = str(unlockhash)
-        key = self._key_pairs.get(unlockhash)
+        if unlockhash[:2] == '00':
+            key = self._key_pairs.get(self.address)
+        else:
+            key = self._key_pairs.get(unlockhash)
         if key is None:
             raise KeyError("wallet does not own unlock hash {}".format(unlockhash))
         return key
@@ -676,7 +681,7 @@ class TFChainMinter():
         """
         Returns the minimum miner fee
         """
-        return self._wallet.client.minimum_minerfee
+        return self._wallet.client.minimum_miner_fee
 
     def _current_mint_condition_get(self):
         """
@@ -955,6 +960,57 @@ class WalletBalance(object):
                 d[id] = output
         return self
 
+    def drain(self, recipient, miner_fee, unconfirmed=False, data=None, lock=None):
+        """
+        add all available outputs into as many transactions as required,
+        by default only confirmed outputs are used, if unconfirmed=True
+        it will use unconfirmed available outputs as well.
+
+        Result can be an empty list if no outputs were available.
+
+        @param recipient: required recipient towards who the drained coins will be sent
+        @param the miner fee to be added to all sent transactions
+        @param unconfirmed: optionally drain unconfirmed (available) outputs as well
+        @param data: optional data that can be attached ot the created transactions (str or bytes), with a max length of 83
+        @param lock: optional lock that can be attached to the sent coin outputs
+        """
+        # define recipient
+        recipient = j.clients.tfchain.types.conditions.from_recipient(recipient, lock=lock)
+
+        # validate miner fee
+        if not isinstance(miner_fee, Currency):
+            raise TypeError("miner fee has to be a currency")
+        if miner_fee == 0:
+            raise ValueError("a non-zero miner fee has to be defined")
+
+        # collect all transactions in one list
+        transactions = []
+
+        # collect all confirmed (available) outputs
+        outputs = self.outputs_available
+        if unconfirmed:
+            # if also the unconfirmed_avaialble) outputs are desired, let's add them as well
+            outputs += self.outputs_unconfirmed_available
+        # drain all outputs
+        while len(outputs) > 0:
+            txn = j.clients.tfchain.transactions.new()
+            txn.data = data
+            txn.miner_fee_add(miner_fee)
+            # select maximum _MAX_RIVINE_TRANSACTION_INPUTS outputs
+            n = min(len(outputs), _MAX_RIVINE_TRANSACTION_INPUTS)
+            used_outputs = outputs[:n]
+            outputs = outputs[n:] # and update our output list, so we do not double spend
+            # compute amount, minus minimum fee and add our only output
+            amount = sum([co.value for co in used_outputs]) - miner_fee
+            txn.coin_output_add(condition=recipient, value=amount)
+            # add the coin inputs
+            txn.coin_inputs = [CoinInput.from_coin_output(co) for co in used_outputs]
+            # append the transaction
+            transactions.append(txn)
+
+        # return all created transactions, if any
+        return transactions
+
     def _human_readable_balance(self):
         # report confirmed coins
         result = "{} available and {} locked".format(self.available.str(with_unit=True), self.locked.str(with_unit=True))
@@ -1204,7 +1260,7 @@ class WalletsBalance(WalletBalance):
                 return [co], co.value
             collected += co.value
             outputs.append(co)
-            if len(outputs) > 99:
+            if len(outputs) > _MAX_RIVINE_TRANSACTION_INPUTS:
                 # to not reach the input limit
                 collected -= outputs.pop(0).value
             if collected >= amount:
@@ -1222,7 +1278,7 @@ class WalletsBalance(WalletBalance):
                 return [co], co.value
             collected += co.value
             outputs.append(co)
-            if len(outputs) > 99:
+            if len(outputs) > _MAX_RIVINE_TRANSACTION_INPUTS:
                 # to not reach the input limit
                 collected -= outputs.pop(0).value
             if collected >= amount:
@@ -1249,7 +1305,7 @@ class WalletsBalance(WalletBalance):
 
                 collected += co.value
                 outputs.append(co)
-                if len(outputs) > 99:
+                if len(outputs) > _MAX_RIVINE_TRANSACTION_INPUTS:
                     # to not reach the input limit
                     collected -= outputs.pop(0).value
                 if collected >= amount:
@@ -1267,7 +1323,7 @@ class WalletsBalance(WalletBalance):
                     return [co], co.value
                 collected += co.value
                 outputs.append(co)
-                if len(outputs) > 99:
+                if len(outputs) > _MAX_RIVINE_TRANSACTION_INPUTS:
                     # to not reach the input limit
                     collected -= outputs.pop(0).value
                 if collected >= amount:
