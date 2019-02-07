@@ -55,6 +55,10 @@ class NACL(j.application.JSBaseClass):
         if reset:
             j.core.db.delete(redis_key)
 
+        # TODO: this should be placed in the correct location
+        if not j.core.db:
+            j.core._db = j.clients.redis.core_get()
+
         r = j.core.db.get(redis_key)
         if r:
             try:
