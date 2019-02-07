@@ -12,6 +12,7 @@ All methods have docstrings, _read_ them.
     1. [Create a Wallet](#create-a-wallet): how to create a wallet (attached to a TFChain client)
     2. [Unlockhash Get](#unlockhash-get): how to get information for addresses that do not belong to you
 2. [Wallet](#wallet): how to save and use a TFChain wallet:
+    1. [Get address info](#get-address-info): Get (the) address(es) linked to this wallet
     1. [Check your balance](#check-your-balance)
     2. [Send Coins](#send-coins)
 3. [Multi-Signature-Wallet](#multi-signature-wallet): learn how to view and manage Multi-Signature Wallets from your TFChain wallet
@@ -119,6 +120,14 @@ sure all outputs can be transferred are immediately transferred to your new wall
 It can also be used to drain all available outputs of the Free-For-All Wallet (`c.unlockhash_get(None).balance()`).
 
 ### Wallet
+
+#### Get address info:
+
+```python
+w.address            # the primary address (string)
+w.addresses          # all individual addresses (list of strings, at least 1 element)
+w.addresses_multisig # returns all known multisig addresses (list of strings, can be empty)
+```
 
 #### Check your balance:
 
