@@ -16,6 +16,7 @@ All methods have docstrings, _read_ them.
     1. [Check your balance](#check-your-balance)
     2. [Send Coins](#send-coins)
 3. [Multi-Signature-Wallet](#multi-signature-wallet): learn how to view and manage Multi-Signature Wallets from your TFChain wallet
+4. [Coin Minting](#coin-minting): a subsection devoted to the coin minters of the network
 
 ### Client
 
@@ -264,3 +265,32 @@ other co-owners of you wallet still have to sign. If so you have to pass the ret
 
 Using this client one can signs (and submit if possible)
 a transaction using the `w.transaction_sign(txn)` method.
+
+### Coin Minting
+
+Only if you have minting powers you can redefine the Mint Condition (the condition to be fulfilled to proof you have these powers)
+as well as create new coins. If you do have these powers, this subsection is for you.
+
+Redefining the Mint Condition can be done as follows:
+
+```python
+(txn, submitted) = w.minter.definition_set(minter='01a006599af1155f43d687635e9680650003a6c506934996b90ae8d07648927414046f9f0e936')
+# optional data can be attached as well,
+# the minter parameter is as flexible as the recipient parameter when sending coins from your wallet.
+
+# if not submitted yet, it's because you might require signatures from others:
+# you can pass the txn in that case to the others, such that they can sign using:
+(txn, signed, submitted) = w.transaction_sign(txn)
+```
+
+Creating coins 
+
+```python
+(txn, submitted) = w.minter.coins_new(recipient='01a006599af1155f43d687635e9680650003a6c506934996b90ae8d07648927414046f9f0e936', amount=200)
+# optional data can be attached as well,
+# the recipient parameter is as flexible as the recipient parameter when sending coins from your wallet.
+
+# if not submitted yet, it's because you might require signatures from others:
+# you can pass the txn in that case to the others, such that they can sign using:
+(txn, signed, submitted) = w.transaction_sign(txn)
+```
