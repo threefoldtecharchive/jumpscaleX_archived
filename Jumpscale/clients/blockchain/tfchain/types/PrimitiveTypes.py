@@ -77,6 +77,14 @@ class BaseBinaryData(BaseDataTypeClass):
 
 
 class BinaryData(BaseBinaryData):
+    @classmethod
+    def random(cls, size):
+        if not isinstance(size, int):
+            raise TypeError("expected size to be an integer")
+        if size <= 0:
+            raise ValueError("expected size to be at least equal to 1")
+        return cls(value=j.data.idgenerator.generateXByteID(size))
+
     def from_str(self, s):
         return bytearray.fromhex(s)
     def to_str(self, value):

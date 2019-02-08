@@ -9,14 +9,15 @@ All methods have docstrings, _read_ them.
 ## Summary
 
 1. [Client](#client): how to create, save and use a TFChain client:
-    1. [Create a Wallet](#create-a-wallet): how to create a wallet (attached to a TFChain client)
+    1. [Create a Wallet](#create-a-wallet): how to create a TFChain wallet (attached to a TFChain client)
     2. [Unlockhash Get](#unlockhash-get): how to get information for addresses that do not belong to you
 2. [Wallet](#wallet): how to save and use a TFChain wallet:
     1. [Get address info](#get-address-info): Get (the) address(es) linked to this wallet
     1. [Check your balance](#check-your-balance)
     2. [Send Coins](#send-coins)
 3. [Multi-Signature-Wallet](#multi-signature-wallet): learn how to view and manage Multi-Signature Wallets from your TFChain wallet
-4. [Coin Minting](#coin-minting): a subsection devoted to the coin minters of the network
+4. [Atomic Swap Contacts](#atomic-swap-contracts): explains how to work with cross-chain atomic swaps, from a TFChain perspective, using your TFChain wallet
+5. [Coin Minting](#coin-minting): a subsection devoted to the coin minters of the network
 
 ### Client
 
@@ -265,6 +266,10 @@ other co-owners of you wallet still have to sign. If so you have to pass the ret
 
 Using this client one can signs (and submit if possible)
 a transaction using the `w.transaction_sign(txn)` method.
+
+### Atomic Swap Contracts
+
+_TODO_
 
 ### Coin Minting
 

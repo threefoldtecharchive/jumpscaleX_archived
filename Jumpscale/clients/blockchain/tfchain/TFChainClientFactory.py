@@ -6,8 +6,9 @@ from Jumpscale import j
 
 from .TFChainClient import TFChainClient
 
+from .types.Transactions import TFChainTransactionFactory
+
 from .TFChainExplorerClient import TFChainExplorerClient
-from .TFChainTransactionFactory import TFChainTransactionFactory
 from .TFChainTypesFactory import TFChainTypesFactory
 
 

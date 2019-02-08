@@ -131,3 +131,82 @@ class CurrencyNegativeValue(Exception):
         The value that caused the overflow.
         """
         return self._value
+
+
+from .PrimitiveTypes import Hash
+from .Transactions import TransactionBaseClass
+from .AtomicSwap import AtomicSwapContract
+
+class AtomicSwapContractError(Exception):
+    """
+    AtomicSwapError generic Base error,
+    containing the contract that went wrong.
+    """
+    def __init__(self, message, contract):
+        if not isinstance(contract, AtomicSwapContract):
+            raise TypeError("invalid contract, expected it to be of type AtomicSwapContract not {}".format(type(contract)))
+        super().__init__(message)
+        self._contract = contract
+
+    @property
+    def contract(self):
+        """
+        The contract that was verified against.
+        """
+        return self._contract
+
+class AtomicSwapForbidden(AtomicSwapContractError):
+    """
+    AtomicSwapForbidden error, caused when a contract was trying
+    to be spent by an unautohorized wallet.
+    """
+
+class AtomicSwapInvalidSecret(AtomicSwapContractError):
+    """
+    AtomicSwapInvalidSecret error, caused when a wrong secret was used
+    as an attempt to redeem an atomic swap contract. 
+    """
+    def __init__(self, contract):
+        super().__init__(message="defined secret does not match the atomic swap's contract secret hash", contract=contract)
+
+class AtomicSwapContractInvalid(AtomicSwapContractError):
+    """
+    AtomicSwapContractInvalid error, caused when a contract was deemed
+    invalid during verification.
+    """
+
+class AtomicSwapContractSpent(Exception):
+    """
+    AtomicSwapContractSpent error, caused when
+    a callee tried to spend a contract that was already spent.
+    """
+    def __init__(self, contract, transaction):
+        if not isinstance(transaction, TransactionBaseClass):
+            raise TypeError("invalid transaction, expected it to be of subtype TransactionBaseClass not {}".format(type(transaction)))
+        super().__init__(message="atomic swap contract has already been spent in transaction {}".format(str(transaction.id)), contract=contract)
+        self._transaction = transaction
+
+    @property
+    def transaction(self):
+        """
+        The transaction in which the contract was spent.
+        """
+        return self._transaction
+
+class AtomicSwapContractNotFound(Exception):
+    """
+    AtomicSwapContractNotFound error, caused when
+    a callee tried to get an atomic swap contract that could not be found.
+    """
+    def __init__(self, outputid):
+        super().__init__("atomic swap contract {} could not be found".format(str(outputid)))
+        if not isinstance(outputid, Hash):
+            raise TypeError("invalid output ID, expected it to be of type Hash not {}".format(type(outputid)))
+        self._outputid = outputid
+
+    @property
+    def outputid(self):
+        """
+        The outputid that was used to look up the contract that could not be found.
+        """
+        return self._outputid

@@ -7,7 +7,7 @@ from .types.ConditionTypes import UnlockHash, UnlockHashType, ConditionMultiSign
 from .types.PrimitiveTypes import Hash, Currency
 from .types.CompositionTypes import CoinOutput, BlockstakeOutput
 from .types.Errors import ExplorerInvalidResponse
-from .TFChainTransactionFactory import TransactionBaseClass, TransactionV128
+from .types.Transactions import TransactionBaseClass, TransactionV128
 from .TFChainWalletFactory import TFChainWalletFactory
 from .TFChainWallet import WalletBalance, MultiSigWalletBalance
 
