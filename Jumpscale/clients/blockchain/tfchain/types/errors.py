@@ -20,6 +20,46 @@ class InsufficientFunds(Exception):
     """
 
 
+class CurrencyPrecisionOverflow(Exception):
+    """
+    CurrencyPrecisionOverflow error, caused when the value is too precise
+    """
+    def __init__(self, value):
+        super().__init__("value {} is too precise to be a value, can have only 9 numbers after the decimal point".format(str(value)))
+        self._value = value
+
+    @property
+    def precision(self):
+        """
+        The precision of the value that caused the overflow.
+        """
+        _, _, exp = self.value
+        return abs(exp)
+
+    @property
+    def value(self):
+        """
+        The value that caused the overflow.
+        """
+        return self._value
+
+class CurrencyNegativeValue(Exception):
+    """
+    CurrencyNegativeValue error, caused when the value is negative
+    """
+    def __init__(self, value):
+        super().__init__("currency has to be at least 0, while value {} is negative".format(str(value)))
+        self._value = value
+
+    @property
+    def value(self):
+        """
+        The value that caused the overflow.
+        """
+        return self._value
+
+
+
 class ExplorerError(Exception):
     """
     Generic Explorer error
@@ -88,63 +128,12 @@ class DoubleSignError(Exception):
     DoubleSignError error
     """
 
-from decimal import Decimal
-
-class CurrencyPrecisionOverflow(Exception):
-    """
-    CurrencyPrecisionOverflow error, caused when the value is too precise
-    """
-    def __init__(self, value):
-        super().__init__("value {} is too precise to be a value, can have only 9 numbers after the decimal point".format(str(value)))
-        if not isinstance(value, Decimal):
-            raise TypeError("invalid value, expected it to be of type Decimal not {}".format(type(value)))
-        self._value = value
-
-    @property
-    def precision(self):
-        """
-        The precision of the value that caused the overflow.
-        """
-        _, _, exp = self.value
-        return abs(exp)
-
-    @property
-    def value(self):
-        """
-        The value that caused the overflow.
-        """
-        return self._value
-
-class CurrencyNegativeValue(Exception):
-    """
-    CurrencyNegativeValue error, caused when the value is negative
-    """
-    def __init__(self, value):
-        super().__init__("currency has to be at least 0, while value {} is negative".format(str(value)))
-        if not isinstance(value, Decimal):
-            raise TypeError("invalid value, expected it to be of type Decimal not {}".format(type(value)))
-        self._value = value
-
-    @property
-    def value(self):
-        """
-        The value that caused the overflow.
-        """
-        return self._value
-
-
-from .PrimitiveTypes import Hash
-from .Transactions import TransactionBaseClass
-from .AtomicSwap import AtomicSwapContract
-
 class AtomicSwapContractError(Exception):
     """
     AtomicSwapError generic Base error,
     containing the contract that went wrong.
     """
     def __init__(self, message, contract):
-        if not isinstance(contract, AtomicSwapContract):
-            raise TypeError("invalid contract, expected it to be of type AtomicSwapContract not {}".format(type(contract)))
         super().__init__(message)
         self._contract = contract
 
@@ -181,9 +170,8 @@ class AtomicSwapContractSpent(Exception):
     a callee tried to spend a contract that was already spent.
     """
     def __init__(self, contract, transaction):
-        if not isinstance(transaction, TransactionBaseClass):
-            raise TypeError("invalid transaction, expected it to be of subtype TransactionBaseClass not {}".format(type(transaction)))
-        super().__init__(message="atomic swap contract has already been spent in transaction {}".format(str(transaction.id)), contract=contract)
+        txid = getattr(transaction, 'id', '')
+        super().__init__(message="atomic swap contract has already been spent in transaction {}".format(str(txid)), contract=contract)
         self._transaction = transaction
 
     @property
@@ -200,8 +188,6 @@ class AtomicSwapContractNotFound(Exception):
     """
     def __init__(self, outputid):
         super().__init__("atomic swap contract {} could not be found".format(str(outputid)))
-        if not isinstance(outputid, Hash):
-            raise TypeError("invalid output ID, expected it to be of type Hash not {}".format(type(outputid)))
         self._outputid = outputid
 
     @property

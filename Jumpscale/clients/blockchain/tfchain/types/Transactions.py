@@ -2,7 +2,7 @@ from Jumpscale import j
 
 from functools import reduce
 
-from .types.Errors import UnknownTransansactionVersion
+from .Errors import UnknownTransansactionVersion
 
 _LEGACY_TRANSACTION_V0 = 0
 _TRANSACTION_V1 = 1
@@ -142,7 +142,7 @@ class TFChainTransactionFactory(j.application.JSBaseClass):
 
 from abc import ABC, abstractmethod, abstractclassmethod
 
-from .types.PrimitiveTypes import Hash
+from .PrimitiveTypes import Hash
 
 class TransactionBaseClass(ABC):
     def __init__(self):
@@ -393,9 +393,8 @@ class InputSignatureHashFactory():
         return self._txn.signature_hash_get(*objects)
 
 
-from .types.CompositionTypes import CoinInput, CoinOutput, BlockstakeInput, BlockstakeOutput
-from .types.PrimitiveTypes import Currency, RawData
-
+from .CompositionTypes import CoinInput, CoinOutput, BlockstakeInput, BlockstakeOutput
+from .PrimitiveTypes import Currency, RawData
 
 class TransactionV1(TransactionBaseClass):
     def __init__(self):
@@ -767,10 +766,10 @@ class TransactionV1(TransactionBaseClass):
         return encoder.data
 
 
-from .types.FulfillmentTypes import FulfillmentBaseClass, FulfillmentSingleSignature 
-from .types.ConditionTypes import ConditionBaseClass, ConditionNil 
+from .FulfillmentTypes import FulfillmentBaseClass, FulfillmentSingleSignature 
+from .ConditionTypes import ConditionBaseClass, ConditionNil 
 
-from .types.PrimitiveTypes import BinaryData
+from .PrimitiveTypes import BinaryData
 
 class TransactionV128(TransactionBaseClass):
     _SPECIFIER = b'minter defin tx\0'
