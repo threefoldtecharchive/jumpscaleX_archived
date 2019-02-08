@@ -774,7 +774,7 @@ class TFChainAtomicSwap():
                 - '123456 TFT': define the amount in TFT (that is '123456 TFT' == 123456 TFT == 123456000000000)
                 - '123.456 TFT': define the amount in TFT (that is '123.456 TFT' == 123.456 TFT == 123456000000)
 
-        Returns (contract, txn, submitted).
+        Returns the AtomicSwapParticipationResult.
 
         @param initiator: str (or unlockhash) of a personal wallet
         @param amount: int or str that defines the amount of TFT to set, see explanation above
@@ -799,6 +799,20 @@ class TFChainAtomicSwap():
             result.transaction, result.submitted)
     
     def verify(self, outputid, amount=None, secret_hash=None, min_duration=None, sender=False, receiver=False):
+        """
+        Verify the status and content of the Atomic Swap Contract linked to the given outputid.
+        An exception is returned if the contract does not exist, has already been spent
+        or is not valid according to this validation
+
+        Returns the contract.
+
+        @param outputid: str or Hash that identifies the coin output to whuich this contract is linked
+        @param amount: validate amount if defined, int or str that defines the amount of TFT to set, see explanation above
+        @param secret_hash: validate secret hash if defined, str or BinaryData
+        @param min_duration: validate duration if defined, 0 if expected to be refundable, else the min duration expected until it becomes refundable
+        @param sender: if True it is expected that this wallet is registered as the sender of this contract
+        @param receiver: if True it is expected that this wallet is registered as the receiver of this contract
+        """
         co = None
         spend_txn = None
         # try to fetch the contract
@@ -838,22 +852,31 @@ class TFChainAtomicSwap():
         
         # if min_duration is given verify it
         if min_duration is not None:
-            if not isinstance(min_duration, int):
+            if isinstance(min_duration, str):
+                min_duration = j.data.types.duration.fromString(min_duration)
+            elif not isinstance(min_duration, int):
                 raise TypeError("expected minimum duration to be an integer, not to be of type {}".format(type(min_duration)))
             chain_time = self._chain_time
             if chain_time >= contract.refund_timestamp:
                 duration = 0
             else:
                 duration = contract.refund_timestamp - chain_time
-            if min_duration <= 0 and duration != 0:
-                raise AtomicSwapContractInvalid(
-                    message="contract can still be redeemed while it was expected it expired already",
-                    contract=contract)
-            elif min_duration > 0 and duration < min_duration:
-                raise AtomicSwapContractInvalid(
-                    message="atomic swap contract was expected to be available for redemption for at least {}, but it is only available for {}".format(
-                        j.data.types.duration.toString(min_duration), j.data.types.duration.toString(duration)),
-                    contract=contract)
+            if min_duration <= 0:
+                if duration != 0:
+                    raise AtomicSwapContractInvalid(
+                        message="contract cannot be refunded yet while it was expected to be possible already",
+                        contract=contract)
+            elif duration < min_duration:
+                if duration == 0:
+                    raise AtomicSwapContractInvalid(
+                        message="contract was expected to be non-refundable for at least {} more, but it can be refunded already since {}".format(
+                            j.data.types.duration.toString(min_duration), j.data.time.epoch2HRDateTime(contract.refund_timestamp)),
+                        contract=contract)
+                elif duration < min_duration:
+                    raise AtomicSwapContractInvalid(
+                        message="contract was expected to be available for redemption for at least {}, but it is only available for {}".format(
+                            j.data.types.duration.toString(min_duration), j.data.types.duration.toString(duration)),
+                        contract=contract)
         
         # if expected to be authorized to be the sender, verify this
         if sender and contract.sender not in self._wallet.addresses:
