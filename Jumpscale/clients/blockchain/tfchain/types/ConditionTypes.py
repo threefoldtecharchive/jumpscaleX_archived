@@ -585,7 +585,9 @@ class ConditionAtomicSwap(ConditionBaseClass):
         if value is None:
             self._sender = None
         else:
-            if not isinstance(value, UnlockHash):
+            if isinstance(value, str):
+                value = UnlockHash.from_json(value)
+            elif not isinstance(value, UnlockHash):
                 raise TypeError("Atomic Swap's sender unlock hash has to be of type UnlockHash, not {}".format(type(value)))
             if value.type not in (UnlockHashType.PUBLIC_KEY, UnlockHashType.NIL):
                 raise ValueError("Atomic Swap's sender unlock hash type cannot be {} (expected: 0 or 1)".format(value.type))
@@ -601,7 +603,9 @@ class ConditionAtomicSwap(ConditionBaseClass):
         if value is None:
             self._receiver = None
         else:
-            if not isinstance(value, UnlockHash):
+            if isinstance(value, str):
+                value = UnlockHash.from_json(value)
+            elif not isinstance(value, UnlockHash):
                 raise TypeError("Atomic Swap's receiver unlock hash has to be of type UnlockHash, not {}".format(type(value)))
             if value.type not in (UnlockHashType.PUBLIC_KEY, UnlockHashType.NIL):
                 raise ValueError("Atomic Swap's receiver unlock hash type cannot be {} (expected: 0 or 1)".format(value.type))

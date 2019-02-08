@@ -5,7 +5,7 @@ Tfchain Client
 from Jumpscale import j
 from .types.ConditionTypes import UnlockHash, UnlockHashType, ConditionMultiSignature
 from .types.PrimitiveTypes import Hash, Currency
-from .types.CompositionTypes import CoinOutput
+from .types.CompositionTypes import CoinOutput, BlockstakeOutput
 from .types.Errors import ExplorerInvalidResponse
 from .TFChainTransactionFactory import TransactionBaseClass, TransactionV128
 from .TFChainWalletFactory import TFChainWalletFactory
@@ -141,8 +141,8 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
     def transaction_get(self, txid):
         """
         Get a transaction from an available explorer Node.
-        
-        @param txid: the identifier (fixed string with a length of 64) that points to the desired transaction
+
+        @param txid: the identifier (bytes, bytearray, hash or string) that points to the desired transaction
         """
         txid = self._normalize_id(txid)
         endpoint = "/explorer/hashes/"+txid
@@ -175,7 +175,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
             raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
-    
+
     def unlockhash_get(self, target):
         """
         Get all transactions linked to the given unlockhash (target),
@@ -216,6 +216,75 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
                 transactions=transactions,
                 multisig_addresses=multisig_addresses,
                 client=self)
+        except KeyError as exc:
+            # return a KeyError as an invalid Explorer Response
+            raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
+
+    def coin_output_get(self, id):
+        """
+        Get a coin output from an available explorer Node.
+
+        Returns (output, creation_txn, spend_txn).
+
+        @param id: the identifier (bytes, bytearray, hash or string) that points to the desired coin output
+        """
+        return self._output_get(id, expected_hash_type='coinoutputid')
+
+    def blockstake_output_get(self, id):
+        """
+        Get a blockstake output from an available explorer Node.
+
+        Returns (output, creation_txn, spend_txn).
+
+        @param id: the identifier (bytes, bytearray, hash or string) that points to the desired blockstake output
+        """
+        return self._output_get(id, expected_hash_type='blockstakeoutputid')
+
+    def _output_get(self, id, expected_hash_type):
+        """
+        Get an output from an available explorer Node.
+
+        Returns (output, creation_txn, spend_txn).
+
+        @param id: the identifier (bytes, bytearray, hash or string) that points to the desired output
+        @param expected_hash_type: one of ('coinoutputid', 'blockstakeoutputid')
+        """
+        if expected_hash_type not in ('coinoutputid', 'blockstakeoutputid'):
+            raise ValueError("expected hash type should be one of ('coinoutputid', 'blockstakeoutputid'), not {}".format(expected_hash_type))
+        id = self._normalize_id(id)
+        endpoint = "/explorer/hashes/"+id
+        resp = self._explorer_get(endpoint=endpoint)
+        resp = j.data.serializers.json.loads(resp)
+        try:
+            hash_type = resp['hashtype']
+            if hash_type != expected_hash_type:
+                raise ExplorerInvalidResponse("expected hash type '{}', not '{}'".format(expected_hash_type, hash_type), endpoint, resp)
+            tresp = resp['transactions']
+            lresp = len(tresp)
+            if lresp not in (1, 2):
+                raise ExplorerInvalidResponse("expected one or two transactions to be returned, not {}".format(lresp), endpoint, resp)
+            # parse the transaction(s)
+            creation_txn = tresp[0]
+            spend_txn = None
+            if lresp == 2:
+                if tresp[1]['height'] > creation_txn['height']:
+                    spend_txn = tresp[1]
+                else:
+                    spend_txn = creation_txn
+                    creation_txn = tresp[1]
+            creation_txn = self._transaction_from_explorer_transaction(creation_txn, endpoint=endpoint, resp=resp)
+            if spend_txn is not None:
+                spend_txn = self._transaction_from_explorer_transaction(spend_txn, endpoint=endpoint, resp=resp)
+            # collect the output
+            output = None
+            for out in (creation_txn.coin_outputs if hash_type == 'coinoutputid' else creation_txn.blockstake_outputs):
+                if str(out.id) == id:
+                    output = out
+                    break
+            if output is None:
+                raise ExplorerInvalidResponse("expected output {} to be part of creation Tx, but it wasn't".format(id), endpoint, resp)
+            # return the output and related transaction(s)
+            return (output, creation_txn, spend_txn)
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
             raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
@@ -264,6 +333,20 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             raise ExplorerInvalidResponse("amount of coin outputs and output identifiers are not matching: {} != {}".format(len(transaction.coin_outputs), len(coinoutputids)), endpoint, resp)
         for (idx, id) in enumerate(coinoutputids):
             transaction.coin_outputs[idx].id = Hash.from_json(obj=id)
+        # add the parent (blockstake) outputs
+        blockstakeinputoutputs = etxn.get('blockstakeinputoutputs', None) or []
+        if len(transaction.blockstake_inputs) != len(blockstakeinputoutputs):
+            raise ExplorerInvalidResponse("amount of blockstake inputs and parent outputs are not matching: {} != {}".format(len(transaction.blockstake_inputs), len(blockstakeinputoutputs)), endpoint, resp)
+        for (idx, bso) in enumerate(blockstakeinputoutputs):
+            bso = BlockstakeOutput.from_json(obj=bso)
+            bso.id = transaction.blockstake_inputs[idx].parentid
+            transaction.blockstake_inputs[idx].parent_output = bso
+        # add the blockstake output ids
+        blockstakeoutputids = etxn.get('blockstakeoutputids', None) or []
+        if len(transaction.blockstake_outputs) != len(blockstakeoutputids):
+            raise ExplorerInvalidResponse("amount of blokstake outputs and output identifiers are not matching: {} != {}".format(len(transaction.blockstake_inputs), len(blockstakeoutputids)), endpoint, resp)
+        for (idx, id) in enumerate(blockstakeoutputids):
+            transaction.blockstake_outputs[idx].id = Hash.from_json(obj=id)
         # set the unconfirmed state
         transaction.unconfirmed = etxn.get('unconfirmed', False)
         # return the transaction
@@ -284,10 +367,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         return j.clients.tfchain.explorer.post(addresses=self.explorer_addresses, endpoint=endpoint, data=data)
 
     def _normalize_id(self, id):
-        if isinstance(id, Hash):
-            return str(id)
-        id = Hash(value=id)
-        return str(id)
+        return str(Hash(value=id))
 
 
 class ExplorerBlockchainInfo():
