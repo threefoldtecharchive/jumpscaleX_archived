@@ -767,7 +767,8 @@ class TFChainAtomicSwap():
 
         # return the contract, transaction, submission status as well as secret
         return AtomicSwapInitiationResult(
-            AtomicSwapContract(coinoutput=result.transaction.coin_outputs[0], unspent=True),
+            AtomicSwapContract(coinoutput=result.transaction.coin_outputs[0], unspent=True,
+                current_timestamp=self._chain_time),
             secret, result.transaction, result.submitted)
     
     def participate(self, initiator, amount, secret_hash, refund_time='+24h', source=None, refund=None, data=None, submit=True):
@@ -808,7 +809,7 @@ class TFChainAtomicSwap():
             recipient=initiator, amount=amount, refund_time=refund_time, source=source,
             refund=refund, data=data, secret_hash=secret_hash, submit=submit)
         return AtomicSwapParticipationResult(
-            AtomicSwapContract(coinoutput=result.transaction.coin_outputs[0], unspent=True),
+            AtomicSwapContract(coinoutput=result.transaction.coin_outputs[0], unspent=True, current_timestamp=self._chain_time),
             result.transaction, result.submitted)
     
     def verify(self, outputid, amount=None, secret_hash=None, min_refund_time=None, sender=False, receiver=False, contract=None):
@@ -840,10 +841,11 @@ class TFChainAtomicSwap():
             if spend_txn is not None:
                 # if a spend transaction exists,
                 # it means the contract was already spend, and can therefore no longer be redeemed
-                raise AtomicSwapContractSpent(contract=AtomicSwapContract(coinoutput=co, unspent=False), transaction=spend_txn)
+                raise AtomicSwapContractSpent(contract=AtomicSwapContract(
+                    coinoutput=co, unspent=False, current_timestamp=self._chain_time), transaction=spend_txn)
             
             # create the unspent contract
-            contract = AtomicSwapContract(coinoutput=co, unspent=True)
+            contract = AtomicSwapContract(coinoutput=co, unspent=True, current_timestamp=self._chain_time)
         elif not isinstance(contract, AtomicSwapContract):
             raise TypeError("contract was expected to be an AtomicSwapContract, not to be of type {}".format(type(contract)))
         else:
@@ -936,7 +938,7 @@ class TFChainAtomicSwap():
         except ExplorerNoContent as exc:
             raise AtomicSwapContractNotFound(outputid=outputid) from exc
         # generate the contract
-        contract = AtomicSwapContract(coinoutput=co, unspent=False) # either it is spent already or we'll spend it
+        contract = AtomicSwapContract(coinoutput=co, unspent=False, current_timestamp=self._chain_time) # either it is spent already or we'll spend it
         # check if the contract hasn't been spent already
         if spend_txn is not None:
             # if a spend transaction exists,
@@ -974,7 +976,7 @@ class TFChainAtomicSwap():
         except ExplorerNoContent as exc:
             raise AtomicSwapContractNotFound(outputid=outputid) from exc
         # generate the contract
-        contract = AtomicSwapContract(coinoutput=co, unspent=False) # either it is spent already or we'll spend it
+        contract = AtomicSwapContract(coinoutput=co, unspent=False, current_timestamp=self._chain_time) # either it is spent already or we'll spend it
         # check if the contract hasn't been spent already
         if spend_txn is not None:
             # if a spend transaction exists,

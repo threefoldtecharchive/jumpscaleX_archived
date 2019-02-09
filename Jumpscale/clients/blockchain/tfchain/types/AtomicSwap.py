@@ -15,7 +15,7 @@ from .ConditionTypes import ConditionAtomicSwap
 
 
 class AtomicSwapContract():
-    def __init__(self, coinoutput, unspent=True):
+    def __init__(self, coinoutput, unspent=True, current_timestamp=None):
         """
         Creates a ReadOnly AtomicSwap contract for consumption purposes.
         """
@@ -29,6 +29,13 @@ class AtomicSwapContract():
         if not isinstance(unspent, bool):
             raise TypeError("unspent status is expected to be of type bool, not {}".format(type(unspent)))
         self._unspent = unspent
+        if current_timestamp is None:
+            current_timestamp = int(datetime.now().timestamp())
+        elif not isinstance(current_timestamp, int):
+            raise TypeError("current timestamp has to be of type integer, not {}".format(type(current_timestamp)))
+        elif current_timestamp <= 0:
+            current_timestamp = int(datetime.now().timestamp())
+        self._current_timestamp = current_timestamp
 
     def __eq__(self, other):
         if not isinstance(other, AtomicSwapContract):
@@ -126,12 +133,11 @@ class AtomicSwapContract():
 
     def __repr__(self):
         if self.unspent:
-            time = int(datetime.now().timestamp())
             refund_time = j.data.time.epoch2HRDateTime(self.refund_timestamp)
-            if time >= self.refund_timestamp:
+            if self._current_timestamp >= self.refund_timestamp:
                 status_desc = "Refund is available since {}.".format(refund_time)
             else:
-                duration = j.data.types.duration.toString(self.refund_timestamp-time)
+                duration = j.data.types.duration.toString(self.refund_timestamp-self._current_timestamp)
                 status_desc = "Refund available at {} (in: {}).".format(refund_time, duration)
         else:
             status_desc = "Spent and no longer available."
