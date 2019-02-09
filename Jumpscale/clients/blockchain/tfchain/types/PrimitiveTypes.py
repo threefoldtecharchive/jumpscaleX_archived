@@ -109,6 +109,10 @@ class Hash(BaseDataTypeClass):
         self.value = value
 
     @classmethod
+    def random(cls):
+        return cls(value=j.data.idgenerator.generateXByteID(Hash._SIZE))
+
+    @classmethod
     def from_json(cls, obj):
         if not isinstance(obj, str):
             raise TypeError("hash is expected to be a string when part of a JSON object")

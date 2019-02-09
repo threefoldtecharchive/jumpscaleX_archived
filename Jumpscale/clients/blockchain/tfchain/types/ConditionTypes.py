@@ -84,7 +84,7 @@ class ConditionFactory(j.application.JSBaseClass):
         """
         return ConditionUnlockHash(unlockhash=unlockhash)
 
-    def atomicswap_new(self, sender=None, receiver=None, hashed_secret=None, lock_time=None):
+    def atomic_swap_new(self, sender=None, receiver=None, hashed_secret=None, lock_time=None):
         """
         Create a new AtomicSwap Condition, which can be
         fulfilled by the AtomicSwap Fulfillment.

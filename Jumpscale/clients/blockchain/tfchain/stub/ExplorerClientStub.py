@@ -3,13 +3,14 @@ from Jumpscale import j
 import re
 
 from Jumpscale.clients.blockchain.tfchain.types.Errors import ExplorerNoContent
+from Jumpscale.clients.blockchain.tfchain.types.PrimitiveTypes import Hash
 
 class TFChainExplorerGetClientStub(j.application.JSBaseClass):
     def __init__(self):
         self._blocks = {}
         self._hashes = {}
         self._chain_info = None
-        self._expected_transactions = []
+        self._posted_transactions = {}
 
     @property
     def chain_info(self):
@@ -21,13 +22,15 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         assert isinstance(value, str) and len(value) > 2
         self._chain_info = value
 
-    def add_expected_transaction(self, transactionid, resp):
+    def posted_transaction_get(self, transactionid):
         """
-        To facilitate transaction positing in an emulated way.
+        Get a posted transaction using our random generated transaction ID.
         """
-        assert isinstance(transactionid, str)
-        assert isinstance(resp, str)
-        self._expected_transactions.append((transactionid, resp))
+        if isinstance(transactionid, Hash):
+            transactionid = str(transactionid)
+        else:
+            assert isinstance(transactionid, str)
+        return self._posted_transactions[transactionid]
     
     def explorer_get(self, endpoint):
         """
@@ -50,19 +53,18 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         """
         Put explorer data onto the stub client for the specified endpoint.
         """
-        if not isinstance(data, dict):
-            raise TypeError("data was expected to be of type dict not of type {}".format(type(data)))
         hash_template = re.compile(r'^.*/transactionpool/transactions$')
         match = hash_template.match(endpoint)
         if match:
-            (txid, resp) = self._expected_transactions.pop()
-            resp = j.data.serializers.json.loads(resp)
-            resp['transaction']['rawtransaction'] = data
-            resp = j.data.serializers.json.dumps(resp)
-            pattern = re.compile(r'\s+')
-            resp = re.sub(pattern, '', resp)
-            self.hash_add(txid, resp)
-            return '{"transactionid":"%s"}'%(txid)
+            transactionid = str(Hash.random())
+            transaction = j.clients.tfchain.transactions.from_json(data)
+            # ensure all coin outputs and block stake outputs have identifiers set
+            for idx, co in enumerate(transaction.coin_outputs):
+                co.id = transaction.coin_outputid_new(idx)
+            for idx, bso in enumerate(transaction.blockstake_outputs):
+                bso.id = transaction.blockstake_outputid_new(idx)
+            self._posted_transactions[transactionid] = transaction
+            return '{"transactionid":"%s"}'%(str(transactionid))
         raise Exception("invalid endpoint {}".format(endpoint))
 
     def block_get(self, height):
@@ -74,13 +76,13 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
             raise ExplorerNoContent("no content found for block {}".format(height), endpoint="/explorer/blocks/{}".format(height))
         return self._blocks[height]
 
-    def block_add(self, height, resp):
+    def block_add(self, height, resp, force=False):
         """
         Add a block response to the stub explorer at the given height.
         """
         assert isinstance(height, int)
         assert isinstance(resp, str)
-        if height in self._blocks:
+        if not force and height in self._blocks:
             raise KeyError("{} already exists in explorer blocks".format(height))
         self._blocks[height] = resp
 
@@ -93,12 +95,12 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
             raise ExplorerNoContent("no content found for hash {}".format(hash), endpoint="/explorer/hashes/{}".format(str(hash)))
         return self._hashes[hash]
     
-    def hash_add(self, hash, resp):
+    def hash_add(self, hash, resp, force=False):
         """
         Add a hash response to the stub explorer at the given hash.
         """
         assert isinstance(hash, str)
         assert isinstance(resp, str)
-        if hash in self._hashes:
+        if not force and hash in self._hashes:
             raise KeyError("{} already exists in explorer hashes".format(hash))
         self._hashes[hash] = resp

@@ -6,6 +6,8 @@ from .PrimitiveTypes import BinaryData, Hash
 from .ConditionTypes import UnlockHash, UnlockHashType, ConditionNil, ConditionUnlockHash, ConditionAtomicSwap, ConditionMultiSignature
 from .Errors import DoubleSignError
 
+# TODO: add signing tests, and compare signatures to the one in Rivine/TFchain, as for now this is still manually tested
+
 _FULFULLMENT_TYPE_SINGLE_SIG = 1
 _FULFILLMENT_TYPE_ATOMIC_SWAP = 2
 _FULFILLMENT_TYPE_MULTI_SIG = 3
@@ -170,6 +172,13 @@ class FulfillmentFactory(j.application.JSBaseClass):
         test_sia_encoded(asf, '02a000000000000000656432353531390000000000000000002000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff4000000000000000abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabdef789def789def789def789def789dedef789def789def789def789def789de')
         test_rivine_encoded(asf, '02090201ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabdef789def789def789def789def789dedef789def789def789def789def789de')
         assert asf.is_fulfilled(ConditionAtomicSwap())
+        # atomic swap fulfillments without secrets are supported
+        as_json = {"type":2,"data":{"publickey":"ed25519:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff","signature":"abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab"}}
+        asf = self.from_json(as_json)
+        assert asf.json() == as_json
+        test_sia_encoded(asf, '028000000000000000656432353531390000000000000000002000000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff4000000000000000abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab')
+        test_rivine_encoded(asf, '02c401ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff80abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab')
+        assert asf.is_fulfilled(ConditionAtomicSwap())
 
         # multi signature fulfillments are supported
         ms_json = {"type":3,"data":{"pairs":[{"publickey":"ed25519:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff","signature":"abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab"},{"publickey":"ed25519:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff","signature":"abcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefab"}]}}
@@ -318,7 +327,7 @@ class FulfillmentSingleSignature(FulfillmentBaseClass):
 
     def signature_requests_new(self, input_hash_func, parent_condition):
         if not callable(input_hash_func):
-            raise TypeError("expected input hash generator func with signature `f(*extra_objects) -> Hash`, not P{".format(type(input_hash_func)))
+            raise TypeError("expected input hash generator func with signature `f(*extra_objects) -> Hash`, not {}".format(type(input_hash_func)))
         parent_condition = parent_condition.unwrap()
         if not isinstance(parent_condition, (ConditionNil, ConditionUnlockHash)):
             raise TypeError("parent condition of FulfillmentSingleSignature cannot be of type {}".format(type(parent_condition)))
@@ -546,14 +555,18 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
     def from_json_data_object(self, data):
         self._pub_key = PublicKey.from_json(data['publickey'])
         self._signature = BinaryData.from_json(data['signature'])
-        self._secret = BinaryData.from_json(data['secret'])
+        self._secret = None
+        if 'secret' in data:
+            self._secret = BinaryData.from_json(data['secret'])
 
     def json_data_object(self):
-        return {
+        obj = {
             'publickey': self.public_key.json(),
             'signature': self.signature.json(),
-            'secret': self.secret.json()
         }
+        if self._secret is not None:
+            obj['secret'] = self.secret.json()
+        return obj
 
     def sia_binary_encode_data(self, encoder):
         encoder.add_all(self.public_key, self.signature)
@@ -565,7 +578,7 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
 
     def signature_requests_new(self, input_hash_func, parent_condition):
         if not callable(input_hash_func):
-            raise TypeError("expected input hash generator func with signature `f(*extra_objects) -> Hash`, not P{".format(type(input_hash_func)))
+            raise TypeError("expected input hash generator func with signature `f(*extra_objects) -> Hash`, not {}".format(type(input_hash_func)))
         if not isinstance(parent_condition, ConditionAtomicSwap):
             raise TypeError("parent condition of FulfillmentAtomicSwap cannot be of type {}".format(type(parent_condition)))
         requests = []
@@ -573,6 +586,8 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
         # define the input_hash_new generator function,
         # used to create the input hash for creating the signature
         def input_hash_gen(public_key):
+            if self._secret is not None:
+                return input_hash_func(public_key, Hash(value=self.secret.value)) # TODO: remove this hack, shouldn't use Hash, but it allows us to binary encode without the size prefix
             return input_hash_func(public_key)
         # create a signature hash for all signees that haven't signed yet
         for unlockhash in [parent_condition.sender, parent_condition.receiver]:
@@ -583,4 +598,4 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
     def is_fulfilled(self, parent_condition):
         if not isinstance(parent_condition, ConditionAtomicSwap):
             raise TypeError("parent condition of FulfillmentAtomicSwap cannot be of type {}".format(type(parent_condition)))
-        return self._secret is not None and self._signature is not None
+        return self._signature is not None

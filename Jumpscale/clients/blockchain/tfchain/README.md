@@ -269,7 +269,72 @@ a transaction using the `w.transaction_sign(txn)` method.
 
 ### Atomic Swap Contracts
 
-_TODO_
+Atomic swaps allow secure cross-chain transfers of money wihout any need of trust.
+You an read more theory on Atomic Swaps as well as an example at <https://github.com/threefoldfoundation/tfchain/blob/master/doc/atomicswaps/atomicswap.md>.
+
+Please ensure that you understand the terminlogy behind atomic swaps as otherwise the commands might make a lot of sense to you.
+
+#### Commands
+
+Create a contract as initiator:
+
+```python
+result = w.atomicswap.initiate(
+        participator='0131cb8e9b5214096fd23c8d88795b2887fbc898aa37125a406fc4769a4f9b3c1dc423852868f6',
+        amount=50, data='the beginning of it all') # data is optional, source and refund options are available as well
+result.contract # the contract
+result.transaction # contains the created (and if all good sent) transaction
+result.submitted # if the contract was submitted (if not it is because more signatures are required)
+result.secret # the random generated secret (Save it, but no yet share it)
+```
+> See [The AtomicSwap Initiate Unit Test](./tests/10_atomicswap_initiate.py) for a detailed example.
+
+> Note: with atomic swap only unlock hashes (strings or `UnlockHash`) are supported, no Multi-Signature wallets can
+> be the recipient or used for refunds.
+> The refund is also used to identify the sender address of the Atomic Swap Contract.
+
+Create a contract as participator:
+
+```python
+result = w.atomicswap.participate(
+        initiator='01746b199781ea316a44183726f81e0734d93e7cefc18e9a913989821100aafa33e6eb7343fa8c',
+        amount='50.0', secret_hash='4163d4b31a1708cd3bb95a0a8117417bdde69fd1132909f92a8ec1e3fe2ccdba') # data is optional, source and refund options are available as well
+result.contract # the contract
+result.transaction # contains the created (and if all good sent) transaction
+result.submitted # if the contract was submitted (if not it is because more signatures are required)
+```
+> See [The AtomicSwap Participate Unit Test](./tests/11_atomicswap_participate.py) for a detailed example.
+
+Verify a contract as recipient of an initiation contract:
+
+```python
+contract = w.atomicswap.verify('dd1babcbab492c742983b887a7408742ad0054ec8586541dd6ee6202877cb486',
+        amount=50, secret_hash='e24b6b609b351a958982ba91de7624d3503f428620f5586fbea1f71807b545c1',
+        min_duration='1d12h', receiver=True)
+# an exception is raised if the contract is not found, has already been spent
+# or is not valid according to the defined information
+```
+> See [The AtomicSwap Verify-As-Receiver Unit Test](./tests/13_atomicswap_verify_receiver.py) for a detailed example.
+
+Redeem a contract:
+
+```python
+transaction = w.atomicswap.redeem(
+    'dd1babcbab492c742983b887a7408742ad0054ec8586541dd6ee6202877cb486',
+    secret='f68d8b238c193bc6765b8e355c53e4f574a2c9da458e55d4402edca621e53756')
+# an exception is raised when the contract is not found, has already been spent,
+# or the wallet is not authorized as receiver.
+```
+> See [The AtomicSwap Redeem Unit Test](./tests/14_atomicswap_redeem.py) for a detailed example.
+
+Refund a contract (only possible when the defined contract duration has expired):
+
+```python
+transaction = w.atomicswap.refund('a5e0159688d300ed7a8f2685829192d8dd1266ce6e82a0d04a3bbbb080de30d0')
+# an exception is raised when the contract is not found, has already been spent,
+# the defined secret is incorrect or the wallet is not authorized as sender. 
+```
+> See [The AtomicSwap Refund Unit Test](./tests/15_atomicswap_refund.py) for a detailed example.
 
 ### Coin Minting
 

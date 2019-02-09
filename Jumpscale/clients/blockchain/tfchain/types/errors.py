@@ -88,6 +88,21 @@ class ExplorerServerError(ExplorerError):
     ExplorerServerError error
     """
 
+class ExplorerServerPostError(ExplorerError):
+    """
+    ExplorerServerPostError error
+    """
+    def __init__(self, message, endpoint, data):
+        super().__init__(message, endpoint)
+        self._data = data
+    
+    @property
+    def data(self):
+        """
+        The data that could not be posted.
+        """
+        return self._data
+
 class ExplorerNotAvailable(ExplorerError):
     """
     ExplorerNotAvailable error
@@ -164,7 +179,7 @@ class AtomicSwapContractInvalid(AtomicSwapContractError):
     invalid during verification.
     """
 
-class AtomicSwapContractSpent(Exception):
+class AtomicSwapContractSpent(AtomicSwapContractError):
     """
     AtomicSwapContractSpent error, caused when
     a callee tried to spend a contract that was already spent.

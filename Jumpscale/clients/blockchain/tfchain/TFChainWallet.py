@@ -3,6 +3,7 @@ from Jumpscale import j
 
 from functools import reduce
 
+import hashlib
 from ed25519 import SigningKey
 
 from .types.PrimitiveTypes import Currency, Hash, BinaryData
@@ -18,9 +19,8 @@ _DEFAULT_KEY_SCAN_COUNT = 3
 _MAX_RIVINE_TRANSACTION_INPUTS = 99
 
 # TODO:
-# * Provide ERC20 Support
-# * Provide Atomic Swap support
 # * Provide 3Bot Registration (Management) Support
+# * Provide ERC20 Support
 
 # TODO (TESTS, for now already manually tested and confirmed):
 # * Send Coins (single sig and multi sig, with data and lock, as well as without)
@@ -242,6 +242,10 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                  # ignore this exception as it simply means
                  # the address has no activity yet on the chain
                 pass
+        # ensure info is defined for wallet, even if no content
+        balance.chain_blockid = info.blockid
+        balance.chain_time = info.timestamp
+        balance.chain_height = info.height
         # cache the balance
         self._cached_balance = balance
         # return the balance
@@ -740,7 +744,7 @@ class TFChainAtomicSwap():
                 - '123456 TFT': define the amount in TFT (that is '123456 TFT' == 123456 TFT == 123456000000000)
                 - '123.456 TFT': define the amount in TFT (that is '123.456 TFT' == 123.456 TFT == 123456000000)
 
-        Returns (contract, secret, txn, submitted).
+        Returns the AtomicSwapInitiationResult.
 
         @param participator: see explanation above
         @param amount: int or str that defines the amount of TFT to set, see explanation above
@@ -751,7 +755,7 @@ class TFChainAtomicSwap():
         """
         # create a random secret
         secret = BinaryData.random(size=32)
-        secret_hash = BinaryData(value=bytes.fromhex(j.data.hash.blake2_string(secret.value)))
+        secret_hash = BinaryData(value=hashlib.sha256(secret.value).digest())
 
         # create the contract
         result = self._create_contract(recipient=participator, amount=amount, duration=duration, source=source, refund=refund, data=data, secret_hash=secret_hash)
@@ -798,13 +802,13 @@ class TFChainAtomicSwap():
             AtomicSwapContract(coinoutput=result.transaction.coin_outputs[0], unspent=True),
             result.transaction, result.submitted)
     
-    def verify(self, outputid, amount=None, secret_hash=None, min_duration=None, sender=False, receiver=False):
+    def verify(self, outputid, amount=None, secret_hash=None, min_duration=None, sender=False, receiver=False, contract=None):
         """
         Verify the status and content of the Atomic Swap Contract linked to the given outputid.
         An exception is returned if the contract does not exist, has already been spent
         or is not valid according to this validation
 
-        Returns the contract.
+        Returns the verified contract.
 
         @param outputid: str or Hash that identifies the coin output to whuich this contract is linked
         @param amount: validate amount if defined, int or str that defines the amount of TFT to set, see explanation above
@@ -812,23 +816,33 @@ class TFChainAtomicSwap():
         @param min_duration: validate duration if defined, 0 if expected to be refundable, else the min duration expected until it becomes refundable
         @param sender: if True it is expected that this wallet is registered as the sender of this contract
         @param receiver: if True it is expected that this wallet is registered as the receiver of this contract
+        @param contract: if contract fetched in a previous call already, one can verify it also by directly passing it to this method
         """
-        co = None
-        spend_txn = None
-        # try to fetch the contract
-        try:
-            # try to fetch the coin output that is expected to contain the secret
-            co, _, spend_txn = self._wallet.client.coin_output_get(outputid)
-        except ExplorerNoContent as exc:
-            raise AtomicSwapContractNotFound(outputid=outputid) from exc
-        # check if the contract hasn't been spent already
-        if spend_txn is not None:
-            # if a spend transaction exists,
-            # it means the contract was already spend, and can therefore no longer be redeemed
-            raise AtomicSwapContractSpent(contract=AtomicSwapContract(coinoutput=co, unspent=False), transaction=spend_txn)
-        
-        # create the unspent contract
-        contract = AtomicSwapContract(coinoutput=co, unspent=True)
+        if contract is None:
+            co = None
+            spend_txn = None
+            # try to fetch the contract
+            try:
+                # try to fetch the coin output that is expected to contain the secret
+                co, _, spend_txn = self._wallet.client.coin_output_get(outputid)
+            except ExplorerNoContent as exc:
+                raise AtomicSwapContractNotFound(outputid=outputid) from exc
+            # check if the contract hasn't been spent already
+            if spend_txn is not None:
+                # if a spend transaction exists,
+                # it means the contract was already spend, and can therefore no longer be redeemed
+                raise AtomicSwapContractSpent(contract=AtomicSwapContract(coinoutput=co, unspent=False), transaction=spend_txn)
+            
+            # create the unspent contract
+            contract = AtomicSwapContract(coinoutput=co, unspent=True)
+        elif not isinstance(contract, AtomicSwapContract):
+            raise TypeError("contract was expected to be an AtomicSwapContract, not to be of type {}".format(type(contract)))
+        else:
+            # verify the outputid is the same
+            if contract.outputid != outputid:
+                raise AtomicSwapContractInvalid(
+                    message="output identifier is expected to be {}, not {}".format(str(outputid), str(contract.outputid)),
+                    contract=contract)
         
         # if amount is given verify it
         if amount is not None:
@@ -926,13 +940,10 @@ class TFChainAtomicSwap():
             raise AtomicSwapForbidden(message="unauthorized to redeem: wallet does not contain receiver address {}".format(contract.receiver), contract=contract)
         
         # create the fulfillment
-        fulfillment = j.clients.tfchain.types.fulfillments.atomicswap_new(secret=secret)
+        fulfillment = j.clients.tfchain.types.fulfillments.atomic_swap_new(secret=secret)
 
         # create, sign and submit the transaction
-        return self._claim_contract(
-            contractid=contract.outputid, value=contract.amount,
-            recipient=contract.receiver, fulfillment=fulfillment,
-            data=data)
+        return self._claim_contract(contract=contract, as_sender=False, fulfillment=fulfillment, data=data)
     
     def refund(self, outputid, data=None):
         """
@@ -970,13 +981,10 @@ class TFChainAtomicSwap():
             raise AtomicSwapForbidden(message="unauthorized to refund: wallet does not contain sender address {}".format(contract.sender), contract=contract)
         
         # create the fulfillment
-        fulfillment = j.clients.tfchain.types.fulfillments.atomicswap_new()
+        fulfillment = j.clients.tfchain.types.fulfillments.atomic_swap_new()
 
         # create, sign and submit the transaction
-        return self._claim_contract(
-            contractid=contract.outputid, value=contract.amount,
-            recipient=contract.sender, fulfillment=fulfillment,
-            data=data)
+        return self._claim_contract(contract=contract, as_sender=True, fulfillment=fulfillment, data=data)
 
 
     def _create_contract(self, recipient, amount, duration, source, refund, data, secret_hash):
@@ -1015,7 +1023,7 @@ class TFChainAtomicSwap():
         txn.data = data
 
         # define the atomic swap contract and add it as a coin output
-        asc = j.clients.tfchain.types.conditions.atomicswap_new(
+        asc = j.clients.tfchain.types.conditions.atomic_swap_new(
             sender=sender, receiver=recipient, hashed_secret=secret_hash, lock_time=duration)
         txn.coin_output_add(condition=asc, value=amount)
 
@@ -1059,7 +1067,7 @@ class TFChainAtomicSwap():
         # return the txn, as well as the submit status as a boolean
         return TransactionSendResult(txn, submit)
         
-    def _claim_contract(self, contractid, value, recipient, fulfillment, data):
+    def _claim_contract(self, contract, as_sender, fulfillment, data):
         """
         claim an unspent atomic swap contract
         """
@@ -1069,11 +1077,11 @@ class TFChainAtomicSwap():
         txn.miner_fee_add(miner_fee)
         txn.data = data
         # define the coin input
-        txn.coin_input_add(parentid=contractid, fulfillment=fulfillment)
+        txn.coin_input_add(parentid=contract.outputid, fulfillment=fulfillment, parent_output=contract.coin_output)
         # and the coin output
         txn.coin_output_add(
-            condition=j.clients.tfchain.types.conditions.unlockhash_new(recipient),
-            value=value-miner_fee)
+            condition=j.clients.tfchain.types.conditions.unlockhash_new(contract.sender if as_sender else contract.receiver),
+            value=contract.amount-miner_fee)
         
         # get all signature requests
         sig_requests = txn.signature_requests_new()
@@ -1099,8 +1107,6 @@ class TFChainAtomicSwap():
         txn.id = self._transaction_put(transaction=txn)
         # update balance
         balance = self._wallet.balance
-        for ci in txn.coin_inputs:
-            balance.output_add(ci.parent_output, confirmed=False, spent=True)
         addresses = self._wallet.addresses
         for idx, co in enumerate(txn.coin_outputs):
             if str(co.condition.unlockhash) in addresses:

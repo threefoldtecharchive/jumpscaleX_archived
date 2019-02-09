@@ -5,6 +5,8 @@ AtomicSwap Types.
 
 from Jumpscale import j
 
+import hashlib
+
 from datetime import datetime
 
 from .PrimitiveTypes import Hash, BinaryData
@@ -27,6 +29,18 @@ class AtomicSwapContract():
         if not isinstance(unspent, bool):
             raise TypeError("unspent status is expected to be of type bool, not {}".format(type(unspent)))
         self._unspent = unspent
+
+    def __eq__(self, other):
+        if not isinstance(other, AtomicSwapContract):
+            raise TypeError("other is expected to ben AtomicSwapContract as well")
+        return self.unspent == other.unspent and \
+            (self.outputid == other.outputid) and \
+                self.amount == other.amount and \
+                    self.unspent == other.unspent and \
+                        (self.condition.json() == other.condition.json())
+       
+    def __ne__(self, other):
+        return not (self == other)
 
     @property 
     def outputid(self):
@@ -53,7 +67,7 @@ class AtomicSwapContract():
     def secret_hash(self):
         """
         Secret Hash of the Atomic Swap contract,
-        a blake2b hash of the secret that is needed to redeem it.
+        a sha256 hash of the secret that is needed to redeem it.
         """
         return self._condition.hashed_secret
 
@@ -79,6 +93,20 @@ class AtomicSwapContract():
         """
         return self._unspent
 
+    @property
+    def condition(self):
+        """
+        Returns the Atomic Swap Condition that drives this AtomicSwapContract.
+        """
+        return self._condition
+    
+    @property
+    def coin_output(self):
+        """
+        Returns the Coin Output that is the framework for this contract.
+        """
+        return CoinOutput(value=self.amount, condition=self.condition, id=self.outputid)
+
     def verify_secret(self, secret):
         """
         Verifies the given secret is a valid value and
@@ -86,12 +114,15 @@ class AtomicSwapContract():
 
         Returns True if the secret has been verified succesfully, False otherwise.
         """
-        if not isinstance(secret, BinaryData):
-            raise TypeError("secret is expected to be of type BinaryData, not {}".format(type(secret)))
-        if not len(secret.value) != 32:
+        if isinstance(secret, (str, bytes, bytearray)):
+            secret = BinaryData(value=secret)
+        elif not isinstance(secret, BinaryData):
+            raise TypeError("secret is expected to be of type BinaryData, bytes, bytearray or str, but not {}".format(type(secret)))
+        if len(secret.value) != 32:
             raise ValueError("secret is expected to have a byte length of 32, not {}".format(len(secret.value)))
-        secret_hash = BinaryData(value=bytes.fromhex(j.data.hash.blake2_string(secret.value)))
-        return self.secret_hash == secret_hash
+        
+        secret_hash = BinaryData(value=hashlib.sha256(secret.value).digest())
+        return str(self.secret_hash) == str(secret_hash)
 
     def __repr__(self):
         if self.unspent:

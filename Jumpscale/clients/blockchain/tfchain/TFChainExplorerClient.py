@@ -7,7 +7,7 @@ from Jumpscale.clients.http.HttpClient import HTTPError
 
 import random
 
-from .types.Errors import ExplorerNoContent, ExplorerServerError, ExplorerNotAvailable
+from .types.Errors import ExplorerNoContent, ExplorerServerError, ExplorerNotAvailable, ExplorerServerPostError
 
 class TFChainExplorerClient(j.application.JSBaseClass):
     """
@@ -85,10 +85,10 @@ class TFChainExplorerClient(j.application.JSBaseClass):
                 resp = j.clients.http.post(url=address+endpoint, data=data, headers=headers)
                 if resp.getcode() == 200:
                     return resp.readline()
-                raise ExplorerServerError("POST: unexpected error (code: {})".format(resp.getcode()), endpoint)
+                raise ExplorerServerPostError("POST: unexpected error (code: {})".format(resp.getcode()), endpoint, data=data)
             except HTTPError as e:
                 if e.status_code:
-                    raise ExplorerServerError("POST: error (code: {}): {}".format(e.status_code, e.msg), endpoint)
+                    raise ExplorerServerPostError("POST: error (code: {}): {}".format(e.status_code, e.msg), endpoint, data=data)
                 self._log_debug("tfchain explorer get exception at endpoint {} on {}: {}".format(endpoint, address, e))
                 pass
         raise ExplorerNotAvailable("no explorer was available", endpoint=endpoint, addresses=addresses)
