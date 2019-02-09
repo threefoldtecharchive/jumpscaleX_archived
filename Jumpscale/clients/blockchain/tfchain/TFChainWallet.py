@@ -1035,6 +1035,13 @@ class TFChainAtomicSwap():
         txn.miner_fee_add(self._minium_miner_fee)
         txn.data = data
 
+        # define refund time already, so we can use the chain time as the current time
+        if isinstance(refund_time, str):
+            chain_time = self._chain_time
+            refund_time = OutputLock(value=refund_time, current_timestamp=chain_time).value
+        elif not isinstance(refund_time, int):
+            raise TypeError("expected refund time to be an integer or string, not to be of type {}".format(type(refund_time)))
+
         # define the atomic swap contract and add it as a coin output
         asc = j.clients.tfchain.types.conditions.atomic_swap_new(
             sender=sender, receiver=recipient, hashed_secret=secret_hash, lock_time=refund_time)
