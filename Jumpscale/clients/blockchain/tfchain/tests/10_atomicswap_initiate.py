@@ -34,7 +34,21 @@ def main(self):
     # money is required to be available in the wallet
     assert str(w.balance.available) == '51'
 
-    # an atomic swap contract can be initiated as follows:
+    # an atomic swap contract can be created and signed without being submitted as follows:
+    result = w.atomicswap.initiate(
+        participator='0131cb8e9b5214096fd23c8d88795b2887fbc898aa37125a406fc4769a4f9b3c1dc423852868f6',
+        amount=50, submit=False) # submit=True is the default
+    assert not result.submitted
+    assert result.transaction.is_fulfilled()
+    # the contract is returned as part of the result
+    assert str(result.contract.amount) == '50'
+    assert str(result.contract.sender) == '011dcc29c37e564ef1b0ae6273bddd6fa9c5fe5443f3a18827d3e5733892f37b2439da663e1e6f'
+    assert str(result.contract.receiver) == '0131cb8e9b5214096fd23c8d88795b2887fbc898aa37125a406fc4769a4f9b3c1dc423852868f6'
+    assert result.contract.refund_timestamp > int(datetime.now().timestamp())
+    assert str(result.contract.secret_hash) == str(BinaryData(value=hashlib.sha256(result.secret.value).digest()))
+    # one would than use `w.transaction_sign(result.transaction)` to submit it for real
+
+    # However, usually an atomic swap contract is initiated as follows:
     result = w.atomicswap.initiate(
         participator='0131cb8e9b5214096fd23c8d88795b2887fbc898aa37125a406fc4769a4f9b3c1dc423852868f6',
         amount=50, data='the beginning of it all') # data is optional

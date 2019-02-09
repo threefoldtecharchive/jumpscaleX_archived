@@ -712,7 +712,7 @@ class TFChainMinter():
         return self._wallet._transaction_put(transaction=transaction)
 
 
-from .types.ConditionTypes import ConditionAtomicSwap
+from .types.ConditionTypes import ConditionAtomicSwap, OutputLock
 from .types.FulfillmentTypes import FulfillmentAtomicSwap
 
 class TFChainAtomicSwap():
@@ -725,10 +725,11 @@ class TFChainAtomicSwap():
             raise TypeError("wallet is expected to be a TFChainWallet")
         self._wallet = wallet
 
-    def initiate(self, participator, amount, duration='+48h', source=None, refund=None, data=None):
+    def initiate(self, participator, amount, refund_time='+48h', source=None, refund=None, data=None, submit=True):
         """
         Initiate an atomic swap contract, targeted at the specified address,
-        with the given amount. By default a 48 hours duration (starting from now) is used, but this can be changed.
+        with the given amount. By default a 48 hours duration (starting from last block time)
+        is used as time until contract can be refunded, but this can be changed.
 
         The participator is one of:
             - None: participator is the Free-For-All wallet
@@ -752,23 +753,28 @@ class TFChainAtomicSwap():
         @param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
         @param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
         @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
+        @param submit: True by default, if False the transaction will not be sent even if possible (e.g. if you want to double check)
         """
         # create a random secret
         secret = BinaryData.random(size=32)
         secret_hash = BinaryData(value=hashlib.sha256(secret.value).digest())
 
         # create the contract
-        result = self._create_contract(recipient=participator, amount=amount, duration=duration, source=source, refund=refund, data=data, secret_hash=secret_hash)
+        result = self._create_contract(
+            recipient=participator, amount=amount, refund_time=refund_time,
+            source=source, refund=refund, data=data, secret_hash=secret_hash,
+            submit=submit)
 
         # return the contract, transaction, submission status as well as secret
         return AtomicSwapInitiationResult(
             AtomicSwapContract(coinoutput=result.transaction.coin_outputs[0], unspent=True),
             secret, result.transaction, result.submitted)
     
-    def participate(self, initiator, amount, secret_hash, duration='+24h', source=None, refund=None, data=None):
+    def participate(self, initiator, amount, secret_hash, refund_time='+24h', source=None, refund=None, data=None, submit=True):
         """
         Initiate an atomic swap contract, targeted at the specified address,
-        with the given amount. By default a 24 hours duration (starting from now) is used, but this can be changed.
+        with the given amount. By default a 24 hours duration (starting from last block time)
+        is used as time until contract can be refunded, but this can be changed.
 
         The amount can be a str or an int:
             - when it is an int, you are defining the amount in the smallest unit (that is 1 == 0.000000001 TFT)
@@ -787,6 +793,7 @@ class TFChainAtomicSwap():
         @param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
         @param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (can only be a personal wallet address)
         @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
+        @param submit: True by default, if False the transaction will not be sent even if possible (e.g. if you want to double check)
         """
         # validate secret hash
         if isinstance(secret_hash, BinaryData):
@@ -797,12 +804,14 @@ class TFChainAtomicSwap():
             raise TypeError("secret hash should be BinaryData, str, bytes or a bytearray, not {}".format(type(secret_hash)))
 
         # create the contract and return the contract, transaction and submission status
-        result = self._create_contract(recipient=initiator, amount=amount, duration=duration, source=source, refund=refund, data=data, secret_hash=secret_hash)
+        result = self._create_contract(
+            recipient=initiator, amount=amount, refund_time=refund_time, source=source,
+            refund=refund, data=data, secret_hash=secret_hash, submit=submit)
         return AtomicSwapParticipationResult(
             AtomicSwapContract(coinoutput=result.transaction.coin_outputs[0], unspent=True),
             result.transaction, result.submitted)
     
-    def verify(self, outputid, amount=None, secret_hash=None, min_duration=None, sender=False, receiver=False, contract=None):
+    def verify(self, outputid, amount=None, secret_hash=None, min_refund_time=None, sender=False, receiver=False, contract=None):
         """
         Verify the status and content of the Atomic Swap Contract linked to the given outputid.
         An exception is returned if the contract does not exist, has already been spent
@@ -813,7 +822,7 @@ class TFChainAtomicSwap():
         @param outputid: str or Hash that identifies the coin output to whuich this contract is linked
         @param amount: validate amount if defined, int or str that defines the amount of TFT to set, see explanation above
         @param secret_hash: validate secret hash if defined, str or BinaryData
-        @param min_duration: validate duration if defined, 0 if expected to be refundable, else the min duration expected until it becomes refundable
+        @param min_refund_time: validate contract's refund time if defined, 0 if expected to be refundable, else the minimun time expected until it becomes refundable
         @param sender: if True it is expected that this wallet is registered as the sender of this contract
         @param receiver: if True it is expected that this wallet is registered as the receiver of this contract
         @param contract: if contract fetched in a previous call already, one can verify it also by directly passing it to this method
@@ -864,12 +873,14 @@ class TFChainAtomicSwap():
                     message="secret_hash is expected to be {}, not {}".format(str(secret_hash), str(contract.secret_hash)),
                     contract=contract)
         
-        # if min_duration is given verify it
-        if min_duration is not None:
-            if isinstance(min_duration, str):
-                min_duration = j.data.types.duration.fromString(min_duration)
-            elif not isinstance(min_duration, int):
-                raise TypeError("expected minimum duration to be an integer, not to be of type {}".format(type(min_duration)))
+        # if min_refund_time is given verify it
+        if min_refund_time is not None:
+            chain_time = self._chain_time
+            if isinstance(min_refund_time, str):
+                min_refund_time = OutputLock(value=min_refund_time, current_timestamp=chain_time).value
+            elif not isinstance(min_refund_time, int):
+                raise TypeError("expected minimum refund time to be an integer or string, not to be of type {}".format(type(min_refund_time)))
+            min_duration = max(0, min_refund_time-chain_time)
             chain_time = self._chain_time
             if chain_time >= contract.refund_timestamp:
                 duration = 0
@@ -987,7 +998,7 @@ class TFChainAtomicSwap():
         return self._claim_contract(contract=contract, as_sender=True, fulfillment=fulfillment, data=data)
 
 
-    def _create_contract(self, recipient, amount, duration, source, refund, data, secret_hash):
+    def _create_contract(self, recipient, amount, refund_time, source, refund, data, secret_hash, submit):
         """
         Create a new atomic swap contract,
         the logic for both the initiate as well as participate phase.
@@ -1024,7 +1035,7 @@ class TFChainAtomicSwap():
 
         # define the atomic swap contract and add it as a coin output
         asc = j.clients.tfchain.types.conditions.atomic_swap_new(
-            sender=sender, receiver=recipient, hashed_secret=secret_hash, lock_time=duration)
+            sender=sender, receiver=recipient, hashed_secret=secret_hash, lock_time=refund_time)
         txn.coin_output_add(condition=asc, value=amount)
 
         # optionally add a refund coin output
@@ -1053,7 +1064,7 @@ class TFChainAtomicSwap():
             co.id = txn.coin_outputid_new(idx)
 
         # submit if possible
-        submit = txn.is_fulfilled()
+        submit = submit and txn.is_fulfilled()
         if submit:
             txn.id = self._transaction_put(transaction=txn)
             # update balance

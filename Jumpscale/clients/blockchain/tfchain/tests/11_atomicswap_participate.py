@@ -32,7 +32,21 @@ def main(self):
     # money is required to be available in the wallet
     assert str(w.balance.available) == '51'
 
-    # an atomic swap contract can be participated as follows:
+    # a participation atomic swap contract can be created and signed as follows:
+    result = w.atomicswap.participate(
+        initiator='01746b199781ea316a44183726f81e0734d93e7cefc18e9a913989821100aafa33e6eb7343fa8c',
+        amount=50, secret_hash='4163d4b31a1708cd3bb95a0a8117417bdde69fd1132909f92a8ec1e3fe2ccdba', submit=False) # submit=True is the default
+    assert not result.submitted
+    assert result.transaction.is_fulfilled()
+    # the contract is returned as part of the result
+    assert str(result.contract.amount) == '50'
+    assert str(result.contract.sender) == '01b73c4e869b6167abe6180ebe7a907f56e0357b4a2f65eb53d22baad84650eb62fce66ba036d0'
+    assert str(result.contract.receiver) == '01746b199781ea316a44183726f81e0734d93e7cefc18e9a913989821100aafa33e6eb7343fa8c'
+    assert result.contract.refund_timestamp > int(datetime.now().timestamp())
+    assert str(result.contract.secret_hash) == '4163d4b31a1708cd3bb95a0a8117417bdde69fd1132909f92a8ec1e3fe2ccdba'
+    # one would than use `w.transaction_sign(result.transaction)` to submit it for real
+
+    # however, usually an atomic swap contract is participated as follows:
     result = w.atomicswap.participate(
         initiator='01746b199781ea316a44183726f81e0734d93e7cefc18e9a913989821100aafa33e6eb7343fa8c',
         amount=50, secret_hash='4163d4b31a1708cd3bb95a0a8117417bdde69fd1132909f92a8ec1e3fe2ccdba')

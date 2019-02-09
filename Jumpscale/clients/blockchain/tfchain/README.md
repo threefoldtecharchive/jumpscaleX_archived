@@ -280,8 +280,8 @@ Create a contract as initiator:
 
 ```python
 result = w.atomicswap.initiate(
-        participator='0131cb8e9b5214096fd23c8d88795b2887fbc898aa37125a406fc4769a4f9b3c1dc423852868f6',
-        amount=50, data='the beginning of it all') # data is optional, source and refund options are available as well
+    participator='0131cb8e9b5214096fd23c8d88795b2887fbc898aa37125a406fc4769a4f9b3c1dc423852868f6',
+    amount=50, data='the beginning of it all') # data is optional, source and refund options are available as well
 result.contract # the contract
 result.transaction # contains the created (and if all good sent) transaction
 result.submitted # if the contract was submitted (if not it is because more signatures are required)
@@ -293,24 +293,47 @@ result.secret # the random generated secret (Save it, but no yet share it)
 > be the recipient or used for refunds.
 > The refund is also used to identify the sender address of the Atomic Swap Contract.
 
+Creating a contract as initiator without submitting it automatically to the network can be done as follows:
+
+```python
+result = w.atomicswap.initiate(
+    participator='0131cb8e9b5214096fd23c8d88795b2887fbc898aa37125a406fc4769a4f9b3c1dc423852868f6',
+    amount=50, submit=False) # submit=True by default, data, source and refund options are available as well
+```
+
+This is not common practise, but should you be in need of pre-submission (custom) validation,
+you can do so by following the above approach.
+
 Create a contract as participator:
 
 ```python
 result = w.atomicswap.participate(
-        initiator='01746b199781ea316a44183726f81e0734d93e7cefc18e9a913989821100aafa33e6eb7343fa8c',
-        amount='50.0', secret_hash='4163d4b31a1708cd3bb95a0a8117417bdde69fd1132909f92a8ec1e3fe2ccdba') # data is optional, source and refund options are available as well
+    initiator='01746b199781ea316a44183726f81e0734d93e7cefc18e9a913989821100aafa33e6eb7343fa8c',
+    amount='50.0', secret_hash='4163d4b31a1708cd3bb95a0a8117417bdde69fd1132909f92a8ec1e3fe2ccdba') # data is optional, source and refund options are available as well
 result.contract # the contract
 result.transaction # contains the created (and if all good sent) transaction
 result.submitted # if the contract was submitted (if not it is because more signatures are required)
 ```
 > See [The AtomicSwap Participate Unit Test](./tests/11_atomicswap_participate.py) for a detailed example.
 
+Creating a contract as participant without submitting it automtically to the network can be done as follows:
+
+```python
+result = w.atomicswap.participate(
+    initiator='01746b199781ea316a44183726f81e0734d93e7cefc18e9a913989821100aafa33e6eb7343fa8c',
+    amount='50.0', secret_hash='4163d4b31a1708cd3bb95a0a8117417bdde69fd1132909f92a8ec1e3fe2ccdba',
+    submit=False) # submit=True by default, data is optional, source and refund options are available as well
+```
+
+This is not common practise, but should you be in need of pre-submission (custom) validation,
+you can do so by following the above approach.
+
 Verify a contract as recipient of an initiation contract:
 
 ```python
 contract = w.atomicswap.verify('dd1babcbab492c742983b887a7408742ad0054ec8586541dd6ee6202877cb486',
-        amount=50, secret_hash='e24b6b609b351a958982ba91de7624d3503f428620f5586fbea1f71807b545c1',
-        min_duration='1d12h', receiver=True)
+    amount=50, secret_hash='e24b6b609b351a958982ba91de7624d3503f428620f5586fbea1f71807b545c1',
+    min_refund_time='+1d12h', receiver=True)
 # an exception is raised if the contract is not found, has already been spent
 # or is not valid according to the defined information
 ```
