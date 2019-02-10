@@ -9,7 +9,7 @@ from ed25519 import SigningKey
 from .types.PrimitiveTypes import Currency, Hash, BinaryData
 from .types.CryptoTypes import PublicKey, UnlockHash, UnlockHashType
 from .types.Errors import *
-from .types.CompositionTypes import CoinOutput, CoinInput
+from .types.IO import CoinOutput, CoinInput
 from .types.ConditionTypes import ConditionNil, ConditionUnlockHash, ConditionLockTime
 from .types.AtomicSwap import AtomicSwapContract
 from .types.Transactions import TransactionBaseClass, TransactionV128, TransactionV129

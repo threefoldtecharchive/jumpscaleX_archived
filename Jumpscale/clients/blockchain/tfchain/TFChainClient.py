@@ -5,7 +5,7 @@ Tfchain Client
 from Jumpscale import j
 from .types.ConditionTypes import UnlockHash, UnlockHashType, ConditionMultiSignature
 from .types.PrimitiveTypes import Hash, Currency
-from .types.CompositionTypes import CoinOutput, BlockstakeOutput
+from .types.IO import CoinOutput, BlockstakeOutput
 from .types.Errors import ExplorerInvalidResponse
 from .types.Transactions import TransactionBaseClass, TransactionV128
 from .TFChainWalletFactory import TFChainWalletFactory

@@ -393,7 +393,7 @@ class InputSignatureHashFactory():
         return self._txn.signature_hash_get(*objects)
 
 
-from .CompositionTypes import CoinInput, CoinOutput, BlockstakeInput, BlockstakeOutput
+from .IO import CoinInput, CoinOutput, BlockstakeInput, BlockstakeOutput
 from .PrimitiveTypes import Currency
 
 class TransactionV1(TransactionBaseClass):

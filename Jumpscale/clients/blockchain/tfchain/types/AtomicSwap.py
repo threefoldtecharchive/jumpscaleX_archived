@@ -9,7 +9,7 @@ import hashlib
 
 from datetime import datetime
 
-from .CompositionTypes import CoinOutput
+from .IO import CoinOutput
 from .ConditionTypes import ConditionAtomicSwap, AtomicSwapSecret, AtomicSwapSecretHash
 
 class AtomicSwapContract():
