@@ -42,8 +42,8 @@ def main(self):
     assert str(result.contract.amount) == '50'
     assert str(result.contract.sender) == '01b73c4e869b6167abe6180ebe7a907f56e0357b4a2f65eb53d22baad84650eb62fce66ba036d0'
     assert str(result.contract.receiver) == '01746b199781ea316a44183726f81e0734d93e7cefc18e9a913989821100aafa33e6eb7343fa8c'
-    assert result.contract.refund_timestamp > int(datetime.now().timestamp())
-    assert str(result.contract.secret_hash) == '4163d4b31a1708cd3bb95a0a8117417bdde69fd1132909f92a8ec1e3fe2ccdba'
+    assert result.contract.refund_timestamp > 1549649728
+    assert result.contract.secret_hash == '4163d4b31a1708cd3bb95a0a8117417bdde69fd1132909f92a8ec1e3fe2ccdba'
     # one would than use `w.transaction_sign(result.transaction)` to submit it for real
 
     # however, usually an atomic swap contract is participated as follows:
@@ -55,8 +55,8 @@ def main(self):
     assert str(result.contract.amount) == '50'
     assert str(result.contract.sender) == '01b73c4e869b6167abe6180ebe7a907f56e0357b4a2f65eb53d22baad84650eb62fce66ba036d0'
     assert str(result.contract.receiver) == '01746b199781ea316a44183726f81e0734d93e7cefc18e9a913989821100aafa33e6eb7343fa8c'
-    assert result.contract.refund_timestamp > int(datetime.now().timestamp())
-    assert str(result.contract.secret_hash) == '4163d4b31a1708cd3bb95a0a8117417bdde69fd1132909f92a8ec1e3fe2ccdba'
+    assert result.contract.refund_timestamp > 1549649728
+    assert result.contract.secret_hash == '4163d4b31a1708cd3bb95a0a8117417bdde69fd1132909f92a8ec1e3fe2ccdba'
 
     # our balance should be updated as well
     assert str(w.balance.available) == '0'

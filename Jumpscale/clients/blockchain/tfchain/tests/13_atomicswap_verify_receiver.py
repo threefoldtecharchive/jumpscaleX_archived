@@ -49,7 +49,7 @@ def main(self):
     assert contract.refund_timestamp == 1549878527
     assert contract.sender == '01b88206a3300dea3dd5f6cd73568ac5797b078910c78cbce6a71fcd0837a3ea5a4f2ed9fc70a1'
     assert contract.receiver == '01b73c4e869b6167abe6180ebe7a907f56e0357b4a2f65eb53d22baad84650eb62fce66ba036d0'
-    assert str(contract.secret_hash) == 'e24b6b609b351a958982ba91de7624d3503f428620f5586fbea1f71807b545c1'
+    assert contract.secret_hash == 'e24b6b609b351a958982ba91de7624d3503f428620f5586fbea1f71807b545c1'
 
     # the amount can however be verified automatically
     w.atomicswap.verify('dd1babcbab492c742983b887a7408742ad0054ec8586541dd6ee6202877cb486', amount=50)

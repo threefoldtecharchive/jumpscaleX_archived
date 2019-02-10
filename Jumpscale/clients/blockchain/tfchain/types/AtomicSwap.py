@@ -9,10 +9,8 @@ import hashlib
 
 from datetime import datetime
 
-from .PrimitiveTypes import Hash, BinaryData
 from .CompositionTypes import CoinOutput
-from .ConditionTypes import ConditionAtomicSwap
-
+from .ConditionTypes import ConditionAtomicSwap, AtomicSwapSecret, AtomicSwapSecretHash
 
 class AtomicSwapContract():
     def __init__(self, coinoutput, unspent=True, current_timestamp=None):
@@ -121,15 +119,9 @@ class AtomicSwapContract():
 
         Returns True if the secret has been verified succesfully, False otherwise.
         """
-        if isinstance(secret, (str, bytes, bytearray)):
-            secret = BinaryData(value=secret)
-        elif not isinstance(secret, BinaryData):
-            raise TypeError("secret is expected to be of type BinaryData, bytes, bytearray or str, but not {}".format(type(secret)))
-        if len(secret.value) != 32:
-            raise ValueError("secret is expected to have a byte length of 32, not {}".format(len(secret.value)))
-        
-        secret_hash = BinaryData(value=hashlib.sha256(secret.value).digest())
-        return str(self.secret_hash) == str(secret_hash)
+        secret = AtomicSwapSecret(value=secret)
+        secret_hash = AtomicSwapSecretHash.from_secret(secret)
+        return self.secret_hash == secret_hash
 
     def __repr__(self):
         if self.unspent:

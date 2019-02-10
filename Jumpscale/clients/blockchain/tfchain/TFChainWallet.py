@@ -712,7 +712,7 @@ class TFChainMinter():
         return self._wallet._transaction_put(transaction=transaction)
 
 
-from .types.ConditionTypes import ConditionAtomicSwap, OutputLock
+from .types.ConditionTypes import ConditionAtomicSwap, OutputLock, AtomicSwapSecret, AtomicSwapSecretHash
 from .types.FulfillmentTypes import FulfillmentAtomicSwap
 
 class TFChainAtomicSwap():
@@ -756,8 +756,8 @@ class TFChainAtomicSwap():
         @param submit: True by default, if False the transaction will not be sent even if possible (e.g. if you want to double check)
         """
         # create a random secret
-        secret = BinaryData.random(size=32)
-        secret_hash = BinaryData(value=hashlib.sha256(secret.value).digest())
+        secret = AtomicSwapSecret.random()
+        secret_hash = AtomicSwapSecretHash.from_secret(secret)
 
         # create the contract
         result = self._create_contract(
@@ -796,13 +796,8 @@ class TFChainAtomicSwap():
         @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
         @param submit: True by default, if False the transaction will not be sent even if possible (e.g. if you want to double check)
         """
-        # validate secret hash
-        if isinstance(secret_hash, BinaryData):
-            secret_hash = secret_hash.value
-        elif isinstance(secret_hash, str):
-            secret_hash = bytes.fromhex(secret_hash)
-        elif not isinstance(secret_hash, (bytes, bytearray)):
-            raise TypeError("secret hash should be BinaryData, str, bytes or a bytearray, not {}".format(type(secret_hash)))
+        # normalize secret hash
+        secret_hash = AtomicSwapSecretHash(value=secret_hash)
 
         # create the contract and return the contract, transaction and submission status
         result = self._create_contract(
@@ -865,12 +860,9 @@ class TFChainAtomicSwap():
         
         # if secret hash is given verify it
         if secret_hash is not None:
-            # validate secret hash
-            if isinstance(secret_hash, (str, bytes, bytearray)):
-                secret_hash = BinaryData(value=secret_hash)
-            elif not isinstance(secret_hash, BinaryData):
-                raise TypeError("secret hash should be BinaryData, str, bytes or a bytearray, not {}".format(type(secret_hash)))
-            if str(secret_hash) != str(contract.secret_hash):
+            # normalize secret hash
+            secret_hash = AtomicSwapSecretHash(value=secret_hash)
+            if secret_hash != contract.secret_hash:
                 raise AtomicSwapContractInvalid(
                     message="secret_hash is expected to be {}, not {}".format(str(secret_hash), str(contract.secret_hash)),
                     contract=contract)
@@ -1192,7 +1184,7 @@ class AtomicSwapInitiationResult(NamedTuple):
     used as the result for an atomic swap initiation call.
     """
     contract: AtomicSwapContract
-    secret: BinaryData
+    secret: AtomicSwapSecret
     transaction: TransactionBaseClass
     submitted: bool
 

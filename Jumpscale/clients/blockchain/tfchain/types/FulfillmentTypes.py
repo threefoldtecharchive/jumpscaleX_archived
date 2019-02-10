@@ -3,10 +3,39 @@ from Jumpscale import j
 from .BaseDataType import BaseDataTypeClass
 from .CryptoTypes import PublicKey
 from .PrimitiveTypes import BinaryData, Hash
-from .ConditionTypes import UnlockHash, UnlockHashType, ConditionNil, ConditionUnlockHash, ConditionAtomicSwap, ConditionMultiSignature
+from .ConditionTypes import UnlockHash, UnlockHashType, ConditionNil, ConditionUnlockHash, ConditionAtomicSwap, ConditionMultiSignature, AtomicSwapSecret
 from .Errors import DoubleSignError
 
 # TODO: add signing tests, and compare signatures to the one in Rivine/TFchain, as for now this is still manually tested
+
+class ED25519Signature(BinaryData):
+    SIZE = 64
+
+    """
+    ED25519 Signature, used in TFChain.
+    """
+    def __init__(self, value=None):
+        super().__init__(value, fixed_size=ED25519Signature.SIZE, strencoding='hex')
+
+    @classmethod
+    def from_json(cls, obj):
+        if not isinstance(obj, str):
+            raise TypeError("ed25519 signature is expected to be an encoded string when part of a JSON object")
+        return cls(value=obj)
+
+    def sia_binary_encode(self, encoder):
+        """
+        Encode this binary data according to the Sia Binary Encoding format.
+        Always encoded as a slice.
+        """
+        encoder.add_slice(self._value)
+
+    def rivine_binary_encode(self, encoder):
+        """
+        Encode this binary data according to the Rivine Binary Encoding format.
+        Always encoded as a slice.
+        """
+        encoder.add_slice(self._value)
 
 _FULFULLMENT_TYPE_SINGLE_SIG = 1
 _FULFILLMENT_TYPE_ATOMIC_SWAP = 2
@@ -77,12 +106,7 @@ class SignatureRequest():
         address = str(public_key.unlockhash())
         if self._unlockhash.type != UnlockHashType.NIL and self.wallet_address != address: # only check if the request is not using a NIL Condition
             raise ValueError("signature request cannot be fulfilled using address {}, expected address {}".format(address, self.wallet_address))
-        # ensure signature is of the correct type
-        if isinstance(signature, (bytearray, bytes)):
-            signature = BinaryData(value=signature)
-        elif not isinstance(signature, BinaryData):
-            raise TypeError("unexpected type for signature, expected bytearray, bytes or Binarydata, but not {}".format(type(signature)))
-        
+
         # add the signature to the callback
         self._callback.signature_add(public_key=public_key, signature=signature)
         # ensure this was the one and only time we signed
@@ -291,16 +315,14 @@ class FulfillmentSingleSignature(FulfillmentBaseClass):
     @property
     def signature(self):
         if self._signature is None:
-            return BinaryData()
+            return ED25519Signature()
         return self._signature
     @signature.setter
     def signature(self, value):
         if value is None:
             self._signature = None
-        elif type(value) is BinaryData:
-            self._signature = BinaryData(value=value.value)
         else:
-            self._signature = BinaryData(value=value)
+            self._signature = ED25519Signature(value=value)
 
     def signature_add(self, public_key, signature):
         """
@@ -311,7 +333,7 @@ class FulfillmentSingleSignature(FulfillmentBaseClass):
     
     def from_json_data_object(self, data):
         self._pub_key = PublicKey.from_json(data['publickey'])
-        self._signature = BinaryData.from_json(data['signature'])
+        self._signature = ED25519Signature.from_json(data['signature'])
 
     def json_data_object(self):
         return {
@@ -403,7 +425,7 @@ class FulfillmentMultiSignature(FulfillmentBaseClass):
 
     def signature_requests_new(self, input_hash_func, parent_condition):
         if not callable(input_hash_func):
-            raise TypeError("expected input hash generator func with signature `f(*extra_objects) -> Hash`, not P{".format(type(input_hash_func)))
+            raise TypeError("expected input hash generator func with signature `f(*extra_objects) -> Hash`, not {}".format(type(input_hash_func)))
         parent_condition = parent_condition.unwrap()
         if not isinstance(parent_condition, ConditionMultiSignature):
             raise TypeError("parent condition of FulfillmentMultiSignature cannot be of type {}".format(type(parent_condition)))
@@ -440,15 +462,17 @@ class PublicKeySignaturePair(BaseDataTypeClass):
     def from_json(cls, obj):
         return cls(
             public_key=PublicKey.from_json(obj['publickey']),
-            signature=BinaryData.from_json(obj['signature']))
+            signature=ED25519Signature.from_json(obj['signature']))
 
     @property
     def public_key(self):
+        if self._public_key is None:
+            return PublicKey()
         return self._public_key
     @public_key.setter
     def public_key(self, pk):
         if pk is None:
-            self._public_key = PublicKey()
+            self._public_key = None
             return
         if not isinstance(pk, PublicKey):
             raise TypeError("cannot assign value of type {} as PublicKeySignaturePair's public key (expected type: PublicKey)".format(type(pk)))
@@ -456,31 +480,33 @@ class PublicKeySignaturePair(BaseDataTypeClass):
 
     @property
     def signature(self):
+        if self._signature is None:
+            return ED25519Signature()
         return self._signature
     @signature.setter
     def signature(self, value):
-        if isinstance(value, BinaryData):
-            self._signature = BinaryData(value=value.value)
+        if value is None:
+            self._signature = None
         else:
-            self._signature = BinaryData(value=value)
+            self._signature = ED25519Signature(value=value)
 
     def json(self):
         return {
-            'publickey': self._public_key.json(),
-            'signature': self._signature.json()
+            'publickey': self.public_key.json(),
+            'signature': self.signature.json()
         }
 
     def sia_binary_encode(self, encoder):
         """
         Encode this PublicKeySignature Pair according to the Sia Binary Encoding format.
         """
-        encoder.add_all(self._public_key, self._signature)
+        encoder.add_all(self.public_key, self.signature)
 
     def rivine_binary_encode(self, encoder):
         """
         Encode this PublicKeySignature Pair according to the Rivine Binary Encoding format.
         """
-        encoder.add_all(self._public_key, self._signature)
+        encoder.add_all(self.public_key, self.signature)
 
 
 # Legacy AtomicSwap Fulfillments are not supported,
@@ -520,30 +546,26 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
     @property
     def signature(self):
         if self._signature is None:
-            return BinaryData()
+            return ED25519Signature()
         return self._signature
     @signature.setter
     def signature(self, value):
         if value is None:
             self._signature = None
-        elif type(value) is BinaryData:
-            self._signature = value
         else:
-            self._signature = BinaryData(value=value)
+            self._signature = ED25519Signature(value=value)
 
     @property
     def secret(self):
         if self._secret is None:
-            return BinaryData()
+            return AtomicSwapSecret()
         return self._secret
     @secret.setter
     def secret(self, value):
         if value is None:
             self._secret = None
-        elif type(value) is BinaryData:
-            self._secret = value
         else:
-            self._secret = BinaryData(value=value)
+            self._secret = AtomicSwapSecret(value=value)
 
     def signature_add(self, public_key, signature):
         """
@@ -554,10 +576,10 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
 
     def from_json_data_object(self, data):
         self._pub_key = PublicKey.from_json(data['publickey'])
-        self._signature = BinaryData.from_json(data['signature'])
+        self._signature = ED25519Signature.from_json(data['signature'])
         self._secret = None
         if 'secret' in data:
-            self._secret = BinaryData.from_json(data['secret'])
+            self._secret = AtomicSwapSecret.from_json(data['secret'])
 
     def json_data_object(self):
         obj = {
@@ -569,12 +591,10 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
         return obj
 
     def sia_binary_encode_data(self, encoder):
-        encoder.add_all(self.public_key, self.signature)
-        encoder.add_array(self.secret.value)
+        encoder.add_all(self.public_key, self.signature, self.secret)
 
     def rivine_binary_encode_data(self, encoder):
-        encoder.add_all(self.public_key, self.signature)
-        encoder.add_array(self.secret.value)
+        encoder.add_all(self.public_key, self.signature, self.secret)
 
     def signature_requests_new(self, input_hash_func, parent_condition):
         if not callable(input_hash_func):
@@ -587,7 +607,7 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
         # used to create the input hash for creating the signature
         def input_hash_gen(public_key):
             if self._secret is not None:
-                return input_hash_func(public_key, Hash(value=self.secret.value)) # TODO: remove this hack, shouldn't use Hash, but it allows us to binary encode without the size prefix
+                return input_hash_func(public_key, self.secret)
             return input_hash_func(public_key)
         # create a signature hash for all signees that haven't signed yet
         for unlockhash in [parent_condition.sender, parent_condition.receiver]:

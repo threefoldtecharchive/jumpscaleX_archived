@@ -394,7 +394,7 @@ class InputSignatureHashFactory():
 
 
 from .CompositionTypes import CoinInput, CoinOutput, BlockstakeInput, BlockstakeOutput
-from .PrimitiveTypes import Currency, RawData
+from .PrimitiveTypes import Currency
 
 class TransactionV1(TransactionBaseClass):
     def __init__(self):
@@ -403,7 +403,7 @@ class TransactionV1(TransactionBaseClass):
         self._blockstake_inputs = []
         self._blockstake_outputs = []
         self._miner_fees = []
-        self._data = RawData()
+        self._data = BinaryData(strencoding='base64')
 
         # hidden flag, that indicates if this Txn was a Legacy v0 Txn or not,
         # False by default as we do not wish to produce new legacy Txns, only decode existing ones
@@ -486,7 +486,7 @@ class TransactionV1(TransactionBaseClass):
             for miner_fee in (txn_data['minerfees'] or []) :
                 txn._miner_fees.append(Currency.from_json(miner_fee))
         if 'arbitrarydata' in txn_data:
-            txn._data = RawData.from_json(txn_data.get('arbitrarydata', None) or '')
+            txn._data = BinaryData.from_json(txn_data.get('arbitrarydata', None) or '', strencoding='base64')
 
         txn._legacy = True
         return txn
@@ -592,20 +592,20 @@ class TransactionV1(TransactionBaseClass):
         with a max length of 83 bytes.
         """
         if self._data is None:
-            return RawData()
+            return BinaryData(strencoding='base64')
         return self._data
     @data.setter
     def data(self, value):
         if value is None:
             self._data = None
             return
-        if isinstance(value, RawData):
+        if isinstance(value, BinaryData):
             value = value.value
         elif isinstance(value, str):
             value = value.encode('utf-8')
         if len(value) > 83:
             raise ValueError("arbitrary data can have a maximum bytes length of 83, {} exceeds this limit".format(len(value)))
-        self._data = RawData(value=value)
+        self._data = BinaryData(value=value, strencoding='base64')
     
     def _signature_hash_input_get(self, *extra_objects):
         if self._legacy:
@@ -688,7 +688,7 @@ class TransactionV1(TransactionBaseClass):
         self._blockstake_inputs = [BlockstakeInput.from_json(bsi) for bsi in data.get('blockstakeinputs', []) or []]
         self._blockstake_outputs = [BlockstakeOutput.from_json(bso) for bso in data.get('blockstakeoutputs', []) or []]
         self._miner_fees = [Currency.from_json(fee) for fee in data.get('minerfees', []) or []]
-        self._data = RawData.from_json(data.get('arbitrarydata', None) or '')
+        self._data = BinaryData.from_json(data.get('arbitrarydata', None) or '', strencoding='base64')
 
     def _json_data_object(self):
         obj = {
@@ -779,7 +779,7 @@ class TransactionV128(TransactionBaseClass):
         self._mint_condition = None
         self._miner_fees = []
         self._data = None
-        self._nonce = RawData(j.data.idgenerator.generateXByteID(8))
+        self._nonce = BinaryData(j.data.idgenerator.generateXByteID(8), strencoding='base64')
 
         # current mint condition
         self._parent_mint_condition = None
@@ -805,20 +805,20 @@ class TransactionV128(TransactionBaseClass):
         with a max length of 83 bytes.
         """
         if self._data is None:
-            return RawData()
+            return BinaryData(strencoding='base64')
         return self._data
     @data.setter
     def data(self, value):
         if value is None:
             self._data = None
             return
-        if isinstance(value, RawData):
+        if isinstance(value, BinaryData):
             value = value.value
         elif isinstance(value, str):
             value = value.encode('utf-8')
         if len(value) > 83:
             raise ValueError("arbitrary data can have a maximum bytes length of 83, {} exceeds this limit".format(len(value)))
-        self._data = RawData(value=value)
+        self._data = BinaryData(value=value, strencoding='base64')
 
     @property
     def mint_condition(self):
@@ -920,11 +920,11 @@ class TransactionV128(TransactionBaseClass):
         return encoder.data
 
     def _from_json_data_object(self, data):
-        self._nonce = RawData.from_json(data.get('nonce', ''))
+        self._nonce = BinaryData.from_json(data.get('nonce', ''), strencoding='base64')
         self._mint_condition = j.clients.tfchain.types.conditions.from_json(data.get('mintcondition', {}))
         self._mint_fulfillment = j.clients.tfchain.types.fulfillments.from_json(data.get('mintfulfillment', {}))
         self._miner_fees = [Currency.from_json(fee) for fee in data.get('minerfees', []) or []]
-        self._data = RawData.from_json(data.get('arbitrarydata', None) or '')
+        self._data = BinaryData.from_json(data.get('arbitrarydata', None) or '', strencoding='base64')
 
     def _json_data_object(self):
         return {
@@ -956,7 +956,7 @@ class TransactionV129(TransactionBaseClass):
         self._coin_outputs = []
         self._miner_fees = []
         self._data = None
-        self._nonce = RawData(j.data.idgenerator.generateXByteID(8))
+        self._nonce = BinaryData(j.data.idgenerator.generateXByteID(8), strencoding='base64')
 
         # current mint condition
         self._parent_mint_condition = None
@@ -982,20 +982,20 @@ class TransactionV129(TransactionBaseClass):
         with a max length of 83 bytes.
         """
         if self._data is None:
-            return RawData()
+            return BinaryData(strencoding='base64')
         return self._data
     @data.setter
     def data(self, value):
         if value is None:
             self._data = None
             return
-        if isinstance(value, RawData):
+        if isinstance(value, BinaryData):
             value = value.value
         elif isinstance(value, str):
             value = value.encode('utf-8')
         if len(value) > 83:
             raise ValueError("arbitrary data can have a maximum bytes length of 83, {} exceeds this limit".format(len(value)))
-        self._data = RawData(value=value)
+        self._data = BinaryData(value=value, strencoding='base64')
 
     @property
     def coin_outputs(self):
@@ -1100,11 +1100,11 @@ class TransactionV129(TransactionBaseClass):
         return encoder.data
 
     def _from_json_data_object(self, data):
-        self._nonce = RawData.from_json(data.get('nonce', ''))
+        self._nonce = BinaryData.from_json(data.get('nonce', ''), strencoding='base64')
         self._mint_fulfillment = j.clients.tfchain.types.fulfillments.from_json(data.get('mintfulfillment', {}))
         self._coin_outputs = [CoinOutput.from_json(co) for co in data.get('coinoutputs', []) or []]
         self._miner_fees = [Currency.from_json(fee) for fee in data.get('minerfees', []) or []]
-        self._data = RawData.from_json(data.get('arbitrarydata', None) or '')
+        self._data = BinaryData.from_json(data.get('arbitrarydata', None) or '', strencoding='base64')
 
     def _json_data_object(self):
         return {
