@@ -1002,8 +1002,15 @@ class TFChainAtomicSwap():
         if amount <= 0:
             raise ValueError("no amount is defined to be swapped")
 
-        # define the coin inputs
+        # define the miner fee
         miner_fee = self._minium_miner_fee
+
+        # ensure the amount is bigger than the miner fee,
+        # otherwise the contract cannot be redeemed/refunded
+        if amount <= miner_fee:
+            raise AtomicSwapInsufficientAmountError(amount=amount, minimum_miner_fee=miner_fee)
+
+        # define the coin inputs
         balance = self._wallet.balance
         inputs, remainder, suggested_refund = balance.fund(amount+miner_fee, source=source)
 

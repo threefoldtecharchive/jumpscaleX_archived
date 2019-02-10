@@ -1,9 +1,10 @@
 from Jumpscale import j
 
-from datetime import datetime
+import pytest
 
 from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChainExplorerGetClientStub
 from Jumpscale.clients.blockchain.tfchain.types.AtomicSwap import AtomicSwapContract
+from Jumpscale.clients.blockchain.tfchain.types.Errors import AtomicSwapInsufficientAmountError
 
 def main(self):
     """
@@ -69,3 +70,12 @@ def main(self):
     # and ensure the transaction is fully signed
     for ci in transaction.coin_inputs:
         assert len(ci.fulfillment.signature.value) == 64
+
+    # FYI: a contract's amount has to be greater than the network's minimum miner fee,
+    # while tfchain does allow it, this client will raise an exception when you
+    # do try to give a value equal to or less than the networks' miner fee.
+    # This because such a contract cannot be redeemed or refunded.
+    with pytest.raises(AtomicSwapInsufficientAmountError):
+        w.atomicswap.participate(
+            initiator='01746b199781ea316a44183726f81e0734d93e7cefc18e9a913989821100aafa33e6eb7343fa8c',
+            amount=c.minimum_miner_fee-'0.000000001 TFT', secret_hash='4163d4b31a1708cd3bb95a0a8117417bdde69fd1132909f92a8ec1e3fe2ccdba')

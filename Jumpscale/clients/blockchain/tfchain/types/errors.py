@@ -143,6 +143,35 @@ class DoubleSignError(Exception):
     DoubleSignError error
     """
 
+
+class AtomicSwapInsufficientAmountError(Exception):
+    """
+    AtomicSwapInsufficientAmountError error,
+    triggered when creating a contract with an amount equal or lower than
+    minimum fee, which isn't allowed as such a contract cannot be redeemed/refunded.
+    """
+    def __init__(self, amount, minimum_miner_fee):
+        super().__init__(
+            "atomic swap contract requires an amount higher than the minimum miner fee ({}): {} is an invalid value".format(
+                str(minimum_miner_fee), str(amount)))
+        self._amount = amount
+        self._minimum_miner_fee = minimum_miner_fee
+
+    @property
+    def amount(self):
+        """
+        The insufficient amount that was used.
+        """
+        return self._amount
+
+    @property
+    def minimum_miner_fee(self):
+        """
+        The minimum miner fee required on the network used.
+        """
+        return self._minimum_miner_fee
+
+
 class AtomicSwapContractError(Exception):
     """
     AtomicSwapError generic Base error,
