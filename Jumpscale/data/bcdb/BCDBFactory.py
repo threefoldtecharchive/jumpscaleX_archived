@@ -128,13 +128,13 @@ class BCDBFactory(j.application.JSBaseClass):
         date_start** = 0 (D)
         description = ""
         token_price** = "10 USD" (N)
-        cost_estimate:hw_cost = 0.0 #this is a comment
+        hw_cost = 0.0 #this is a comment
         llist = []
         llist3 = "1,2,3" (LF)
         llist4 = "1,2,3" (L)
         llist5 = "1,2,3" (LI)
         U = 0.0
-        #pool_type = "managed,unmanaged" (E)  #NOT DONE FOR NOW
+        pool_type = "managed,unmanaged" (E)
         """
 
         if self.latest != None:

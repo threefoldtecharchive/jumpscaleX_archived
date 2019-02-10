@@ -13,7 +13,7 @@ def main(self):
 
     c = j.clients.zdb.client_admin_get()
     c.namespace_new("test", secret="1234")
-    cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9900, secret="1234")
+    cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9901, secret="1234")
     cl1.flush()
 
     bcdb, _ = self._load_test_model()

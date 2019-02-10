@@ -44,8 +44,6 @@ def main(self):
     assert e.toData("YELLOW ")== 3
 
 
-
-
     assert e._jumpscale_location=="j.data.types.enumerations['6d9fe6d18a520e26fce3841a7065c93b']"
 
     # self._log_info("TEST DONE")

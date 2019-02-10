@@ -4,10 +4,10 @@ from Jumpscale import j
 
 from Jumpscale.data.types.PrimitiveTypes import (String, StringMultiLine, Bytes,
                                                  Boolean, Integer,
-                                                 Float, Percent, Object, JSObject)
+                                                 Float, Percent)
 
 import struct
-
+from .TypeBaseClasses import *
 
 class YAML(String):
     '''Generic dictionary type'''
@@ -82,7 +82,7 @@ class JSON(String):
         return self.clean(v)
 
     def toJSON(self, v):
-        return self.fromString(v)
+        return self.clean(v)
 
     def toHR(self, v):
         return self.toString(v)
@@ -152,7 +152,7 @@ class Dictionary(String):
         return "%s @%s :Data;" % (name, nr)
 
 
-class List():
+class List(TypeBaseClass):
     '''
     Generic list & set type
     in the self.clean there is a sort option
@@ -315,6 +315,7 @@ class Hash(List):
 
     NAME = 'hash'
     BASETYPE = 'string'
+    ALIAS = 'hash'
 
     def fromString(self, s):
         """

@@ -67,19 +67,19 @@ class Schema(j.application.JSBaseClass):
         """
         if "\\n" in txt:
             jumpscaletype = j.data.types.multiline
-            defvalue = jumpscaletype.fromString(txt)
+            defvalue = jumpscaletype.clean(txt)
 
         elif "'" in txt or '"' in txt:
             jumpscaletype = j.data.types.string
-            defvalue = jumpscaletype.fromString(txt)
+            defvalue = jumpscaletype.clean(txt)
 
         elif "." in txt:
             jumpscaletype = j.data.types.float
-            defvalue = jumpscaletype.fromString(txt)
+            defvalue = jumpscaletype.clean(txt)
 
         elif "true" in txt.lower() or "false" in txt.lower():
             jumpscaletype = j.data.types.bool
-            defvalue = jumpscaletype.fromString(txt)
+            defvalue = jumpscaletype.clean(txt)
 
         elif "[]" in txt:
             jumpscaletype = j.data.types._list()
@@ -88,7 +88,7 @@ class Schema(j.application.JSBaseClass):
 
         elif j.data.types.int.checkString(txt):  # means is digit
             jumpscaletype = j.data.types.int
-            defvalue = jumpscaletype.fromString(txt)
+            defvalue = jumpscaletype.clean(txt)
 
         else:
             raise RuntimeError("cannot find type for:%s" % txt)
@@ -167,7 +167,7 @@ class Schema(j.application.JSBaseClass):
                         if line_wo_proptype == "" or line_wo_proptype is None:
                             defvalue = jumpscaletype.get_default()
                         else:
-                            defvalue = jumpscaletype.fromString(line_wo_proptype)
+                            defvalue = jumpscaletype.clean(line_wo_proptype)
             else:
                 jumpscaletype, defvalue = self._proptype_get(line)
 

@@ -2,10 +2,10 @@
 """
 from Jumpscale import j
 import base64
-import ast
+# import ast
+from .TypeBaseClasses import *
 
-
-class String():
+class String(TypeBaseClass):
 
     '''
     Generic string type
@@ -13,6 +13,7 @@ class String():
     '''
 
     NAME = 'string'
+    ALIAS = 'str,s'
     BASETYPE = 'string'
 
     def fromString(self, s):
@@ -46,14 +47,8 @@ class String():
         """
         if value is None:
             value = ""
-        elif not self.check(value):
-            raise ValueError("Invalid value for string: '%s'" % value)
         value = str(value)
-        if value == "\'\'" or value == "\"\"" or value == "":
-            return ""
-        value = value.strip()  # for extra linespaces
-        if (value.startswith("\"") and value.endswith("\"")) or (value.startswith("'") and value.endswith("'")):
-            value = value[1:-1]
+        value = value.strip("").strip("'").strip("\"").strip("")
         return value
 
     def python_code_get(self, value):
@@ -142,7 +137,7 @@ class StringMultiLine(String):
         return out
 
 
-class Bytes():
+class Bytes(TypeBaseClass):
     '''
     Generic array of bytes type
     stored as bytes directly, no conversion
@@ -150,6 +145,7 @@ class Bytes():
 
     NAME = 'bytes'
     BASETYPE = 'bytes'
+    ALIAS = "bin"
 
     def fromString(self, s):
         """
@@ -208,12 +204,13 @@ class Bytes():
             return out
 
 
-class Boolean():
+class Boolean(TypeBaseClass):
 
     '''Generic boolean type'''
 
     NAME = 'boolean'
     BASETYPE = 'boolean'
+    ALIAS = "b,bool"
 
     def fromString(self, s):
         return self.clean(s)
@@ -292,11 +289,12 @@ class Boolean():
         return "%s @%s :Bool;" % (name, nr)
 
 
-class Integer():
+class Integer(TypeBaseClass):
 
     '''Generic integer type'''
 
     NAME = 'integer'
+    ALIAS = 'int,i'
     BASETYPE = 'integer'
 
     def checkString(self, s):
@@ -320,14 +318,14 @@ class Integer():
     def toHR(self, v):
         if int(v) == 4294967295:
             return "-"  # means not set yet
-        return self.clean(v)
+        return '{:,}'.format(self.clean(v))
 
     def fromString(self, s):
-        return j.core.text.getInt(s)
+        return self.clean(s)
 
     def get_default(self):
         # return this high number, is like None, not set yet
-        return 65535
+        return 4294967295
 
     def toJSON(self, v):
         return self.clean(v)
@@ -336,6 +334,13 @@ class Integer():
         """
         used to change the value to a predefined standard for this type
         """
+        if isinstance(value,float):
+            value=int(value)
+        elif isinstance(value,str):
+            value = value.strip().strip("'").strip("\"").strip()
+            if "," in value:
+                value = value.replace(",","")
+            value = int(value)
         if not self.check(value):
             raise ValueError("Invalid value for integer: '%s'" % value)
         return int(value)
@@ -359,12 +364,13 @@ class Integer():
         return "%s @%s :UInt32;" % (name, nr)
 
 
-class Float():
+class Float(TypeBaseClass):
 
     '''Generic float type'''
 
     NAME = 'float'
     BASETYPE = 'float'
+    ALIAS = "f"
 
     def checkString(self, value):
         try:
@@ -387,12 +393,13 @@ class Float():
         return self.clean(v)
 
     def toHR(self, v):
-        return self.clean(v)
+        return "%d"%v
 
     def toJSON(self, v):
         return self.clean(v)
 
     def fromString(self, s):
+        s=self.clean(s)
         return j.core.text.getFloat(s)
 
     def get_default(self):
@@ -402,8 +409,6 @@ class Float():
         """
         used to change the value to a predefined standard for this type
         """
-        if not self.check(value):
-            raise ValueError("Invalid value for float: '%s'" % value)
         return float(value)
 
     def python_code_get(self, value):
@@ -425,67 +430,58 @@ class Float():
         return "%s @%s :Float64;" % (name, nr)
 
 
-class Percent(Integer):
+class Percent(Float):
 
     '''
-    stored as integer,
-    to deal with percentages < 1 we multiply with 100 before storing
-    as input support:
-    xx%
-    when int: is native format is multiples of 100 e.g. 1000 is 10%
-    when string: is e.g. 99 which would be 99%
-    when float is e.g. 50.0 which would be 50%
+    stored as float, 0-1
+    can input as string xx%
+    when int: is native format is 0-1 in float
     when float is e.g. 0.5 which would be 0.5% #be carefull
 
-    when using in multiplication don't forget to divide by 100
 
     '''
 
     NAME = 'percent'
-    BASETYPE = 'integer'
+    ALIAS = 'perc'
+    BASETYPE = 'float'
 
     def clean(self, value):
         """
         used to change the value to a predefined standard for this type
         """
-        if String().check(value):
-            value = value.strip("\"").strip("'")
+        if isinstance(value,str):
+            value = value.strip().strip("\"").strip("'").strip()
             if "%" in value:
                 value = value.replace("%", "")
-            if "." in value:
-                value = float(value)
+                value=float(value)/100
             else:
-                value = int(value)
-        if Integer().check(value):
-            return value
-        elif Float().check(value):
-            return value
+                value = float(value)
+        elif isinstance(value,int) or isinstance(value,float):
+            value = float(value)
         else:
-            raise RuntimeError(
-                "could not convert input to percent, input was:%s" %
-                value)
+            raise RuntimeError("could not convert input to percent, input was:%s" % value)
+        assert value<1.00001
+        return value
 
-    def fromString(self, s):
-        s = self.clean(s)
-        return s
+    def get_default(self):
+        return 0.0
 
     def toHR(self, v):
-        return self.toString(v)
+        return "{:.2%}".format(self.clean(v))
 
     def toString(self, v):
         v = self.clean(v)
-        v = round(v / 100, 2)
         if int(v) == v:
             v = int(v)
         return "{}%".format(v)
 
 
-class Object(Bytes):
+class CapnpBin(Bytes):
     '''
     is capnp object in binary format
     '''
 
-    NAME = 'object'
+    NAME = 'capnpbin'
     BASETYPE = 'bytes'
 
     def fromString(self, s):
@@ -521,13 +517,14 @@ class Object(Bytes):
         raise NotImplemented()
 
 
-class JSObject(Bytes):
+class JSDataObject(Bytes):
     '''
-    jumpscale ORM object
+    jumpscale data object as result of using j.data.schemas.
     '''
 
     NAME = 'jsobject'
     BASETYPE = ''
+    ALIAS = "o,obj"
 
     def __init__(self):
         self.SUBTYPE = None
@@ -563,77 +560,16 @@ class JSObject(Bytes):
     def toml_string_get(self, value, key):
         raise NotImplemented()
 
-
-class Enumeration(String):
-
+class JSConfigObject(TypeBaseClass):
     '''
-    Generic string type
-    stored in capnp as string
+    jumpscale object which inherits from j.application.JSBaseConfigClass
     '''
 
-    NAME = 'enum'
-    BASETYPE = 'string'
-
-    def __init__(self, values):
-        if isinstance(values, str):
-            values = values.split(",")
-            values = [item.strip().strip("'").strip().strip('"').strip() for item in values]
-        if not isinstance(values, list):
-            raise RuntimeError("input for enum is comma separated str or list")
-        self.values = [item.upper().strip() for item in values]
-        self.default = self.values[0]
-        self.values.sort()
-        self.values_str = ",".join(self.values)
-        self._md5 = j.data.hash.md5_string(str(self))  # so it has the default as well
-        self._jumpscale_location = "j.data.types.enumerations['%s']" % self._md5
+    NAME = 'jsconfigobject'
+    BASETYPE = ''
+    ALIAS = "configobj"
 
     def check(self, value):
-        '''Check whether provided value is a string'''
-        try:
-            self.clean()
-        except:
-            return False
-        return True
-
-    def capnp_schema_get(self, name, nr):
-        return "%s @%s :UInt32;" % (name, nr)
-
-    def get_default(self):
-        return self.default
-
-    def toString(self, v):
-        return self.clean(v)
-
-    def toData(self, v):
-        v = self.clean(v)
-        return self.values.index(v)+1
-
-    def clean(self, value):
-        """
-        can use int or string,
-        will find it and return as string
-        """
-        try:
-            value = int(value)
-        except:
-            pass
-        if isinstance(value, str):
-            value = value.upper().strip()
-            if value not in self.values:
-                raise RuntimeError("could not find enum:'%s' in '%s'" % (value, self.values_str))
-            return value
-        elif isinstance(value, int):
-            if value == 0:
-                raise RuntimeError("could not find enum id:%s in '%s', tshould not be 0" % (value, self.values_str))
-            if value > len(self.values)+1:
-                raise RuntimeError("could not find enum id:%s in '%s', too high" % (value, self.values_str))
-            return self.values[value-1]
-        else:
-            raise RuntimeError("unsupported type for enum, is int or string")
-
-    def __str__(self):
-        return "ENNUM: %s (default:%s)" % (self.values_str, self.default)
-
-    __repr__ = __str__
+        return isinstance(value,j.application.JSBaseConfigClass)
 
 

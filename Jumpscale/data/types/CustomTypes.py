@@ -12,6 +12,7 @@ from ipaddress import IPv4Address, IPv6Address
 from ipaddress import AddressValueError, NetmaskValueError
 from Jumpscale import j
 from datetime import datetime
+from .TypeBaseClasses import *
 
 
 class Guid(String):
@@ -126,6 +127,7 @@ class Path(String):
 class Url(String):
     '''Generic url type'''
     NAME = 'url'
+    ALIAS = "u"
 
     def __init__(self):
         String.__init__(self)
@@ -137,6 +139,7 @@ class Url(String):
         Check whether provided value is a valid
         '''
         return self._RE.fullmatch(value) is not None
+
 
     def clean(self, value):
         value = j.data.types.string.clean(value)
@@ -156,6 +159,7 @@ class Tel(String):
     and x stands for phone number extension
     """
     NAME = 'tel'
+    ALIAS = "mobile"
 
     def __init__(self):
         String.__init__(self)
@@ -210,14 +214,39 @@ class IPRange(String):
         return "192.168.1.1/24"
 
 
+class IPAddressObject(TypeBaseObjClass):
+
+    def __init__(self,val):
+        self._jstype = j.data.types.ipaddr
+
+        self._val = None
+        try:
+            self._val = IPv4Address(ip)
+        except (AddressValueError, NetmaskValueError):
+            pass
+
+        if not self._val:
+            try:
+                self._val = IPv6Address(ip)
+            except (AddressValueError, NetmaskValueError):
+                pass
+
+
+
 class IPAddress(String):
     """
     """
     NAME = 'ipaddr'
+    ALIAS = "ipaddress"
 
     def __init__(self):
         String.__init__(self)
         self._RE = re.compile('[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+
+    def get(self,val):
+        res = IPAddressObject(val)
+        if res._val is None:
+            raise
 
     def get_default(self):
         return "192.168.1.1"
@@ -241,10 +270,6 @@ class IPAddress(String):
             the use of regular expressions is INSANE. and also wrong.
             use standard python3 ipaddress module instead.
         """
-        try:
-            return IPv4Address(ip) and True
-        except (AddressValueError, NetmaskValueError):
-            return False
 
     def is_valid_ipv6(self, ip):
         """ Validates IPv6 addresses.
@@ -261,6 +286,7 @@ class IPAddress(String):
 class IPPort(Integer):
     '''Generic IP port type'''
     NAME = 'ipport'
+    ALIAS = 'tcpport'
 
     def __init__(self):
         Integer.__init__(self)
@@ -293,9 +319,6 @@ class Numeric(String):
     """
     NAME = 'numeric'
 
-    def __init__(self):
-        String.__init__(self)
-
     def get_default(self):
         return self.str2bytes("0 USD")
 
@@ -309,6 +332,8 @@ class Numeric(String):
 
         """
         return "%s @%s :Data;" % (name, nr)
+
+
 
     def bytes2cur(self, bindata, curcode="usd", roundnr=None):
         if bindata == b'':
@@ -623,10 +648,11 @@ class DateTime(String):
     internal representation is an epoch (int)
     '''
     NAME = 'datetime'
+    ALIAS = "t"
 
     def __init__(self):
         String.__init__(self)
-        self._RE = re.compile('[0-9]{4}/[0-9]{2}/[0-9]{2}')  #something wrong here is not valid for time
+        # self._RE = re.compile('[0-9]{4}/[0-9]{2}/[0-9]{2}')  #something wrong here is not valid for time
 
     def get_default(self):
         return 0
@@ -690,13 +716,13 @@ class DateTime(String):
                 s0 = splitted[0].strip()
                 s1 = splitted[1].strip()
                 s2 = splitted[2].strip()
-                if len(s0) == 4 and len(s1) == 2 and len(s2) == 2:
+                if len(s0) == 4 and (len(s1) == 2 or len(s1) == 1) and (len(s2) == 2 or len(s2) == 1):
                     # year in front
                     dfstr = "%Y/%m/%d"
-                elif len(s2) == 4 and len(s1) == 2 and len(s0) == 2:
+                elif len(s2) == 4 and (len(s1) == 2 or len(s1) == 1) and (len(s0) == 2 or len(s0) == 1):
                     # year at end
                     dfstr = "%d/%m/%Y"
-                elif len(s2) == 2 and len(s1) == 2 and len(s0) == 2:
+                elif (len(s2) == 2 or len(s2) == 1) and (len(s1) == 2 or len(s1) == 1) and (len(s0) == 2 or len(s0) == 1):
                     # year at start but small
                     dfstr = "%y/%m/%d"
                 else:
@@ -805,10 +831,11 @@ class Date(DateTime):
     internal representation is an epoch (int)
     '''
     NAME = 'date'
+    ALIAS = "d"
 
     def __init__(self):
         String.__init__(self)
-        self._RE = re.compile('[0-9]{4}/[0-9]{2}/[0-9]{2}')
+        # self._RE = re.compile('[0-9]{4}/[0-9]{2}/[0-9]{2}')
 
     def clean(self, v):
         """

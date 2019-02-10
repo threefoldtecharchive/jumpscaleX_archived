@@ -100,7 +100,7 @@ class ModelOBJ():
         keys.sort()
         for key in keys:
             item = res[key]
-            out += "- %-20s: %s\n" % (key, item)
+            out += "- %-30s: %s\n" % (key, item)
         return out
 
 
@@ -165,7 +165,7 @@ class ModelOBJ():
         {% else %} 
         #will make sure that the input args are put in right format
         val = {{prop.js_typelocation}}.clean(val)  #is important because needs to come in right format e.g. binary for numeric
-        if val != self.{{prop.name}}:
+        if True or val != self.{{prop.name}}:
             self._changed_items["{{prop.name}}"] = val
             if self.model:
                 # self._log_debug("change:{{prop.name}} %s"%(val))
@@ -339,21 +339,7 @@ class ModelOBJ():
         """
         human readable dict
         """
-        d={}
-        {% for prop in obj.properties %}
-        {% if prop.jumpscaletype.NAME == "jsobject" %}
-        d["{{prop.name}}"] = self.{{prop.name}}._ddict_hr
-        {% else %}
-        d["{{prop.name}}"] = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
-        {% endif %}
-        {% endfor %}
-        {% for prop in obj.lists %}
-        d["{{prop.name}}"] = self._{{prop.name}}.pylist(subobj_format="H")
-        {% endfor %}
-        if self.id is not None:
-            d["id"]=self.id
-        if self.model is not None:
-            d=self.model._dict_process_out(d)
+        d = self._ddict_hr_get()
         return d
 
     @property
@@ -361,22 +347,6 @@ class ModelOBJ():
         """
         json readable dict
         """
-        # d={}
-        # {% for prop in obj.properties %}
-        # {% if prop.jumpscaletype.NAME == "jsobject" %}
-        # d["{{prop.name}}"] = self.{{prop.name}}._ddict_json
-        # {% else %}
-        # d["{{prop.name}}"] = {{prop.js_typelocation}}.toJSON(self.{{prop.name}})
-        # {% endif %}
-        # {% endfor %}
-        # {% for prop in obj.lists %}
-        # d["{{prop.name}}"] = self._{{prop.name}}.pylist(subobj_format="J")
-        # {% endfor %}
-        # if self.id is not None:
-        #     d["id"]=self.id
-        # if self.model is not None:
-        #     d=self.model._dict_process_out(d)
-        # return d
         return j.data.serializers.json.dumps(self._ddict_hr)
 
     def _ddict_hr_get(self,exclude=[],maxsize=100):
@@ -386,7 +356,8 @@ class ModelOBJ():
         d = {}
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
-        d["{{prop.name}}"] = self.{{prop.name}}._ddict_hr
+        # d["{{prop.name}}"] = j.data.serializers.yaml.dumps(self.{{prop.name}}._ddict_hr)
+        d["{{prop.name}}"] = "\n"+j.core.text.indent(self.{{prop.name}}._str(),4)
         {% else %}
         res = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
         if len(str(res))<maxsize:
@@ -398,6 +369,8 @@ class ModelOBJ():
         for item in exclude:
             if item in d:
                 d.pop(item)
+        if self.model is not None:
+            d=self.model._dict_process_out(d)
         return d
 
 
@@ -416,7 +389,24 @@ class ModelOBJ():
     def _msgpack(self):
         return j.data.serializers.msgpack.dumps(self._ddict)
 
+    def _str(self):
+        out = "## "
+        out += "{BLUE}%s{RESET}\n"%self._schema.url
+        out += "{GRAY}id: %s{RESET} " %self.id
+        if hasattr(self,"name"):
+            out += "{RED}'%s'{RESET} "%self.name
+        out += self._hr_get()
+
+        return out
+
     def __str__(self):
-        return j.data.serializers.json.dumps(str(self._ddict_hr),sort_keys=True, indent=True)
+        out = self._str()
+
+        out += "{RESET}\n\n"
+        out = j.core.tools.text_replace(out)
+        out = out.replace("[","{").replace("]","}")
+        #TODO: *1 dirty hack, the ansi codes are not printed, need to check why
+        print (out)
+        return ""
 
     __repr__ = __str__

@@ -1,7 +1,6 @@
 import sys
-# import JSExceptions
-import Jumpscale.core.errorhandler.JSExceptions as JSExceptions
-# import inspect
+
+from Jumpscale.core.errorhandler.JSExceptions import JSExceptions
 
 try:
     import colored_traceback
@@ -25,8 +24,8 @@ class ErrorHandler():
         # JSBASE.__init__(self)
         self._j = j
         self.setExceptHook()
-        self.exceptions = JSExceptions
-        self._j.exceptions = JSExceptions
+        self.exceptions = JSExceptions()
+        self._j.exceptions = self.exceptions
         self.redis = False
         self.exit_on_error = True
 

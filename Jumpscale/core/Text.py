@@ -186,7 +186,7 @@ class Text(object):
         # out.decode()
         return out
 
-    def indent(self, instr, nspaces=4, wrap=180, strip=True, indentchar=" "):
+    def indent(self, instr, nspaces=4, wrap=180, strip=True, indentchar=" ",args={}):
         """Indent a string a given number of spaces.
 
         Parameters
@@ -203,7 +203,7 @@ class Text(object):
         str|unicode : string indented by ntabs and nspaces.
 
         """
-        return self._j.core.tools.text_strip(instr, ignorecomments=True, args={})
+        return self._j.core.tools.text_indent(instr, nspaces=nspaces,wrap=wrap,strip=strip, indentchar=indentchar,args=args)
 
     def toUnicode(self, value, codec='utf-8'):
         if isinstance(value, str):
@@ -815,7 +815,7 @@ class Text(object):
 
     def getInt(self, text):
         if self._j.data.types.string.check(text):
-            text = self.strip(text)
+            text = self.strip(text).strip("'\"").strip()
             if text.lower() == "none":
                 return 0
             elif text is None:
@@ -883,23 +883,22 @@ class Text(object):
             raise self._j.exceptions.RuntimeError(
                 "input needs to be None, string, bool or int")
 
-    def _dealWithQuote(self, text):
-        """
-        look for 'something,else' the comma needs to be converted to \k
-        """
-        for item in re.findall(matchquote, text):
-            item2 = item.replace(",", "\\K")
-            text = text.replace(item, item2)
-        return text
-
-    def _dealWithList(self, text):
-        """
-        look for [something,2] the comma needs to be converted to \k
-        """
-        for item in re.findall(matchlist, text):
-            item2 = item.replace(",", "\\K")
-            text = text.replace(item, item2)
-        return text
+    # def _dealWithQuote(self, text):
+    #     """
+    #     look for 'something,else' the comma needs to be converted to \k
+    #     """
+    #     for item in re.findall(matchquote, text):
+    #         text = text.replace(item, item)
+    #     return text
+    #
+    # def _dealWithList(self, text):
+    #     """
+    #     look for [something,2] the comma needs to be converted to \k
+    #     """
+    #     for item in re.findall(matchlist, text):
+    #         item2 = item.replace(",", "\\K")
+    #         text = text.replace(item, item2)
+    #     return text
 
     def getList(self, text, ttype=None):
         """
@@ -924,7 +923,7 @@ class Text(object):
         if self.strip(text) == "":
             return []
 
-        text = self._dealWithQuote(text)  # to get ',' in '' not counting
+        # text = self._dealWithQuote(text)  # to get ',' in '' not counting
         if "," in text:
             text = text.split(",")
             text = [item.strip().strip("'").strip() for item in text if item.strip().strip("'").strip() is not ""]
@@ -941,7 +940,7 @@ class Text(object):
 
         res = []
         for item in text:
-            item = ttype.fromString(item)
+            item = ttype.clean(item)
             if item not in res:
                 res.append(item)
         return res
@@ -954,8 +953,8 @@ class Text(object):
         """
         if self.strip() == "" or self.strip() == "{}":
             return {}
-        text = self._dealWithList(text)
-        text = self._dealWithQuote(text)
+        # text = self._dealWithList(text)
+        # text = self._dealWithQuote(text)
         res2 = {}
         for item in self.split(","):
             if item.strip() != "":
@@ -967,7 +966,7 @@ class Text(object):
                 if val.find("[") != -1:
                     val = self.machinetext2val(val)
                 else:
-                    val = val.replace("\k", ",")
+                    # val = val.replace("\k", ",")
                     key = key.strip()
                     val = val.strip()
                 res2[key] = val
