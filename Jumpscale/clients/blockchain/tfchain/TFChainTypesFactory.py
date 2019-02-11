@@ -3,6 +3,7 @@ from Jumpscale import j
 from .types.PrimitiveTypes import BinaryData, Hash, Currency, Blockstake
 from .types.FulfillmentTypes import FulfillmentFactory
 from .types.ConditionTypes import ConditionFactory
+from .types.ThreeBot import ThreeBotTypesFactory
 from .types.CryptoTypes import PublicKey, PublicKeySpecifier
 from .types.transactions.Factory import TransactionFactory
 
@@ -17,6 +18,7 @@ class TFChainTypesFactory(j.application.JSBaseClass):
         self._transaction_factory = TransactionFactory()
         self._fulfillment_factory = FulfillmentFactory()
         self._condition_factory = ConditionFactory()
+        self._threebot_types_factory = ThreeBotTypesFactory()
 
     @property
     def transactions(self):
@@ -35,6 +37,14 @@ class TFChainTypesFactory(j.application.JSBaseClass):
         Condition types.
         """
         return self._condition_factory
+
+    @property
+    def threebot(self):
+        """
+        ThreeBot types.
+        """
+        return self._threebot_types_factory
+
     
     def currency_new(self, value=0):
         """
