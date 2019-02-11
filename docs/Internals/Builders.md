@@ -1,6 +1,12 @@
+# Builders guidlines
 
+## Builder tools 
+Builder tools is a set of tools to perform the common tasks in your builder (e.g read a file
+, write to a file, execute bash commands and many other handy methods that you will probably need in your builder)
+Check [BuilderTools.py](https://github.com/threefoldtech/jumpscaleX/blob/development/Jumpscale/builder/tools/BuilderTools.py)
+ to see the full list of methods available 
 
-## methods 
+## methods you should implement in your builder
 
 ### build
 
@@ -26,13 +32,16 @@
 
 - only for servers
 
-### sandbox(zerohubclient)
+### sandbox(destination_dir="tmp/builder/{self.NAME}", flist=True, zhub_instance=None)
 
-- call sandboxing library to sandbox the solution & copy to /sandbox/var/builds/sandboxes/$name/
-- the  /sandbox/var/builds/sandboxes/$name/ can then be made an flist but result path is /sandbox/... 
-- results in an flist & the relevant files pushed to given zerohubclient (which uses config mgr)
-- flist is in /sandbox/var/builds/sandboxes/$name/$flistname.flist
+this method should be responsible for collecting all bins and libs and dirs that was a result
+of the build and copy it to `destination_dir` in the same directory structure.  
+example:  
+a binary loacted in `/sanbox/bin/{name}` should be copied to `{destinatrion_dir}/sandbox/bin/{name}`
 
+afterward if `flist=True` this method should call `self.flist_create(sandbox_dir,zhub_instance)` which is a method 
+implemented in the base builder class which will tar the sandbox directory and upload it the hub using the provided 
+zhub instance
 ### clean()
 
 removes all files as result from building 
