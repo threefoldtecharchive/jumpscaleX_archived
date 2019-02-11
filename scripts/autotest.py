@@ -6,7 +6,7 @@ from uuid import uuid4
 
 # ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 # response.stderr = ansi_escape.sub('', response.stderr)
-response = run('docker run --name jsx -itd ubuntu:18.04', shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
+response = run('docker build --rm -t jumpscale', shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
 response = run('docker run --rm -t jumpscale /bin/bash -c "curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py"', shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
 response = run('docker run --rm -t jumpscale /bin/bash -c "source /sandbox/env.sh; python3 /sandbox/code/github/threefoldtech/jumpscaleX/test.py"', shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
 
