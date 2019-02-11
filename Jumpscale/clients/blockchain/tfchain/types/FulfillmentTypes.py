@@ -14,14 +14,17 @@ class ED25519Signature(BinaryData):
     """
     ED25519 Signature, used in TFChain.
     """
-    def __init__(self, value=None):
+    def __init__(self, value=None, as_array=False):
         super().__init__(value, fixed_size=ED25519Signature.SIZE, strencoding='hex')
+        if not isinstance(as_array, bool):
+            raise TypeError("as_array has to be of type bool, not type {}".format(type(as_array)))
+        self._as_array = as_array
 
     @classmethod
-    def from_json(cls, obj):
+    def from_json(cls, obj, as_array=False):
         if not isinstance(obj, str):
             raise TypeError("ed25519 signature is expected to be an encoded string when part of a JSON object")
-        return cls(value=obj)
+        return cls(value=obj, as_array=as_array)
 
     def sia_binary_encode(self, encoder):
         """
@@ -33,9 +36,12 @@ class ED25519Signature(BinaryData):
     def rivine_binary_encode(self, encoder):
         """
         Encode this binary data according to the Rivine Binary Encoding format.
-        Always encoded as a slice.
+        Usually encoded as a slice, except when as part of a context where it is not needed.
         """
-        encoder.add_slice(self._value)
+        if self._as_array:
+            encoder.add_array(self._value)
+        else:
+            encoder.add_slice(self._value)
 
 _FULFULLMENT_TYPE_SINGLE_SIG = 1
 _FULFILLMENT_TYPE_ATOMIC_SWAP = 2

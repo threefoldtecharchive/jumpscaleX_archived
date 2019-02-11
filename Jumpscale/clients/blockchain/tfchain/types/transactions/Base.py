@@ -5,10 +5,19 @@ from enum import IntEnum
 from abc import ABC, abstractmethod, abstractclassmethod
 
 class TransactionVersion(IntEnum):
+    """
+    The valid Transaction versions as known by the TFChain network.
+    """
     LEGACY = 0
     STANDARD = 1
+
     MINTER_DEFINITION = 128
     MINTER_COIN_CREATION = 129
+
+    THREEBOT_REGISTRATION = 144
+    THREEBOT_RECORD_UPDATE = 145
+    THREEBOT_NAME_TRANSFER = 146
+
 
 from ..PrimitiveTypes import Hash
 
