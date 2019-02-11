@@ -6,7 +6,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
 
 
     def __init(self):
-
+        pass
 
     def _repository_ensure_apt(self, repository):
         self.ensure('python-software-properties')

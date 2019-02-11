@@ -30,6 +30,30 @@ class BuilderCoreDns(j.builder.system._BaseClass):
 
         self._done_set('install')
 
+    def sandbox(self,  dest_path="/tmp/coredns", sandbox_dir="sandbox", reset=False, create_flist=False, zhub_instance=None):
+        if self._done_check('sandbox',reset):
+            return
+        if not self._done_check('build'):
+            self.build()
+            
+        coredns_bin = j.sal.fs.joinPaths(self.package_path, 'coredns')
+        dir_dest = j.sal.fs.joinPaths(dest_path, coredns_bin[1:]) 
+        j.builder.tools.dir_ensure(dir_dest)
+        j.sal.fs.copyFile(coredns_bin, dir_dest)
+        
+        dir_dest = j.sal.fs.joinPaths(dest_path, sandbox_dir, 'etc/ssl/certs/')
+        j.builder.tools.dir_ensure(dir_dest)
+        j.sal.fs.copyDirTree('/etc/ssl/certs', dir_dest)
+
+        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'coredns_startup.toml')
+        j.sal.fs.copyFile(startup_file,  j.sal.fs.joinPaths(dest_path,sandbox_dir))
+
+        self._done_set('sandbox')
+
+        if create_flist:
+            self.flist_create(dest_path,zhub_instance)
+
+
     def start(self, config_file=None, args=None):
         """Starts coredns with the configuration file provided
 

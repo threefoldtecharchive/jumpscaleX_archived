@@ -37,6 +37,30 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             'etc/group': 'nogroup:x:65534:'
         }
 
+    def sandbox(self, dest_path="/tmp/openresty", reset=False, create_flist=False, zhub_instance=None):
+        if self._done_check('sandbox',reset):
+            return
+        if not self._done_check('build'):
+            self.build()
+
+        for dir_src in self.bins:
+            dir_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR[1:])
+            j.builder.tools.dir_ensure(dir_dest)
+            j.sal.fs.copyFile(dir_src, dir_dest)
+        
+        for dir_src in self.dirs:
+            dir_dest = j.sal.fs.joinPaths(dest_path, dir_src[1:])
+            j.builder.tools.dir_ensure(dir_dest)
+            j.sal.fs.copyDirTree(dir_src, dir_dest)
+
+        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'openresty_startup.toml')
+        j.sal.fs.copyFile(startup_file,   j.sal.fs.joinPaths(dest_path,'sandbox'))
+
+        self._done_set('sandbox')
+        
+        if create_flist:
+            self.flist_create(dest_path,zhub_instance)
+
     def _build_prepare(self):
         j.builder.system.package.mdupdate()
         j.builder.tools.package_install('build-essential libpcre3-dev libssl-dev zlib1g-dev')
