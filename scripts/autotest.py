@@ -1,12 +1,14 @@
 from Jumpscale import j
 from subprocess import run, PIPE
 from uuid import uuid4
+import sys
 
 
 client = j.clients.telegram_bot.get("test")
 response = run('docker build --rm -t jumpscale ../', shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
 if response.returncode:
     client.send_message(chatid="@hamadatest", text='Failed to bulid docker image')
+    sys.exit()
 
 response = run('docker run --rm -t jumpscale /bin/bash -c "source /sandbox/env.sh; python3 /sandbox/code/github/threefoldtech/jumpscaleX/test.py"', shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
 if response.stderr not in [None, '']:
