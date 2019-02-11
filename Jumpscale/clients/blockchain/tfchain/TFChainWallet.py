@@ -12,7 +12,8 @@ from .types.Errors import *
 from .types.IO import CoinOutput, CoinInput
 from .types.ConditionTypes import ConditionNil, ConditionUnlockHash, ConditionLockTime
 from .types.AtomicSwap import AtomicSwapContract
-from .types.Transactions import TransactionBaseClass, TransactionV128, TransactionV129
+from .types.transactions.Base import TransactionBaseClass
+from .types.transactions.Minting import TransactionV128, TransactionV129
 
 _DEFAULT_KEY_SCAN_COUNT = 3
 
@@ -306,7 +307,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             refund = j.clients.tfchain.types.conditions.from_recipient(refund)
 
         # create transaction
-        txn = j.clients.tfchain.transactions.new()
+        txn = j.clients.tfchain.types.transactions.new()
         # add main coin output
         txn.coin_output_add(value=amount, condition=recipient)
         # add refund coin output if needed
@@ -367,7 +368,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         """
         # validate and/or normalize txn parameter
         if isinstance(txn, (str, dict)):
-            txn = j.clients.tfchain.transactions.from_json(txn)
+            txn = j.clients.tfchain.types.transactions.from_json(txn)
         elif not isinstance(txn, TransactionBaseClass):
             raise TypeError("txn value has invalid type {} and cannot be signed".format(type(txn)))
 
@@ -565,7 +566,7 @@ class TFChainMinter():
         @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
         """
         # create empty Mint Definition Txn, with a newly generated Nonce set already
-        txn = j.clients.tfchain.transactions.mint_definition_new()
+        txn = j.clients.tfchain.types.transactions.mint_definition_new()
 
         # add the minimum miner fee
         txn.miner_fee_add(self._minium_miner_fee)
@@ -635,7 +636,7 @@ class TFChainMinter():
         @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
         """
         # create empty Mint Definition Txn, with a newly generated Nonce set already
-        txn = j.clients.tfchain.transactions.mint_coin_creation_new()
+        txn = j.clients.tfchain.types.transactions.mint_coin_creation_new()
 
         # add the minimum miner fee
         txn.miner_fee_add(self._minium_miner_fee)
@@ -1029,7 +1030,7 @@ class TFChainAtomicSwap():
             sender = self._wallet.address
         
         # create and populate the transaction
-        txn = j.clients.tfchain.transactions.new()
+        txn = j.clients.tfchain.types.transactions.new()
         txn.coin_inputs = inputs
         txn.miner_fee_add(self._minium_miner_fee)
         txn.data = data
@@ -1091,7 +1092,7 @@ class TFChainAtomicSwap():
         claim an unspent atomic swap contract
         """
         # create the contract and fill in the easy content
-        txn = j.clients.tfchain.transactions.new()
+        txn = j.clients.tfchain.types.transactions.new()
         miner_fee = self._minium_miner_fee
         txn.miner_fee_add(miner_fee)
         txn.data = data
@@ -1499,7 +1500,7 @@ class WalletBalance(object):
             outputs += self.outputs_unconfirmed_available
         # drain all outputs
         while len(outputs) > 0:
-            txn = j.clients.tfchain.transactions.new()
+            txn = j.clients.tfchain.types.transactions.new()
             txn.data = data
             txn.miner_fee_add(miner_fee)
             # select maximum _MAX_RIVINE_TRANSACTION_INPUTS outputs

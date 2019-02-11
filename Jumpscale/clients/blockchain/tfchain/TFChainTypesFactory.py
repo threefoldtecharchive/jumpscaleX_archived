@@ -4,6 +4,7 @@ from .types.PrimitiveTypes import BinaryData, Hash, Currency, Blockstake
 from .types.FulfillmentTypes import FulfillmentFactory
 from .types.ConditionTypes import ConditionFactory
 from .types.CryptoTypes import PublicKey, PublicKeySpecifier
+from .types.transactions.Factory import TransactionFactory
 
 from .crypto.MerkleTree import Tree
 
@@ -12,19 +13,28 @@ class TFChainTypesFactory(j.application.JSBaseClass):
     TFChain Types Factory class
     """
 
+    def _init(self):
+        self._transaction_factory = TransactionFactory()
+        self._fulfillment_factory = FulfillmentFactory()
+        self._condition_factory = ConditionFactory()
+
+    @property
+    def transactions(self):
+        return self._transaction_factory
+
     @property
     def fulfillments(self):
         """
         Fulfillment types.
         """
-        return FulfillmentFactory()
+        return self._fulfillment_factory
 
     @property
     def conditions(self):
         """
         Condition types.
         """
-        return ConditionFactory()
+        return self._condition_factory
     
     def currency_new(self, value=0):
         """

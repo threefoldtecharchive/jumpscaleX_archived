@@ -57,7 +57,7 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         match = hash_template.match(endpoint)
         if match:
             transactionid = str(Hash(value=j.data.idgenerator.generateXByteID(Hash.SIZE)))
-            transaction = j.clients.tfchain.transactions.from_json(data)
+            transaction = j.clients.tfchain.types.transactions.from_json(data)
             # ensure all coin outputs and block stake outputs have identifiers set
             for idx, co in enumerate(transaction.coin_outputs):
                 co.id = transaction.coin_outputid_new(idx)

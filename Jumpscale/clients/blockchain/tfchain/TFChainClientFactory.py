@@ -6,8 +6,6 @@ from Jumpscale import j
 
 from .TFChainClient import TFChainClient
 
-from .types.Transactions import TFChainTransactionFactory
-
 from .TFChainExplorerClient import TFChainExplorerClient
 from .TFChainTypesFactory import TFChainTypesFactory
 
@@ -22,10 +20,6 @@ class TFChainClientFactory(j.application.JSBaseConfigsClass):
     @property
     def explorer(self):
         return TFChainExplorerClient()
-
-    @property
-    def transactions(self):
-        return TFChainTransactionFactory()
 
     @property
     def types(self):
