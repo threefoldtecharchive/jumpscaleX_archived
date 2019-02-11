@@ -200,6 +200,17 @@ class Currency(BaseDataTypeClass):
         self.value += other.value
         return self
 
+    # operator overloading to allow currencies to be multiplied
+    def __mul__(self, other):
+        other = Currency._op_other_as_currency(other)
+        value = self.value * other.value
+        return Currency(value=value)
+    __rmul__ = __mul__
+    def __imul__(self, other):
+        other = Currency._op_other_as_currency(other)
+        self.value *= other.value
+        return self
+
     # operator overloading to allow currencies to be subtracted
     def __sub__(self, other):
         other = Currency._op_other_as_currency(other)
@@ -235,6 +246,8 @@ class Currency(BaseDataTypeClass):
     def _op_other_as_currency(other):
         if isinstance(other, (int, str)):
             other = Currency(value=other)
+        elif isinstance(other, float):
+            other = Currency(value=Decimal(str(other)))
         elif not isinstance(other, Currency):
             raise TypeError("currency of type {} is not supported".format(type(other)))
         return other

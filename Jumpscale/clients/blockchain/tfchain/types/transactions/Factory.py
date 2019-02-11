@@ -164,6 +164,17 @@ class TransactionFactory(j.application.JSBaseClass):
         assert v146_txn.signature_hash_get(BotTransactionBaseClass.SPECIFIER_RECEIVER).hex() == '36445975184c68e13f8b74e2e87dd72f23cb47ff3bd4f22e80c4654ec63015d9'
         assert v146_txn.binary_encode().hex() == '920100000080f1c6109c685c7452efaf20cec6b170817f1faeb6f0a4ff49a7a0872343e62810f51dee051d8eb7883fb0ad7a848aa5bf18b8bd30fe109daa04f13e7d76af750a0200000080ae9dc9fa308e76de123b5f889fed93d6d9a701dc8d5369787dc25095f3d6eb833f6d47302697d2da22e05854d08f26d723463f328cc6ec445529cff583903308111c68656c6c6f2e7468726565626f74083b9aca0002572635ceed12c61cd78e97391c75fefb01cc969211aa827de4c44eb66285a37c01c4013079d97d169f96b996ff87677483bb601150c1bae8b1061ecbb137b9597d7cb98088e8c0d168ac60c1c6b47caad1bf660192064f2cd74ea38def15ff91d50e50b9bf2046c70c363d2ba152c51fcdaa017a27ab26a75bca76252df852785dd470071001633fdc441710000142014195d5ada0434d0766bf9e3d9b87d2f63ef7b1820739cff88335d45cbae2dac5'
 
+        # 3Bot Transactions also have extra fees,
+        # part of these fees are monthly fees
+        assert BotTransactionBaseClass.compute_monthly_bot_fees(0) == '0 TFT'
+        assert BotTransactionBaseClass.compute_monthly_bot_fees(1) == '10 TFT'
+        assert BotTransactionBaseClass.compute_monthly_bot_fees(2) == '20 TFT'
+        assert BotTransactionBaseClass.compute_monthly_bot_fees(11) == '110 TFT'
+        assert BotTransactionBaseClass.compute_monthly_bot_fees(12) == '84 TFT'
+        assert BotTransactionBaseClass.compute_monthly_bot_fees(21) == '147 TFT'
+        assert BotTransactionBaseClass.compute_monthly_bot_fees(23) == '161 TFT'
+        assert BotTransactionBaseClass.compute_monthly_bot_fees(24) == '120 TFT'
+
         # ERC20 Transactions
 
         # v208 Transactions are supported
