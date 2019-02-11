@@ -715,7 +715,7 @@ class BuilderTools(j.builder.system._BaseClass):
             env = args.update(env)
 
         rc, out, err = j.sal.process.execute(cmd, cwd=None, timeout=timeout, die=True,
-                                             env=env, interactive=False, replace=replace)
+                                             env=env, interactive=False, replace=replace, showout=showout)
         return rc, out, err
 
     def cd(self, path):
@@ -761,7 +761,7 @@ class BuilderTools(j.builder.system._BaseClass):
         command = j.core.tools.text_replace(command)
         rc, out, err = self.run("which '%s'" % command,
                                 die=False, showout=False, profile=True)
-        if rc>0:
+        if rc > 0:
             raise RuntimeError("command '%s' does not exist, cannot find" % command)
         return out.strip()
 
@@ -779,15 +779,15 @@ class BuilderTools(j.builder.system._BaseClass):
 
     @property
     def isUbuntu(self):
-        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("ubuntu")!=-1
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("ubuntu") != -1
 
     @property
     def isLinux(self):
-        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("linux")!=-1
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("linux") != -1
 
     @property
     def isAlpine(self):
-        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("alpine")!=-1
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("alpine") != -1
 
     @property
     def isArch(self):
@@ -795,8 +795,8 @@ class BuilderTools(j.builder.system._BaseClass):
 
     @property
     def isMac(self):
-        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("darwin")!=-1
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("darwin") != -1
 
     @property
     def isCygwin(self):
-        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("cygwin")!=-1
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("cygwin") != -1
