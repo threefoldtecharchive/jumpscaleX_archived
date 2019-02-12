@@ -97,3 +97,14 @@ class BuilderCaddy(j.builder.system._BaseClass):
         else:
             full_path = j.sal.fs.joinPaths(j.core.dirs.BINDIR, self.NAME)
             j.sal.process.killProcessByName(full_path, sig)
+
+
+    def sandbox(self,dest='/tmp/builder/caddy'):
+        if self._done_check('sandbox'):
+             return
+        if not self._done_check('build'):
+            self.build()
+        bin_dest = j.sal.fs.joinPaths(dest, 'sandbox', 'bin')
+        self.tools.dir_ensure(bin_dest)
+        self.tools.file_copy('{DIR_BIN}/caddy', bin_dest)
+        self._done_set('sandbox')
