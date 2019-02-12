@@ -32,11 +32,22 @@ done
 pushd $HOME/code/github/threefoldtech
 
 # cloning source code
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py 1 y
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py 1 y y y y y
+
 #ssh generate
 ssh-keygen -f ~/.ssh/id_rsa -P ''
 eval `ssh-agent -s`
 ssh-add ~/.ssh/id_rsa
 #change in permission
 chown root:root /tmp
+source /sandbox/env.sh 
+cd /sandbox
+js_shell "j.builder.runtimes.lua.install(reset=True)"
+js_shell "j.tools.tmux.execute('source /sandbox/env.sh \n js_shell \'j.tools.markdowndocs.webserver()\'',window ='flist')"
+
+echo "Waiting webserver to launch on 8080..."
+while ! nc -z localhost 8080; do   
+  sleep 10 # wait for 10 seconds before check again
+done
+cp utils/startup.toml /.startup.toml
 tar -cpzf "/tmp/archives/JSX.tar.gz" --exclude dev --exclude sys --exclude proc  /
