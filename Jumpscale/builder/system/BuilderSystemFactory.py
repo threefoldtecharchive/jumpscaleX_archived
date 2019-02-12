@@ -10,6 +10,8 @@ class BuilderSystemPackage(j.application.JSBaseClass):
 
     __jslocation__ = "j.builder.system"
     _BaseClass = BuilderBaseClass
+    # BaseClass property shouldn't start with underscore but we will keep it for backward compatibility
+    BaseClass = _BaseClass
     _BaseFactoryClass = BuilderBaseFactoryClass
 
     def _init(self):
