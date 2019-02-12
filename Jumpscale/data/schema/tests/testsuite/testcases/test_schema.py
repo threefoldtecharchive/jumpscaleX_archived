@@ -621,11 +621,11 @@ class SchemaTest(BaseTest):
             schema_obj.percent = {'number': random.randint(1, 100)}
 
         self.log("Try to set parameter[P1] with percent type, should succeed.")
-        percent = random.randint(0, 250)
+        percent = random.randint(0, 100)
         schema_obj.percent = percent
         self.assertEqual(schema_obj.percent, percent)
 
-        percent = random.uniform(0, 250)
+        percent = random.uniform(0, 100)
         schema_obj.percent = percent
         self.assertEqual(schema_obj.percent, percent)
 
