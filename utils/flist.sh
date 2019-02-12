@@ -49,5 +49,6 @@ echo "Waiting webserver to launch on 8080..."
 while ! nc -z localhost 8080; do   
   sleep 10 # wait for 10 seconds before check again
 done
+cd /sandbox/code/github/threefoldtech/jumpscaleX/
 cp utils/startup.toml /.startup.toml
 tar -cpzf "/tmp/archives/JSX.tar.gz" --exclude dev --exclude sys --exclude proc  /
