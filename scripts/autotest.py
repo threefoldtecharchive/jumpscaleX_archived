@@ -40,7 +40,9 @@ def containers_remove():
     response = execute_cmd('docker ps -a | tail -n+2 | awk "{print\$1}"')
     containers = response.stdout.split()
     for container in containers:
-        execute_cmd('docker rm {}'.format(container))
+        response = execute_cmd('docker rm -f {}'.format(container))
+        if response.returncode:
+            send_msg('Failed to remove docker container')
 
 def images_clean():
     response = execute_cmd('docker images | tail -n+2 | awk "{print \$1}"')
@@ -51,7 +53,9 @@ def images_clean():
         if images[i] == 'ubuntu':
             continue
         else:
-            response = execute_cmd('docker rm {}'.format(images_id[i]))
+            response = execute_cmd('docker rmi -f {}'.format(images_id[i]))
+            if response.returncode:
+                send_msg('Failed to remove docker image')
 
 if __name__ == "__main__":
     build_image()
