@@ -6,7 +6,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
 
     def _init(self):
         self.go_runtime = j.builder.runtimes.golang
-        self.bins = [self.tools.joinpaths(self.go_runtime.go_path_bin, 'caddy')]
+        
 
     def reset(self):
         self.stop()
@@ -56,7 +56,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
         if self._done_check('install', reset):
             return
 
-        caddy_bin_path = self.tools.joinpaths(self.go_runtme.go_path_bin, self.NAME)
+        caddy_bin_path = self.tools.joinpaths(self.go_runtime.go_path_bin, self.NAME)
         j.builder.tools.file_copy(caddy_bin_path, '{DIR_BIN}/caddy')
 
         self._done_set('install')
@@ -99,12 +99,15 @@ class BuilderCaddy(j.builder.system._BaseClass):
             j.sal.process.killProcessByName(full_path, sig)
 
 
-    def sandbox(self,dest='/tmp/builder/caddy'):
+    def sandbox(self,dest='/tmp/builder/caddy',create_flist=True, zhub_instance=None, reset=False):
         if self._done_check('sandbox'):
              return
         if not self._done_check('build'):
             self.build()
         bin_dest = j.sal.fs.joinPaths(dest, 'sandbox', 'bin')
         self.tools.dir_ensure(bin_dest)
-        self.tools.file_copy('{DIR_BIN}/caddy', bin_dest)
+        caddy_bin_path = self.tools.joinpaths(self.go_runtime.go_path_bin, self.NAME)
+        self.tools.file_copy(caddy_bin_path, bin_dest)
+        if create_flist:
+            print(self.flist_create(sandbox_dir=dest, hub_instance=zhub_instance))
         self._done_set('sandbox')
