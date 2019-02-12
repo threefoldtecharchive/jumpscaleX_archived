@@ -41,7 +41,6 @@ class Schema(j.application.JSBaseClass):
 
         j.data.schema.schemas[self.url] = self
 
-
     @property
     def _path(self):
         return j.sal.fs.getDirName(os.path.abspath(__file__))
@@ -100,7 +99,7 @@ class Schema(j.application.JSBaseClass):
         get schema object from schema text
         """
 
-        self._log_debug("load schema",data=text)
+        self._log_debug("load schema", data=text)
 
         self.text = j.core.text.strip(text)
 
@@ -148,11 +147,11 @@ class Schema(j.application.JSBaseClass):
 
             if "(" in line:
                 line_proptype = line.split("(")[1].split(")")[0].strip().lower()
-                self._log_debug("line:%s; lineproptype:'%s'"%(line_original,line_proptype))
+                self._log_debug("line:%s; lineproptype:'%s'" % (line_original, line_proptype))
                 line_wo_proptype = line.split("(")[0].strip()
                 if line_proptype == "o":
                     # special case where we have subject directly attached
-                    jumpscaletype = j.data.types.get("jo")
+                    jumpscaletype = j.data.types.get("o")
                     jumpscaletype.SUBTYPE = pointer_type
                     defvalue = ""
                 else:
@@ -228,7 +227,7 @@ class Schema(j.application.JSBaseClass):
         if not self._capnp:
             tpath = "%s/templates/schema.capnp" % self._path
             _capnp_schema_text = j.tools.jinja2.template_render(
-                    path=tpath, reload=False, obj=self, objForHash=self._md5)
+                path=tpath, reload=False, obj=self, objForHash=self._md5)
             self._capnp = j.data.capnp.getSchemaFromText(_capnp_schema_text)
         return self._capnp
 

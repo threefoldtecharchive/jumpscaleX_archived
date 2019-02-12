@@ -462,7 +462,8 @@ class Percent(Float):
             value = float(value)
         else:
             raise RuntimeError("could not convert input to percent, input was:%s" % value)
-        assert value < 1.00001
+
+        assert value < 100
         return value
 
     def get_default(self):
