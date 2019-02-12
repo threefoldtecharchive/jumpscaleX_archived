@@ -89,3 +89,16 @@ class BuilderTraefik(j.builder.system._BaseClass):
         """
         self._test_run(name=name, obj_key='test_main')
 
+    def sandbox(self,dest='/tmp/builder/traefik'):
+        if self._done_check('sandbox'):
+            return
+        if not self._done_check('build'):
+            self.build()
+
+        bin_dest = j.sal.fs.joinPaths(dest, 'sandbox', 'bin')
+        self.tools.dir_ensure(bin_dest)
+        bin = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
+        j.sal.fs.copyFile(bin, j.sal.fs.joinPaths(bin_dest, self.NAME))
+        self._done_set('sandbox')
+
+
