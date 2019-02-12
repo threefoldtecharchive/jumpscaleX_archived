@@ -8,7 +8,6 @@ class BuilderTraefik(j.builder.system._BaseClass):
 
     def _init(self):
         self.go_runtime = self.b.runtimes.golang
-        self.traefik_dir = self.go_runtime.package_path_get('containous/traefik')
     def build(self, reset=False):
         """install traefik by getting the source from https://github.com/containous/traefik
             and building it.
@@ -84,20 +83,25 @@ class BuilderTraefik(j.builder.system._BaseClass):
         """
         self._test_run(name=name, obj_key='test_main')
 
-    def sandbox(self,dest='/tmp/builder/traefik'):
-        if self._done_check('sandbox'):
+    def sandbox(self,dest='/tmp/builder/traefik', create_flist=True, zhub_instance=None, reset=False):
+        
+        if self._done_check('sandbox') and not reset:
             return
         if not self._done_check('build'):
             self.build()
+        
+        bin_dest = j.sal.fs.joinPaths(dest, 'sandbox', 'bin')
+        self.tools.dir_ensure(bin_dest)
+        bin = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
+        j.sal.fs.copyFile(bin, j.sal.fs.joinPaths(bin_dest, self.NAME))
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'traefik_startup.toml')
         self.startup = j.sal.fs.readFile(startup_file)
         file_dest = j.sal.fs.joinPaths(dest, '.startup.toml')
         j.builder.tools.file_ensure(file_dest)
         j.builder.tools.file_write(file_dest, self.startup)
-        bin_dest = j.sal.fs.joinPaths(dest, 'sandbox', 'bin')
-        self.tools.dir_ensure(bin_dest)
-        bin = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
-        j.sal.fs.copyFile(bin, j.sal.fs.joinPaths(bin_dest, self.NAME))
+        if create_flist:
+            print(self.flist_create(sandbox_dir=dest, hub_instance=zhub_instance))
         self._done_set('sandbox')
+
 
 

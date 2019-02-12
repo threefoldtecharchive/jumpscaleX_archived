@@ -104,7 +104,7 @@ class BuilderBaseClass(BaseClass):
         """
         if not sandbox_dir:
             sandbox_dir = "/tmp/builders/{}".format(self.NAME)
-        self.sandbox_create(sandbox_dir)
+        
         self.copy_dirs(self.root_dirs, sandbox_dir)
         self.write_files(self.root_files, sandbox_dir)
 
