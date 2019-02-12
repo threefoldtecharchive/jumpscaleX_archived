@@ -130,6 +130,7 @@ class BuilderLua(j.builder.system._BaseClass):
 
         alt-getopt
 
+        lua-resty-iyo-auth
         """
 
         for line in C.split("\n"):
