@@ -23,6 +23,7 @@ class Guid(String):
 
     NAME = 'guid'
     ALIAS = "guid"
+
     def __init__(self):
         String.__init__(self)
 
@@ -64,6 +65,7 @@ class Email(String):
 
     NAME = 'email'
     ALIAS = "email"
+
     def __init__(self):
         String.__init__(self)
 
@@ -141,7 +143,6 @@ class Url(String):
         '''
         return self._RE.fullmatch(value) is not None
 
-
     def clean(self, value):
         value = j.data.types.string.clean(value)
         if not self.check(value):
@@ -218,7 +219,7 @@ class IPRange(String):
 
 class IPAddressObject(TypeBaseObjClass):
 
-    def __init__(self,val):
+    def __init__(self, val):
         self._jstype = j.data.types.ipaddr
 
         self._val = None
@@ -234,7 +235,6 @@ class IPAddressObject(TypeBaseObjClass):
                 pass
 
 
-
 class IPAddress(String):
     """
     """
@@ -245,7 +245,7 @@ class IPAddress(String):
         String.__init__(self)
         self._RE = re.compile('[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 
-    def get(self,val):
+    def get(self, val):
         res = IPAddressObject(val)
         if res._val is None:
             raise
@@ -272,6 +272,10 @@ class IPAddress(String):
             the use of regular expressions is INSANE. and also wrong.
             use standard python3 ipaddress module instead.
         """
+        try:
+            return IPv4Address(ip) and True
+        except (AddressValueError, NetmaskValueError):
+            return False
 
     def is_valid_ipv6(self, ip):
         """ Validates IPv6 addresses.
@@ -293,16 +297,17 @@ class IPPort(Integer):
     def __init__(self):
         Integer.__init__(self)
         self.BASETYPE = 'string'
-
+        
+    def get_default(self):
+        return 65535
+    
     def check(self, value):
         '''
         Check if the value is a valid port
         We just check if the value a single port or a range
         Values must be between 0 and 65535
         '''
-        if not Integer.check(self, value):
-            return False
-        if 0 < value <= 65535:
+        if 0 < int(value) <= 65535:
             return True
         return False
 
@@ -860,7 +865,7 @@ class Date(DateTime):
             v=v.replace("'","").replace("\"","").strip()
         if v in [0,"0",None,""]:
             return 0
-        #am sure there are better ways how to do this but goes to beginning of day
+        # am sure there are better ways how to do this but goes to beginning of day
         v2 = DateTime.clean(self,v)
         dt = datetime.fromtimestamp(v2)
         dt2 = datetime(dt.year,dt.month,dt.day,0,0)

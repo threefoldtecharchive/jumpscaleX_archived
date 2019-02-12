@@ -48,8 +48,14 @@ class String(TypeBaseClass):
         """
         if value is None:
             value = ""
+        elif not self.check(value):
+            raise ValueError("Invalid value for string: '%s'" % value)
         value = str(value)
-        value = value.strip("").strip("'").strip("\"").strip("")
+        if value == "\'\'" or value == "\"\"" or value == "":
+            return ""
+        value = value.strip()  # for extra linespaces
+        if (value.startswith("\"") and value.endswith("\"")) or (value.startswith("'") and value.endswith("'")):
+            value = value[1:-1]
         return value
 
     def python_code_get(self, value):
