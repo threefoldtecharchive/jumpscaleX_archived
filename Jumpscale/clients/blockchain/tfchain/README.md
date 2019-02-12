@@ -16,8 +16,9 @@ All methods have docstrings, _read_ them.
     1. [Check your balance](#check-your-balance)
     2. [Send Coins](#send-coins)
 3. [Multi-Signature-Wallet](#multi-signature-wallet): learn how to view and manage Multi-Signature Wallets from your TFChain wallet
-4. [Atomic Swap Contacts](#atomic-swap-contracts): explains how to work with cross-chain atomic swaps, from a TFChain perspective, using your TFChain wallet
-5. [Coin Minting](#coin-minting): a subsection devoted to the coin minters of the network
+4. [3Bot Records](#3bot-records): explains how to get, create new and manage existing 3Bot records
+5. [Atomic Swap Contacts](#atomic-swap-contracts): explains how to work with cross-chain atomic swaps, from a TFChain perspective, using your TFChain wallet
+6. [Coin Minting](#coin-minting): a subsection devoted to the coin minters of the network
 
 ### Client
 
@@ -266,6 +267,48 @@ other co-owners of you wallet still have to sign. If so you have to pass the ret
 
 Using this client one can signs (and submit if possible)
 a transaction using the `w.transaction_sign(txn)` method.
+
+### 3Bot Records
+
+3Bot records can be fetched using the 3Bot client API as follows:
+
+```python
+record = c.threebot.record_get(3) # record fetched by unique ID
+record.identifier # the unique identifier of the 3Bot as an integer
+record.addresses # a list of NetworkAddresses
+record.names # a list of BotNames
+record.public_key # the PublicKey of the 3Bot, used for signature verification
+record.expiration # the timestamp (epoch UNIX seconds) when the
+                  # 3Bot expires if no further action is taken
+```
+> See [The ThreeBot Record Get Unit Test](./tests/16_threebot_record_get.py) for a detailed example.
+
+3Bot records cannot only be fetched by ID, but also by name or public key:
+
+```python
+c.threebot.record_get("chatbot.example")
+```
+
+```python
+c.threebot.record_get("ed25519:e4f55bc46b5feb37c03a0faa2d624a9ee1d0deb5059aaa9625d8b4f60f29bcab")
+```
+
+#### Create and Manage 3Bot Records
+
+Creating a new 3Bot record can be done as follows:
+
+```python
+result = w.threebot.record_new(
+    months=1, # default is 1, can be omitted to keep it at default,
+              # or can be anything of inclusive range of [1,24]
+    names=["chatbot.example"], # names can be omitted as well, as long as you have 1 address
+    addresses=["example.org"], # addresses can be omitted as well, as long as you have 1 address
+    key_index=0) # optionally leave key_index at default value of None
+result.transaction # transaction that was created, signed and if possible submitted
+result.submitted   # True if submitted, False if not possible
+                   # due to lack of signatures in MultiSig Coin Inputs
+```
+> See [The ThreeBot Record New Unit Test](./tests/17_threebot_record_new.py) for a detailed example.
 
 ### Atomic Swap Contracts
 

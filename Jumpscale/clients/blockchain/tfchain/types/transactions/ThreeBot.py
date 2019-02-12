@@ -190,7 +190,7 @@ class TransactionV144(BotTransactionBaseClass):
     def refund_coin_output_set(self, value, condition, id=None):
         co = CoinOutput(value=value, condition=condition)
         co.id = id
-        self._refund_coin_output = value
+        self._refund_coin_output = co
 
     @property
     def addresses(self):
@@ -243,8 +243,8 @@ class TransactionV144(BotTransactionBaseClass):
         if self._transaction_fee is None:
             return Currency()
         return self._transaction_fee
-
-    def set_transaction_fee(self, txfee):
+    @transaction_fee.setter
+    def transaction_fee(self, txfee):
         if txfee is None:
             self._transaction_fee = None
         else:
@@ -551,7 +551,7 @@ class TransactionV145(BotTransactionBaseClass):
     def refund_coin_output_set(self, value, condition, id=None):
         co = CoinOutput(value=value, condition=condition)
         co.id = id
-        self._refund_coin_output = value
+        self._refund_coin_output = co
 
     @property
     def addresses_to_add(self):
@@ -996,7 +996,7 @@ class TransactionV146(BotTransactionBaseClass):
     def refund_coin_output_set(self, value, condition, id=None):
         co = CoinOutput(value=value, condition=condition)
         co.id = id
-        self._refund_coin_output = value
+        self._refund_coin_output = co
     
     @property
     def names(self):

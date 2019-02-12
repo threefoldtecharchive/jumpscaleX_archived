@@ -76,6 +76,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # add sub-apis
         self._minter = TFChainMinter(wallet=self)
         self._atomicswap = TFChainAtomicSwap(wallet=self)
+        self._threebot = TFChainThreeBot(wallet=self)
     
     @property
     def minter(self):
@@ -93,6 +94,14 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         as well as to redeem and refund existing unredeemed atomic swap contrats.
         """
         return self._atomicswap
+
+    @property
+    def threebot(self):
+        """
+        ThreeBot API used to register new 3Bots and
+        manage existing 3Bot records.
+        """
+        return self._threebot
 
     @property
     def client(self):
@@ -1241,6 +1250,129 @@ class SpendableKey():
             hash = Hash(value=hash)
         hash = bytes(hash.value)
         return self._private_key.sign(hash)
+
+
+class TFChainThreeBot():
+    """
+    TFChainThreeBot contains all ThreeBot logic.
+    """
+
+    def __init__(self, wallet):
+        if not isinstance(wallet, TFChainWallet):
+            raise TypeError("wallet is expected to be a TFChainWallet")
+        self._wallet = wallet
+
+    def record_new(self, months=1, names=None, addresses=None, key_index=None, source=None, refund=None):
+        """
+        Create a new 3Bot by creating a new record on the BlockChain,
+        by default 1 month rent is already paid for the 3Bot, but up to 24 months can immediately be pre-paid
+        against a discount if desired.
+
+        At least one name or one address is required, and up to 5 names and 10 addresses can
+        exists for a single 3Bot.
+
+        If no key_index is given a new key pair is generated for the wallet,
+        otherwise the key pair on the given index of the wallet is used.
+
+        @param months: amount of months to be prepaid, at least 1 month is required, maximum 24 months is allowed
+        @param names: 3Bot Names to add to the 3Bot as aliases (minumum 0, maximum 5)
+        @param addresses: Network Addresses used to reach the 3Bot (minimum 0, maximum 10)
+        @param key_index: if None is given a new key pair is generated, otherwise the key pair on the defined index is used.
+        @param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
+        @param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
+        """
+        # create the txn and fill the easiest properties already
+        txn = j.clients.tfchain.types.transactions.threebot_registration_new()
+        txn.number_of_months = months
+        if names is None and addresses is None:
+            raise ValueError("at least one name or one address is given, none is defined")
+        txn.names = names
+        txn.addresses = addresses
+
+        # get the fees, and fund the transaction
+        miner_fee = self._minium_miner_fee
+        bot_fee = txn.required_bot_fees
+        balance = self._wallet.balance
+        inputs, remainder, suggested_refund = balance.fund(miner_fee+bot_fee, source=source)
+
+        # add the coin inputs
+        txn.coin_inputs = inputs
+
+        # add refund coin output if needed
+        if remainder > 0:
+            # define the refund condition
+            if refund is None: # automatically choose a refund condition if none is given
+                if suggested_refund is None:
+                    refund = j.clients.tfchain.types.conditions.unlockhash_new(unlockhash=self._wallet.address)
+                else:
+                    refund = suggested_refund
+            else:
+                # use the given refund condition (defined as a recipient)
+                refund = j.clients.tfchain.types.conditions.from_recipient(refund)
+            txn.refund_coin_output_set(value=remainder, condition=refund)
+        # add the miner fee
+        txn.transaction_fee = miner_fee
+
+        # if the key_index is not defined, generate a new public key,
+        # otherwise use the key_index given
+        if key_index is None:
+            txn.public_key = self._wallet.public_key_new()
+        else:
+            if not isinstance(key_index, int):
+                raise TypeError("key index is to be of type int, not type {}".format(type(key_index)))
+            addresses = self._wallet.addresses
+            if key_index < 0 or key_index >= len(addresses):
+                raise ValueError("key index {} is OOB, index cannot be negative, and can be maximum {}".format(key_index, len(addresses)-1))
+            txn.public_key = self._wallet.key_pair_get(unlockhash=addresses[key_index]).public_key
+
+        # generate the signature requests
+        sig_requests = txn.signature_requests_new()
+        if len(sig_requests) == 0:
+            raise Exception("BUG: sig requests should not be empty at this point, please fix or report as an issue")
+
+        # fulfill the signature requests that we can fulfill
+        for request in sig_requests:
+            try:
+                key_pair = self._wallet.key_pair_get(request.wallet_address)
+                input_hash = request.input_hash_new(public_key=key_pair.public_key)
+                signature = key_pair.sign(input_hash)
+                request.signature_fulfill(public_key=key_pair.public_key, signature=signature)
+            except KeyError:
+                pass # this is acceptable due to how we directly try the key_pair_get method
+
+        # txn should be fulfilled now
+        submit = txn.is_fulfilled()
+        if submit:
+            # submit the transaction
+            txn.id = self._transaction_put(transaction=txn)
+
+            # update balance
+            for ci in txn.coin_inputs:
+                balance.output_add(ci.parent_output, confirmed=False, spent=True)
+            addresses = self._wallet.addresses + list(balance.wallets.keys())
+            for idx, co in enumerate(txn.coin_outputs):
+                if str(co.condition.unlockhash) in addresses:
+                    # add the id to the coin_output, so we can track it has been spent
+                    co.id = txn.coin_outputid_new(idx)
+                    balance.output_add(co, confirmed=False, spent=False)
+        # and return the created/submitted transaction for optional user consumption
+        return TransactionSendResult(txn, submit)
+
+
+    @property
+    def _minium_miner_fee(self):
+        """
+        Returns the minimum miner fee
+        """
+        return self._wallet.client.minimum_miner_fee
+
+    def _transaction_put(self, transaction):
+        """
+        Submit the transaction to the network using the parent's wallet client.
+
+        Returns the transaction ID.
+        """
+        return self._wallet._transaction_put(transaction=transaction)
 
 
 class WalletBalance(object):
