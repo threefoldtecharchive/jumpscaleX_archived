@@ -42,7 +42,7 @@ class TFChainExplorerClient(j.application.JSBaseClass):
                     raise ExplorerNoContent("GET: no content available (code: 204)", endpoint)
                 raise ExplorerServerError("error (code: {})".format(resp.getcode()), endpoint)
             except HTTPError as e:
-                if e.status_code == 400 and b'unrecognized hash' in e.msg:
+                if e.status_code == 400 and (b'unrecognized hash' in e.msg) or (b'not found' in e.msg):
                     raise ExplorerNoContent("GET: no content available for specified hash (code: 400)", endpoint)
                 if e.status_code:
                     raise ExplorerServerError("GET: error (code: {}): {}".format(e.status_code, e.msg), endpoint)

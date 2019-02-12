@@ -7,6 +7,8 @@ from .types.ConditionTypes import UnlockHash, UnlockHashType, ConditionMultiSign
 from .types.PrimitiveTypes import Hash, Currency
 from .types.IO import CoinOutput, BlockstakeOutput
 from .types.Errors import ExplorerInvalidResponse
+from .types.CryptoTypes import PublicKey
+from .types.ThreeBot import BotName, NetworkAddress
 from .types.transactions.Base import TransactionBaseClass
 from .types.transactions.Minting import TransactionV128
 from .TFChainWalletFactory import TFChainWalletFactory
@@ -43,6 +45,16 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
 
     _CHILDCLASSES = [TFChainWalletFactory]
 
+    def _init(self):
+        self._threebot = TFChainThreeBotClient(self)
+
+    @property
+    def threebot(self):
+        """
+        ThreeBot API.
+        """
+        return self._threebot
+
     @property
     def explorer_addresses(self):
         """
@@ -73,7 +85,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         """
         Get the current blockchain info, using the last known block, as reported by an explorer.
         """
-        resp = self._explorer_get(endpoint="/explorer")
+        resp = self.explorer_get(endpoint="/explorer")
         resp = j.data.serializers.json.loads(resp)
         blockid = Hash.from_json(obj=resp['blockid'])
         last_block = self.block_get(blockid)
@@ -91,13 +103,13 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             # get the explorer block
             if isinstance(value, int):
                 endpoint = "/explorer/blocks/{}".format(int(value))
-                resp = self._explorer_get(endpoint=endpoint)
+                resp = self.explorer_get(endpoint=endpoint)
                 resp = j.data.serializers.json.loads(resp)
                 resp = resp['block']
             else:
                 blockid = self._normalize_id(value)
                 endpoint = "/explorer/hashes/"+blockid
-                resp = self._explorer_get(endpoint=endpoint)
+                resp = self.explorer_get(endpoint=endpoint)
                 resp = j.data.serializers.json.loads(resp)
                 if resp['hashtype'] != 'blockid':
                     raise ExplorerInvalidResponse("expected hash type 'blockid' not '{}'".format(resp['hashtype']), endpoint, resp)
@@ -147,7 +159,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         """
         txid = self._normalize_id(txid)
         endpoint = "/explorer/hashes/"+txid
-        resp = self._explorer_get(endpoint=endpoint)
+        resp = self.explorer_get(endpoint=endpoint)
         resp = j.data.serializers.json.loads(resp)
         try:
             if resp['hashtype'] != 'transactionid':
@@ -169,7 +181,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         if isinstance(transaction, TransactionBaseClass):
             transaction = transaction.json()
         endpoint = "/transactionpool/transactions"
-        resp = self._explorer_post(endpoint=endpoint, data=transaction)
+        resp = self.explorer_post(endpoint=endpoint, data=transaction)
         resp = j.data.serializers.json.loads(resp)
         try:
             return str(Hash(value=resp['transactionid']))
@@ -192,7 +204,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         """
         unlockhash = str(j.clients.tfchain.types.conditions.from_recipient(target).unlockhash)
         endpoint = "/explorer/hashes/"+unlockhash
-        resp = self._explorer_get(endpoint=endpoint)
+        resp = self.explorer_get(endpoint=endpoint)
         resp = j.data.serializers.json.loads(resp)
         try:
             if resp['hashtype'] != 'unlockhash':
@@ -254,7 +266,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             raise ValueError("expected hash type should be one of ('coinoutputid', 'blockstakeoutputid'), not {}".format(expected_hash_type))
         id = self._normalize_id(id)
         endpoint = "/explorer/hashes/"+id
-        resp = self._explorer_get(endpoint=endpoint)
+        resp = self.explorer_get(endpoint=endpoint)
         resp = j.data.serializers.json.loads(resp)
         try:
             hash_type = resp['hashtype']
@@ -305,7 +317,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             endpoint += "/%d"%(height)
 
         # get the mint condition
-        resp = self._explorer_get(endpoint=endpoint)
+        resp = self.explorer_get(endpoint=endpoint)
         resp = j.data.serializers.json.loads(resp)
 
         try:
@@ -353,12 +365,28 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         # return the transaction
         return transaction
 
+    @property
+    def explorer_get(self):
+        """
+        Utility method that gets the data on the given endpoint,
+        but in a method so it can be overriden, internally, for Testing purposes.
+        """
+        return self._explorer_get
+
     def _explorer_get(self, endpoint):
         """
         Private utility method that gets the data on the given endpoint,
         but in a method so it can be overriden for Testing purposes.
         """
         return j.clients.tfchain.explorer.get(addresses=self.explorer_addresses, endpoint=endpoint)
+
+    @property
+    def explorer_post(self):
+        """
+        Utility method that sets the data on the given endpoint,
+        but in a method so it can be overriden, internally, for Testing purposes.
+        """
+        return self._explorer_post
 
     def _explorer_post(self, endpoint, data):
         """
@@ -597,3 +625,73 @@ class ExplorerMinerPayout():
     def __str__(self):
         return str(self.id)
     __repr__ = __str__
+
+
+class TFChainThreeBotClient():
+    """
+    TFChainThreeBotClient contains all ThreeBot Logic
+    """
+
+    def __init__(self, client):
+        if not isinstance(client, TFChainClient):
+            raise TypeError("client is expected to be a TFChainClient")
+        self._client = client
+
+    def record_get(self, identifier):
+        """
+        Get a 3Bot record registered on a TFchain network
+        @param identifier: unique 3Bot id, public key or (bot) name to search a 3Bot record for
+        """
+        endpoint = "/explorer/3bot"
+        if isinstance(identifier, int):
+            identifier = str(identifier)
+        elif isinstance(identifier, BotName):
+            endpoint = "/explorer/whois/3bot"
+            identifier = str(identifier)
+        elif isinstance(identifier, PublicKey):
+            identifier = str(identifier)
+        elif isinstance(identifier, str):
+            if BotName.REGEXP.match(identifier) is not None:
+                endpoint = "/explorer/whois/3bot"
+            else:
+                try:
+                    PublicKey.from_json(identifier)
+                except ValueError as exc:
+                    raise ValueError("a 3Bot identifier in string format has to be either a valid BotName or PublicKey, '{}' is neither".format(identifier)) from exc
+        else:
+            raise TypeError("identifier of type {} is invalid".format(type(identifier)))
+        # identifier is a str at this point
+        # and endpoint is configured
+
+        # fetch the data
+        endpoint += "/{}".format(identifier)
+        resp = self._client.explorer_get(endpoint=endpoint)
+        resp = j.data.serializers.json.loads(resp)
+        try:
+            # return the fetched record as a named tuple, for easy semi-typed access
+            record = resp['record']
+            return ThreeBotRecord(
+                identifier=int(record['id']),
+                names=[BotName.from_json(name) for name in record.get('names', []) or []],
+                addresses=[NetworkAddress.from_json(address) for address in record.get('addresses', []) or []],
+                public_key=PublicKey.from_json(record['publickey']),
+                expiration=int(record['expiration']),
+            )
+        except KeyError as exc:
+            # return a KeyError as an invalid Explorer Response
+            raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
+
+
+from typing import NamedTuple
+
+class ThreeBotRecord(NamedTuple):
+    """
+    ThreeBotRecord is a named tuple,
+    used to represent a ThreeBot Record as fetched from an explorer,
+    as the result of a local function.
+    """
+    identifier: int
+    names: list
+    addresses: list
+    public_key: PublicKey
+    expiration: int
