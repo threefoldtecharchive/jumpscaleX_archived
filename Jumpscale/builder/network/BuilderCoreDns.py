@@ -9,11 +9,6 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         self.package_path = j.builder.runtimes.golang.package_path_get(
             'coredns', host='github.com/coredns')
 
-        self.bins = [j.sal.fs.joinPaths(self.package_path, 'coredns')]
-        self.dirs = {'/etc/ssl/certs/': '/etc/ssl/certs/'}
-        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'coredns_startup.toml')
-        self.startup = j.sal.fs.readFile(startup_file)
-
     def build(self, reset=False):
         """
         installs and runs coredns server with redis plugin
@@ -30,29 +25,43 @@ class BuilderCoreDns(j.builder.system._BaseClass):
 
         self._done_set('install')
 
-    def sandbox(self,  dest_path="/tmp/coredns", sandbox_dir="sandbox", reset=False, create_flist=False, zhub_instance=None):
+    def sandbox(self,  dest_path="/tmp/builders/coredns", sandbox_dir="sandbox", reset=False, create_flist=False, zhub_instance=None):
+        '''Copy built bins to dest_path and create flist if create_flist = True
+
+        :param dest_path: destination path to copy files into
+        :type dest_path: str
+        :param sandbox_dir: path to sandbox
+        :type sandbox_dir: str
+        :param reset: reset sandbox file transfer
+        :type reset: bool
+        :param create_flist: create flist after copying files
+        :type create_flist:bool
+        :param zhub_instance: hub instance to upload flist to
+        :type zhub_instance:str
+        '''
+
         if self._done_check('sandbox',reset):
             return
         if not self._done_check('build'):
             self.build()
-            
+
         coredns_bin = j.sal.fs.joinPaths(self.package_path, 'coredns')
         dir_dest = j.sal.fs.joinPaths(dest_path, coredns_bin[1:]) 
         j.builder.tools.dir_ensure(dir_dest)
         j.sal.fs.copyFile(coredns_bin, dir_dest)
-        
+
         dir_dest = j.sal.fs.joinPaths(dest_path, sandbox_dir, 'etc/ssl/certs/')
         j.builder.tools.dir_ensure(dir_dest)
         j.sal.fs.copyDirTree('/etc/ssl/certs', dir_dest)
 
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'coredns_startup.toml')
-        j.sal.fs.copyFile(startup_file,  j.sal.fs.joinPaths(dest_path,sandbox_dir))
+        self.startup = j.sal.fs.readFile(startup_file)
+        j.sal.fs.copyFile(startup_file,  j.sal.fs.joinPaths(dest_path, sandbox_dir))
 
         self._done_set('sandbox')
 
         if create_flist:
-            self.flist_create(dest_path,zhub_instance)
-
+            self.flist_create(dest_path, zhub_instance)
 
     def start(self, config_file=None, args=None):
         """Starts coredns with the configuration file provided
