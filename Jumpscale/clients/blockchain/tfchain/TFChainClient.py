@@ -5,9 +5,10 @@ Tfchain Client
 from Jumpscale import j
 from .types.ConditionTypes import UnlockHash, UnlockHashType, ConditionMultiSignature
 from .types.PrimitiveTypes import Hash, Currency
-from .types.CompositionTypes import CoinOutput, BlockstakeOutput
+from .types.IO import CoinOutput, BlockstakeOutput
 from .types.Errors import ExplorerInvalidResponse
-from .types.Transactions import TransactionBaseClass, TransactionV128
+from .types.transactions.Base import TransactionBaseClass
+from .types.transactions.Minting import TransactionV128
 from .TFChainWalletFactory import TFChainWalletFactory
 from .TFChainWallet import WalletBalance, MultiSigWalletBalance
 
@@ -318,7 +319,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         if resp is None:
             resp = {}
         # parse the transactions
-        transaction = j.clients.tfchain.transactions.from_json(obj=etxn['rawtransaction'], id=etxn['id'])
+        transaction = j.clients.tfchain.types.transactions.from_json(obj=etxn['rawtransaction'], id=etxn['id'])
         # add the parent (coin) outputs
         coininputoutputs = etxn.get('coininputoutputs', None) or []
         if len(transaction.coin_inputs) != len(coininputoutputs):

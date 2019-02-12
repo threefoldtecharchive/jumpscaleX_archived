@@ -2,11 +2,9 @@ from Jumpscale import j
 import time
 
 CMD_APT_GET = "apt-get "
+
+
 class BuilderSystemPackage(j.builder.system._BaseClass):
-
-
-    def __init(self):
-        pass
 
     def _repository_ensure_apt(self, repository):
         self.ensure('python-software-properties')
@@ -124,7 +122,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
 
             key = "install_%s" % package
             if self._done_check(key, reset):
-                self._log_info("package:%s already installed"%package)
+                self._log_info("package:%s already installed" % package)
                 continue
             todo.append(package)
             print("+ install: %s" % package)
@@ -149,8 +147,9 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
                 cmd = "pacman -S %s  --noconfirm\n" % package
 
             elif j.core.platformtype.myplatform.isMac:
-                for unsupported in ["libpython3.4-dev", "python3.4-dev", "libpython3.5-dev", "python3.5-dev",
-                                    "libffi-dev", "libssl-dev", "make", "build-essential", "libpq-dev", "libsqlite3-dev"]:
+                for unsupported in [
+                    "libpython3.4-dev", "python3.4-dev", "libpython3.5-dev", "python3.5-dev", "libffi-dev",
+                        "libssl-dev", "make", "build-essential", "libpq-dev", "libsqlite3-dev"]:
                     if 'libsnappy-dev' in package or 'libsnappy1v5' in package:
                         package = 'snappy'
 
@@ -349,4 +348,3 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
                 self._apt_get("autoclean")
         elif j.core.platformtype.myplatform.isMac:
             j.sal.process.execute("brew remove %s 2>&1 > /dev/null|echo """ % package)
-

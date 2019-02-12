@@ -1,7 +1,5 @@
 from Jumpscale import j
 
-from datetime import datetime
-
 import pytest
 
 from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChainExplorerGetClientStub

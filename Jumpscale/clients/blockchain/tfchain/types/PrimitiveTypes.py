@@ -1,180 +1,146 @@
 from Jumpscale import j
 
+from enum import IntEnum
+
 from .BaseDataType import BaseDataTypeClass
 from .Errors import CurrencyPrecisionOverflow, CurrencyNegativeValue
 
-from abc import abstractmethod
-
-# TODO:
-# Binary data should be one class with following options:
-#   * Fixed-size or not (important for binary encoding) (1)
-#   * format for str encoding (hex or base64) (2)
-# We achieve (2) currently by using sub-classes, but (1) we support manually in the classes
-# that own such binary data.
-#
-# ^ From this perspective is a hash just a fixed-size binary data
-#   (in which case we do want to specify the size for validation)
-
-class BaseBinaryData(BaseDataTypeClass):
+class BinaryData(BaseDataTypeClass):
     """
-    BinaryData is the data type used for any binary data that is not a hash,
-    for example: signatures
+    BinaryData is the data type used for any binary data used in tfchain.
     """
 
-    def __init__(self, value=None):
+    def __init__(self, value=None, fixed_size=None, strencoding=None):
+        # define string encoding
+        if strencoding is not None and not isinstance(strencoding, str):
+            raise TypeError("strencoding should be None or a str, not be of type {}".format(strencoding))
+        if strencoding is None or strencoding.lower().strip() == 'hex':
+            self._from_str = lambda s: bytearray.fromhex(s)
+            self._to_str = lambda value: value.hex()
+        elif strencoding.lower().strip() == 'base64':
+            self._from_str = lambda s: bytearray(j.data.serializers.base64.decode(s))
+            self._to_str = lambda value: j.data.serializers.base64.dumps(value)
+        else:
+            raise TypeError("{} is not a valid string encoding".format(strencoding))
+        self._strencoding = strencoding
+
+        # define fixed size
+        if fixed_size is not None:
+            if not isinstance(fixed_size, int):
+                raise TypeError("fixed size should be None or int, not be of type {}".format(type(fixed_size)))
+            if fixed_size <= 0:
+                raise TypeError("fixed size should be at least 1, {} is not allowed".format(fixed_size))
+        self._fixed_size = fixed_size
+
+        # define the value (finally)
         self._value = None
         self.value = value
 
     @classmethod
-    def from_json(cls, obj):
+    def from_json(cls, obj, fixed_size=None, strencoding=None):
         if not isinstance(obj, str):
             raise TypeError("binary data is expected to be an encoded string when part of a JSON object")
-        return cls(value=obj)
+        return cls(value=obj, fixed_size=fixed_size, strencoding=strencoding)
 
     @property
     def value(self):
         return self._value
     @value.setter
     def value(self, value):
-        if isinstance(value, BaseBinaryData):
-            self._value = value.value
-            return
-        if not value:
+        # normalize the value
+        if isinstance(value, BinaryData):
+            value = value.value
+        elif value is None:
             value = bytearray()
         elif isinstance(value, str):
-            value = self.from_str(value)
+            value = self._from_str(value)
         elif isinstance(value, bytes):
             value = bytearray(value)
         elif not isinstance(value, bytearray):
-            raise TypeError("binary data can only be set to a str, bytes or bytearray, not {}".format(type(value)))
+            raise TypeError("binary data can only be set to a BinaryData, str, bytes or bytearray, not {}".format(type(value)))
+        # if fixed size, check this now
+        lvalue = len(value)
+        if self._fixed_size is not None and lvalue != 0 and lvalue != self._fixed_size:
+            raise ValueError(
+                "binary data was expected to be of fixed size {}, length {} is not allowed".format(
+                    self._fixed_size, len(value)))
+        # all good, assign the bytearray value
         self._value = value
     
     def __str__(self):
-        return self.to_str(self._value)
+        return self._to_str(self._value)
     
-    __repr__ = __str__
+    def __repr__(self):
+        return self.__str__()
     
-    json = __str__
-
-    def sia_binary_encode(self, encoder):
-        """
-        Encode this binary data according to the Sia Binary Encoding format.
-        """
-        encoder.add_slice(self._value)
-    
-    def rivine_binary_encode(self, encoder):
-        """
-        Encode this binary data according to the Rivine Binary Encoding format.
-        """
-        encoder.add_slice(self._value)
-
-    @abstractmethod
-    def from_str(self, s):
-        pass
-    @abstractmethod
-    def to_str(self, value):
-        pass
-
-
-class BinaryData(BaseBinaryData):
-    @classmethod
-    def random(cls, size):
-        if not isinstance(size, int):
-            raise TypeError("expected size to be an integer")
-        if size <= 0:
-            raise ValueError("expected size to be at least equal to 1")
-        return cls(value=j.data.idgenerator.generateXByteID(size))
-
-    def from_str(self, s):
-        return bytearray.fromhex(s)
-    def to_str(self, value):
-        return value.hex()
-    
-class RawData(BaseBinaryData):
-    def from_str(self, s):
-        return bytearray(j.data.serializers.base64.decode(s))
-    def to_str(self, value):
-        return j.data.serializers.base64.dumps(self.value)
-
-
-class Hash(BaseDataTypeClass):
-    # hash size
-    _SIZE = 32
-
-    """
-    TFChain Hash Object.
-    """
-    def __init__(self, value=None):
-        self._value = None
-        self.value = value
-
-    @classmethod
-    def random(cls):
-        return cls(value=j.data.idgenerator.generateXByteID(Hash._SIZE))
-
-    @classmethod
-    def from_json(cls, obj):
-        if not isinstance(obj, str):
-            raise TypeError("hash is expected to be a string when part of a JSON object")
-        return cls(value=obj)
-    
-    @property
-    def value(self):
-        return self._value
-    @value.setter
-    def value(self, value):
-        if isinstance(value, Hash):
-            self._value = value.value
-            return
-        if not value:
-            value = bytearray(b'\x00'*Hash._SIZE)
-        else:
-            if isinstance(value, str):
-                value = bytearray.fromhex(value)
-            elif isinstance(value, bytes):
-                value = bytearray(value)
-            elif not isinstance(value, bytearray):
-                raise TypeError("hash can only be set to a str, bytes or bytearray, not {}".format(type(value)))
-        if len(value) != Hash._SIZE:
-            raise TypeError('hash has to have a fixed length of {}'.format(Hash._SIZE))
-        self._value = value
-    
-    def __str__(self):
-        return self._value.hex()
-    
-    __repr__ = __str__
-    
-    json = __str__
+    def json(self):
+        return self.__str__()
 
     def __eq__(self, other):
-        other = Hash._op_other_as_hash(other)
+        other = self._op_other_as_binary_data(other)
         return self.value == other.value
     def __ne__(self, other):
-        other = Hash._op_other_as_hash(other)
+        other = self._op_other_as_binary_data(other)
         return self.value != other.value
+
+    def _op_other_as_binary_data(self, other):
+        if isinstance(other, (str, bytes, bytearray)):
+            other = BinaryData(value=other, fixed_size=self._fixed_size, strencoding=self._strencoding)
+        elif not isinstance(other, BinaryData):
+            raise TypeError("Binary data of type {} is not supported".format(type(other)))
+        if self._fixed_size != other._fixed_size:
+            raise TypeError(
+                "Cannot compare binary data with different fixed size: self({}) != other({})".format(
+                    self._fixed_size, other._fixed_size))
+        if self._strencoding != other._strencoding:
+            raise TypeError(
+                "Cannot compare binary data with different strencoding: self({}) != other({})".format(
+                    self._strencoding, other._strencoding))
+        return other
 
     def __hash__(self):
         return hash(str(self))
 
-    @staticmethod
-    def _op_other_as_hash(other):
-        if isinstance(other, (str, bytes)):
-            other = Hash(value=other)
-        elif not isinstance(other, Hash):
-            raise TypeError("Hash of type {} is not supported".format(type(other)))
-        return other
-
     def sia_binary_encode(self, encoder):
         """
-        Encode this hash according to the Sia Binary Encoding format.
+        Encode this binary data according to the Sia Binary Encoding format.
+        Either encoded as a slice or an array, depending on whether or not it is fixed sized.
         """
-        encoder.add_array(self._value)
+        if self._fixed_size is None:
+            encoder.add_slice(self._value)
+        else:
+            encoder.add_array(self._value)
     
     def rivine_binary_encode(self, encoder):
         """
-        Encode this hash according to the Rivine Binary Encoding format.
+        Encode this binary data according to the Rivine Binary Encoding format.
+        Either encoded as a slice or an array, depending on whether or not it is fixed sized.
         """
-        encoder.add_array(self._value)
+        if self._fixed_size is None:
+            encoder.add_slice(self._value)
+        else:
+            encoder.add_array(self._value)
+
+class Hash(BinaryData):
+    SIZE = 32
+
+    """
+    TFChain Hash Object, a special type of BinaryData
+    """
+    def __init__(self, value=None):
+        super().__init__(value, fixed_size=Hash.SIZE, strencoding='hex')
+
+    @classmethod
+    def from_json(cls, obj):
+        if not isinstance(obj, str):
+            raise TypeError("hash is expected to be an encoded string when part of a JSON object")
+        return cls(value=obj)
+
+    def __str__(self):
+        s = super().__str__()
+        if not s:
+            return '0'*(Hash.SIZE*2)
+        return s
 
 from math import floor
 from decimal import Decimal
@@ -234,6 +200,17 @@ class Currency(BaseDataTypeClass):
         self.value += other.value
         return self
 
+    # operator overloading to allow currencies to be multiplied
+    def __mul__(self, other):
+        other = Currency._op_other_as_currency(other)
+        value = self.value * other.value
+        return Currency(value=value)
+    __rmul__ = __mul__
+    def __imul__(self, other):
+        other = Currency._op_other_as_currency(other)
+        self.value *= other.value
+        return self
+
     # operator overloading to allow currencies to be subtracted
     def __sub__(self, other):
         other = Currency._op_other_as_currency(other)
@@ -269,6 +246,8 @@ class Currency(BaseDataTypeClass):
     def _op_other_as_currency(other):
         if isinstance(other, (int, str)):
             other = Currency(value=other)
+        elif isinstance(other, float):
+            other = Currency(value=Decimal(str(other)))
         elif not isinstance(other, Currency):
             raise TypeError("currency of type {} is not supported".format(type(other)))
         return other

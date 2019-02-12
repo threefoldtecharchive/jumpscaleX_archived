@@ -1,11 +1,11 @@
 from Jumpscale import j
 
-import hashlib
-from datetime import datetime
+import pytest
 
 from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChainExplorerGetClientStub
 from Jumpscale.clients.blockchain.tfchain.types.PrimitiveTypes import BinaryData
-from Jumpscale.clients.blockchain.tfchain.types.AtomicSwap import AtomicSwapContract
+from Jumpscale.clients.blockchain.tfchain.types.AtomicSwap import AtomicSwapContract, AtomicSwapSecretHash
+from Jumpscale.clients.blockchain.tfchain.types.Errors import AtomicSwapInsufficientAmountError
 
 def main(self):
     """
@@ -44,8 +44,8 @@ def main(self):
     assert str(result.contract.amount) == '50'
     assert str(result.contract.sender) == '011dcc29c37e564ef1b0ae6273bddd6fa9c5fe5443f3a18827d3e5733892f37b2439da663e1e6f'
     assert str(result.contract.receiver) == '0131cb8e9b5214096fd23c8d88795b2887fbc898aa37125a406fc4769a4f9b3c1dc423852868f6'
-    assert result.contract.refund_timestamp > int(datetime.now().timestamp())
-    assert str(result.contract.secret_hash) == str(BinaryData(value=hashlib.sha256(result.secret.value).digest()))
+    assert result.contract.refund_timestamp > 1549646257
+    assert result.contract.secret_hash == AtomicSwapSecretHash.from_secret(result.secret)
     # one would than use `w.transaction_sign(result.transaction)` to submit it for real
 
     # However, usually an atomic swap contract is initiated as follows:
@@ -57,8 +57,8 @@ def main(self):
     assert str(result.contract.amount) == '50'
     assert str(result.contract.sender) == '011dcc29c37e564ef1b0ae6273bddd6fa9c5fe5443f3a18827d3e5733892f37b2439da663e1e6f'
     assert str(result.contract.receiver) == '0131cb8e9b5214096fd23c8d88795b2887fbc898aa37125a406fc4769a4f9b3c1dc423852868f6'
-    assert result.contract.refund_timestamp > int(datetime.now().timestamp())
-    assert str(result.contract.secret_hash) == str(BinaryData(value=hashlib.sha256(result.secret.value).digest()))
+    assert result.contract.refund_timestamp > 1549646257
+    assert result.contract.secret_hash == AtomicSwapSecretHash.from_secret(result.secret)
 
     # our balance should be updated as well
     assert str(w.balance.available) == '0'
@@ -71,3 +71,12 @@ def main(self):
     # and ensure the transaction is fully signed
     for ci in transaction.coin_inputs:
         assert len(ci.fulfillment.signature.value) == 64
+
+    # FYI: a contract's amount has to be greater than the network's minimum miner fee,
+    # while tfchain does allow it, this client will raise an exception when you
+    # do try to give a value equal to or less than the networks' miner fee.
+    # This because such a contract cannot be redeemed or refunded.
+    with pytest.raises(AtomicSwapInsufficientAmountError):
+        w.atomicswap.initiate(
+            participator='0131cb8e9b5214096fd23c8d88795b2887fbc898aa37125a406fc4769a4f9b3c1dc423852868f6',
+            amount=c.minimum_miner_fee-'0.000000001 TFT')

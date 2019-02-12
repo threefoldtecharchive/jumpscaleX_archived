@@ -1,5 +1,6 @@
 from Jumpscale import j
 
+import hashlib
 from datetime import datetime, timedelta
 
 from .PrimitiveTypes import BinaryData
@@ -428,7 +429,7 @@ class UnlockHash(BaseDataTypeClass):
 
     def __str__(self):
         checksum = self._checksum()[:UnlockHash._CHECKSUM_SIZE].hex()
-        return "{}{}{}".format(bytearray([int(self._type)]).hex(), self._hash.value.hex(), checksum)
+        return "{}{}{}".format(bytearray([int(self._type)]).hex(), str(self._hash), checksum)
 
     def _checksum(self):
         if self._type == UnlockHashType.NIL:
@@ -546,6 +547,48 @@ class ConditionUnlockHash(ConditionBaseClass):
         encoder.add(self.unlockhash)
 
 
+class AtomicSwapSecret(BinaryData):
+    SIZE = 32
+
+    """
+    Atomic Swap Secret Object, a special type of BinaryData
+    """
+    def __init__(self, value=None):
+        super().__init__(value, fixed_size=AtomicSwapSecret.SIZE, strencoding='hex')
+
+    @classmethod
+    def from_json(cls, obj):
+        if not isinstance(obj, str):
+            raise TypeError("secret is expected to be an encoded string when part of a JSON object")
+        return cls(value=obj)
+
+    @classmethod
+    def random(cls):
+        return cls(value=j.data.idgenerator.generateXByteID(AtomicSwapSecret.SIZE))
+
+
+class AtomicSwapSecretHash(BinaryData):
+    SIZE = 32
+
+    """
+    Atomic Swap Secret Hash, a special type of BinaryData
+    """
+    def __init__(self, value=None):
+        super().__init__(value, fixed_size=AtomicSwapSecretHash.SIZE, strencoding='hex')
+
+    @classmethod
+    def from_json(cls, obj):
+        if not isinstance(obj, str):
+            raise TypeError("secret hash is expected to be an encoded string when part of a JSON object")
+        return cls(value=obj)
+
+    @classmethod
+    def from_secret(cls, secret):
+        if not isinstance(secret, AtomicSwapSecret):
+            raise TypeError("secret is expected to be of type AtomicSwapSecret, not to be of type {}".format(type(secret)))
+        return cls(value=hashlib.sha256(secret.value).digest())
+
+
 class ConditionAtomicSwap(ConditionBaseClass):
     """
     ConditionAtomicSwap class
@@ -621,7 +664,7 @@ class ConditionAtomicSwap(ConditionBaseClass):
         if value is None:
             self._hashed_secret = None
         else:
-            self._hashed_secret = BinaryData(value=value)
+            self._hashed_secret = AtomicSwapSecretHash(value=value)
 
     @property
     def lock_time(self):
@@ -639,7 +682,7 @@ class ConditionAtomicSwap(ConditionBaseClass):
     def from_json_data_object(self, data):
         self.sender = UnlockHash.from_json(data['sender'])
         self.receiver = UnlockHash.from_json(data['receiver'])
-        self.hashed_secret = j.clients.tfchain.types.binary_data_new(value=data['hashedsecret'])
+        self.hashed_secret = AtomicSwapSecretHash(value=data['hashedsecret'])
         self.lock_time = int(data['timelock'])
 
     def json_data_object(self):
@@ -651,14 +694,10 @@ class ConditionAtomicSwap(ConditionBaseClass):
         }
 
     def sia_binary_encode_data(self, encoder):
-        encoder.add_all(self.sender, self.receiver)
-        encoder.add_array(self.hashed_secret.value)
-        encoder.add(self.lock_time)
+        encoder.add_all(self.sender, self.receiver, self.hashed_secret, self.lock_time)
 
     def rivine_binary_encode_data(self, encoder):
-        encoder.add_all(self.sender, self.receiver)
-        encoder.add_array(self.hashed_secret.value)
-        encoder.add(self.lock_time)
+        encoder.add_all(self.sender, self.receiver, self.hashed_secret, self.lock_time)
 
 
 class ConditionLockTime(ConditionBaseClass):

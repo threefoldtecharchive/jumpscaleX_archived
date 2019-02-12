@@ -9,10 +9,11 @@ from ed25519 import SigningKey
 from .types.PrimitiveTypes import Currency, Hash, BinaryData
 from .types.CryptoTypes import PublicKey, UnlockHash, UnlockHashType
 from .types.Errors import *
-from .types.CompositionTypes import CoinOutput, CoinInput
+from .types.IO import CoinOutput, CoinInput
 from .types.ConditionTypes import ConditionNil, ConditionUnlockHash, ConditionLockTime
 from .types.AtomicSwap import AtomicSwapContract
-from .types.Transactions import TransactionBaseClass, TransactionV128, TransactionV129
+from .types.transactions.Base import TransactionBaseClass
+from .types.transactions.Minting import TransactionV128, TransactionV129
 
 _DEFAULT_KEY_SCAN_COUNT = 3
 
@@ -306,7 +307,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             refund = j.clients.tfchain.types.conditions.from_recipient(refund)
 
         # create transaction
-        txn = j.clients.tfchain.transactions.new()
+        txn = j.clients.tfchain.types.transactions.new()
         # add main coin output
         txn.coin_output_add(value=amount, condition=recipient)
         # add refund coin output if needed
@@ -367,7 +368,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         """
         # validate and/or normalize txn parameter
         if isinstance(txn, (str, dict)):
-            txn = j.clients.tfchain.transactions.from_json(txn)
+            txn = j.clients.tfchain.types.transactions.from_json(txn)
         elif not isinstance(txn, TransactionBaseClass):
             raise TypeError("txn value has invalid type {} and cannot be signed".format(type(txn)))
 
@@ -565,7 +566,7 @@ class TFChainMinter():
         @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
         """
         # create empty Mint Definition Txn, with a newly generated Nonce set already
-        txn = j.clients.tfchain.transactions.mint_definition_new()
+        txn = j.clients.tfchain.types.transactions.mint_definition_new()
 
         # add the minimum miner fee
         txn.miner_fee_add(self._minium_miner_fee)
@@ -635,7 +636,7 @@ class TFChainMinter():
         @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
         """
         # create empty Mint Definition Txn, with a newly generated Nonce set already
-        txn = j.clients.tfchain.transactions.mint_coin_creation_new()
+        txn = j.clients.tfchain.types.transactions.mint_coin_creation_new()
 
         # add the minimum miner fee
         txn.miner_fee_add(self._minium_miner_fee)
@@ -712,7 +713,7 @@ class TFChainMinter():
         return self._wallet._transaction_put(transaction=transaction)
 
 
-from .types.ConditionTypes import ConditionAtomicSwap, OutputLock
+from .types.ConditionTypes import ConditionAtomicSwap, OutputLock, AtomicSwapSecret, AtomicSwapSecretHash
 from .types.FulfillmentTypes import FulfillmentAtomicSwap
 
 class TFChainAtomicSwap():
@@ -756,8 +757,8 @@ class TFChainAtomicSwap():
         @param submit: True by default, if False the transaction will not be sent even if possible (e.g. if you want to double check)
         """
         # create a random secret
-        secret = BinaryData.random(size=32)
-        secret_hash = BinaryData(value=hashlib.sha256(secret.value).digest())
+        secret = AtomicSwapSecret.random()
+        secret_hash = AtomicSwapSecretHash.from_secret(secret)
 
         # create the contract
         result = self._create_contract(
@@ -796,13 +797,8 @@ class TFChainAtomicSwap():
         @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
         @param submit: True by default, if False the transaction will not be sent even if possible (e.g. if you want to double check)
         """
-        # validate secret hash
-        if isinstance(secret_hash, BinaryData):
-            secret_hash = secret_hash.value
-        elif isinstance(secret_hash, str):
-            secret_hash = bytes.fromhex(secret_hash)
-        elif not isinstance(secret_hash, (bytes, bytearray)):
-            raise TypeError("secret hash should be BinaryData, str, bytes or a bytearray, not {}".format(type(secret_hash)))
+        # normalize secret hash
+        secret_hash = AtomicSwapSecretHash(value=secret_hash)
 
         # create the contract and return the contract, transaction and submission status
         result = self._create_contract(
@@ -865,12 +861,9 @@ class TFChainAtomicSwap():
         
         # if secret hash is given verify it
         if secret_hash is not None:
-            # validate secret hash
-            if isinstance(secret_hash, (str, bytes, bytearray)):
-                secret_hash = BinaryData(value=secret_hash)
-            elif not isinstance(secret_hash, BinaryData):
-                raise TypeError("secret hash should be BinaryData, str, bytes or a bytearray, not {}".format(type(secret_hash)))
-            if str(secret_hash) != str(contract.secret_hash):
+            # normalize secret hash
+            secret_hash = AtomicSwapSecretHash(value=secret_hash)
+            if secret_hash != contract.secret_hash:
                 raise AtomicSwapContractInvalid(
                     message="secret_hash is expected to be {}, not {}".format(str(secret_hash), str(contract.secret_hash)),
                     contract=contract)
@@ -1010,8 +1003,15 @@ class TFChainAtomicSwap():
         if amount <= 0:
             raise ValueError("no amount is defined to be swapped")
 
-        # define the coin inputs
+        # define the miner fee
         miner_fee = self._minium_miner_fee
+
+        # ensure the amount is bigger than the miner fee,
+        # otherwise the contract cannot be redeemed/refunded
+        if amount <= miner_fee:
+            raise AtomicSwapInsufficientAmountError(amount=amount, minimum_miner_fee=miner_fee)
+
+        # define the coin inputs
         balance = self._wallet.balance
         inputs, remainder, suggested_refund = balance.fund(amount+miner_fee, source=source)
 
@@ -1030,7 +1030,7 @@ class TFChainAtomicSwap():
             sender = self._wallet.address
         
         # create and populate the transaction
-        txn = j.clients.tfchain.transactions.new()
+        txn = j.clients.tfchain.types.transactions.new()
         txn.coin_inputs = inputs
         txn.miner_fee_add(self._minium_miner_fee)
         txn.data = data
@@ -1092,7 +1092,7 @@ class TFChainAtomicSwap():
         claim an unspent atomic swap contract
         """
         # create the contract and fill in the easy content
-        txn = j.clients.tfchain.transactions.new()
+        txn = j.clients.tfchain.types.transactions.new()
         miner_fee = self._minium_miner_fee
         txn.miner_fee_add(miner_fee)
         txn.data = data
@@ -1192,7 +1192,7 @@ class AtomicSwapInitiationResult(NamedTuple):
     used as the result for an atomic swap initiation call.
     """
     contract: AtomicSwapContract
-    secret: BinaryData
+    secret: AtomicSwapSecret
     transaction: TransactionBaseClass
     submitted: bool
 
@@ -1500,7 +1500,7 @@ class WalletBalance(object):
             outputs += self.outputs_unconfirmed_available
         # drain all outputs
         while len(outputs) > 0:
-            txn = j.clients.tfchain.transactions.new()
+            txn = j.clients.tfchain.types.transactions.new()
             txn.data = data
             txn.miner_fee_add(miner_fee)
             # select maximum _MAX_RIVINE_TRANSACTION_INPUTS outputs

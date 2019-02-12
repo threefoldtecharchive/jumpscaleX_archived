@@ -1,7 +1,5 @@
 from Jumpscale import j
 
-from datetime import datetime
-
 import pytest
 
 from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChainExplorerGetClientStub
@@ -47,7 +45,7 @@ def main(self):
     assert contract.refund_timestamp == 1549736249
     assert contract.sender == '01b73c4e869b6167abe6180ebe7a907f56e0357b4a2f65eb53d22baad84650eb62fce66ba036d0'
     assert contract.receiver == '01746b199781ea316a44183726f81e0734d93e7cefc18e9a913989821100aafa33e6eb7343fa8c'
-    assert str(contract.secret_hash) == '4163d4b31a1708cd3bb95a0a8117417bdde69fd1132909f92a8ec1e3fe2ccdba'
+    assert contract.secret_hash == '4163d4b31a1708cd3bb95a0a8117417bdde69fd1132909f92a8ec1e3fe2ccdba'
 
     # the amount can however be verified automatically
     w.atomicswap.verify('023b1c17a01945573933e62ca7a1297057681622aaea52c4c4e198077a263890', amount=50)
