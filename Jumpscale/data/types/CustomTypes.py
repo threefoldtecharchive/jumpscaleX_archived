@@ -22,7 +22,7 @@ class Guid(String):
     '''
 
     NAME = 'guid'
-
+    ALIAS = "guid"
     def __init__(self):
         String.__init__(self)
 
@@ -63,7 +63,7 @@ class Email(String):
     """
 
     NAME = 'email'
-
+    ALIAS = "email"
     def __init__(self):
         String.__init__(self)
 
@@ -103,6 +103,7 @@ class Email(String):
 class Path(String):
     '''Generic path type'''
     NAME = 'path'
+    ALIAS = "path"
 
     def __init__(self):
         String.__init__(self)
@@ -193,6 +194,7 @@ class IPRange(String):
     """
     """
     NAME = 'iprange'
+    ALIAS = "iprange"
 
     def __init__(self):
         String.__init__(self)
@@ -318,6 +320,7 @@ class Numeric(String):
 
     """
     NAME = 'numeric'
+    ALIAS = 'n'
 
     def get_default(self):
         return self.str2bytes("0 USD")

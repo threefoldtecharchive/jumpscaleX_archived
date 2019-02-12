@@ -5,6 +5,7 @@ import base64
 # import ast
 from .TypeBaseClasses import *
 
+
 class String(TypeBaseClass):
 
     '''
@@ -13,7 +14,7 @@ class String(TypeBaseClass):
     '''
 
     NAME = 'string'
-    ALIAS = 'str,s'
+    ALIAS = "str,s"
     BASETYPE = 'string'
 
     def fromString(self, s):
@@ -78,6 +79,7 @@ class StringMultiLine(String):
 
     NAME = 'multiline'     # this really does not match with the
     BASETYPE = 'stringmultiline'  # list of aliases.
+    ALIAS = "multiline"
 
     def check(self, value):
         '''Check whether provided value is a string and has \n inside'''
@@ -334,12 +336,12 @@ class Integer(TypeBaseClass):
         """
         used to change the value to a predefined standard for this type
         """
-        if isinstance(value,float):
-            value=int(value)
-        elif isinstance(value,str):
+        if isinstance(value, float):
+            value = int(value)
+        elif isinstance(value, str):
             value = value.strip().strip("'").strip("\"").strip()
             if "," in value:
-                value = value.replace(",","")
+                value = value.replace(",", "")
             value = int(value)
         if not self.check(value):
             raise ValueError("Invalid value for integer: '%s'" % value)
@@ -370,7 +372,7 @@ class Float(TypeBaseClass):
 
     NAME = 'float'
     BASETYPE = 'float'
-    ALIAS = "f"
+    ALIAS = "f,float"
 
     def checkString(self, value):
         try:
@@ -393,13 +395,13 @@ class Float(TypeBaseClass):
         return self.clean(v)
 
     def toHR(self, v):
-        return "%d"%v
+        return "%d" % v
 
     def toJSON(self, v):
         return self.clean(v)
 
     def fromString(self, s):
-        s=self.clean(s)
+        s = self.clean(s)
         return j.core.text.getFloat(s)
 
     def get_default(self):
@@ -442,25 +444,25 @@ class Percent(Float):
     '''
 
     NAME = 'percent'
-    ALIAS = 'perc'
+    ALIAS = 'perc,p'
     BASETYPE = 'float'
 
     def clean(self, value):
         """
         used to change the value to a predefined standard for this type
         """
-        if isinstance(value,str):
+        if isinstance(value, str):
             value = value.strip().strip("\"").strip("'").strip()
             if "%" in value:
                 value = value.replace("%", "")
-                value=float(value)/100
+                value = float(value)/100
             else:
                 value = float(value)
-        elif isinstance(value,int) or isinstance(value,float):
+        elif isinstance(value, int) or isinstance(value, float):
             value = float(value)
         else:
             raise RuntimeError("could not convert input to percent, input was:%s" % value)
-        assert value<1.00001
+        assert value < 1.00001
         return value
 
     def get_default(self):
@@ -483,6 +485,7 @@ class CapnpBin(Bytes):
 
     NAME = 'capnpbin'
     BASETYPE = 'bytes'
+    ALIAS = "cbin"
 
     def fromString(self, s):
         """
@@ -560,6 +563,7 @@ class JSDataObject(Bytes):
     def toml_string_get(self, value, key):
         raise NotImplemented()
 
+
 class JSConfigObject(TypeBaseClass):
     '''
     jumpscale object which inherits from j.application.JSBaseConfigClass
@@ -570,6 +574,4 @@ class JSConfigObject(TypeBaseClass):
     ALIAS = "configobj"
 
     def check(self, value):
-        return isinstance(value,j.application.JSBaseConfigClass)
-
-
+        return isinstance(value, j.application.JSBaseConfigClass)

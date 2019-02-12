@@ -9,11 +9,13 @@ from Jumpscale.data.types.PrimitiveTypes import (String, StringMultiLine, Bytes,
 import struct
 from .TypeBaseClasses import *
 
+
 class YAML(String):
     '''Generic dictionary type'''
 
     NAME = 'yaml'
     BASETYPE = 'string'
+    ALIAS = "yaml"
 
     def check(self, value):
         '''Check whether provided value is a dict'''
@@ -54,6 +56,7 @@ class JSON(String):
 
     NAME = 'json'
     BASETYPE = 'string'
+    ALIAS = "json"
 
     def check(self, value):
         """
@@ -159,6 +162,7 @@ class List(TypeBaseClass):
     '''
     NAME = 'list'
     BASETYPE = 'list'
+    ALIAS = "l"
 
     def __init__(self):
         self.SUBTYPE = None

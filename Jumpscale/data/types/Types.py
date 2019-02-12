@@ -17,29 +17,27 @@ class Types(j.application.JSBaseClass):
         self.enumerations = {}
 
         self._types_list = [Dictionary, List, Guid, Path, Boolean, Integer, Float, String, Bytes, StringMultiLine,
-                           IPAddress, IPRange, IPPort, Tel, YAML, JSON, Email, Date, DateTime, Numeric, Percent,
-                           Hash, CapnpBin, JSDataObject, JSConfigObject, Url, Enumeration ]
+                            IPAddress, IPRange, IPPort, Tel, YAML, JSON, Email, Date, DateTime, Numeric, Percent,
+                            Hash, CapnpBin, JSDataObject, JSConfigObject, Url, Enumeration]
 
-        l=[]
+        l = []
         for typeclass in self._types_list:
             name = typeclass.NAME.strip().strip("_")
-            self.__attach(name,typeclass)
-            if hasattr(typeclass,"ALIAS"):
+            self.__attach(name, typeclass)
+            if hasattr(typeclass, "ALIAS"):
                 for alias in typeclass.ALIAS.split(","):
-                    self.__attach(alias,typeclass)
+                    self.__attach(alias, typeclass)
 
         self._type_check_list = ['guid', 'path', 'multiline', 'ipaddr', 'iprange', 'ipport',
                                  'tel', 'email', 'date', 'datetime', 'numeric', 'percent', 'hash',
                                  'jsobject', 'url', 'enum',
                                  'dict', 'list', 'boolean', 'integer', 'float', 'string', 'bytes']
 
-
-    def __attach(self,name,typeclass):
-        name=name.strip().lower()
-        name2 = "_%s"%name
+    def __attach(self, name, typeclass):
+        name = name.strip().lower()
+        name2 = "_%s" % name
         self.__dict__[name2] = typeclass
         self.__dict__[name] = self.__dict__[name2]()
-
 
     def type_detect(self, val):
         """
@@ -104,20 +102,17 @@ class Types(j.application.JSBaseClass):
             res = self._numeric
         elif ttype.startswith("l"):
             tt = self._list()  # need to create new instance
-            if return_class:
-                raise RuntimeError("cannot return class if subtype specified")
             if len(ttype) > 1:
-                tt.SUBTYPE = self.get(ttype[1:], return_class=True)()
+                tt.SUBTYPE = self.get(ttype[1:])
                 return tt
             elif len(ttype) == 1:
                 assert tt.SUBTYPE == None
                 return tt
 
-        if not ttype in self__ddict__:
+        if not ttype in self._ddict:
             raise j.exceptions.RuntimeError("did not find type:'%s'" % ttype)
 
         return self.__dict__[ttype]
-
 
     def test(self, name=""):
         """
