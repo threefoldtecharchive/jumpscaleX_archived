@@ -317,7 +317,7 @@ result.submitted   # True if submitted, False if not possible
 > record = c.threebot.record_get(result.transaction.public_key)
 > record.identifier # the unique identifier of the 3Bot
 > ```
-> If you the `ExplorerNoContent` exception gets raised, it probably means
+> If the `ThreeBotNotFound` exception gets raised, it probably means
 > the transaction is still not registered on the blockchain, wait a bit longer in that case.
 
 Updating an existing 3Bot record can e done as follows:
@@ -341,6 +341,10 @@ result.submitted   # True if submitted, False if not possible
                    # due to lack of signatures in MultiSig Coin Inputs
 ```
 > See [The ThreeBot Record Update Unit Test](./tests/18_threebot_record_update.py) for a detailed example.
+
+> If the `ThreeBotInactive` exception gets raised,
+> it means your 3Bot is currently marked as inactive,
+> and so you'll have to add at least one month (`months=1`) to make it active again.
 
 If you only want to update one or some properties than that is possible
 as well, here are some more examples:
@@ -380,6 +384,16 @@ result.submitted   # True if submitted, False if not possible
                    # due to lack of signatures in MultiSig Coin Inputs
 ```
 > See [The ThreeBot Name Transfer Unit Test](./tests/19_threebot_name_transfer.py) for a detailed example.
+
+> If the `ThreeBotNotFound` exception gets raised,
+> it means either the sender or receiver 3Bot could not be found
+> (check the raised exceptions' `identifier` property to know which).
+
+> If the `ThreeBotInactive` exception gets raised,
+> it means either the sender or receiver 3Bot is inactive
+> (check the raised exceptions' `identifier` property to know which).
+> Before you can continue with the name transfer the inactive bot will have
+> to be made active again by applying a 3Bot update (`w.threebot.record_update`).
 
 ### Atomic Swap Contracts
 
