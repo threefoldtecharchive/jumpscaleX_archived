@@ -83,24 +83,37 @@ class BuilderTraefik(j.builder.system._BaseClass):
         """
         self._test_run(name=name, obj_key='test_main')
 
-    def sandbox(self,dest='/tmp/builder/traefik', create_flist=True, zhub_instance=None, reset=False):
+    def sandbox(self, dest_path='/tmp/builder/traefik', create_flist=True, zhub_instance=None, reset=False):
         
+        '''Copy built bins to dest_path and create flist if create_flist = True
+
+        :param dest_path: destination path to copy files into
+        :type dest_path: str
+        :param sandbox_dir: path to sandbox
+        :type sandbox_dir: str
+        :param reset: reset sandbox file transfer
+        :type reset: bool
+        :param create_flist: create flist after copying files
+        :type create_flist:bool
+        :param zhub_instance: hub instance to upload flist to
+        :type zhub_instance:str
+        '''
+
         if self._done_check('sandbox') and not reset:
             return
-        if not self._done_check('build'):
-            self.build()
+        self.build(reset = reset)
         
-        bin_dest = j.sal.fs.joinPaths(dest, 'sandbox', 'bin')
+        bin_dest = j.sal.fs.joinPaths(dest_path, 'sandbox', 'bin')
         self.tools.dir_ensure(bin_dest)
         bin = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
         j.sal.fs.copyFile(bin, j.sal.fs.joinPaths(bin_dest, self.NAME))
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'traefik_startup.toml')
         self.startup = j.sal.fs.readFile(startup_file)
-        file_dest = j.sal.fs.joinPaths(dest, '.startup.toml')
+        file_dest = j.sal.fs.joinPaths(dest_path, '.startup.toml')
         j.builder.tools.file_ensure(file_dest)
         j.builder.tools.file_write(file_dest, self.startup)
         if create_flist:
-            print(self.flist_create(sandbox_dir=dest, hub_instance=zhub_instance))
+            print(self.flist_create(sandbox_dir=dest_path, hub_instance=zhub_instance))
         self._done_set('sandbox')
 
 
