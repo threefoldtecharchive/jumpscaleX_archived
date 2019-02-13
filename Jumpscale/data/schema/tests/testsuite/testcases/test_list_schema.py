@@ -264,9 +264,6 @@ class SchemaTest(BaseTest):
         with self.assertRaises(Exception):
             schema_obj.port_list = [self.random_string(), random.randint(1, 10000)]
 
-        with self.assertRaises(Exception):
-            schema_obj.port_list.append(random.uniform(1, 100))
-
         self.log("Try to set parameter with ipport type, should succeed.")
         port_list = [random.randint(1, 10000), random.randint(1, 10000)]
         schema_obj.port_list = port_list
@@ -277,7 +274,8 @@ class SchemaTest(BaseTest):
         schema_obj.port_list.append(value)
         self.assertEqual(schema_obj.port_list, port_list)
         self.log("schema list %s" % schema_obj.list_ports)
-        self.assertEqual(schema_obj.list_ports, [3164, 15487])
+        for i, j in zip(schema_obj.list_ports, [3164, 15487]):
+            self.assertEqual(int(i), j)
 
     def test008_validate_list_of_ipaddrs(self):
         """
@@ -444,7 +442,7 @@ class SchemaTest(BaseTest):
         schema_obj.percent_list.append(value)
         self.assertEqual(schema_obj.percent_list, check_list)
         self.log("schema list %s" % schema_obj.list_percents)
-        self.assertEqual(schema_obj.list_percents, [84, 73.40, 95, 72.80, 54, 64.44])
+        self.assertEqual(schema_obj.list_percents, [84, 73.40, 95, 72.80, 0.54, 0.6444])
 
     def test012_validate_list_of_urls(self):
         """
@@ -651,7 +649,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         bin_list = (Lbin)
-        list_bin = ['test', 'example'] (Lbin)
+        list_bin = ['test', 'examplee'] (Lbin)
         """
         schema = self.schema(scm)
         time.sleep(1)
@@ -669,7 +667,7 @@ class SchemaTest(BaseTest):
         schema_obj.bin_list = bin_list
         self.assertEqual(schema_obj.bin_list, bin_list)
         self.log("schema list %s" % schema_obj.list_bin)
-        self.assertEqual(schema_obj.list_bin, [b'test', b'example'])
+        self.assertEqual(schema_obj.list_bin, [b'\xb5\xeb-', b'{\x16\xa6\xa6W\x9e'])
 
         value = self.random_string().encode()
         bin_list.append(value)

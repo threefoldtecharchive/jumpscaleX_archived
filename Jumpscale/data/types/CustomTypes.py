@@ -224,13 +224,13 @@ class IPAddressObject(TypeBaseObjClass):
 
         self._val = None
         try:
-            self._val = IPv4Address(ip)
+            self._val = IPv4Address(val)
         except (AddressValueError, NetmaskValueError):
             pass
 
         if not self._val:
             try:
-                self._val = IPv6Address(ip)
+                self._val = IPv6Address(val)
             except (AddressValueError, NetmaskValueError):
                 pass
 

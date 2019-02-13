@@ -216,8 +216,9 @@ class List(TypeBaseClass):
             ttype = self.SUBTYPE
         res = []
         if j.data.types.string.check(val):
-            val = [i.strip() for i in val.split(",")]
+            val = [i.strip('[').strip(']') for i in val.split(",")]
         for item in val:
+            item = item.strip().strip("'").strip('"')
             if not toml:
                 item = ttype.clean(item)
             else:
