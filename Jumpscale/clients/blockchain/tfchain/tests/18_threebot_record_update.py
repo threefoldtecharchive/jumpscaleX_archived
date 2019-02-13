@@ -3,12 +3,16 @@ from Jumpscale import j
 import pytest
 
 from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChainExplorerGetClientStub
+from Jumpscale.clients.blockchain.tfchain.TFChainClient import ThreeBotRecord
+from Jumpscale.clients.blockchain.tfchain.types.ThreeBot import BotName, NetworkAddress
+from Jumpscale.clients.blockchain.tfchain.types.CryptoTypes import PublicKey
+from Jumpscale.clients.blockchain.tfchain.types.Errors import ExplorerNoContent
 
 def main(self):
     """
     to run:
 
-    js_shell 'j.clients.tfchain.test(name="threebot_record_new")'
+    js_shell 'j.clients.tfchain.test(name="threebot_record_update")'
     """
     
     # create a tfchain client for devnet
@@ -22,6 +26,14 @@ def main(self):
     explorer_client.chain_info = '{"blockid":"552e410481cce1358ffcd4687f4199dd2181c799d55da26178e55643355bbd2e","difficulty":"27801","estimatedactivebs":"59","height":3644,"maturitytimestamp":1549012510,"target":[0,2,91,116,78,165,130,72,116,162,127,4,125,67,108,16,140,247,132,198,107,159,114,177,44,25,18,162,38,157,169,245],"totalcoins":"0","arbitrarydatatotalsize":6,"minerpayoutcount":3650,"transactioncount":3652,"coininputcount":12,"coinoutputcount":15,"blockstakeinputcount":3644,"blockstakeoutputcount":3645,"minerfeecount":7,"arbitrarydatacount":1}'
     explorer_client.hash_add('552e410481cce1358ffcd4687f4199dd2181c799d55da26178e55643355bbd2e', '{"hashtype":"blockid","block":{"minerpayoutids":["468db689f752414702ef3a5aa06238f03a4539434a61624b3b8a0fb5dc38a211"],"transactions":[{"id":"2396f8e57bbb9b22bd1d749d5de3fd532ea6886e9660a556a13571d701d83e27","height":3644,"parent":"552e410481cce1358ffcd4687f4199dd2181c799d55da26178e55643355bbd2e","rawtransaction":{"version":1,"data":{"coininputs":null,"blockstakeinputs":[{"parentid":"ff5a002ec356b7cb24fbee9f076f239fb8c72d5a8a448cee92ee6d29a87aef52","fulfillment":{"type":1,"data":{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"7bec94dfb87640726c6a14de2110599db0f81cf9fa456249e7bf79b0c74b79517edde25c4ee87f181880af44fe6ee054ff20b74eda2144fe07fa5bfb9d884208"}}}],"blockstakeoutputs":[{"value":"3000","condition":{"type":1,"data":{"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"}}}],"minerfees":null}},"coininputoutputs":null,"coinoutputids":null,"coinoutputunlockhashes":null,"blockstakeinputoutputs":[{"value":"3000","condition":{"type":1,"data":{"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"}},"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"}],"blockstakeoutputids":["f683e7319659c61f54e93546bc41b57c5bffe79de26c06ec7371034465804c81"],"blockstakeunlockhashes":["015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"],"unconfirmed":false}],"rawblock":{"parentid":"47db4274551b0372564f8d1ab89c596428f00e460c0b416327e53983c8765198","timestamp":1549012665,"pobsindexes":{"BlockHeight":3643,"TransactionIndex":0,"OutputIndex":0},"minerpayouts":[{"value":"10000000000","unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"}],"transactions":[{"version":1,"data":{"coininputs":null,"blockstakeinputs":[{"parentid":"ff5a002ec356b7cb24fbee9f076f239fb8c72d5a8a448cee92ee6d29a87aef52","fulfillment":{"type":1,"data":{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"7bec94dfb87640726c6a14de2110599db0f81cf9fa456249e7bf79b0c74b79517edde25c4ee87f181880af44fe6ee054ff20b74eda2144fe07fa5bfb9d884208"}}}],"blockstakeoutputs":[{"value":"3000","condition":{"type":1,"data":{"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"}}}],"minerfees":null}}]},"blockid":"552e410481cce1358ffcd4687f4199dd2181c799d55da26178e55643355bbd2e","difficulty":"27801","estimatedactivebs":"59","height":3644,"maturitytimestamp":1549012510,"target":[0,2,91,116,78,165,130,72,116,162,127,4,125,67,108,16,140,247,132,198,107,159,114,177,44,25,18,162,38,157,169,245],"totalcoins":"0","arbitrarydatatotalsize":6,"minerpayoutcount":3650,"transactioncount":3652,"coininputcount":12,"coinoutputcount":15,"blockstakeinputcount":3644,"blockstakeoutputcount":3645,"minerfeecount":7,"arbitrarydatacount":1},"blocks":null,"transaction":{"id":"0000000000000000000000000000000000000000000000000000000000000000","height":0,"parent":"0000000000000000000000000000000000000000000000000000000000000000","rawtransaction":{"version":0,"data":{"coininputs":[],"minerfees":null}},"coininputoutputs":null,"coinoutputids":null,"coinoutputunlockhashes":null,"blockstakeinputoutputs":null,"blockstakeoutputids":null,"blockstakeunlockhashes":null,"unconfirmed":false},"transactions":null,"multisigaddresses":null,"unconfirmed":false}')
     explorer_client.hash_add('039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a', '{"hashtype":"unlockhash","block":{"minerpayoutids":null,"transactions":null,"rawblock":{"parentid":"0000000000000000000000000000000000000000000000000000000000000000","timestamp":0,"pobsindexes":{"BlockHeight":0,"TransactionIndex":0,"OutputIndex":0},"minerpayouts":null,"transactions":null},"blockid":"0000000000000000000000000000000000000000000000000000000000000000","difficulty":"0","estimatedactivebs":"0","height":0,"maturitytimestamp":0,"target":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"totalcoins":"0","arbitrarydatatotalsize":0,"minerpayoutcount":0,"transactioncount":0,"coininputcount":0,"coinoutputcount":0,"blockstakeinputcount":0,"blockstakeoutputcount":0,"minerfeecount":0,"arbitrarydatacount":0},"blocks":null,"transaction":{"id":"0000000000000000000000000000000000000000000000000000000000000000","height":0,"parent":"0000000000000000000000000000000000000000000000000000000000000000","rawtransaction":{"version":0,"data":{"coininputs":[],"minerfees":null}},"coininputoutputs":null,"coinoutputids":null,"coinoutputunlockhashes":null,"blockstakeinputoutputs":null,"blockstakeoutputids":null,"blockstakeunlockhashes":null,"unconfirmed":false},"transactions":[{"id":"4c70a0406f36cf354edf87642df3f34568fd0a89c052a81d11cc6e4f8fbf685e","height":45,"parent":"f7b78b17d581ff9e58ffbcce1701d4dcadb0781590ca68e839def0dc98b0360a","rawtransaction":{"version":1,"data":{"coininputs":[{"parentid":"7d4a100fc3bc08b2bdd1284c17260dd2bd6b55fd6c1429dbbd683bf362d92b50","fulfillment":{"type":1,"data":{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"c34b8ca1ab08930bc68d61026af504d62d8a8bbda9b79ae01a387560fba22d39b12021e16566732b742ea686f997b3c19c807523797cdc0d74a4d25123691004"}}},{"parentid":"83503f9cea00d562e0460eace93159a4c4dd00df4703c96947e81885b46da04c","fulfillment":{"type":1,"data":{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"f6eea681a259baf14433ac55b4293b22ca2056810ee8fed2129039224d14558f54ca58c6d96e9885cb20ecdf7e64ba81d1a83c6e9a42bf9464287fa6359d360c"}}},{"parentid":"578aa43de72b42b4f4547c5ddc7f61736b1cac206e1789bc89fcd9333cf3d1f3","fulfillment":{"type":1,"data":{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"a0521d14dfe4a0c9b8b57ed361d738b48b6a8346097246effe0b4ee67b6fecbc3a90e4671ddc0b164f6c2839df249bb5998f10216a4a674ba8d24b8ad6bdf808"}}},{"parentid":"5a1454762e6895431e1b9e4e435e4d0ad60a3881843ac46b88e220771055ca87","fulfillment":{"type":1,"data":{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"900e7868780e67bcb68af3ec6976e84289850d0db59210d4689b1c0e2deb3164b9e93eb9ee5a38850f2319463b0845163e1eee443d7b645c59485c2aa0837707"}}},{"parentid":"c04ebebe17a1759457eecaf4d5d33f5ddbe8d154b0be1606f05bc8fd02ab9cd4","fulfillment":{"type":1,"data":{"publickey":"ed25519:d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d7780","signature":"e992b1cd3347b5362e820166d5929de7c682130c7143fc4c9ff3156f5d44110753687697a0154a2043290b3f022e2537f3e3a6807caf9150f8c255d74e386d0a"}}}],"coinoutputs":[{"value":"42000000000","condition":{"type":4,"data":{"unlockhashes":["01ffd7c884aa869056bfb832d957bb71a0005fee13c19046cebec84b3a5047ee8829eab070374b","014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a"],"minimumsignaturecount":1}}},{"value":"7000000000","condition":{"type":1,"data":{"unlockhash":"01972837ee396f22f96846a0c700f9cf7c8fa83ab4110da91a1c7d02f94f28ff03e45f1470df82"}}}],"minerfees":["1000000000"]}},"coininputoutputs":[{"value":"10000000000","condition":{"type":1,"data":{"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"}},"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"},{"value":"10000000000","condition":{"type":1,"data":{"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"}},"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"},{"value":"10000000000","condition":{"type":1,"data":{"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"}},"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"},{"value":"10000000000","condition":{"type":1,"data":{"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"}},"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"},{"value":"10000000000","condition":{"type":1,"data":{"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"}},"unlockhash":"015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f"}],"coinoutputids":["29152fe03a2c8782fcbd670579686088c52be83fa3870f5f0788073d97fb5fb2","0fc9b16bb180cd8f8a7144d65e6c8fca66994a4ccaee42e324289d4039ab2841"],"coinoutputunlockhashes":["039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a","01972837ee396f22f96846a0c700f9cf7c8fa83ab4110da91a1c7d02f94f28ff03e45f1470df82"],"blockstakeinputoutputs":null,"blockstakeoutputids":null,"blockstakeunlockhashes":null,"unconfirmed":false}],"multisigaddresses":null,"unconfirmed":false}')
+    # add threebot record:
+    explorer_client.threebot_record_add(ThreeBotRecord(
+        identifier=3,
+        names=[BotName(value=s) for s in ["chatbot.example"]],
+        addresses=[NetworkAddress(address=s) for s in ["example.org", "127.0.0.1"]],
+        public_key=PublicKey.from_json("ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa"),
+        expiration=1552581420,
+    ))
     c._explorer_get = explorer_client.explorer_get
     c._explorer_post = explorer_client.explorer_post
 
@@ -45,18 +57,36 @@ def main(self):
     assert str(balance.available)== '3698'
     assert str(balance.locked) == '0'
 
-    # create a new record is as simple as 
-    result = w.threebot.record_new(
-        months=1, # default is 1, can be omitted to keep it at default, or can be anything of inclusive range of [1,24]
-        names=["chatbot.example"], # names can be omitted as well, as long as you have 1 address
-        addresses=["example.org"], # addresses can be omitted as well, as long as you have 1 address
-        key_index=0) # optionally leave key_index at default value of None
+    # updating a record is as simple as:
+    result = w.threebot.record_update(
+        3, # identifier of the 3Bot
+        months=2, # months to add, 0 by default
+        names_to_add=['thisis.justan.example', 'foobar'], # names to add, None by default
+        names_to_remove=['chatbot.example'], # registered names to remove, None by default
+        addresses_to_add=['bot.example.org'], # addresses to add, None by default
+        addresses_to_remove=['127.0.0.1', 'example.org'], # registered addresses to remove, None by default
+        source=w.address, # source address or addresses used to fund this transaction, None by default
+                          # in which case all the personal wallet addresses will be used
+        refund=w.address, # refund address, None by default
+                       # in which case either the source address is used (if only one is defined),
+                       # or the primary address is used
+    )
     assert result.submitted # we expect the transaction to be submitted
 
-    expected_transaction = {'version': 144, 'data': {'nrofmonths': 1, 'txfee': '1000000000', 'coininputs': [{'parentid': '19d4e81d057b4c93a7763f3dfe878f6a37d6111a3808b93afff4b369de0f5376', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': 'e285d86d4d1271b30672e4db5ce1688aeee9dab2a91cb5c301799d8f4c0f4eb2c48a8099d94c8e2f63de76f7a11772be7ff8ed1f26ebbbd5c3b067edc6af790f'}}}], 'identification': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': '5b0b1563b1c2cf9d48dce68de0167a55159163ccc123486b8abc1e8f412f7e1b8eebf3736b9c76c1e6744c2c662496bbda5e69b1e38ba8f1b99961a42a93ff03'}, 'addresses': ['example.org'], 'names': ['chatbot.example'], 'refundcoinoutput': {'value': '97000000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}}}
+    expected_transaction = {'version': 145, 'data': {'id': 3, 'nrofmonths': 2, 'txfee': '1000000000', 'coininputs': [{'parentid': '19d4e81d057b4c93a7763f3dfe878f6a37d6111a3808b93afff4b369de0f5376', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': '88bbef906997cf4c1346962bb2fd2f7260da751293d5b91675f16b34349dcc1e79ff7c1e9c19c47992245cbd67bf6352b25fd4376abaae24edcde68fb0115c0a'}}}], 'signature': 'a51bc43e07fc28d5865cd0814e060a14a905d84896369c5eef1fe551b88c32622592e16539d406240de83d8ecc603779467de583a3bd298f50756c56e5fb7707', 'addresses': {'add': ['bot.example.org'], 'remove': ['127.0.0.1', 'example.org']}, 'names': {'add': ['thisis.justan.example', 'foobar'], 'remove': ['chatbot.example']}, 'refundcoinoutput': {'value': '57000000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}}}
     # ensure our transaction is as expected
     assert result.transaction.json() == expected_transaction
 
     # ensure the transaction is posted and as expected there as well
     txn = explorer_client.posted_transaction_get(result.transaction.id)
     assert txn.json() == expected_transaction
+
+    # if no data is given to update, a ValueError exception will be raised
+    with pytest.raises(ValueError):
+        w.threebot.record_update(3)
+
+    # if data is given to update,
+    # but the 3Bot doesn't exist (linked to the given identifier)
+    # an ExplorerNoContent exception will be raised
+    with pytest.raises(ExplorerNoContent):
+        w.threebot.record_update(2, months=1)

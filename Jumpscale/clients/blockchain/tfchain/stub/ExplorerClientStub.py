@@ -132,7 +132,10 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         """
         assert isinstance(identifier, str)
         if identifier.isdigit():
-            return self._threebot_records[int(identifier)]
+            try:
+                return self._threebot_records[int(identifier)]
+            except KeyError as exc:
+                raise ExplorerNoContent("no 3Bot record could be found for identifier {}".format(identifier), endpoint=endpoint) from exc
         if BotName.REGEXP.match(identifier) is not None:
             for record in self._threebot_records.values():
                 for name in record.names:

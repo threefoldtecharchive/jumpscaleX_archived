@@ -650,8 +650,8 @@ class TransactionV145(BotTransactionBaseClass):
         if self._transaction_fee is None:
             return Currency()
         return self._transaction_fee
-
-    def set_transaction_fee(self, txfee):
+    @transaction_fee.setter
+    def transaction_fee(self, txfee):
         if txfee is None:
             self._transaction_fee = None
         else:
@@ -1026,8 +1026,8 @@ class TransactionV146(BotTransactionBaseClass):
         if self._transaction_fee is None:
             return Currency()
         return self._transaction_fee
-
-    def set_transaction_fee(self, txfee):
+    @transaction_fee.setter
+    def transaction_fee(self, txfee):
         if txfee is None:
             self._transaction_fee = None
         else:

@@ -310,6 +310,60 @@ result.submitted   # True if submitted, False if not possible
 ```
 > See [The ThreeBot Record New Unit Test](./tests/17_threebot_record_new.py) for a detailed example.
 
+> Remark: in order to get the 3Bot's unique identifier,
+> you'll have to wait until the transaction is registered on the blockchain (+/- 2 minutes waiting time),
+> and afterwards you'll be able to get the identifier as part of the 3Bot's created record as follows:
+> ```python
+> record = c.threebot.record_get(result.transaction.public_key)
+> record.identifier # the unique identifier of the 3Bot
+> ```
+
+Updating an existing 3Bot record can e done as follows:
+
+```python
+result = w.threebot.record_update(
+        3, # identifier of the 3Bot
+        months=2, # months to add, 0 by default
+        names_to_add=['thisis.justan.example', 'foobar'], # names to add, None by default
+        names_to_remove=['chatbot.example'], # registered names to remove, None by default
+        addresses_to_add=['bot.example.org'], # addresses to add, None by default
+        addresses_to_remove=['127.0.0.1', 'example.org'], # registered addresses to remove, None by default
+        source=w.address, # source address or addresses used to fund this transaction, None by default
+                          # in which case all the personal wallet addresses will be used
+        refund=w.address, # refund address, None by default
+                       # in which case either the source address is used (if only one is defined),
+                       # or the primary address is used
+    )
+result.transaction # transaction that was created, signed and if possible submitted
+result.submitted   # True if submitted, False if not possible
+                   # due to lack of signatures in MultiSig Coin Inputs
+```
+> See [The ThreeBot Record Update Unit Test](./tests/18_threebot_record_update.py) for a detailed example.
+
+If you only want to update one or some properties than that is possible
+as well, here are some more examples:
+
+```python
+# add one month to 3Bot #4
+w.threebot.record_update(4, months=1)
+```
+
+```python
+# add one (IPv6) address to 3Bot #10
+w.threebot.record_update(10, addresses_to_add=["2001:db8:85a3::8a2e:370:7334"]) 
+```
+
+```python
+# remove one name from 3Bot #1
+w.threebot.record_update(1, names_to_remove=["example.chatbot"]) 
+```
+
+```python
+# revive an inactive bot (#101) by adding a month,
+# plus start using a new name as well
+w.threebot.record_update(101, months=1, names_to_add=["example.chatbot"])
+```
+
 ### Atomic Swap Contracts
 
 Atomic swaps allow secure cross-chain transfers of money wihout any need of trust.

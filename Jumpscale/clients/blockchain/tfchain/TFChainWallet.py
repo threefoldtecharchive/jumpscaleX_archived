@@ -1285,10 +1285,71 @@ class TFChainThreeBot():
         txn = j.clients.tfchain.types.transactions.threebot_registration_new()
         txn.number_of_months = months
         if names is None and addresses is None:
-            raise ValueError("at least one name or one address is given, none is defined")
+            raise ValueError("at least one name or one address is to be given, none is defined")
         txn.names = names
         txn.addresses = addresses
 
+        # get the fees, and fund the transaction
+        balance = self._fund_txn(txn, source, refund)
+
+        # if the key_index is not defined, generate a new public key,
+        # otherwise use the key_index given
+        if key_index is None:
+            txn.public_key = self._wallet.public_key_new()
+        else:
+            if not isinstance(key_index, int):
+                raise TypeError("key index is to be of type int, not type {}".format(type(key_index)))
+            addresses = self._wallet.addresses
+            if key_index < 0 or key_index >= len(addresses):
+                raise ValueError("key index {} is OOB, index cannot be negative, and can be maximum {}".format(key_index, len(addresses)-1))
+            txn.public_key = self._wallet.key_pair_get(unlockhash=addresses[key_index]).public_key
+
+        # sign, submit, update Balance and return result
+        return self._sign_and_submit_txn(txn, balance)
+
+    def record_update(self, identifier, months=0, names_to_add=None, names_to_remove=None, addresses_to_add=None, addresses_to_remove=None, source=None, refund=None):
+        """
+        Update the record of an existing 3Bot, for which this Wallet is authorized to make such changes.
+        Names and addresses can be added and removed. Removal of data is always for free, adding data costs money.
+        Extra months can also be paid (up to 24 months in total), as to extend the expiration time further in the future.
+
+        One of months, names_to_add, names_to_remove, addresses_to_add, addresses_to_remove has to be a value other than 0/None.
+
+        @param months: amount of months to be paid and added to the current months, if the 3Bot was inactive, the starting time will be now
+        @param names_to_add: 3Bot Names to add to the 3Bot as aliases (minumum 0, maximum 5)
+        @param names_to_remove: 3Bot Names to add to the 3Bot as aliases (minumum 0, maximum 5)
+        @param addresses_to_add: Network Addresses to add and used to reach the 3Bot (minimum 0, maximum 10)
+        @param addresses_to_remove: Network Addresses to remove and used to reach the 3Bot (minimum 0, maximum 10)
+        @param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
+        @param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
+        """
+        if months < 1 and not reduce((lambda r, v: r or (v is not None)), [names_to_add, names_to_remove, addresses_to_add, addresses_to_remove], False):
+            raise ValueError("extra months is to be given or one name/address is to be added/removed, none is defined")
+    
+        # create the txn and fill the easiest properties already
+        txn = j.clients.tfchain.types.transactions.threebot_record_update_new()
+        txn.botid = identifier
+        txn.number_of_months = months
+        txn.names_to_add = names_to_add
+        txn.names_to_remove = names_to_remove
+        txn.addresses_to_add = addresses_to_add
+        txn.addresses_to_remove = addresses_to_remove
+
+        # get the 3Bot Public Key
+        record = self._wallet.client.threebot.record_get(identifier)
+        # set the parent public key
+        txn.parent_public_key = record.public_key
+
+        # get the fees, and fund the transaction
+        balance = self._fund_txn(txn, source, refund)
+
+        # sign, submit, update Balance and return result
+        return self._sign_and_submit_txn(txn, balance)
+
+    def _fund_txn(self, txn, source, refund):
+        """
+        common fund/refund/inputs/fees logic for all 3Bot Transactions
+        """
         # get the fees, and fund the transaction
         miner_fee = self._minium_miner_fee
         bot_fee = txn.required_bot_fees
@@ -1313,18 +1374,13 @@ class TFChainThreeBot():
         # add the miner fee
         txn.transaction_fee = miner_fee
 
-        # if the key_index is not defined, generate a new public key,
-        # otherwise use the key_index given
-        if key_index is None:
-            txn.public_key = self._wallet.public_key_new()
-        else:
-            if not isinstance(key_index, int):
-                raise TypeError("key index is to be of type int, not type {}".format(type(key_index)))
-            addresses = self._wallet.addresses
-            if key_index < 0 or key_index >= len(addresses):
-                raise ValueError("key index {} is OOB, index cannot be negative, and can be maximum {}".format(key_index, len(addresses)-1))
-            txn.public_key = self._wallet.key_pair_get(unlockhash=addresses[key_index]).public_key
-
+        # return balance object
+        return balance
+    
+    def _sign_and_submit_txn(self, txn, balance):
+        """
+        common sign and submit logic for all 3Bot Transactions
+        """
         # generate the signature requests
         sig_requests = txn.signature_requests_new()
         if len(sig_requests) == 0:
@@ -1357,7 +1413,6 @@ class TFChainThreeBot():
                     balance.output_add(co, confirmed=False, spent=False)
         # and return the created/submitted transaction for optional user consumption
         return TransactionSendResult(txn, submit)
-
 
     @property
     def _minium_miner_fee(self):
