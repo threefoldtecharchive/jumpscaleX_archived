@@ -407,7 +407,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # be able to add whatever content we know we can add
         if isinstance(txn, (TransactionV128, TransactionV129)):
             # set the parent mint condition
-            txn.parent_mint_condition = self.client.mint_condition_get()
+            txn.parent_mint_condition = self.client.minter.condition_get()
             # define the current fulfillment if it is not defined
             if not txn.mint_fulfillment_defined():
                 txn.mint_fulfillment = j.clients.tfchain.types.fulfillments.from_condition(txn.parent_mint_condition)
@@ -711,7 +711,7 @@ class TFChainMinter():
         """
         Get the current mind condition from the parent TFChain client.
         """
-        return self._wallet.client.mint_condition_get()
+        return self._wallet.client.minter.condition_get()
 
     def _transaction_put(self, transaction):
         """
@@ -719,7 +719,7 @@ class TFChainMinter():
 
         Returns the transaction ID.
         """
-        return self._wallet._transaction_put(transaction=transaction)
+        return self._wallet.client.transaction_put(transaction=transaction)
 
 
 from .types.ConditionTypes import ConditionAtomicSwap, OutputLock, AtomicSwapSecret, AtomicSwapSecretHash
@@ -1174,7 +1174,7 @@ class TFChainAtomicSwap():
 
         Returns the transaction ID.
         """
-        return self._wallet._transaction_put(transaction=transaction)
+        return self._wallet.client.transaction_put(transaction=transaction)
 
 from typing import NamedTuple
 
@@ -1372,7 +1372,7 @@ class TFChainThreeBot():
 
         Returns the transaction ID.
         """
-        return self._wallet._transaction_put(transaction=transaction)
+        return self._wallet.client.transaction_put(transaction=transaction)
 
 
 class WalletBalance(object):

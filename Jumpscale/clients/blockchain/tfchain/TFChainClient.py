@@ -47,13 +47,21 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
 
     def _init(self):
         self._threebot = TFChainThreeBotClient(self)
+        self._minter = TFChainMinterClient(self)
 
     @property
     def threebot(self):
         """
-        ThreeBot API.
+        ThreeBot Client API.
         """
         return self._threebot
+
+    @property
+    def minter(self):
+        """
+        Minter Client API.
+        """
+        return self._minter
 
     @property
     def explorer_addresses(self):
@@ -298,31 +306,6 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
                 raise ExplorerInvalidResponse("expected output {} to be part of creation Tx, but it wasn't".format(id), endpoint, resp)
             # return the output and related transaction(s)
             return (output, creation_txn, spend_txn)
-        except KeyError as exc:
-            # return a KeyError as an invalid Explorer Response
-            raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
-    
-    def mint_condition_get(self, height=None):
-        """
-        Get the latest (coin) mint condition or the (coin) mint condition at the specified block height.
-
-        @param height: if defined the block height at which to look up the (coin) mint condition (if none latest block will be used)
-        """
-        # define the endpoint
-        endpoint = "/explorer/mintcondition"
-        if height is not None:
-            if not isinstance(height, (int, str)):
-                raise TypeError("invalid block height given")
-            height = int(height)
-            endpoint += "/%d"%(height)
-
-        # get the mint condition
-        resp = self.explorer_get(endpoint=endpoint)
-        resp = j.data.serializers.json.loads(resp)
-
-        try:
-            # return the decoded mint condition
-            return j.clients.tfchain.types.conditions.from_json(obj=resp['mintcondition'])
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
             raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
@@ -625,6 +608,42 @@ class ExplorerMinerPayout():
     def __str__(self):
         return str(self.id)
     __repr__ = __str__
+
+
+class TFChainMinterClient():
+    """
+    TFChainMinterClient contains all Coin Minting logic.
+    """
+
+    def __init__(self, client):
+        if not isinstance(client, TFChainClient):
+            raise TypeError("client is expected to be a TFChainClient")
+        self._client = client
+
+    def condition_get(self, height=None):
+        """
+        Get the latest (coin) mint condition or the (coin) mint condition at the specified block height.
+
+        @param height: if defined the block height at which to look up the (coin) mint condition (if none latest block will be used)
+        """
+        # define the endpoint
+        endpoint = "/explorer/mintcondition"
+        if height is not None:
+            if not isinstance(height, (int, str)):
+                raise TypeError("invalid block height given")
+            height = int(height)
+            endpoint += "/%d"%(height)
+
+        # get the mint condition
+        resp = self._client.explorer_get(endpoint=endpoint)
+        resp = j.data.serializers.json.loads(resp)
+
+        try:
+            # return the decoded mint condition
+            return j.clients.tfchain.types.conditions.from_json(obj=resp['mintcondition'])
+        except KeyError as exc:
+            # return a KeyError as an invalid Explorer Response
+            raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
 
 
 class TFChainThreeBotClient():
