@@ -154,7 +154,7 @@ class BuilderNGINX(j.builder.system._BaseClass):
         if j.core.platformtype.myplatform.isUbuntu:
             j.sal.ubuntu.apt_update()
             j.sal.ubuntu.apt_install(
-                "build-essential libpcre3-dev libssl-dev zlibc zlib1g zlib1g-dev", update_md=False)
+                "build-essential libpcre3-dev libssl-dev zlibc zlib1g zlib1g-dev")
             
             tmp_dir = j.core.tools.text_replace("{DIR_TEMP}/build/nginx")
             j.core.tools.dir_ensure(tmp_dir, remove_existing=True)
@@ -212,3 +212,27 @@ class BuilderNGINX(j.builder.system._BaseClass):
         """
         # test is already implemented in php runtime
         pass
+
+    
+    def sandbox(self, dest_path='/tmp/builder/nginx', create_flist=True, zhub_instance=None, reset=False):
+        if self._done_check('sandbox'):
+             return
+        self.build(reset=reset)
+        dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
+        dir_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR)
+        j.builder.tools.dir_ensure(dir_dest)
+        j.sal.fs.copyFile(dir_src, dir_dest)
+
+        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'nginx_startup.toml')
+        self.startup = j.sal.fs.readFile(startup_file)
+        file_dest = j.sal.fs.joinPaths(dest, '.startup.toml')
+        j.builder.tools.file_ensure(file_dest)
+        j.builder.tools.file_write(file_dest, self.startup)
+
+
+
+
+        self._done_set('sandbox')
+
+        if create_flist:
+            self.flist_create(dest_path, zhub_instance)
