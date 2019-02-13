@@ -42,8 +42,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
 
         if self._done_check('sandbox',reset):
             return
-        if not self._done_check('build'):
-            self.build(reset=reset)
+        self.build(reset=reset)
 
         coredns_bin = j.sal.fs.joinPaths(self.package_path, 'coredns')
         dir_dest = j.sal.fs.joinPaths(dest_path, coredns_bin[1:]) 

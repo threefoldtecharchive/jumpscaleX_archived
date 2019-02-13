@@ -240,8 +240,7 @@ class BuilderLua(j.builder.system._BaseClass):
         '''
         if self._done_check('sandbox', reset):
             return
-        if not self._done_check('build'):
-            self.build(reset=reset)
+        self.build(reset=reset)
 
         j.builder.web.openresty.sandbox(dest_path=dest_path, reset=reset)
 
