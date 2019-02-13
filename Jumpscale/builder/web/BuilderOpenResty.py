@@ -33,7 +33,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         if self._done_check('sandbox',reset):
             return
         if not self._done_check('build'):
-            self.build()
+            self.build(reset=reset)
 
         self.bins = ['openresty', 'lua', 'resty', 'restydoc', 'restydoc-index', 'lapis', 'moon', 'moonc']
         self.dirs = {
