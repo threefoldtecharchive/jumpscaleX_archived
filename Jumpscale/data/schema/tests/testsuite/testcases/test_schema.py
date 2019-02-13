@@ -584,12 +584,11 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         percent = (percent)
-        init_percent_1 = 84 (percent)
-        init_percent_2 = 73.4 (percent)
-        init_percent_3 = 95 (percent)
-        init_percent_4 = 72.8 (percent)
-        init_percent_5 = 54% (percent)
-        init_percent_6 = 64.44% (percent)
+        init_percent_1 = 0 (percent)
+        init_percent_2 = 1 (percent)
+        init_percent_3 = 0.95 (percent)
+        init_percent_4 = 1% (percent)
+        init_percent_5 = 0.54% (percent)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -611,25 +610,15 @@ class SchemaTest(BaseTest):
             schema_obj.percent = {'number': random.randint(1, 100)}
 
         self.log("Try to set parameter[P1] with percent type, should succeed.")
-        percent = random.randint(0, 100)
+        percent = random.randint(0, 1)
         schema_obj.percent = percent
         self.assertEqual(schema_obj.percent, percent)
 
-        percent = random.uniform(0, 100)
+        percent = random.uniform(0, 1)
         schema_obj.percent = percent
         self.assertEqual(schema_obj.percent, percent)
 
-        value = random.randint(1, 100)
-        percent = '{}'.format(value)
-        schema_obj.percent = percent
-        self.assertEqual(schema_obj.percent, value)
-
-        value = random.randint(1, 100)
-        percent = '{}%'.format(value)
-        schema_obj.percent = percent
-        self.assertEqual(schema_obj.percent, value/100)
-
-        value = random.uniform(1, 100)
+        value = random.randint(0, 1)
         percent = '{}'.format(value)
         schema_obj.percent = percent
         self.assertEqual(schema_obj.percent, value)
@@ -637,12 +626,20 @@ class SchemaTest(BaseTest):
         percent = '{}%'.format(value)
         schema_obj.percent = percent
         self.assertEqual(schema_obj.percent, value/100)
-        self.assertEqual(schema_obj.init_percent_1, 84)
-        self.assertEqual(schema_obj.init_percent_2, 73.4)
-        self.assertEqual(schema_obj.init_percent_3, 95)
-        self.assertEqual(schema_obj.init_percent_4, 72.80)
-        self.assertEqual(schema_obj.init_percent_5, 0.54)
-        self.assertEqual(schema_obj.init_percent_6, 0.6444)
+
+        value = random.uniform(0, 1)
+        percent = '{}'.format(value)
+        schema_obj.percent = percent
+        self.assertEqual(schema_obj.percent, value)
+
+        percent = '{}%'.format(value)
+        schema_obj.percent = percent
+        self.assertEqual(schema_obj.percent, value/100)
+        self.assertEqual(schema_obj.init_percent_1, 0)
+        self.assertEqual(schema_obj.init_percent_2, 1)
+        self.assertEqual(schema_obj.init_percent_3, 0.95)
+        self.assertEqual(schema_obj.init_percent_4, 0.01)
+        self.assertEqual(schema_obj.init_percent_5, 0.0054)
 
     def test012_validate_url_type(self):
         """

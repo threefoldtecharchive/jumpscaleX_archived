@@ -419,7 +419,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         percent_list = (Lpercent)
-        list_percents = [84, 73.4, '95', '72.8', '54%', '64.44%'] (Lpercent)
+        list_percents = [0, 1, '0.95', '1%', '0.54%'] (Lpercent)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -432,17 +432,17 @@ class SchemaTest(BaseTest):
             schema_obj.percent_list.append(self.random_string())
 
         self.log("Try to set parameter with percent type, should succeed.")
-        percent_list = [random.randint(1, 100), random.uniform(1, 100)]
-        check_list = [percent_list[0], percent_list[1]]
+        percent_list = [random.randint(0, 1), random.uniform(0, 1), '{}'.format(random.uniform(0, 1))]
+        check_list = [percent_list[0], percent_list[1], float(percent_list[2])]
         schema_obj.percent_list = percent_list
         self.assertEqual(schema_obj.percent_list, check_list)
 
-        value = random.randint(1, 100)
-        check_list.append(value)
-        schema_obj.percent_list.append(value)
+        value = random.uniform(0, 1)
+        check_list.append(value/100)
+        schema_obj.percent_list.append('{}%'.format(value))
         self.assertEqual(schema_obj.percent_list, check_list)
         self.log("schema list %s" % schema_obj.list_percents)
-        self.assertEqual(schema_obj.list_percents, [84, 73.40, 95, 72.80, 0.54, 0.6444])
+        self.assertEqual(schema_obj.list_percents, [0, 1, 0.95, 0.01, 0.0054])
 
     def test012_validate_list_of_urls(self):
         """
