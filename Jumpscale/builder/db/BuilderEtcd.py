@@ -9,9 +9,6 @@ class BuilderEtcd(j.builder.system._BaseClass):
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'etcd_startup.toml')
         self.startup = j.sal.fs.readFile(startup_file)
 
-
-
-
     def build(self, reset=False):
         """
         Build etcd
@@ -28,19 +25,39 @@ class BuilderEtcd(j.builder.system._BaseClass):
         self._done_set('build')
         # self._cache.get(key='build', method=do, expire=3600*30*24, refresh=False, retry=2, die=True)
 
-    def sandbox(self):
-        def do():
-            if self._done_check('sandbox'):
-                return
-            if not self._done_check('build'):
-                self.build()
+    def sandbox(self, dest_path="/tmp/builders/etcd", reset=False, create_flist=False, zhub_instance=None):
+        '''Copy built bins to dest_path and create flist if create_flist = True
 
-            j.sal.fs.copyFile(j.sal.fs.joinPaths(self.package_path, 'bin', 'etcd'), j.core.dirs.BINDIR)
-            j.sal.fs.copyFile(j.sal.fs.joinPaths(self.package_path, 'bin', 'etcdctl'), j.core.dirs.BINDIR)
+        :param dest_path: destination path to copy files into
+        :type dest_path: str
+        :param sandbox_dir: path to sandbox
+        :type sandbox_dir: str
+        :param reset: reset sandbox file transfer
+        :type reset: bool
+        :param create_flist: create flist after copying files
+        :type create_flist:bool
+        :param zhub_instance: hub instance to upload flist to
+        :type zhub_instance:str
+        '''
+        if self._done_check('sandbox', reset):
+            return
+        self.build(reset=reset)
 
-            self._done_set('sandbox')
+        bin_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR[1:])
+        j.builder.tools.dir_ensure(bin_dest)
+        j.sal.fs.copyFile(j.sal.fs.joinPaths(self.package_path, 'bin', 'etcd'), bin_dest)
+        j.sal.fs.copyFile(j.sal.fs.joinPaths(self.package_path, 'bin', 'etcdctl'), bin_dest)
 
-        #self._cache.get(key="sandbox", method=do, expire=3600*30*24, refresh=False, retry=1, die=True)
+        dir_dest = j.sal.fs.joinPaths(dest_path, 'sandbox')
+        j.builder.tools.dir_ensure(dir_dest)
+        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'etcd_startup.toml')
+        self.startup = j.sal.fs.readFile(startup_file)
+        j.sal.fs.copyFile(startup_file,   dir_dest)
+
+        self._done_set('sandbox')
+
+        if create_flist:
+            self.flist_create(dest_path, zhub_instance)
 
     def client_get(self, name):
         """
