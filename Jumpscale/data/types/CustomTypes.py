@@ -223,6 +223,8 @@ class IPAddressObject(TypeBaseObjClass):
         self._jstype = j.data.types.ipaddr
 
         self._val = None
+        self.typebase = IPAddress()
+        self.value = val
         try:
             self._val = IPv4Address(val)
         except (AddressValueError, NetmaskValueError):
@@ -248,7 +250,8 @@ class IPAddress(String):
     def get(self, val):
         res = IPAddressObject(val)
         if res._val is None:
-            raise
+            raise ValueError("Invalid IPAddress :%s" % val)
+        return res
 
     def get_default(self):
         return "192.168.1.1"

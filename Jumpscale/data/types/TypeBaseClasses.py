@@ -2,41 +2,35 @@
 
 class TypeBaseObjClass():
 
-    def __init__(self,typebase,**kwargs):
-        self._typebase = typebase
-        self._init(**kwargs)
-        self._value = value #example
-
-
     def check(self):
         '''
         Check whether provided value is the native type
         '''
-        return self._typebase.check(self.value)
+        return self.typebase.check(ip=self.value)
 
     def possible(self):
         '''
         Check whether provided value can be converted to this type
         '''
         try:
-            self.clean()
+            self.typebase.clean(self.value)
         except:
             return False
         return True
 
     def capnp_schema_get(self, name, nr):
-        return self._typebase.capnp_schema_get(name,nr)
+        return self.typebase.capnp_schema_get(name, nr)
 
     def get_default(self):
-        return self._typebase.get_default()
+        return self.typebase.get_default()
 
     def toString(self, v):
+
         return self.clean(v)
 
     def toData(self):
         value = self.clean(self.value)
-        return self._typebase.toData(self.value)
-
+        return self.typebase.toData(value)
 
     def clean(self):
         """
@@ -46,7 +40,7 @@ class TypeBaseObjClass():
         return self.value
 
     def __equal__(self):
-        #TODO
+        # TODO
         pass
 
     def __str__(self):
@@ -55,10 +49,7 @@ class TypeBaseObjClass():
     __repr__ = __str__
 
 
-
 class TypeBaseClass():
-
-
 
     def toString(self, v):
         return self.clean(v)
