@@ -6,7 +6,7 @@ from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChain
 from Jumpscale.clients.blockchain.tfchain.TFChainClient import ThreeBotRecord
 from Jumpscale.clients.blockchain.tfchain.types.ThreeBot import BotName, NetworkAddress
 from Jumpscale.clients.blockchain.tfchain.types.CryptoTypes import PublicKey
-from Jumpscale.clients.blockchain.tfchain.types.Errors import ExplorerNoContent
+from Jumpscale.clients.blockchain.tfchain.types.Errors import ThreeBotNotFound, ThreeBotInactive
 
 def main(self):
     """
@@ -32,7 +32,7 @@ def main(self):
         names=[BotName(value=s) for s in ["chatbot.example"]],
         addresses=[NetworkAddress(address=s) for s in ["example.org", "127.0.0.1"]],
         public_key=PublicKey.from_json("ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa"),
-        expiration=1552581420,
+        expiration=1549012664,
     ))
     c._explorer_get = explorer_client.explorer_get
     c._explorer_post = explorer_client.explorer_post
@@ -56,6 +56,13 @@ def main(self):
     # the available and locked tokens can be easily checked
     assert str(balance.available)== '3698'
     assert str(balance.locked) == '0'
+
+    # if a 3Bot is inactive, at least one month has to be added to make it active again,
+    # and reset the expiration time, otherwise the ThreeBotInactive error will be raised
+    with pytest.raises(ThreeBotInactive):
+        w.threebot.record_update(3, addresses_to_add=['bot.example.org'])
+    with pytest.raises(ThreeBotInactive):
+        w.threebot.record_update(3, months=0, addresses_to_add=['bot.example.org'])
 
     # updating a record is as simple as:
     result = w.threebot.record_update(
@@ -87,6 +94,6 @@ def main(self):
 
     # if data is given to update,
     # but the 3Bot doesn't exist (linked to the given identifier)
-    # an ExplorerNoContent exception will be raised
-    with pytest.raises(ExplorerNoContent):
+    # an ThreeBotNotFound exception will be raised
+    with pytest.raises(ThreeBotNotFound):
         w.threebot.record_update(2, months=1)

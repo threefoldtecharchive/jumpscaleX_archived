@@ -2,6 +2,8 @@
 Public TFChain Errors
 """
 
+from Jumpscale import j
+
 class InvalidPublicKeySpecifier(Exception):
     """
     InvalidPublicKeySpecifier error
@@ -240,3 +242,44 @@ class AtomicSwapContractNotFound(Exception):
         The outputid that was used to look up the contract that could not be found.
         """
         return self._outputid
+
+
+class ThreeBotNotFound(Exception):
+    """
+    ThreeBotNotFound error, triggered when a 3Bot was not found.
+    """
+    def __init__(self, identifier):
+        super().__init__("3Bot {} could not be found".format(identifier))
+        self._identifier = identifier
+
+    @property
+    def identifier(self):
+        """
+        The (unique) identifier of the 3Bot that could not be found.
+        """
+        return self._identifier
+
+
+class ThreeBotInactive(Exception):
+    """
+    ThreeBotInactive error, triggered when a 3Bot is an active,
+    and the operation to be applied to the 3Bot would not change that fact.
+    """
+    def __init__(self, identifier, expiration):
+        super().__init__("3Bot {} is inactive since {}".format(str(identifier), j.data.time.epoch2HRDateTime(expiration)))
+        self._identifier = identifier
+        self._expiration = expiration
+
+    @property
+    def identifier(self):
+        """
+        The (unique) identifier of the 3Bot that could not be found.
+        """
+        return self._identifier
+
+    @property
+    def expiration(self):
+        """
+        The timestamp on which the 3Bot became inactive.
+        """
+        return self._expiration

@@ -6,7 +6,7 @@ from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChain
 from Jumpscale.clients.blockchain.tfchain.TFChainClient import ThreeBotRecord
 from Jumpscale.clients.blockchain.tfchain.types.ThreeBot import BotName, NetworkAddress
 from Jumpscale.clients.blockchain.tfchain.types.CryptoTypes import PublicKey
-from Jumpscale.clients.blockchain.tfchain.types.Errors import ExplorerNoContent
+from Jumpscale.clients.blockchain.tfchain.types.Errors import ThreeBotNotFound, ThreeBotInactive
 
 def main(self):
     """
@@ -88,8 +88,47 @@ def main(self):
         w.threebot.name_transfer(sender=3, receiver=5, names=[])
 
     # if names are defined to be transfered but one of the two 3Bots do no exist,
-    # an ExplorerNoContent will be raised
-    with pytest.raises(ExplorerNoContent):
+    # an ThreeBotNotFound will be raised
+    with pytest.raises(ThreeBotNotFound):
         w.threebot.name_transfer(sender=2, receiver=5, names=["foobar"])
-    with pytest.raises(ExplorerNoContent):
+    with pytest.raises(ThreeBotNotFound):
         w.threebot.name_transfer(sender=3, receiver=4, names=["foobar"])
+
+    # make our receiver 3Bot expired
+    explorer_client.threebot_record_add(ThreeBotRecord(
+        identifier=5,
+        names=[],
+        addresses=[NetworkAddress(address=s) for s in ["bot.example.org"]],
+        public_key=PublicKey.from_json("ed25519:bdea9aff09bcdc66529f6e2ef1bb763a3bab83ce542e8673d97aeaed0581ad97"),
+        expiration=1549012664,
+    ), force=True)
+
+    # if the receiver 3Bot is inactive, an error will be raised
+    with pytest.raises(ThreeBotInactive):
+        w.threebot.name_transfer(sender=3, receiver=5, names=["foobar"])
+
+    # make our sender 3Bot expired
+    explorer_client.threebot_record_add(ThreeBotRecord(
+        identifier=3,
+        names=[BotName(value=s) for s in ["foorbar", "chatbot.example"]],
+        addresses=[NetworkAddress(address=s) for s in ["example.org", "127.0.0.1"]],
+        public_key=PublicKey.from_json("ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa"),
+        expiration=1549012664,
+    ), force=True)
+
+    # if the sender and receiver 3Bots are inactive, an error will be raised
+    with pytest.raises(ThreeBotInactive):
+        w.threebot.name_transfer(sender=3, receiver=5, names=["foobar"])
+
+    # make our receiver 3Bot active again
+    explorer_client.threebot_record_add(ThreeBotRecord(
+        identifier=5,
+        names=[],
+        addresses=[NetworkAddress(address=s) for s in ["bot.example.org"]],
+        public_key=PublicKey.from_json("ed25519:bdea9aff09bcdc66529f6e2ef1bb763a3bab83ce542e8673d97aeaed0581ad97"),
+        expiration=1552585420,
+    ), force=True)
+
+    # if the sender 3Bot is inactive, an error will be raised
+    with pytest.raises(ThreeBotInactive):
+        w.threebot.name_transfer(sender=3, receiver=5, names=["foobar"])

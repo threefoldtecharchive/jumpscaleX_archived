@@ -1176,81 +1176,6 @@ class TFChainAtomicSwap():
         """
         return self._wallet.client.transaction_put(transaction=transaction)
 
-from typing import NamedTuple
-
-class TransactionSendResult(NamedTuple):
-    """
-    TransactionSendResult is a named tuple,
-    used as the result for a generic transaction send call.
-    """
-    transaction: TransactionBaseClass
-    submitted: bool
-
-class TransactionSignResult(NamedTuple):
-    """
-    TransactionSignResult is a named tuple,
-    used as the result for a transaction sign call.
-    """
-    transaction: TransactionBaseClass
-    signed: bool
-    submitted: bool
-
-class AtomicSwapInitiationResult(NamedTuple):
-    """
-    AtomicSwapInitiationResult is a named tuple,
-    used as the result for an atomic swap initiation call.
-    """
-    contract: AtomicSwapContract
-    secret: AtomicSwapSecret
-    transaction: TransactionBaseClass
-    submitted: bool
-
-class AtomicSwapParticipationResult(NamedTuple):
-    """
-    AtomicSwapParticipationResult is a named tuple,
-    used as the result for an atomic swap participation call.
-    """
-    contract: AtomicSwapContract
-    transaction: TransactionBaseClass
-    submitted: bool
-
-class SpendableKey():
-    """
-    SpendableKey defines a PublicPrivate key pair as useable
-    by a TFChain wallet.
-    """
-
-    def __init__(self, public_key, private_key):
-        if not isinstance(public_key, PublicKey):
-            raise TypeError("public key cannot be of type {} (expected: PublicKey)".format(type(public_key)))
-        self._public_key = public_key
-        if not isinstance(private_key, SigningKey):
-            raise TypeError("private key cannot be of type {} (expected: SigningKey)".format(type(private_key)))
-        self._private_key = private_key
-
-    @property
-    def public_key(self):
-        return self._public_key
-
-    @property
-    def private_key(self):
-        return self._private_key
-
-    @property
-    def unlockhash(self):
-        return self._public_key.unlockhash()
-
-    def sign(self, hash):
-        """
-        Sign the given hash and return the signature.
-
-        @param hash: hash to be signed
-        """
-        if not isinstance(hash, Hash):
-            hash = Hash(value=hash)
-        hash = bytes(hash.value)
-        return self._private_key.sign(hash)
-
 
 class TFChainThreeBot():
     """
@@ -1344,6 +1269,10 @@ class TFChainThreeBot():
         # set the parent public key
         txn.parent_public_key = record.public_key
 
+        # ensure the 3Bot is either active, or will be come active
+        if record.expiration <= self._chain_time and months == 0:
+            raise ThreeBotInactive(identifier, record.expiration)
+
         # get the fees, and fund the transaction
         balance = self._fund_txn(txn, source, refund)
 
@@ -1371,13 +1300,22 @@ class TFChainThreeBot():
         if len(txn.names) == 0:
             raise ValueError("at least one (3Bot) name has to be transfered, but none were defined")
 
+        # keep track of chain time
+        chain_time = self._chain_time
+
         # get and assign the 3Bot's public key for the sender
         record = self._wallet.client.threebot.record_get(sender)
         txn.sender_parent_public_key = record.public_key
+        # ensure sender bot is active
+        if record.expiration <= chain_time:
+            raise ThreeBotInactive(sender, record.expiration)
 
         # get and assign the 3Bot's public key for the receiver
         record = self._wallet.client.threebot.record_get(receiver)
         txn.receiver_parent_public_key = record.public_key
+        # ensure receiver bot is active
+        if record.expiration <= chain_time:
+            raise ThreeBotInactive(receiver, record.expiration)
 
         # get the fees, and fund the transaction
         balance = self._fund_txn(txn, source, refund)
@@ -1469,6 +1407,90 @@ class TFChainThreeBot():
         Returns the transaction ID.
         """
         return self._wallet.client.transaction_put(transaction=transaction)
+
+    @property
+    def _chain_time(self):
+        """
+        Returns the time according to the chain's network.
+        """
+        info = self._wallet.client.blockchain_info_get()
+        return info.timestamp
+
+
+from typing import NamedTuple
+
+class TransactionSendResult(NamedTuple):
+    """
+    TransactionSendResult is a named tuple,
+    used as the result for a generic transaction send call.
+    """
+    transaction: TransactionBaseClass
+    submitted: bool
+
+class TransactionSignResult(NamedTuple):
+    """
+    TransactionSignResult is a named tuple,
+    used as the result for a transaction sign call.
+    """
+    transaction: TransactionBaseClass
+    signed: bool
+    submitted: bool
+
+class AtomicSwapInitiationResult(NamedTuple):
+    """
+    AtomicSwapInitiationResult is a named tuple,
+    used as the result for an atomic swap initiation call.
+    """
+    contract: AtomicSwapContract
+    secret: AtomicSwapSecret
+    transaction: TransactionBaseClass
+    submitted: bool
+
+class AtomicSwapParticipationResult(NamedTuple):
+    """
+    AtomicSwapParticipationResult is a named tuple,
+    used as the result for an atomic swap participation call.
+    """
+    contract: AtomicSwapContract
+    transaction: TransactionBaseClass
+    submitted: bool
+
+class SpendableKey():
+    """
+    SpendableKey defines a PublicPrivate key pair as useable
+    by a TFChain wallet.
+    """
+
+    def __init__(self, public_key, private_key):
+        if not isinstance(public_key, PublicKey):
+            raise TypeError("public key cannot be of type {} (expected: PublicKey)".format(type(public_key)))
+        self._public_key = public_key
+        if not isinstance(private_key, SigningKey):
+            raise TypeError("private key cannot be of type {} (expected: SigningKey)".format(type(private_key)))
+        self._private_key = private_key
+
+    @property
+    def public_key(self):
+        return self._public_key
+
+    @property
+    def private_key(self):
+        return self._private_key
+
+    @property
+    def unlockhash(self):
+        return self._public_key.unlockhash()
+
+    def sign(self, hash):
+        """
+        Sign the given hash and return the signature.
+
+        @param hash: hash to be signed
+        """
+        if not isinstance(hash, Hash):
+            hash = Hash(value=hash)
+        hash = bytes(hash.value)
+        return self._private_key.sign(hash)
 
 
 class WalletBalance(object):

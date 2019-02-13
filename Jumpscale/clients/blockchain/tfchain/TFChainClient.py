@@ -6,7 +6,7 @@ from Jumpscale import j
 from .types.ConditionTypes import UnlockHash, UnlockHashType, ConditionMultiSignature
 from .types.PrimitiveTypes import Hash, Currency
 from .types.IO import CoinOutput, BlockstakeOutput
-from .types.Errors import ExplorerInvalidResponse
+from .types.Errors import ExplorerInvalidResponse, ExplorerNoContent, ThreeBotNotFound
 from .types.CryptoTypes import PublicKey
 from .types.ThreeBot import BotName, NetworkAddress
 from .types.transactions.Base import TransactionBaseClass
@@ -684,7 +684,10 @@ class TFChainThreeBotClient():
 
         # fetch the data
         endpoint += "/{}".format(identifier)
-        resp = self._client.explorer_get(endpoint=endpoint)
+        try:
+            resp = self._client.explorer_get(endpoint=endpoint)
+        except ExplorerNoContent as exc:
+            raise ThreeBotNotFound(identifier) from exc
         resp = j.data.serializers.json.loads(resp)
         try:
             # return the fetched record as a named tuple, for easy semi-typed access
