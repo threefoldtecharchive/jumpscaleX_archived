@@ -163,6 +163,12 @@ class TransactionFactory(j.application.JSBaseClass):
         assert v146_txn.signature_hash_get(BotTransactionBaseClass.SPECIFIER_SENDER).hex() == 'ade263bfbc693e95463f19c201dd672bbd2616412362217c70317dfb42ab73cb'
         assert v146_txn.signature_hash_get(BotTransactionBaseClass.SPECIFIER_RECEIVER).hex() == '36445975184c68e13f8b74e2e87dd72f23cb47ff3bd4f22e80c4654ec63015d9'
         assert v146_txn.binary_encode().hex() == '920100000080f1c6109c685c7452efaf20cec6b170817f1faeb6f0a4ff49a7a0872343e62810f51dee051d8eb7883fb0ad7a848aa5bf18b8bd30fe109daa04f13e7d76af750a0200000080ae9dc9fa308e76de123b5f889fed93d6d9a701dc8d5369787dc25095f3d6eb833f6d47302697d2da22e05854d08f26d723463f328cc6ec445529cff583903308111c68656c6c6f2e7468726565626f74083b9aca0002572635ceed12c61cd78e97391c75fefb01cc969211aa827de4c44eb66285a37c01c4013079d97d169f96b996ff87677483bb601150c1bae8b1061ecbb137b9597d7cb98088e8c0d168ac60c1c6b47caad1bf660192064f2cd74ea38def15ff91d50e50b9bf2046c70c363d2ba152c51fcdaa017a27ab26a75bca76252df852785dd470071001633fdc441710000142014195d5ada0434d0766bf9e3d9b87d2f63ef7b1820739cff88335d45cbae2dac5'
+        # another v146 Txn, to guarantee the signature hash with how rivine expects it
+        v146_txn_json = {'version': 146, 'data': {'sender': {'id': 3, 'signature': ''}, 'receiver': {'id': 4, 'signature': ''}, 'names': ['foobar', 'thisis.justan.example'], 'txfee': '1000000000', 'coininputs': [{'parentid': '825eecc33a194e087c7d6f711cae384c1b0f7515f3aa3feb590fd04fd1f22613', 'fulfillment': {'type': 1, 'data': {'publickey': ':0000000000000000000000000000000000000000000000000000000000000000', 'signature': ''}}}], 'refundcoinoutput': {'value': '99000000000', 'condition': {'type': 1, 'data': {'unlockhash': '01b73c4e869b6167abe6180ebe7a907f56e0357b4a2f65eb53d22baad84650eb62fce66ba036d0'}}}}}
+        v146_txn = self.from_json(v146_txn_json)
+        assert v146_txn.json() == v146_txn_json
+        assert v146_txn.signature_hash_get(BotTransactionBaseClass.SPECIFIER_SENDER).hex() == '0e9cac3de589d283b2f25b59eaf4d4797028f14bc3a5f188180e9214311e624f'
+        assert v146_txn.signature_hash_get(BotTransactionBaseClass.SPECIFIER_RECEIVER).hex() == '74d949499a0c76e09c642b879c7f7b2da7ba047a2adcad477d7211e67be5d031'
 
         # 3Bot Transactions also have extra fees,
         # part of these fees are monthly fees

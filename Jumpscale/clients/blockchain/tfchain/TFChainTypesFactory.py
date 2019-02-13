@@ -134,6 +134,8 @@ class TFChainTypesFactory(j.application.JSBaseClass):
         # as a slice, not an array
         assert str(self.binary_data_new()) == ''
         assert str(self.binary_data_new(b'1')) == '31'
+        assert str(self.binary_data_new(b'1', fixed_size=0)) == '31'
+        assert str(self.binary_data_new(b'1', fixed_size=1)) == '31'
 
         # raw data is pretty much binary data, except that it is
         # base64 encoded/decoded for str/json purposes

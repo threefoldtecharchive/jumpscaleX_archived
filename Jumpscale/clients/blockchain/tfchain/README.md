@@ -317,23 +317,25 @@ result.submitted   # True if submitted, False if not possible
 > record = c.threebot.record_get(result.transaction.public_key)
 > record.identifier # the unique identifier of the 3Bot
 > ```
+> If you the `ExplorerNoContent` exception gets raised, it probably means
+> the transaction is still not registered on the blockchain, wait a bit longer in that case.
 
 Updating an existing 3Bot record can e done as follows:
 
 ```python
 result = w.threebot.record_update(
-        3, # identifier of the 3Bot
-        months=2, # months to add, 0 by default
-        names_to_add=['thisis.justan.example', 'foobar'], # names to add, None by default
-        names_to_remove=['chatbot.example'], # registered names to remove, None by default
-        addresses_to_add=['bot.example.org'], # addresses to add, None by default
-        addresses_to_remove=['127.0.0.1', 'example.org'], # registered addresses to remove, None by default
-        source=w.address, # source address or addresses used to fund this transaction, None by default
-                          # in which case all the personal wallet addresses will be used
-        refund=w.address, # refund address, None by default
-                       # in which case either the source address is used (if only one is defined),
-                       # or the primary address is used
-    )
+    3, # identifier of the 3Bot
+    months=2, # months to add, 0 by default
+    names_to_add=['thisis.justan.example', 'foobar'], # names to add, None by default
+    names_to_remove=['chatbot.example'], # registered names to remove, None by default
+    addresses_to_add=['bot.example.org'], # addresses to add, None by default
+    addresses_to_remove=['127.0.0.1', 'example.org'], # registered addresses to remove, None by default
+    source=w.address, # source address or addresses used to fund this transaction, None by default
+                        # in which case all the personal wallet addresses will be used
+    refund=w.address, # refund address, None by default
+                    # in which case either the source address is used (if only one is defined),
+                    # or the primary address is used
+)
 result.transaction # transaction that was created, signed and if possible submitted
 result.submitted   # True if submitted, False if not possible
                    # due to lack of signatures in MultiSig Coin Inputs
@@ -363,6 +365,21 @@ w.threebot.record_update(1, names_to_remove=["example.chatbot"])
 # plus start using a new name as well
 w.threebot.record_update(101, months=1, names_to_add=["example.chatbot"])
 ```
+
+Transfering one or multiple names between from one existing 3Bot to another can be done as follows:
+
+```python
+result = w.threebot.name_transfer(
+    sender=3, # identifier of sender 3Bot
+    receiver=5, # identifier of receiver 3Bot
+    names=["foobar", "chatbot.example"], # names to be transfered from sender to receiver 3Bot,
+                                         # at least one name HAS to be defined
+)
+result.transaction # transaction that was created, signed and if possible submitted
+result.submitted   # True if submitted, False if not possible
+                   # due to lack of signatures in MultiSig Coin Inputs
+```
+> See [The ThreeBot Name Transfer Unit Test](./tests/19_threebot_name_transfer.py) for a detailed example.
 
 ### Atomic Swap Contracts
 

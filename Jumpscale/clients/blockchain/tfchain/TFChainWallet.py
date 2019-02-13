@@ -1274,6 +1274,8 @@ class TFChainThreeBot():
         If no key_index is given a new key pair is generated for the wallet,
         otherwise the key pair on the given index of the wallet is used.
 
+        Returns a TransactionSendResult.
+
         @param months: amount of months to be prepaid, at least 1 month is required, maximum 24 months is allowed
         @param names: 3Bot Names to add to the 3Bot as aliases (minumum 0, maximum 5)
         @param addresses: Network Addresses used to reach the 3Bot (minimum 0, maximum 10)
@@ -1315,6 +1317,8 @@ class TFChainThreeBot():
 
         One of months, names_to_add, names_to_remove, addresses_to_add, addresses_to_remove has to be a value other than 0/None.
 
+        Returns a TransactionSendResult.
+
         @param months: amount of months to be paid and added to the current months, if the 3Bot was inactive, the starting time will be now
         @param names_to_add: 3Bot Names to add to the 3Bot as aliases (minumum 0, maximum 5)
         @param names_to_remove: 3Bot Names to add to the 3Bot as aliases (minumum 0, maximum 5)
@@ -1344,6 +1348,43 @@ class TFChainThreeBot():
         balance = self._fund_txn(txn, source, refund)
 
         # sign, submit, update Balance and return result
+        return self._sign_and_submit_txn(txn, balance)
+
+    def name_transfer(self, sender, receiver, names, source=None, refund=None):
+        """
+        Transfer one or multiple 3Bot names from the sender 3Bot to the receiver 3Bot.
+        Both the Sender and Receiver 3Bots have to be active at the time of transfer.
+
+        Returns a TransactionSendResult.
+
+        @param sender: identifier of the existing and active 3Bot sender bot
+        @param receiver: identifier of the existing and active 3Bot receiver bot
+        @param names: 3Bot Names to transfer (minumum 0, maximum 5)
+        @param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
+        @param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
+        """
+        # create the txn and fill the easiest properties already
+        txn = j.clients.tfchain.types.transactions.threebot_name_transfer_new()
+        txn.sender_botid = sender
+        txn.receiver_botid = receiver
+        txn.names = names
+        if len(txn.names) == 0:
+            raise ValueError("at least one (3Bot) name has to be transfered, but none were defined")
+
+        # get and assign the 3Bot's public key for the sender
+        record = self._wallet.client.threebot.record_get(sender)
+        txn.sender_parent_public_key = record.public_key
+
+        # get and assign the 3Bot's public key for the receiver
+        record = self._wallet.client.threebot.record_get(receiver)
+        txn.receiver_parent_public_key = record.public_key
+
+        # get the fees, and fund the transaction
+        balance = self._fund_txn(txn, source, refund)
+
+        # sign and update Balance and return result,
+        # only if the 3Bot owns both public keys, the Txn will be already,
+        # submitted as well
         return self._sign_and_submit_txn(txn, balance)
 
     def _fund_txn(self, txn, source, refund):

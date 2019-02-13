@@ -22,8 +22,10 @@ class ED25519Signature(BinaryData):
 
     @classmethod
     def from_json(cls, obj, as_array=False):
-        if not isinstance(obj, str):
-            raise TypeError("ed25519 signature is expected to be an encoded string when part of a JSON object")
+        if obj is not None and not isinstance(obj, str):
+            raise TypeError("ed25519 signature is expected to be an encoded string when part of a JSON object, not {}".format(type(obj)))
+        if obj == '':
+            obj = None
         return cls(value=obj, as_array=as_array)
 
     def sia_binary_encode(self, encoder):

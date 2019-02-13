@@ -99,8 +99,10 @@ class NetworkAddress(BaseDataTypeClass):
 
     @classmethod
     def from_json(cls, obj):
-        if not isinstance(obj, str):
-            raise TypeError("network address is expected to be an encoded string when part of a JSON object")
+        if obj is not None and not isinstance(obj, str):
+            raise TypeError("network address is expected to be an encoded string when part of a JSON object, not {}".format(type(obj)))
+        if obj == '':
+            obj = None
         return cls(address=obj)
 
     @property
@@ -191,8 +193,10 @@ class BotName(BaseDataTypeClass):
 
     @classmethod
     def from_json(cls, obj):
-        if not isinstance(obj, str):
+        if obj is not None and not isinstance(obj, str):
             raise TypeError("bot name is expected to be an encoded string when part of a JSON object")
+        if obj == '':
+            obj = None
         return cls(value=obj)
 
     @property

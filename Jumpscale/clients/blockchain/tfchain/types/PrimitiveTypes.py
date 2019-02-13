@@ -28,18 +28,27 @@ class BinaryData(BaseDataTypeClass):
         if fixed_size is not None:
             if not isinstance(fixed_size, int):
                 raise TypeError("fixed size should be None or int, not be of type {}".format(type(fixed_size)))
-            if fixed_size <= 0:
-                raise TypeError("fixed size should be at least 1, {} is not allowed".format(fixed_size))
-        self._fixed_size = fixed_size
+            if fixed_size < 0:
+                raise TypeError("fixed size should be at least 0, {} is not allowed".format(fixed_size))
+        if fixed_size != 0:
+            self._fixed_size = fixed_size
+        else:
+            self._fixed_size = None # for now use no fixed size
 
         # define the value (finally)
         self._value = None
         self.value = value
 
+        if fixed_size == 0:
+            # define the fixed size now, if the fixed_size was 0
+            self._fixed_size = len(self.value) # based on the binary length of the value
+
     @classmethod
     def from_json(cls, obj, fixed_size=None, strencoding=None):
-        if not isinstance(obj, str):
+        if obj is not None and not isinstance(obj, str):
             raise TypeError("binary data is expected to be an encoded string when part of a JSON object")
+        if obj == '':
+            obj = None
         return cls(value=obj, fixed_size=fixed_size, strencoding=strencoding)
 
     @property
@@ -132,8 +141,10 @@ class Hash(BinaryData):
 
     @classmethod
     def from_json(cls, obj):
-        if not isinstance(obj, str):
-            raise TypeError("hash is expected to be an encoded string when part of a JSON object")
+        if obj is not None and not isinstance(obj, str):
+            raise TypeError("hash is expected to be an encoded string when part of a JSON object, not {}".format(type(obj)))
+        if obj == '':
+            obj = None
         return cls(value=obj)
 
     def __str__(self):
@@ -155,8 +166,10 @@ class Currency(BaseDataTypeClass):
 
     @classmethod
     def from_json(cls, obj):
-        if not isinstance(obj, str):
+        if obj is not None and not isinstance(obj, str):
             raise TypeError("currency is expected to be a string when part of a JSON object, not type {}".format(type(obj)))
+        if obj == '':
+            obj = None
         c = cls()
         c.value = Decimal(obj) * Decimal('0.000000001')
         return c
@@ -315,8 +328,10 @@ class Blockstake(BaseDataTypeClass):
 
     @classmethod
     def from_json(cls, obj):
-        if not isinstance(obj, str):
+        if obj is not None and not isinstance(obj, str):
             raise TypeError("block stake is expected to be a string when part of a JSON object, not type {}".format(type(obj)))
+        if obj == '':
+            obj = None
         return cls(value=obj)
     
     @property

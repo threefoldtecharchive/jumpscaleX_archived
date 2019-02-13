@@ -21,8 +21,8 @@ class BotTransactionBaseClass(TransactionBaseClass, SignatureCallbackBase):
     MAX_NAMES_PER_BOT = 5
     MAX_ADDRESSES_PER_BOT = 10
 
-    SPECIFIER_SENDER = BinaryData(value=b'sender', fixed_size=6)
-    SPECIFIER_RECEIVER = BinaryData(value=b'receiver', fixed_size=8)
+    SPECIFIER_SENDER = BinaryData(value=b'sender', fixed_size=0)
+    SPECIFIER_RECEIVER = BinaryData(value=b'receiver', fixed_size=0)
 
     @staticmethod
     def compute_monthly_bot_fees(months):
@@ -907,7 +907,7 @@ class TransactionV146(BotTransactionBaseClass):
         """
         The fees required to pay for this 3Bot Name Transfer Transaction.
         """
-        return BotTransactionBaseClass.compute_monthly_bot_fees(self._number_of_months)
+        return BotTransactionBaseClass.BOT_FEE_ADDITIONAL_NAME * len(self.names)
 
     @property
     def sender_botid(self):
@@ -1040,16 +1040,6 @@ class TransactionV146(BotTransactionBaseClass):
         return [self._transaction_fee]
 
     @property
-    def number_of_months(self):
-        return self._number_of_months
-
-    @number_of_months.setter
-    def number_of_months(self, n):
-        if n < 0 or n > 24:
-            raise ValueError("number of months for a 3Bot Record Update has to be in the inclusive range [0,24]")
-        self._number_of_months = n
-
-    @property
     def sender_signature(self):
         if self._sender_signature is None:
             return ED25519Signature(as_array=True)
@@ -1106,9 +1096,9 @@ class TransactionV146(BotTransactionBaseClass):
         Implements SignatureCallbackBase.
         """
         unlockhash = public_key.unlockhash()
-        if unlockhash == self.sender_parent_public_key:
+        if unlockhash == self.sender_parent_public_key.unlockhash():
             self.sender_signature = signature
-        elif unlockhash == self.receiver_parent_public_key:
+        elif unlockhash == self.receiver_parent_public_key.unlockhash():
             self.receiver_signature = signature
         else:
             raise ValueError("given public key (unlockhash: {}) is not linked to this BotNameTransfer Transaction".format(str(unlockhash)))
@@ -1139,7 +1129,7 @@ class TransactionV146(BotTransactionBaseClass):
             e.add(ci.parentid)
 
         # encode transaction fee
-        e.add_all(self.transaction_fee)
+        e.add(self.transaction_fee)
 
         # encode refund coin output
         if self._refund_coin_output is None:
@@ -1211,8 +1201,6 @@ class TransactionV146(BotTransactionBaseClass):
             self._receiver_signature = None
         # decode names
         self._names = [BotName.from_json(name) for name in data.get('names', []) or []]
-        # decode number of months
-        self._number_of_months = int(data.get('nrofmonths', 0) or 0)
         # decode transaction fee
         if 'txfee' in data:
             self._transaction_fee = Currency.from_json(data['txfee'])
@@ -1240,36 +1228,39 @@ class TransactionV146(BotTransactionBaseClass):
             'txfee': self.transaction_fee.json(),
             'coininputs': [ci.json() for ci in self.coin_inputs]
         }
-        number_of_months = self.number_of_months
-        if number_of_months > 0:
-            output['nrofmonths'] = number_of_months
         if self._refund_coin_output is not None:
             output['refundcoinoutput'] = self._refund_coin_output.json()
         return output
 
     def _extra_signature_requests_new(self):
-        candidates = [
-            (self._sender_parent_public_key, self._sender_signature, BotTransactionBaseClass.SPECIFIER_SENDER),
-            (self._receiver_parent_public_key, self._receiver_signature, BotTransactionBaseClass.SPECIFIER_RECEIVER),
-        ]
         requests = []
-        for (public_key, signature, specifier) in candidates:
-            if public_key is None:
-                # if no parent public key is defined, cannot do anything
-                continue
-            if signature is not None:
-                continue # nothing to do
-            # generate the input hash func
-            input_hash_func = InputSignatureHashFactory(self, specifier).signature_hash_new
-            # define the input_hash_new generator function,
-            # used to create the input hash for creating the signature
-            unlockhash = public_key.unlockhash()
-            def input_hash_gen(public_key):
-                return input_hash_func()
-            # create the only signature request
-            requests.append(SignatureRequest(unlockhash=unlockhash, input_hash_gen=input_hash_gen, callback=self))
+        # collect, if possible, the sender request
+        request = self._extra_signature_requests_for(self._sender_parent_public_key, self._sender_signature, BotTransactionBaseClass.SPECIFIER_SENDER)
+        if request is not None:
+            requests.append(request)
+        # collect, if possible, the receiver request
+        request = self._extra_signature_requests_for(self._receiver_parent_public_key, self._receiver_signature, BotTransactionBaseClass.SPECIFIER_RECEIVER)
+        if request is not None:
+            requests.append(request)
         # return all requests, if any
         return requests
+
+    def _extra_signature_requests_for(self, public_key, signature, specifier):
+        if public_key is None:
+            # if no parent public key is defined, cannot do anything
+            return None
+        if signature is not None:
+            return None
+        # generate the input hash func
+        factory = InputSignatureHashFactory(self, specifier)
+        # define the input_hash_new generator function,
+        # used to create the input hash for creating the signature
+        unlockhash = public_key.unlockhash()
+        # create the only signature request
+        return SignatureRequest(
+            unlockhash=unlockhash,
+            input_hash_gen=(lambda public_key: factory.signature_hash_new()),
+            callback=self)
 
     def _extra_is_fulfilled(self):
         return self._sender_signature is not None and self._receiver_signature is not None
