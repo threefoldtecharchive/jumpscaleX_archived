@@ -1697,14 +1697,9 @@ class MyEnv():
 
         return config
 
-
     @staticmethod
-    def _init(force=False):
-        MyEnv.check_platform()
-
-        if MyEnv.__init:
-            return
-
+    def init_config():
+        """init config without creating any files or dirs anywhere"""
         if "DIR_CFG" in os.environ:
             DIR_CFG = os.environ["DIR_CFG"].strip()
         else:
@@ -1717,7 +1712,13 @@ class MyEnv():
             MyEnv.config_load()
         else:
             MyEnv.config = MyEnv.config_default_get()
-            MyEnv.config_save()
+
+    @staticmethod
+    def init(force=False):
+        if MyEnv.__init:
+            return
+
+        MyEnv.check_platform()
 
         if force or not MyEnv.state_exists("myenv_init"):
 
@@ -1749,11 +1750,8 @@ class MyEnv():
             Tools.execute(script,interactive=True)
 
 
-            MyEnv.config_load()
-
             if not "HOME" in MyEnv.config and "HOME" in os.environ:
                 MyEnv.config["DIR_HOME"] = copy.copy(os.environ["HOME"])
-                MyEnv.config_save()
 
             if not os.path.exists(MyEnv.config["DIR_BASE"]):
                 script = """
@@ -1789,8 +1787,6 @@ class MyEnv():
         installed = Tools.cmd_installed("git") and Tools.cmd_installed("ssh-agent")
         MyEnv.config["SSH_AGENT"]=installed
         MyEnv.config_save()
-
-
 
         MyEnv.__init = True
 
@@ -2091,9 +2087,7 @@ class JumpscaleInstaller():
         Tools.execute("cd /sandbox;source env.sh;js_init generate")
 
 
-
-MyEnv._init()
-
+MyEnv.init_config()
 
 
 try:

@@ -68,8 +68,8 @@ def help():
     --portrange = 1 is the default means 8000-8099 on host gets mapped to 8000-8099 in docker
                   1 means 8100-8199 on host gets mapped to 8000-8099 in docker
                   2 means 8200-8299 on host gets mapped to 8000-8099 in docker
-                  
-    --image=/path/to/image.tar or name of image (use docker images) 
+
+    --image=/path/to/image.tar or name of image (use docker images)
                   ...
     --port = port of container SSH std is 9022 (normally not needed to use because is in portrange:22 e.g. 9122 if portrange 1)
 
@@ -302,6 +302,7 @@ elif "2" in args:
 
 
 if "1" in args or "2" in args:
+    IT.MyEnv.init()
     installer = IT.JumpscaleInstaller()
     installer.install()
 
