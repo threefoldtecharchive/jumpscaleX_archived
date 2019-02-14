@@ -19,18 +19,17 @@ class NACL(j.application.JSBaseClass):
     def __init__(self, name, privkey=None, secret=None, reset=False, interactive=True):
         while True:
             try:
-                self._init__(name=name, privkey=privkey, secret=secret, reset=reset, interactive=interactive)
+                self.init(name=name, privkey=privkey, secret=secret, reset=reset, interactive=interactive)
                 break
             except nacl.exceptions.CryptoError as e:
-                raise
                 print(e)
                 self._log_warning("ERROR in decrypting")
                 secret = j.tools.console.askPassword("issue in decrypting the private key, try other secret")
 
     def reset(self, privkey=None, secret=None):
-        self._init__(name=self.name, privkey=privkey, secret=secret, reset=True, interactive=True)
+        self.init(name=self.name, privkey=privkey, secret=secret, reset=True, interactive=True)
 
-    def _init__(self, name, privkey=None, secret=None, reset=False, interactive=True):
+    def init(self, name, privkey=None, secret=None, reset=False, interactive=True):
         """
         :param if secret given will be used in nacl
         """
@@ -50,7 +49,7 @@ class NACL(j.application.JSBaseClass):
 
         self._box = nacl.secret.SecretBox(secret)  # used to decrypt the private key
 
-        self.__init()
+        self.clear_keys()
 
         self.path_privatekey = "%s/%s.priv" % (self.path, self.name)
         if reset:
@@ -64,12 +63,11 @@ class NACL(j.application.JSBaseClass):
                     '{RED}a private key is generated for you, please store the following key secret in a safe place:{RESET}')
                 print('{BLUE}%s{RESET}' % self.words)
 
-        self.__init()
+        self.clear_keys()
 
         self.words  # will check that the private key is in line with secret used
 
-    def __init(self):
-
+    def clear_keys(self):
         self._privkey = ""
         self._pubkey = ""
         self._signingkey = ""
