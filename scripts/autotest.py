@@ -2,11 +2,11 @@ from Jumpscale import j
 from subprocess import run, PIPE
 from datetime import datetime
 import sys
+import os 
 
-
-chat_id = '@hamadatest'
 
 def send_msg(msg):
+    chat_id = os.environ.get('chat_id')
     client = j.clients.telegram_bot.get("test")
     client.send_message(chatid=chat_id, text=msg)
 
