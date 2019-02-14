@@ -61,7 +61,6 @@ class CurrencyNegativeValue(Exception):
         return self._value
 
 
-
 class ExplorerError(Exception):
     """
     Generic Explorer error
@@ -283,3 +282,20 @@ class ThreeBotInactive(Exception):
         The timestamp on which the 3Bot became inactive.
         """
         return self._expiration
+
+
+class ERC20RegistrationForbidden(Exception):
+    """
+    ERC20RegistrationForbidden error, triggered
+    when trying to register an ERC20 address not owned by the used wallet.
+    """
+    def __init__(self, address):
+        super().__init__("address {} is not owned by the used wallet".format(str(address)))
+        self._address = address
+
+    @property
+    def address(self):
+        """
+        The address attempted to be registered.
+        """
+        return self._address

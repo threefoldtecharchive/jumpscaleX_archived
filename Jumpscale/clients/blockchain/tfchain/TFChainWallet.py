@@ -1485,6 +1485,47 @@ class TFChainERC20():
         # sign, submit and return the transaction
         return self._sign_and_submit_txn(txn, balance)
 
+    def address_register(self, value=None, source=None, refund=None):
+        """
+        Register an existing TFT address of this wallet as an ERC20 Withdraw Address,
+        either by specifying the address itself or by specifying the index of the address.
+        If no value is defined a new key pair will be defined.
+
+        Returns a TransactionSendResult.
+        
+        @param value: index of the TFT address or address itself, the address has to be owned by this wallet
+        @param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
+        @param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
+        """
+        if value is None:
+            public_key = self._wallet.public_key_new()
+        elif isinstance(value, (str, UnlockHash)):
+            try:
+                public_key = self._wallet.key_pair_get(unlockhash=value).public_key
+            except KeyError as exc:
+                if isinstance(value, str):
+                    value = UnlockHash.from_json(value)
+                raise ERC20RegistrationForbidden(address=value) from exc
+        elif isinstance(value, int) and not isinstance(value, bool):
+            addresses = self._wallet.addresses
+            if value < 0 or value >= len(addresses):
+                raise ValueError("address index {} is not a valid index for this wallet, has to be in the inclusive range of [0, {}]".format(
+                    value, len(addresses)-1))
+            public_key = self._wallet.key_pair_get(unlockhash=addresses[value]).public_key
+        else:
+            raise ValueError("value has to be a str, UnlockHash or int, cannot identify an address using value {} (type: {})".format(value, type(value)))
+
+        # create transaction
+        txn = j.clients.tfchain.types.transactions.erc20_address_registration_new()
+        # define the public key
+        txn.public_key = public_key
+
+        # fund the transaction
+        balance = self._fund_txn(txn, source, refund, txn.registration_fee)
+
+        # sign, submit and return the transaction
+        return self._sign_and_submit_txn(txn, balance)
+
     def _fund_txn(self, txn, source, refund, amount):
         """
         common fund/refund/inputs/fees logic for all ERC20 Transactions

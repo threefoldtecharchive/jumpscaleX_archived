@@ -498,7 +498,7 @@ result = w.coins_send(
         amount="200.5 TFT" # the amount of TFT to convert to ERC20 Tokens
     ) # no data or lock can be attached, optionally you can define a source and refund address(es) as well
 result.transaction # contains the created (and if all good sent) transaction
-result.submitted # if the contract was submitted (if not it is because more signatures are required)
+result.submitted # if the transaction was submitted (if not it is because more signatures are required)
 ```
 > See [The ERC20 Coins Send Unit Test](./tests/20_erc20_coins_send.py) for a detailed example.
 
@@ -509,6 +509,36 @@ result.submitted # if the contract was submitted (if not it is because more sign
 > and that when using the `w.coins_send` shorthand you are not allowed
 > to add data or a lock when sending to an ERC20 address. If you do try
 > to attach a lock or data to this transaction a `ValueError` will be raised.
+
+In order to be able to withdraw ERC20 Tokens into a TFT wallet,
+you first need to register a TFT address (of that wallet) as an ERC20 withdraw address.
+You can do this in three ways.
+
+- if you specify nothing, a new address will be generated and used:
+  ```python
+  result = w.erc20.address_register() # value=None, optionally you can define a source and refund address(es) as well
+  result.transaction # contains the created (and if all good sent) transaction
+  result.submitted # if the transaction was submitted (if not it is because more signatures are required)
+  ```
+- if you specify a valid address index (`int`), the address on that index will be used:
+  ```python
+  # you can for example register the 5th address of the wallet as follows:
+  result = w.erc20.address_register(4) # value=4, optionally you can define a source and refund address(es) as well
+  result.transaction # contains the created (and if all good sent) transaction
+  result.submitted # if the transaction was submitted (if not it is because more signatures are required)
+  ```
+- if you specify a valid address (`str`/`UnlockHash`), that address wil be used:
+  ```python
+  result = w.erc20.address_register('014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a')
+  result.transaction # contains the created (and if all good sent) transaction
+  result.submitted # if the transaction was submitted (if not it is because more signatures are required)
+  ```
+
+An address can only be registered once, a generic `ExplorerServerError` error will be raised if you try to double-register an address.
+If your wallet does not own the defined address, the `ERC20RegistrationForbidden` error will be raised.
+
+See [The ERC20 Address Register Unit Test](./tests/21_erc20_address_register.py)
+for detailed examples of the registration of an ERC20 withdraw address.
 
 ### Coin Minting
 
