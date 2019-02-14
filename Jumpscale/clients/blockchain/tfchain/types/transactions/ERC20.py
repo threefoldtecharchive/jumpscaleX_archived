@@ -3,7 +3,7 @@ from Jumpscale import j
 from .Base import TransactionBaseClass, TransactionVersion, InputSignatureHashFactory
 
 from ..FulfillmentTypes import ED25519Signature, SignatureCallbackBase, SignatureRequest
-from ..ConditionTypes import UnlockHash
+from ..ConditionTypes import UnlockHash, ConditionUnlockHash
 from ..PrimitiveTypes import BinaryData, Currency
 from ..ERC20 import ERC20Address, ERC20Hash
 from ..IO import CoinInput, CoinOutput
@@ -300,6 +300,14 @@ class TransactionV209(TransactionBaseClass):
             self._transactionid = None
         else:
             self._transactionid = ERC20Hash(value=value)
+
+    @property
+    def coin_outputs(self):
+        """
+        A singleton, containing the ERC20-converted TFT coins.
+        """
+        condition = ConditionUnlockHash(unlockhash=self.address)
+        return [CoinOutput(value=self.value, condition=condition, id=None)]
 
     def _signature_hash_input_get(self, *extra_objects):
         e = j.data.rivine.encoder_sia_get()

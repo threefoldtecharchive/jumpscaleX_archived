@@ -12,6 +12,7 @@ from .types.Errors import *
 from .types.IO import CoinOutput, CoinInput
 from .types.ConditionTypes import ConditionNil, ConditionUnlockHash, ConditionLockTime
 from .types.AtomicSwap import AtomicSwapContract
+from .types.ERC20 import ERC20Address
 from .types.transactions.Base import TransactionBaseClass
 from .types.transactions.Minting import TransactionV128, TransactionV129
 
@@ -77,6 +78,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         self._minter = TFChainMinter(wallet=self)
         self._atomicswap = TFChainAtomicSwap(wallet=self)
         self._threebot = TFChainThreeBot(wallet=self)
+        self._erc20 = TFChainERC20(wallet=self)
     
     @property
     def minter(self):
@@ -102,6 +104,14 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         manage existing 3Bot records.
         """
         return self._threebot
+
+    @property
+    def erc20(self):
+        """
+        ERC20 API used to send coins to ERC20 Addresses,
+        and register TFT addresses that can than be used as ERC20 Withdraw addresses.
+        """
+        return self._erc20
 
     @property
     def client(self):
@@ -266,11 +276,15 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         Send the specified amount of coins to the given recipient,
         optionally locked. Arbitrary data can be attached as well if desired.
 
+        If the given recipient is a valid ERC20 address, than this will send
+        the specified amount to that ERC20 address and no lock or data is allowed to be defined.
+
         The recipient is one of:
             - None: recipient is the Free-For-All wallet
             - str (or unlockhash): recipient is a personal wallet
             - list: recipient is a MultiSig wallet where all owners (specified as a list of addresses) have to sign
             - tuple (addresses, sigcount): recipient is a sigcount-of-addresscount MultiSig wallet
+            - an ERC20 address (str/ERC20Address), amount will be send to this ERC20 address
 
         The amount can be a str or an int:
             - when it is an int, you are defining the amount in the smallest unit (that is 1 == 0.000000001 TFT)
@@ -293,6 +307,14 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         @param lock: optional lock that can be used to lock the sent amount to a specific time or block height, see explation above
         @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
         """
+        if ERC20Address.is_valid_value(recipient):
+            if lock is not None:
+                raise ValueError("a lock cannot be applied when sending coins to an ERC20 Address")
+            if data is not None:
+                raise ValueError("data cannot be added to the transaction when sending coins to an ERC20 Address")
+            # all good, try to send to the ERC20 address
+            return self.erc20.coins_send(address=recipient, amount=amount, source=source, refund=refund)
+
         amount = Currency(value=amount)
         if amount <= 0:
             raise ValueError("no amount is defined to be sent")
@@ -1181,7 +1203,7 @@ class TFChainThreeBot():
     """
     TFChainThreeBot contains all ThreeBot logic.
     """
-
+    
     def __init__(self, wallet):
         if not isinstance(wallet, TFChainWallet):
             raise TypeError("wallet is expected to be a TFChainWallet")
@@ -1325,6 +1347,7 @@ class TFChainThreeBot():
         # submitted as well
         return self._sign_and_submit_txn(txn, balance)
 
+
     def _fund_txn(self, txn, source, refund):
         """
         common fund/refund/inputs/fees logic for all 3Bot Transactions
@@ -1415,6 +1438,136 @@ class TFChainThreeBot():
         """
         info = self._wallet.client.blockchain_info_get()
         return info.timestamp
+
+
+class TFChainERC20():
+    """
+    TFChainERC20 contains all ERC20 (wallet) logic.
+    """
+    
+    def __init__(self, wallet):
+        if not isinstance(wallet, TFChainWallet):
+            raise TypeError("wallet is expected to be a TFChainWallet")
+        self._wallet = wallet
+
+    def coins_send(self, address, amount, source=None, refund=None):
+        """
+        Send the specified amount of coins to the given ERC20 address.
+
+        The amount can be a str or an int:
+            - when it is an int, you are defining the amount in the smallest unit (that is 1 == 0.000000001 TFT)
+            - when defining as a str you can use the following space-stripped and case-insentive formats:
+                - '123456789': same as when defining the amount as an int
+                - '123.456': define the amount in TFT (that is '123.456' == 123.456 TFT == 123456000000)
+                - '123456 TFT': define the amount in TFT (that is '123456 TFT' == 123456 TFT == 123456000000000)
+                - '123.456 TFT': define the amount in TFT (that is '123.456 TFT' == 123.456 TFT == 123456000000)
+
+        Returns a TransactionSendResult.
+        
+        @param address: str or ERC20Address value to which the money is to be send
+        @param amount: int or str that defines the amount of TFT to set, see explanation above
+        @param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
+        @param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
+        """
+        amount = Currency(value=amount)
+        if amount <= 0:
+            raise ValueError("no amount is defined to be sent")
+
+        # create transaction
+        txn = j.clients.tfchain.types.transactions.erc20_convert_new()
+        # define the amount and recipient
+        txn.address = ERC20Address(value=address)
+        txn.value = amount
+
+        # fund the transaction
+        balance = self._fund_txn(txn, source, refund, txn.value)
+
+        # sign, submit and return the transaction
+        return self._sign_and_submit_txn(txn, balance)
+
+    def _fund_txn(self, txn, source, refund, amount):
+        """
+        common fund/refund/inputs/fees logic for all ERC20 Transactions
+        """
+        # get the fees, and fund the transaction
+        miner_fee = self._minium_miner_fee
+        balance = self._wallet.balance
+        inputs, remainder, suggested_refund = balance.fund(miner_fee+amount, source=source)
+
+        # add the coin inputs
+        txn.coin_inputs = inputs
+
+        # add refund coin output if needed
+        if remainder > 0:
+            # define the refund condition
+            if refund is None: # automatically choose a refund condition if none is given
+                if suggested_refund is None:
+                    refund = j.clients.tfchain.types.conditions.unlockhash_new(unlockhash=self._wallet.address)
+                else:
+                    refund = suggested_refund
+            else:
+                # use the given refund condition (defined as a recipient)
+                refund = j.clients.tfchain.types.conditions.from_recipient(refund)
+            txn.refund_coin_output_set(value=remainder, condition=refund)
+
+        # add the miner fee
+        txn.transaction_fee = miner_fee
+
+        # return balance object
+        return balance
+    
+    def _sign_and_submit_txn(self, txn, balance):
+        """
+        common sign and submit logic for all ERC20 Transactions
+        """
+        # generate the signature requests
+        sig_requests = txn.signature_requests_new()
+        if len(sig_requests) == 0:
+            raise Exception("BUG: sig requests should not be empty at this point, please fix or report as an issue")
+
+        # fulfill the signature requests that we can fulfill
+        for request in sig_requests:
+            try:
+                key_pair = self._wallet.key_pair_get(request.wallet_address)
+                input_hash = request.input_hash_new(public_key=key_pair.public_key)
+                signature = key_pair.sign(input_hash)
+                request.signature_fulfill(public_key=key_pair.public_key, signature=signature)
+            except KeyError:
+                pass # this is acceptable due to how we directly try the key_pair_get method
+
+        # txn should be fulfilled now
+        submit = txn.is_fulfilled()
+        if submit:
+            # submit the transaction
+            txn.id = self._transaction_put(transaction=txn)
+
+            # update balance
+            for ci in txn.coin_inputs:
+                balance.output_add(ci.parent_output, confirmed=False, spent=True)
+            addresses = self._wallet.addresses + list(balance.wallets.keys())
+            for idx, co in enumerate(txn.coin_outputs):
+                if str(co.condition.unlockhash) in addresses:
+                    # add the id to the coin_output, so we can track it has been spent
+                    co.id = txn.coin_outputid_new(idx)
+                    balance.output_add(co, confirmed=False, spent=False)
+
+        # and return the created/submitted transaction for optional user consumption
+        return TransactionSendResult(txn, submit)
+
+    @property
+    def _minium_miner_fee(self):
+        """
+        Returns the minimum miner fee
+        """
+        return self._wallet.client.minimum_miner_fee
+
+    def _transaction_put(self, transaction):
+        """
+        Submit the transaction to the network using the parent's wallet client.
+
+        Returns the transaction ID.
+        """
+        return self._wallet.client.transaction_put(transaction=transaction)
 
 
 from typing import NamedTuple

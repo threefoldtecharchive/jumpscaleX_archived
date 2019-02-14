@@ -18,7 +18,8 @@ All methods have docstrings, _read_ them.
 3. [Multi-Signature-Wallet](#multi-signature-wallet): learn how to view and manage Multi-Signature Wallets from your TFChain wallet
 4. [3Bot Records](#3bot-records): explains how to get, create new and manage existing 3Bot records
 5. [Atomic Swap Contacts](#atomic-swap-contracts): explains how to work with cross-chain atomic swaps, from a TFChain perspective, using your TFChain wallet
-6. [Coin Minting](#coin-minting): a subsection devoted to the coin minters of the network
+6. [ERC20 Interaction](#erc20-interaction): send coins to an ERC20 address and register a TFT address as ERC20 Withdrawel addresses
+7. [Coin Minting](#coin-minting): a subsection devoted to the coin minters of the network
 
 ### Client
 
@@ -486,6 +487,28 @@ transaction = w.atomicswap.refund('a5e0159688d300ed7a8f2685829192d8dd1266ce6e82a
 # the defined secret is incorrect or the wallet is not authorized as sender. 
 ```
 > See [The AtomicSwap Refund Unit Test](./tests/15_atomicswap_refund.py) for a detailed example.
+
+### ERC20 Interaction
+
+Sending coins to an ERC20 address can be done as follows:
+
+```python
+result = w.coins_send(
+        recipient="0x828de486adc50aa52dab52a2ec284bcac75be211", # the ERC20 address to receive the amount, converted from TFT
+        amount="200.5 TFT" # the amount of TFT to convert to ERC20 Tokens
+    ) # no data or lock can be attached, optionally you can define a source and refund address(es) as well
+result.transaction # contains the created (and if all good sent) transaction
+result.submitted # if the contract was submitted (if not it is because more signatures are required)
+```
+> See [The ERC20 Coins Send Unit Test](./tests/20_erc20_coins_send.py) for a detailed example.
+
+> Note that the above command is an alias for:
+> ```python
+> w.erc20.coins_send(address="0x828de486adc50aa52dab52a2ec284bcac75be211", amount="200.5 TFT")
+> ```
+> and that when using the `w.coins_send` shorthand you are not allowed
+> to add data or a lock when sending to an ERC20 address. If you do try
+> to attach a lock or data to this transaction a `ValueError` will be raised.
 
 ### Coin Minting
 

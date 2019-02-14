@@ -21,7 +21,7 @@ class BinaryData(BaseDataTypeClass):
             self._from_str = lambda s: bytearray(j.data.serializers.base64.decode(s))
             self._to_str = lambda value: j.data.serializers.base64.dumps(value)
         elif strencoding.lower().strip() == 'hexprefix':
-            self._from_str = lambda s: bytearray.fromhex(s.lstrip('0x'))
+            self._from_str = lambda s: bytearray.fromhex(s[2:] if (s.startswith("0x") or s.startswith("0X")) else s)
             self._to_str = lambda value: '0x' + value.hex()
         else:
             raise TypeError("{} is not a valid string encoding".format(strencoding))

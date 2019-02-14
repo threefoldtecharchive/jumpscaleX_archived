@@ -15,6 +15,28 @@ class ERC20Address(BinaryData):
     def __init__(self, value=None):
         super().__init__(value, fixed_size=ERC20Address.SIZE, strencoding='hexprefix')
 
+    @staticmethod
+    def is_valid_value(value):
+        """
+        Returns True if the given value is a valid ERC20Address value, False otherwise.
+        """
+        if isinstance(value, str):
+            if value.startswith("0x") or value.startswith("0X"):
+                value = value[2:]
+            if len(value) != ERC20Address.SIZE*2:
+                return False
+            try:
+                int(value, 16)
+                return True
+            except ValueError:
+                return False
+        elif isinstance(value, (bytes, bytearray)):
+            return len(value) == ERC20Address.SIZE
+        elif isinstance(value, ERC20Address):
+            return ERC20Address.is_valid_value(value.value)
+        else:
+            return False
+
     @classmethod
     def from_unlockhash(cls, unlockhash):
         """
