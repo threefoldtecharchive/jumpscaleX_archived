@@ -1,36 +1,31 @@
 
+from Jumpscale import j
+
 
 class TypeBaseObjClass():
-
-    def check(self):
-        '''
-        Check whether provided value is the native type
-        '''
-        return self.typebase.check(ip=self.value)
 
     def possible(self):
         '''
         Check whether provided value can be converted to this type
         '''
         try:
-            self.typebase.clean(self.value)
+            self.clean(self.value)
         except:
             return False
         return True
 
     def capnp_schema_get(self, name, nr):
-        return self.typebase.capnp_schema_get(name, nr)
+        return self.capnp_schema_get(name, nr)
 
     def get_default(self):
-        return self.typebase.get_default()
+        return self.get_default()
 
     def toString(self, v):
-
         return self.clean(v)
 
     def toData(self):
         value = self.clean(self.value)
-        return self.typebase.toData(value)
+        return j.data.serializers.msgpack.dumps(value)
 
     def clean(self):
         """
@@ -38,6 +33,10 @@ class TypeBaseObjClass():
         will find it and return as string
         """
         return self.value
+
+    def python_code_get(self, value):
+        value = self.clean(value)
+        return "'%s'" % self.toString(value)
 
     def __equal__(self):
         # TODO
@@ -52,28 +51,29 @@ class TypeBaseObjClass():
 class TypeBaseClass():
 
     def toString(self, v):
-        return self.clean(v)
+        return str(self.clean(v))
 
     def toHR(self, v):
         return self.clean(v)
 
     def toData(self, v):
-        return self.clean(v)
+        v = self.clean(v)
+        return j.data.serializers.msgpack.dumps(v)
 
     def check(self, value):
         '''
         - if there is a specific implementation e.g. string, float, enumeration, it will check if the input is that implementation
         - if not strict implementation or we cannot know e.g. an address will return None
         '''
-        return False
+        return isinstance(value, str)
 
-    def possible(self):
+    def possible(self, value):
         """
         will check if it can be converted to the jumpscale representation, basically the clean works without error
         :return:
         """
         try:
-            self.clean()
+            self.clean(str(value))
             return True
         except Exception as e:
             return False

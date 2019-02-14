@@ -218,13 +218,18 @@ class IPRange(String):
 
 
 class IPAddressObject(TypeBaseObjClass):
+    
+    NAME = 'ipaddr'
+    ALIAS = "ipaddr"
 
     def __init__(self, val):
         self._jstype = j.data.types.ipaddr
+        self._val = val
+        val = j.data.types.string.clean(val)
+        self._md5 = j.data.hash.md5_string(str(self))  # so it has the default as well
+        j.data.types.ipaddrs[self._md5] = self
+        self._jumpscale_location = "j.data.types.ipaddrs['%s']" % self._md5
 
-        self._val = None
-        self.typebase = IPAddress()
-        self.value = val
         try:
             self._val = IPv4Address(val)
         except (AddressValueError, NetmaskValueError):
@@ -235,23 +240,6 @@ class IPAddressObject(TypeBaseObjClass):
                 self._val = IPv6Address(val)
             except (AddressValueError, NetmaskValueError):
                 pass
-
-
-class IPAddress(String):
-    """
-    """
-    NAME = 'ipaddr'
-    ALIAS = "ipaddress"
-
-    def __init__(self):
-        String.__init__(self)
-        self._RE = re.compile('[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
-
-    def get(self, val):
-        res = IPAddressObject(val)
-        if res._val is None:
-            raise ValueError("Invalid IPAddress :%s" % val)
-        return res
 
     def get_default(self):
         return "192.168.1.1"
@@ -271,7 +259,7 @@ class IPAddress(String):
 
     def is_valid_ipv4(self, ip):
         """ Validates IPv4 addresses.
-            https://stackoverflow.com/questions/319279/
+            https: // stackoverflow.com/questions/319279/
             the use of regular expressions is INSANE. and also wrong.
             use standard python3 ipaddress module instead.
         """
@@ -282,7 +270,7 @@ class IPAddress(String):
 
     def is_valid_ipv6(self, ip):
         """ Validates IPv6 addresses.
-            https://stackoverflow.com/questions/319279/
+            https: // stackoverflow.com/questions/319279/
             the use of regular expressions is INSANE. and also wrong.
             use standard python3 ipaddress module instead.
         """
@@ -290,6 +278,26 @@ class IPAddress(String):
             return IPv6Address(ip) and True
         except (AddressValueError, NetmaskValueError):
             return False
+
+    def capnp_schema_get(self, name, nr):
+
+        return "%s @%s :Data;" % (name, nr)
+    
+    def __str__(self):
+        return "Ipadress: %s (default:%s)" % (self.__repr__(), self._val)
+
+    def __repr__(self):
+        return "{}".format(self._val)
+
+class IPAddress:
+    """
+    """
+    NAME = 'ipaddr'
+    ALIAS = "ipaddr"
+    BASETYPE = 'string'
+    
+    def get(self, val="192.168.1.1"):
+        return IPAddressObject(val)
 
 
 class IPPort(Integer):
@@ -310,8 +318,11 @@ class IPPort(Integer):
         We just check if the value a single port or a range
         Values must be between 0 and 65535
         '''
-        if 0 < int(value) <= 65535:
-            return True
+        try:
+            if 0 < int(value) <= 65535:
+                return True
+        except :
+            pass
         return False
 
     def clean(self, value):
@@ -344,7 +355,16 @@ class Numeric(String):
         """
         return "%s @%s :Data;" % (name, nr)
 
-
+    def check(self, value):
+        '''Check whether provided value is a numeric'''
+        if isinstance(value, str):
+            try:
+                import ipdb; ipdb.set_trace()
+                self.str2bytes(value)
+                return True
+            except :
+                return False
+        return False
 
     def bytes2cur(self, bindata, curcode="usd", roundnr=None):
         if bindata == b'':
@@ -789,8 +809,6 @@ class DateTime(String):
         else:
             raise ValueError("Input needs to be string:%s" % v)
 
-    def capnp_schema_get(self, name, nr):
-        return "%s @%s :UInt32;" % (name, nr)
 
     def test(self):
         """

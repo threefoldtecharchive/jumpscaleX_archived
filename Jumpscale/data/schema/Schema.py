@@ -155,12 +155,24 @@ class Schema(j.application.JSBaseClass):
                     jumpscaletype.SUBTYPE = pointer_type
                     defvalue = ""
                 else:
+
                     if line_proptype in ["e", "enum"]:
                         try:
-                            jumpscaletype = j.data.types.get_custom("e", values=line_wo_proptype)
-                            defvalue = jumpscaletype.get_default()
+                            jumpscaletype = j.data.types.enum.get(values=line_wo_proptype)
+                            defvalue = jumpscaletype.default
                         except Exception as e:
                             self._error_raise("error (enum) on line:%s" % line_original, e=e)
+
+                    elif line_proptype in ["ipaddr"]:
+                        try:
+                            if line_wo_proptype == "" or line_wo_proptype is None:
+                                jumpscaletype = j.data.types.ipaddr.get("192.168.1.1")
+                                defvalue = jumpscaletype.get_default()
+                            else:
+                                jumpscaletype = j.data.types.ipaddr.get(line_wo_proptype)
+                                defvalue = jumpscaletype.clean(line_wo_proptype)
+                        except Exception as e:
+                            self._error_raise("error (ipaddr) on line:%s" % line_original, e=e)
                     else:
                         jumpscaletype = j.data.types.get(line_proptype)
                         if line_wo_proptype == "" or line_wo_proptype is None:

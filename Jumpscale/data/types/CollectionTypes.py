@@ -27,9 +27,6 @@ class YAML(String):
             return False
         return True
 
-    def get_default(self):
-        return ""
-
     def clean(self, value):
         if value is None:
             value = self.get_default()
@@ -70,18 +67,12 @@ class JSON(String):
             return False
         return True
 
-    def get_default(self):
-        return ""
-
     def clean(self, v=""):
         if not self.check(v):
             raise RuntimeError("Valid serialized json string is required")
         return v
 
     def fromString(self, v):
-        return self.clean(v)
-
-    def toString(self, v):
         return self.clean(v)
 
     def toJSON(self, v):
@@ -131,10 +122,6 @@ class Dictionary(String):
             raise RuntimeError("dict for clean needs to be bytes, string or dict")
         return v
 
-    def toData(self, v):
-        v = self.clean(v)
-        return j.data.serializers.msgpack.dumps(v)
-
     def toString(self, v):
         v = self.clean(v)
         return j.data.serializers.json.dumps(v, True, True)
@@ -170,7 +157,6 @@ class List(TypeBaseClass):
     def check(self, value):
         '''Check whether provided value is a list'''
         return isinstance(value, (list, tuple, set))
-        # self.list_check_1type(value)
 
     def get_default(self):
         return list()
@@ -206,17 +192,14 @@ class List(TypeBaseClass):
     def clean(self, val, toml=False, sort=False, unique=True, ttype=None):
         if ttype is None:
             ttype = self.SUBTYPE
-        else:
-            if j.data.types.string.check(val):
-                val = [i.strip() for i in val.split(",")]
+        if j.data.types.string.check(val):
+            val = [i.strip('[').strip(']') for i in val.split(",")]
         if len(val) == 0:
             return val
         if ttype is None:
             self.SUBTYPE = j.data.types.type_detect(val[0])
             ttype = self.SUBTYPE
         res = []
-        if j.data.types.string.check(val):
-            val = [i.strip('[').strip(']') for i in val.split(",")]
         for item in val:
             item = item.strip().strip("'").strip('"')
             if not toml:
@@ -231,9 +214,6 @@ class List(TypeBaseClass):
         if sort:
             res.sort()
         return res
-
-    def toData(self, v):
-        return self.clean(v)
 
     def toString(self, val, clean=True, sort=False):
         """

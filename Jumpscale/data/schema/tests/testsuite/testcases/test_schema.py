@@ -1006,8 +1006,6 @@ class SchemaTest(BaseTest):
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
-        import ipdb
-        ipdb.set_trace()
         self.log("Try to set parameter[P1] with non enum type, should fail.")
         with self.assertRaises(Exception):
             schema_obj.colors = self.random_string()

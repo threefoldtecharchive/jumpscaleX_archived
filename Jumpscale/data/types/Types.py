@@ -15,6 +15,7 @@ class Types(j.application.JSBaseClass):
 
     def _init(self):
         self.enumerations = {}
+        self.ipaddrs = {}
 
         self._types_list = [Dictionary, List, Guid, Path, Boolean, Integer, Float, String, Bytes, StringMultiLine,
                             IPAddress, IPRange, IPPort, Tel, YAML, JSON, Email, Date, DateTime, Numeric, Percent,
@@ -55,16 +56,16 @@ class Types(j.application.JSBaseClass):
     #     :param ttype:
     #     :param kwargs: e.g. values="red,blue,green" can also a list for e.g. enum
     #     :return:
-    #
+
     #     e.g. for enumeration
-    #
+
     #     j.data.types.get_custom("e",values="blue,red")
-    #
+
     #     """
     #     ttype = ttype.lower().strip()
     #     if ttype in ["e", "enum"]:
     #         cl = self._enumeration
-    #         cl = cl(values=kwargs["values"])
+    #         cl = cl.get(values=kwargs["values"])
     #         self.enumerations[cl._md5] = cl
     #         return self.enumerations[cl._md5]
     #     else:

@@ -2,7 +2,6 @@
 """
 from Jumpscale import j
 import base64
-# import ast
 from .TypeBaseClasses import *
 
 
@@ -23,24 +22,12 @@ class String(TypeBaseClass):
         """
         return self.clean(s)
 
-    def toString(self, v):
-        return self.clean(v)
-
-    def toHR(self, v):
-        return self.clean(v)
-
     def toJSON(self, v):
-        return self.clean(v)
-
-    def toData(self, v):
         return self.clean(v)
 
     def check(self, value):
         '''Check whether provided value is a string'''
         return isinstance(value, str)
-
-    def get_default(self):
-        return ""
 
     def clean(self, value):
         """
@@ -57,25 +44,6 @@ class String(TypeBaseClass):
         if (value.startswith("\"") and value.endswith("\"")) or (value.startswith("'") and value.endswith("'")):
             value = value[1:-1]
         return value
-
-    def python_code_get(self, value):
-        """
-        produce the python code which represents this value
-        """
-        value = self.clean(value)
-        return "'%s'" % value
-
-    def toml_string_get(self, value, key=""):
-        """
-        will translate to what we need in toml
-        """
-        if key == "":
-            return "'%s'" % (self.clean(value))
-        else:
-            return "%s = '%s'" % (key, self.clean(value))
-
-    def capnp_schema_get(self, name, nr):
-        return "%s @%s :Text;" % (name, nr)
 
     def unique_sort(self, txt):
         return "".join(j.data.types.list.clean(txt))
@@ -116,7 +84,6 @@ class StringMultiLine(String):
         produce the python code which represents this value
         """
         value = self.clean(value)
-        # value = value.replace("\n", "\\n")
         out0 = ""
         out0 += "'''\n"
         for item in value.split("\n"):
@@ -173,9 +140,6 @@ class Bytes(TypeBaseClass):
     def toJSON(self, v):
         return self.toString(v)
 
-    def toData(self, v):
-        return self.clean(v)
-
     def check(self, value):
         '''Check whether provided value is a array of bytes'''
         return isinstance(value, bytes)
@@ -223,21 +187,6 @@ class Boolean(TypeBaseClass):
     def fromString(self, s):
         return self.clean(s)
 
-    # def checkString(self, s):
-    #     """
-    #     string which says True or true or false or False are considered to be textual representations
-    #     """
-    #     return s.lower().strip() == "true"
-
-    def toString(self, boolean):
-        if self.check(boolean):
-            return str(boolean)
-        else:
-            raise ValueError("Invalid value for boolean: '%s'" % boolean)
-
-    def toData(self, v):
-        return self.clean(v)
-
     def toHR(self, v):
         return self.clean(v)
 
@@ -261,8 +210,10 @@ class Boolean(TypeBaseClass):
             value = True
         elif j.data.types.string.check(value) and value.strip().lower() in ["true", "yes", "y"]:
             value = True
-        else:
+        elif j.data.types.string.check(value) and value.strip().lower() in ["false", "no", "n", "f"]:
             value = False
+        else:
+            raise ValueError("Invalid value for boolean: '%s'" % value)
         return value
 
     def python_code_get(self, value):
@@ -311,17 +262,6 @@ class Integer(TypeBaseClass):
     def check(self, value):
         '''Check whether provided value is an integer'''
         return isinstance(value, int)
-
-    def toString(self, value):
-        if int(value) == 4294967295:
-            return "-"  # means not set yet
-        if self.check(value):
-            return str(value)
-        else:
-            raise ValueError("Invalid value for integer: '%s'" % value)
-
-    def toData(self, v):
-        return self.clean(v)
 
     def toHR(self, v):
         if int(v) == 4294967295:
@@ -391,15 +331,6 @@ class Float(TypeBaseClass):
         '''Check whether provided value is a float'''
         return isinstance(value, float)
 
-    def toString(self, value):
-        if self.check(value):
-            return str(value)
-        else:
-            raise ValueError("Invalid value for float: '%s'" % value)
-
-    def toData(self, v):
-        return self.clean(v)
-
     def toHR(self, v):
         return "%d" % v
 
@@ -417,6 +348,8 @@ class Float(TypeBaseClass):
         """
         used to change the value to a predefined standard for this type
         """
+        if self.check(value):
+            return value
         return float(value)
 
     def python_code_get(self, value):
@@ -472,9 +405,6 @@ class Percent(Float):
         assert value < 1.00001
         return value
 
-    def get_default(self):
-        return 0.0
-
     def toHR(self, v):
         return "{:.2%}".format(self.clean(v))
 
@@ -487,6 +417,7 @@ class Percent(Float):
 
 class CapnpBin(Bytes):
     '''
+    #TODO
     is capnp object in binary format
     '''
 
@@ -494,37 +425,22 @@ class CapnpBin(Bytes):
     BASETYPE = 'bytes'
     ALIAS = "cbin"
 
-    def fromString(self, s):
-        """
-        """
-        raise NotImplemented()
-
-    def toString(self, v):
-        return "BYTES"
-
-    def check(self, value):
-        return isinstance(value, bytes)
-
-    def get_default(self):
-        return b""
-
     def clean(self, value):
         """
-
         """
         return value
 
     def toHR(self, v):
         return self.clean(v)
 
-    def python_code_get(self, value):
-        raise NotImplemented()
-
     def capnp_schema_get(self, name, nr):
         return "%s @%s :Data;" % (name, nr)
 
     def toml_string_get(self, value, key):
-        raise NotImplemented()
+        if key == "":
+            return "%s" % (self.clean(value))
+        else:
+            return "%s = %s" % (key, self.clean(value))
 
 
 class JSDataObject(Bytes):
@@ -548,7 +464,10 @@ class JSDataObject(Bytes):
         return v
 
     def check(self, value):
-        return "_JSOBJ" in value.__dict__
+        try:
+            return "_JSOBJ" in value.__dict__
+        except:
+            return False
 
     def get_default(self):
         return self.SUBTYPE()
