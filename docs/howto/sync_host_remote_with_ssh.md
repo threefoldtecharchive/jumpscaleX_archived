@@ -1,13 +1,18 @@
-sync_host_remote_with_ssh# Syncing host to remote machines
+                                        sshkey_name=sshkey_test_name) sync_host_remote_with_ssh# Syncing host to remote machines
 
 ## (SSH from host)
 1) **Create SSHKEY client instance**
     ```
     j.clients.sshkey.get(name=sshkey_test_name,
-                        path=path_to_ssh_key)
+                        path=path_to_ssh_key
+                        passphrase=passphrase_to_ssh_key)
     ```
     where
     - *path* : path to the ssh key
+    - *passphrase_to_ssh_key* : (optional) passphrase to ssh key
+    
+    *NOTE*: The public key created needs to be added to the authorized hosts of the remote machine
+    
 2) **Create SSH client** (opens ssh connection to remote machine)
     ```
     ssh_client_instance = j.clients.ssh.get(name=ssh_test_name,
@@ -20,7 +25,7 @@ sync_host_remote_with_ssh# Syncing host to remote machines
     - *addr* : remote machine address
     - *port* : remote machine port
     - *sshkey_name* : name of sshkey client created
-    - *password_to_remote* : passphrase of sshkey
+    - *passphrase_of_sshkey* : (optional) passphrase for the sshkey
 
     To make sure the host and remote are connected:
     ```
