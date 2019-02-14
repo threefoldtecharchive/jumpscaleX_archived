@@ -15,7 +15,7 @@ def execute_cmd(cmd):
     return response
 
 def build_image():
-    response = execute_cmd('docker build --rm -t jumpscale /sandbox/code/github/threefoldtech/jumpscaleX')
+    response = execute_cmd('docker build --rm -t .')
     if response.returncode:
         send_msg('Failed to bulid docker image')
         containers_remove()
