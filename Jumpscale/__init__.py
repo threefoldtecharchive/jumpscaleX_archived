@@ -188,7 +188,8 @@ rootdir = os.path.dirname(os.path.abspath(__file__))
 
 j.core.myenv = MyEnv
 
-j.core.myenv._init()
+j.core.myenv.init_config()
+j.core.myenv.init()
 
 
 
