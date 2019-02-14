@@ -2,7 +2,6 @@ from Jumpscale import j
 
 import re
 
-from Jumpscale.clients.blockchain.tfchain.types.Errors import ExplorerNoContent
 from Jumpscale.clients.blockchain.tfchain.types.CryptoTypes import PublicKey
 from Jumpscale.clients.blockchain.tfchain.types.PrimitiveTypes import Hash
 from Jumpscale.clients.blockchain.tfchain.types.ThreeBot import BotName
@@ -85,7 +84,7 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         """
         assert isinstance(height, int)
         if not height in self._blocks:
-            raise ExplorerNoContent("no content found for block {}".format(height), endpoint="/explorer/blocks/{}".format(height))
+            raise j.clients.tfchain.errors.ExplorerNoContent("no content found for block {}".format(height), endpoint="/explorer/blocks/{}".format(height))
         return self._blocks[height]
 
     def block_add(self, height, resp, force=False):
@@ -104,7 +103,7 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         """
         assert isinstance(hash, str)
         if not hash in self._hashes:
-            raise ExplorerNoContent("no content found for hash {}".format(hash), endpoint="/explorer/hashes/{}".format(str(hash)))
+            raise j.clients.tfchain.errors.ExplorerNoContent("no content found for hash {}".format(hash), endpoint="/explorer/hashes/{}".format(str(hash)))
         return self._hashes[hash]
     
     def hash_add(self, hash, resp, force=False):
@@ -135,19 +134,19 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
             try:
                 return self._threebot_records[int(identifier)]
             except KeyError as exc:
-                raise ExplorerNoContent("no 3Bot record could be found for identifier {}".format(identifier), endpoint=endpoint) from exc
+                raise j.clients.tfchain.errors.ExplorerNoContent("no 3Bot record could be found for identifier {}".format(identifier), endpoint=endpoint) from exc
         if BotName.REGEXP.match(identifier) is not None:
             for record in self._threebot_records.values():
                 for name in record.names:
                     if name.value == identifier:
                         return record
-            raise ExplorerNoContent("no content found for 3Bot identifier {}".format(identifier), endpoint=endpoint)
+            raise j.clients.tfchain.errors.ExplorerNoContent("no content found for 3Bot identifier {}".format(identifier), endpoint=endpoint)
         # must be a public key
         pk = PublicKey.from_json(identifier)
         for record in self._threebot_records.values():
             if record.public_key.unlockhash() == pk.unlockhash():
                 return record
-        raise ExplorerNoContent("no content found for 3Bot identifier {}".format(identifier), endpoint=endpoint)
+        raise j.clients.tfchain.errors.ExplorerNoContent("no content found for 3Bot identifier {}".format(identifier), endpoint=endpoint)
 
     def _record_as_json_resp(self, record):
         return j.data.serializers.json.dumps({

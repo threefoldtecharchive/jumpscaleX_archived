@@ -3,7 +3,6 @@ from Jumpscale import j
 import pytest
 
 from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChainExplorerGetClientStub
-from Jumpscale.clients.blockchain.tfchain.types.Errors import AtomicSwapInvalidSecret, AtomicSwapContractNotFound, AtomicSwapForbidden, AtomicSwapContractSpent
 
 def main(self):
     """
@@ -34,16 +33,16 @@ def main(self):
     assert w.balance.available == '0 TFT'
 
     # if the output identifier is wrong, the redemption will fail
-    with pytest.raises(AtomicSwapContractNotFound):
+    with pytest.raises(j.clients.tfchain.errors.AtomicSwapContractNotFound):
         w.atomicswap.redeem('dd1babcbab492c742983b887a7408742ad0054ec8586541dd6ee6202877cb483', secret='f68d8b238c193bc6765b8e355c53e4f574a2c9da458e55d4402edca621e53756')
 
     # if the secret is wrong, the redemption will fail as well
-    with pytest.raises(AtomicSwapInvalidSecret):
+    with pytest.raises(j.clients.tfchain.errors.AtomicSwapInvalidSecret):
         w.atomicswap.redeem('dd1babcbab492c742983b887a7408742ad0054ec8586541dd6ee6202877cb486', secret='f68d8b238c193bc6765b8e355c53e4f574a2c9da458e55d4402edca621e53754')
 
     # if not authorized, redemption will also fail
     fw = c.wallets.new("foo")
-    with pytest.raises(AtomicSwapForbidden):
+    with pytest.raises(j.clients.tfchain.errors.AtomicSwapForbidden):
         fw.atomicswap.redeem('dd1babcbab492c742983b887a7408742ad0054ec8586541dd6ee6202877cb486', secret='f68d8b238c193bc6765b8e355c53e4f574a2c9da458e55d4402edca621e53756')
 
     # once you know the secret, and you are authorized to receive the contract,
@@ -64,9 +63,9 @@ def main(self):
     assert w.balance.unconfirmed == '0'
     
     # and the contract can no longer be redeemed
-    with pytest.raises(AtomicSwapContractSpent):
+    with pytest.raises(j.clients.tfchain.errors.AtomicSwapContractSpent):
         w.atomicswap.redeem('dd1babcbab492c742983b887a7408742ad0054ec8586541dd6ee6202877cb486', secret='f68d8b238c193bc6765b8e355c53e4f574a2c9da458e55d4402edca621e53756')
 
     # should you verify it at this point, you'll get the same exception
-    with pytest.raises(AtomicSwapContractSpent):
+    with pytest.raises(j.clients.tfchain.errors.AtomicSwapContractSpent):
         w.atomicswap.verify('dd1babcbab492c742983b887a7408742ad0054ec8586541dd6ee6202877cb486')

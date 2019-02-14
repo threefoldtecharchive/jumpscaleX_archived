@@ -3,7 +3,6 @@ from Jumpscale import j
 import pytest
 
 from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChainExplorerGetClientStub
-from Jumpscale.clients.blockchain.tfchain.types.Errors import AtomicSwapContractInvalid, AtomicSwapContractNotFound
 
 def main(self):
     """
@@ -32,7 +31,7 @@ def main(self):
     # not super useful, but it does also contain an optional check to know if it is already refundable
 
     # verification will fail if the contract could not be found
-    with pytest.raises(AtomicSwapContractNotFound):
+    with pytest.raises(j.clients.tfchain.errors.AtomicSwapContractNotFound):
         w.atomicswap.verify('023b1c17a01945573933e62ca7a1297057681622aaea52c4c4e198077a263890')
 
     # add the coin output info of the submitted atomic swap contract
@@ -50,27 +49,27 @@ def main(self):
     # the amount can however be verified automatically
     w.atomicswap.verify('023b1c17a01945573933e62ca7a1297057681622aaea52c4c4e198077a263890', amount=50)
     # which will fail if the amount is wrong
-    with pytest.raises(AtomicSwapContractInvalid):
+    with pytest.raises(j.clients.tfchain.errors.AtomicSwapContractInvalid):
         w.atomicswap.verify('023b1c17a01945573933e62ca7a1297057681622aaea52c4c4e198077a263890', amount=42)
 
     # the secret hash can be verified as well, not so important as the sender,
     # would be more used if one is the receiver, but it is possible none the less.
     w.atomicswap.verify('023b1c17a01945573933e62ca7a1297057681622aaea52c4c4e198077a263890', secret_hash='4163d4b31a1708cd3bb95a0a8117417bdde69fd1132909f92a8ec1e3fe2ccdba')
     # which will fail if the secret hash is wrong
-    with pytest.raises(AtomicSwapContractInvalid):
+    with pytest.raises(j.clients.tfchain.errors.AtomicSwapContractInvalid):
         w.atomicswap.verify('023b1c17a01945573933e62ca7a1297057681622aaea52c4c4e198077a263890', secret_hash='4163d4b31a1708cd3bb95a0a8117417bdde69fd1132909f92a8ec1e3fe2ccdbb')
 
     # a minimum duration can also be defined, where the duration defines how long it takes until the
     # contract becomes refundable, 0 if already assumed to be refundable
     w.atomicswap.verify('023b1c17a01945573933e62ca7a1297057681622aaea52c4c4e198077a263890', min_refund_time='+1d')
     # which will fail if assumed wrong
-    with pytest.raises(AtomicSwapContractInvalid):
+    with pytest.raises(j.clients.tfchain.errors.AtomicSwapContractInvalid):
         w.atomicswap.verify('023b1c17a01945573933e62ca7a1297057681622aaea52c4c4e198077a263890', min_refund_time=0)
 
     # if one is assumed to be the sender, it can also be verified automatically
     w.atomicswap.verify('023b1c17a01945573933e62ca7a1297057681622aaea52c4c4e198077a263890', sender=True)
     # if one assumed its position wrong, it will however fail
-    with pytest.raises(AtomicSwapContractInvalid):
+    with pytest.raises(j.clients.tfchain.errors.AtomicSwapContractInvalid):
         w.atomicswap.verify('023b1c17a01945573933e62ca7a1297057681622aaea52c4c4e198077a263890', receiver=True)
 
     # all can be verified at once of course

@@ -1,7 +1,5 @@
 from Jumpscale import j
 
-from ..Errors import UnknownTransansactionVersion
-
 from .Base import TransactionBaseClass, TransactionVersion
 from .Standard import TransactionV1
 from .Minting import TransactionV128, TransactionV129
@@ -105,7 +103,7 @@ class TransactionFactory(j.application.JSBaseClass):
             txn.id = id
             return txn
 
-        raise UnknownTransansactionVersion("transaction version {} is unknown".format(tt))
+        raise j.clients.tfchain.errors.UnknownTransansactionVersion("transaction version {} is unknown".format(tt))
 
 
     def test(self):

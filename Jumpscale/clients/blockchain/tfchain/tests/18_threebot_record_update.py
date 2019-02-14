@@ -6,7 +6,6 @@ from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChain
 from Jumpscale.clients.blockchain.tfchain.TFChainClient import ThreeBotRecord
 from Jumpscale.clients.blockchain.tfchain.types.ThreeBot import BotName, NetworkAddress
 from Jumpscale.clients.blockchain.tfchain.types.CryptoTypes import PublicKey
-from Jumpscale.clients.blockchain.tfchain.types.Errors import ThreeBotNotFound, ThreeBotInactive
 
 def main(self):
     """
@@ -58,10 +57,10 @@ def main(self):
     assert str(balance.locked) == '0'
 
     # if a 3Bot is inactive, at least one month has to be added to make it active again,
-    # and reset the expiration time, otherwise the ThreeBotInactive error will be raised
-    with pytest.raises(ThreeBotInactive):
+    # and reset the expiration time, otherwise the j.clients.tfchain.errors.ThreeBotInactive error will be raised
+    with pytest.raises(j.clients.tfchain.errors.ThreeBotInactive):
         w.threebot.record_update(3, addresses_to_add=['bot.example.org'])
-    with pytest.raises(ThreeBotInactive):
+    with pytest.raises(j.clients.tfchain.errors.ThreeBotInactive):
         w.threebot.record_update(3, months=0, addresses_to_add=['bot.example.org'])
 
     # updating a record is as simple as:
@@ -94,6 +93,6 @@ def main(self):
 
     # if data is given to update,
     # but the 3Bot doesn't exist (linked to the given identifier)
-    # an ThreeBotNotFound exception will be raised
-    with pytest.raises(ThreeBotNotFound):
+    # an j.clients.tfchain.errors.ThreeBotNotFound exception will be raised
+    with pytest.raises(j.clients.tfchain.errors.ThreeBotNotFound):
         w.threebot.record_update(2, months=1)

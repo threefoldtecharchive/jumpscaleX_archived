@@ -3,8 +3,8 @@ from Jumpscale import j
 from .BaseDataType import BaseDataTypeClass
 from .CryptoTypes import PublicKey
 from .PrimitiveTypes import BinaryData, Hash
-from .ConditionTypes import UnlockHash, UnlockHashType, ConditionNil, ConditionUnlockHash, ConditionAtomicSwap, ConditionMultiSignature, AtomicSwapSecret
-from .Errors import DoubleSignError
+from .ConditionTypes import UnlockHash, UnlockHashType, ConditionNil, \
+    ConditionUnlockHash, ConditionAtomicSwap, ConditionMultiSignature, AtomicSwapSecret
 
 # TODO: add signing tests, and compare signatures to the one in Rivine/TFchain, as for now this is still manually tested
 
@@ -106,7 +106,7 @@ class SignatureRequest():
         """
         # guarantee base conditions
         if self.fulfilled:
-            raise DoubleSignError("SignatureRequest is already fulfilled for address {}".format(self.wallet_address))
+            raise j.clients.tfchain.errors.DoubleSignError("SignatureRequest is already fulfilled for address {}".format(self.wallet_address))
 
         # ensure public key is the key of the wallet who owns this request
         if not isinstance(public_key, PublicKey):

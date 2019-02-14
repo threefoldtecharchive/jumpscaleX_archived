@@ -3,7 +3,6 @@ from Jumpscale import j
 from enum import IntEnum
 
 from .BaseDataType import BaseDataTypeClass
-from .Errors import CurrencyPrecisionOverflow, CurrencyNegativeValue
 
 class BinaryData(BaseDataTypeClass):
     """
@@ -198,9 +197,9 @@ class Currency(BaseDataTypeClass):
             d = Decimal(value)
             sign, _, exp = d.as_tuple()
             if exp < -9:
-                raise CurrencyPrecisionOverflow(d)
+                raise j.clients.tfchain.errors.CurrencyPrecisionOverflow(d)
             if sign != 0:
-                raise CurrencyNegativeValue(d)
+                raise j.clients.tfchain.errors.CurrencyNegativeValue(d)
             self._value = d
             return
         raise TypeError("cannot set value of type {} as Currency (invalid type)".format(type(value)))

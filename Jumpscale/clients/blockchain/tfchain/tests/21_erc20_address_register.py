@@ -3,7 +3,6 @@ from Jumpscale import j
 import pytest
 
 from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChainExplorerGetClientStub
-from Jumpscale.clients.blockchain.tfchain.types.Errors import ERC20RegistrationForbidden
 
 def main(self):
     """
@@ -89,8 +88,8 @@ def main(self):
     assert balance.locked == '0.0'
 
     # if the address is not owned by this wallet,
-    # an ERC20RegistrationForbidden error is raised
-    with pytest.raises(ERC20RegistrationForbidden):
+    # an j.clients.tfchain.errors.ERC20RegistrationForbidden error is raised
+    with pytest.raises(j.clients.tfchain.errors.ERC20RegistrationForbidden):
         result = w.erc20.address_register(value='015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f')
 
     # you can also automatically generate a new key pair within the used wallet and use its public key,

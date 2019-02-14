@@ -3,7 +3,6 @@ from Jumpscale import j
 import pytest
 
 from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChainExplorerGetClientStub
-from Jumpscale.clients.blockchain.tfchain.types.Errors import AtomicSwapInvalidSecret, AtomicSwapContractNotFound, AtomicSwapForbidden, AtomicSwapContractSpent
 
 def main(self):
     """
@@ -36,16 +35,16 @@ def main(self):
     assert w.balance.available == '28 TFT'
 
     # if the output identifier is wrong, the refund will fail
-    with pytest.raises(AtomicSwapContractNotFound):
+    with pytest.raises(j.clients.tfchain.errors.AtomicSwapContractNotFound):
         w.atomicswap.refund('a5e0159688d300ed7a8f2685829192d8dd1266ce6e82a0d04a3bbbb080de30d5')
 
     # if not authorized, refund will also fail
     fw = c.wallets.new("foo")
-    with pytest.raises(AtomicSwapForbidden):
+    with pytest.raises(j.clients.tfchain.errors.AtomicSwapForbidden):
         fw.atomicswap.refund('a5e0159688d300ed7a8f2685829192d8dd1266ce6e82a0d04a3bbbb080de30d0')
 
     # if not refundable yet, refund will still fail
-    with pytest.raises(AtomicSwapForbidden):
+    with pytest.raises(j.clients.tfchain.errors.AtomicSwapForbidden):
         w.atomicswap.refund('a5e0159688d300ed7a8f2685829192d8dd1266ce6e82a0d04a3bbbb080de30d0')
 
     # if the blockchain is updated, and the time for refund has reached, things will become possible
@@ -70,9 +69,9 @@ def main(self):
     assert w.balance.unconfirmed == '0'
     
     # and the contract can no longer be refunded
-    with pytest.raises(AtomicSwapContractSpent):
+    with pytest.raises(j.clients.tfchain.errors.AtomicSwapContractSpent):
         w.atomicswap.refund('a5e0159688d300ed7a8f2685829192d8dd1266ce6e82a0d04a3bbbb080de30d0')
 
     # should you verify it at this point, you'll get the same exception
-    with pytest.raises(AtomicSwapContractSpent):
+    with pytest.raises(j.clients.tfchain.errors.AtomicSwapContractSpent):
         w.atomicswap.verify('a5e0159688d300ed7a8f2685829192d8dd1266ce6e82a0d04a3bbbb080de30d0')

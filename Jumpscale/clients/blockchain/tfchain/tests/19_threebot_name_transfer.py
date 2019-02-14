@@ -6,7 +6,6 @@ from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChain
 from Jumpscale.clients.blockchain.tfchain.TFChainClient import ThreeBotRecord
 from Jumpscale.clients.blockchain.tfchain.types.ThreeBot import BotName, NetworkAddress
 from Jumpscale.clients.blockchain.tfchain.types.CryptoTypes import PublicKey
-from Jumpscale.clients.blockchain.tfchain.types.Errors import ThreeBotNotFound, ThreeBotInactive
 
 def main(self):
     """
@@ -88,10 +87,10 @@ def main(self):
         w.threebot.name_transfer(sender=3, receiver=5, names=[])
 
     # if names are defined to be transfered but one of the two 3Bots do no exist,
-    # an ThreeBotNotFound will be raised
-    with pytest.raises(ThreeBotNotFound):
+    # an j.clients.tfchain.errors.ThreeBotNotFound will be raised
+    with pytest.raises(j.clients.tfchain.errors.ThreeBotNotFound):
         w.threebot.name_transfer(sender=2, receiver=5, names=["foobar"])
-    with pytest.raises(ThreeBotNotFound):
+    with pytest.raises(j.clients.tfchain.errors.ThreeBotNotFound):
         w.threebot.name_transfer(sender=3, receiver=4, names=["foobar"])
 
     # make our receiver 3Bot expired
@@ -104,7 +103,7 @@ def main(self):
     ), force=True)
 
     # if the receiver 3Bot is inactive, an error will be raised
-    with pytest.raises(ThreeBotInactive):
+    with pytest.raises(j.clients.tfchain.errors.ThreeBotInactive):
         w.threebot.name_transfer(sender=3, receiver=5, names=["foobar"])
 
     # make our sender 3Bot expired
@@ -117,7 +116,7 @@ def main(self):
     ), force=True)
 
     # if the sender and receiver 3Bots are inactive, an error will be raised
-    with pytest.raises(ThreeBotInactive):
+    with pytest.raises(j.clients.tfchain.errors.ThreeBotInactive):
         w.threebot.name_transfer(sender=3, receiver=5, names=["foobar"])
 
     # make our receiver 3Bot active again
@@ -130,5 +129,5 @@ def main(self):
     ), force=True)
 
     # if the sender 3Bot is inactive, an error will be raised
-    with pytest.raises(ThreeBotInactive):
+    with pytest.raises(j.clients.tfchain.errors.ThreeBotInactive):
         w.threebot.name_transfer(sender=3, receiver=5, names=["foobar"])

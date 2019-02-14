@@ -7,8 +7,6 @@ from Jumpscale.clients.http.HttpClient import HTTPError
 
 import random
 
-from .types.Errors import ExplorerNoContent, ExplorerServerError, ExplorerNotAvailable, ExplorerServerPostError
-
 class TFChainExplorerClient(j.application.JSBaseClass):
     """
     Client to get data from a tfchain explorer.
@@ -39,16 +37,16 @@ class TFChainExplorerClient(j.application.JSBaseClass):
                 if resp.getcode() == 200:
                     return resp.readline()
                 if resp.getcode() == 204:
-                    raise ExplorerNoContent("GET: no content available (code: 204)", endpoint)
-                raise ExplorerServerError("error (code: {})".format(resp.getcode()), endpoint)
+                    raise j.clients.tfchain.errors.ExplorerNoContent("GET: no content available (code: 204)", endpoint)
+                raise j.clients.tfchain.errors.ExplorerServerError("error (code: {})".format(resp.getcode()), endpoint)
             except HTTPError as e:
                 if e.status_code == 400 and (b'unrecognized hash' in e.msg) or (b'not found' in e.msg):
-                    raise ExplorerNoContent("GET: no content available for specified hash (code: 400)", endpoint)
+                    raise j.clients.tfchain.errors.ExplorerNoContent("GET: no content available for specified hash (code: 400)", endpoint)
                 if e.status_code:
-                    raise ExplorerServerError("GET: error (code: {}): {}".format(e.status_code, e.msg), endpoint)
+                    raise j.clients.tfchain.errors.ExplorerServerError("GET: error (code: {}): {}".format(e.status_code, e.msg), endpoint)
                 self._log_debug("tfchain explorer get exception at endpoint {} on {}: {}".format(endpoint, address, e))
                 pass
-        raise ExplorerNotAvailable("no explorer was available", endpoint=endpoint, addresses=addresses)
+        raise j.clients.tfchain.errors.ExplorerNotAvailable("no explorer was available", endpoint=endpoint, addresses=addresses)
 
     def post(self, addresses, endpoint, data):
         """
@@ -85,13 +83,13 @@ class TFChainExplorerClient(j.application.JSBaseClass):
                 resp = j.clients.http.post(url=address+endpoint, data=data, headers=headers)
                 if resp.getcode() == 200:
                     return resp.readline()
-                raise ExplorerServerPostError("POST: unexpected error (code: {})".format(resp.getcode()), endpoint, data=data)
+                raise j.clients.tfchain.errors.ExplorerServerPostError("POST: unexpected error (code: {})".format(resp.getcode()), endpoint, data=data)
             except HTTPError as e:
                 if e.status_code:
-                    raise ExplorerServerPostError("POST: error (code: {}): {}".format(e.status_code, e.msg), endpoint, data=data)
+                    raise j.clients.tfchain.errors.ExplorerServerPostError("POST: error (code: {}): {}".format(e.status_code, e.msg), endpoint, data=data)
                 self._log_debug("tfchain explorer get exception at endpoint {} on {}: {}".format(endpoint, address, e))
                 pass
-        raise ExplorerNotAvailable("no explorer was available", endpoint=endpoint, addresses=addresses)
+        raise j.clients.tfchain.errors.ExplorerNotAvailable("no explorer was available", endpoint=endpoint, addresses=addresses)
 
     def test(self):
         """

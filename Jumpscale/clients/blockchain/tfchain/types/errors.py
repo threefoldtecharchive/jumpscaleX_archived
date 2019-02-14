@@ -4,6 +4,230 @@ Public TFChain Errors
 
 from Jumpscale import j
 
+
+class ErrorTypes():
+    """
+    All TFChain Error types,
+    collected as public properties of one class.
+    """
+
+    # Primitive Type Errors
+
+    @property
+    def InvalidPublicKeySpecifier(self):
+        """
+        InvalidPublicKeySpecifier error
+        """
+        return InvalidPublicKeySpecifier
+
+    @property
+    def CurrencyPrecisionOverflow(self):
+        """
+        CurrencyPrecisionOverflow error, caused when the currency value is too precise.
+
+        The `value` property exposes the value that caused the overflow,
+        and the `precision` property exposes the precision of that value.
+        """
+        return CurrencyPrecisionOverflow
+
+    @property
+    def CurrencyNegativeValue(self):
+        """
+        CurrencyNegativeValue error, caused when the value is negative.
+
+        THe `value` property exposes the negative value that caused this error.
+        """
+        return CurrencyNegativeValue
+
+    # Explorer Errors
+
+    @property
+    def ExplorerNoContent(self):
+        """
+        ExplorerNoContent error, returned when the explorer found
+        no content for the given GET Request.
+
+        The `endpoint` property exposes the full endpoint that was involved.
+        """
+        return ExplorerNoContent
+
+    @property
+    def ExplorerServerError(self):
+        """
+        ExplorerServerError error, returned when the explorer returned an Error,
+        for example when an internal error occured or the given query was invalid.
+
+        The `endpoint` property exposes the full endpoint that was involved.
+        """
+        return ExplorerServerError
+
+    @property
+    def ExplorerServerPostError(self):
+        """
+        ExplorerServerPostError error, returned when the explorer returned an Error,
+        for example when a posted transaction was not accepted for some reason.
+
+        The `endpoint` property exposes the full endpoint that was involved.
+        And the `data` property exposes the JSON-encoded data that was posted.
+        """
+        return ExplorerServerPostError
+
+    @property
+    def ExplorerNotAvailable(self):
+        """
+        ExplorerServerPostError error,
+        returned when none of the known explorers were available for the desired request.
+
+        The `endpoint` property exposes the full endpoint that was involved.
+        And the `addresses` property exposes all (explorer) addresses that were tried to reach.
+        """
+        return ExplorerNotAvailable
+
+    @property
+    def ExplorerInvalidResponse(self):
+        """
+        ExplorerInvalidResponse error, returned in case the response given by
+        the Explorer for a GET/POST request is not as expected.
+
+        The `endpoint` property exposes the full endpoint that was involved.
+        And the `response` property exposes the dict (JSON-dececoded) response that was invalid (unexpexted).
+
+        Please report an issue at https://github.com/threefoldfoundation/tfchain/issues
+        with all details should this happen. Also include in the issue the values of the properties
+        of this response.
+        """
+        return ExplorerInvalidResponse
+
+    # Generic Transaction Errors
+
+    @property
+    def UnknownTransansactionVersion(self):
+        """
+        UnknownTransansactionVersion error
+        """
+        return UnknownTransansactionVersion
+
+    @property
+    def InsufficientFunds(self):
+        """
+        InsufficientFunds error
+        """
+        return InsufficientFunds
+
+    @property
+    def DoubleSignError(self):
+        """
+        DoubleSignError error, in case an input or extension is signed twice.
+
+        Unless you do something weird and manual,
+        this most likely indicates a bug that should be reported at
+        https://github.com/threefoldfoundation/tfchain/issues
+        """
+        return DoubleSignError
+
+    # Atomic Swap (Transaction) Errors
+
+    @property
+    def AtomicSwapInsufficientAmountError(self):
+        """
+        AtomicSwapInsufficientAmountError error,
+        triggered when creating a contract with an amount equal or lower than
+        minimum fee, which isn't allowed as such a contract cannot be redeemed/refunded.
+
+        The `amount` property exposes the amount that was tried,
+        and the `minimum_miner_fee` exposes the minimum miner fee used and required by the network.
+        """
+        return AtomicSwapInsufficientAmountError
+
+    @property
+    def AtomicSwapForbidden(self):
+        """
+        AtomicSwapForbidden error, caused when a contract was trying
+        to be spent by an unautohorized wallet.
+
+        The `contract` property exposes the contract that was involved in this error.
+        """
+        return AtomicSwapForbidden
+
+    @property
+    def AtomicSwapInvalidSecret(self):
+        """
+        AtomicSwapInvalidSecret error, caused when a wrong secret was used
+        as an attempt to redeem an atomic swap contract. 
+
+        The `contract` property exposes the contract that was involved in this error.
+        """
+        return AtomicSwapInvalidSecret
+
+    @property
+    def AtomicSwapContractInvalid(self):
+        """
+        AtomicSwapContractInvalid error, caused when a contract was deemed
+        invalid during verification.
+
+        The `contract` property exposes the contract that was involved in this error.
+        """
+        return AtomicSwapContractInvalid
+
+    @property
+    def AtomicSwapContractSpent(self):
+        """
+        AtomicSwapContractSpent error, caused when
+        a callee tried to spend a contract that was already spent.
+
+        The `contract` property exposes the contract that was involved in this error.
+        And the `transaction` property exposes the transaction in which the contract was already spent.
+        """
+        return AtomicSwapContractSpent
+
+    @property
+    def AtomicSwapContractNotFound(self):
+        """
+        AtomicSwapContractNotFound error, caused when
+        a callee tried to get an atomic swap contract that could not be found.
+
+        The `outputid` property exposes the identifier that was used
+        to try to find the atomic swap contract.
+        """
+        return AtomicSwapContractNotFound
+
+    # 3Bot (Transaction) Errors
+
+    @property
+    def ThreeBotNotFound(self):
+        """
+        ThreeBotNotFound error, triggered when a 3Bot was not found.
+
+        The `identifier` property exposes the identifier that was used
+        to try to find the 3Bot.
+        """
+        return ThreeBotNotFound
+
+    @property
+    def ThreeBotInactive(self):
+        """
+        ThreeBotInactive error, triggered when a 3Bot is an active,
+        and the operation to be applied to the 3Bot would not change that fact.
+
+        The `identifier` property exposes the identifier of the inactive 3Bot
+        and the `expiration` property exposes the timestamp (int, Epoch UNIX seconds)
+        since when the 3Bot is inactive.
+        """
+        return ThreeBotInactive
+
+    # ERC20 (Transaction) Errors
+
+    @property
+    def ERC20RegistrationForbidden(self):
+        """
+        ERC20RegistrationForbidden error, triggered
+        when trying to register an ERC20 address not owned by the used wallet.
+
+        The `address` property exposes the address that was attempted to be registered.
+        """
+        return ERC20RegistrationForbidden
+
+
 class InvalidPublicKeySpecifier(Exception):
     """
     InvalidPublicKeySpecifier error

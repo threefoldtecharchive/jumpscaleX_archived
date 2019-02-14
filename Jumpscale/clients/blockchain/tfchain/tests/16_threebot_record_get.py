@@ -6,7 +6,6 @@ from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChain
 from Jumpscale.clients.blockchain.tfchain.TFChainClient import ThreeBotRecord
 from Jumpscale.clients.blockchain.tfchain.types.ThreeBot import BotName, NetworkAddress
 from Jumpscale.clients.blockchain.tfchain.types.CryptoTypes import PublicKey
-from Jumpscale.clients.blockchain.tfchain.types.Errors import ThreeBotNotFound
 
 def main(self):
     """
@@ -48,6 +47,6 @@ def main(self):
         # timestamp on which the 3Bot expires, unless more months are paid (see Record Update)
         assert record.expiration == 1552581420
 
-    # if the 3Bot cannot be found, the ThreeBotNotFound exception will be raised
-    with pytest.raises(ThreeBotNotFound):
+    # if the 3Bot cannot be found, the j.clients.tfchain.errors.ThreeBotNotFound exception will be raised
+    with pytest.raises(j.clients.tfchain.errors.ThreeBotNotFound):
         c.threebot.record_get(1)

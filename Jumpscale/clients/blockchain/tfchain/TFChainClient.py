@@ -6,7 +6,6 @@ from Jumpscale import j
 from .types.ConditionTypes import UnlockHash, UnlockHashType, ConditionMultiSignature
 from .types.PrimitiveTypes import Hash, Currency
 from .types.IO import CoinOutput, BlockstakeOutput
-from .types.Errors import ExplorerInvalidResponse, ExplorerNoContent, ThreeBotNotFound
 from .types.CryptoTypes import PublicKey
 from .types.ThreeBot import BotName, NetworkAddress
 from .types.transactions.Base import TransactionBaseClass
@@ -120,10 +119,10 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
                 resp = self.explorer_get(endpoint=endpoint)
                 resp = j.data.serializers.json.loads(resp)
                 if resp['hashtype'] != 'blockid':
-                    raise ExplorerInvalidResponse("expected hash type 'blockid' not '{}'".format(resp['hashtype']), endpoint, resp)
+                    raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected hash type 'blockid' not '{}'".format(resp['hashtype']), endpoint, resp)
                 resp = resp['block']
                 if resp['blockid'] != blockid:
-                    raise ExplorerInvalidResponse("expected block ID '{}' not '{}'".format(blockid, resp['blockid']), endpoint, resp)
+                    raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected block ID '{}' not '{}'".format(blockid, resp['blockid']), endpoint, resp)
             # parse the transactions
             transactions = []
             for etxn in resp['transactions']:
@@ -139,7 +138,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             minerpayoutids = resp.get('minerpayoutids', None) or []
             eminerpayouts = rawblock.get('minerpayouts', None) or []
             if len(eminerpayouts) != len(minerpayoutids):
-                raise ExplorerInvalidResponse("amount of miner payouts and payout ids are not matching: {} != {}".format(len(eminerpayouts), len(minerpayoutids)), endpoint, resp)
+                raise j.clients.tfchain.errors.ExplorerInvalidResponse("amount of miner payouts and payout ids are not matching: {} != {}".format(len(eminerpayouts), len(minerpayoutids)), endpoint, resp)
             for idx, mp in enumerate(eminerpayouts):
                 id = Hash.from_json(minerpayoutids[idx])
                 value = Currency.from_json(mp['value'])
@@ -157,7 +156,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
                 transactions=transactions, miner_payouts=miner_payouts)
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
-            raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
+            raise j.clients.tfchain.errors.ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
 
     def transaction_get(self, txid):
         """
@@ -171,14 +170,14 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         resp = j.data.serializers.json.loads(resp)
         try:
             if resp['hashtype'] != 'transactionid':
-                raise ExplorerInvalidResponse("expected hash type 'transactionid' not '{}'".format(resp['hashtype']), endpoint, resp)
+                raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected hash type 'transactionid' not '{}'".format(resp['hashtype']), endpoint, resp)
             resp = resp['transaction']
             if resp['id'] != txid:
-                raise ExplorerInvalidResponse("expected transaction ID '{}' not '{}'".format(txid, resp['id']), endpoint, resp)
+                raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected transaction ID '{}' not '{}'".format(txid, resp['id']), endpoint, resp)
             return self._transaction_from_explorer_transaction(resp, endpoint=endpoint, resp=resp)
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
-            raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
+            raise j.clients.tfchain.errors.ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
 
     def transaction_put(self, transaction):
         """
@@ -195,7 +194,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             return str(Hash(value=resp['transactionid']))
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
-            raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
+            raise j.clients.tfchain.errors.ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
 
     def unlockhash_get(self, target):
         """
@@ -216,7 +215,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         resp = j.data.serializers.json.loads(resp)
         try:
             if resp['hashtype'] != 'unlockhash':
-                raise ExplorerInvalidResponse("expected hash type 'unlockhash' not '{}'".format(resp['hashtype']), endpoint, resp)
+                raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected hash type 'unlockhash' not '{}'".format(resp['hashtype']), endpoint, resp)
             # parse the transactions
             transactions = []
             for etxn in resp['transactions']:
@@ -228,7 +227,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             multisig_addresses = [UnlockHash.from_json(obj=uh) for uh in resp.get('multisigaddresses', None) or []]
             for addr in multisig_addresses:
                 if addr.type != UnlockHashType.MULTI_SIG:
-                    raise ExplorerInvalidResponse("invalid unlock hash type {} for MultiSignature Address (expected: 3)".format(addr.type), endpoint, resp)
+                    raise j.clients.tfchain.errors.ExplorerInvalidResponse("invalid unlock hash type {} for MultiSignature Address (expected: 3)".format(addr.type), endpoint, resp)
             # TODO: support resp.get('erc20info')
             # return explorer data for the unlockhash
 
@@ -239,7 +238,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
                 client=self)
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
-            raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
+            raise j.clients.tfchain.errors.ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
 
     def coin_output_get(self, id):
         """
@@ -279,11 +278,11 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         try:
             hash_type = resp['hashtype']
             if hash_type != expected_hash_type:
-                raise ExplorerInvalidResponse("expected hash type '{}', not '{}'".format(expected_hash_type, hash_type), endpoint, resp)
+                raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected hash type '{}', not '{}'".format(expected_hash_type, hash_type), endpoint, resp)
             tresp = resp['transactions']
             lresp = len(tresp)
             if lresp not in (1, 2):
-                raise ExplorerInvalidResponse("expected one or two transactions to be returned, not {}".format(lresp), endpoint, resp)
+                raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected one or two transactions to be returned, not {}".format(lresp), endpoint, resp)
             # parse the transaction(s)
             creation_txn = tresp[0]
             spend_txn = None
@@ -303,12 +302,12 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
                     output = out
                     break
             if output is None:
-                raise ExplorerInvalidResponse("expected output {} to be part of creation Tx, but it wasn't".format(id), endpoint, resp)
+                raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected output {} to be part of creation Tx, but it wasn't".format(id), endpoint, resp)
             # return the output and related transaction(s)
             return (output, creation_txn, spend_txn)
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
-            raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
+            raise j.clients.tfchain.errors.ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
 
     def _transaction_from_explorer_transaction(self, etxn, endpoint="/?", resp=None): # keyword parameters for error handling purposes only
         if resp is None:
@@ -318,7 +317,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         # add the parent (coin) outputs
         coininputoutputs = etxn.get('coininputoutputs', None) or []
         if len(transaction.coin_inputs) != len(coininputoutputs):
-            raise ExplorerInvalidResponse("amount of coin inputs and parent outputs are not matching: {} != {}".format(len(transaction.coin_inputs), len(coininputoutputs)), endpoint, resp)
+            raise j.clients.tfchain.errors.ExplorerInvalidResponse("amount of coin inputs and parent outputs are not matching: {} != {}".format(len(transaction.coin_inputs), len(coininputoutputs)), endpoint, resp)
         for (idx, co) in enumerate(coininputoutputs):
             co = CoinOutput.from_json(obj=co)
             co.id = transaction.coin_inputs[idx].parentid
@@ -326,13 +325,13 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         # add the coin output ids
         coinoutputids = etxn.get('coinoutputids', None) or []
         if len(transaction.coin_outputs) != len(coinoutputids):
-            raise ExplorerInvalidResponse("amount of coin outputs and output identifiers are not matching: {} != {}".format(len(transaction.coin_outputs), len(coinoutputids)), endpoint, resp)
+            raise j.clients.tfchain.errors.ExplorerInvalidResponse("amount of coin outputs and output identifiers are not matching: {} != {}".format(len(transaction.coin_outputs), len(coinoutputids)), endpoint, resp)
         for (idx, id) in enumerate(coinoutputids):
             transaction.coin_outputs[idx].id = Hash.from_json(obj=id)
         # add the parent (blockstake) outputs
         blockstakeinputoutputs = etxn.get('blockstakeinputoutputs', None) or []
         if len(transaction.blockstake_inputs) != len(blockstakeinputoutputs):
-            raise ExplorerInvalidResponse("amount of blockstake inputs and parent outputs are not matching: {} != {}".format(len(transaction.blockstake_inputs), len(blockstakeinputoutputs)), endpoint, resp)
+            raise j.clients.tfchain.errors.ExplorerInvalidResponse("amount of blockstake inputs and parent outputs are not matching: {} != {}".format(len(transaction.blockstake_inputs), len(blockstakeinputoutputs)), endpoint, resp)
         for (idx, bso) in enumerate(blockstakeinputoutputs):
             bso = BlockstakeOutput.from_json(obj=bso)
             bso.id = transaction.blockstake_inputs[idx].parentid
@@ -340,7 +339,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         # add the blockstake output ids
         blockstakeoutputids = etxn.get('blockstakeoutputids', None) or []
         if len(transaction.blockstake_outputs) != len(blockstakeoutputids):
-            raise ExplorerInvalidResponse("amount of blokstake outputs and output identifiers are not matching: {} != {}".format(len(transaction.blockstake_inputs), len(blockstakeoutputids)), endpoint, resp)
+            raise j.clients.tfchain.errors.ExplorerInvalidResponse("amount of blokstake outputs and output identifiers are not matching: {} != {}".format(len(transaction.blockstake_inputs), len(blockstakeoutputids)), endpoint, resp)
         for (idx, id) in enumerate(blockstakeoutputids):
             transaction.blockstake_outputs[idx].id = Hash.from_json(obj=id)
         # set the unconfirmed state
@@ -643,7 +642,7 @@ class TFChainMinterClient():
             return j.clients.tfchain.types.conditions.from_json(obj=resp['mintcondition'])
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
-            raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
+            raise j.clients.tfchain.errors.ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
 
 
 class TFChainThreeBotClient():
@@ -686,8 +685,8 @@ class TFChainThreeBotClient():
         endpoint += "/{}".format(identifier)
         try:
             resp = self._client.explorer_get(endpoint=endpoint)
-        except ExplorerNoContent as exc:
-            raise ThreeBotNotFound(identifier) from exc
+        except j.clients.tfchain.errors.ExplorerNoContent as exc:
+            raise j.clients.tfchain.errors.ThreeBotNotFound(identifier) from exc
         resp = j.data.serializers.json.loads(resp)
         try:
             # return the fetched record as a named tuple, for easy semi-typed access
@@ -701,7 +700,7 @@ class TFChainThreeBotClient():
             )
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
-            raise ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
+            raise j.clients.tfchain.errors.ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
 
 
 from typing import NamedTuple

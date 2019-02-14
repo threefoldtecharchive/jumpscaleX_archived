@@ -8,7 +8,6 @@ from ed25519 import SigningKey
 
 from .types.PrimitiveTypes import Currency, Hash, BinaryData
 from .types.CryptoTypes import PublicKey, UnlockHash, UnlockHashType
-from .types.Errors import *
 from .types.IO import CoinOutput, CoinInput
 from .types.ConditionTypes import ConditionNil, ConditionUnlockHash, ConditionLockTime
 from .types.AtomicSwap import AtomicSwapContract
@@ -193,7 +192,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                 # collect all multisig addresses
                 for address in result.multisig_addresses:
                     multisig_addresses.append(str(address))
-            except ExplorerNoContent:
+            except j.clients.tfchain.errors.ExplorerNoContent:
                  # ignore this exception as it simply means
                  # the address has no activity yet on the chain
                 pass
@@ -225,7 +224,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                         # collect all multisig addresses
                         for address in result.multisig_addresses:
                             multisig_addresses.append(str(address))
-                    except ExplorerNoContent:
+                    except j.clients.tfchain.errors.ExplorerNoContent:
                         # ignore this exception as it simply means
                         # the address has no activity yet on the chain
                         used_pairs.append(False)
@@ -258,7 +257,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                 result = self._unlockhash_get(address)
                 uh_balance = result.balance(info=info)
                 balance = balance.balance_add(uh_balance)
-            except ExplorerNoContent:
+            except j.clients.tfchain.errors.ExplorerNoContent:
                  # ignore this exception as it simply means
                  # the address has no activity yet on the chain
                 pass
@@ -862,13 +861,13 @@ class TFChainAtomicSwap():
             try:
                 # try to fetch the coin output that is expected to contain the secret
                 co, _, spend_txn = self._wallet.client.coin_output_get(outputid)
-            except ExplorerNoContent as exc:
-                raise AtomicSwapContractNotFound(outputid=outputid) from exc
+            except j.clients.tfchain.errors.ExplorerNoContent as exc:
+                raise j.clients.tfchain.errors.AtomicSwapContractNotFound(outputid=outputid) from exc
             # check if the contract hasn't been spent already
             if spend_txn is not None:
                 # if a spend transaction exists,
                 # it means the contract was already spend, and can therefore no longer be redeemed
-                raise AtomicSwapContractSpent(contract=AtomicSwapContract(
+                raise j.clients.tfchain.errors.AtomicSwapContractSpent(contract=AtomicSwapContract(
                     coinoutput=co, unspent=False, current_timestamp=self._chain_time), transaction=spend_txn)
             
             # create the unspent contract
@@ -878,7 +877,7 @@ class TFChainAtomicSwap():
         else:
             # verify the outputid is the same
             if contract.outputid != outputid:
-                raise AtomicSwapContractInvalid(
+                raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
                     message="output identifier is expected to be {}, not {}".format(str(outputid), str(contract.outputid)),
                     contract=contract)
         
@@ -886,7 +885,7 @@ class TFChainAtomicSwap():
         if amount is not None:
             amount = Currency(value=amount)
             if amount != contract.amount:
-                raise AtomicSwapContractInvalid(
+                raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
                     message="amount is expected to be {}, not {}".format(amount.str(with_unit=True), contract.amount.str(with_unit=True)),
                     contract=contract)
         
@@ -895,7 +894,7 @@ class TFChainAtomicSwap():
             # normalize secret hash
             secret_hash = AtomicSwapSecretHash(value=secret_hash)
             if secret_hash != contract.secret_hash:
-                raise AtomicSwapContractInvalid(
+                raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
                     message="secret_hash is expected to be {}, not {}".format(str(secret_hash), str(contract.secret_hash)),
                     contract=contract)
         
@@ -914,29 +913,29 @@ class TFChainAtomicSwap():
                 duration = contract.refund_timestamp - chain_time
             if min_duration <= 0:
                 if duration != 0:
-                    raise AtomicSwapContractInvalid(
+                    raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
                         message="contract cannot be refunded yet while it was expected to be possible already",
                         contract=contract)
             elif duration < min_duration:
                 if duration == 0:
-                    raise AtomicSwapContractInvalid(
+                    raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
                         message="contract was expected to be non-refundable for at least {} more, but it can be refunded already since {}".format(
                             j.data.types.duration.toString(min_duration), j.data.time.epoch2HRDateTime(contract.refund_timestamp)),
                         contract=contract)
                 elif duration < min_duration:
-                    raise AtomicSwapContractInvalid(
+                    raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
                         message="contract was expected to be available for redemption for at least {}, but it is only available for {}".format(
                             j.data.types.duration.toString(min_duration), j.data.types.duration.toString(duration)),
                         contract=contract)
         
         # if expected to be authorized to be the sender, verify this
         if sender and contract.sender not in self._wallet.addresses:
-            raise AtomicSwapContractInvalid(
+            raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
                 message="wallet not registered as sender of this contract", contract=contract)
         
         # if expected to be authorized to be the receiver, verify this
         if receiver and contract.receiver not in self._wallet.addresses:
-            raise AtomicSwapContractInvalid(
+            raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
                 message="wallet not registered as receiver of this contract", contract=contract)
 
         # return the contract for further optional consumption,
@@ -959,22 +958,22 @@ class TFChainAtomicSwap():
         try:
             # try to fetch the coin output that is expected to contain the secret
             co, _, spend_txn = self._wallet.client.coin_output_get(outputid)
-        except ExplorerNoContent as exc:
-            raise AtomicSwapContractNotFound(outputid=outputid) from exc
+        except j.clients.tfchain.errors.ExplorerNoContent as exc:
+            raise j.clients.tfchain.errors.AtomicSwapContractNotFound(outputid=outputid) from exc
         # generate the contract
         contract = AtomicSwapContract(coinoutput=co, unspent=False, current_timestamp=self._chain_time) # either it is spent already or we'll spend it
         # check if the contract hasn't been spent already
         if spend_txn is not None:
             # if a spend transaction exists,
             # it means the contract was already spend, and can therefore no longer be redeemed
-            raise AtomicSwapContractSpent(contract=contract, transaction=spend_txn)
+            raise j.clients.tfchain.errors.AtomicSwapContractSpent(contract=contract, transaction=spend_txn)
         # verify the defined secret
         if not contract.verify_secret(secret):
-            raise AtomicSwapInvalidSecret(contract=contract)
+            raise j.clients.tfchain.errors.AtomicSwapInvalidSecret(contract=contract)
         
         # ensure this wallet is authorized to be the receiver
         if contract.receiver not in self._wallet.addresses:
-            raise AtomicSwapForbidden(message="unauthorized to redeem: wallet does not contain receiver address {}".format(contract.receiver), contract=contract)
+            raise j.clients.tfchain.errors.AtomicSwapForbidden(message="unauthorized to redeem: wallet does not contain receiver address {}".format(contract.receiver), contract=contract)
         
         # create the fulfillment
         fulfillment = j.clients.tfchain.types.fulfillments.atomic_swap_new(secret=secret)
@@ -997,25 +996,25 @@ class TFChainAtomicSwap():
         try:
             # try to fetch the coin output that is expected to contain the secret
             co, _, spend_txn = self._wallet.client.coin_output_get(outputid)
-        except ExplorerNoContent as exc:
-            raise AtomicSwapContractNotFound(outputid=outputid) from exc
+        except j.clients.tfchain.errors.ExplorerNoContent as exc:
+            raise j.clients.tfchain.errors.AtomicSwapContractNotFound(outputid=outputid) from exc
         # generate the contract
         contract = AtomicSwapContract(coinoutput=co, unspent=False, current_timestamp=self._chain_time) # either it is spent already or we'll spend it
         # check if the contract hasn't been spent already
         if spend_txn is not None:
             # if a spend transaction exists,
             # it means the contract was already spend, and can therefore no longer be redeemed
-            raise AtomicSwapContractSpent(contract=contract, transaction=spend_txn)
+            raise j.clients.tfchain.errors.AtomicSwapContractSpent(contract=contract, transaction=spend_txn)
         # verify the contract can be refunded already
         time = self._chain_time
         if time < contract.refund_timestamp:
-            raise AtomicSwapForbidden(
+            raise j.clients.tfchain.errors.AtomicSwapForbidden(
                 message="unauthorized to refund: contract can only be refunded since {}".format(j.data.time.epoch2HRDateTime(contract.refund_timestamp)),
                 contract=contract)
         
         # ensure this wallet is authorized to be the sender (refunder)
         if contract.sender not in self._wallet.addresses:
-            raise AtomicSwapForbidden(message="unauthorized to refund: wallet does not contain sender address {}".format(contract.sender), contract=contract)
+            raise j.clients.tfchain.errors.AtomicSwapForbidden(message="unauthorized to refund: wallet does not contain sender address {}".format(contract.sender), contract=contract)
         
         # create the fulfillment
         fulfillment = j.clients.tfchain.types.fulfillments.atomic_swap_new()
@@ -1040,7 +1039,7 @@ class TFChainAtomicSwap():
         # ensure the amount is bigger than the miner fee,
         # otherwise the contract cannot be redeemed/refunded
         if amount <= miner_fee:
-            raise AtomicSwapInsufficientAmountError(amount=amount, minimum_miner_fee=miner_fee)
+            raise j.clients.tfchain.errors.AtomicSwapInsufficientAmountError(amount=amount, minimum_miner_fee=miner_fee)
 
         # define the coin inputs
         balance = self._wallet.balance
@@ -1293,7 +1292,7 @@ class TFChainThreeBot():
 
         # ensure the 3Bot is either active, or will be come active
         if record.expiration <= self._chain_time and months == 0:
-            raise ThreeBotInactive(identifier, record.expiration)
+            raise j.clients.tfchain.errors.ThreeBotInactive(identifier, record.expiration)
 
         # get the fees, and fund the transaction
         balance = self._fund_txn(txn, source, refund)
@@ -1330,14 +1329,14 @@ class TFChainThreeBot():
         txn.sender_parent_public_key = record.public_key
         # ensure sender bot is active
         if record.expiration <= chain_time:
-            raise ThreeBotInactive(sender, record.expiration)
+            raise j.clients.tfchain.errors.ThreeBotInactive(sender, record.expiration)
 
         # get and assign the 3Bot's public key for the receiver
         record = self._wallet.client.threebot.record_get(receiver)
         txn.receiver_parent_public_key = record.public_key
         # ensure receiver bot is active
         if record.expiration <= chain_time:
-            raise ThreeBotInactive(receiver, record.expiration)
+            raise j.clients.tfchain.errors.ThreeBotInactive(receiver, record.expiration)
 
         # get the fees, and fund the transaction
         balance = self._fund_txn(txn, source, refund)
@@ -1505,7 +1504,7 @@ class TFChainERC20():
             except KeyError as exc:
                 if isinstance(value, str):
                     value = UnlockHash.from_json(value)
-                raise ERC20RegistrationForbidden(address=value) from exc
+                raise j.clients.tfchain.errors.ERC20RegistrationForbidden(address=value) from exc
         elif isinstance(value, int) and not isinstance(value, bool):
             addresses = self._wallet.addresses
             if value < 0 or value >= len(addresses):
@@ -2176,7 +2175,7 @@ class WalletsBalance(WalletBalance):
 
         # ensure at least one address is defined
         if len(addresses) == 0 and len(ms_addresses) == 0:
-            raise InsufficientFunds("no addresses defined or linked to this wallet")
+            raise j.clients.tfchain.errors.InsufficientFunds("no addresses defined or linked to this wallet")
 
         # if personal addresses are given, try to use these first
         # as these are the easiest kind to deal with
@@ -2191,13 +2190,13 @@ class WalletsBalance(WalletBalance):
 
         if len(ms_addresses) == 0:
             # if no ms_addresses were defined,
-            raise InsufficientFunds("not enough funds available in the individual wallet to fund the requested amount")
+            raise j.clients.tfchain.errors.InsufficientFunds("not enough funds available in the individual wallet to fund the requested amount")
         # otherwise keep going for multisig addresses
         outputs, collected = self._fund_multisig(amount, ms_addresses, outputs=outputs, collected=collected)
 
         # if we still didn't manage to fund enough, there is nothing we can do
         if collected < amount:
-            raise InsufficientFunds("not enough funds available in the wallets to fund the requested amount")
+            raise j.clients.tfchain.errors.InsufficientFunds("not enough funds available in the wallets to fund the requested amount")
         return ([CoinInput.from_coin_output(co) for co in outputs], collected-amount, refund)
 
     def _fund_individual(self, amount, addresses):

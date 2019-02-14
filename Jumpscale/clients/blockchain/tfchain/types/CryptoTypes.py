@@ -2,7 +2,6 @@ from Jumpscale import j
 
 from .BaseDataType import BaseDataTypeClass
 from .PrimitiveTypes import Hash
-from .Errors import InvalidPublicKeySpecifier
 from .ConditionTypes import UnlockHash, UnlockHashType
 
 from enum import IntEnum
@@ -19,7 +18,7 @@ class PublicKeySpecifier(IntEnum):
             return PublicKeySpecifier.NIL
         if obj == _SIG_Ed25519:
             return PublicKeySpecifier.ED25519
-        raise InvalidPublicKeySpecifier("{} is an invalid Public Key specifier".format(obj))
+        raise j.clients.tfchain.errors.InvalidPublicKeySpecifier("{} is an invalid Public Key specifier".format(obj))
 
     def __str__(self):
         if self == PublicKeySpecifier.ED25519:

@@ -343,7 +343,7 @@ result.submitted   # True if submitted, False if not possible
 ```
 > See [The ThreeBot Record Update Unit Test](./tests/18_threebot_record_update.py) for a detailed example.
 
-> If the `ThreeBotInactive` exception gets raised,
+> If the `j.clients.tfchain.errors.ThreeBotInactive` exception gets raised,
 > it means your 3Bot is currently marked as inactive,
 > and so you'll have to add at least one month (`months=1`) to make it active again.
 
@@ -386,11 +386,11 @@ result.submitted   # True if submitted, False if not possible
 ```
 > See [The ThreeBot Name Transfer Unit Test](./tests/19_threebot_name_transfer.py) for a detailed example.
 
-> If the `ThreeBotNotFound` exception gets raised,
+> If the `j.clients.tfchain.errors.ThreeBotNotFound` exception gets raised,
 > it means either the sender or receiver 3Bot could not be found
 > (check the raised exceptions' `identifier` property to know which).
 
-> If the `ThreeBotInactive` exception gets raised,
+> If the `j.clients.tfchain.errors.ThreeBotInactive` exception gets raised,
 > it means either the sender or receiver 3Bot is inactive
 > (check the raised exceptions' `identifier` property to know which).
 > Before you can continue with the name transfer the inactive bot will have
@@ -514,7 +514,7 @@ In order to be able to withdraw ERC20 Tokens into a TFT wallet,
 you first need to register a TFT address (of that wallet) as an ERC20 withdraw address.
 You can do this in three ways.
 
-- if you specify nothing, a new address will be generated and used:
+- if you specify nothing (`None`), a new address will be generated and used:
   ```python
   result = w.erc20.address_register() # value=None, optionally you can define a source and refund address(es) as well
   result.transaction # contains the created (and if all good sent) transaction
@@ -534,8 +534,9 @@ You can do this in three ways.
   result.submitted # if the transaction was submitted (if not it is because more signatures are required)
   ```
 
-An address can only be registered once, a generic `ExplorerServerError` error will be raised if you try to double-register an address.
-If your wallet does not own the defined address, the `ERC20RegistrationForbidden` error will be raised.
+An address can only be registered once, a generic `j.clients.tfchain.errors.ExplorerServerError` error
+will be raised if you try to double-register an address. If your wallet does not own the defined address,
+the `j.clients.tfchain.errors.ERC20RegistrationForbidden` error will be raised.
 
 See [The ERC20 Address Register Unit Test](./tests/21_erc20_address_register.py)
 for detailed examples of the registration of an ERC20 withdraw address.
