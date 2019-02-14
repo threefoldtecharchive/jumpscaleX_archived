@@ -2,8 +2,7 @@ from Jumpscale import j
 
 from .Base import TransactionBaseClass, TransactionVersion, InputSignatureHashFactory
 
-from ..FulfillmentTypes import FulfillmentBaseClass, FulfillmentSingleSignature, \
-    PublicKeySignaturePair, ED25519Signature, SignatureCallbackBase, SignatureRequest
+from ..FulfillmentTypes import ED25519Signature, SignatureCallbackBase, SignatureRequest
 from ..ConditionTypes import ConditionBaseClass, ConditionNil
 from ..ThreeBot import NetworkAddress, BotName
 from ..PrimitiveTypes import BinaryData, Currency

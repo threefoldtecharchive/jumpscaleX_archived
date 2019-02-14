@@ -18,6 +18,10 @@ class TransactionVersion(IntEnum):
     THREEBOT_RECORD_UPDATE = 145
     THREEBOT_NAME_TRANSFER = 146
 
+    ERC20_CONVERT = 208
+    ERC20_COIN_CREATION = 209
+    ERC20_ADDRESS_REGISTRATION = 210
+
 
 from ..PrimitiveTypes import Hash
 

@@ -528,8 +528,6 @@ class ConditionUnlockHash(ConditionBaseClass):
         if isinstance(value, UnlockHash):
             self._unlockhash = value
             return
-        if isinstance(value, bytes):
-            value = value.tohex()
         self._unlockhash = UnlockHash.from_json(value)
 
     def from_json_data_object(self, data):
