@@ -2,7 +2,6 @@
 AtomicSwap Types.
 """
 
-
 from Jumpscale import j
 
 import hashlib
