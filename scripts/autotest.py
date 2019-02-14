@@ -1,12 +1,10 @@
 from Jumpscale import j
 from subprocess import run, PIPE
-from uuid import uuid4
+from datetime import datetime
 import sys
 
-chat_id = '@hamadatest'
 
-def random_string():
-    str(uuid4()).replace('-', '')[:10]
+chat_id = '@hamadatest'
 
 def send_msg(msg):
     client = j.clients.telegram_bot.get("test")
@@ -25,9 +23,13 @@ def build_image():
         sys.exit()
 
 def run_tests():
-    response = execute_cmd('docker run --rm -t jumpscale /bin/bash -c "source /sandbox/env.sh; python3 /sandbox/code/github/threefoldtech/jumpscaleX/test.py"')
+    docker_cmd = "docker run --rm -t jumpscale /bin/bash -c"
+    env_cmd = "source /sandbox/env.sh; export NACL_SECRET=test;"
+    run_cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/test.py"
+    cmd = '{} "{} {}"'.format(docker_cmd, env_cmd, run_cmd)
+    response = execute_cmd(cmd)
     if response.stderr not in [None, '']:
-        file_name = '{}.log'.format(random_string())
+        file_name = '{}.log'.format(str(datetime.now())[:16])
         with open (file_name, 'w+') as f:
             f.write(response.stderr)
 
