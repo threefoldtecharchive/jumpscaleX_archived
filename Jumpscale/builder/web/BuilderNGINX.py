@@ -144,11 +144,15 @@ class BuilderNGINX(j.builder.system._BaseClass):
         if start:
             self.start()
 
-    def build(self, install=True):
+    def build(self, install=True, reset=False):
         """ Builds NGINX server
         Arguments:
             install {[bool]} -- [If True, the server will be installed locally after building](default: {True})
         """
+
+        if self._done_check("build") and reset is False:
+            return
+            
         j.tools.bash.local.locale_check()
 
         if j.core.platformtype.myplatform.isUbuntu:
@@ -214,25 +218,31 @@ class BuilderNGINX(j.builder.system._BaseClass):
         pass
 
     
-    def sandbox(self, dest_path='/tmp/builder/nginx', create_flist=True, zhub_instance=None, reset=False):
+    def sandbox(self, dest_path='/tmp/builder/nginx', create_flist=True, zhub_instance=None,  reset=False):
+        '''Copy built bins to dest_path and create flist if create_flist = True
+            :param dest_path: destination path to copy files into
+            :type dest_path: str
+            :param sandbox_dir: path to sandbox
+            :type sandbox_dir: str
+            :param reset: reset sandbox file transfer
+            :type reset: bool
+            :param create_flist: create flist after copying files
+            :type create_flist:bool
+            :param zhub_instance: hub instance to upload flist to
+            :type zhub_instance:str
+        '''
         if self._done_check('sandbox'):
              return
         self.build(reset=reset)
+       
         dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
-        dir_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR)
+        dir_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR[1:])
         j.builder.tools.dir_ensure(dir_dest)
         j.sal.fs.copyFile(dir_src, dir_dest)
+        confs = {'{DIR_APPS}/nginx/conf/fastcgi.conf':'/sandbox/{DIR_APPS}/nginx/conf/fastcgi.conf','{DIR_APPS}/nginx/conf/nginx.conf':'/sandbox/nginx/conf/nginx.conf'}
 
-        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'nginx_startup.toml')
-        self.startup = j.sal.fs.readFile(startup_file)
-        file_dest = j.sal.fs.joinPaths(dest, '.startup.toml')
-        j.builder.tools.file_ensure(file_dest)
-        j.builder.tools.file_write(file_dest, self.startup)
-
-
-
+        self.copy_dirs(dirs = confs, dest = dest_path )
 
         self._done_set('sandbox')
-
         if create_flist:
             self.flist_create(dest_path, zhub_instance)
