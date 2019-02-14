@@ -52,7 +52,7 @@ class NACLFactory(j.application.JSBaseClass):
         """
         js_shell 'j.data.nacl.test()'
         """
-        cl = self.get('test', secret='querty')  # get's the default location & generate's keys
+        cl = self.get('test', secret=b'qwerty')  # get's the default location & generate's keys
 
         data = b"something"
         r = cl.sign(data)
