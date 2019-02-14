@@ -1,4 +1,4 @@
-                                        sshkey_name=sshkey_test_name) sync_host_remote_with_ssh# Syncing host to remote machines
+# Syncing host to remote machines
 
 ## (SSH from host)
 1) **Create SSHKEY client instance**
