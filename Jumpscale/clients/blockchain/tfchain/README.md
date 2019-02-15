@@ -589,12 +589,34 @@ for detailed examples of getting information for one or multiple wallet addresse
 registered as ERC20 wallet addresses.
 
 You can also get the ER20 withdraw address registration info for an address not owned by
-your wallet. You do this by looking the address up using the `c.erc20.address_get` method (where `c` is a `TFChainClient` instance).
+your wallet. You do this by looking the address up using the `c.erc20.address_get` method
+(where `c` is a `TFChainClient` instance).
 See [The ERC20 Client Address Get Unit Test](./tests/22_erc20_client_address_get.py) for detailed example of this.
 
 ### Coin Minting
 
-Only if you have minting powers you can redefine the Mint Condition (the condition to be fulfilled to proof you have these powers)
+You can get the current minting condition active at the network as follows:
+
+```python
+condition = c.minter.condition_get()
+condition.json       # the condition in JSON format
+condition.unlockhash # the address of the wallet that is currently the minter
+```
+
+You can also get the current minting condition active at a given height in the network as follows:
+
+```python
+condition = c.minter.condition_get(height=1000)
+condition.json       # the condition in JSON format
+condition.unlockhash # the address of the wallet that is currently the minter
+```
+
+See [The Minter Condition Get Unit Test](./tests/25_minter_condition_get.py)
+for detailed examples for getting the minter condition at a given height as
+well as the latest minter condition for the used network.
+
+Only if you have minting powers you can redefine the Mint Condition
+(the condition to be fulfilled to proof you have these powers)
 as well as create new coins. If you do have these powers, this subsection is for you.
 
 Redefining the Mint Condition can be done as follows:

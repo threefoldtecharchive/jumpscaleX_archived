@@ -2,6 +2,7 @@ from Jumpscale import j
 
 import re
 
+from Jumpscale.clients.blockchain.tfchain.types.ConditionTypes import ConditionBaseClass
 from Jumpscale.clients.blockchain.tfchain.types.CryptoTypes import PublicKey
 from Jumpscale.clients.blockchain.tfchain.types.PrimitiveTypes import Hash
 from Jumpscale.clients.blockchain.tfchain.types.ThreeBot import BotName
@@ -12,6 +13,7 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         self._blocks = {}
         self._hashes = {}
         self._threebot_records = {}
+        self._mint_conditions = {}
         self._chain_info = None
         self._posted_transactions = {}
 
@@ -55,6 +57,14 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         match = threebot_whois_template.match(endpoint)
         if match:
             return self._record_as_json_resp(self.threebot_record_get(match.group(1), endpoint='/explorer/whois/3bot/{}'.format(match.group(1))))
+        mint_condition_at_template = re.compile(r'^.*/explorer/mintcondition/(\d+)$')
+        match = mint_condition_at_template.match(endpoint)
+        if match:
+            return self.mint_condition_get(height=int(match.group(1)), endpoint='/explorer/mintcondition/' + match.group(1))
+        mint_condition_latest_template = re.compile(r'^.*/explorer/mintcondition$')
+        match = mint_condition_latest_template.match(endpoint)
+        if match:
+            return self.mint_condition_get(height=None, endpoint='/explorer/mintcondition')
         info_template = re.compile(r'^.*/explorer$')
         if info_template.match(endpoint):
             return self.chain_info
@@ -147,6 +157,47 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
             if record.public_key.unlockhash == pk.unlockhash:
                 return record
         raise j.clients.tfchain.errors.ExplorerNoContent("no content found for 3Bot identifier {}".format(identifier), endpoint=endpoint)
+
+    def mint_condition_add(self, condition, height, force=False):
+        if not(isinstance(height, int) and not isinstance(height, bool)):
+            raise TypeError("height has to be None or an int: {} is an invalid height type".format(type(height)))
+        if height < 0:
+            raise ValueError("height cannot be negative")
+        if height in self._mint_conditions and not force:
+            raise KeyError("{} already exists in explorer mint conditions on height {}".format(str(condition.unlockhash), height))
+        if not isinstance(condition, ConditionBaseClass):
+            raise TypeError("condition is expected to be a subtype of ConditionBaseClass: {} is an invalid type".format(type(condition)))
+        self._mint_conditions[height] = condition
+
+    def mint_condition_get(self, height, endpoint):
+        # ensure there is a mint condition
+        if len(self._mint_conditions) == 0:
+            raise j.clients.tfchain.errors.ExplorerServerError("no mint conditions defined", endpoint=endpoint)
+
+        # define the desired condition
+        if height is None:
+            heights = list(self._mint_conditions.keys())
+            heights.sort(reverse=True)
+            condition = self._mint_conditions[heights[0]]
+        elif isinstance(height, int) and not isinstance(height, bool):
+            if height < 0:
+                raise ValueError("height cannot be negative")
+            heights = list(self._mint_conditions.keys())
+            heights.sort()
+            condition_height = heights[0]
+            for current_height in heights[1:]:
+                if current_height <= height:
+                    condition_height = current_height
+                if current_height >= height:
+                    break
+            condition = self._mint_conditions[condition_height]
+        else:
+            raise TypeError("height has to be None or an int: {} is an invalid height type".format(type(height)))
+
+        # return it as a JSON string
+        return j.data.serializers.json.dumps({
+            'mintcondition': condition.json(),
+        })
 
     def _record_as_json_resp(self, record):
         return j.data.serializers.json.dumps({
