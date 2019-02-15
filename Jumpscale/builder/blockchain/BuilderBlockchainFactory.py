@@ -10,8 +10,5 @@ class BuilderBlockchainFactory(j.builder.system._BaseFactoryClass):
         from .BuilderTFChain import BuilderTFChain
         self.tfchain = BuilderTFChain()
 
-        #TODO:*1
-
-
-
-
+        from .BuilderEthereum import BuilderEthereum
+        self.ethereum = BuilderEthereum()
