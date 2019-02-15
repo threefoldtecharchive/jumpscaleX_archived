@@ -19,9 +19,6 @@ _DEFAULT_KEY_SCAN_COUNT = 3
 
 _MAX_RIVINE_TRANSACTION_INPUTS = 99
 
-# TODO (TESTS, for now already manually tested and confirmed):
-# * Minter Transactions (single sig and multi sig)
-
 # TODO:
 # add support for transaction listing (need to work this out)
 

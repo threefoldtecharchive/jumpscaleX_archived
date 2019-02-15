@@ -645,3 +645,6 @@ Creating coins as a Coin Minter can be done as follows:
 # you can pass the txn in that case to the others, such that they can sign using:
 (txn, signed, submitted) = w.transaction_sign(txn)
 ```
+
+See [The Minter Coins New Unit Test](./tests/27_minter_coins_new.py)
+for detailed examples for minting new coins.
