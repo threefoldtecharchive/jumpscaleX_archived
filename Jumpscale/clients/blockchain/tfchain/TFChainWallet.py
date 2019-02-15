@@ -23,6 +23,9 @@ _MAX_RIVINE_TRANSACTION_INPUTS = 99
 # * Send Coins (single sig and multi sig, with data and lock, as well as without)
 # * Minter Transactions (single sig and multi sig)
 
+# TODO:
+# add support for transaction listing (need to work this out)
+
 class TFChainWallet(j.application.JSBaseConfigClass):
     """
     Tfchain Wallet object
