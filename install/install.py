@@ -366,7 +366,7 @@ elif "3" in args:
     if "codepath" in args:
         args_txt+=" --codepath=%s"%args["codepath"]
 
-    IT.MyEnv.config["DIR_BASE"] = args["codepath"].replace("/code", "")
+    IT.MyEnv.config["DIR_BASE"] = args["codepath"].replace("/code", "") #TODO: seems weird?
     install = IT.JumpscaleInstaller()
     install.repos_get()
 

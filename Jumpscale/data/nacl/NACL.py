@@ -1,4 +1,3 @@
-import os
 from Jumpscale import j
 from nacl.public import PrivateKey, SealedBox
 import nacl.signing
@@ -12,83 +11,47 @@ import binascii
 from nacl.exceptions import BadSignatureError
 import sys
 JSBASE = j.application.JSBaseClass
-print = j.tools.console.echo
 
 
 class NACL(j.application.JSBaseClass):
-    def __init__(self, name, privkey=None, secret=None, reset=False, interactive=True):
+    def __init__(self, name,privkey=None,secret=None,reset=False,interactive=True):
+
         while True:
             try:
-                self.init(name=name, privkey=privkey, secret=secret, reset=reset, interactive=interactive)
+                self._init__(name=name,privkey=privkey,secret=secret,reset=reset,interactive=interactive)
                 break
             except nacl.exceptions.CryptoError as e:
                 print(e)
                 self._log_warning("ERROR in decrypting")
                 secret = j.tools.console.askPassword("issue in decrypting the private key, try other secret")
 
-    def reset(self, privkey=None, secret=None):
-        self.init(name=self.name, privkey=privkey, secret=secret, reset=True, interactive=True)
+    def reset(self,privkey=None,secret=None):
+        self._init__(name=self.name,privkey=privkey,secret=secret,reset=True,interactive=True)
 
-    def init(self, name, privkey=None, secret=None, reset=False, interactive=True):
+    def _init__(self, name,privkey=None,secret=None,reset=False,interactive=True):
         """
         :param if secret given will be used in nacl
         """
         JSBASE.__init__(self)
 
         self.name = name
-        self.interactive = interactive #  should remove interactive completely
 
         self.path = j.core.tools.text_replace("{DIR_CFG}/nacl")
         j.sal.fs.createDir(self.path)
         self._log_debug("NACL uses path:'%s'" % self.path)
 
-        if not secret:
-            secret = self.get_secret_from_redis(reset=reset)
-        else:
-            secret = self._hash(secret)
-
-        self._box = nacl.secret.SecretBox(secret)  # used to decrypt the private key
-
-        self.clear_keys()
-
-        self.path_privatekey = "%s/%s.priv" % (self.path, self.name)
-        if reset:
-            j.sal.fs.remove(self.path_privatekey)
-        if not j.sal.fs.exists(self.path_privatekey):
-            if interactive:
-                self.generate_interactive()
-            else:
-                self._keys_generate()
-                print(
-                    '{RED}a private key is generated for you, please store the following key secret in a safe place:{RESET}')
-                print('{BLUE}%s{RESET}' % self.words)
-
-        self.clear_keys()
-
-        self.words  # will check that the private key is in line with secret used
-
-    def clear_keys(self):
-        self._privkey = ""
-        self._pubkey = ""
-        self._signingkey = ""
-        self._signingkey_pub = ""
-
-    def get_secret_from_redis(self, reset=False):
-        path_encryptor_for_secret = "{DIR_VAR}/myprocess_%s.log" % self.name
+        path_encryptor_for_secret="{DIR_VAR}/myprocess_%s.log"%name
         if reset:
             j.sal.fs.remove(path_encryptor_for_secret)
         if not j.sal.fs.exists(path_encryptor_for_secret):
             key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
-            j.sal.fs.writeFile(path_encryptor_for_secret, key)
+            j.sal.fs.writeFile(path_encryptor_for_secret,key)
         else:
-            key = j.sal.fs.readFile(path_encryptor_for_secret, binary=True)
-        sb = nacl.secret.SecretBox(key)
+            key = j.sal.fs.readFile(path_encryptor_for_secret,binary=True)
+        sb=nacl.secret.SecretBox(key)
+        redis_key="secret_%s"%name
 
-        # TODO: this should be placed in the correct location
-        if not j.core.db:
-            j.core._db = j.clients.redis.core_get()
 
-        redis_key = "secret_%s" % self.name
         if reset:
             j.core.db.delete(redis_key)
 
@@ -100,56 +63,80 @@ class NACL(j.application.JSBaseClass):
                 r = None
 
         if r is None:
-            if self.interactive:
-                secret = j.tools.console.askPassword(
-                    "Provide a strong secret which will be used to encrypt/decrypt your private key")
-                secret = secret.strip()
             if not secret:
-                raise RuntimeError("Secret cannot be empty")
-            r = sb.encrypt(self._hash(secret))
-            j.core.db.set(redis_key, r)
+                secret = j.tools.console.askPassword("Provide a strong secret which will be used to encrypt/decrypt your private key")
+                if secret.strip() in [""]:
+                    raise RuntimeError("Secret cannot be empty")
+                secret = self._hash(secret)
+            r = sb.encrypt(secret)
+            j.core.db.set(redis_key,r)
 
         r = j.core.db.get(redis_key)
-        secret = sb.decrypt(r)  # this to doublecheck
-        return secret
+        secret = sb.decrypt(r) #this to doublecheck
 
-    def generate_interactive(self):
-        msg = """
-        There is no private key on your system yet.
-        We will generate one for you or you can provide words of your secret key.
-        """
-        if j.tools.console.askYesNo("Ok to generate private key (Y or 1 for yes, otherwise provide words)?"):
-            print("\nWe have generated a private key for you.")
-            print("\nThe private key:\n\n")
-            self._keys_generate()
-            j.tools.console.echo("{RED}")
-            print("{BLUE}"+self.words+"{RESET}\n")
-            print("\n{RED}ITS IMPORTANT TO STORE THIS KEY IN A SAFE PLACE{RESET}")
-            if not j.tools.console.askYesNo("Did you write the words down and store them in safe place?"):
-                j.sal.fs.remove(self.path_privatekey)
-                print("WE HAVE REMOVED THE KEY, need to restart this procedure.")
+        self._box = nacl.secret.SecretBox(secret)  #used to decrypt the private key
+
+        self.__init()
+
+        print = j.tools.console.echo
+
+        self.path_privatekey = "%s/%s.priv" % (self.path, self.name)
+        if reset:
+            j.sal.fs.remove(self.path_privatekey)
+        if not j.sal.fs.exists(self.path_privatekey):
+            if interactive:
+                msg = """
+                There is no private key on your system yet.
+                We will generate one for you or you can provide words of your secret key.
+                """
+                if j.tools.console.askYesNo("Ok to generate private key (Y or 1 for yes, otherwise provide words)?"):
+                    print("\nWe have generated a private key for you.")
+                    print("\nThe private key:\n\n")
+                    self._keys_generate()
+                    j.tools.console.echo("{RED}")
+                    print("{BLUE}"+self.words+"{RESET}\n")
+                    print("\n{RED}ITS IMPORTANT TO STORE THIS KEY IN A SAFE PLACE{RESET}")
+                    if not j.tools.console.askYesNo("Did you write the words down and store them in safe place?"):
+                        j.sal.fs.remove(self.path_privatekey)
+                        print("WE HAVE REMOVED THE KEY, need to restart this procedure.")
+                        sys.exit(1)
+                else:
+                    words = j.tools.console.askString("Provide words of private key")
+                    self._keys_generate(words=words)
+                    assert self.words == words
+
+            j.tools.console.clear_screen()
+
+            word3=self.words.split(" ")[2]
+
+            word3_to_check = j.tools.console.askString("give the 3e word of the private key string")
+
+            if not word3 == word3_to_check:
+                print ("the control word was not correct, please restart the procedure.")
                 sys.exit(1)
-        else:
-            words = j.tools.console.askString("Provide words of private key")
-            self._keys_generate(words=words)
-            assert self.words == words
 
-        j.tools.console.clear_screen()
+        self.__init()
 
-        word3 = self.words.split(" ")[2]
 
-        word3_to_check = j.tools.console.askString("give the 3e word of the private key string")
+        self.words  #will check that the private key is in line with secret used
 
-        if not word3 == word3_to_check:
-            print("the control word was not correct, please restart the procedure.")
-            sys.exit(1)
 
-    def _hash(self, data):
+    def __init(self):
+
+        self._privkey = ""
+        self._pubkey = ""
+        self._signingkey = ""
+        self._signingkey_pub = ""
+
+
+
+    def _hash(self,data):
         m = hashlib.sha256()
         if not j.data.types.bytes.check(data):
             data = data.encode()
         m.update(data)
         return m.digest()
+
 
     @property
     def privkey(self):
@@ -210,7 +197,7 @@ class NACL(j.application.JSBaseClass):
         m.update(self.tobytes(data))
         return m.digest()[0:8]
 
-    def ssh_hash(self, data):
+    def ssh_hash(self,data):
         """
         uses sshagent to sign the payload & then hash result with md5
         :return:
@@ -220,7 +207,7 @@ class NACL(j.application.JSBaseClass):
         data2 = self.sign_with_ssh_key(data)
         return j.data.hash.md5_string(data2)
 
-    def encryptSymmetric(self, data, hex=False, salt=""):
+    def encryptSymmetric(self, data, secret=b"", hex=False, salt=""):
         box = self._box
         if salt == "":
             salt = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
@@ -259,7 +246,7 @@ class NACL(j.application.JSBaseClass):
             data = self.hex_to_bin(data)
         return unseal_box.decrypt(data)
 
-    def _keys_generate(self, words=None):
+    def _keys_generate(self,words=None):
         """
         Generate private key (strong) & store in chosen path &
         will load in this class
@@ -334,6 +321,6 @@ class NACL(j.application.JSBaseClass):
         return content
 
     def __str__(self):
-        return "nacl:%s" % self.name
+        return "nacl:%s"%self.name
 
     __repr__ = __str__
