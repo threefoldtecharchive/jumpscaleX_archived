@@ -11,7 +11,8 @@ class B(A):
         A.__init__(self)
         self.__class__.name = "b"
 
-a=A()
-b=B()
+if __name__ == "__main__":
+    a=A()
+    b=B()
 
-j.shell()
+    j.shell()

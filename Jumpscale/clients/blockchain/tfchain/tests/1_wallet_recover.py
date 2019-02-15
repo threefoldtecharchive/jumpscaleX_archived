@@ -27,7 +27,7 @@ def main(self):
     # by default we still have 1 address only,
     # you can change this however by creating a new wallet with the `key_count` parameter
     # set to a value higher than 1
-    assert w.address_count == 1
+    assert w.key_count == 1
     # the first address is known for the genesis devnet wallet
     assert w.address == '015df22a2e82a3323bc6ffbd1730450ed844feca711c8fe0c15e218c171962fd17b206263220ee'
 
@@ -35,4 +35,4 @@ def main(self):
     assert w.address_new() == '01095d1811ae152aad0a5dd40588d8414e3bc3132ce8bd2405df13df164635646e3afe5e3af280'
     assert w.address_new() == '0183ccf250c5a13b0b0bbe452eb65afdb551bd8c572bf45714a2f8cf37239afa3aaa114cdc8b57'
     # our wallet now has 3 addresses
-    assert w.address_count == 3
+    assert w.key_count == 3

@@ -2,13 +2,18 @@ from Jumpscale import j
 
 import re
 
-from Jumpscale.clients.blockchain.tfchain.types.Errors import ExplorerNoContent
+from Jumpscale.clients.blockchain.tfchain.types.CryptoTypes import PublicKey
+from Jumpscale.clients.blockchain.tfchain.types.PrimitiveTypes import Hash
+from Jumpscale.clients.blockchain.tfchain.types.ThreeBot import BotName
+from Jumpscale.clients.blockchain.tfchain.TFChainClient import ThreeBotRecord
 
 class TFChainExplorerGetClientStub(j.application.JSBaseClass):
     def __init__(self):
         self._blocks = {}
         self._hashes = {}
+        self._threebot_records = {}
         self._chain_info = None
+        self._posted_transactions = {}
 
     @property
     def chain_info(self):
@@ -19,6 +24,16 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
     def chain_info(self, value):
         assert isinstance(value, str) and len(value) > 2
         self._chain_info = value
+
+    def posted_transaction_get(self, transactionid):
+        """
+        Get a posted transaction using our random generated transaction ID.
+        """
+        if isinstance(transactionid, Hash):
+            transactionid = str(transactionid)
+        else:
+            assert isinstance(transactionid, str)
+        return self._posted_transactions[transactionid]
     
     def explorer_get(self, endpoint):
         """
@@ -32,9 +47,35 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         match = hash_template.match(endpoint)
         if match:
             return self.block_get(int(match.group(1)))
+        threebot_template = re.compile(r'^.*/explorer/3bot/(.+)$')
+        match = threebot_template.match(endpoint)
+        if match:
+            return self._record_as_json_resp(self.threebot_record_get(match.group(1), endpoint='/explorer/3bot/{}'.format(match.group(1))))
+        threebot_whois_template = re.compile(r'^.*/explorer/whois/3bot/(.+)$')
+        match = threebot_whois_template.match(endpoint)
+        if match:
+            return self._record_as_json_resp(self.threebot_record_get(match.group(1), endpoint='/explorer/whois/3bot/{}'.format(match.group(1))))
         info_template = re.compile(r'^.*/explorer$')
         if info_template.match(endpoint):
             return self.chain_info
+        raise Exception("invalid endpoint {}".format(endpoint))
+
+    def explorer_post(self, endpoint, data):
+        """
+        Put explorer data onto the stub client for the specified endpoint.
+        """
+        hash_template = re.compile(r'^.*/transactionpool/transactions$')
+        match = hash_template.match(endpoint)
+        if match:
+            transactionid = str(Hash(value=j.data.idgenerator.generateXByteID(Hash.SIZE)))
+            transaction = j.clients.tfchain.types.transactions.from_json(data)
+            # ensure all coin outputs and block stake outputs have identifiers set
+            for idx, co in enumerate(transaction.coin_outputs):
+                co.id = transaction.coin_outputid_new(idx)
+            for idx, bso in enumerate(transaction.blockstake_outputs):
+                bso.id = transaction.blockstake_outputid_new(idx)
+            self._posted_transactions[transactionid] = transaction
+            return '{"transactionid":"%s"}'%(str(transactionid))
         raise Exception("invalid endpoint {}".format(endpoint))
 
     def block_get(self, height):
@@ -43,15 +84,17 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         """
         assert isinstance(height, int)
         if not height in self._blocks:
-            raise ExplorerNoContent("no content found for block {}".format(height), endpoint="/explorer/blocks/{}".format(height))
+            raise j.clients.tfchain.errors.ExplorerNoContent("no content found for block {}".format(height), endpoint="/explorer/blocks/{}".format(height))
         return self._blocks[height]
 
-    def block_add(self, height, resp):
+    def block_add(self, height, resp, force=False):
         """
         Add a block response to the stub explorer at the given height.
         """
         assert isinstance(height, int)
         assert isinstance(resp, str)
+        if not force and height in self._blocks:
+            raise KeyError("{} already exists in explorer blocks".format(height))
         self._blocks[height] = resp
 
     def hash_get(self, hash):
@@ -60,13 +103,58 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         """
         assert isinstance(hash, str)
         if not hash in self._hashes:
-            raise ExplorerNoContent("no content found for hash {}".format(hash), endpoint="/explorer/hashes/{}".format(str(hash)))
+            raise j.clients.tfchain.errors.ExplorerNoContent("no content found for hash {}".format(hash), endpoint="/explorer/hashes/{}".format(str(hash)))
         return self._hashes[hash]
     
-    def hash_add(self, hash, resp):
+    def hash_add(self, hash, resp, force=False):
         """
         Add a hash response to the stub explorer at the given hash.
         """
         assert isinstance(hash, str)
         assert isinstance(resp, str)
+        if not force and hash in self._hashes:
+            raise KeyError("{} already exists in explorer hashes".format(hash))
         self._hashes[hash] = resp
+
+    def threebot_record_add(self, record, force=False):
+        """
+        Add a block response to the stub explorer at the given height.
+        """
+        assert isinstance(record, ThreeBotRecord)
+        if not force and record.identifier in self._threebot_records:
+            raise KeyError("3Bot {} already exists in explorer threebot records".format(record.identifier))
+        self._threebot_records[record.identifier] = record
+
+    def threebot_record_get(self, identifier, endpoint):
+        """
+        Add a block response to the stub explorer at the given height.
+        """
+        assert isinstance(identifier, str)
+        if identifier.isdigit():
+            try:
+                return self._threebot_records[int(identifier)]
+            except KeyError as exc:
+                raise j.clients.tfchain.errors.ExplorerNoContent("no 3Bot record could be found for identifier {}".format(identifier), endpoint=endpoint) from exc
+        if BotName.REGEXP.match(identifier) is not None:
+            for record in self._threebot_records.values():
+                for name in record.names:
+                    if name.value == identifier:
+                        return record
+            raise j.clients.tfchain.errors.ExplorerNoContent("no content found for 3Bot identifier {}".format(identifier), endpoint=endpoint)
+        # must be a public key
+        pk = PublicKey.from_json(identifier)
+        for record in self._threebot_records.values():
+            if record.public_key.unlockhash() == pk.unlockhash():
+                return record
+        raise j.clients.tfchain.errors.ExplorerNoContent("no content found for 3Bot identifier {}".format(identifier), endpoint=endpoint)
+
+    def _record_as_json_resp(self, record):
+        return j.data.serializers.json.dumps({
+            'record': {
+                'id': record.identifier,
+                'names': [name.json() for name in record.names],
+                'addresses': [address.json() for address in record.addresses],
+                'publickey': record.public_key.json(),
+                'expiration': record.expiration,
+            },
+        })

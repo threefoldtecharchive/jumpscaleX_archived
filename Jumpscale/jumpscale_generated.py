@@ -50,7 +50,6 @@ class group_clients(JSGroup):
         self._influxdb = None
         self._btc_electrum = None
         self._tfchain = None
-        self._tfchain_old = None
         self._sshagent = None
         self._ssh = None
         self._racktivity = None
@@ -286,12 +285,6 @@ class group_clients(JSGroup):
             self._tfchain =  TFChainClientFactory()
         return self._tfchain
     @property
-    def tfchain_old(self):
-        if self._tfchain_old is None:
-            from Jumpscale.clients.blockchain.tfchain_old.TfchainClientFactory import TfchainClientFactory
-            self._tfchain_old =  TfchainClientFactory()
-        return self._tfchain_old
-    @property
     def sshagent(self):
         if self._sshagent is None:
             from Jumpscale.clients.sshagent.SSHAgent import SSHAgent
@@ -420,8 +413,8 @@ class group_clients(JSGroup):
     @property
     def coredns(self):
         if self._coredns is None:
-            from Jumpscale.clients.coredns.CoreDNSFactory import CoreDNSFactory
-            self._coredns =  CoreDNSFactory()
+            from Jumpscale.clients.coredns.CoreDNSFactory import CoreDnsFactory
+            self._coredns =  CoreDnsFactory()
         return self._coredns
     @property
     def ipmi(self):

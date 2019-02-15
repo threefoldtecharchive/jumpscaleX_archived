@@ -1,10 +1,7 @@
 from Jumpscale import j
-
 from .webgateway import WebGateway
 
-JSConfigBaseFactory = j.application.JSFactoryBaseClass
 
-
-class WebGatewayFactory(JSConfigBaseFactory):
+class WebGatewayFactory(j.application.JSBaseConfigsClass):
     __jslocation__ = "j.clients.webgateway"
     _CHILDCLASS = WebGateway

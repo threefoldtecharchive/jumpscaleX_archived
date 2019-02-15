@@ -10,10 +10,12 @@ import sys
 
 JSBASE = j.application.JSBaseClass
 
+
 class Watcher:
     """
     a class to watch all dirs loaded in the docsite and reload it once changed
     """
+
     def __init__(self, docsites):
         print("initializing watcher for paths: {}".format(docsites))
         event_handler = DocsiteChangeHandler(self)
@@ -107,15 +109,13 @@ class MarkDownDocs(j.application.JSBaseClass):
         self._configs = []  # all found config files
         # self._macros_loaded = []
 
-        self._macros_modules = {} #key is the path
-        self._macros = {} #key is the name
+        self._macros_modules = {}  # key is the path
+        self._macros = {}  # key is the name
 
         self._pointer_cache = {}  # so we don't have to full lookup all the time (for markdown docs)
 
-        #lets make sure we have default macros
+        # lets make sure we have default macros
         self.macros_load()
-
-
 
     def _git_get(self, path):
         if path not in self._git_repos:
@@ -140,7 +140,7 @@ class MarkDownDocs(j.application.JSBaseClass):
         """
         @param pathOrUrl can be existing path or url
         """
-        self._log_info("load macros:%s"%pathOrUrl)
+        self._log_info("load macros:%s" % pathOrUrl)
 
         path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
 
@@ -150,8 +150,9 @@ class MarkDownDocs(j.application.JSBaseClass):
                 raise j.exceptions.Input("Cannot find path:'%s' for macro's, does it exist?" % path)
 
             for path0 in j.sal.fs.listFilesInDir(path, recursive=True, filter="*.py", followSymlinks=True):
-                name = j.sal.fs.getBaseName(path0)[:-3] #find name, remove .py
-                self._macros[name] = j.tools.jinja2.code_python_render(obj_key=name, path=path0,reload=False, objForHash=name)
+                name = j.sal.fs.getBaseName(path0)[:-3]  # find name, remove .py
+                self._macros[name] = j.tools.jinja2.code_python_render(
+                    obj_key=name, path=path0, reload=False, objForHash=name)
         # else:
         #     self._log_debug("macros not loaded, already there")
 
@@ -292,11 +293,6 @@ class MarkDownDocs(j.application.JSBaseClass):
         tf_grid = self.load(url, name="grid")
         tf_grid.write()
 
-        url = "https://github.com/threefoldfoundation/info_tech/tree/master/docs"
-        tf_tech = self.load(url, name="tech")
-        tf_tech.write()
-
-
     def test(self):
         """
         js_shell 'j.tools.markdowndocs.test()'
@@ -316,7 +312,6 @@ class MarkDownDocs(j.application.JSBaseClass):
         for link in doc.links:
             print(link)
 
-
         assert str(doc.link_get(cat="image", nr=0)) == 'link:image:unsplash.jpeg'
         assert str(doc.link_get(cat="link", nr=0)) == 'link:link:https://unsplash.com/'
 
@@ -334,18 +329,17 @@ class MarkDownDocs(j.application.JSBaseClass):
         assert "- b" in md
         assert "high" in md
 
-        doc = ds.doc_get("has_data") #combines data from subdirs as well as data from doc itself
+        doc = ds.doc_get("has_data")  # combines data from subdirs as well as data from doc itself
 
         assert doc.data == {'color': 'blue',
-                         'colors': ['blue', 'red'],
-                         'importance': 'somewhat',
-                         'somelist': ['a', 'b', 'c']}
+                            'colors': ['blue', 'red'],
+                            'importance': 'somewhat',
+                            'somelist': ['a', 'b', 'c']}
 
+        print("test of docsite done")
 
-        print ("test of docsite done")
-
-        #TODO Fix Macros include for another docs in other repos i.e. include(core9:macros)
-        #include of a markdown doc in a repo
+        # TODO Fix Macros include for another docs in other repos i.e. include(core9:macros)
+        # include of a markdown doc in a repo
         # p=doci.markdown_obj.parts[-2]
         # assert str(p).find("rivine client itself")!=-1
         #
@@ -353,7 +347,7 @@ class MarkDownDocs(j.application.JSBaseClass):
         # p=doci.markdown_obj.parts[-6]
         # assert str(p).find("j.tools.fixer.write_changes()")!=-1
 
-        #next will rewrite the full pre-processed docsite
+        # next will rewrite the full pre-processed docsite
         ds.write()
 
         ds_js.write()
@@ -367,9 +361,9 @@ class MarkDownDocs(j.application.JSBaseClass):
         ds5.write()
 
         url = "https://github.com/threefoldfoundation/info_grid/tree/development/docs"
-        ds6= self.load(url, name="tf_grid")
+        ds6 = self.load(url, name="tf_grid")
         ds6.write()
 
         self.webserver()
 
-        print ("TEST FOR MARKDOWN PREPROCESSING IS DONE")
+        print("TEST FOR MARKDOWN PREPROCESSING IS DONE")

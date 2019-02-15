@@ -6,7 +6,7 @@ from Jumpscale import j
 from unittest.mock import MagicMock
 from github.GithubObject import NotSet
 class TestGuthubClient(unittest.TestCase):
-
+    @pytest.mark.skip(reason="test need to be reviewed")
     @pytest.mark.github_client
     @mock.patch('github.Github')
     @mock.patch('Jumpscale.data.bcdb.BCDB.BCDB')
@@ -14,7 +14,7 @@ class TestGuthubClient(unittest.TestCase):
         """
         check if organizations_get working
         """
-        githubclient = j.clients.github.new(name="testclient")
+        githubclient = j.clients.github.get("testclient")
         githubclient.api = MagicMock()
         githubclient.organizations_get()
         # assert the expected call for get_orgs

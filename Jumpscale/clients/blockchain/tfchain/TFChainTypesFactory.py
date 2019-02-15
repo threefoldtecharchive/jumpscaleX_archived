@@ -1,9 +1,11 @@
 from Jumpscale import j
 
-from .types.PrimitiveTypes import BinaryData, RawData, Hash, Currency, Blockstake
+from .types.PrimitiveTypes import BinaryData, Hash, Currency, Blockstake
 from .types.FulfillmentTypes import FulfillmentFactory
 from .types.ConditionTypes import ConditionFactory
+from .types.ThreeBot import ThreeBotTypesFactory
 from .types.CryptoTypes import PublicKey, PublicKeySpecifier
+from .types.transactions.Factory import TransactionFactory
 
 from .crypto.MerkleTree import Tree
 
@@ -12,19 +14,37 @@ class TFChainTypesFactory(j.application.JSBaseClass):
     TFChain Types Factory class
     """
 
+    def _init(self):
+        self._transaction_factory = TransactionFactory()
+        self._fulfillment_factory = FulfillmentFactory()
+        self._condition_factory = ConditionFactory()
+        self._threebot_types_factory = ThreeBotTypesFactory()
+
+    @property
+    def transactions(self):
+        return self._transaction_factory
+
     @property
     def fulfillments(self):
         """
         Fulfillment types.
         """
-        return FulfillmentFactory()
+        return self._fulfillment_factory
 
     @property
     def conditions(self):
         """
         Condition types.
         """
-        return ConditionFactory()
+        return self._condition_factory
+
+    @property
+    def threebot(self):
+        """
+        ThreeBot types.
+        """
+        return self._threebot_types_factory
+
     
     def currency_new(self, value=0):
         """
@@ -50,21 +70,13 @@ class TFChainTypesFactory(j.application.JSBaseClass):
         """
         return Hash(value=value)
 
-    def binary_data_new(self, value=None):
+    def binary_data_new(self, value=None, fixed_size=None, strencoding=None):
         """
         Create a new binary data value.
         
         @param value: bytearray, bytes or str that defines the hash value to be set, nil hash by default
         """
-        return BinaryData(value=value)
-
-    def raw_data_new(self, value=None):
-        """
-        Create a new raw binary data value.
-        
-        @param value: bytearray, bytes or str that defines the hash value to be set, nil hash by default
-        """
-        return RawData(value=value)
+        return BinaryData(value=value, fixed_size=fixed_size, strencoding=strencoding)
 
     def public_key_new(self, hash=None):
         """
@@ -103,10 +115,14 @@ class TFChainTypesFactory(j.application.JSBaseClass):
         # in the string versions you can also add the TFT currency notation,
         # or use decimal notation to express the currency in the TFT Currency Unit,
         # rather than the primitive unit
-        assert str(self.currency_new(value='1 TFT')) == '1000000000'
-        assert str(self.currency_new(value='0.123456789')) == '123456789'
-        assert str(self.currency_new(value='9.123456789')) == '9123456789'
-        assert str(self.currency_new(value='1.0 tft')) == '1000000000'
+        assert str(self.currency_new(value='1 TFT')) == '1'
+        assert str(self.currency_new(value='0.123456789')) == '0.123456789'
+        assert str(self.currency_new(value='9.123456789')) == '9.123456789'
+        assert str(self.currency_new(value='1234.34')) == '1234.34'
+        assert str(self.currency_new(value='1.00000')) == '1'
+        assert str(self.currency_new(value='1.0 tft')) == '1'
+        assert str(self.currency_new(value=1)) == '1'
+        assert str(self.currency_new(value=12344)) == '12344'
 
         # hash values can be created directly from binary data,
         # or from a hex-encoded string, by default the nil hash will be created
@@ -118,10 +134,12 @@ class TFChainTypesFactory(j.application.JSBaseClass):
         # as a slice, not an array
         assert str(self.binary_data_new()) == ''
         assert str(self.binary_data_new(b'1')) == '31'
+        assert str(self.binary_data_new(b'1', fixed_size=0)) == '31'
+        assert str(self.binary_data_new(b'1', fixed_size=1)) == '31'
 
         # raw data is pretty much binary data, except that it is
         # base64 encoded/decoded for str/json purposes
-        assert str(self.raw_data_new(b'data')) == 'ZGF0YQ=='
+        assert str(self.binary_data_new(b'data', strencoding='base64')) == 'ZGF0YQ=='
 
         # block stake values can be created from both
         # int and str values, but are never allowed to be negative

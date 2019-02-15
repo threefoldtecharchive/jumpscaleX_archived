@@ -1,10 +1,10 @@
 from .Minio import Minio
-
+import pytest
 
 def test_replication_config():
 
     m = Minio('aminio', None, 'admin', 'admin', ['localhost:9999'], 'anamespace',
-              'myprivatekeystring', namespace_secret='nssecret', nr_datashards=6, nr_parityshards=0)
+              'myprivatekeystring', node_port=9000, namespace_secret='nssecret', nr_datashards=6, nr_parityshards=0)
     conf = m._config_as_text()
     expected = """\
 namespace: anamespace
@@ -25,10 +25,9 @@ datastor: # required
     assert expected == conf
     assert m.mode == "replication"
 
-
 def test_distribution_config():
     m = Minio('aminio', None, 'admin', 'admin', ['localhost:9999'], 'anamespace',
-              'myprivatekeystring', namespace_secret='nssecret', nr_datashards=6, nr_parityshards=4)
+              'myprivatekeystring', node_port=9000, namespace_secret='nssecret', nr_datashards=6, nr_parityshards=4)
     conf = m._config_as_text()
     expected = """\
 namespace: anamespace
@@ -50,10 +49,9 @@ datastor: # required
     assert expected == conf
     assert m.mode == "distribution"
 
-
 def test_tlog_config():
     m = Minio('aminio', None, 'admin', 'admin', ['localhost:9999'], 'anamespace', 'myprivatekeystring',
-              namespace_secret='nssecret', nr_datashards=6, nr_parityshards=4,
+               node_port=9000, namespace_secret='nssecret', nr_datashards=6, nr_parityshards=4,
               tlog_namespace='tlogns', tlog_address='ip:port')
     conf = m._config_as_text()
     expected = """\
@@ -80,10 +78,9 @@ minio:
     password: nssecret"""
     assert expected == conf
 
-
 def test_master_config():
     m = Minio('aminio', None, 'admin', 'admin', ['localhost:9999'], 'anamespace', 'myprivatekeystring',
-              namespace_secret='nssecret', nr_datashards=6, nr_parityshards=4,
+               node_port=9000, namespace_secret='nssecret', nr_datashards=6, nr_parityshards=4,
               master_namespace='masterns', master_address='ip:port')
     conf = m._config_as_text()
     expected = """\
@@ -110,10 +107,9 @@ minio:
     password: nssecret"""
     assert expected == conf
 
-
 def test_master_and_tlog_config():
     m = Minio('aminio', None, 'admin', 'admin', ['localhost:9999'], 'anamespace', 'myprivatekeystring',
-              namespace_secret='nssecret', nr_datashards=6, nr_parityshards=4,
+              node_port=9000, namespace_secret='nssecret', nr_datashards=6, nr_parityshards=4,
               master_namespace='masterns', master_address='ip:port',
               tlog_namespace='tlogns', tlog_address='ip:port')
     conf = m._config_as_text()

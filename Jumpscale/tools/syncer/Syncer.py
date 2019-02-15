@@ -27,18 +27,18 @@ class Syncer(j.application.JSBaseConfigClass):
     """
     _SCHEMATEXT = """
         @url = jumpscale.syncer.1
-        name* = ""
-        sshclient_name = ""
-        paths = (LS)
-        ignoredir = (LS)
-        t = ""     
+        name* = "" (S)
+        sshclient_name = "" (S)
+        paths = [] (LS)
+        ignoredir = [] (LS)
+        t = ""  (S)  
         """
 
     def _init(self,sshclient_name=None,ssh_client=None):
 
         if ssh_client:
             self.ssh_client = ssh_client
-        elif sshclient_name:
+        elif self.sshclient_name:
             self.ssh_client = j.clients.ssh.get(name=self.sshclient_name)
         else:
             raise RuntimeError("need sshclient_name or ssh_client")
@@ -53,7 +53,7 @@ class Syncer(j.application.JSBaseConfigClass):
 
 
     def delete(self):
-        for item in j.clients.ssh.find(name=self.data.sshclient_name):
+        for item in j.clients.ssh.find(name=self.sshclient_name):
             item.delete()
         j.application.JSBaseConfigClass.delete(self)
 

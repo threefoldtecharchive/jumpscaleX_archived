@@ -2,7 +2,6 @@ from importlib import util
 import os
 import subprocess
 import sys
-import inspect
 
 BRANCH = "development"
 
@@ -12,7 +11,7 @@ rootdir = os.path.dirname(os.path.abspath(__file__))
 path = os.path.join(rootdir, "InstallTools.py")
 
 if not os.path.exists(path):
-    cmd = "cd %s;rm -f InstallTools.py;curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/InstallTools.py?$RANDOM > InstallTools.py" % rootdir
+    cmd = "cd %s;rm -f InstallTools.py;curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/%s/install/InstallTools.py?$RANDOM > InstallTools.py" % (rootdir, BRANCH)
     subprocess.call(cmd, shell=True)
 
 spec = util.spec_from_file_location("IT", path)
@@ -98,8 +97,7 @@ def ui():
             args["incontainer"]=False
 
     if not "1" in args and not "2" in args and not "3" in args:
-
-        if "incontainer" in args:
+        if args["incontainer"]:
             #means we are inside a container
             T="""
             Installer choice for jumpscale in the docker
@@ -164,7 +162,6 @@ def ui():
 
 
     if "3" in args: #means we want docker
-
         if "name" not in args:
             args["name"] = "default"
 
@@ -277,7 +274,6 @@ def ui():
     return args
 
 args = ui()
-
 if "r" in args:
     #remove the state
     IT.Tools.delete(IT.MyEnv.state_file_path)
@@ -309,7 +305,7 @@ if "1" in args or "2" in args:
         if "1" in args:
             #in system need to install the lua env
             IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.builder.runtimes.lua.install()'")
-        IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.tools.markdowndocs.test()'")
+        IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.tools.markdowndocs.test()'", showout=False)
 
 
 elif "3" in args:
@@ -369,6 +365,10 @@ elif "3" in args:
             args_txt+=" -%s"%item
     if "codepath" in args:
         args_txt+=" --codepath=%s"%args["codepath"]
+
+    IT.MyEnv.config["DIR_BASE"] = args["codepath"].replace("/code", "")
+    install = IT.JumpscaleInstaller()
+    install.repos_get()
 
     cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py %s"%args_txt
 

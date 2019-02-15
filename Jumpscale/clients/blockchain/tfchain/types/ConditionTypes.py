@@ -1,12 +1,15 @@
 from Jumpscale import j
 
+import hashlib
+from datetime import datetime, timedelta
+
+from .PrimitiveTypes import BinaryData
+
 _CONDITION_TYPE_NIL = 0
 _CONDITION_TYPE_UNLOCK_HASH = 1
 _CONDITION_TYPE_ATOMIC_SWAP = 2
 _CONDITION_TYPE_LOCKTIME = 3
 _CONDITION_TYPE_MULTI_SIG = 4
-
-from .PrimitiveTypes import BinaryData
 
 class ConditionFactory(j.application.JSBaseClass):
     """
@@ -27,7 +30,7 @@ class ConditionFactory(j.application.JSBaseClass):
             return ConditionMultiSignature.from_json(obj)
         raise ValueError("unsupport condition type {}".format(ct))
 
-    def from_recipient(self, recipient, lock_time=0):
+    def from_recipient(self, recipient, lock=None):
         """
         Create automatically a recipient condition based on any accepted pythonic value (combo).
         """
@@ -43,6 +46,9 @@ class ConditionFactory(j.application.JSBaseClass):
             elif isinstance(recipient, (UnlockHash, str)):
                 # single sig wallet
                 condition = self.unlockhash_new(unlockhash=recipient)
+            elif isinstance(recipient, (bytes, bytearray)):
+                # single sig wallet
+                condition = self.unlockhash_new(unlockhash=recipient.hex())
             elif isinstance(recipient, list):
                 # multisig to an all-for-all wallet
                 condition = self.multi_signature_new(min_nr_sig=len(recipient), unlockhashes=recipient)
@@ -59,8 +65,8 @@ class ConditionFactory(j.application.JSBaseClass):
                 raise TypeError("invalid type for recipient parameter: {}", type(recipient))
         
         # if lock is defined, define it as a locktime value
-        if lock_time:
-            condition = self.locktime_new(lock_time=lock_time, condition=condition)
+        if lock is not None:
+            condition = self.locktime_new(lock=lock, condition=condition)
 
         # return condition
         return condition
@@ -79,7 +85,7 @@ class ConditionFactory(j.application.JSBaseClass):
         """
         return ConditionUnlockHash(unlockhash=unlockhash)
 
-    def atomicswap_new(self, sender=None, receiver=None, hashed_secret=None, lock_time=0):
+    def atomic_swap_new(self, sender=None, receiver=None, hashed_secret=None, lock_time=None):
         """
         Create a new AtomicSwap Condition, which can be
         fulfilled by the AtomicSwap Fulfillment.
@@ -88,18 +94,24 @@ class ConditionFactory(j.application.JSBaseClass):
             sender=sender, receiver=receiver,
             hashed_secret=hashed_secret, lock_time=lock_time)
 
-    def locktime_new(self, lock_time=0, condition=None):
+    def locktime_new(self, lock=None, condition=None):
         """
         Create a new LockTime Condition, which can be fulfilled by a fulfillment
         when the relevant timestamp/block has been reached as well as the fulfillment fulfills the internal condition.
         """
-        return ConditionLockTime(locktime=lock_time, condition=condition)
+        return ConditionLockTime(lock=lock, condition=condition)
 
     def multi_signature_new(self, min_nr_sig=0, unlockhashes=None):
         """
         Create a new MultiSignature Condition, which can be fulfilled by a matching MultiSignature Fulfillment.
         """
         return ConditionMultiSignature(unlockhashes=unlockhashes, min_nr_sig=min_nr_sig)
+
+    def output_lock_new(self, value):
+        """
+        Creates a new output lock.
+        """
+        return OutputLock(value=value)
 
 
     def test(self):
@@ -175,23 +187,61 @@ class ConditionFactory(j.application.JSBaseClass):
         test_rivine_encoded(clt_ms, '03a80065cd1d000000000402000000000000000401e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35')
         assert str(clt_ms.unlockhash) == '0313a5abd192d1bacdd1eb518fc86987d3c3d1cfe3c5bed68ec4a86b93b2f05a89f67b89b07d71'
 
+        # FYI, Where lock times are used, it should be known that these are pretty flexible in definition
+        assert OutputLock().value == 0 
+        assert OutputLock(value=0).value == 0
+        assert OutputLock(value=1).value == 1
+        assert OutputLock(value=1549483822).value == 1549483822
+        # if current_timestamp is not defined, the current time is used: int(datetime.now().timestamp)
+        assert OutputLock(value='+7d', current_timestamp=1).value == 604801
+        assert OutputLock(value='+7d12h5s', current_timestamp=1).value == 648006
+        assert OutputLock(value='30/11/2020').value == 1606690800
+        assert OutputLock(value='11/30').value == OutputLock(value='30/11/{}'.format(datetime.now().year)).value # year is optional
+        assert OutputLock(value='30/11/2020 23:59:59').value == 1606777199
+        assert OutputLock(value='30/11/2020 23:59').value == 1606777140 # seconds is optional
+
 
 class OutputLock():
     # as defined by Rivine
     _MIN_TIMESTAMP_VALUE = 500 * 1000 * 1000
 
-    def __init__(self, value=0):
-        if not isinstance(value ,int):
-            raise TypeError("OutputLock's value has to be of type int, not {}".format(type(value)))
-        self._value = int(value)
+    def __init__(self, value=None, current_timestamp=None):
+        if current_timestamp is None:
+            current_timestamp = int(datetime.now().timestamp())
+        elif not isinstance(current_timestamp, int):
+            raise TypeError("current timestamp has to be an integer")
+
+        if value is None:
+            self._value = 0
+        elif isinstance(value, OutputLock):
+            self._value = value.value
+        elif isinstance(value, int):
+            if value < 0:
+                raise ValueError("output lock value cannot be negative")
+            self._value = int(value)
+        elif isinstance(value, str):
+            value = value.lstrip()
+            if value[0] == "+":
+                # interpret string as a duration
+                offset = j.data.types.duration.fromString(value[1:])
+                self._value = current_timestamp + offset
+            else:
+                # interpret string as a datetime
+                self._value = j.data.types.datetime.fromString(value)
+        elif isinstance(value, timedelta):
+            self._value = current_timestamp + int(value.total_seconds())
+        elif isinstance(value, datetime):
+            self._value = int(value.timestamp())
+        else:
+            raise TypeError("cannot set OutputLock using invalid type {}".format(type(value)))
 
     def __int__(self):
         return self._value
 
     def __str__(self):
-        if self._value < OutputLock._MIN_TIMESTAMP_VALUE:
-            return str(self._value)
-        return j.data.time.epoch2HRDateTime(self._value)
+        if self.is_timestamp:
+            return j.data.time.epoch2HRDateTime(self._value)
+        return str(self._value)
     __repr__ = __str__
 
     @property
@@ -201,13 +251,20 @@ class OutputLock():
         """
         return self._value
 
+    @property
+    def is_timestamp(self):
+        """
+        Returns whether or not this value is a timestamp.
+        """
+        return self._value >= OutputLock._MIN_TIMESTAMP_VALUE
+
     def locked_check(self, height, time):
         """
         Check if the the output is still locked on the given block height/time.
         """
-        if self._value < OutputLock._MIN_TIMESTAMP_VALUE:
-            return height < self._value
-        return time < self._value
+        if self.is_timestamp:
+            return time < self._value
+        return height < self._value
 
 
 from abc import abstractmethod
@@ -372,7 +429,7 @@ class UnlockHash(BaseDataTypeClass):
 
     def __str__(self):
         checksum = self._checksum()[:UnlockHash._CHECKSUM_SIZE].hex()
-        return "{}{}{}".format(bytearray([int(self._type)]).hex(), self._hash.value.hex(), checksum)
+        return "{}{}{}".format(bytearray([int(self._type)]).hex(), str(self._hash), checksum)
 
     def _checksum(self):
         if self._type == UnlockHashType.NIL:
@@ -471,8 +528,6 @@ class ConditionUnlockHash(ConditionBaseClass):
         if isinstance(value, UnlockHash):
             self._unlockhash = value
             return
-        if isinstance(value, bytes):
-            value = value.tohex()
         self._unlockhash = UnlockHash.from_json(value)
 
     def from_json_data_object(self, data):
@@ -490,12 +545,53 @@ class ConditionUnlockHash(ConditionBaseClass):
         encoder.add(self.unlockhash)
 
 
+class AtomicSwapSecret(BinaryData):
+    SIZE = 32
+
+    """
+    Atomic Swap Secret Object, a special type of BinaryData
+    """
+    def __init__(self, value=None):
+        super().__init__(value, fixed_size=AtomicSwapSecret.SIZE, strencoding='hex')
+
+    @classmethod
+    def from_json(cls, obj):
+        if not isinstance(obj, str):
+            raise TypeError("secret is expected to be an encoded string when part of a JSON object")
+        return cls(value=obj)
+
+    @classmethod
+    def random(cls):
+        return cls(value=j.data.idgenerator.generateXByteID(AtomicSwapSecret.SIZE))
+
+
+class AtomicSwapSecretHash(BinaryData):
+    SIZE = 32
+
+    """
+    Atomic Swap Secret Hash, a special type of BinaryData
+    """
+    def __init__(self, value=None):
+        super().__init__(value, fixed_size=AtomicSwapSecretHash.SIZE, strencoding='hex')
+
+    @classmethod
+    def from_json(cls, obj):
+        if not isinstance(obj, str):
+            raise TypeError("secret hash is expected to be an encoded string when part of a JSON object")
+        return cls(value=obj)
+
+    @classmethod
+    def from_secret(cls, secret):
+        if not isinstance(secret, AtomicSwapSecret):
+            raise TypeError("secret is expected to be of type AtomicSwapSecret, not to be of type {}".format(type(secret)))
+        return cls(value=hashlib.sha256(secret.value).digest())
+
+
 class ConditionAtomicSwap(ConditionBaseClass):
     """
     ConditionAtomicSwap class
     """
-    # TODO: replace lock_time with a user_friendly option that can define durations in a more human-readable way
-    def __init__(self, sender=None, receiver=None, hashed_secret=None, lock_time=0):
+    def __init__(self, sender=None, receiver=None, hashed_secret=None, lock_time=None):
         self._sender = None
         self.sender = sender
         self._receiver = None
@@ -530,7 +626,9 @@ class ConditionAtomicSwap(ConditionBaseClass):
         if value is None:
             self._sender = None
         else:
-            if not isinstance(value, UnlockHash):
+            if isinstance(value, str):
+                value = UnlockHash.from_json(value)
+            elif not isinstance(value, UnlockHash):
                 raise TypeError("Atomic Swap's sender unlock hash has to be of type UnlockHash, not {}".format(type(value)))
             if value.type not in (UnlockHashType.PUBLIC_KEY, UnlockHashType.NIL):
                 raise ValueError("Atomic Swap's sender unlock hash type cannot be {} (expected: 0 or 1)".format(value.type))
@@ -546,7 +644,9 @@ class ConditionAtomicSwap(ConditionBaseClass):
         if value is None:
             self._receiver = None
         else:
-            if not isinstance(value, UnlockHash):
+            if isinstance(value, str):
+                value = UnlockHash.from_json(value)
+            elif not isinstance(value, UnlockHash):
                 raise TypeError("Atomic Swap's receiver unlock hash has to be of type UnlockHash, not {}".format(type(value)))
             if value.type not in (UnlockHashType.PUBLIC_KEY, UnlockHashType.NIL):
                 raise ValueError("Atomic Swap's receiver unlock hash type cannot be {} (expected: 0 or 1)".format(value.type))
@@ -562,7 +662,7 @@ class ConditionAtomicSwap(ConditionBaseClass):
         if value is None:
             self._hashed_secret = None
         else:
-            self._hashed_secret = BinaryData(value=value)
+            self._hashed_secret = AtomicSwapSecretHash(value=value)
 
     @property
     def lock_time(self):
@@ -571,15 +671,16 @@ class ConditionAtomicSwap(ConditionBaseClass):
     def lock_time(self, value):
         if value is None:
             self._lock_time = 0
-            return
-        if not isinstance(value, int):
-            raise TypeError("ConditionAtomicSwap's LockTime is expected to be of type int, not {}".format(type(value)))
-        self._lock_time = int(value)
+        else:
+            lock = OutputLock(value=value)
+            if not lock.is_timestamp:
+                raise TypeError("ConditionAtomicSwap only accepts timestamps as the lock value, not block heights: {} is invalid".format(value))
+            self._lock_time = lock.value
 
     def from_json_data_object(self, data):
         self.sender = UnlockHash.from_json(data['sender'])
         self.receiver = UnlockHash.from_json(data['receiver'])
-        self.hashed_secret = j.clients.tfchain.types.binary_data_new(value=data['hashedsecret'])
+        self.hashed_secret = AtomicSwapSecretHash(value=data['hashedsecret'])
         self.lock_time = int(data['timelock'])
 
     def json_data_object(self):
@@ -591,26 +692,21 @@ class ConditionAtomicSwap(ConditionBaseClass):
         }
 
     def sia_binary_encode_data(self, encoder):
-        encoder.add_all(self.sender, self.receiver)
-        encoder.add_array(self.hashed_secret.value)
-        encoder.add(self.lock_time)
+        encoder.add_all(self.sender, self.receiver, self.hashed_secret, self.lock_time)
 
     def rivine_binary_encode_data(self, encoder):
-        encoder.add_all(self.sender, self.receiver)
-        encoder.add_array(self.hashed_secret.value)
-        encoder.add(self.lock_time)
+        encoder.add_all(self.sender, self.receiver, self.hashed_secret, self.lock_time)
 
 
 class ConditionLockTime(ConditionBaseClass):
     """
     ConditionLockTime class
     """
-    # TODO: replace lock_time with a user_friendly option that can define durations in a more human-readable way
-    def __init__(self, condition=None, locktime=0):
+    def __init__(self, condition=None, lock=None):
         self._condition = None
         self.condition = condition
-        self._lock_time = 0
-        self.lock = locktime
+        self._lock = None
+        self.lock = lock
 
     @property
     def type(self):
@@ -622,18 +718,12 @@ class ConditionLockTime(ConditionBaseClass):
 
     @property
     def lock(self):
-        return OutputLock(self._lock_time)
+        if self._lock is None:
+            return OutputLock()
+        return self._lock
     @lock.setter
     def lock(self, value):
-        if value is None:
-            self._lock_time = 0
-            return
-        if not isinstance(value, int):
-            raise TypeError("ConditionLockTime's lock is expected to be of type int, not {}".format(type(value)))
-        value = int(value)
-        if value < 0:
-            value = 0
-        self._lock_time = value
+        self._lock = OutputLock(value=value)
 
     @property
     def condition(self):
@@ -661,17 +751,17 @@ class ConditionLockTime(ConditionBaseClass):
 
     def json_data_object(self):
         return {
-            'locktime': self._lock_time,
+            'locktime': self.lock.value,
             'condition': self.condition.json(),
         }
 
     def sia_binary_encode_data(self, encoder):
-        encoder.add(self._lock_time)
+        encoder.add(self.lock.value)
         encoder.add_array(bytearray([int(self.condition.type)]))
         self.condition.sia_binary_encode_data(encoder)
 
     def rivine_binary_encode_data(self, encoder):
-        encoder.add(self._lock_time)
+        encoder.add(self.lock.value)
         encoder.add_int8(int(self.condition.type))
         self.condition.rivine_binary_encode_data(encoder)
 
@@ -679,7 +769,6 @@ class ConditionMultiSignature(ConditionBaseClass):
     """
     ConditionMultiSignature class
     """
-    # TODO: replace lock_time with a user_friendly option that can define durations in a more human-readable way
     def __init__(self, unlockhashes=None, min_nr_sig=0):
         self._unlockhashes = []
         if unlockhashes:

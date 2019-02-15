@@ -110,9 +110,8 @@ class SSHClient(SSHClientBase):
         # TODO: make sure we don't need to clean anything
         pass
 
-    # def copy_file(self, local_file, remote_file, recurse=False):
-    #     #DOES THIS WORK?
-    #     return self._client.copy_file(local_file, remote_file, recurse=recurse, sftp=self.sftp)
+    def copy_file(self, local_file, remote_file, recurse=False):
+        return self._client.copy_file(local_file, remote_file, recurse=recurse, sftp=self.sftp)
 
 
 

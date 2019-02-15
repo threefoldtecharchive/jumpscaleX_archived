@@ -95,7 +95,7 @@ class ModelOBJ():
         human readable test format
         """
         out = "\n"
-        res = self._ddict_hr
+        res = self._ddict_hr_get(exclude=exclude)
         keys = [name for name in res.keys()]
         keys.sort()
         for key in keys:
@@ -363,6 +363,9 @@ class ModelOBJ():
         if len(str(res))<maxsize:
             d["{{prop.name}}"] = res
         {% endif %}
+        {% endfor %}
+        {% for prop in obj.lists %}
+        d["{{prop.name}}"] = self._{{prop.name}}.pylist(subobj_format="H")
         {% endfor %}
         if self.id is not None:
             d["id"] = self.id

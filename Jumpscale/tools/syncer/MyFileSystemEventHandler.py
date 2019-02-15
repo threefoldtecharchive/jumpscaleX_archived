@@ -14,7 +14,7 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
 
         self.sync_paths_src=[]
         self.sync_paths_dest=[]
-        for source in self.paths:
+        for source in self.syncer._get_paths():
             if not j.data.types.list.check(source):
                 dest=source
             else:
@@ -38,7 +38,9 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
         # self._log_debug("%s:%s" % (event, action))
         ftp =  self.syncer.ssh_client.sftp
         changedfile = event.src_path
-        if event.is_directory:
+        if event.src_path.endswith((".swp",".swx")):
+            return
+        elif event.is_directory:
             if changedfile.find("/.git") != -1:
                 return
             elif changedfile.find("/__pycache__/") != -1:
@@ -65,18 +67,19 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
                 if action == "copy":
                     self._log_debug("copy: %s:%s" % (changedfile, dest))
                     try:
-                        ftp.put(changedfile, dest)
+                        self.syncer.ssh_client.copy_file(changedfile,dest)
                     except Exception as e:
-                        j.shell()
+                        self._log_debug("Couldn't sync file: %s:%s" % (changedfile,dest))
                         self._log_debug("** ERROR IN COPY, WILL SYNC ALL")
                         self._log_debug(str(e))
                         error = True
                 elif action == "delete":
                     self._log_debug("delete: %s:%s" % (changedfile, dest))
                     try:
-                        ftp.remove(dest)
+                        cmd = 'rm %s' % dest
+                        self.syncer.ssh_client.exec_command(cmd)
                     except Exception as e:
-                        j.shell()
+                        self._log_debug("Couldn't remove file: %s" % (dest))
                         if "No such file" in str(e):
                             return
                         else:
@@ -95,7 +98,7 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
                     error = False
 
     def on_moved(self, event):
-        j.tools.develop.sync()
+        self.syncer.sync(monitor=False)
         self.handler(event, action="delete")
 
     def on_created(self, event):

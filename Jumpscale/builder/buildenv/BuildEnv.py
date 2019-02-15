@@ -5,9 +5,6 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
 
     __jslocation__ = "j.builder.buildenv"
 
-    def _init(self):
-
-
     def install(self, reset=False, upgrade=True):
 
         if self._done_check("install", reset):
