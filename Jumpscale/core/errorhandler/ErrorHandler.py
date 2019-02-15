@@ -140,8 +140,6 @@ class ErrorHandler():
 
     def bug_escalate_developer(self, errorConditionObject, tb=None):
 
-        self._j.logger.enabled = False  # no need to further log, there is error
-
         tracefile = ""
 
         def findEditorLinux():
@@ -193,7 +191,6 @@ class ErrorHandler():
                         result, out, err = self._j.sal.process.execute(
                             cmd, die=False, showout=False)
 
-                self._j.logger.clear()
                 if res == "c":
                     return
                 elif res == "d":
@@ -208,7 +205,6 @@ class ErrorHandler():
                 # print errorConditionObject
                 res = self._j.tools.console.askString(
                     "\nAn error has occurred. Do you want do you want to do? (s=stop, c=continue, d=debug)")
-                self._j.logger.clear()
                 if res == "c":
                     return
                 elif res == "d":

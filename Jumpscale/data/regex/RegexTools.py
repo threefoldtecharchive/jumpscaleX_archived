@@ -114,7 +114,7 @@ class RegexTools(j.application.JSBaseClass):
             raise j.exceptions.RuntimeError(
                 "Cannot do .codetools.regex.match when "
                 "pattern or text parameter is empty")
-        #j.logger.log("Regextools: pattern:%s in text:%s" % (pattern,text),5)
+        #self._log_debug("Regextools: pattern:%s in text:%s" % (pattern,text),5)
         # print "Regextools: pattern:%s in text:%s" % (pattern,text)
         pattern = self._patternFix(pattern)
         result = re.findall(pattern, text)
