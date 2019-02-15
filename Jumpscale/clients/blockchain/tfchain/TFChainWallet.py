@@ -78,6 +78,10 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         self._atomicswap = TFChainAtomicSwap(wallet=self)
         self._threebot = TFChainThreeBot(wallet=self)
         self._erc20 = TFChainERC20(wallet=self)
+
+        # fetch balance already once,
+        # this way we for sure have all adresses
+        self.balance
     
     @property
     def minter(self):

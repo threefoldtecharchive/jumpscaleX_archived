@@ -8,6 +8,7 @@ from .types.PrimitiveTypes import Hash, Currency
 from .types.IO import CoinOutput, BlockstakeOutput
 from .types.CryptoTypes import PublicKey
 from .types.ThreeBot import BotName, NetworkAddress
+from .types.ERC20 import ERC20Address
 from .types.transactions.Base import TransactionBaseClass
 from .types.transactions.Minting import TransactionV128
 from .TFChainWalletFactory import TFChainWalletFactory
@@ -47,6 +48,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
     def _init(self):
         self._threebot = TFChainThreeBotClient(self)
         self._minter = TFChainMinterClient(self)
+        self._erc20 = TFChainERC20Client(self)
 
     @property
     def threebot(self):
@@ -61,6 +63,13 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         Minter Client API.
         """
         return self._minter
+
+    @property
+    def erc20(self):
+        """
+        ERC20 Client API.
+        """
+        return self._erc20
 
     @property
     def explorer_addresses(self):
@@ -228,13 +237,21 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             for addr in multisig_addresses:
                 if addr.type != UnlockHashType.MULTI_SIG:
                     raise j.clients.tfchain.errors.ExplorerInvalidResponse("invalid unlock hash type {} for MultiSignature Address (expected: 3)".format(addr.type), endpoint, resp)
-            # TODO: support resp.get('erc20info')
-            # return explorer data for the unlockhash
+            erc20_info = None
+            if 'erc20info' in resp:
+                info = resp['erc20info']
+                erc20_info = ERC20AddressInfo(
+                    address_tft=UnlockHash.from_json(info['tftaddress']),
+                    address_erc20=ERC20Address.from_json(info['erc20address']),
+                    confirmations=int(info['confirmations']),
+                )
 
+            # return explorer data for the unlockhash
             return ExplorerUnlockhashResult(
                 unlockhash=UnlockHash.from_json(unlockhash),
                 transactions=transactions,
                 multisig_addresses=multisig_addresses,
+                erc20_info=erc20_info,
                 client=self)
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
@@ -419,7 +436,7 @@ class ExplorerBlockchainInfo():
 
 
 class ExplorerUnlockhashResult():
-    def __init__(self, unlockhash, transactions, multisig_addresses, client=None):
+    def __init__(self, unlockhash, transactions, multisig_addresses, erc20_info, client=None):
         """
         All the info found for a given unlock hash, as reported by an explorer.
         """
@@ -430,6 +447,7 @@ class ExplorerUnlockhashResult():
         if client is not None and not isinstance(client, TFChainClient):
             raise TypeError("client cannot be set to a value of type {}".format(type(client)))
         self._client = client
+        self._erc20_info = erc20_info
     
     @property
     def unlockhash(self):
@@ -451,6 +469,10 @@ class ExplorerUnlockhashResult():
         Addresses of multisignature wallets co-owned by the looked up unlockhash.
         """
         return self._multisig_addresses
+
+    @property
+    def erc20_info(self):
+        return self._erc20_info
 
     def __repr__(self):
         return "Found {} transaction(s) and {} multisig address(es) for {}".format(
@@ -514,6 +536,16 @@ class ExplorerUnlockhashResult():
         if info is not None or self._client is None:
             return info
         return self._client.blockchain_info_get()
+
+from typing import NamedTuple
+
+class ERC20AddressInfo(NamedTuple):
+    """
+    Contains the information for an ERC20 address (registration).
+    """
+    address_tft: UnlockHash
+    address_erc20: ERC20Address
+    confirmations: int
 
 class ExplorerBlock():
     def __init__(self, id, parentid, height, timestamp, transactions, miner_payouts):
@@ -697,6 +729,53 @@ class TFChainThreeBotClient():
                 addresses=[NetworkAddress.from_json(address) for address in record.get('addresses', []) or []],
                 public_key=PublicKey.from_json(record['publickey']),
                 expiration=int(record['expiration']),
+            )
+        except KeyError as exc:
+            # return a KeyError as an invalid Explorer Response
+            raise j.clients.tfchain.errors.ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
+
+
+class TFChainERC20Client():
+    """
+    TFChainERC20Client contains all ERC20 Logic
+    """
+
+    def __init__(self, client):
+        if not isinstance(client, TFChainClient):
+            raise TypeError("client is expected to be a TFChainClient")
+        self._client = client
+
+    def address_get(self, unlockhash):
+        """
+        Get the ERC20 (withdraw) address for the given unlock hash,
+        ExplorerNoContent error is raised when no address could be found for the given unlock hash.
+
+        Only type 01 addresses can be looked up for this method (personal wallet addresses),
+        as there can be no MultiSignature (wallet) address registered as an ERC20 withdraw address.
+
+        @param unlockhash: the str or wallet address to be looked up
+        """
+        if isinstance(unlockhash, str):
+            unlockhash = UnlockHash.from_json(unlockhash)
+        elif not isinstance(unlockhash, UnlockHash):
+            raise TypeError("{} is not a valid type and cannot be used as unlock hash".format(type(unlockhash)))
+        if unlockhash.type != UnlockHashType.PUBLIC_KEY:
+            raise TypeError("{} only person wallet addresses cannot be registered as withdrawel addresses: {} is an invalid unlock hash type".format(unlockhash.type))
+    
+        endpoint = "/explorer/hashes/"+str(unlockhash)
+        resp = self._client.explorer_get(endpoint=endpoint)
+        resp = j.data.serializers.json.loads(resp)
+        try:
+            if resp['hashtype'] != 'unlockhash':
+                raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected hash type 'unlockhash' not '{}'".format(resp['hashtype']), endpoint, resp)
+            # parse the ERC20 Info
+            if not 'erc20info' in resp:
+                raise j.clients.tfchain.errors.ExplorerNoContent("{} could be found but is not registered as an ERC20 withdraw address".format(str(unlockhash)), endpoint=endpoint)
+            info = resp['erc20info']
+            return ERC20AddressInfo(
+                address_tft=UnlockHash.from_json(info['tftaddress']),
+                address_erc20=ERC20Address.from_json(info['erc20address']),
+                confirmations=int(info['confirmations']),
             )
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
