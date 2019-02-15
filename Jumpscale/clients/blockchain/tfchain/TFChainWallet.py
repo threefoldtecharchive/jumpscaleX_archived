@@ -151,13 +151,6 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         return list(self._key_pairs.keys())
 
     @property
-    def address_count(self):
-        """
-        The amount of addresses owned and used by this wallet.
-        """
-        return len(self._key_pairs)
-
-    @property
     def address(self):
         """
         The primary address, the address generated with index 0.
@@ -171,7 +164,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         as reported by the internal balance reporter.
         """
         balance = self.balance
-        return list(balance.wallets.keys())
+        return balance.addresses_multisig
 
     @property
     def balance(self):
@@ -381,7 +374,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             # update balance
             for ci in txn.coin_inputs:
                 balance.output_add(ci.parent_output, confirmed=False, spent=True)
-            addresses = self.addresses + list(balance.wallets.keys())
+            addresses = self.addresses + balance.addresses_multisig
             for idx, co in enumerate(txn.coin_outputs):
                 if str(co.condition.unlockhash) in addresses:
                     # add the id to the coin_output, so we can track it has been spent
@@ -462,7 +455,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         submit = (submit and is_fulfilled)
         if submit:
             txn.id = self._transaction_put(transaction=txn)
-            addresses = self.addresses + list(balance.wallets.keys())
+            addresses = self.addresses + balance.addresses_multisig
             # update balance
             for ci in txn.coin_inputs:
                 if str(ci.parent_output.condition.unlockhash) in addresses:
@@ -715,7 +708,7 @@ class TFChainMinter():
         if submit:
             txn.id = self._transaction_put(transaction=txn)
             # update balance of wallet
-            addresses = self._wallet.addresses + list(balance.wallets.keys())
+            addresses = self._wallet.addresses + balance.addresses_multisig
             for idx, co in enumerate(txn.coin_outputs):
                 if str(co.condition.unlockhash) in addresses:
                     # add the id to the coin_output, so we can track it has been spent
@@ -1113,7 +1106,7 @@ class TFChainAtomicSwap():
             # update balance
             for ci in txn.coin_inputs:
                 balance.output_add(ci.parent_output, confirmed=False, spent=True)
-            addresses = self._wallet.addresses + list(balance.wallets.keys())
+            addresses = self._wallet.addresses + balance.addresses_multisig
             for idx, co in enumerate(txn.coin_outputs):
                 if str(co.condition.unlockhash) in addresses:
                     balance.output_add(co, confirmed=False, spent=False)
@@ -1410,7 +1403,7 @@ class TFChainThreeBot():
             # update balance
             for ci in txn.coin_inputs:
                 balance.output_add(ci.parent_output, confirmed=False, spent=True)
-            addresses = self._wallet.addresses + list(balance.wallets.keys())
+            addresses = self._wallet.addresses + balance.addresses_multisig
             for idx, co in enumerate(txn.coin_outputs):
                 if str(co.condition.unlockhash) in addresses:
                     # add the id to the coin_output, so we can track it has been spent
@@ -1588,7 +1581,7 @@ class TFChainERC20():
             # update balance
             for ci in txn.coin_inputs:
                 balance.output_add(ci.parent_output, confirmed=False, spent=True)
-            addresses = self._wallet.addresses + list(balance.wallets.keys())
+            addresses = self._wallet.addresses + balance.addresses_multisig
             for idx, co in enumerate(txn.coin_outputs):
                 if str(co.condition.unlockhash) in addresses:
                     # add the id to the coin_output, so we can track it has been spent
@@ -1701,6 +1694,15 @@ class WalletBalance(object):
         self._chain_time = 0
         self._chain_height = 0
         self._chain_blockid = Hash()
+        # all wallet addresses tracked in this wallet
+        self._addresses = set()
+
+    @property
+    def addresses(self):
+        """
+        All (personal wallet) addresses for which an output is tracked in this Balance.
+        """
+        return list(self._addresses)
 
     @property
     def chain_blockid(self):
@@ -1866,6 +1868,7 @@ class WalletBalance(object):
                 self._outputs.pop(output.id, None)
             elif output.id not in self._outputs_unconfirmed_spent:
                 self._outputs_unconfirmed[output.id] = output
+        self._addresses.add(str(output.condition.unlockhash))
     
     @property
     def _base(self):
@@ -1880,6 +1883,7 @@ class WalletBalance(object):
         b._chain_blockid = self._chain_blockid
         b._chain_height = self._chain_height
         b._chain_time = self._chain_time
+        b._addresses = self._addresses
         return b
 
     def balance_add(self, other):
@@ -1912,6 +1916,9 @@ class WalletBalance(object):
             d = getattr(self, attr, {})
             for id, output in getattr(other, attr, {}).items():
                 d[id] = output
+        # merge the addresses
+        self._addresses |= other._addresses
+        # return the modified self
         return self
 
     def drain(self, recipient, miner_fee, unconfirmed=False, data=None, lock=None):
@@ -2069,6 +2076,14 @@ class WalletsBalance(WalletBalance):
         """
         return self._wallets
 
+    @property
+    def addresses_multisig(self):
+        """
+        All (multisig wallet) addresses for which an output is tracked in this Balance.
+        For each address you'll find a wallet in the `self.wallets` dict property.
+        """
+        return list(self.wallets.keys())
+
     def multisig_output_add(self, address, output, confirmed=True, spent=False):
         """
         Add an output to the MultiSignature Wallet's balance.
@@ -2089,6 +2104,7 @@ class WalletsBalance(WalletBalance):
         uh = output.condition.unlockhash
         if uh.type == UnlockHashType.MULTI_SIG:
             return self.multisig_output_add(address=str(uh), output=output, confirmed=confirmed, spent=spent)
+        self._addresses.add(str(uh))
         return super().output_add(output=output, confirmed=confirmed, spent=spent)
 
     def balance_add(self, other):

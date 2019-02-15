@@ -35,12 +35,18 @@ def main(self):
     # interaction with the tfchain network
     assert w.network_type == "DEV"
 
+    # getting all personal wallet addresses can be done using the addresses property
+    assert w.addresses == ['014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a', '018f5a43327fb865843808ddf549f1b1c06376e07195423778751056be626841f42dcf25a593fd']
+
     # getting the balance of a wallet is as easy as getting the 'balance' property
     balance = w.balance
 
     # the available and locked tokens can be easily checked
     assert str(balance.available)== '3698'
     assert str(balance.locked) == '0'
+
+    # getting all multisig wallet addresses can be done using the addresses_multisig property
+    w.addresses_multisig == ['039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a']
 
     # MultiSig wallets can be easily checked as well
     assert str(balance.wallets['039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a'].available) == '42'
