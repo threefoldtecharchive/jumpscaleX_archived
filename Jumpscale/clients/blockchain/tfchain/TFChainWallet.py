@@ -20,7 +20,12 @@ _DEFAULT_KEY_SCAN_COUNT = 3
 _MAX_RIVINE_TRANSACTION_INPUTS = 99
 
 # TODO:
-# add support for transaction listing (need to work this out)
+#
+# * add optional height property to base transaction class,
+#   and populate it when possible;
+#
+# * add support for transaction listing (need to work this out)
+#
 
 class TFChainWallet(j.application.JSBaseConfigClass):
     """
