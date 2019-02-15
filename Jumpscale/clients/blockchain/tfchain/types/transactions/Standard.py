@@ -265,7 +265,7 @@ class TransactionV1(TransactionBaseClass):
 
         # encode coin inputs
         for ci in self.coin_inputs:
-            e.add_all(ci.parentid, ci.fulfillment.public_key.unlockhash())
+            e.add_all(ci.parentid, ci.fulfillment.public_key.unlockhash)
 
         # encode coin outputs
         e.add(len(self.coin_outputs))
@@ -274,7 +274,7 @@ class TransactionV1(TransactionBaseClass):
 
         # encode blockstake inputs
         for bsi in self.blockstake_inputs:
-            e.add_all(bsi.parentid, bsi.fulfillment.public_key.unlockhash())
+            e.add_all(bsi.parentid, bsi.fulfillment.public_key.unlockhash)
 
         # encode blockstake outputs
         e.add(len(self.blockstake_outputs))

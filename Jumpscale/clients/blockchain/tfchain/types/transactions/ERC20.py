@@ -524,9 +524,9 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
         """
         Implements SignatureCallbackBase.
         """
-        if self._public_key.unlockhash() != public_key.unlockhash():
+        if self._public_key.unlockhash != public_key.unlockhash:
             raise ValueError("given public key ({}) does not equal public key ({})".format(
-                str(self._public_key.unlockhash()), str(public_key.unlockhash())))
+                str(self._public_key.unlockhash), str(public_key.unlockhash)))
         self.signature = signature
 
     def _signature_hash_input_get(self, *extra_objects):
@@ -616,7 +616,7 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
             self._refund_coin_output = None
 
     def _json_data_object(self):
-        tftaddress = self.public_key.unlockhash()
+        tftaddress = self.public_key.unlockhash
         erc20address = ERC20Address.from_unlockhash(tftaddress)
         output = {
             'pubkey': self.public_key.json(),
@@ -641,7 +641,7 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
         input_hash_func = InputSignatureHashFactory(self, TransactionV210.SPECIFIER_REGISTRATION_SIGNATURE).signature_hash_new
         # define the input_hash_new generator function,
         # used to create the input hash for creating the signature
-        unlockhash = self._public_key.unlockhash()
+        unlockhash = self._public_key.unlockhash
         def input_hash_gen(public_key):
             return input_hash_func()
         # create the only signature request

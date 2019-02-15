@@ -90,6 +90,7 @@ class PublicKey(BaseDataTypeClass):
     
     json = __str__
 
+    @property
     def unlockhash(self):
         """
         Return the unlock hash generated from this public key.

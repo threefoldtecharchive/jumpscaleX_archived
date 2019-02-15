@@ -1553,7 +1553,7 @@ class TFChainERC20():
             raise ValueError("value has to be a str, UnlockHash or int, cannot identify an address using value {} (type: {})".format(value, type(value)))
 
         # look up the wallet address and return it
-        return self._wallet.client.erc20.address_get(unlockhash=public_key.unlockhash())
+        return self._wallet.client.erc20.address_get(unlockhash=public_key.unlockhash)
 
     def addresses_get(self):
         """
@@ -1722,7 +1722,7 @@ class SpendableKey():
 
     @property
     def unlockhash(self):
-        return self._public_key.unlockhash()
+        return self._public_key.unlockhash
 
     def sign(self, hash):
         """

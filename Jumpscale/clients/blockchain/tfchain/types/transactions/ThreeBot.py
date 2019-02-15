@@ -295,9 +295,9 @@ class TransactionV144(BotTransactionBaseClass):
         """
         Implements SignatureCallbackBase.
         """
-        if self._public_key.unlockhash() != public_key.unlockhash():
+        if self._public_key.unlockhash != public_key.unlockhash:
             raise ValueError("given public key ({}) does not equal public key ({})".format(
-                str(self._public_key.unlockhash()), str(public_key.unlockhash())))
+                str(self._public_key.unlockhash), str(public_key.unlockhash)))
         self.signature = signature
 
     def _signature_hash_input_get(self, *extra_objects):
@@ -429,7 +429,7 @@ class TransactionV144(BotTransactionBaseClass):
         input_hash_func = InputSignatureHashFactory(self, BotTransactionBaseClass.SPECIFIER_SENDER).signature_hash_new
         # define the input_hash_new generator function,
         # used to create the input hash for creating the signature
-        unlockhash = self._public_key.unlockhash()
+        unlockhash = self._public_key.unlockhash
         def input_hash_gen(public_key):
             return input_hash_func()
         # create the only signature request
@@ -702,9 +702,9 @@ class TransactionV145(BotTransactionBaseClass):
         """
         Implements SignatureCallbackBase.
         """
-        if self._parent_public_key.unlockhash() != public_key.unlockhash():
+        if self._parent_public_key.unlockhash != public_key.unlockhash:
             raise ValueError("given public key ({}) does not equal parent public key ({})".format(
-                str(self._parent_public_key.unlockhash()), str(public_key.unlockhash())))
+                str(self._parent_public_key.unlockhash), str(public_key.unlockhash)))
         self.signature = signature
 
     def _signature_hash_input_get(self, *extra_objects):
@@ -870,7 +870,7 @@ class TransactionV145(BotTransactionBaseClass):
         input_hash_func = InputSignatureHashFactory(self, BotTransactionBaseClass.SPECIFIER_SENDER).signature_hash_new
         # define the input_hash_new generator function,
         # used to create the input hash for creating the signature
-        unlockhash = self._parent_public_key.unlockhash()
+        unlockhash = self._parent_public_key.unlockhash
         def input_hash_gen(public_key):
             return input_hash_func()
         # create the only signature request
@@ -1094,10 +1094,10 @@ class TransactionV146(BotTransactionBaseClass):
         """
         Implements SignatureCallbackBase.
         """
-        unlockhash = public_key.unlockhash()
-        if unlockhash == self.sender_parent_public_key.unlockhash():
+        unlockhash = public_key.unlockhash
+        if unlockhash == self.sender_parent_public_key.unlockhash:
             self.sender_signature = signature
-        elif unlockhash == self.receiver_parent_public_key.unlockhash():
+        elif unlockhash == self.receiver_parent_public_key.unlockhash:
             self.receiver_signature = signature
         else:
             raise ValueError("given public key (unlockhash: {}) is not linked to this BotNameTransfer Transaction".format(str(unlockhash)))
@@ -1254,7 +1254,7 @@ class TransactionV146(BotTransactionBaseClass):
         factory = InputSignatureHashFactory(self, specifier)
         # define the input_hash_new generator function,
         # used to create the input hash for creating the signature
-        unlockhash = public_key.unlockhash()
+        unlockhash = public_key.unlockhash
         # create the only signature request
         return SignatureRequest(
             unlockhash=unlockhash,

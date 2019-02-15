@@ -144,7 +144,7 @@ class TFChainExplorerGetClientStub(j.application.JSBaseClass):
         # must be a public key
         pk = PublicKey.from_json(identifier)
         for record in self._threebot_records.values():
-            if record.public_key.unlockhash() == pk.unlockhash():
+            if record.public_key.unlockhash == pk.unlockhash:
                 return record
         raise j.clients.tfchain.errors.ExplorerNoContent("no content found for 3Bot identifier {}".format(identifier), endpoint=endpoint)
 

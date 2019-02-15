@@ -43,7 +43,7 @@ def main(self):
         assert len(record.addresses) == 1
         assert record.addresses[0].value == "example.org"
         # public key can be accessed
-        assert record.public_key.unlockhash() == "01b73c4e869b6167abe6180ebe7a907f56e0357b4a2f65eb53d22baad84650eb62fce66ba036d0"
+        assert record.public_key.unlockhash == "01b73c4e869b6167abe6180ebe7a907f56e0357b4a2f65eb53d22baad84650eb62fce66ba036d0"
         # timestamp on which the 3Bot expires, unless more months are paid (see Record Update)
         assert record.expiration == 1552581420
 
