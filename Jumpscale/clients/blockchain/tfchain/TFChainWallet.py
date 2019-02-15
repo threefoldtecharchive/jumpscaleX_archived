@@ -20,7 +20,6 @@ _DEFAULT_KEY_SCAN_COUNT = 3
 _MAX_RIVINE_TRANSACTION_INPUTS = 99
 
 # TODO (TESTS, for now already manually tested and confirmed):
-# * Send Coins (single sig and multi sig, with data and lock, as well as without)
 # * Minter Transactions (single sig and multi sig)
 
 # TODO:

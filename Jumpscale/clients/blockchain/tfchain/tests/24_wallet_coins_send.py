@@ -8,7 +8,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.clients.tfchain.test(name="erc20_address_register")'
+    js_shell 'j.clients.tfchain.test(name="wallet_coins_send")'
     """
     
     # create a tfchain client for devnet
@@ -42,77 +42,118 @@ def main(self):
     balance = w.balance
 
     # the available and locked tokens can be easily checked
-    assert str(balance.available)== '3698'
-    assert str(balance.locked) == '0'
-
-    # registering the second address of the wallet as an ERC20 withdrawel address
-    # can be done by defining its index as the value to be registered:
-    result = w.erc20.address_register(value=1) # the second address has index 1
-    assert result.submitted # it is expected the transaction is submitted, as we do not use Multi-Sig coin inputs
-
-    # validate the transaction is as expected
-    expected_transaction = {'version': 210, 'data': {'pubkey': 'ed25519:bdea9aff09bcdc66529f6e2ef1bb763a3bab83ce542e8673d97aeaed0581ad97', 'tftaddress': '018f5a43327fb865843808ddf549f1b1c06376e07195423778751056be626841f42dcf25a593fd', 'erc20address': '0x85cb35056799f8d49d56a24341906c55c25795f7', 'signature': '78c83fb447cc1e3aa485ce823a45108bad80da82344c72946102fc8c7cdb1e38842aa12774f615b32083c8d392d4085fb88dec03ee186cd749a769c40189e003', 'regfee': '10000000000', 'txfee': '1000000000', 'coininputs': [{'parentid': '19d4e81d057b4c93a7763f3dfe878f6a37d6111a3808b93afff4b369de0f5376', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': '3e28477fd7f0572745b71a69c424e949451f60d72bd69e10b263c51dc4fe0ff8e6d94ac77412e52b2968f1d3dddf25fcb652fa6359060b45d1b3ba156a223b01'}}}], 'refundcoinoutput': {'value': '187000000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}}}
-    assert result.transaction.json() == expected_transaction
-    # ensure the transaction is posted and as expected there as well
-    txn = explorer_client.posted_transaction_get(result.transaction.id)
-    assert txn.json() == expected_transaction
-
-    # balance will be updated
-    balance = w.balance
-    assert balance.available == '3500 TFT'
-    assert balance.unconfirmed == '187'
+    assert balance.available == '3698 TFT'
     assert balance.locked == 0
 
-    # if the index is negative or beyond the upper bounds, a ValueError is raised:
-    with pytest.raises(ValueError):
-        w.erc20.address_register(value=-1)
-    with pytest.raises(ValueError):
-        w.erc20.address_register(value=2)
-
-    # registering an address as ERC20 address can also be done by specifying
-    # the address as a str or UnlockHash:
-    result = w.erc20.address_register(value='014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a')
-    assert result.submitted # it is expected the transaction is submitted, as we do not use Multi-Sig coin inputs
+    # (1) sending coins to a personal wallet on the used tfchain network can be done as follows:
+    result = w.coins_send(
+        recipient="015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f",
+        amount="108.24" # the amount of TFT to send
+    )
+    assert result.submitted # it is expected the transaction is submitted
 
     # validate the transaction is as expected
-    expected_transaction = {'version': 210, 'data': {'pubkey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'tftaddress': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a', 'erc20address': '0x3001cb4e707f6389e55cc714a3b5e42e1b7a12d5', 'signature': 'c7baa36180994473042fdb96d788457f4d97783682b74ecef2079a55cac4db7bf26c7e1716d8b5283f1e40d5dbaf350b2e8bc7ec8a8047df254c4ae80f29e001', 'regfee': '10000000000', 'txfee': '1000000000', 'coininputs': [{'parentid': 'b90422bad2dffde79f0a46bd0a41055cf7974b080e115d76f69891ca31d31f11', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': 'f948ae9cf054cd77ff9840e43b0641e0c5a33856aa8b65a4ddebc5e329434bb888d435c6a995acbb2689d36a46ea5c642fa7cf97b3c3be55c5a490c869e4e309'}}}], 'refundcoinoutput': {'value': '489000000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}}}
+    expected_transaction = {'version': 1, 'data': {'coininputs': [{'parentid': '19d4e81d057b4c93a7763f3dfe878f6a37d6111a3808b93afff4b369de0f5376', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': '781c886bd135ee068c407fc80c639530579e422dc4e006383eb9fa3b25a1091f3d31836b52254a8fb0f4ab031effff9ba5cc77949215e06ac6b7c934bd9d470c'}}}], 'coinoutputs': [{'value': '108240000000', 'condition': {'type': 1, 'data': {'unlockhash': '015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f'}}}, {'value': '88760000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}], 'minerfees': ['1000000000']}}
     assert result.transaction.json() == expected_transaction
     # ensure the transaction is posted and as expected there as well
     txn = explorer_client.posted_transaction_get(result.transaction.id)
     assert txn.json() == expected_transaction
 
-    # balance will be updated
-    balance = w.balance
+    # the balance is now updated as well
+    assert balance.available == 3500
+    assert balance.unconfirmed == '88.76'
+    assert balance.locked == 0
+
+    # (2) sending coins to a personal wallet with a lock and data is possible as well
+    result = w.coins_send(
+        recipient="015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f",
+        amount=200, # the amount of TFT to send
+        lock='07/12/2020 14:35', # a lock can be a timestamp, data-time str, duration str, or block height
+        data='maximum 83 bytes can be used as optional data'
+    )
+    assert result.submitted # it is expected the transaction is submitted
+
+    # validate the transaction is as expected
+    expected_transaction = {'version': 1, 'data': {'coininputs': [{'parentid': 'b90422bad2dffde79f0a46bd0a41055cf7974b080e115d76f69891ca31d31f11', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': '5d628e0ac977bff00e6163b9df86ce60d376bc91f08fd917372a5a6c35dfba4c8663acc88f1c618791e05a179aec9b65077e988b650a23d5c2a343cca3c7d50f'}}}], 'coinoutputs': [{'value': '200000000000', 'condition': {'type': 3, 'data': {'locktime': 1607348100, 'condition': {'type': 1, 'data': {'unlockhash': '015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f'}}}}}, {'value': '299000000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}], 'minerfees': ['1000000000'], 'arbitrarydata': 'bWF4aW11bSA4MyBieXRlcyBjYW4gYmUgdXNlZCBhcyBvcHRpb25hbCBkYXRh'}}
+    assert result.transaction.json() == expected_transaction
+    # ensure the transaction is posted and as expected there as well
+    txn = explorer_client.posted_transaction_get(result.transaction.id)
+    assert txn.json() == expected_transaction
+
+    # the balance is now updated as well
     assert balance.available == 3000
-    assert balance.unconfirmed == '676 TFT'
-    assert balance.locked == '0.0'
+    assert balance.unconfirmed == '387.76 TFT'
+    assert balance.locked == 0
 
-    # if the address is not owned by this wallet,
-    # a j.clients.tfchain.errors.ERC20RegistrationForbidden error is raised
-    with pytest.raises(j.clients.tfchain.errors.ERC20RegistrationForbidden):
-        result = w.erc20.address_register(value='015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f')
-
-    # you can also automatically generate a new key pair within the used wallet and use its public key,
-    # by specifying None as the value (the default):
-    result = w.erc20.address_register() # value=None
-    assert result.submitted # it is expected the transaction is submitted, as we do not use Multi-Sig coin inputs
+    # (3) one can also send to full multi-sig wallet
+    result = w.coins_send(
+        recipient=["015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f", "010d22cf70053432d70ea08c6940c9e84c4c89e67ad24c3ff9f0444dd2d03bf77c91b3e02c30a1"],
+        amount="50 TFT", # the amount of TFT to send
+        lock=1550665225, # a lock can be a timestamp, data-time str, duration str, or block height
+        data=b'binary data can be added as well'
+    )
+    assert result.submitted # it is expected the transaction is submitted
 
     # validate the transaction is as expected
-    expected_transaction = {'version': 210, 'data': {'pubkey': 'ed25519:052007f06e3b88dcb3d44931ebf7a1c7973438e97a0a73f2407677dab88b3a6f', 'tftaddress': '01056f56a2e59a67334b697926af7e5a93c487aa5d54bbd48d0652092548c54073ea4ee1bd7d1b', 'erc20address': '0xa811dc6f5612cc89e2e23fbcf70994deb42ccfc3', 'signature': '496588b0fb736c78d9f2e7922c969159435d2ef6b3e844b694e30ce44e73da5eeab11caad27eac1131e5fbdf76bc21189503045232f5bcdb72d5ddc0a89c2b04', 'regfee': '10000000000', 'txfee': '1000000000', 'coininputs': [{'parentid': '19d4e81d057b4c93a7763f3dfe878f6a37d6111a3808b93afff4b369de0f5376', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': '5b855e3d2e213b1d5e909c082ff178d65eede999d351be5accc30d313e70ace5cecbc5d153f976bcdd33a6f93484021de00fbcb5bdae07487adf0db398054508'}}}], 'refundcoinoutput': {'value': '187000000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}}}
+    expected_transaction = {'version': 1, 'data': {'coininputs': [{'parentid': '75f297550acfa48490c21490f82c3c308326c16f950e17ef3a286486065a51b8', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': 'b9cfd884255eb3719c4819a20a5482fabf83fd687554bbfe7bd06737cdf8324733c7883da64f7ad79cdbe88451e24079fe6c073cebb8fc90dcfc1e3188e15e08'}}}], 'coinoutputs': [{'value': '50000000000', 'condition': {'type': 3, 'data': {'locktime': 1550665225, 'condition': {'type': 4, 'data': {'minimumsignaturecount': 2, 'unlockhashes': ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f', '010d22cf70053432d70ea08c6940c9e84c4c89e67ad24c3ff9f0444dd2d03bf77c91b3e02c30a1']}}}}}, {'value': '949000000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}], 'minerfees': ['1000000000'], 'arbitrarydata': 'YmluYXJ5IGRhdGEgY2FuIGJlIGFkZGVkIGFzIHdlbGw='}}
     assert result.transaction.json() == expected_transaction
     # ensure the transaction is posted and as expected there as well
     txn = explorer_client.posted_transaction_get(result.transaction.id)
     assert txn.json() == expected_transaction
 
-    # the wallet will now have 3 keys, instead of 2
-    assert w.key_count == 3
-    assert w.addresses == ['014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a', '018f5a43327fb865843808ddf549f1b1c06376e07195423778751056be626841f42dcf25a593fd', '01056f56a2e59a67334b697926af7e5a93c487aa5d54bbd48d0652092548c54073ea4ee1bd7d1b']
+    # the balance is now updated as well
+    assert balance.available == 2000
+    assert balance.unconfirmed == '1336.76'
+    assert balance.locked == 0
 
-    # trying to register an address using a value other than None with
-    # a type other than str, UnlockHash or int, will result in a ValueError being raised
-    with pytest.raises(ValueError):
-        result = w.erc20.address_register(value=False)
+    # (4) one can also send to a x-out-of-n multisig wallet
+    result = w.coins_send(
+        recipient=(1, ["015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f", "010d22cf70053432d70ea08c6940c9e84c4c89e67ad24c3ff9f0444dd2d03bf77c91b3e02c30a1"]),
+        amount='300.0', # the amount of TFT to send
+        lock=35000, # a lock can be a timestamp, data-time str, duration str, or block height
+        data=bytearray(b'binary data can be added as well')
+    )
+    assert result.submitted # it is expected the transaction is submitted
 
-    # trying to register with an invalid unlock hash will result in a ValueError being raised as well
-    with pytest.raises(ValueError):
-        result = w.erc20.address_register(value='01blabla')
+    # validate the transaction is as expected
+    expected_transaction = {'version': 1, 'data': {'coininputs': [{'parentid': 'd1f74e90eba8095e78f08a6284c7b76d4cda86b06ac742062d6e0e02dc4607eb', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': '96b185004da4cb8bc41203f2ae2e7992ef1f9ababac870ca1cf97d4074f404cc33dbf68a6fdf1400203d61cde057cc951c4127200f21be6bc5cbd5f4c85b4f0a'}}}], 'coinoutputs': [{'value': '300000000000', 'condition': {'type': 3, 'data': {'locktime': 35000, 'condition': {'type': 4, 'data': {'minimumsignaturecount': 1, 'unlockhashes': ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f', '010d22cf70053432d70ea08c6940c9e84c4c89e67ad24c3ff9f0444dd2d03bf77c91b3e02c30a1']}}}}}, {'value': '1699000000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}], 'minerfees': ['1000000000'], 'arbitrarydata': 'YmluYXJ5IGRhdGEgY2FuIGJlIGFkZGVkIGFzIHdlbGw='}}
+    assert result.transaction.json() == expected_transaction
+    # ensure the transaction is posted and as expected there as well
+    txn = explorer_client.posted_transaction_get(result.transaction.id)
+    assert txn.json() == expected_transaction
+
+    # the balance is now updated as well
+    assert balance.available == 0
+    assert balance.unconfirmed == '3035.76 TFT'
+    assert balance.locked == 0
+
+    # ensure we have the multi-sig wallet that we think we have
+    mw = w.balance.wallets['039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a']
+    assert mw.owners == ['01ffd7c884aa869056bfb832d957bb71a0005fee13c19046cebec84b3a5047ee8829eab070374b', '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a']
+    assert mw.signature_count == 1
+    assert mw.available == '42 TFT'
+    assert mw.unconfirmed == '0 TFT'
+    assert mw.locked == '0 TFT'
+
+    # (5) spending from a multi-sig wallet can be done as follows
+    result = w.coins_send(
+        recipient="015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f",
+        amount=20, # the amount of TFT to send
+        lock=None, # a lock can be a timestamp, data-time str, duration str, or block height
+        data='some data',
+        source="039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a",
+    )
+    assert result.submitted # it is expected the transaction is submitted, as it is a 1-of-2 signature wallet
+
+    # validate the transaction is as expected
+    expected_transaction = {'version': 1, 'data': {'coininputs': [{'parentid': '29152fe03a2c8782fcbd670579686088c52be83fa3870f5f0788073d97fb5fb2', 'fulfillment': {'type': 3, 'data': {'pairs': [{'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': 'c8efb66be71f7b991148bb479620d93dc909ea6982d640f304655969a7f22265134bd46f7e33868bbbe8a4a2451a68c18ae8380b45bb524c46cc76b1bac0780b'}]}}}], 'coinoutputs': [{'value': '20000000000', 'condition': {'type': 1, 'data': {'unlockhash': '015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f'}}}, {'value': '21000000000', 'condition': {'type': 4, 'data': {'minimumsignaturecount': 1, 'unlockhashes': ['01ffd7c884aa869056bfb832d957bb71a0005fee13c19046cebec84b3a5047ee8829eab070374b', '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a']}}}], 'minerfees': ['1000000000'], 'arbitrarydata': 'c29tZSBkYXRh'}}
+    assert result.transaction.json() == expected_transaction
+    # ensure the transaction is posted and as expected there as well
+    txn = explorer_client.posted_transaction_get(result.transaction.id)
+    assert txn.json() == expected_transaction
+
+    # ensure our balance is updated
+    mw = w.balance.wallets['039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a']
+    assert mw.available == '0 TFT'
+    assert mw.unconfirmed == '21 TFT'
+    assert mw.locked == '0 TFT'

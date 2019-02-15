@@ -229,6 +229,9 @@ By default the primary wallet address will be used for refunds (`w.address`).
 Refunds are required in case the sum of the defined amount and minimum transaction fee
 is smaller than the sum value of the used coin inputs.
 
+See [The Wallet Coins Send Unit Test](./tests/24_wallet_coins_send.py)
+for detailed examples of sending coins to some address on the used TFChain network.
+
 ### Multi-Signature Wallet
 
 You use your regular wallet to manage and use your co-owned Multi-Signature wallets.
@@ -268,6 +271,10 @@ other co-owners of you wallet still have to sign. If so you have to pass the ret
 
 Using this client one can signs (and submit if possible)
 a transaction using the `w.transaction_sign(txn)` method.
+
+See [The Wallet Coins Send Unit Test](./tests/24_wallet_coins_send.py)
+for detailed examples of sending coins to some address on the used TFChain network
+using a Multi-Signature wallet to fund and refund.
 
 ### 3Bot Records
 
