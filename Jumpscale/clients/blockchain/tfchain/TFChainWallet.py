@@ -602,6 +602,10 @@ class TFChainMinter():
 
         # set the new mint condition
         txn.mint_condition = j.clients.tfchain.types.conditions.from_recipient(minter)
+        # minter definition must be of unlock type 1 or 3
+        ut = txn.mint_condition.unlockhash.type
+        if ut not in (UnlockHashType.PUBLIC_KEY, UnlockHashType.MULTI_SIG):
+            raise ValueError("{} is an invalid unlock hash type and cannot be used for a minter definition".format(ut))
 
         # optionally set the data
         if data is not None:

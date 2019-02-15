@@ -631,7 +631,10 @@ Redefining the Mint Condition can be done as follows:
 (txn, signed, submitted) = w.transaction_sign(txn)
 ```
 
-Creating coins 
+See [The Minter Condition Set Unit Test](./tests/26_minter_condition_set.py)
+for detailed examples for setting a new minter condition.
+
+Creating coins as a Coin Minter can be done as follows:
 
 ```python
 (txn, submitted) = w.minter.coins_new(recipient='01a006599af1155f43d687635e9680650003a6c506934996b90ae8d07648927414046f9f0e936', amount=200)
