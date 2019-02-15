@@ -6,8 +6,6 @@ from .PrimitiveTypes import BinaryData, Hash
 from .ConditionTypes import UnlockHash, UnlockHashType, ConditionNil, \
     ConditionUnlockHash, ConditionAtomicSwap, ConditionMultiSignature, AtomicSwapSecret
 
-# TODO: add signing tests, and compare signatures to the one in Rivine/TFchain, as for now this is still manually tested
-
 class ED25519Signature(BinaryData):
     SIZE = 64
 
