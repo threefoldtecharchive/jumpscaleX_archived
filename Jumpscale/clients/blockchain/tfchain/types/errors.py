@@ -98,6 +98,18 @@ class ErrorTypes():
         """
         return ExplorerInvalidResponse
 
+    # wallet errors
+
+    @property
+    def AddressNotInWallet(self):
+        """
+        AddressNotInWallet error, triggered
+        when trying to use an address on a wallet that does not own it.
+
+        The `address` property exposes the address that was attempted to be used.
+        """
+        return AddressNotInWallet
+
     # Generic Transaction Errors
 
     @property
@@ -506,6 +518,23 @@ class ThreeBotInactive(Exception):
         The timestamp on which the 3Bot became inactive.
         """
         return self._expiration
+
+
+class AddressNotInWallet(Exception):
+    """
+    AddressNotInWallet error, triggered
+    when trying to use an address on a wallet that does not own it
+    """
+    def __init__(self, address):
+        super().__init__("address {} is not owned by the used wallet".format(str(address)))
+        self._address = address
+
+    @property
+    def address(self):
+        """
+        The address attempted to be used.
+        """
+        return self._address
 
 
 class ERC20RegistrationForbidden(Exception):

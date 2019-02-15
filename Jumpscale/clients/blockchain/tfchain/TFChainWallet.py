@@ -19,10 +19,6 @@ _DEFAULT_KEY_SCAN_COUNT = 3
 
 _MAX_RIVINE_TRANSACTION_INPUTS = 99
 
-# TODO:
-# * Provide 3Bot Registration (Management) Support
-# * Provide ERC20 Support
-
 # TODO (TESTS, for now already manually tested and confirmed):
 # * Send Coins (single sig and multi sig, with data and lock, as well as without)
 # * Minter Transactions (single sig and multi sig)
@@ -79,9 +75,8 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         self._threebot = TFChainThreeBot(wallet=self)
         self._erc20 = TFChainERC20(wallet=self)
 
-        # fetch balance already once,
-        # this way we for sure have all adresses
-        self.balance
+        # scan already for keys once
+        self._key_scan()
     
     @property
     def minter(self):
@@ -171,9 +166,12 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         """
         The balance "sheet" of the wallet.
         """
+        # key scan first
+        scanned_new_keys = self._key_scan()
+
         # first get chain info, so we can check if the current balance is still fine
         info = self.client.blockchain_info_get()
-        if self._cached_balance and self._cached_balance.chain_blockid == info.blockid:
+        if not scanned_new_keys and self._cached_balance and self._cached_balance.chain_blockid == info.blockid:
             return self._cached_balance
 
         addresses = self.addresses
@@ -194,59 +192,6 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                  # the address has no activity yet on the chain
                 pass
 
-        # try some extra key scanning, to see if other keys have been used
-        # if we already have unsused keys, no scanning is done however
-        if len(self._unused_key_pairs) == 0 and self.key_scan_count != 0:
-            # use the defined count or the default one
-            count = self.key_scan_count
-            if count < 0:
-                count = _DEFAULT_KEY_SCAN_COUNT
-            # generate the key pairs, without integrating them already
-            # loop, and do this until now more are found:
-            while True:
-                pairs = []
-                used_pairs = []
-                for offset in range(count):
-                    pairs.append(self._key_pair_new(integrate=False, offset=offset))
-                for pair in pairs:
-                    address = str(pair.unlockhash)
-                    try:
-                        # collect the inputs/outputs linked to this address for all found transactions
-                        result = self._unlockhash_get(address)
-                        uh_balance = result.balance(info=info)
-                        balance = balance.balance_add(uh_balance)
-
-                        # register this pair as a known index
-                        used_pairs.append(True)
-                        # collect all multisig addresses
-                        for address in result.multisig_addresses:
-                            multisig_addresses.append(str(address))
-                    except j.clients.tfchain.errors.ExplorerNoContent:
-                        # ignore this exception as it simply means
-                        # the address has no activity yet on the chain
-                        used_pairs.append(False)
-                        pass
-                # check if any address was found
-                if not reduce(lambda a, b: a or b, used_pairs):
-                    break
-
-                last_index = 0
-                for idx, pair in enumerate(pairs):
-                    if used_pairs[idx]:
-                        last_index = idx
-                        self._key_pair_add(pair, add_count=False)
-                    else:
-                        self._unused_key_pairs.append(pair)
-                # remove the unused pairs that came after the last known index
-                self._unused_key_pairs = self._unused_key_pairs[:-count+last_index]
-                # update the new key count
-                self.key_count += last_index + 1
-
-                # if the last pair is not used, we can stop scanning
-                if not used_pairs[-1]:
-                    break
-                # otherwise continue
-
         # collect info for all multisig addresses
         for address in multisig_addresses:
             try:
@@ -266,6 +211,61 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         self._cached_balance = balance
         # return the balance
         return balance
+
+    def _key_scan(self):
+        # try some extra key scanning, to see if other keys have been used
+        # if we already have unsused keys, no scanning is done however
+        if len(self._unused_key_pairs) != 0 or self.key_scan_count == 0:
+            return False
+    
+        # use the defined count or the default one
+        count = self.key_scan_count
+        if count < 0:
+            count = _DEFAULT_KEY_SCAN_COUNT
+        # key track of start key count, so we can easily check at the end,
+        # if we indeed scanned for any new keys
+        key_count_start = self.key_count
+        # generate the key pairs, without integrating them already
+        # loop, and do this until now more are found:
+        while True:
+            pairs = []
+            used_pairs = []
+            for offset in range(count):
+                pairs.append(self._key_pair_new(integrate=False, offset=offset))
+            for pair in pairs:
+                address = str(pair.unlockhash)
+                try:
+                    self._unlockhash_get(address)
+                    # register this pair as a known index
+                    used_pairs.append(True)
+                except j.clients.tfchain.errors.ExplorerNoContent:
+                    # ignore this exception as it simply means
+                    # the address has no activity yet on the chain
+                    used_pairs.append(False)
+                    pass
+            # check if any address was found
+            if not reduce(lambda a, b: a or b, used_pairs):
+                break
+
+            last_index = 0
+            for idx, pair in enumerate(pairs):
+                if used_pairs[idx]:
+                    last_index = idx
+                    self._key_pair_add(pair, add_count=False)
+                else:
+                    self._unused_key_pairs.append(pair)
+            # remove the unused pairs that came after the last known index
+            self._unused_key_pairs = self._unused_key_pairs[:-count+last_index]
+            # update the new key count
+            self.key_count += last_index + 1
+
+            # if the last pair is not used, we can stop scanning
+            if not used_pairs[-1]:
+                break
+            # otherwise continue
+        
+        # return if we scanned new keys
+        return self.key_count > key_count_start
 
     def coins_send(self, recipient, amount, source=None, refund=None, lock=None, data=None):
         """
@@ -1521,6 +1521,57 @@ class TFChainERC20():
 
         # sign, submit and return the transaction
         return self._sign_and_submit_txn(txn, balance)
+
+    def address_get(self, value=None):
+        """
+        Get the registration info of an existing TFT address of this wallet as an ERC20 Withdraw Address,
+        either by specifying the address itself or by specifying the index of the address.
+        If no value is defined the first wallet address will be used.
+
+        Returns an ERC20AddressInfo named tuple.
+        
+        @param value: index of the TFT address or address itself, the address has to be owned by this wallet
+        """
+        if value is None:
+            public_key = self._wallet.key_pair_get(unlockhash=self._wallet.address).public_key
+        elif isinstance(value, (str, UnlockHash)):
+            try:
+                public_key = self._wallet.key_pair_get(unlockhash=value).public_key
+            except KeyError as exc:
+                if isinstance(value, str):
+                    value = UnlockHash.from_json(value)
+                raise j.clients.tfchain.errors.AddressNotInWallet(address=value) from exc
+        elif isinstance(value, int) and not isinstance(value, bool):
+            addresses = self._wallet.addresses
+            if value < 0 or value >= len(addresses):
+                raise ValueError("address index {} is not a valid index for this wallet, has to be in the inclusive range of [0, {}]".format(
+                    value, len(addresses)-1))
+            public_key = self._wallet.key_pair_get(unlockhash=addresses[value]).public_key
+        else:
+            raise ValueError("value has to be a str, UnlockHash or int, cannot identify an address using value {} (type: {})".format(value, type(value)))
+
+        # look up the wallet address and return it
+        return self._wallet.client.erc20.address_get(unlockhash=public_key.unlockhash())
+
+    def addresses_get(self):
+        """
+        Get the information for all registered ERC20 withdraw addresses.
+        Can return a empty list if no addresses of this wallet were registered as an ERC20 withdraw address.
+
+        Returns a list of ERC20AddressInfo named tuples.
+        """
+        results = []
+        # scan for some new keys first, to ensure we get all addresses
+        self._wallet._key_scan()
+        # get the ERC20 info for all addresses that are registered as ERC20 withdraw addresses, if any
+        for address in self._wallet.addresses:
+            try:
+                info = self._wallet.client.erc20.address_get(address)
+                results.append(info)
+            except j.clients.tfchain.errors.ExplorerNoContent:
+                pass
+        # return all found info, if anything
+        return results
 
     def _fund_txn(self, txn, source, refund, amount):
         """

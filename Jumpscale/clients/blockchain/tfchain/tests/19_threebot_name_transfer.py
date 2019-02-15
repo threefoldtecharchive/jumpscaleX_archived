@@ -48,7 +48,7 @@ def main(self):
     DEVNET_GENESIS_SEED="image orchard airport business cost work mountain obscure flee alpha alert salmon damage engage trumpet route marble subway immune short tide young cycle attract"
 
     # create a new devnet wallet
-    w = c.wallets.new("mywallet", seed=DEVNET_GENESIS_SEED, key_count=2)
+    w = c.wallets.new("mywallet", seed=DEVNET_GENESIS_SEED)
     # we create a new wallet using an existing seed,
     # such that our seed is used and not a new randomly generated seed
 

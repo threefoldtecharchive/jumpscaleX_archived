@@ -541,6 +541,50 @@ the `j.clients.tfchain.errors.ERC20RegistrationForbidden` error will be raised.
 See [The ERC20 Address Register Unit Test](./tests/21_erc20_address_register.py)
 for detailed examples of the registration of an ERC20 withdraw address.
 
+You can get the information for a registered ERC20 address of a wallet:
+
+- by specifying nothing (`None`), the first wallet address will be used:
+  ```python
+  info = w.erc20.address_get() # value=None
+  info.address_tft # tft address (unlock hash)
+  info.address_erc20 # erc20 address (ERC20Address)
+  info.confirmations # the amount of blocks that confirm this ERC20 Address Withdraw Registration
+  # if no (ERC20 address registration) info could be found for the address
+  # a j.clients.tfchain.errors.ExplorerNoContent error is raised
+  ```
+- if you specify a valid address index (`int`), the address on that index will be used:
+  ```python
+  # you can for example get the ERC20 address registration info for the 5th address of the wallet as follows:
+  info = w.erc20.address_get(4) # value=4
+  # the index has to be within bounds of the range as indicated by the amount of addresses
+  # owned by this wallet, if not a ValueError is raised
+  ```
+- if you specify a valid address (`str`/`UnlockHash`), that address wil be used:
+  ```python
+  info = w.erc20.address_get('014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a')
+  # the address has to be owned by the wallet,
+  # otherwise a j.clients.tfchain.errors.AddressNotInWallet error is raised
+  ```
+
+You can get the information for all wallet addresses registered as ERC20 addresses as follows:
+
+```python
+info_list = w.erc20.addresses_get() # returns a list of info tuples
+info_list[0].address_tft # tft address (unlock hash)
+info_list[0].address_erc20 # erc20 address (ERC20Address)
+info_list[0].confirmations # the amount of blocks that confirm this ERC20 Address Withdraw Registration
+# if no (ERC20 address registration) info could be found for any
+# of the wallet addresses an empty list is returned
+```
+
+See [The ERC20 Wallet Addresses Get Unit Test](./tests/23_erc20_wallet_addresses_get.py)
+for detailed examples of getting information for one or multiple wallet addresses
+registered as ERC20 wallet addresses.
+
+You can also get the ER20 withdraw address registration info for an address not owned by
+your wallet. You do this by looking the address up using the `c.erc20.address_get` method (where `c` is a `TFChainClient` instance).
+See [The ERC20 Client Address Get Unit Test](./tests/22_erc20_client_address_get.py) for detailed example of this.
+
 ### Coin Minting
 
 Only if you have minting powers you can redefine the Mint Condition (the condition to be fulfilled to proof you have these powers)

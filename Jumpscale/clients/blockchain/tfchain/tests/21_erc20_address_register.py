@@ -30,7 +30,7 @@ def main(self):
     DEVNET_GENESIS_SEED="image orchard airport business cost work mountain obscure flee alpha alert salmon damage engage trumpet route marble subway immune short tide young cycle attract"
 
     # create a new devnet wallet
-    w = c.wallets.new("mywallet", seed=DEVNET_GENESIS_SEED, key_count=2)
+    w = c.wallets.new("mywallet", seed=DEVNET_GENESIS_SEED)
     # we create a new wallet using an existing seed,
     # such that our seed is used and not a new randomly generated seed
 
@@ -88,7 +88,7 @@ def main(self):
     assert balance.locked == '0.0'
 
     # if the address is not owned by this wallet,
-    # an j.clients.tfchain.errors.ERC20RegistrationForbidden error is raised
+    # a j.clients.tfchain.errors.ERC20RegistrationForbidden error is raised
     with pytest.raises(j.clients.tfchain.errors.ERC20RegistrationForbidden):
         result = w.erc20.address_register(value='015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f')
 
