@@ -109,7 +109,7 @@ class SignatureRequest():
         # ensure public key is the key of the wallet who owns this request
         if not isinstance(public_key, PublicKey):
             raise TypeError("public key is expected to be of type PublicKey, not {}".format(type(public_key)))
-        address = str(public_key.unlockhash())
+        address = str(public_key.unlockhash)
         if self._unlockhash.type != UnlockHashType.NIL and self.wallet_address != address: # only check if the request is not using a NIL Condition
             raise ValueError("signature request cannot be fulfilled using address {}, expected address {}".format(address, self.wallet_address))
 
@@ -360,7 +360,7 @@ class FulfillmentSingleSignature(FulfillmentBaseClass):
         if not isinstance(parent_condition, (ConditionNil, ConditionUnlockHash)):
             raise TypeError("parent condition of FulfillmentSingleSignature cannot be of type {}".format(type(parent_condition)))
         unlockhash = parent_condition.unlockhash
-        if str(unlockhash) == str(self.public_key.unlockhash()):
+        if str(unlockhash) == str(self.public_key.unlockhash):
             return [] # nothing to do
         # define the input_hash_new generator function,
         # used to create the input hash for creating the signature
@@ -436,7 +436,7 @@ class FulfillmentMultiSignature(FulfillmentBaseClass):
         if not isinstance(parent_condition, ConditionMultiSignature):
             raise TypeError("parent condition of FulfillmentMultiSignature cannot be of type {}".format(type(parent_condition)))
         requests = []
-        signed = [str(pair.public_key.unlockhash()) for pair in self._pairs]
+        signed = [str(pair.public_key.unlockhash) for pair in self._pairs]
         # define the input_hash_new generator function,
         # used to create the input hash for creating the signature
         def input_hash_gen(public_key):
@@ -608,7 +608,7 @@ class FulfillmentAtomicSwap(FulfillmentBaseClass):
         if not isinstance(parent_condition, ConditionAtomicSwap):
             raise TypeError("parent condition of FulfillmentAtomicSwap cannot be of type {}".format(type(parent_condition)))
         requests = []
-        signee = str(self.public_key.unlockhash())
+        signee = str(self.public_key.unlockhash)
         # define the input_hash_new generator function,
         # used to create the input hash for creating the signature
         def input_hash_gen(public_key):
