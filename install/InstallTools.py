@@ -242,7 +242,7 @@ if redis:
             assert isinstance(sha, (str))
             # assert isinstance(sha, (bytes, bytearray))
             from Jumpscale import j
-            j.shell()
+            Tools.shell()
             return self.evalsha(sha,data["nrkeys"],*args)
             # self.eval(data["script"],data["nrkeys"],*args)
             # return self.execute_command("EVALSHA",sha,data["nrkeys"],*args)
@@ -510,22 +510,30 @@ class Tools:
     @staticmethod
     def _installbase_for_shell():
 
-        script = """
-            if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
-                echo >> /etc/apt/sources.list
-                echo "# Jumpscale Setup" >> /etc/apt/sources.list
-                echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
-                apt-get update
-                apt-get install -y python3-pip locales
-                apt-get install -y curl rsync
-                apt-get install -y unzip
-                pip3 install ipython
-                locale-gen --purge en_US.UTF-8
-            fi
-        """
-        Tools.execute(script, interactive=True)
+        if 'darwin' in MyEnv.platform():
 
-        MyEnv.state_set("ubuntu_base_install")
+            script = """            
+            pip3 install ipython
+            """
+            Tools.execute(script, interactive=True)
+
+        else:
+
+            script = """
+                if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+                    echo >> /etc/apt/sources.list
+                    echo "# Jumpscale Setup" >> /etc/apt/sources.list
+                    echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+                    apt-get update
+                    apt-get install -y python3-pip locales
+                    apt-get install -y curl rsync
+                    apt-get install -y unzip
+                    pip3 install ipython
+                    locale-gen --purge en_US.UTF-8
+                fi
+            """
+            Tools.execute(script, interactive=True)
+
 
 
     def clear():
@@ -546,8 +554,9 @@ class Tools:
         if Tools._shell is None:
             try:
                 from IPython.terminal.embed import InteractiveShellEmbed
-            except:
-                Tools._installbase()
+            except Exception as e:
+                Tools._installbase_for_shell()
+                from IPython.terminal.embed import InteractiveShellEmbed
             Tools._shell = InteractiveShellEmbed(banner1= "", exit_msg="")
         return Tools._shell(stack_depth=2)
 
@@ -1372,6 +1381,20 @@ class OSXInstall():
 
         UbuntuInstall.pips_install()
 
+    @staticmethod
+    def brew_uninstall():
+        cmd='sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"'
+        Tools.execute(cmd,interactive=True)
+        toremove = """                
+        sudo rm -rf /usr/local/.com.apple.installer.keep
+        sudo rm -rf /usr/local/include/
+        sudo rm -rf /usr/local/etc/
+        sudo rm -rf /usr/local/var/
+        sudo rm -rf /usr/local/FlashcardService/
+        sudo rm -rf /usr/local/texlive/ 
+        """
+        Tools.execute(toremove,interactive=True)
+
 
 class UbuntuInstall():
 
@@ -1595,6 +1618,7 @@ class MyEnv():
 
     config = {}
     _sshagent_active = None
+    installer_only = not Tools.exists("/sandbox")  #if /sandbox does not exist then will use as installer only
     sandbox_python_active = False #WHAT IS THIS?
     sandbox_lua_active = False
     config_changed = False
@@ -1657,8 +1681,6 @@ class MyEnv():
     @staticmethod
     def config_default_get():
         config = {}
-        config["DIR_BASE"] = "/sandbox"
-        config["DIR_TEMP"] = "/tmp/jumpscale"
 
         if "HOMEDIR" in os.environ:
             dir_home = os.environ["HOMEDIR"]
@@ -1667,12 +1689,6 @@ class MyEnv():
         else:
             dir_home = "/root"
         config["DIR_HOME"] = dir_home
-
-        config["DIR_VAR"] = "/sandbox/var"
-        config["DIR_CODE"] = "/sandbox/code"
-        config["DIR_CFG"] = "/sandbox/cfg"
-        config["DIR_BIN"] = "/sandbox/bin"
-        config["DIR_APPS"] = "/sandbox/apps"
         config["USEGIT"] = True
         config["DEBUG"] = True
         config["SSH_AGENT"] = False
@@ -1681,7 +1697,23 @@ class MyEnv():
         config["LOGGER_EXCLUDE"] = ["sal.fs"]
         config["LOGGER_LEVEL"] = 15 #means std out & plus gets logged
         config["LOGGER_CONSOLE"] = True
-        config["LOGGER_REDIS"] = True
+        config["LOGGER_REDIS"] = False
+
+        if MyEnv.installer_only:
+            config["DIR_TEMP"] = "/tmp/jumpscale_installer"
+            config["LOGGER_REDIS"] = False
+            config["LOGGER_CONSOLE"] = True
+            return config
+
+        config["DIR_BASE"] = "/sandbox"
+        config["DIR_TEMP"] = "/tmp/jumpscale"
+
+        config["DIR_VAR"] = "/sandbox/var"
+        config["DIR_CODE"] = "/sandbox/code"
+        config["DIR_CFG"] = "/sandbox/cfg"
+        config["DIR_BIN"] = "/sandbox/bin"
+        config["DIR_APPS"] = "/sandbox/apps"
+
 
         if "INSYSTEM" in os.environ:
             if str(os.environ["INSYSTEM"]).lower().strip() in ["1","true","yes","y"]:
@@ -1698,15 +1730,47 @@ class MyEnv():
 
 
     @staticmethod
-    def _init(force=False):
+    def _init(force=False,install=False):
         MyEnv.check_platform()
 
         if MyEnv.__init:
             return
 
+        if install:
+            #will make sure we install and manipulate local system
+            MyEnv.installer_only=False
+
+        if MyEnv.installer_only:
+            #means we are not installing in system
+            MyEnv.config = MyEnv.config_default_get()
+            MyEnv.sandbox_python_active=False #because python is not in sandbox because there is no sandbox (-:
+
+            if not Tools.cmd_installed("curl") or not Tools.cmd_installed("unzip") or not Tools.cmd_installed("rsync"):
+                Tools.error_raise("Cannot continue, curl, rsync, unzip needs to be installed")
+
+            return
+
+
+        if not os.path.exists("/sandbox"):
+            script = """
+            cd /
+            sudo mkdir -p /sandbox/cfg
+            sudo chown -R {USERNAME}:{GROUPNAME} /sandbox
+            mkdir -p /usr/local/EGG-INFO
+            sudo chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
+            """
+            args={}
+            args["USERNAME"] = getpass.getuser()
+            st = os.stat(MyEnv.config["DIR_HOME"])
+            gid = st.st_gid
+            args["GROUPNAME"] = grp.getgrgid(gid)[0]
+            Tools.execute(script,interactive=True,args=args)
+
+
         if "DIR_CFG" in os.environ:
             DIR_CFG = os.environ["DIR_CFG"].strip()
         else:
+
             DIR_CFG = "/sandbox/cfg"
 
         MyEnv.config_file_path = os.path.join(DIR_CFG,"jumpscale_config.toml")
@@ -1717,6 +1781,9 @@ class MyEnv():
         else:
             MyEnv.config = MyEnv.config_default_get()
             MyEnv.config_save()
+
+        if not os.path.exists(MyEnv.config["DIR_TEMP"]):
+            os.makedirs(MyEnv.config["DIR_TEMP"],exist_ok=True)
 
         if force or not MyEnv.state_exists("myenv_init"):
 
@@ -1736,47 +1803,23 @@ class MyEnv():
                 mkdir -p /sandbox/var/log
 
                 """
-            else:
-                if not Tools.cmd_installed("curl") or Tools.cmd_installed("unzip") or Tools.cmd_installed("rsync"):
+            if "darwin" in MyEnv.platform():
+                if not Tools.cmd_installed("curl") or not Tools.cmd_installed("unzip") or not Tools.cmd_installed("rsync"):
                     script="""
                     brew install curl unzip rsync
                     """
-                else:
-                    script = ""
-                    Tools.error_raise("Cannot continue, curl, rsync, unzip needs to be installed")
+                    Tools.execute(script,interactive=True)
 
-            Tools.execute(script,interactive=True)
+            else:
+                Tools.error_raise("only OSX and Linux Ubuntu supported.")
 
-
-            MyEnv.config_load()
-
-            if not "HOME" in MyEnv.config and "HOME" in os.environ:
-                MyEnv.config["DIR_HOME"] = copy.copy(os.environ["HOME"])
-                MyEnv.config_save()
-
-            if not os.path.exists(MyEnv.config["DIR_BASE"]):
-                script = """
-                cd /
-                sudo mkdir -p /sandbox/cfg
-                sudo chown -R {USERNAME}:{GROUPNAME} /sandbox
-                """
-                args={}
-                args["USERNAME"] = getpass.getuser()
-                st = os.stat(MyEnv.config["DIR_HOME"])
-                gid = st.st_gid
-                args["GROUPNAME"] = grp.getgrgid(gid)[0]
-                Tools.execute(script,interactive=True,args=args)
-
-                # and
-            if not os.path.exists(MyEnv.config["DIR_TEMP"]):
-                os.makedirs(MyEnv.config["DIR_TEMP"],exist_ok=True)
 
             MyEnv.state_set("myenv_init")
 
-        if os.path.exists(os.path.join(MyEnv.config["DIR_BASE"],"bin","python3.6")):
-            MyEnv.sandbox_python_active=True
-        else:
-            MyEnv.sandbox_python_active=False
+            if os.path.exists(os.path.join(MyEnv.config["DIR_BASE"],"bin","python3.6")):
+                MyEnv.sandbox_python_active=True
+            else:
+                MyEnv.sandbox_python_active=False
 
 
         MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE",[]) if i.strip().strip("'\'") != ""]
@@ -1795,6 +1838,8 @@ class MyEnv():
 
     @staticmethod
     def install(force=False):
+
+        MyEnv._init(install=True)
 
         #DONT USE THE SANDBOX
         if MyEnv.config["INSYSTEM"]:
@@ -1915,6 +1960,8 @@ class MyEnv():
         edits the configuration file which is in {DIR_BASE}/cfg/jumpscale_config.toml
         {DIR_BASE} normally is /sandbox
         """
+        if MyEnv.installer_only:
+            Tools.error_raise("config cannot be saved in installer only mode")
         Tools.file_edit(MyEnv.config_file_path)
 
     @staticmethod
@@ -1923,10 +1970,14 @@ class MyEnv():
         loads the configuration file which is in {DIR_BASE}/cfg/jumpscale_config.toml
         {DIR_BASE} normally is /sandbox
         """
+        if MyEnv.installer_only:
+            Tools.error_raise("config cannot be saved in installer only mode")
         MyEnv.config = Tools.config_load(MyEnv.config_file_path)
 
     @staticmethod
     def config_save():
+        if MyEnv.installer_only:
+            Tools.error_raise("config cannot be saved in installer only mode")
         Tools.config_save(MyEnv.config_file_path,MyEnv.config)
 
     @staticmethod
@@ -1935,10 +1986,14 @@ class MyEnv():
         only 1 level deep toml format only for int,string,bool
         no multiline
         """
+        if MyEnv.installer_only:
+            return
         MyEnv.state = Tools.config_load(MyEnv.state_file_path,if_not_exist_create=True)
 
     @staticmethod
     def state_save():
+        if MyEnv.installer_only:
+            return
         Tools.config_save(MyEnv.state_file_path,MyEnv.state)
 
 
@@ -1953,6 +2008,8 @@ class MyEnv():
 
     @staticmethod
     def state_exists(key):
+        if MyEnv.installer_only:
+            return False
         key = MyEnv._key_get(key)
         if MyEnv.state is None:
             MyEnv.state_load()
@@ -1962,6 +2019,8 @@ class MyEnv():
 
     @staticmethod
     def state_set(key,val=True):
+        if MyEnv.installer_only:
+            return
         key = MyEnv._key_get(key)
         if MyEnv.state is None:
             MyEnv.state_load()
@@ -1979,14 +2038,13 @@ class JumpscaleInstaller():
         self.branch = ["development"]
         self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
-    def install(self):
+    def install(self,branch="development",secret="1234",private_key=""):
 
         MyEnv.install()
 
-
         Tools.file_touch(os.path.join(MyEnv.config["DIR_BASE"], "lib/jumpscale/__init__.py"))
 
-        self.repos_get()
+        self.repos_get(branch=branch)
         self.repos_link()
         self.cmds_link()
 
@@ -1996,10 +2054,14 @@ class JumpscaleInstaller():
         source env.sh
         mkdir -p /sandbox/openresty/nginx/logs
         mkdir -p /sandbox/var/log
-        js_shell ' j.core.installer_jumpscale.remove_old_parts()'
+        js_shell 'j.core.installer_jumpscale.remove_old_parts()'
+        js_shell 'j.data.nacl.
         js_shell 'j.tools.console.echo("JumpscaleX IS OK.")'
         """
-        Tools.execute(script,interactive=True)
+        args={}
+        args["secret"]=secret
+        args["private_key"]=private_key
+        Tools.execute(script,interactive=True,args=args)
 
 
 

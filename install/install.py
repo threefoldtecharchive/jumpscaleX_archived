@@ -35,8 +35,6 @@ def image_names():
     names = [i.strip("\"'") for i in names if i.strip()!=""]
     return names
 
-# FOR DEBUG purposes can install ipython & pip3 will allow us to use the shell
-# IT.UbuntuInstall.base_install()
 
 def help():
     T="""
@@ -53,10 +51,15 @@ def help():
     -y = answer yes on every question (for unattended installs)
     -c = will confirm all filled in questions at the end (useful when using -y)
     -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install
+    
+    --secret = std is '1234'
+    --private_key = std is '' otherwise is 24 words, use '' around the private key
+                if secret specified and private_key not then will ask in -y mode will autogenerate
 
     -r = reinstall, basically means will try to re-do everything without removing (keep data)
 
     -p = pull code from git, if not specified will only pull if code directory does not exist yet
+    --branch = jumpscale branch: normally 'development'
 
     -w = install the wiki at the end, which includes openresty, lapis, lua, ...
 
@@ -64,13 +67,15 @@ def help():
 
     --codepath = "/sandbox/code" can overrule, is where the github code will be checked out
 
-    --portrange = 1 is the default means 8000-8099 on host gets mapped to 8000-8099 in docker
+    --portrange = 1 is the default 
                   1 means 8100-8199 on host gets mapped to 8000-8099 in docker
                   2 means 8200-8299 on host gets mapped to 8000-8099 in docker
                   
     --image=/path/to/image.tar or name of image (use docker images) 
                   ...
     --port = port of container SSH std is 9022 (normally not needed to use because is in portrange:22 e.g. 9122 if portrange 1)
+    
+    --reset : will remove everything (on OSX: brew, /sandbox) BECAREFULL
 
     -h = this help
 
@@ -85,6 +90,10 @@ def ui():
 
     if "h" in args:
         help()
+
+    if "reset" in args:
+        IT.Tools.shell()
+        w
 
 
     if "incontainer" not in args:
@@ -136,27 +145,36 @@ def ui():
             It's recommended to have a SSH key as used on github loaded in your ssh-agent
             If the SSH key is not found, repositories will be cloned using https
             """
-            print("Could not continue, load ssh key.")
-            sys.exit(1)
+            print("Could not continue, load ssh key in ssh-agent and try again.")
+            if "3" in args:
+                sys.exit(1)
+            if "y" not in args:
+                if not IT.Tools.ask_yes_no("OK to continue?"):
+                    sys.exit(1)
         else:
             sshkey = IT.MyEnv.sshagent_key_get()
             sshkey+=".pub"
+
             if not IT.Tools.exists(sshkey):
                 print ("ERROR: could not find SSH key:%s"%sshkey)
                 sys.exit(1)
             sshkey2 = IT.Tools.file_text_read(sshkey)
 
-        args["sshkey"]=sshkey2
+            args["sshkey"]=sshkey2
 
     if not "codepath" in args:
-        if IT.Tools.exists("/sandbox/code"):
+        codepath = "/sandbox/code"
+        if "1" in args or "2" in args or IT.Tools.exists("/sandbox"):
             codepath = "/sandbox/code"
         else:
             codepath = "~/code"
         codepath=codepath.replace("~",IT.MyEnv.config["DIR_HOME"])
         args["codepath"] = codepath
 
-    if "y" not in args and "r" not in args and IT.Tools.exists(IT.MyEnv.state_file_path):
+    if not "branch" in args:
+        args["branch"]="development"
+
+    if "y" not in args and "r" not in args and IT.MyEnv.installer_only is False and IT.Tools.exists(IT.MyEnv.state_file_path):
         if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
             args["r"]=True
 
@@ -198,12 +216,12 @@ def ui():
 
         if "portrange" not in args:
             if "y" in args:
-                args["portrange"] = 0
+                args["portrange"] = 1
             else:
                 if container_exists:
-                    args["portrange"] = int(IT.Tools.ask_choices("choose portrange, std = 0",[0,1,2,3,4,5,6,7,8,9]))
+                    args["portrange"] = int(IT.Tools.ask_choices("choose portrange, std = 1",[1,2,3,4,5,6,7,8,9]))
                 else:
-                    args["portrange"] = 0
+                    args["portrange"] = 1
 
         a=8000+int(args["portrange"])*100
         b=8099+int(args["portrange"])*100
@@ -223,6 +241,18 @@ def ui():
             else:
                 #default is not pull
                 args["p"]=False
+
+    if "y" in args:
+        if "secret" not in args:
+            args["secret"] = "1234"
+        if "private_key" not in args:
+            args["private_key"] = ""
+    else:
+        if "secret" not in args:
+            args["secret"] = IT.Tools.ask_string("please provide secret passphrase for the BCDB.")
+        if "private_key" not in args:
+            args["private_key"] = IT.Tools.ask_string("please provide 24 words of the private key, or empty for autogeneration.")
+
 
     if "y" not in args and "w" not in args:
         if IT.Tools.ask_yes_no("Do you want to install lua/nginx/openresty & wiki environment?"):
@@ -274,7 +304,7 @@ def ui():
     return args
 
 args = ui()
-if "r" in args:
+if "r" in args and IT.MyEnv.installer_only is False:
     #remove the state
     IT.Tools.delete(IT.MyEnv.state_file_path)
     IT.MyEnv.state_load()
@@ -284,9 +314,8 @@ if "p" in args:
 else:
     os.environ["GITPULL"] = "0"
 
-
-
-IT.Tools.dir_ensure(args["codepath"])
+if "1" in args or "2" in args:
+    IT.MyEnv._init(install=True)
 
 if "1" in args:
     IT.MyEnv.config["INSYSTEM"] = True
@@ -296,10 +325,16 @@ elif "2" in args:
     #is sandbox (2)
     IT.MyEnv.config["INSYSTEM"] = False
 
+    if "darwin" in IT.MyEnv.platform():
+        print("sandbox node for darwin not yet supported.")
+        sys.exit(1)
+
 
 if "1" in args or "2" in args:
+
+    IT.MyEnv.installer_only = False #need to make sure we will install
     installer = IT.JumpscaleInstaller()
-    installer.install()
+    installer.install(branch=args["branch"],secret=args["secret"],private_key=args["private_key"])
 
     if "w" in args:
         if "1" in args:
@@ -355,18 +390,17 @@ elif "3" in args:
 
     IT.Tools.execute("rm -f ~/.ssh/known_hosts")  #rather dirty hack
 
-    # if "2" in args:
-    #     args_txt = "-2"
-    # else:
     #for now only support for insystem
     args_txt = "-1"
-    for item in ["y","r","p","w"]:
+    for item in ["r","p","w"]:
         if item in args:
             args_txt+=" -%s"%item
-    if "codepath" in args:
-        args_txt+=" --codepath=%s"%args["codepath"]
+    args_txt+=" -y"
+    for item in ["codepath","secret","private_key"]:
+        if item in args:
+            args_txt+=" --%s='%s'"%(item,args[item])
 
-    IT.MyEnv.config["DIR_BASE"] = args["codepath"].replace("/code", "") #TODO: seems weird?
+    IT.MyEnv.config["DIR_BASE"] = args["codepath"].replace("/code", "")
     install = IT.JumpscaleInstaller()
     install.repos_get()
 
