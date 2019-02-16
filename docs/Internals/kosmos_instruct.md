@@ -13,7 +13,7 @@ can be called as follows
 ```toml
 [[instruction]]
 instruction_method = "j.data.nacl.configure"
-instruction_name=ddict.pop('instruction_name',"") = "also_optional"
+instruction_name= "optional_name"
 instruction_description = "does not have to be used"
 name = "default"
 sshagent_use = true
