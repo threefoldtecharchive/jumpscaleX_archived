@@ -590,6 +590,8 @@ class Console(j.application.JSBaseClass):
             return self._askChoice(choicearray, descr, sort)
 
     def _askChoice(self, choicearray, descr=None, sort=True):
+        if not j.application.interactive:
+            raise j.exceptions.Input("Cannot ask a choice in a non interactive mode.", "console._askChoice")
         if not choicearray:
             return None
         if len(choicearray) == 1:
@@ -670,6 +672,9 @@ class Console(j.application.JSBaseClass):
         @type escapeString: string
         @return: string multi-line reply by the user, always ending with a newline
         """
+        if not j.application.interactive:
+            raise j.exceptions.Input("Cannot ask a askMultiline in an list of items in a non interactive mode.",
+                                     "console.askChoiceMultiple.askMultiline")
         self.echo("%s:" % question)
         self.echo(
             "(Enter answer over multiple lines, end by typing '%s' (without the quotes) on an empty line)" %

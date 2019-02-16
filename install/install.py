@@ -41,43 +41,47 @@ def help():
     Jumpscale X Installer
     ---------------------
 
-    options
+    # options
 
-    # type of installation
+    --reset : will remove everything (on OSX: brew, /sandbox) BECAREFULL
+    -h = this help
+
+    ## type of installation
+    
     -1 = in system install
     -2 = sandbox install
     -3 = install in a docker (make sure docker is installed)
+    -w = install the wiki at the end, which includes openresty, lapis, lua, ...
+    
 
+    ## interactivity
+    
     -y = answer yes on every question (for unattended installs)
     -c = will confirm all filled in questions at the end (useful when using -y)
-    -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install
+    -r = reinstall, basically means will try to re-do everything without removing (keep data)
     
-    --secret = std is '1234'
+    ## encryption
+    
+    --secret = std is '1234', if you use 'SSH' then a secret will be derived from the SSH-Agent (only if only 1 ssh key loaded
     --private_key = std is '' otherwise is 24 words, use '' around the private key
                 if secret specified and private_key not then will ask in -y mode will autogenerate
 
-    -r = reinstall, basically means will try to re-do everything without removing (keep data)
-
-    -p = pull code from git, if not specified will only pull if code directory does not exist yet
-    --branch = jumpscale branch: normally 'development'
-
-    -w = install the wiki at the end, which includes openresty, lapis, lua, ...
-
+    ## docker related
+    
     --name = name of docker, only relevant when docker option used
-
-    --codepath = "/sandbox/code" can overrule, is where the github code will be checked out
-
+    -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install
     --portrange = 1 is the default 
                   1 means 8100-8199 on host gets mapped to 8000-8099 in docker
-                  2 means 8200-8299 on host gets mapped to 8000-8099 in docker
-                  
+                  2 means 8200-8299 on host gets mapped to 8000-8099 in docker                  
     --image=/path/to/image.tar or name of image (use docker images) 
-                  ...
     --port = port of container SSH std is 9022 (normally not needed to use because is in portrange:22 e.g. 9122 if portrange 1)
-    
-    --reset : will remove everything (on OSX: brew, /sandbox) BECAREFULL
 
-    -h = this help
+    ## code related
+    
+    --codepath = "/sandbox/code" can overrule, is where the github code will be checked out
+    -p = pull code from git, if not specified will only pull if code directory does not exist yet
+    --branch = jumpscale branch: normally 'development'
+    
 
     """
     print(IT.Tools.text_replace(T))

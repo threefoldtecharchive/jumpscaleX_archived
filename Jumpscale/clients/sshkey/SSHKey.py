@@ -87,6 +87,7 @@ class SSHKey(j.application.JSBaseConfigClass):
 
     def sign_ssh_data(self, data):
         return self.agent.sign_ssh_data(data)
+        #TODO: does not work, property needs to be implemented
 
     def load(self, duration=3600 * 24):
         """

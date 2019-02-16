@@ -36,7 +36,7 @@ class Application(object):
 
         self._systempid = None
 
-        self.interactive = True
+        self.interactive = False
 
         self.schemas = None
 
