@@ -17,6 +17,52 @@ from os import O_NONBLOCK, read
 from pathlib import Path
 from subprocess import Popen, check_output
 
+try:
+    import traceback
+except:
+    traceback = None
+
+try:
+    import pudb
+except:
+    pudb = None
+
+try:
+    import pygments
+except Exception as e:
+    pygments = None
+
+if pygments:
+    from pygments import formatters
+    from pygments import lexers
+    pygments_formatter = formatters.get_formatter_by_name("terminal")
+    pygments_pylexer = lexers.get_lexer_by_name("python")
+else:
+    pygments_formatter = False
+    pygments_pylexer = False
+
+
+
+
+class InstallError(Exception):
+    pass
+
+class InputError(Exception):
+    pass
+    # def __init__(self, expression, message):
+    #     self.expression = expression
+    #     self.message = message
+
+
+def my_excepthook(exception_type,exception_obj,tb):
+    Tools.log(msg=exception_obj,tb=tb,level=40)
+    if MyEnv.debug and traceback and pudb:
+        # exception_type, exception_obj, tb = sys.exc_info()
+        pudb.post_mortem(tb)
+    Tools.pprint("{RED}CANNOT CONTINUE{RESET}")
+    sys.exit(1)
+
+
 import inspect
 
 serializer=None
@@ -280,7 +326,33 @@ class Tools:
     _shell = None
 
     @staticmethod
-    def log(msg,cat="",level=10,data=None,context=None,_deeper=False,stdout=True,redis=True):
+    def traceback_text_get(tb=None,stdout=False):
+        """
+        format traceback to readable text
+        :param tb:
+        :return:
+        """
+        if tb is None:
+            tb = sys.last_traceback
+        out=""
+        for item in traceback.extract_tb(tb):
+            fname =  item.filename
+            if len(fname)>60:
+                fname=fname[-60:]
+            line= "%-60s : %-4s: %s"%(fname, item.lineno,item.line)
+            if stdout:
+                line2 = "        {GRAY}%-60s :{RESET} %-4s: "%(fname, item.lineno)
+                Tools.pprint(line2,end="",log=False)
+                if pygments_formatter is not False:
+                    print(pygments.highlight(item.line ,pygments_pylexer, pygments_formatter).rstrip())
+                else:
+                    Tools.pprint(item.line,log=False)
+
+            out+="%s\n"%line
+        return out
+
+    @staticmethod
+    def log(msg,cat="",level=10,data=None,context=None,_deeper=False,stdout=True,redis=True,tb=None,data_show=True):
         """
 
         :param msg:
@@ -294,10 +366,29 @@ class Tools:
 
         :return:
         """
-        if _deeper:
-            frame_ = inspect.currentframe().f_back
+        if isinstance(msg,Exception):
+            Tools.pprint("\n\n{BOLD}{RED}EXCEPTION{RESET}\n")
+            msg="{RED}EXCEPTION: {RESET}%s"%str(msg)
+            level = 50
+            if cat is "":
+                cat="exception"
+        if tb:
+            if tb.tb_next is not None:
+                frame_ = tb.tb_next.tb_frame
+            else:
+                # extype, value, tb = sys.exc_info()
+                frame_ = tb.tb_frame
+            if data is None:
+                data = Tools.traceback_text_get(tb,stdout=True)
+                data_show = False
+            else:
+                msg+="\n%s"%Tools.traceback_text_get(tb,stdout=True)
+            print()
         else:
-            frame_ = inspect.currentframe().f_back.f_back
+            if _deeper:
+                frame_ = inspect.currentframe().f_back
+            else:
+                frame_ = inspect.currentframe().f_back.f_back
 
         fname = frame_.f_code.co_filename.split("/")[-1]
         defname = frame_.f_code.co_name
@@ -322,7 +413,7 @@ class Tools:
         logdict["data"] = data
 
         if stdout:
-            Tools.log2stdout(logdict)
+            Tools.log2stdout(logdict,data_show=data_show)
 
     @staticmethod
     def redis_client_get(addr='localhost',port=6379, unix_socket_path="/sandbox/var/redis.sock",die=True):
@@ -356,15 +447,24 @@ class Tools:
     def _isUnix():
         return 'posix' in sys.builtin_module_names
 
-    @staticmethod
-    def error_raise(msg, pythonerror=None):
-        print ("** ERROR **")
-        Tools.log(msg)
-        # sys.exit(1)
-        raise RuntimeError(msg)
+    # @staticmethod
+    # def error_raise(msg, pythonerror=None):
+    #     print ("** ERROR **")
+    #     Tools.log(msg)
+    #     if MyEnv.debug and traceback and pudb:
+    #         extype, value, tb = sys.exc_info()
+    #         if tb is not None:
+    #             traceback.print_exc()
+    #             pudb.post_mortem(tb,e_value=pythonerror)
+    #         else:
+    #             from pudb import set_trace
+    #             set_trace()
+    #         sys.exit(1)
+    #     raise RuntimeError(msg)
 
     @staticmethod
-    def _execute_interactive(cmd=None, args=None, die=True):
+    def _execute_interactive(cmd=None, args=None, die=True,original_command=None):
+
         if args is None:
             args = cmd.split(" ")
         # else:
@@ -374,10 +474,13 @@ class Tools:
         cmd=" ".join(args   )
         if returncode == 127:
             Tools.shell()
-            Tools.error_raise('{0}: command not found\n'.format(args[0]))
+            raise RuntimeError('{0}: command not found\n'.format(args[0]))
         if returncode>0 and returncode != 999:
             if die:
-                Tools.error_raise("***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n"%(cmd,returncode))
+                if original_command:
+                    raise RuntimeError("***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n"%(original_command,returncode))
+                else:
+                    raise RuntimeError("***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n"%(cmd,returncode))
             return returncode
         return returncode
 
@@ -402,7 +505,7 @@ class Tools:
             if Tools.cmd_installed(editor):
                 Tools._execute_interactive("%s %s" % (editor, path))
                 return
-        Tools.error_raise("cannot edit the file: '{}', non of the supported editors is installed".format(path))
+        raise RuntimeError("cannot edit the file: '{}', non of the supported editors is installed".format(path))
 
 
 
@@ -524,13 +627,15 @@ class Tools:
                     echo >> /etc/apt/sources.list
                     echo "# Jumpscale Setup" >> /etc/apt/sources.list
                     echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
-                    apt-get update
-                    apt-get install -y python3-pip locales
-                    apt-get install -y curl rsync
-                    apt-get install -y unzip
-                    pip3 install ipython
-                    locale-gen --purge en_US.UTF-8
                 fi
+                apt-get update
+                apt-get install -y python3-pip locales
+                apt-get install -y curl rsync
+                apt-get install -y unzip
+                pip3 install ipython
+                pip3 install pudb
+                pip3 install pygments
+                locale-gen --purge en_US.UTF-8                
             """
             Tools.execute(script, interactive=True)
 
@@ -548,15 +653,18 @@ class Tools:
             curframe = inspect.currentframe()
             calframe = inspect.getouterframes(curframe, 2)
             f = calframe[1]
-            print("\n*** file: %s"%f.filename)
-            print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
-
+        else:
+            f = None
         if Tools._shell is None:
             try:
                 from IPython.terminal.embed import InteractiveShellEmbed
             except Exception as e:
                 Tools._installbase_for_shell()
                 from IPython.terminal.embed import InteractiveShellEmbed
+            if f:
+                print("\n*** file: %s"%f.filename)
+                print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
+
             Tools._shell = InteractiveShellEmbed(banner1= "", exit_msg="")
         return Tools._shell(stack_depth=2)
 
@@ -655,6 +763,7 @@ class Tools:
                 "BLUE",
                 "CYAN",
                 "GREEN",
+                "YELLOW,
                 "RESET",
                 "BOLD",
                 "REVERSE"
@@ -683,7 +792,7 @@ class Tools:
 
 
     @staticmethod
-    def log2stdout(logdict):
+    def log2stdout(logdict,data_show=True):
         """
 
         :param logdict:
@@ -739,23 +848,25 @@ class Tools:
         elif logdict["context"].startswith(":"):
             logdict["context"]=""
 
-
-
         msg = LOGFORMAT.format(**logdict)
+
+        msg=Tools.text_replace(msg)
 
         print(msg)
 
-        if logdict["data"] not in ["",None]:
-            if isinstance(logdict["data"],dict):
-                data = serializer(logdict["data"])
-            else:
-                data = logdict["data"]
-            data=Tools.text_indent(data,10,strip=True)
-            print (data.rstrip())
+        if data_show:
+            if logdict["data"] not in ["",None]:
+                if isinstance(logdict["data"],dict):
+                    data = serializer(logdict["data"])
+                else:
+                    data = logdict["data"]
+                data=Tools.text_indent(data,10,strip=True)
+                data=Tools.text_replace(data,text_strip=False)
+                print (data.rstrip())
 
 
     @staticmethod
-    def pprint(content, ignorecomments=False, text_strip=False,args=None,colors=True,indent=0,end="\n"):
+    def pprint(content, ignorecomments=False, text_strip=False,args=None,colors=True,indent=0,end="\n",log=True):
         """
 
         :param content: what to print
@@ -781,7 +892,8 @@ class Tools:
                                      ignorecomments=ignorecomments,colors=colors)
         if indent>0:
             content = Tools.text_indent(content)
-        Tools.log(content,level=15,stdout=False)
+        if log:
+            Tools.log(content,level=15,stdout=False)
         print(content,end=end)
 
     @staticmethod
@@ -839,7 +951,7 @@ class Tools:
     def execute(command, showout=True, useShell=True, cwd=None, timeout=600,die=True,
                 async_=False, args=None, env=None,
                 interactive=False,self=None,
-                replace=True,asfile=False):
+                replace=True,asfile=False,original_command=None):
 
         if env is None:
             env={}
@@ -859,13 +971,13 @@ class Tools:
             print(command2)
             command3 = "bash %s" % path
             res = Tools.execute(command3,showout=showout,useShell=useShell,cwd=cwd,
-                            timeout=timeout,die=die,env=env,self=self,interactive=interactive,asfile=False)
+                            timeout=timeout,die=die,env=env,self=self,interactive=interactive,asfile=False,original_command=command )
             Tools.delete(path)
             return res
         else:
 
             if interactive:
-                res = Tools._execute_interactive(cmd=command, die=die)
+                res = Tools._execute_interactive(cmd=command, die=die,original_command=original_command)
                 Tools.log("execute interactive:%s"%command)
                 return res
             else:
@@ -1625,6 +1737,7 @@ class MyEnv():
     _cmd_installed = {}
     state = None
     __init = False
+    debug = False
 
     appname = "installer"
 
@@ -1746,7 +1859,7 @@ class MyEnv():
             MyEnv.sandbox_python_active=False #because python is not in sandbox because there is no sandbox (-:
 
             if not Tools.cmd_installed("curl") or not Tools.cmd_installed("unzip") or not Tools.cmd_installed("rsync"):
-                Tools.error_raise("Cannot continue, curl, rsync, unzip needs to be installed")
+                raise RuntimeError("Cannot continue, curl, rsync, unzip needs to be installed")
 
             return
 
@@ -1786,8 +1899,8 @@ class MyEnv():
             os.makedirs(MyEnv.config["DIR_TEMP"],exist_ok=True)
 
         if force or not MyEnv.state_exists("myenv_init"):
-
-            if MyEnv.platform()== "linux":
+            # Tools.log(MyEnv.platform())
+            if MyEnv.platform() == "linux":
                 script="""
                 if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
                     echo >> /etc/apt/sources.list
@@ -1803,15 +1916,15 @@ class MyEnv():
                 mkdir -p /sandbox/var/log
 
                 """
-            if "darwin" in MyEnv.platform():
+            elif "darwin" in MyEnv.platform():
                 if not Tools.cmd_installed("curl") or not Tools.cmd_installed("unzip") or not Tools.cmd_installed("rsync"):
                     script="""
                     brew install curl unzip rsync
                     """
-                    Tools.execute(script,interactive=True)
-
             else:
-                Tools.error_raise("only OSX and Linux Ubuntu supported.")
+                raise RuntimeError("only OSX and Linux Ubuntu supported.")
+
+            Tools.execute(script,interactive=True)
 
 
             MyEnv.state_set("myenv_init")
@@ -1961,7 +2074,7 @@ class MyEnv():
         {DIR_BASE} normally is /sandbox
         """
         if MyEnv.installer_only:
-            Tools.error_raise("config cannot be saved in installer only mode")
+            raise RuntimeError("config cannot be saved in installer only mode")
         Tools.file_edit(MyEnv.config_file_path)
 
     @staticmethod
@@ -1971,13 +2084,13 @@ class MyEnv():
         {DIR_BASE} normally is /sandbox
         """
         if MyEnv.installer_only:
-            Tools.error_raise("config cannot be saved in installer only mode")
+            raise RuntimeError("config cannot be saved in installer only mode")
         MyEnv.config = Tools.config_load(MyEnv.config_file_path)
 
     @staticmethod
     def config_save():
         if MyEnv.installer_only:
-            Tools.error_raise("config cannot be saved in installer only mode")
+            raise RuntimeError("config cannot be saved in installer only mode")
         Tools.config_save(MyEnv.config_file_path,MyEnv.config)
 
     @staticmethod
@@ -2038,13 +2151,17 @@ class JumpscaleInstaller():
         self.branch = ["development"]
         self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
-    def install(self,branch="development",secret="1234",private_key=""):
+    def install(self,branch=None,secret="1234",private_key_words=None):
 
         MyEnv.install()
 
         Tools.file_touch(os.path.join(MyEnv.config["DIR_BASE"], "lib/jumpscale/__init__.py"))
 
-        self.repos_get(branch=branch)
+        if branch:
+            #TODO: need to check if ok
+            self.branch = [i.strip() for i in branch.split(",") if i.strip()!=""]
+
+        self.repos_get()
         self.repos_link()
         self.cmds_link()
 
@@ -2054,16 +2171,41 @@ class JumpscaleInstaller():
         source env.sh
         mkdir -p /sandbox/openresty/nginx/logs
         mkdir -p /sandbox/var/log
-        js_shell 'j.core.installer_jumpscale.remove_old_parts()'
-        js_shell 'j.data.nacl.
-        js_shell 'j.tools.console.echo("JumpscaleX IS OK.")'
+        kosmos 'j.core.installer_jumpscale.remove_old_parts()'
+        kosmos --instruct=/tmp/instructions.toml
+        kosmos 'j.tools.console.echo("JumpscaleX IS OK.")'
         """
-        args={}
-        args["secret"]=secret
-        args["private_key"]=private_key
-        Tools.execute(script,interactive=True,args=args)
 
+        if private_key_words is None:
+            private_key_words = "" #will make sure it gets generated
 
+        if secret.lower().strip() == "ssh":
+            C="""
+            [[instruction]]
+            instruction_method = "j.data.nacl.configure"
+            name = "default"
+            sshagent_use = true
+            private_key = {WORDS}
+            generate = true
+            """
+        else:
+            C="""
+            [[instruction]]
+            instruction_method = "j.data.nacl.configure"
+            name = "default"
+            sshagent_use = false
+            secret = {SECRET}
+            private_key = {WORDS}
+            generate = true
+            """
+        kwargs={}
+        kwargs["WORDS"] = private_key_words
+        kwargs["SECRET"] = secret
+
+        C=Tools.text_strip(C,args=kwargs,replace=True)
+
+        Tools.file_write("/tmp/instructions.toml")
+        Tools.execute(script)
 
 
     def remove_old_parts(self):

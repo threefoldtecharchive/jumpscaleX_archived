@@ -17,13 +17,23 @@ if not os.path.exists(path):
 spec = util.spec_from_file_location("IT", path)
 IT = spec.loader.load_module()
 
-def dexec(cmd):
-    cmd2 = "docker exec -ti %s bash -c '%s'"%(args["name"],cmd)
-    IT.Tools.execute(cmd2,interactive=True,showout=False,replace=False,asfile=True)
+sys.excepthook = IT.my_excepthook
+
+
+def dexec(cmd,interactive=True):
+    if "'" in cmd:
+        cmd = cmd.replace("'","\"")
+    if interactive:
+        cmd2 = "docker exec -ti %s bash -c '%s'"%(args["name"],cmd)
+    else:
+        cmd2 = "docker exec -t %s bash -c '%s'"%(args["name"],cmd)
+    IT.Tools.execute(cmd2,interactive=interactive,showout=False,replace=False,asfile=True)
 
 def sshexec(cmd):
+    if "'" in cmd:
+        cmd = cmd.replace("'","\"")
     cmd2 = "ssh -t root@localhost -A -p %s '%s'"%(args["port"],cmd)
-    IT.Tools.execute(cmd2,interactive=True,showout=False,replace=False,asfile=True)
+    IT.Tools.execute(cmd2,interactive=False,showout=False,replace=False,asfile=True)
 
 def docker_names():
     names = IT.Tools.execute("docker container ls -a --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
@@ -59,6 +69,7 @@ def help():
     -y = answer yes on every question (for unattended installs)
     -c = will confirm all filled in questions at the end (useful when using -y)
     -r = reinstall, basically means will try to re-do everything without removing (keep data)
+    --debug will launch the debugger if something goes wrong
     
     ## encryption
     
@@ -298,6 +309,10 @@ def ui():
         T+=" - will map ssh port to: '%s'\n"%args["port"]
         T+=" - will map portrange '%s' (8000-8100) always in container.\n"% portrange_txt
 
+    if "debug" in args:
+        IT.MyEnv.debug = True
+        T+=" - runs in debug mode (means will use debugger when error).\n"
+
     T+="\n"
     print(T)
 
@@ -306,6 +321,8 @@ def ui():
             sys.exit(1)
 
     return args
+
+
 
 args = ui()
 if "r" in args and IT.MyEnv.installer_only is False:
@@ -338,7 +355,7 @@ if "1" in args or "2" in args:
 
     IT.MyEnv.installer_only = False #need to make sure we will install
     installer = IT.JumpscaleInstaller()
-    installer.install(branch=args["branch"],secret=args["secret"],private_key=args["private_key"])
+    installer.install(branch=args["branch"],secret=args["secret"],private_key_words=args["private_key"])
 
     if "w" in args:
         if "1" in args:
@@ -400,7 +417,8 @@ elif "3" in args:
         if item in args:
             args_txt+=" -%s"%item
     args_txt+=" -y"
-    for item in ["codepath","secret","private_key"]:
+    # args_txt+=" -c"
+    for item in ["codepath","secret","private_key","debug"]:
         if item in args:
             args_txt+=" --%s='%s'"%(item,args[item])
 
