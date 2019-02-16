@@ -19,11 +19,13 @@ _DEFAULT_KEY_SCAN_COUNT = 3
 
 _MAX_RIVINE_TRANSACTION_INPUTS = 99
 
-# TODO (TESTS, for now already manually tested and confirmed):
-# * Minter Transactions (single sig and multi sig)
-
 # TODO:
-# add support for transaction listing (need to work this out)
+#
+# * add optional height property to base transaction class,
+#   and populate it when possible;
+#
+# * add support for transaction listing (need to work this out)
+#
 
 class TFChainWallet(j.application.JSBaseConfigClass):
     """
@@ -602,6 +604,10 @@ class TFChainMinter():
 
         # set the new mint condition
         txn.mint_condition = j.clients.tfchain.types.conditions.from_recipient(minter)
+        # minter definition must be of unlock type 1 or 3
+        ut = txn.mint_condition.unlockhash.type
+        if ut not in (UnlockHashType.PUBLIC_KEY, UnlockHashType.MULTI_SIG):
+            raise ValueError("{} is an invalid unlock hash type and cannot be used for a minter definition".format(ut))
 
         # optionally set the data
         if data is not None:

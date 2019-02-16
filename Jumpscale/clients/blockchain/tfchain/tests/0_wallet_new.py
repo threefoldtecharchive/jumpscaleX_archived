@@ -1,5 +1,7 @@
 from Jumpscale import j
 
+from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChainExplorerGetClientStub
+
 def main(self):
     """
     to run:
@@ -14,6 +16,10 @@ def main(self):
     # for standard net you could also immediate create a new wallet using
     # `c = j.tfchain.clients.mydevclient`, or the more explicit form
     # `c = j.clients.tfchain.new("mydevclient", network_type="STD")`
+
+    # (we replace internal client logic with custom logic as to ensure we can test without requiring an active network)
+    explorer_client = TFChainExplorerGetClientStub()
+    c._explorer_get = explorer_client.explorer_get
 
     # create a new devnet wallet
     w = c.wallets.mywallet # is the implicit form of `c.wallets.new("mywallet")`

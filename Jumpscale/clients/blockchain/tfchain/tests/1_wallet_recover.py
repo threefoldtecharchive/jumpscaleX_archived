@@ -1,5 +1,7 @@
 from Jumpscale import j
 
+from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChainExplorerGetClientStub
+
 def main(self):
     """
     to run:
@@ -10,6 +12,10 @@ def main(self):
     # create a tfchain client for devnet
     c = j.clients.tfchain.new("mydevclient", network_type="DEV")
     # or simply `c = j.tfchain.clients.mydevclient`, should the client already exist
+
+    # (we replace internal client logic with custom logic as to ensure we can test without requiring an active network)
+    explorer_client = TFChainExplorerGetClientStub()
+    c._explorer_get = explorer_client.explorer_get
 
     # the devnet genesis seed is the seed of the wallet,
     # which receives all block stakes and coins in the genesis block of the tfchain devnet
