@@ -15,7 +15,7 @@ def execute_cmd(cmd):
     return response
 
 def build_image():
-    response = execute_cmd('docker build --rm -t .')
+    response = execute_cmd('docker build --rm -t jumpscale /sandbox/code/github/threefoldtech/jumpscaleX/scripts')
     if response.returncode:
         send_msg('Failed to bulid docker image')
         containers_remove()
@@ -24,8 +24,8 @@ def build_image():
 
 def run_tests():
     docker_cmd = "docker run --rm -t jumpscale /bin/bash -c"
-    env_cmd = "source /sandbox/env.sh; export NACL_SECRET=test;"
-    run_cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/test.py"
+    env_cmd = "source /sandbox/env.sh; export NACL_SECRET={};".format(os.environ.get('Nacl'))
+    run_cmd = "python3.6 /sandbox/code/github/threefoldtech/jumpscaleX/test.py 1>/dev/null"
     cmd = '{} "{} {}"'.format(docker_cmd, env_cmd, run_cmd)
     response = execute_cmd(cmd)
     if response.stderr not in [None, '']:
@@ -33,8 +33,8 @@ def run_tests():
         with open (file_name, 'w+') as f:
             f.write(response.stderr)
 
-        file_link = '{}/{}'.format('serverip', file_name)
-        send_msg('test has errors ' + file_link)
+        file_link = '{}/{}'.format(os.environ.get('ServerIp'), file_name)
+        send_msg('Tests had errors ' + file_link)
     else:
         send_msg('Tests Passed')
 
@@ -64,5 +64,3 @@ if __name__ == "__main__":
     run_tests()
     containers_remove()
     images_clean()
-
-
