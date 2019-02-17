@@ -4,9 +4,9 @@
 jumpscale has ability to call any command in jumpscale by means of an instruction toml file.
 This is a good way how to do something automated e.g. during an automated install.
 
-"""python
+```python
 j.data.nacl.configure(name='default', privkey_words=None, secret=None, sshagent_use=None, interactive=False, generate=False)
-"""
+```
 
 can be called as follows
 
