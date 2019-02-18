@@ -28,10 +28,10 @@ def run_tests():
     run_cmd = "python3.6 /sandbox/code/github/threefoldtech/jumpscaleX/test.py 1>/dev/null"
     cmd = '{} "{} {}"'.format(docker_cmd, env_cmd, run_cmd)
     response = execute_cmd(cmd)
-    if response.stdout not in [None, '']:
-        file_name = '{}.log'.format(str(datetime.now())[:16])
+    if 'Error In' in response.stdout:
+        file_name = '{}.log'.format(str(datetime.now())[:13].replace(' ', '_'))
         with open (file_name, 'w+') as f:
-            f.write(response.stdout)
+            f.write(response.stdout[response.stdout.find('Error In'):])
 
         file_link = '{}/{}'.format(os.environ.get('ServerIp'), file_name)
         send_msg('Tests had errors ' + file_link)
