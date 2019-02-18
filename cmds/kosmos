@@ -23,7 +23,7 @@ parser.add_argument('--init', default=False,
 
 parser.add_argument('--instruct', default=None,
                 help="if you want to instruct kosmos to execute instructions see documentation kosmos_instruct.md .")
-parser.add_argument('--ignore-error', default = False,action='store_true',
+parser.add_argument('--ignore_error', default = False,action='store_true',
                 help="will continue instructions even if error")
 
 parser.add_argument('--debug', default=False,
@@ -37,6 +37,11 @@ if options.quiet:
 
 if options.reset:
     j.shell()
+
+if options.debug:
+    j.application.debug = True
+    j.core.myenv.debug = True
+
 
 def instruction_process(ddict):
 
@@ -55,7 +60,8 @@ def instruction_process(ddict):
         method = eval(res["method"])
     except Exception as e:
         extype, value, tb = sys.exc_info()
-        traceback.print_exc()
+        j.core.tools.log(e,tb=tb,level=40)
+        # traceback.print_exc()
         if options.debug:
             pudb.post_mortem(tb)
             sys.exit(1)
@@ -68,7 +74,8 @@ def instruction_process(ddict):
         result = method(**ddict)
     except Exception as e:
         extype, value, tb = sys.exc_info()
-        traceback.print_exc()
+        j.core.tools.log(e,tb=tb,level=40)
+        # traceback.print_exc()
         if options.debug:
             pudb.post_mortem(tb)
             sys.exit(1)
@@ -112,7 +119,7 @@ if options.instruct:
                 if key not in res:
                     res[key]=[]
                 res[key].append(resultone)
-                if rc>0 and not options.ignore-error:
+                if rc>0 and not options.ignore_error:
                     print("ERROR, could not execute all instructions")
                     instructions_result_print(res)
                     sys.exit(1)

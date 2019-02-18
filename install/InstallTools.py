@@ -920,7 +920,7 @@ class Tools:
         if args is not None:
             content = Tools.text_replace(content,args=args)
         if strip:
-            content = Tools.text_strip(content)
+            content = Tools.text_strip(content,replace=False)
         if wrap > 0:
             content = Tools.text_wrap(content, wrap)
 
@@ -2185,7 +2185,7 @@ class JumpscaleInstaller():
             instruction_method = "j.data.nacl.configure"
             name = "default"
             sshagent_use = true
-            private_key = {WORDS}
+            privkey_words = '{WORDS}'
             generate = true
             """
         else:
@@ -2195,7 +2195,7 @@ class JumpscaleInstaller():
             name = "default"
             sshagent_use = false
             secret = {SECRET}
-            private_key = {WORDS}
+            privkey_words = '{WORDS}'
             generate = true
             """
         kwargs={}
@@ -2204,7 +2204,7 @@ class JumpscaleInstaller():
 
         C=Tools.text_strip(C,args=kwargs,replace=True)
 
-        Tools.file_write("/tmp/instructions.toml")
+        Tools.file_write("/tmp/instructions.toml",C)
         Tools.execute(script)
 
 
@@ -2276,7 +2276,7 @@ class JumpscaleInstaller():
             #     continue
 
             args={"NAME":item,"LOC":loc,"ALIAS":alias}
-            Tools.log(Tools.text_strip("link {LOC}/{ALIAS} to {ALIAS}",args=args))
+            Tools.log(Tools.text_replace("link {LOC}/{ALIAS} to {ALIAS}",args=args))
             Tools.execute(script,args=args)
 
 

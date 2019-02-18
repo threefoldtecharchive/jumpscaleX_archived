@@ -22,22 +22,12 @@ class Guid(String):
     '''
 
     NAME = 'guid'
-    ALIAS = "guid"
 
     def __init__(self):
         String.__init__(self)
 
-    def clean(self, value):
-        if not self.check(value):
-            raise ValueError("Invalid guid :%s" % value)
-        return value
 
     def check(self, value):
-        ''' Check whether provided value is a valid GUID string
-            (WITHOUT using insane regular expressions.  also catches
-             INVALID uuid4 which would otherwise be valid hex strings
-             https://gist.github.com/ShawnMilo/7777304)
-        '''
         try:
             val = UUID(value, version=4)
         except (ValueError, AttributeError):
@@ -53,8 +43,7 @@ class Guid(String):
         if self.check(v):
             return v
         else:
-            raise ValueError("%s not properly formatted: '%s'" %
-                             (Guid.NAME, v))
+            raise ValueError("%s not properly formatted: '%s'" % (Guid.NAME, v))
 
     toString = fromString
 
@@ -64,7 +53,6 @@ class Email(String):
     """
 
     NAME = 'email'
-    ALIAS = "email"
 
     def __init__(self):
         String.__init__(self)
@@ -80,26 +68,11 @@ class Email(String):
         return self._RE.fullmatch(value) is not None
 
     def clean(self, v):
-        if not j.data.types.string.check(v):
-            raise ValueError("Input needs to be string:%s" % v)
-        elif not self.check(v):
+        v = j.data.types.string.clean(v)
+        if not self.check(v):
             raise ValueError("Invalid email :%s" % v)
         v = v.lower()
-        v.strip()
         return v
-
-    def fromString(self, v):
-        v = self.clean(v)
-        if self.check(v):
-            return v
-        else:
-            raise ValueError("%s not properly formatted: '%s'" %
-                             (self.NAME, v))
-
-    toString = fromString
-
-    def get_default(self):
-        return "changeme@example.com"
 
 
 class Path(String):
@@ -116,12 +89,6 @@ class Path(String):
         Check whether provided value is a valid
         '''
         return self._RE.fullmatch(value) is not None
-
-    def clean(self, value):
-        value = j.data.types.string.clean(value)
-        if not self.check(value):
-            raise ValueError("Invalid path :%s" % value)
-        return value
 
     def get_default(self):
         return ""
@@ -142,15 +109,6 @@ class Url(String):
         Check whether provided value is a valid
         '''
         return self._RE.fullmatch(value) is not None
-
-    def clean(self, value):
-        value = j.data.types.string.clean(value)
-        if not self.check(value):
-            raise ValueError("Invalid Url :%s" % value)
-        return value
-
-    def get_default(self):
-        return "www.example.com"
 
 
 class Tel(String):
@@ -182,13 +140,10 @@ class Tel(String):
         v = v.replace("(", "")
         v = v.replace(")", "")
         v = v.replace(" ", "")
-        v.strip()
         if not self.check(v):
             raise ValueError("Invalid mobile number :%s" % v)
         return v
 
-    def get_default(self):
-        return "+32 475.99.99.99"
 
 
 class IPRange(String):
@@ -207,97 +162,7 @@ class IPRange(String):
         '''
         return self._RE.fullmatch(value) is not None
 
-    def clean(self, value):
-        value = j.data.types.string.clean(value)
-        if not self.check(value):
-            raise ValueError("Invalid IPrange :%s" % value)
-        return value
 
-    def get_default(self):
-        return "192.168.1.1/24"
-
-
-class IPAddressObject(TypeBaseObjClass):
-    
-    NAME = 'ipaddr'
-    ALIAS = "ipaddr"
-
-    def __init__(self, val):
-        self._jstype = j.data.types.ipaddr
-        self._val = val
-        val = j.data.types.string.clean(val)
-        self._md5 = j.data.hash.md5_string(str(self))  # so it has the default as well
-        j.data.types.ipaddrs[self._md5] = self
-        self._jumpscale_location = "j.data.types.ipaddrs['%s']" % self._md5
-
-        try:
-            self._val = IPv4Address(val)
-        except (AddressValueError, NetmaskValueError):
-            pass
-
-        if not self._val:
-            try:
-                self._val = IPv6Address(val)
-            except (AddressValueError, NetmaskValueError):
-                pass
-
-    def get_default(self):
-        return "192.168.1.1"
-
-    def check(self, ip):
-        """Validates IP addresses.
-        """
-        return self.is_valid_ipv4(ip) or self.is_valid_ipv6(ip)
-
-    def clean(self, ip):
-        ip = j.data.types.string.clean(ip)
-        if not self.check(ip):
-            raise ValueError("Invalid IPAddress :%s" % ip)
-        ip_value = IPv4Address(ip)
-        ip = ip_value.compressed
-        return ip
-
-    def is_valid_ipv4(self, ip):
-        """ Validates IPv4 addresses.
-            https: // stackoverflow.com/questions/319279/
-            the use of regular expressions is INSANE. and also wrong.
-            use standard python3 ipaddress module instead.
-        """
-        try:
-            return IPv4Address(ip) and True
-        except (AddressValueError, NetmaskValueError):
-            return False
-
-    def is_valid_ipv6(self, ip):
-        """ Validates IPv6 addresses.
-            https: // stackoverflow.com/questions/319279/
-            the use of regular expressions is INSANE. and also wrong.
-            use standard python3 ipaddress module instead.
-        """
-        try:
-            return IPv6Address(ip) and True
-        except (AddressValueError, NetmaskValueError):
-            return False
-
-    def capnp_schema_get(self, name, nr):
-
-        return "%s @%s :Data;" % (name, nr)
-    
-    def __str__(self):
-        return "Ipadress: %s (default:%s)" % (self.__repr__(), self._val)
-
-    def __repr__(self):
-        return "{}".format(self._val)
-
-class IPAddress:
-    """
-    """
-    NAME = 'ipaddr'
-    ALIAS = "ipaddr"
-    BASETYPE = 'string'
-    
-    def get(self, val="192.168.1.1"):
-        return IPAddressObject(val)
 
 
 class IPPort(Integer):
@@ -325,11 +190,6 @@ class IPPort(Integer):
             pass
         return False
 
-    def clean(self, value):
-        if not self.check(value):
-            raise ValueError("Invalid IP port: %s" % value)
-        return value
-
 
 class Numeric(String):
     """
@@ -337,12 +197,14 @@ class Numeric(String):
 
     storformat = 6 or 10 bytes (10 for float)
 
+    will return int as jumpscale basic implementation
+
     """
     NAME = 'numeric'
     ALIAS = 'n'
 
     def get_default(self):
-        return self.str2bytes("0 USD")
+        return 0
 
     def capnp_schema_get(self, name, nr):
         """
@@ -356,17 +218,15 @@ class Numeric(String):
         return "%s @%s :Data;" % (name, nr)
 
     def check(self, value):
-        '''Check whether provided value is a numeric'''
-        if isinstance(value, str):
-            try:
-                import ipdb; ipdb.set_trace()
-                self.str2bytes(value)
-                return True
-            except :
-                return False
-        return False
+        '''Check whether provided value is a numeric, is not 100% exact'''
+        if not isinstance(value, bytes):
+            return False
+        if len(bindata) not in [6, 10]:
+            return False
+        return True
 
     def bytes2cur(self, bindata, curcode="usd", roundnr=None):
+
         if bindata == b'':
             return 0
 
@@ -640,12 +500,16 @@ class Numeric(String):
     def clean(self, data):
         # print("num:clean:%s"%data)
         if j.data.types.string.check(data):
-            data = data.strip().strip("'").strip("\"").strip()
-            return self.str2bytes(data)
+            data = j.data.types.string.clean(data)
+            val = self.str2bytes(data)
         elif j.data.types.bytes.check(data):
-            return data
-        else:
-            return self.str2bytes("%s USD" % data)
+            val = data
+        elif isinstance(int,data) or isinstance(int,float):
+            #means is already in native format, native format always USD
+            return float(data)
+
+        return self.bytes2cur(val,curcode="usd")
+
 
     def fromString(self, txt):
         return self.clean(txt)
@@ -809,6 +673,8 @@ class DateTime(String):
         else:
             raise ValueError("Input needs to be string:%s" % v)
 
+    def capnp_schema_get(self, name, nr):
+        return "%s @%s :UInt32;" % (name, nr)
 
     def test(self):
         """

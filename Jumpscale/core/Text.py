@@ -186,7 +186,7 @@ class Text(object):
         # out.decode()
         return out
 
-    def indent(self, instr, nspaces=4, wrap=180, strip=True, indentchar=" ",args={}):
+    def indent(self, instr, nspaces=4, wrap=180, strip=True, indentchar=" ",args=None):
         """Indent a string a given number of spaces.
 
         Parameters

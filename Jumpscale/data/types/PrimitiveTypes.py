@@ -35,14 +35,13 @@ class String(TypeBaseClass):
         """
         if value is None:
             value = ""
-        elif not self.check(value):
-            raise ValueError("Invalid value for string: '%s'" % value)
-        value = str(value)
-        if value == "\'\'" or value == "\"\"" or value == "":
-            return ""
-        value = value.strip()  # for extra linespaces
-        if (value.startswith("\"") and value.endswith("\"")) or (value.startswith("'") and value.endswith("'")):
-            value = value[1:-1]
+        try:
+            value = str(value)
+        except Exception as e:
+            raise j.exceptions.input("cannot convert to string")
+
+        value = value.strip().strip("'").strip().strip("\"").strip()
+
         return value
 
     def unique_sort(self, txt):
@@ -63,21 +62,13 @@ class StringMultiLine(String):
         """
         will do a strip on multiline
         """
-        value = j.data.types.string.clean(value)
-        if value == "" or value is None:
-            value = ""
-        elif not self.check(value):
-            raise ValueError("Invalid String Multiline type %s" % value)
-        value = str(value)
-        return j.core.text.strip(value)
-
-    def toString(self, v):
         if value is None:
             value = ""
-        if not self.check(value):
-            raise ValueError("Invalid value for StringMultiLine: '%s'" % value)
-        v = self.clean(v)
-        return v
+        try:
+            value = str(value)
+        except Exception as e:
+            raise j.exceptions.input("cannot convert to string")
+        return value
 
     def python_code_get(self, value):
         """
@@ -125,10 +116,16 @@ class Bytes(TypeBaseClass):
     def fromString(self, s):
         """
         """
-        s = j.data.types.string.clean(s)
-        if not isinstance(s, str):
-            raise ValueError("Should be string:%s" % s)
-        return s.encode()
+        if isinstance(str,s):
+            try:
+                s=base64.b64decode(s) #could be rather dangerous
+                return s
+            except:
+                pass
+            s = j.data.types.string.clean(s)
+            return s.encode()
+        else:
+            raise j.exceptions.input("input is not string")
 
     def toString(self, v):
         v = self.clean(v)
@@ -149,10 +146,10 @@ class Bytes(TypeBaseClass):
 
     def clean(self, value):
         """
-        only support b64encoded strings and binary strings
+        supports b64encoded strings, std strings which can be encoded and binary strings
         """
         if isinstance(value, str):
-            value = base64.b64decode(value)
+            value = self.fromString(value)
         else:
             if not self.check(value):
                 raise RuntimeError("byte input required")
@@ -168,7 +165,6 @@ class Bytes(TypeBaseClass):
         return "%s @%s :Data;" % (name, nr)
 
     def toml_string_get(self, value, key=""):
-        value = self.clean(value)
         if key == "":
             return self.toString(value)
         else:
@@ -202,19 +198,16 @@ class Boolean(TypeBaseClass):
 
     def clean(self, value):
         """
-        used to change the value to a predefined standard for this type
+        if string and true, yes, y, 1 then True
+        if int and 1 then True
+
+        everything else = False
+
         """
         if isinstance(value, str):
-            value = value.strip().strip("'").strip("\"")
-        if value in ["1", 1, True]:
-            value = True
-        elif j.data.types.string.check(value) and value.strip().lower() in ["true", "yes", "y"]:
-            value = True
-        elif j.data.types.string.check(value) and value.strip().lower() in ["false", "no", "n", "f"]:
-            value = False
-        else:
-            raise ValueError("Invalid value for boolean: '%s'" % value)
-        return value
+            value = j.data.types.string.clean(value).lower().strip()
+            return value in ["true", "yes", "y","1"]
+        return value in [1, True]
 
     def python_code_get(self, value):
         """
@@ -285,13 +278,13 @@ class Integer(TypeBaseClass):
         if isinstance(value, float):
             value = int(value)
         elif isinstance(value, str):
-            value = value.strip().strip("'").strip("\"").strip()
+            value = j.data.types.string.clean(value).strip()
             if "," in value:
                 value = value.replace(",", "")
             value = int(value)
         if not self.check(value):
             raise ValueError("Invalid value for integer: '%s'" % value)
-        return int(value)
+        return value
 
     def python_code_get(self, value):
         """
@@ -346,7 +339,6 @@ class Float(TypeBaseClass):
 
     def clean(self, value):
         """
-        used to change the value to a predefined standard for this type
         """
         if self.check(value):
             return value
@@ -405,6 +397,9 @@ class Percent(Float):
         assert value < 1.00001
         return value
 
+    def get_default(self):
+        return 0.0
+
     def toHR(self, v):
         return "{:.2%}".format(self.clean(v))
 
@@ -433,14 +428,14 @@ class CapnpBin(Bytes):
     def toHR(self, v):
         return self.clean(v)
 
+    def python_code_get(self, value):
+        raise NotImplemented()
+
     def capnp_schema_get(self, name, nr):
         return "%s @%s :Data;" % (name, nr)
 
     def toml_string_get(self, value, key):
-        if key == "":
-            return "%s" % (self.clean(value))
-        else:
-            return "%s = %s" % (key, self.clean(value))
+        raise NotImplemented()
 
 
 class JSDataObject(Bytes):

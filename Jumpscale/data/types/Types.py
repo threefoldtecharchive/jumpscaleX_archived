@@ -6,6 +6,7 @@ from .CustomTypes import *
 from .CollectionTypes import *
 from .PrimitiveTypes import *
 from .Enumeration import Enumeration
+from .IPAddress import *
 from Jumpscale import j
 
 

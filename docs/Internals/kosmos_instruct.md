@@ -94,7 +94,7 @@ kosmos --instruct="/tmp/myconfig.toml" --debug
 will call the debugger when there is an issue, super easy to debug.
 
 ```bash
-kosmos --instruct="/tmp/myconfig.toml" --ignore-error
+kosmos --instruct="/tmp/myconfig.toml" --ignore_error
 ```
 
 will ignore errors and do all the instructions even if errors happen

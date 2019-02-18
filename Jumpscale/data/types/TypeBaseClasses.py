@@ -4,48 +4,127 @@ from Jumpscale import j
 
 class TypeBaseObjClass():
 
-    def possible(self):
-        '''
-        Check whether provided value can be converted to this type
-        '''
-        try:
-            self.clean(self.value)
-        except:
-            return False
-        return True
+    def __init__(self,typebase,value):
+        __slots__ = ['_typebase', '_value']
 
-    def capnp_schema_get(self, name, nr):
-        return self.capnp_schema_get(name, nr)
+        self._typebase = typebase
+        self._value_ = self._typebase.clean(value)
 
-    def get_default(self):
-        return self.get_default()
+    def _capnp_schema_get(self, name, nr):
+        return self._typebase.capnp_schema_get(name,nr)
 
-    def toString(self, v):
-        return self.clean(v)
+    @property
+    def _string(self):
+        return self._typebase._toString(self._value_)
 
-    def toData(self):
-        value = self.clean(self.value)
-        return j.data.serializers.msgpack.dumps(value)
+    @property
+    def _data(self):
+        return self._typebase._toData(self._value_)
 
-    def clean(self):
-        """
-        can use int or string,
-        will find it and return as string
-        """
-        return self.value
+    @property
+    def _python_code(self):
+        return self._typebase._python_code_get(self._value_)
 
-    def python_code_get(self, value):
-        value = self.clean(value)
-        return "'%s'" % self.toString(value)
+    @property
+    def _value(self):
+        return self._value_
 
-    def __equal__(self):
-        # TODO
-        pass
+    @_value.setter
+    def _value(self,val):
+        self._value_ = self._typebase.clean(val)
 
     def __str__(self):
-        return "TODO: %s (default:%s)" % (self.values_str, self.default)
+        if self._value_:
+            return "%s: %s"%(self._typebase.__class__.NAME,self._value)
+        else:
+            return "%s: NOTSET"%(self._typebase.__class__.NAME)
 
     __repr__ = __str__
+
+
+class TypeBaseObjClassNumeric(TypeBaseObjClass):
+
+    @property
+    def _value(self):
+        return float(self._value_)
+
+    @_value.setter
+    def _value(self,val):
+        self._value_ = self._typebase.clean(val)
+
+
+    # def __hash__(self):
+    #     return hash(self._value)
+
+    def __eq__(self, other):
+        other = self._other_convert(other)
+        return other == float(self._value)
+
+    def __bool__(self):
+        return self._value is not None
+
+    def _other_convert(self,other):
+        if isinstance(other,TypeBaseObjClass):
+            return float(self._typebase.clean(other._value))
+        else:
+            return float(self._typebase.clean(other))
+
+    def __add__(self, other):
+        other = self._other_convert(other)
+        return other + float(self._value)
+
+    def __iadd__(self, other):
+        other = self._other_convert(other)
+        self.value = other + float(self._value)
+        return self
+
+    def __sub__(self, other):
+        other = self._other_convert(other)
+        return float(self._value)- other
+
+    def __mul__(self, other):
+        other = self._other_convert(other)
+        return float(self._value)* other
+
+    def __matmul__(self, other):
+        other = self._other_convert(other)
+        return float(self._value)@ other
+
+    def __truediv__(self, other):
+        other = self._other_convert(other)
+        return float(self._value)/ other
+
+    def __floordiv__(self, other):
+        other = self._other_convert(other)
+        return float(self._value)// other
+
+    def __mod__(self, other):
+        raise NotImplemented()
+
+    def __divmod__(self, other):
+        raise NotImplemented()
+
+    def __pow__(self, other):
+        raise NotImplemented()
+
+    def __lshift__(self):
+        raise NotImplemented()
+
+    def __neg__(self):
+        return float(self._value)* -1
+
+    def __float__(self):
+        return float(self._value)
+
+    def __int__(self):
+        return int(self._value)
+
+
+    __rshift__ = __lshift__
+    __and__ = __lshift__
+    __xor__ = __lshift__
+    __or__ = __lshift__
+
 
 
 class TypeBaseClass():
@@ -54,18 +133,17 @@ class TypeBaseClass():
         return str(self.clean(v))
 
     def toHR(self, v):
-        return self.clean(v)
+        return self.toString(v)
 
     def toData(self, v):
-        v = self.clean(v)
-        return j.data.serializers.msgpack.dumps(v)
+        return self.clean(v)
 
     def check(self, value):
         '''
         - if there is a specific implementation e.g. string, float, enumeration, it will check if the input is that implementation
         - if not strict implementation or we cannot know e.g. an address will return None
         '''
-        return isinstance(value, str)
+        raise RuntimeError("not implemented")
 
     def possible(self, value):
         """
@@ -83,13 +161,9 @@ class TypeBaseClass():
 
     def clean(self, value):
         """
-        will do a strip and conversion to string
         """
-        if value is None:
-            value = ""
-        value = str(value)
-        value = value.strip("").strip("'").strip("\"").strip("")
-        return value
+        raise RuntimeError("not implemented")
+
 
     def python_code_get(self, value):
         """
@@ -108,7 +182,6 @@ class TypeBaseClass():
             return "%s = '%s'" % (key, self.clean(value))
 
     def capnp_schema_get(self, name, nr):
-        return "%s @%s :Text;" % (name, nr)
+        raise RuntimeError("not implemented")
+        # return "%s @%s :Text;" % (name, nr)
 
-    def unique_sort(self, txt):
-        return "".join(j.data.types.list.clean(txt))

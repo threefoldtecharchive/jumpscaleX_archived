@@ -123,6 +123,10 @@ class NACL(j.application.JSBaseClass):
         j.sal.fs.remove(self._path_encryptor_for_secret)
 
         redis_key="secret_%s"%self.name
+
+        if j.core.db is None:
+            j.clients.redis.core_get()
+
         j.core.db.delete(redis_key)
 
         if j.application.interactive and sshagent_use is None:

@@ -16,6 +16,7 @@ except BaseException:
     pygmentsObj = False
 
 import traceback
+import pudb
 
 class ErrorHandler():
 
@@ -33,19 +34,19 @@ class ErrorHandler():
         sys.excepthook = self.excepthook
         self.inException = False
 
-    def try_except_error_process(self, err, die=True):
-        """
-        how to use
-
-        try:
-            ##do something
-        except Exception,e:
-            j.errorhandler.try_except_error_process(e,die=False) #if you want to continue
-
-        """
-
-        ttype, msg, tb = sys.exc_info()
-        self.excepthook(ttype, err, tb, die=die)
+    # def try_except_error_process(self, err, die=True):
+    #     """
+    #     how to use
+    #
+    #     try:
+    #         ##do something
+    #     except Exception,e:
+    #         j.errorhandler.try_except_error_process(e,die=False) #if you want to continue
+    #
+    #     """
+    #
+    #     ttype, msg, tb = sys.exc_info()
+    #     self.excepthook(ttype, err, tb, die=die)
 
     def _error_process(self, err, tb_text=""):
         # self._j.shell()
@@ -67,24 +68,31 @@ class ErrorHandler():
             sys.exit(1)
             return
 
-        print(err)
-        tb_text=""
-        if "trace_do" in err.__dict__:
-            if err.trace_do:
-                err._trace = self._trace_get(ttype, err, tb)
-                # err.trace_print()
-                print(err)
-                tb_text = err._trace
-        else:
-            tb_text = self._trace_get(ttype, err, tb)
-            self._trace_print(tb_text)
-
-        self.inException = True
-        self._error_process(err, tb_text=tb_text)
-        self.inException = False
-
-        if die:
-            sys.exit(1)
+        self._j.core.tools.log(msg=err,tb=tb,level=40)
+        if self._j.core.myenv.debug:
+            pudb.post_mortem(tb)
+        self._j.core.tools.pprint("{RED}CANNOT CONTINUE{RESET}")
+        sys.exit(1)
+        #
+        #
+        # print(err)
+        # tb_text=""
+        # if "trace_do" in err.__dict__:
+        #     if err.trace_do:
+        #         err._trace = self._trace_get(ttype, err, tb)
+        #         # err.trace_print()
+        #         print(err)
+        #         tb_text = err._trace
+        # else:
+        #     tb_text = self._trace_get(ttype, err, tb)
+        #     self._trace_print(tb_text)
+        #
+        # self.inException = True
+        # self._error_process(err, tb_text=tb_text)
+        # self.inException = False
+        #
+        # if die:
+        #     sys.exit(1)
 
     def _filterLocals(self, k, v):
         try:
