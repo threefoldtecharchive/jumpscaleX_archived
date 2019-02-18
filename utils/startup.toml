@@ -10,6 +10,6 @@ export HOME=/root
 export LANG=en_US.UTF-8
 export LANGUAGE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
-source /sandbox/env.sh
+/bin/bash -c \"source /sandbox/env.sh\"
 exec js_shell \"j.tools.markdowndocs.webserver()\"
 """
