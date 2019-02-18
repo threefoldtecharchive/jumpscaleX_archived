@@ -734,7 +734,15 @@ class Tools:
 
         msg = LOGFORMAT.format(**logdict)
 
-        print(msg)
+        p = print
+        if MyEnv.config.get('printlogs') and MyEnv.config['DEBUG']:
+            # another problem is the stdout is the stdout
+            # if i captured stdout, it would be simply a loopback!
+            # if what is needed is only 10 lines of logs,
+            # i think it would be ok
+            p = MyEnv.config['printlogs']
+
+        p(msg)
 
         if logdict["data"] not in ["",None]:
             if isinstance(logdict["data"],dict):
@@ -742,7 +750,7 @@ class Tools:
             else:
                 data = logdict["data"]
             data=Tools.text_indent(data,10,strip=True)
-            print (data.rstrip())
+            p(data.rstrip())
 
 
     @staticmethod

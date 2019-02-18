@@ -49,8 +49,8 @@ class LoggerBase(j.application.JSBaseConfigClass):
         redis_secret = ""
         level_min = 0
         filter_processid = "" (LS)
-        filter_context= "" (LS) 
-        
+        filter_context= "" (LS)
+
         """
 
     def _init(self,**kwargs):

@@ -231,9 +231,22 @@ class HasDocString(PythonInputFilter):
         return len(self.python_input.docstring_buffer.text) > 0
 
 
-def setup_docstring_containers(repl):
+log_pane_buffer = Buffer()
+
+
+class HasLogs(PythonInputFilter):
+
+    def __call__(self):
+        return len(log_pane_buffer.text) > 0
+
+
+def get_ptpython_parent_container(repl):
     # see ptpython.layout
-    parent_container = repl.app.layout.container.children[0].children[0]
+    return repl.app.layout.container.children[0].children[0]
+
+
+def setup_docstring_containers(repl):
+    parent_container = get_ptpython_parent_container(repl)
     # remove ptpython docstring containers, we have ours now
     parent_container.children = parent_container.children[:-2]
 
@@ -256,7 +269,35 @@ def setup_docstring_containers(repl):
     ])
 
 
+def addlogstopane(msg):
+    text = log_pane_buffer.text
+    text += '\n' + msg
+    log_pane_buffer.reset(document=Document(text, cursor_position=0))
+
+
+def setup_logging_containers(repl):
+    parent_container = get_ptpython_parent_container(repl)
+    parent_container.children.extend([
+        ConditionalContainer(
+            content=Window(
+                height=Dimension.exact(1),
+                char='\u2500',
+                style='class:separator'),
+            filter=HasLogs(repl)),
+        ConditionalContainer(
+            content=Window(
+                BufferControl(
+                    buffer=log_pane_buffer,
+                    lexer=PygmentsLexer(PythonLexer),
+                ),
+                height=Dimension(max=12)),
+            filter=HasLogs(repl)),
+    ])
+
+
 def ptconfig(repl):
+    j = KosmosShellConfig.j
+
     repl.exit_message = "We hope you had fun using te kosmos shell"
     repl.show_docstring = True
 
@@ -391,4 +432,6 @@ def ptconfig(repl):
 
     repl._completer.__class__.get_completions = get_completions
 
+    j.core.myenv.config['printlogs'] = addlogstopane
     setup_docstring_containers(repl)
+    setup_logging_containers(repl)
