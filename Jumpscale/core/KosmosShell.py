@@ -272,10 +272,13 @@ def setup_docstring_containers(repl):
 def addlogstopane(msg):
     text = log_pane_buffer.text
     text += '\n' + msg
-    log_pane_buffer.reset(document=Document(text, cursor_position=0))
+    pos = len(text) - 1
+    log_pane_buffer.reset(document=Document(text, cursor_position=pos))
 
 
 def setup_logging_containers(repl):
+    # FIXME: add custom lexer for coloring logs (pygments)
+    # instead of PythonLexer
     parent_container = get_ptpython_parent_container(repl)
     parent_container.children.extend([
         ConditionalContainer(
