@@ -3,6 +3,9 @@ Tfchain Client
 """
 
 from Jumpscale import j
+
+import sys
+
 from .types.ConditionTypes import UnlockHash, UnlockHashType, ConditionMultiSignature
 from .types.PrimitiveTypes import Hash, Currency
 from .types.IO import CoinOutput, BlockstakeOutput
@@ -246,6 +249,9 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
                     confirmations=int(info['confirmations']),
                 )
 
+            # sort the transactions by height
+            transactions.sort(key=(lambda txn: sys.maxsize if txn.height < 0 else txn.height), reverse=True)
+
             # return explorer data for the unlockhash
             return ExplorerUnlockhashResult(
                 unlockhash=UnlockHash.from_json(unlockhash),
@@ -361,6 +367,10 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             transaction.blockstake_outputs[idx].id = Hash.from_json(obj=id)
         # set the unconfirmed state
         transaction.unconfirmed = etxn.get('unconfirmed', False)
+        # set the height of the transaction
+        height = etxn.get('height')
+        if height is not None:
+            transaction.height = height
         # return the transaction
         return transaction
 

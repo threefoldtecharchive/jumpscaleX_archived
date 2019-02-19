@@ -77,6 +77,9 @@ class BinaryData(BaseDataTypeClass):
                     self._fixed_size, len(value)))
         # all good, assign the bytearray value
         self._value = value
+
+    def __len__(self):
+        return len(self.value)
     
     def __str__(self):
         return self._to_str(self._value)

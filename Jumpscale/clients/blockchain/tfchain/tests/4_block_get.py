@@ -51,6 +51,7 @@ def main(self):
 
         # from the transaction you can get all kind of info
         assert str(txn.id) == '96df1e34533ffcd42ee1db995e165538edd275ba0c065ef9293ead84ff923eec'
+        assert txn.height == 2662
         assert txn.version == 1 # in reality it is 0, but the JSX tfchain client converts v0 transactions automatically to v1 transactions
         assert len(txn.coin_inputs) == 1
         assert str(txn.coin_inputs[0].parentid) == 'c1df239aba64ca0c6a241ddf18f3dd18b75e2c650874dd4c8c7dbbb56bd73683'

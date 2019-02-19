@@ -3,6 +3,7 @@ from Jumpscale import j
 
 from functools import reduce
 
+import sys
 import hashlib
 from ed25519 import SigningKey
 
@@ -215,6 +216,26 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         self._cached_balance = balance
         # return the balance
         return balance
+
+    @property
+    def transactions(self):
+        """
+        Get all transactions linked to a personal wallet address.
+        """
+        # key scan first
+        self._key_scan()
+
+        # for each address get all transactions
+        transactions = []
+        for address in self.addresses:
+            result = self._unlockhash_get(address)
+            transactions += result.transactions
+
+        # sort all transactions
+        transactions.sort(key=(lambda txn: sys.maxsize if txn.height < 0 else txn.height), reverse=True)
+
+        # return all transactions
+        return transactions
 
     def _key_scan(self):
         # try some extra key scanning, to see if other keys have been used
