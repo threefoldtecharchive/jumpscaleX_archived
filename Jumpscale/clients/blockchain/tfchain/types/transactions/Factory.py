@@ -11,6 +11,13 @@ class TransactionFactory(j.application.JSBaseClass):
     TFChain Transaction Factory class
     """
 
+    @property
+    def version(self):
+        """
+        Version Enum class, containing all known TFChain transactions
+        """
+        return TransactionVersion
+
     def new(self):
         """
         Creates and returns a default transaction.
