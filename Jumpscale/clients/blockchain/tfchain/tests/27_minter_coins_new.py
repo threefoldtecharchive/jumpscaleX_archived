@@ -81,11 +81,6 @@ def main(self):
     txn = explorer_client.posted_transaction_get(result.transaction.id)
     assert txn.json() == result.transaction.json()
 
-    # balance will be updated as unconfirmed
-    assert w.balance.available == 0
-    assert w.balance.unconfirmed == '108.24 TFT'
-    assert w.balance.locked == 0
-
     # (3) creating coins and sending it to a personal wallet with a lock and data is possible as well
     result = w.minter.coins_new(
         recipient="015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f",

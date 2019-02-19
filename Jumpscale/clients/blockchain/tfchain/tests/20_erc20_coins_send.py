@@ -89,7 +89,7 @@ def main(self):
     ) # no data or lock can be attached
     assert result.submitted # it is expected the transaction is submitted
 
-    expected_transaction = {'version': 208, 'data': {'address': '0x828de486adc50aa52dab52a2ec284bcac75be211', 'value': '200500000000', 'coininputs': [{'parentid': '75f297550acfa48490c21490f82c3c308326c16f950e17ef3a286486065a51b8', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': '04c86992109151a4a9c935e998c644c3e165ef555dddcb1a4e1eb19d44814aafc6732d4bb952e179da7ded1fd890f134e24ba153ca2928e2f7c4d66861a38f0b'}}}], 'txfee': '1000000000', 'refundcoinoutput': {'value': '798500000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}}}
+    expected_transaction = {'version': 208, 'data': {'address': '0x828de486adc50aa52dab52a2ec284bcac75be211', 'value': '200500000000', 'coininputs': [{'parentid': 'b90422bad2dffde79f0a46bd0a41055cf7974b080e115d76f69891ca31d31f11', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': '34d8a289741694462d45e01c5f27b351ed42f5b5d5b90e0a410e509c0b6a670d3a2078a3548eb324f62e5f81ffd51ce580596ca5bbeca99419b41a171cd75102'}}}], 'txfee': '1000000000', 'refundcoinoutput': {'value': '298500000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}}}
     # ensure our transaction is as expected
     assert result.transaction.json() == expected_transaction
     # ensure the transaction is posted and as expected there as well

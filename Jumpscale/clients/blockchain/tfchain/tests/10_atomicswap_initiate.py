@@ -59,10 +59,6 @@ def main(self):
     assert result.contract.refund_timestamp > 1549646257
     assert result.contract.secret_hash == AtomicSwapSecretHash.from_secret(result.secret)
 
-    # our balance should be updated as well
-    assert str(w.balance.available) == '0'
-    assert str(sum([co.value for co in w.balance.outputs_unconfirmed_spent.values()])) == '51'
-
     # ensure our contract was submitted
     transaction = explorer_client.posted_transaction_get(result.transaction.id)
     contract = AtomicSwapContract(transaction.coin_outputs[0], unspent=True)

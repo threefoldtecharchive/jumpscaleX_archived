@@ -56,9 +56,6 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # can use them first
         self._unused_key_pairs = []
 
-        # cache balance so we only update when the block chain info changes
-        self._cached_balance = None
-
         # provide sane defaults for the schema-based wallet config
         if self.seed == "":
             self.seed = j.data.encryption.mnemonic.generate(strength=256)
@@ -174,10 +171,8 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # key scan first
         scanned_new_keys = self._key_scan()
 
-        # first get chain info, so we can check if the current balance is still fine
+        # first get chain info
         info = self.client.blockchain_info_get()
-        if not scanned_new_keys and self._cached_balance and self._cached_balance.chain_blockid == info.blockid:
-            return self._cached_balance
 
         addresses = self.addresses
         balance = WalletsBalance()
@@ -212,8 +207,6 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         balance.chain_blockid = info.blockid
         balance.chain_time = info.timestamp
         balance.chain_height = info.height
-        # cache the balance
-        self._cached_balance = balance
         # return the balance
         return balance
 
@@ -583,11 +576,6 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         self._key_pairs[addr] = key_pair
         if add_count:
             self.key_count += 1+offset
-        # clear cache, as it will no longer be up to date
-        self._clear_cache()
-
-    def _clear_cache(self):
-        self._cached_balance = None
 
 from .types.ConditionTypes import ConditionMultiSignature
 from .types.FulfillmentTypes import FulfillmentMultiSignature, PublicKeySignaturePair
