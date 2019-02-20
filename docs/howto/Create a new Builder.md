@@ -19,7 +19,7 @@ The factory name will be in this format `Builder{category_name}Factory`, so in o
 from .BuilderEthereum import BuilderEthereum
 self.ethereum = BuilderEthereum()
 ```
-and now the builder will be accessible from `j.builder.blockchai.ethereum`
+and now the builder will be accessible from `j.builder.blockchain.ethereum`
 
 ## Start the Builder class
  All builders should inherit from `j.builder.system.BaseClass` and it should have the Property `Name` set, we will use 
