@@ -78,7 +78,7 @@ class SSHKey(j.application.JSBaseConfigClass):
                     self.write_to_sshdir()
 
         if not j.sal.fs.exists(self.path) or reset:
-            cmd = 'ssh-keygen -t rsa -f %s -q -P "%s"' % (self.path, self.passphrase)
+            cmd = 'ssh-keygen -t rsa -f {} -N "{}"'.format(self.path, self.passphrase)
             j.sal.process.execute(cmd, timeout=10)
 
         self.pubkey=""

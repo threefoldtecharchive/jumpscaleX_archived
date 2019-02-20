@@ -28,18 +28,18 @@ class SSHKeys(j.application.JSBaseConfigsClass):
 
     def test(self):
         '''
-        -Generate key manually first
+        -Generates key manually first
         -j.clients.sshkey.get(name="test",path="~/.ssh/test_key")
-        -check self.pubkey, self.privkey
-        -delete from ssh dir --> check path doesnt exist
-        -write to ssh dir --> check path exists
+        -checks self.pubkey, self.privkey
+        -deletes from ssh dir --> check path doesnt exist
+        -writes to ssh dir --> check path exists
         -generate(reset=True)
-        -check saved sshkeys with sshkeys before generate and compare it after generate
+        -checks saved sshkeys with sshkeys before generate and compare it after generate
 
         Agent:
-        -check is_loaded is False
-        -load keys to agent         -->check is_loaded is True
-        -unload sshkeys from agent  --> check is_loaded is False
+        -checks is_loaded is False
+        -loads keys to agent         -->check is_loaded is True
+        -unloads sshkeys from agent  --> check is_loaded is False
         '''
         path = "/root/.ssh/test_key"
         sshkey_client = j.clients.sshkey.get(name="test_key", path=path)
@@ -70,4 +70,8 @@ class SSHKeys(j.application.JSBaseConfigsClass):
         assert sshkey_client.is_loaded()
         sshkey_client.unload()
         assert sshkey_client.is_loaded() == False
+
+        # Clean up after test
+        sshkey_client.delete_from_sshdir()
+        sshkey_client.delete()
 

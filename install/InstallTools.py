@@ -460,7 +460,9 @@ class Tools:
             os.unlink(path)
         if not Tools.exists(path):
             return
-        if os.path.isfile(path):
+
+        mode = os.stat(path).st_mode
+        if os.path.isfile(path) or stat.S_ISSOCK(mode):
             if len(path) > 0 and path[-1] == os.sep:
                 path = path[:-1]
             os.remove(path)
