@@ -2148,7 +2148,7 @@ class JumpscaleInstaller():
     def __init__(self):
 
         self.account = "threefoldtech"
-        self.branch = ["development"]
+        self.branch = ["development_types"]
         self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
     def install(self,branch=None,secret="1234",private_key_words=None):

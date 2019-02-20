@@ -3,7 +3,7 @@ import os
 import subprocess
 import sys
 
-BRANCH = "development"
+BRANCH = "development_types"
 
 # get current install.py directory
 rootdir = os.path.dirname(os.path.abspath(__file__))
@@ -189,7 +189,7 @@ def ui():
         args["codepath"] = codepath
 
     if not "branch" in args:
-        args["branch"]="development"
+        args["branch"]="development_types"
 
     if "y" not in args and "r" not in args and IT.MyEnv.installer_only is False and IT.Tools.exists(IT.MyEnv.state_file_path):
         if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
