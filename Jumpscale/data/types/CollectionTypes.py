@@ -300,7 +300,7 @@ class Hash(List):
 
     NAME = 'hash'
     BASETYPE = 'string'
-    ALIAS = 'hash'
+    ALIAS = 'h'
 
     def fromString(self, s):
         """

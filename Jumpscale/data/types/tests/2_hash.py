@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.types.test(name="hash")'
+    kosmos 'j.data.types.test(name="hash")'
     """
 
     e = j.data.types.get("h")

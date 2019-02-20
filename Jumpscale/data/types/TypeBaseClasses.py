@@ -4,38 +4,37 @@ from Jumpscale import j
 
 class TypeBaseObjClass():
 
-    def __init__(self,typebase,value):
+    def __init__(self,typebase,value=None):
         __slots__ = ['_typebase', '_value']
 
         self._typebase = typebase
-        self._value_ = self._typebase.clean(value)
+        if value is None:
+            self._data = None
+        else:
+            self._data = self._typebase.toData(value) #returns the native lowest level type
 
     def _capnp_schema_get(self, name, nr):
         return self._typebase.capnp_schema_get(name,nr)
 
     @property
     def _string(self):
-        return self._typebase._toString(self._value_)
-
-    @property
-    def _data(self):
-        return self._typebase._toData(self._value_)
+        raise j.exceptions.NotImplemented()
 
     @property
     def _python_code(self):
-        return self._typebase._python_code_get(self._value_)
+        raise j.exceptions.NotImplemented()
 
     @property
-    def _value(self):
-        return self._value_
+    def value(self):
+        raise j.exceptions.NotImplemented()
 
-    @_value.setter
-    def _value(self,val):
-        self._value_ = self._typebase.clean(val)
+    @value.setter
+    def value(self,val):
+        self._data = self._typebase.toData(val)
 
     def __str__(self):
-        if self._value_:
-            return "%s: %s"%(self._typebase.__class__.NAME,self._value)
+        if self._data:
+            return "%s: %s"%(self._typebase.__class__.NAME, self._string)
         else:
             return "%s: NOTSET"%(self._typebase.__class__.NAME)
 
@@ -45,58 +44,51 @@ class TypeBaseObjClass():
 class TypeBaseObjClassNumeric(TypeBaseObjClass):
 
     @property
-    def _value(self):
-        return float(self._value_)
-
-    @_value.setter
-    def _value(self,val):
-        self._value_ = self._typebase.clean(val)
+    def value(self):
+        raise j.exceptions.NotImplemented()
 
 
     # def __hash__(self):
-    #     return hash(self._value)
+    #     return hash(self.value)
 
     def __eq__(self, other):
         other = self._other_convert(other)
-        return other == float(self._value)
+        return float(other) == float(self)
 
     def __bool__(self):
-        return self._value is not None
+        return self._data is not None
 
     def _other_convert(self,other):
-        if isinstance(other,TypeBaseObjClass):
-            return float(self._typebase.clean(other._value))
-        else:
-            return float(self._typebase.clean(other))
+        return self._typebase.clean(other)
 
     def __add__(self, other):
         other = self._other_convert(other)
-        return other + float(self._value)
+        return self._typebase.clean(float(other) + float(self))
 
     def __iadd__(self, other):
         other = self._other_convert(other)
-        self.value = other + float(self._value)
+        self.value = float(self) + float(other)
         return self
 
     def __sub__(self, other):
         other = self._other_convert(other)
-        return float(self._value)- other
+        return self._typebase.clean(float(self) - float(other))
 
     def __mul__(self, other):
         other = self._other_convert(other)
-        return float(self._value)* other
+        return self._typebase.clean(float(self) * float(other))
 
     def __matmul__(self, other):
         other = self._other_convert(other)
-        return float(self._value)@ other
+        return self._typebase.clean(float(self) @ float(other))
 
     def __truediv__(self, other):
         other = self._other_convert(other)
-        return float(self._value)/ other
+        return self._typebase.clean(float(self) / float(other))
 
     def __floordiv__(self, other):
         other = self._other_convert(other)
-        return float(self._value)// other
+        return self._typebase.clean(float(self) // float(other))
 
     def __mod__(self, other):
         raise NotImplemented()
@@ -111,21 +103,19 @@ class TypeBaseObjClassNumeric(TypeBaseObjClass):
         raise NotImplemented()
 
     def __neg__(self):
-        return float(self._value)* -1
+        return self._typebase.clean(float(self) * -1)
 
     def __float__(self):
-        return float(self._value)
+        return float(self.value)
 
     def __int__(self):
-        return int(self._value)
+        return int(self.value)
 
 
     __rshift__ = __lshift__
     __and__ = __lshift__
     __xor__ = __lshift__
     __or__ = __lshift__
-
-
 
 class TypeBaseClass():
 
@@ -182,6 +172,48 @@ class TypeBaseClass():
             return "%s = '%s'" % (key, self.clean(value))
 
     def capnp_schema_get(self, name, nr):
-        raise RuntimeError("not implemented")
-        # return "%s @%s :Text;" % (name, nr)
+        return "%s @%s :Text;" % (name, nr)
 
+
+class TypeBaseObjClassFactory(TypeBaseClass):
+
+    def get_default(self):
+        return self.clean("0")
+
+    def capnp_schema_get(self, name, nr):
+        """
+        is 5 bytes, 1 for type, 4 for float value
+        - j.clients.currencylayer.cur2id
+        - j.clients.currencylayer.id2cur
+
+        struct.pack("B",1)+struct.pack("f",1234234234.0)
+
+        """
+        return "%s @%s :Data;" % (name, nr)
+
+    def check(self, value):
+        if isinstance(value,TypeBaseObjClass):
+            return True
+
+    def fromString(self, txt):
+        return self.clean(txt)
+
+    def toJSON(self, v):
+        return self.toString(v)
+
+    def toString(self, val):
+        val = self.clean(val)
+        return val._string
+
+    def python_code_get(self, value):
+        """
+        produce the python code which represents this value
+        """
+        val = self.clean(value)
+        return val._python_code
+
+    def toData(self, v):
+        raise j.exceptions.NotImplemented()
+
+    def clean(self, v):
+        raise j.exceptions.NotImplemented()

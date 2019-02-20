@@ -12,6 +12,7 @@ class BCDBFactory(j.application.JSBaseClass):
     __jslocation__ = "j.data.bcdb"
 
     def _init(self):
+
         self._log_debug("bcdb starts")
         self.bcdb_instances = {}  #key is the name
         self._path = j.sal.fs.getDirName(os.path.abspath(__file__))
@@ -22,11 +23,12 @@ class BCDBFactory(j.application.JSBaseClass):
         j.clients.redis.core_get() #just to make sure the redis got started
 
 
-
     def new(self, name, zdbclient=None,reset=False):
+
         self._log_debug("new bcdb:%s"%name)
         if zdbclient!=None and j.data.types.string.check(zdbclient):
             raise RuntimeError("zdbclient cannot be str")
+
         self.bcdb_instances[name] = BCDB(zdbclient=zdbclient,name=name,reset=reset)
         return self.bcdb_instances[name]
 

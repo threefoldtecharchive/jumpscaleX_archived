@@ -2295,14 +2295,14 @@ class JumpscaleInstaller():
 
 
 
-MyEnv._init()
 
 
 
-try:
-    from colored_traceback import add_hook
-    import colored_traceback
-    add_hook()
-    MyEnv._colored_traceback = colored_traceback
-except ImportError:
-    MyEnv._colored_traceback = None
+
+# try:
+#     from colored_traceback import add_hook
+#     import colored_traceback
+#     add_hook()
+#     MyEnv._colored_traceback = colored_traceback
+# except ImportError:
+#     MyEnv._colored_traceback = None

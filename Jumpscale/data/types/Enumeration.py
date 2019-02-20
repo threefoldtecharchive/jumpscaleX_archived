@@ -1,17 +1,18 @@
 from .PrimitiveTypes import String
-from .TypeBaseClasses import TypeBaseObjClass
+from .TypeBaseClasses import TypeBaseClass
 from Jumpscale import j
 
 
-class EnumerationObj(TypeBaseObjClass):
+class EnumerationObj(TypeBaseClass):
 
     '''
     Generic string type
-    stored in capnp as string
+    stored in capnp as int
     '''
     NAME = 'enum'
     BASETYPE = 'string'
     ALIAS = "e"
+    __slots__ = ['values', 'default', "_md5", "_jumpscale_location" ]
 
     def __init__(self, values):
 
@@ -30,8 +31,13 @@ class EnumerationObj(TypeBaseObjClass):
     def capnp_schema_get(self, name, nr):
         return "%s @%s :UInt32;" % (name, nr)
 
+
+    def toData(self,val):
+        val = self.clean(val)
+        return self.values.index(val)+1
+
     def get_default(self):
-        raise RuntimeError("Enum objects have no default value")
+        return self.values[0]
 
     def clean(self, value):
         """
@@ -49,7 +55,7 @@ class EnumerationObj(TypeBaseObjClass):
             return value
         elif isinstance(value, int):
             if value == 0:
-                raise RuntimeError("could not find enum id:%s in '%s', tshould not be 0" % (value, self.__repr__()))
+                raise RuntimeError("could not find enum id:%s in '%s', should not be 0" % (value, self.__repr__()))
             if value > len(self.values)+1:
                 raise RuntimeError("could not find enum id:%s in '%s', too high" % (value, self.__repr__()))
             return self.values[value-1]
@@ -63,19 +69,20 @@ class EnumerationObj(TypeBaseObjClass):
         return ",".join(self.values)
 
 
-class Enumeration:
+class Enumeration(TypeBaseClass):
 
     '''
     Generic string type
-    stored in capnp as string
+    stored in capnp as int
     '''
+
     NAME = 'enum'
-    BASETYPE = 'string'
+    BASETYPE = 'int'
     ALIAS = "e"
+
 
     def get(self, values):
         """
-        e.g. for enum, but there can be other types in future who take certain input
         :param ttype:
         :param kwargs: e.g. values="red,blue,green" can also a list for e.g. enum
         :return:
@@ -84,3 +91,4 @@ class Enumeration:
 
         """
         return EnumerationObj(values)
+

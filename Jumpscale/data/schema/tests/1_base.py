@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.schema.test(name="base")'
+    kosmos 'j.data.schema.test(name="base")' --debug
     """
     schema = """
         @url = despiegk.test

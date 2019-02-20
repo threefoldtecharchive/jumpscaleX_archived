@@ -19,27 +19,34 @@ class Types(j.application.JSBaseClass):
         self.ipaddrs = {}
 
         self._types_list = [Dictionary, List, Guid, Path, Boolean, Integer, Float, String, Bytes, StringMultiLine,
-                            IPAddress, IPRange, IPPort, Tel, YAML, JSON, Email, Date, DateTime, Numeric, Percent,
+                            IPRange, IPPort, Tel, YAML, JSON, Email, Date, DateTime, Numeric, Percent,
                             Hash, CapnpBin, JSDataObject, JSConfigObject, Url, Enumeration]
 
         l = []
         for typeclass in self._types_list:
             name = typeclass.NAME.strip().strip("_")
-            self.__attach(name, typeclass)
+            o = self.__attach(name, typeclass)
             if hasattr(typeclass, "ALIAS"):
                 for alias in typeclass.ALIAS.split(","):
-                    self.__attach(alias, typeclass)
+                    self.__attach(alias, typeclass,o)
 
         self._type_check_list = ['guid', 'path', 'multiline', 'ipaddr', 'iprange', 'ipport',
                                  'tel', 'email', 'date', 'datetime', 'numeric', 'percent', 'hash',
                                  'jsobject', 'url', 'enum',
                                  'dict', 'list', 'boolean', 'integer', 'float', 'string', 'bytes']
 
-    def __attach(self, name, typeclass):
+        self.enumeration = Enumeration
+        self._enumeration = Enumeration()
+
+    def __attach(self, name, typeclass,o=None):
         name = name.strip().lower()
         name2 = "_%s" % name
         self.__dict__[name2] = typeclass
-        self.__dict__[name] = self.__dict__[name2]()
+        if o:
+            self.__dict__[name] = o
+        else:
+            self.__dict__[name] = self.__dict__[name2]()
+        return self.__dict__[name]
 
     def type_detect(self, val):
         """
@@ -51,26 +58,26 @@ class Types(j.application.JSBaseClass):
                 return ttype
         raise RuntimeError("did not detect val for :%s" % val)
 
-    # def get_custom(self, ttype, **kwargs):
-    #     """
-    #     e.g. for enum, but there can be other types in future who take certain input
-    #     :param ttype:
-    #     :param kwargs: e.g. values="red,blue,green" can also a list for e.g. enum
-    #     :return:
+    def get_custom(self, ttype, **kwargs):
+        """
+        e.g. for enum, but there can be other types in future who take certain input
+        :param ttype:
+        :param kwargs: e.g. values="red,blue,green" can also a list for e.g. enum
+        :return:
 
-    #     e.g. for enumeration
+        e.g. for enumeration
 
-    #     j.data.types.get_custom("e",values="blue,red")
+        j.data.types.get_custom("e",values="blue,red")
 
-    #     """
-    #     ttype = ttype.lower().strip()
-    #     if ttype in ["e", "enum"]:
-    #         cl = self._enumeration
-    #         cl = cl.get(values=kwargs["values"])
-    #         self.enumerations[cl._md5] = cl
-    #         return self.enumerations[cl._md5]
-    #     else:
-    #         raise j.exceptions.RuntimeError("did not find custom type:'%s'" % ttype)
+        """
+        ttype = ttype.lower().strip()
+        if ttype in ["e", "enum"]:
+            cl = self._enumeration
+            cl = cl.get(values=kwargs["values"])
+            self.enumerations[cl._md5] = cl
+            return self.enumerations[cl._md5]
+        else:
+            raise j.exceptions.RuntimeError("did not find custom type:'%s'" % ttype)
 
     def get(self, ttype):
         """

@@ -10,6 +10,7 @@ class SchemaFactory(j.application.JSBaseClass):
     __jslocation__ = "j.data.schema"
 
     def _init(self):
+
         self.__code_generation_dir = None
         self.db = j.clients.redis.core_get()
         self.schemas = {}

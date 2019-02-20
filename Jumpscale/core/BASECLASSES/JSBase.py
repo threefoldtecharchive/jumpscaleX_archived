@@ -438,6 +438,7 @@ class JSBase:
 
     def __test_run(self, name=None, obj_key="main", die=True, **kwargs):
 
+
         if name == '':
             name = None
 
@@ -461,11 +462,12 @@ class JSBase:
                         bname2 = "_".join(bname.split("_", 1)[1:])  # remove part before first '_'
                     else:
                         bname2 = bname
-                    if bname2.startswith(name):
+                    if bname2.endswith(".py"):
+                        bname2 = bname2[:-3]
+                    if bname2.strip().lower()==name:
                         self.__test_run(name=bname, obj_key=obj_key, **kwargs)
                         return
-                return self._test_error(
-                    name, RuntimeError("Could not find, test:%s in %s/tests/" % (name, self._dirpath)))
+                return self._test_error(name, RuntimeError("Could not find, test:%s in %s/tests/" % (name, self._dirpath)))
 
             self._log_debug("##: path: %s\n\n" % tpath)
         else:
@@ -479,13 +481,16 @@ class JSBase:
 
         method = j.tools.codeloader.load(obj_key=obj_key, path=tpath)
         self._log_debug("##:LOAD: path: %s\n\n" % tpath)
-        if die:
+        if die or j.application.debug:
             res = method(self=self, **kwargs)
         else:
             try:
                 res = method(self=self, **kwargs)
             except Exception as e:
-                j.errorhandler.try_except_error_process(e, die=False)
+                if j.application.debug:
+                    raise e
+                else:
+                    j.errorhandler.try_except_error_process(e, die=False)
                 self.__class__._test_runs_error[name] = e
                 return e
             self.__class__._test_runs[name] = res

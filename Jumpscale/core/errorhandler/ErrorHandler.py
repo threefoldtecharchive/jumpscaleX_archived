@@ -34,19 +34,19 @@ class ErrorHandler():
         sys.excepthook = self.excepthook
         self.inException = False
 
-    # def try_except_error_process(self, err, die=True):
-    #     """
-    #     how to use
-    #
-    #     try:
-    #         ##do something
-    #     except Exception,e:
-    #         j.errorhandler.try_except_error_process(e,die=False) #if you want to continue
-    #
-    #     """
-    #
-    #     ttype, msg, tb = sys.exc_info()
-    #     self.excepthook(ttype, err, tb, die=die)
+    def try_except_error_process(self, err, die=True):
+        """
+        how to use
+
+        try:
+            ##do something
+        except Exception,e:
+            j.errorhandler.try_except_error_process(e,die=False) #if you want to continue
+
+        """
+
+        ttype, msg, tb = sys.exc_info()
+        self.excepthook(ttype, err, tb, die=die)
 
     def _error_process(self, err, tb_text=""):
         # self._j.shell()
@@ -54,7 +54,7 @@ class ErrorHandler():
             self._j.tools.alerthandler.log(err, tb_text=tb_text)
         return err
 
-    def excepthook(self, ttype, err, tb, die=False):
+    def excepthook(self, ttype, err, tb, die=True):
         """ every fatal error in jumpscale or by python itself will result in an exception
         in this function the exception is caught.
         @ttype : is the description of the error
@@ -64,15 +64,18 @@ class ErrorHandler():
         # print ("jumpscale EXCEPTIONHOOK")
         if self.inException:
             print("**ERROR IN EXCEPTION HANDLING ROUTINES, which causes recursive errorhandling behavior.**")
-            print(exceptionObject)
+            print(err)
             sys.exit(1)
             return
 
         self._j.core.tools.log(msg=err,tb=tb,level=40)
-        if self._j.core.myenv.debug:
-            pudb.post_mortem(tb)
-        self._j.core.tools.pprint("{RED}CANNOT CONTINUE{RESET}")
-        sys.exit(1)
+        if die:
+            if self._j.core.myenv.debug:
+                pudb.post_mortem(tb)
+            self._j.core.tools.pprint("{RED}CANNOT CONTINUE{RESET}")
+            sys.exit(1)
+        else:
+            print("WARNING IGNORE EXCEPTIONHOOK, NEED TO IMPLEMENT: #TODO:")
         #
         #
         # print(err)

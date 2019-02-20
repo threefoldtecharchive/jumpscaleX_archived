@@ -17,6 +17,7 @@ class RedisFactory(j.application.JSBaseClass):
 
     def _init(self):
         self._cache_clear()
+
         #
 
     def _cache_clear(self):

@@ -8,8 +8,6 @@ from .PrimitiveTypes import String, Integer
 import copy
 import time
 from uuid import UUID
-from ipaddress import IPv4Address, IPv6Address
-from ipaddress import AddressValueError, NetmaskValueError
 from Jumpscale import j
 from datetime import datetime
 from .TypeBaseClasses import *
@@ -22,6 +20,7 @@ class Guid(String):
     '''
 
     NAME = 'guid'
+    ALIAS = 'guid'
 
     def __init__(self):
         String.__init__(self)
@@ -53,6 +52,8 @@ class Email(String):
     """
 
     NAME = 'email'
+    ALIAS = 'email'
+
 
     def __init__(self):
         String.__init__(self)
@@ -191,7 +192,31 @@ class IPPort(Integer):
         return False
 
 
-class Numeric(String):
+class NumericObject(TypeBaseObjClassNumeric):
+
+
+    @property
+    def _string(self):
+        return self._typebase.bytes2str(self._data)
+
+    @property
+    def _python_code(self):
+        return "'%s'"%self._string
+
+    @property
+    def usd(self):
+        return self._value
+
+    @property
+    def value(self):
+        return self._typebase.bytes2cur(self._data)
+
+    @value.setter
+    def value(self,val):
+        self._data = self._typebase.toData(val)
+
+
+class Numeric(TypeBaseObjClassFactory):
     """
     has support for currencies and does nice formatting in string
 
@@ -202,28 +227,6 @@ class Numeric(String):
     """
     NAME = 'numeric'
     ALIAS = 'n'
-
-    def get_default(self):
-        return 0
-
-    def capnp_schema_get(self, name, nr):
-        """
-        is 5 bytes, 1 for type, 4 for float value
-        - j.clients.currencylayer.cur2id
-        - j.clients.currencylayer.id2cur
-
-        struct.pack("B",1)+struct.pack("f",1234234234.0)
-
-        """
-        return "%s @%s :Data;" % (name, nr)
-
-    def check(self, value):
-        '''Check whether provided value is a numeric, is not 100% exact'''
-        if not isinstance(value, bytes):
-            return False
-        if len(bindata) not in [6, 10]:
-            return False
-        return True
 
     def bytes2cur(self, bindata, curcode="usd", roundnr=None):
 
@@ -446,96 +449,25 @@ class Numeric(String):
         else:
             return struct.pack("B", ttype) + struct.pack("B", curcat) + struct.pack("I", value)
 
-    def test(self):
-        """
-        js_shell 'j.data.types.numeric.test()'
-        """
-
-        assert self.bytes2str(self.str2bytes("123456789")) == "123,456,789"
-        assert self.bytes2str(self.str2bytes("100000")) == "100,000"
-        assert self.bytes2str(self.str2bytes("10000")) == "10,000"
-        assert self.bytes2str(self.str2bytes("1000")) == "1,000"
-        assert self.bytes2str(self.str2bytes("100")) == "100"
-
-        assert self.bytes2cur(self.str2bytes("10usd"), "eur") < 10
-        assert self.bytes2cur(self.str2bytes("10usd"), "eur") > 7
-        assert self.bytes2cur(self.str2bytes("10eur"), "eur") == 10
-        assert self.bytes2cur(self.str2bytes("10.3eur"), "eur") == 10.3
-        assert self.bytes2cur(self.str2bytes("10eur"), "usd") > 10
-        assert self.bytes2cur(self.str2bytes("10eur"), "usd") < 15
-
-        assert self.bytes2str(self.str2bytes("10")) == "10"
-        assert self.bytes2str(self.str2bytes("10 USD")) == "10"
-        assert self.bytes2str(self.str2bytes("10 usd")) == "10"
-        assert self.bytes2str(self.str2bytes("10 eur")) == "10 EUR"
-        assert self.bytes2str(self.str2bytes("10 keur")) == "10 kEUR"
-        assert self.bytes2str(self.str2bytes("10.1 keur")) == "10,100 EUR"
-        assert self.bytes2str(self.str2bytes("10,001 eur")) == "10,001 EUR"
-        assert self.bytes2str(self.str2bytes("10,001 keur")) == "10,001 kEUR"
-        assert self.bytes2str(self.str2bytes("10,001.01 keur")) == "10,001,010 EUR"
-        assert self.bytes2str(self.str2bytes("10,001.01 k")) == "10,001,010"
-        assert self.bytes2str(self.str2bytes("-10,001.01 k")) == "-10,001,010"
-        assert self.bytes2str(self.str2bytes("0.1%")) == "0.1%"
-        assert self.bytes2str(self.str2bytes("1%")) == "1%"
-        assert self.bytes2str(self.str2bytes("150%")) == "150%"
-        assert self.bytes2str(self.str2bytes("-150%")) == "-150%"
-        assert self.bytes2str(self.str2bytes("0.001")) == "0.001"
-        assert self.bytes2str(self.str2bytes("0.001 eur")) == "0.001 EUR"
-        assert self.bytes2str(self.str2bytes("-0.1 eur")) == "-0.1 EUR"
-        # assert self.bytes2str(self.str2bytes(("-0.0001"))=="-0.0001"
-        # assert self.bytes2cur(self.str2bytes("0.001usd"),"usd") == 1
-        # assert self.bytes2cur(self.str2bytes("0.001k"),"usd") == 0.001
-
-        # print (self.bytes2cur(self.str2bytes("0.001k"),"eur"))
-        # from IPython import embed;embed(colors='Linux')
-
-        # test that encoding currencies that fit in an int are only
-        # 6 bytes (1 for type, 1 for currency code, 4 for int)
-        # and those that fit into a float are 10 bytes
-        # (1 for type, 1 for currency code, 8 for float)
-        assert len(self.str2bytes("10 usd")) == 6
-        assert len(self.str2bytes("10.0 usd")) == 6
-        assert len(self.str2bytes("10.1 usd")) == 10
-
     def clean(self, data):
+        if isinstance(data,NumericObject):
+            return data
+        return NumericObject(self,data)
+
+    def toData(self,data):
         # print("num:clean:%s"%data)
         if j.data.types.string.check(data):
             data = j.data.types.string.clean(data)
-            val = self.str2bytes(data)
+            data = self.str2bytes(data)
         elif j.data.types.bytes.check(data):
-            val = data
-        elif isinstance(int,data) or isinstance(int,float):
-            #means is already in native format, native format always USD
-            return float(data)
-
-        return self.bytes2cur(val,curcode="usd")
-
-
-    def fromString(self, txt):
-        return self.clean(txt)
-
-    def toHR(self, v):
-        return self.toString(v)
-
-    def toJSON(self, v):
-        return self.toString(v)
-
-    def toString(self, val):
-        if val == 0:
-            return ""
-        if j.data.types.string.check(val):
-            return val
-        elif j.data.types.bytes.check(val):
-            return self.bytes2str(val)
+            if len(data) not in [6, 10]:
+                raise j.exceptions.Input("len of numeric bytes needs to be 6 or 10 bytes")
+        elif isinstance(data,int) or isinstance(data,float):
+            data = self.str2bytes(str(data))
         else:
-            return "%s USD" % val
+            raise RuntimeError("could not clean data, did not find supported type:%s"%data)
 
-    def python_code_get(self, value):
-        """
-        produce the python code which represents this value
-        """
-        value = self.clean(value)
-        return "'%s'" % self.toString(value)
+        return data
 
 
 class DateTime(String):
@@ -680,46 +612,7 @@ class DateTime(String):
         """
         js_shell 'j.data.types.datetime.test()'
         """
-        c = """
-        11/30 22:50
-        11/30
-        1990/11/30
-        1990/11/30 10am:50
-        1990/11/30 10pm:50
-        1990/11/30 22:50
-        30/11/1990
-        30/11/1990 10pm:50
-        """
-        c = j.core.text.strip(c)
-        out = ""
-        for line in c.split("\n"):
-            if line.strip() == "":
-                continue
-            epoch = self.clean(line)
-            out += "%s -> %s\n" % (line, self.toString(epoch))
-        out_compare = """
-        11/30 22:50 -> 2019/11/30 22:50:00
-        11/30 -> 2019/11/30 00:00:00
-        1990/11/30 -> 1990/11/30 00:00:00
-        1990/11/30 10am:50 -> 1990/11/30 10:50:00
-        1990/11/30 10pm:50 -> 1990/11/30 22:50:00
-        1990/11/30 22:50 -> 1990/11/30 22:50:00
-        30/11/1990 -> 1990/11/30 00:00:00
-        30/11/1990 10pm:50 -> 1990/11/30 22:50:00
-        """
-        print(out)
-        out = j.core.text.strip(out)
-        out_compare = j.core.text.strip(out_compare)
-        assert out == out_compare
 
-        assert self.clean(0) == 0
-        
-        self.clean("-0s") == j.data.time.epoch
-
-        self.clean("'0'") == 0
-
-
-        print("test j.data.types.date.datetime() ok")
 
 class Date(DateTime):
     '''
@@ -764,35 +657,3 @@ class Date(DateTime):
             return ""
         return j.data.time.epoch2HRDate(val, local=local)
 
-    def test(self):
-        """
-        js_shell 'j.data.types.date.test()'
-        """
-        c = """
-        11/30
-        1990/11/30
-        30/11/1990
-        """
-        c = j.core.text.strip(c)
-        out = ""
-        for line in c.split("\n"):
-            if line.strip() == "":
-                continue
-            epoch = self.clean(line)
-            out += "%s -> %s\n" % (line, self.toString(epoch))
-        out_compare = """
-        11/30 -> 2019/11/30
-        1990/11/30 -> 1990/11/30
-        30/11/1990 -> 1990/11/30
-        """
-        print(out)
-        out = j.core.text.strip(out)
-        out_compare = j.core.text.strip(out_compare)
-        assert out == out_compare
-
-        assert self.clean(0) == 0
-        assert self.clean("") == 0
-
-        self.clean("-0s") == j.data.time.epoch
-
-        print("test j.data.types.date.test() ok")

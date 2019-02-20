@@ -17,6 +17,8 @@ if not os.path.exists(path):
 spec = util.spec_from_file_location("IT", path)
 IT = spec.loader.load_module()
 
+IT.MyEnv._init()
+
 sys.excepthook = IT.my_excepthook
 
 
