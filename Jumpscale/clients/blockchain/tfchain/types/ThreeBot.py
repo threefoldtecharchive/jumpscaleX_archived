@@ -1,7 +1,5 @@
 from Jumpscale import j
 
-import pytest
-
 import re, ipaddress
 from enum import IntEnum
 
@@ -39,6 +37,8 @@ class ThreeBotTypesFactory(j.application.JSBaseClass):
         """
         js_shell 'j.clients.tfchain.types.threebot.test()'
         """
+        import pytest
+
         # 3Bot network addresses...
         # > nil address
         str(self.network_address_new()) == ''
