@@ -71,6 +71,16 @@ class TransactionBaseClass(ABC):
         if isinstance(id, Hash):
             self._id = Hash(value=id.value)
         self._id = Hash(value=id)
+
+    def __hash__(self):
+        if self._id is None:
+            return hash(j.data.serializers.json.dumps(self.json()))
+        return hash(self.id)
+
+    def __eq__(self, other):
+        if not isinstance(other, TransactionBaseClass):
+            raise TypeError("other is expected to be subtype of TransactionBaseClass, not {}".format(type(other)))
+        return hash(self) == hash(other)
     
     @property
     def height(self):

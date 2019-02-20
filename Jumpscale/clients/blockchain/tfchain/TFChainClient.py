@@ -367,10 +367,9 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             transaction.blockstake_outputs[idx].id = Hash.from_json(obj=id)
         # set the unconfirmed state
         transaction.unconfirmed = etxn.get('unconfirmed', False)
-        # set the height of the transaction
-        height = etxn.get('height')
-        if height is not None:
-            transaction.height = height
+        # set the height of the transaction only if confirmed
+        if not transaction.unconfirmed:
+            transaction.height = int(etxn.get('height'))
         # return the transaction
         return transaction
 

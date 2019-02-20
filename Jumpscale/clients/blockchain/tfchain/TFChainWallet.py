@@ -145,6 +145,9 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         """
         The addresses owned and used by this wallet.
         """
+        # key scan first
+        scanned_new_keys = self._key_scan()
+        # than list all addresses
         return list(self._key_pairs.keys())
 
     @property
@@ -219,13 +222,13 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         self._key_scan()
 
         # for each address get all transactions
-        transactions = []
+        transactions = set()
         for address in self.addresses:
             result = self._unlockhash_get(address)
-            transactions += result.transactions
+            transactions.update(result.transactions)
 
         # sort all transactions
-        transactions.sort(key=(lambda txn: sys.maxsize if txn.height < 0 else txn.height), reverse=True)
+        transactions = sorted(transactions, key=(lambda txn: sys.maxsize if txn.height < 0 else txn.height), reverse=True)
 
         # return all transactions
         return transactions

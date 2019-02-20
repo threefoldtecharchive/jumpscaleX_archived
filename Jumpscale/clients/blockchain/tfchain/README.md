@@ -20,6 +20,7 @@ All methods have docstrings, _read_ them.
 5. [Atomic Swap Contacts](#atomic-swap-contracts): explains how to work with cross-chain atomic swaps, from a TFChain perspective, using your TFChain wallet
 6. [ERC20 Interaction](#erc20-interaction): send coins to an ERC20 address and register a TFT address as ERC20 Withdrawel addresses
 7. [Coin Minting](#coin-minting): a subsection devoted to the coin minters of the network
+8. [Examples](#examples): examples that show how to use the TFChain client as a library
 
 ### Client
 
@@ -648,3 +649,38 @@ Creating coins as a Coin Minter can be done as follows:
 
 See [The Minter Coins New Unit Test](./tests/27_minter_coins_new.py)
 for detailed examples for minting new coins.
+
+### Examples
+
+The TFChain Client is kept simple and focussed. It can do a lot, and it is very easy to use it.
+However, that does mean that we do not support every possible use case out-of-the box.
+Building an application on top of the TFChain Client and as such using this client as a library.
+
+#### Wallet Statements
+
+You can find a detailed example in [The Wallet Statements Example](./tests/100_examples_wallet_statements.py)
+on how to assemble your own statements for a wallet using the TFChain Wallet Client.
+
+The example is simple and prints the statements directly to the STDOUT as follows:
+
+```
+$ js_shell 'j.clients.tfchain.test(name="examples_wallet_statements")'
+unconfirmed  Tx: 573290763024ae0a5e981412598a3d41bc02f8da628fa1e1adfe07d98818c689 |                          |         + 10 TFT         |
+        > to: 0125c0156f6c1c0bc43c7d38e17f8948300564bef63caac05c08b0fd68996e494704bbbe0268cb
+        > from: 01f0f397fd6b7b51b46ddd2ffda1e2240e639b19b47d27a4adc2bed78da0fc3d97c1fe7b972d1e
+39997        Tx: 779cf13ecee7f45f032af92429056cd5976cb75ce968bab98e3e2fdf9a9b1034 |         - 1 TFT          |                          |
+        > to: this wallet
+        > from: this wallet
+39995        Tx: b104308e683d4353a5a6b6cdfd4f6dfce39e241ff1218d6d6189bae89945034f |                          |        + 200 TFT         |
+        > to: 0125c0156f6c1c0bc43c7d38e17f8948300564bef63caac05c08b0fd68996e494704bbbe0268cb
+        > from: 015827a0cabfb4be5531ecd2b42470a25cf9910a868b857029c2bdabdc05cad51e66d5dd899064
+39994        Tx: 208d9f524e937176e50a7399fd3886f584290948983bbd0ed781f59cefc343a8 |         - 11 TFT         |                          |
+        > to: 01cb0aedd4098efd926195c2f7bba9323d919f99ecd95cf3626f0508f6be33f49bcae3dd62cca6
+        > from: this wallet
+39991        Tx: e7785bacd0d12f93ab435cf3e29301f15b84be82ae8abbdaed1cfd034f4ed652 |                          |        + 100 TFT         |
+        > to: 0125c0156f6c1c0bc43c7d38e17f8948300564bef63caac05c08b0fd68996e494704bbbe0268cb
+        > from: 01456d748fc44c753f63671cb384b8cb8a2aebb1d48b4e0be82c302d71c10f2448b2d8e3d164f6
+39990        Tx: 544a204f0211e7642f508a7918c5d29334bd7d6892b2612e8acfb6dc36d39bd9 |                          |        + 400 TFT         |
+        > to: 0125c0156f6c1c0bc43c7d38e17f8948300564bef63caac05c08b0fd68996e494704bbbe0268cb
+        > from: 01773a1dd123347e1030f0822cb8d22082fe3f9b0ea8563d4ac8e7abc377eba920c47efb2fd736
+```
