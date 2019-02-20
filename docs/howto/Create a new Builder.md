@@ -114,7 +114,8 @@ implemented in the base builder class which will tar the sandbox directory and u
 zhub instance
 
 ```python
-if self._done_get('sandbox') and reset is False:
+def sandbox(self, sandbox_dir="/tmp/builder/ethereum", flist=False, hub_instance=None, reset=False):
+        if self._done_get('sandbox') and reset is False:
             return
 
         self.build(reset=reset)
