@@ -114,15 +114,19 @@ implemented in the base builder class which will tar the sandbox directory and u
 zhub instance
 
 ```python
-def sandbox(self,dest='/tmp/builder/caddy'):
-    if self._done_check('sandbox'):
-         return
-    if not self._done_check('build'):
-        self.build()
-    bin_dest = self.tools.joinpaths(dest, 'sandbox', 'bin')
-    self.tools.dir_ensure(bin_dest)
-    self.tools.file_copy('{DIR_BIN}/caddy', bin_dest)
-    self._done_set('sandbox')
+if self._done_get('sandbox') and reset is False:
+            return
+
+        self.build(reset=reset)
+        bin_path = self.tools.joinpaths(self.package_path, "build", "bin", "geth")
+        bin_dest = self.tools.joinpaths(sandbox_dir, 'sandbox', 'bin')
+        self.tools.dir_ensure(bin_dest)
+        self.tools.file_copy(bin_path, bin_dest)
+
+        if flist:
+            print(self.flist_create(sandbox_dir=sandbox_dir, hub_instance=hub_instance))
+
+        self._done_set('sandbox')
 ```
 
 ## Startup script
