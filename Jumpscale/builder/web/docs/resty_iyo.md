@@ -75,7 +75,7 @@ Other variables that start with `$iyo_` are needed by [lua-resty-iyo-auth](https
 * $iyo_secret: client secret
 * $iyo_redirect_uri: a callback url that iyo will redirect to after successful login.
 
-As you can see, we are using some helper lua files provided by `lua-resty-iyo-auth` to deal with the oauth flow for us, we only need to handle things after access_by_lua is done, in this example, we defined `content_by_lua` to be executed in case `access_by_lua_file` successed:
+As you can see, we are using some helper lua files provided by `lua-resty-iyo-auth` to deal with the oauth flow for us, we only need to handle things after `access_by_lua_file` is done, in this example, we defined `content_by_lua` to be executed in case `access_by_lua_file` succeeded:
 
 ```lua
     local jwt = require("cpp.jwt")
@@ -87,5 +87,5 @@ As you can see, we are using some helper lua files provided by `lua-resty-iyo-au
     ngx.say("Welcome "..jwt_obj.payload.username.." <a href=\'/_iyo/logout\'>Logout...</a>")';
 ```
 
-`get_req_jwt()` is provided to get the jwt token from current request or cookeies, then we use `decode()` to get user info (we don't need to do any verification, it should be done already by `lua-resty-iyo-auth`).
+`get_req_jwt()` is provided to get the jwt token from current request or cookies, then we use `decode()` to get user info (we don't need to do any verification, it should be done already by `lua-resty-iyo-auth`).
 
