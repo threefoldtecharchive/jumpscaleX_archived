@@ -2185,7 +2185,7 @@ class JumpscaleInstaller():
             instruction_method = "j.data.nacl.configure"
             name = "default"
             sshagent_use = true
-            privkey_words = '{WORDS}'
+            privkey_words = "{WORDS}"
             generate = true
             """
         else:
@@ -2194,8 +2194,8 @@ class JumpscaleInstaller():
             instruction_method = "j.data.nacl.configure"
             name = "default"
             sshagent_use = false
-            secret = {SECRET}
-            privkey_words = '{WORDS}'
+            secret = "{SECRET}"
+            privkey_words = "{WORDS}"
             generate = true
             """
         kwargs={}
