@@ -48,7 +48,9 @@ http {
                 local nginx = require("iyo-auth.nginx")
 
                 local jwt_obj = jwt.decode(nginx.get_req_jwt())
-                ngx.say("Welcome "..jwt_obj.payload.username.."!")';
+
+                ngx.header["Content-type"] = "text/html"
+                ngx.say("Welcome "..jwt_obj.payload.username.." <a href=\'/_iyo/logout\'>Logout...</a>")';
         }
 
         location /_iyo/callback {
