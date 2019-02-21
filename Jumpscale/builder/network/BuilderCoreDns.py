@@ -74,3 +74,12 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         cmd = "{coredns_path}/coredns -conf {path_config}".format(
             coredns_path=self.package_path, path_config=config_file)
         j.tools.tmux.execute(window="coredns", cmd=cmd)
+
+
+    def _test(self, name=''):
+        """Run tests under tests directory
+
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        self._test_run(name=name, obj_key='test_main')

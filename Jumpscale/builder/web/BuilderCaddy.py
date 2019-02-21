@@ -125,3 +125,11 @@ class BuilderCaddy(j.builder.system._BaseClass):
         if create_flist:
             print(self.flist_create(sandbox_dir=dest_path, hub_instance=zhub_instance))
         self._done_set('sandbox')
+    
+    def _test(self, name=""):
+        """Run tests under tests directory
+
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        self._test_run(name=name, obj_key='test_main')
