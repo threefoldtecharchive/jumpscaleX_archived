@@ -25,3 +25,15 @@ try:
 except Exception as e:
     sys.stderr.write('\nError In ZDB Server\n')
     traceback.print_exc()
+
+try:
+    j.clients.sshagent.test()
+except Exception as e:
+    sys.stderr.write('\nError In SSHagent\n')
+    traceback.print_exc()
+
+try:
+    j.clients.sshkey.test()
+except Exception as e:
+    sys.stderr.write('\nError In SSHKey\n')
+    traceback.print_exc()

@@ -59,11 +59,6 @@ def main(self):
     txn = explorer_client.posted_transaction_get(result.transaction.id)
     assert txn.json() == expected_transaction
 
-    # the balance is now updated as well
-    assert balance.available == 3500
-    assert balance.unconfirmed == '88.76'
-    assert balance.locked == 0
-
     # (2) sending coins to a personal wallet with a lock and data is possible as well
     result = w.coins_send(
         recipient="015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f",
@@ -80,11 +75,6 @@ def main(self):
     txn = explorer_client.posted_transaction_get(result.transaction.id)
     assert txn.json() == expected_transaction
 
-    # the balance is now updated as well
-    assert balance.available == 3000
-    assert balance.unconfirmed == '387.76 TFT'
-    assert balance.locked == 0
-
     # (3) one can also send to full multi-sig wallet
     result = w.coins_send(
         recipient=["015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f", "010d22cf70053432d70ea08c6940c9e84c4c89e67ad24c3ff9f0444dd2d03bf77c91b3e02c30a1"],
@@ -95,16 +85,11 @@ def main(self):
     assert result.submitted # it is expected the transaction is submitted
 
     # validate the transaction is as expected
-    expected_transaction = {'version': 1, 'data': {'coininputs': [{'parentid': '75f297550acfa48490c21490f82c3c308326c16f950e17ef3a286486065a51b8', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': 'b9cfd884255eb3719c4819a20a5482fabf83fd687554bbfe7bd06737cdf8324733c7883da64f7ad79cdbe88451e24079fe6c073cebb8fc90dcfc1e3188e15e08'}}}], 'coinoutputs': [{'value': '50000000000', 'condition': {'type': 3, 'data': {'locktime': 1550665225, 'condition': {'type': 4, 'data': {'minimumsignaturecount': 2, 'unlockhashes': ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f', '010d22cf70053432d70ea08c6940c9e84c4c89e67ad24c3ff9f0444dd2d03bf77c91b3e02c30a1']}}}}}, {'value': '949000000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}], 'minerfees': ['1000000000'], 'arbitrarydata': 'YmluYXJ5IGRhdGEgY2FuIGJlIGFkZGVkIGFzIHdlbGw='}}
+    expected_transaction = {'version': 1, 'data': {'coininputs': [{'parentid': '19d4e81d057b4c93a7763f3dfe878f6a37d6111a3808b93afff4b369de0f5376', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': '5d51a67cfd93e1960553c8281a27a047c6b505800efb3106014baf4eea59188c43c993bac4af0a1b789a8054872a07b3137982c584dce42d8477700c4ae77a0a'}}}], 'coinoutputs': [{'value': '50000000000', 'condition': {'type': 3, 'data': {'locktime': 1550665225, 'condition': {'type': 4, 'data': {'minimumsignaturecount': 2, 'unlockhashes': ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f', '010d22cf70053432d70ea08c6940c9e84c4c89e67ad24c3ff9f0444dd2d03bf77c91b3e02c30a1']}}}}}, {'value': '147000000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}], 'minerfees': ['1000000000'], 'arbitrarydata': 'YmluYXJ5IGRhdGEgY2FuIGJlIGFkZGVkIGFzIHdlbGw='}}
     assert result.transaction.json() == expected_transaction
     # ensure the transaction is posted and as expected there as well
     txn = explorer_client.posted_transaction_get(result.transaction.id)
     assert txn.json() == expected_transaction
-
-    # the balance is now updated as well
-    assert balance.available == 2000
-    assert balance.unconfirmed == '1336.76'
-    assert balance.locked == 0
 
     # (4) one can also send to a x-out-of-n multisig wallet
     result = w.coins_send(
@@ -116,16 +101,11 @@ def main(self):
     assert result.submitted # it is expected the transaction is submitted
 
     # validate the transaction is as expected
-    expected_transaction = {'version': 1, 'data': {'coininputs': [{'parentid': 'd1f74e90eba8095e78f08a6284c7b76d4cda86b06ac742062d6e0e02dc4607eb', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': '96b185004da4cb8bc41203f2ae2e7992ef1f9ababac870ca1cf97d4074f404cc33dbf68a6fdf1400203d61cde057cc951c4127200f21be6bc5cbd5f4c85b4f0a'}}}], 'coinoutputs': [{'value': '300000000000', 'condition': {'type': 3, 'data': {'locktime': 35000, 'condition': {'type': 4, 'data': {'minimumsignaturecount': 1, 'unlockhashes': ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f', '010d22cf70053432d70ea08c6940c9e84c4c89e67ad24c3ff9f0444dd2d03bf77c91b3e02c30a1']}}}}}, {'value': '1699000000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}], 'minerfees': ['1000000000'], 'arbitrarydata': 'YmluYXJ5IGRhdGEgY2FuIGJlIGFkZGVkIGFzIHdlbGw='}}
+    expected_transaction = {'version': 1, 'data': {'coininputs': [{'parentid': 'b90422bad2dffde79f0a46bd0a41055cf7974b080e115d76f69891ca31d31f11', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': '027d44a7d16fa29c0ae9bfdbfbd18bf029864b14c4a0444b6d2e16145175e1df2c446ff77105731a76bbd40e8bc9e36439949e1f8311d997b4bb3273ed2b7e03'}}}], 'coinoutputs': [{'value': '300000000000', 'condition': {'type': 3, 'data': {'locktime': 35000, 'condition': {'type': 4, 'data': {'minimumsignaturecount': 1, 'unlockhashes': ['015a080a9259b9d4aaa550e2156f49b1a79a64c7ea463d810d4493e8242e6791584fbdac553e6f', '010d22cf70053432d70ea08c6940c9e84c4c89e67ad24c3ff9f0444dd2d03bf77c91b3e02c30a1']}}}}}, {'value': '199000000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}], 'minerfees': ['1000000000'], 'arbitrarydata': 'YmluYXJ5IGRhdGEgY2FuIGJlIGFkZGVkIGFzIHdlbGw='}}
     assert result.transaction.json() == expected_transaction
     # ensure the transaction is posted and as expected there as well
     txn = explorer_client.posted_transaction_get(result.transaction.id)
     assert txn.json() == expected_transaction
-
-    # the balance is now updated as well
-    assert balance.available == 0
-    assert balance.unconfirmed == '3035.76 TFT'
-    assert balance.locked == 0
 
     # ensure we have the multi-sig wallet that we think we have
     mw = w.balance.wallets['039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a']
@@ -151,9 +131,3 @@ def main(self):
     # ensure the transaction is posted and as expected there as well
     txn = explorer_client.posted_transaction_get(result.transaction.id)
     assert txn.json() == expected_transaction
-
-    # ensure our balance is updated
-    mw = w.balance.wallets['039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a']
-    assert mw.available == '0 TFT'
-    assert mw.unconfirmed == '21 TFT'
-    assert mw.locked == '0 TFT'

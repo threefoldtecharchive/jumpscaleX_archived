@@ -28,6 +28,7 @@ from ..PrimitiveTypes import Hash
 class TransactionBaseClass(ABC):
     def __init__(self):
         self._id = None
+        self._height = -1
         self._unconfirmed = False
 
     @classmethod
@@ -61,13 +62,40 @@ class TransactionBaseClass(ABC):
     
     @property
     def id(self):
+        """
+        ID of this transaction.
+        """
         return str(self._id)
     @id.setter
     def id(self, id):
-        if type(id) is type(self._id):
-            self._id = id
-        else:
-            self._id = j.clients.tfchain.types.hash_new(value=id)
+        if isinstance(id, Hash):
+            self._id = Hash(value=id.value)
+        self._id = Hash(value=id)
+
+    def __hash__(self):
+        if self._id is None:
+            return hash(j.data.serializers.json.dumps(self.json()))
+        return hash(self.id)
+
+    def __eq__(self, other):
+        if not isinstance(other, TransactionBaseClass):
+            raise TypeError("other is expected to be subtype of TransactionBaseClass, not {}".format(type(other)))
+        return hash(self) == hash(other)
+    
+    @property
+    def height(self):
+        """
+        Height of the block this transaction is part of,
+        if not yet part of a block it will be negative (-1 is the default value).
+        """
+        return self._height
+    @height.setter
+    def height(self, value):
+        if not (isinstance(value, int) and not isinstance(value, bool)):
+            raise TypeError("value should be of type int or bool, not {}".format(type(value)))
+        if value < 0:
+            raise ValueError("a block height cannot be negative")
+        self._height = value
 
     @property
     def coin_inputs(self):

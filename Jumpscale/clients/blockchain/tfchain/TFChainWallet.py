@@ -3,6 +3,7 @@ from Jumpscale import j
 
 from functools import reduce
 
+import sys
 import hashlib
 from ed25519 import SigningKey
 
@@ -54,9 +55,6 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # but will keep the unused keys in a seperate bucket, so we
         # can use them first
         self._unused_key_pairs = []
-
-        # cache balance so we only update when the block chain info changes
-        self._cached_balance = None
 
         # provide sane defaults for the schema-based wallet config
         if self.seed == "":
@@ -147,6 +145,9 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         """
         The addresses owned and used by this wallet.
         """
+        # key scan first
+        scanned_new_keys = self._key_scan()
+        # than list all addresses
         return list(self._key_pairs.keys())
 
     @property
@@ -173,10 +174,8 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # key scan first
         scanned_new_keys = self._key_scan()
 
-        # first get chain info, so we can check if the current balance is still fine
+        # first get chain info
         info = self.client.blockchain_info_get()
-        if not scanned_new_keys and self._cached_balance and self._cached_balance.chain_blockid == info.blockid:
-            return self._cached_balance
 
         addresses = self.addresses
         balance = WalletsBalance()
@@ -211,10 +210,28 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         balance.chain_blockid = info.blockid
         balance.chain_time = info.timestamp
         balance.chain_height = info.height
-        # cache the balance
-        self._cached_balance = balance
         # return the balance
         return balance
+
+    @property
+    def transactions(self):
+        """
+        Get all transactions linked to a personal wallet address.
+        """
+        # key scan first
+        self._key_scan()
+
+        # for each address get all transactions
+        transactions = set()
+        for address in self.addresses:
+            result = self._unlockhash_get(address)
+            transactions.update(result.transactions)
+
+        # sort all transactions
+        transactions = sorted(transactions, key=(lambda txn: sys.maxsize if txn.height < 0 else txn.height), reverse=True)
+
+        # return all transactions
+        return transactions
 
     def _key_scan(self):
         # try some extra key scanning, to see if other keys have been used
@@ -562,11 +579,6 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         self._key_pairs[addr] = key_pair
         if add_count:
             self.key_count += 1+offset
-        # clear cache, as it will no longer be up to date
-        self._clear_cache()
-
-    def _clear_cache(self):
-        self._cached_balance = None
 
 from .types.ConditionTypes import ConditionMultiSignature
 from .types.FulfillmentTypes import FulfillmentMultiSignature, PublicKeySignaturePair
