@@ -53,13 +53,18 @@ class TypeBaseObjClassNumeric(TypeBaseObjClass):
 
     def __eq__(self, other):
         other = self._other_convert(other)
+        if other is None:
+            return None
         return float(other) == float(self)
 
     def __bool__(self):
         return self._data is not None
 
     def _other_convert(self,other):
-        return self._typebase.clean(other)
+        try:
+            return self._typebase.clean(other)
+        except:
+            pass
 
     def __add__(self, other):
         other = self._other_convert(other)

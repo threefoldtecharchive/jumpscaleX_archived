@@ -30,7 +30,7 @@ class Types(j.application.JSBaseClass):
                 for alias in typeclass.ALIAS.split(","):
                     self.__attach(alias, typeclass,o)
 
-        self._type_check_list = ['guid', 'path', 'multiline', 'ipaddr', 'iprange', 'ipport',
+        self._type_check_list = ['guid', 'path', 'multiline', 'iprange', 'ipport',
                                  'tel', 'email', 'date', 'datetime', 'numeric', 'percent', 'hash',
                                  'jsobject', 'url', 'enum',
                                  'dict', 'list', 'boolean', 'integer', 'float', 'string', 'bytes']

@@ -230,7 +230,7 @@ class Numeric(TypeBaseObjClassFactory):
 
     def bytes2cur(self, bindata, curcode="usd", roundnr=None):
 
-        if bindata == b'':
+        if bindata in [b'',None]:
             return 0
 
         if len(bindata) not in [6, 10]:
