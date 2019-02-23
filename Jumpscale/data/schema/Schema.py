@@ -45,18 +45,18 @@ class Schema(j.application.JSBaseClass):
     def _path(self):
         return j.sal.fs.getDirName(os.path.abspath(__file__))
 
-    def _error_raise(self, msg, e=None, schema=None):
-        if self.url == "" and "url" in self._systemprops:
-            self.url = self._systemprops["url"]
-        out = "\nerror in schema:\n"
-        out += "    url:%s\n" % self.url
-        out += "    msg:%s\n" % j.core.text.prefix("    ", msg)
-        if schema:
-            out += "    schema:\n%s" % schema
-        if e is not None:
-            out += "\nERROR:\n"
-            out += j.core.text.prefix("        ", str(e))
-        raise RuntimeError(out)
+    # def _error_raise(self, msg, e=None, schema=None):
+    #     if self.url == "" and "url" in self._systemprops:
+    #         self.url = self._systemprops["url"]
+    #     out = "\nerror in schema:\n"
+    #     out += "    url:%s\n" % self.url
+    #     out += "    msg:%s\n" % j.core.text.prefix("    ", msg)
+    #     if schema:
+    #         out += "    schema:\n%s" % schema
+    #     if e is not None:
+    #         out += "\nERROR:\n"
+    #         out += j.core.text.prefix("        ", str(e))
+    #     raise RuntimeError(out)
 
     def _proptype_get(self, txt):
         """
@@ -155,30 +155,7 @@ class Schema(j.application.JSBaseClass):
                     jumpscaletype.SUBTYPE = pointer_type
                     defvalue = ""
                 else:
-
-                    if line_proptype in ["e", "enum"]:
-                        try:
-                            jumpscaletype = j.data.types.enum.get(values=line_wo_proptype)
-                            defvalue = jumpscaletype.default
-                        except Exception as e:
-                            self._error_raise("error (enum) on line:%s" % line_original, e=e)
-
-                    elif line_proptype in ["ipaddr"]:
-                        try:
-                            if line_wo_proptype == "" or line_wo_proptype is None:
-                                jumpscaletype = j.data.types.ipaddr.get("192.168.1.1")
-                                defvalue = jumpscaletype.get_default()
-                            else:
-                                jumpscaletype = j.data.types.ipaddr.get(line_wo_proptype)
-                                defvalue = jumpscaletype.clean(line_wo_proptype)
-                        except Exception as e:
-                            self._error_raise("error (ipaddr) on line:%s" % line_original, e=e)
-                    else:
-                        jumpscaletype = j.data.types.get(line_proptype)
-                        if line_wo_proptype == "" or line_wo_proptype is None:
-                            defvalue = jumpscaletype.get_default()
-                        else:
-                            defvalue = jumpscaletype.clean(line_wo_proptype)
+                    jumpscaletype = j.data.types.get(line_proptype,default=line_wo_proptype)
             else:
                 jumpscaletype, defvalue = self._proptype_get(line)
 
@@ -205,7 +182,7 @@ class Schema(j.application.JSBaseClass):
             if line.startswith("#"):
                 continue
             if "=" not in line:
-                self._error_raise("did not find =, need to be there to define field", schema=text)
+                raise j.exceptions.Input("did not find =, need to be there to define field, line=%s"%line, data=text)
 
             p = process(line)
 
@@ -251,7 +228,6 @@ class Schema(j.application.JSBaseClass):
                 raise RuntimeError("md5 cannot be None")
 
             tpath = "%s/templates/template_obj.py" % self._path
-
             self._obj_class = j.tools.jinja2.code_python_render(
                 name="schema_%s" % self.key, obj_key="ModelOBJ", path=tpath, obj=self, objForHash=self._md5)
 

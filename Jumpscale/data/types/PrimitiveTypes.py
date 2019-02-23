@@ -12,9 +12,10 @@ class String(TypeBaseClass):
     stored in capnp as string
     '''
 
-    NAME = 'string'
-    ALIAS = "str,s"
-    BASETYPE = 'string'
+    NAME =  'str,s,string'
+
+    def __init__(self):
+        self.BASETYPE = None
 
     def fromString(self, s):
         """
@@ -49,10 +50,10 @@ class String(TypeBaseClass):
 
 
 class StringMultiLine(String):
+    NAME =  'multiline'
 
-    NAME = 'multiline'     # this really does not match with the
-    BASETYPE = 'stringmultiline'  # list of aliases.
-    ALIAS = "multiline"
+    def __init__(self):
+        self.BASETYPE = 'string'
 
     def check(self, value):
         '''Check whether provided value is a string and has \n inside'''
@@ -108,10 +109,10 @@ class Bytes(TypeBaseClass):
     Generic array of bytes type
     stored as bytes directly, no conversion
     '''
+    NAME =  'bytes,bin,binary'
 
-    NAME = 'bytes'
-    BASETYPE = 'bytes'
-    ALIAS = "bin"
+    def __init__(self):
+        self.BASETYPE = None
 
     def fromString(self, s):
         """
@@ -175,10 +176,10 @@ class Bytes(TypeBaseClass):
 class Boolean(TypeBaseClass):
 
     '''Generic boolean type'''
+    NAME =  'boolean,bool,b'
 
-    NAME = 'boolean'
-    BASETYPE = 'boolean'
-    ALIAS = "b,bool"
+    def __init__(self):
+        self.BASETYPE = None
 
     def fromString(self, s):
         return self.clean(s)
@@ -244,10 +245,10 @@ class Boolean(TypeBaseClass):
 class Integer(TypeBaseClass):
 
     '''Generic integer type'''
+    NAME =  'integer,int,i'
 
-    NAME = 'integer'
-    ALIAS = 'int,i'
-    BASETYPE = 'integer'
+    def __init__(self):
+        self.BASETYPE = None
 
     def checkString(self, s):
         return s.isdigit()
@@ -308,10 +309,10 @@ class Integer(TypeBaseClass):
 class Float(TypeBaseClass):
 
     '''Generic float type'''
+    NAME =  'float,f'
 
-    NAME = 'float'
-    BASETYPE = 'float'
-    ALIAS = "f,float"
+    def __init__(self):
+        self.BASETYPE = None
 
     def checkString(self, value):
         try:
@@ -373,10 +374,12 @@ class Percent(Float):
 
 
     '''
+    NAME =  'percent,perc,p'
 
-    NAME = 'percent'
-    ALIAS = 'perc,p'
-    BASETYPE = 'float'
+    def __init__(self):
+
+        self.BASETYPE = 'float'
+        self.NOCHECK = True
 
     def clean(self, value):
         """
@@ -415,10 +418,12 @@ class CapnpBin(Bytes):
     #TODO
     is capnp object in binary format
     '''
+    NAME =  'capnpbin,cbin'
 
-    NAME = 'capnpbin'
-    BASETYPE = 'bytes'
-    ALIAS = "cbin"
+    def __init__(self):
+
+        self.BASETYPE = 'bin'
+        self.NOCHECK = True
 
     def clean(self, value):
         """
@@ -442,12 +447,10 @@ class JSDataObject(Bytes):
     '''
     jumpscale data object as result of using j.data.schemas.
     '''
-
-    NAME = 'jsobject'
-    BASETYPE = ''
-    ALIAS = "o,obj"
+    NAME = 'jsobject,o,obj'
 
     def __init__(self):
+        self.BASETYPE = 'bin'
         self.SUBTYPE = None
 
     def fromString(self, s):
@@ -489,10 +492,12 @@ class JSConfigObject(TypeBaseClass):
     '''
     jumpscale object which inherits from j.application.JSBaseConfigClass
     '''
+    NAME =  'jsconfigobject,configobj'
 
-    NAME = 'jsconfigobject'
-    BASETYPE = ''
-    ALIAS = "configobj"
+    def __init__(self):
+
+        self.BASETYPE = 'capnpbin'
+        self.SUBTYPE = None
 
     def check(self, value):
         return isinstance(value, j.application.JSBaseConfigClass)

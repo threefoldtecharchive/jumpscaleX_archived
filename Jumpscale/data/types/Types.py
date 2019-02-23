@@ -8,45 +8,59 @@ from .PrimitiveTypes import *
 from .Enumeration import Enumeration
 from .IPAddress import *
 from Jumpscale import j
+import copy
 
+class Custom(j.application.JSBaseClass):
+    def _init(self):
+        self._types = {}
 
 class Types(j.application.JSBaseClass):
 
     __jslocation__ = "j.data.types"
 
     def _init(self):
-        self.enumerations = {}
-        self.ipaddrs = {}
 
         self._types_list = [Dictionary, List, Guid, Path, Boolean, Integer, Float, String, Bytes, StringMultiLine,
                             IPRange, IPPort, Tel, YAML, JSON, Email, Date, DateTime, Numeric, Percent,
                             Hash, CapnpBin, JSDataObject, JSConfigObject, Url, Enumeration]
 
-        l = []
+        self.custom = Custom()
+
+        self._type_check_list = []
         for typeclass in self._types_list:
-            name = typeclass.NAME.strip().strip("_")
+            name = typeclass.NAME.strip().strip("_").lower()
+            if "," in name:
+                aliases = [name.strip() for name in name.split(",")]
+                name=aliases[0]
+                aliases.pop(aliases.index(name))
+            else:
+                aliases = None
             o = self.__attach(name, typeclass)
-            if hasattr(typeclass, "ALIAS"):
-                for alias in typeclass.ALIAS.split(","):
+            if name in self._type_check_list:
+                raise RuntimeError("there is duplicate type:%s"%name)
+            if not hasattr(o,"NOCHECK") or o.NOCHECK is False:
+                self._type_check_list.append(name)
+            if aliases:
+                for alias in aliases:
                     self.__attach(alias, typeclass,o)
-
-        self._type_check_list = ['guid', 'path', 'multiline', 'iprange', 'ipport',
-                                 'tel', 'email', 'date', 'datetime', 'numeric', 'percent', 'hash',
-                                 'jsobject', 'url', 'enum',
-                                 'dict', 'list', 'boolean', 'integer', 'float', 'string', 'bytes']
-
-        self.enumeration = Enumeration
-        self._enumeration = Enumeration()
 
     def __attach(self, name, typeclass,o=None):
         name = name.strip().lower()
         name2 = "_%s" % name
-        self.__dict__[name2] = typeclass
-        if o:
-            self.__dict__[name] = o
+
+        if not hasattr(typeclass,"CUSTOM") or typeclass.CUSTOM is False:
+            #o is the object
+            if not o:
+                o = typeclass()
+                o._jsx_location = "j.data.types.%s"%name
+
+        if hasattr(typeclass,"CUSTOM") and typeclass.CUSTOM is True:
+            self.custom.__dict__[name] = typeclass  #only attach class
         else:
-            self.__dict__[name] = self.__dict__[name2]()
-        return self.__dict__[name]
+            self.__dict__[name] = o
+            self.__dict__[name2] = typeclass
+
+        return o
 
     def type_detect(self, val):
         """
@@ -58,28 +72,8 @@ class Types(j.application.JSBaseClass):
                 return ttype
         raise RuntimeError("did not detect val for :%s" % val)
 
-    def get_custom(self, ttype, **kwargs):
-        """
-        e.g. for enum, but there can be other types in future who take certain input
-        :param ttype:
-        :param kwargs: e.g. values="red,blue,green" can also a list for e.g. enum
-        :return:
 
-        e.g. for enumeration
-
-        j.data.types.get_custom("e",values="blue,red")
-
-        """
-        ttype = ttype.lower().strip()
-        if ttype in ["e", "enum"]:
-            cl = self._enumeration
-            cl = cl.get(values=kwargs["values"])
-            self.enumerations[cl._md5] = cl
-            return self.enumerations[cl._md5]
-        else:
-            raise j.exceptions.RuntimeError("did not find custom type:'%s'" % ttype)
-
-    def get(self, ttype):
+    def get(self, ttype,default=None):
         """
         type is one of following
         - s, str, string
@@ -104,24 +98,44 @@ class Types(j.application.JSBaseClass):
         - guid
         - url, u
         - e,enum        #enumeration
+
+
+        :param default: e.g. "red,blue,green" for an enumerator
+            for certain types e.g. enumeration the default value is needed to create the right type
+
         """
         ttype = ttype.lower().strip()
 
-        if ttype in ["n", "num", "numeric"]:
-            res = self._numeric
-        elif ttype.startswith("l"):
-            tt = self._list()  # need to create new instance
+        if ttype.startswith("l"):
+            default_copy=copy.copy(default)
             if len(ttype) > 1:
-                tt.SUBTYPE = self.get(ttype[1:])
-                return tt
+                default = ttype[1:]
             elif len(ttype) == 1:
-                assert tt.SUBTYPE == None
-                return tt
+                default = None
+            else:
+                raise RuntimeError("list type can only be 1 or 2 chars")
 
-        if not ttype in self._ddict:
+        if ttype in self.custom.__dict__:
+            tt_class = self.custom.__dict__[ttype]  #is the class
+            name = tt_class.NAME.split(",")[0]
+            key0=default.replace(" ","").replace(",","_")
+            key="%s_%s"%(name,key0)
+            tt = tt_class(default)
+            self.custom._types[key] = tt
+            tt._jsx_location = "j.data.types.custom._types['%s']"%key
+            if ttype.startswith("l"):
+                #is a list, copy default values in
+                tt._default_values = tt.fromString(default_copy)
+            return tt
+        elif ttype in self.__dict__:
+            tt = self.__dict__[ttype]
+            return tt
+        else:
             raise j.exceptions.RuntimeError("did not find type:'%s'" % ttype)
 
-        return self.__dict__[ttype]
+
+
+
 
     def test(self, name=""):
         """

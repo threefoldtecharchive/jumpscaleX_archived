@@ -19,12 +19,10 @@ class Guid(String):
     stored as binary internally
     '''
 
-    NAME = 'guid'
-    ALIAS = 'guid'
+    NAME =  'guid'
 
     def __init__(self):
-        String.__init__(self)
-
+        self.BASETYPE = "string"
 
     def check(self, value):
         try:
@@ -50,14 +48,10 @@ class Guid(String):
 class Email(String):
     """
     """
-
-    NAME = 'email'
-    ALIAS = 'email'
-
+    NAME =  'email'
 
     def __init__(self):
-        String.__init__(self)
-
+        self.BASETYPE = "string"
         self._RE = re.compile('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 
     def check(self, value):
@@ -78,11 +72,10 @@ class Email(String):
 
 class Path(String):
     '''Generic path type'''
-    NAME = 'path'
-    ALIAS = "path"
+    NAME =  'path'
 
     def __init__(self):
-        String.__init__(self)
+        self.BASETYPE = "string"
         self._RE = re.compile("^(?:\.{2})?(?:\/\.{2})*(\/[a-zA-Z0-9]+)+$")
 
     def check(self, value):
@@ -97,11 +90,10 @@ class Path(String):
 
 class Url(String):
     '''Generic url type'''
-    NAME = 'url'
-    ALIAS = "u"
+    NAME =  'url,u'
 
     def __init__(self):
-        String.__init__(self)
+        self.BASETYPE = "string"
         self._RE = re.compile(
             "(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,}")
 
@@ -119,11 +111,10 @@ class Tel(String):
     the. & , and spaces will not be remembered
     and x stands for phone number extension
     """
-    NAME = 'tel'
-    ALIAS = "mobile"
+    NAME =  'tel,mobile'
 
     def __init__(self):
-        String.__init__(self)
+        self.BASETYPE = "string"
         self._RE = re.compile('^\+?[0-9]{6,15}(?:x[0-9]+)?$')
 
     def check(self, value):
@@ -145,16 +136,13 @@ class Tel(String):
             raise ValueError("Invalid mobile number :%s" % v)
         return v
 
-
-
 class IPRange(String):
     """
     """
-    NAME = 'iprange'
-    ALIAS = "iprange"
+    NAME =  'iprange'
 
     def __init__(self):
-        String.__init__(self)
+        self.BASETYPE = "string"
         self._RE = re.compile('[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2}')
 
     def check(self, value):
@@ -163,22 +151,19 @@ class IPRange(String):
         '''
         return self._RE.fullmatch(value) is not None
 
-
-
-
 class IPPort(Integer):
     '''Generic IP port type'''
-    NAME = 'ipport'
-    ALIAS = 'tcpport'
+    NAME =  'ipport,tcpport'
 
     def __init__(self):
-        Integer.__init__(self)
-        self.BASETYPE = 'string'
-        
+        self.BASETYPE = "string"
+        self.NOCHECK = True
+
     def get_default(self):
         return 65535
-    
-    def check(self, value):
+
+
+    def possible(self, value):
         '''
         Check if the value is a valid port
         We just check if the value a single port or a range
@@ -216,7 +201,7 @@ class NumericObject(TypeBaseObjClassNumeric):
         self._data = self._typebase.toData(val)
 
 
-class Numeric(TypeBaseObjClassFactory):
+class Numeric(TypeBaseObjFactory):
     """
     has support for currencies and does nice formatting in string
 
@@ -225,8 +210,13 @@ class Numeric(TypeBaseObjClassFactory):
     will return int as jumpscale basic implementation
 
     """
-    NAME = 'numeric'
-    ALIAS = 'n'
+    NAME =  'numeric,n'
+
+    def __init__(self):
+        TypeBaseObjFactory.__init__(self)
+
+        self.NOCHECK = True
+
 
     def bytes2cur(self, bindata, curcode="usd", roundnr=None):
 
@@ -470,15 +460,17 @@ class Numeric(TypeBaseObjClassFactory):
         return data
 
 
-class DateTime(String):
+class DateTime(Integer):
     '''
     internal representation is an epoch (int)
     '''
-    NAME = 'datetime'
-    ALIAS = "t"
+    NAME =  'datetime,t'
 
     def __init__(self):
-        String.__init__(self)
+
+        self.BASETYPE = "int"
+        self.NOCHECK = True
+
         # self._RE = re.compile('[0-9]{4}/[0-9]{2}/[0-9]{2}')  #something wrong here is not valid for time
 
     def get_default(self):
@@ -489,17 +481,6 @@ class DateTime(String):
         produce the python code which represents this value
         """
         return self.clean(value)
-
-    def check(self, value):
-        '''
-        Check whether provided value is a valid date/time representation
-        be carefull is SLOW
-        '''
-        try:
-            self.clean(value)
-            return True
-        except:
-            return False
 
     def fromString(self, txt):
         return self.clean(txt)
@@ -618,12 +599,13 @@ class Date(DateTime):
     '''
     internal representation is an epoch (int)
     '''
-    NAME = 'date'
-    ALIAS = "d"
+    NAME =  'date,d'
 
     def __init__(self):
-        String.__init__(self)
+
+        self.BASETYPE = "int"
         # self._RE = re.compile('[0-9]{4}/[0-9]{2}/[0-9]{2}')
+        self.NOCHECK = True
 
     def clean(self, v):
         """

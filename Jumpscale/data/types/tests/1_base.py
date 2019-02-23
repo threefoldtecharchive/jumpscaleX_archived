@@ -8,9 +8,12 @@ def main(self):
     kosmos 'j.data.types.test(name="base")'
     """
 
-    assert j.data.types.s.__class__.NAME == "string"
+
+    assert j.data.types.s.__class__.NAME == 'str,s,string'
 
     assert j.data.types.get("s") == j.data.types.get("string")
+
+    j.shell()
 
     #TODO: need more tests here
 

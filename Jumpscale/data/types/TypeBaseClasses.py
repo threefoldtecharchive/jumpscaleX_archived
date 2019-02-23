@@ -8,6 +8,7 @@ class TypeBaseObjClass():
         __slots__ = ['_typebase', '_value']
 
         self._typebase = typebase
+
         if value is None:
             self._data = None
         else:
@@ -23,6 +24,10 @@ class TypeBaseObjClass():
     @property
     def _python_code(self):
         raise j.exceptions.NotImplemented()
+
+    @property
+    def _dictdata(self):
+        return self._data
 
     @property
     def value(self):
@@ -124,6 +129,13 @@ class TypeBaseObjClassNumeric(TypeBaseObjClass):
 
 class TypeBaseClass():
 
+    #CUSTOM = False #if custom will create new instance depending specification in default
+
+    def __init__(self):
+        self.BASETYPE = None
+        self.ALIAS = None
+        self.NAME = None
+
     def toString(self, v):
         return str(self.clean(v))
 
@@ -138,6 +150,8 @@ class TypeBaseClass():
         - if there is a specific implementation e.g. string, float, enumeration, it will check if the input is that implementation
         - if not strict implementation or we cannot know e.g. an address will return None
         '''
+        if hasattr(self,"NOCHECK") and self.NOCHECK is True:
+            return RuntimeError("check cannot be used")
         raise RuntimeError("not implemented")
 
     def possible(self, value):
@@ -180,19 +194,18 @@ class TypeBaseClass():
         return "%s @%s :Text;" % (name, nr)
 
 
-class TypeBaseObjClassFactory(TypeBaseClass):
+class TypeBaseObjFactory(TypeBaseClass):
+
+
+    def __init__(self):
+        self.BASETYPE = None
+        self.NAME = None
 
     def get_default(self):
         return self.clean("0")
 
     def capnp_schema_get(self, name, nr):
         """
-        is 5 bytes, 1 for type, 4 for float value
-        - j.clients.currencylayer.cur2id
-        - j.clients.currencylayer.id2cur
-
-        struct.pack("B",1)+struct.pack("f",1234234234.0)
-
         """
         return "%s @%s :Data;" % (name, nr)
 
@@ -220,5 +233,6 @@ class TypeBaseObjClassFactory(TypeBaseClass):
     def toData(self, v):
         raise j.exceptions.NotImplemented()
 
-    def clean(self, v):
+    def get(self, v):
         raise j.exceptions.NotImplemented()
+

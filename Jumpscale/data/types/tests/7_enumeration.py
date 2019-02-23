@@ -9,7 +9,7 @@ def main(self):
     """
 
 
-    e = j.data.types.get_custom("e",values="yellow,blue,red")
+    e = j.data.types.get("e",default="yellow,blue,red")
 
     assert str(e)=="ENNUM: BLUE,RED,YELLOW (default:YELLOW)"
 

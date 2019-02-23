@@ -1,5 +1,5 @@
 from .PrimitiveTypes import String
-from .TypeBaseClasses import TypeBaseObjClass
+from .TypeBaseClasses import *
 from Jumpscale import j
 
 from ipaddress import IPv4Address, IPv6Address
@@ -9,10 +9,8 @@ from ipaddress import AddressValueError, NetmaskValueError
 
 class IPAddressObject(TypeBaseObjClass):
 
-    NAME = 'ipaddr'
-    ALIAS = "ipaddr"
-
     def __init__(self, val):
+        raise RuntimeError("need to be implemented")
         self._jstype = j.data.types.ipaddr
         self._val = val
         val = j.data.types.string.clean(val)
@@ -42,12 +40,13 @@ class IPAddressObject(TypeBaseObjClass):
     def __repr__(self):
         return "{}".format(self._val)
 
-class IPAddress:
+class IPAddress(TypeBaseObjFactory):
     """
     """
-    NAME = 'ipaddr'
-    ALIAS = "ipaddr"
-    BASETYPE = 'string'
+    NAME =  'ipaddr'
+
+    def __init__(self):
+        TypeBaseObjClassFactory.__init__(self)
 
     def clean(self, val="192.168.1.1"):
         if isinstance(val,IPAddressObject):

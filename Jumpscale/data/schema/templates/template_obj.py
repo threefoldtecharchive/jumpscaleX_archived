@@ -149,7 +149,12 @@ class ModelOBJ():
         {% endif %} 
         {% if prop.jumpscaletype.NAME == "jsobject" %}
         return self._changed_items["{{prop.name}}"]
-        {% else %} 
+        {% elif prop.jumpscaletype.BASETYPE == "OBJ" %}
+        if not "{{prop.name}}" in self._changed_items:
+            self._changed_items["{{prop.name}}"] = {{prop.js_typelocation}}.clean(self._cobj_.{{prop.name_camel}})
+        return self._changed_items["{{prop.name}}"]
+
+        {% else %}
         if "{{prop.name}}" in self._changed_items:
             return self._changed_items["{{prop.name}}"]
         else:
@@ -165,7 +170,7 @@ class ModelOBJ():
         {% else %} 
         #will make sure that the input args are put in right format
         val = {{prop.js_typelocation}}.clean(val)  #is important because needs to come in right format e.g. binary for numeric
-        if True or val != self.{{prop.name}}:
+        if True or val != self.{{prop.name}}: #TODO: shortcut for now
             self._changed_items["{{prop.name}}"] = val
             if self.model:
                 # self._log_debug("change:{{prop.name}} %s"%(val))
@@ -177,17 +182,17 @@ class ModelOBJ():
     {% if prop.jumpscaletype.NAME == "numeric" %}
     @property
     def {{prop.name}}_usd(self):
-        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.name}})
+        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.name}}._data)
 
     @property
     def {{prop.name}}_eur(self):
-        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.name}},curcode="eur")
+        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.name}}._data,curcode="eur")
 
     def {{prop.name}}_cur(self,curcode):
         """
         @PARAM curcode e.g. usd, eur, egp, ...
         """
-        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.name}}, curcode = curcode)
+        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.name}}._data, curcode = curcode)
 
     {% endif %}
 
@@ -281,6 +286,8 @@ class ModelOBJ():
         if "{{prop.name}}" in self._changed_items:
             {% if prop.jumpscaletype.NAME == "jsobject" %}
             ddict["{{prop.name_camel}}"] = self._changed_items["{{prop.name}}"]._data
+            {% elif prop.jumpscaletype.BASETYPE == "OBJ" %}
+            ddict["{{prop.name_camel}}"] = self._changed_items["{{prop.name}}"]._data
             {% else %}
             ddict["{{prop.name_camel}}"] = {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
             {% endif %}
@@ -319,6 +326,8 @@ class ModelOBJ():
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
         d["{{prop.name}}"] = self.{{prop.name}}._ddict
+        {% elif prop.jumpscaletype.BASETYPE == "OBJ" %}
+        d["{{prop.name}}"] = self.{{prop.name}}._dictdata
         {% else %}
         d["{{prop.name}}"] = self.{{prop.name}}
         {% endif %}    
@@ -385,7 +394,6 @@ class ModelOBJ():
     @property
     def _toml(self):
         return j.data.serializers.toml.dumps(self._ddict)
-
 
 
     @property

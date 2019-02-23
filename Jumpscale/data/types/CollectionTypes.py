@@ -13,11 +13,14 @@ from .TypeBaseClasses import *
 class YAML(String):
     '''Generic dictionary type'''
 
-    NAME = 'yaml'
-    BASETYPE = 'string'
-    ALIAS = "yaml"
+    NAME =  'yaml'
 
-    def check(self, value):
+    def __init__(self):
+
+        self.BASETYPE = 'string'
+        self.NOCHECK = True
+
+    def possible(self, value):
         '''Check whether provided value is a dict'''
         if not isinstance(value, str):
             return False
@@ -51,11 +54,13 @@ class YAML(String):
 
 class JSON(String):
 
-    NAME = 'json'
-    BASETYPE = 'string'
-    ALIAS = "json"
+    NAME =  'json'
 
-    def check(self, value):
+    def __init__(self):
+        self.BASETYPE = 'string'
+        self.NOCHECK = True
+
+    def possible(self, value):
         """
         Check whether provided value is a dict
         """
@@ -85,8 +90,11 @@ class JSON(String):
 class Dictionary(String):
     '''Generic dictionary type'''
 
-    NAME = 'dict'
-    BASETYPE = 'dictionary'
+    NAME =  'dict'
+
+    def __init__(self):
+
+        self.BASETYPE = 'dictionary'
 
     def check(self, value):
         '''Check whether provided value is a dict'''
@@ -142,24 +150,27 @@ class Dictionary(String):
         return "%s @%s :Data;" % (name, nr)
 
 
-class List(TypeBaseClass):
-    '''
-    Generic list & set type
-    in the self.clean there is a sort option
-    '''
-    NAME = 'list'
-    BASETYPE = 'list'
-    ALIAS = "l"
 
-    def __init__(self):
-        self.SUBTYPE = None
+class List(TypeBaseClass):
+
+    CUSTOM=True
+    NAME =  'list,l'
+
+    def __init__(self,default):
+
+        self.BASETYPE = None
+        if default:
+            self.SUBTYPE = j.data.types.get(default)
+        else:
+            self.SUBTYPE = None
+        self._default_values = []
 
     def check(self, value):
         '''Check whether provided value is a list'''
         return isinstance(value, (list, tuple, set))
 
     def get_default(self):
-        return list()
+        return self._default_values
 
     def list_check_1type(self, llist, die=True):
         if len(llist) == 0:
@@ -297,10 +308,10 @@ class Hash(List):
     '''
     hash is 2 value list, represented as 2 times 4 bytes
     '''
+    NAME =  'hash'
 
-    NAME = 'hash'
-    BASETYPE = 'string'
-    ALIAS = 'h'
+    def __init__(self):
+        self.BASETYPE = 'string'
 
     def fromString(self, s):
         """
@@ -389,7 +400,7 @@ class Hash(List):
 # class Set(List):
 #     '''Generic set type'''
 #
-#     NAME = 'set'
+#     self.NAME =  'set'
 #     BASETYPE = 'set'
 #
 #     def check(self, value):
