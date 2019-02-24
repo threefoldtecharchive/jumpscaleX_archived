@@ -1,8 +1,10 @@
 from Jumpscale import j
 from subprocess import run, PIPE
 from uuid import uuid4
-import sys
-import os 
+import sys, os , re
+
+ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
+
 
 def random_string():
     return str(uuid4()).replace('-', '')[:10]
@@ -18,6 +20,7 @@ def execute_cmd(cmd):
     return response
 
 def write_file(text):
+    text = ansi_escape.sub('', text)
     file_name = '{}.log'.format(os.environ.get('commit')[:7])
     with open (file_name, 'w+') as f:
         f.write(text)
