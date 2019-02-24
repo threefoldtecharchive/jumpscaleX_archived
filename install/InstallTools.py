@@ -1266,6 +1266,7 @@ class Tools:
         args["REPO_DIR"]= REPO_DIR
         args["URL"] = repo_url
         args["NAME"] = repo
+        args["BRANCH"] = branch[0]
 
         if "GITPULL" in os.environ:
             pull = str(os.environ["GITPULL"]) == "1"
@@ -1285,11 +1286,24 @@ class Tools:
                 set -e
                 mkdir -p {ACCOUNT_DIR}
                 cd {ACCOUNT_DIR}
-                git clone  --depth 1 {URL}
-                cd {NAME}
                 """
                 Tools.log("get code [git] (first time): %s"%repo)
                 Tools.execute(C, args=args,showout=False)
+                C = """
+                cd {ACCOUNT_DIR}
+                git clone  --depth 1 {URL} -b {BRANCH}
+                cd {NAME}
+                """
+                try:
+                    Tools.execute(C, args=args,showout=False)
+                except Exception as e :
+                    C = """
+                        cd {ACCOUNT_DIR}
+                        git clone  --depth 1 {URL}
+                        cd {NAME}
+                        """
+                    Tools.execute(C, args=args,showout=False)
+
             else:
                 if pull and Tools.code_changed(REPO_DIR):
                     if Tools.ask_yes_no("\n**: found changes in repo '%s', do you want to commit?"%repo):
