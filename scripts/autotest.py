@@ -17,13 +17,21 @@ def execute_cmd(cmd):
     response = run(cmd, shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
     return response
 
+def write_file(text):
+    file_name = '{}.log'.format(os.environ.get('commit')[:7])
+    with open (file_name, 'w+') as f:
+        f.write(text)
+    file_link = '{}/{}'.format(os.environ.get('ServerIp'), file_name)
+    return file_link
+
 def build_image():
     image_name = random_string()
     cmd = 'docker build --force-rm -t {} /sandbox/code/github/threefoldtech/jumpscaleX/scripts --build-arg commit={}'\
             .format(image_name, os.environ.get('commit'))
     response = execute_cmd(cmd)
     if response.returncode:
-        send_msg('Failed to install jumpscaleX')
+        file_link = write_file(response.stdout)
+        send_msg('Failed to install jumpscaleX ' + file_link)
         sys.exit()
     else:
         return image_name
@@ -35,11 +43,7 @@ def run_tests(image_name):
     cmd = '{} "{} {}"'.format(docker_cmd, env_cmd, run_cmd)
     response = execute_cmd(cmd)
     if 'Error In' in response.stdout:
-        file_name = '{}.log'.format(os.environ.get('commit'))
-        with open (file_name, 'w+') as f:
-            f.write(response.stdout[response.stdout.find('Error In'):])
-
-        file_link = '{}/{}'.format(os.environ.get('ServerIp'), file_name)
+        file_link = write_file(response.stdout[response.stdout.find('Error In'):])
         send_msg('Tests had errors ' + file_link)
     else:
         send_msg('Tests Passed')
