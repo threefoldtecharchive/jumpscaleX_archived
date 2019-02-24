@@ -35,6 +35,7 @@ def build_image():
     if response.returncode:
         file_link = write_file(response.stdout)
         send_msg('Failed to install jumpscaleX ' + file_link)
+        images_clean()
         sys.exit()
     else:
         return image_name
