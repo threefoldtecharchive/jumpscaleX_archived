@@ -203,20 +203,27 @@ class List(TypeBaseClass):
     def clean(self, val, toml=False, sort=False, unique=True, ttype=None):
         if ttype is None:
             ttype = self.SUBTYPE
+
         if j.data.types.string.check(val):
             val = [i.strip('[').strip(']') for i in val.split(",")]
+        if not self.check(val):
+            raise j.exceptions.InputError("need list or set as input for clean on linst")
         if len(val) == 0:
-            return val
+            return []
+
+        #what if still None, then try to detect the ttype
         if ttype is None:
             self.SUBTYPE = j.data.types.type_detect(val[0])
-            ttype = self.SUBTYPE
+
         res = []
         for item in val:
-            item = item.strip().strip("'").strip('"')
-            if not toml:
-                item = ttype.clean(item)
-            else:
+            if isinstance(item,str):
+                item = item.strip().strip("'").strip('"')
+            if toml:
                 item = ttype.toml_string_get(item)
+            else:
+                item = ttype.clean(item)
+
             if unique:
                 if item not in res:
                     res.append(item)
@@ -308,7 +315,8 @@ class Hash(List):
     '''
     hash is 2 value list, represented as 2 times 4 bytes
     '''
-    NAME =  'hash'
+    NAME =  'hash,h'
+    CUSTOM = False
 
     def __init__(self):
         self.BASETYPE = 'string'

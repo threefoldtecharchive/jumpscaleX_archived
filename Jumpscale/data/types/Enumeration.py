@@ -22,6 +22,26 @@ class EnumerationObj(TypeBaseObjClass):
         obj = self._typebase.clean(val)
         self._data = obj._data
 
+    def __str__(self):
+        return self._string
+
+    __repr__ = __str__
+
+    def __eq__(self, other):
+        other = self._typebase.clean(other)
+        return other.value == self.value
+
+    def __dir__(self):
+        res=["_string","_python_code","value"]
+        for item in self._typebase.values:
+            res.append(item)
+        return res
+
+    def __getattr__(self, item):
+        if item in self._typebase.values:
+            self._data = self._typebase.values.index(item)+1
+            return self
+        return self.__getattribute__(item)
 
 class Enumeration(TypeBaseObjFactory):
 
@@ -49,10 +69,9 @@ class Enumeration(TypeBaseObjFactory):
         if not isinstance(values, list):
             raise RuntimeError("input for enum is comma separated str or list")
         self.values = [item.upper().strip() for item in values]
-        self.values.sort()
-        self._md5 = j.data.hash.md5_string(str(self))  # so it has the default as well
-        j.data.types.enumerations[self._md5] = self
-        self._jumpscale_location = "j.data.types.enumerations['%s']" % self._md5
+        # self._md5 = j.data.hash.md5_string(str(self))  # so it has the default as well
+        # j.data.types.enumerations[self._md5] = self
+        # self._jumpscale_location = "j.data.types.enumerations['%s']" % self._md5
 
     def capnp_schema_get(self, name, nr):
         return "%s @%s :UInt32;" % (name, nr)
@@ -93,8 +112,20 @@ class Enumeration(TypeBaseObjFactory):
         value_id = self.toData(value)
         return EnumerationObj(self,value_id)
 
-    def __str__(self):
-        return "ENUM: %s (default:%s)" % (self.__repr__(), self.get_default())
+    def __dir__(self):
+        res=["clean","get_default","toData","capnp_schema_get"]
+        for item in self.values:
+            res.append(item)
+        return res
 
-    def __repr__(self):
-        return ",".join(self.values)
+    def __getattr__(self, item):
+        if item in self.values:
+            data = self.values.index(item)+1
+            return self.clean(data)
+        return self.__getattribute__(item)
+
+    def __str__(self):
+        values = ",".join(self.values)
+        return "ENUM: %s (default:%s)" % (values, self.get_default())
+
+    __repr__ = __str__

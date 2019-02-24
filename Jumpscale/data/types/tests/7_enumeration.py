@@ -11,38 +11,55 @@ def main(self):
 
     e = j.data.types.get("e",default="yellow,blue,red")
 
-    assert str(e)=="ENNUM: BLUE,RED,YELLOW (default:YELLOW)"
 
-    assert e.toString(1)=="BLUE"
-    assert e.toString(2)=="RED"
+    assert str(e)=="ENUM: YELLOW,BLUE,RED (default:YELLOW)"
+
+    assert e.toString(2)=="BLUE"
+    assert e.toString(3)=="RED"
 
     try:
-        e.clean(3)
+        e.clean(4)
         raise RuntimeError("should not work")
     except Exception:
         pass
 
-    try:
-        e.clean(0)
-        raise RuntimeError("should not work")
-    except Exception:
-        pass
+    str(e.clean(0)) == "UNKNOWN"
 
     assert e.toString(" blue")=="BLUE"
     assert e.toString("Red ")=="RED"
 
-    assert e.clean("Red ")== "RED"
-    assert e.clean("BLUE ")== "BLUE"
-    assert e.clean("YELLOW ")== "YELLOW"
+
+    assert str(e.clean("Red "))== "RED"
+    assert str(e.clean("BLUE "))== "BLUE"
+    assert str(e.clean("YELLOW "))== "YELLOW"
 
     #start count from 1 (0 is for None)
-    assert e.toData("BLUE ")== 1
-    assert e.toData("Red ")== 2
-    assert e.toData("YELLOW ")== 3
+    assert e.toData("BLUE ")== 2
+    assert e.toData("Red ")== 3
+    assert e.toData("YELLOW ")== 1
 
 
-    assert e._jumpscale_location=="j.data.types.enumerations['6d9fe6d18a520e26fce3841a7065c93b']"
+    assert e._jsx_location=="j.data.types.custom._types['e_yellow_blue_red']"
+    e = j.data.types.custom._types['e_yellow_blue_red']
+    assert str(e)=="ENUM: YELLOW,BLUE,RED (default:YELLOW)"
 
-    # self._log_info("TEST DONE")
+    enum = e.clean(1)
+    enum2 = e.clean(2)
+    enum3 = e.clean(1)
+
+
+    assert enum.value == 1
+
+    assert enum == enum3
+    assert enum != enum2
+
+    assert e.RED == e.clean(3)
+    assert e.RED == "RED"
+
+    assert str(enum3) == "YELLOW"
+    assert enum3.BLUE == enum2.BLUE
+    assert str(enum3) == "BLUE"
+
+    self._log_info("TEST DONE ENUMERATION")
 
     return ("OK")

@@ -20,13 +20,14 @@ class Types(j.application.JSBaseClass):
 
     def _init(self):
 
-        self._types_list = [Dictionary, List, Guid, Path, Boolean, Integer, Float, String, Bytes, StringMultiLine,
+        self._types_list = [List,Dictionary, Guid, Path, Boolean, Integer, Float, String, Bytes, StringMultiLine,
                             IPRange, IPPort, Tel, YAML, JSON, Email, Date, DateTime, Numeric, Percent,
                             Hash, CapnpBin, JSDataObject, JSConfigObject, Url, Enumeration]
 
         self.custom = Custom()
 
         self._type_check_list = []
+
         for typeclass in self._types_list:
             name = typeclass.NAME.strip().strip("_").lower()
             if "," in name:
@@ -35,6 +36,7 @@ class Types(j.application.JSBaseClass):
                 aliases.pop(aliases.index(name))
             else:
                 aliases = None
+            name = name.split(",")[0].strip()
             o = self.__attach(name, typeclass)
             if name in self._type_check_list:
                 raise RuntimeError("there is duplicate type:%s"%name)
@@ -44,6 +46,10 @@ class Types(j.application.JSBaseClass):
                 for alias in aliases:
                     self.__attach(alias, typeclass,o)
 
+        self.list = self.custom.list(default=[])
+        self.custom.list.NAME = "list"
+        self.list.NAME = "list"
+
     def __attach(self, name, typeclass,o=None):
         name = name.strip().lower()
         name2 = "_%s" % name
@@ -52,10 +58,12 @@ class Types(j.application.JSBaseClass):
             #o is the object
             if not o:
                 o = typeclass()
+                o.__class__.NAME = name
                 o._jsx_location = "j.data.types.%s"%name
 
         if hasattr(typeclass,"CUSTOM") and typeclass.CUSTOM is True:
             self.custom.__dict__[name] = typeclass  #only attach class
+            self.custom.__dict__[name].NAME = name
         else:
             self.__dict__[name] = o
             self.__dict__[name2] = typeclass
@@ -104,22 +112,30 @@ class Types(j.application.JSBaseClass):
             for certain types e.g. enumeration the default value is needed to create the right type
 
         """
+
         ttype = ttype.lower().strip()
+        ttype_org = copy.copy(ttype)
+        default_copy=copy.copy(default)
 
         if ttype.startswith("l"):
-            default_copy=copy.copy(default)
             if len(ttype) > 1:
                 default = ttype[1:]
             elif len(ttype) == 1:
                 default = None
             else:
                 raise RuntimeError("list type can only be 1 or 2 chars")
+            ttype = "l"
 
         if ttype in self.custom.__dict__:
             tt_class = self.custom.__dict__[ttype]  #is the class
-            name = tt_class.NAME.split(",")[0]
-            key0=default.replace(" ","").replace(",","_")
-            key="%s_%s"%(name,key0)
+            name = tt_class.NAME
+            if default_copy:
+                key0=default_copy.replace(" ","").replace(",","_")
+            else:
+                key0=""
+            key="%s_%s"%(ttype_org,key0)
+            if key in self.custom._types:
+                return self.custom._types[key]
             tt = tt_class(default)
             self.custom._types[key] = tt
             tt._jsx_location = "j.data.types.custom._types['%s']"%key

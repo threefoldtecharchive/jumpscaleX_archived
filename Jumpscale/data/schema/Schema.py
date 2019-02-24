@@ -153,14 +153,16 @@ class Schema(j.application.JSBaseClass):
                     # special case where we have subject directly attached
                     jumpscaletype = j.data.types.get("o")
                     jumpscaletype.SUBTYPE = pointer_type
-                    defvalue = ""
                 else:
                     jumpscaletype = j.data.types.get(line_proptype,default=line_wo_proptype)
+                defvalue = None
+
             else:
                 jumpscaletype, defvalue = self._proptype_get(line)
 
             p.name = name
-            p.default = defvalue
+            if defvalue:
+                p.default = defvalue
             p.comment = comment
             p.jumpscaletype = jumpscaletype
             p.pointer_type = pointer_type

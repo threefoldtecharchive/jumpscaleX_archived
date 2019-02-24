@@ -9,11 +9,29 @@ def main(self):
     """
 
 
-    assert j.data.types.s.__class__.NAME == 'str,s,string'
+    assert j.data.types.s.__class__.NAME == 'str'
 
     assert j.data.types.get("s") == j.data.types.get("string")
 
-    j.shell()
+    t = j.data.types.get("i")
+
+    assert t.clean("1") == 1
+    assert t.clean(1) == 1
+    assert t.get_default() == 4294967295
+
+    t = j.data.types.get("li",default="1,2,3")  #list of integers
+
+    t.get_default() == [1,2,3]
+
+    t2 = j.data.types.get("ls",default="1,2,3")  #list of integers
+    t2.get_default() == ['1', '2', '3']
+
+    t3 = j.data.types.get("ls")
+    assert t3.get_default() == []
+
+    t=j.data.types.email
+    assert t.check("kristof@in.com")
+    assert t.check("kristof.in.com") == False
 
     #TODO: need more tests here
 
