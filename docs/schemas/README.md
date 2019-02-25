@@ -14,134 +14,37 @@ usability and high performance.
 
 ## Schema url
 
-The very first part of the schema is the url, Each schema should have it's unique url over the application.
-you can define the schema url like that.  
+The very first part of the schema is the url
 
+> **@url** is the unique locator of the schema , try to have this unique on global basis
+
+> **its good practice to put an version nr at the end of the url**
+
+you can define the schema url like that.  
 ```toml
-@url = schema.test
+@url = schema.test.1
 ```
 
 ## Data types
 
-see [schemas/readme.md]
+### for more details see  ```/docs/types/readme.md```
 
+> ## simple types
 
-### Complex data types
-
-you can define more complex data types by nesting schemas  
-
-Example:
-
-```toml
-@url = schema.address
-street = (S)
-floor = (I)
-apartment = (I)
-```
-
-```toml
-@url = schema.student
-name = (S)
-subjects = (LS)
-address = (O) !schema.address
-```
-
-### How to use schema 
-
-```
-schema = """
-        @url = despiegk.test
-        llist2 = "" (LS) #L means = list, S=String        
-        nr = 4
-        date_start = 0 (D)
-        description = ""
-        token_price = "10 USD" (N)
-        llist = "1,2,3" (LI)
-        llist1 = "1,2,3" (L)
-        """
-```
-
-## to get schema from schema_text
-
-```python
-schema_test = j.data.schema.get(schema_text_path=schema)
-schema_object = schema_test.get()
-```
-
-## to add data using schema
-
-```python
-schema_object.token_price = "20 USD"
-schema_object.llist.append(1)
-schema_object.description = "something"
-```
-
-- for a full example of using schema see the following [test link](data/schema/tests)
-
-## Schema Test
-
-### run all tests
-
-```python
-kosmos 'j.data.schema.test()'
-```
-
-### run specific test
-
-```python
-kosmos 'j.data.schema.test(name="base")'
-kosmos 'j.data.schema.test(name="capnp_schema")'
-kosmos 'j.data.schema.test(name="embedded_schema")'
-kosmos 'j.data.schema.test(name="lists")'
-kosmos 'j.data.schema.test(name="load_data")'
-```
-
-TODO: list not complete
-
-TODO: there is duplication with below, lets fix
-
-
-# jumpscale schemas
-
-## format of the schema
-
-
-```python
-@url = despiegk.test.1
-llist2 = "" (LS) #L means = list, S=String        
-nr = 4
-date_start = 0 (D)
-description = ""
-token_price = "10 USD" (N)
-cost_estimate:hw_cost = 0.0 #this is a comment
-llist = []
-llist3 = "1,2,3" (LF)
-llist4 = "1,2,3" (L)
-llist5 = "1,2,3" (LI)
-U = 0.0
-pool_type = "managed,unmanaged" (E)
-```
-
-- @url is the unique locator of the schema, try to have this unique on global basis
-  - its good practice to put an version nr at the end of the url
-
-### simple types
-
-- I
+- I 
   - Integer
-- F:
+- F 
   - Float
-- N:
+- N 
   - Numeric, has support for currencies
   - can e.g. insert 10 EUR, 10 USD, 10k USD
-- S:
+- S 
   - string
-- B:
+- B 
   - boolean
   - true,True,1 are all considered to be True
 
 ```python
-type is one of following
 - s, str, string
 - i, int, integer
 - f, float
@@ -165,18 +68,21 @@ type is one of following
 - url, u
 - e,enum        #enumeration
 ```
-for full list see j.data.types
 
-### collection types
+> for full list see ```j.data.types```
 
-- L
-- e.g. LI is list of integer
 
-#### collection of other objects
+ > ## collection types
+
+- L 
+- e.g. ```LI``` is list of integer
+- e.g. ```LS``` is list of string 
+
+> ## collection of other objects
 
 ```python
 @url =  jumpscale.digitalme.package
-name = "UNKNOWN" (S)           #official name of the package, there can be no overlap (can be dot notation)
+name = "UNKNOWN" (S)    #official name of the package, there can be no overlap (can be dot notation)
 enable = true (B)
 args = (LO) !jumpscale.digitalme.package.arg
 loaders= (LO) !jumpscale.digitalme.package.loader
@@ -191,14 +97,66 @@ dest =  "" (S)
 enable = true (B)
 ```
 
-- generic format ```(LO) !URL```
+ ### generic format ```(LO) !URL```
 
-### defaults
+ > ## enumerators
+
+  ### are cool, you can store long string representations and they will only take 4 bytes to store (int)
+
+
+
+```
+schema = """
+    @url = despiegk.test2
+    enum = "red,green,blue" (E) #first one specified is the default one
+    """
+s=j.data.schema.get(schema_text=schema)
+o=s.new()
+assert o.enum == "RED" 
+o.enum = 3
+assert o.enum == 'RED'  #is always sorted on alfabet
+
+``` 
+>## defaults
 
 - ```enable = true (B)```
     - in this case the default is true, so basically everything in between = and (
 - ```name = myname (S)``` or ```name = myname```
     - if type not specified the schemas will try to guess the type e.g. Int, String, ...
+
+
+# How to use schema 
+
+```python
+schema = """
+        @url = despiegk.test
+        llist2 = "" (LS) #L means = list, S=String        
+        nr = 4
+        date_start = 0 (D)
+        description = ""
+        token_price = "10 USD" (N)
+        llist = "1,2,3" (LI)
+        llist1 = "1,2,3" (L)
+        """
+```
+
+## format of the schema
+
+```python
+@url = despiegk.test.1
+llist2 = "" (LS) #L means = list, S=String        
+nr = 4
+date_start = 0 (D)
+description = ""
+token_price = "10 USD" (N)
+cost_estimate:hw_cost = 0.0 #this is a comment
+llist = []
+llist3 = "1,2,3" (LF)
+llist4 = "1,2,3" (L)
+llist5 = "1,2,3" (LI)
+U = 0.0
+pool_type = "managed,unmanaged" (E)
+```
 
 ## how to get a new schema
 
@@ -228,14 +186,16 @@ s=j.data.schema.get(SCHEMA)
 
 #if the schema already exists then can do
 s=j.data.schema.get(url="jumpscale.digitalme.package.1") #will die if not exists
-
-
 ```
 
-## how to get a new object
+## how to get a new object (add data using schema)
 
 ```python
+#using schema url
 s=j.data.schema.get(url="jumpscale.digitalme.package") #will die if not exists
+#using schema text itself
+s=j.data.schema.get(schema_text_path=SCHEMA) #will die if not exists
+#create new object
 obj = s.new()
 obj.abool = True
 obj.abool = 1
@@ -244,25 +204,25 @@ obj.abool = 0
 assert obj.abool == False
 ```
 
-can see how the type system we use is intelligent, especially if used for things like numerics.
+> ### can see how the type system we use is intelligent, especially if used for things like numerics.
 
 
-### enumerators
+- for a full example of using schema see the following [test link](data/schema/tests)
 
-- are cool, you can store long string representations and they will only take 4 bytes to store (int)
+## Schema Test
 
-e.g.
+### run all tests
 
-```
-schema = """
-    @url = despiegk.test2
-    enum = "red,green,blue" (E) #first one specified is the default one
-    """
-s=j.data.schema.get(schema_text=schema)
-o=s.new()
-assert o.enum == "RED" 
-o.enum = 3
-assert o.enum == 'RED'  #is always sorted on alfabet
-
+```python
+kosmos 'j.data.schema.test()'
 ```
 
+### run specific test
+
+```python
+kosmos 'j.data.schema.test(name="base")'
+kosmos 'j.data.schema.test(name="capnp_schema")'
+kosmos 'j.data.schema.test(name="embedded_schema")'
+kosmos 'j.data.schema.test(name="lists")'
+kosmos 'j.data.schema.test(name="load_data")'
+```
