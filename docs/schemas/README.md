@@ -27,7 +27,7 @@ you can define the schema url like that.
 
 ## Data types
 
-### for more details see  ```/docs/types/readme.md```
+### for more details [see](/docs/types/readme.md)
 
 > ## simple types
 
@@ -207,7 +207,7 @@ assert obj.abool == False
 > ### can see how the type system we use is intelligent, especially if used for things like numerics.
 
 
-- for a full example of using schema see the following [test link](data/schema/tests)
+- for a full example of using schema see the following [test link](https://github.com/threefoldtech/jumpscaleX/tree/development_types/Jumpscale/data/schema/tests)
 
 ## Schema Test
 
