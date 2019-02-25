@@ -21,9 +21,8 @@ class Utils:
             msg = msg + '\n' + os.environ.get('name') + '\n' + os.environ.get('commit')
         client.send_message(chatid=chat_id, text=msg)
 
-    def write_file(self, text):
+    def write_file(self, text, file_name):
         text = ansi_escape.sub('', text)
-        file_name = '{}.log'.format(os.environ.get('commit')[:7])
         with open(file_name, 'w+') as f:
             f.write(text)
         file_link = '{}/{}'.format(os.environ.get('ServerIp'), file_name)

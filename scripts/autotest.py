@@ -11,7 +11,8 @@ class RunTests(Utils):
         cmd = '{} "{} {} {}"'.format(docker_cmd, env_cmd, commit_cmd, run_cmd)
         response = self.execute_cmd(cmd)
         if 'Error In' in response.stdout:
-            file_link = self.write_file(response.stdout[response.stdout.find('Error In'):])
+            file_name = '{}.log'.format(os.environ.get('commit')[:7])
+            file_link = self.write_file(response.stdout[response.stdout.find('Error In'):], file_name=file_name)
             self.send_msg('Tests had errors ' + file_link)
         else:
             self.send_msg('Tests Passed')
