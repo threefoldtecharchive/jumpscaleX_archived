@@ -21,7 +21,8 @@ class BaseTest(TestCase):
                                        'grant_type': 'client_credentials'})
 
         self.hub_instance = 'hub_instance_{}'.format(randint(1, 1000))
-        j.clients.zhub.get(name=self.hub_instance, token_=self.jwt, username=self.username)
+        self.zhub = j.clients.zhub.get(name=self.hub_instance, token_=self.jwt, username=self.username)
+        self.zhub.save()
         
         self.node_instance = 'node_instance_{}'.format(randint(1, 1000))
         self.node = j.client.node.get(name=self.node_instance, password=self.jwt, )
