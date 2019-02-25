@@ -31,7 +31,7 @@ class Guid(String):
             return False
         return val.hex == value.replace('-', '')
 
-    def get_default(self):
+    def default_get(self):
         return j.data.idgenerator.generateGUID()
 
     def fromString(self, v):
@@ -84,7 +84,7 @@ class Path(String):
         '''
         return self._RE.fullmatch(value) is not None
 
-    def get_default(self):
+    def default_get(self):
         return ""
 
 
@@ -159,7 +159,7 @@ class IPPort(Integer):
         self.BASETYPE = "string"
         self.NOCHECK = True
 
-    def get_default(self):
+    def default_get(self):
         return 65535
 
 
@@ -267,7 +267,7 @@ class Numeric(TypeBaseObjFactory):
 
     def bytes2str(self, bindata, roundnr=8, comma=True):
         if len(bindata) == 0:
-            bindata = self.get_default()
+            bindata = self.default_get()
 
         elif len(bindata) not in [6, 10]:
             raise j.exceptions.Input("len of data needs to be 6 or 10")
@@ -473,14 +473,8 @@ class DateTime(Integer):
 
         # self._RE = re.compile('[0-9]{4}/[0-9]{2}/[0-9]{2}')  #something wrong here is not valid for time
 
-    def get_default(self):
+    def default_get(self):
         return 0
-
-    def python_code_get(self, value):
-        """
-        produce the python code which represents this value
-        """
-        return self.clean(value)
 
     def fromString(self, txt):
         return self.clean(txt)

@@ -7,59 +7,60 @@ def main(self):
 
     kosmos 'j.data.schema.test(name="base")' --debug
     """
-    # schema = """
-    #     @url = despiegk.test
-    #     llist2 = "" (LS) #L means = list, S=String
-    #     nr = 4
-    #     date_start = 0 (D)
-    #     description = ""
-    #     token_price = "10 USD" (N)
-    #     cost_estimate = 0.0 #this is a comment
-    #     llist = []
-    #     llist3 = [1,2,3] (LF)
-    #     llist4 = [1,2,3] (L)
-    #     llist5 = [1,2,3] (LI)
-    #     U = 0.0
-    #     #pool_type = "managed,unmanaged" (E)  #NOT DONE FOR NOW
-    #     """
-    #
-    # schema_object = j.data.schema.get(schema_text=schema)
-    #
-    # assert schema_object.url == "despiegk.test"
-    # print(schema_object)
-    # schema_test = schema_object.get()
-    #
-    # schema_test.llist2.append("yes")
-    # schema_test.llist2.append("no")
-    # schema_test.llist3.append(1.2)
-    # schema_test.llist5.append(1)
-    # schema_test.llist5.append(2)
-    # schema_test.U = 1.1
-    # schema_test.nr = 1
-    # schema_test.token_price = "10 USD"
-    # schema_test.description = "something"
-    #
-    # usd2usd = schema_test.token_price_usd  # convert USD-to-USD... same value
-    # assert usd2usd == 10
-    # inr = schema_test.token_price_cur("inr")
-    # # print ("convert 10 USD to INR", inr)
-    # assert inr > 100  # ok INR is pretty high... check properly in a bit...
-    # eur = schema_test.token_price_eur
-    # # print ("convert 10 USD to EUR", eur)
-    # currency = j.clients.currencylayer
-    # cureur = currency.cur2usd["eur"]
-    # curinr = currency.cur2usd["inr"]
-    # # print (cureur, curinr, o.token_price)
-    # assert usd2usd * cureur == eur
-    # assert usd2usd * curinr == inr
-    #
-    # # try EUR to USD as well
-    # schema_test.token_price = "10 EUR"
-    # assert schema_test.token_price == b"\x000\n\x00\x00\x00"
-    # eur2usd = schema_test.token_price_usd
-    # assert eur2usd * cureur == 10
-    #
-    # schema_test._cobj
+    schema = """
+        @url = despiegk.test
+        llist = []
+        llist2 = "" (LS) #L means = list, S=String
+        llist3 = [1,2,3] (LF)
+        nr = 4
+        date_start = 0 (D)
+        description = ""        
+        llist4 = [1,2,3] (L)
+        llist5 = [1,2,3] (LI)
+        llist6 = "1,2,3" (LI)
+        U = 0.0
+        """
+
+    schema_object = j.data.schema.get(schema_text=schema)
+
+    assert schema_object.url == "despiegk.test"
+    print(schema_object)
+
+    assert schema_object.property_llist.default.value == []
+    assert schema_object.property_llist2.default.value == []
+    assert schema_object.property_llist3.default.value == [1.0,2.0,3.0]
+    #works with & without value
+    assert schema_object.property_llist3.default == [1.0,2.0,3.0]
+    assert schema_object.property_llist4.default == [1,2,3]
+    assert schema_object.property_llist5.default == [1,2,3]
+    assert schema_object.property_llist6.default == [1,2,3]
+
+    ll = schema_object.property_llist3.jumpscaletype.default_get()
+    assert ll.value == [1.0,2.0,3.0]
+
+    assert schema_object.property_llist3.js_typelocation == "j.data.types.custom._types['lf_1_2_3']"
+
+
+    o = schema_object.get()
+
+    assert o.llist3 == [1.0,2.0,3.0]
+
+    o.llist2.append("yes")
+    o.llist2.append("no")
+    o.llist3.append(1.2)
+    o.llist5.append(1)
+    o.llist5.append(2)
+    o.U = 1.1
+    o.nr = 1
+    o.description = "something"
+
+    assert o.llist2 == ["yes","no"]
+    assert o.description == "something"
+    assert o.llist3 == [1.0, 2.0, 3.0, 1.2]
+    assert o.U == 1.1
+    o.U = "1.1"
+    assert o.U == 1.1
+
 
     schema = """
         @url = despiegk.test2
@@ -68,7 +69,6 @@ def main(self):
         nr = 4
         date_start = 0 (D)
         description = ""
-        token_price = "10 USD" (N)
         cost_estimate = 0.0 #this is a comment
         llist = []
         @url = despiegk.test3
@@ -76,14 +76,12 @@ def main(self):
         description = ""
         """
 
-    # from pudb import set_trace; set_trace()
     j.data.schema.get(schema_text=schema)
 
     s=j.data.schema.schemas['despiegk.test2']
     e = s.properties[0] #is the enumerator
     assert e.js_typelocation != 'j.data.types.enum' #should not the default location
 
-    j.shell()
     schema_object1 = j.data.schema.get(url="despiegk.test2")
     schema_object2 = j.data.schema.get(url="despiegk.test3")
 
@@ -92,7 +90,6 @@ def main(self):
     schema_test1.llist2.append("5")
     schema_test2.llist.append("1")
 
-    j.shell()
     assert schema_test1.enum == 'RED'
 
     schema_test1.enum = 2

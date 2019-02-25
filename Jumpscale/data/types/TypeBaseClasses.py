@@ -4,10 +4,12 @@ from Jumpscale import j
 
 class TypeBaseObjClass():
 
-    def __init__(self,typebase,value=None):
-        __slots__ = ['_typebase', '_value']
+    BASETYPE = "OBJ"
+    __slots__ = ['_typebase', '_value']
 
-        self._typebase = typebase
+    def __init__(self,typebase,value=None):
+
+        self._typebase = typebase  #is the factory for this object
 
         if value is None:
             self._data = None
@@ -47,6 +49,8 @@ class TypeBaseObjClass():
 
 
 class TypeBaseObjClassNumeric(TypeBaseObjClass):
+
+    BASETYPE = "OBJ"
 
     @property
     def value(self):
@@ -165,14 +169,13 @@ class TypeBaseClass():
         except Exception as e:
             return False
 
-    def get_default(self):
+    def default_get(self):
         return ""
 
     def clean(self, value):
         """
         """
         raise RuntimeError("not implemented")
-
 
     def python_code_get(self, value):
         """
@@ -201,7 +204,7 @@ class TypeBaseObjFactory(TypeBaseClass):
         self.BASETYPE = None
         self.NAME = None
 
-    def get_default(self):
+    def default_get(self):
         return self.clean("0")
 
     def capnp_schema_get(self, name, nr):
@@ -233,6 +236,6 @@ class TypeBaseObjFactory(TypeBaseClass):
     def toData(self, v):
         raise j.exceptions.NotImplemented()
 
-    def get(self, v):
+    def clean(self, v):
         raise j.exceptions.NotImplemented()
 

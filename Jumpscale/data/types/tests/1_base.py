@@ -17,17 +17,17 @@ def main(self):
 
     assert t.clean("1") == 1
     assert t.clean(1) == 1
-    assert t.get_default() == 4294967295
+    assert t.default_get() == 4294967295
 
     t = j.data.types.get("li",default="1,2,3")  #list of integers
 
-    t.get_default() == [1,2,3]
+    t.default_get() == [1,2,3]
 
     t2 = j.data.types.get("ls",default="1,2,3")  #list of integers
-    t2.get_default() == ['1', '2', '3']
+    t2.default_get() == ['1', '2', '3']
 
     t3 = j.data.types.get("ls")
-    assert t3.get_default() == []
+    assert t3.default_get() == []
 
     t=j.data.types.email
     assert t.check("kristof@in.com")

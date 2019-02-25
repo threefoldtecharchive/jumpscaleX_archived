@@ -32,7 +32,7 @@ class EnumerationObj(TypeBaseObjClass):
         return other.value == self.value
 
     def __dir__(self):
-        res=["_string","_python_code","value"]
+        res=[] #"_string","_python_code","value"
         for item in self._typebase.values:
             res.append(item)
         return res
@@ -95,7 +95,7 @@ class Enumeration(TypeBaseObjFactory):
             raise RuntimeError("unsupported type for enum, is int or string")
         return value_id
 
-    def get_default(self):
+    def default_get(self):
         """
         returns the first one of collection
         :return:
@@ -113,7 +113,7 @@ class Enumeration(TypeBaseObjFactory):
         return EnumerationObj(self,value_id)
 
     def __dir__(self):
-        res=["clean","get_default","toData","capnp_schema_get"]
+        res=["clean","default_get","toData","capnp_schema_get"]
         for item in self.values:
             res.append(item)
         return res
@@ -126,6 +126,6 @@ class Enumeration(TypeBaseObjFactory):
 
     def __str__(self):
         values = ",".join(self.values)
-        return "ENUM: %s (default:%s)" % (values, self.get_default())
+        return "ENUM: %s (default:%s)" % (values, self.default_get())
 
     __repr__ = __str__

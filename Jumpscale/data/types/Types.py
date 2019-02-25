@@ -1,13 +1,13 @@
-
-
 '''Definition of several primitive type properties (integer, string,...)'''
-
+from Jumpscale import j
 from .CustomTypes import *
 from .CollectionTypes import *
 from .PrimitiveTypes import *
 from .Enumeration import Enumeration
 from .IPAddress import *
-from Jumpscale import j
+from .JSXObject import *
+from .List import *
+
 import copy
 
 class Custom(j.application.JSBaseClass):
@@ -22,7 +22,10 @@ class Types(j.application.JSBaseClass):
 
         self._types_list = [List,Dictionary, Guid, Path, Boolean, Integer, Float, String, Bytes, StringMultiLine,
                             IPRange, IPPort, Tel, YAML, JSON, Email, Date, DateTime, Numeric, Percent,
-                            Hash, CapnpBin, JSDataObject, JSConfigObject, Url, Enumeration]
+                            Hash, CapnpBin, JSDataObjectFactory, JSConfigObject, Url, Enumeration]
+
+
+        self._TypeBaseObjClass = TypeBaseObjClass
 
         self.custom = Custom()
 
@@ -46,7 +49,7 @@ class Types(j.application.JSBaseClass):
                 for alias in aliases:
                     self.__attach(alias, typeclass,o)
 
-        self.list = self.custom.list(default=[])
+        self.list = self.custom.list()
         self.custom.list.NAME = "list"
         self.list.NAME = "list"
 
@@ -104,8 +107,11 @@ class Types(j.application.JSBaseClass):
         - dict
         - yaml
         - guid
-        - url, u
+        - url
         - e,enum        #enumeration
+        - a, acl
+        - u, user
+        - g, group
 
 
         :param default: e.g. "red,blue,green" for an enumerator
@@ -130,21 +136,22 @@ class Types(j.application.JSBaseClass):
             tt_class = self.custom.__dict__[ttype]  #is the class
             name = tt_class.NAME
             if default_copy:
-                key0=default_copy.replace(" ","").replace(",","_")
+                key0=default_copy.replace(" ","").replace(",","_").replace("[","").replace("]","").replace("\"","")
             else:
                 key0=""
             key="%s_%s"%(ttype_org,key0)
             if key in self.custom._types:
                 return self.custom._types[key]
             tt = tt_class(default)
-            self.custom._types[key] = tt
             tt._jsx_location = "j.data.types.custom._types['%s']"%key
             if ttype.startswith("l"):
                 #is a list, copy default values in
-                tt._default_values = tt.fromString(default_copy)
-            return tt
+                tt._default_values = tt.clean(default_copy)._inner_list #make sure they are clean
+            self.custom._types[key] = tt
+            return self.custom._types[key]
         elif ttype in self.__dict__:
             tt = self.__dict__[ttype]
+            # tt._jsx_location = "j.data.types.%s"%ttype
             return tt
         else:
             raise j.exceptions.RuntimeError("did not find type:'%s'" % ttype)

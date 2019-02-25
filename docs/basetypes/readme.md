@@ -12,7 +12,7 @@ implement some basic types in jumpscale
 - e.g. in case of a Guid its a string
 - e.g. in case of Float its a Float
 
-### get_default()
+### default_get()
 
 - returns the default value if any as how it will be used in jumpscale environment (see result clean)
 - e.g. in case of int:0, float:0.0, ...

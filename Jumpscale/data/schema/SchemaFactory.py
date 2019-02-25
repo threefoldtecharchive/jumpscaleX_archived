@@ -1,8 +1,8 @@
 import sys
-from .List0 import List0
+
 from .Schema import *
 from Jumpscale import j
-
+from .DataObjBase import DataObjBase
 JSBASE = j.application.JSBaseClass
 
 
@@ -16,6 +16,8 @@ class SchemaFactory(j.application.JSBaseClass):
         self.schemas = {}
         self.schemas_versionless = {}
         self._md5_schema = {}
+
+        self._DataObjBase = DataObjBase
 
     @property
     def SCHEMA_CLASS(self):
@@ -120,8 +122,6 @@ class SchemaFactory(j.application.JSBaseClass):
 
         return res[0]
 
-    def list_base_class_get(self):
-        return List0
 
     def test(self, name=""):
         """

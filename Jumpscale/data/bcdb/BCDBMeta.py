@@ -25,15 +25,17 @@ class BCDBMeta(j.application.JSBaseClass):
         self.bcdb = bcdb
         self._meta_local_path = j.sal.fs.joinPaths(self.bcdb._data_dir,"meta.db")
         self._schema = j.data.schema.get(SCHEMA)
-        #
         self.reset()
 
     @property
     def data(self):
         if self._data is None:
+            j.shell()
+            w
             if self.bcdb.zdbclient is not None:
                 data = self.bcdb.zdbclient.get(0)
             else:
+                #no ZDB used, is a file in local filesystem
                 if not j.sal.fs.exists(self._meta_local_path):
                     data = None
                 else:

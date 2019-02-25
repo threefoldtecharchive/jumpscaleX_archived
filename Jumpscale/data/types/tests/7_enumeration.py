@@ -60,6 +60,7 @@ def main(self):
     assert enum3.BLUE == enum2.BLUE
     assert str(enum3) == "BLUE"
 
+
     self._log_info("TEST DONE ENUMERATION")
 
     return ("OK")

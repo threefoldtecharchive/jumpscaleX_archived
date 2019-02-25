@@ -142,7 +142,7 @@ class Bytes(TypeBaseClass):
         '''Check whether provided value is a array of bytes'''
         return isinstance(value, bytes)
 
-    def get_default(self):
+    def default_get(self):
         return b""
 
     def clean(self, value):
@@ -160,6 +160,7 @@ class Bytes(TypeBaseClass):
         """
         produce the python code which represents this value
         """
+        raise RuntimeError("pythoncode get on bytes not implemented")
         return self.clean(value)
 
     def capnp_schema_get(self, name, nr):
@@ -191,7 +192,7 @@ class Boolean(TypeBaseClass):
         '''Check whether provided value is a boolean'''
         return value is True or value is False
 
-    def get_default(self):
+    def default_get(self):
         return False
 
     def toJSON(self, v):
@@ -265,7 +266,7 @@ class Integer(TypeBaseClass):
     def fromString(self, s):
         return self.clean(s)
 
-    def get_default(self):
+    def default_get(self):
         # return this high number, is like None, not set yet
         return 4294967295
 
@@ -282,16 +283,13 @@ class Integer(TypeBaseClass):
             value = j.data.types.string.clean(value).strip()
             if "," in value:
                 value = value.replace(",", "")
-            value = int(value)
+            if value == "":
+                value = 0
+            else:
+                value = int(value)
         if not self.check(value):
             raise ValueError("Invalid value for integer: '%s'" % value)
         return value
-
-    def python_code_get(self, value):
-        """
-        produce the python code which represents this value
-        """
-        return self.toml_string_get(value)
 
     def toml_string_get(self, value, key=""):
         """
@@ -335,7 +333,7 @@ class Float(TypeBaseClass):
         s = self.clean(s)
         return j.core.text.getFloat(s)
 
-    def get_default(self):
+    def default_get(self):
         return 0.0
 
     def clean(self, value):
@@ -400,7 +398,7 @@ class Percent(Float):
         assert value < 1.00001
         return value
 
-    def get_default(self):
+    def default_get(self):
         return 0.0
 
     def toHR(self, v):
@@ -443,61 +441,3 @@ class CapnpBin(Bytes):
         raise NotImplemented()
 
 
-class JSDataObject(Bytes):
-    '''
-    jumpscale data object as result of using j.data.schemas.
-    '''
-    NAME = 'jsobject,o,obj'
-
-    def __init__(self):
-        self.BASETYPE = 'bin'
-        self.SUBTYPE = None
-
-    def fromString(self, s):
-        """
-        """
-        return str(s)
-
-    def toString(self, v):
-        return v
-
-    def check(self, value):
-        try:
-            return "_JSOBJ" in value.__dict__
-        except:
-            return False
-
-    def get_default(self):
-        return self.SUBTYPE()
-
-    def clean(self, value):
-        """
-        """
-        return value
-
-    def toHR(self, v):
-        return str(v)
-
-    def python_code_get(self, value):
-        return "None"
-
-    def capnp_schema_get(self, name, nr):
-        return "%s @%s :Data;" % (name, nr)
-
-    def toml_string_get(self, value, key):
-        raise NotImplemented()
-
-
-class JSConfigObject(TypeBaseClass):
-    '''
-    jumpscale object which inherits from j.application.JSBaseConfigClass
-    '''
-    NAME =  'jsconfigobject,configobj'
-
-    def __init__(self):
-
-        self.BASETYPE = 'capnpbin'
-        self.SUBTYPE = None
-
-    def check(self, value):
-        return isinstance(value, j.application.JSBaseConfigClass)
