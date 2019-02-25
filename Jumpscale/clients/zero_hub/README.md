@@ -15,6 +15,7 @@ zhubcl = j.clients.zhub.zhubcl
 zhubcl.username = "$your_zhub_username"
 zhubcl.token = "$your_itsyouonline_token"
 
+zhubcl.authenticate()
 zhubcl.save()
 ```
 
@@ -50,4 +51,22 @@ cl = j.clients.zhub.getClient('$your_zhub_client_name')
 
 cl.upload('/tmp/my-upload-file.tar.gz')
 cl.rename('my-upload-file.flist', 'my-super-flist.flist')
+```
+
+### Example flow
+
+```
+zhubcl = j.clients.zhub.zhubcl
+zhubcl.username = "$your_zhub_username"
+
+iyo_client = j.clients.itsyouonline
+token = iyo_client.jwt_get().jwt
+
+zhubcl.token = token
+
+zhubcl.save()
+zhubcl.authenticate()
+
+zhubcl.upload('/tmp/my-upload-file.tar.gz')
+zhubcl.rename('my-upload-file.flist', 'my-super-flist.flist')
 ```
