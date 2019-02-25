@@ -4,7 +4,7 @@ import os
 
 class RunTests(Utils):
     def run_tests(self):
-        docker_cmd = 'docker run --rm -t jumpscale /bin/bash -c'.format()
+        docker_cmd = 'docker run --rm -t jumpscalex /bin/bash -c'.format()
         env_cmd = 'source /sandbox/env.sh; export NACL_SECRET={};'.format(os.environ.get('Nacl'))
         commit_cmd = 'git pull; git reset --hard {};'.format(os.environ.get('commit'))
         run_cmd = 'python3.6 /sandbox/code/github/threefoldtech/jumpscaleX/test.py 1>/dev/null'
