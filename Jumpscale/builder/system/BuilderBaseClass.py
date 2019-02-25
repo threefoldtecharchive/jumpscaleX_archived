@@ -113,9 +113,10 @@ class BuilderBaseClass(BaseClass):
             j.builder.tools.file_ensure(file_dest)
             j.builder.tools.file_write(file_dest, self.startup)
 
-        ld_dest = j.sal.fs.joinPaths(sandbox_dir, 'lib64/')
-        j.builder.tools.dir_ensure(ld_dest)
-        j.sal.fs.copyFile('/lib64/ld-linux-x86-64.so.2', ld_dest)
+        if j.core.platformtype.myplatform.isLinux:
+            ld_dest = j.sal.fs.joinPaths(sandbox_dir, 'lib64/')
+            j.builder.tools.dir_ensure(ld_dest)
+            j.sal.fs.copyFile('/lib64/ld-linux-x86-64.so.2', ld_dest)
 
         self._log_info('building flist')
         tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
