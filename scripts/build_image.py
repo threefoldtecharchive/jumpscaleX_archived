@@ -12,6 +12,7 @@ class BuildImage(Utils):
             file_name = '{}.log'.format(str(datetime.now())[:10])
             file_link = self.write_file(response.stdout, file_name=file_name)
             self.send_msg('Failed to install jumpscaleX ' + file_link, push=False)
+            self.images_clean()
             sys.exit()
         else:
             self.send_msg('jumpscaleX installed Successfully', push=False)
