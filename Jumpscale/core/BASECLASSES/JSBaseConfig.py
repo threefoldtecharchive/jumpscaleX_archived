@@ -37,8 +37,8 @@ class JSBaseConfig(JSBase):
             raise RuntimeError("name needs to be specified in data")
 
         if topclass:
-            self._init()
             self._init2(**kwargs)
+            self._init()
 
 
     def _class_init(self):

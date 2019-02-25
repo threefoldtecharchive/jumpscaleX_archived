@@ -12,8 +12,8 @@ class JSBaseConfigs(JSBase):
         self._children = {}
 
         if topclass:
-            self._init()
             self._init2(**kwargs)
+            self._init()
 
     def _class_init(self):
 
