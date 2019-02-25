@@ -1266,7 +1266,10 @@ class Tools:
         args["REPO_DIR"]= REPO_DIR
         args["URL"] = repo_url
         args["NAME"] = repo
-        args["BRANCH"] = branch[0]
+        if isinstance(branch,(list,set)):
+            args["BRANCH"] = branch[0]
+        else:
+            args["BRANCH"] = branch
 
         if "GITPULL" in os.environ:
             pull = str(os.environ["GITPULL"]) == "1"
