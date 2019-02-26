@@ -15,6 +15,7 @@ class Utils:
         self.chat_id = os.environ.get('chat_id')
         self.commit = os.environ.get('commit')
         self.commiter = os.environ.get('commiter')
+        self.nacl = os.environ.get('Nacl')
 
     def execute_cmd(self, cmd):
         response = run(cmd, shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
