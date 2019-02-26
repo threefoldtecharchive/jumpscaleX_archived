@@ -149,7 +149,6 @@ class DataObjBase():
 
     @property
     def _data(self):
-        j.shell()
         try:
             self._cobj.clear_write_flag()
             return self._cobj.to_bytes_packed()

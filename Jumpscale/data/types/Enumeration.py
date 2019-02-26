@@ -107,6 +107,8 @@ class Enumeration(TypeBaseObjFactory):
         can use int or string,
         will find it and return as string
         """
+        if value is None:
+            return self.default_get()
         if isinstance(value,EnumerationObj):
             return value
         value_id = self.toData(value)

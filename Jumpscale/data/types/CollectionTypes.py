@@ -72,6 +72,8 @@ class JSON(StringMultiLine):
         return True
 
     def clean(self, v=""):
+        if value is None:
+            return self.default_get()
         if not self.check(v):
             raise RuntimeError("Valid serialized json string is required")
         return v
@@ -121,6 +123,8 @@ class Dictionary(TypeBaseClass):
         :param v:
         :return:
         """
+        if value is None:
+            return self.default_get()
         if j.data.types.bytes.check(v):
             v = j.data.serializers.msgpack.loads(v)
         elif j.data.types.string.check(v):
@@ -188,7 +192,8 @@ class Hash(TypeBaseClass):
         """
         will do a strip
         """
-
+        if value is None:
+            return self.default_get()
         def bytesToInt(val):
             if j.data.types.bytes.check(val):
                 if len(val) is not 4:

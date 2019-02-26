@@ -49,6 +49,8 @@ class IPAddress(TypeBaseObjFactory):
         TypeBaseObjClassFactory.__init__(self)
 
     def clean(self, val="192.168.1.1"):
+        if value is None:
+            return self.default_get()
         if isinstance(val,IPAddressObject):
             return val
         return IPAddressObject(val)

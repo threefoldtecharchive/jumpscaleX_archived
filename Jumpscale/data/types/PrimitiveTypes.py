@@ -35,7 +35,9 @@ class String(TypeBaseClass):
         will do a strip
         """
         if value is None:
-            value = ""
+            return self.default_get()
+        if isinstance(value,bytes):
+            value = value.decode()
         try:
             value = str(value)
         except Exception as e:
@@ -64,7 +66,7 @@ class StringMultiLine(String):
         will do a strip on multiline
         """
         if value is None:
-            value = ""
+            return self.default_get()
         try:
             value = str(value)
         except Exception as e:
@@ -149,6 +151,8 @@ class Bytes(TypeBaseClass):
         """
         supports b64encoded strings, std strings which can be encoded and binary strings
         """
+        if value is None:
+            return self.default_get()
         if isinstance(value, str):
             value = self.fromString(value)
         else:
@@ -206,6 +210,8 @@ class Boolean(TypeBaseClass):
         everything else = False
 
         """
+        if value is None:
+            return self.default_get()
         if isinstance(value, str):
             value = j.data.types.string.clean(value).lower().strip()
             return value in ["true", "yes", "y","1"]
@@ -277,6 +283,8 @@ class Integer(TypeBaseClass):
         """
         used to change the value to a predefined standard for this type
         """
+        if value is None:
+            return self.default_get()
         if isinstance(value, float):
             value = int(value)
         elif isinstance(value, str):
@@ -339,6 +347,8 @@ class Float(TypeBaseClass):
     def clean(self, value):
         """
         """
+        if value is None:
+            return self.default_get()
         if self.check(value):
             return value
         return float(value)
@@ -383,6 +393,8 @@ class Percent(Float):
         """
         used to change the value to a predefined standard for this type
         """
+        if value is None:
+            return self.default_get()
         if isinstance(value, str):
             value = value.strip().strip("\"").strip("'").strip()
             if "%" in value:

@@ -117,4 +117,6 @@ class DMTypeFactory(TypeBaseObjFactory):
         raise j.exceptions.NotImplemented()
 
     def clean(self, v):
+        if value is None:
+            return self.default_get()
         raise j.exceptions.NotImplemented()

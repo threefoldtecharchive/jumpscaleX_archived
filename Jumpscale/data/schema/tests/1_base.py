@@ -85,28 +85,37 @@ def main(self):
     schema_object1 = j.data.schema.get(url="despiegk.test2")
     schema_object2 = j.data.schema.get(url="despiegk.test3")
 
-    schema_test1 = schema_object1.get()
-    schema_test2 = schema_object2.get()
-    schema_test1.llist2.append("5")
-    schema_test2.llist.append("1")
+    o1 = schema_object1.get()
+    o2 = schema_object2.get()
+    o1.llist2.append("5")
+    o2.llist.append("1")
 
-    assert schema_test1.enum == 'RED'
+    assert o1.enum == 'RED'
+    assert o1._cobj.enum == 1
 
-    schema_test1.enum = 2
-    assert schema_test1.enum == 'GREEN'
-    schema_test1.enum = "  green"
-    assert schema_test1.enum == 'GREEN'
+    o1.enum = 2
+    assert o1.enum == 'GREEN'
+    assert o1._cobj.enum == 2
+    o1.enum = "  green"
+    assert o1.enum == 'GREEN'
+    assert o1.enum == ' GREEN'
+    assert o1.enum == ' Green'
 
-    assert schema_test1._ddict["enum"] == "GREEN"
+    assert o1._ddict["enum"] == "GREEN"
 
-    assert schema_test1._data.find(b"GREEN") == -1  # needs to be stored as int
-    assert len(schema_test1._data) <= 30
-    x = len(schema_test1._data)+0
+    assert o1._cobj.nr == 4
+    assert o1._cobj.list2 == ["5"]
 
-    schema_test1.enum = 4
-    assert schema_test1.enum == "ZHISISAVERYLONGONENEEDITTOTESTLETSDOSOMEMORE"
-    assert len(schema_test1._data) <= 30
-    assert len(schema_test1._data) == x
+    j.shell()
+
+    assert o1._data.find(b"GREEN") == -1  # needs to be stored as int
+    assert len(o1._data) <= 30
+    x = len(o1._data)+0
+
+    o1.enum = 4
+    assert o1.enum == "ZHISISAVERYLONGONENEEDITTOTESTLETSDOSOMEMORE"
+    assert len(o1._data) <= 30
+    assert len(o1._data) == x
 
     schema = """
         @url = despiegk.test2

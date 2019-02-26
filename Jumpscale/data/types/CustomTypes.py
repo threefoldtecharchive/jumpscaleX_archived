@@ -63,6 +63,8 @@ class Email(String):
         return self._RE.fullmatch(value) is not None
 
     def clean(self, v):
+        if value is None:
+            return self.default_get()
         v = j.data.types.string.clean(v)
         if not self.check(v):
             raise ValueError("Invalid email :%s" % v)
@@ -124,6 +126,8 @@ class Tel(String):
         return self._RE.fullmatch(value) is not None
 
     def clean(self, v):
+        if v is None:
+            return self.default_get()
 
         v = j.data.types.string.clean(v)
         v = v.replace(".", "")
@@ -440,6 +444,8 @@ class Numeric(TypeBaseObjFactory):
             return struct.pack("B", ttype) + struct.pack("B", curcat) + struct.pack("I", value)
 
     def clean(self, data):
+        if data is None:
+            return self.default_get()
         if isinstance(data,NumericObject):
             return data
         return NumericObject(self,data)
@@ -507,6 +513,8 @@ class DateTime(Integer):
         will return epoch
 
         """
+        if v is None:
+            return self.default_get()
         def date_process(dd):
             if "/" not in dd:
                 raise j.exceptions.Input("date needs to have:/, now:%s" % v)
@@ -617,6 +625,8 @@ class Date(DateTime):
         will return epoch
 
         """
+        if v is None:
+            return self.default_get()
         if isinstance(v,str):
             v=v.replace("'","").replace("\"","").strip()
         if v in [0,"0",None,""]:

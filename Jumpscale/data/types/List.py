@@ -18,7 +18,7 @@ class ListObject(TypeBaseObjClass,MutableSequence):
         self._inner_list = values
         self._changed = False
         self._child_type_ = child_type
-        self._child_schema_ = None
+        # self._child_schema_ = None
         self._current = 0
 
     def __len__(self):
@@ -131,33 +131,35 @@ class ListObject(TypeBaseObjClass,MutableSequence):
         """
         return new subitem, only relevant when there are pointer_types used
         """
-        if self.schema_property.pointer_type is None:
-            if data is not None:
-                data = self.schema_property.jumpscaletype.SUBTYPE.clean(data)
-            else:
-                data = self.schema_property.jumpscaletype.SUBTYPE.default_get()
-            # assert data != None
-        else:
 
-            if data is None:
-                data = self._child_schema.new()
-            else:
-                data = self._child_schema.get(capnpbin=data)
-            assert data != None
+        data = self._child_type.clean(data)
+        # if self.schema_property.pointer_type is None:
+        #     if data is not None:
+        #         data = self.schema_property.jumpscaletype.SUBTYPE.clean(data)
+        #     else:
+        #         data = self.schema_property.jumpscaletype.SUBTYPE.default_get()
+        #     # assert data != None
+        # else:
+        #
+        #     if data is None:
+        #         data = self._child_schema.new()
+        #     else:
+        #         data = self._child_schema.get(capnpbin=data)
+        #     assert data != None
         if data:
             self.append(data)
         self._changed = True
         return data
 
-    @property
-    def _child_schema(self):
-        """
-        JSX schema for the child
-        :return:
-        """
-        if self._child_schema_ is None:
-            self._child_schema_ = j.data.schemas.get(url=self._child_schema_url)
-        return self._child_schema_
+    # @property
+    # def _child_schema(self):
+    #     """
+    #     JSX schema for the child
+    #     :return:
+    #     """
+    #     if self._child_schema_ is None:
+    #         self._child_schema_ = j.data.schemas.get(url=self._child_schema_url)
+    #     return self._child_schema_
 
     @property
     def _child_type(self):
@@ -234,6 +236,8 @@ class List(TypeBaseObjFactory):
 
 
     def clean(self, val=None, toml=False, sort=False, unique=True, ttype=None):
+        if val is None:
+            val = self._default_values
         if ttype is None:
             ttype = self.SUBTYPE
 
