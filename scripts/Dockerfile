@@ -6,4 +6,4 @@ ENV LC_ALL=en_US.UTF-8
 RUN mkdir -p /sandbox/code/github/threefoldtech
 RUN cd /sandbox/code/github/threefoldtech; git clone https://github.com/threefoldtech/jumpscaleX.git
 
-RUN python3.6 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py -1 -y 
+RUN python3.6 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py -1 -y -w -p
