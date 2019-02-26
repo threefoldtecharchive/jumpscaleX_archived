@@ -4,10 +4,12 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.document import Document
 from prompt_toolkit.completion import Completion
 from prompt_toolkit.filters import is_done
+from prompt_toolkit.formatted_text import ANSI, to_formatted_text, fragment_list_to_text
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.containers import ConditionalContainer, Window
 from prompt_toolkit.layout.controls import BufferControl
 from prompt_toolkit.layout.dimension import Dimension
+from prompt_toolkit.layout.processors import HighlightIncrementalSearchProcessor, Processor, Transformation
 from prompt_toolkit.lexers import PygmentsLexer
 from ptpython.filters import ShowDocstring, PythonInputFilter
 from ptpython.prompt_style import PromptStyle
@@ -16,9 +18,7 @@ from pygments.lexers import PythonLexer
 
 
 class KosmosShellConfig():
-
     pass
-
 
 def get_object(tbc, locals_=None, globals_=None, walkback=False):
     """
@@ -234,6 +234,13 @@ class HasDocString(PythonInputFilter):
 log_pane_buffer = Buffer()
 
 
+class FormatANSIText(Processor):
+    """see https://github.com/prompt-toolkit/python-prompt-toolkit/issues/711"""
+    def apply_transformation(self, ti):
+        fragments = to_formatted_text(ANSI(fragment_list_to_text(ti.fragments)))
+        return Transformation(fragments)
+
+
 class HasLogs(PythonInputFilter):
 
     def __call__(self):
@@ -270,10 +277,8 @@ def setup_docstring_containers(repl):
 
 
 def addlogstopane(msg):
-    text = log_pane_buffer.text
-    text += '\n' + msg
-    pos = len(text) - 1
-    log_pane_buffer.reset(document=Document(text, cursor_position=pos))
+    text = '\n'.join([log_pane_buffer.text, msg])
+    log_pane_buffer.reset(document=Document(text, cursor_position=len(text)))
 
 
 def setup_logging_containers(repl):
@@ -291,7 +296,9 @@ def setup_logging_containers(repl):
             content=Window(
                 BufferControl(
                     buffer=log_pane_buffer,
-                    lexer=PygmentsLexer(PythonLexer),
+                    input_processors=[FormatANSIText(), HighlightIncrementalSearchProcessor()],
+                    focusable=True,
+                    preview_search=True
                 ),
                 height=Dimension(max=12)),
             filter=HasLogs(repl)),
