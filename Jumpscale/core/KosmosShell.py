@@ -1,5 +1,4 @@
 import inspect
-import jedi
 
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.document import Document
@@ -81,17 +80,6 @@ def get_object(tbc, locals_=None, globals_=None, walkback=False):
     return obj
 
 
-def is_reference(definition):
-    """checks if jedi `Definition is not a keyword or a definition
-
-    :param definition: definition
-    :type definition: Definition
-    :return: true if a reference else false
-    :rtype: bool
-    """
-    return not definition.is_keyword and not definition.is_definition()
-
-
 def sort_members_key(name):
     """Sort members of an object
 
@@ -128,14 +116,9 @@ def get_completions(self, document, complete_event):
                     selected_style='bg:ansidarkgray')
 
     tbc = document.current_line_before_cursor
-    defs = jedi.names(tbc, references=True)
-    references = [d.name for d in  filter(is_reference, defs)]
-    if references:
-        if tbc.endswith('.'):
-            parent, member = '.'.join(references), ''
-        else:
-            parent, member = '.'.join(references[:-1]), references[-1]
-
+    if tbc:
+        line = tbc.split('.')
+        parent, member = '.'.join(line[:-1]), line[-1]
         if member.startswith('__'):  # then we want to show private methods
             prefix = '__'
         elif member.startswith('_'):  # then we want to show private methods
