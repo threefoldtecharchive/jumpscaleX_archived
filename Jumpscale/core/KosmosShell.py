@@ -80,128 +80,63 @@ def get_object(tbc, locals_=None, globals_=None, walkback=False):
     return obj
 
 
+def sort_members_key(name):
+    """Sort members of an object
+
+    :param name: name
+    :type name: str
+    :return: the order of sorting
+    :rtype: int
+    """
+    if name.startswith('__'):
+        return 3
+    elif name.startswith('_'):
+        return 2
+    elif name.isupper():
+        return 1
+    else:
+        return 0
+
+
 def get_completions(self, document, complete_event):
     """
-    Get Python completions.
+    get completions for j objects (using _method_) and others (using dir)
+
+    :rtype: `Completion` generator
     """
 
-    j = KosmosShellConfig.j
-    obj = None
+    def colored_completions(names, color):
+        for name in names:
+            if not name:
+                continue
+            if name.startswith(member):
+                completion = name[len(member):]
+                yield Completion(completion, 0,
+                    display=name, style='bg:%s fg:ansiblack' % color,
+                    selected_style='bg:ansidarkgray')
+
     tbc = document.current_line_before_cursor
-
-    if "." in tbc:
-        c = ".".join(tbc.split(".")[:-1])
-
-        obj = get_object(c, self.get_locals(), self.get_globals())
-
-        try:
-            obj = get_object(c, self.get_locals(), self.get_globals())
-        except Exception as e:
-            return
-
-        remainder = tbc[len(c)+1:]  # e.g. everything after j.clients.ssh.
-        if remainder.startswith("__"):  # then we want to show private methods
-            prefix = "__"
-        elif remainder.startswith("_"):  # then we want to show private methods
-            prefix = "_"
+    if tbc:
+        line = tbc.split('.')
+        parent, member = '.'.join(line[:-1]), line[-1]
+        if member.startswith('__'):  # then we want to show private methods
+            prefix = '__'
+        elif member.startswith('_'):  # then we want to show private methods
+            prefix = '_'
         else:
-            prefix = ""
+            prefix = ''
 
+        obj = get_object(parent, self.get_locals(), self.get_globals())
         if obj:
-
-            if hasattr(obj.__class__, "_methods_"):
-                for x in obj._properties_children():
-                    if x is None:
-                        continue
-                    if x.startswith(remainder):
-                        x2 = c+"."+x
-                        x3 = x2[len(tbc):]
-                        yield Completion(x3, 0, display=x, display_meta=None, style='bg:ansigreen fg:ansiblack')
-                for x in obj._properties_model():
-                    if x.startswith(remainder):
-                        x2 = c+"."+x
-                        x3 = x2[len(tbc):]
-                        yield Completion(x3, 0, display=x, display_meta=None, style='bg:ansiyellow fg:ansiblack')
-                for x in obj._methods(prefix=prefix):
-                    if x.startswith(remainder):
-                        x2 = c+"."+x
-                        x3 = x2[len(tbc):]
-                        yield Completion(x3, 0, display=x, display_meta=None, style='bg:ansiblue fg:ansiblack')
-                for x in obj._properties(prefix=prefix):
-                    if x.startswith(remainder):
-                        x2 = c+"."+x
-                        x3 = x2[len(tbc):]
-                        yield Completion(x3, 0, display=x, display_meta=None, style='bg:ansigray fg:ansiblack')
-                return
-            # else:
-            #     for x in dir(obj):
-            #         if x.startswith(remainder):
-            #             x2=c+"."+x
-            #             x3=x2[len(tbc):]
-            #             yield Completion(x3, 0,display=x,display_meta=None, style='bg:ansired fg:ansiblack')
-
-    # Do Path completions
-    if complete_event.completion_requested or self._complete_path_while_typing(document):
-        for c in self._path_completer.get_completions(document, complete_event):
-            yield c
-
-    # If we are inside a string, Don't do Jedi completion.
-    if self._path_completer_grammar.match(document.text_before_cursor):
-        return
-
-    # Do Jedi Python completions.
-    if complete_event.completion_requested or self._complete_python_while_typing(document):
-        script = get_jedi_script_from_document(document, self.get_locals(), self.get_globals())
-
-        if script:
-            e=None
-            try:
-                completions = script.completions()
-            except TypeError as e:
-                # Issue #9: bad syntax causes completions() to fail in jedi.
-                # https://github.com/jonathanslenders/python-prompt-toolkit/issues/9
-                pass
-            except UnicodeDecodeError as e:
-                # Issue #43: UnicodeDecodeError on OpenBSD
-                # https://github.com/jonathanslenders/python-prompt-toolkit/issues/43
-                pass
-            except AttributeError as e:
-                # Jedi issue #513: https://github.com/davidhalter/jedi/issues/513
-                pass
-            except ValueError as e:
-                # Jedi issue: "ValueError: invalid \x escape"
-                pass
-            except KeyError as e:
-                # Jedi issue: "KeyError: u'a_lambda'."
-                # https://github.com/jonathanslenders/ptpython/issues/89
-                pass
-            except IOError as e:
-                # Jedi issue: "IOError: No such file or directory."
-                # https://github.com/jonathanslenders/ptpython/issues/71
-                pass
-            except AssertionError as e:
-                # In jedi.parser.__init__.py: 227, in remove_last_newline,
-                # the assertion "newline.value.endswith('\n')" can fail.
-                pass
-            except SystemError as e:
-                # In jedi.api.helpers.py: 144, in get_stack_at_position
-                # raise SystemError("This really shouldn't happen. There's a bug in Jedi.")
-                pass
-            except NotImplementedError as e:
-                # See: https://github.com/jonathanslenders/ptpython/issues/223
-                pass
-            except Exception as e:
-                # Supress all other Jedi exceptions.
-                pass
+            if hasattr(obj.__class__, '_methods_'):
+                yield from colored_completions(obj._properties_children(), 'ansigreen')
+                yield from colored_completions(obj._properties_model(), 'ansiyellow')
+                yield from colored_completions(obj._methods(prefix=prefix), 'ansiblue')
+                yield from colored_completions(obj._properties(prefix=prefix), 'ansigray')
             else:
-                for c in completions:
-                    if not c.name_with_symbols.startswith("_"):
-                        yield Completion(c.name_with_symbols, len(c.complete) - len(c.name_with_symbols),
-                                         display=c.name_with_symbols)
-            if e is not None:
-                print(e)
-                j.loggers.logger_redis.error(e)
-
+                # try dir()
+                members = sorted(dir(obj), key=sort_members_key)
+                yield from colored_completions(members, 'ansigray')
 
 
 def get_doc_string(tbc):
@@ -389,6 +324,17 @@ def ptconfig(repl):
     repl.all_prompt_styles['custom'] = CustomPrompt()
     repl.prompt_style = 'custom'
 
-    repl._completer.__class__.get_completions = get_completions
+    old_get_completions = repl._completer.__class__.get_completions
+
+    def custom_get_completions(self, document, complete_event):
+        completions = list(old_get_completions(self, document, complete_event))
+        if not completions:
+            js_completions = get_completions(self, document, complete_event)
+            if js_completions:
+                yield from js_completions
+        else:
+            yield from iter(completions)
+
+    repl._completer.__class__.get_completions = custom_get_completions
 
     setup_docstring_containers(repl)
