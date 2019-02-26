@@ -12,6 +12,7 @@ def test_main(self=None):
     if not j.sal.process.checkInstalled(j.builder.web.caddy.NAME):
         j.builder.web.caddy.stop()
         j.builder.web.caddy.build(reset=True)
+        j.builder.web.caddy.install()
         j.builder.web.caddy.sandbox()
 
     # try to start/stop
@@ -20,4 +21,8 @@ def test_main(self=None):
     child_process = tmux_pane.process_obj_child
     assert child_process.is_running()
 
- 
+    def is_listening():
+        return j.sal.nettools.tcpPortConnectionTest("localhost", 2015)
+
+    assert j.tools.timer.execute_until(is_listening, timeout=5)
+

@@ -81,7 +81,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
         if agree:
             cmd += ' -agree'
 
-        cmd += 'ulimit -n 8192; %s' % cmd
+        cmd = 'ulimit -n 8192; %s' % cmd
         return j.tools.tmux.execute(cmd, window=self.NAME, pane=self.NAME, reset=True)
 
     def stop(self, pid=None, sig=None):

@@ -232,3 +232,24 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         args["BINDIR"]=j.core.tools.text_replace("{DIR_BASE}/bin")
 
         self.tools.run(C,args=args)
+
+    def start(self, config_file=None, args=None):
+        test_dir = j.core.tools.text_replace('{DIR_TEMP}/lapis_test')
+        if self.tools.exists(test_dir):
+            self.tools.dir_remove(test_dir)
+        self.tools.dir_ensure(test_dir)
+        cmd = """
+            cd {dir}
+            lapis --lua new
+            lapis server
+        """.format(dir=test_dir)
+        p = j.tools.tmux.execute(cmd, window=self.NAME, pane=self.NAME, reset=True)
+        return p
+
+    def _test(self, name=""):
+        """Run tests under tests directory
+
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        self._test_run(name=name, obj_key='test_main')

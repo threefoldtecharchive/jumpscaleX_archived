@@ -73,7 +73,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         self._init()
         cmd = "{coredns_path}/coredns -conf {path_config}".format(
             coredns_path=self.package_path, path_config=config_file)
-        j.tools.tmux.execute(window="coredns", cmd=cmd)
+        return j.tools.tmux.execute(window="coredns", cmd=cmd)
 
 
     def _test(self, name=''):

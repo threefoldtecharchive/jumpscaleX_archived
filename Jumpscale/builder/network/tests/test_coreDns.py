@@ -11,8 +11,8 @@ def test_main(self=None):
 
     if not j.sal.process.checkInstalled(j.builder.network.coredns.NAME):
         # j.builder.network.coredns.stop()
-        j.builder.network.coredns.build(reset=True)
-        j.builder.network.coredns.sandbox()
+        # j.builder.network.coredns.build(reset=True)
+        j.builder.network.coredns.sandbox(reset=True)
 
     # try to start/stop
     tmux_pane = j.builder.network.coredns.start()
