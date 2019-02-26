@@ -14,12 +14,16 @@ class BaseTest(TestCase):
         self.username = self.config['itsyou']['username']
 
     def setUp(self):
-        self.jwt = requests.post("https://itsyou.online/v1/oauth/access_token",
-                                 data={'client_id': self.client_id,
-                                       'client_secret': self.client_secret,
-                                       'scope': 'user:memberof:kristof-farm',
-                                       'grant_type': 'client_credentials'})
+        # self.jwt = requests.post("https://itsyou.online/v1/oauth/access_token",
+        #                          data={'client_id': self.client_id,
+        #                                'client_secret': self.client_secret,
+        #                                'scope': 'user:memberof:kristof-farm',
+        #                                'grant_type': 'client_credentials'})
 
+        self.iyo_instance = 'iyo_instance_{}'.format(randint(1, 1000))
+        self.iyo_client = j.clients.itsyouonline.get(self.iyo_instance, application_id=self.client_id,
+                                                     secret=self.client_secret)
+        self.jwt = self.iyo_client.jwt_get().jwt
         self.hub_instance = 'hub_instance_{}'.format(randint(1, 1000))
         self.zhub = j.clients.zhub.get(name=self.hub_instance, token_=self.jwt, username=self.username)
         self.zhub.save()
