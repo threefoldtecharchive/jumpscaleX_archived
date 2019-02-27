@@ -13,7 +13,7 @@ class ZeroHubClient(JSConfigClient):
     name* = "" (S)
     token_ = "" (S)
     username = "" (S)
-    url = "https://hub.grid.tf//api" (S)
+    url = "https://hub.grid.tf/api" (S)
     """
 
     def _init(self):
