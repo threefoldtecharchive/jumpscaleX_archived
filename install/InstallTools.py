@@ -548,7 +548,7 @@ class Tools:
         if Tools._shell is None:
             script = """
             apt-get install -y ipython
-            apt-get install -y python-dev
+            apt-get install -y python3 python-dev python3-dev build-essential libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev
             pip3 install ipython
             apt-get clean && apt-get update && apt-get install -y locales
             """
