@@ -547,7 +547,7 @@ class Tools:
 
         if Tools._shell is None:
             script = """
-            apt-get install ipython
+            apt-get install -y ipython
             apt-get clean && apt-get update && apt-get install -y locales
             """
             Tools.execute(script, interactive=False)
