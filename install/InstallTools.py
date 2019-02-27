@@ -548,6 +548,7 @@ class Tools:
         if Tools._shell is None:
             script = """
             apt-get install -y ipython
+            apt-get install -y python-dev
             pip3 install ipython
             apt-get clean && apt-get update && apt-get install -y locales
             """
