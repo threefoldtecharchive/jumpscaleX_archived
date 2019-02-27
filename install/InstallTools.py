@@ -546,10 +546,16 @@ class Tools:
             print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
 
         if Tools._shell is None:
+            script = """
+            apt-get install ipython
+            apt-get clean && apt-get update && apt-get install -y locales
+            """
+            Tools.execute(script, interactive=False)
             try:
                 from IPython.terminal.embed import InteractiveShellEmbed
             except:
-                Tools._installbase()
+                Tools._installbase_for_shell()
+                from IPython.terminal.embed import InteractiveShellEmbed
             Tools._shell = InteractiveShellEmbed(banner1= "", exit_msg="")
         return Tools._shell(stack_depth=2)
 
@@ -829,7 +835,7 @@ class Tools:
         return str(random.getrandbits(16))
 
     @staticmethod
-    def execute(command, showout=True, useShell=True, cwd=None, timeout=600,die=True,
+    def execute(command, showout=True, useShell=True, cwd=None, timeout=800,die=True,
                 async_=False, args=None, env=None,
                 interactive=False,self=None,
                 replace=True,asfile=False):

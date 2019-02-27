@@ -293,7 +293,7 @@ class MarkDownDocs(j.application.JSBaseClass):
         tf_grid = self.load(url, name="grid")
         tf_grid.write()
 
-    def test(self):
+    def test(self, watch=False):
         """
         js_shell 'j.tools.markdowndocs.test()'
         """
@@ -362,8 +362,11 @@ class MarkDownDocs(j.application.JSBaseClass):
 
         url = "https://github.com/threefoldfoundation/info_grid/tree/development/docs"
         ds6 = self.load(url, name="tf_grid")
-        ds6.write()
+        try:
+            ds6.write()
+        except :
+            pass
 
-        self.webserver()
+        self.webserver(watch)
 
         print("TEST FOR MARKDOWN PREPROCESSING IS DONE")
