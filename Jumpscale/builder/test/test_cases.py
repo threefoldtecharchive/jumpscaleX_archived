@@ -33,7 +33,7 @@ class TestCases(BaseTest):
         data = self.cont_client.system("/sandbox/bin/ngnix -h")
         self.assertIn("Usage: nginx", data.stdout)
 
-    @unitteast.skip("https://github.com/threefoldtech/jumpscaleX/issues/186")
+    @unittest.skip("https://github.com/threefoldtech/jumpscaleX/issues/186")
     def test005_openresty(self):
         j.builder.web.openresty.sandbox(zhub_instance=self.hub_instance, reset=True)
         j.builder.web.openresty.create_flist(self.hub_instance)
