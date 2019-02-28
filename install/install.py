@@ -304,7 +304,7 @@ if "1" in args or "2" in args:
     if "w" in args:
         if "1" in args:
             #in system need to install the lua env
-            IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.builder.runtimes.lua.install()'")
+            IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.builder.runtimes.lua.install(reset=True)'")
         IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.tools.markdowndocs.test()'", showout=False)
         print("Jumpscale X installed successfully")
 
