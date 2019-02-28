@@ -16,4 +16,4 @@ if [ $# -eq 0 ]
 fi
 git pull --all
 js_init generate
-nosetests-3.4 -vs --logging-level=WARNING Jumpscale/builder/test/test_cases.py --tc-file=Jumpscale/builder/test/config.ini --tc=username:$IYO_USERNAME --tc:client_id:$IYO_CLIENT_ID --tc:client_secret=IYO_CLIENT_SECRET --tc:node_ip:ZOS_NODE_IP
+nosetests-3.4 -vs --logging-level=WARNING Jumpscale/builder/test/test_cases.py --tc-file=Jumpscale/builder/test/config.ini --tc=itsyou.username:$IYO_USERNAME --tc=itsyou.client_id:$IYO_CLIENT_ID --tc=itsyou.client_secret=IYO_CLIENT_SECRET --tc=zos_node.node_ip:ZOS_NODE_IP
