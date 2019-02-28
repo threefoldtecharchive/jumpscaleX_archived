@@ -12,7 +12,7 @@ class BaseTest(TestCase):
         self.client_id = self.config['itsyou']['client_id']
         self.client_secret = self.config['itsyou']['client_secret']
         self.username = self.config['itsyou']['username']
-        self.node_ip = self.config['zod_node']['node_ip']
+        self.node_ip = self.config['zos_node']['node_ip']
 
     def setUp(self):
         # self.jwt = requests.post("https://itsyou.online/v1/oauth/access_token",
