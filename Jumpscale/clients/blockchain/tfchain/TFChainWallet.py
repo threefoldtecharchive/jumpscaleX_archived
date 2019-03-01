@@ -16,6 +16,8 @@ from .types.ERC20 import ERC20Address
 from .types.transactions.Base import TransactionBaseClass
 from .types.transactions.Minting import TransactionV128, TransactionV129
 
+from .TFChainReservation import TFChainReservation
+
 _DEFAULT_KEY_SCAN_COUNT = 3
 
 _MAX_RIVINE_TRANSACTION_INPUTS = 99
@@ -76,10 +78,11 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         self._atomicswap = TFChainAtomicSwap(wallet=self)
         self._threebot = TFChainThreeBot(wallet=self)
         self._erc20 = TFChainERC20(wallet=self)
+        self._reservation = TFChainReservation(wallet=self)
 
         # scan already for keys once
         self._key_scan()
-    
+
     @property
     def minter(self):
         """
@@ -112,6 +115,14 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         and register TFT addresses that can than be used as ERC20 Withdraw addresses.
         """
         return self._erc20
+
+    @property
+    def reservation(self):
+        """
+        Reservation API used to reserva capacity on the grid
+        """
+        return self._reservation
+
 
     @property
     def client(self):
@@ -238,7 +249,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # if we already have unsused keys, no scanning is done however
         if len(self._unused_key_pairs) != 0 or self.key_scan_count == 0:
             return False
-    
+
         # use the defined count or the default one
         count = self.key_scan_count
         if count < 0:
@@ -284,7 +295,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             if not used_pairs[-1]:
                 break
             # otherwise continue
-        
+
         # return if we scanned new keys
         return self.key_count > key_count_start
 
@@ -316,7 +327,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             - when a str it can be a Jumpscale Datetime (e.g. '12:00:10', '31/10/2012 12:30', ...) or a Jumpscale Duration (e.g. '+ 2h', '+7d12h', ...)
 
         Returns a TransactionSendResult.
-        
+
         @param recipient: see explanation above
         @param amount: int or str that defines the amount of TFT to set, see explanation above
         @param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
@@ -366,7 +377,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
 
         # add the coin inputs
         txn.coin_inputs = inputs
-        
+
         # if there is data to be added, add it as well
         if data:
             txn.data = data
@@ -551,7 +562,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         seed_hash = bytes.fromhex(j.data.hash.blake2_string(e.data))
         private_key = SigningKey(seed_hash)
         public_key = private_key.get_verifying_key()
-        
+
         key_pair = SpendableKey(
             public_key = j.clients.tfchain.types.public_key_new(hash=public_key.to_bytes()),
             private_key = private_key)
@@ -604,7 +615,7 @@ class TFChainMinter():
             - tuple (addresses, sigcount): minter is a sigcount-of-addresscount MultiSig wallet
 
         Returns a TransactionSendResult.
-        
+
         @param minter: see explanation above
         @param data: optional data that can be attached ot the sent transaction (str or bytes), with a max length of 83
         """
@@ -818,7 +829,7 @@ class TFChainAtomicSwap():
             AtomicSwapContract(coinoutput=result.transaction.coin_outputs[0], unspent=True,
                 current_timestamp=self._chain_time),
             secret, result.transaction, result.submitted)
-    
+
     def participate(self, initiator, amount, secret_hash, refund_time='+24h', source=None, refund=None, data=None, submit=True):
         """
         Initiate an atomic swap contract, targeted at the specified address,
@@ -854,7 +865,7 @@ class TFChainAtomicSwap():
         return AtomicSwapParticipationResult(
             AtomicSwapContract(coinoutput=result.transaction.coin_outputs[0], unspent=True, current_timestamp=self._chain_time),
             result.transaction, result.submitted)
-    
+
     def verify(self, outputid, amount=None, secret_hash=None, min_refund_time=None, sender=False, receiver=False, contract=None):
         """
         Verify the status and content of the Atomic Swap Contract linked to the given outputid.
@@ -886,7 +897,7 @@ class TFChainAtomicSwap():
                 # it means the contract was already spend, and can therefore no longer be redeemed
                 raise j.clients.tfchain.errors.AtomicSwapContractSpent(contract=AtomicSwapContract(
                     coinoutput=co, unspent=False, current_timestamp=self._chain_time), transaction=spend_txn)
-            
+
             # create the unspent contract
             contract = AtomicSwapContract(coinoutput=co, unspent=True, current_timestamp=self._chain_time)
         elif not isinstance(contract, AtomicSwapContract):
@@ -897,7 +908,7 @@ class TFChainAtomicSwap():
                 raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
                     message="output identifier is expected to be {}, not {}".format(str(outputid), str(contract.outputid)),
                     contract=contract)
-        
+
         # if amount is given verify it
         if amount is not None:
             amount = Currency(value=amount)
@@ -905,7 +916,7 @@ class TFChainAtomicSwap():
                 raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
                     message="amount is expected to be {}, not {}".format(amount.str(with_unit=True), contract.amount.str(with_unit=True)),
                     contract=contract)
-        
+
         # if secret hash is given verify it
         if secret_hash is not None:
             # normalize secret hash
@@ -914,7 +925,7 @@ class TFChainAtomicSwap():
                 raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
                     message="secret_hash is expected to be {}, not {}".format(str(secret_hash), str(contract.secret_hash)),
                     contract=contract)
-        
+
         # if min_refund_time is given verify it
         if min_refund_time is not None:
             chain_time = self._chain_time
@@ -944,12 +955,12 @@ class TFChainAtomicSwap():
                         message="contract was expected to be available for redemption for at least {}, but it is only available for {}".format(
                             j.data.types.duration.toString(min_duration), j.data.types.duration.toString(duration)),
                         contract=contract)
-        
+
         # if expected to be authorized to be the sender, verify this
         if sender and contract.sender not in self._wallet.addresses:
             raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
                 message="wallet not registered as sender of this contract", contract=contract)
-        
+
         # if expected to be authorized to be the receiver, verify this
         if receiver and contract.receiver not in self._wallet.addresses:
             raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
@@ -958,7 +969,7 @@ class TFChainAtomicSwap():
         # return the contract for further optional consumption,
         # according to our validations it is valid
         return contract
-    
+
     def redeem(self, outputid, secret, data=None):
         """
         Redeem an unspent Atomic Swap contract.
@@ -987,17 +998,17 @@ class TFChainAtomicSwap():
         # verify the defined secret
         if not contract.verify_secret(secret):
             raise j.clients.tfchain.errors.AtomicSwapInvalidSecret(contract=contract)
-        
+
         # ensure this wallet is authorized to be the receiver
         if contract.receiver not in self._wallet.addresses:
             raise j.clients.tfchain.errors.AtomicSwapForbidden(message="unauthorized to redeem: wallet does not contain receiver address {}".format(contract.receiver), contract=contract)
-        
+
         # create the fulfillment
         fulfillment = j.clients.tfchain.types.fulfillments.atomic_swap_new(secret=secret)
 
         # create, sign and submit the transaction
         return self._claim_contract(contract=contract, as_sender=False, fulfillment=fulfillment, data=data)
-    
+
     def refund(self, outputid, data=None):
         """
         Refund an unspent Atomic Swap contract.
@@ -1028,11 +1039,11 @@ class TFChainAtomicSwap():
             raise j.clients.tfchain.errors.AtomicSwapForbidden(
                 message="unauthorized to refund: contract can only be refunded since {}".format(j.data.time.epoch2HRDateTime(contract.refund_timestamp)),
                 contract=contract)
-        
+
         # ensure this wallet is authorized to be the sender (refunder)
         if contract.sender not in self._wallet.addresses:
             raise j.clients.tfchain.errors.AtomicSwapForbidden(message="unauthorized to refund: wallet does not contain sender address {}".format(contract.sender), contract=contract)
-        
+
         # create the fulfillment
         fulfillment = j.clients.tfchain.types.fulfillments.atomic_swap_new()
 
@@ -1075,7 +1086,7 @@ class TFChainAtomicSwap():
             sender = refund.unlockhash
         else:
             sender = self._wallet.address
-        
+
         # create and populate the transaction
         txn = j.clients.tfchain.types.transactions.new()
         txn.coin_inputs = inputs
@@ -1133,7 +1144,7 @@ class TFChainAtomicSwap():
 
         # return the txn, as well as the submit status as a boolean
         return TransactionSendResult(txn, submit)
-        
+
     def _claim_contract(self, contract, as_sender, fulfillment, data):
         """
         claim an unspent atomic swap contract
@@ -1149,7 +1160,7 @@ class TFChainAtomicSwap():
         txn.coin_output_add(
             condition=j.clients.tfchain.types.conditions.unlockhash_new(contract.sender if as_sender else contract.receiver),
             value=contract.amount-miner_fee)
-        
+
         # get all signature requests
         sig_requests = txn.signature_requests_new()
         if len(sig_requests) == 0:
@@ -1169,7 +1180,7 @@ class TFChainAtomicSwap():
         submit = txn.is_fulfilled()
         if not submit:
             raise Exception("BUG: transaction should be fulfilled at ths point, please fix or report as an isuse")
-        
+
         # assign transactionid
         txn.id = self._transaction_put(transaction=txn)
         # update balance
@@ -1219,7 +1230,7 @@ class TFChainThreeBot():
     """
     TFChainThreeBot contains all ThreeBot logic.
     """
-    
+
     def __init__(self, wallet):
         if not isinstance(wallet, TFChainWallet):
             raise TypeError("wallet is expected to be a TFChainWallet")
@@ -1292,7 +1303,7 @@ class TFChainThreeBot():
         """
         if months < 1 and not reduce((lambda r, v: r or (v is not None)), [names_to_add, names_to_remove, addresses_to_add, addresses_to_remove], False):
             raise ValueError("extra months is to be given or one name/address is to be added/removed, none is defined")
-    
+
         # create the txn and fill the easiest properties already
         txn = j.clients.tfchain.types.transactions.threebot_record_update_new()
         txn.botid = identifier
@@ -1394,7 +1405,7 @@ class TFChainThreeBot():
 
         # return balance object
         return balance
-    
+
     def _sign_and_submit_txn(self, txn, balance):
         """
         common sign and submit logic for all 3Bot Transactions
@@ -1460,7 +1471,7 @@ class TFChainERC20():
     """
     TFChainERC20 contains all ERC20 (wallet) logic.
     """
-    
+
     def __init__(self, wallet):
         if not isinstance(wallet, TFChainWallet):
             raise TypeError("wallet is expected to be a TFChainWallet")
@@ -1479,7 +1490,7 @@ class TFChainERC20():
                 - '123.456 TFT': define the amount in TFT (that is '123.456 TFT' == 123.456 TFT == 123456000000)
 
         Returns a TransactionSendResult.
-        
+
         @param address: str or ERC20Address value to which the money is to be send
         @param amount: int or str that defines the amount of TFT to set, see explanation above
         @param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
@@ -1508,7 +1519,7 @@ class TFChainERC20():
         If no value is defined a new key pair will be defined.
 
         Returns a TransactionSendResult.
-        
+
         @param value: index of the TFT address or address itself, the address has to be owned by this wallet
         @param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
         @param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
@@ -1549,7 +1560,7 @@ class TFChainERC20():
         If no value is defined the first wallet address will be used.
 
         Returns an ERC20AddressInfo named tuple.
-        
+
         @param value: index of the TFT address or address itself, the address has to be owned by this wallet
         """
         if value is None:
@@ -1623,7 +1634,7 @@ class TFChainERC20():
 
         # return balance object
         return balance
-    
+
     def _sign_and_submit_txn(self, txn, balance):
         """
         common sign and submit logic for all ERC20 Transactions
@@ -1940,7 +1951,7 @@ class WalletBalance(object):
             elif output.id not in self._outputs_unconfirmed_spent:
                 self._outputs_unconfirmed[output.id] = output
         self._addresses.add(str(output.condition.unlockhash))
-    
+
     @property
     def _base(self):
         """
@@ -2204,7 +2215,7 @@ class WalletsBalance(WalletBalance):
             b._merge_multisig_wallet_balance(addr, balance)
         # return the merged balance
         return b
-    
+
     def _merge_multisig_wallet_balance(self, address, balance):
         """
         Assign or merge a multi-sig wallet balance
