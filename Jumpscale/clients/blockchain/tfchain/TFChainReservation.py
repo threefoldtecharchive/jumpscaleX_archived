@@ -11,8 +11,6 @@ bot_id = (S)
 created = (I)
 """)
 
-_GRID_BROKER_PUB_KEY = "..."
-
 
 class TFChainReservation():
     """
@@ -32,7 +30,8 @@ class TFChainReservation():
     @property
     def _notary_client(self):
         if self._notary_client_ is None:
-            self._notary_client_ = j.clients.gedis.configure('tfnotary', host='notary.grid.tf', port=8888)
+            c = j.clients.gedis.configure('tfnotary', host='notary.grid.tf', port=5000)
+            self._notary_client_ = c.cmds.notary_actor
         return self._notary_client_
 
     @property
@@ -40,9 +39,10 @@ class TFChainReservation():
         if self._grid_broker_pub_key_ is None:
             record = self._wallet.client.threebot.record_get('tf3bot.zaibon')
             encoded_key = record.public_key.hash
-            self._grid_broker_pub_key_ = nacl.public.PublicKey(
+            vk = nacl.signing.VerifyKey(
                 str(encoded_key),
                 encoder=nacl.encoding.HexEncoder)
+            self._grid_broker_pub_key_ = vk.to_curve25519_public_key()
         return self._grid_broker_pub_key_
 
     def reserve(self, reservation_type, size, email, bot_id, duration=None):
@@ -51,6 +51,7 @@ class TFChainReservation():
         reservation.size = size
         reservation.email = email
         reservation.bot_id = bot_id
+        # reservation.duration = #TODO after beta
         reservation.created = j.data.time.epoch
 
         self._validate_reservation(reservation)
@@ -63,24 +64,22 @@ class TFChainReservation():
         box = nacl.public.Box(self._private_key, self._grid_broker_pub_key)
         encrypted = box.encrypt(b)
         signature = self._signing_key.sign(encrypted, nacl.encoding.RawEncoder)
-
-        key = self._notary_client.register(encrypted, signature, reservation.bot_id)
+        key = self._notary_client.register(bot_id, encrypted, signature)
         tx = self._wallet.coins_send(self._grid_broker_addr, reservation_amount(reservation), data=key)
         return tx.id
 
     def _validate_reservation(self, reservation):
-        # for field in ['type', 'reservation', 'size', 'email', 'bot_id']:
-        for field in ['size', 'email', 'bot_id', 'duration']:
+        for field in ['size', 'email', 'bot_id']:
             if not getattr(reservation, field):
                 raise ValueError("field '%s' cannot be empty" % field)
 
         # validate bot id exists
         self._wallet.client.threebot.record_get(reservation.bot_id)
 
-        if reservation.duration <= 0:
-            raise ValueError("reservation duration must be greated then 0")
+        # if reservation.duration <= 0:
+        #     raise ValueError("reservation duration must be greated then 0")
 
-        if reservation.size < 0 or reservation > 2:
+        if reservation.size < 0 or reservation.size > 2:
             raise ValueError('reservation size can only be 1 or 2')
 
 
