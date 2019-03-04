@@ -21,8 +21,8 @@ class TFChainReservation():
 
     def __init__(self, wallet):
         self._wallet = wallet
-        self._notary_client = None
-        self._grid_broker_pub_key = None
+        self._notary_client_ = None
+        self._grid_broker_pub_key_ = None
         self._grid_broker_addr = ''  # TODO: hardcode tfchain address of the grid broker
         # this all key management needs to be improved
         keypair = self._wallet.key_pair_get(self._wallet.address)
@@ -30,20 +30,20 @@ class TFChainReservation():
         self._private_key = self._signing_key.to_curve25519_private_key()
 
     @property
-    def notary_client(self):
-        if self._notary_client is None:
-            self._notary_client = j.clients.gedis.configure('tfnotary', host='notary.grid.tf', port=8888)
-        return self._notary_client
+    def _notary_client(self):
+        if self._notary_client_ is None:
+            self._notary_client_ = j.clients.gedis.configure('tfnotary', host='notary.grid.tf', port=8888)
+        return self._notary_client_
 
     @property
-    def grid_broker_pub_key(self):
-        if self._grid_broker_pub_key is None:
+    def _grid_broker_pub_key(self):
+        if self._grid_broker_pub_key_ is None:
             record = self._wallet.client.threebot.record_get('tf3bot.zaibon')
             encoded_key = record.public_key.unlockhash
-            self._grid_broker_pub_key = nacl.public.PublicKey(
+            self._grid_broker_pub_key_ = nacl.public.PublicKey(
                 str(encoded_key.hash),
                 encoder=nacl.encoding.HexEncoder)
-        return self._grid_broker_pub_key
+        return self._grid_broker_pub_key_
 
     def new(self):
         return _RESERVATION_SCHEMA.new()
@@ -58,7 +58,7 @@ class TFChainReservation():
         # TODO: this api does not yet exists
         # encrypted = j.data.nacl.encrypt(blob, self.grid_broker_pub_key)
         # I'm doing it manually here for now, will have to update this once nacl module be proper API
-        box = nacl.public.Box(self._private_key, self.grid_broker_pub_key)
+        box = nacl.public.Box(self._private_key, self._grid_broker_pub_key)
         encrypted = box.encrypt(b)
         signature = self._signing_key.sign(encrypted, nacl.encoding.RawEncoder)
 
@@ -73,12 +73,7 @@ class TFChainReservation():
                 raise ValueError("field '%s' cannot be empty" % field)
 
         # validate bot id exists
-        try:
-            bot_id = int(reservation.bot_id)
-        except TypeError:
-            # assume it's the 3bot name
-            bot_id = reservation.bot_id
-        self._wallet.client.threebot.record_get(bot_id)
+        self._wallet.client.threebot.record_get(reservation.bot_id)
 
         if reservation.duration <= 0:
             raise ValueError("reservation duration must be greated then 0")
