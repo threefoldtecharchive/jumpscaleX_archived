@@ -17,8 +17,11 @@ class RunTests(Utils):
             file_name = '{}.log'.format(self.commit[:7])
             file_link = self.write_file(response.stdout[response.stdout.find('Error In'):], file_name=file_name)
             self.send_msg('Tests had errors ' + file_link, push=True)
+            self.github_status_send('failure', file_link)
+
         else:
             self.send_msg('Tests Passed', push=True)
+            self.github_status_send('success', self.serverip)
 
     def image_check(self):
         image_name = '{}/jumpscalex'.format(self.username)
@@ -28,8 +31,13 @@ class RunTests(Utils):
             self.send_msg('Could not find image', push=True)
             sys.exit()
 
+    def github_status_send(self, status, file_link):
+        cmd = 'bash github_status_send.sh {} {} {} {}'.format(self.commit, self.access_token, status, file_link)
+        self.execute_cmd(cmd)
+
 
 if __name__ == "__main__":
     test = RunTests()
     test.image_check()
+    test.github_status_send('pending', test.serverip)
     test.run_tests()

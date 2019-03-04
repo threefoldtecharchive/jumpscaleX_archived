@@ -16,6 +16,7 @@ class Utils:
         self.commit = os.environ.get('commit')
         self.commiter = os.environ.get('commiter')
         self.nacl = os.environ.get('Nacl')
+        self.access_token = os.environ.get('access_token')
 
     def execute_cmd(self, cmd):
         response = run(cmd, shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
