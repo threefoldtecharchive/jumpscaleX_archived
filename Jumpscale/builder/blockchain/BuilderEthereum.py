@@ -27,7 +27,7 @@ class BuilderEthereum(j.builder.system._BaseClass):
 
         j.builder.runtimes.golang.get(self.geth_repo)
 
-        j.builder.runtimes.golang.execute("cd {} && make geth".format(self.package_path))
+        j.builder.runtimes.golang.execute("cd {} && go build -a -ldflags '-w -extldflags -static' ./cmd/geth".format(self.package_path))
         self._done_set('build')
 
     def install(self, reset=False):
@@ -39,7 +39,7 @@ class BuilderEthereum(j.builder.system._BaseClass):
 
         self.build(reset=reset)
 
-        bin_path = self.tools.joinpaths(self.package_path, "build", "bin", "geth")
+        bin_path = self.tools.joinpaths(self.package_path, "geth")
         self.tools.file_copy(bin_path, "/sandbox/bin")
         self._done_set('install')
 
@@ -57,7 +57,7 @@ class BuilderEthereum(j.builder.system._BaseClass):
         """
         cmd = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
         if config_file and self.tools.file_exists(config_file):
-            cmd += ' --configFile=%s' % config_file
+            cmd += ' --config %s' % config_file
 
         args = args or {}
         for arg, value in args.items():
@@ -94,11 +94,20 @@ class BuilderEthereum(j.builder.system._BaseClass):
             return
         self.build(reset = reset)
 
-        bin_path = self.tools.joinpaths(self.package_path, "build", "bin", "geth")
+        bin_path = self.tools.joinpaths(self.package_path, "geth")
         bin_dest = self.tools.joinpaths(sandbox_dir, 'sandbox', 'bin')
+
         self.tools.dir_ensure(bin_dest)
         self.tools.file_copy(bin_path, bin_dest)
+
+        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'geth_startup.toml')
+        self.startup = j.sal.fs.readFile(startup_file)
+        file_dest = j.sal.fs.joinPaths(sandbox_dir, '.startup.toml')
+
+        j.builder.tools.file_ensure(file_dest)
+        j.builder.tools.file_write(file_dest, self.startup)
 
         if flist:
             print(self.flist_create(sandbox_dir=sandbox_dir, hub_instance=hub_instance))
         self._done_set('sandbox')
+

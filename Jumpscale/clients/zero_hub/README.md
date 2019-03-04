@@ -41,6 +41,9 @@ Note: above will prompt you for application id / application secret. You can cre
 ```
 cl = j.clients.zhub.getClient('$your_zhub_client_name')
 cl.token = token
+cl.username = 'tf-official-apps'
+cl.authenticate()
+cl.save()
 ```
 
 This allows you to do following
@@ -63,6 +66,7 @@ iyo_client = j.clients.itsyouonline
 token = iyo_client.jwt_get(scope="user:memberof:tf-official-apps").jwt
 
 zhubcl.token = token
+zhubcl.username = "tf-official-apps"
 
 zhubcl.save()
 zhubcl.authenticate()
