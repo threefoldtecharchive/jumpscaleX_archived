@@ -7,3 +7,5 @@ RUN mkdir -p /sandbox/code/github/threefoldtech
 RUN cd /sandbox/code/github/threefoldtech; git clone https://github.com/threefoldtech/jumpscaleX.git
 
 RUN python3.6 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py -1 -y -w -p
+RUN /bin/bash -c "source /sandbox/env.sh; js_shell 'j.builder.db.zdb.install()'"
+RUN cd /sandbox/code/github/threefoldtech/jumpscaleX/; git checkout Jumpscale/jumpscale_generated.py docs/errors.md
