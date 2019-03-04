@@ -39,16 +39,18 @@ class TFChainReservation():
     def _grid_broker_pub_key(self):
         if self._grid_broker_pub_key_ is None:
             record = self._wallet.client.threebot.record_get('tf3bot.zaibon')
-            encoded_key = record.public_key.unlockhash
+            encoded_key = record.public_key.hash
             self._grid_broker_pub_key_ = nacl.public.PublicKey(
-                str(encoded_key.hash),
+                str(encoded_key),
                 encoder=nacl.encoding.HexEncoder)
         return self._grid_broker_pub_key_
 
-    def new(self):
-        return _RESERVATION_SCHEMA.new()
-
-    def send(self, reservation):
+    def reserve(self, reservation_type, size, email, bot_id, duration=None):
+        reservation = _RESERVATION_SCHEMA.new()
+        reservation.type = reservation_type
+        reservation.size = size
+        reservation.email = email
+        reservation.bot_id = bot_id
         reservation.created = j.data.time.epoch
 
         self._validate_reservation(reservation)
