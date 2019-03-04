@@ -21,14 +21,19 @@ class TFChainReservation():
 
     def __init__(self, wallet):
         self._wallet = wallet
+        self._notary_client = None
         self._grid_broker_pub_key = None
         self._grid_broker_addr = ''  # TODO: hardcode tfchain address of the grid broker
-        self._notary_client = j.clients.gedis.configure('tfnotary', host='notary.grid.tf', port=8888)
-        # self._notary_client = NotaryMock()
         # this all key management needs to be improved
         keypair = self._wallet.key_pair_get(self._wallet.address)
         self._signing_key = nacl.signing.SigningKey(keypair.private_key.to_seed())
         self._private_key = self._signing_key.to_curve25519_private_key()
+
+    @property
+    def notary_client(self):
+        if self._notary_client is None:
+            self._notary_client = j.clients.gedis.configure('tfnotary', host='notary.grid.tf', port=8888)
+        return self._notary_client
 
     @property
     def grid_broker_pub_key(self):
@@ -45,18 +50,45 @@ class TFChainReservation():
 
     def send(self, reservation):
         reservation.created = j.data.time.epoch
-        blob = reservation._data
+
+        self._validate_reservation(reservation)
+        # get binary representation
+        b = encode_reservation(reservation)
 
         # TODO: this api does not yet exists
         # encrypted = j.data.nacl.encrypt(blob, self.grid_broker_pub_key)
-        # I'm doing it manually here for now, will have to update this once nacl module has be
-        # proper API
-        encrypted = nacl.public.Box(self._private_key, self.grid_broker_pub_key)
+        # I'm doing it manually here for now, will have to update this once nacl module be proper API
+        box = nacl.public.Box(self._private_key, self.grid_broker_pub_key)
+        encrypted = box.encrypt(b)
         signature = self._signing_key.sign(encrypted, nacl.encoding.RawEncoder)
 
         key = self._notary_client.register(encrypted, signature, reservation.bot_id)
         tx = self._wallet.coins_send(self._grid_broker_addr, reservation_amount(reservation), data=key)
         return tx.id
+
+    def _validate_reservation(self, reservation):
+        # for field in ['type', 'reservation', 'size', 'email', 'bot_id']:
+        for field in ['size', 'email', 'bot_id', 'duration']:
+            if not getattr(reservation, field):
+                raise ValueError("field '%s' cannot be empty" % field)
+
+        # validate bot id exists
+        try:
+            bot_id = int(reservation.bot_id)
+        except TypeError:
+            # assume it's the 3bot name
+            bot_id = reservation.bot_id
+        self._wallet.client.threebot.record_get(bot_id)
+
+        if reservation.duration <= 0:
+            raise ValueError("reservation duration must be greated then 0")
+
+        if reservation.size < 0 or reservation > 2:
+            raise ValueError('reservation size can only be 1 or 2')
+
+
+def encode_reservation(reservation):
+    return reservation._data
 
 
 def reservation_amount(reservation):
