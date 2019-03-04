@@ -492,6 +492,7 @@ class group_tools(JSGroup):
         self._legal_contracts = None
         self._imagelib = None
         self._markdowndocs = None
+        self._googleslides = None
         self._jinja2 = None
         self._performancetrace = None
         self._code = None
@@ -578,6 +579,12 @@ class group_tools(JSGroup):
             from Jumpscale.tools.markdowndocs.MarkDownDocs import MarkDownDocs
             self._markdowndocs =  MarkDownDocs()
         return self._markdowndocs
+    @property
+    def googleslides(self):
+        if self._googleslides is None:
+            from Jumpscale.tools.googleslides.GoogleSlides import GoogleSlides
+            self._googleslides =  GoogleSlides()
+        return self._googleslides
     @property
     def jinja2(self):
         if self._jinja2 is None:
