@@ -1,0 +1,40 @@
+#!/usr/bin/env python3
+
+import click
+from Jumpscale import j
+
+
+def _split_hostport(hostport):
+    """
+    convert a listen addres of the form
+    host:port into a tuple (host, port)
+    host is a string, port is an int
+    """
+    i = hostport.index(':')
+    host = hostport[:i]
+    if not host:
+        host = '0.0.0.0'
+    port = hostport[i + 1:]
+    return host, int(port)
+
+
+@click.command()
+@click.option('--listen', help='listen address (default :5000)', default=':5000')
+@click.option('--zdb', help='0-db address (default localhost:9900)', default='localhost:9900')
+@click.option('--namespace', help='0-db namespace to use', default='notary')
+@click.option('--secret', help='namespace secret', default='')
+def main(listen, zdb, namespace, secret):
+    zdb_host, zdb_port = _split_hostport(zdb)
+    zdb_cl = j.clients.zdb.client_get(nsname=namespace, addr=zdb_host, port=zdb_port)
+    bcdb = j.data.bcdb.new(zdbclient=zdb_cl, name="notary_bcdb")
+    bcdb.models_add("/sandbox/code/github/threefoldtech/digitalmeX/packages/notary/models")
+    host, port = _split_hostport(listen)
+    server = j.servers.gedis.configure(host=host, port=port)
+    server.actor_add('/sandbox/code/github/threefoldtech/digitalmeX/packages/notary/actors/notary_actor.py')
+    server.models_add(models=bcdb.models.values())
+    print('start gedis on %s' % zdb)
+    server.start()
+
+
+if __name__ == '__main__':
+    main()
