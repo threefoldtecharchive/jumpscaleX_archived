@@ -27,16 +27,16 @@ class CustomLink:
     """
 
     URL_RE = re.compile(r'^(http|https)\:\/\/', re.IGNORECASE)
-    REFERENCE_RE = re.compile(r'^\#\d+$')
+    REFERENCE_RE = re.compile(r'^\#(\d+)$')
     REPO_PATH_RE = re.compile(r'^(?:(.*?)(?:\((.*?)\))?\:)?(.*?)$')
 
     def __init__(self, link):
         self.link = link.strip()
         self.account = None
         self.repo = None
-        self.branch = 'master'
+        self.branch = None
 
-        if self.is_url or self.is_reference:
+        if self.is_url:
             self.path = link
         else:
             self.account, other_part = self.get_account()
@@ -75,13 +75,24 @@ class CustomLink:
         return bool(self.URL_RE.match(self.link))
 
     @property
+    def reference(self):
+        """return the reference id of the given link
+
+        :return: id or None
+        :rtype: str
+        """
+        id_match = self.REFERENCE_RE.match(self.path)
+        if id_match:
+            return id_match.group(1)
+
+    @property
     def is_reference(self):
         """check if the given link is a reference (e.g. #124)
 
         :return: True if a reference, False otherwise
         :rtype: bool
         """
-        return bool(self.REFERENCE_RE.match(self.link))
+        return bool(self.reference)
 
     @classmethod
     def test(cls):
@@ -102,6 +113,51 @@ class CustomLink:
         assert not l.repo
         assert l.branch == 'master'
         assert l.path == 'docs/test.md'
+
+
+
+class Linker:
+    HOST = None
+    ISSUE = None
+    PULL_REQUEST = None
+    TREE = None
+
+    def join(self, *args):
+        return j.sal.fs.joinPaths(self.HOST, *args)
+
+    def issue(self, _id):
+        raise NotImplementedError
+
+    def pull_request(self, _id):
+        raise NotImplementedError
+
+    def tree(self, path, branch='master'):
+        pass
+
+
+class GithubLinker(Linker):
+    HOST = 'http://github.com'
+    ISSUE = 'issues/{id}'
+    PULL_REQUEST = 'pull/{id}'
+    TREE = 'tree/{branch}'
+
+    def __init__(self, account, repo):
+        self.account = account
+        self.repo = repo
+
+    def join(self, *args):
+        return super(GithubLinker, self).join(self.account, self.repo, *args)
+
+    def issue(self, _id):
+        return self.join(self.ISSUE.format(id=_id))
+
+    def pull_request(self, _id):
+        return self.join(self.PULL_REQUEST.format(id=_id))
+
+    def tree(self, path, branch=None):
+        if not branch:
+            branch = 'master'
+        return self.join(self.TREE.format(branch=branch), path)
 
 
 class Link(j.application.JSBaseClass):
@@ -132,8 +188,52 @@ class Link(j.application.JSBaseClass):
         self.doc._content = self.doc._content.replace(self.source,msg)
         return msg
 
-    def _find_source(self):
-        pass
+    @property
+    def account(self):
+        return self.docsite.git.account
+
+    @property
+    def repo(self):
+        return self.docsite.git.name
+
+    @property
+    def branch(self):
+        return self.docsite.git.branchName
+
+    def is_different_source(self, custom_link):
+        """check if account, repo or branch are differnt from current docsite
+
+        :param custom_link: instanc of CustomLink
+        :type custom_link: CustomLink
+        :return: True if different, False if the same
+        :rtype: bool
+        """
+        return custom_link.account and custom_link.account != self.account or \
+            custom_link.repo and custom_link.repo != self.repo or \
+            custom_link.branch and custom_link.branch != self.branch
+
+    def get_real_source(self, custom_link, linker=None):
+        if custom_link.is_url:
+            # as-is
+            return custom_link.path
+
+        # check for docsite.git.remoteUrl hostname (urlparse)
+        account = custom_link.account or self.account
+        repo = custom_link.repo or self.repo
+        if not linker:
+            linker = GithubLinker(account, repo)
+
+        if custom_link.reference:
+            return linker.issue(custom_link.reference)
+
+        same_repo = account == self.account and repo == self.repo
+        if same_repo:
+            # the same docsite, the same internal link
+            # also, custom link branch is ignored here
+            return custom_link.path
+
+        branch = custom_link.branch
+        return linker.tree(custom_link.path, branch=branch)
 
     def _process(self):
         self.link_source = self.source.rsplit("(",1)[1].split(")",1)[0] #find inside ()
@@ -143,10 +243,14 @@ class Link(j.application.JSBaseClass):
         if self.link_source.strip()=="":
             return self.error("link is empty, but url is:%s"%self.source)
 
-
         if "@" in self.link_descr:
             self.link_source_original = self.link_descr.split("@")[1].strip() #was link to original source
             self.link_descr = self.link_descr.split("@")[0].strip()
+
+        print(self.source, self.link_source)
+        custom_link = CustomLink(self.link_source)
+        self.link_source = self.get_real_source(custom_link)
+        print(self.source, self.link_source)
 
         if "?" in self.link_source:
             lsource=self.link_source.split("?",1)[0]
@@ -177,7 +281,18 @@ class Link(j.application.JSBaseClass):
                 if self.docsite.links_verify:
                     self.link_verify()
 
-                self.filename = None #because is e.g. other site
+                # other site, get it
+                if not custom_link.is_url:
+                    if not j.sal.fs.getFileExtension(self.link_source):
+                        dir_name = self.link_source
+                    else:
+                        dir_name = j.sal.fs.getDirName(self.link_source)
+                    new_docsite = j.tools.markdowndocs.load(dir_name, name=custom_link.repo)
+                    new_docsite.load()
+                    self.filename = custom_link.path
+                    self.filepath = new_docsite.file_get(self.filename, die=False)
+                else:
+                    self.filename = None #because is e.g. other site
 
 
         else:
