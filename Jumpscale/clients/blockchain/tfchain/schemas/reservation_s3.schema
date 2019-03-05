@@ -1,0 +1,6 @@
+@url = tfchain.reservation.s3
+type = "s3" (S)
+duration = (I)
+size = (I)
+email = (email)
+created = (I)

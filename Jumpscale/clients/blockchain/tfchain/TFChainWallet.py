@@ -16,7 +16,7 @@ from .types.ERC20 import ERC20Address
 from .types.transactions.Base import TransactionBaseClass
 from .types.transactions.Minting import TransactionV128, TransactionV129
 
-from .TFChainReservation import TFChainReservation
+from .TFChainCapacity import TFChainCapacity
 
 _DEFAULT_KEY_SCAN_COUNT = 3
 
@@ -78,7 +78,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         self._atomicswap = TFChainAtomicSwap(wallet=self)
         self._threebot = TFChainThreeBot(wallet=self)
         self._erc20 = TFChainERC20(wallet=self)
-        self._reservation = TFChainReservation(wallet=self)
+        self._capacity = TFChainCapacity(wallet=self)
 
         # scan already for keys once
         self._key_scan()
@@ -117,11 +117,11 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         return self._erc20
 
     @property
-    def reservation(self):
+    def capacity(self):
         """
-        Reservation API used to reserva capacity on the grid
+        Reservation API used to reserve capacity on the grid
         """
-        return self._reservation
+        return self._capacity
 
 
     @property

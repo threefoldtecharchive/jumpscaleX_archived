@@ -1,18 +1,10 @@
 from Jumpscale import j
 import nacl
 
-_RESERVATION_SCHEMA = j.data.schema.get("""
-@url = tfchain.reservation
-type = "S3,VM" (E)
-duration = (I)
-size = (I)
-email = (email)
-bot_id = (S)
-created = (I)
-""")
+from . import schemas
 
 
-class TFChainReservation():
+class TFChainCapacity():
     """
     TFChainReservation contains all TF grid reservation logic.
     """
@@ -45,16 +37,30 @@ class TFChainReservation():
             self._grid_broker_pub_key_ = vk.to_curve25519_public_key()
         return self._grid_broker_pub_key_
 
-    def reserve(self, reservation_type, size, email, bot_id, duration=None):
-        reservation = _RESERVATION_SCHEMA.new()
-        reservation.type = reservation_type
-        reservation.size = size
-        reservation.email = email
-        reservation.bot_id = bot_id
-        # reservation.duration = #TODO after beta
-        reservation.created = j.data.time.epoch
+    def reserve_s3(self, size, email, threebot_id, duration=None):
+        reservation = j.data.schema.get(url='tfchain.reservation.s3').new(data={
+            'size': size,
+            'email': email,
+            'created': j.data.time.epoch
+        })
+        return self._process_reservation(reservation, threebot_id)
 
-        self._validate_reservation(reservation)
+    def reserve_zos_vm(self, size, email, threebot_id, duration=None):
+        reservation = j.data.schema.get(url='tfchain.reservation.zos_vm').new(data={
+            'size': size,
+            'email': email,
+            'created': j.data.time.epoch
+        })
+        return self._process_reservation(reservation, threebot_id)
+
+    def _process_reservation(self, reservation, threebot_id):
+        _validate_reservation(reservation)
+
+        # validate bot id exists
+        record = self._wallet.client.threebot.record_get(threebot_id)
+        # always use the identifier in the reservation, not the name of the threebot
+        threebot_id = record.identifier
+
         # get binary representation
         b = encode_reservation(reservation)
 
@@ -64,23 +70,18 @@ class TFChainReservation():
         box = nacl.public.Box(self._private_key, self._grid_broker_pub_key)
         encrypted = box.encrypt(b)
         signature = self._signing_key.sign(encrypted, nacl.encoding.RawEncoder)
-        key = self._notary_client.register(bot_id, encrypted, signature)
-        tx = self._wallet.coins_send(self._grid_broker_addr, reservation_amount(reservation), data=key)
-        return tx.id
+        key = self._notary_client.register(threebot_id, encrypted, signature)
+        # tx = self._wallet.coins_send(self._grid_broker_addr, reservation_amount(reservation), data=key)
+        # return tx.id
 
-    def _validate_reservation(self, reservation):
-        for field in ['size', 'email', 'bot_id']:
-            if not getattr(reservation, field):
-                raise ValueError("field '%s' cannot be empty" % field)
 
-        # validate bot id exists
-        self._wallet.client.threebot.record_get(reservation.bot_id)
+def _validate_reservation(reservation):
+    for field in ['size', 'email']:
+        if not getattr(reservation, field):
+            raise ValueError("field '%s' cannot be empty" % field)
 
-        # if reservation.duration <= 0:
-        #     raise ValueError("reservation duration must be greated then 0")
-
-        if reservation.size < 0 or reservation.size > 2:
-            raise ValueError('reservation size can only be 1 or 2')
+    if reservation.size < 0 or reservation.size > 2:
+        raise ValueError('reservation size can only be 1 or 2')
 
 
 def encode_reservation(reservation):
