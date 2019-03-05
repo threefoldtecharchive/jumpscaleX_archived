@@ -1,8 +1,8 @@
 from Jumpscale import j
 import toml
-
+import re
 import copy
-
+from collections import namedtuple
 JSBASE = j.application.JSBaseClass
 
 
@@ -11,9 +11,102 @@ SKIPPED_LINKS = ['t.me', 'chat.grid.tf', 'linkedin.com', 'docs.grid.tf', 'btc-al
                  'kraken.com', 'bitoasis.net', 'cex.io',  'itsyou.online', 'skype:',
                  'medium.com', "mailto:"]
 
+
+class CustomLink:
+    """A link with custom format of `account:repo(branch):path`
+
+    account, repo and branch are optional, examples:
+
+    threefoldtech:jumpscaleX(development):docs/readme.md
+    jumpscaleX(development):docs/readme.md
+    jumpscaleX:docs/readme.md
+    jumpscaleX:#123
+    docs/readme.md
+    #124
+    http://github.com/account/repo/tree/master/docs/readme.md
+    """
+
+    URL_RE = re.compile(r'^(http|https)\:\/\/')
+    REFERENCE_RE = re.compile(r'^\#\d+$')
+    REPO_PATH_RE = re.compile(r'^(?:(.*?)(?:\((.*?)\))?\:)?(.*?)$')
+
+    def __init__(self, link):
+        self.link = link.strip()
+        self.account = None
+        self.repo = None
+        self.branch = 'master'
+
+        if self.is_url or self.is_reference:
+            self.path = link
+        else:
+            self.account, other_part = self.get_account()
+            self.repo, branch, self.path = self.parse_repo_and_path(other_part)
+            self.branch = branch or self.branch
+
+    def get_account(self):
+        """get the account and other part
+
+        :return: a tuple of (account, other_part), account can be None
+        :rtype: tuple
+        """
+        if self.link.count(':') == 2:
+            account, _, other_part = self.link.partition(':')
+            return account, other_part
+        return None, self.link
+
+    def parse_repo_and_path(self, repo_and_path):
+        """parse the repo and path part, repo(branch):path
+        possible examples, `repo(branch):path`, `repo:path` and `path`.
+
+        :param repo_and_path: containing possible format
+        :type repo_and_path: str
+        :return: a tuple of (repo, branch, path), repo and branch can be None
+        :rtype: tuple
+        """
+        return self.REPO_PATH_RE.match(repo_and_path).groups()
+
+    @property
+    def is_url(self):
+        """check if the given links is a url
+
+        :return: True if a url, False otherwise
+        :rtype: bool
+        """
+        return bool(self.URL_RE.match(self.link))
+
+    @property
+    def is_reference(self):
+        """check if the given link is a reference (e.g. #124)
+
+        :return: True if a reference, False otherwise
+        :rtype: bool
+        """
+        return bool(self.REFERENCE_RE.match(self.link))
+
+    @classmethod
+    def test(cls):
+
+        l = CustomLink('threefoldtech:jumpscaleX(dev):#124')
+        assert l.account == 'threefoldtech'
+        assert l.repo == 'jumpscaleX'
+        assert l.branch == 'dev'
+        assert l.path == '#124'
+
+        l = CustomLink('jumpscaleX(dev):docs/test.md')
+        assert l.repo == 'jumpscaleX'
+        assert l.branch == 'dev'
+        assert l.path == 'docs/test.md'
+
+        l = CustomLink('docs/test.md')
+        assert not l.account
+        assert not l.repo
+        assert l.branch == 'master'
+        assert l.path == 'docs/test.md'
+
+
 class Link(j.application.JSBaseClass):
     def __init__(self,doc, source):
-        JSBASE.__init__(self)        
+        JSBASE.__init__(self)
         self.docsite = doc.docsite
         self.doc = doc
         self.extension = ""
@@ -33,11 +126,14 @@ class Link(j.application.JSBaseClass):
 
     def error(self,msg):
         self.error_msg = msg
-        msg="**ERROR:** problem with link:%s\n%s"%(self.source,msg)        
+        msg="**ERROR:** problem with link:%s\n%s"%(self.source,msg)
         # self._log_error(msg)
         self.docsite.error_raise(msg, doc=self.doc)
-        self.doc._content = self.doc._content.replace(self.source,msg) 
+        self.doc._content = self.doc._content.replace(self.source,msg)
         return msg
+
+    def _find_source(self):
+        pass
 
     def _process(self):
         self.link_source = self.source.rsplit("(",1)[1].split(")",1)[0] #find inside ()
@@ -47,11 +143,11 @@ class Link(j.application.JSBaseClass):
         if self.link_source.strip()=="":
             return self.error("link is empty, but url is:%s"%self.source)
 
-        
+
         if "@" in self.link_descr:
             self.link_source_original = self.link_descr.split("@")[1].strip() #was link to original source
             self.link_descr = self.link_descr.split("@")[0].strip()
-            
+
         if "?" in self.link_source:
             lsource=self.link_source.split("?",1)[0]
         else:
@@ -61,7 +157,7 @@ class Link(j.application.JSBaseClass):
         self.extension = j.sal.fs.getFileExtension(lsource)
 
         if "http" in self.link_source or "https" in self.link_source:
-            self.link_source_original = self.link_source            
+            self.link_source_original = self.link_source
             if self.source.startswith("!"):
                 if "?" in self.link_source:
                    link_source=self.link_source.split("?",1)[0]
@@ -94,7 +190,7 @@ class Link(j.application.JSBaseClass):
 
             if "?" in self.link_source:
                 self.link_source=self.link_source.split("?",1)[0]
-                
+
             if self.link_source.find("/") != -1 and self.extension != "md":
                 name = self.link_source.split("/")[-1]
             else:
@@ -130,9 +226,6 @@ class Link(j.application.JSBaseClass):
 
             self.filepath = self.doc.docsite.file_get(self.filename, die=False)
 
-
-
-    
     @property
     def markdown(self):
         if self.source.startswith("!"):
@@ -162,9 +255,9 @@ class Link(j.application.JSBaseClass):
                 return True
             self._log_info("check link exists:%s"%self.link_source)
             if not j.clients.http.ping(self.link_source_original):
-                self.error("link not alive:%s"%self.link_source_original)                
+                self.error("link not alive:%s"%self.link_source_original)
                 return False
-            return True                 
+            return True
         res =  self._cache.get(self.link_source, method=do, expire=3600)
         if res is not True:
             self.error(res)
