@@ -20,8 +20,8 @@ class Doc(j.application.JSBaseClass):
         if "/blogs/" in path or "/blog/" in path:
             self.cat = "blog"
         if "/defs/" in path or "/def/" in path:
-            self.cat = "def"            
-        
+            self.cat = "def"
+
         self.path_dir = j.sal.fs.getDirName(self.path)
         self.path_dir_rel = j.sal.fs.pathRemoveDirPart(self.path_dir, self.docsite.path).strip("/")
         self.name = self._clean(name)
@@ -94,7 +94,7 @@ class Doc(j.application.JSBaseClass):
     @property
     def extension(self):
         if not self._extension:
-           self._extension = j.sal.fs.getFileExtension(self.path)        
+           self._extension = j.sal.fs.getFileExtension(self.path)
         return self._extension
 
     @property
@@ -105,7 +105,7 @@ class Doc(j.application.JSBaseClass):
             self.error_raise("Could not find title in doc.")
 
     def error_raise(self, msg):
-        return self.docsite.error_raise(msg, doc=self)            
+        return self.docsite.error_raise(msg, doc=self)
 
     # def htmlpage_get(self,htmlpage=None):
     #     if htmlpage is None:
@@ -259,7 +259,7 @@ class Doc(j.application.JSBaseClass):
             if die:
                 raise RuntimeError("could not find link %s:%s at position:%s"%(filename,cat,nr))
             else:
-                return None            
+                return None
         return res[nr]
 
     def links_get(self,filename=None,cat=None):
@@ -344,7 +344,7 @@ class Doc(j.application.JSBaseClass):
             return
         if self.markdown_source == "":
             return
-        regex = "!*\[.*?\] *\(.*?\)"
+        regex = Link.LINK_MARKDOWN_PATTERN
         for match in j.data.regex.yieldRegexMatches(regex, self.markdown_source, flags=0):
             self._log_debug("##:file:link:%s" % match)
             link = Link(self,match.founditem)
@@ -358,14 +358,14 @@ class Doc(j.application.JSBaseClass):
         @param cat is: table, header, macro, code, comment1line, comment, block, data, image
         @param nr is the one you need to have 0 = first one which matches
         @param text_to_find looks into the text
-        """        
+        """
         return self.markdown_obj.part_get(text_to_find=text_to_find,cat=cat, nr=nr,die=die)
 
-    def parts_get(self,text_to_find=None,cat=None):  
+    def parts_get(self,text_to_find=None,cat=None):
         """
         @param cat is: table, header, macro, code, comment1line, comment, block, data, image
         @param text_to_find looks into the text
-        """         
+        """
         return self.markdown_obj.parts_get(text_to_find=text_to_find,cat=cat)
 
     def write(self):

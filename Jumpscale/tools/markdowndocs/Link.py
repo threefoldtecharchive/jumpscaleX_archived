@@ -161,6 +161,9 @@ class GithubLinker(Linker):
 
 
 class Link(j.application.JSBaseClass):
+    LINK_MARKDOWN_PATTERN = r'^\[(.*?)\]\((.*?)\)$'
+    LINK_MARKDOWN_RE = re.compile(LINK_MARKDOWN_PATTERN)
+
     def __init__(self,doc, source):
         JSBASE.__init__(self)
         self.docsite = doc.docsite
@@ -187,6 +190,16 @@ class Link(j.application.JSBaseClass):
         self.docsite.error_raise(msg, doc=self.doc)
         self.doc._content = self.doc._content.replace(self.source,msg)
         return msg
+
+    def remove_quotes(self, s):
+        return s.replace('"', '').replace("'", '')
+
+    def parse_markdown(self, link_markdown):
+        match = self.LINK_MARKDOWN_RE.match(link_markdown)
+        if match:
+            match = match.groups()
+            return map(self.remove_quotes, match)
+        raise ValueError('not a link markdown')
 
     @property
     def account(self):
@@ -236,10 +249,7 @@ class Link(j.application.JSBaseClass):
         return linker.tree(custom_link.path, branch=branch)
 
     def _process(self):
-        self.link_source = self.source.rsplit("(",1)[1].split(")",1)[0] #find inside ()
-        self.link_source = self.link_source.replace("\"","").replace("'","")
-        self.link_descr = self.source.split("[",1)[1].split("]",1)[0].replace("\"","").replace("'","") #find inside []
-
+        self.link_descr, self.link_source = self.parse_markdown(self.source)
         if self.link_source.strip()=="":
             return self.error("link is empty, but url is:%s"%self.source)
 
@@ -287,7 +297,8 @@ class Link(j.application.JSBaseClass):
                         dir_name = self.link_source
                     else:
                         dir_name = j.sal.fs.getDirName(self.link_source)
-                    new_docsite = j.tools.markdowndocs.load(dir_name, name=custom_link.repo)
+                    docsite_name = custom_link.repo
+                    new_docsite = j.tools.markdowndocs.load(dir_name, name=docsite_name)
                     new_docsite.load()
                     self.filename = custom_link.path
                     self.filepath = new_docsite.file_get(self.filename, die=False)
