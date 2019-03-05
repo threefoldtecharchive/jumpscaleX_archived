@@ -166,6 +166,14 @@ class HasDocString(PythonInputFilter):
         return len(self.python_input.docstring_buffer.text) > 0
 
 
+class IsInsideString(PythonInputFilter):
+
+    def __call__(self):
+        text = self.python_input.default_buffer.document.text_before_cursor
+        grammer = self.python_input._completer._path_completer_grammar
+        return bool(grammer.match(text))
+
+
 def setup_docstring_containers(repl):
     # see ptpython.layout
     parent_container = repl.app.layout.container.children[0].children[0]
@@ -296,7 +304,7 @@ def ptconfig(repl):
                 b.insert_text(corrections[w])
         b.insert_text(' ')
 
-    @repl.add_key_binding('?')
+    @repl.add_key_binding('?', filter=~IsInsideString(repl))
     def _docevent(event):
         j = KosmosShellConfig.j
         b = event.cli.current_buffer
