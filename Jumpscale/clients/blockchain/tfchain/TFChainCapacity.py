@@ -1,5 +1,5 @@
-from Jumpscale import j
 import nacl
+from Jumpscale import j
 
 from . import schemas
 
@@ -22,7 +22,7 @@ class TFChainCapacity():
     @property
     def _notary_client(self):
         if self._notary_client_ is None:
-            c = j.clients.gedis.configure('tfnotary', host='notary.grid.tf', port=5000)
+            c = j.clients.gedis.configure('tfnotary', host='notary.grid.tf', port=6830)
             self._notary_client_ = c.cmds.notary_actor
         return self._notary_client_
 
@@ -57,9 +57,7 @@ class TFChainCapacity():
         _validate_reservation(reservation)
 
         # validate bot id exists
-        record = self._wallet.client.threebot.record_get(threebot_id)
-        # always use the identifier in the reservation, not the name of the threebot
-        threebot_id = record.identifier
+        self._wallet.client.threebot.record_get(threebot_id)
 
         # get binary representation
         b = encode_reservation(reservation)
@@ -71,8 +69,8 @@ class TFChainCapacity():
         encrypted = box.encrypt(b)
         signature = self._signing_key.sign(encrypted, nacl.encoding.RawEncoder)
         key = self._notary_client.register(threebot_id, encrypted, signature)
-        # tx = self._wallet.coins_send(self._grid_broker_addr, reservation_amount(reservation), data=key)
-        # return tx.id
+        tx = self._wallet.coins_send(self._grid_broker_addr, reservation_amount(reservation), data=key)
+        return tx.id
 
 
 def _validate_reservation(reservation):
@@ -85,7 +83,7 @@ def _validate_reservation(reservation):
 
 
 def encode_reservation(reservation):
-    return reservation._data
+    return reservation._msgpack
 
 
 def reservation_amount(reservation):
