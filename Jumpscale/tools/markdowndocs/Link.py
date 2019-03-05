@@ -26,7 +26,7 @@ class CustomLink:
     http://github.com/account/repo/tree/master/docs/readme.md
     """
 
-    URL_RE = re.compile(r'^(http|https)\:\/\/')
+    URL_RE = re.compile(r'^(http|https)\:\/\/', re.IGNORECASE)
     REFERENCE_RE = re.compile(r'^\#\d+$')
     REPO_PATH_RE = re.compile(r'^(?:(.*?)(?:\((.*?)\))?\:)?(.*?)$')
 
