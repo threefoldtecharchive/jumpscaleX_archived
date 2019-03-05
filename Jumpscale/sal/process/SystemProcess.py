@@ -398,7 +398,7 @@ class SystemProcess(j.application.JSBaseClass):
         @param sig: signal. If no signal is specified signal.SIGKILL is used
         """
         pid=int(pid)
-        j.sal.process.self._log_debug('Killing process %d' % pid)
+        self._log_debug('Killing process %d' % pid)
         if self.isUnix:
             try:
                 if sig is None:
