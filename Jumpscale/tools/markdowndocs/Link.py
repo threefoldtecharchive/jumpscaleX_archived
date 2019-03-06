@@ -311,8 +311,8 @@ class Link(j.application.JSBaseClass):
                 if self.docsite.links_verify:
                     self.link_verify()
 
-                # other site, get it
                 if not custom_link.is_url:
+                    # a custom link that wasn't a full url originally, get it's docsite
                     self.get_docsite(self.link_source, name=custom_link.repo)
                     self.filename = self._clean(Linker().join(custom_link.repo, custom_link.path))
                 else:
