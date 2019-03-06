@@ -710,7 +710,7 @@ Examples:
 ```python
 c = j.clients.tfchain.myclient
 w = c.wallets.mywallet
-tx_id = w.capacity.reserve_s3(
+txid = w.capacity.reserve_s3(
     size=1, # each workload have a different size available
     email='user@email.com', # the email on which you will received the connection information
     bot_id='my3bot.example.org') # your threebot id, it can be any of the names you gave to your 3bot
@@ -718,6 +718,10 @@ tx_id = w.capacity.reserve_s3(
 
 
 The result of the `reserve_s3` method call is the transaction ID in which you reservation has been created.
-You can check it on our [explorer](https://explorer.testnet.threefoldtoken.com/) by entering the transaction ID in the `Search by hash` field of the explorer form.
+You can check it on our [explorer](https://explorer.testnet.threefoldtoken.com/) by entering the transaction ID in the `Search by hash` field of the explorer form or using the tfchain client:
 
-Your workload is currently being deployed, you will receive an email with the connection information within a few minutes.
+```python
+transaction = c.transaction_get(txid)
+```
+
+As soon as it is ready, usually within a few minutes, you will receive an email with the connection information.

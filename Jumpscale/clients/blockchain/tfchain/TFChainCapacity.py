@@ -13,7 +13,6 @@ class TFChainCapacity():
         self._wallet = wallet
         self._notary_client_ = None
         self._grid_broker_pub_key_ = None
-        self._grid_broker_addr = ''  # TODO: hardcode tfchain address of the grid broker
         # this all key management needs to be improved
         keypair = self._wallet.key_pair_get(self._wallet.address)
         self._signing_key = nacl.signing.SigningKey(keypair.private_key.to_seed())
@@ -37,7 +36,11 @@ class TFChainCapacity():
             self._grid_broker_pub_key_ = vk.to_curve25519_public_key()
         return self._grid_broker_pub_key_
 
-    def reserve_s3(self, size, email, threebot_id, duration=None):
+    @property
+    def _grid_broker_addr(self):
+        return self._grid_broker_pub_key.unlockhash
+
+    def reserve_s3(self, email, threebot_id, size=1, duration=None):
         reservation = j.data.schema.get(url='tfchain.reservation.s3').new(data={
             'size': size,
             'email': email,
@@ -45,7 +48,7 @@ class TFChainCapacity():
         })
         return self._process_reservation(reservation, threebot_id)
 
-    def reserve_zos_vm(self, size, email, threebot_id, duration=None):
+    def reserve_zos_vm(self, email, threebot_id, size=1, duration=None):
         reservation = j.data.schema.get(url='tfchain.reservation.zos_vm').new(data={
             'size': size,
             'email': email,
@@ -66,7 +69,7 @@ class TFChainCapacity():
         # encrypted = j.data.nacl.encrypt(blob, self.grid_broker_pub_key)
         # I'm doing it manually here for now, will have to update this once nacl module be proper API
         box = nacl.public.Box(self._private_key, self._grid_broker_pub_key)
-        encrypted = box.encrypt(b)
+        encrypted = box.encrypt(b).ciphertext
         signature = self._signing_key.sign(encrypted, nacl.encoding.RawEncoder)
         key = self._notary_client.register(threebot_id, encrypted, signature)
         tx = self._wallet.coins_send(self._grid_broker_addr, reservation_amount(reservation), data=key)
