@@ -241,15 +241,15 @@ class Link(j.application.JSBaseClass):
 
     @property
     def account(self):
-        return self.docsite.git.account
+        return self.docsite.git and self.docsite.git.account
 
     @property
     def repo(self):
-        return self.docsite.git.name
+        return self.docsite.git and self.docsite.git.name
 
     @property
     def branch(self):
-        return self.docsite.git.branchName
+        return self.docsite.git and self.docsite.git.branchName
 
     def is_different_source(self, custom_link):
         """check if account, repo or branch are differnt from current docsite
@@ -341,7 +341,7 @@ class Link(j.application.JSBaseClass):
                     self.link_verify()
 
                 if not custom_link.is_url:
-                    # a custom link that wasn't a full url originally, get it's docsite
+                    # a custom link that wasn't a full url originally, get its docsite
                     self.get_docsite(self.link_source, name=custom_link.repo)
                     self.filename = self._clean(Linker().join(custom_link.repo, custom_link.path))
                 else:
