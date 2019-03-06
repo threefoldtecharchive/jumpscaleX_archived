@@ -13,51 +13,116 @@ class TFChainCapacity():
         self._wallet = wallet
         self._notary_client_ = None
         self._grid_broker_pub_key_ = None
-        # this all key management needs to be improved
-        keypair = self._wallet.key_pair_get(self._wallet.address)
-        self._signing_key = nacl.signing.SigningKey(keypair.private_key.to_seed())
-        self._private_key = self._signing_key.to_curve25519_private_key()
+        self._grid_broker_addr = None
 
     @property
     def _notary_client(self):
+        """
+        lazy loading of the notary client
+        """
+
         if self._notary_client_ is None:
             c = j.clients.gedis.configure('tfnotary', host='notary.grid.tf', port=6830)
             self._notary_client_ = c.cmds.notary_actor
         return self._notary_client_
 
+    def _threebot_singing_key(self, threebot_id):
+        """
+        reteive the singing key used to register the threebot
+        identify by `threebot_id`
+
+        :param threebot_id: name or address or identifier or the threebot
+        :type threebot_id: string
+        :raises KeyError: raises if no matching key has been found
+        :return: signing key used to register the threebot
+        :rtype: nacl.signing.SigningKey
+        """
+
+        record = self._wallet.client.threebot.record_get(threebot_id)
+        for addr in self._wallet.addresses:
+            keypair = self._wallet.key_pair_get(addr)
+            if record.public_key.hash == keypair.public_key.hash:
+                return nacl.signing.SigningKey(keypair.private_key.to_seed())
+
+        raise KeyError(
+            "could not found the private used to create the threebot %s. Please generate more addresses" % threebot_id)
+
     @property
     def _grid_broker_pub_key(self):
+        """
+        retrieve the public key of the grid broker to encrypt the reservation
+        """
+
         if self._grid_broker_pub_key_ is None:
-            record = self._wallet.client.threebot.record_get('tf3bot.zaibon')
+            record = self._wallet.client.threebot.record_get('development.broker')
             encoded_key = record.public_key.hash
+            self._grid_broker_addr = record.public_key.unlockhash
             vk = nacl.signing.VerifyKey(
                 str(encoded_key),
                 encoder=nacl.encoding.HexEncoder)
             self._grid_broker_pub_key_ = vk.to_curve25519_public_key()
         return self._grid_broker_pub_key_
 
-    @property
-    def _grid_broker_addr(self):
-        return self._grid_broker_pub_key.unlockhash
+    def reserve_s3(self, email, threebot_id, size=1, source=None, refund=None):
+        """
+        reserve an S3 archive
 
-    def reserve_s3(self, email, threebot_id, size=1, duration=None):
+        :param email: email address on which to send the connection information
+        :type email: string
+        :param threebot_id: name or address of your threebot
+        :type threebot_id: string
+        :param size: size of the archive to reserve, defaults to 1
+                    possible value:
+                    - 1 => 50GiB of storage
+                    - 2 => 100GiB of storage
+        :param size: int, optional
+        :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
+        :param source: string, optional
+        :param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
+        :param refund: string, optional
+        :return: transaction id in which your reservation has been written
+        :rtype: string
+        """
+
         reservation = j.data.schema.get(url='tfchain.reservation.s3').new(data={
             'size': size,
             'email': email,
-            'created': j.data.time.epoch
+            'created': j.data.time.epoch,
+            'type': 's3',
         })
-        return self._process_reservation(reservation, threebot_id)
+        return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
-    def reserve_zos_vm(self, email, threebot_id, size=1, duration=None):
+    def reserve_zos_vm(self, email, threebot_id, size=1, source=None, refund=None):
+        """
+        reserve an virtual 0-OS
+
+        :param email: email address on which to send the connection information
+        :type email: string
+        :param threebot_id: name or address of your threebot
+        :type threebot_id: string
+        :param size: size of the archive to reserve, defaults to 1
+                    possible value:
+                    - 1 => 1 CPU 2 GiB of memory  10 GiB of storage
+                    - 2 => 2 CPU 4 GiB of memory  40 GiB of storage
+        :param size: int, optional
+        :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
+        :param source: string, optional
+        :param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
+        :param refund: string, optional
+        :return: transaction id in which your reservation has been written
+        :rtype: string
+        """
         reservation = j.data.schema.get(url='tfchain.reservation.zos_vm').new(data={
             'size': size,
             'email': email,
-            'created': j.data.time.epoch
+            'created': j.data.time.epoch,
+            'type': 'vm',
         })
-        return self._process_reservation(reservation, threebot_id)
+        return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
-    def _process_reservation(self, reservation, threebot_id):
+    def _process_reservation(self, reservation, threebot_id, source=None, refund=None):
         _validate_reservation(reservation)
+        amount = reservation_amount(reservation)
 
         # validate bot id exists
         self._wallet.client.threebot.record_get(threebot_id)
@@ -68,12 +133,19 @@ class TFChainCapacity():
         # TODO: this api does not yet exists
         # encrypted = j.data.nacl.encrypt(blob, self.grid_broker_pub_key)
         # I'm doing it manually here for now, will have to update this once nacl module be proper API
-        box = nacl.public.Box(self._private_key, self._grid_broker_pub_key)
-        encrypted = box.encrypt(b).ciphertext
-        signature = self._signing_key.sign(encrypted, nacl.encoding.RawEncoder)
-        key = self._notary_client.register(threebot_id, encrypted, signature)
-        tx = self._wallet.coins_send(self._grid_broker_addr, reservation_amount(reservation), data=key)
-        return tx.id
+
+        sk = self._threebot_singing_key(threebot_id)
+        pk = _signing_key_to_private_key(sk)
+        box = nacl.public.Box(pk, self._grid_broker_pub_key)
+        encrypted = bytes(box.encrypt(b))
+        signature = sk.sign(encrypted, nacl.encoding.RawEncoder)
+        response = self._notary_client.register(threebot_id, signature.message, signature.signature)
+        result = self._wallet.coins_send(self._grid_broker_addr,
+                                         amount,
+                                         data=response.hash,
+                                         source=source,
+                                         refund=refund)
+        return result.transaction.id
 
 
 def _validate_reservation(reservation):
@@ -87,6 +159,12 @@ def _validate_reservation(reservation):
 
 def encode_reservation(reservation):
     return reservation._msgpack
+
+
+def _signing_key_to_private_key(sk):
+    if not isinstance(sk, nacl.signing.SigningKey):
+        raise TypeError("sk must be of type nacl.signing.SigningKey")
+    return sk.to_curve25519_private_key()
 
 
 def reservation_amount(reservation):
