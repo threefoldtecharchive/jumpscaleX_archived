@@ -104,9 +104,8 @@ def main(self):
     assert o1._ddict["enum"] == "GREEN"
 
     assert o1._cobj.nr == 4
-    assert o1._cobj.list2 == ["5"]
+    assert o1._cobj.llist2[0] == b'5'
 
-    j.shell()
 
     assert o1._data.find(b"GREEN") == -1  # needs to be stored as int
     assert len(o1._data) <= 30
@@ -132,6 +131,9 @@ def main(self):
     """
 
     o = j.data.schema.get(schema).new()
+
+
+    j.shell()
 
     assert o.bool1 == True
     assert o.bool2 == True

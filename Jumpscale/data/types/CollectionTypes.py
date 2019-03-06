@@ -123,7 +123,7 @@ class Dictionary(TypeBaseClass):
         :param v:
         :return:
         """
-        if value is None:
+        if v is None:
             return self.default_get()
         if j.data.types.bytes.check(v):
             v = j.data.serializers.msgpack.loads(v)

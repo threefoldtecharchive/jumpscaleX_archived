@@ -198,6 +198,10 @@ def get_completions(self, document, complete_event):
                     if not c.name_with_symbols.startswith("_"):
                         yield Completion(c.name_with_symbols, len(c.complete) - len(c.name_with_symbols),
                                          display=c.name_with_symbols)
+            try:
+                e is not None
+            except Exception as x:
+                j.shell()
             if e is not None:
                 print(e)
                 j.loggers.logger_redis.error(e)

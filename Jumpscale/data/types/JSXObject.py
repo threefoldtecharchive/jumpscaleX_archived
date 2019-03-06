@@ -20,6 +20,7 @@ class JSDataObjectFactory(TypeBaseObjFactory):
         """
         if not default:
             raise j.exceptions.Input("Cannot init JSDataObjectFactory without url")
+
         self._schema_url = default
         self._schema_ = None
 
@@ -68,8 +69,10 @@ class JSDataObjectFactory(TypeBaseObjFactory):
             return value
         if isinstance(value,bytes):
             return self._schema.get(data=None, capnpbin=value, model=model)
-        else:
+        elif isinstance(value,dict):
             return self._schema.get(data=value, capnpbin=None, model=model)
+        else:
+            raise j.exceptions.Input("can only accept dataobj, bytes (capnp) or dict as input for jsxobj")
 
     def toHR(self, v):
         v=self.clean(v)

@@ -33,8 +33,20 @@ def main(self):
     assert t.check("kristof@in.com")
     assert t.check("kristof.in.com") == False
 
+    t = j.data.types.bool
+    assert t.clean("true")==True
+    assert t.clean("True")==True
+    assert t.clean(1)==True
+    assert t.clean("1")==True
+    assert t.clean("False")==False
+    assert t.clean("false")==False
+    assert t.clean("0")==False
+    assert t.clean(0)==False
+    assert t.check(1) == False
+    assert t.check(True) == True
+
     #TODO: need more tests here
 
-    self._log_info("TEST DONE")
+    self._log_info("TEST DONE FOR TYPES BASE")
 
     return ("OK")
