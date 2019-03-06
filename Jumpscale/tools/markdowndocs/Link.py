@@ -1,8 +1,9 @@
-from Jumpscale import j
 import toml
 import re
 import copy
-from collections import namedtuple
+from urllib.parse import urlparse
+from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
 
@@ -96,7 +97,6 @@ class CustomLink:
 
     @classmethod
     def test(cls):
-
         l = CustomLink('threefoldtech:jumpscaleX(dev):#124')
         assert l.account == 'threefoldtech'
         assert l.repo == 'jumpscaleX'
@@ -111,7 +111,6 @@ class CustomLink:
         l = CustomLink('docs/test.md')
         assert not l.account
         assert not l.repo
-        assert l.branch == 'master'
         assert l.path == 'docs/test.md'
 
 
@@ -122,8 +121,15 @@ class Linker:
     PULL_REQUEST = None
     TREE = None
 
+    def remove_slash(self, arg):
+        return arg.lstrip('/')
+
     def join(self, *args):
-        return j.sal.fs.joinPaths(self.HOST, *args)
+        if self.HOST:
+            args = (self.HOST, *args)
+
+        args = [self.remove_slash(arg) for arg in args]
+        return j.sal.fs.joinPaths(*args)
 
     def issue(self, _id):
         raise NotImplementedError
@@ -161,7 +167,7 @@ class GithubLinker(Linker):
 
 
 class Link(j.application.JSBaseClass):
-    LINK_MARKDOWN_PATTERN = r'^\[(.*?)\]\((.*?)\)$'
+    LINK_MARKDOWN_PATTERN = r'\!?\[([^\]\(]+)?\]\(([^\(\)]*?(\([^\(\)]*?\))?[^\(\)]*?)?\)'
     LINK_MARKDOWN_RE = re.compile(LINK_MARKDOWN_PATTERN)
 
     def __init__(self,doc, source):
@@ -192,12 +198,14 @@ class Link(j.application.JSBaseClass):
         return msg
 
     def remove_quotes(self, s):
-        return s.replace('"', '').replace("'", '')
+        if s:
+            return s.replace('"', '').replace("'", '')
+        return ''
 
     def parse_markdown(self, link_markdown):
         match = self.LINK_MARKDOWN_RE.match(link_markdown)
         if match:
-            match = match.groups()
+            match = match.groups()[0:2]
             return map(self.remove_quotes, match)
         raise ValueError('not a link markdown')
 
@@ -226,7 +234,7 @@ class Link(j.application.JSBaseClass):
             custom_link.branch and custom_link.branch != self.branch
 
     def get_real_source(self, custom_link, linker=None):
-        if custom_link.is_url:
+        if custom_link.is_url or not self.docsite.git:
             # as-is
             return custom_link.path
 
@@ -248,6 +256,20 @@ class Link(j.application.JSBaseClass):
         branch = custom_link.branch
         return linker.tree(custom_link.path, branch=branch)
 
+    def get_docsite(self, external_link, name):
+        url = urlparse(external_link)
+        path = url.path
+
+        if not j.sal.fs.getFileExtension(path):
+            parent_dir = external_link
+        else:
+            parent_path = j.sal.fs.getDirName(path)
+            parent_dir = Linker().join('https://', url.hostname, parent_path)
+
+        new_docsite = j.tools.markdowndocs.load(parent_dir, name=name)
+        new_docsite.write()
+        return new_docsite
+
     def _process(self):
         self.link_descr, self.link_source = self.parse_markdown(self.source)
         if self.link_source.strip()=="":
@@ -257,10 +279,8 @@ class Link(j.application.JSBaseClass):
             self.link_source_original = self.link_descr.split("@")[1].strip() #was link to original source
             self.link_descr = self.link_descr.split("@")[0].strip()
 
-        print(self.source, self.link_source)
         custom_link = CustomLink(self.link_source)
         self.link_source = self.get_real_source(custom_link)
-        print(self.source, self.link_source)
 
         if "?" in self.link_source:
             lsource=self.link_source.split("?",1)[0]
@@ -293,15 +313,8 @@ class Link(j.application.JSBaseClass):
 
                 # other site, get it
                 if not custom_link.is_url:
-                    if not j.sal.fs.getFileExtension(self.link_source):
-                        dir_name = self.link_source
-                    else:
-                        dir_name = j.sal.fs.getDirName(self.link_source)
-                    docsite_name = custom_link.repo
-                    new_docsite = j.tools.markdowndocs.load(dir_name, name=docsite_name)
-                    new_docsite.load()
-                    self.filename = custom_link.path
-                    self.filepath = new_docsite.file_get(self.filename, die=False)
+                    self.get_docsite(self.link_source, name=custom_link.repo)
+                    self.filename = self._clean(Linker().join(custom_link.repo, custom_link.path))
                 else:
                     self.filename = None #because is e.g. other site
 
