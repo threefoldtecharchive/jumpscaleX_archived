@@ -24,7 +24,6 @@ class BCDB(j.application.JSBaseClass):
         """
         JSBASE.__init__(self)
 
-
         if name is None:
             raise RuntimeError("name needs to be specified")
 
@@ -146,31 +145,29 @@ class BCDB(j.application.JSBaseClass):
         """
         self._init_(stop=True, reset=True)
 
-
-    def _hset_index_key_get(self,schema,returndata=False):
-        if not isinstance(schema,j.data.schema.SCHEMA_CLASS):
+    def _hset_index_key_get(self, schema, returndata=False):
+        if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise RuntimeError("schema needs to be of type: SCHEMA_CLASS")
 
-        key=[self.name,schema.url]
+        key = [self.name, schema.url]
         r = j.clients.credis_core.get("bcdb.schema.instances")
         if r is None:
-            data={}
-            data["lastid"]=0
+            data = {}
+            data["lastid"] = 0
         else:
             data = j.data.serializers.json.loads(r)
         if self.name not in data:
-            data[self.name]={}
+            data[self.name] = {}
         if schema.url not in data[self.name]:
-            data["lastid"]=data["lastid"]+1
-            data[self.name][schema.url]=data["lastid"]
+            data["lastid"] = data["lastid"]+1
+            data[self.name][schema.url] = data["lastid"]
 
             bindata = j.data.serializers.json.dumps(data)
-            j.clients.credis_core.set("bcdb.schema.instances",bindata)
+            j.clients.credis_core.set("bcdb.schema.instances", bindata)
         if returndata:
             return data
         else:
             return b"O:"+str(data[self.name][schema.url]).encode()
-
 
     def _hset_index_key_delete(self):
         r = j.clients.credis_core.get("bcdb.schema.instances")
@@ -178,12 +175,11 @@ class BCDB(j.application.JSBaseClass):
             return
         data = j.data.serializers.json.loads(r)
         if self.name in data:
-            for url,key_id in data[self.name].items():
-                tofind=b"O:"+str(key_id).encode()+b":*"
+            for url, key_id in data[self.name].items():
+                tofind = b"O:"+str(key_id).encode()+b":*"
                 for key in j.clients.credis_core.keys(tofind):
-                    print("HKEY DELETE:%s"%key)
+                    print("HKEY DELETE:%s" % key)
                     j.clients.credis_core.delete(key)
-
 
     def _reset(self):
 
@@ -308,7 +304,7 @@ class BCDB(j.application.JSBaseClass):
             imodel = BCDBIndexMeta(schema=schema)
             imodel.include_schema = True
             tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._path
-            myclass = j.tools.jinja2.code_python_render(path=tpath,objForHash=schema._md5,
+            myclass = j.tools.jinja2.code_python_render(path=tpath, objForHash=schema._md5,
                                                         reload=True, dest=dest,
                                                         schema=schema, bcdb=self, index=imodel)
 
@@ -371,7 +367,8 @@ class BCDB(j.application.JSBaseClass):
 
             dest = "%s/%s.py" % (path, bname)
 
-            self.model_get_from_schema(schema=schema, dest=dest)
+            model = self.model_get_from_schema(schema=schema, dest=dest)
+            self.model_add(model)
 
         for pyfile_base in pyfiles_base:
             if pyfile_base.startswith("_"):
