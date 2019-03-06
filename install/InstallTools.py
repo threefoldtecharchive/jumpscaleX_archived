@@ -661,6 +661,11 @@ class Tools:
                 "REVERSE"
 
         """
+        class format_dict(dict):
+            def __missing__(self, key):
+                return '{%s}' % key
+
+
         if args is None:
             args={}
 
@@ -673,7 +678,8 @@ class Tools:
             if colors:
                 args.update(MyEnv.MYCOLORS)
 
-            content = content.format(**args)
+            replace_args = format_dict(args)
+            content = content.format_map(replace_args)
 
         if text_strip:
             content = Tools.text_strip(content,ignorecomments=ignorecomments)
