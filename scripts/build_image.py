@@ -6,21 +6,15 @@ import os
 
 class BuildImage(Utils):
 
-    def image_bulid(self):
-        image_name = '{}/jumpscalex'.format(self.username)
-        self.images_clean(image_name=image_name)
-        cmd = 'docker build --force-rm -t {} /sandbox/code/github/threefoldtech/jumpscaleX/scripts'.format(image_name)
+    def image_bulid(self, image_name, branch, commit=''):
+        cmd = 'docker build --force-rm -t {} . --build-arg branch={} commit={}'.format(
+            image_name, branch, commit)
         response = self.execute_cmd(cmd)
-        if response.returncode:
-            file_name = '{}.log'.format(str(datetime.now())[:10])
-            file_link = self.write_file(response.stdout, file_name=file_name)
-            self.images_clean()
-            self.image_pull(file_link)
-            sys.exit()
+        return response
 
     def images_clean(self, image_name=None):
         if image_name:
-            response = self.execute_cmd('docker rmi -f {}/jumpscalex'.format(self.username))
+            response = self.execute_cmd('docker rmi -f {}'.format(image_name))
         response = self.execute_cmd('docker images | tail -n+2 | awk "{print \$1}"')
         images_name = response.stdout.split()
         response = self.execute_cmd('docker images | tail -n+2 | awk "{print \$3}"')
@@ -54,5 +48,15 @@ class BuildImage(Utils):
 
 if __name__ == "__main__":
     build = BuildImage()
-    build.image_bulid()
-    build.image_push()
+    image_name = '{}/jumpscalex'.format(build.username)
+    build.images_clean(image_name=image_name)
+    response = build.image_bulid(image_name=image_name, branch='development')
+    if response.returncode:
+        file_name = '{}.log'.format(str(datetime.now())[:10])
+        build.write_file(text=response.stdout, file_name=file_name)
+        build.images_clean()
+        file_link = '{}/{}'.format(build.serverip, file_name)
+        build.image_pull(file_link)
+        sys.exit()
+    else:
+        build.image_push()
