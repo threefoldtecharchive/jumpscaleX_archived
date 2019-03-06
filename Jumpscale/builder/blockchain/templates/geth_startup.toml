@@ -4,4 +4,4 @@ name = "core.system"
 [startup.geth.args]
 name = "/sandbox/bin/geth"
 args = ["--testnet", "--verbosity=4",
-    "--lightserv=90", "--nat=none", "--v5disc", "--syncmode=full", "--rpc"]
+    "--lightserv=90", "--nat=none", "--v5disc", "--syncmode=full", "--rpc", "--rpcaddr=0.0.0.0"]
