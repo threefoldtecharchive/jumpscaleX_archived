@@ -30,14 +30,14 @@ Create a client as follows:
 c = j.clients.tfchain.my_client
 ```
 
-or 
+or
 
 ```python
 c = j.clients.tfchain.new('my_client')
 # available as `j.clients.tfchain.my_client` from now on
 ```
 
-or 
+or
 
 ```python
 # valid types: STD, TEST and DEV, by default it is set to STD
@@ -76,7 +76,7 @@ Should you desire you can use the client
 to get a block by height or ID (`c.block_get`), as well
 as transactions by ID (`c.transaction_get`) and more.
 
-Create a TFChain client in Kosmos to explore all its options or check out 
+Create a TFChain client in Kosmos to explore all its options or check out
 the [./tests](./tests) directory for documented tests.
 
 ##### Unlockhash Get
@@ -365,12 +365,12 @@ w.threebot.record_update(4, months=1)
 
 ```python
 # add one (IPv6) address to 3Bot #10
-w.threebot.record_update(10, addresses_to_add=["2001:db8:85a3::8a2e:370:7334"]) 
+w.threebot.record_update(10, addresses_to_add=["2001:db8:85a3::8a2e:370:7334"])
 ```
 
 ```python
 # remove one name from 3Bot #1
-w.threebot.record_update(1, names_to_remove=["example.chatbot"]) 
+w.threebot.record_update(1, names_to_remove=["example.chatbot"])
 ```
 
 ```python
@@ -492,7 +492,7 @@ Refund a contract (only possible when the defined contract duration has expired)
 ```python
 transaction = w.atomicswap.refund('a5e0159688d300ed7a8f2685829192d8dd1266ce6e82a0d04a3bbbb080de30d0')
 # an exception is raised when the contract is not found, has already been spent,
-# the defined secret is incorrect or the wallet is not authorized as sender. 
+# the defined secret is incorrect or the wallet is not authorized as sender.
 ```
 > See [The AtomicSwap Refund Unit Test](./tests/15_atomicswap_refund.py) for a detailed example.
 
@@ -684,3 +684,40 @@ unconfirmed  Tx: 573290763024ae0a5e981412598a3d41bc02f8da628fa1e1adfe07d98818c68
         > to: 0125c0156f6c1c0bc43c7d38e17f8948300564bef63caac05c08b0fd68996e494704bbbe0268cb
         > from: 01773a1dd123347e1030f0822cb8d22082fe3f9b0ea8563d4ac8e7abc377eba920c47efb2fd736
 ```
+
+### Capacity reservation
+
+During the fist beta phase of the public launch of the TF grid, beta tester will be able to reserve 2 kind of workload on the grid.
+
+- Zero-OS virtual machines
+- S3 archive storage instances
+
+**At the time of writing, everything happens on the testnet network**
+**Don't send real TFT from the main network !!**
+
+#### How to reserve some capacity on the Threefold Grid
+
+To be able to make a reservation you first need to:
+
+- have a wallet with some fund
+- record a threebot on the tfchain
+
+Once you have both, you can then use your wallet client to do a reservation.
+The wallet expose a module called `capacity`. On this module you will find function to reserver the different type of capacity.
+
+Examples:
+
+```python
+c = j.clients.tfchain.myclient
+w = c.wallets.mywallet
+tx_id = w.capacity.reserve_s3(
+    size=1, # each workload have a different size available
+    email='user@email.com', # the email on which you will received the connection information
+    bot_id='my3bot.example.org') # your threebot id, it can be any of the names you gave to your 3bot
+```
+
+
+The result of the `reserve_s3` method call is the transaction ID in which you reservation has been created.
+You can check it on our [explorer](https://explorer.testnet.threefoldtoken.com/) by entering the transaction ID in the `Search by hash` field of the explorer form.
+
+Your workload is currently being deployed, you will receive an email with the connection information within a few minutes.
