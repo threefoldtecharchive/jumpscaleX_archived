@@ -9,7 +9,7 @@ class RunTests(Utils):
         self.image_check(image_name)
         hub_image = '{}/jumpscalex'.format(self.username)
         docker_cmd = 'docker run --rm -t {} /bin/bash -c'.format(image_name)
-        env_cmd = 'export {};'.format(self.export_var)
+        env_cmd = 'export {};'.format(self.exports)
         if image_name == hub_image:
             commit_cmd = 'cd /sandbox/code/github/threefoldtech/jumpscaleX/; git pull; git reset --hard {};'.format(
                 commit)

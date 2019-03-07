@@ -12,6 +12,7 @@ ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 class Utils:
     def __init__(self):
         config = configparser.ConfigParser()
+        config.optionxform = str
         config.read('config.ini')
         self.username = config['docker']['username']
         self.password = config['docker']['password']
@@ -33,16 +34,18 @@ class Utils:
 
     def write_file(self, text, file_name):
         text = ansi_escape.sub('', text)
-        if os.path.exists(file_name):
+        file_path = '/mnt/data/result/' + file_name
+        if os.path.exists(file_path):
             append_write = 'a'  # append if already exists
         else:
             append_write = 'w'  # make a new file if not
 
-        with open(file_name, append_write) as f:
+        with open(file_path, append_write) as f:
             f.write(text + '\n\n')
 
     def github_status_send(self, status, file_link, commit):
-        data = {"state": status, "description": "JSX-machine for testing", "target_url": file_link}
+        data = {"state": status, "description": "JSX-machine for testing",
+                "target_url": file_link, "context": "continuous-integration/JSX"}
         url = 'https://api.github.com/repos/{}/statuses/{}?access_token={}'.format(self.repo, commit, self.access_token)
         requests.post(url, json=data)
 

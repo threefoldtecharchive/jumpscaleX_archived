@@ -4,6 +4,8 @@ from autotest import RunTests
 from build_image import BuildImage
 from utils import Utils
 import os
+path = '/sandbox/code/github/threefoldtech/jumpscaleX/scripts/'
+os.chdir(path)
 app = Flask(__name__)
 
 
@@ -26,7 +28,7 @@ def test_run(image_name, commit, commiter):
 
 def build_image(branch, commit):
     build = BuildImage()
-    build.github_status_send('pending', build.serverip)
+    build.github_status_send('pending', build.serverip, commit=commit)
     image_name = build.random_string()
     response = build.image_bulid(image_name=image_name, branch=branch, commit=commit)
     if response.returncode:
@@ -35,8 +37,8 @@ def build_image(branch, commit):
         build.images_clean()
         file_link = '{}/{}'.format(build.serverip, file_name)
         build.github_status_send('failure', file_link, commit)
-        return False, image_name
-    return True, image_name
+        return False
+    return image_name
 
 
 @app.route('/', methods=["POST"])
@@ -46,7 +48,6 @@ def triggar(**kwargs):
             branch = request.json['ref'][request.json['ref'].rfind('/') + 1:]
             commit = request.json['after']
             commiter = request.json['pusher']['name']
-
             if branch == 'development':
                 utils = Utils()
                 utils.github_status_send('pending', utils.serverip, commit=commit)
@@ -57,8 +58,8 @@ def triggar(**kwargs):
             branch = request.json['pull_request']['head']['ref']
             commit = request.json['pull_request']['head']['sha']
             commiter = request.json['pull_request']['head']['user']['login']
-            state, image_name = build_image(branch, commit)
-            if state:
+            image_name = build_image(branch, commit)
+            if image_name:
                 test_run(image_name=image_name, commit=commit, commiter=commiter)
 
     return "Done", 201

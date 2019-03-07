@@ -7,7 +7,7 @@ import os
 class BuildImage(Utils):
 
     def image_bulid(self, image_name, branch, commit=''):
-        cmd = 'docker build --force-rm -t {} . --build-arg branch={} commit={}'.format(
+        cmd = 'docker build --force-rm -t {} . --build-arg branch={} --build-arg commit={}'.format(
             image_name, branch, commit)
         response = self.execute_cmd(cmd)
         return response
