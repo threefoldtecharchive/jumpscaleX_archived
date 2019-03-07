@@ -10,19 +10,8 @@ from .ProcessManager import ProcessManager
 from .Response import ResultError
 
 
-class BaseClient(j.application.JSBaseConfigClass):
+class BaseClientMain:
 
-    _SCHEMATEXT = """
-    @url = jumpscale.zos.client.connection.1
-    name* = "" (S)
-    host = "127.0.0.1" (S)
-    port = 6379 (ipport)
-    unixsocket = "" (S)
-    password = ""  (S)
-    db = 0 (I)
-    ssl = true (B)
-    timeout = 120 (I)
-    """
 
     _system_chk = typchk.Checker({
         'name': str,
@@ -230,3 +219,18 @@ class BaseClient(j.application.JSBaseConfigClass):
         :return: the subscribe Job object
         """
         return self.raw('core.subscribe', {'id': job}, stream=True, id=id)
+
+class BaseClient(j.application.JSBaseConfigClass,BaseClientMain):
+
+    _SCHEMATEXT = """
+    @url = jumpscale.zos.client.connection.1
+    name* = "" (S)
+    host = "127.0.0.1" (S)
+    port = 6379 (ipport)
+    unixsocket = "" (S)
+    password = ""  (S)
+    db = 0 (I)
+    ssl = true (B)
+    timeout = 120 (I)
+    """
+
