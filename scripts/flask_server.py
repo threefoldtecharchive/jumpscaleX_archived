@@ -9,7 +9,7 @@ os.chdir(path)
 app = Flask(__name__)
 
 
-def test_run(image_name, commit, commiter):
+def test_run(image_name, branch, commit, commiter):
     test = RunTests()
     file_name = '{}.log'.format(commit[:7])
     status = True
@@ -23,7 +23,7 @@ def test_run(image_name, commit, commiter):
             if response.returncode:
                 status = False
     file_link = '{}/{}'.format(test.serverip, file_name)
-    test.report(status, file_link, commit=commit, commiter=commiter)
+    test.report(status, file_link, branch=branch, commit=commit, commiter=commiter)
 
 
 def build_image(branch, commit):
@@ -52,7 +52,7 @@ def triggar(**kwargs):
                 utils = Utils()
                 utils.github_status_send('pending', utils.serverip, commit=commit)
                 image_name = '{}/jumpscalex'.format(utils.username)
-                test_run(image_name=image_name, commit=commit, commiter=commiter)
+                test_run(image_name=image_name, branch=branch, commit=commit, commiter=commiter)
 
         elif request.json.get('pull_request'):
             branch = request.json['pull_request']['head']['ref']
@@ -60,7 +60,9 @@ def triggar(**kwargs):
             commiter = request.json['pull_request']['head']['user']['login']
             image_name = build_image(branch, commit)
             if image_name:
-                test_run(image_name=image_name, commit=commit, commiter=commiter)
+                test_run(image_name=image_name, branch=branch, commit=commit, commiter=commiter)
+                build = BuildImage()
+                build.images_clean(image_name=image_name)
 
     return "Done", 201
 

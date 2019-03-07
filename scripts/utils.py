@@ -45,12 +45,12 @@ class Utils:
 
     def github_status_send(self, status, file_link, commit):
         data = {"state": status, "description": "JSX-machine for testing",
-                "target_url": file_link, "context": "continuous-integration/JSX"}
+                "target_url": file_link, "context": "continuous-integration/0-Test"}
         url = 'https://api.github.com/repos/{}/statuses/{}?access_token={}'.format(self.repo, commit, self.access_token)
         requests.post(url, json=data)
 
     def random_string(self):
-        return str(uuid4())[10:]
+        return str(uuid4())[:10]
 
     def export_var(self, config):
         exports = config['exports']

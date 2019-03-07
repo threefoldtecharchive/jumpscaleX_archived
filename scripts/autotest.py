@@ -19,13 +19,16 @@ class RunTests(Utils):
         response = self.execute_cmd(cmd)
         return response
 
-    def report(self, status, file_link, commit, commiter):
+    def report(self, status, file_link, branch, commit, commiter):
         if status:
-            self.send_msg('Tests Passed ' + file_link, commit=commit, commiter=commiter)
             self.github_status_send('success', file_link, commit=commit)
+            if branch == 'development':
+                self.send_msg('Tests Passed ' + file_link, commit=commit, commiter=commiter)
+
         else:
-            self.send_msg('Tests had errors ' + file_link, commit=commit, commiter=commiter)
             self.github_status_send('failure', file_link, commit=commit)
+            if branch == 'development':
+                self.send_msg('Tests had errors ' + file_link, commit=commit, commiter=commiter)
 
     def image_check(self, image_name):
         response = self.execute_cmd('docker images | tail -n+2 | awk "{print \$1}"')
