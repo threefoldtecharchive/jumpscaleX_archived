@@ -140,12 +140,11 @@ class TFChainCapacity():
         encrypted = bytes(box.encrypt(b))
         signature = sk.sign(encrypted, nacl.encoding.RawEncoder)
         response = self._notary_client.register(threebot_id, signature.message, signature.signature)
-        result = self._wallet.coins_send(self._grid_broker_addr,
-                                         amount,
-                                         data=response.hash,
-                                         source=source,
-                                         refund=refund)
-        return result.transaction.id
+        return self._wallet.coins_send(self._grid_broker_addr,
+                                       amount,
+                                       data=response.hash,
+                                       source=source,
+                                       refund=refund)
 
 
 def _validate_reservation(reservation):
