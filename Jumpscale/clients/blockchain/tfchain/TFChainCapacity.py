@@ -63,7 +63,7 @@ class TFChainCapacity():
             self._grid_broker_pub_key_ = vk.to_curve25519_public_key()
         return self._grid_broker_pub_key_
 
-    def reserve_s3(self, email, threebot_id, size=1, source=None, refund=None):
+    def reserve_s3(self, email, threebot_id, location, size=1, source=None, refund=None):
         """
         reserve an S3 archive
 
@@ -75,11 +75,13 @@ class TFChainCapacity():
                     possible value:
                     - 1 => 50GiB of storage
                     - 2 => 100GiB of storage
-        :param size: int, optional
+        :type size: int, optional
+        :param location: name of the farm where to deploy the s3 archive
+        :type location: string
         :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
-        :param source: string, optional
+        :type source: string, optional
         :param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
-        :param refund: string, optional
+        :type refund: string, optional
         :return: a tuple containing the transaction and the submission status as a boolean
         :rtype: tuple
         """
@@ -89,10 +91,11 @@ class TFChainCapacity():
             'email': email,
             'created': j.data.time.epoch,
             'type': 's3',
+            'location': location,
         })
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
-    def reserve_zos_vm(self, email, threebot_id, size=1, source=None, refund=None):
+    def reserve_zos_vm(self, email, threebot_id, location, size=1, source=None, refund=None):
         """
         reserve an virtual 0-OS
 
@@ -104,11 +107,15 @@ class TFChainCapacity():
                     possible value:
                     - 1 => 1 CPU 2 GiB of memory  10 GiB of storage
                     - 2 => 2 CPU 4 GiB of memory  40 GiB of storage
-        :param size: int, optional
+        :type size: int, optional
+        :param location: node id or farm name where to deploy the virtual 0-OS
+                        if location is a node id, the node is used
+                        if location is a farm name, a node is automatically chosen in the farm and used.
+        :type location: string
         :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
-        :param source: string, optional
+        :type source: string, optional
         :param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
-        :param refund: string, optional
+        :type refund: string, optional
         :return: a tuple containing the transaction and the submission status as a boolean
         :rtype: tuple
         """
@@ -117,6 +124,7 @@ class TFChainCapacity():
             'email': email,
             'created': j.data.time.epoch,
             'type': 'vm',
+            'location': location,
         })
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 

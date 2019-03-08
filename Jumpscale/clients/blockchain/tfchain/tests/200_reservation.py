@@ -76,7 +76,7 @@ def main(self):
     box = nacl.public.Box(user_priv, broker_public)
 
     # try to reserve a 0-os VM
-    result = w.capacity.reserve_zos_vm("user@mail.com", "user3bot")
+    result = w.capacity.reserve_zos_vm("user@mail.com", "user3bot", 'ac1f6b47a04c')
     assert result.submitted
 
     reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
@@ -88,9 +88,10 @@ def main(self):
     assert o.size == 1
     assert o.email == 'user@mail.com'
     assert o.created <= j.data.time.epoch
+    assert o.location == 'ac1f6b47a04c'
 
     # try to reserve an S3
-    result = w.capacity.reserve_s3("user@mail.com", "user3bot", size=2)
+    result = w.capacity.reserve_s3("user@mail.com", "user3bot", "kristof-farm-s3", size=2)
     assert result.submitted
 
     reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
@@ -102,7 +103,8 @@ def main(self):
     assert o.size == 2
     assert o.email == 'user@mail.com'
     assert o.created <= j.data.time.epoch
+    assert o.location == 'kristof-farm-s3'
 
     # try to reserve an S3 with from a non existent threebot
     with pytest.raises(ThreeBotNotFound):
-        result = w.capacity.reserve_s3("user@mail.com", "nonexistent")
+        result = w.capacity.reserve_s3("user@mail.com", "nonexistent", "kristof-farm-s3")

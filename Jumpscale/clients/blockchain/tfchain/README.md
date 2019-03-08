@@ -21,6 +21,7 @@ All methods have docstrings, _read_ them.
 6. [ERC20 Interaction](#erc20-interaction): send coins to an ERC20 address and register a TFT address as ERC20 Withdrawel addresses
 7. [Coin Minting](#coin-minting): a subsection devoted to the coin minters of the network
 8. [Examples](#examples): examples that show how to use the TFChain client as a library
+9. [Capacity reservation](#capacity-reservation): reserve and deploy some workloads on the TF grid
 
 ### Client
 
@@ -713,6 +714,7 @@ w = c.wallets.mywallet
 result = w.capacity.reserve_s3(
     size=1, # each workload have a different size available
     email='user@email.com', # the email on which you will received the connection information
+    location='farm_name', # name of the farm where to deploy the workload
     bot_id='my3bot.example.org') # your threebot id, it can be any of the names you gave to your 3bot
 ```
 
