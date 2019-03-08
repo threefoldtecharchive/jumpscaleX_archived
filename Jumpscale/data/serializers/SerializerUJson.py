@@ -16,7 +16,6 @@ class BytesEncoder(json.JSONEncoder):
 
     def default(self, obj):
         if isinstance(obj, bytes):
-            j.logger.self._log_debug('encoding bytes into %s' % self.ENCODING)
             return obj.decode(self.ENCODING)
         return json.JSONEncoder.default(self, obj)
 
