@@ -699,7 +699,7 @@ During the fist beta phase of the public launch of the TF grid, beta tester will
 
 To be able to make a reservation you first need to:
 
-- have a wallet with some fund
+- have a wallet with sufficient funds
 - record a threebot on the tfchain
 
 Once you have both, you can then use your wallet client to do a reservation.
@@ -710,18 +710,18 @@ Examples:
 ```python
 c = j.clients.tfchain.myclient
 w = c.wallets.mywallet
-txid = w.capacity.reserve_s3(
+result = w.capacity.reserve_s3(
     size=1, # each workload have a different size available
     email='user@email.com', # the email on which you will received the connection information
     bot_id='my3bot.example.org') # your threebot id, it can be any of the names you gave to your 3bot
 ```
 
 
-The result of the `reserve_s3` method call is the transaction ID in which you reservation has been created.
+The result of the `reserve_s3` method call is a tuple containing the transaction and the submission status as a boolean.
 You can check it on our [explorer](https://explorer.testnet.threefoldtoken.com/) by entering the transaction ID in the `Search by hash` field of the explorer form or using the tfchain client:
 
 ```python
-transaction = c.transaction_get(txid)
+transaction = c.transaction_get(result.transaction.id)
 ```
 
 As soon as it is ready, usually within a few minutes, you will receive an email with the connection information.
