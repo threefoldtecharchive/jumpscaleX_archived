@@ -108,3 +108,8 @@ def main(self):
     # try to reserve an S3 with from a non existent threebot
     with pytest.raises(ThreeBotNotFound):
         result = w.capacity.reserve_s3("user@mail.com", "nonexistent", "kristof-farm-s3")
+
+    # test validation of location
+    # use a non existing location here
+    with pytest.raises(ValueError):
+        result = w.capacity.reserve_s3("user@mail.com", "user3bot", j.data.idgenerator.generateGUID())

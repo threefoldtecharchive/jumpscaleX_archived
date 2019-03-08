@@ -76,7 +76,9 @@ class TFChainCapacity():
                     - 1 => 50GiB of storage
                     - 2 => 100GiB of storage
         :type size: int, optional
-        :param location: name of the farm where to deploy the s3 archive
+        :param location: node id or farm name where to deploy the virtual 0-OS
+                        if location is a node id, the node is used
+                        if location is a farm id, a node is automatically chosen in the farm and used.
         :type location: string
         :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
         :type source: string, optional
@@ -110,7 +112,7 @@ class TFChainCapacity():
         :type size: int, optional
         :param location: node id or farm name where to deploy the virtual 0-OS
                         if location is a node id, the node is used
-                        if location is a farm name, a node is automatically chosen in the farm and used.
+                        if location is a farm id, a node is automatically chosen in the farm and used.
         :type location: string
         :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
         :type source: string, optional
@@ -163,6 +165,9 @@ def _validate_reservation(reservation):
     if reservation.size < 0 or reservation.size > 2:
         raise ValueError('reservation size can only be 1 or 2')
 
+    if not _validate_location(reservation.location):
+        raise ValueError("location '%s' is not valid" % reservation.location)
+
 
 def encode_reservation(reservation):
     return reservation._msgpack
@@ -186,3 +191,25 @@ def reservation_amount(reservation):
         }
     }
     return amounts[reservation.type][reservation.size]
+
+
+def _validate_location(location):
+    cl = j.clients.threefold_directory.get()
+    farm_exists = False
+    node_exists = False
+    try:
+        cl.api.GetFarmer(location)
+        farm_exists = True
+    except:
+        farm_exists = False
+
+    if farm_exists:
+        return True
+
+    try:
+        cl.api.GetCapacity(location)
+        node_exists = True
+    except:
+        node_exists = False
+
+    return node_exists
