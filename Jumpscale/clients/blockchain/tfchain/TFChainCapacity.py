@@ -80,8 +80,8 @@ class TFChainCapacity():
         :param source: string, optional
         :param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
         :param refund: string, optional
-        :return: transaction id in which your reservation has been written
-        :rtype: string
+        :return: a tuple containing the transaction and the submission status as a boolean
+        :rtype: tuple
         """
 
         reservation = j.data.schema.get(url='tfchain.reservation.s3').new(data={
@@ -109,8 +109,8 @@ class TFChainCapacity():
         :param source: string, optional
         :param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
         :param refund: string, optional
-        :return: transaction id in which your reservation has been written
-        :rtype: string
+        :return: a tuple containing the transaction and the submission status as a boolean
+        :rtype: tuple
         """
         reservation = j.data.schema.get(url='tfchain.reservation.zos_vm').new(data={
             'size': size,

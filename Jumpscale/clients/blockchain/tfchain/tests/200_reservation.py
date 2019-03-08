@@ -1,13 +1,16 @@
-from Jumpscale import j
-
+import nacl
 import pytest
-
-from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChainExplorerGetClientStub
+from Jumpscale import j
+from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import \
+    TFChainExplorerGetClientStub
+from Jumpscale.clients.blockchain.tfchain.stub.NotaryClientStub import \
+    NotaryClientStub
 from Jumpscale.clients.blockchain.tfchain.TFChainClient import ThreeBotRecord
-from Jumpscale.clients.blockchain.tfchain.types.ThreeBot import BotName, NetworkAddress
 from Jumpscale.clients.blockchain.tfchain.types.CryptoTypes import PublicKey
-from Jumpscale.clients.blockchain.tfchain.stub.NotaryClientStub import NotaryClientStub
 from Jumpscale.clients.blockchain.tfchain.types.Errors import ThreeBotNotFound
+from Jumpscale.clients.blockchain.tfchain.types.ThreeBot import (BotName,
+                                                                 NetworkAddress)
+from Jumpscale.clients.blockchain.tfchain.TFChainCapacity import _signing_key_to_private_key
 
 
 def main(self):
@@ -63,19 +66,42 @@ def main(self):
         expiration=1552581420,
     ))
 
+    broker_verify = nacl.signing.VerifyKey(
+        'e4f55bc46b5feb37c03a0faa2d624a9ee1d0deb5059aaa9625d8b4f60f29bcab',
+        encoder=nacl.encoding.HexEncoder)
+    broker_public = broker_verify.to_curve25519_public_key()
+
+    user_signing = w.capacity._threebot_singing_key('user3bot')
+    user_priv = user_signing.to_curve25519_private_key()
+    box = nacl.public.Box(user_priv, broker_public)
+
     # try to reserve a 0-os VM
     result = w.capacity.reserve_zos_vm("user@mail.com", "user3bot")
     assert result.submitted
 
     reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
-    assert reservation
+    reservation = box.decrypt(reservation)
+    reservation = j.data.serializers.msgpack.loads(reservation)
+    schema = j.data.schema.get(url='tfchain.reservation.zos_vm')
+    o = schema.new(data=reservation)
+    assert o.type == 'vm'
+    assert o.size == 1
+    assert o.email == 'user@mail.com'
+    assert o.created <= j.data.time.epoch
 
     # try to reserve an S3
-    result = w.capacity.reserve_s3("user@mail.com", "user3bot")
+    result = w.capacity.reserve_s3("user@mail.com", "user3bot", size=2)
     assert result.submitted
 
     reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
-    assert reservation
+    reservation = box.decrypt(reservation)
+    reservation = j.data.serializers.msgpack.loads(reservation)
+    schema = j.data.schema.get(url='tfchain.reservation.zos_vm')
+    o = schema.new(data=reservation)
+    assert o.type == 's3'
+    assert o.size == 2
+    assert o.email == 'user@mail.com'
+    assert o.created <= j.data.time.epoch
 
     # try to reserve an S3 with from a non existent threebot
     with pytest.raises(ThreeBotNotFound):
