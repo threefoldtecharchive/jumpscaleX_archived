@@ -16,7 +16,7 @@
 
 ```
 chat_id=                            # Telegram chat ID
-server_ip=                          # (ip:port) ip should be public
+server_ip=                          # (http://ip:port) ip should be public
 
 username=                           # Docker Hub ID
 password=                           # Docker Hub password
