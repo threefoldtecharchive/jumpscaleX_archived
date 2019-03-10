@@ -11,7 +11,7 @@
   ```
 - Docker account.
 - Dockerfile has the installation of your project.
-- script.sh should has bash commands(should one line for each test) how to run tests(exp: pytest jumpscaleX).
+- repo/0-Test.sh should has bash commands(should one line for each test) for how to run tests(exp: pytest jumpscaleX).
 - config.ini:
 
 ```

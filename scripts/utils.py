@@ -1,11 +1,12 @@
-import configparser
 from Jumpscale import j
 from subprocess import run, PIPE
 from uuid import uuid4
+import configparser
+import requests
+import base64
 import sys
 import os
 import re
-import requests
 ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
 
@@ -77,6 +78,21 @@ class Utils:
                 "target_url": file_link, "context": "continuous-integration/0-Test"}
         url = 'https://api.github.com/repos/{}/statuses/{}?access_token={}'.format(self.repo, commit, self.access_token)
         requests.post(url, json=data)
+
+    def github_get_content(self, commit):
+        """Get file content from github with specific commit.
+
+        :param commit: commit hash.
+        :type commit: str
+        """
+        url = 'https://api.github.com/repos/{}/contents/0-Test.sh'.format(self.repo)
+        req = requests.get(url, {'ref': commit})
+        if req.status_code == requests.codes.ok:
+            req = req.json()
+            content = base64.b64decode(req['content'])
+            content = content.decode()
+            return content
+        return None
 
     def export_var(self, config):
         """Prepare environment variables from config file.

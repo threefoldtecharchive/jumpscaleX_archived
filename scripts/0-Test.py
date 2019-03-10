@@ -25,15 +25,18 @@ def test_run(image_name, branch, commit, committer):
     test = RunTests()
     file_name = '{}.log'.format(commit[:7])
     status = True
-    if os.path.exists('script.sh'):
-        with open('script.sh', 'r') as f:
-            lines = f.readlines()
+    content = utils.github_get_content(commit)
+    if content:
+        lines = content.splitlines()
         for line in lines:
             response = test.run_tests(image_name=image_name, run_cmd=line, commit=commit)
             test.write_file(text='---> {}'.format(line), file_name=file_name)
             test.write_file(text=response.stdout, file_name=file_name)
             if response.returncode:
                 status = False
+    else:
+        test.write_file(text="Didn't find tests", file_name=file_name)
+
     file_link = '{}/{}'.format(test.serverip, file_name)
     test.report(status, file_link, branch=branch, commit=commit, committer=committer)
 
