@@ -52,11 +52,10 @@ def _file_process(j, content, start="", end="", paragraph=False, docstring=""):
     return out
 
 
-def include(doc, name="", docsite="", repo="", start="", end="", paragraph=False, codeblock=False, docstring="", **args):
+def include(doc, name="", repo="", start="", end="", paragraph=False, codeblock=False, docstring="", **args):
     """
 
     :param name: name of the document to look for (will always be made lowercase)
-    :param docsite: name of the docsite
     :param repo: url of the repo, if url given then will checkout the required content from a git repo
     :param start: will walk over the content of the file specified (name) and only include starting from line where the start argument is found
     :param end: will match till end

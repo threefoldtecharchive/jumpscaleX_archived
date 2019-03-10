@@ -5,10 +5,10 @@
 
 ```
 :param name: name of the document to look for (will always be made lowercase)
-:param docsite: name of the docsite
-:param repo: url of the repo, if url given then will checkout 
-    the required content from a git repo
-:param start: will walk over the content of the file specified (name) 
+:param repo: url of the repo, if url given then will checkout
+    the required content from a git repo, the url can be a custom link, with the format of account:repo(branch):/path/to/docs, e.g. `threefoldfoundation:info_tokens(development):/docs`
+    see docs/tools/wiki/links.md for full documentation.
+:param start: will walk over the content of the file specified (name)
     and only include starting from line where the start argument is found
 :param end: will match till end
 :param paragraph: if True then will include from start till next line is found which is at same prefix (basically taking out a paragraph)
