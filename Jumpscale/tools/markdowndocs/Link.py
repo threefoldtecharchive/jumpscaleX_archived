@@ -239,53 +239,6 @@ class Link(j.application.JSBaseClass):
             return map(self.remove_quotes, match)
         raise ValueError('not a link markdown')
 
-    @property
-    def account(self):
-        return self.docsite.git and self.docsite.git.account
-
-    @property
-    def repo(self):
-        return self.docsite.git and self.docsite.git.name
-
-    @property
-    def branch(self):
-        return self.docsite.git and self.docsite.git.branchName
-
-    def is_different_source(self, custom_link):
-        """check if account, repo or branch are differnt from current docsite
-
-        :param custom_link: instanc of CustomLink
-        :type custom_link: CustomLink
-        :return: True if different, False if the same
-        :rtype: bool
-        """
-        return custom_link.account and custom_link.account != self.account or \
-            custom_link.repo and custom_link.repo != self.repo or \
-            custom_link.branch and custom_link.branch != self.branch
-
-    def get_real_source(self, custom_link, linker=None):
-        if custom_link.is_url or not self.docsite.git:
-            # as-is
-            return custom_link.path
-
-        # check for docsite.git.remoteUrl hostname (urlparse)
-        account = custom_link.account or self.account
-        repo = custom_link.repo or self.repo
-        if not linker:
-            linker = GithubLinker(account, repo)
-
-        if custom_link.reference:
-            return linker.issue(custom_link.reference)
-
-        same_repo = account == self.account and repo == self.repo
-        if same_repo:
-            # the same docsite, the same internal link
-            # also, custom link branch is ignored here
-            return custom_link.path
-
-        branch = custom_link.branch
-        return linker.tree(custom_link.path, branch=branch)
-
     def get_docsite(self, external_link, name):
         url = urlparse(external_link)
         path = url.path
@@ -310,7 +263,7 @@ class Link(j.application.JSBaseClass):
             self.link_descr = self.link_descr.split("@")[0].strip()
 
         custom_link = CustomLink(self.link_source)
-        self.link_source = self.get_real_source(custom_link)
+        self.link_source = self.docsite.get_real_source(custom_link)
 
         if "?" in self.link_source:
             lsource = self.link_source.split("?", 1)[0]
