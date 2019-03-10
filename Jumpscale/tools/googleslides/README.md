@@ -16,6 +16,8 @@ You need to enable and download credentials files using  or go to [Python Quicks
 - Download credentials (as json and save it anywhere on your filesystem)
 
 
+## Requirements
+```pip3 install --upgrade google-api-python-client google-auth-httplib2 google-auth-oauthlib oauth2client```
 
 ## Example usage
 ```ipython
