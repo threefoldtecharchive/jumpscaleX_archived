@@ -1,0 +1,23 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.css"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.js"></script>
+  </head>
+
+  <body>
+    <div class="ui container" style="margin-top:30px">
+      <h2 class="ui header">Welcome to 0-Test</h2>
+      <div class="ui blue large divided list">
+        {% for file in files %}
+          <div class="item">
+            <i class="large middle grey file icon"></i>
+          <div class="middle aligned content">
+            <a href="{{ file }}">{{ file }}</a>
+          </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </body>
+</html>

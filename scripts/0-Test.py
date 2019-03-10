@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, send_file, render_template, abort
 from subprocess import run
 from autotest import RunTests
 from build_image import BuildImage
@@ -6,10 +6,22 @@ from utils import Utils
 import os
 path = '/sandbox/code/github/threefoldtech/jumpscaleX/scripts/'
 os.chdir(path)
+utils = Utils()
 app = Flask(__name__)
 
 
-def test_run(image_name, branch, commit, commiter):
+def test_run(image_name, branch, commit, committer):
+    """Run test aginst the new commit and give report on Telegram chat and github commit status.
+    
+    :param image_name: docker image name.
+    :type image_name: str
+    :param branch: branch name.
+    :type branch: str
+    :param commit: commit hash.
+    :type commit: str
+    :param committer: name of the committer on github.
+    :type committer: str
+    """
     test = RunTests()
     file_name = '{}.log'.format(commit[:7])
     status = True
@@ -23,12 +35,18 @@ def test_run(image_name, branch, commit, commiter):
             if response.returncode:
                 status = False
     file_link = '{}/{}'.format(test.serverip, file_name)
-    test.report(status, file_link, branch=branch, commit=commit, commiter=commiter)
+    test.report(status, file_link, branch=branch, commit=commit, committer=committer)
 
 
 def build_image(branch, commit):
+    """Build a docker image to install application.
+
+    :param branch: branch name.
+    :type branch: str
+    :param commit: commit hash.
+    :type commit: str
+    """
     build = BuildImage()
-    build.github_status_send('pending', build.serverip, commit=commit)
     image_name = build.random_string()
     response = build.image_bulid(image_name=image_name, branch=branch, commit=commit)
     if response.returncode:
@@ -43,34 +61,49 @@ def build_image(branch, commit):
 
 @app.route('/', methods=["POST"])
 def triggar(**kwargs):
+    """Triggar the test when post request is sent
+    """
     if request.json:
+        # push case 
         if request.json.get('ref'):
             branch = request.json['ref'][request.json['ref'].rfind('/') + 1:]
             commit = request.json['after']
-            commiter = request.json['pusher']['name']
+            committer = request.json['pusher']['name']
             if branch == 'development':
-                utils = Utils()
                 utils.github_status_send('pending', utils.serverip, commit=commit)
                 image_name = '{}/jumpscalex'.format(utils.username)
-                test_run(image_name=image_name, branch=branch, commit=commit, commiter=commiter)
-
+                test_run(image_name=image_name, branch=branch, commit=commit, committer=committer)
+        
+        # pull request case
         elif request.json.get('pull_request'):
             branch = request.json['pull_request']['head']['ref']
             commit = request.json['pull_request']['head']['sha']
-            commiter = request.json['pull_request']['head']['user']['login']
-            image_name = build_image(branch, commit)
+            committer = request.json['pull_request']['head']['user']['login']
+            utils.github_status_send('pending', utils.serverip, commit=commit)
+            image_name = build_image(branch=branch, commit=commit)
             if image_name:
-                test_run(image_name=image_name, branch=branch, commit=commit, commiter=commiter)
+                test_run(image_name=image_name, branch=branch, commit=commit, committer=committer)
                 build = BuildImage()
                 build.images_clean(image_name=image_name)
-
     return "Done", 201
 
 
-@app.route('/', methods=["GET"])
-def ping():
-    return 'pong'
+@app.route("/<filename>")
+def files(filename):
+    abs_path = os.path.join(utils.result_path, filename)
+    if not os.path.exists(abs_path):
+        return abort(404)
+
+    if os.path.isfile(abs_path):
+        return send_file(abs_path, mimetype='text/x-log')
+
+
+@app.route('/')
+def dir_listing():
+    files = os.listdir(utils.result_path)
+    return render_template('files.html', files=files)
 
 
 if __name__ == "__main__":
-    app.run("0.0.0.0", 6010)
+    port = utils.serverip[utils.serverip.rfind(':') + 1:]
+    app.run("0.0.0.0", port)

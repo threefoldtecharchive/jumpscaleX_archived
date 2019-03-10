@@ -2,7 +2,7 @@ FROM ubuntu:18.04
 
 ARG branch
 ARG commit
-RUN apt-get update;apt-get install -y python3.6 curl git locales language-pack-en python3-nose
+RUN apt-get update; apt-get install -y python3.6 curl git locales language-pack-en python3-nose
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 RUN mkdir -p /sandbox/code/github/threefoldtech
