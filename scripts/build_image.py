@@ -76,6 +76,8 @@ if __name__ == "__main__":
         build.write_file(text=response.stdout, file_name=file_name)
         build.images_clean()
         file_link = '{}/{}'.format(build.serverip, file_name)
+        text = '{}:failure'.format(file_name)
+        build.write_file(text=text, file_name='status.log', file_path='.')
         build.image_pull(file_link)
         sys.exit()
     else:

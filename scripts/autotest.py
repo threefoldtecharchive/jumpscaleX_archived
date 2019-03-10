@@ -27,29 +27,6 @@ class RunTests(Utils):
         response = self.execute_cmd(cmd)
         return response
 
-    def report(self, status, file_link, branch, commit, committer):
-        """Report the result to github commit status and Telegram chat.
-
-        :param status: test status. 
-        :type status: str
-        :param file_link: result file link. 
-        :type file_link: str
-        :param branch: branch name. 
-        :type branch: str
-        :param commit: commit hash.
-        :type commit: str
-        :param committer: committer name on github. 
-        :type committer: str
-        """
-        if status:
-            self.github_status_send('success', file_link, commit=commit)
-            if branch == 'development':
-                self.send_msg('Tests Passed ' + file_link, commit=commit, committer=committer)
-
-        else:
-            self.github_status_send('failure', file_link, commit=commit)
-            if branch == 'development':
-                self.send_msg('Tests had errors ' + file_link, commit=commit, committer=committer)
 
     def image_check(self, image_name):
         """Check if the docker image exist before run tests.

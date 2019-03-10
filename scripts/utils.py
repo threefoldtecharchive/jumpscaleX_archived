@@ -46,7 +46,7 @@ class Utils:
             msg = msg + '\n' + committer + '\n' + commit
         client.send_message(chatid=self.chat_id, text=msg)
 
-    def write_file(self, text, file_name):
+    def write_file(self, text, file_name, file_path=''):
         """Write result file.
 
         :param text: text will be written to result file.
@@ -55,14 +55,16 @@ class Utils:
         :type file_name: str
         """
         text = ansi_escape.sub('', text)
-        file_path = os.path.join(self.result_path, file_name)
+        if file_path == '':
+            file_path = self.result_path
+        file_path = os.path.join(file_path, file_name)
         if os.path.exists(file_path):
             append_write = 'a'  # append if already exists
         else:
             append_write = 'w'  # make a new file if not
 
         with open(file_path, append_write) as f:
-            f.write(text + '\n\n')
+            f.write(text + '\n')
 
     def github_status_send(self, status, file_link, commit):
         """Change github commit status.
@@ -93,6 +95,31 @@ class Utils:
             content = content.decode()
             return content
         return None
+
+    
+    def report(self, status, file_name, branch, commit, committer=''):
+        """Report the result to github commit status and Telegram chat.
+
+        :param status: test status. 
+        :type status: str
+        :param file_link: result file link. 
+        :type file_link: str
+        :param branch: branch name. 
+        :type branch: str
+        :param commit: commit hash.
+        :type commit: str
+        :param committer: committer name on github. 
+        :type committer: str
+        """
+        file_link = '{}/{}'.format(self.serverip, file_name)
+        text = '{}:{}'.format(file_name, status)
+        self.write_file(text=text, file_name='status.log', file_path='.')
+        self.github_status_send(status, file_link, commit=commit)
+        if status == 'success' and branch == 'development':
+            self.send_msg('Tests Passed ' + file_link, commit=commit, committer=committer)
+        elif status == 'failure' and branch == 'development':
+            self.send_msg('Tests had errors ' + file_link, commit=commit, committer=committer)
+        
 
     def export_var(self, config):
         """Prepare environment variables from config file.

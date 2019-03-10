@@ -24,7 +24,7 @@ def test_run(image_name, branch, commit, committer):
     """
     test = RunTests()
     file_name = '{}.log'.format(commit[:7])
-    status = True
+    status = 'success'
     content = utils.github_get_content(commit)
     if content:
         lines = content.splitlines()
@@ -33,12 +33,11 @@ def test_run(image_name, branch, commit, committer):
             test.write_file(text='---> {}'.format(line), file_name=file_name)
             test.write_file(text=response.stdout, file_name=file_name)
             if response.returncode:
-                status = False
+                status = 'failure'
     else:
         test.write_file(text="Didn't find tests", file_name=file_name)
 
-    file_link = '{}/{}'.format(test.serverip, file_name)
-    test.report(status, file_link, branch=branch, commit=commit, committer=committer)
+    test.report(status, file_name, branch=branch, commit=commit, committer=committer)
 
 
 def build_image(branch, commit):
@@ -56,11 +55,17 @@ def build_image(branch, commit):
         file_name = '{}.log'.format(commit[:7])
         build.write_file(text=response.stdout, file_name=file_name)
         build.images_clean()
-        file_link = '{}/{}'.format(build.serverip, file_name)
-        build.github_status_send('failure', file_link, commit)
+        build.report('failure', file_name, branch=branch, commit=commit)
         return False
     return image_name
 
+def get_state(name):
+    with open('status.log', 'r') as f:
+        lines = f.readlines()
+    for line in lines:
+        line = line.split(':')
+        if line[0] == name:
+            return line[1].strip()
 
 @app.route('/', methods=["POST"])
 def triggar(**kwargs):
@@ -103,7 +108,12 @@ def files(filename):
 
 @app.route('/')
 def dir_listing():
-    files = os.listdir(utils.result_path)
+    path = utils.result_path
+    names = os.listdir(path)
+    names.sort(key=lambda x: os.path.getctime(os.path.join(path, x)), reverse=True)
+    files = list()
+    for i in range(len(names)):
+        files.append({'name': names[i], 'state': get_state(names[i])})
     return render_template('files.html', files=files)
 
 
