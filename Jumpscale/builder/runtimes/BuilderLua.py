@@ -131,6 +131,7 @@ class BuilderLua(j.builder.system._BaseClass):
         alt-getopt
 
         lua-resty-iyo-auth
+        lua-messagepack
         """
 
         for line in C.split("\n"):
