@@ -112,8 +112,7 @@ def dir_listing():
     names = os.listdir(path)
     names.sort(key=lambda x: os.path.getctime(os.path.join(path, x)), reverse=True)
     files = list()
-    for i in range(len(names)):
-        files.append({'name': names[i], 'state': get_state(names[i])})
+    [files.append({'name': name, 'state': get_state(name)}) for name in names]
     return render_template('files.html', files=files)
 
 

@@ -4,21 +4,20 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.2.9/semantic.min.js"></script>
   </head>
-
   <body>
     <div class="ui container" style="margin-top:30px">
       <h2 class="ui header">Welcome to 0-Test</h2>
       <div class="ui large divided list">
         {% for file in files %}
           {% if file.state == "success" %}
-            <div class="item" style="background-color:#80FF80;">
+            <div class="item" style="background-color:#CDFFCD;">
               <i class="large middle grey file icon"></i>
               <div class="middle aligned content">
                 <a href="{{ file.name }}" style="color:black">{{ file.name }}</a>
               </div>
                 </div>
           {% elif file.state == "failure" %}
-            <div class="item" style="background-color:#FF8080;">
+            <div class="item" style="background-color:#FFCDCD;">
               <i class="large middle grey file icon"></i>
             <div class="middle aligned content">
               <a href="{{ file.name }}" style="color:black">{{ file.name }}</a>
