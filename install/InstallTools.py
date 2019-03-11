@@ -658,15 +658,22 @@ class Tools:
         else:
             f = None
         if Tools._shell is None:
+            script = """
+            apt-get install -y ipython
+            apt-get install -y python3 python-dev python3-dev build-essential libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev
+            pip3 install ipython
+            apt-get clean && apt-get update && apt-get install -y locales
+            """
+            Tools.execute(script, interactive=False)
             try:
                 from IPython.terminal.embed import InteractiveShellEmbed
+
             except Exception as e:
                 Tools._installbase_for_shell()
                 from IPython.terminal.embed import InteractiveShellEmbed
             if f:
                 print("\n*** file: %s"%f.filename)
                 print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
-
             Tools._shell = InteractiveShellEmbed(banner1= "", exit_msg="")
         return Tools._shell(stack_depth=2)
 
@@ -771,6 +778,11 @@ class Tools:
                 "REVERSE"
 
         """
+        class format_dict(dict):
+            def __missing__(self, key):
+                return '{%s}' % key
+
+
         if args is None:
             args={}
 
@@ -783,7 +795,8 @@ class Tools:
             if colors:
                 args.update(MyEnv.MYCOLORS)
 
-            content = content.format(**args)
+            replace_args = format_dict(args)
+            content = content.format_map(replace_args)
 
         if text_strip:
             content = Tools.text_strip(content,ignorecomments=ignorecomments)
@@ -950,7 +963,7 @@ class Tools:
         return str(random.getrandbits(16))
 
     @staticmethod
-    def execute(command, showout=True, useShell=True, cwd=None, timeout=600,die=True,
+    def execute(command, showout=True, useShell=True, cwd=None, timeout=800,die=True,
                 async_=False, args=None, env=None,
                 interactive=False,self=None,
                 replace=True,asfile=False,original_command=None):
@@ -1714,7 +1727,7 @@ class UbuntuInstall():
         for pip in UbuntuInstall.pips_list(3):
 
             if not MyEnv.state_exists("pip_%s"%pip):
-                C="pip3 install '%s'"%pip
+                C="pip3 install --user '%s'"%pip
                 Tools.execute(C,die=True)
                 MyEnv.state_set("pip_%s"%pip)
 

@@ -1,16 +1,25 @@
-from Jumpscale import j
-
+import nacl
 import pytest
+from Jumpscale import j
+from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import \
+    TFChainExplorerGetClientStub
+from Jumpscale.clients.blockchain.tfchain.stub.NotaryClientStub import \
+    NotaryClientStub
+from Jumpscale.clients.blockchain.tfchain.TFChainClient import ThreeBotRecord
+from Jumpscale.clients.blockchain.tfchain.types.CryptoTypes import PublicKey
+from Jumpscale.clients.blockchain.tfchain.types.Errors import ThreeBotNotFound
+from Jumpscale.clients.blockchain.tfchain.types.ThreeBot import (BotName,
+                                                                 NetworkAddress)
+from Jumpscale.clients.blockchain.tfchain.TFChainCapacity import _signing_key_to_private_key
 
-from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChainExplorerGetClientStub
 
 def main(self):
     """
     to run:
 
-    js_shell 'j.clients.tfchain.test(name="threebot_record_new")'
+    js_shell 'j.clients.tfchain.test(name="reservation")'
     """
-    
+
     # create a tfchain client for devnet
     c = j.clients.tfchain.new("mydevclient", network_type="DEV")
     # or simply `c = j.tfchain.clients.mydevclient`, should the client already exist
@@ -27,7 +36,7 @@ def main(self):
 
     # the devnet genesis seed is the seed of the wallet,
     # which receives all block stakes and coins in the genesis block of the tfchain devnet
-    DEVNET_GENESIS_SEED="image orchard airport business cost work mountain obscure flee alpha alert salmon damage engage trumpet route marble subway immune short tide young cycle attract"
+    DEVNET_GENESIS_SEED = "image orchard airport business cost work mountain obscure flee alpha alert salmon damage engage trumpet route marble subway immune short tide young cycle attract"
 
     # create a new devnet wallet
     w = c.wallets.new("mywallet", seed=DEVNET_GENESIS_SEED)
@@ -38,50 +47,69 @@ def main(self):
     # interaction with the tfchain network
     assert w.network_type == "DEV"
 
-    # getting the balance of a wallet is as easy as getting the 'balance' property
-    balance = w.balance
+    w.capacity._notary_client_ = NotaryClientStub(c)
 
-    # the available and locked tokens can be easily checked
-    assert str(balance.available)== '3698'
-    assert str(balance.locked) == '0'
+    # create user threebot record
+    explorer_client.threebot_record_add(ThreeBotRecord(
+        identifier=1,
+        names=[BotName(value="user3bot")],
+        addresses=[],
+        public_key=w.key_pair_get(w.address).public_key,
+        expiration=1552581420,
+    ))
+    # create grid broker threebot record
+    explorer_client.threebot_record_add(ThreeBotRecord(
+        identifier=2,
+        names=[BotName(value="development.broker")],
+        addresses=[],
+        public_key=PublicKey.from_json("ed25519:e4f55bc46b5feb37c03a0faa2d624a9ee1d0deb5059aaa9625d8b4f60f29bcab"),
+        expiration=1552581420,
+    ))
 
-    # create a new record is as simple as 
-    result = w.threebot.record_new(
-        months=1, # default is 1, can be omitted to keep it at default, or can be anything of inclusive range of [1,24]
-        names=["chatbot.example"], # names can be omitted as well, as long as you have 1 address
-        addresses=["example.org"], # addresses can be omitted as well, as long as you have 1 address
-        key_index=0) # optionally leave key_index at default value of None
-    assert result.submitted # we expect the transaction to be submitted
+    broker_verify = nacl.signing.VerifyKey(
+        'e4f55bc46b5feb37c03a0faa2d624a9ee1d0deb5059aaa9625d8b4f60f29bcab',
+        encoder=nacl.encoding.HexEncoder)
+    broker_public = broker_verify.to_curve25519_public_key()
 
-    expected_transaction = {'version': 144, 'data': {'nrofmonths': 1, 'txfee': '1000000000', 'coininputs': [{'parentid': '19d4e81d057b4c93a7763f3dfe878f6a37d6111a3808b93afff4b369de0f5376', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': 'e285d86d4d1271b30672e4db5ce1688aeee9dab2a91cb5c301799d8f4c0f4eb2c48a8099d94c8e2f63de76f7a11772be7ff8ed1f26ebbbd5c3b067edc6af790f'}}}], 'identification': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': '5b0b1563b1c2cf9d48dce68de0167a55159163ccc123486b8abc1e8f412f7e1b8eebf3736b9c76c1e6744c2c662496bbda5e69b1e38ba8f1b99961a42a93ff03'}, 'addresses': ['example.org'], 'names': ['chatbot.example'], 'refundcoinoutput': {'value': '97000000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}}}
-    # ensure our transaction is as expected
-    assert result.transaction.json() == expected_transaction
+    user_signing = w.capacity._threebot_singing_key('user3bot')
+    user_priv = user_signing.to_curve25519_private_key()
+    box = nacl.public.Box(user_priv, broker_public)
 
-    # ensure the transaction is posted and as expected there as well
-    txn = explorer_client.posted_transaction_get(result.transaction.id)
-    assert txn.json() == expected_transaction
+    # try to reserve a 0-os VM
+    result = w.capacity.reserve_zos_vm("user@mail.com", "user3bot", 'ac1f6b47a04c')
+    assert result.submitted
 
-    # Add output for the poor seed
-    explorer_client.hash_add('0143b6f062e892e168f554827bdad2462a03e7e8a2b0fe152e3889042b10b418754b4305d6aec3', '{"hashtype":"unlockhash","block":{"minerpayoutids":null,"transactions":null,"rawblock":{"parentid":"0000000000000000000000000000000000000000000000000000000000000000","timestamp":0,"pobsindexes":{"BlockHeight":0,"TransactionIndex":0,"OutputIndex":0},"minerpayouts":null,"transactions":null},"blockid":"0000000000000000000000000000000000000000000000000000000000000000","difficulty":"0","estimatedactivebs":"0","height":0,"maturitytimestamp":0,"target":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"totalcoins":"0","arbitrarydatatotalsize":0,"minerpayoutcount":0,"transactioncount":0,"coininputcount":0,"coinoutputcount":0,"blockstakeinputcount":0,"blockstakeoutputcount":0,"minerfeecount":0,"arbitrarydatacount":0},"blocks":null,"transaction":{"id":"0000000000000000000000000000000000000000000000000000000000000000","height":0,"parent":"0000000000000000000000000000000000000000000000000000000000000000","rawtransaction":{"version":0,"data":{"coininputs":[],"minerfees":null}},"coininputoutputs":null,"coinoutputids":null,"coinoutputunlockhashes":null,"blockstakeinputoutputs":null,"blockstakeoutputids":null,"blockstakeunlockhashes":null,"unconfirmed":false},"transactions":[{"id":"61f7fd8d316762fc548e7f1e2f3a4eb089dd66cb7314615866763b6f930720d5","height":225344,"parent":"b6e8fb02568b6361f44decbe742aab3a01168942c1e6168edc41fdbb9cbf2339","rawtransaction":{"version":1,"data":{"coininputs":[{"parentid":"f0c0f8ac8b9d370adadc0e99df0850e3f734c605489b3a08193a004e0af42ac9","fulfillment":{"type":1,"data":{"publickey":"ed25519:c2e41428d4662a2aaa9badf71b206f282c585cbab33e54ee60072b126287a366","signature":"c4cdb456ec080721e9169c9b4d35ae96b7aac0c4740e5a7c911323c096809d801555b809001036a908f8489f3613d0e3173d1970988c0de1ec00942776777105"}}}],"coinoutputs":[{"value":"100000000000","condition":{"type":1,"data":{"unlockhash":"0143b6f062e892e168f554827bdad2462a03e7e8a2b0fe152e3889042b10b418754b4305d6aec3"}}},{"value":"199900000000","condition":{"type":1,"data":{"unlockhash":"0167d645ab5ad87dfa9e45eaf95152938f3a95c8400a48fa246de2da478d670a1ff7c435f920f3"}}}],"minerfees":["100000000"]}},"coininputoutputs":[{"value":"300000000000","condition":{"type":1,"data":{"unlockhash":"019805f0d72fb5759f0dd0e88fc663891150e8c5e227e633c6d0fdd91bb1e32bf658d46a527695"}},"unlockhash":"019805f0d72fb5759f0dd0e88fc663891150e8c5e227e633c6d0fdd91bb1e32bf658d46a527695"}],"coinoutputids":["4ec82e367c9e2235317694d0fd241995aedf47ba99a1d65f333e4a8309149bdc","2f83a83a223e3325a60f67f785c7ba023d3eb67746d16ead1e82a80819f3e4f7"],"coinoutputunlockhashes":["0143b6f062e892e168f554827bdad2462a03e7e8a2b0fe152e3889042b10b418754b4305d6aec3","0167d645ab5ad87dfa9e45eaf95152938f3a95c8400a48fa246de2da478d670a1ff7c435f920f3"],"blockstakeinputoutputs":null,"blockstakeoutputids":null,"blockstakeunlockhashes":null,"unconfirmed":false}],"multisigaddresses":null,"unconfirmed":false}')
+    reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
+    reservation = box.decrypt(reservation)
+    reservation = j.data.serializers.msgpack.loads(reservation)
+    schema = j.data.schema.get(url='tfchain.reservation.zos_vm')
+    o = schema.new(data=reservation)
+    assert o.type == 'vm'
+    assert o.size == 1
+    assert o.email == 'user@mail.com'
+    assert o.created <= j.data.time.epoch
+    assert o.location == 'ac1f6b47a04c'
 
-    # Random seed with insufficient funds to create a new transaction
-    DEVNET_POOR_SEED = "merge weekend armed harbor giant exact puppy caution nerve donkey then foam random doll slight front relief want edge rare digital already rib volcano"
-    w = c.wallets.new("mywallet2", seed=DEVNET_POOR_SEED)
+    # try to reserve an S3
+    result = w.capacity.reserve_s3("user@mail.com", "user3bot", "kristof-farm-s3", size=2)
+    assert result.submitted
 
-    # New wallet should still be on devnet
-    assert w.network_type == "DEV"
+    reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
+    reservation = box.decrypt(reservation)
+    reservation = j.data.serializers.msgpack.loads(reservation)
+    schema = j.data.schema.get(url='tfchain.reservation.zos_vm')
+    o = schema.new(data=reservation)
+    assert o.type == 's3'
+    assert o.size == 2
+    assert o.email == 'user@mail.com'
+    assert o.created <= j.data.time.epoch
+    assert o.location == 'kristof-farm-s3'
 
-    # Do some checks to ensure the balance is as expected
-    balance = w.balance
+    # try to reserve an S3 with from a non existent threebot
+    with pytest.raises(ThreeBotNotFound):
+        result = w.capacity.reserve_s3("user@mail.com", "nonexistent", "kristof-farm-s3")
 
-    assert str(balance.available) == '100'
-    assert str(balance.locked) == '0'
-
-    # now try to create a new record, should fail
-    with pytest.raises(j.clients.tfchain.errors.InsufficientFunds):
-        w.threebot.record_new(
-            months=5,
-            names=["another.example", "another.testcase"],
-            addresses=["some.org", "test.org"],
-            key_index=0
-        )
+    # test validation of location
+    # use a non existing location here
+    with pytest.raises(ValueError):
+        result = w.capacity.reserve_s3("user@mail.com", "user3bot", j.data.idgenerator.generateGUID())

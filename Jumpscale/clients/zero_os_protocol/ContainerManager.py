@@ -1,6 +1,6 @@
 import shlex
 import json
-from .BaseClient import BaseClient
+from .BaseClient import BaseClientMain
 from .Response import JSONResponse
 from .FlistManager import FlistManager
 
@@ -9,7 +9,7 @@ from . import typchk
 DefaultTimeout = 10  # seconds
 
 
-class ContainerClient(BaseClient):
+class ContainerClient(BaseClientMain):
     class ContainerZerotierManager:
         def __init__(self, client, container):
             self._container = container
@@ -36,7 +36,7 @@ class ContainerClient(BaseClient):
     })
 
     def __init__(self, client, container):
-        super().__init__(client.timeout)
+        BaseClientMain._init(self)
         self._client = client
         self._container = container
         self._zerotier = ContainerClient.ContainerZerotierManager(client, container)  # not (self) we use core0 client

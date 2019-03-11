@@ -123,7 +123,7 @@ class TransactionV144(BotTransactionBaseClass):
         The fees required to pay for this 3Bot Registration Transaction.
         """
         # a static registration fee has to be paid
-        fees = BotTransactionBaseClass.BOT_FEE_REGISTRATION
+        fees = 0 + BotTransactionBaseClass.BOT_FEE_REGISTRATION
         # the amount of desired months also has to be paid
         fees += BotTransactionBaseClass.compute_monthly_bot_fees(self._number_of_months)
         # if more than one name is defined it also has to be paid
