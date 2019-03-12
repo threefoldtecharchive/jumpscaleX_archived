@@ -21,8 +21,9 @@ class Guid(String):
 
     NAME =  'guid'
 
-    def __init__(self):
+    def __init__(self,default=None):
         self.BASETYPE = "string"
+        self._default = default
 
     def check(self, value):
         try:
@@ -32,6 +33,8 @@ class Guid(String):
         return val.hex == value.replace('-', '')
 
     def default_get(self):
+        if self._default:
+            return self.clean(self._default)
         return j.data.idgenerator.generateGUID()
 
     def fromString(self, v):
@@ -50,9 +53,10 @@ class Email(String):
     """
     NAME =  'email'
 
-    def __init__(self):
+    def __init__(self, default=None):
         self.BASETYPE = "string"
         self._RE = re.compile('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+        self._default = default
 
     def check(self, value):
         '''
@@ -63,7 +67,7 @@ class Email(String):
         return self._RE.fullmatch(value) is not None
 
     def clean(self, v):
-        if value is None:
+        if v is None:
             return self.default_get()
         v = j.data.types.string.clean(v)
         if not self.check(v):
@@ -76,9 +80,10 @@ class Path(String):
     '''Generic path type'''
     NAME =  'path'
 
-    def __init__(self):
+    def __init__(self, default=None):
         self.BASETYPE = "string"
         self._RE = re.compile("^(?:\.{2})?(?:\/\.{2})*(\/[a-zA-Z0-9]+)+$")
+        self._default = default
 
     def check(self, value):
         '''
@@ -94,10 +99,11 @@ class Url(String):
     '''Generic url type'''
     NAME =  'url,u'
 
-    def __init__(self):
+    def __init__(self,default=None):
         self.BASETYPE = "string"
         self._RE = re.compile(
             "(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,}")
+        self._default = default
 
     def check(self, value):
         '''
@@ -115,9 +121,10 @@ class Tel(String):
     """
     NAME =  'tel,mobile'
 
-    def __init__(self):
+    def __init__(self, default=None):
         self.BASETYPE = "string"
         self._RE = re.compile('^\+?[0-9]{6,15}(?:x[0-9]+)?$')
+        self._default = default
 
     def check(self, value):
         '''
@@ -145,9 +152,10 @@ class IPRange(String):
     """
     NAME =  'iprange'
 
-    def __init__(self):
+    def __init__(self, default=None):
         self.BASETYPE = "string"
         self._RE = re.compile('[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2}')
+        self._default = default
 
     def check(self, value):
         '''
@@ -159,9 +167,10 @@ class IPPort(Integer):
     '''Generic IP port type'''
     NAME =  'ipport,tcpport'
 
-    def __init__(self):
+    def __init__(self,default=None):
         self.BASETYPE = "string"
         self.NOCHECK = True
+        self._default = default
 
     def default_get(self):
         return 65535
@@ -216,10 +225,13 @@ class Numeric(TypeBaseObjFactory):
     """
     NAME =  'numeric,n'
 
-    def __init__(self):
+    def __init__(self,default=None):
         TypeBaseObjFactory.__init__(self)
 
         self.NOCHECK = True
+        if not default:
+            default = NumericObject(self)
+        self._default = default
 
 
     def bytes2cur(self, bindata, curcode="usd", roundnr=None):
@@ -472,10 +484,11 @@ class DateTime(Integer):
     '''
     NAME =  'datetime,t'
 
-    def __init__(self):
+    def __init__(self, default=None):
 
         self.BASETYPE = "int"
         self.NOCHECK = True
+        self._default = default
 
         # self._RE = re.compile('[0-9]{4}/[0-9]{2}/[0-9]{2}')  #something wrong here is not valid for time
 
@@ -603,11 +616,12 @@ class Date(DateTime):
     '''
     NAME =  'date,d'
 
-    def __init__(self):
+    def __init__(self, default=None):
 
         self.BASETYPE = "int"
         # self._RE = re.compile('[0-9]{4}/[0-9]{2}/[0-9]{2}')
         self.NOCHECK = True
+        self._default = default
 
     def clean(self, v):
         """

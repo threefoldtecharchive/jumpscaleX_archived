@@ -4,23 +4,16 @@ from Jumpscale.data.types.TypeBaseClasses import TypeBaseObjFactory
 
 class JSDataObjectFactory(TypeBaseObjFactory):
     '''
-    jumpscale data object as result of using j.data.schemas.
+    jumpscale data object as result of using j.data.schema.
     '''
     NAME = 'jsobject,o,obj'
     CUSTOM = True
 
-    def __init__(self):
+    def __init__(self,default = None):
         self.BASETYPE = 'bin'
         self.SUBTYPE = None
-
-    def __init__(self,default = None):
-        """
-
-        :param schema_url: is the url to a jumpscale schema
-        """
         if not default:
             raise j.exceptions.Input("Cannot init JSDataObjectFactory without url")
-
         self._schema_url = default
         self._schema_ = None
 
@@ -31,7 +24,7 @@ class JSDataObjectFactory(TypeBaseObjFactory):
         :return:
         """
         if self._schema_ is None:
-            self._schema_ = j.data.schemas.get(url=self._schema_url)
+            self._schema_ = j.data.schema.get(url=self._schema_url)
         return self._schema_
 
     def python_code_get(self, value):
@@ -53,7 +46,7 @@ class JSDataObjectFactory(TypeBaseObjFactory):
         return val._json
 
     def check(self, value):
-        return isinstance(value,j.data.schemas._DataObjBase)
+        return isinstance(value,j.data.schema._DataObjBase)
 
     def default_get(self):
         return self._schema.new()
@@ -65,7 +58,7 @@ class JSDataObjectFactory(TypeBaseObjFactory):
         :param model: when model specified (BCDB model) can be stored in BCDB
         :return:
         """
-        if isinstance(value,j.data.schemas._DataObjBase):
+        if isinstance(value,j.data.schema._DataObjBase):
             return value
         if isinstance(value,bytes):
             return self._schema.get(data=None, capnpbin=value, model=model)
@@ -91,10 +84,12 @@ class JSConfigObject(TypeBaseObjFactory):
     '''
     NAME =  'jsconfigobject,configobj'
 
-    def __init__(self):
+    def __init__(self,default=None):
 
         self.BASETYPE = 'capnpbin'
         self.SUBTYPE = None
+
+        self._default = default
 
     def check(self, value):
         return isinstance(value, j.application.JSBaseConfigClass)

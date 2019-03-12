@@ -1,4 +1,4 @@
-'''Definition of several collection types (list, dict, set,...)'''
+#TODO" NOT READY TO BE USED, see despiegk
 
 from Jumpscale import j
 from Jumpscale.data.types.TypeBaseClasses import TypeBaseObjFactory,TypeBaseObjClass

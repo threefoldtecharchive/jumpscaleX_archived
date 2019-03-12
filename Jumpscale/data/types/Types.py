@@ -1,6 +1,6 @@
 '''Definition of several primitive type properties (integer, string,...)'''
 from Jumpscale import j
-from .CustomTypes import *
+from .AdvTypes import *
 from .CollectionTypes import *
 from .PrimitiveTypes import *
 from .Enumeration import Enumeration
@@ -10,9 +10,6 @@ from .List import *
 
 import copy
 
-class Custom(j.application.JSBaseClass):
-    def _init(self):
-        self._types = {}
 
 class Types(j.application.JSBaseClass):
 
@@ -27,9 +24,8 @@ class Types(j.application.JSBaseClass):
 
         self._TypeBaseObjClass = TypeBaseObjClass
 
-        self.custom = Custom()
-
         self._type_check_list = []
+        self._aliases = {}
 
         for typeclass in self._types_list:
             name = typeclass.NAME.strip().strip("_").lower()
@@ -44,34 +40,32 @@ class Types(j.application.JSBaseClass):
             if name in self._type_check_list:
                 raise RuntimeError("there is duplicate type:%s"%name)
             if not hasattr(o,"NOCHECK") or o.NOCHECK is False:
-                self._type_check_list.append(name)
+                if not hasattr(typeclass,"CUSTOM") or typeclass.CUSTOM is False:
+                    self._type_check_list.append(name)
             if aliases:
                 for alias in aliases:
-                    self.__attach(alias, typeclass,o)
+                    self._aliases[alias] = name
 
-        self.list = self.custom.list()
-        self.custom.list.NAME = "list"
-        self.list.NAME = "list"
+        self._types = {}
 
-    def __attach(self, name, typeclass,o=None):
+        self.list = List()
+
+
+    def __attach(self, name, typeclass):
         name = name.strip().lower()
         name2 = "_%s" % name
+        # print(name)
+
+        self.__dict__[name2] = typeclass  # attach class
+        self.__dict__[name2].NAME = name
 
         if not hasattr(typeclass,"CUSTOM") or typeclass.CUSTOM is False:
-            #o is the object
-            if not o:
-                o = typeclass()
-                o.__class__.NAME = name
-                o._jsx_location = "j.data.types.%s"%name
-
-        if hasattr(typeclass,"CUSTOM") and typeclass.CUSTOM is True:
-            self.custom.__dict__[name] = typeclass  #only attach class
-            self.custom.__dict__[name].NAME = name
-        else:
+            o = typeclass()
+            o.__class__.NAME = name
+            o._jsx_location = "j.data.types.%s"%name
             self.__dict__[name] = o
-            self.__dict__[name2] = typeclass
 
-        return o
+            return o
 
     def type_detect(self, val):
         """
@@ -84,7 +78,7 @@ class Types(j.application.JSBaseClass):
         raise RuntimeError("did not detect val for :%s" % val)
 
 
-    def get(self, ttype,default=None):
+    def get(self, ttype, default=None):
         """
         type is one of following
         - s, str, string
@@ -120,43 +114,43 @@ class Types(j.application.JSBaseClass):
         """
 
         ttype = ttype.lower().strip()
-        ttype_org = copy.copy(ttype)
-        default_copy=copy.copy(default)
 
-        if ttype.startswith("l"):
-            if len(ttype) > 1:
-                default = ttype[1:]
-            elif len(ttype) == 1:
-                default = None
-            else:
-                raise RuntimeError("list type can only be 1 or 2 chars")
-            ttype = "l"
+        if ttype!="list" and ttype.startswith("l"):
+            default = {"default":default,"subtype":ttype[1:]}
+            ttype = "list"
 
-        if ttype in self.custom.__dict__:
-            tt_class = self.custom.__dict__[ttype]  #is the class
-            name = tt_class.NAME
-            if default_copy:
-                key0=default_copy.replace(" ","").replace(",","_").replace("[","").replace("]","").replace("\"","")
-            else:
-                key0=""
-            key="%s_%s"%(ttype_org,key0)
-            if key in self.custom._types:
-                return self.custom._types[key]
-            tt = tt_class(default)
-            tt._jsx_location = "j.data.types.custom._types['%s']"%key
-            if ttype.startswith("l"):
-                #is a list, copy default values in
-                tt._default_values = tt.clean(default_copy)._inner_list #make sure they are clean
-            self.custom._types[key] = tt
-            return self.custom._types[key]
-        elif ttype in self.__dict__:
-            tt = self.__dict__[ttype]
-            # tt._jsx_location = "j.data.types.%s"%ttype
-            return tt
+        #check if there is an alias
+        if ttype in self._aliases:
+            ttype = self._aliases[ttype]
+
+        klasstype = "_%s" % ttype
+        if klasstype not in self.__dict__:
+            raise RuntimeError("did not find type class:%s"%klasstype)
+        tt_class = self.__dict__[klasstype]  #is the class
+
+        if default:
+            # key0=default_copy.replace(" ","").replace(",","_").replace("[","").replace("]","").replace("\"","")
+            key0 = j.data.hash.md5_string(str(default))
+            key="%s_%s"%(tt_class.NAME,key0)
         else:
-            raise j.exceptions.RuntimeError("did not find type:'%s'" % ttype)
+            if ttype not in self.__dict__:
+                raise j.exceptions.RuntimeError("did not find type:'%s'" % ttype)
+            return self.__dict__[ttype]
 
+        if key in self._types:
+            return self._types[key]
 
+        tt = tt_class(default=default)
+        tt._jsx_location = "j.data.types._types['%s']"%key
+
+        # #not sure this is the right way (despiegk)
+        # if ttype.startswith("l"):
+        #     #is a list, copy default values in
+        #     tt._default_values = tt.clean(default_copy)._inner_list #make sure they are clean
+
+        self._types[key] = tt
+
+        return self._types[key]
 
 
 

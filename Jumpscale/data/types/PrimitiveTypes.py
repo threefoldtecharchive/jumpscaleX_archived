@@ -12,10 +12,13 @@ class String(TypeBaseClass):
     stored in capnp as string
     '''
 
-    NAME =  'str,s,string'
+    NAME =  'string,str,s'
 
-    def __init__(self):
+    def __init__(self,default=None):
         self.BASETYPE = None
+        if not default:
+            default = ""
+        self._default = default
 
     def fromString(self, s):
         """
@@ -54,8 +57,11 @@ class String(TypeBaseClass):
 class StringMultiLine(String):
     NAME =  'multiline'
 
-    def __init__(self):
+    def __init__(self,default=None):
         self.BASETYPE = 'string'
+        if not default:
+            default = ""
+        self._default = default
 
     def check(self, value):
         '''Check whether provided value is a string and has \n inside'''
@@ -113,8 +119,11 @@ class Bytes(TypeBaseClass):
     '''
     NAME =  'bytes,bin,binary'
 
-    def __init__(self):
+    def __init__(self,default=None):
         self.BASETYPE = None
+        if not default:
+            default = ""
+        self._default = b""
 
     def fromString(self, s):
         """
@@ -143,9 +152,6 @@ class Bytes(TypeBaseClass):
     def check(self, value):
         '''Check whether provided value is a array of bytes'''
         return isinstance(value, bytes)
-
-    def default_get(self):
-        return b""
 
     def clean(self, value):
         """
@@ -181,10 +187,13 @@ class Bytes(TypeBaseClass):
 class Boolean(TypeBaseClass):
 
     '''Generic boolean type'''
-    NAME =  'boolean,bool,b'
+    NAME =  'bool,boolean,b'
 
-    def __init__(self):
+    def __init__(self,default=None):
         self.BASETYPE = None
+        if not default:
+            default = False
+        self._default = default
 
     def fromString(self, s):
         return self.clean(s)
@@ -195,9 +204,6 @@ class Boolean(TypeBaseClass):
     def check(self, value):
         '''Check whether provided value is a boolean'''
         return value is True or value is False
-
-    def default_get(self):
-        return False
 
     def toJSON(self, v):
         return self.clean(v)
@@ -252,10 +258,13 @@ class Boolean(TypeBaseClass):
 class Integer(TypeBaseClass):
 
     '''Generic integer type'''
-    NAME =  'integer,int,i'
+    NAME =  'int,integer,i'
 
-    def __init__(self):
+    def __init__(self,default=None):
         self.BASETYPE = None
+        if not default:
+            default = 4294967295
+        self._default = default
 
     def checkString(self, s):
         return s.isdigit()
@@ -272,9 +281,6 @@ class Integer(TypeBaseClass):
     def fromString(self, s):
         return self.clean(s)
 
-    def default_get(self):
-        # return this high number, is like None, not set yet
-        return 4294967295
 
     def toJSON(self, v):
         return self.clean(v)
@@ -317,8 +323,11 @@ class Float(TypeBaseClass):
     '''Generic float type'''
     NAME =  'float,f'
 
-    def __init__(self):
+    def __init__(self,default=None):
         self.BASETYPE = None
+        if not default:
+            default = 0.0
+        self._default = default
 
     def checkString(self, value):
         try:
@@ -340,9 +349,6 @@ class Float(TypeBaseClass):
     def fromString(self, s):
         s = self.clean(s)
         return j.core.text.getFloat(s)
-
-    def default_get(self):
-        return 0.0
 
     def clean(self, value):
         """
@@ -384,10 +390,13 @@ class Percent(Float):
     '''
     NAME =  'percent,perc,p'
 
-    def __init__(self):
+    def __init__(self,default=None):
 
         self.BASETYPE = 'float'
         self.NOCHECK = True
+        if not default:
+            default = 0.0
+        self._default = default
 
     def clean(self, value):
         """
@@ -410,9 +419,6 @@ class Percent(Float):
         assert value < 1.00001
         return value
 
-    def default_get(self):
-        return 0.0
-
     def toHR(self, v):
         return "{:.2%}".format(self.clean(v))
 
@@ -430,10 +436,13 @@ class CapnpBin(Bytes):
     '''
     NAME =  'capnpbin,cbin'
 
-    def __init__(self):
+    def __init__(self,default=None):
 
         self.BASETYPE = 'bin'
         self.NOCHECK = True
+        if not default:
+            default = b""
+        self._default = default
 
     def clean(self, value):
         """

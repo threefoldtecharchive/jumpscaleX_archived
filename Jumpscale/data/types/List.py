@@ -192,33 +192,44 @@ class List(TypeBaseObjFactory):
     CUSTOM = True
     NAME =  'list,l'
 
-    def __init__(self,subtype=None,default_values=[]):
+    def __init__(self,default=None):
+
+        if isinstance(default,dict):
+            subtype = default["subtype"]
+            default = default["default"]
+        else:
+            subtype = None
+
+        if not default:
+            self._default = []
+        else:
+            self._default = default
 
         self.BASETYPE = None
         if subtype:
             self._SUBTYPE = j.data.types.get(subtype)
         else:
             self._SUBTYPE = None
-        self._default_values = default_values
+
+        if not isinstance(self._default, list) and not isinstance(self._default, set):
+            self._default = self.clean(self._default)
+
 
     @property
     def SUBTYPE(self):
         if not self._SUBTYPE:
-            if len(self._default_values)==0:
+            if len(self._default)==0:
                 self._SUBTYPE = j.data.types.string
             else:
-                if not self.list_check_1type(self._default_values):
+                if not self.list_check_1type(self._default):
                     raise RuntimeError("default values need to be of 1 type")
-                self._SUBTYPE = j.data.types.type_detect(self._default_values[0])
+                self._SUBTYPE = j.data.types.type_detect(self._default[0])
         return self._SUBTYPE
 
 
     def check(self, value):
         '''Check whether provided value is a list'''
         return isinstance(value, (list, tuple, set)) or isinstance(value,ListObject)
-
-    def default_get(self):
-        return self.clean(self._default_values)
 
     def list_check_1type(self, llist, die=True):
         if len(llist) == 0:
@@ -233,11 +244,9 @@ class List(TypeBaseObjFactory):
                     return False
         return True
 
-
-
     def clean(self, val=None, toml=False, sort=False, unique=True, ttype=None):
         if val is None:
-            val = self._default_values
+            val = self._default
         if ttype is None:
             ttype = self.SUBTYPE
 
@@ -362,7 +371,7 @@ class List(TypeBaseObjFactory):
 
     def __str__(self):
         out="LIST TYPE:"
-        if self._default_values != []:
+        if self._default != []:
             out+=" - defaults: %s"%self.default_get()._inner_list
         if self.SUBTYPE:
             out+=" - subtype: %s"%self.SUBTYPE.NAME

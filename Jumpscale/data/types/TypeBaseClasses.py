@@ -139,6 +139,7 @@ class TypeBaseClass():
         self.BASETYPE = None
         self.ALIAS = None
         self.NAME = None
+        self._default = None
 
     def toString(self, v):
         return str(self.clean(v))
@@ -170,7 +171,7 @@ class TypeBaseClass():
             return False
 
     def default_get(self):
-        return ""
+        return self.clean(self._default)
 
     def clean(self, value):
         """
@@ -204,8 +205,6 @@ class TypeBaseObjFactory(TypeBaseClass):
         self.BASETYPE = None
         self.NAME = None
 
-    def default_get(self):
-        return self.clean("0")
 
     def capnp_schema_get(self, name, nr):
         """

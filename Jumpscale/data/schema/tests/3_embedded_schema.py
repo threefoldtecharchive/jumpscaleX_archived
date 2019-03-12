@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.schema.test(name="embedded_schema")'
+    kosmos 'j.data.schema.test(name="embedded_schema")'
     """
     schema = """
         @url = jumpscale.schema.test3.cmd

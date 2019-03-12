@@ -863,10 +863,8 @@ class Tools:
         elif logdict["context"].startswith(":"):
             logdict["context"]=""
 
-        msg = LOGFORMAT.format(**logdict)
 
-        msg=Tools.text_replace(msg)
-
+        msg=Tools.text_replace(LOGFORMAT,args=logdict)
         print(msg)
 
         if data_show:

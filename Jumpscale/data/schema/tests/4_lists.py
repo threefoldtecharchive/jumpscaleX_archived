@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.schema.test(name="lists")'
+    kosmos 'j.data.schema.test(name="lists")'
 
     tests an issue with lists, they were gone at one point after setting a value
 

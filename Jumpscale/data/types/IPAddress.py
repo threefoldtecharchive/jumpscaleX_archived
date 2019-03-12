@@ -45,8 +45,9 @@ class IPAddress(TypeBaseObjFactory):
     """
     NAME =  'ipaddr'
 
-    def __init__(self):
+    def __init__(self,default=None):
         TypeBaseObjClassFactory.__init__(self)
+        self._default = default
 
     def clean(self, val="192.168.1.1"):
         if value is None:

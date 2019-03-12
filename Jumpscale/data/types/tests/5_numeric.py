@@ -8,7 +8,7 @@ def main(self):
     kosmos 'j.data.types.test(name="numeric")'
     """
 
-    n = j.data.types.n
+    n = j.data.types.numeric
 
     assert n.bytes2str(n.str2bytes("123456789")) == "123,456,789"
     assert n.bytes2str(n.str2bytes("100000")) == "100,000"

@@ -14,10 +14,14 @@ class YAML(StringMultiLine):
 
     NAME =  'yaml'
 
-    def __init__(self):
+    def __init__(self,default=None):
 
         self.BASETYPE = 'string'
         self.NOCHECK = True
+        if not default:
+            default = {}
+        self._default = default
+
 
     def possible(self, value):
         '''Check whether provided value is a dict'''
@@ -31,7 +35,7 @@ class YAML(StringMultiLine):
 
     def clean(self, value):
         if value is None:
-            value = self.default_get()
+            value = self._default_get()
         elif not self.check(value):
             raise ValueError("Invalid value for yaml: %s" % value)
         value = j.data.types.string.clean(value)
@@ -55,9 +59,12 @@ class JSON(StringMultiLine):
 
     NAME =  'json'
 
-    def __init__(self):
+    def __init__(self,default=None):
         self.BASETYPE = 'string'
         self.NOCHECK = True
+        if not default:
+            default = {}
+        self._default = default
 
     def possible(self, value):
         """
@@ -73,7 +80,7 @@ class JSON(StringMultiLine):
 
     def clean(self, v=""):
         if value is None:
-            return self.default_get()
+            return self._default_get()
         if not self.check(v):
             raise RuntimeError("Valid serialized json string is required")
         return v
@@ -93,16 +100,16 @@ class Dictionary(TypeBaseClass):
 
     NAME =  'dict'
 
-    def __init__(self):
+    def __init__(self, default=None):
 
         self.BASETYPE = 'dictionary'
+        if not default:
+            default = {}
+        self._default = default
 
     def check(self, value):
         '''Check whether provided value is a dict'''
         return isinstance(value, dict)
-
-    def default_get(self):
-        return dict()
 
     def fromString(self, s):
         """
@@ -124,7 +131,7 @@ class Dictionary(TypeBaseClass):
         :return:
         """
         if v is None:
-            return self.default_get()
+            return self._default_get()
         if j.data.types.bytes.check(v):
             v = j.data.serializers.msgpack.loads(v)
         elif j.data.types.string.check(v):
@@ -161,8 +168,11 @@ class Hash(TypeBaseClass):
     NAME =  'hash,h'
     CUSTOM = False
 
-    def __init__(self):
+    def __init__(self,default=None):
         self.BASETYPE = 'string'
+        if not default:
+            default = (0,0)
+        self._default = default
 
     def fromString(self, s):
         """
@@ -185,15 +195,12 @@ class Hash(TypeBaseClass):
     def check(self, value):
         return isinstance(value, (list, tuple)) and len(value) == 2
 
-    def default_get(self):
-        return self.clean("0:0")
-
     def clean(self, value):
         """
         will do a strip
         """
         if value is None:
-            return self.default_get()
+            return self._default_get()
         def bytesToInt(val):
             if j.data.types.bytes.check(val):
                 if len(val) is not 4:

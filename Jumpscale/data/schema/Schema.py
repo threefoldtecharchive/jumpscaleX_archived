@@ -109,6 +109,7 @@ class Schema(j.application.JSBaseClass):
         self.properties = []
         # self._systemprops = systemprops
 
+
         def process(line):
             line_original = copy(line)
             propname, line = line.split("=", 1)
@@ -159,6 +160,7 @@ class Schema(j.application.JSBaseClass):
                 # else:
 
                 jumpscaletype = j.data.types.get(line_proptype,default=line_wo_proptype)
+
                 defvalue = None
 
             else:

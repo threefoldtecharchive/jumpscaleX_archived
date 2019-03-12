@@ -55,10 +55,13 @@ class Enumeration(TypeBaseObjFactory):
     '''
     NAME =  'enum,enumeration,e'
     CUSTOM = True
-    __slots__ = ['values', 'default', "_md5", "_jumpscale_location"]
+    __slots__ = ['values', '_default', "_jsx_location"]
 
-    def __init__(self, values):
+    def __init__(self, default=None):
 
+        values = default #here the default is used to create custom instance
+        if not default:
+            raise RuntimeError("enumeration needs default arg to be given e.g. red,blue,... ")
 
         self.BASETYPE = "int"
         self.NOCHECK = True
@@ -69,12 +72,11 @@ class Enumeration(TypeBaseObjFactory):
         if not isinstance(values, list):
             raise RuntimeError("input for enum is comma separated str or list")
         self.values = [item.upper().strip() for item in values]
-        # self._md5 = j.data.hash.md5_string(str(self))  # so it has the default as well
-        # j.data.types.enumerations[self._md5] = self
-        # self._jumpscale_location = "j.data.types.enumerations['%s']" % self._md5
+
+        self._default = 1
 
     def capnp_schema_get(self, name, nr):
-        return "%s @%s :UInt32;" % (name, nr)
+        return "%s @%s :UInt8;" % (name, nr)
 
 
     def toData(self,value):
@@ -94,13 +96,6 @@ class Enumeration(TypeBaseObjFactory):
         else:
             raise RuntimeError("unsupported type for enum, is int or string")
         return value_id
-
-    def default_get(self):
-        """
-        returns the first one of collection
-        :return:
-        """
-        return self.clean(1)
 
     def clean(self, value):
         """

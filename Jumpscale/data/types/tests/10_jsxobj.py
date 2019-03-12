@@ -28,10 +28,12 @@ def main(self):
 
     o = tt.clean({})
 
+    assert o.nr == 4
+    assert tt.check(o)
 
+    o2 = tt.clean({"nr":5})
+    assert o2.nr == 5
 
-    j.shell()
-
-    # self._log_info("TEST DONE ACL")
+    self._log_info("TEST DONE JSXOBJ")
 
     return ("OK")

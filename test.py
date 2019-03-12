@@ -2,6 +2,15 @@ from Jumpscale import j
 import traceback
 import sys
 
+
+#THIS is not ideal in my opinon and not very JSX alike, lots of boilerplate code for nothing
+
+try:
+    j.data.types.test()
+except Exception as e:
+    sys.stderr.write('\nError In types\n')
+    traceback.print_exc()
+
 try:
     j.clients.zdb.test()
 except Exception as e:

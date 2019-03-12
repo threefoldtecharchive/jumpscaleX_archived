@@ -8,7 +8,7 @@ def main(self):
     kosmos 'j.data.types.test(name="datetime")'
     """
 
-    tt = j.data.types.t
+    tt = j.data.types.datetime
 
     c = """
     11/30 22:50

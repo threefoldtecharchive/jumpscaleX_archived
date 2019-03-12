@@ -7,6 +7,7 @@ def main(self):
 
     kosmos 'j.data.schema.test(name="base")' --debug
     """
+
     schema = """
         @url = despiegk.test
         llist = []
@@ -38,7 +39,8 @@ def main(self):
     ll = schema_object.property_llist3.jumpscaletype.default_get()
     assert ll.value == [1.0,2.0,3.0]
 
-    assert schema_object.property_llist3.js_typelocation == "j.data.types.custom._types['lf_1_2_3']"
+
+    assert schema_object.property_llist3.js_typelocation == "j.data.types._types['list_281be192c3ea134b85dd0c368d7d1b36']"
 
 
     o = schema_object.get()
@@ -131,9 +133,6 @@ def main(self):
     """
 
     o = j.data.schema.get(schema).new()
-
-
-    j.shell()
 
     assert o.bool1 == True
     assert o.bool2 == True

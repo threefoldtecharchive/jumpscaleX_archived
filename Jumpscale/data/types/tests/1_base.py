@@ -9,9 +9,10 @@ def main(self):
     """
 
 
-    assert j.data.types.s.__class__.NAME == 'str'
+    assert j.data.types.string.__class__.NAME == 'string'
 
     assert j.data.types.get("s") == j.data.types.get("string")
+    assert j.data.types.get("s") == j.data.types.get("str")
 
     t = j.data.types.get("i")
 
@@ -21,10 +22,13 @@ def main(self):
 
     t = j.data.types.get("li",default="1,2,3")  #list of integers
 
-    t.default_get() == [1,2,3]
+    assert t._default == [1,2,3]
 
-    t2 = j.data.types.get("ls",default="1,2,3")  #list of integers
-    t2.default_get() == ['1', '2', '3']
+
+    assert t.default_get() == [1,2,3]
+
+    t2 = j.data.types.get("ls",default="1,2,3")  #list of strings
+    assert t2.default_get() == ['1', '2', '3']
 
     t3 = j.data.types.get("ls")
     assert t3.default_get() == []
@@ -44,6 +48,10 @@ def main(self):
     assert t.clean(0)==False
     assert t.check(1) == False
     assert t.check(True) == True
+
+
+    b = j.data.types.get('b',default='true')
+    assert b.default_get() == True
 
     #TODO: need more tests here
 

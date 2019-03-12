@@ -249,7 +249,7 @@ class BCDB(j.application.JSBaseClass):
         :return:
         """
 
-        if j.data.types.str.check(schema):
+        if j.data.types.string.check(schema):
             schema_text = schema
             schema = j.data.schema.get(schema_text)
             self._log_debug(
@@ -290,7 +290,7 @@ class BCDB(j.application.JSBaseClass):
             dir_path = j.sal.fs.getDirName(path_parent)
             dest = "%s/%s_index.py" % (dir_path, name)
 
-        if j.data.types.str.check(schema):
+        if j.data.types.string.check(schema):
             schema = j.data.schema.get(schema)
 
         elif not isinstance(schema, j.data.schema.SCHEMA_CLASS):
