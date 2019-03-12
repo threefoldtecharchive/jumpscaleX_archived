@@ -1159,6 +1159,7 @@ class Tools:
         args["REPO_DIR"]= REPO_DIR
         args["URL"] = repo_url
         args["NAME"] = repo
+        args["BRANCH"] = branch[0]
 
         if "GITPULL" in os.environ:
             pull = str(os.environ["GITPULL"]) == "1"
@@ -1178,7 +1179,7 @@ class Tools:
                 set -e
                 mkdir -p {ACCOUNT_DIR}
                 cd {ACCOUNT_DIR}
-                git clone  --depth 1 {URL}
+                git clone  --depth 1 {URL} -b {BRANCH}
                 cd {NAME}
                 """
                 Tools.log("get code [git] (first time): %s"%repo)
