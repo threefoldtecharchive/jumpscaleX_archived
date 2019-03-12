@@ -71,13 +71,9 @@ ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/s
 ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/views/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/views
 ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/applications/chat.moon /sandbox/code/github/threefoldfoundation/lapis-wiki/app.moon 
 
+js_shell \" j.tools.tmux.execute('. /sandbox/env.sh js_shell \\\"server = j.servers.gedis.configure(host=\\\"0.0.0.0\\\", port=8888) server.actor_add(\\\"/sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/actors/chatbot.py\\\") server.chatbot.chatflows_load(\\\"/sandbox/code/github/threefoldtech/digitalmeX/packages/system/base/chatflows\\\") server.start()\\\" ', window=\\\"flist\\\") \"
 
-js_shell 'server = j.servers.gedis.configure(host="0.0.0.0", port=8888)
-server.actor_add("/sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/actors/chatbot.py")
-server.chatbot.chatflows_load("/sandbox/code/github/threefoldtech/digitalmeX/packages/system/base/chatflows")
-server.start() '
-
-exec js_shell 'j.tools.markdowndocs.webserver()'
+js_shell \"j.tools.markdowndocs.webserver()\"
 """ > 3bot_startup.sh
 cd /sandbox/code/github/threefoldtech/jumpscaleX/
 cp utils/startup.toml /.startup.toml
