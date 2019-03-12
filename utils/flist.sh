@@ -49,6 +49,36 @@ echo "Waiting webserver to launch on 8080..."
 while ! nc -z localhost 8080; do   
   sleep 10 # wait for 10 seconds before check again
 done
+cd /sandbox 
+echo """ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    locale-gen
+export HOME=/root
+export LANG=en_US.UTF-8
+export LANGUAGE=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+. /sandbox/env.sh
+cd /sandbox/code/github/threefoldfoundation/info_foundation
+git pull
+cd /sandbox/code/github/threefoldfoundation/info_tokens
+git pull
+cd /sandbox/code/github/threefoldfoundation/lapis-wiki
+git pull
+cd /sandbox/code/github/threefoldtech/digitalmeX
+git pull
+
+
+ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/static/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/static
+ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/views/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/views
+ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/applications/chat.moon /sandbox/code/github/threefoldfoundation/lapis-wiki/app.moon 
+
+
+js_shell 'server = j.servers.gedis.configure(host="0.0.0.0", port=8888)
+server.actor_add("/sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/actors/chatbot.py")
+server.chatbot.chatflows_load("/sandbox/code/github/threefoldtech/digitalmeX/packages/system/base/chatflows")
+server.start() '
+
+exec js_shell 'j.tools.markdowndocs.webserver()'
+""" > 3bot_startup.sh
 cd /sandbox/code/github/threefoldtech/jumpscaleX/
 cp utils/startup.toml /.startup.toml
 tar -cpzf "/tmp/archives/JSX.tar.gz" --exclude dev --exclude sys --exclude proc  /
