@@ -58,7 +58,7 @@ paragraph = True
 codeblock = True
 ```
 
-this will return the first paragraph (line breaks starts a new paragraph).
+this will return the first paragraph (line breaks start a new paragraph).
 
 https://github.com/threefoldtech/jumpscaleX/blob/8a1d631a6bd98af3a11517c23f5eadef080db4af/Jumpscale/tools/fixer/Fixer.py#L50-L93
 
