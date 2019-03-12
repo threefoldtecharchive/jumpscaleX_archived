@@ -1,6 +1,29 @@
 from Jumpscale.tools.markdowndocs.Link import CustomLink, GithubLinker
 
 
+def count_spaces_at_start(line):
+    count = 0
+    for char in line:
+        if char is not ' ':
+            break
+        count += 1
+    return count
+
+
+def get_indentation_levels(lines):
+    if not lines:
+        return []
+
+    levels = []
+    for line in lines:
+        line = line.replace('\t', '    ')  # replace tabs with 4 spaces
+        if not line.strip():
+            levels.append(0)
+        else:
+            levels.append(count_spaces_at_start(line))
+    return levels
+
+
 def _file_process(j, content, start="", end="", paragraph=False, docstring=""):
     if start == "" and end == "" and docstring == "":
         return content
@@ -9,7 +32,10 @@ def _file_process(j, content, start="", end="", paragraph=False, docstring=""):
         start = start.lower()
         out = ""
         state = "START"
-        for line in content.split("\n"):
+        lines = content.split('\n')
+        levels = get_indentation_levels(lines)
+        start_level = None
+        for i, line in enumerate(lines):
             lstrip = line.strip().lower()
 
             if lstrip.startswith(start):
@@ -18,8 +44,11 @@ def _file_process(j, content, start="", end="", paragraph=False, docstring=""):
                 continue
             if state == "FOUND":
                 if paragraph:
+                    if start_level is None:
+                        start_level = levels[i]
                     # means looking for paragraph
-                    if len(line) > 0 and line[0] != " ":
+                    # empty new line or an indentation
+                    if start_level != levels[i]:
                         return out
                 out += "%s\n" % line
                 if end != "" and lstrip.find(end.lower()) != -1:
