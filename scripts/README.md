@@ -1,5 +1,15 @@
 ### 0-Test Continuous-Integration
 
+#### Server life cycle:
+Once there is a PR from branch X, the following steps will be done: 
+
+    - Server will build an ubuntu 18 image with installed JS from X branch
+    - Create a docker container from this image
+    - Get tests commands from 0-Test.sh file from this X branch
+    - Run those commands one by one against this docker container
+    - Produce a log file with all results 
+
+
 #### Requirement:
 
 - Ubuntu:18.04 with (jumpscaleX and docker) installed.
