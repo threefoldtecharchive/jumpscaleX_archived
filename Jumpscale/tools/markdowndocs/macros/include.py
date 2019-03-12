@@ -10,13 +10,13 @@ def count_spaces_at_start(line):
     return count
 
 
-def get_indentation_levels(lines):
+def get_indentation_levels(lines, tabsize=4):
     if not lines:
         return []
 
     levels = []
     for line in lines:
-        line = line.replace('\t', '    ')  # replace tabs with 4 spaces
+        line = line.replace('\t', ' ' * tabsize)  # replace tabs with 4 spaces
         if not line.strip():
             levels.append(0)
         else:
