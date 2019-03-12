@@ -43,6 +43,10 @@ end = "self.replacer.dir_process("
 codeblock = True
 ```
 
+this will return the body of find_changes().
+
+https://github.com/threefoldtech/jumpscaleX/blob/8a1d631a6bd98af3a11517c23f5eadef080db4af/Jumpscale/tools/fixer/Fixer.py#L50-63
+
 ### possibility 2: use the paragraph argument
 
 ```python
@@ -54,7 +58,9 @@ paragraph = True
 codeblock = True
 ```
 
-they will both return the lines of def find_changes... and nothing more
+this will return the first paragraph (line breaks starts a new paragraph).
+
+https://github.com/threefoldtech/jumpscaleX/blob/8a1d631a6bd98af3a11517c23f5eadef080db4af/Jumpscale/tools/fixer/Fixer.py#L50-L93
 
 ## can also just include a document string from a python method
 
