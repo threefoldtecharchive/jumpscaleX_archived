@@ -50,10 +50,10 @@ class NACL(j.application.JSBaseClass):
 
         self.clear_keys()
 
-        self.path_privatekey = "%s/%s.priv" % (self.path, self.name)
+        self.path_signaturekey = "%s/%s.priv" % (self.path, self.name)
         if reset:
-            j.sal.fs.remove(self.path_privatekey)
-        if not j.sal.fs.exists(self.path_privatekey):
+            j.sal.fs.remove(self.path_signaturekey)
+        if not j.sal.fs.exists(self.path_signaturekey):
             if interactive:
                 self.generate_interactive()
             else:
@@ -125,7 +125,7 @@ class NACL(j.application.JSBaseClass):
             print("{BLUE}"+self.words+"{RESET}\n")
             print("\n{RED}ITS IMPORTANT TO STORE THIS KEY IN A SAFE PLACE{RESET}")
             if not j.tools.console.askYesNo("Did you write the words down and store them in safe place?"):
-                j.sal.fs.remove(self.path_privatekey)
+                j.sal.fs.remove(self.path_signaturekey)
                 print("WE HAVE REMOVED THE KEY, need to restart this procedure.")
                 sys.exit(1)
         else:
@@ -173,7 +173,7 @@ class NACL(j.application.JSBaseClass):
     @property
     def signingkey(self):
         if self._signingkey == "":
-            encrypted_key = self.file_read_hex(self.path_privatekey)
+            encrypted_key = self.file_read_hex(self.path_signaturekey)
             key = self.decryptSymmetric(encrypted_key)
             self._signingkey = nacl.signing.SigningKey(key)
         return self._signingkey
@@ -262,10 +262,10 @@ class NACL(j.application.JSBaseClass):
             key = nacl.signing.SigningKey.generate().encode()   # generates a bytes representation of the key
 
         encrypted_key = self.encryptSymmetric(key)
-        self.file_write_hex(self.path_privatekey, encrypted_key)
+        self.file_write_hex(self.path_signaturekey, encrypted_key)
 
         # build in verification
-        verify = self.file_read_hex(self.path_privatekey)
+        verify = self.file_read_hex(self.path_signaturekey)
         assert encrypted_key == verify
 
     def sign(self, data):
