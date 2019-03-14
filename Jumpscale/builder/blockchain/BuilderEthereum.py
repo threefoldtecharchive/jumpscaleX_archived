@@ -27,7 +27,9 @@ class BuilderEthereum(j.builder.system._BaseClass):
 
         j.builder.runtimes.golang.get(self.geth_repo)
 
-        j.builder.runtimes.golang.execute("cd {} && go build -a -ldflags '-w -extldflags -static' ./cmd/geth".format(self.package_path))
+        j.builder.runtimes.golang.execute("cd {} && go build -a -ldflags '-w -extldflags -static' ./cmd/geth ./cmd/bootnode".format(self.package_path))
+        j.builder.runtimes.golang.execute("cd {} && go build -a -ldflags '-w -extldflags -static' ./cmd/bootnode".format(self.package_path))
+
         self._done_set('build')
 
     def install(self, reset=False):
@@ -96,9 +98,13 @@ class BuilderEthereum(j.builder.system._BaseClass):
 
         bin_path = self.tools.joinpaths(self.package_path, "geth")
         bin_dest = self.tools.joinpaths(sandbox_dir, 'sandbox', 'bin')
-
         self.tools.dir_ensure(bin_dest)
         self.tools.file_copy(bin_path, bin_dest)
+        
+        bootnode_bin_path = self.tools.joinpaths(self.package_path, "bootnode")
+        bootnode_bin_dest = self.tools.joinpaths(sandbox_dir, 'sandbox', 'bin')
+        self.tools.dir_ensure(bootnode_bin_dest)
+        self.tools.file_copy(bootnode_bin_path, bootnode_bin_dest)
 
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'geth_startup.toml')
         self.startup = j.sal.fs.readFile(startup_file)
