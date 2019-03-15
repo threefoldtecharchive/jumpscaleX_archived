@@ -22,7 +22,7 @@ class TFChainCapacity():
         """
 
         if self._notary_client_ is None:
-            c = j.clients.gedis.configure('tfnotary', host='notary.grid.tf', port=6830)
+            c = j.clients.gedis.configure('tfnotary', host='notary.grid.tf', port=5000)
             self._notary_client_ = c.cmds.notary_actor
         return self._notary_client_
 

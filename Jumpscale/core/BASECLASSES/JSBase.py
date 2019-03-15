@@ -360,11 +360,13 @@ class JSBase:
         logdict["context"] = self._key
         logdict["cat"] = cat
 
-        if data and isinstance(data,dict):
-            if "password" in data or "secret" in data or "passwd" in data:
-                data["password"]="***"
-
         logdict["data"] = data
+        if data and isinstance(data,dict):
+            # shallow copy the data to avoid changing the original data
+            hidden_data = data.copy()
+            if "password" in data or "secret" in data or "passwd" in data:
+                hidden_data["password"] = "***"
+            logdict["data"] = hidden_data
 
         if j.application.logger:
             j.application.logger._process(logdict)

@@ -712,10 +712,10 @@ Examples:
 c = j.clients.tfchain.myclient
 w = c.wallets.mywallet
 result = w.capacity.reserve_s3(
-    size=1, # each workload have a different size available
     email='user@email.com', # the email on which you will received the connection information
+    threebot_id='my3bot.example.org', # your threebot id, it can be any of the names you gave to your 3bot
     location='farm_name', # name of the farm where to deploy the workload
-    bot_id='my3bot.example.org') # your threebot id, it can be any of the names you gave to your 3bot
+    size=1) # each workload have a different size available
 ```
 
 
