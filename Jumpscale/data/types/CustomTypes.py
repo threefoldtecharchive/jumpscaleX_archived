@@ -265,7 +265,7 @@ class IPPort(Integer):
 
     def __init__(self):
         Integer.__init__(self)
-        self.BASETYPE = 'string'
+        self.BASETYPE = 'integer'
 
     def check(self, value):
         '''
