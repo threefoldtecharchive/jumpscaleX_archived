@@ -54,8 +54,7 @@ class JSBaseConfigs(JSBase):
         data = self._model.new(data=kwargs)
         for model in self._model.get_all():
             if(model.name == name):
-                raise RuntimeError(
-                    "can't create , this name is already exist")
+                raise RuntimeError("can't create , this name already exist")
         data.name = name
         self._children[name] = kl(parent=self, data=data, **kwargs)
         self._children[name]._isnew = True
