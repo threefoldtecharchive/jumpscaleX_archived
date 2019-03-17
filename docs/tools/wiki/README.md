@@ -110,7 +110,6 @@ You can serve any docsite that uses [docsify.js](https://docsify.js.org/#/?id=do
 See [tool usage](#Tool-usage) to generate the docsite (you can find some examples in markdowndocs tool itself [here](https://github.com/threefoldtech/jumpscaleX/blob/development/Jumpscale/tools/markdowndocs/MarkDownDocs.py#L283)), and [lapis-wiki](https://github.com/threefoldfoundation/lapis-wiki) to run the web server.
 
 ## Openresty and lapis in action
-
-* [Web server and gedis](https://github.com/threefoldtech/digitalmeX/tree/development/docs/webserver): how to run and serve files using openresty and lapis (with possible gedis backend).
-* [Itsyou.online authentication](../../../Jumpscale/builder/web/docs/resty_iyo.md): itsyou.online authentication for resty
 * [lapis-wiki](https://github.com/threefoldfoundation/lapis-wiki): our implementation to serve docsites and other lapis applications.
+* [Web server and gedis](https://github.com/threefoldtech/digitalmeX/tree/development/docs/webserver): how to run and serve files using openresty and lapis/lapis-wiki (with possible gedis backend).
+* [Itsyou.online authentication](../../../Jumpscale/builder/web/docs/resty_iyo.md): itsyou.online authentication for resty
