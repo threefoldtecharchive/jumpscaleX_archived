@@ -6,9 +6,9 @@ The tool pre-process the given markdown directory (it adds some extension to mar
 
 ### Markdown extensions:
 * [Custom Link format](links.md) to make it easy to reference other documents and files.
-* [Macros](docsites/macros/readmen.md):
+* [Macros](docsites/macros/readme.md):
     * [data](docsites/macros/data.md): to add data that can be
-    * [include](docsites/macros/include.md)
+    * [include](docsites/macros/include.md): to include content from other documents and files.
 
 
 ## Tool usage
