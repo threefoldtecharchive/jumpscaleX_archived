@@ -26,24 +26,24 @@ class ModelOBJ(DataObjBase):
 
         {% for ll in obj.lists %}
         # self._{{ll.name}} = j.data.types.get("l",self._schema.property_{{ll.name}}.js_typelocation)
+        raise RuntimeError("not get here")
 
         self._{{ll.name}} = {{ll.js_typelocation}}.default_get()
 
         for capnpbin in self._cobj_.{{ll.name_camel}}:
             self._{{ll.name}}.new(data=capnpbin)
         {% endfor %}
+
         #PROP
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
         self._schema_{{prop.name}} = j.data.schema.get(url="{{prop.jumpscaletype.SUBTYPE}}")
-        
         if self._cobj_.{{prop.name_camel}}:
             self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.get(capnpbin=self._cobj_.{{prop.name_camel}})
         else:
             self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.new()
         {% endif %}
         {% endfor %}
-        self._defaults_set()
 
 
     {# generate the properties #}
@@ -140,17 +140,19 @@ class ModelOBJ(DataObjBase):
 
         {% for prop in obj.lists %}
         if self._{{prop.name}}._changed:
-            #means the list was modified
-            if "{{prop.name_camel}}" in ddict:
-                ddict.pop("{{prop.name_camel}}")
-            ddict["{{prop.name_camel}}"]=[] #make sure we have empty list
-            for item in self._{{prop.name}}._inner_list:
-                if self._{{prop.name}}._child_type.NAME is "jsobject":
-                    #use data in stead of rich object
-                    item = item._data
-                elif hasattr(item,"_data"):
-                    item = item._data
-                ddict["{{prop.name_camel}}"].append(item)
+            raise RuntimeError("should not get here")
+            # #means the list was modified
+            # if "{{prop.name_camel}}" in ddict:
+            #     ddict.pop("{{prop.name_camel}}")
+            # ddict["{{prop.name_camel}}"]=[] #make sure we have empty list
+            #
+            # for item in self._{{prop.name}}._inner_list:
+            #     if self._{{prop.name}}._child_type.NAME is "jsobject":
+            #         #use data in stead of rich object
+            #         item = item._data
+            #     elif hasattr(item,"_data"):
+            #         item = item._data
+            #     ddict["{{prop.name_camel}}"].append(item)
         {% endfor %}
 
         {% for prop in obj.properties %}
@@ -159,9 +161,10 @@ class ModelOBJ(DataObjBase):
             {% if prop.jumpscaletype.NAME == "jsobject" %}
             ddict["{{prop.name_camel}}"] = self._changed_items["{{prop.name}}"]._data
             {% else %}
-            o =  {{prop.js_typelocation}}.clean(self._changed_items["{{prop.name}}"])
-            if hasattr(o,"_data"):
-                o=o._data
+            # o =  {{prop.js_typelocation}}.clean(self._changed_items["{{prop.name}}"])
+            o =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
+            # if hasattr(o,"_data"):
+            #     o=o._data
             ddict["{{prop.name_camel}}"] = o
             {% endif %}
         {% endfor %}
@@ -188,21 +191,27 @@ class ModelOBJ(DataObjBase):
     @property
     def _ddict(self):
         d={}
+        from pudb import set_trace; set_trace()
         {% for prop in obj.properties %}
-        {% if prop.jumpscaletype.NAME == "jsobject" %}
+        {% if prop.jumpscaletype.NAME == "jsobject" %} #NEED TO CHECK : #TODO: despiegk
+        raise RuntimeError("not here")
         d["{{prop.name}}"] = self.{{prop.name}}._ddict
         {% elif prop.jumpscaletype.BASETYPE == "OBJ" %}
-        j.shell()
-        w
-        d["{{prop.name}}"] = self.{{prop.name}}._dictdata
+        raise RuntimeError("not here")
+        # d["{{prop.name}}"] = self.{{prop.name}}._dictdata
         {% else %}
-        d["{{prop.name}}"] = self.{{prop.name}}
+        if isinstance(self.{{prop.name}},j.data.types._TypeBaseObjClass):
+            d["{{prop.name}}"] = self.{{prop.name}}._dictdata
+        else:
+            d["{{prop.name}}"] = self.{{prop.name}}
         {% endif %}    
         {% endfor %}
 
         {% for prop in obj.lists %}
-        d["{{prop.name}}"] = self._{{prop.name}}.pylist()
+        raise RuntimeError("not here")
+        # d["{{prop.name}}"] = self._{{prop.name}}.pylist()
         {% endfor %}
+
         if self.id is not None:
             d["id"]=self.id
 

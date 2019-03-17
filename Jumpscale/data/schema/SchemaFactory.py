@@ -17,7 +17,7 @@ class SchemaFactory(j.application.JSBaseClass):
         self.schemas_versionless = {}
         self._md5_schema = {}
 
-        self._DataObjBase = DataObjBase
+        self.DataObjBase = DataObjBase
 
     @property
     def SCHEMA_CLASS(self):

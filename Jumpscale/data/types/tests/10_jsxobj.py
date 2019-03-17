@@ -34,6 +34,12 @@ def main(self):
     o2 = tt.clean({"nr":5})
     assert o2.nr == 5
 
+    o3 = tt.default_get()
+
+    assert o3 == tt.clean(o3)
+
+    j.shell()
+
     self._log_info("TEST DONE JSXOBJ")
 
     return ("OK")

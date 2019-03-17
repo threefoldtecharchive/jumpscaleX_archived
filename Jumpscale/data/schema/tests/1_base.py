@@ -90,6 +90,21 @@ def main(self):
     o1 = schema_object1.get()
     o2 = schema_object2.get()
     o1.llist2.append("5")
+    o1.llist2.append(6)
+
+    assert "5" in o1.llist2
+    assert "6" in o1.llist2
+
+    c= o1._cobj
+    c2= o1._cobj
+
+    assert c.llist2[0] == b'5'
+    assert c2.llist2[0] == b'5'
+
+    dd = o1._ddict
+
+    j.shell()
+
     o2.llist.append("1")
 
     assert o1.enum == 'RED'

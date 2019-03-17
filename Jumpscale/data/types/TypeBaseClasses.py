@@ -14,7 +14,14 @@ class TypeBaseObjClass():
         if value is None:
             self._data = None
         else:
-            self._data = self._typebase.toData(value) #returns the native lowest level type
+            self._data_from_init_val(value)
+
+    def _data_from_init_val(self,value):
+        """
+        convert init value to raw type inside this object
+        :return:
+        """
+        self._data = value
 
     def _capnp_schema_get(self, name, nr):
         return self._typebase.capnp_schema_get(name,nr)
@@ -131,7 +138,7 @@ class TypeBaseObjClassNumeric(TypeBaseObjClass):
     __xor__ = __lshift__
     __or__ = __lshift__
 
-class TypeBaseClass():
+class TypeBaseClass(): #!!TYPEBASECLASS!!
 
     #CUSTOM = False #if custom will create new instance depending specification in default
 
@@ -147,7 +154,19 @@ class TypeBaseClass():
     def toHR(self, v):
         return self.toString(v)
 
+    def toDict(self,v):
+        raise NotImplemented()
+
+    def toDictHR(self,v):
+        raise NotImplemented()
+
+
     def toData(self, v):
+        """
+        first clean then get the data for capnp
+        :param v:
+        :return:
+        """
         return self.clean(v)
 
     def check(self, value):
@@ -197,6 +216,7 @@ class TypeBaseClass():
     def capnp_schema_get(self, name, nr):
         return "%s @%s :Text;" % (name, nr)
 
+ #!!TYPEBASECLASS!!
 
 class TypeBaseObjFactory(TypeBaseClass):
 
@@ -233,7 +253,9 @@ class TypeBaseObjFactory(TypeBaseClass):
         return val._python_code
 
     def toData(self, v):
-        raise j.exceptions.NotImplemented()
+        v = self.clean(v)
+        return v.toData()
+        # raise j.exceptions.NotImplemented()
 
     def clean(self, v):
         raise j.exceptions.NotImplemented()

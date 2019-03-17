@@ -25,60 +25,18 @@ you can define the schema url like that.
 @url = schema.test.1
 ```
 
-## Data types
+## basic types
 
-### for more details [see](/docs/types/readme.md)
+see [types/readme.md]
+for the internals of types see [basetypes/readme.md]
 
-> ## simple types
-
-- I 
-  - Integer
-- F 
-  - Float
-- N 
-  - Numeric, has support for currencies
-  - can e.g. insert 10 EUR, 10 USD, 10k USD
-- S 
-  - string
-- B 
-  - boolean
-  - true,True,1 are all considered to be True
-
-```python
-- s, str, string
-- i, int, integer
-- f, float
-- b, bool,boolean
-- tel, mobile
-- d, date
-- n, numeric
-- h, hash       #set of 2 int
-- p, percent
-- o, jsobject
-- ipaddr, ipaddress
-- ipport, tcpport
-- iprange
-- email
-- multiline
-- list
-- dict
-- yaml
-- set
-- guid
-- url, u
-- e,enum        #enumeration
-```
-
-> for full list see ```j.data.types```
-
-
- > ## collection types
+## collection types
 
 - L 
 - e.g. ```LI``` is list of integer
 - e.g. ```LS``` is list of string 
 
-> ## collection of other objects
+## collection of other objects
 
 ```python
 @url =  jumpscale.digitalme.package
@@ -97,13 +55,11 @@ dest =  "" (S)
 enable = true (B)
 ```
 
- ### generic format ```(LO) !URL```
+- generic format ```(LO) !URL```
 
- > ## enumerators
+## enumerators
 
-  ### are cool, you can store long string representations and they will only take 4 bytes to store (int)
-
-
+### are cool, you can store long string representations and they will only take 1 byte to store (shortint)
 
 ```
 schema = """
@@ -117,7 +73,8 @@ o.enum = 3
 assert o.enum == 'RED'  #is always sorted on alfabet
 
 ``` 
->## defaults
+
+### defaults
 
 - ```enable = true (B)```
     - in this case the default is true, so basically everything in between = and (

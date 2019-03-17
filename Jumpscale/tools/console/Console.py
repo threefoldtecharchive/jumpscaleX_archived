@@ -30,16 +30,17 @@ import sys
 # log = logging.getLogger('stdxxx')
 
 
-class Console(j.application.JSBaseClass):
+class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
     """
     class which groups functionality to print to a console
     self.width=120
     self.indent=0 #current indentation of messages send to console
     self.reformat=False #if True will make sure message fits nicely on screen
     """
+    #!!!CONSOLE!!!
 
     def __init__(self):
-        self.__jslocation__ = "j.tools.console"
+        self.__jslocation__ = "j.tools.console" 
         JSBASE.__init__(self)
         self.width = 230
         self.indent = 0  # current indentation of messages send to console

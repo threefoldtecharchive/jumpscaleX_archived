@@ -11,6 +11,7 @@ from .List import *
 import copy
 
 
+
 class Types(j.application.JSBaseClass):
 
     __jslocation__ = "j.data.types"
@@ -19,7 +20,7 @@ class Types(j.application.JSBaseClass):
 
         self._types_list = [List,Dictionary, Guid, Path, Boolean, Integer, Float, String, Bytes, StringMultiLine,
                             IPRange, IPPort, Tel, YAML, JSON, Email, Date, DateTime, Numeric, Percent,
-                            Hash, CapnpBin, JSDataObjectFactory, JSConfigObject, Url, Enumeration]
+                            Hash, CapnpBin, JSDataObjectFactory, JSConfigObjectFactory, Url, Enumeration]
 
 
         self._TypeBaseObjClass = TypeBaseObjClass
@@ -80,7 +81,11 @@ class Types(j.application.JSBaseClass):
 
     def get(self, ttype, default=None):
         """
+
+        mytype = j.data.types.get("s") #will return string type (which is a primitive type)  !!!TYPES!!!
+
         type is one of following
+
         - s, str, string
         - i, int, integer
         - f, float
@@ -102,11 +107,12 @@ class Types(j.application.JSBaseClass):
         - yaml
         - guid
         - url
-        - e,enum        #enumeration
+        - e, enum        #enumeration
         - a, acl
         - u, user
         - g, group
 
+        !!!TYPES!!!
 
         :param default: e.g. "red,blue,green" for an enumerator
             for certain types e.g. enumeration the default value is needed to create the right type

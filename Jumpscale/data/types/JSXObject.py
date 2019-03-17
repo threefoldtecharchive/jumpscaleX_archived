@@ -46,7 +46,7 @@ class JSDataObjectFactory(TypeBaseObjFactory):
         return val._json
 
     def check(self, value):
-        return isinstance(value,j.data.schema._DataObjBase)
+        return isinstance(value,j.data.schema.DataObjBase)
 
     def default_get(self):
         return self._schema.new()
@@ -58,7 +58,7 @@ class JSDataObjectFactory(TypeBaseObjFactory):
         :param model: when model specified (BCDB model) can be stored in BCDB
         :return:
         """
-        if isinstance(value,j.data.schema._DataObjBase):
+        if isinstance(value,j.data.schema.DataObjBase):
             return value
         if isinstance(value,bytes):
             return self._schema.get(data=None, capnpbin=value, model=model)
@@ -78,7 +78,7 @@ class JSDataObjectFactory(TypeBaseObjFactory):
         raise NotImplemented()
 
 
-class JSConfigObject(TypeBaseObjFactory):
+class JSConfigObjectFactory(TypeBaseObjFactory):
     '''
     jumpscale object which inherits from j.application.JSBaseConfigClass
     '''

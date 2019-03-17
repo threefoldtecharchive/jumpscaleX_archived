@@ -114,7 +114,7 @@ class ListObject(TypeBaseObjClass,MutableSequence):
         res=[]
         for item in self._inner_list:
 
-            if isinstance(item, j.data.schema._DataObjBase):
+            if isinstance(item, j.data.schema.DataObjBase):
                 if subobj_format == "J":
                     res.append(item._ddict_json)
                 elif subobj_format == "D":
@@ -244,7 +244,13 @@ class List(TypeBaseObjFactory):
                     return False
         return True
 
+    def toData(self,val=None):
+        val = self.clean(val)
+        return val._inner_list
+
     def clean(self, val=None, toml=False, sort=False, unique=True, ttype=None):
+        if isinstance(val,ListObject):
+            return val
         if val is None:
             val = self._default
         if ttype is None:

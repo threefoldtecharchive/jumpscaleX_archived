@@ -197,7 +197,7 @@ class Schema(j.application.JSBaseClass):
             p = process(line)
 
             if p.jumpscaletype.NAME is "list":
-                # j.shell()
+                j.shell()
                 print(p.capnp_schema)
                 self.lists.append(p)
             else:

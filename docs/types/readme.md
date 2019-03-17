@@ -3,6 +3,14 @@
 Jumpscale X has a rich typeset if used properly can protect you with strongly typed features while python byitself is not typed.
 The typesystem will automatically convert to the required type without you having to think about it.
 
+
+- [currencies][currencies.md]
+- [date_time][date_time.md]
+- [dict][dict.md]
+- [list][list.md]
+- [numeric][numeric.md]
+
+
 ## Quick Overview
 
 | Name | Symbol | Description | sample valid data |

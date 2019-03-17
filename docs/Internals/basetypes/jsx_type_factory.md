@@ -1,8 +1,16 @@
-# j.date.types
 
-implement some basic types in jumpscale
+# jsx type factory
 
-## basic methods on each type class
+!!!include("types/TypeBaseClasses.py!TYPEBASECLASS",codeblock_type="python")
+
+## CUSTOM class property
+
+if set then [jsx_type_factory.md] will return a specific implementation which will be different depending the speficied default.
+
+this is used to implement e.g. enumeration type.
+
+
+## basic methods on each factory type class
 
 ### clean(val)
 
@@ -11,6 +19,7 @@ implement some basic types in jumpscale
 - e.g. in case of ENUMERATION its an EnumerationObject()
 - e.g. in case of a Guid its a string
 - e.g. in case of Float its a Float
+- will return [basetypes/basetype.md], [jsx_data_obj.md] or [jsx_config_obj.md]
 
 ### default_get()
 
@@ -41,6 +50,7 @@ implement some basic types in jumpscale
 
 ### toData()
 
+- will first to a clean, then will get data out of the resulting object of primitive type
 - convert the object to the smallest possible representation in binary
 - is stored inside the capnp objects (can be used to store elsewhere as well)
 
@@ -50,10 +60,23 @@ implement some basic types in jumpscale
 - the clean() needs to be able to use the toHR result back to the jumpscale representation we can work with
 - its the most readable format format, ideal to e.g. represent in screen
 
-## capnp_schema_get()
-
-- returns how to represent it in capnp
-
 ### toDict()
 
 - only relevant for types which have a dict representation
+
+### toDictHR()
+
+- same as to dict but the parts are also in HR format
+
+### python_code_get
+
+produce the python code which represents this value
+
+### toml_string_get
+
+will translate to what we need in toml
+
+### capnp_schema_get
+
+will return schema text to be used in definition of capnp schema
+

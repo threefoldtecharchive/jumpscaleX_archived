@@ -3,6 +3,32 @@ from .TypeBaseClasses import *
 
 class EnumerationObj(TypeBaseObjClass):
 
+
+    def _data_from_init_val(self,value):
+        """
+        convert init value to raw type inside this object
+        :return:
+        """
+        try:
+            value_id = int(value)
+        except:
+            pass
+        if isinstance(value, str):
+            value_str = value.upper().strip()
+            if value_str not in self._typebase.values:
+                raise RuntimeError("could not find enum:'%s' in '%s'" % (value, self.__repr__()))
+            value_id = self._typebase.values.index(value_str)+1
+        elif isinstance(value, int):
+            if value > len(self._typebase.values)+1:
+                raise RuntimeError("could not find enum id:%s in '%s', too high" % (value, self.__repr__()))
+            value_id = value
+        else:
+            raise RuntimeError("unsupported type for enum, is int or string")
+
+        self._data = value_id
+
+
+
     @property
     def _string(self):
         if self._data is 0:
@@ -75,27 +101,15 @@ class Enumeration(TypeBaseObjFactory):
 
         self._default = 1
 
+
+
     def capnp_schema_get(self, name, nr):
         return "%s @%s :UInt8;" % (name, nr)
 
 
     def toData(self,value):
-        try:
-            value = int(value)
-        except:
-            pass
-        if isinstance(value, str):
-            value_str = value.upper().strip()
-            if value_str not in self.values:
-                raise RuntimeError("could not find enum:'%s' in '%s'" % (value, self.__repr__()))
-            value_id = self.values.index(value_str)+1
-        elif isinstance(value, int):
-            if value > len(self.values)+1:
-                raise RuntimeError("could not find enum id:%s in '%s', too high" % (value, self.__repr__()))
-            value_id = value
-        else:
-            raise RuntimeError("unsupported type for enum, is int or string")
-        return value_id
+        o = self.clean(value)
+        return o._data
 
     def clean(self, value):
         """
@@ -106,8 +120,7 @@ class Enumeration(TypeBaseObjFactory):
             return self.default_get()
         if isinstance(value,EnumerationObj):
             return value
-        value_id = self.toData(value)
-        return EnumerationObj(self,value_id)
+        return EnumerationObj(self,value)
 
     def __dir__(self):
         res=["clean","default_get","toData","capnp_schema_get"]
