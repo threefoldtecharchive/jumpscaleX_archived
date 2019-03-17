@@ -218,6 +218,12 @@ class ModelOBJ():
             if self.readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s"%self)
             # print (self.model.__class__.__name__)
+            {% for prop in obj.properties %}
+            if self.model.schema.property_{{prop.name}}.unique:
+                for mm in self.model.get_all():
+                    if mm.{{prop.name}} == self.model.schema.property_{{prop.name}}.default:
+                        raise RuntimeError("cannot save , {{prop.name}} should be unique")
+            {% endfor %}
             if not self.model.__class__._name=="acl" and self.acl is not None:
                 if self.acl.id is None:
                     self.acl.save()
