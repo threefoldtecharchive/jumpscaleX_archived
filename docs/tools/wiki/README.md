@@ -11,11 +11,12 @@ The tool pre-process the given markdown directory (it adds some extension to mar
     * [include](docsites/macros/include.md)
 
 
-### Tool usage
+## Tool usage
 
 Given a markdown documents directory (a link to repository), the tool will pull, pre-process and generate the docsite.
+You can find some markdown docs examples [here](https://github.com/threefoldtech/jumpscale_weblibs/tree/master/docsites_examples) and [here](https://github.com/threefoldtech/jumpscaleX/tree/development_markdown/docs/tools/wiki/docsites/examples/docs).
 
-Example:
+Usage example:
 
 ```python
 url = "https://github.com/threefoldtech/jumpscaleX/tree/development_markdown/docs/tools/wiki/docsites/examples/docs"
@@ -26,11 +27,89 @@ docsite.write()
 This will pull the repo at the branch specified, then generate a docsite at `$DIR_VAR/docsites` with the name `test_example`.
 
 
-### Openresty
-* TODO (about serving docsite directory using openresty)
+## Openresty
+This docsite can be served as static files by nginx/openresty like:
 
-### Docsites at front-end
-* TODO (about docsite.js)
+```conf
+worker_processes 4;
+error_log stderr notice;
+daemon off;
+pid logs/nginx.pid;
 
-#### Wiki
-* TODO (about docsify.js)
+events {
+  worker_connections 1024;
+}
+
+http {
+  include mime.types;
+  client_body_buffer_size 64k;
+
+  server {
+    listen 8080;
+
+    location /wiki_static/ {
+      alias /sandbox/var/docsites/;
+    }
+
+}
+```
+
+## Docsites at the front-end
+[docsite.js](https://github.com/threefoldtech/jumpscale_weblibs/blob/master/static/docsites/docsite.js) is a tool to replace custom handlebars in html templates with data and content from docsites.
+
+To use it, make sure you add it to your html pages for example:
+
+`<script src="/static/docsites/docsite.js" type="text/javascript"></script>`
+
+The directory where dociste are should be served at `/wiki_static`, see the [previous configuration](#Openresty) for openresty.
+
+In any document, you can define a data section between `+++` like:
+
+```
++++
+name = "a new docsite to ..."
+button = "<button>"
+link1 = "https://...."
++++
+
+any content can be added after.
+```
+
+and it can be referenced in the following format:
+
+```
+{{{ <docsite name>.[<path.to.document>].<variable name> }}}
+```
+
+* `<docsite name>`: the docsite name used when generating it using jumpscale markdown tool.
+* `<path.to.document>`: is the path to the document, but it's a dot-separated.
+* `<variable name>`: like `name`, `button` or `link1`.
+
+the content can be referenced the same way, with a special name `content`:
+
+```
+{{{ <docsite name>.[<path.to.document>].content }}}
+```
+
+For example, if a docsite is generated at `/sandbox/var/docsites/site_a` and served using Openresty at `/wiki_static/site_a`, you can reference data and content in your html templates like:
+
+```
+<div class="container">
+  <div class="content">
+    {{{ site_a.[team.development].content }}}
+  </div>
+  <a href="{{{ site_a.[team.development].link1 }}}">Link to ...</a>
+<div>
+```
+
+Some of our websites are based on this tool, [theefold.io](https://github.com/threefoldfoundation/www_threefold_lapis) is an example of using `lapis` with `etlua` templates and `docsite.js`.
+
+## Wiki
+* [docsify.js](https://docsify.js.org/#/?id=docsify) TODO
+
+
+## Openresty and lapis in action
+
+* [Webserver and gedis](https://github.com/threefoldtech/digitalmeX/tree/development/docs/webserver)
+* [Itsyou.online authentication](../../../Jumpscale/builder/web/docs/resty_iyo.md)
+* [lapis-wiki](https://github.com/threefoldfoundation/lapis-wiki)
