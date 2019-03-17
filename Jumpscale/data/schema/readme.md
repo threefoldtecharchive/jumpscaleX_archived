@@ -70,6 +70,20 @@ type is one of following
 - L
 - e.g. LI is list of integer
 
+### unique attribute
+
+- &
+- e.g. &key = "" (S)
+- in this example **dest** is should be unique
+ ```
+ schema = """
+@url =  jumpscale.test.1
+giturl =  "" (S)
+&dest =  "" (S)  #unique attribute
+enable = true (B)
+"""
+ ```
+
 #### collection of other objects
 
 ```python
