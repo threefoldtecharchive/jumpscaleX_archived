@@ -59,7 +59,7 @@ http {
 
 To use it, make sure you add it to your html pages for example:
 
-`<script src="/static/docsites/docsite.js" type="text/javascript"></script>`
+`<script src="/static/weblibs/docsites/docsite.js" type="text/javascript"></script>`
 
 The directory where dociste are should be served at `/wiki_static`, see the [previous configuration](#Openresty) for openresty.
 
@@ -105,11 +105,12 @@ For example, if a docsite is generated at `/sandbox/var/docsites/site_a` and ser
 Some of our websites are based on this tool, [theefold.io](https://github.com/threefoldfoundation/www_threefold_lapis) is an example of using `lapis` with `etlua` templates and `docsite.js`.
 
 ## Wiki
-* [docsify.js](https://docsify.js.org/#/?id=docsify) TODO
+You can serve any docsite that uses [docsify.js](https://docsify.js.org/#/?id=docsify) using our `lapis-wiki`, you just need to generate the docsite from your docs, and `lapis-wiki` will make it accessiable at `/wiki/<docsite name>`.
 
+See [tool usage](#Tool-usage) to generate the docsite (you can find some examples in markdowndocs tool itself [here](https://github.com/threefoldtech/jumpscaleX/blob/development/Jumpscale/tools/markdowndocs/MarkDownDocs.py#L283)), and [lapis-wiki](https://github.com/threefoldfoundation/lapis-wiki) to run the web server.
 
 ## Openresty and lapis in action
 
-* [Webserver and gedis](https://github.com/threefoldtech/digitalmeX/tree/development/docs/webserver)
-* [Itsyou.online authentication](../../../Jumpscale/builder/web/docs/resty_iyo.md)
-* [lapis-wiki](https://github.com/threefoldfoundation/lapis-wiki)
+* [Web server and gedis](https://github.com/threefoldtech/digitalmeX/tree/development/docs/webserver): how to run and serve files using openresty and lapis (with possible gedis backend).
+* [Itsyou.online authentication](../../../Jumpscale/builder/web/docs/resty_iyo.md): itsyou.online authentication for resty
+* [lapis-wiki](https://github.com/threefoldfoundation/lapis-wiki): our implementation to serve docsites and other lapis applications.
