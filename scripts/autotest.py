@@ -34,8 +34,9 @@ class RunTests(Utils):
         :param image_name: docker image name 
         :type image_name: str
         """
-        response = self.execute_cmd('docker images | tail -n+2 | awk "{print \$1}"')
-        images_name = response.stdout.split()
-        if image_name not in images_name:
-            self.send_msg('Could not find image')
-            sys.exit()
+        if image_name == '{}/jumpscalex'.format(self.username):
+            response = self.execute_cmd('docker images | tail -n+2 | awk "{print \$1}"')
+            images_name = response.stdout.split()
+            if image_name not in images_name:
+                self.report('Could not find image')
+                sys.exit()

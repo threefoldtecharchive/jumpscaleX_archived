@@ -4,8 +4,6 @@ from autotest import RunTests
 from build_image import BuildImage
 from utils import Utils
 import os
-path = '/sandbox/code/github/threefoldtech/jumpscaleX/scripts/'
-os.chdir(path)
 utils = Utils()
 app = Flask(__name__)
 
