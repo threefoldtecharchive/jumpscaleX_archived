@@ -38,7 +38,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         self.dirs = {
             self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/openresty.cfg'): 'cfg/',
             self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/mime.types'): 'cfg/',
-            self.tools.joinpaths(j.core.dirs.BASEDIR, 'openresty/'): 'openresty/',
+            self.tools.joinpaths(j.core.dirs.BASEDIR, 'openresty/'): 'openresty/'
             '/lib/x86_64-linux-gnu/libnss_files.so.2': 'lib',
         }
         lua_files = j.sal.fs.listFilesInDir(self.tools.joinpaths(j.core.dirs.BASEDIR, 'bin/'), filter='*.lua')
@@ -51,6 +51,12 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             j.builder.tools.dir_ensure(dir_dest)
             j.sal.fs.copyFile(dir_src, dir_dest)
 
+        lib_dest = j.sal.fs.joinPaths(dest_path, 'sandbox/lib')
+        j.builder.tools.dir_ensure(lib_dest)
+        for bin in self.bins:
+            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
+            j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
+
         for dir_src in self.dirs:
             dir_dest = j.sal.fs.joinPaths(dest_path, dir_src[1:])
             j.builder.tools.dir_ensure(dir_dest)
@@ -58,7 +64,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
 
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'openresty_startup.toml')
         self.startup = j.sal.fs.readFile(startup_file)
-        j.sal.fs.copyFile(startup_file,   j.sal.fs.joinPaths(dest_path, 'sandbox'))
+        j.sal.fs.copyFile(startup_file,j.sal.fs.joinPaths(dest_path, 'sandbox'))
 
         self._done_set('sandbox')
 

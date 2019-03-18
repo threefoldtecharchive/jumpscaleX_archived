@@ -244,13 +244,20 @@ class BuilderLua(j.builder.system._BaseClass):
 
         j.builder.web.openresty.sandbox(dest_path=dest_path, reset=reset)
 
-        self.bins = ['_lapis.lua', '_moonc.lua', '_moon.lua', '_moonrocks.lua']
+        self.bins = [ 'lua','_lapis.lua', '_moonc.lua', '_moon.lua', '_moonrocks.lua']
 
         for bin_name in self.bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
             dir_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR[1:])
             j.builder.tools.dir_ensure(dir_dest)
             j.sal.fs.copyFile(dir_src, dir_dest)
+            # j.sal.fs.copyDirTree(dir_src, dir_dest)
+
+        lib_dest = j.sal.fs.joinPaths(dest_path, 'sandbox/lib')
+        j.builder.tools.dir_ensure(lib_dest)
+        for bin in self.bins:
+            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
+            j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)    
 
         self._done_set('sandbox')
 
