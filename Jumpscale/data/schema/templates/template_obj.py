@@ -48,13 +48,13 @@ class ModelOBJ(DataObjBase):
 
     {# generate the properties #}
     {% for prop in obj.properties %}
-    @property 
+    @property
     def {{prop.name}}(self):
         {% if prop.comment != "" %}
         '''
         {{prop.comment}}
         '''
-        {% endif %} 
+        {% endif %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
         return self._changed_items["{{prop.name}}"]
         {% else %}
@@ -62,15 +62,15 @@ class ModelOBJ(DataObjBase):
             return self._changed_items["{{prop.name}}"]
         else:
             return {{prop.js_typelocation}}.clean(self._cobj_.{{prop.name_camel}})
-        {% endif %} 
-        
+        {% endif %}
+
     @{{prop.name}}.setter
     def {{prop.name}}(self,val):
         if self._readonly:
             raise RuntimeError("object readonly, cannot set.\n%s"%self)
         {% if prop.jumpscaletype.NAME == "jsobject" %}
         self._changed_items["{{prop.name}}"] = val
-        {% else %} 
+        {% else %}
         #will make sure that the input args are put in right format
         val = {{prop.js_typelocation}}.clean(val)  #is important because needs to come in right format e.g. binary for numeric
         if True or val != self.{{prop.name}}: #TODO: shortcut for now
@@ -203,7 +203,7 @@ class ModelOBJ(DataObjBase):
             d["{{prop.name}}"] = self.{{prop.name}}._dictdata
         else:
             d["{{prop.name}}"] = self.{{prop.name}}
-        {% endif %}    
+        {% endif %}
         {% endfor %}
 
         {% for prop in obj.lists %}
@@ -233,6 +233,8 @@ class ModelOBJ(DataObjBase):
         res = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
         if len(str(res))<maxsize:
             d["{{prop.name}}"] = res
+        else:
+            d["{{prop.name}}"] = "\n"+j.core.text.indent(res,4)
         {% endif %}
         {% endfor %}
         {% for prop in obj.lists %}

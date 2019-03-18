@@ -208,8 +208,7 @@ class DataObjBase():
         out += "{RESET}\n\n"
         out = j.core.tools.text_replace(out)
         # out = out.replace("[","{").replace("]","}")
-        #TODO: *1 dirty hack, the ansi codes are not printed, need to check why
-        print (out)
-        return ""
+        # Nothing wrong with printing ansi characters, it's just a bug in our code!
+        return out
 
     __repr__ = __str__
