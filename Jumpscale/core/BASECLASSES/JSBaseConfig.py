@@ -89,7 +89,7 @@ class JSBaseConfig(JSBase):
         :return:
         """
         ddict = self.data._ddict
-        self.data.data_update(data=kwargs)
+        # self.data.data_update(data=kwargs)
 
         #TODO: REEM was not ok, cannot do this
         # for prop, val in self.data._ddict.items():

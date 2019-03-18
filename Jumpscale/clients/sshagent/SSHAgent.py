@@ -340,7 +340,7 @@ class SSHAgent(j.application.JSBaseClass):
         :return:
         """
         if not self.available():
-            return false
+            return False
         return len(self.keys_list())==1
 
     def kill(self, socketpath=None):

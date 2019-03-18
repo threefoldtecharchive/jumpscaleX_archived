@@ -19,6 +19,7 @@ class NACL(j.application.JSBaseClass):
     def _init(self, name=None):
         assert name is not None
         self.name = name
+        self._box = None
 
     @property
     def _path(self):
@@ -237,7 +238,11 @@ class NACL(j.application.JSBaseClass):
 
         return True
 
-
+    @property
+    def box(self):
+        if not self._box:
+            self.load()
+        return self._box
 
     def _hash(self,data):
         m = hashlib.sha256()
@@ -289,7 +294,8 @@ class NACL(j.application.JSBaseClass):
         return j.data.hash.md5_string(data2)
 
     def encryptSymmetric(self, data, hex=False, salt=""):
-        box = self._box
+
+        box = self.box
         if salt == "":
             salt = nacl.utils.random(nacl.secret.SecretBox.NONCE_SIZE)
         else:
