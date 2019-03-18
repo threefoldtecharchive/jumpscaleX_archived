@@ -153,8 +153,8 @@ class DataObjBase():
             self._cobj.clear_write_flag()
             return self._cobj.to_bytes_packed()
         except:
-            self._cobj=self._cobj.as_builder()
-            return self._cobj.to_bytes_packed()
+            self._cobj_=self._cobj.as_builder()
+            return self._cobj_.to_bytes_packed()
 
 
     @property

@@ -194,11 +194,10 @@ class ModelOBJ(DataObjBase):
         # from pudb import set_trace; set_trace()
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %} #NEED TO CHECK : #TODO: despiegk
-        raise RuntimeError("not here")
-        # d["{{prop.name}}"] = self.{{prop.name}}._ddict
+        d["{{prop.name}}"] = self.{{prop.name}}._ddict
         {% elif prop.jumpscaletype.BASETYPE == "OBJ" %}
-        raise RuntimeError("not here")
-        # d["{{prop.name}}"] = self.{{prop.name}}._dictdata
+        d["{{prop.name}}"] = self.{{prop.name}}._dictdata
+        j.shell()
         {% else %}
         if isinstance(self.{{prop.name}},j.data.types._TypeBaseObjClass):
             d["{{prop.name}}"] = self.{{prop.name}}._dictdata

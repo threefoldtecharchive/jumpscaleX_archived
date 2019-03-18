@@ -68,19 +68,18 @@ class TypeBaseObjClassNumeric(TypeBaseObjClass):
     #     return hash(self.value)
 
     def __eq__(self, other):
-        other = self._other_convert(other)
-        if other is None:
-            return None
+        # other = self._other_convert(other)
+        # if other is None:
+        #     j.shell()
+        #     raise RuntimeError("cannot compare with None")
+        other = self._typebase.clean(other)
         return float(other) == float(self)
 
     def __bool__(self):
         return self._data is not None
 
-    def _other_convert(self,other):
-        try:
-            return self._typebase.clean(other)
-        except:
-            pass
+    # def _other_convert(self,other):
+    #     return self._typebase.clean(other)
 
     def __add__(self, other):
         other = self._other_convert(other)

@@ -459,6 +459,8 @@ class Numeric(TypeBaseObjFactory):
             return data
         if data is None:
             data = self._default
+        if isinstance(data,float) or isinstance(data,int):
+            data = str(data)
         if isinstance(data,str):
             data = self.str2bytes(data)
         if isinstance(data,bytes):

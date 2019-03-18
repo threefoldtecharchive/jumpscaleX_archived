@@ -64,7 +64,7 @@ def main(self):
     # j.shell()
 
 
-    
+    #more deep embedded (2 levels)
     
     schema = """
         @url = jumpscale.schema.test3.cmd

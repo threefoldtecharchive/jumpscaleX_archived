@@ -39,8 +39,9 @@ def main(self):
 
     jsx_obj = o1.llist.new()
 
+    assert jsx_obj.cost_estimate == 0.0
+    assert jsx_obj.cost_estimate == 0
 
-    j.shell()
 
     self._log_info("TEST DONE CAPNP")
 
