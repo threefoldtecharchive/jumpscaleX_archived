@@ -141,8 +141,10 @@ class NACL(j.application.JSBaseClass):
             #will create a dummy file with a random key which will encrypt the secret
             key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
             j.sal.fs.writeFile(self._path_encryptor_for_secret,key)
-            sb=nacl.secret.SecretBox(key)
-            r = sb.encrypt(secret)
+            self._box = nacl.secret.SecretBox(key)
+            if isinstance(secret, str):
+                secret = secret.encode()
+            r = self._box.encrypt(secret)
             j.core.db.set(redis_key,r)
 
         #create path where the files for nacl will be
@@ -205,7 +207,7 @@ class NACL(j.application.JSBaseClass):
                     return False
 
         try:
-            self._box = nacl.secret.SecretBox(secret)  #used to decrypt the private key
+            self._box = nacl.secret.SecretBox(key)  #used to decrypt the private key
         except nacl.exceptions.CryptoError as e:
             if die:
                 self._error_raise("could not use the secret key, maybe wrong one, please use 'kosmos --init' to fix.")
