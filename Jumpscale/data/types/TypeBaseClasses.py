@@ -216,7 +216,7 @@ class TypeBaseClass(): #!!TYPEBASECLASS!!
     def capnp_schema_get(self, name, nr):
         return "%s @%s :Text;" % (name, nr)
 
- #!!TYPEBASECLASS!!
+#!!TYPEBASECLASS!!
 
 class TypeBaseObjFactory(TypeBaseClass):
 

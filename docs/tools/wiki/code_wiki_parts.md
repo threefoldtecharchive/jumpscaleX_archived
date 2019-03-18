@@ -6,10 +6,10 @@ Is ability to mark blocks in code or wiki
 marked as 
 
 ```
-!!!A!!!
+!!A!!
 ```
 
-basically !!!$MARKER!!!
+basically !!$MARKER!!
 
 if you use 2 markers then basically marker will stop in next iteration
 
@@ -20,11 +20,11 @@ next examples will show how text with marker 'A' is taked out of the text
 ```
 # title 1
 
-## title 1.1 !!!A!!!
+## title 1.1 !!A!!
 
 This is content
 
-!!!A!!!
+!!A!!
 # title 2
 
 Some other content
@@ -45,12 +45,12 @@ This is content
 ```
 # title 1
 
-!!!A!!!
+!!A!!
 ## title 1.1 
 
 This is content
 
-!!!A!!!
+!!A!!
 # title 2
 
 Some other content
@@ -71,10 +71,10 @@ This is content
 ```
 # title 1
 
-!!!A!!!
+!!A!!
 ## title 1.1 
 
-This is content !!!A!!!
+This is content !!A!!
 
 # title 2
 
@@ -96,7 +96,7 @@ This is content
 ```
 # title 1
 
-!!!A!!!
+!!A!!
 
 
 ## title 1.1 
@@ -104,7 +104,7 @@ This is content
 This is content 
 
 
-!!!A!!!
+!!A!!
 
 # title 2
 
@@ -128,14 +128,14 @@ there is always strip of '\n' at start & end
 
 
 ```python
-class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
+class Console(j.application.JSBaseClass):  #!!CONSOLE!!
     """
     class which groups functionality to print to a console
     self.width=120
     self.indent=0 #current indentation of messages send to console
     self.reformat=False #if True will make sure message fits nicely on screen
     """
-    #!!!CONSOLE!!!
+    #!!CONSOLE!!
 
     def xxx(self):
         pass
@@ -159,7 +159,11 @@ class Console(j.application.JSBaseClass):
 
 
 ```python
-class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
+
+class OTHER():
+    pass
+
+class Console(j.application.JSBaseClass):  #!!CONSOLE!!
     """
     class which groups functionality to print to a console
     self.width=120
@@ -173,7 +177,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         """
 
 
-    #!!!CONSOLE!!!
+    #!!CONSOLE!!
 
     def xxx(self):
         pass
@@ -187,4 +191,32 @@ self.width=120
 self.indent=0 #current indentation of messages send to console
 self.reformat=False #if True will make sure message fits nicely on screen
 something
+```
+
+
+## Example 6
+
+```
+# title 1
+
+## title 1.1 !!A!!
+
+This is content
+
+# title 2
+
+Some other content
+
+```
+
+will result
+
+```
+## title 1.1
+
+This is content
+
+# title 2
+
+Some other content
 ```

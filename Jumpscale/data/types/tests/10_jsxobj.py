@@ -36,7 +36,9 @@ def main(self):
 
     o3 = tt.default_get()
 
-    assert o3 == tt.clean(o3)
+    print(tt._schema._capnp_schema_text)
+
+    # assert o3 == tt.clean(o3)
 
     j.shell()
 

@@ -226,12 +226,16 @@ class Schema(j.application.JSBaseClass):
     @property
     def _capnp_schema(self):
         if not self._capnp:
-            tpath = "%s/templates/schema.capnp" % self._path
-            # j.shell()
-            _capnp_schema_text = j.tools.jinja2.template_render(
-                path=tpath, reload=False, obj=self, objForHash=self._md5)
-            self._capnp = j.data.capnp.getSchemaFromText(_capnp_schema_text)
+            self._capnp = j.data.capnp.getSchemaFromText(self._capnp_schema_text)
         return self._capnp
+
+    @property
+    def _capnp_schema_text(self):
+        tpath = "%s/templates/schema.capnp" % self._path
+        # j.shell()
+        _capnp_schema_text = j.tools.jinja2.template_render(
+            path=tpath, reload=False, obj=self, objForHash=self._md5)
+        return _capnp_schema_text
 
     @property
     def objclass(self):
