@@ -200,7 +200,7 @@ class NACL(j.application.JSBaseClass):
         else:
             #need to find an ssh agent now and only 1 key
             if j.clients.sshagent.available_1key_check():
-                secret = j.clients.sshagent.sign("nacl_could_be_anything",hash=True)
+                key = j.clients.sshagent.sign("nacl_could_be_anything",hash=True)
             else:
                 if die:
                     self._error_raise("could not find secret key from sshagent, ssh-agent not active, if active need 1 ssh key loaded!")
