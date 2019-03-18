@@ -40,6 +40,7 @@ class group_clients(JSGroup):
         self._sendgrid = None
         self._openvcloud = None
         self._intercom = None
+        self._freeflowpages = None
         self.__template = None
         self._itsyouonline = None
         self._grafana = None
@@ -224,6 +225,12 @@ class group_clients(JSGroup):
             from Jumpscale.clients.intercom.IntercomFactory import Intercom
             self._intercom =  Intercom()
         return self._intercom
+    @property
+    def freeflowpages(self):
+        if self._freeflowpages is None:
+            from Jumpscale.clients.freeflow.FreeFlowFactory import FreeFlowFactory
+            self._freeflowpages =  FreeFlowFactory()
+        return self._freeflowpages
     @property
     def _template(self):
         if self.__template is None:
