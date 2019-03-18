@@ -66,6 +66,7 @@ git pull
 cd /sandbox/code/github/threefoldfoundation/lapis-wiki
 git pull
 cd /sandbox/code/github/threefoldtech/digitalmeX
+git stash
 git pull
 
 
