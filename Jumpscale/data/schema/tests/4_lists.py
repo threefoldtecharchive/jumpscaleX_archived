@@ -41,18 +41,19 @@ def main(self):
     schema_object = j.data.schema.get(schema1)
     schema_test = schema_object.new()
     schema_test.return_queues = ["a", "b"]
-    assert schema_test._return_queues.pylist() == ["a", "b"]
-    assert schema_test._return_queues._inner_list == ["a", "b"]
+    assert schema_test.return_queues.pylist() == ["a", "b"]
+    assert schema_test.return_queues._inner_list == ["a", "b"]
     assert schema_test.return_queues == ["a", "b"]
 
     schema_test.return_queues[1] = "c"
-    assert schema_test._return_queues.pylist() == ["a", "c"]
-    assert schema_test._return_queues._inner_list == ["a", "c"]
+    
+    assert schema_test.return_queues.pylist() == ["a", "c"]
+    assert schema_test.return_queues._inner_list == ["a", "c"]
     assert schema_test.return_queues == ["a", "c"]
 
     schema_test.return_queues.pop(0)
-    assert schema_test._return_queues.pylist() == ["c"]
-    assert schema_test._return_queues._inner_list == ["c"]
+    assert schema_test.return_queues.pylist() == ["c"]
+    assert schema_test.return_queues._inner_list == ["c"]
     assert schema_test.return_queues == ["c"]
 
     cmd = schema_test.cmds.new()
