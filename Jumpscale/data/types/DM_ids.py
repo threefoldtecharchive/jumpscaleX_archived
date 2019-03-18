@@ -7,6 +7,8 @@ class DMBase(TypeBaseObjClass):
 
     def __init__(self,typebase,value=None):
 
+        self.BASETYPE = "bytes"
+
         self._typebase = typebase  #is the factory for this object
 
         if value is None:
@@ -18,6 +20,7 @@ class DMBase(TypeBaseObjClass):
 class DM(DMBase):
 
     def __init__(self,typebase,value=None):
+
 
         TypeBaseObjClass.__init__(self,typebase,value)
 

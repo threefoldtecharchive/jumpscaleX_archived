@@ -67,9 +67,9 @@ class BCDB(j.application.JSBaseClass):
 
         self.dataprocessor_start()
 
-        self.acl = None
-        self.user = None
-        self.group = None
+        # self.acl = None
+        # self.user = None
+        # self.group = None
 
         self.models = {}
 
@@ -84,19 +84,21 @@ class BCDB(j.application.JSBaseClass):
         self.results = {}
         self.results_id = 0
 
+
+        #ACL NO LONGER DONE THIS WAY, WILL BE PROPER BASETYPE USING REDIS
         # need to do this to make sure we load the classes from scratch
-        for item in ["ACL", "USER", "GROUP"]:
-            key = "Jumpscale.data.bcdb.models_system.%s" % item
-            if key in sys.modules:
-                sys.modules.pop(key)
+        # for item in ["ACL", "USER", "GROUP"]:
+        #     key = "Jumpscale.data.bcdb.models_system.%s" % item
+        #     if key in sys.modules:
+        #         sys.modules.pop(key)
 
-        from .models_system.ACL import ACL
-        from .models_system.USER import USER
-        from .models_system.GROUP import GROUP
+        # from .models_system.ACL import ACL
+        # from .models_system.USER import USER
+        # from .models_system.GROUP import GROUP
 
-        self.acl = self.model_add(ACL())
-        self.user = self.model_add(USER())
-        self.group = self.model_add(GROUP())
+        # self.acl = self.model_add(ACL())
+        # self.user = self.model_add(USER())
+        # self.group = self.model_add(GROUP())
 
         #
         # self._log_info("BCDB INIT DONE:%s" % self.name)

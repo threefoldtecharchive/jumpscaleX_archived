@@ -15,7 +15,7 @@ class String(TypeBaseClass):
     NAME =  'string,str,s'
 
     def __init__(self,default=None):
-        self.BASETYPE = None
+        self.BASETYPE = "string"
         if not default:
             default = ""
         self._default = default
@@ -120,7 +120,7 @@ class Bytes(TypeBaseClass):
     NAME =  'bytes,bin,binary'
 
     def __init__(self,default=None):
-        self.BASETYPE = None
+        self.BASETYPE = "bytes"
         if not default:
             default = ""
         self._default = b""
@@ -190,7 +190,7 @@ class Boolean(TypeBaseClass):
     NAME =  'bool,boolean,b'
 
     def __init__(self,default=None):
-        self.BASETYPE = None
+        self.BASETYPE = "bool"
         if not default:
             default = False
         self._default = default
@@ -261,7 +261,7 @@ class Integer(TypeBaseClass):
     NAME =  'int,integer,i'
 
     def __init__(self,default=None):
-        self.BASETYPE = None
+        self.BASETYPE = "int"
         if not default:
             default = 4294967295
         self._default = default
@@ -324,7 +324,7 @@ class Float(TypeBaseClass):
     NAME =  'float,f'
 
     def __init__(self,default=None):
-        self.BASETYPE = None
+        self.BASETYPE = "float"
         if not default:
             default = 0.0
         self._default = default
@@ -438,7 +438,7 @@ class CapnpBin(Bytes):
 
     def __init__(self,default=None):
 
-        self.BASETYPE = 'bin'
+        self.BASETYPE = 'bytes'
         self.NOCHECK = True
         if not default:
             default = b""

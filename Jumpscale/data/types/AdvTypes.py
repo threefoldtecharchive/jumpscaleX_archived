@@ -168,7 +168,7 @@ class IPPort(Integer):
     NAME =  'ipport,tcpport'
 
     def __init__(self,default=None):
-        self.BASETYPE = "string"
+        self.BASETYPE = "int"
         self.NOCHECK = True
         self._default = default
 
@@ -227,10 +227,9 @@ class Numeric(TypeBaseObjFactory):
 
     def __init__(self,default=None):
         TypeBaseObjFactory.__init__(self)
+        self.BASETYPE = "bytes"
 
         self.NOCHECK = True
-        if not default:
-            default = NumericObject(self)
         self._default = default
 
 
@@ -455,12 +454,17 @@ class Numeric(TypeBaseObjFactory):
         else:
             return struct.pack("B", ttype) + struct.pack("B", curcat) + struct.pack("I", value)
 
-    def clean(self, data):
-        if data is None:
-            return self.default_get()
+    def clean(self, data=None):
         if isinstance(data,NumericObject):
             return data
-        return NumericObject(self,data)
+        if data is None:
+            data = self._default
+        if isinstance(data,str):
+            data = self.str2bytes(data)
+        if isinstance(data,bytes):
+            return NumericObject(self,data)
+        else:
+            raise RuntimeError("was not able to clean numeric")
 
     def toData(self,data):
         # print("num:clean:%s"%data)

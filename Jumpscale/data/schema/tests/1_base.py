@@ -98,12 +98,15 @@ def main(self):
     c= o1._cobj
     c2= o1._cobj
 
-    assert c.llist2[0] == b'5'
-    assert c2.llist2[0] == b'5'
+    assert c.llist2[0] == '5'
+    assert c2.llist2[0] == '5'
 
     dd = o1._ddict
 
-    j.shell()
+    assert dd["enum"] == 1
+    assert dd["llist2"][1] == '6'
+    assert dd["nr"] == 4
+
 
     o2.llist.append("1")
 
@@ -118,10 +121,10 @@ def main(self):
     assert o1.enum == ' GREEN'
     assert o1.enum == ' Green'
 
-    assert o1._ddict["enum"] == "GREEN"
+    assert o1._ddict_hr["enum"] == "GREEN"
 
     assert o1._cobj.nr == 4
-    assert o1._cobj.llist2[0] == b'5'
+    assert o1._cobj.llist2[0] == '5'
 
 
     assert o1._data.find(b"GREEN") == -1  # needs to be stored as int

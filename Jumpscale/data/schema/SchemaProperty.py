@@ -35,7 +35,6 @@ class SchemaProperty(j.application.JSBaseClass):
     @property
     def default_as_python_code(self):
         #default already set when parsing the schema
-
         return self.jumpscaletype.python_code_get(self.default)
         # try:
         #     return self.jumpscaletype.python_code_get(self.default)

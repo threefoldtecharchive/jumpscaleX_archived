@@ -43,7 +43,7 @@ class IPAddressObject(TypeBaseObjClass):
 class IPAddress(TypeBaseObjFactory):
     """
     """
-    NAME =  'ipaddr'
+    NAME = 'ipaddr'
 
     def __init__(self,default=None):
         TypeBaseObjClassFactory.__init__(self)

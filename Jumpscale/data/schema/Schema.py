@@ -150,6 +150,9 @@ class Schema(j.application.JSBaseClass):
                 line_proptype = line.split("(")[1].split(")")[0].strip().lower()
                 self._log_debug("line:%s; lineproptype:'%s'" % (line_original, line_proptype))
                 line_wo_proptype = line.split("(")[0].strip() #before the (
+                if line_wo_proptype == "":
+                    if line_proptype in ["lo","o"]:
+                        line_wo_proptype = pointer_type
                 # if line_proptype == "o":
                 #     # special case where we have subject directly attached
                 #     jumpscaletype = j.data.types.get("o")
@@ -159,7 +162,27 @@ class Schema(j.application.JSBaseClass):
                 #     jumpscaletype = j.data.types.get("lo",
                 # else:
 
-                jumpscaletype = j.data.types.get(line_proptype,default=line_wo_proptype)
+                #will make sure we convert the default to the right possible type int,float, string
+                if "\"" or "'" in line_wo_proptype:
+                    default=line_wo_proptype.strip().strip("\"").strip("'").strip()
+                elif line_wo_proptype.strip()=="":
+                    default=None
+                else:
+                    line_wo_proptype=line_wo_proptype.strip()
+                    default=None
+                    try:
+                        default=int(line_wo_proptype)
+                    except:
+                        pass
+                    if default is None:
+                        try:
+                            default=float(line_wo_proptype)
+                        except:
+                            pass
+                    if default is None:
+                        default = line_wo_proptype #is normal string
+
+                jumpscaletype = j.data.types.get(line_proptype,default=default)
 
                 defvalue = None
 
@@ -197,9 +220,10 @@ class Schema(j.application.JSBaseClass):
             p = process(line)
 
             if p.jumpscaletype.NAME is "list":
-                j.shell()
-                print(p.capnp_schema)
-                self.lists.append(p)
+                raise RuntimeError("no longer used")
+                # j.shell()
+                # print(p.capnp_schema)
+                # self.lists.append(p)
             else:
                 self.properties.append(p)
 
@@ -212,10 +236,10 @@ class Schema(j.application.JSBaseClass):
             self.__dict__["property_%s" % s.name] = s
             nr += 1
 
-        for s in self.lists:
-            s.nr = nr
-            self.__dict__["property_%s" % s.name] = s
-            nr += 1
+        # for s in self.lists:
+        #     s.nr = nr
+        #     self.__dict__["property_%s" % s.name] = s
+        #     nr += 1
 
     @property
     def _capnp_id(self):

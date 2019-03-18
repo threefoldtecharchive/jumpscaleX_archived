@@ -4,7 +4,7 @@ from Jumpscale.data.schema.DataObjBase import DataObjBase
 
 class ModelOBJ(DataObjBase):
 
-    __slots__ = ["id","_schema","model","autosave","readonly","_JSOBJ","_cobj_","_changed_items","acl_id","_acl",
+    __slots__ = ["id","_schema","_model","_autosave","_readonly","_JSOBJ","_cobj_","_changed_items","_acl_id","_acl",
                         {% for prop in obj.lists %}"_{{prop.name}}",{% endfor %}]
 
     def _defaults_set(self):
@@ -37,7 +37,7 @@ class ModelOBJ(DataObjBase):
         #PROP
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
-        self._schema_{{prop.name}} = j.data.schema.get(url="{{prop.jumpscaletype.SUBTYPE}}")
+        self._schema_{{prop.name}} = j.data.schema.get(url="{{prop.jumpscaletype._schema_url}}")
         if self._cobj_.{{prop.name_camel}}:
             self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.get(capnpbin=self._cobj_.{{prop.name_camel}})
         else:
@@ -66,7 +66,7 @@ class ModelOBJ(DataObjBase):
         
     @{{prop.name}}.setter
     def {{prop.name}}(self,val):
-        if self.readonly:
+        if self._readonly:
             raise RuntimeError("object readonly, cannot set.\n%s"%self)
         {% if prop.jumpscaletype.NAME == "jsobject" %}
         self._changed_items["{{prop.name}}"] = val
@@ -75,10 +75,10 @@ class ModelOBJ(DataObjBase):
         val = {{prop.js_typelocation}}.clean(val)  #is important because needs to come in right format e.g. binary for numeric
         if True or val != self.{{prop.name}}: #TODO: shortcut for now
             self._changed_items["{{prop.name}}"] = val
-            if self.model:
+            if self._model:
                 # self._log_debug("change:{{prop.name}} %s"%(val))
-                self.model.triggers_call(obj=self, action="change", propertyname="{{prop.name}}")
-            if self.autosave:
+                self._model.triggers_call(obj=self, action="change", propertyname="{{prop.name}}")
+            if self._autosave:
                 self.save()
         {% endif %}
 
@@ -109,14 +109,14 @@ class ModelOBJ(DataObjBase):
 
     @{{ll.name}}.setter
     def {{ll.name}}(self,val):
-        if self.readonly:
+        if self._readonly:
             raise RuntimeError("object readonly, cannot set.\n%s"%self)
         self._{{ll.name}}._inner_list=[]
         if j.data.types.string.check(val):
             val = [i.strip() for i in val.split(",")]
         for item in val:
             self._{{ll.name}}.append(item)
-        if self.autosave:
+        if self._autosave:
             self.save()
     {% endfor %}
 
@@ -191,11 +191,11 @@ class ModelOBJ(DataObjBase):
     @property
     def _ddict(self):
         d={}
-        from pudb import set_trace; set_trace()
+        # from pudb import set_trace; set_trace()
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %} #NEED TO CHECK : #TODO: despiegk
         raise RuntimeError("not here")
-        d["{{prop.name}}"] = self.{{prop.name}}._ddict
+        # d["{{prop.name}}"] = self.{{prop.name}}._ddict
         {% elif prop.jumpscaletype.BASETYPE == "OBJ" %}
         raise RuntimeError("not here")
         # d["{{prop.name}}"] = self.{{prop.name}}._dictdata
@@ -215,8 +215,8 @@ class ModelOBJ(DataObjBase):
         if self.id is not None:
             d["id"]=self.id
 
-        if self.model is not None:
-            d=self.model._dict_process_out(d)
+        if self._model is not None:
+            d=self._model._dict_process_out(d)
         return d
 
 
@@ -244,7 +244,7 @@ class ModelOBJ(DataObjBase):
         for item in exclude:
             if item in d:
                 d.pop(item)
-        if self.model is not None:
-            d=self.model._dict_process_out(d)
+        if self._model is not None:
+            d=self._model._dict_process_out(d)
         return d
 

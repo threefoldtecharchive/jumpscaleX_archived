@@ -6,7 +6,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.schema.test(name="capnp_schema")'
+    kosmos 'j.data.schema.test(name="capnp_schema")'
     """
     schema0 = """
         @url = despiegk.test.group
@@ -24,12 +24,23 @@ def main(self):
         cost_estimate = 0.0 (N) #this is a comment
         """
 
-    schema_object1 = j.data.schema.get(schema1)
-    schema_object0 = j.data.schema.get(schema0)
-    print(schema_object0)
+    o1_schema = j.data.schema.get(schema0)
+    o2_schema = j.data.schema.get(schema1)
 
-    print(schema_object1._capnp_schema)
-    print(schema_object0._capnp_schema)
+    o1=o1_schema.new()
+
+    print(o1_schema)
+
+    print(o1_schema._capnp_schema)
+    print(o2_schema._capnp_schema)
+
+    o1.listnum.append("1")
+    assert o1.listnum[0] == 1
+
+    jsx_obj = o1.llist.new()
+
+
+    j.shell()
 
     self._log_info("TEST DONE CAPNP")
 

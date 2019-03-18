@@ -43,6 +43,11 @@ class ListObject(TypeBaseObjClass,MutableSequence):
     def value(self):
         return self._inner_list
 
+    @property
+    def _dictdata(self):
+        return self._inner_list
+
+
     def __iter__(self):
         self._current = 0
         return self
@@ -194,20 +199,25 @@ class List(TypeBaseObjFactory):
 
     def __init__(self,default=None):
 
+        self.BASETYPE = "list"
+
         if isinstance(default,dict):
             subtype = default["subtype"]
             default = default["default"]
         else:
             subtype = None
 
-        if not default:
+        if not default or subtype == "o":
             self._default = []
         else:
             self._default = default
 
-        self.BASETYPE = None
         if subtype:
-            self._SUBTYPE = j.data.types.get(subtype)
+            if subtype == "o":
+                #need to take original default, but cannot store in obj, is for list of jsx objects
+                self._SUBTYPE = j.data.types.get(subtype,default = default)
+            else:
+                self._SUBTYPE = j.data.types.get(subtype)
         else:
             self._SUBTYPE = None
 
@@ -244,9 +254,14 @@ class List(TypeBaseObjFactory):
                     return False
         return True
 
+
     def toData(self,val=None):
-        val = self.clean(val)
-        return val._inner_list
+        val2 = self.clean(val)
+
+        if val2.BASETYPE == "OBJ":
+            return [i._data for i in val2]
+        else:
+            return val2._inner_list
 
     def clean(self, val=None, toml=False, sort=False, unique=True, ttype=None):
         if isinstance(val,ListObject):
@@ -260,7 +275,12 @@ class List(TypeBaseObjFactory):
             if val.strip("'\" []") in [None,""]:
                 return ListObject(self,[],ttype)
             val = [i.strip('[').strip(']') for i in val.split(",")]
+
+        if val.__class__.__name__ in ['_DynamicListBuilder','_DynamicListReader']:
+             val = [i for i in val] #get binary data
+
         if not self.check(val):
+            # j.shell()
             raise j.exceptions.Input("need list or set as input for clean on list")
 
         if len(val) == 0:
@@ -366,12 +386,14 @@ class List(TypeBaseObjFactory):
 
     def capnp_schema_get(self, name, nr):
         # s = self.SUBTYPE.capnp_schema_get("name", 0)
-        if self.SUBTYPE.BASETYPE in ["string", "integer", "float", "bool"]:
+        if self.SUBTYPE.BASETYPE is None:
+            raise j.exceptions.bug("basetype of a jstype should not be None")
+        if self.SUBTYPE.BASETYPE in ["string", "int", "float", "bool"]:
             capnptype = self.SUBTYPE.capnp_schema_get("", 0).split(":", 1)[1].rstrip(";").strip()
         else:
             # the sub type is now bytes because that is how the subobjects will
             # be stored
-            capnptype = j.data.types.bytes.capnp_schema_get("", nr=0).split(":", 1)[1].rstrip(";").strip()
+            capnptype = "Data"
         return "%s @%s :List(%s);" % (name, nr, capnptype)
 
 

@@ -102,7 +102,7 @@ class Dictionary(TypeBaseClass):
 
     def __init__(self, default=None):
 
-        self.BASETYPE = 'dictionary'
+        self.BASETYPE = 'dict'
         if not default:
             default = {}
         self._default = default

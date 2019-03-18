@@ -9,10 +9,10 @@ class DataObjBase():
         self._cobj_ = None
         self.id = None
         self._schema = schema
-        self.model = model
+        self._model = model
         self._changed_items = []
-        self.autosave = False
-        self.readonly = False
+        self._autosave = False
+        self._readonly = False
         self._JSOBJ = True
         self._load_from_data(data=data, capnpbin=capnpbin, keepid=False, keepacl=False)
 
@@ -25,7 +25,7 @@ class DataObjBase():
 
     def _load_from_data(self,data=None, capnpbin=None, keepid=True, keepacl=True):
 
-        if self.readonly:
+        if self._readonly:
             raise RuntimeError("cannot load from data, obj is readonly.\n%s"%self)
 
         if capnpbin is not None:
@@ -42,9 +42,9 @@ class DataObjBase():
 
         if not keepid:
             #means we are overwriting id, need to remove from cache
-            if self.model is not None and self.model.obj_cache is not None:
-                if self.id is not None and self.id in self.model.obj_cache:
-                    self.model.obj_cache.pop(self.id)
+            if self._model is not None and self._model.obj_cache is not None:
+                if self.id is not None and self.id in self._model.obj_cache:
+                    self._model.obj_cache.pop(self.id)
 
         # if not keepacl:
         #     self.acl_id = 0
@@ -55,18 +55,18 @@ class DataObjBase():
                 data = j.data.serializers.json.loads(data)
             if not isinstance(data,dict):
                 raise j.exceptions.Input("_load_from_data when string needs to be dict as json")
-            self.data_update(data=data)
+            self._data_update(data=data)
 
-    def edit(self):
+    def Edit(self):
         e = j.data.dict_editor.get(self._ddict)
         e.edit()
         self.data_update(e._dict)
 
-    def view(self):
+    def _view(self):
         e = j.data.dict_editor.get(self._ddict)
         e.view()
 
-    def data_update(self,data=None):
+    def _data_update(self,data=None):
         """
         upload data
         :param data:
@@ -77,7 +77,7 @@ class DataObjBase():
             data={}
 
 
-        if self.readonly:
+        if self._readonly:
             raise RuntimeError("cannot load from data, obj is readonly.\n%s"%self)
 
         if j.data.types.json.check(data):
@@ -87,8 +87,8 @@ class DataObjBase():
             raise RuntimeError("data needs to be of type dict, now:%s"%data)
 
         if data!=None and data!={}:
-            if self.model is not None:
-                data = self.model._dict_process_in(data)
+            if self._model is not None:
+                data = self._model._dict_process_in(data)
             for key,val in data.items():
                 setattr(self, key, val)
 
@@ -96,7 +96,7 @@ class DataObjBase():
     # def acl(self):
     #     if self._acl is None:
     #         if self.acl_id ==0:
-    #             self._acl = self.model.bcdb.acl.new()
+    #             self._acl = self._model.bcdb.acl.new()
     #     return self._acl
 
     def _hr_get(self,exclude=[]):
@@ -113,19 +113,19 @@ class DataObjBase():
         return out
 
 
-    def save(self):
-        if self.model:
-            if self.readonly:
+    def Save(self):
+        if self._model:
+            if self._readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s"%self)
-            # print (self.model.__class__.__name__)
-            # if not self.model.__class__._name=="acl" and self.acl is not None:
+            # print (self._model.__class__.__name__)
+            # if not self._model.__class__._name=="acl" and self.acl is not None:
             #     if self.acl.id is None:
             #         self.acl.save()
             #     if self.acl.id != self.acl_id:
             #         self._changed_items["ACL"]=True
 
             if self._changed:
-                o=self.model._set(self)
+                o=self._model._set(self)
                 self.id = o.id
                 # self._log_debug("MODEL CHANGED, SAVE DONE")
                 return o
@@ -133,12 +133,12 @@ class DataObjBase():
             return self
         raise RuntimeError("cannot save, model not known")
 
-    def delete(self):
-        if self.model:
-            if self.readonly:
+    def Delete(self):
+        if self._model:
+            if self._readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s"%self)
-            if not self.model.__class__.__name__=="ACL":
-                self.model.delete(self)
+            if not self._model.__class__.__name__=="ACL":
+                self._model.delete(self)
             return self
         raise RuntimeError("cannot save, model not known")
 
@@ -191,7 +191,7 @@ class DataObjBase():
         out += "{BLUE}%s{RESET}\n"%self._schema.url
         out += "{GRAY}id: %s{RESET} " %self.id
         if hasattr(self,"name"):
-            out += "{RED}'%s'{RESET} "%self.name
+            out += "{RED}name:'%s'{RESET} "%self.name
         out += self._hr_get()
 
         return out
@@ -207,7 +207,7 @@ class DataObjBase():
 
         out += "{RESET}\n\n"
         out = j.core.tools.text_replace(out)
-        out = out.replace("[","{").replace("]","}")
+        # out = out.replace("[","{").replace("]","}")
         #TODO: *1 dirty hack, the ansi codes are not printed, need to check why
         print (out)
         return ""

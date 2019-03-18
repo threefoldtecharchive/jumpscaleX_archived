@@ -15,7 +15,7 @@ def main(self):
         llist3 = [1,2,3] (LF)
         nr = 4
         date_start = 0 (D)
-        description = ""        
+        description = "test"        
         llist4 = [1,2,3] (L)
         llist5 = [1,2,3] (LI)
         llist6 = "1,2,3" (LI)
@@ -38,9 +38,12 @@ def main(self):
 
     print(tt._schema._capnp_schema_text)
 
-    # assert o3 == tt.clean(o3)
+    assert o3 == tt.clean(o3)
 
-    j.shell()
+    print(o3._ddict)
+    print(o3)
+
+    assert o3.description == "test"
 
     self._log_info("TEST DONE JSXOBJ")
 

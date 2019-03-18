@@ -30,8 +30,6 @@ class BCDBMeta(j.application.JSBaseClass):
     @property
     def data(self):
         if self._data is None:
-            j.shell()
-            w
             if self.bcdb.zdbclient is not None:
                 data = self.bcdb.zdbclient.get(0)
             else:
@@ -57,8 +55,6 @@ class BCDBMeta(j.application.JSBaseClass):
                 self.md5sid[s.md5] = s.sid
                 if s.sid > self._schema_last_id:
                     self._schema_last_id = s.sid
-
-
 
         return self._data
 

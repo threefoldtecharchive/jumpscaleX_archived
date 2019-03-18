@@ -64,6 +64,8 @@ class JSDataObjectFactory(TypeBaseObjFactory):
             return self._schema.get(data=None, capnpbin=value, model=model)
         elif isinstance(value,dict):
             return self._schema.get(data=value, capnpbin=None, model=model)
+        elif value is None:
+            return self._schema.new(model=model)
         else:
             raise j.exceptions.Input("can only accept dataobj, bytes (capnp) or dict as input for jsxobj")
 
@@ -72,10 +74,10 @@ class JSDataObjectFactory(TypeBaseObjFactory):
         return str(v)
 
     def capnp_schema_get(self, name, nr):
-        raise NotImplemented()
+        return "%s @%s :Data;" % (name, nr)
 
     def toml_string_get(self, value, key):
-        raise NotImplemented()
+        raise RuntimeError("not implemented")
 
 
 class JSConfigObjectFactory(TypeBaseObjFactory):
