@@ -20,12 +20,13 @@ def main(self):
 
     schema_test.token_price = "10 USD"
 
-    usd2usd = schema_test.token_price_usd  # convert USD-to-USD... same value
+
+    usd2usd = schema_test.token_price.usd  # convert USD-to-USD... same value
     assert usd2usd == 10
-    inr = schema_test.token_price_cur("inr")
+    inr = schema_test.token_price.value_currency("inr")
     # print ("convert 10 USD to INR", inr)
     assert inr > 100  # ok INR is pretty high... check properly in a bit...
-    eur = schema_test.token_price_eur
+    eur = schema_test.token_price.value_currency("eur")
     # print ("convert 10 USD to EUR", eur)
     currency = j.clients.currencylayer
     cureur = currency.cur2usd["eur"]
@@ -37,6 +38,10 @@ def main(self):
     # try EUR to USD as well
     schema_test.token_price = "10 EUR"
     assert schema_test.token_price == b"\x000\n\x00\x00\x00"
-    eur2usd = schema_test.token_price_usd
+    eur2usd = schema_test.token_price.usd
     assert eur2usd * cureur == 10
+
+
+    schema_test.token_price = "10 EUR"
+    assert schema_test.token_price.currency_code == "eur"
 

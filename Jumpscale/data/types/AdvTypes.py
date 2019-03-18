@@ -203,7 +203,7 @@ class NumericObject(TypeBaseObjClassNumeric):
 
     @property
     def usd(self):
-        return self._value
+        return self.value
 
     @property
     def value(self):
@@ -212,6 +212,21 @@ class NumericObject(TypeBaseObjClassNumeric):
     @value.setter
     def value(self,val):
         self._data = self._typebase.toData(val)
+
+    @property
+    def currency_code(self):
+        curcode ,val = self._typebase.bytes2cur(self._data, return_currency_code=True)
+        return curcode
+
+    def value_currency(self,curcode="usd"):
+        return self._typebase.bytes2cur( self._data, curcode=curcode)
+
+    def __str__(self):
+        if self._data:
+            return "numeric (%s): %s"%(self.currency,self._string)
+        else:
+            return "numeric: NOTSET"
+
 
 
 class Numeric(TypeBaseObjFactory):
@@ -233,7 +248,7 @@ class Numeric(TypeBaseObjFactory):
         self._default = default
 
 
-    def bytes2cur(self, bindata, curcode="usd", roundnr=None):
+    def bytes2cur(self, bindata, curcode="usd", roundnr=None,return_currency_code=False):
 
         if bindata in [b'',None]:
             return 0
@@ -278,7 +293,10 @@ class Numeric(TypeBaseObjFactory):
         if roundnr:
             val = round(val, roundnr)
 
-        return val
+        if return_currency_code:
+            return curcode0,val
+        else:
+            return val
 
     def bytes2str(self, bindata, roundnr=8, comma=True):
         if len(bindata) == 0:
