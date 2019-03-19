@@ -257,8 +257,7 @@ class List(TypeBaseObjFactory):
 
     def toData(self,val=None):
         val2 = self.clean(val)
-
-        if val2.BASETYPE == "OBJ":
+        if val2.BASETYPE == "OBJ" and all([isinstance(i, TypeBaseObjClass) for i in val2]):
             return [i._data for i in val2]
         else:
             return val2._inner_list
