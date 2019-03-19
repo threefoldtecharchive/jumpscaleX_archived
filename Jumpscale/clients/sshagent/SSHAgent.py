@@ -215,6 +215,34 @@ class SSHAgent(j.application.JSBaseClass):
         else:
             return list(map(lambda key: key[2], keys))
 
+
+    def keys_get(self):
+        import paramiko.agent
+        a = paramiko.agent.Agent()
+        return [key for key in a.get_keys()]
+
+    def sign(self,data,hash=True):
+        """
+        will sign the data with the ssh-agent loaded
+        :param data: the data to sign
+        :param hash, if True, will use
+        :return:
+        """
+        if not j.data.types.bytes.check(data):
+            data = data.encode()
+        self.check()
+        assert self.available_1key_check() == True
+        import hashlib
+        data_sha1 = hashlib.sha1(data).digest()
+        key = self.keys_get()[0]
+        res = key.sign_ssh_data(data_sha1)
+        if hash:
+            m = hashlib.sha256()
+            m.update(res)
+            return m.digest()
+        else:
+            return res
+
     def start(self):
         '''
         start ssh-agent, kills other agents if more than one are found
@@ -305,6 +333,15 @@ class SSHAgent(j.application.JSBaseClass):
                 self._available = True
                 return True
         return self._available
+
+    def available_1key_check(self):
+        """
+        checks that ssh-agent is active and there is 1 key loaded
+        :return:
+        """
+        if not self.available():
+            return False
+        return len(self.keys_list())==1
 
     def kill(self, socketpath=None):
         '''

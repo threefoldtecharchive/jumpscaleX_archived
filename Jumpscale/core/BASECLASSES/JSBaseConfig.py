@@ -89,7 +89,7 @@ class JSBaseConfig(JSBase):
         :return:
         """
         ddict = self.data._ddict
-        self.data.data_update(data=kwargs)
+        # self.data.data_update(data=kwargs)
 
         #TODO: REEM was not ok, cannot do this
         # for prop, val in self.data._ddict.items():
@@ -141,14 +141,13 @@ class JSBaseConfig(JSBase):
     def __setattr__(self, key, value):
         if key.startswith("_") or key == "data":
             self.__dict__[key] = value
-            return
 
-        if "data" in self.__dict__ and key in self._model.schema.propertynames:
+        elif "data" in self.__dict__ and key in self._model.schema.propertynames:
             # if value != self.data.__getattribute__(key):
             self._log_debug("SET:%s:%s" % (key, value))
             self.__dict__["data"].__setattr__(key, value)
-
-        self.__dict__[key] = value
+        else:
+            self.__dict__[key] = value
 
     def __str__(self):
         out = "## "
@@ -156,9 +155,10 @@ class JSBaseConfig(JSBase):
         out += "{GRAY}Instance: "
         out += "{RED}'%s'{RESET} "%self.name
         out += "{GRAY}\n"
-        out += self.data._hr_get()
+        out += self.data._hr_get()#.replace("{","[").replace("}","]")
         out += "{RESET}\n\n"
         out = j.core.tools.text_replace(out)
+        # out = out.replace("[","{").replace("]","}")
 
         #TODO: *1 dirty hack, the ansi codes are not printed, need to check why
         print (out)

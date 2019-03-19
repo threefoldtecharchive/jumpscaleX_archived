@@ -9,16 +9,32 @@ class BuilderOpenResty(j.builder.system._BaseClass):
 
     def _init(self):
         self.BUILDDIR = j.core.tools.text_replace('{DIR_VAR}/build/')
-        self.bins = [
-            self.tools.joinpaths(j.core.dirs.BINDIR, 'openresty'),
-            self.tools.joinpaths(j.core.dirs.BINDIR, 'lua'),
-            self.tools.joinpaths(j.core.dirs.BINDIR, 'resty'),
-            self.tools.joinpaths(j.core.dirs.BINDIR, 'restydoc'),
-            self.tools.joinpaths(j.core.dirs.BINDIR, 'restydoc-index'),
-            self.tools.joinpaths(j.core.dirs.BINDIR, 'lapis'),
-            self.tools.joinpaths(j.core.dirs.BINDIR, 'moon'),
-            self.tools.joinpaths(j.core.dirs.BINDIR, 'moonc'),
-        ]
+
+        self.new_dirs = ['var/pid/', 'var/log/']
+        self.root_files = {
+            'etc/passwd': 'nobody:x:65534:65534:nobody:/:/sandbox/bin/openresty',
+            'etc/group': 'nogroup:x:65534:'
+        }
+
+    def sandbox(self, dest_path="/tmp/builders/openresty", reset=False, create_flist=False, zhub_instance=None):
+        '''Copy built bins to dest_path and create flist if create_flist = True
+
+        :param dest_path: destination path to copy files into
+        :type dest_path: str
+        :param sandbox_dir: path to sandbox
+        :type sandbox_dir: str
+        :param reset: reset sandbox file transfer
+        :type reset: bool
+        :param create_flist: create flist after copying files
+        :type create_flist:bool
+        :param zhub_instance: hub instance to upload flist to
+        :type zhub_instance:str
+        '''
+        if self._done_check('sandbox',reset):
+            return
+        self.build(reset=reset)
+
+        self.bins = ['openresty', 'lua', 'resty', 'restydoc', 'restydoc-index', 'lapis', 'moon', 'moonc']
         self.dirs = {
             self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/openresty.cfg'): 'cfg/',
             self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/mime.types'): 'cfg/',
@@ -29,13 +45,25 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         for file in lua_files:
             self.dirs[file] = 'bin/'
 
-        self.new_dirs = ['var/pid/', 'var/log/']
+        for bin_name in self.bins:
+            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
+            dir_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR[1:])
+            j.builder.tools.dir_ensure(dir_dest)
+            j.sal.fs.copyFile(dir_src, dir_dest)
+
+        for dir_src in self.dirs:
+            dir_dest = j.sal.fs.joinPaths(dest_path, dir_src[1:])
+            j.builder.tools.dir_ensure(dir_dest)
+            j.sal.fs.copyDirTree(dir_src, dir_dest)
+
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'openresty_startup.toml')
         self.startup = j.sal.fs.readFile(startup_file)
-        self.root_files = {
-            'etc/passwd': 'nobody:x:65534:65534:nobody:/:/sandbox/bin/openresty',
-            'etc/group': 'nogroup:x:65534:'
-        }
+        j.sal.fs.copyFile(startup_file,   j.sal.fs.joinPaths(dest_path, 'sandbox'))
+
+        self._done_set('sandbox')
+
+        if create_flist:
+            self.flist_create(dest_path, zhub_instance)
 
     def _build_prepare(self):
         j.builder.system.package.mdupdate()

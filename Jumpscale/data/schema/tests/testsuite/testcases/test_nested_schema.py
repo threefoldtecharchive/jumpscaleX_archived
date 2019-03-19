@@ -53,7 +53,7 @@ class NestedSchemaTest(BaseTest):
         city = self.random_string()
         street = self.random_string()
         building = random.randint(1, 100)
-        grades = [random.randint(50, 100), random.randint(50, 100)]
+        grades = [random.randint(0, 1), random.uniform(0, 1)]
 
         schema_obj3.name = name
         schema_obj3.numbers.mobile_number = mobile_number
@@ -122,7 +122,7 @@ class NestedSchemaTest(BaseTest):
         city = self.random_string()
         street = self.random_string()
         building = random.randint(1, 100)
-        grades = [random.randint(50, 100), random.randint(50, 100)]
+        grades = [random.randint(0, 1), random.randint(0, 1)]
 
         schema_obj3.name = name
         schema_obj3.numbers.mobile_number = mobile_number

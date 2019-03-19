@@ -1,10 +1,13 @@
-import os
-import fakeredis
 from Jumpscale import j
+
 from .NACL import NACL
-
+import nacl.secret
+import nacl.utils
+import base64
+import hashlib
+from nacl.public import PrivateKey, SealedBox
+import fakeredis
 JSBASE = j.application.JSBaseClass
-
 
 class NACLFactory(j.application.JSBaseClass):
 
@@ -13,34 +16,40 @@ class NACLFactory(j.application.JSBaseClass):
         self.__jslocation__ = "j.data.nacl"
         self._default = None
 
-        # check there is core redis
-        if isinstance(j.core.db, fakeredis.FakeStrictRedis):
+        #check there is core redis
+        if isinstance(j.core.db,fakeredis.FakeStrictRedis):
             j.clients.redis.core_get()
 
-    def reset(self, name="default", privkey=None, secret=None, interactive=True):
+    def configure(self,name="default",privkey_words=None,secret=None,sshagent_use=None,
+                  interactive=False, generate=False):
         """
-        removes the default private key & secret, be careful this will make your local data non accessible
-        unless if you have your secret and key
-        :return:
-        """
-        msg = """
-        removes your private key & secret, be careful this will make your local data non accessible
-        unless if you have your secret and key
-        """
-        if interactive:
-            print(j.core.text.strip(msg))
-            if not j.tools.console.askYesNo("Are you sure you want to erase your private key & secret for %s" % name):
-                return
+        secret is used to encrypt/decrypt the private key when stored on local filesystem
+        privkey_words is used to put the private key back
 
-        NACL(name, privkey=privkey, secret=secret, reset=True, interactive=interactive)
+        will ask for the details of the configuration
+        :param: sshagent_use is True, will derive the secret from the private key of the ssh-agent if only 1 ssh key loaded
+                                secret needs to be None at that point
+        :param: secret only used when sshagent not used, will be stored encrypted in redis
+                sha256 is used on the secret as specified above before storing/encrypting/decrypting the private key
 
-    def get(self, name="default", privkey=None, secret=None):
+        :param: generate if True and interactive is False then will autogenerate a key
+
+        :return: None
+
+        """
+        n=self.get(name=name,load=False)
+        n.configure(privkey_words=privkey_words,secret=secret,sshagent_use=sshagent_use,
+                    interactive=interactive, generate=generate)
+        return n
+
+
+    def get(self, name="default",load=True):
         """
         """
-        if not secret:
-            secret = os.environ.get('NACL_SECRET')
-        interactive = not bool(secret)
-        return NACL(name, privkey=privkey, secret=secret, interactive=interactive)
+        n=NACL(name=name)
+        if load:
+            n.load()
+        return n
 
     @property
     def default(self):
@@ -48,11 +57,13 @@ class NACLFactory(j.application.JSBaseClass):
             self._default = self.get()
         return self._default
 
+
     def test(self):
         """
         js_shell 'j.data.nacl.test()'
         """
-        cl = self.get('test', secret=b'qwerty')  # get's the default location & generate's keys
+
+        cl = self.default  # get's the default location & generate's keys
 
         data = b"something"
         r = cl.sign(data)
@@ -106,7 +117,7 @@ class NACLFactory(j.application.JSBaseClass):
         js_shell 'j.data.nacl.test_perf()'
         """
 
-        cl = self.get('test', secret=b"qwerty")  # get's the default location & generate's keys
+        cl = self.default  # get's the default location & generate's keys
         data = b"something"
 
         nr = 10000
@@ -138,7 +149,7 @@ class NACLFactory(j.application.JSBaseClass):
         data2 = data * 20
         j.tools.timer.start("encryption/decryption symmetric")
         for i in range(nr):
-            a = cl.encryptSymmetric(data2)
-            b = cl.decryptSymmetric(a)
+            a = cl.encryptSymmetric(data2, secret=secret)
+            b = cl.decryptSymmetric(a, secret=secret)
             assert data2 == b
         j.tools.timer.stop(i)

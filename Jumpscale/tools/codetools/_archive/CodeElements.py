@@ -35,5 +35,5 @@ class CodeElements(j.application.JSBaseClass):
         for classDef in self.classDefs:
             if classDef.name == classname:
                 return classDef
-        j.logger.log("Could not find class [%s]." % classname)
+        self._log_debug("Could not find class [%s]." % classname)
         return None

@@ -131,6 +131,7 @@ class BuilderLua(j.builder.system._BaseClass):
         alt-getopt
 
         lua-resty-iyo-auth
+        lua-messagepack
         """
 
         for line in C.split("\n"):
@@ -223,6 +224,39 @@ class BuilderLua(j.builder.system._BaseClass):
         j.sal.fs.copyDirTree(src, "/sandbox/bin/", rsyncdelete=False, recursive=False, overwriteFiles=True)
 
         self._log_info("install lua & openresty done.")
+
+    def sandbox(self, dest_path="/tmp/builders/lua", reset=False, create_flist=False, zhub_instance=None):
+        '''Copy built bins to dest_path and create flist if create_flist = True
+
+        :param dest_path: destination path to copy files into
+        :type dest_path: str
+        :param sandbox_dir: path to sandbox
+        :type sandbox_dir: str
+        :param reset: reset sandbox file transfer
+        :type reset: bool
+        :param create_flist: create flist after copying files
+        :type create_flist:bool
+        :param zhub_instance: hub instance to upload flist to
+        :type zhub_instance:str
+        '''
+        if self._done_check('sandbox', reset):
+            return
+        self.build(reset=reset)
+
+        j.builder.web.openresty.sandbox(dest_path=dest_path, reset=reset)
+
+        self.bins = ['_lapis.lua', '_moonc.lua', '_moon.lua', '_moonrocks.lua']
+
+        for bin_name in self.bins:
+            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
+            dir_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR[1:])
+            j.builder.tools.dir_ensure(dir_dest)
+            j.sal.fs.copyFile(dir_src, dir_dest)
+
+        self._done_set('sandbox')
+
+        if create_flist:
+            self.flist_create(dest_path, zhub_instance)
 
     def copy_to_github(self):
         """

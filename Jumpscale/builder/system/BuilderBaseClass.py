@@ -89,7 +89,7 @@ class BuilderBaseClass(BaseClass):
             j.builder.tools.file_ensure(file_dest)
             j.builder.tools.file_write(file_dest, content)
 
-    def flist_create(self, hub_instance=None):
+    def flist_create(self, sandbox_dir=None, hub_instance=None):
         """
         build a flist for the builder and upload the created flist to the hub
 
@@ -102,8 +102,9 @@ class BuilderBaseClass(BaseClass):
         :return: path to the tar.gz created
         :rtype: str
         """
-        sandbox_dir = "/tmp/builders/{}".format(self.NAME)
-        self.sandbox_create(sandbox_dir)
+        if not sandbox_dir:
+            sandbox_dir = "/tmp/builders/{}".format(self.NAME)
+        
         self.copy_dirs(self.root_dirs, sandbox_dir)
         self.write_files(self.root_files, sandbox_dir)
 

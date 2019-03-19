@@ -46,18 +46,18 @@ class Schema(j.application.JSBaseClass):
     def _path(self):
         return j.sal.fs.getDirName(os.path.abspath(__file__))
 
-    def _error_raise(self, msg, e=None, schema=None):
-        if self.url == "" and "url" in self._systemprops:
-            self.url = self._systemprops["url"]
-        out = "\nerror in schema:\n"
-        out += "    url:%s\n" % self.url
-        out += "    msg:%s\n" % j.core.text.prefix("    ", msg)
-        if schema:
-            out += "    schema:\n%s" % schema
-        if e is not None:
-            out += "\nERROR:\n"
-            out += j.core.text.prefix("        ", str(e))
-        raise RuntimeError(out)
+    # def _error_raise(self, msg, e=None, schema=None):
+    #     if self.url == "" and "url" in self._systemprops:
+    #         self.url = self._systemprops["url"]
+    #     out = "\nerror in schema:\n"
+    #     out += "    url:%s\n" % self.url
+    #     out += "    msg:%s\n" % j.core.text.prefix("    ", msg)
+    #     if schema:
+    #         out += "    schema:\n%s" % schema
+    #     if e is not None:
+    #         out += "\nERROR:\n"
+    #         out += j.core.text.prefix("        ", str(e))
+    #     raise RuntimeError(out)
 
     def _proptype_get(self, txt):
         """
@@ -66,29 +66,28 @@ class Schema(j.application.JSBaseClass):
         :return:
         """
         if "\\n" in txt:
-            jumpscaletype = j.data.types.multiline
-            defvalue = jumpscaletype.fromString(txt)
+            jumpscaletype = j.data.types.get("multiline")
+            defvalue = jumpscaletype.clean(txt)
 
         elif "'" in txt or '"' in txt:
-            jumpscaletype = j.data.types.string
-            defvalue = jumpscaletype.fromString(txt)
+            jumpscaletype = j.data.types.get("string")
+            defvalue = jumpscaletype.clean(txt)
 
         elif "." in txt:
-            jumpscaletype = j.data.types.float
-            defvalue = jumpscaletype.fromString(txt)
+            jumpscaletype = j.data.types.get("float")
+            defvalue = jumpscaletype.clean(txt)
 
         elif "true" in txt.lower() or "false" in txt.lower():
-            jumpscaletype = j.data.types.bool
-            defvalue = jumpscaletype.fromString(txt)
+            jumpscaletype = j.data.types.get("bool")
+            defvalue = jumpscaletype.clean(txt)
 
         elif "[]" in txt:
-            jumpscaletype = j.data.types._list()
-            jumpscaletype.SUBTYPE = j.data.types.string
+            jumpscaletype = j.data.types.get("ls",[])
             defvalue = []
 
         elif j.data.types.int.checkString(txt):  # means is digit
-            jumpscaletype = j.data.types.int
-            defvalue = jumpscaletype.fromString(txt)
+            jumpscaletype = j.data.types.get("i")
+            defvalue = jumpscaletype.clean(txt)
 
         else:
             raise RuntimeError("cannot find type for:%s" % txt)
@@ -100,7 +99,7 @@ class Schema(j.application.JSBaseClass):
         get schema object from schema text
         """
 
-        self._log_debug("load schema",data=text)
+        self._log_debug("load schema", data=text)
 
         self.text = j.core.text.strip(text)
 
@@ -109,6 +108,7 @@ class Schema(j.application.JSBaseClass):
         systemprops = {}
         self.properties = []
         # self._systemprops = systemprops
+
 
         def process(line):
             line_original = copy(line)
@@ -148,34 +148,55 @@ class Schema(j.application.JSBaseClass):
 
             if "(" in line:
                 line_proptype = line.split("(")[1].split(")")[0].strip().lower()
-                self._log_debug("line:%s; lineproptype:'%s'"%(line_original,line_proptype))
-                line_wo_proptype = line.split("(")[0].strip()
-                if line_proptype == "o":
-                    # special case where we have subject directly attached
-                    jumpscaletype = j.data.types.get("jo")
-                    jumpscaletype.SUBTYPE = pointer_type
-                    defvalue = ""
+                self._log_debug("line:%s; lineproptype:'%s'" % (line_original, line_proptype))
+                line_wo_proptype = line.split("(")[0].strip() #before the (
+                if line_wo_proptype == "":
+                    if line_proptype in ["lo","o"]:
+                        line_wo_proptype = pointer_type
+                # if line_proptype == "o":
+                #     # special case where we have subject directly attached
+                #     jumpscaletype = j.data.types.get("o")
+                #     jumpscaletype.SUBTYPE = pointer_type
+                # elif line_proptype == "lo":
+                #     #list of objects
+                #     jumpscaletype = j.data.types.get("lo",
+                # else:
+
+                #will make sure we convert the default to the right possible type int,float, string
+                if "\"" or "'" in line_wo_proptype:
+                    default=line_wo_proptype.strip().strip("\"").strip("'").strip()
+                elif line_wo_proptype.strip()=="":
+                    default=None
                 else:
-                    if line_proptype in ["e", "enum"]:
+                    line_wo_proptype=line_wo_proptype.strip()
+                    default=None
+                    try:
+                        default=int(line_wo_proptype)
+                    except:
+                        pass
+                    if default is None:
                         try:
-                            jumpscaletype = j.data.types.get_custom("e", values=line_wo_proptype)
-                            defvalue = jumpscaletype.get_default()
-                        except Exception as e:
-                            self._error_raise("error (enum) on line:%s" % line_original, e=e)
-                    else:
-                        jumpscaletype = j.data.types.get(line_proptype)
-                        if line_wo_proptype == "" or line_wo_proptype is None:
-                            defvalue = jumpscaletype.get_default()
-                        else:
-                            defvalue = jumpscaletype.fromString(line_wo_proptype)
+                            default=float(line_wo_proptype)
+                        except:
+                            pass
+                    if default is None:
+                        default = line_wo_proptype #is normal string
+
+                jumpscaletype = j.data.types.get(line_proptype,default=default)
+
+                defvalue = None
+
             else:
                 jumpscaletype, defvalue = self._proptype_get(line)
 
+            jumpscaletype._jsx_location
+
             p.name = name
-            p.default = defvalue
+            if defvalue:
+                p._default = defvalue
             p.comment = comment
             p.jumpscaletype = jumpscaletype
-            p.pointer_type = pointer_type
+            # p.pointer_type = pointer_type
 
             return p
 
@@ -194,12 +215,15 @@ class Schema(j.application.JSBaseClass):
             if line.startswith("#"):
                 continue
             if "=" not in line:
-                self._error_raise("did not find =, need to be there to define field", schema=text)
+                raise j.exceptions.Input("did not find =, need to be there to define field, line=%s"%line, data=text)
 
             p = process(line)
 
             if p.jumpscaletype.NAME is "list":
-                self.lists.append(p)
+                raise RuntimeError("no longer used")
+                # j.shell()
+                # print(p.capnp_schema)
+                # self.lists.append(p)
             else:
                 self.properties.append(p)
 
@@ -212,10 +236,10 @@ class Schema(j.application.JSBaseClass):
             self.__dict__["property_%s" % s.name] = s
             nr += 1
 
-        for s in self.lists:
-            s.nr = nr
-            self.__dict__["property_%s" % s.name] = s
-            nr += 1
+        # for s in self.lists:
+        #     s.nr = nr
+        #     self.__dict__["property_%s" % s.name] = s
+        #     nr += 1
 
     @property
     def _capnp_id(self):
@@ -226,11 +250,16 @@ class Schema(j.application.JSBaseClass):
     @property
     def _capnp_schema(self):
         if not self._capnp:
-            tpath = "%s/templates/schema.capnp" % self._path
-            _capnp_schema_text = j.tools.jinja2.template_render(
-                    path=tpath, reload=False, obj=self, objForHash=self._md5)
-            self._capnp = j.data.capnp.getSchemaFromText(_capnp_schema_text)
+            self._capnp = j.data.capnp.getSchemaFromText(self._capnp_schema_text)
         return self._capnp
+
+    @property
+    def _capnp_schema_text(self):
+        tpath = "%s/templates/schema.capnp" % self._path
+        # j.shell()
+        _capnp_schema_text = j.tools.jinja2.template_render(
+            path=tpath, reload=False, obj=self, objForHash=self._md5)
+        return _capnp_schema_text
 
     @property
     def objclass(self):
@@ -239,8 +268,14 @@ class Schema(j.application.JSBaseClass):
             if self._md5 in [None, ""]:
                 raise RuntimeError("md5 cannot be None")
 
-            tpath = "%s/templates/template_obj.py" % self._path
+            for prop in self.properties:
+                self._log_debug("prop for obj gen: %s:%s"%(prop, prop.js_typelocation))
 
+            for prop in self.lists:
+                self._log_debug("list for obj gen: %s:%s"%(prop, prop.js_typelocation))
+
+
+            tpath = "%s/templates/template_obj.py" % self._path
             self._obj_class = j.tools.jinja2.code_python_render(
                 name="schema_%s" % self.key, obj_key="ModelOBJ", path=tpath, obj=self, objForHash=self._md5)
 

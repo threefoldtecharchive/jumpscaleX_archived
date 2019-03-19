@@ -36,7 +36,7 @@ class Application(object):
 
         self._systempid = None
 
-        self.interactive = True
+        self.interactive = False
 
         self.schemas = None
 
@@ -277,7 +277,7 @@ class Application(object):
         # Both are wrong! One should call self._j.application.stop(<exitcode>)
         # TODO: can we get the line of code which called sys.exit here?
 
-        # self._j.logger.log("UNCLEAN EXIT OF APPLICATION, SHOULD HAVE USED self._j.application.stop()", 4)
+        # self._self._log_debug("UNCLEAN EXIT OF APPLICATION, SHOULD HAVE USED self._j.application.stop()", 4)
         import sys
         if not self._calledexit:
             self.stop(stop=False)

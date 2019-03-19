@@ -24,14 +24,12 @@ class BCDB(j.application.JSBaseClass):
         """
         JSBASE.__init__(self)
 
-
         if name is None:
             raise RuntimeError("name needs to be specified")
 
         if zdbclient is not None:
             if not isinstance(zdbclient, ZDBClientBase):
-                raise RuntimeError(
-                    "zdbclient needs to be type: clients.zdb.ZDBClientBase")
+                raise RuntimeError("zdbclient needs to be type: clients.zdb.ZDBClientBase")
 
         self.name = name
         self._sqlclient = None
@@ -69,9 +67,9 @@ class BCDB(j.application.JSBaseClass):
 
         self.dataprocessor_start()
 
-        self.acl = None
-        self.user = None
-        self.group = None
+        # self.acl = None
+        # self.user = None
+        # self.group = None
 
         self.models = {}
 
@@ -86,19 +84,21 @@ class BCDB(j.application.JSBaseClass):
         self.results = {}
         self.results_id = 0
 
+
+        #ACL NO LONGER DONE THIS WAY, WILL BE PROPER BASETYPE USING REDIS
         # need to do this to make sure we load the classes from scratch
-        for item in ["ACL", "USER", "GROUP"]:
-            key = "Jumpscale.data.bcdb.models_system.%s" % item
-            if key in sys.modules:
-                sys.modules.pop(key)
+        # for item in ["ACL", "USER", "GROUP"]:
+        #     key = "Jumpscale.data.bcdb.models_system.%s" % item
+        #     if key in sys.modules:
+        #         sys.modules.pop(key)
 
-        from .models_system.ACL import ACL
-        from .models_system.USER import USER
-        from .models_system.GROUP import GROUP
+        # from .models_system.ACL import ACL
+        # from .models_system.USER import USER
+        # from .models_system.GROUP import GROUP
 
-        self.acl = self.model_add(ACL())
-        self.user = self.model_add(USER())
-        self.group = self.model_add(GROUP())
+        # self.acl = self.model_add(ACL())
+        # self.user = self.model_add(USER())
+        # self.group = self.model_add(GROUP())
 
         #
         # self._log_info("BCDB INIT DONE:%s" % self.name)
@@ -146,31 +146,29 @@ class BCDB(j.application.JSBaseClass):
         """
         self._init_(stop=True, reset=True)
 
-
-    def _hset_index_key_get(self,schema,returndata=False):
-        if not isinstance(schema,j.data.schema.SCHEMA_CLASS):
+    def _hset_index_key_get(self, schema, returndata=False):
+        if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise RuntimeError("schema needs to be of type: SCHEMA_CLASS")
 
-        key=[self.name,schema.url]
+        key = [self.name, schema.url]
         r = j.clients.credis_core.get("bcdb.schema.instances")
         if r is None:
-            data={}
-            data["lastid"]=0
+            data = {}
+            data["lastid"] = 0
         else:
             data = j.data.serializers.json.loads(r)
         if self.name not in data:
-            data[self.name]={}
+            data[self.name] = {}
         if schema.url not in data[self.name]:
-            data["lastid"]=data["lastid"]+1
-            data[self.name][schema.url]=data["lastid"]
+            data["lastid"] = data["lastid"]+1
+            data[self.name][schema.url] = data["lastid"]
 
             bindata = j.data.serializers.json.dumps(data)
-            j.clients.credis_core.set("bcdb.schema.instances",bindata)
+            j.clients.credis_core.set("bcdb.schema.instances", bindata)
         if returndata:
             return data
         else:
             return b"O:"+str(data[self.name][schema.url]).encode()
-
 
     def _hset_index_key_delete(self):
         r = j.clients.credis_core.get("bcdb.schema.instances")
@@ -178,12 +176,11 @@ class BCDB(j.application.JSBaseClass):
             return
         data = j.data.serializers.json.loads(r)
         if self.name in data:
-            for url,key_id in data[self.name].items():
-                tofind=b"O:"+str(key_id).encode()+b":*"
+            for url, key_id in data[self.name].items():
+                tofind = b"O:"+str(key_id).encode()+b":*"
                 for key in j.clients.credis_core.keys(tofind):
-                    print("HKEY DELETE:%s"%key)
+                    print("HKEY DELETE:%s" % key)
                     j.clients.credis_core.delete(key)
-
 
     def _reset(self):
 
@@ -254,7 +251,7 @@ class BCDB(j.application.JSBaseClass):
         :return:
         """
 
-        if j.data.types.str.check(schema):
+        if j.data.types.string.check(schema):
             schema_text = schema
             schema = j.data.schema.get(schema_text)
             self._log_debug(
@@ -295,7 +292,7 @@ class BCDB(j.application.JSBaseClass):
             dir_path = j.sal.fs.getDirName(path_parent)
             dest = "%s/%s_index.py" % (dir_path, name)
 
-        if j.data.types.str.check(schema):
+        if j.data.types.string.check(schema):
             schema = j.data.schema.get(schema)
 
         elif not isinstance(schema, j.data.schema.SCHEMA_CLASS):
@@ -308,7 +305,7 @@ class BCDB(j.application.JSBaseClass):
             imodel = BCDBIndexMeta(schema=schema)
             imodel.include_schema = True
             tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._path
-            myclass = j.tools.jinja2.code_python_render(path=tpath,objForHash=schema._md5,
+            myclass = j.tools.jinja2.code_python_render(path=tpath, objForHash=schema._md5,
                                                         reload=True, dest=dest,
                                                         schema=schema, bcdb=self, index=imodel)
 
@@ -371,7 +368,8 @@ class BCDB(j.application.JSBaseClass):
 
             dest = "%s/%s.py" % (path, bname)
 
-            self.model_get_from_schema(schema=schema, dest=dest)
+            model = self.model_get_from_schema(schema=schema, dest=dest)
+            self.model_add(model)
 
         for pyfile_base in pyfiles_base:
             if pyfile_base.startswith("_"):

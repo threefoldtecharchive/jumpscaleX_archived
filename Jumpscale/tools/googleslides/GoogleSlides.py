@@ -34,52 +34,49 @@ class GoogleSlides(j.application.JSBaseClass):
             ValueError -- [Invalid credentials file.]
         """
 
+        from Jumpscale.tools.googleslides.slides2html.google_links_utils import get_slide_id, get_presentation_id, link_info
+        from Jumpscale.tools.googleslides.slides2html.image_utils import images_to_transparent_background, set_background_for_images
+        from Jumpscale.tools.googleslides.slides2html.generator import Generator
+        from Jumpscale.tools.googleslides.slides2html.downloader import Downloader
+        from Jumpscale.tools.googleslides.slides2html.revealjstemplate import BASIC_TEMPLATE
+        from Jumpscale.tools.googleslides.slides2html.tool import Tool
+
+        presentation_id = slideid
         try:
-            from slides2html.google_links_utils import get_slideid, get_presentation_id, link_info
-            from slides2html.image_utils import images_to_transparent_background, set_background_for_images
-            from slides2html.generator import Generator
-            from slides2html.downloader import Downloader
-            from slides2html.revealjstemplate import BASIC_TEMPLATE
-            from slides2html.tool import Tool
-        except ImportError:
-            print(SLIDES2HTML_NOT_FOUND_MESSAGE)
+            presentation_id, slideid = link_info(slideid)
+        except ValueError:  # not a url, people using id as in old version.
+            pass
+        imagesize = imagesize.upper()
+        if imagesize not in ["MEDIUM", "LARGE"]:
+            raise ValueError(
+                "Invalid image size should be MEDIUM or LARGE")
+        if not indexfile:
+            indexfilepath = j.sal.fs.joinPaths(
+                websitedir, "{}.html".format(presentation_id))
         else:
-            presentation_id = slideid
-            try:
-                presentation_id, slideid = link_info(slideid)
-            except ValueError:  # not a url, people using id as in old version.
-                pass
-            imagesize = imagesize.upper()
-            if imagesize not in ["MEDIUM", "LARGE"]:
-                raise ValueError(
-                    "Invalid image size should be MEDIUM or LARGE")
-            if not indexfile:
-                indexfilepath = j.sal.fs.joinPaths(
-                    websitedir, "{}.html".format(presentation_id))
-            else:
-                indexfilepath = j.sal.fs.joinPaths(
-                    websitedir, "{}.html".format(indexfile))
+            indexfilepath = j.sal.fs.joinPaths(
+                websitedir, "{}.html".format(indexfile))
 
-            destdir = j.sal.fs.joinPaths(websitedir, presentation_id)
-            credfile = os.path.abspath(os.path.expanduser(credfile))
-            if not os.path.exists(credfile):
-                raise ValueError(
-                    "Invalid credential file: {}".format(credfile))
+        destdir = j.sal.fs.joinPaths(websitedir, presentation_id)
+        credfile = os.path.abspath(os.path.expanduser(credfile))
+        if not os.path.exists(credfile):
+            raise ValueError(
+                "Invalid credential file: {}".format(credfile))
 
-            theme = ""
-            themefilepath = os.path.expanduser(themefile)
-            if os.path.exists(themefilepath):
-                with open(themefilepath) as f:
-                    theme = f.read()
-            else:
-                theme = BASIC_TEMPLATE
+        theme = ""
+        themefilepath = os.path.expanduser(themefile)
+        if os.path.exists(themefilepath):
+            with open(themefilepath) as f:
+                theme = f.read()
+        else:
+            theme = BASIC_TEMPLATE
 
-            p2h = Tool(presentation_id, credfile,
-                       serviceaccount=serviceaccount)
-            p2h.downloader.thumbnailsize = imagesize
-            p2h.build_revealjs_site(destdir, indexfilepath, template=theme)
+        p2h = Tool(presentation_id, credfile,
+                    serviceaccount=serviceaccount)
+        p2h.downloader.thumbnailsize = imagesize
+        p2h.build_revealjs_site(destdir, indexfilepath, template=theme)
 
-            if background is not None:
-                bgpath = p2h.downloader.get_background(background, destdir)
-                p2h.convert_to_transparent_background(destdir)
-                p2h.set_images_background(destdir, bgpath)
+        if background is not None:
+            bgpath = p2h.downloader.get_background(background, destdir)
+            p2h.convert_to_transparent_background(destdir)
+            p2h.set_images_background(destdir, bgpath)

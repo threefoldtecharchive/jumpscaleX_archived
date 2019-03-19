@@ -56,7 +56,7 @@ class TextCharEditor(j.application.JSBaseClass):
                              end):  # scan first time if somewhere there is already a char part of a block
                 if self.chars[pos][1] != "":
                     skip = True
-                    #j.logger.log("Could not match the pattern because as part of result there was already another block found, posstart:%s posstop%s" % (match.start,match.start+end-1),5)
+                    #self._log_debug("Could not match the pattern because as part of result there was already another block found, posstart:%s posstop%s" % (match.start,match.start+end-1),5)
             blocknr = self._getNextBlockNr(blockname)
             if skip is False:
                 for pos in range(match.start, match.start + end):

@@ -6,7 +6,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
 
     def _init(self):
         self.go_runtime = j.builder.runtimes.golang
-        self.bins = [self.tools.joinpaths(self.go_runtime.go_path_bin, 'caddy')]
+        
 
     def reset(self):
         self.stop()
@@ -56,7 +56,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
         if self._done_check('install', reset):
             return
 
-        caddy_bin_path = self.tools.joinpaths(self.go_runtme.go_path_bin, self.NAME)
+        caddy_bin_path = self.tools.joinpaths(self.go_runtime.go_path_bin, self.NAME)
         j.builder.tools.file_copy(caddy_bin_path, '{DIR_BIN}/caddy')
 
         self._done_set('install')
@@ -97,3 +97,31 @@ class BuilderCaddy(j.builder.system._BaseClass):
         else:
             full_path = j.sal.fs.joinPaths(j.core.dirs.BINDIR, self.NAME)
             j.sal.process.killProcessByName(full_path, sig)
+
+
+    def sandbox(self, dest_path='/tmp/builder/caddy',create_flist=True, zhub_instance=None, reset=False):
+
+        '''Copy built bins to dest_path and create flist if create_flist = True
+
+        :param dest_path: destination path to copy files into
+        :type dest_path: str
+        :param sandbox_dir: path to sandbox
+        :type sandbox_dir: str
+        :param reset: reset sandbox file transfer
+        :type reset: bool
+        :param create_flist: create flist after copying files
+        :type create_flist:bool
+        :param zhub_instance: hub instance to upload flist to
+        :type zhub_instance:str
+        '''
+
+        if self._done_check('sandbox') and reset is False:
+             return
+        self.build(reset = reset)
+        bin_dest = j.sal.fs.joinPaths(dest_path, 'sandbox', 'bin')
+        self.tools.dir_ensure(bin_dest)
+        caddy_bin_path = self.tools.joinpaths(self.go_runtime.go_path_bin, self.NAME)
+        self.tools.file_copy(caddy_bin_path, bin_dest)
+        if create_flist:
+            print(self.flist_create(sandbox_dir=dest_path, hub_instance=zhub_instance))
+        self._done_set('sandbox')

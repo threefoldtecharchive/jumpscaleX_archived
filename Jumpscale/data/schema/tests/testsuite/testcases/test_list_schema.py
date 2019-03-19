@@ -264,9 +264,6 @@ class SchemaTest(BaseTest):
         with self.assertRaises(Exception):
             schema_obj.port_list = [self.random_string(), random.randint(1, 10000)]
 
-        with self.assertRaises(Exception):
-            schema_obj.port_list.append(random.uniform(1, 100))
-
         self.log("Try to set parameter with ipport type, should succeed.")
         port_list = [random.randint(1, 10000), random.randint(1, 10000)]
         schema_obj.port_list = port_list
@@ -277,7 +274,8 @@ class SchemaTest(BaseTest):
         schema_obj.port_list.append(value)
         self.assertEqual(schema_obj.port_list, port_list)
         self.log("schema list %s" % schema_obj.list_ports)
-        self.assertEqual(schema_obj.list_ports, [3164, 15487])
+        for i, j in zip(schema_obj.list_ports, [3164, 15487]):
+            self.assertEqual(int(i), j)
 
     def test008_validate_list_of_ipaddrs(self):
         """
@@ -421,7 +419,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         percent_list = (Lpercent)
-        list_percents = [84, 73.4, '95', '72.8', '54%', '64.44%'] (Lpercent)
+        list_percents = [0, 1, '0.95', '1%', '0.54%'] (Lpercent)
         """
         schema = self.schema(scm)
         schema_obj = schema.new()
@@ -434,17 +432,17 @@ class SchemaTest(BaseTest):
             schema_obj.percent_list.append(self.random_string())
 
         self.log("Try to set parameter with percent type, should succeed.")
-        percent_list = [random.randint(1, 100), random.uniform(1, 100)]
-        check_list = [percent_list[0], percent_list[1]]
+        percent_list = [random.randint(0, 1), random.uniform(0, 1), '{}'.format(random.uniform(0, 1))]
+        check_list = [percent_list[0], percent_list[1], float(percent_list[2])]
         schema_obj.percent_list = percent_list
         self.assertEqual(schema_obj.percent_list, check_list)
 
-        value = random.randint(1, 100)
-        check_list.append(value)
-        schema_obj.percent_list.append(value)
+        value = random.uniform(0, 1)
+        check_list.append(value/100)
+        schema_obj.percent_list.append('{}%'.format(value))
         self.assertEqual(schema_obj.percent_list, check_list)
         self.log("schema list %s" % schema_obj.list_percents)
-        self.assertEqual(schema_obj.list_percents, [84, 73.40, 95, 72.80, 54, 64.44])
+        self.assertEqual(schema_obj.list_percents, [0, 1, 0.95, 0.01, 0.0054])
 
     def test012_validate_list_of_urls(self):
         """
@@ -651,7 +649,7 @@ class SchemaTest(BaseTest):
         scm = """
         @url = test.schema
         bin_list = (Lbin)
-        list_bin = ['test', 'example'] (Lbin)
+        list_bin = ['test', 'examplee'] (Lbin)
         """
         schema = self.schema(scm)
         time.sleep(1)
@@ -669,7 +667,7 @@ class SchemaTest(BaseTest):
         schema_obj.bin_list = bin_list
         self.assertEqual(schema_obj.bin_list, bin_list)
         self.log("schema list %s" % schema_obj.list_bin)
-        self.assertEqual(schema_obj.list_bin, [b'test', b'example'])
+        self.assertEqual(schema_obj.list_bin, [b'\xb5\xeb-', b'{\x16\xa6\xa6W\x9e'])
 
         value = self.random_string().encode()
         bin_list.append(value)

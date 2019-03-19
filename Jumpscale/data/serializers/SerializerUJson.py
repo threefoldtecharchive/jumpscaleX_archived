@@ -16,7 +16,18 @@ class BytesEncoder(json.JSONEncoder):
 
     def default(self, obj):
         if isinstance(obj, bytes):
-            j.logger.self._log_debug('encoding bytes into %s' % self.ENCODING)
+# <<<<<<< HEAD
+#             try:
+#                 return obj.decode(self.ENCODING)
+#             except Exception as e:
+#                 raise j.exceptions.Input("obj in json encoder has binary data which cannot be encoded")
+#
+#
+#         try:
+#             return json.JSONEncoder.default(self, obj)
+#         except Exception as e:
+#             raise j.exceptions.Input("obj in json encoder has binary data which cannot be encoded, default")
+# =======
             return obj.decode(self.ENCODING)
         return json.JSONEncoder.default(self, obj)
 

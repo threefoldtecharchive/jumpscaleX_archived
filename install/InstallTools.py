@@ -17,6 +17,52 @@ from os import O_NONBLOCK, read
 from pathlib import Path
 from subprocess import Popen, check_output
 
+try:
+    import traceback
+except:
+    traceback = None
+
+try:
+    import pudb
+except:
+    pudb = None
+
+try:
+    import pygments
+except Exception as e:
+    pygments = None
+
+if pygments:
+    from pygments import formatters
+    from pygments import lexers
+    pygments_formatter = formatters.get_formatter_by_name("terminal")
+    pygments_pylexer = lexers.get_lexer_by_name("python")
+else:
+    pygments_formatter = False
+    pygments_pylexer = False
+
+
+
+
+class InstallError(Exception):
+    pass
+
+class InputError(Exception):
+    pass
+    # def __init__(self, expression, message):
+    #     self.expression = expression
+    #     self.message = message
+
+
+def my_excepthook(exception_type,exception_obj,tb):
+    Tools.log(msg=exception_obj,tb=tb,level=40)
+    if MyEnv.debug and traceback and pudb:
+        # exception_type, exception_obj, tb = sys.exc_info()
+        pudb.post_mortem(tb)
+    Tools.pprint("{RED}CANNOT CONTINUE{RESET}")
+    sys.exit(1)
+
+
 import inspect
 
 serializer=None
@@ -242,7 +288,7 @@ if redis:
             assert isinstance(sha, (str))
             # assert isinstance(sha, (bytes, bytearray))
             from Jumpscale import j
-            j.shell()
+            Tools.shell()
             return self.evalsha(sha,data["nrkeys"],*args)
             # self.eval(data["script"],data["nrkeys"],*args)
             # return self.execute_command("EVALSHA",sha,data["nrkeys"],*args)
@@ -280,7 +326,33 @@ class Tools:
     _shell = None
 
     @staticmethod
-    def log(msg,cat="",level=10,data=None,context=None,_deeper=False,stdout=True,redis=True):
+    def traceback_text_get(tb=None,stdout=False):
+        """
+        format traceback to readable text
+        :param tb:
+        :return:
+        """
+        if tb is None:
+            tb = sys.last_traceback
+        out=""
+        for item in traceback.extract_tb(tb):
+            fname =  item.filename
+            if len(fname)>60:
+                fname=fname[-60:]
+            line= "%-60s : %-4s: %s"%(fname, item.lineno,item.line)
+            if stdout:
+                line2 = "        {GRAY}%-60s :{RESET} %-4s: "%(fname, item.lineno)
+                Tools.pprint(line2,end="",log=False)
+                if pygments_formatter is not False:
+                    print(pygments.highlight(item.line ,pygments_pylexer, pygments_formatter).rstrip())
+                else:
+                    Tools.pprint(item.line,log=False)
+
+            out+="%s\n"%line
+        return out
+
+    @staticmethod
+    def log(msg,cat="",level=10,data=None,context=None,_deeper=False,stdout=True,redis=True,tb=None,data_show=True):
         """
 
         :param msg:
@@ -294,10 +366,29 @@ class Tools:
 
         :return:
         """
-        if _deeper:
-            frame_ = inspect.currentframe().f_back
+        if isinstance(msg,Exception):
+            Tools.pprint("\n\n{BOLD}{RED}EXCEPTION{RESET}\n")
+            msg="{RED}EXCEPTION: {RESET}%s"%str(msg)
+            level = 50
+            if cat is "":
+                cat="exception"
+        if tb:
+            if tb.tb_next is not None:
+                frame_ = tb.tb_next.tb_frame
+            else:
+                # extype, value, tb = sys.exc_info()
+                frame_ = tb.tb_frame
+            if data is None:
+                data = Tools.traceback_text_get(tb,stdout=True)
+                data_show = False
+            else:
+                msg+="\n%s"%Tools.traceback_text_get(tb,stdout=True)
+            print()
         else:
-            frame_ = inspect.currentframe().f_back.f_back
+            if _deeper:
+                frame_ = inspect.currentframe().f_back
+            else:
+                frame_ = inspect.currentframe().f_back.f_back
 
         fname = frame_.f_code.co_filename.split("/")[-1]
         defname = frame_.f_code.co_name
@@ -322,7 +413,7 @@ class Tools:
         logdict["data"] = data
 
         if stdout:
-            Tools.log2stdout(logdict)
+            Tools.log2stdout(logdict,data_show=data_show)
 
     @staticmethod
     def redis_client_get(addr='localhost',port=6379, unix_socket_path="/sandbox/var/redis.sock",die=True):
@@ -356,15 +447,24 @@ class Tools:
     def _isUnix():
         return 'posix' in sys.builtin_module_names
 
-    @staticmethod
-    def error_raise(msg, pythonerror=None):
-        print ("** ERROR **")
-        Tools.log(msg)
-        # sys.exit(1)
-        raise RuntimeError(msg)
+    # @staticmethod
+    # def error_raise(msg, pythonerror=None):
+    #     print ("** ERROR **")
+    #     Tools.log(msg)
+    #     if MyEnv.debug and traceback and pudb:
+    #         extype, value, tb = sys.exc_info()
+    #         if tb is not None:
+    #             traceback.print_exc()
+    #             pudb.post_mortem(tb,e_value=pythonerror)
+    #         else:
+    #             from pudb import set_trace
+    #             set_trace()
+    #         sys.exit(1)
+    #     raise RuntimeError(msg)
 
     @staticmethod
-    def _execute_interactive(cmd=None, args=None, die=True):
+    def _execute_interactive(cmd=None, args=None, die=True,original_command=None):
+
         if args is None:
             args = cmd.split(" ")
         # else:
@@ -374,10 +474,13 @@ class Tools:
         cmd=" ".join(args   )
         if returncode == 127:
             Tools.shell()
-            Tools.error_raise('{0}: command not found\n'.format(args[0]))
+            raise RuntimeError('{0}: command not found\n'.format(args[0]))
         if returncode>0 and returncode != 999:
             if die:
-                Tools.error_raise("***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n"%(cmd,returncode))
+                if original_command:
+                    raise RuntimeError("***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n"%(original_command,returncode))
+                else:
+                    raise RuntimeError("***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n"%(cmd,returncode))
             return returncode
         return returncode
 
@@ -402,7 +505,7 @@ class Tools:
             if Tools.cmd_installed(editor):
                 Tools._execute_interactive("%s %s" % (editor, path))
                 return
-        Tools.error_raise("cannot edit the file: '{}', non of the supported editors is installed".format(path))
+        raise RuntimeError("cannot edit the file: '{}', non of the supported editors is installed".format(path))
 
 
 
@@ -512,22 +615,32 @@ class Tools:
     @staticmethod
     def _installbase_for_shell():
 
-        script = """
-            if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
-                echo >> /etc/apt/sources.list
-                echo "# Jumpscale Setup" >> /etc/apt/sources.list
-                echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+        if 'darwin' in MyEnv.platform():
+
+            script = """            
+            pip3 install ipython
+            """
+            Tools.execute(script, interactive=True)
+
+        else:
+
+            script = """
+                if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+                    echo >> /etc/apt/sources.list
+                    echo "# Jumpscale Setup" >> /etc/apt/sources.list
+                    echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+                fi
                 apt-get update
                 apt-get install -y python3-pip locales
                 apt-get install -y curl rsync
                 apt-get install -y unzip
                 pip3 install ipython
-                locale-gen --purge en_US.UTF-8
-            fi
-        """
-        Tools.execute(script, interactive=True)
+                pip3 install pudb
+                pip3 install pygments
+                locale-gen --purge en_US.UTF-8                
+            """
+            Tools.execute(script, interactive=True)
 
-        MyEnv.state_set("ubuntu_base_install")
 
 
     def clear():
@@ -542,9 +655,8 @@ class Tools:
             curframe = inspect.currentframe()
             calframe = inspect.getouterframes(curframe, 2)
             f = calframe[1]
-            print("\n*** file: %s"%f.filename)
-            print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
-
+        else:
+            f = None
         if Tools._shell is None:
             script = """
             apt-get install -y ipython
@@ -555,9 +667,13 @@ class Tools:
             Tools.execute(script, interactive=False)
             try:
                 from IPython.terminal.embed import InteractiveShellEmbed
-            except:
+
+            except Exception as e:
                 Tools._installbase_for_shell()
                 from IPython.terminal.embed import InteractiveShellEmbed
+            if f:
+                print("\n*** file: %s"%f.filename)
+                print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
             Tools._shell = InteractiveShellEmbed(banner1= "", exit_msg="")
         return Tools._shell(stack_depth=2)
 
@@ -656,11 +772,17 @@ class Tools:
                 "BLUE",
                 "CYAN",
                 "GREEN",
+                "YELLOW,
                 "RESET",
                 "BOLD",
                 "REVERSE"
 
         """
+        class format_dict(dict):
+            def __missing__(self, key):
+                return '{%s}' % key
+
+
         if args is None:
             args={}
 
@@ -673,7 +795,8 @@ class Tools:
             if colors:
                 args.update(MyEnv.MYCOLORS)
 
-            content = content.format(**args)
+            replace_args = format_dict(args)
+            content = content.format_map(replace_args)
 
         if text_strip:
             content = Tools.text_strip(content,ignorecomments=ignorecomments)
@@ -684,7 +807,7 @@ class Tools:
 
 
     @staticmethod
-    def log2stdout(logdict):
+    def log2stdout(logdict,data_show=True):
         """
 
         :param logdict:
@@ -741,22 +864,22 @@ class Tools:
             logdict["context"]=""
 
 
-
-        msg = LOGFORMAT.format(**logdict)
-
+        msg=Tools.text_replace(LOGFORMAT,args=logdict)
         print(msg)
 
-        if logdict["data"] not in ["",None]:
-            if isinstance(logdict["data"],dict):
-                data = serializer(logdict["data"])
-            else:
-                data = logdict["data"]
-            data=Tools.text_indent(data,10,strip=True)
-            print (data.rstrip())
+        if data_show:
+            if logdict["data"] not in ["",None]:
+                if isinstance(logdict["data"],dict):
+                    data = serializer(logdict["data"])
+                else:
+                    data = logdict["data"]
+                data=Tools.text_indent(data,10,strip=True)
+                data=Tools.text_replace(data,text_strip=False)
+                print (data.rstrip())
 
 
     @staticmethod
-    def pprint(content, ignorecomments=False, text_strip=False,args=None,colors=True,indent=0,end="\n"):
+    def pprint(content, ignorecomments=False, text_strip=False,args=None,colors=True,indent=0,end="\n",log=True):
         """
 
         :param content: what to print
@@ -782,7 +905,8 @@ class Tools:
                                      ignorecomments=ignorecomments,colors=colors)
         if indent>0:
             content = Tools.text_indent(content)
-        Tools.log(content,level=15,stdout=False)
+        if log:
+            Tools.log(content,level=15,stdout=False)
         print(content,end=end)
 
     @staticmethod
@@ -809,7 +933,7 @@ class Tools:
         if args is not None:
             content = Tools.text_replace(content,args=args)
         if strip:
-            content = Tools.text_strip(content)
+            content = Tools.text_strip(content,replace=False)
         if wrap > 0:
             content = Tools.text_wrap(content, wrap)
 
@@ -840,7 +964,7 @@ class Tools:
     def execute(command, showout=True, useShell=True, cwd=None, timeout=800,die=True,
                 async_=False, args=None, env=None,
                 interactive=False,self=None,
-                replace=True,asfile=False):
+                replace=True,asfile=False,original_command=None):
 
         if env is None:
             env={}
@@ -860,13 +984,13 @@ class Tools:
             print(command2)
             command3 = "bash %s" % path
             res = Tools.execute(command3,showout=showout,useShell=useShell,cwd=cwd,
-                            timeout=timeout,die=die,env=env,self=self,interactive=interactive,asfile=False)
+                            timeout=timeout,die=die,env=env,self=self,interactive=interactive,asfile=False,original_command=command )
             Tools.delete(path)
             return res
         else:
 
             if interactive:
-                res = Tools._execute_interactive(cmd=command, die=die)
+                res = Tools._execute_interactive(cmd=command, die=die,original_command=original_command)
                 Tools.log("execute interactive:%s"%command)
                 return res
             else:
@@ -1153,6 +1277,10 @@ class Tools:
         args["REPO_DIR"]= REPO_DIR
         args["URL"] = repo_url
         args["NAME"] = repo
+        if isinstance(branch,(list,set)):
+            args["BRANCH"] = branch[0]
+        else:
+            args["BRANCH"] = branch
 
         if "GITPULL" in os.environ:
             pull = str(os.environ["GITPULL"]) == "1"
@@ -1172,11 +1300,24 @@ class Tools:
                 set -e
                 mkdir -p {ACCOUNT_DIR}
                 cd {ACCOUNT_DIR}
-                git clone  --depth 1 {URL}
-                cd {NAME}
                 """
                 Tools.log("get code [git] (first time): %s"%repo)
                 Tools.execute(C, args=args,showout=False)
+                C = """
+                cd {ACCOUNT_DIR}
+                git clone  --depth 1 {URL} -b {BRANCH}
+                cd {NAME}
+                """
+                try:
+                    Tools.execute(C, args=args,showout=False)
+                except Exception as e :
+                    C = """
+                        cd {ACCOUNT_DIR}
+                        git clone  --depth 1 {URL}
+                        cd {NAME}
+                        """
+                    Tools.execute(C, args=args,showout=False)
+
             else:
                 if pull and Tools.code_changed(REPO_DIR):
                     if Tools.ask_yes_no("\n**: found changes in repo '%s', do you want to commit?"%repo):
@@ -1381,6 +1522,20 @@ class OSXInstall():
         '''
 
         UbuntuInstall.pips_install()
+
+    @staticmethod
+    def brew_uninstall():
+        cmd='sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"'
+        Tools.execute(cmd,interactive=True)
+        toremove = """                
+        sudo rm -rf /usr/local/.com.apple.installer.keep
+        sudo rm -rf /usr/local/include/
+        sudo rm -rf /usr/local/etc/
+        sudo rm -rf /usr/local/var/
+        sudo rm -rf /usr/local/FlashcardService/
+        sudo rm -rf /usr/local/texlive/ 
+        """
+        Tools.execute(toremove,interactive=True)
 
 
 class UbuntuInstall():
@@ -1605,12 +1760,14 @@ class MyEnv():
 
     config = {}
     _sshagent_active = None
+    installer_only = not Tools.exists("/sandbox")  #if /sandbox does not exist then will use as installer only
     sandbox_python_active = False #WHAT IS THIS?
     sandbox_lua_active = False
     config_changed = False
     _cmd_installed = {}
     state = None
     __init = False
+    debug = False
 
     appname = "installer"
 
@@ -1667,8 +1824,6 @@ class MyEnv():
     @staticmethod
     def config_default_get():
         config = {}
-        config["DIR_BASE"] = "/sandbox"
-        config["DIR_TEMP"] = "/tmp/jumpscale"
 
         if "HOMEDIR" in os.environ:
             dir_home = os.environ["HOMEDIR"]
@@ -1677,12 +1832,6 @@ class MyEnv():
         else:
             dir_home = "/root"
         config["DIR_HOME"] = dir_home
-
-        config["DIR_VAR"] = "/sandbox/var"
-        config["DIR_CODE"] = "/sandbox/code"
-        config["DIR_CFG"] = "/sandbox/cfg"
-        config["DIR_BIN"] = "/sandbox/bin"
-        config["DIR_APPS"] = "/sandbox/apps"
         config["USEGIT"] = True
         config["DEBUG"] = True
         config["SSH_AGENT"] = False
@@ -1691,7 +1840,23 @@ class MyEnv():
         config["LOGGER_EXCLUDE"] = ["sal.fs"]
         config["LOGGER_LEVEL"] = 15 #means std out & plus gets logged
         config["LOGGER_CONSOLE"] = True
-        config["LOGGER_REDIS"] = True
+        config["LOGGER_REDIS"] = False
+
+        if MyEnv.installer_only:
+            config["DIR_TEMP"] = "/tmp/jumpscale_installer"
+            config["LOGGER_REDIS"] = False
+            config["LOGGER_CONSOLE"] = True
+            return config
+
+        config["DIR_BASE"] = "/sandbox"
+        config["DIR_TEMP"] = "/tmp/jumpscale"
+
+        config["DIR_VAR"] = "/sandbox/var"
+        config["DIR_CODE"] = "/sandbox/code"
+        config["DIR_CFG"] = "/sandbox/cfg"
+        config["DIR_BIN"] = "/sandbox/bin"
+        config["DIR_APPS"] = "/sandbox/apps"
+
 
         if "INSYSTEM" in os.environ:
             if str(os.environ["INSYSTEM"]).lower().strip() in ["1","true","yes","y"]:
@@ -1708,15 +1873,47 @@ class MyEnv():
 
 
     @staticmethod
-    def _init(force=False):
+    def _init(force=False,install=False):
         MyEnv.check_platform()
 
         if MyEnv.__init:
             return
 
+        if install:
+            #will make sure we install and manipulate local system
+            MyEnv.installer_only=False
+
+        if MyEnv.installer_only:
+            #means we are not installing in system
+            MyEnv.config = MyEnv.config_default_get()
+            MyEnv.sandbox_python_active=False #because python is not in sandbox because there is no sandbox (-:
+
+            if not Tools.cmd_installed("curl") or not Tools.cmd_installed("unzip") or not Tools.cmd_installed("rsync"):
+                raise RuntimeError("Cannot continue, curl, rsync, unzip needs to be installed")
+
+            return
+
+
+        if not os.path.exists("/sandbox"):
+            script = """
+            cd /
+            sudo mkdir -p /sandbox/cfg
+            sudo chown -R {USERNAME}:{GROUPNAME} /sandbox
+            mkdir -p /usr/local/EGG-INFO
+            sudo chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
+            """
+            args={}
+            args["USERNAME"] = getpass.getuser()
+            st = os.stat(MyEnv.config["DIR_HOME"])
+            gid = st.st_gid
+            args["GROUPNAME"] = grp.getgrgid(gid)[0]
+            Tools.execute(script,interactive=True,args=args)
+
+
         if "DIR_CFG" in os.environ:
             DIR_CFG = os.environ["DIR_CFG"].strip()
         else:
+
             DIR_CFG = "/sandbox/cfg"
 
         MyEnv.config_file_path = os.path.join(DIR_CFG,"jumpscale_config.toml")
@@ -1728,9 +1925,12 @@ class MyEnv():
             MyEnv.config = MyEnv.config_default_get()
             MyEnv.config_save()
 
-        if force or not MyEnv.state_exists("myenv_init"):
+        if not os.path.exists(MyEnv.config["DIR_TEMP"]):
+            os.makedirs(MyEnv.config["DIR_TEMP"],exist_ok=True)
 
-            if MyEnv.platform()== "linux":
+        if force or not MyEnv.state_exists("myenv_init"):
+            # Tools.log(MyEnv.platform())
+            if MyEnv.platform() == "linux":
                 script="""
                 if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
                     echo >> /etc/apt/sources.list
@@ -1746,47 +1946,23 @@ class MyEnv():
                 mkdir -p /sandbox/var/log
 
                 """
-            else:
-                if not Tools.cmd_installed("curl") or Tools.cmd_installed("unzip") or Tools.cmd_installed("rsync"):
+            elif "darwin" in MyEnv.platform():
+                if not Tools.cmd_installed("curl") or not Tools.cmd_installed("unzip") or not Tools.cmd_installed("rsync"):
                     script="""
                     brew install curl unzip rsync
                     """
-                else:
-                    script = ""
-                    Tools.error_raise("Cannot continue, curl, rsync, unzip needs to be installed")
+            else:
+                raise RuntimeError("only OSX and Linux Ubuntu supported.")
 
             Tools.execute(script,interactive=True)
 
 
-            MyEnv.config_load()
-
-            if not "HOME" in MyEnv.config and "HOME" in os.environ:
-                MyEnv.config["DIR_HOME"] = copy.copy(os.environ["HOME"])
-                MyEnv.config_save()
-
-            if not os.path.exists(MyEnv.config["DIR_BASE"]):
-                script = """
-                cd /
-                sudo mkdir -p /sandbox/cfg
-                sudo chown -R {USERNAME}:{GROUPNAME} /sandbox
-                """
-                args={}
-                args["USERNAME"] = getpass.getuser()
-                st = os.stat(MyEnv.config["DIR_HOME"])
-                gid = st.st_gid
-                args["GROUPNAME"] = grp.getgrgid(gid)[0]
-                Tools.execute(script,interactive=True,args=args)
-
-                # and
-            if not os.path.exists(MyEnv.config["DIR_TEMP"]):
-                os.makedirs(MyEnv.config["DIR_TEMP"],exist_ok=True)
-
             MyEnv.state_set("myenv_init")
 
-        if os.path.exists(os.path.join(MyEnv.config["DIR_BASE"],"bin","python3.6")):
-            MyEnv.sandbox_python_active=True
-        else:
-            MyEnv.sandbox_python_active=False
+            if os.path.exists(os.path.join(MyEnv.config["DIR_BASE"],"bin","python3.6")):
+                MyEnv.sandbox_python_active=True
+            else:
+                MyEnv.sandbox_python_active=False
 
 
         MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE",[]) if i.strip().strip("'\'") != ""]
@@ -1805,6 +1981,8 @@ class MyEnv():
 
     @staticmethod
     def install(force=False):
+
+        MyEnv._init(install=True)
 
         #DONT USE THE SANDBOX
         if MyEnv.config["INSYSTEM"]:
@@ -1925,6 +2103,8 @@ class MyEnv():
         edits the configuration file which is in {DIR_BASE}/cfg/jumpscale_config.toml
         {DIR_BASE} normally is /sandbox
         """
+        if MyEnv.installer_only:
+            raise RuntimeError("config cannot be saved in installer only mode")
         Tools.file_edit(MyEnv.config_file_path)
 
     @staticmethod
@@ -1933,10 +2113,14 @@ class MyEnv():
         loads the configuration file which is in {DIR_BASE}/cfg/jumpscale_config.toml
         {DIR_BASE} normally is /sandbox
         """
+        if MyEnv.installer_only:
+            raise RuntimeError("config cannot be saved in installer only mode")
         MyEnv.config = Tools.config_load(MyEnv.config_file_path)
 
     @staticmethod
     def config_save():
+        if MyEnv.installer_only:
+            raise RuntimeError("config cannot be saved in installer only mode")
         Tools.config_save(MyEnv.config_file_path,MyEnv.config)
 
     @staticmethod
@@ -1945,10 +2129,14 @@ class MyEnv():
         only 1 level deep toml format only for int,string,bool
         no multiline
         """
+        if MyEnv.installer_only:
+            return
         MyEnv.state = Tools.config_load(MyEnv.state_file_path,if_not_exist_create=True)
 
     @staticmethod
     def state_save():
+        if MyEnv.installer_only:
+            return
         Tools.config_save(MyEnv.state_file_path,MyEnv.state)
 
 
@@ -1963,6 +2151,8 @@ class MyEnv():
 
     @staticmethod
     def state_exists(key):
+        if MyEnv.installer_only:
+            return False
         key = MyEnv._key_get(key)
         if MyEnv.state is None:
             MyEnv.state_load()
@@ -1972,6 +2162,8 @@ class MyEnv():
 
     @staticmethod
     def state_set(key,val=True):
+        if MyEnv.installer_only:
+            return
         key = MyEnv._key_get(key)
         if MyEnv.state is None:
             MyEnv.state_load()
@@ -1986,15 +2178,18 @@ class JumpscaleInstaller():
     def __init__(self):
 
         self.account = "threefoldtech"
-        self.branch = ["development"]
+        self.branch = ["development_types"]
         self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
-    def install(self):
+    def install(self,branch=None,secret="1234",private_key_words=None):
 
         MyEnv.install()
 
-
         Tools.file_touch(os.path.join(MyEnv.config["DIR_BASE"], "lib/jumpscale/__init__.py"))
+
+        if branch:
+            #TODO: need to check if ok
+            self.branch = [i.strip() for i in branch.split(",") if i.strip()!=""]
 
         self.repos_get()
         self.repos_link()
@@ -2006,12 +2201,41 @@ class JumpscaleInstaller():
         source env.sh
         mkdir -p /sandbox/openresty/nginx/logs
         mkdir -p /sandbox/var/log
-        js_shell ' j.core.installer_jumpscale.remove_old_parts()'
-        js_shell 'j.tools.console.echo("JumpscaleX IS OK.")'
+        kosmos 'j.core.installer_jumpscale.remove_old_parts()'
+        kosmos --instruct=/tmp/instructions.toml
+        kosmos 'j.tools.console.echo("JumpscaleX IS OK.")'
         """
-        Tools.execute(script,interactive=True)
 
+        if private_key_words is None:
+            private_key_words = "" #will make sure it gets generated
 
+        if secret.lower().strip() == "ssh":
+            C="""
+            [[instruction]]
+            instruction_method = "j.data.nacl.configure"
+            name = "default"
+            sshagent_use = true
+            privkey_words = "{WORDS}"
+            generate = true
+            """
+        else:
+            C="""
+            [[instruction]]
+            instruction_method = "j.data.nacl.configure"
+            name = "default"
+            sshagent_use = false
+            secret = "{SECRET}"
+            privkey_words = "{WORDS}"
+            generate = true
+            """
+        kwargs={}
+        kwargs["WORDS"] = private_key_words
+        kwargs["SECRET"] = secret
+
+        C=Tools.text_strip(C,args=kwargs,replace=True)
+
+        Tools.file_write("/tmp/instructions.toml",C)
+        Tools.execute(script)
 
 
     def remove_old_parts(self):
@@ -2082,7 +2306,7 @@ class JumpscaleInstaller():
             #     continue
 
             args={"NAME":item,"LOC":loc,"ALIAS":alias}
-            Tools.log(Tools.text_strip("link {LOC}/{ALIAS} to {ALIAS}",args=args))
+            Tools.log(Tools.text_replace("link {LOC}/{ALIAS} to {ALIAS}",args=args))
             Tools.execute(script,args=args)
 
 
@@ -2101,14 +2325,14 @@ class JumpscaleInstaller():
 
 
 
-MyEnv._init()
 
 
 
-try:
-    from colored_traceback import add_hook
-    import colored_traceback
-    add_hook()
-    MyEnv._colored_traceback = colored_traceback
-except ImportError:
-    MyEnv._colored_traceback = None
+
+# try:
+#     from colored_traceback import add_hook
+#     import colored_traceback
+#     add_hook()
+#     MyEnv._colored_traceback = colored_traceback
+# except ImportError:
+#     MyEnv._colored_traceback = None
