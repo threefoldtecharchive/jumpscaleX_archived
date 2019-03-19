@@ -170,10 +170,13 @@ class IPPort(Integer):
     def __init__(self,default=None):
         self.BASETYPE = "int"
         self.NOCHECK = True
+        # j.shell()
         self._default = default
 
     def default_get(self):
-        return 65535
+        if not self._default:
+            self._default = 65535
+        return self._default
 
 
     def possible(self, value):
@@ -517,7 +520,9 @@ class DateTime(Integer):
         # self._RE = re.compile('[0-9]{4}/[0-9]{2}/[0-9]{2}')  #something wrong here is not valid for time
 
     def default_get(self):
-        return 0
+        if not self._default:
+            self._default = 0
+        return self._default
 
     def fromString(self, txt):
         return self.clean(txt)
