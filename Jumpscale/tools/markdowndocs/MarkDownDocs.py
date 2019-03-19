@@ -376,6 +376,11 @@ class MarkDownDocs(j.application.JSBaseClass):
         except :
             pass
 
+        url = "https://github.com/threefoldtech/info_tftech/tree/master/docs"
+        ds7 = self.load(url, name="tech")
+        ds7.write()
+
+
         self.webserver(watch)
 
         print("TEST FOR MARKDOWN PREPROCESSING IS DONE")
