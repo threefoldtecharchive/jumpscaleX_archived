@@ -2,9 +2,7 @@ from Jumpscale import j
 from subprocess import run, PIPE
 from uuid import uuid4
 import configparser
-import requests
 import base64
-import sys
 import os
 import re
 ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
@@ -23,6 +21,8 @@ class Utils:
         self.repo = config['github']['repo']
         self.result_path = config['main']['result_path']
         self.exports = self.export_var(config)
+        self.github_cl = j.clients.github('test', token=self.access_token)
+        self.repo = self.github_cl.api.get_repo(self.repo)
 
     def execute_cmd(self, cmd):
         response = run(cmd, shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
@@ -43,7 +43,7 @@ class Utils:
         """
         client = j.clients.telegram_bot.get("test")
         if commit:
-            msg = msg + '\n' + committer + '\n' + commit
+            msg = '\n'.join([msg, committer, commit])
         client.send_message(chatid=self.chat_id, text=msg)
 
     def write_file(self, text, file_name, file_path=''):
@@ -76,26 +76,23 @@ class Utils:
         :param commit: commit hash required to change its status on github.
         :type commit: str
         """
-        data = {"state": status, "description": "JSX-machine for testing",
-                "target_url": file_link, "context": "continuous-integration/0-Test"}
-        url = 'https://api.github.com/repos/{}/statuses/{}?access_token={}'.format(self.repo, commit, self.access_token)
-        requests.post(url, json=data)
+        commit = self.repo.get_commit(commit)
+        commit.create_status(state=status, target_url=file_link, description='JSX-machine for testing',
+                             context='continuous-integration/0-Test')
 
-    def github_get_content(self, commit):
+    def github_get_content(self, ref, file_path='0-Test.sh'):
         """Get file content from github with specific commit.
 
         :param commit: commit hash.
         :type commit: str
         """
-        url = 'https://api.github.com/repos/{}/contents/0-Test.sh'.format(self.repo)
-        req = requests.get(url, {'ref': commit})
-        if req.status_code == requests.codes.ok:
-            req = req.json()
-            content = base64.b64decode(req['content'])
-            content = content.decode()
-            return content
-        return None
-
+        try:
+            content_b64 = self.repo.get_contents(file_path, ref=ref)
+        except Exception:
+            return None
+        content = base64.b64decode(content_b64.content)
+        content = content.decode()
+        return content
     
     def report(self, status, file_name, branch, commit, committer=''):
         """Report the result to github commit status and Telegram chat.
@@ -120,7 +117,6 @@ class Utils:
         elif status == 'failure' and branch == 'development':
             self.send_msg('Tests had errors ' + file_link, commit=commit, committer=committer)
         
-
     def export_var(self, config):
         """Prepare environment variables from config file.
 

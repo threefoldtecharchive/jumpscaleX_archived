@@ -23,10 +23,12 @@ def test_run(image_name, branch, commit, committer):
     test = RunTests()
     file_name = '{}.log'.format(commit[:7])
     status = 'success'
-    content = utils.github_get_content(commit)
+    content = test.github_get_content(ref=commit)
     if content:
         lines = content.splitlines()
         for line in lines:
+            if line.startswith('#'):
+                continue
             response = test.run_tests(image_name=image_name, run_cmd=line, commit=commit)
             test.write_file(text='---> {}'.format(line), file_name=file_name)
             test.write_file(text=response.stdout, file_name=file_name)
