@@ -8,11 +8,13 @@ utils = Utils()
 app = Flask(__name__)
 
 
-def test_run(image_name, branch, commit, committer):
+def test_run(image_name, repo, branch, commit, committer):
     """Run test aginst the new commit and give report on Telegram chat and github commit status.
     
     :param image_name: docker image name.
     :type image_name: str
+    :param repo: full repo name
+    :type repo: str
     :param branch: branch name.
     :type branch: str
     :param commit: commit hash.
@@ -23,13 +25,13 @@ def test_run(image_name, branch, commit, committer):
     test = RunTests()
     file_name = '{}.log'.format(commit[:7])
     status = 'success'
-    content = test.github_get_content(ref=commit)
+    content = test.github_get_content(repo=repo, ref=commit)
     if content:
         lines = content.splitlines()
         for line in lines:
             if line.startswith('#'):
                 continue
-            response = test.run_tests(image_name=image_name, run_cmd=line, commit=commit)
+            response = test.run_tests(image_name=image_name, run_cmd=line, repo=repo, commit=commit)
             test.write_file(text='---> {}'.format(line), file_name=file_name)
             test.write_file(text=response.stdout, file_name=file_name)
             if response.returncode:
@@ -37,16 +39,18 @@ def test_run(image_name, branch, commit, committer):
     else:
         test.write_file(text="Didn't find tests", file_name=file_name)
 
-    test.report(status, file_name, branch=branch, commit=commit, committer=committer)
+    test.report(status=status, file_name=file_name, repo=repo, branch=branch, commit=commit, committer=committer)
 
 
-def build_image(branch, commit):
+def build_image(branch, commit, committer):
     """Build a docker image to install application.
 
     :param branch: branch name.
     :type branch: str
     :param commit: commit hash.
     :type commit: str
+    :param committer: name of the committer on github.
+    :type committer: str
     """
     build = BuildImage()
     image_name = build.random_string()
@@ -55,7 +59,7 @@ def build_image(branch, commit):
         file_name = '{}.log'.format(commit[:7])
         build.write_file(text=response.stdout, file_name=file_name)
         build.images_clean()
-        build.report('failure', file_name, branch=branch, commit=commit)
+        build.report('failure', file_name, repo='jumpscalex', branch=branch, commit=commit, committer=committer)
         return False
     return image_name
 
@@ -67,32 +71,52 @@ def get_state(name):
         if line[0] == name:
             return line[1].strip()
 
-@app.route('/', methods=["POST"])
-def triggar(**kwargs):
-    """Triggar the test when post request is sent
+@app.route('/jumpscalex', methods=["POST"])
+def triggar_jumpscale(**kwargs):
+    """Triggar the test when post request is sent from jumpscalex repo.
     """
     if request.json:
         # push case 
         if request.json.get('ref'):
+            repo = request.json['repository']['full_name']
             branch = request.json['ref'][request.json['ref'].rfind('/') + 1:]
             commit = request.json['after']
             committer = request.json['pusher']['name']
-            if branch == 'development':
-                utils.github_status_send('pending', utils.serverip, commit=commit)
+            if repo == utils.repo[0] and branch == 'development':
+                utils.github_status_send(status='pending', link=utils.serverip, repo=repo, commit=commit)
                 image_name = '{}/jumpscalex'.format(utils.username)
-                test_run(image_name=image_name, branch=branch, commit=commit, committer=committer)
+                test_run(image_name=image_name, repo=repo, branch=branch, commit=commit, committer=committer)
         
         # pull request case
         elif request.json.get('pull_request'):
+            repo = request.json['pull_request']['head']['repo']['full_name']
             branch = request.json['pull_request']['head']['ref']
             commit = request.json['pull_request']['head']['sha']
             committer = request.json['pull_request']['head']['user']['login']
-            utils.github_status_send('pending', utils.serverip, commit=commit)
-            image_name = build_image(branch=branch, commit=commit)
-            if image_name:
-                test_run(image_name=image_name, branch=branch, commit=commit, committer=committer)
-                build = BuildImage()
-                build.images_clean(image_name=image_name)
+            if repo == utils.repo[0]:
+                utils.github_status_send(status='pending', link=utils.serverip, repo=repo, commit=commit)
+                image_name = build_image(branch=branch, commit=commit, committer=committer)
+                if image_name:
+                    test_run(image_name=image_name, repo=repo, branch=branch, commit=commit, committer=committer)
+                    build = BuildImage()
+                    build.images_clean(image_name=image_name)
+    return "Done", 201
+
+@app.route('/digitalmex', methods=["POST"])
+def triggar_digitalme(**kwargs):
+    """Triggar the test when post request is sent from digitalme repo
+    """
+    if request.json:
+        # push case 
+        if request.json.get('ref'):
+            repo = request.json['repository']['full_name']
+            branch = request.json['ref'][request.json['ref'].rfind('/') + 1:]
+            commit = request.json['after']
+            committer = request.json['pusher']['name']
+            if repo == utils.repo[1]:
+                utils.github_status_send(status='pending', link=utils.serverip, repo=repo, commit=commit)
+                image_name = '{}/jumpscalex'.format(utils.username)
+                test_run(image_name=image_name, repo=repo, branch=branch, commit=commit, committer=committer)
     return "Done", 201
 
 
