@@ -189,7 +189,7 @@ class TypeBaseClass(): #!!TYPEBASECLASS!!
             return False
 
     def default_get(self):
-        return self.clean(self._default)
+        return self._default
 
     def clean(self, value):
         """

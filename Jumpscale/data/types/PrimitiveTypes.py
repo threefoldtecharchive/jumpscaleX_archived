@@ -128,7 +128,7 @@ class Bytes(TypeBaseClass):
     def fromString(self, s):
         """
         """
-        if isinstance(str,s):
+        if isinstance(s, str):
             try:
                 s=base64.b64decode(s) #could be rather dangerous
                 return s
@@ -170,7 +170,6 @@ class Bytes(TypeBaseClass):
         """
         produce the python code which represents this value
         """
-        raise RuntimeError("pythoncode get on bytes not implemented")
         return self.clean(value)
 
     def capnp_schema_get(self, name, nr):
