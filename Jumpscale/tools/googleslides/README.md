@@ -30,3 +30,9 @@ j.tools.googleslides.export('https://docs.google.com/presentation/d/1N8YWE7Shqmh
 - `serviceaccount` tell the application if it's using serviceaccount credentials. (False by default) 
 - `background` optional background for all the exported images
 - `websitedir` reveal.js website directory
+- `resize` tuple of the new size (width,height) of the slides to
+
+e.g
+```ipython
+j.tools.googleslides.export('https://docs.google.com/presentation/d/1N8YWE7ShqmhQphT6L29-AcEKZfZg2QripM4L0AK8mSU/edit#slide=id.p', credfile='/root/service_credentials.json', serviceaccount=True, websitedir="/tmp/revealsite", resize=(200,200))  
+```
