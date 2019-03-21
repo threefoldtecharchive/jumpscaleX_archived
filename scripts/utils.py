@@ -21,7 +21,7 @@ class Utils:
         self.repo = config['github']['repo'].split(',')
         self.result_path = config['main']['result_path']
         self.exports = self.export_var(config)
-        self.github_cl = j.clients.github('test', token=self.access_token)
+        self.github_cl = j.clients.github.get('test', token=self.access_token)
         self.telegram_cl = j.clients.telegram_bot.get("test")
 
     def execute_cmd(self, cmd):
@@ -48,12 +48,13 @@ class Utils:
         if commit:
             repo = repo.strip('threefoldtech/')
             msg = '\n'.join([msg, repo, branch, committer, commit])
-        for _ in range(0, 10):
+        for _ in range(0, 5):
             try:    
                 self.telegram_cl.send_message(chatid=self.chat_id, text=msg)
                 break
             except Exception:
                 time.sleep(1)
+                self.telegram_cl = j.clients.telegram_bot.get("test")
 
     def write_file(self, text, file_name, file_path=''):
         """Write result file.
@@ -87,10 +88,16 @@ class Utils:
         :param commit: commit hash required to change its status on github.
         :type commit: str
         """
-        repo = self.github_cl.api.get_repo(repo)
-        commit = repo.get_commit(commit)
-        commit.create_status(state=status, target_url=link, description='JSX-machine for testing',
-                             context='continuous-integration/0-Test')
+        for _ in range(0, 5):
+            try: 
+                repo = self.github_cl.api.get_repo(repo)
+                commit = repo.get_commit(commit)
+                commit.create_status(state=status, target_url=link, description='JSX-machine for testing',
+                                    context='continuous-integration/0-Test')
+                break
+            except Exception:
+                time.sleep(1)
+                self.github_cl = j.clients.github.get('test', token=self.access_token)
 
     def github_get_content(self, repo, ref, file_path='0-Test.sh'):
         """Get file content from github with specific ref.
@@ -102,10 +109,15 @@ class Utils:
         :param file_path: file path in the repo
         :type file_path: str
         """
-        repo = self.github_cl.api.get_repo(repo)
-        try:
-            content_b64 = repo.get_contents(file_path, ref=ref)
-        except Exception:
+        for _ in range(0, 5):
+            try:
+                repo = self.github_cl.api.get_repo(repo)
+                content_b64 = repo.get_contents(file_path, ref=ref)
+                break
+            except Exception:
+                time.sleep(1)
+                self.github_cl = j.clients.github.get('test', token=self.access_token)
+        else:        
             return None
         content = j.data.serializers.base64.decode(content_b64.content)
         content = content.decode()

@@ -1,5 +1,4 @@
 from flask import Flask, request, send_file, render_template, abort
-from subprocess import run
 from autotest import RunTests
 from build_image import BuildImage
 from utils import Utils
@@ -39,7 +38,7 @@ def test_run(image_name, repo, branch, commit, committer):
     else:
         test.write_file(text="Didn't find tests", file_name=file_name)
 
-    test.report(status=status, file_name=file_name, repo=repo, branch=branch, commit=commit, committer=committer)
+    utils.report(status=status, file_name=file_name, repo=repo, branch=branch, commit=commit, committer=committer)
 
 
 def build_image(branch, commit, committer):
@@ -59,7 +58,7 @@ def build_image(branch, commit, committer):
         file_name = '{}.log'.format(commit[:7])
         build.write_file(text=response.stdout, file_name=file_name)
         build.images_clean()
-        build.report('failure', file_name, repo='jumpscalex', branch=branch, commit=commit, committer=committer)
+        utils.report('failure', file_name, repo='jumpscalex', branch=branch, commit=commit, committer=committer)
         return False
     return image_name
 
@@ -92,7 +91,7 @@ def triggar_jumpscale(**kwargs):
             repo = request.json['pull_request']['head']['repo']['full_name']
             branch = request.json['pull_request']['head']['ref']
             commit = request.json['pull_request']['head']['sha']
-            committer = request.json['pull_request']['head']['user']['login']
+            committer = request.json['sender']['login']
             if repo == utils.repo[0]:
                 utils.github_status_send(status='pending', link=utils.serverip, repo=repo, commit=commit)
                 image_name = build_image(branch=branch, commit=commit, committer=committer)
