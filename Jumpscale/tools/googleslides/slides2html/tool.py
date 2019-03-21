@@ -2,6 +2,7 @@ import os
 import os.path
 import re
 import click
+import json
 from configparser import ConfigParser
 from httplib2 import Http
 from oauth2client import file, client, tools
@@ -17,7 +18,8 @@ from Jumpscale.tools.googleslides.slides2html.revealjstemplate import BASIC_TEMP
 def dir_images_as_htmltags(directory):
 
     images = []
-    files = [x for x in os.listdir(directory) if x.endswith("png") and "_" in x and "background_" not in x]
+    files = [x for x in os.listdir(directory) if x.endswith(
+        "png") and "_" in x and "background_" not in x]
     files.sort(key=lambda k: int(k.split("_")[0]))
     for p in files:
         dirbasename = os.path.basename(directory)
@@ -59,7 +61,7 @@ def get_slides_info(directory):
 
 
 class Tool:
-    def __init__(self, presentation_id, credfile="credentials.json", serviceaccount=False):
+    def __init__(self, presentation_id, credfile="credentials.json", serviceaccount=False, credjson=None):
         """Initialize slides2html tool.
 
         Arguments:
@@ -85,8 +87,15 @@ class Tool:
         credentials = None
         service = None
         if serviceaccount:
-            credentials = service_account.Credentials.from_service_account_file(
-                self.credfile, scopes=SCOPES)
+            if os.path.exists(self.credfile):
+                credentials = service_account.Credentials.from_service_account_file(
+                    self.credfile, scopes=SCOPES)
+            elif credjson:
+                credentials = service_account.Credentials.from_service_account_info(
+                    **json.loads(credjson), scopes=SCOPES)
+            else:
+                raise RuntimeError(
+                    "invalid credential file or credential json.")
             service = build('slides', 'v1', credentials=credentials)
         else:
             userdir = os.path.expanduser("~")
@@ -148,7 +157,8 @@ def cli(website, id, indexfile="", imagesize="medium", credfile="credentials.jso
     if imagesize not in ["MEDIUM", "LARGE"]:
         raise ValueError("Invalid image size should be MEDIUM or LARGE")
     if not indexfile:
-        indexfilepath = os.path.join(website, "{}.html".format(presentation_id))
+        indexfilepath = os.path.join(
+            website, "{}.html".format(presentation_id))
     else:
         indexfilepath = os.path.join(website, "{}.html".format(indexfile))
 
@@ -268,12 +278,15 @@ def cli(website, id, indexfile="", imagesize="medium", credfile="credentials.jso
 
     if resize and "," in resize:
         try:
-            newwidth, newheight = map(lambda x: int(x.strip()), resize.split(","))
+            newwidth, newheight = map(
+                lambda x: int(x.strip()), resize.split(","))
         except:
-            raise ValueError("invalid size for --resize {}: should be 'width,height' ".format(resize))
+            raise ValueError(
+                "invalid size for --resize {}: should be 'width,height' ".format(resize))
 
     if not indexfile:
-        indexfilepath = os.path.join(website, "{}.html".format(presentation_id))
+        indexfilepath = os.path.join(
+            website, "{}.html".format(presentation_id))
     else:
         indexfilepath = os.path.join(website, "{}.html".format(indexfile))
 
