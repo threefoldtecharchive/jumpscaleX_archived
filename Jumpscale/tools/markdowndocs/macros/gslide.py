@@ -2,19 +2,23 @@ from Jumpscale import j
 from Jumpscale.tools.googleslides.slides2html.google_links_utils import get_presentation_id
 
 
-EXPORT_TMP_DIR = "/tmp/slides"
+EXPORT_TMP_DIR = "/tmp"
 CRED_FILE_PATH = "/sandbox/var/cred.json"
 
 
-def gslides(doc, **kwargs):
+def gslide(doc, **kwargs):
     presentations = []
     for key in kwargs:
         if key.startswith("presentation"):
             presentations.append(kwargs[key])
 
-    output = "```gslides\n"
+    output = "```gslide\n"
     for pres in presentations:
-        j.tools.googleslides.export(pres, credfile=CRED_FILE_PATH, serviceaccount=True, websitedir=EXPORT_TMP_DIR)
+        if ("width" and "height")in kwargs:
+            j.tools.googleslides.export(pres, credfile=CRED_FILE_PATH, serviceaccount=True,
+                                        websitedir=EXPORT_TMP_DIR, resize=(int(kwargs["width"]), int(kwargs["height"])))
+        else:
+            j.tools.googleslides.export(pres, credfile=CRED_FILE_PATH, serviceaccount=True, websitedir=EXPORT_TMP_DIR)
         pres_id = get_presentation_id(pres)
         source = j.sal.fs.joinPaths(EXPORT_TMP_DIR, pres_id)
         dest = j.sal.fs.joinPaths(doc.docsite.outpath, pres_id)
@@ -34,6 +38,7 @@ def gslides(doc, **kwargs):
             <section>
                <div class="slide-image">
                    {image}
+                   
                </div>
             </section>""".format(image=image_tag)
     output += "\n```"
