@@ -96,7 +96,7 @@ class BCDBModel(j.application.JSBaseClass):
         if method not in self._triggers:
             self._triggers.append(method)
 
-    def triggers_call(self,obj, action=None, propertyname=None):
+    def triggers_call(self, obj, action=None, propertyname=None):
         """
         will go over all triggers and call them with arguments given
         see docs/baseclasses/data_mgmt_on_obj.md
@@ -105,7 +105,7 @@ class BCDBModel(j.application.JSBaseClass):
         model = self
         kosmosinstance = self._kosmosinstance
         for method in self._triggers:
-            method(model,obj,kosmosinstance=kosmosinstance, action=action, propertyname=propertyname)
+            method(model, obj, kosmosinstance=kosmosinstance, action=action, propertyname=propertyname)
 
     def cache_reset(self):
         self.obj_cache = {}
@@ -117,7 +117,7 @@ class BCDBModel(j.application.JSBaseClass):
         :return:
         """
         if self.__redis_prefix is None:
-           self.__redis_prefix = self.bcdb._hset_index_key_get(self.schema)
+            self.__redis_prefix = self.bcdb._hset_index_key_get(self.schema)
         return self.__redis_prefix
 
     @queue_method
@@ -155,7 +155,7 @@ class BCDBModel(j.application.JSBaseClass):
     def index_rebuild(self):
         self.stop()
         self.index_destroy()
-        self._log_warning("will rebuild index for:%s"%self)
+        self._log_warning("will rebuild index for:%s" % self)
         for obj in self.iterate(die=False):
             self._set(obj, store=False)
 
@@ -178,8 +178,6 @@ class BCDBModel(j.application.JSBaseClass):
             self.bcdb.sqlclient.delete(key=obj_id)
         else:
             self.zdbclient.delete(obj_id)
-
-
 
     def check(self, obj):
         if not hasattr(obj, "_JSOBJ"):
@@ -367,9 +365,9 @@ class BCDBModel(j.application.JSBaseClass):
             try:
                 bdata = obj._data
             except Exception as e:
-                if str(e).find("has no such member")!=-1:
-                    msg = str(e).split("no such member",1)[1].split("stack:")
-                    raise RuntimeError("Could not serialize capnnp message:%s"%msg)
+                if str(e).find("has no such member") != -1:
+                    msg = str(e).split("no such member", 1)[1].split("stack:")
+                    raise RuntimeError("Could not serialize capnnp message:%s" % msg)
                 else:
                     raise e
 
@@ -406,7 +404,7 @@ class BCDBModel(j.application.JSBaseClass):
             self.index_set(obj)
             self.index_keys_set(obj)
 
-            if obj.id > self._ids_last:
+            if obj.id >= self._ids_last:
                 bin_id = struct.pack("<I", obj.id)
                 j.sal.fs.writeFile(self._ids_file_path, bin_id, append=True)
                 self._ids_last = obj.id
@@ -434,13 +432,12 @@ class BCDBModel(j.application.JSBaseClass):
                 else:
                     break
 
-    def id_delete(self,id):
-        out=b""
+    def id_delete(self, id):
+        out = b""
         for id_ in self.id_iterator:
             if id_ != id:
-                out+=struct.pack("<I", id_)
+                out += struct.pack("<I", id_)
         j.sal.fs.writeFile(self._ids_file_path, out)
-
 
     def _dict_process_out(self, ddict):
         """
@@ -462,7 +459,7 @@ class BCDBModel(j.application.JSBaseClass):
         if data:
             data = self._dict_process_in(data)
         if data or capnpbin:
-            obj = self.schema.get(data=data, capnpbin=capnpbin,model=self)
+            obj = self.schema.get(data=data, capnpbin=capnpbin, model=self)
         else:
             obj = self.schema.new()
             obj.model = self
@@ -545,14 +542,14 @@ class BCDBModel(j.application.JSBaseClass):
         self.stop()
         j.sal.fs.remove(self._data_dir)
 
-        tofind=self.bcdb._hset_index_key_get(self.schema)+b":*"
+        tofind = self.bcdb._hset_index_key_get(self.schema)+b":*"
 
         for key in j.clients.credis_core.keys(tofind):
             j.clients.credis_core.delete(key)
 
         self._init_()
 
-    def iterate(self,die=True):
+    def iterate(self, die=True):
         """
         walk over objects which are of type of this model
         """
@@ -560,8 +557,8 @@ class BCDBModel(j.application.JSBaseClass):
             try:
                 o = self.get(obj_id)
             except Exception as e:
-                if str(e).find("could not find obj")!=-1:
-                    self._log_warning("warning: could not find object with id:%s in %s"%(obj_id, self))
+                if str(e).find("could not find obj") != -1:
+                    self._log_warning("warning: could not find object with id:%s in %s" % (obj_id, self))
                     continue
                 else:
                     raise e

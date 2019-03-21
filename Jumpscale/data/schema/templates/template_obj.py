@@ -121,6 +121,45 @@ class ModelOBJ(DataObjBase):
     {% endfor %}
 
 
+    def save(self):
+        if self.model:
+            if self.readonly:
+                raise RuntimeError("object readonly, cannot be saved.\n%s"%self)
+            # print (self.model.__class__.__name__)
+            {% for prop in obj.properties %}
+            if self.model.schema.property_{{prop.name}}.unique:
+                for mm in self.model.get_all():
+                    if mm.{{prop.name}} == self.model.schema.property_{{prop.name}}.default:
+                        raise RuntimeError("cannot save , {{prop.name}} should be unique")
+            {% endfor %}
+            if not self.model.__class__._name=="acl" and self.acl is not None:
+                if self.acl.id is None:
+                    self.acl.save()
+                if self.acl.id != self.acl_id:
+                    self._changed_items["ACL"]=True
+
+            if self._changed:
+                o=self.model._set(self)
+                self.id = o.id
+                # self._log_debug("MODEL CHANGED, SAVE DONE")
+                return o
+
+            return self
+        raise RuntimeError("cannot save, model not known")
+
+    def delete(self):
+        if self.model:
+            if self.readonly:
+                raise RuntimeError("object readonly, cannot be saved.\n%s"%self)
+            if not self.model.__class__.__name__=="ACL":
+                self.model.delete(self)
+            return self
+        raise RuntimeError("cannot save, model not known")
+
+    def _check(self):
+        self._ddict
+        return True
+
     @property
     def _changed(self):
         if  self._changed_items != {}:

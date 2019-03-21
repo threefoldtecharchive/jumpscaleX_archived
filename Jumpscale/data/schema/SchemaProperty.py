@@ -18,7 +18,7 @@ class SchemaProperty(j.application.JSBaseClass):
         self._default = None
         self.index = False # as used in sqlite
         self.index_key = False # is for indexing the keys
-
+        self.unique =  False # to check if type is unique or not
         if self.name in ["schema"]:
             raise RuntimeError("cannot have property name:%s" % self.name)
 
