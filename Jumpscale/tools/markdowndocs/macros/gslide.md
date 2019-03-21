@@ -1,5 +1,5 @@
 
-# how use gslide 
+# how to use gslide 
 In this macro gslide, a user can be easily create a slideshow from
 
 - one presentation

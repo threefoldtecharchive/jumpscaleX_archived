@@ -1,5 +1,5 @@
 
-# how use slideshow 
+# how to use slideshow 
 In this macro slideshow, a user can be easily create a slideshow from
 
 - one or more presentations
