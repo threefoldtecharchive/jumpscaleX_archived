@@ -81,7 +81,7 @@ class GoogleSlides(j.application.JSBaseClass):
             theme = BASIC_TEMPLATE
 
         p2h = Tool(presentation_id, credfile,
-                   serviceaccount=serviceaccount)
+                   serviceaccount=serviceaccount, credjson=credjson)
         p2h.downloader.thumbnailsize = imagesize
         p2h.build_revealjs_site(destdir, indexfilepath, template=theme)
 
