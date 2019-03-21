@@ -41,20 +41,25 @@ class CustomLink:
             )?              # optional
             \:              # match literal :
         )?                  # optional
-        (.*?)$              # anything at the end after that -> path
+        (.*?)               # anything at the end after that -> path
+        (?:
+            \!\s*?
+            (\w+)           # any marker (part) like !A
+        )?$                 # optional
     ''', re.X)
 
-    def __init__(self, link):
+    def __init__(self, link, **kwargs):
         self.link = link.strip()
         self.account = None
         self.repo = None
         self.branch = None
+        self.marker = None  # part
 
         if self.is_url:
             self.path = link
         else:
             self.account, other_part = self.get_account()
-            self.repo, branch, self.path = self.parse_repo_and_path(other_part)
+            self.repo, branch, self.path, self.marker = self.parse_repo_and_path(other_part)
             self.branch = branch or self.branch
 
     def get_account(self):
@@ -152,12 +157,31 @@ class Linker:
     def tree(self, path, branch='master'):
         pass
 
+    def to_custom_link(self):
+        raise NotImplementedError
+
 
 class GithubLinker(Linker):
     HOST = 'http://github.com'
     ISSUE = 'issues/{id}'
     PULL_REQUEST = 'pull/{id}'
     TREE = 'tree/{branch}'
+
+    GITHUB_LINK_RE = re.compile(r'''
+        (?:http|https)\:\/\/github\.com                 # https://github.com/
+        (?:\/([^\/]+))                                  # account
+        (?:\/([^\/]+))                                  # repo
+        (?:                                             # a link to tree/blob
+            \/
+            (?:tree|blob)
+            \/
+            ([^\/]+)                                    # branch
+            (?:                                         # possible path
+                \/
+                (.*?)$
+            )?
+        )?
+    ''', re.X | re.IGNORECASE)
 
     def __init__(self, account, repo):
         self.account = account
@@ -176,6 +200,21 @@ class GithubLinker(Linker):
         if not branch:
             branch = 'master'
         return self.join(self.TREE.format(branch=branch), path)
+
+    @classmethod
+    def to_custom_link(cls, url):
+        match = cls.GITHUB_LINK_RE.match(url)
+        if not match:
+            raise ValueError('not a valid github url')
+
+        account, repo, branch, path = match.groups()
+        link = '%s:%s' % (account, repo)
+        if branch:
+            link += '(%s)' % branch
+        if not path:
+            path = ''
+        link += ':%s' % path
+        return CustomLink(link)
 
 
 class Link(j.application.JSBaseClass):

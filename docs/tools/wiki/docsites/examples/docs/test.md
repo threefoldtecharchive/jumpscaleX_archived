@@ -1,19 +1,18 @@
+## same repo
+!!!include("threefoldtech:jumpscaleX(master):test_src.md", remarks_skip=True)
 
+!!!include("threefoldtech:jumpscaleX(master):test_src.md", header_levels_modify=2)
+
+
+
+## external repos
+!!!include("abom:test_custom_md:test_src.md!A")
 
 ```
 !!!include
-name = "Fixer.py"
-repo = "https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/tools/fixer"
-docstring = "write_changes"
+link = "abom:test_custom_md:docs/test_src.md!B"
 ```
 
-```
-!!!include
-repo = "threefoldtech:jumpscaleX(develpment):/docs/tools/wiki/docsites/examples/docs"
-name = "test_src.md"
-start = "This is a paragraph"
-paragraph = True
-```
 
 ```!!!dot
  graph graphname {
