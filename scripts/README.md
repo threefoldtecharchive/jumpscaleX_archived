@@ -19,7 +19,7 @@
     - Get tests commands from 0-Test.sh file from this X branch
     - Run those commands one by one against this docker container
     - Produce a log file with all results 
-    - Change commit status on github
+    - Send log file url to Telegram chat and Change commit status on github
 
 ### How to install:
 
@@ -47,7 +47,7 @@ password=                           # Docker Hub password
 
 [github]
 access_token=                       # Github access token for user
-repo=threefoldtech/jumpscaleX       # Repository name
+repo=                               # Repository Full name
 
 [exports]                           # under this a list of environment variables needed to be exported before running tests.
 ```

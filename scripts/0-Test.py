@@ -1,5 +1,4 @@
 from flask import Flask, request, send_file, render_template, abort
-from subprocess import run
 from autotest import RunTests
 from build_image import BuildImage
 from utils import Utils
@@ -92,7 +91,7 @@ def triggar_jumpscale(**kwargs):
             repo = request.json['pull_request']['head']['repo']['full_name']
             branch = request.json['pull_request']['head']['ref']
             commit = request.json['pull_request']['head']['sha']
-            committer = request.json['pull_request']['head']['user']['login']
+            committer = request.json['sender']['login']
             if repo == utils.repo[0]:
                 utils.github_status_send(status='pending', link=utils.serverip, repo=repo, commit=commit)
                 image_name = build_image(branch=branch, commit=commit, committer=committer)
