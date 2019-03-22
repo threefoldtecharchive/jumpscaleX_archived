@@ -1929,6 +1929,7 @@ class MyEnv():
 
         if force or not MyEnv.state_exists("myenv_init"):
             # Tools.log(MyEnv.platform())
+            script = None
             if MyEnv.platform() == "linux":
                 script="""
                 if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
@@ -1952,8 +1953,8 @@ class MyEnv():
                     """
             else:
                 raise RuntimeError("only OSX and Linux Ubuntu supported.")
-
-            Tools.execute(script,interactive=True)
+            if script:
+                Tools.execute(script,interactive=True)
 
 
             MyEnv.state_set("myenv_init")
