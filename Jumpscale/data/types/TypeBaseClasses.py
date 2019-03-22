@@ -78,8 +78,8 @@ class TypeBaseObjClassNumeric(TypeBaseObjClass):
     def __bool__(self):
         return self._data is not None
 
-    # def _other_convert(self,other):
-    #     return self._typebase.clean(other)
+    def _other_convert(self,other):
+        return self._typebase.clean(other)
 
     def __add__(self, other):
         other = self._other_convert(other)
@@ -189,7 +189,7 @@ class TypeBaseClass(): #!!TYPEBASECLASS!!
             return False
 
     def default_get(self):
-        return self._default
+        return self.clean(self._default)
 
     def clean(self, value):
         """
@@ -221,8 +221,8 @@ class TypeBaseObjFactory(TypeBaseClass):
 
 
     def __init__(self):
+        self.NAME = self.__class__.NAME
         self.BASETYPE = None
-        self.NAME = None
 
 
     def capnp_schema_get(self, name, nr):

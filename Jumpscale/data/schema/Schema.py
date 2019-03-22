@@ -65,34 +65,27 @@ class Schema(j.application.JSBaseClass):
         :param txt:
         :return:
         """
+
         if "\\n" in txt:
-            jumpscaletype = j.data.types.get("multiline")
-            defvalue = jumpscaletype.clean(txt)
+            return j.data.types.get("multiline",default=txt)
 
-        elif "'" in txt or '"' in txt:
-            jumpscaletype = j.data.types.get("string")
-            defvalue = jumpscaletype.clean(txt)
+        if "'" in txt or '"' in txt:
+            txt=txt.strip().strip("\"").strip("'").strip()
+            return j.data.types.get("string",default=txt)
 
-        elif "." in txt:
-            jumpscaletype = j.data.types.get("float")
-            defvalue = jumpscaletype.clean(txt)
+        if "." in txt:
+            return j.data.types.get("float",default=txt)
 
-        elif "true" in txt.lower() or "false" in txt.lower():
-            jumpscaletype = j.data.types.get("bool")
-            defvalue = jumpscaletype.clean(txt)
+        if "true" in txt.lower() or "false" in txt.lower():
+            return j.data.types.get("bool",default=txt)
 
-        elif "[]" in txt:
-            jumpscaletype = j.data.types.get("ls",[])
-            defvalue = []
+        if "[]" in txt:
+            return j.data.types.get("ls",default=txt)
 
-        elif j.data.types.int.checkString(txt):  # means is digit
-            jumpscaletype = j.data.types.get("i")
-            defvalue = jumpscaletype.clean(txt)
-
+        if j.data.types.int.checkString(txt):  # means is digit
+            return j.data.types.get("i",default=txt)
         else:
             raise RuntimeError("cannot find type for:%s" % txt)
-
-        return (jumpscaletype, defvalue)
 
     def _schema_from_text(self, text):
         """
@@ -111,6 +104,16 @@ class Schema(j.application.JSBaseClass):
 
 
         def process(line):
+
+
+            def _getdefault(txt):
+                if "\"" in txt or "'" in txt:
+                    txt=txt.strip().strip("\"").strip("'").strip()
+                if txt.strip()=="":
+                    return None
+                txt=txt.strip()
+                return txt
+            
             line_original = copy(line)
             propname, line = line.split("=", 1)
             propname = propname.strip()
@@ -147,47 +150,24 @@ class Schema(j.application.JSBaseClass):
                 self._error_raise("do not use 'id' in your schema, is reserved for system.", schema=text)
 
             if "(" in line:
-                line_proptype = line.split("(")[1].split(")")[0].strip().lower()
+                line_proptype = line.split("(")[1].split(")")[0].strip().lower() #in between the ()
                 self._log_debug("line:%s; lineproptype:'%s'" % (line_original, line_proptype))
                 line_wo_proptype = line.split("(")[0].strip() #before the (
-                if line_wo_proptype == "":
-                    if line_proptype in ["lo","o"]:
-                        line_wo_proptype = pointer_type
-                # if line_proptype == "o":
-                #     # special case where we have subject directly attached
-                #     jumpscaletype = j.data.types.get("o")
-                #     jumpscaletype.SUBTYPE = pointer_type
-                # elif line_proptype == "lo":
-                #     #list of objects
-                #     jumpscaletype = j.data.types.get("lo",
-                # else:
 
-                #will make sure we convert the default to the right possible type int,float, string
-                if "\"" or "'" in line_wo_proptype:
-                    default=line_wo_proptype.strip().strip("\"").strip("'").strip()
-                elif line_wo_proptype.strip()=="":
-                    default=None
+                if pointer_type:
+                    default = pointer_type
+                    #means the default is a link to another object
                 else:
-                    line_wo_proptype=line_wo_proptype.strip()
-                    default=None
-                    try:
-                        default=int(line_wo_proptype)
-                    except:
-                        pass
-                    if default is None:
-                        try:
-                            default=float(line_wo_proptype)
-                        except:
-                            pass
-                    if default is None:
-                        default = line_wo_proptype #is normal string
-
+                    #will make sure we convert the default to the right possible type int,float, string
+                    default = _getdefault(line_wo_proptype)
+                    
                 jumpscaletype = j.data.types.get(line_proptype,default=default)
 
                 defvalue = None
 
             else:
-                jumpscaletype, defvalue = self._proptype_get(line)
+                jumpscaletype = self._proptype_get(line)
+                defvalue = None
 
             jumpscaletype._jsx_location
 
@@ -196,7 +176,6 @@ class Schema(j.application.JSBaseClass):
                 p._default = defvalue
             p.comment = comment
             p.jumpscaletype = jumpscaletype
-            # p.pointer_type = pointer_type
 
             return p
 

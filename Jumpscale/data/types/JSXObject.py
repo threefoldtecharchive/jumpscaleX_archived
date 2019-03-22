@@ -10,7 +10,7 @@ class JSDataObjectFactory(TypeBaseObjFactory):
     CUSTOM = True
 
     def __init__(self,default = None):
-        self.BASETYPE = 'bin'
+        self.BASETYPE = 'OBJ'
         self.SUBTYPE = None
         if not default:
             raise j.exceptions.Input("Cannot init JSDataObjectFactory without url")

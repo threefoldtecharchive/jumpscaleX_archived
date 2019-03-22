@@ -16,10 +16,14 @@ def main(self):
         nr = 4
         date_start = 0 (D)
         description = ""        
+        description2 = (S)
         llist4 = [1,2,3] (L)
         llist5 = [1,2,3] (LI)
         llist6 = "1,2,3" (LI)
         U = 0.0
+        nrdefault = 0
+        nrdefault2 = (I)
+        nrdefault3 = 0 (I)
         """
 
     schema_object = j.data.schema.get(schema_text=schema)
@@ -39,11 +43,16 @@ def main(self):
     ll = schema_object.property_llist3.jumpscaletype.default_get()
     assert ll.value == [1.0,2.0,3.0]
 
-
     assert schema_object.property_llist3.js_typelocation == "j.data.types._types['list_281be192c3ea134b85dd0c368d7d1b36']"
 
 
     o = schema_object.get()
+
+    assert o.nrdefault == 0
+    assert o.nrdefault2 == 4294967295
+    assert o.nrdefault == 0
+    assert o.description == ""
+    assert o.description2 == ""
 
     assert o.llist3 == [1.0,2.0,3.0]
 

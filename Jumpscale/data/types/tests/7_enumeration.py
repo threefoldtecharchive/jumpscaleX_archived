@@ -39,8 +39,8 @@ def main(self):
     assert e.toData("YELLOW ")== 1
 
 
-    assert e._jsx_location=="j.data.types._types['enum_yellow_blue_red']"
-    e = j.data.types._types['enum_yellow_blue_red']
+    assert e._jsx_location=="j.data.types._types['enum_b3fb5d69cff844ccc156a430ea82e83b']"
+    e = j.data.types._types['enum_b3fb5d69cff844ccc156a430ea82e83b']
     assert str(e)=="ENUM: YELLOW,BLUE,RED (default:YELLOW)"
 
     enum = e.clean(1)

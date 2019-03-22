@@ -37,6 +37,7 @@ class Types(j.application.JSBaseClass):
             else:
                 aliases = None
             name = name.split(",")[0].strip()
+
             o = self.__attach(name, typeclass)
             if name in self._type_check_list:
                 raise RuntimeError("there is duplicate type:%s"%name)
@@ -55,14 +56,12 @@ class Types(j.application.JSBaseClass):
     def __attach(self, name, typeclass):
         name = name.strip().lower()
         name2 = "_%s" % name
-        # print(name)
-
+        typeclass.NAME = name
         self.__dict__[name2] = typeclass  # attach class
-        self.__dict__[name2].NAME = name
+
 
         if not hasattr(typeclass,"CUSTOM") or typeclass.CUSTOM is False:
             o = typeclass()
-            o.__class__.NAME = name
             o._jsx_location = "j.data.types.%s"%name
             self.__dict__[name] = o
 

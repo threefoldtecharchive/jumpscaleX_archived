@@ -26,6 +26,8 @@ def main(self):
 
     tt = j.data.types.get("o","despiegk.test")
 
+    assert tt.BASETYPE == "OBJ"
+
     o = tt.clean({})
 
     assert o.nr == 4
@@ -44,6 +46,20 @@ def main(self):
     print(o3)
 
     assert o3.description == "test"
+
+
+    tt = j.data.types.get("lo","despiegk.test")
+
+    ll = tt.clean()
+
+    o = ll.new()
+    o.U = 1
+
+    assert ll[0].U == 1
+
+    assert ll._child_type.BASETYPE == "OBJ"
+
+    print(o)
 
     self._log_info("TEST DONE JSXOBJ")
 

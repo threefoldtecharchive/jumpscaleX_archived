@@ -286,7 +286,6 @@ class Numeric(TypeBaseObjFactory):
     def __init__(self,default=None):
         TypeBaseObjFactory.__init__(self)
         self.BASETYPE = "bytes"
-
         self.NOCHECK = True
         self._default = default
 

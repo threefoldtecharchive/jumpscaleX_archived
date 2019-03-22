@@ -5,8 +5,6 @@ import os
 import inspect
 import types
 
-from logging import getLogger
-
 class JSBase:
 
     def __init__(self, parent=None, topclass=True,**kwargs):
@@ -28,7 +26,6 @@ class JSBase:
             # print("_class init:%s"%self.__class__.__name__)
             # only needed to execute once, needs to be done at init time, class inheritance does not exist
             self.__class__._dirpath_ = ""  # path of the directory hosting this class
-            self.__class__._logger = getLogger(self.__class__.__name__)  # logger attached to this class
 
             self.__class__._cache_expiration = 3600  # expiration of the cache
             self.__class__._test_runs = {}

@@ -198,7 +198,7 @@ class DataObjBase():
 
     def __eq__(self, val):
         if not isinstance(val,DataObjBase):
-            tt = j.data.types.get("object",self._schema.url)
+            tt = j.data.types.get("obj",self._schema.url)
             val = tt.clean(val)
         return self._data == val._data
 
@@ -207,8 +207,9 @@ class DataObjBase():
 
         out += "{RESET}\n\n"
         out = j.core.tools.text_replace(out)
-        # out = out.replace("[","{").replace("]","}")
-        # Nothing wrong with printing ansi characters, it's just a bug in our code!
-        return out
+        # #TODO: *1 when returning the text it does not represent propertly, needs to be in kosmos shell I think
+        #IS UGLY WORKAROUND
+        print(out)
+        return ""
 
     __repr__ = __str__

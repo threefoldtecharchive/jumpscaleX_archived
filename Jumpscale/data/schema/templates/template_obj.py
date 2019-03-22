@@ -162,10 +162,7 @@ class ModelOBJ(DataObjBase):
             {% if prop.jumpscaletype.NAME == "jsobject" %}
             ddict["{{prop.name_camel}}"] = self._changed_items["{{prop.name}}"]._data
             {% else %}
-            # o =  {{prop.js_typelocation}}.clean(self._changed_items["{{prop.name}}"])
             o =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
-            # if hasattr(o,"_data"):
-            #     o=o._data
             ddict["{{prop.name_camel}}"] = o
             {% endif %}
         {% endfor %}
@@ -192,7 +189,6 @@ class ModelOBJ(DataObjBase):
     @property
     def _ddict(self):
         d={}
-        # from pudb import set_trace; set_trace()
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %} #NEED TO CHECK : #TODO: despiegk
         d["{{prop.name}}"] = self.{{prop.name}}._ddict

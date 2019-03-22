@@ -18,6 +18,7 @@ def main(self):
 
     assert t.clean("1") == 1
     assert t.clean(1) == 1
+    assert t.clean(0) == 0
     assert t.default_get() == 4294967295
 
     t = j.data.types.get("li",default="1,2,3")  #list of integers
@@ -51,6 +52,7 @@ def main(self):
 
 
     b = j.data.types.get('b',default='true')
+
     assert b.default_get() == True
 
     #TODO: need more tests here

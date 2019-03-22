@@ -55,17 +55,26 @@ class Tmux(j.application.JSBaseClass):
 
     @property
     def server(self):
+
+        def start():
+            cmd = "/sandbox/bin/js_mux start"
+            j.sal.process.execute(cmd,die=True)
+            time.sleep(0.1)
+
         if self._server is None:
             rc,out,err = j.core.tools.execute("tmux ls",die=False)
+            if rc>0:
+                if err.find("/private/tmp/tmux")!=-1:
+                    start()
+                    rc,out,err = j.core.tools.execute("tmux ls",die=False)
+            if rc>0:
+                raise RuntimeError("could not execute tmux ls\n%s"%err)
+
             if out.strip().count("\n")>0:
                 raise RuntimeError("found too many tmux sessions, there should only be 1")
 
             if rc>0 and "out".find("no server")==-1:
-                cmd = "/sandbox/bin/js_mux start"
-                j.sal.process.executeWithoutPipe(cmd)
-                time.sleep(0.1)
-            elif rc>0:
-                j.shell()
+                start()
 
             rc,out,err=j.sal.process.execute("tmux -f /sandbox/cfg/.tmux.conf has-session -t main",die=False)
             if rc>0:

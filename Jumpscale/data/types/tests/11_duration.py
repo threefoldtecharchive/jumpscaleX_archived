@@ -8,6 +8,12 @@ def main(self):
     kosmos 'j.data.types.test(name="duration")' --debug
     """
 
+    return ("OK")
+
+    #TODO:*1
+
+    self = j.data.types.get("duration")
+
     c = """
     1s
     2m

@@ -8,13 +8,13 @@ from collections.abc import MutableSequence
 
 class ListObject(TypeBaseObjClass,MutableSequence):
 
-    def __init__(self,typebase, values=[], child_type = None):
+    def __init__(self,list_factory_type, values=[], child_type = None):
         """
 
         :param child_type: is the JSX basetype which is the child of the list, can be None, will be detected when required then
         :param child_schema_url: is the url to a JSX schema
         """
-        self._typebase = typebase
+        self._list_factory_type = list_factory_type
         self._inner_list = values
         self._changed = False
         self._child_type_ = child_type
@@ -28,7 +28,7 @@ class ListObject(TypeBaseObjClass,MutableSequence):
         return len(self._inner_list)
 
     def __eq__(self, val):
-        val = self._typebase.clean(val)
+        val = self._list_factory_type.clean(val)
         return val._inner_list == self._inner_list
 
     def __delitem__(self, index):
@@ -45,8 +45,13 @@ class ListObject(TypeBaseObjClass,MutableSequence):
 
     @property
     def _dictdata(self):
-        return self._inner_list
-
+        res=[]
+        for item in self._inner_list:
+            if isinstance(item, j.data.schema.DataObjBase):
+                res.append(item._ddict)
+            else:
+                res.append(item)
+        return res
 
     def __iter__(self):
         self._current = 0
@@ -60,7 +65,9 @@ class ListObject(TypeBaseObjClass,MutableSequence):
             return self._inner_list[self._current - 1]
 
     def insert(self,index,value):
-        return self.__setitem__(index,value)
+        self._inner_list.insert(index,self._child_type.clean(value))
+        self._changed = True
+
 
     def __setitem__(self, index, value):
         """
@@ -70,15 +77,6 @@ class ListObject(TypeBaseObjClass,MutableSequence):
             value : value that add in collections
         """
 
-        if j.data.types.dict.check(value):
-            #new does new & append at same time, thats why we dont have to insert in inner_list
-            o = self.new()
-            o._load_from_data(data=value)
-            self._changed = True
-            return
-        else:
-            value = self._child_type.clean(value)
-
         # if self.schema_property.pointer_type is None:
         #     #means data is not a JSX_DATA_OBJECT so primitive types work inside this list, we only need to clean
         #     # value = self.schema_property.jumpscaletype.SUBTYPE.clean(value)
@@ -86,13 +84,13 @@ class ListObject(TypeBaseObjClass,MutableSequence):
         # else:
         #     if j.data.types.dict.check(value):
         #         #new does new & append at same time, thats why we dont have to insert in inner_list
-        #         o = self.new()
+        #         o = self._child_type.clean()
         #         o._load_from_data(data=value)
         #         self._changed = True
         #         return
-        #     elif not hasattr(value,"_JSOBJ") or not value._JSOBJ:
-        #         raise RuntimeError("type inserted needs to be dict JSX_DATA_OBJECT")
-        self._inner_list.insert(index, value)
+        #     raise RuntimeError("type inserted needs to be dict JSX_DATA_OBJECT")
+        #
+        self._inner_list[index]=self._child_type.clean(value)
         self._changed = True
 
 
@@ -137,34 +135,10 @@ class ListObject(TypeBaseObjClass,MutableSequence):
         return new subitem, only relevant when there are pointer_types used
         """
 
-        data = self._child_type.clean(data)
-        # if self.schema_property.pointer_type is None:
-        #     if data is not None:
-        #         data = self.schema_property.jumpscaletype.SUBTYPE.clean(data)
-        #     else:
-        #         data = self.schema_property.jumpscaletype.SUBTYPE.default_get()
-        #     # assert data != None
-        # else:
-        #
-        #     if data is None:
-        #         data = self._child_schema.new()
-        #     else:
-        #         data = self._child_schema.get(capnpbin=data)
-        #     assert data != None
-        if data:
-            self.append(data)
+        data2 = self._child_type.clean(data)
+        self.append(data2)
         self._changed = True
-        return data
-
-    # @property
-    # def _child_schema(self):
-    #     """
-    #     JSX schema for the child
-    #     :return:
-    #     """
-    #     if self._child_schema_ is None:
-    #         self._child_schema_ = j.data.schemas.get(url=self._child_schema_url)
-    #     return self._child_schema_
+        return data2
 
     @property
     def _child_type(self):
@@ -257,7 +231,7 @@ class List(TypeBaseObjFactory):
 
     def toData(self,val=None):
         val2 = self.clean(val)
-        if val2.BASETYPE == "OBJ" and all([isinstance(i, TypeBaseObjClass) for i in val2]):
+        if self.SUBTYPE.BASETYPE == "OBJ":
             return [i._data for i in val2]
         else:
             return val2._inner_list

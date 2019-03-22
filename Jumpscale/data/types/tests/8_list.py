@@ -17,7 +17,7 @@ def main(self):
     - 3
     """
     C=j.core.text.strip(C).strip()
-    str(tt.default_get()).strip() ==C
+    str(tt.default_get()).strip() == C
 
 
     l = tt.clean(val="3,4,5")
@@ -46,8 +46,14 @@ def main(self):
     l.append('5')
 
     assert l == [1,2,3,4,5]
+    assert len(l) == 5
 
     assert 5 in l
+
+    l[1] = 10
+    assert l == [1,10,3,4,5]
+    assert len(l) == 5
+
 
     self._log_info("TEST DONE LIST")
 
