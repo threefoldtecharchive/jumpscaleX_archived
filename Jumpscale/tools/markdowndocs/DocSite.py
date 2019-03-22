@@ -1,5 +1,6 @@
 from Jumpscale import j
 from .Doc import Doc
+from .Link import GithubLinker
 
 JSBASE = j.application.JSBaseClass
 
@@ -80,6 +81,61 @@ class DocSite(j.application.JSBaseClass):
                 self.docgen._git_repos[gitpath] = self.git
         return self._git
         #MARKER FOR INCLUDE TO STOP  (HIDE)
+
+    @property
+    def account(self):
+        return self.git and self.git.account
+
+    @property
+    def repo(self):
+        return self.git and self.git.name
+
+    @property
+    def branch(self):
+        return self.git and self.git.branchName
+
+    def is_different_source(self, custom_link):
+        """check if account, repo or branch are differnt from current docsite
+
+        :param custom_link: instanc of CustomLink
+        :type custom_link: CustomLink
+        :return: True if different, False if the same
+        :rtype: bool
+        """
+        return custom_link.account and custom_link.account != self.account or \
+            custom_link.repo and custom_link.repo != self.repo or \
+            custom_link.branch and custom_link.branch != self.branch
+
+    def get_real_source(self, custom_link, linker=None):
+        """get the real source of custom link format
+
+        :param custom_link: custom link
+        :type custom_link: CustomLink
+        :param linker: a liner instance, defaults to GithubLinker
+        :type linker: Linker, optional
+        :return: a path or a full link
+        :rtype: str
+        """
+        if custom_link.is_url or not self.git:
+            # as-is
+            return custom_link.path
+
+        account = custom_link.account or self.account
+        repo = custom_link.repo or self.repo
+        if not linker:
+            linker = GithubLinker(account, repo)
+
+        if custom_link.reference:
+            return linker.issue(custom_link.reference)
+
+        same_repo = account == self.account and repo == self.repo
+        if same_repo:
+            # the same docsite, the same internal link
+            # also, custom link branch is ignored here
+            return custom_link.path
+
+        branch = custom_link.branch
+        return linker.tree(custom_link.path, branch=branch)
 
     @property
     def urls(self):
