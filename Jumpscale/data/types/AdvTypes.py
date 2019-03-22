@@ -731,3 +731,89 @@ class Date(DateTime):
             return ""
         return j.data.time.epoch2HRDate(val, local=local)
 
+
+class Duration(String):
+    '''
+    internal representation is an int (seconds)
+    '''
+    NAME = 'duration'
+
+    def __init__(self, default=None):
+        # inspired by https://stackoverflow.com/a/51916936
+        self._RE = re.compile(r'^((?P<days>[\.\d]+?)d)?((?P<hours>[\.\d]+?)h)?((?P<minutes>[\.\d]+?)m)?((?P<seconds>[\.\d]+?)s)?$')
+        self.BASETYPE = "int"
+        self.NOCHECK = True
+        self._default = default
+
+
+    def get_default(self):
+        return 0
+
+    def python_code_get(self, value):
+        """
+        produce the python code which represents this value
+        """
+        return self.clean(value)
+
+    def check(self, value):
+        '''
+        Check whether provided value is a valid duration representation
+        be carefull is SLOW
+        '''
+        try:
+            self.clean(value)
+            return True
+        except:
+            return False
+
+    def fromString(self, txt):
+        return self.clean(txt)
+
+    def toString(self, val):
+        val = self.clean(val)
+        if val == 0:
+            return ""
+        days = val//86400
+        hours = (val - days*86400)//3600
+        minutes = (val - days*86400 - hours*3600)//60
+        seconds = val - days*86400 - hours*3600 - minutes*60
+        return reduce(
+            (lambda r, p: r+str(p[0])+p[1] if p[0] > 0 else r),
+            [(days, "d"), (hours, "h"), (minutes, "m"), (seconds, "s")], "")
+
+    def toHR(self, v):
+        return self.toString(v)
+
+    def clean(self, v):
+        """
+        support following formats:
+        - None, 0: means undefined date
+        - seconds = int
+        - 1 (seconds)
+        - 1s (seconds)
+        - 2m (minutes)
+        - 3h (hours)
+        - 4d (days)
+        - 1d4h2m3s (can also combine multiple, has to be from biggest to smallest and each unit has to be unique (e.g. cannot have 2 times hour specified))
+
+        will return seconds
+        """
+        if v in [0,"0",None,""]:
+            return 0
+        if j.data.types.string.check(v):
+            v = v.replace("'","").replace("\"","").strip()
+            if v.isdigit():
+                return int(v) # shortcut for when string is an integer
+            parts = self._RE.match(v)
+            if parts is None:
+                raise ValueError("Could not parse any time information from '{}'.  Examples of valid strings: '8h', '2d8h5m20s', '2m4s'".format(v))
+            time_params = {name: float(param) for name, param in parts.groupdict().items() if param}
+            return int(timedelta(**time_params).total_seconds())
+        elif j.data.types.int.check(v):
+            return v
+        else:
+            raise ValueError("Input needs to be string or int: {} ({})".format(v, type(v)))
+
+    def capnp_schema_get(self, name, nr):
+        return "%s @%s :UInt32;" % (name, nr)
+

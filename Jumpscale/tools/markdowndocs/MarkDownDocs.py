@@ -293,6 +293,15 @@ class MarkDownDocs(j.application.JSBaseClass):
         tf_grid = self.load(url, name="grid")
         tf_grid.write()
 
+        url = "https://github.com/BetterToken/info_bettertoken/tree/master/docs"
+        tf_grid = self.load(url, name="bettertoken")
+        tf_grid.write()
+
+        url = "https://github.com/harvested-io/info_harvested.io/tree/master/docs"
+        tf_grid = self.load(url, name="harvested")
+        tf_grid.write()
+
+
     def test(self, watch=False):
         """
         js_shell 'j.tools.markdowndocs.test()'
@@ -366,6 +375,11 @@ class MarkDownDocs(j.application.JSBaseClass):
             ds6.write()
         except :
             pass
+
+        url = "https://github.com/threefoldtech/info_tftech/tree/master/docs"
+        ds7 = self.load(url, name="tech")
+        ds7.write()
+
 
         self.webserver(watch)
 

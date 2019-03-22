@@ -1299,7 +1299,6 @@ class Tools:
                 C="""
                 set -e
                 mkdir -p {ACCOUNT_DIR}
-                cd {ACCOUNT_DIR}
                 """
                 Tools.log("get code [git] (first time): %s"%repo)
                 Tools.execute(C, args=args,showout=False)

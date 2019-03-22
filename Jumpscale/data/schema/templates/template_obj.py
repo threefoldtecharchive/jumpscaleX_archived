@@ -121,6 +121,7 @@ class ModelOBJ(DataObjBase):
     {% endfor %}
 
 
+
     @property
     def _changed(self):
         if  self._changed_items != {}:
