@@ -20,7 +20,7 @@ class Types(j.application.JSBaseClass):
 
         self._types_list = [List,Dictionary, Guid, Path, Boolean, Integer, Float, String, Bytes, StringMultiLine,
                             IPRange, IPPort, Tel, YAML, JSON, Email, Date, DateTime, Numeric, Percent,
-                            Hash, CapnpBin, JSDataObjectFactory, JSConfigObjectFactory, Url, Enumeration]
+                            Hash, CapnpBin, JSDataObjectFactory, JSConfigObjectFactory, Url, Enumeration, IPAddress]
 
 
         self._TypeBaseObjClass = TypeBaseObjClass

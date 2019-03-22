@@ -24,6 +24,14 @@ class Guid(String):
     def __init__(self,default=None):
         self.BASETYPE = "string"
         self._default = default
+    
+    def clean(self, value):
+        if value is None:
+            return self.default_get()
+        if not self.check(value):
+            raise ValueError("invalid guid :%s" % value)
+        else:
+            return value
 
     def check(self, value):
         try:
@@ -67,7 +75,7 @@ class Email(String):
         return self._RE.fullmatch(value) is not None
 
     def clean(self, v):
-        if v is None:
+        if v is None or v == 'None':
             return self.default_get()
         v = j.data.types.string.clean(v)
         if not self.check(v):
@@ -105,6 +113,14 @@ class Url(String):
             "(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,}")
         self._default = default
 
+    def clean(self, value):
+        if value is None or value == 'None':
+            return self.default_get()
+        if not self.check(value):
+            raise ValueError("invalid url :%s" % value)
+        else:
+            return value
+
     def check(self, value):
         '''
         Check whether provided value is a valid
@@ -130,12 +146,13 @@ class Tel(String):
         '''
         Check whether provided value is a valid
         '''
+        if not value:
+            return True
         return self._RE.fullmatch(value) is not None
 
     def clean(self, v):
-        if v is None:
+        if v is None or v =='None':
             return self.default_get()
-
         v = j.data.types.string.clean(v)
         v = v.replace(".", "")
         v = v.replace(",", "")
@@ -146,6 +163,11 @@ class Tel(String):
         if not self.check(v):
             raise ValueError("Invalid mobile number :%s" % v)
         return v
+
+    def default_get(self):
+        if not self._default:
+            self._default = None
+        return self._default
 
 class IPRange(String):
     """
@@ -162,6 +184,14 @@ class IPRange(String):
         Check whether provided value is a valid
         '''
         return self._RE.fullmatch(value) is not None
+
+    def clean(self, value):
+        if value is None or value == 'None':
+            return self.default_get()
+        if not self.check(value):
+            raise ValueError("invalid ip range %s" % value)
+        else:
+            return value
 
 class IPPort(Integer):
     '''Generic IP port type'''
@@ -191,7 +221,17 @@ class IPPort(Integer):
         except :
             pass
         return False
+    
+    def clean(self, value):
+        if value is None:
+            return self.default_get()
+        if not self.check(value):
+            raise ValueError("invalid port: %s" % value)
+        else:
+            return value
 
+    def check(self, value):
+        return self.possible(value)
 
 class NumericObject(TypeBaseObjClassNumeric):
 
@@ -478,8 +518,8 @@ class Numeric(TypeBaseObjFactory):
     def clean(self, data=None):
         if isinstance(data,NumericObject):
             return data
-        if data is None:
-            data = self._default
+        if data is None or data == 'None':
+            return self.default_get()
         if isinstance(data,float) or isinstance(data,int):
             data = str(data)
         if isinstance(data,str):
@@ -487,7 +527,7 @@ class Numeric(TypeBaseObjFactory):
         if isinstance(data,bytes):
             return NumericObject(self,data)
         else:
-            raise RuntimeError("was not able to clean numeric")
+            raise RuntimeError("was not able to clean numeric : %s" % data)
 
     def toData(self,data):
         # print("num:clean:%s"%data)
@@ -503,6 +543,11 @@ class Numeric(TypeBaseObjFactory):
             raise RuntimeError("could not clean data, did not find supported type:%s"%data)
 
         return data
+
+    def default_get(self):
+        if not self._default:
+            self._default = 0
+        return self._default
 
 
 class DateTime(Integer):
