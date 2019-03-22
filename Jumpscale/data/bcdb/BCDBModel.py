@@ -462,7 +462,7 @@ class BCDBModel(j.application.JSBaseClass):
             obj = self.schema.get(data=data, capnpbin=capnpbin, model=self)
         else:
             obj = self.schema.new()
-            obj.model = self
+            obj._model = self
         obj = self._methods_add(obj)
         self.triggers_call(obj=obj, action="new")
         return obj
@@ -574,6 +574,9 @@ class BCDBModel(j.application.JSBaseClass):
 
     def _init_index(self):
         pass
+
+    def notify_new(self,obj):
+        return
 
     def __str__(self):
         out = "model:%s\n" % self.schema.url

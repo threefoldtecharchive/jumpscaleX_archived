@@ -266,7 +266,7 @@ class NumericObject(TypeBaseObjClassNumeric):
 
     def __str__(self):
         if self._data:
-            return "numeric (%s): %s"%(self.currency,self._string)
+            return "numeric (%s): %s"%(self.value_currency,self._string)
         else:
             return "numeric: NOTSET"
 
@@ -517,7 +517,7 @@ class Numeric(TypeBaseObjFactory):
     def clean(self, data=None):
         if isinstance(data,NumericObject):
             return data
-        if data is None or data == 'None':
+        if data is None or data == 'None' or data == b"" or data == "":
             return self.default_get()
         if isinstance(data,float) or isinstance(data,int):
             data = str(data)
@@ -529,24 +529,27 @@ class Numeric(TypeBaseObjFactory):
             raise RuntimeError("was not able to clean numeric : %s" % data)
 
     def toData(self,data):
-        # print("num:clean:%s"%data)
-        if j.data.types.string.check(data):
-            data = j.data.types.string.clean(data)
-            data = self.str2bytes(data)
-        elif j.data.types.bytes.check(data):
-            if len(data) not in [6, 10]:
-                raise j.exceptions.Input("len of numeric bytes needs to be 6 or 10 bytes")
-        elif isinstance(data,int) or isinstance(data,float):
-            data = self.str2bytes(str(data))
-        else:
-            raise RuntimeError("could not clean data, did not find supported type:%s"%data)
-
-        return data
+        data = self.clean(data)
+        return data._data
+    #     # print("num:clean:%s"%data)
+    #     if j.data.types.string.check(data):
+    #         data = j.data.types.string.clean(data)
+    #         data = self.str2bytes(data)
+    #     elif j.data.types.bytes.check(data):
+    #         if len(data) not in [6, 10]:
+    #             raise j.exceptions.Input("len of numeric bytes needs to be 6 or 10 bytes")
+    #     elif isinstance(data,int) or isinstance(data,float):
+    #         data = self.str2bytes(str(data))
+    #     else:
+    #         j.shell()
+    #         raise RuntimeError("could not clean data, did not find supported type:%s"%data)
+    #
+    #     return data
 
     def default_get(self):
         if not self._default:
             self._default = 0
-        return self._default
+        return self.clean(self._default)
 
 
 class DateTime(Integer):

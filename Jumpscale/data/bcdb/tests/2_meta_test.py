@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.bcdb.test(name="meta_test")'
+    kosmos 'j.data.bcdb.test(name="meta_test")'
 
     """
 

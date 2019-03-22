@@ -115,7 +115,7 @@ class DataObjBase():
         return out
 
 
-    def Save(self):
+    def save(self):
         if self._model:
             if self._readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s"%self)
@@ -135,7 +135,7 @@ class DataObjBase():
             return self
         raise RuntimeError("cannot save, model not known")
 
-    def Delete(self):
+    def delete(self):
         if self._model:
             if self._readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s"%self)
@@ -205,7 +205,7 @@ class DataObjBase():
         return self._data == val._data
 
     def __str__(self):
-        return self._toml
+        return j.data.serializers.toml.dumps(self._ddict_hr)
         # out = self._str()
         #
         # out += "{RESET}\n\n"

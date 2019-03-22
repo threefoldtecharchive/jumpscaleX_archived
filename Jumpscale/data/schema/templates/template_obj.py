@@ -77,7 +77,7 @@ class ModelOBJ(DataObjBase):
         {% else %}
         #will make sure that the input args are put in right format
         val = {{prop.js_typelocation}}.clean(val)  #is important because needs to come in right format e.g. binary for numeric
-        if True or val != self.{{prop.name}}: #TODO: shortcut for now
+        if val != self.{{prop.name}}:
             self._changed_items["{{prop.name}}"] = val
             if self._model:
                 # self._log_debug("change:{{prop.name}} %s"%(val))
