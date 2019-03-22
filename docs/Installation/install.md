@@ -24,7 +24,7 @@ brew install curl python3 git rsync
 sudo mkdir -p /sandbox; sudo chown -R "${USER}:staff" /sandbox
 
 #do the installation
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py
 ```
 
 ### Ubuntu (without docker)
@@ -32,7 +32,7 @@ curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/i
 On ubuntu should be very straight forward
 
 ```bash
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py
 ```
 
 If you are a developer don't forget to load your SSH key for github.

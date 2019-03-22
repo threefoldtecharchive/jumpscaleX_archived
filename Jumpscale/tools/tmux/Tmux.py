@@ -64,7 +64,7 @@ class Tmux(j.application.JSBaseClass):
         if self._server is None:
             rc,out,err = j.core.tools.execute("tmux ls",die=False)
             if rc>0:
-                if err.find("/private/tmp/tmux")!=-1:
+                if err.find("No such file or directory")!=-1:
                     start()
                     rc,out,err = j.core.tools.execute("tmux ls",die=False)
             if rc>0:

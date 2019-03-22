@@ -16,9 +16,6 @@ class JSGroup():
 class group_clients(JSGroup):
     def __init__(self):
         
-        self._gedis = None
-        self._multicast = None
-        self._gedis_backend = None
         self._syncthing = None
         self._postgres = None
         self._s3 = None
@@ -79,26 +76,11 @@ class group_clients(JSGroup):
         self._git = None
         self._traefik = None
         self._packetnet = None
+        self._gedis = None
+        self._multicast = None
+        self._gedis_backend = None
 
     
-    @property
-    def gedis(self):
-        if self._gedis is None:
-            from DigitalMe.clients.gedis.GedisClientFactory import GedisClientFactory
-            self._gedis =  GedisClientFactory()
-        return self._gedis
-    @property
-    def multicast(self):
-        if self._multicast is None:
-            from DigitalMe.clients.multicast.MulticastFactory import MulticastFactory
-            self._multicast =  MulticastFactory()
-        return self._multicast
-    @property
-    def gedis_backend(self):
-        if self._gedis_backend is None:
-            from DigitalMe.clients.gedis_backends.GedisBackendClientFactory import GedisBackendClientFactory
-            self._gedis_backend =  GedisBackendClientFactory()
-        return self._gedis_backend
     @property
     def syncthing(self):
         if self._syncthing is None:
@@ -459,40 +441,231 @@ class group_clients(JSGroup):
             from Jumpscale.clients.packetnet.PacketNetFactory import PacketNetFactory
             self._packetnet =  PacketNetFactory()
         return self._packetnet
+    @property
+    def gedis(self):
+        if self._gedis is None:
+            from DigitalMe.clients.gedis.GedisClientFactory import GedisClientFactory
+            self._gedis =  GedisClientFactory()
+        return self._gedis
+    @property
+    def multicast(self):
+        if self._multicast is None:
+            from DigitalMe.clients.multicast.MulticastFactory import MulticastFactory
+            self._multicast =  MulticastFactory()
+        return self._multicast
+    @property
+    def gedis_backend(self):
+        if self._gedis_backend is None:
+            from DigitalMe.clients.gedis_backends.GedisBackendClientFactory import GedisBackendClientFactory
+            self._gedis_backend =  GedisBackendClientFactory()
+        return self._gedis_backend
 
 j.clients = group_clients()
 j.core._groups["clients"] = j.clients
 
 
-class group_world(JSGroup):
+class group_sal(JSGroup):
     def __init__(self):
         
-        self._system = None
-        self._hypervisor = None
+        self._coredns = None
+        self._docker = None
+        self._qemu_img = None
+        self._btrfs = None
+        self._nettools = None
+        self._ssl = None
+        self._disklayout = None
+        self._nic = None
+        self._nfs = None
+        self._sshd = None
+        self._hostsfile = None
+        self._rsync = None
+        self._unix = None
+        self._tls = None
+        self._samba = None
+        self._nginx = None
+        self._netconfig = None
+        self._kvm = None
+        self._windows = None
+        self._ufw = None
+        self._bind = None
+        self._fswalker = None
+        self._fs = None
+        self._ubuntu = None
+        self._openvswitch = None
+        self._dnsmasq = None
+        self._process = None
 
     
     @property
-    def system(self):
-        if self._system is None:
-            from DigitalMe.tools.kosmos.WorldSystem import WorldSystem
-            self._system =  WorldSystem()
-        return self._system
+    def coredns(self):
+        if self._coredns is None:
+            from Jumpscale.clients.coredns.alternative.CoreDnsFactory import CoreDnsFactory
+            self._coredns =  CoreDnsFactory()
+        return self._coredns
     @property
-    def hypervisor(self):
-        if self._hypervisor is None:
-            from DigitalMe.tools.kosmos.world_example.HyperVisorCoordinator.CoordinatorHypervisor import CoordinatorHypervisor
-            self._hypervisor =  CoordinatorHypervisor()
-        return self._hypervisor
+    def docker(self):
+        if self._docker is None:
+            from Jumpscale.tools.docker.Docker import Docker
+            self._docker =  Docker()
+        return self._docker
+    @property
+    def qemu_img(self):
+        if self._qemu_img is None:
+            from Jumpscale.sal.qemu_img.Qemu_img import QemuImg
+            self._qemu_img =  QemuImg()
+        return self._qemu_img
+    @property
+    def btrfs(self):
+        if self._btrfs is None:
+            from Jumpscale.sal.btrfs.BtrfsExtension import BtfsExtensionFactory
+            self._btrfs =  BtfsExtensionFactory()
+        return self._btrfs
+    @property
+    def nettools(self):
+        if self._nettools is None:
+            from Jumpscale.sal.nettools.NetTools import NetTools
+            self._nettools =  NetTools()
+        return self._nettools
+    @property
+    def ssl(self):
+        if self._ssl is None:
+            from Jumpscale.sal.ssl.SSLFactory import SSLFactory
+            self._ssl =  SSLFactory()
+        return self._ssl
+    @property
+    def disklayout(self):
+        if self._disklayout is None:
+            from Jumpscale.sal.disklayout.DiskManager import DiskManager
+            self._disklayout =  DiskManager()
+        return self._disklayout
+    @property
+    def nic(self):
+        if self._nic is None:
+            from Jumpscale.sal.nic.UnixNetworkManager import UnixNetworkManager
+            self._nic =  UnixNetworkManager()
+        return self._nic
+    @property
+    def nfs(self):
+        if self._nfs is None:
+            from Jumpscale.sal.nfs.NFS import NFS
+            self._nfs =  NFS()
+        return self._nfs
+    @property
+    def sshd(self):
+        if self._sshd is None:
+            from Jumpscale.sal.sshd.SSHD import SSHD
+            self._sshd =  SSHD()
+        return self._sshd
+    @property
+    def hostsfile(self):
+        if self._hostsfile is None:
+            from Jumpscale.sal.hostfile.HostFile import HostFile
+            self._hostsfile =  HostFile()
+        return self._hostsfile
+    @property
+    def rsync(self):
+        if self._rsync is None:
+            from Jumpscale.sal.rsync.RsyncFactory import RsyncFactory
+            self._rsync =  RsyncFactory()
+        return self._rsync
+    @property
+    def unix(self):
+        if self._unix is None:
+            from Jumpscale.sal.unix.Unix import UnixSystem
+            self._unix =  UnixSystem()
+        return self._unix
+    @property
+    def tls(self):
+        if self._tls is None:
+            from Jumpscale.sal.tls.TLSFactory import TLSFactory
+            self._tls =  TLSFactory()
+        return self._tls
+    @property
+    def samba(self):
+        if self._samba is None:
+            from Jumpscale.sal.samba.Samba import Samba
+            self._samba =  Samba()
+        return self._samba
+    @property
+    def nginx(self):
+        if self._nginx is None:
+            from Jumpscale.sal.nginx.Nginx import NginxFactory
+            self._nginx =  NginxFactory()
+        return self._nginx
+    @property
+    def netconfig(self):
+        if self._netconfig is None:
+            from Jumpscale.sal.netconfig.Netconfig import Netconfig
+            self._netconfig =  Netconfig()
+        return self._netconfig
+    @property
+    def kvm(self):
+        if self._kvm is None:
+            from Jumpscale.sal.kvm.KVM import KVM
+            self._kvm =  KVM()
+        return self._kvm
+    @property
+    def windows(self):
+        if self._windows is None:
+            from Jumpscale.sal.windows.Windows import WindowsSystem
+            self._windows =  WindowsSystem()
+        return self._windows
+    @property
+    def ufw(self):
+        if self._ufw is None:
+            from Jumpscale.sal.ufw.UFWManager import UFWManager
+            self._ufw =  UFWManager()
+        return self._ufw
+    @property
+    def bind(self):
+        if self._bind is None:
+            from Jumpscale.sal.bind.BindDNS import BindDNS
+            self._bind =  BindDNS()
+        return self._bind
+    @property
+    def fswalker(self):
+        if self._fswalker is None:
+            from Jumpscale.sal.fs.SystemFSWalker import SystemFSWalker
+            self._fswalker =  SystemFSWalker()
+        return self._fswalker
+    @property
+    def fs(self):
+        if self._fs is None:
+            from Jumpscale.sal.fs.SystemFS import SystemFS
+            self._fs =  SystemFS()
+        return self._fs
+    @property
+    def ubuntu(self):
+        if self._ubuntu is None:
+            from Jumpscale.sal.ubuntu.Ubuntu import Ubuntu
+            self._ubuntu =  Ubuntu()
+        return self._ubuntu
+    @property
+    def openvswitch(self):
+        if self._openvswitch is None:
+            from Jumpscale.sal.openvswitch.NetConfigFactory import NetConfigFactory
+            self._openvswitch =  NetConfigFactory()
+        return self._openvswitch
+    @property
+    def dnsmasq(self):
+        if self._dnsmasq is None:
+            from Jumpscale.sal.dnsmasq.DnsmasqFactory import DnsmasqFactory
+            self._dnsmasq =  DnsmasqFactory()
+        return self._dnsmasq
+    @property
+    def process(self):
+        if self._process is None:
+            from Jumpscale.sal.process.SystemProcess import SystemProcess
+            self._process =  SystemProcess()
+        return self._process
 
-j.world = group_world()
-j.core._groups["world"] = j.world
+j.sal = group_sal()
+j.core._groups["sal"] = j.sal
 
 
 class group_tools(JSGroup):
     def __init__(self):
         
-        self._kosmos = None
-        self._tfbot = None
         self._sandboxer = None
         self._fixer = None
         self._logger = None
@@ -536,20 +709,10 @@ class group_tools(JSGroup):
         self._numtools = None
         self._issuemanager = None
         self._email = None
+        self._kosmos = None
+        self._tfbot = None
 
     
-    @property
-    def kosmos(self):
-        if self._kosmos is None:
-            from DigitalMe.tools.kosmos.kosmos_OLD.Kosmos import Kosmos
-            self._kosmos =  Kosmos()
-        return self._kosmos
-    @property
-    def tfbot(self):
-        if self._tfbot is None:
-            from DigitalMe.tools.tfbot.TFBotFactory import TFBotFactory
-            self._tfbot =  TFBotFactory()
-        return self._tfbot
     @property
     def sandboxer(self):
         if self._sandboxer is None:
@@ -808,32 +971,43 @@ class group_tools(JSGroup):
             from Jumpscale.data.email.Email import EmailTool
             self._email =  EmailTool()
         return self._email
+    @property
+    def kosmos(self):
+        if self._kosmos is None:
+            from DigitalMe.tools.kosmos.kosmos_OLD.Kosmos import Kosmos
+            self._kosmos =  Kosmos()
+        return self._kosmos
+    @property
+    def tfbot(self):
+        if self._tfbot is None:
+            from DigitalMe.tools.tfbot.TFBotFactory import TFBotFactory
+            self._tfbot =  TFBotFactory()
+        return self._tfbot
 
 j.tools = group_tools()
 j.core._groups["tools"] = j.tools
 
 
-class group_kosmos(JSGroup):
+class group_tutorials(JSGroup):
     def __init__(self):
         
-        self._zos = None
+        self._base = None
 
     
     @property
-    def zos(self):
-        if self._zos is None:
-            from DigitalMe.kosmos.zos.ZOSFactory import ZOSCmdFactory
-            self._zos =  ZOSCmdFactory()
-        return self._zos
+    def base(self):
+        if self._base is None:
+            from Jumpscale.tutorials.base.Tutorial import Tutorial
+            self._base =  Tutorial()
+        return self._base
 
-j.kosmos = group_kosmos()
-j.core._groups["kosmos"] = j.kosmos
+j.tutorials = group_tutorials()
+j.core._groups["tutorials"] = j.tutorials
 
 
 class group_data(JSGroup):
     def __init__(self):
         
-        self._nltk = None
         self._encryption = None
         self._cachelru = None
         self._inifile = None
@@ -858,14 +1032,9 @@ class group_data(JSGroup):
         self._bcdb = None
         self._dict_editor = None
         self._idgenerator = None
+        self._nltk = None
 
     
-    @property
-    def nltk(self):
-        if self._nltk is None:
-            from DigitalMe.data.nltk.NLTK import NLTKFactory
-            self._nltk =  NLTKFactory()
-        return self._nltk
     @property
     def encryption(self):
         if self._encryption is None:
@@ -1010,319 +1179,15 @@ class group_data(JSGroup):
             from Jumpscale.data.idgenerator.IDGenerator import IDGenerator
             self._idgenerator =  IDGenerator()
         return self._idgenerator
+    @property
+    def nltk(self):
+        if self._nltk is None:
+            from DigitalMe.data.nltk.NLTK import NLTKFactory
+            self._nltk =  NLTKFactory()
+        return self._nltk
 
 j.data = group_data()
 j.core._groups["data"] = j.data
-
-
-class group_servers(JSGroup):
-    def __init__(self):
-        
-        self._gedis = None
-        self._digitalme = None
-        self._myjobs = None
-        self._raftserver = None
-        self._dns = None
-        self._errbot = None
-        self._openresty = None
-        self._web = None
-        self._etcd = None
-        self._capacity = None
-        self._zdb = None
-        self._jsrun = None
-
-    
-    @property
-    def gedis(self):
-        if self._gedis is None:
-            from DigitalMe.servers.gedis.GedisFactory import GedisFactory
-            self._gedis =  GedisFactory()
-        return self._gedis
-    @property
-    def digitalme(self):
-        if self._digitalme is None:
-            from DigitalMe.servers.digitalme.DigitalMe import DigitalMe
-            self._digitalme =  DigitalMe()
-        return self._digitalme
-    @property
-    def myjobs(self):
-        if self._myjobs is None:
-            from DigitalMe.servers.myjobs.MyJobs import MyJobs
-            self._myjobs =  MyJobs()
-        return self._myjobs
-    @property
-    def raftserver(self):
-        if self._raftserver is None:
-            from DigitalMe.servers.raft.RaftServerFactory import RaftServerFactory
-            self._raftserver =  RaftServerFactory()
-        return self._raftserver
-    @property
-    def dns(self):
-        if self._dns is None:
-            from DigitalMe.servers.dns.DNSServerFactory import DNSServerFactory
-            self._dns =  DNSServerFactory()
-        return self._dns
-    @property
-    def errbot(self):
-        if self._errbot is None:
-            from Jumpscale.servers.errbot.ErrBotFactory import ErrBotFactory
-            self._errbot =  ErrBotFactory()
-        return self._errbot
-    @property
-    def openresty(self):
-        if self._openresty is None:
-            from Jumpscale.servers.openresty.OpenRestyFactory import OpenRestyFactory
-            self._openresty =  OpenRestyFactory()
-        return self._openresty
-    @property
-    def web(self):
-        if self._web is None:
-            from Jumpscale.servers.webserver.JSWebServers import JSWebServers
-            self._web =  JSWebServers()
-        return self._web
-    @property
-    def etcd(self):
-        if self._etcd is None:
-            from Jumpscale.servers.etcd.EtcdServer import EtcdServer
-            self._etcd =  EtcdServer()
-        return self._etcd
-    @property
-    def capacity(self):
-        if self._capacity is None:
-            from Jumpscale.servers.grid_capacity.CapacityFactory import CapacityFactory
-            self._capacity =  CapacityFactory()
-        return self._capacity
-    @property
-    def zdb(self):
-        if self._zdb is None:
-            from Jumpscale.servers.zdb.ZDBServer import ZDBServer
-            self._zdb =  ZDBServer()
-        return self._zdb
-    @property
-    def jsrun(self):
-        if self._jsrun is None:
-            from Jumpscale.servers.jsrun.JSRun import JSRun
-            self._jsrun =  JSRun()
-        return self._jsrun
-
-j.servers = group_servers()
-j.core._groups["servers"] = j.servers
-
-
-class group_sal(JSGroup):
-    def __init__(self):
-        
-        self._coredns = None
-        self._docker = None
-        self._qemu_img = None
-        self._btrfs = None
-        self._nettools = None
-        self._ssl = None
-        self._disklayout = None
-        self._nic = None
-        self._nfs = None
-        self._sshd = None
-        self._hostsfile = None
-        self._rsync = None
-        self._unix = None
-        self._tls = None
-        self._samba = None
-        self._nginx = None
-        self._netconfig = None
-        self._kvm = None
-        self._windows = None
-        self._ufw = None
-        self._bind = None
-        self._fswalker = None
-        self._fs = None
-        self._ubuntu = None
-        self._openvswitch = None
-        self._dnsmasq = None
-        self._process = None
-
-    
-    @property
-    def coredns(self):
-        if self._coredns is None:
-            from Jumpscale.clients.coredns.alternative.CoreDnsFactory import CoreDnsFactory
-            self._coredns =  CoreDnsFactory()
-        return self._coredns
-    @property
-    def docker(self):
-        if self._docker is None:
-            from Jumpscale.tools.docker.Docker import Docker
-            self._docker =  Docker()
-        return self._docker
-    @property
-    def qemu_img(self):
-        if self._qemu_img is None:
-            from Jumpscale.sal.qemu_img.Qemu_img import QemuImg
-            self._qemu_img =  QemuImg()
-        return self._qemu_img
-    @property
-    def btrfs(self):
-        if self._btrfs is None:
-            from Jumpscale.sal.btrfs.BtrfsExtension import BtfsExtensionFactory
-            self._btrfs =  BtfsExtensionFactory()
-        return self._btrfs
-    @property
-    def nettools(self):
-        if self._nettools is None:
-            from Jumpscale.sal.nettools.NetTools import NetTools
-            self._nettools =  NetTools()
-        return self._nettools
-    @property
-    def ssl(self):
-        if self._ssl is None:
-            from Jumpscale.sal.ssl.SSLFactory import SSLFactory
-            self._ssl =  SSLFactory()
-        return self._ssl
-    @property
-    def disklayout(self):
-        if self._disklayout is None:
-            from Jumpscale.sal.disklayout.DiskManager import DiskManager
-            self._disklayout =  DiskManager()
-        return self._disklayout
-    @property
-    def nic(self):
-        if self._nic is None:
-            from Jumpscale.sal.nic.UnixNetworkManager import UnixNetworkManager
-            self._nic =  UnixNetworkManager()
-        return self._nic
-    @property
-    def nfs(self):
-        if self._nfs is None:
-            from Jumpscale.sal.nfs.NFS import NFS
-            self._nfs =  NFS()
-        return self._nfs
-    @property
-    def sshd(self):
-        if self._sshd is None:
-            from Jumpscale.sal.sshd.SSHD import SSHD
-            self._sshd =  SSHD()
-        return self._sshd
-    @property
-    def hostsfile(self):
-        if self._hostsfile is None:
-            from Jumpscale.sal.hostfile.HostFile import HostFile
-            self._hostsfile =  HostFile()
-        return self._hostsfile
-    @property
-    def rsync(self):
-        if self._rsync is None:
-            from Jumpscale.sal.rsync.RsyncFactory import RsyncFactory
-            self._rsync =  RsyncFactory()
-        return self._rsync
-    @property
-    def unix(self):
-        if self._unix is None:
-            from Jumpscale.sal.unix.Unix import UnixSystem
-            self._unix =  UnixSystem()
-        return self._unix
-    @property
-    def tls(self):
-        if self._tls is None:
-            from Jumpscale.sal.tls.TLSFactory import TLSFactory
-            self._tls =  TLSFactory()
-        return self._tls
-    @property
-    def samba(self):
-        if self._samba is None:
-            from Jumpscale.sal.samba.Samba import Samba
-            self._samba =  Samba()
-        return self._samba
-    @property
-    def nginx(self):
-        if self._nginx is None:
-            from Jumpscale.sal.nginx.Nginx import NginxFactory
-            self._nginx =  NginxFactory()
-        return self._nginx
-    @property
-    def netconfig(self):
-        if self._netconfig is None:
-            from Jumpscale.sal.netconfig.Netconfig import Netconfig
-            self._netconfig =  Netconfig()
-        return self._netconfig
-    @property
-    def kvm(self):
-        if self._kvm is None:
-            from Jumpscale.sal.kvm.KVM import KVM
-            self._kvm =  KVM()
-        return self._kvm
-    @property
-    def windows(self):
-        if self._windows is None:
-            from Jumpscale.sal.windows.Windows import WindowsSystem
-            self._windows =  WindowsSystem()
-        return self._windows
-    @property
-    def ufw(self):
-        if self._ufw is None:
-            from Jumpscale.sal.ufw.UFWManager import UFWManager
-            self._ufw =  UFWManager()
-        return self._ufw
-    @property
-    def bind(self):
-        if self._bind is None:
-            from Jumpscale.sal.bind.BindDNS import BindDNS
-            self._bind =  BindDNS()
-        return self._bind
-    @property
-    def fswalker(self):
-        if self._fswalker is None:
-            from Jumpscale.sal.fs.SystemFSWalker import SystemFSWalker
-            self._fswalker =  SystemFSWalker()
-        return self._fswalker
-    @property
-    def fs(self):
-        if self._fs is None:
-            from Jumpscale.sal.fs.SystemFS import SystemFS
-            self._fs =  SystemFS()
-        return self._fs
-    @property
-    def ubuntu(self):
-        if self._ubuntu is None:
-            from Jumpscale.sal.ubuntu.Ubuntu import Ubuntu
-            self._ubuntu =  Ubuntu()
-        return self._ubuntu
-    @property
-    def openvswitch(self):
-        if self._openvswitch is None:
-            from Jumpscale.sal.openvswitch.NetConfigFactory import NetConfigFactory
-            self._openvswitch =  NetConfigFactory()
-        return self._openvswitch
-    @property
-    def dnsmasq(self):
-        if self._dnsmasq is None:
-            from Jumpscale.sal.dnsmasq.DnsmasqFactory import DnsmasqFactory
-            self._dnsmasq =  DnsmasqFactory()
-        return self._dnsmasq
-    @property
-    def process(self):
-        if self._process is None:
-            from Jumpscale.sal.process.SystemProcess import SystemProcess
-            self._process =  SystemProcess()
-        return self._process
-
-j.sal = group_sal()
-j.core._groups["sal"] = j.sal
-
-
-class group_tutorials(JSGroup):
-    def __init__(self):
-        
-        self._base = None
-
-    
-    @property
-    def base(self):
-        if self._base is None:
-            from Jumpscale.tutorials.base.Tutorial import Tutorial
-            self._base =  Tutorial()
-        return self._base
-
-j.tutorials = group_tutorials()
-j.core._groups["tutorials"] = j.tutorials
 
 
 class group_data_units(JSGroup):
@@ -1462,6 +1327,100 @@ class group_builder(JSGroup):
 
 j.builder = group_builder()
 j.core._groups["builder"] = j.builder
+
+
+class group_servers(JSGroup):
+    def __init__(self):
+        
+        self._errbot = None
+        self._openresty = None
+        self._web = None
+        self._etcd = None
+        self._capacity = None
+        self._zdb = None
+        self._jsrun = None
+        self._gedis = None
+        self._digitalme = None
+        self._myjobs = None
+        self._raftserver = None
+        self._dns = None
+
+    
+    @property
+    def errbot(self):
+        if self._errbot is None:
+            from Jumpscale.servers.errbot.ErrBotFactory import ErrBotFactory
+            self._errbot =  ErrBotFactory()
+        return self._errbot
+    @property
+    def openresty(self):
+        if self._openresty is None:
+            from Jumpscale.servers.openresty.OpenRestyFactory import OpenRestyFactory
+            self._openresty =  OpenRestyFactory()
+        return self._openresty
+    @property
+    def web(self):
+        if self._web is None:
+            from Jumpscale.servers.webserver.JSWebServers import JSWebServers
+            self._web =  JSWebServers()
+        return self._web
+    @property
+    def etcd(self):
+        if self._etcd is None:
+            from Jumpscale.servers.etcd.EtcdServer import EtcdServer
+            self._etcd =  EtcdServer()
+        return self._etcd
+    @property
+    def capacity(self):
+        if self._capacity is None:
+            from Jumpscale.servers.grid_capacity.CapacityFactory import CapacityFactory
+            self._capacity =  CapacityFactory()
+        return self._capacity
+    @property
+    def zdb(self):
+        if self._zdb is None:
+            from Jumpscale.servers.zdb.ZDBServer import ZDBServer
+            self._zdb =  ZDBServer()
+        return self._zdb
+    @property
+    def jsrun(self):
+        if self._jsrun is None:
+            from Jumpscale.servers.jsrun.JSRun import JSRun
+            self._jsrun =  JSRun()
+        return self._jsrun
+    @property
+    def gedis(self):
+        if self._gedis is None:
+            from DigitalMe.servers.gedis.GedisFactory import GedisFactory
+            self._gedis =  GedisFactory()
+        return self._gedis
+    @property
+    def digitalme(self):
+        if self._digitalme is None:
+            from DigitalMe.servers.digitalme.DigitalMe import DigitalMe
+            self._digitalme =  DigitalMe()
+        return self._digitalme
+    @property
+    def myjobs(self):
+        if self._myjobs is None:
+            from DigitalMe.servers.myjobs.MyJobs import MyJobs
+            self._myjobs =  MyJobs()
+        return self._myjobs
+    @property
+    def raftserver(self):
+        if self._raftserver is None:
+            from DigitalMe.servers.raft.RaftServerFactory import RaftServerFactory
+            self._raftserver =  RaftServerFactory()
+        return self._raftserver
+    @property
+    def dns(self):
+        if self._dns is None:
+            from DigitalMe.servers.dns.DNSServerFactory import DNSServerFactory
+            self._dns =  DNSServerFactory()
+        return self._dns
+
+j.servers = group_servers()
+j.core._groups["servers"] = j.servers
 
 
 class group_sal_zos(JSGroup):
@@ -1661,6 +1620,47 @@ class group_sal_zos(JSGroup):
 
 j.sal_zos = group_sal_zos()
 j.core._groups["sal_zos"] = j.sal_zos
+
+
+class group_world(JSGroup):
+    def __init__(self):
+        
+        self._system = None
+        self._hypervisor = None
+
+    
+    @property
+    def system(self):
+        if self._system is None:
+            from DigitalMe.tools.kosmos.WorldSystem import WorldSystem
+            self._system =  WorldSystem()
+        return self._system
+    @property
+    def hypervisor(self):
+        if self._hypervisor is None:
+            from DigitalMe.tools.kosmos.world_example.HyperVisorCoordinator.CoordinatorHypervisor import CoordinatorHypervisor
+            self._hypervisor =  CoordinatorHypervisor()
+        return self._hypervisor
+
+j.world = group_world()
+j.core._groups["world"] = j.world
+
+
+class group_kosmos(JSGroup):
+    def __init__(self):
+        
+        self._zos = None
+
+    
+    @property
+    def zos(self):
+        if self._zos is None:
+            from DigitalMe.kosmos.zos.ZOSFactory import ZOSCmdFactory
+            self._zos =  ZOSCmdFactory()
+        return self._zos
+
+j.kosmos = group_kosmos()
+j.core._groups["kosmos"] = j.kosmos
 
 
 

@@ -4,7 +4,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.bcdb.test(name="keys")'
+    kosmos 'j.data.bcdb.test(name="keys")'
 
     """
 
@@ -178,7 +178,7 @@ def main(self):
 
     m4  = bcdb2.model_get_from_schema(SCHEMA3)
     o=m4.new()
-    o.ipaddr = "something"
+    o.ipaddr = "192.168.1.1"
     o.email = "ename"
     o.addr = "test"
     o.save()
@@ -206,7 +206,7 @@ def main(self):
 
     bcdb2.reset()
 
-    #check 2 bcdb are empty (doesnt work yet)
+    #check 2 bcdb are empty (doesnt work yet): #TODO:*3
     # assert len(j.sal.fs.listDirsInDir("/sandbox/var/bcdb/test"))==0
     # assert len(j.sal.fs.listDirsInDir("{DIR_BASE}/var/bcdb/test2"))==0
     # assert len(j.sal.fs.listDirsInDir("{DIR_VAR}/bcdb/test2"))==0
