@@ -61,7 +61,11 @@ class ModelOBJ(DataObjBase):
         if "{{prop.name}}" in self._changed_items:
             return self._changed_items["{{prop.name}}"]
         else:
-            return {{prop.js_typelocation}}.clean(self._cobj_.{{prop.name_camel}})
+            v = {{prop.js_typelocation}}.clean(self._cobj_.{{prop.name_camel}})
+            if isinstance(v,j.data.types._TypeBaseObjClass):
+                self._changed_items["{{prop.name}}"] = v
+            return v
+
         {% endif %}
 
     @{{prop.name}}.setter

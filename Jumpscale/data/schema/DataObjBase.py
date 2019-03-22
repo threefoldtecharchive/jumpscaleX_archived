@@ -13,6 +13,8 @@ class DataObjBase():
         self._changed_items = []
         self._autosave = False
         self._readonly = False
+        self.acl_id = None
+        self._acl = None
         self._JSOBJ = True
         self._load_from_data(data=data, capnpbin=capnpbin, keepid=False, keepacl=False)
 
@@ -203,13 +205,14 @@ class DataObjBase():
         return self._data == val._data
 
     def __str__(self):
-        out = self._str()
-
-        out += "{RESET}\n\n"
-        out = j.core.tools.text_replace(out)
-        # #TODO: *1 when returning the text it does not represent propertly, needs to be in kosmos shell I think
-        #IS UGLY WORKAROUND
-        print(out)
-        return ""
+        return self._toml
+        # out = self._str()
+        #
+        # out += "{RESET}\n\n"
+        # out = j.core.tools.text_replace(out)
+        # # #TODO: *1 when returning the text it does not represent propertly, needs to be in kosmos shell I think
+        # #IS UGLY WORKAROUND
+        # print(out)
+        # return ""
 
     __repr__ = __str__

@@ -97,7 +97,7 @@ class BCDBMeta(j.application.JSBaseClass):
                     self.sid2schema[schema_id].sid = schema_id
                     return self.sid2schema[schema_id]
             if die:
-                raise RuntimeError("schema_id does not exist in db:%s"%schema_id)
+                raise RuntimeError("schema_id does not exist in db (id:%s)"%schema_id)
         return self.sid2schema[schema_id]
 
     def schema_get_from_url(self, url, die=True):
@@ -141,6 +141,7 @@ class BCDBMeta(j.application.JSBaseClass):
 
         # not known yet in namespace in ZDB
         self._schema_last_id += 1
+
         s = self.data.schemas.new()
         s.url = schema.url
         s.sid = self._schema_last_id
@@ -151,7 +152,7 @@ class BCDBMeta(j.application.JSBaseClass):
         self.url2sid[s.url] = s.sid
         schema.sid = s.sid
 
-        return self.schema_get_from_id(schema.sid)
+        return self.schema_get_from_id(s.sid)
 
     def __repr__(self):
         return str(self._data)

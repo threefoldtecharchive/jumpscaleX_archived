@@ -61,7 +61,11 @@ def main(self):
 
     print(o)
 
-    # j.shell()
+    cmd=o.cmds.new()
+    cmd.name = "cc"
+
+    assert len(o.cmds)==2
+    assert o.cmds[1].name == "cc"
 
 
     #more deep embedded (2 levels)

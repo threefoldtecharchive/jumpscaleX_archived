@@ -69,7 +69,7 @@ class Schema(j.application.JSBaseClass):
         if "\\n" in txt:
             return j.data.types.get("multiline",default=txt)
 
-        if "'" in txt or '"' in txt:
+        if "'" in txt or '"' in txt or txt.strip("'")=="":
             txt=txt.strip().strip("\"").strip("'").strip()
             return j.data.types.get("string",default=txt)
 
