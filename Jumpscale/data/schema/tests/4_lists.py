@@ -46,7 +46,7 @@ def main(self):
     assert schema_test.return_queues == ["a", "b"]
 
     schema_test.return_queues[1] = "c"
-    
+
     assert schema_test.return_queues.pylist() == ["a", "c"]
     assert schema_test.return_queues._inner_list == ["a", "c"]
     assert schema_test.return_queues == ["a", "c"]
