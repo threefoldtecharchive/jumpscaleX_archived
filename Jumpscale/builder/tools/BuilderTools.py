@@ -46,6 +46,7 @@ class BuilderTools(j.builder.system._BaseClass):
         self.file_update(
             '/etc/hosts', lambda x: text_replace_line(x, old, new)[0])
 
+    @property
     def system_uuid(self):
         """Gets a machines UUID (Universally Unique Identifier)."""
         return self.run('dmidecode -s system-uuid | tr "[A-Z]" "[a-z]"')
@@ -116,20 +117,8 @@ class BuilderTools(j.builder.system._BaseClass):
         return x
 
     def file_download(
-            self,
-            url,
-            to="",
-            overwrite=True,
-            retry=3,
-            timeout=0,
-            login="",
-            passwd="",
-            minspeed=0,
-            multithread=False,
-            expand=False,
-            minsizekb=40,
-            removeTopDir=False,
-            deletedest=False):
+            self,url,to="",overwrite=True,retry=3,timeout=0,login="",passwd="",minspeed=0,
+            multithread=False,expand=False,minsizekb=40,removeTopDir=False,deletedest=False):
         """
         download from url
         @return path of downloaded file
@@ -389,9 +378,9 @@ class BuilderTools(j.builder.system._BaseClass):
         # TODO:
         return self.prefab.system.ns
 
-    def setIDs(self, name, grid, domain="aydo.com"):
-        self.fqn = "%s.%s.%s" % (name, grid, domain)
-        self.hostname = name
+    # def setIDs(self, name, grid, domain="aydo.com"):
+    #     self.fqn = "%s.%s.%s" % (name, grid, domain)
+    #     self.hostname = name
 
     @property
     def hostfile(self):
@@ -523,20 +512,13 @@ class BuilderTools(j.builder.system._BaseClass):
         location = j.core.tools.text_replace(location)
         return j.data.hash.md5(location)
 
-    def package_install(self, name):
-        name = ' '.join(name.split(','))
-        # TODO do same for list
-        # check if ubuntu or osx, use right package manager to install
-        if self.isUbuntu or self.isLinux:
-            j.sal.ubuntu.apt_install(name)
-
     # =============================================================================
     #
     # Network OPERATIONS
     #
     # =============================================================================
 
-    def getNetworkInfoGenrator(self):
+    def getNetworkInfoGenerator(self):
         from Jumpscale.tools.nettools.NetTools import parseBlock, IPBLOCKS, IPMAC, IPIP, IPNAME
         exitcode, output, err = self.run("ip a", showout=False)
         for m in IPBLOCKS.finditer(output):
@@ -721,21 +703,24 @@ class BuilderTools(j.builder.system._BaseClass):
         self._cd = path
 
     def pwd(self):
+        """
+        :return current path
+        """
         return self._cd
 
-    def execute_jumpscript(self, script, die=True, profile=True, tmux=False, replace=True, showout=True):
-        """
-        execute a jumpscript(script as content) in a remote tmux command, the stdout will be returned
-        """
-        script = j.core.tools.text_replace(script)
-        script = j.core.text.strip(script)
-
-        if script.find("from Jumpscale import j") == -1:
-            script = "from Jumpscale import j\n\n%s" % script
-
-        # TODO:
-        return self.execute_script(script, die=die, profile=profile, interpreter="jspython", tmux=tmux,
-                                   replace=replace, showout=showout)
+    # def execute_jumpscript(self, script, die=True, profile=True, tmux=False, replace=True, showout=True):
+    #     """
+    #     execute a jumpscript(script as content) in a remote tmux command, the stdout will be returned
+    #     """
+    #     script = j.core.tools.text_replace(script)
+    #     script = j.core.text.strip(script)
+    #
+    #     if script.find("from Jumpscale import j") == -1:
+    #         script = "from Jumpscale import j\n\n%s" % script
+    #
+    #     # TODO:
+    #     return self.execute_script(script, die=die, profile=profile, interpreter="jspython", tmux=tmux,
+    #                                replace=replace, showout=showout)
 
     # =============================================================================
     #

@@ -20,27 +20,6 @@ class Sandboxer(j.application.JSBaseClass):
         self.new_size = 0
 
 
-    def sandbox_build(self,reset=False):
-        """
-        js_shell 'j.tools.sandboxer.sandbox_build()'
-
-        will build python & openresty & copy all to the right git sandboxes works for Ubuntu & OSX
-        :return:
-        """
-        j.builder.runtimes.python.build(reset=reset)
-        j.builder.runtimes.python._copy2sandbox_github()
-        j.builder.runtimes.lua.build()  # will build openresty & lua & openssl
-        j.builder.runtimes.lua.copy2sandbox_github()
-
-        if j.core.platformtype.myplatform.isUbuntu: #only for building
-            #no need to sandbox in non linux systems
-            j.tools.sandboxer.libs_sandbox("{{DIR_BASE}}/bin", "{{DIR_BASE}}/lib", True)
-            # TODO: Check if still needed
-            # j.tools.sandboxer.libs_sandbox("{{BASE_DIR}}/lib", "{{BASE_DIR}}/lib"% self.PACKAGEDIR, True)
-        else:
-            # FIXME : support OSX
-            j.shell()
-
     def _ldd(self, path, result=dict(), done=list(), exclude_sys_libs=True):
         self._log_debug("find deb:%s" % path)
         if j.sal.fs.getFileExtension(path) in ["py", "pyc", "cfg", "bak", "txt",
