@@ -18,7 +18,7 @@ class EtcdServer(j.application.JSBaseClass):
         return j.tools.tmux.execute(cmd, window='etcd', pane='etcd', reset=True)
 
     def stop(self, pid=None, sig=None):
-        """Stops traefik process
+        """Stops etcd process
 
         :param pid: pid of the process, if not given, will kill by name
         :type pid: long, defaults to None

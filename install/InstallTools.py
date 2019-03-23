@@ -798,6 +798,8 @@ class Tools:
             replace_args = format_dict(args)
             content = content.format_map(replace_args)
 
+            # content = content.format(**args)
+
         if text_strip:
             content = Tools.text_strip(content,ignorecomments=ignorecomments)
 
@@ -865,6 +867,7 @@ class Tools:
 
 
         msg=Tools.text_replace(LOGFORMAT,args=logdict)
+        msg=Tools.text_replace(msg,args=logdict)
         print(msg)
 
         if data_show:
@@ -874,12 +877,12 @@ class Tools:
                 else:
                     data = logdict["data"]
                 data=Tools.text_indent(data,10,strip=True)
-                data=Tools.text_replace(data,text_strip=False)
+                data=Tools.text_replace(data,text_strip=False,colors=True)
                 print (data.rstrip())
 
 
     @staticmethod
-    def pprint(content, ignorecomments=False, text_strip=False,args=None,colors=True,indent=0,end="\n",log=True):
+    def pprint(content, ignorecomments=False, text_strip=False,args=None,colors=False,indent=0,end="\n",log=True):
         """
 
         :param content: what to print
@@ -901,8 +904,14 @@ class Tools:
 
         """
 
-        content = Tools.text_replace(content,args=args,text_strip=text_strip,
-                                     ignorecomments=ignorecomments,colors=colors)
+        if args or colors or text_strip:
+            content = Tools.text_replace(content,args=args,text_strip=text_strip,
+                                         ignorecomments=ignorecomments,colors=colors)
+        elif content.find("{RESET}")!=-1:
+            for key,val in MyEnv.MYCOLORS.items():
+                content = content.replace("{%s}"%key,val)
+
+
         if indent>0:
             content = Tools.text_indent(content)
         if log:

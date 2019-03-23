@@ -38,8 +38,8 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         self.dirs = {
             self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/openresty.cfg'): 'cfg/',
             self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/mime.types'): 'cfg/',
-            self.tools.joinpaths(j.core.dirs.BASEDIR, 'openresty/'): 'openresty/'
-            '/lib/x86_64-linux-gnu/libnss_files.so.2': 'lib',
+            self.tools.joinpaths(j.core.dirs.BASEDIR, 'openresty/'): 'openresty/',
+                '/lib/x86_64-linux-gnu/libnss_files.so.2': 'lib',
         }
         lua_files = j.sal.fs.listFilesInDir(self.tools.joinpaths(j.core.dirs.BASEDIR, 'bin/'), filter='*.lua')
         for file in lua_files:

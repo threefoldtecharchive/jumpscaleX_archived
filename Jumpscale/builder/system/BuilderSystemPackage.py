@@ -130,7 +130,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
             self._log_info("prepare to install:%s" % package)
 
             if j.core.platformtype.myplatform.isUbuntu:
-                cmd += "%s install %s\n" % (CMD_APT_GET, package)
+                cmd += "%s install %s -y\n" % (CMD_APT_GET, package)
 
             elif j.builder.tools.isAlpine:
                 cmd = "apk add %s \n" % package
@@ -207,74 +207,29 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
             key = "install_%s," % package
             self._done_set(key)
 
-    # def multiInstall(self, packagelist, allow_unauthenticated=False, reset=False):
-    #     """
-    #     @param packagelist is text file and each line is name of package
-    #     can also be list
-
-    #     e.g.
-    #         # python
-    #         mongodb
-
-    #     @param runid, if specified actions will be used to execute
-    #     """
-    #     # previous_run = j.sal.process.executemode
-    #     # try:
-    #     #     j.sal.process.executemode = True
-
-    #     if j.data.types.string.check(packagelist):
-    #         packages = packagelist.strip().splitlines()
-    #     elif j.data.types.list.check(packagelist):
-    #         packages = packagelist
-    #     else:
-    #         raise j.exceptions.Input(
-    #             'packagelist should be string or a list. received a %s' % type(packagelist))
-
-    #     to_install = []
-    #     for dep in packages:
-    #         dep = dep.strip()
-    #         if dep is None or dep == "" or dep[0] == '#':
-    #             continue
-    #         to_install.append(dep)
-
-    #     for package in to_install:
-    #         self.install(
-    #             package, allow_unauthenticated=allow_unauthenticated, reset=reset)
-
-    def start(self, package):
-        if j.builder.tools.isArch or j.core.platformtype.myplatform.isUbuntu or j.core.platformtype.myplatform.isMac:
-            pm = j.builder.system.processmanager.get()
-            pm.ensure(package)
-        else:
-            raise j.exceptions.RuntimeError(
-                "could not install/ensure:%s, platform not supported" % package)
 
     def ensure(self, package, update=False):
-        """Ensure apt packages are installed"""
+        """Ensure packages are installed"""
+
+        if "," in package:
+            package = [i.strip() for i in package.split(",")]
+        if isinstance(package,list):
+            for package0 in package:
+                self.ensure(package0,update=update)
+            return
+
         if j.core.platformtype.myplatform.isUbuntu:
-            if isinstance(package, str):
-                package = package.split()
-            res = {}
-            for p in package:
-                p = p.strip()
-                if not p:
-                    continue
-                # The most reliable way to detect success is to use the command status
-                # and suffix it with OK. This won't break with other locales.
-                rc, out, err = j.sal.process.execute(
-                    "dpkg -s %s && echo **OK**;true" % p)
-                if "is not installed" in err:
-                    self.install(p)
-                    res[p] = False
-                else:
-                    if update:
-                        self.mdupdate(p)
-                    res[p] = True
-            if len(res) == 1:
-                for _, value in res.items():
-                    return value
+            p = package.strip()
+            # The most reliable way to detect success is to use the command status
+            # and suffix it with OK. This won't break with other locales.
+            rc, out, err = j.sal.process.execute("dpkg -s %s && echo **OK**;true" % p)
+            if "is not installed" in err:
+                self.install(p)
             else:
-                return res
+                if update:
+                    self.mdupdate(p)
+            return
+
         elif j.builder.tools.isArch:
             j.sal.process.execute("pacman -S %s" % package)
             return
@@ -282,8 +237,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
             self.install(package)
             return
         else:
-            raise j.exceptions.RuntimeError(
-                "could not install/ensure:%s, platform not supported" % package)
+            raise j.exceptions.RuntimeError("could not install/ensure:%s, platform not supported" % package)
 
         raise j.exceptions.RuntimeError("not supported platform")
 

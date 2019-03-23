@@ -709,13 +709,9 @@ class BuilderTools(j.builder.system._BaseClass):
         self._log_info(cmd)
         if cmd.strip() == "":
             raise RuntimeError("cmd cannot be empty")
-        if not env:
-            env = {}
-        else:
-            env = args.update(env)
 
-        rc, out, err = j.sal.process.execute(cmd, cwd=None, timeout=timeout, die=True,
-                                             env=env, interactive=False, replace=replace, showout=showout)
+        rc, out, err = j.sal.process.execute(cmd, cwd=None, timeout=timeout, die=die,env=env,
+                                             args=args, interactive=False, replace=replace, showout=showout)
         return rc, out, err
 
     def cd(self, path):
@@ -765,17 +761,30 @@ class BuilderTools(j.builder.system._BaseClass):
             raise RuntimeError("command '%s' does not exist, cannot find" % command)
         return out.strip()
 
-    def command_ensure(self, command, package=None):
-        """Ensures that the given command is present, if not installs the
-        package with the given name, which is the same as the command by
-        default."""
-        command = j.core.tools.text_replace(command)
-        if package is None:
-            package = command
-        if not self.command_check(command):
-            j.builder.tools.package_install(package)
-        assert self.command_check(command), \
-            "Command was not installed, check for errors: %s" % (command)
+
+    #USE: j.builder.system.package.ensure
+
+    # def command_ensure(self, command, package=None):
+    #     """Ensures that the given command is present, if not installs the
+    #     package with the given name, which is the same as the command by
+    #     default.
+    #
+    #     command can be comma separated or a list
+    #
+    #     """
+    #     if "," in command:
+    #         command = [i.strip() for i in command.split(",")]
+    #     if isinstance(command,list):
+    #         for commanditem in command:
+    #             self.command_ensure(commanditem,package=package)
+    #         return
+    #     command = j.core.tools.text_replace(command)
+    #     if package is None:
+    #         package = command
+    #     if not self.command_check(command):
+    #         j.builder.tools.package_install(package)
+    #     assert self.command_check(command), \
+    #         "Command was not installed, check for errors: %s" % (command)
 
     @property
     def isUbuntu(self):

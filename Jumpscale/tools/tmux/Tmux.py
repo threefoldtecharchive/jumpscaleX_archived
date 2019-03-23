@@ -75,13 +75,16 @@ class Tmux(j.application.JSBaseClass):
                 raise RuntimeError("could not execute tmux ls\n%s"%err)
 
             if out.strip().count("\n")>0:
+                j.shell()
                 raise RuntimeError("found too many tmux sessions, there should only be 1")
 
             rc,out,err=j.sal.process.execute("tmux -f /sandbox/cfg/.tmux.conf has-session -t main",die=False)
             if rc>0:
+                j.shell()
                 raise RuntimeError("did not find tmux session -t main")
 
             self._server = tmuxp.Server()
+            time.sleep(1)
             self._log_info("tmux server is running")
 
         return self._server
@@ -90,7 +93,11 @@ class Tmux(j.application.JSBaseClass):
         """
         js_shell 'j.tools.tmux.kill()'
         """
-        self.session.kill()
+        if len(j.sal.process.getPidsByFilter("tmux"))==1 and len(j.sal.process.getPidsByFilter("tmux -f /sandbox/cfg/.tmux.conf"))==1:
+            #means is only our tmux running so can stop cleanly
+            self.session.kill()
+        #kill remaining processes
+        j.sal.process.killProcessByName("tmux")
 
     def pane_get(self,window="main", pane="main",reset=False):
         w=self.window_get(window=window)

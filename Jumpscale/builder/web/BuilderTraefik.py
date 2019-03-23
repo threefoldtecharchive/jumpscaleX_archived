@@ -3,18 +3,22 @@ from Jumpscale import j
 
 class BuilderTraefik(j.builder.system._BaseClass):
     NAME = 'traefik'
-    VERSION = '1.7.7' # latest
+    VERSION = '1.7.9' # latest
     URL = 'https://github.com/containous/traefik/releases/download/v{version}/traefik_{platform}-{arch}'
 
     def _init(self):
+
         self.go_runtime = self.b.runtimes.golang
-    def build(self, reset=False):
-        """install traefik by getting the source from https://github.com/containous/traefik
-            and building it.
+
+    def install(self, reset=False):
+        """
+
+        kosmos 'j.builder.web.traefik.install(reset=True)'
 
         :param reset: reset installation, defaults to False
         :type reset: bool, optional
         :raises j.exceptions.RuntimeError: in case go (version 1.9+) is not installed
+
         """
         if self._done_get('install') and not reset:
             return
@@ -33,7 +37,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
 
         dest = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
         self.tools.file_download(
-            download_url, dest, overwrite=False, retry=3, timeout=0)
+            download_url, dest, overwrite=True, retry=3, timeout=0)
         self.tools.file_attribs(dest, mode=0o770)
 
         self._done_set('install')
@@ -49,6 +53,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         :return: tmux pane
         :rtype: tmux.Pane
         """
+        self.install()
         cmd = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
         if config_file and self.tools.file_exists(config_file):
             cmd += ' --configFile=%s' % config_file

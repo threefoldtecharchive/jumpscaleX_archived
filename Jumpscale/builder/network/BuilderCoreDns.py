@@ -6,24 +6,45 @@ class BuilderCoreDns(j.builder.system._BaseClass):
 
     def _init(self):
         self.golang = self.b.runtimes.golang
-        self.package_path = j.builder.runtimes.golang.package_path_get(
-            'coredns', host='github.com/coredns')
+        self.package_path = j.builder.runtimes.golang.package_path_get('coredns', host='github.com/coredns')
 
     def build(self, reset=False):
         """
+
+        kosmos 'j.builder.network.coredns.build(reset=False)'
+
         installs and runs coredns server with redis plugin
         """
         self._init()
-        if self._done_check("install", reset):
+        if self._done_check("build", reset):
             return
         # install golang
-        j.builder.runtimes.golang.install(reset=reset)
-        j.builder.runtimes.golang.get('github.com/coredns/coredns', install=False, update=False)
-        # go to package path and build (for coredns)
-        j.builder.runtimes.golang.execute(
-            'cd {} && git remote add threefoldtech_coredns https://github.com/threefoldtech/coredns &&git fetch threefoldtech_coredns && git checkout threefoldtech_coredns/master && make'.format(self.package_path))
+        j.builder.runtimes.golang.install(reset=False)
+        j.builder.runtimes.golang.get('github.com/coredns/coredns', install=False, update=True)
 
-        self._done_set('install')
+        # go to package path and build (for coredns)
+        C="""
+        cd {GITDIR}
+        git remote add threefoldtech_coredns https://github.com/threefoldtech/coredns
+        git fetch threefoldtech_coredns
+        git checkout threefoldtech_coredns/master
+        make
+        
+        cp /sandbox/go_proj/src/github.com/coredns/coredns/coredns /sandbox/bin/coredns
+        """
+        self.tools.run(C,args={"GITDIR":self.package_path},replace=True)
+
+        self._done_set('build')
+
+    def install(self,reset=False):
+        """
+
+        kosmos 'j.builder.network.coredns.install(reset=False)'
+
+        :param reset:
+        :return:
+        """
+        self.build(reset=reset)
 
     def sandbox(self,  dest_path="/tmp/builders/coredns", sandbox_dir="sandbox", reset=False, create_flist=False, zhub_instance=None):
         '''Copy built bins to dest_path and create flist if create_flist = True
@@ -71,15 +92,23 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         :rtype: tmux.Pane
         """
         self._init()
-        cmd = "{coredns_path}/coredns -conf {path_config}".format(
-            coredns_path=self.package_path, path_config=config_file)
+        cmd = "{coredns_path}/coredns -conf {path_config}".format(coredns_path=self.package_path, path_config=config_file)
         return j.tools.tmux.execute(window="coredns", cmd=cmd)
 
 
-    def _test(self, name=''):
-        """Run tests under tests directory
+    def test(self):
 
-        :param name: basename of the file to run, defaults to "".
-        :type name: str, optional
-        """
-        self._test_run(name=name, obj_key='test_main')
+        if not j.sal.process.checkInstalled(j.builder.network.coredns.NAME):
+            # j.builder.network.coredns.stop()
+            # j.builder.network.coredns.build(reset=True)
+            j.builder.network.coredns.sandbox(reset=True)
+
+        # try to start/stop
+        tmux_pane = j.builder.network.coredns.start()
+        tmux_process = tmux_pane.process_obj
+        child_process = tmux_pane.process_obj_child
+        assert child_process.is_running()
+
+        #CONFIGURE REDIS BACKEND
+        #TODO: need to do a test on UDP port for some DNS queries
+

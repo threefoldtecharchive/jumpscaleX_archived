@@ -8,8 +8,11 @@ class BuilderTarantool(j.builder.system._BaseClass):
     def _init(self):
         self.git_url = 'https://github.com/tarantool/tarantool.git'
 
-    def install(self, reset=False, branch='1.7'):
+    def install(self, reset=False, branch='2.1.1'): #branch='1.10.1'
         """
+
+
+
         Install tarantool
         :param reset: reinstall if reset is True
         :param branch: the branch to install from

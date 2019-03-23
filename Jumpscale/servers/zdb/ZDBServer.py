@@ -116,7 +116,7 @@ class ZDBServer(j.application.JSBaseClass):
         get client to zdb
 
         """
-        cl = j.clients.zdb.get(name=name, nsname=nsname, addr=self.addr, port=self.port, secret=secret, mode=self.mode)
+        cl = j.clients.zdb.client_get( nsname=nsname, addr=self.addr, port=self.port, secret=secret, mode=self.mode)
 
         assert cl.ping()
 
@@ -160,22 +160,22 @@ class ZDBServer(j.application.JSBaseClass):
 
         return self.client_admin_get()
 
-    def build(self):
+    def build(self,reset=True):
         """
-        js_shell 'j.servers.zdb.build()'
+        kosmos 'j.servers.zdb.build()'
         """
-        j.builder.zero_os.zos_db.build(install=True, reset=True)
+        j.builder.db.zdb.install(reset=reset)
 
     def test(self, build=False):
         """
-        js_shell 'j.servers.zdb.test(build=True)'
+        kosmos 'j.servers.zdb.test(build=True)'
         """
         if build:
             self.build()
         self.destroy()
-        self.start_test_instance()
+        self.start_test_instance(namespaces=["test"])
         self.stop()
-        self.start(mode='seq')
+        self.start()
         cl = self.client_get(nsname="test")
 
         print("TEST OK")

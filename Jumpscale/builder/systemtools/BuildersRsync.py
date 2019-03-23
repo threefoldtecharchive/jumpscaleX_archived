@@ -1,8 +1,7 @@
 from Jumpscale import j
 
 
-class BuilderRsync()
-    Rsync(j.builder.system._BaseClass):
+class BuilderRsync(j.builder.system._BaseClass):
 
 
     def __init(self):
