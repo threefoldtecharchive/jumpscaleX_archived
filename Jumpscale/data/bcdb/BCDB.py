@@ -398,7 +398,7 @@ class BCDB(j.application.JSBaseClass):
             obj = model.schema.get(capnpbin=bdata)
             obj.id = id
             obj.acl_id = acl_id
-            obj.model = model
+            obj._model = model
             if model.readonly:
                 obj.readonly = True  # means we fetched from DB, we need to make sure cannot be changed
             return obj

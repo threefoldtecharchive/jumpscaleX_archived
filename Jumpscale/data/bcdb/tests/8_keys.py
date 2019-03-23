@@ -26,13 +26,14 @@ def main(self):
 
     m.reset()
 
-
     o = m.new()
+    assert o._model.schema.url == 'threefoldtoken.wallet.test'
     o.addr = "something"
     o.email = "myemail"
     o.username="myuser"
     o.save()
 
+    assert o._model.schema.url == 'threefoldtoken.wallet.test'
 
     o2= m.get_by_addr(o.addr)[0]
     assert len(m.get_by_addr(o.addr))==1
@@ -54,6 +55,8 @@ def main(self):
     o.email = "myemail2"
     o.username="myuser2"
     o.save()
+
+    assert o._model.schema.url == 'threefoldtoken.wallet.test'
 
 
     l= m.get_by_username("myuser")
@@ -145,6 +148,7 @@ def main(self):
     o.email = "ename"
     o.addr = "test"
     o.save()
+    assert o._model.schema.url == 'threefoldtoken.wallet.test2'
 
     data=bcdb._hset_index_key_get(schema=m3.schema,returndata=True)
     redisid = data[bcdb.name][m3.schema.url]
@@ -159,7 +163,7 @@ def main(self):
 
     assert len(m.get_all())==3
 
-    assert m.get_all()[0].model.schema.sid == o2.model.schema.sid
+    assert m.get_all()[0]._model.schema.sid == o2._model.schema.sid
 
     assert len(m3.get_by_addr("test"))==1
 
@@ -183,6 +187,8 @@ def main(self):
     o.addr = "test"
     o.save()
 
+    assert o._model.schema.url == 'threefoldtoken.wallet.test2'
+
     myid = o.id+0 #make copy
 
     assert len(m4.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.1")) == 1
@@ -194,7 +200,10 @@ def main(self):
     myid=m.get_all()[2].id+0
     nr = len(m.get_all())
     assert nr==3
+
     o6=m.get(myid)
+    assert o6._model.schema.url == 'threefoldtoken.wallet.test'
+
     o6.delete()
     nr = len(m.get_all())
     assert nr==2

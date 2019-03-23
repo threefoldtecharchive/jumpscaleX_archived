@@ -142,6 +142,7 @@ class DataObjBase():
             if not self._model.__class__.__name__=="ACL":
                 self._model.delete(self)
             return self
+
         raise RuntimeError("cannot save, model not known")
 
     def _check(self):

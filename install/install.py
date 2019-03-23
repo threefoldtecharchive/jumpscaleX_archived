@@ -271,7 +271,7 @@ def ui():
     else:
         if "secret" not in args:
             if  IT.MyEnv.sshagent_active_check():
-                args["secret"] = IT.Tools.ask_string("Optional: provide secret to use for passphrase, of ok to use SSH-Agent just press 'ENTER'",default="SSH")
+                args["secret"] = IT.Tools.ask_string("Optional: provide secret to use for passphrase, if ok to use SSH-Agent just press 'ENTER'",default="SSH")
             else:
                 args["secret"] = IT.Tools.ask_string("please provide secret passphrase for the BCDB.",default="1234")
         if "private_key" not in args:
