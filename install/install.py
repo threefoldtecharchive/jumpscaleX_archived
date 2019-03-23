@@ -260,15 +260,22 @@ def ui():
                 args["p"]=False
 
     if "y" in args:
+
         if "secret" not in args:
-            args["secret"] = "1234"
+            if  IT.MyEnv.sshagent_active_check():
+                args["secret"] = "SSH"
+            else:
+                args["secret"] = "1234"
         if "private_key" not in args:
             args["private_key"] = ""
     else:
         if "secret" not in args:
-            args["secret"] = IT.Tools.ask_string("please provide secret passphrase for the BCDB.")
+            if  IT.MyEnv.sshagent_active_check():
+                args["secret"] = IT.Tools.ask_string("Optional: provide secret to use for passphrase, of ok to use SSH-Agent just press 'ENTER'",default="SSH")
+            else:
+                args["secret"] = IT.Tools.ask_string("please provide secret passphrase for the BCDB.",default="1234")
         if "private_key" not in args:
-            args["private_key"] = IT.Tools.ask_string("please provide 24 words of the private key, or empty for autogeneration.")
+            args["private_key"] = IT.Tools.ask_string("please provide 24 words of the private key, or just press 'ENTER' for autogeneration.")
 
 
     if "y" not in args and "w" not in args:
@@ -362,7 +369,7 @@ if "1" in args or "2" in args:
     if "w" in args:
         if "1" in args:
             #in system need to install the lua env
-            IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.builder.runtimes.lua.install(reset=True)'", showout=False)
+            IT.Tools.execute("source /sandbox/env.sh;kosmos 'j.builder.runtimes.lua.install(reset=True)'", showout=False)
         IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.tools.markdowndocs.test()'", showout=False)
         print("Jumpscale X installed successfully")
 

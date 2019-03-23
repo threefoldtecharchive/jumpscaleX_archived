@@ -67,14 +67,15 @@ class Tmux(j.application.JSBaseClass):
                 if err.find("No such file or directory")!=-1:
                     start()
                     rc,out,err = j.core.tools.execute("tmux ls",die=False)
+                if err.find("no server running")!=-1:
+                    start()
+                    rc,out,err = j.core.tools.execute("tmux ls",die=False)
+
             if rc>0:
                 raise RuntimeError("could not execute tmux ls\n%s"%err)
 
             if out.strip().count("\n")>0:
                 raise RuntimeError("found too many tmux sessions, there should only be 1")
-
-            if rc>0 and "out".find("no server")==-1:
-                start()
 
             rc,out,err=j.sal.process.execute("tmux -f /sandbox/cfg/.tmux.conf has-session -t main",die=False)
             if rc>0:

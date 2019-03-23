@@ -132,7 +132,7 @@ def main(self):
 
     #default
     assert o.addr == "aa"
-    assert o.ipaddr == ""
+    assert o.ipaddr == "0.0.0.0"
     assert o.email == ""
     assert o.nr == 10
     assert o.nr2 == 4294967295
@@ -141,7 +141,7 @@ def main(self):
     assert o.nr4_usd == 5
     assert o.date == 0
 
-    o.ipaddr = "something"
+    o.ipaddr = "192.168.1.1"
     o.email = "ename"
     o.addr = "test"
     o.save()
@@ -163,16 +163,16 @@ def main(self):
 
     assert len(m3.get_by_addr("test"))==1
 
-    assert len(m3.get_from_keys(addr="test",email="ename",ipaddr="something")) == 1
-    assert len(m3.get_from_keys(addr="test",email="ename",ipaddr="something2")) == 0
+    assert len(m3.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.1")) == 1
+    assert len(m3.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.2")) == 0
 
     a=j.servers.zdb.client_admin_get()
     zdbclient2 = a.namespace_new("test2",secret="12345")
 
     bcdb2 = j.data.bcdb.new("test2",zdbclient2,reset=True)
-    assert len(m3.get_from_keys(addr="test",email="ename",ipaddr="something")) == 1
+    assert len(m3.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.1")) == 1
     bcdb2.reset()
-    assert len(m3.get_from_keys(addr="test",email="ename",ipaddr="something")) == 1
+    assert len(m3.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.1")) == 1
 
     #now we know that the previous indexes where not touched
 
@@ -185,9 +185,9 @@ def main(self):
 
     myid = o.id+0 #make copy
 
-    assert len(m4.get_from_keys(addr="test",email="ename",ipaddr="something")) == 1
+    assert len(m4.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.1")) == 1
 
-    o5=m4.get_from_keys(addr="test",email="ename",ipaddr="something")[0]
+    o5=m4.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.1")[0]
     assert o5.id == myid
 
 
@@ -201,8 +201,8 @@ def main(self):
 
     bcdb.reset()
 
-    assert m3.get_from_keys(addr="test",email="ename",ipaddr="something") == []
-    assert len(m4.get_from_keys(addr="test",email="ename",ipaddr="something")) == 1
+    assert m3.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.1") == []
+    assert len(m4.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.1")) == 1
 
     bcdb2.reset()
 

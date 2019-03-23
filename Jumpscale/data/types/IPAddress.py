@@ -43,7 +43,7 @@ class IPAddress(String):
             return False
 
     def clean(self, value):
-        if value is None:
+        if value is None or value is "":
             return self.default_get()
         if not self.check(value):
             raise ValueError("invalid ip address %s" % value)
