@@ -1,68 +1,44 @@
-from Jumpscale import j
-from subprocess import run, PIPE
-from datetime import datetime
+from utils import Utils
+import os
 import sys
-import os 
 
 
-def send_msg(msg):
-    chat_id = os.environ.get('chat_id')
-    client = j.clients.telegram_bot.get("test")
-    client.send_message(chatid=chat_id, text=msg)
+class RunTests(Utils):
 
-def execute_cmd(cmd):
-    response = run(cmd, shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
-    return response
+    def run_tests(self, image_name, run_cmd, repo, commit):
+        """Run tests with specific image and commit.
 
-def build_image():
-    response = execute_cmd('docker build --rm -t .')
-    if response.returncode:
-        send_msg('Failed to bulid docker image')
-        containers_remove()
-        images_clean()
-        sys.exit()
-
-def run_tests():
-    docker_cmd = "docker run --rm -t jumpscale /bin/bash -c"
-    env_cmd = "source /sandbox/env.sh; export NACL_SECRET=test;"
-    run_cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/test.py"
-    cmd = '{} "{} {}"'.format(docker_cmd, env_cmd, run_cmd)
-    response = execute_cmd(cmd)
-    if response.stderr not in [None, '']:
-        file_name = '{}.log'.format(str(datetime.now())[:16])
-        with open (file_name, 'w+') as f:
-            f.write(response.stderr)
-
-        file_link = '{}/{}'.format('serverip', file_name)
-        send_msg('test has errors ' + file_link)
-    else:
-        send_msg('Tests Passed')
-
-def containers_remove():
-    response = execute_cmd('docker ps -a | tail -n+2 | awk "{print\$1}"')
-    containers = response.stdout.split()
-    for container in containers:
-        response = execute_cmd('docker rm -f {}'.format(container))
-        if response.returncode:
-            send_msg('Failed to remove docker container')
-
-def images_clean():
-    response = execute_cmd('docker images | tail -n+2 | awk "{print \$1}"')
-    images = response.stdout.split()
-    response = execute_cmd('docker images | tail -n+2 | awk "{print \$3}"')
-    images_id = response.stdout.split()
-    for i in range(0, len(images)):
-        if images[i] == 'ubuntu':
-            continue
+        :param image_name: docker image name.
+        :type image_name: str
+        :param run_cmd: command line that will be run tests. 
+        :type run_cmd: str
+        :param repo: full repo name
+        :type repo: str
+        :param commit: commit hash 
+        :type commit: str
+        """
+        self.image_check(image_name)
+        hub_image = '{}/jumpscalex'.format(self.username)
+        docker_cmd = 'docker run --rm -t {} /bin/bash -c'.format(image_name)
+        env_cmd = 'export {};'.format(self.exports)
+        if image_name == hub_image:
+            commit_cmd = 'cd /sandbox/code/github/{}; git pull; git reset --hard {};'.format(repo, commit)
         else:
-            response = execute_cmd('docker rmi -f {}'.format(images_id[i]))
-            if response.returncode:
-                send_msg('Failed to remove docker image')
-
-if __name__ == "__main__":
-    build_image()
-    run_tests()
-    containers_remove()
-    images_clean()
+            commit_cmd = ""
+        cmd = '{} "{} {} {}"'.format(docker_cmd, env_cmd, commit_cmd, run_cmd)
+        response = self.execute_cmd(cmd)
+        return response
 
 
+    def image_check(self, image_name):
+        """Check if the docker image exist before run tests.
+
+        :param image_name: docker image name 
+        :type image_name: str
+        """
+        if image_name == '{}/jumpscalex'.format(self.username):
+            response = self.execute_cmd('docker images | tail -n+2 | awk "{print \$1}"')
+            images_name = response.stdout.split()
+            if image_name not in images_name:
+                self.send_msg('Could not find image')
+                sys.exit()
