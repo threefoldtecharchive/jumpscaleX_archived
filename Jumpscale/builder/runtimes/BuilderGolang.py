@@ -114,6 +114,8 @@ class BuilderGolang(j.builder.system._BaseClass):
         # only check for linux for now
         if j.core.platformtype.myplatform.isLinux:
             download_url = self.DOWNLOAD_URL.format(version='1.11.4', platform='linux', arch=self.current_arch)
+        elif j.core.platformtype.myplatform.isMac:
+            download_url = self.DOWNLOAD_URL.format(version='1.11.4', platform='darwin', arch=self.current_arch)
         else:
             raise j.exceptions.RuntimeError('platform not supported')
 

@@ -254,3 +254,4 @@ class Client(BaseClient):
 
     def response_for(self, id):
         return Response(self, id)
+    

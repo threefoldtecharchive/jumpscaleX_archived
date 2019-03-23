@@ -38,7 +38,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         self.dirs = {
             self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/openresty.cfg'): 'cfg/',
             self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/mime.types'): 'cfg/',
-            self.tools.joinpaths(j.core.dirs.BASEDIR, 'openresty/'): 'openresty/',
+            self.tools.joinpaths(j.core.dirs.BASEDIR, 'openresty/'): 'openresty/'
             '/lib/x86_64-linux-gnu/libnss_files.so.2': 'lib',
         }
         lua_files = j.sal.fs.listFilesInDir(self.tools.joinpaths(j.core.dirs.BASEDIR, 'bin/'), filter='*.lua')
@@ -51,6 +51,12 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             j.builder.tools.dir_ensure(dir_dest)
             j.sal.fs.copyFile(dir_src, dir_dest)
 
+        lib_dest = j.sal.fs.joinPaths(dest_path, 'sandbox/lib')
+        j.builder.tools.dir_ensure(lib_dest)
+        for bin in self.bins:
+            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
+            j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
+
         for dir_src in self.dirs:
             dir_dest = j.sal.fs.joinPaths(dest_path, dir_src[1:])
             j.builder.tools.dir_ensure(dir_dest)
@@ -58,7 +64,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
 
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'openresty_startup.toml')
         self.startup = j.sal.fs.readFile(startup_file)
-        j.sal.fs.copyFile(startup_file,   j.sal.fs.joinPaths(dest_path, 'sandbox'))
+        j.sal.fs.copyFile(startup_file,j.sal.fs.joinPaths(dest_path, 'sandbox'))
 
         self._done_set('sandbox')
 
@@ -232,3 +238,24 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         args["BINDIR"]=j.core.tools.text_replace("{DIR_BASE}/bin")
 
         self.tools.run(C,args=args)
+
+    def start(self, config_file=None, args=None):
+        test_dir = j.core.tools.text_replace('{DIR_TEMP}/lapis_test')
+        if self.tools.exists(test_dir):
+            self.tools.dir_remove(test_dir)
+        self.tools.dir_ensure(test_dir)
+        cmd = """
+            cd {dir}
+            lapis --lua new
+            lapis server
+        """.format(dir=test_dir)
+        p = j.tools.tmux.execute(cmd, window=self.NAME, pane=self.NAME, reset=True)
+        return p
+
+    def _test(self, name=""):
+        """Run tests under tests directory
+
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        self._test_run(name=name, obj_key='test_main')

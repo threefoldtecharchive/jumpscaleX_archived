@@ -1,11 +1,6 @@
 from Jumpscale import j
 
 class BuilderEthereum(j.builder.system._BaseClass):
-    """
-    NOTE: This not a completed builder, this builder is made to demonstrate how to create a builder
-    """
-    # TODO: build the other binaries and write a startup script
-
     NAME = "geth"
 
     def _init(self):
@@ -27,7 +22,9 @@ class BuilderEthereum(j.builder.system._BaseClass):
 
         j.builder.runtimes.golang.get(self.geth_repo)
 
-        j.builder.runtimes.golang.execute("cd {} && make geth".format(self.package_path))
+        j.builder.runtimes.golang.execute("cd {} && go build -a -ldflags '-w -extldflags -static' ./cmd/geth".format(self.package_path))
+        j.builder.runtimes.golang.execute("cd {} && go build -a -ldflags '-w -extldflags -static' ./cmd/bootnode".format(self.package_path))
+
         self._done_set('build')
 
     def install(self, reset=False):
@@ -39,11 +36,24 @@ class BuilderEthereum(j.builder.system._BaseClass):
 
         self.build(reset=reset)
 
-        bin_path = self.tools.joinpaths(self.package_path, "build", "bin", "geth")
+        bin_path = self.tools.joinpaths(self.package_path, "geth")
         self.tools.file_copy(bin_path, "/sandbox/bin")
         self._done_set('install')
 
-    def sandbox(self, sandbox_dir="/tmp/builder/ethereum", flist=False, hub_instance=None, reset=False):
+    def stop(self, pid=None, sig=None):
+        """Stops geth process
+
+        :param pid: pid of the process, if not given, will kill by name
+        :type pid: long, defaults to None
+        :param sig: signal, if not given, SIGKILL will be used
+        :type sig: int, defaults to None
+        """
+        if pid:
+            j.sal.process.kill(pid, sig)
+        else:
+            j.sal.process.killProcessByName(self.NAME, sig)
+
+    def sandbox(self, sandbox_dir="/tmp/builder/ethereum", flist=True, hub_instance=None, reset=False):
         """
         sandbbox go-ethereum
         :param sandbox_dir: the directory to sandbox to (default: {"/tmp/builder/ethereum"})
@@ -51,16 +61,21 @@ class BuilderEthereum(j.builder.system._BaseClass):
         :param hub_instance: zhub_client instance which will be used to uplload the flist (default: {None})
         :param reset: reset the process (default: {False})
         """
-        if self._done_get('sandbox') and reset is False:
+        if self._done_check('sandbox') and not reset:
             return
+        self.build(reset = reset)
 
-        self.build(reset=reset)
-        bin_path = self.tools.joinpaths(self.package_path, "build", "bin", "geth")
+        bin_path = self.tools.joinpaths(self.package_path, "geth")
         bin_dest = self.tools.joinpaths(sandbox_dir, 'sandbox', 'bin')
         self.tools.dir_ensure(bin_dest)
         self.tools.file_copy(bin_path, bin_dest)
+        
+        bootnode_bin_path = self.tools.joinpaths(self.package_path, "bootnode")
+        bootnode_bin_dest = self.tools.joinpaths(sandbox_dir, 'sandbox', 'bin')
+        self.tools.dir_ensure(bootnode_bin_dest)
+        self.tools.file_copy(bootnode_bin_path, bootnode_bin_dest)
 
         if flist:
             print(self.flist_create(sandbox_dir=sandbox_dir, hub_instance=hub_instance))
-
         self._done_set('sandbox')
+
