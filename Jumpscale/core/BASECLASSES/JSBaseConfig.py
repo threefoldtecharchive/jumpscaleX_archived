@@ -89,12 +89,7 @@ class JSBaseConfig(JSBase):
         :return:
         """
         ddict = self.data._ddict
-        self.data.data_update(data=kwargs)
-
-        #TODO: REEM was not ok, cannot do this
-        # for prop, val in self.data._ddict.items():
-        #     setattr(self, prop, val)
-        # self.data.save()
+        self.data._data_update(data=kwargs)
 
 
     def edit(self):
