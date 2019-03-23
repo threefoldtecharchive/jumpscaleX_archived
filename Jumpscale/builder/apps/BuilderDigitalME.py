@@ -30,5 +30,22 @@ class BuilderDigitalME(j.builder.system._BaseClass):
             # FIXME : support OSX
             j.shell()
 
-    def sandbox(destination_dir="/tmp/builder/{NAME}", flist=True, zhub_instance=None)
-        destination_dir = self.tools.
+    def sandbox(self,destination_dir="/tmp/builder/{NAME}", flist=True, zhub_instance=None):
+        destination_dir = self.tools.replace(destination_dir,args={"NAME":self.__class__.NAME})
+        raise RuntimeError("needs to be implemented")
+
+
+    def test(self,zos_client):
+        """
+
+        :return:
+        """
+
+        self.build()
+        flist = self.sandbox()  #will not upload to zhub_instance
+
+
+        #create container and use this flist
+        #see that openresty is working
+
+

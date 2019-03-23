@@ -186,13 +186,13 @@ class Application(object):
     @property
     def debug(self):
         if self._debug is None:
-            self._debug = self._j.core.state.configGetFromDictBool(
-                "system", "debug", False)
+            return self._j.core.myenv.debug
         return self._debug
 
     @debug.setter
     def debug(self, value):
         self._debug = value
+        raise RuntimeError("not implemented yet")
 
     def break_into_jshell(self, msg="DEBUG NOW"):
         if self.debug is True:

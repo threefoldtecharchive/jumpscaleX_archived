@@ -20,7 +20,11 @@ class CoreDnsFactory(JSConfigs):
         j.clients.etcd.get(etcd_instance, host=host, port=port, user=user, password_=password_)
         return self.get(name, etcd_instance=etcd_instance)
 
-    def test(self):
+    def test(self,build=False):
+
+        if build:
+            raise RuntimeError("build the coredns and start through builder")
+
         # create etcd client
         cl = j.sal.coredns.configure(instance_name="main", host="127.0.0.1", password="1234")
         # create zones

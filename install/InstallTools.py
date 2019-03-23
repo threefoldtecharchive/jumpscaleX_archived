@@ -558,7 +558,8 @@ class Tools:
         @param path: string (File path required to be removed)
         """
         path = Tools.text_replace(path)
-        Tools.log('Remove file with path: %s' % path)
+        if MyEnv.debug:
+            Tools.log('Remove file with path: %s' % path)
         if os.path.islink(path):
             os.unlink(path)
         if not Tools.exists(path):
@@ -602,7 +603,8 @@ class Tools:
         except (OSError, AttributeError):
             pass
         if found and followlinks and stat.S_ISLNK(st.st_mode):
-            Tools.log('path %s exists' % str(path.encode("utf-8")))
+            if MyEnv.debug:
+                Tools.log('path %s exists' % str(path.encode("utf-8")))
             linkpath = os.readlink(path)
             if linkpath[0]!="/":
                 linkpath = os.path.join(Tools.path_parent(path), linkpath)
@@ -871,7 +873,7 @@ class Tools:
         print(msg)
 
         if data_show:
-            if logdict["data"] not in ["",None]:
+            if logdict["data"] not in ["",None,{}]:
                 if isinstance(logdict["data"],dict):
                     data = serializer(logdict["data"])
                 else:
@@ -973,7 +975,7 @@ class Tools:
     def execute(command, showout=True, useShell=True, cwd=None, timeout=800,die=True,
                 async_=False, args=None, env=None,
                 interactive=False,self=None,
-                replace=True,asfile=False,original_command=None):
+                replace=True,asfile=False,original_command=None,log=False):
 
         if env is None:
             env={}
@@ -982,7 +984,8 @@ class Tools:
         command  = Tools.text_strip(command, args=args, replace=replace)
         if "\n" in command or asfile:
             path = Tools._file_path_tmp_get()
-            Tools.log("execbash:\n'''%s\n%s'''\n" % (path, command))
+            if MyEnv.debug or log:
+                Tools.log("execbash:\n'''%s\n%s'''\n" % (path, command))
             command2 = ""
             if die:
                 command2 = "set -e\n"
@@ -990,7 +993,7 @@ class Tools:
                 command2 += "cd %s\n" % cwd
             command2+=command
             Tools.file_write(path, command2)
-            print(command2)
+            # print(command2)
             command3 = "bash %s" % path
             res = Tools.execute(command3,showout=showout,useShell=useShell,cwd=cwd,
                             timeout=timeout,die=die,env=env,self=self,interactive=interactive,asfile=False,original_command=command )
@@ -1000,10 +1003,12 @@ class Tools:
 
             if interactive:
                 res = Tools._execute_interactive(cmd=command, die=die,original_command=original_command)
-                Tools.log("execute interactive:%s"%command)
+                if MyEnv.debug or log:
+                    Tools.log("execute interactive:%s"%command)
                 return res
             else:
-                Tools.log("execute:%s"%command)
+                if MyEnv.debug or log:
+                    Tools.log("execute:%s"%command)
 
             os.environ["PYTHONUNBUFFERED"] = "1" #WHY THIS???
 
@@ -1104,8 +1109,8 @@ class Tools:
                             time.sleep(0.1)
                             if p.poll():
                                 p.terminate()
-
-                        Tools.log("process killed because of timeout",level=30)
+                        if MyEnv.debug or log:
+                            Tools.log("process killed because of timeout",level=30)
                         return (-2, out, err)
 
                     # Read out process streams, but don't block
@@ -1115,7 +1120,8 @@ class Tools:
             rc = -1 if p.returncode < 0 else p.returncode
 
             if rc<0 or rc>0:
-                Tools.log('system.process.run ended, exitcode was %d' % rc)
+                if MyEnv.debug or log:
+                    Tools.log('system.process.run ended, exitcode was %d' % rc)
             # if out!="":
             #     Tools.log('system.process.run stdout:\n%s' % out)
             # if err!="":
