@@ -437,7 +437,7 @@ elif "3" in args:
 
     cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py %s"%args_txt
 
-    dexec(cmd)
+    sshexec(cmd)
 
 
 
