@@ -7,7 +7,6 @@ import psutil
 JSBASE = j.application.JSBaseClass
 
 from .Session import Session
-from .TmuxCmd import TmuxCmd
 
 class Tmux(j.application.JSBaseClass):
 
@@ -148,8 +147,8 @@ class Tmux(j.application.JSBaseClass):
             else:
                 self.window_get(window=window, reset=True)
 
-        return TmuxCmd(name=name,pane_name=pane,window_name=window,
-                       cmd=cmd,path=path,env=env,ports=ports,stopcmd=stopcmd,process_strings=process_strings)
+        print("need to reimplement using StartupCMD, dont forget to set the _pane as property")
+        j.shell()
 
     def panes_2x2_get(self, window_name="multi", reset=True):
 

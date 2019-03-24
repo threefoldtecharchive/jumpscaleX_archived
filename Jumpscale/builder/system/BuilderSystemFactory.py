@@ -2,7 +2,7 @@
 
 from Jumpscale import j
 
-from .BuilderBaseClass import BuilderBaseClass
+from .BuilderBaseClass import *
 from .BuilderBaseFactoryClass import BuilderBaseFactoryClass
 
 
@@ -13,6 +13,7 @@ class BuilderSystemPackage(j.application.JSBaseClass):
     # BaseClass property shouldn't start with underscore but we will keep it for backward compatibility
     BaseClass = _BaseClass
     _BaseFactoryClass = BuilderBaseFactoryClass
+    _builder_method = builder_method
 
     def _init(self):
         self._package = None

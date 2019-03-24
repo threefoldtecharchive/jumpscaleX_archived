@@ -133,7 +133,10 @@ class Dictionary(TypeBaseClass):
         if v is None:
             return self._default_get()
         if j.data.types.bytes.check(v):
-            v = j.data.serializers.msgpack.loads(v)
+            if v==b'':
+                v={}
+            else:
+                v = j.data.serializers.msgpack.loads(v)
         elif j.data.types.string.check(v):
             v = j.data.serializers.json.loads(v)
         if not self.check(v):

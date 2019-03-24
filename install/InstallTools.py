@@ -708,7 +708,7 @@ class Tools:
 
 
     @staticmethod
-    def text_strip(content, ignorecomments=False,args={},replace=False,executor=None,colors=False):
+    def text_strip(content, ignorecomments=False,args={},replace=False,executor=None,colors=True):
         """
         remove all spaces at beginning & end of line when relevant (this to allow easy definition of scripts)
         args will be substitued to .format(...) string function https://docs.python.org/3/library/string.html#formatspec
@@ -746,12 +746,16 @@ class Tools:
             content = "\n".join([line[minchars:] for line in content.split("\n")])
 
         if replace:
-            content = Tools.text_replace(content=content,args=args,executor=executor,text_strip=False,colors=colors)
+            content = Tools.text_replace(content=content,args=args,executor=executor,text_strip=False)
+        else:
+            if colors and "{" in content:
+                for key,val in MyEnv.MYCOLORS.items():
+                    content = content.replace("{%s}"%key,val)
 
         return content
 
     @staticmethod
-    def text_replace(content,args=None,executor=None,ignorecomments=False,text_strip=True,colors=True):
+    def text_replace(content,args=None,executor=None,ignorecomments=False,text_strip=True):
         """
 
         j.core.tools.text_replace
@@ -789,18 +793,24 @@ class Tools:
             args={}
 
         if "{" in content:
-            if executor:
-                args.update(executor.config)
-            else:
-                args.update(MyEnv.config)
 
-            if colors:
+            if executor is None and args is None:
+
+                if text_strip:
+                    content = Tools.text_strip(content=content,colors=True)
+
+            else:
+
+                if executor:
+                    args.update(executor.config)
+                else:
+                    args.update(MyEnv.config)
+
                 args.update(MyEnv.MYCOLORS)
 
-            replace_args = format_dict(args)
-            content = content.format_map(replace_args)
+                replace_args = format_dict(args)
+                content = content.format_map(replace_args)
 
-            # content = content.format(**args)
 
         if text_strip:
             content = Tools.text_strip(content,ignorecomments=ignorecomments)
@@ -879,7 +889,7 @@ class Tools:
                 else:
                     data = logdict["data"]
                 data=Tools.text_indent(data,10,strip=True)
-                data=Tools.text_replace(data,text_strip=False,colors=True)
+                data=Tools.text_replace(data,text_strip=False)
                 print (data.rstrip())
 
 

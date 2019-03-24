@@ -1,24 +1,48 @@
 from Jumpscale import j
+
 import time
 
-JSBASE = j.application.JSBaseClass
+class StartupCMD(j.application.JSBaseDataObjClass):
 
+    _SCHEMATEXT ="""
+        @url = jumpscale.startupcmd.1
+        name* = ""
+        cmd_start = ""
+        cmd_stop = ""
+        path = ""
+        env = (dict)
+        ports = (li)
+        timeout = 0
+        process_strings = (ls)
+        pid = 0
+        """
 
-class TmuxCmd(j.application.JSBaseClass):
-    def __init__(self,name,pane_name,cmd="",path=None,env={},ports=[],stopcmd=None,process_strings=[],window_name="multi"):
-        JSBASE.__init__(self)
-        self.name = name
-        self.pane_name = pane_name
-        self.window_name = window_name
-        self.cmd = cmd
-        self.path = path
-        self.env = env
-        self.ports = ports
-        self.timeout = 60
-        self.stopcmd = stopcmd
-        self.process_strings = process_strings
-
+    def _init(self):
+        self._pane = j.tools.tmux.pane_get(window=self.name,pane="main",reset=False)
         self._pid = None
+
+    @property
+    def _cmd_path(self):
+        return j.sal.fs.joinPaths(j.data.startupcmd._cmdsdir,self.name)
+
+    def _error_raise(self,msg):
+        msg="error in jsrunprocess:%s\n%s\n"%(self,msg)
+        raise RuntimeError(msg)
+
+    @property
+    def pid(self):
+        if self.process is not None:
+            return self.process.pid
+
+    @property
+    def process(self):
+        child=self._pane.process_obj_child
+        return child
+
+
+    def save(self):
+        j.shell()
+        self.pid = None
         tdir = j.sal.fs.joinPaths(j.sal.fs.joinPaths(j.dirs.VARDIR,"tmuxcmds"))
         j.sal.fs.createDir(tdir)
         self._cmd_path = j.sal.fs.joinPaths(tdir,self.name)
@@ -30,23 +54,14 @@ class TmuxCmd(j.application.JSBaseClass):
         else:
             self.__dict__.update(j.data.serializers.toml.load(tpath))
 
-
-        self._pane = j.tools.tmux.pane_get(window=window_name,pane=pane_name,reset=False)
-
-
-
-    def _error_raise(self,msg):
-        msg="error in jsrunprocess:%s\n%s\n"%(self,msg)
-        raise RuntimeError(msg)
-
     def stop(self):
         self._log_warning("stop:\n%s"%self.name)
         if self.stopcmd:
-            cmd = j.tools.jinja2.template_render(text=self.stopcmd, args=self._ddict)
+            cmd = j.tools.jinja2.template_render(text=self.cmd_stop, args=self.data._ddict)
             self._log_warning("stopcmd:%s"%cmd)
             rc,out,err=j.sal.process.execute(cmd,die=False)
             time.sleep(0.2)
-        if self.pid:
+        if self.pid>0:
             self._log_info("found process to stop:%s"%self.pid)
             j.sal.process.kill(self.pid)
             time.sleep(0.2)
@@ -63,15 +78,6 @@ class TmuxCmd(j.application.JSBaseClass):
 
         self.wait_stopped(die=True,onetime=False,timeout=5)
 
-    @property
-    def pid(self):
-        if self.process is not None:
-            return self.process.pid
-
-    @property
-    def process(self):
-        child=self._pane.process_obj_child
-        return child
 
     @property
     def running(self):
@@ -143,7 +149,7 @@ class TmuxCmd(j.application.JSBaseClass):
         reset
         tmux clear
         clear
-        cat /sandbox/var/tmuxcmds/{{name}}.sh
+        cat /sandbox/var/cmds/{{name}}.sh
         set +ex
         {% for key,val in args.items() %}
         export {{key}}='{{val}}'
@@ -157,7 +163,7 @@ class TmuxCmd(j.application.JSBaseClass):
         """
 
         C2=j.core.text.strip(C)
-        C3 = j.tools.jinja2.template_render(text=C2, args=self.env, cmdpath=self.path, cmd=self.cmd,name=self.name)
+        C3 = j.tools.jinja2.template_render(text=C2, args=self.env, cmdpath=self.path, cmd=self.cmd_start,name=self.name)
         C3 = C3.replace("\"","'").replace("''","'")
         # for key,val in self.env.items():
 
@@ -170,8 +176,9 @@ class TmuxCmd(j.application.JSBaseClass):
 
         if "__" in self._pane.name:
             self._pane.kill()
-        self._pane.name_set(self._pane.name+"__"+self.name)
+        # self._pane.name_set(self._pane.name+"__"+self.name)
         self._pane.execute("source %s"%tpath)
+
         if checkrunning:
             self.wait_running()
             assert self.running

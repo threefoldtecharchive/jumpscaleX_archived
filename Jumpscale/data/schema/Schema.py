@@ -194,7 +194,7 @@ class Schema(j.application.JSBaseClass):
             if line.startswith("#"):
                 continue
             if "=" not in line:
-                raise j.exceptions.Input("did not find =, need to be there to define field, line=%s"%line, data=text)
+                raise j.exceptions.Input("did not find =, need to be there to define field, line=%s\ntext:%s"%(line,text))
 
             p = process(line)
 

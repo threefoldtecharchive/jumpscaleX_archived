@@ -8,7 +8,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
 
     def _init(self):
 
-        self.go_runtime = self.b.runtimes.golang
+        self.go_runtime = j.builder.runtimes.golang
 
     def install(self, reset=False):
         """

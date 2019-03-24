@@ -1,23 +1,25 @@
 from Jumpscale import j
 
+builder_method = j.builder.system._builder_method
 
 class BuilderCoreDns(j.builder.system._BaseClass):
     NAME = "coredns"
 
+    @builder_method(log=False)
     def _init(self):
-        self.golang = self.b.runtimes.golang
-        self.package_path = j.builder.runtimes.golang.package_path_get('coredns', host='github.com/coredns')
+        self.golang = j.builder.runtimes.golang
+        self._package_path = j.builder.runtimes.golang.package_path_get('coredns', host='github.com/coredns')
 
-    def build(self, reset=False):
+    @builder_method()
+    def build(self):
         """
 
         kosmos 'j.builder.network.coredns.build(reset=False)'
 
         installs and runs coredns server with redis plugin
         """
-        self._init()
-        if self._done_check("build", reset):
-            return
+        print(1)
+        return(2)
         # install golang
         j.builder.runtimes.golang.install(reset=False)
         j.builder.runtimes.golang.get('github.com/coredns/coredns', install=False, update=True)
@@ -32,40 +34,13 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         
         cp /sandbox/go_proj/src/github.com/coredns/coredns/coredns /sandbox/bin/coredns
         """
-        self.tools.run(C,args={"GITDIR":self.package_path},replace=True)
+        self.tools.run(C,args={"GITDIR":self._package_path},replace=True)
 
-        self._done_set('build')
 
-    def install(self,reset=False):
-        """
+    @builder_method()
+    def sandbox(self, zhub_client=None):
 
-        kosmos 'j.builder.network.coredns.install(reset=False)'
-
-        :param reset:
-        :return:
-        """
-        self.build(reset=reset)
-
-    def sandbox(self,  dest_path="/tmp/builders/coredns", sandbox_dir="sandbox", reset=False, create_flist=False, zhub_instance=None):
-        '''Copy built bins to dest_path and create flist if create_flist = True
-
-        :param dest_path: destination path to copy files into
-        :type dest_path: str
-        :param sandbox_dir: path to sandbox
-        :type sandbox_dir: str
-        :param reset: reset sandbox file transfer
-        :type reset: bool
-        :param create_flist: create flist after copying files
-        :type create_flist:bool
-        :param zhub_instance: hub instance to upload flist to
-        :type zhub_instance:str
-        '''
-
-        if self._done_check('sandbox',reset):
-            return
-        self.build(reset=reset)
-
-        coredns_bin = j.sal.fs.joinPaths(self.package_path, 'coredns')
+        coredns_bin = j.sal.fs.joinPaths(self._package_path, 'coredns')
         dir_dest = j.sal.fs.joinPaths(dest_path, coredns_bin[1:]) 
         j.builder.tools.dir_ensure(dir_dest)
         j.sal.fs.copyFile(coredns_bin, dir_dest)
@@ -78,10 +53,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         self.startup = j.sal.fs.readFile(startup_file)
         j.sal.fs.copyFile(startup_file,  j.sal.fs.joinPaths(dest_path, sandbox_dir))
 
-        self._done_set('sandbox')
 
-        if create_flist:
-            self.flist_create(dest_path, zhub_instance)
 
     def start(self, config_file=None, args=None):
         """Starts coredns with the configuration file provided
@@ -92,11 +64,17 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         :rtype: tmux.Pane
         """
         self._init()
-        cmd = "{coredns_path}/coredns -conf {path_config}".format(coredns_path=self.package_path, path_config=config_file)
+        cmd = "{coredns_path}/coredns -conf {path_config}".format(coredns_path=self._package_path, path_config=config_file)
         return j.tools.tmux.execute(window="coredns", cmd=cmd)
 
 
-    def test(self):
+    def test(self,reset=False):
+        """
+        build on local ubuntu & test a client
+        :return:
+        """
+
+
 
         if not j.sal.process.checkInstalled(j.builder.network.coredns.NAME):
             # j.builder.network.coredns.stop()
@@ -111,4 +89,24 @@ class BuilderCoreDns(j.builder.system._BaseClass):
 
         #CONFIGURE REDIS BACKEND
         #TODO: need to do a test on UDP port for some DNS queries
+
+        #use the test on the client
+
+
+    def test_zos(self,zosclient=None,flist=None,build=False):
+
+        if build:
+            #TODO:*1 build the app and sandbox & create flist, created flist is then used here in this test
+            pass
+
+        if not flist:
+            flist = 1 #TODO:*1 get the std flist which is on tfhub
+
+        if not zosclient:
+            zosclient = j.clients.zos.get("test") #NEEDS TO EXIST
+
+        #launch container on selected zosclient
+
+
+
 

@@ -10,6 +10,7 @@ from .BASECLASSES.JSFactoryBase import JSFactoryBase
 from .BASECLASSES.JSBaseConfig import JSBaseConfig
 from .BASECLASSES.JSBaseConfigs import JSBaseConfigs
 from .BASECLASSES.JSBaseConfigParent import JSBaseConfigParent
+from .BASECLASSES.JSBaseDataObj import JSBaseDataObj
 import gc
 import sys
 import types
@@ -46,6 +47,9 @@ class Application(object):
         self._JSGroup = JSGroup
 
         self.appname = "unknown"
+
+
+        self.JSBaseDataObjClass = JSBaseDataObj
 
     @property
     def appname(self):
@@ -133,6 +137,9 @@ class Application(object):
         """
         return JSFactoryBase
 
+
+
+
     @property
     def JSBaseConfigClass(self):
         """
@@ -192,7 +199,6 @@ class Application(object):
     @debug.setter
     def debug(self, value):
         self._debug = value
-        raise RuntimeError("not implemented yet")
 
     def break_into_jshell(self, msg="DEBUG NOW"):
         if self.debug is True:
@@ -360,7 +366,7 @@ class Application(object):
                     continue
                 if key in ["exceptions","core","dirs","application","data_units","errorhandler"]:
                     continue
-                self._j.core.tools.log("iterate jumpscale factory:%s"%key)
+                # self._j.core.tools.log("iterate jumpscale factory:%s"%key)
                 for key2,item2 in item.__dict__.items():
                     # self._j.core.tools.log("iterate rootobj:%s"%key2)
                     if item2 is not None:

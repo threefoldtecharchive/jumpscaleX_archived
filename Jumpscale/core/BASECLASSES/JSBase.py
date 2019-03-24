@@ -124,7 +124,7 @@ class JSBase:
 
     def _init2(self,**kwargs):
         """
-        happens after _init by the caller of the object, meant to be used by developers of the base classes
+        meant to be used by developers of the base classes
         :return:
         """
         self._obj_cache_reset()
