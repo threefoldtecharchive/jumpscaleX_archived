@@ -2,9 +2,10 @@ from Jumpscale import j
 
 import time
 
+
 class StartupCMD(j.application.JSBaseDataObjClass):
 
-    _SCHEMATEXT ="""
+    _SCHEMATEXT = """
         @url = jumpscale.startupcmd.1
         name* = ""
         cmd_start = ""
@@ -18,15 +19,21 @@ class StartupCMD(j.application.JSBaseDataObjClass):
         """
 
     def _init(self):
-        self._pane = j.tools.tmux.pane_get(window=self.name,pane="main",reset=False)
+        self._pane_ = None
         self._pid = None
 
     @property
-    def _cmd_path(self):
-        return j.sal.fs.joinPaths(j.data.startupcmd._cmdsdir,self.name)
+    def _pane(self):
+        if self._pane_ is None:
+            self._pane_ = j.tools.tmux.pane_get(window=self.name, pane="main", reset=False)
+        return self._pane_
 
-    def _error_raise(self,msg):
-        msg="error in jsrunprocess:%s\n%s\n"%(self,msg)
+    @property
+    def _cmd_path(self):
+        return j.sal.fs.joinPaths(j.data.startupcmd._cmdsdir, self.name)
+
+    def _error_raise(self, msg):
+        msg = "error in jsrunprocess:%s\n%s\n" % (self, msg)
         raise RuntimeError(msg)
 
     @property
@@ -36,114 +43,104 @@ class StartupCMD(j.application.JSBaseDataObjClass):
 
     @property
     def process(self):
-        child=self._pane.process_obj_child
+        child = self._pane.process_obj_child
         return child
 
-
     def save(self):
-        j.shell()
-        self.pid = None
-        self._cmd_path = j.sal.fs.joinPaths(tdir,self.name)
         tpath = self._cmd_path+".toml"
+        # means we need to serialize & save
+        j.data.serializers.toml.dump(tpath, self._ddict)
 
-        if self.cmd!="":
-            #means we need to serialize & save
-            j.data.serializers.toml.dump(tpath,self._ddict)
-        else:
+    def load(self):
+        tpath = self._cmd_path+".toml"
+        if j.sal.fs.exists(tpath):
             self.__dict__.update(j.data.serializers.toml.load(tpath))
 
     def stop(self):
-        self._log_warning("stop:\n%s"%self.name)
-        if self.stopcmd:
+        self._log_warning("stop:\n%s" % self.name)
+        if self.cmd_stop:
             cmd = j.tools.jinja2.template_render(text=self.cmd_stop, args=self.data._ddict)
-            self._log_warning("stopcmd:%s"%cmd)
-            rc,out,err=j.sal.process.execute(cmd,die=False)
+            self._log_warning("stopcmd:%s" % cmd)
+            rc, out, err = j.sal.process.execute(cmd, die=False)
             time.sleep(0.2)
-        if self.pid>0:
-            self._log_info("found process to stop:%s"%self.pid)
+        if self.pid > 0:
+            self._log_info("found process to stop:%s" % self.pid)
             j.sal.process.kill(self.pid)
             time.sleep(0.2)
-        if self.process_strings!=[]:
+        if self.process_strings != []:
             for pstring in self.process_strings:
-                self._log_debug("find processes to kill:%s"%pstring)
+                self._log_debug("find processes to kill:%s" % pstring)
                 pids = j.sal.process.getPidsByFilter(pstring)
-                while pids!=[]:
+                while pids != []:
                     for pid in pids:
-                        self._log_debug("will stop process with pid: %s"%pid)
+                        self._log_debug("will stop process with pid: %s" % pid)
                         j.sal.process.kill(pid)
                     time.sleep(0.2)
                     pids = j.sal.process.getPidsByFilter(pstring)
 
-        self.wait_stopped(die=True,onetime=False,timeout=5)
-
+        self.wait_stopped(die=True, timeout=5)
 
     @property
     def running(self):
-        self._log_debug("running:%s"%self.name)
+        self._log_debug("running:%s" % self.name)
         if self.ports == [] and self.process is None:
             return False
-        return self.wait_running(die=False,onetime=True)
+        return self.wait_running(die=False, timeout=2)
 
-    def wait_stopped(self,die=True,onetime=False,timeout=5):
-        self._log_debug("wait_stopped:%s"%self.name)
-        end=j.data.time.epoch+timeout
-        while onetime or j.data.time.epoch<end:
-            nr=0
+    def wait_stopped(self, die=True, timeout=5):
+        self._log_debug("wait_stopped:%s" % self.name)
+        end = j.data.time.epoch+timeout
+        while j.data.time.epoch < end:
+            nr = 0
             for port in self.ports:
-                if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost",port=port)==False:
-                    nr+=1
-            if nr==len(self.ports):
-                self._log_info("IS HALTED %s"%self.name)
+                if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=port) == False:
+                    nr += 1
+            if nr == len(self.ports):
+                self._log_info("IS HALTED %s" % self.name)
                 return True
-            if onetime:
-                break
         if die:
             self._error_raise("could not stop")
         else:
             return False
 
-
-    def wait_running(self,die=True,onetime=False,timeout=10):
-        if timeout==None:
+    def wait_running(self, die=True, timeout=10):
+        if timeout is None:
             timeout = self.timeout
-        end=j.data.time.epoch+timeout
+        end = j.data.time.epoch+timeout
         if self.ports == []:
-            time.sleep(1) #need this one or it doesn't check if it failed
-        self._log_debug("wait to run:%s (timeout:%s,onetime:%s)"%(self.name,timeout,onetime))
-        while j.data.time.epoch<end:
+            time.sleep(1)  # need this one or it doesn't check if it failed
+        self._log_debug("wait to run:%s (timeout:%s)" % (self.name, timeout))
+        while j.data.time.epoch < end:
             if self.ports == []:
-                if self.process!=None and self.process.is_running():
+                if self.process and self.process.status().casefold() in ['running', 'sleeping', 'idle']:
+                    self._log_info("IS RUNNING %s" % self.name)
                     return True
-                continue
             else:
-                nr=0
+                nr = 0
                 for port in self.ports:
-                    if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost",port=port):
-                        nr+=1
-                if nr==len(self.ports) and len(self.ports)>0:
-                    self._log_info("IS RUNNING %s"%self.name)
+                    if j.sal.nettools.tcpPortConnectionTest(ipaddr="localhost", port=port):
+                        nr += 1
+                if nr == len(self.ports) and len(self.ports) > 0:
+                    self._log_info("IS RUNNING %s" % self.name)
                     return True
-            if onetime:
-                break
         if die:
             self._error_raise("could not start")
         else:
             return False
 
-
-    def start(self,reset=False,checkrunning=True):
-        self._log_debug("start:%s"%self.name)
+    def start(self, reset=False, checkrunning=True):
+        self._log_debug("start:%s" % self.name)
         if reset:
             self.stop()
             self._pane.reset()
         else:
             if self.running:
-                self._log_info("no need to start was already started:%s"%self.name)
+                self._log_info("no need to start was already started:%s" % self.name)
                 return
 
         self._pid = None
 
-        C="""         
+        C = """         
         reset
         tmux clear
         clear
@@ -160,27 +157,24 @@ class StartupCMD(j.application.JSBaseDataObjClass):
 
         """
 
-        C2=j.core.text.strip(C)
-        C3 = j.tools.jinja2.template_render(text=C2, args=self.env, cmdpath=self.path, cmd=self.cmd_start,name=self.name)
-        C3 = C3.replace("\"","'").replace("''","'")
+        C2 = j.core.text.strip(C)
+        C3 = j.tools.jinja2.template_render(text=C2, args=self.env, cmdpath=self.path,
+                                            cmd=self.cmd_start, name=self.name)
+        C3 = C3.replace("\"", "'").replace("''", "'")
         # for key,val in self.env.items():
 
-        self._log_debug("\n%s"%C3)
+        self._log_debug("\n%s" % C3)
 
         tpath = self._cmd_path+".sh"
-        j.sal.fs.writeFile(tpath,C3+"\n\n")
+        j.sal.fs.writeFile(tpath, C3+"\n\n")
 
-        j.sal.fs.chmod(tpath,0o770)
+        j.sal.fs.chmod(tpath, 0o770)
 
         if "__" in self._pane.name:
             self._pane.kill()
         # self._pane.name_set(self._pane.name+"__"+self.name)
-        self._pane.execute("source %s"%tpath)
+        self._pane.execute("source %s" % tpath)
 
         if checkrunning:
-            self.wait_running()
+            running = self.wait_running()
             assert self.running
-
-
-
-

@@ -319,7 +319,7 @@ class JSBase:
 
         """
 
-        if level < self.__class__._logger_level:
+        if level > self.__class__._logger_level:
             return
 
         frame_ = inspect.currentframe().f_back

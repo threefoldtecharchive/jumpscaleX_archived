@@ -19,8 +19,7 @@ class ZDBServer(j.application.JSBaseClass):
         self.port = port
         self.mode = mode
         self.adminsecret = adminsecret
-        self.tmux_window = "digitalme"
-        self.tmux_panel = "p13"
+
 
 
     def isrunning(self):
@@ -56,7 +55,7 @@ class ZDBServer(j.application.JSBaseClass):
         if destroydata:
             self.destroy()
 
-        self.tmuxcmd.start()
+        self.startupcmd.start()
 
 
         self._log_info("waiting for zdb server to start on (%s:%s)" % (self.addr, self.port))
@@ -73,7 +72,7 @@ class ZDBServer(j.application.JSBaseClass):
 
 
     @property
-    def tmuxcmd(self):
+    def startupcmd(self):
 
         idir =  "%s/index/"%(self.datadir)
         ddir =  "%s/data/"%(self.datadir)
@@ -86,8 +85,13 @@ class ZDBServer(j.application.JSBaseClass):
 
         cmd="zdb --listen %s --port %s --index %s --data %s --mode %s --admin %s --protect"%(addr,self.port,idir,ddir,self.mode,self.adminsecret)
 
+        tmux_window = "digitalme"
+        tmux_panel = "p13"
+
+        j.tools.tmux.window_digitalme_get()
+
         return j.tools.tmux.cmd_get(name="zdb_%s"%self.name,
-                    window=self.tmux_window,pane=self.tmux_panel,
+                    window_name=tmux_window,pane_name=tmux_panel,
                     cmd=cmd,path="/tmp",ports=[self.port],
                     process_strings = ["wwwww:"])
 
