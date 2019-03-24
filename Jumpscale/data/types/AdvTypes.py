@@ -223,7 +223,7 @@ class IPPort(Integer):
         return False
     
     def clean(self, value):
-        if value is None:
+        if not value:
             return self.default_get()
         if not self.check(value):
             raise ValueError("invalid port: %s" % value)
