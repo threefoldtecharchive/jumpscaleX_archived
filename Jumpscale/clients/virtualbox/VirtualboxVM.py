@@ -12,17 +12,17 @@ class VirtualboxVM(j.application.JSBaseClass):
         self.client = j.clients.virtualbox.client
         self.name = name
         self._guid = ""
-        self._logger_enable()
+
 
     def _cmd(self, cmd):
         cmd = "VBoxManage %s" % cmd
-        self._logger.debug("vb cmd:%s" % cmd)
+        self._log_debug("vb cmd:%s" % cmd)
         rc, out, err = j.sal.process.execute(cmd,showout=False)
         return out
 
     def _cmd2(self, cmd):
         cmd = "VBoxManage modifyvm %s %s" % (self.name, cmd)
-        self._logger.debug("vb2 cmd:%s" % cmd)
+        self._log_debug("vb2 cmd:%s" % cmd)
         rc, out, err = j.sal.process.execute(cmd,showout=False)
         return out
 
@@ -41,7 +41,7 @@ class VirtualboxVM(j.application.JSBaseClass):
         p = "%s/%s.vbox-prev" % (self.path, self.name)
         if j.sal.fs.exists(p):
             j.sal.fs.remove(p)
-        self._logger.debug("delete done")
+        self._log_debug("delete done")
 
     @property
     def exists(self):
@@ -71,7 +71,7 @@ class VirtualboxVM(j.application.JSBaseClass):
         path = "%s/%s.vdi" % (self.path, name)
         d = self.client.disk_get(path=path)
         d.create(size=size, reset=reset)
-        self._logger.debug("disk create done")
+        self._log_debug("disk create done")
         return d
 
 
@@ -114,7 +114,7 @@ class VirtualboxVM(j.application.JSBaseClass):
             cmd = "storageattach %s --storagectl \"IDE Controller\" --port 0 --device 0 --type dvddrive --medium %s" % (
             self.name, isopath)
             self._cmd(cmd)
-        self._logger.debug("create done")
+        self._log_debug("create done")
 
     def start(self):
         args = ""
@@ -129,7 +129,7 @@ class VirtualboxVM(j.application.JSBaseClass):
                 args += "--type headless"
 
         self._cmd('startvm %s "%s"' % (args, self.name))
-        self._logger.debug("start done")
+        self._log_debug("start done")
 
     @property
     def info(self):
@@ -165,10 +165,10 @@ class VirtualboxVM(j.application.JSBaseClass):
         if self.is_running:
             try:
                 self._cmd('controlvm "%s" poweroff' % self.name)
-                self._logger.info("stopping vm : %s", self.name)
+                self._log_info("stopping vm : %s", self.name)
             except Exception as e:
-                self._logger.info("vm : %s wasn't running" % self.name)
-            self._logger.debug("stop done")
+                self._log_info("vm : %s wasn't running" % self.name)
+            self._log_debug("stop done")
 
     def __repr__(self):
         return "vm: %-20s%s" % (self.name, self.path)

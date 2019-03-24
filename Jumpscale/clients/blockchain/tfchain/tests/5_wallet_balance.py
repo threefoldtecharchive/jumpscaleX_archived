@@ -35,15 +35,21 @@ def main(self):
     # interaction with the tfchain network
     assert w.network_type == "DEV"
 
+    # getting all personal wallet addresses can be done using the addresses property
+    assert w.addresses == ['014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a', '018f5a43327fb865843808ddf549f1b1c06376e07195423778751056be626841f42dcf25a593fd']
+
     # getting the balance of a wallet is as easy as getting the 'balance' property
     balance = w.balance
 
     # the available and locked tokens can be easily checked
-    assert balance.available.totft() == '3698'
+    assert str(balance.available)== '3698'
     assert str(balance.locked) == '0'
 
+    # getting all multisig wallet addresses can be done using the addresses_multisig property
+    w.addresses_multisig == ['039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a']
+
     # MultiSig wallets can be easily checked as well
-    assert str(balance.wallets['039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a'].available) == '42000000000'
+    assert str(balance.wallets['039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a'].available) == '42'
     assert str(balance.wallets['039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a'].locked) == '0'
     # MultiSig wallets balance reports also contain the owners and signatures required
     msbalance = balance.wallets['039e16ed27b2dfa3a5bbb1fa2b5f240ba7ff694b34a52bfc5bed6d4c3b14b763c011d7503ccb3a']
@@ -54,6 +60,7 @@ def main(self):
 
     # a balance can be used for funding amounts
     # (NOTE that is it up to you to ensure that your balance object is used only until it becomes out of date)
-    outputs, remainder = balance.fund('1.2345')
-    assert remainder.totft() == '196.7655'
-    assert sum([co.value for co in outputs]).totft() == '198'
+    inputs, remainder, suggested_refund = balance.fund('1.2345')
+    assert str(remainder) == '196.7655'
+    assert str(sum([ci.parent_output.value for ci in inputs])) == '198'
+    assert suggested_refund == None # no refund is suggested, as there are too many sources to pick from (2)

@@ -72,7 +72,7 @@ class GiteaClient(JSConfigBase):
         :return: gitea org object
         :rtype: object
         """
-        self._logger.info("org:get:%s" % name)
+        self._log_info("org:get:%s" % name)
         if name not in self.orgs_currentuser_list().keys():
             raise RuntimeError("Could not find %s in orgs on gitea" % name)
         return GiteaOrg(self, name)
@@ -88,7 +88,7 @@ class GiteaClient(JSConfigBase):
         :param remove_old: bool, optional
         """
 
-        self._logger.info("labels_milestones_set:%s:%s" % (orgname, reponame))
+        self._log_info("labels_milestones_set:%s:%s" % (orgname, reponame))
         if orgname == "*":
             for orgname0 in self.orgs_currentuser_list():
                 self.labels_milestones_set(orgname=orgname0, reponame=reponame, remove_old=remove_old)
@@ -98,8 +98,8 @@ class GiteaClient(JSConfigBase):
 
         if reponame == "*":
             for reponame0 in org.repos_list():
-                # self._logger.debug(org.repos_list())
-                # self._logger.debug("reponame0:%s"%reponame0)
+                # self._log_debug(org.repos_list())
+                # self._log_debug("reponame0:%s"%reponame0)
                 self.labels_milestones_set(orgname=orgname, reponame=reponame0, remove_old=remove_old)
             return
 

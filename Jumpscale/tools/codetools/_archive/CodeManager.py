@@ -82,7 +82,7 @@ class CodeManager(j.application.JSBaseClass):
         for pathItem in files:
             if not self._pathIgnoreCheck(pathItem):
                 path2 = pathItem.replace(path, "")
-                self._logger.debug(("parse %s" % path2))
+                self._log_debug(("parse %s" % path2))
                 if not path2 == "/apps/incubaiddevelopmentprocess/appserver/service_developmentprocess/extensions/codeparser/Parser.py":
                     if path2[0] == "/":
                         path3 = path2[1:]
@@ -162,7 +162,7 @@ class CodeManagerFile(j.application.JSBaseClass):
         return text, result
 
     def parseTimeInfo(self, timestring, modelobj, defaults=[8, 16, 8, 4, 8]):
-        # self._logger.debug "timestring: %s" % timestring
+        # self._log_debug "timestring: %s" % timestring
         timeItems = timestring.split("/")
         modelobj.time_architecture = defaults[0]
         modelobj.time_coding = defaults[1]
@@ -258,7 +258,7 @@ class CodeManagerFile(j.application.JSBaseClass):
         descr = ""
         state = "start"
         tags = ""
-        # self._logger.debug "parse task: %s" % text
+        # self._log_debug "parse task: %s" % text
         text, users = self.getUsers(text)
         text = text.replace("  ", " ")
         text = text.replace("  ", " ")
@@ -266,7 +266,7 @@ class CodeManagerFile(j.application.JSBaseClass):
             return ["", "", "", "", ""]
         usersfound = False
         for item in text.strip().split(" "):
-            # self._logger.debug "item:  %s" % item
+            # self._log_debug "item:  %s" % item
             if state == "endofmeta":
                 descr += item + " "
             if state == "start":
@@ -569,8 +569,8 @@ class CodeManagerFile(j.application.JSBaseClass):
                 obj.model.context = self._getLinesAround(fullPath, line, 10, 20)
 
                 obj.model.descrshort = self.shortenDescr(descr)
-                self._logger.debug(("tasktext:%s" % line))
-                # self._logger.debug "infotext:%s" % infotext
+                self._log_debug(("tasktext:%s" % line))
+                # self._log_debug "infotext:%s" % infotext
                 self._parseTaskInfo(obj.model, infotext)
                 self.parseTimeInfo(timetext, obj.model, defaults=[0, 1, 0, 1, 0])
                 if obj.model.storyid == 0:

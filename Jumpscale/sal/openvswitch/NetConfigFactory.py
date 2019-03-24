@@ -31,7 +31,7 @@ class NetConfigFactory(j.application.JSBaseClass):
         return self._layout.nicdetail
 
     def _exec(self, cmd, failOnError=True):
-        self._logger.debug(cmd)
+        self._log_debug(cmd)
         rc, out = self._executor.execute(cmd, die=failOnError)
         return out
 
@@ -343,8 +343,8 @@ iface $bondname inet manual
 
         self._executor.execute("/etc/init.d/openvswitch-switch restart")
 
-        self._logger.debug((self._exec("ip a", failOnError=True)))
-        self._logger.debug((self._exec("ovs-vsctl show", failOnError=True)))
+        self._log_debug((self._exec("ip a", failOnError=True)))
+        self._log_debug((self._exec("ovs-vsctl show", failOnError=True)))
 
     def newBondedBackplane(self, name, interfaces, trunks=None):
         """

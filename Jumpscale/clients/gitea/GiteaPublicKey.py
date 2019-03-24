@@ -87,7 +87,7 @@ class GiteaPublicKey(j.application.JSBaseClass):
         is_valid, err = self._validate(create=True)
 
         if not commit or not is_valid:
-            self._logger.debug(err)
+            self._log_debug(err)
             return is_valid
 
         try:
@@ -97,14 +97,14 @@ class GiteaPublicKey(j.application.JSBaseClass):
                 setattr(self, k, v)
             return True
         except Exception as e:
-            self._logger.debug(e.response.content)
+            self._log_debug(e.response.content)
             return False
 
     def delete(self, commit=True):
         is_valid, err = self._validate(delete=True)
 
         if not commit or not is_valid:
-            self._logger.debug(err)
+            self._log_debug(err)
             return is_valid
 
         try:
@@ -112,7 +112,7 @@ class GiteaPublicKey(j.application.JSBaseClass):
             self.id = None
             return True
         except Exception as e:
-            self._logger.debug(e.response.content)
+            self._log_debug(e.response.content)
             return False
 
     def __repr__ (self):

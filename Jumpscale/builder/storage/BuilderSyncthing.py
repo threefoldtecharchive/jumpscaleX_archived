@@ -95,7 +95,7 @@ class BuilderSyncthing(j.builder.system._BaseClass):
         for item in r:
             if item.tag == "gui":
                 for item2 in item:
-                    self._logger.info(item2.tag)
+                    self._log_info(item2.tag)
                     if item2.tag == "apikey":
                         return item2.text
 

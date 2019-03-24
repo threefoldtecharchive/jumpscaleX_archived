@@ -7,4 +7,3 @@ class ZDBClientDirectMode(ZDBClientBase):
         super().__init__(factory=factory,addr=addr, port=port, mode="direct", nsname=nsname, secret=secret)
 
     # No custom logic yet
-    pass

@@ -134,7 +134,7 @@ class ClassDoc(j.application.JSBaseClass):
             self.errors += '#### Error trying to add %s source in %s.\n' % (
                 name, self.location)
 
-        self._logger.debug("ADD METHOD:%s %s" % (self.path, name))
+        self._log_debug("ADD METHOD:%s %s" % (self.path, name))
         md = MethodDoc(method, name, self)
         self.methods[name] = md
         return source, md.params
@@ -229,13 +229,13 @@ class ObjectInspector(j.application.JSBaseClass):
                     try:
                         exec(toexec)
                     except Exception as e:
-                        self._logger.error(("COULD NOT IMPORT %s" % toexec))
+                        self._log_error(("COULD NOT IMPORT %s" % toexec))
                         errors += "**%s**\n\n" % toexec
                         errors += "%s\n\n" % e
         return errors
 
     def raiseError(self, errormsg):
-        self._logger.error("ERROR:%s" % errormsg)
+        self._log_error("ERROR:%s" % errormsg)
         errormsg = errormsg.strip()
         errormsg = errormsg.strip("-")
         errormsg = errormsg.strip("*")
@@ -323,7 +323,7 @@ class ObjectInspector(j.application.JSBaseClass):
         @param object is start object
         @param objectLocationPath is full location name in object tree e.g. j.sal.fs , no need to fill in
         """
-        self._logger.debug(objectLocationPath)
+        self._log_debug(objectLocationPath)
         if obj is None:
             try:
                 obj = eval(objectLocationPath)
@@ -349,7 +349,7 @@ class ObjectInspector(j.application.JSBaseClass):
         if obj not in self.visited and obj:
             self.visited.append(obj)
         else:
-            self._logger.debug("RECURSIVE:%s" % objectLocationPath)
+            self._log_debug("RECURSIVE:%s" % objectLocationPath)
             return
         attrs = dir(obj)
 
@@ -381,12 +381,12 @@ class ObjectInspector(j.application.JSBaseClass):
             try:
                 objattribute = eval("obj.%s" % objattributename)
             except Exception as e:
-                self._logger.error(str(e))
+                self._log_error(str(e))
                 self.raiseError("cannot eval %s" % objectLocationPath2)
                 continue
             if objattributename.upper() == objattributename:
                 # is special type or constant
-                self._logger.debug("special type: %s" % objectLocationPath2)
+                self._log_debug("special type: %s" % objectLocationPath2)
                 j.sal.fs.writeFile(
                     self.apiFileLocation, "%s?7\n" %
                     objectLocationPath2, True)
@@ -408,7 +408,7 @@ class ObjectInspector(j.application.JSBaseClass):
                                 recursive=True, parent=obj, obj=obj2)
 
                 except Exception as e:
-                    self._logger.error(
+                    self._log_error(
                         "the _getFactoryEnabledClasses gives error")
                     import ipdb
             elif inspect.isfunction(objattribute) or inspect.ismethod(objattribute) or inspect.isbuiltin(objattribute) or inspect.isgenerator(objattribute):
@@ -421,14 +421,14 @@ class ObjectInspector(j.application.JSBaseClass):
                     filepath = methodpath
                     if not methodpath.startswith(self.base):
                         self.classDocs.pop(objectLocationPath2, "")
-                        self._logger.info("SKIPPED:%s" % objectLocationPath2)
+                        self._log_info("SKIPPED:%s" % objectLocationPath2)
                         return
                 except Exception as e:
-                    self._logger.error(str(e))
+                    self._log_error(str(e))
 
                 source, params = self._processMethod(
                     objattributename, objattribute, objectLocationPath2, obj)
-                self._logger.debug("instancemethod: %s" % objectLocationPath2)
+                self._log_debug("instancemethod: %s" % objectLocationPath2)
                 j.sal.fs.writeFile(
                     self.apiFileLocation, "%s?4(%s)\n" %
                     (objectLocationPath2, params), True)
@@ -437,7 +437,7 @@ class ObjectInspector(j.application.JSBaseClass):
                     objectLocationPath2, filepath, methodargs)
 
             elif isinstance(objattribute, (str, bool, int, float, list, tuple, dict, property)) or objattribute is None:
-                self._logger.debug("property: %s" % objectLocationPath2)
+                self._log_debug("property: %s" % objectLocationPath2)
                 j.sal.fs.writeFile(
                     self.apiFileLocation, "%s?8\n" %
                     objectLocationPath2, True)
@@ -448,7 +448,7 @@ class ObjectInspector(j.application.JSBaseClass):
                 j.sal.fs.writeFile(
                     self.apiFileLocation, "%s?8\n" %
                     objectLocationPath2, True)
-                self._logger.debug(
+                self._log_debug(
                     "class or instance: %s" %
                     objectLocationPath2)
                 try:
@@ -470,7 +470,7 @@ class ObjectInspector(j.application.JSBaseClass):
                          tuple)) or objattribute is not None:
                         self.inspect(objectLocationPath2, parent=objattribute)
                 except Exception as e:
-                    self._logger.error(str(e))
+                    self._log_error(str(e))
             else:
                 pass
 

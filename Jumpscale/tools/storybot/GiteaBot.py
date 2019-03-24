@@ -39,7 +39,6 @@ class GiteaBot:
         self.api_url = api_url
         self.base_url = base_url
         self._repos = repos
-        self._logger = j.logger.get("j.tools.StoryBot")
 
     @property
     def repos(self):
@@ -95,7 +94,7 @@ class GiteaBot:
         try:
             repos_l = self.client.api.users.userListRepos(user)[0]
         except Exception as err:
-            self._logger.error("Something went wrong getting Gitea repos from user '%s': %s" % (user, err))
+            self._log_error("Something went wrong getting Gitea repos from user '%s': %s" % (user, err))
             return repos
         
         for r in repos_l:
@@ -109,11 +108,11 @@ class GiteaBot:
         Returns:
             [Story] -- A list of stories (Story) on the provided Gitea repos
         """
-        self._logger.info("Checking for stories on gitea...")
+        self._log_info("Checking for stories on gitea...")
         stories = []
 
         if not self.repos:
-            self._logger.info("No repos provided to the Gitea bot")
+            self._log_info("No repos provided to the Gitea bot")
             return stories
 
         gls = []
@@ -124,7 +123,7 @@ class GiteaBot:
         for gl in gls:
             stories.extend(gl.value)
 
-        self._logger.info("Done checking for stories on Gitea!")
+        self._log_info("Done checking for stories on Gitea!")
         return stories
     
     def _get_story_repo(self, repo):
@@ -136,7 +135,7 @@ class GiteaBot:
         Returns:
             [Story] -- List of stories (Story) found in repo
         """
-        self._logger.debug("checking repo '%s'" % repo)
+        self._log_debug("checking repo '%s'" % repo)
         stories = []
 
         repoowner, reponame = _repoowner_reponame(repo, self.username)
@@ -148,13 +147,13 @@ class GiteaBot:
         try:
             issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state":"all"})[0]
         except Exception as err:
-            self._logger.error("Could not fetch Gitea repo '%s': %s" % (repo, err))
+            self._log_error("Could not fetch Gitea repo '%s': %s" % (repo, err))
             return stories
 
         for iss in issues:
             html_url = self._parse_html_url(repoowner,reponame,iss.number)
 
-            self._logger.debug("checking issue '%s'" % html_url)
+            self._log_debug("checking issue '%s'" % html_url)
             # not a story if no type story label
             if not self.LABEL_STORY in [label.name for label in iss.labels]:
                 continue
@@ -163,7 +162,7 @@ class GiteaBot:
             if title[-1:] == ")":
                 start_i = title.rfind("(")
                 if start_i == -1:
-                    self._logger.error("issue title of %s has a closeing bracket, but no opening bracket", html_url)
+                    self._log_error("issue title of %s has a closeing bracket, but no opening bracket", html_url)
                     continue
                 story_title = title[start_i + 1:-1]
                 story_desc = title[:start_i].strip()
@@ -188,13 +187,13 @@ class GiteaBot:
         Returns:
             [Task] -- List of tasks (Task) found in the provided Gitea repos
         """
-        self._logger.info("Linking tasks on Gitea to stories...")
+        self._log_info("Linking tasks on Gitea to stories...")
 
         if not stories:
-            self._logger.info("No stories provided to link Gitea issues with")
+            self._log_info("No stories provided to link Gitea issues with")
             return
         if not self.repos:
-            self._logger.info("No repos provided to the Gitea bot")
+            self._log_info("No repos provided to the Gitea bot")
             return
 
         gls = []
@@ -205,7 +204,7 @@ class GiteaBot:
         for gl in gls:
             tasks.extend(gl.value)
 
-        self._logger.info("Done linking tasks on Gitea to stories!")
+        self._log_info("Done linking tasks on Gitea to stories!")
 
         return tasks
     
@@ -219,7 +218,7 @@ class GiteaBot:
         Returns:
             [Task] -- List of tasks (Task) found in the provided repo
         """
-        self._logger.debug("checking repo '%s'" % repo)
+        self._log_debug("checking repo '%s'" % repo)
         tasks = []
         repoowner, reponame = _repoowner_reponame(repo, self.username)
          # skip wildcard repos
@@ -229,17 +228,17 @@ class GiteaBot:
         try:
             issues = self.client.api.repos.issueListIssues(reponame, repoowner, query_params={"state":"all"})[0]
         except Exception as err:
-            self._logger.error("Could not fetch Gitea repo '%s': %s" % (repo, err))
+            self._log_error("Could not fetch Gitea repo '%s': %s" % (repo, err))
             return tasks
 
         for iss in issues:
             title = iss.title
             html_url = self._parse_html_url(repoowner, reponame, iss.number)
 
-            self._logger.debug("checking issue: %s" % html_url)
+            self._log_debug("checking issue: %s" % html_url)
             end_i = title.find(":")
             if end_i == -1:
-                self._logger.debug("issue is not a story task")
+                self._log_debug("issue is not a story task")
                 continue
             found_titles = [item.strip() for item in title[:end_i].split(",")]
             data = {}
@@ -248,26 +247,26 @@ class GiteaBot:
                 story_i = _index_story(stories, story_title)
                 story = stories[story_i]
                 if story_i == -1:
-                    self._logger.debug("Story title was not in story list")
+                    self._log_debug("Story title was not in story list")
                     continue
                 # update task body
-                self._logger.debug("Parsing task issue body")
+                self._log_debug("Parsing task issue body")
                 try:
                     data["body"] = _parse_body(data["body"], story)
                 except RuntimeError as err:
-                    self._logger.error("Something went wrong parsing body for %s:\n%s" % (html_url, err))
+                    self._log_error("Something went wrong parsing body for %s:\n%s" % (html_url, err))
                     continue
                 self.client.api.repos.issueEditIssue(data, str(iss.number), reponame, repoowner)
 
                 # update story with task
-                self._logger.debug("Parsing story issue body")
+                self._log_debug("Parsing story issue body")
                 desc = title[end_i +1 :].strip()
                 task = Task(url=html_url, description=desc, state=iss.state,body=data["body"], 
                     update_func=self._update_iss_func(iss.number, reponame, repoowner))
                 try:
                     story.update_list(task)
                 except RuntimeError as err:
-                    self._logger.error("Something went wrong parsing body for %s:\n%s" % (task.url, err))
+                    self._log_error("Something went wrong parsing body for %s:\n%s" % (task.url, err))
                     continue
                 # if task already present replace it with current task
                 if task in tasks:

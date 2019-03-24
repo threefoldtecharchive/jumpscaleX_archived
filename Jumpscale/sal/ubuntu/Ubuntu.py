@@ -181,7 +181,7 @@ class Ubuntu(JSBaseClass):
         :param package_name: package name to be removed
         :type package_name: str
         """
-        self._logger.info('ubuntu remove package:%s' % package_name)
+        self._log_info('ubuntu remove package:%s' % package_name)
         self.check()
         if self._cache_ubuntu is None:
             self.apt_init()
@@ -248,7 +248,7 @@ stop on runlevel [016]
         :return: start service output
         :rtype: bool
         """
-        self._logger.debug('start service on ubuntu for:%s' % service_name)
+        self._log_debug('start service on ubuntu for:%s' % service_name)
         if not self.service_status(service_name):
             cmd = 'service %s start' % service_name
             return j.sal.process.execute(cmd, useShell=True)

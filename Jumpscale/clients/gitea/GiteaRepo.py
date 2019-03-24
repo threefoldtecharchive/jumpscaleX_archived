@@ -27,7 +27,7 @@ class GiteaRepo(j.application.JSBaseClass):
         :param remove_old: bool, optional
         """
 
-        self._logger.info("labels add")
+        self._log_info("labels add")
 
         labels_default = labels or self.org.labels_default_get()
 
@@ -62,7 +62,7 @@ class GiteaRepo(j.application.JSBaseClass):
         :param remove_old: bool, optional
         """
 
-        self._logger.info("milestones add")
+        self._log_info("milestones add")
 
         if not milestones:
             milestones = self.milestones_default

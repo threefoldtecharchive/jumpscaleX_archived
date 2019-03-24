@@ -65,7 +65,7 @@ class MongoInstance(Startable):
         if public_port is None:
             public_port = private_port
         self.dbdir = dbdir
-        self._logger.info(prefab, private_port, public_port, type_, replica, configdb, dbdir)
+        self._log_info(prefab, private_port, public_port, type_, replica, configdb, dbdir)
 
     def _install(self):
         super()._install()
@@ -96,7 +96,7 @@ class MongoInstance(Startable):
     @Startable.ensure_installed
     def _start(self):
         super()._start()
-        self._logger.info("starting: ", self._gen_service_name(), self._gen_service_cmd())
+        self._log_info("starting: ", self._gen_service_name(), self._gen_service_cmd())
         pm = j.builder.system.processmanager.get()
         pm.ensure(self._gen_service_name(), self._gen_service_cmd())
         return a
@@ -110,11 +110,11 @@ class MongoInstance(Startable):
                     "\\", "\\\\").replace(
                     "'", "\\'")), die=False)
             if not rc and out.find('errmsg') == -1:
-                self._logger.info('command executed %s' % (cmd))
+                self._log_info('command executed %s' % (cmd))
                 break
             sleep(5)
         else:
-            self._logger.info('cannot execute command %s' % (cmd))
+            self._log_info('cannot execute command %s' % (cmd))
         return rc, out
 
     def __repr__(self):

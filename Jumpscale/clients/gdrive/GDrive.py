@@ -67,7 +67,7 @@ class GDriveFactory(j.application.JSBaseClass):
             flow.user_agent = APPLICATION_NAME
             self._credentials = tools.run_flow(flow, store)
             # credentials = tools.run(flow, store)
-            self._logger.info('Storing credentials to ' + self.secretsFilePath)
+            self._log_info('Storing credentials to ' + self.secretsFilePath)
 
     def fileExport(self, file_id, path=""):
         """
@@ -115,22 +115,22 @@ class GDriveFactory(j.application.JSBaseClass):
 
             for file in response.get('files', []):
                 # Process file & put metadata in file
-                self._logger.info('Found gdrive file: %s (%s)' % (file.get('name'), file.get('id')))
+                self._log_info('Found gdrive file: %s (%s)' % (file.get('name'), file.get('id')))
 
                 from IPython import embed
-                self._logger.debug("DEBUG NOW 87")
+                self._log_debug("DEBUG NOW 87")
                 embed()
                 raise RuntimeError("stop debug here")
 
                 md = GDriveFile(gmd=file)
-                self._logger.debug(md.json)
+                self._log_debug(md.json)
 
                 # CHECK THAT FILE HAS BEEN MODIFIED
                 epoch = int(j.data.time.any2epoch(parser.parse(file.get('modifiedTime'))))
 
                 if epoch > md.modTime + 60 * 4:
-                    self._logger.info("file modified, will export: %s" % md)
-                    self._logger.info("%s>%s" % (epoch, md.modTime))
+                    self._log_info("file modified, will export: %s" % md)
+                    self._log_info("%s>%s" % (epoch, md.modTime))
                     ddir = "/optvar/data/gdrive/%s%s" % (md.sid[0], md.sid[1])
                     j.sal.fs.createDir(ddir)
                     md.export(path="%s/%s.%s" % (ddir, md.sid, md.extension))

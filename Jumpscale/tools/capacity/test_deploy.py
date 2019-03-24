@@ -5,7 +5,7 @@ ZT_TOKEN = '8DaFJC9cyQBaQnHB6gsgwVKJsuRrUySG'
 KEY_PUB = 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCtRRg+Hj3CB/1kPaWMExXFmUAIti6wirVrURsEvz/d0eJeQJok7Fy1npoAgtBEGn9LVrmL2jyefAZSggPkxtRLbUvWBDraZoJGRtzrEo9nf5z6YrCnGG+Od+HbP5aoHkq9ykEsyDcdTNInvW+qeClE0vtA4zuQ/QxcAV293yq+4HQRRoH1EosodONjsLDb8D20Z36Fmc6VTxtMC5yvvNal+si/XelKha7ri/Su/mCSV+IwnA2Ph5XZPe4JYUdD529CTdfjcwyN3CShtwNNFG72YYWwxKPHQFs/5QlwvbXUmLEjz7gF50qaeeGKibDRWOkxjV8wnBUXKShC5waZCRTd zaibon@zaibon.be'
 NODES = ['local']
 
-logger = j.logger.get("deploy")
+
 
 
 def main():
@@ -13,11 +13,11 @@ def main():
     for i, instance in enumerate(NODES[:2]):
         robot = j.clients.zrobot.robots[instance]
 
-        logger.info('create zerotier client used to authorize VM to the network')
+        self._log_info('create zerotier client used to authorize VM to the network')
         zt_client_instance = 'ztclient'
         zt = robot.services.find_or_create('zerotier_client', zt_client_instance, {'token': ZT_TOKEN})
 
-        logger.info('create vdisk')
+        self._log_info('create vdisk')
         vdiskargs = {'disktype': 'HDD', 'size': 5, 'filesystem': 'btrfs', 'mountpoint': '/mnt/data'}
         vdisk = robot.services.find_or_create('vdisk', 'capacity_registration_datadisk', vdiskargs)
         vdisk.schedule_action('install').wait(die=True)
@@ -28,7 +28,7 @@ def main():
 
         disk_url = vdisk.schedule_action('private_url').wait(die=True).result
 
-        logger.info("create vm")
+        self._log_info("create vm")
         vmargs = {
             'memory': 256,
             'cpu': 1,

@@ -414,10 +414,10 @@ class FListMetadata(j.application.JSBaseClass):
                 message="fpath:%s needs to start with rootpath:%s" % (fpath, self.rootpath))
         relPath = fpath[len(self.rootpath):].strip("/")
         toHash = self.namespace + relPath
-        self._logger.debug("> %s" % toHash)
+        self._log_debug("> %s" % toHash)
         bl = pyblake2.blake2b(toHash.encode(), 32)
         binhash = bl.digest()
-        self._logger.debug(binascii.hexlify(binhash).decode())
+        self._log_debug(binascii.hexlify(binhash).decode())
         return relPath, binascii.hexlify(binhash).decode()
 
     def _initialize_aci(self, mode, fileType):

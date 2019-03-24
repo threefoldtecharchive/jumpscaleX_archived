@@ -61,7 +61,7 @@ class SystemFS(j.application.JSBaseClass):
                 # due to locking [delete/copy is a better strategy]
                 self.remove(to)
         shutil.copy(fileFrom, to)
-        self._logger.debug("Copied file from %s to %s" % (fileFrom, to))
+        self._log_debug("Copied file from %s to %s" % (fileFrom, to),_levelup=3)
 
     @path_check(source={"exists", "required", "replace", "file"}, destin={"required"})
     def moveFile(self, source, destin):
@@ -69,14 +69,14 @@ class SystemFS(j.application.JSBaseClass):
         @param source: string (Source file path)
         @param destination: string (Destination path the file should be moved to )
         """
-        self._logger.debug('Move file from %s to %s' % (source, destin))
+        self._log_debug('Move file from %s to %s' % (source, destin),_levelup=3)
         self._move(source, destin)
 
     def renameFile(self, filePath, new_name):
         """
         OBSOLETE
         """
-        self._logger.debug("WARNING: renameFIle should not be used")
+        self._log_debug("WARNING: renameFIle should not be used",_levelup=3)
         return self._move(filePath, new_name)
 
     @path_check(path={"exists", "required", "replace", "dir"})
@@ -101,10 +101,9 @@ class SystemFS(j.application.JSBaseClass):
         """Create an empty file
         @param filename: string (file path name to be created)
         """
-        self._logger.debug(
-            'creating an empty file with name & path: %s' % filename)
+        self._log_debug('creating an empty file with name & path: %s' % filename,_levelup=3)
         open(filename, "w").close()
-        self._logger.debug(
+        self._log_debug(
             'Empty file %s has been successfully created' % filename)
 
     @path_check(newdir={"required", "replace", })
@@ -116,14 +115,14 @@ class SystemFS(j.application.JSBaseClass):
         """
         if newdir.find("file://") != -1:
             raise j.exceptions.RuntimeError("Cannot use file notation here")
-        self._logger.debug('Creating directory if not exists %s' % j.core.text.toStr(newdir))
+        self._log_debug('Creating directory if not exists %s' % j.core.text.toStr(newdir),_levelup=3)
         if self.exists(newdir):
             if self.isLink(newdir) and unlink:
                 self.unlink(newdir)
 
             if self.isDir(newdir):
-                self._logger.debug(
-                    'Directory trying to create: [%s] already exists' % j.core.text.toStr(newdir))
+                self._log_debug(
+                    'Directory trying to create: [%s] already exists' % j.core.text.toStr(newdir),_levelup=3)
         else:
             head, tail = os.path.split(newdir)
             if head and (not self.exists(head) or not self.isDir(head)):
@@ -137,7 +136,7 @@ class SystemFS(j.application.JSBaseClass):
                 #     if e.errno != os.errno.EEXIST:  # File exists
                 #         raise
 
-            self._logger.debug(
+            self._log_debug(
                 'Created the directory [%s]' % j.core.text.toStr(newdir))
 
     def copyDirTree(self, src, dst, keepsymlinks=False, deletefirst=False,
@@ -177,7 +176,7 @@ class SystemFS(j.application.JSBaseClass):
             if src.find("file://") != -1 or dst.find("file://") != -1:
                 raise j.exceptions.RuntimeError(
                     "Cannot use file notation here")
-            self._logger.debug('Copy directory tree from %s to %s' % (src, dst))
+            self._log_debug('Copy directory tree from %s to %s' % (src, dst),_levelup=3)
             if ((src is None) or (dst is None)):
                 raise TypeError(
                     'Not enough parameters passed in system.fs.copyDirTree to copy directory from %s to %s ' %
@@ -268,10 +267,10 @@ class SystemFS(j.application.JSBaseClass):
         """Changes Current Directory
         @param path: string (Directory path to be changed to)
         """
-        self._logger.debug('Changing directory to: %s' % path)
+        self._log_debug('Changing directory to: %s' % path,_levelup=3)
         os.chdir(path)
         newcurrentPath = os.getcwd()
-        self._logger.debug(
+        self._log_debug(
             'Directory successfully changed to %s' % path)
         return newcurrentPath
 
@@ -281,9 +280,9 @@ class SystemFS(j.application.JSBaseClass):
         @param source: string (Source path where the directory should be removed from)
         @param destin: string (Destination path where the directory should be moved into)
         """
-        self._logger.debug('Moving directory from %s to %s' % (source, destin))
+        self._log_debug('Moving directory from %s to %s' % (source, destin),_levelup=3)
         self._move(source, destin)
-        self._logger.debug(
+        self._log_debug(
             'Directory is successfully moved from %s to %s' % (source, destin))
 
     def joinPaths(self, *args):
@@ -297,7 +296,7 @@ class SystemFS(j.application.JSBaseClass):
         with exactly one directory separator (os.sep) inserted between components, unless path2 is empty.
         """
         args = [j.core.text.toStr(x) for x in args]
-        self._logger.debug('Join paths %s' % (str(args)))
+        self._log_debug('Join paths %s' % (str(args)),_levelup=3)
         if args is None:
             raise TypeError('Not enough parameters %s' % (str(args)))
         if os.sys.platform.startswith("win"):
@@ -321,7 +320,7 @@ class SystemFS(j.application.JSBaseClass):
          e.g. ...getDirName("/opt/qbase/bin/something/test.py", levelsUp=1) would return bin
          e.g. ...getDirName("/opt/qbase/bin/something/test.py", levelsUp=10) would raise an error
         """
-        self._logger.debug('Get directory name of path: %s' % path)
+        self._log_debug('Get directory name of path: %s' % path,_levelup=3)
         dname = os.path.dirname(path)
         dname = dname.replace("/", os.sep)
         dname = dname.replace("//", os.sep)
@@ -341,7 +340,7 @@ class SystemFS(j.application.JSBaseClass):
     @path_check(path={"required", "replace", })
     def getBaseName(self, path, removeExtension = False):
         """Return the base name of pathname path."""
-        self._logger.debug('Get basename for path: %s' % path)
+        self._log_debug('Get basename for path: %s' % path,_levelup=3)
         name =  os.path.basename(path.rstrip(os.path.sep))
         if removeExtension:
             if "." in name:
@@ -590,7 +589,7 @@ class SystemFS(j.application.JSBaseClass):
         """get current working directory
         @rtype: string (current working directory path)
         """
-        self._logger.debug('Get current working directory')
+        self._log_debug('Get current working directory')
         return os.getcwd()
 
     @path_check(path={"required"})
@@ -601,7 +600,7 @@ class SystemFS(j.application.JSBaseClass):
         """
         while path[-1] == "/" or path[-1] == "\\":
             path = path[:-1]
-        self._logger.debug('Read link with path: %s' % path)
+        self._log_debug('Read link with path: %s' % path,_levelup=3)
         if j.core.platformtype.myplatform.isUnix or j.core.platformtype.myplatform.isMac:
             res = os.readlink(path)
         elif j.core.platformtype.myplatform.isWindows:
@@ -654,7 +653,7 @@ class SystemFS(j.application.JSBaseClass):
         """
         if depth is not None:
             depth = int(depth)
-        self._logger.debug('List files in directory with path: %s' % path)
+        self._log_debug('List files in directory with path: %s' % path,_levelup=3)
         if depth == 0:
             depth = None
         # if depth is not None:
@@ -683,7 +682,7 @@ class SystemFS(j.application.JSBaseClass):
         """
         if depth is not None:
             depth = int(depth)
-        self._logger.debug('List files in directory with path: %s' % path)
+        self._log_debug('List files in directory with path: %s' % path,_levelup=3)
         if depth == 0:
             depth = None
         # if depth is not None:
@@ -808,8 +807,8 @@ class SystemFS(j.application.JSBaseClass):
         @param path: string represents directory path to search in
         @rtype: list
         """
-        self._logger.debug('List directories in directory with path: %s, recursive = %s' % (
-            path, str(recursive)))
+        self._log_debug('List directories in directory with path: %s, recursive = %s' % (
+            path, str(recursive)),_levelup=3)
 
         items = self._listInDir(path)
         filesreturn = []
@@ -870,13 +869,13 @@ class SystemFS(j.application.JSBaseClass):
         except (OSError, AttributeError):
             pass
         if found and followlinks and stat.S_ISLNK(st.st_mode):
-            self._logger.debug('path %s exists' % str(path.encode("utf-8")))
+            self._log_debug('path %s exists' % str(path.encode("utf-8")),_levelup=3)
             relativelink = self.readLink(path)
             newpath = self.joinPaths( self.getParent(path), relativelink)
             return self.exists(newpath)
         if found:
             return True
-        self._logger.debug('path %s does not exist' % str(path.encode("utf-8")))
+        self._log_debug('path %s does not exist' % str(path.encode("utf-8")))
         return False
 
     @path_check(path={"required", "replace", "exists"}, target={"required", "replace", })
@@ -886,8 +885,8 @@ class SystemFS(j.application.JSBaseClass):
         @param target: destination path required to create the symbolic link at
         @param overwriteTarget: boolean indicating whether target can be overwritten
         """
-        self._logger.debug(
-            'Getting symlink for path: %s to target %s' % (path, target))
+        self._log_debug(
+            'Getting symlink for path: %s to target %s' % (path, target),_levelup=3)
 
         if target[-1] == "/":
             target = target[:-1]
@@ -908,7 +907,7 @@ class SystemFS(j.application.JSBaseClass):
             self.createDir(dir)
 
         if j.core.platformtype.myplatform.isUnix or j.core.platformtype.myplatform.isMac:
-            self._logger.debug("Creating link from %s to %s" % (path, target))
+            self._log_debug("Creating link from %s to %s" % (path, target))
             os.symlink(path, target)
         elif j.core.platformtype.myplatform.isWindows:
             path = path.replace("+", ":")
@@ -931,7 +930,7 @@ class SystemFS(j.application.JSBaseClass):
         for item in items:
             dest2 = "%s/%s" % (dest, self.getBaseName(item))
             dest2 = dest2.replace("//", "/")
-            self._logger.debug("link %s:%s" % (item, dest2))
+            self._log_debug("link %s:%s" % (item, dest2))
             self.symlink(item, dest2, overwriteTarget=delete)
             if makeExecutable:
                 # print("executable:%s" % dest2)
@@ -946,8 +945,8 @@ class SystemFS(j.application.JSBaseClass):
         @rtype: concatenation of dirname, and optionally linkname, etc.
         with exactly one directory separator (os.sep) inserted between components, unless path2 is empty
         """
-        self._logger.debug(
-            'Create a hard link pointing to %s named %s' % (source, destin))
+        self._log_debug(
+            'Create a hard link pointing to %s named %s' % (source, destin),_levelup=3)
         if j.core.platformtype.myplatform.isUnix or j.core.platformtype.myplatform.isMac:
             return os.link(source, destin)
         else:
@@ -983,9 +982,9 @@ class SystemFS(j.application.JSBaseClass):
         @rtype: boolean (True if directory is empty)
         """
         if(self._listInDir(path) == []):
-            self._logger.debug('path %s is an empty directory' % path)
+            self._log_debug('path %s is an empty directory' % path,_levelup=3)
             return True
-        self._logger.debug('path %s is not an empty directory' % path)
+        self._log_debug('path %s is not an empty directory' % path,_levelup=3)
         return False
 
     @path_check(path={"required", "replace", "exists"})
@@ -995,16 +994,16 @@ class SystemFS(j.application.JSBaseClass):
         @param followSoftlink: boolean
         @rtype: boolean (True if file exists for the given path)
         """
-        self._logger.debug("isfile:%s" % path)
+        self._log_debug("isfile:%s" % path)
         if not followSoftlink and self.isLink(path):
-            self._logger.debug('path %s is a file' % path)
+            self._log_debug('path %s is a file' % path,_levelup=3)
             return True
 
         if(os.path.isfile(path)):
-            self._logger.debug('path %s is a file' % path)
+            self._log_debug('path %s is a file' % path,_levelup=3)
             return True
 
-        self._logger.debug('path %s is not a file' % path)
+        self._log_debug('path %s is not a file' % path,_levelup=3)
         return False
 
     @path_check(path={"required", "replace", "exists", "file"})
@@ -1051,9 +1050,9 @@ class SystemFS(j.application.JSBaseClass):
             if check_valid:
                 j.shell()
                 w
-            self._logger.debug('path %s is a link' % path)
+            self._log_debug('path %s is a link' % path,_levelup=3)
             return True
-        self._logger.debug('path %s is not a link' % path)
+        self._log_debug('path %s is not a link' % path,_levelup=3)
         return False
 
     @path_check(path={"required", "replace", "dir", "exists"})
@@ -1061,7 +1060,7 @@ class SystemFS(j.application.JSBaseClass):
         """Return true if pathname path is a mount point:
         A point in a file system where a different file system has been mounted.
         """
-        self._logger.debug('Check if path %s is a mount point' % path)
+        self._log_debug('Check if path %s is a mount point' % path,_levelup=3)
         if path is None:
             raise TypeError('Path is passed null in system.fs.isMount')
         return os.path.ismount(path)
@@ -1079,7 +1078,7 @@ class SystemFS(j.application.JSBaseClass):
         @param dirname: string (Directory original name)
         @param newname: string (Directory new name to be changed to)
         """
-        self._logger.debug('Renaming directory %s to %s' % (dirname, newname))
+        self._log_debug('Renaming directory %s to %s' % (dirname, newname),_levelup=3)
         if dirname == newname:
             return
         if overwrite and self.exists(newname):
@@ -1094,7 +1093,7 @@ class SystemFS(j.application.JSBaseClass):
         """Remove the file path (only for files, not for symlinks)
         @param filename: File path to be removed
         """
-        self._logger.debug('Unlink file with path: %s' % filename)
+        self._log_debug('Unlink file with path: %s' % filename,_levelup=3)
         os.unlink(filename)
 
     @path_check(filename={"required", "replace", "exists", "file"})
@@ -1104,11 +1103,11 @@ class SystemFS(j.application.JSBaseClass):
         @param filename: File path to be removed
         @type filename: string
         '''
-        self._logger.debug('Unlink path: %s' % filename)
+        self._log_debug('Unlink path: %s' % filename,_levelup=3)
 
         if j.core.platformtype.myplatform.isWindows:
-            cmd = "junction -d %s 2>&1 > null" % (path)
-            self._logger.info(cmd)
+            cmd = "junction -d %s 2>&1 > null" % (filename)
+            self._log_info(cmd)
             os.system(cmd)
         os.unlink(filename)
 
@@ -1119,16 +1118,13 @@ class SystemFS(j.application.JSBaseClass):
         @rtype: string representing the file contents
         @param encoding utf-8 or ascii
         """
-        self._logger.debug('Opened file %s for reading' % filename)
-        self._logger.debug('Reading file %s' % filename)
+        self._log_debug('Read file: %s' % filename,_levelup=3)
         if binary:
             with open(filename, mode='rb') as fp:
                 data = fp.read()
         else:
             with open(filename, encoding=encoding) as fp:
                 data = fp.read()
-
-        self._logger.debug('File %s is closed after reading' % filename)
         return data
 
 
@@ -1139,8 +1135,8 @@ class SystemFS(j.application.JSBaseClass):
     #     @param filename: string (filename to open for reading )
     #     @rtype: list of lines of uncommented file contents
     #     """
-    #     self._logger.debug('Opened file %s for reading' % filename)
-    #     # self._logger.debug('Reading file %s'% filename,9)
+    #     self._log_debug('Opened file %s for reading' % filename)
+    #     # self._log_debug('Reading file %s'% filename,9)
     #     with open(filename) as fp:
     #         data = fp.readlines()
     #         uncommented = list()
@@ -1148,7 +1144,7 @@ class SystemFS(j.application.JSBaseClass):
     #             if not line.strip().startswith('#') and not line.startswith('\n'):
     #                 line = line.replace('\n', '')
     #                 uncommented.append(line)
-    #         self._logger.debug('File %s is closed after reading' % filename)
+    #         self._log_debug('File %s is closed after reading' % filename)
     #         return uncommented
     #
     # @path_check(filename={"required", "exists", "file"})
@@ -1190,12 +1186,11 @@ class SystemFS(j.application.JSBaseClass):
         if contents is None:
             raise TypeError('Passed None parameters in system.fs.writeFile')
         filename = j.core.tools.text_replace(filename)
-        self._logger.debug('Opened file %s for writing' % filename)
         if append is False:
             fp = open(filename, "wb")
         else:
             fp = open(filename, "ab")
-        self._logger.debug('Writing contents in file %s' % filename)
+        self._log_debug('Write file %s' % filename,_levelup=3)
         if j.data.types.string.check(contents):
             fp.write(bytes(contents, 'UTF-8'))
         else:
@@ -1221,8 +1216,8 @@ class SystemFS(j.application.JSBaseClass):
         if not obj:
             raise ValueError(
                 "You should provide a filelocation or a object as parameters")
-        self._logger.debug(
-            "Creating pickle and write it to file: %s" % filelocation)
+        self._log_debug(
+            "Creating pickle and write it to file: %s" % filelocation,_levelup=3)
         try:
             pcl = pickle.dumps(obj)
         except Exception as e:
@@ -1239,9 +1234,9 @@ class SystemFS(j.application.JSBaseClass):
         @param filelocation: location of the file
         @return: object
         """
-        self._logger.debug("Opening file %s for reading" % filelocation)
+        self._log_debug("Opening file %s for reading" % filelocation,_levelup=3)
         contents = self.fileGetContents(filelocation)
-        self._logger.debug("creating object")
+        self._log_debug("creating object")
         return pickle.loads(contents)
 
     @path_check(filename={"required", "replace", "exists", "file"})
@@ -1250,8 +1245,8 @@ class SystemFS(j.application.JSBaseClass):
         @param filename: string (filename to get the hex digest of it) or list of files
         @rtype: md5 of the file
         """
-        self._logger.debug(
-            'Get the hex digest of file %s without loading it all into memory' % filename)
+        self._log_debug(
+            'Get the hex digest of file %s without loading it all into memory' % filename,_levelup=3)
         if not isinstance(filename, list):
             filename = [filename]
         digest = hashlib.md5()
@@ -1536,8 +1531,8 @@ class SystemFS(j.application.JSBaseClass):
         import os.path
         import tarfile
 
-        self._logger.debug("Compressing directory %s to %s" %
-                          (sourcepath, destinationpath))
+        self._log_debug("Compressing directory %s to %s" %
+                          (sourcepath, destinationpath),_levelup=3)
         if not self.exists(self.getDirName(destinationpath)):
             self.createDir(self.getDirName(destinationpath))
         t = tarfile.open(name=destinationpath, mode='w:gz')
@@ -1552,7 +1547,7 @@ class SystemFS(j.application.JSBaseClass):
                     destInTar, self.pathRemoveDirPart(path, sourcepath))
                 if self.isLink(path) and followlinks:
                     path = self.readLink(path)
-                self._logger.debug("fs.tar: add file %s to tar" % path)
+                self._log_debug("fs.tar: add file %s to tar" % path)
                 # print "fstar: add file %s to tar" % path
                 if not (j.core.platformtype.myplatform.isWindows and j.sal.windows.checkFileToIgnore(path)):
                     if self.isFile(path) or self.isLink(path):

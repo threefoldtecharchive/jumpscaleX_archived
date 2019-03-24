@@ -33,7 +33,6 @@ class Story():
         self.url = url
         self.description = description
         self.state = state
-        self._logger = j.logger.get("j.tools.StoryBot")
         self._body = body
         self._update_func = update_func
 
@@ -94,7 +93,7 @@ class Story():
             # get title from line and compare
             title_start = _find_second(line, char="[")
             if title_start == -1:
-                self._logger.warning("List item is could be wrongly formatted: '%s'" % line)
+                self._log_warning("List item is could be wrongly formatted: '%s'" % line)
             line_title = line[title_start: line.find(":")]
             if line_title == self.title:
                 return i
@@ -108,7 +107,7 @@ class Story():
         try:
             new_body = _check_broken_links(self._body, self.LIST_TITLE, self.url)
         except RuntimeError as err:
-            self._logger.error("Something went wrong checking for broken urls: %s" % err)
+            self._log_error("Something went wrong checking for broken urls: %s" % err)
             return self._body
 
         if self._body != new_body:

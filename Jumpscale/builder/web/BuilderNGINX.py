@@ -194,7 +194,7 @@ class BuilderNGINX(j.builder.system._BaseClass):
             nginxcmd = "%s -c %s -g 'daemon off;'" % (self.NAME, nginxconfpath)
             nginxcmd = j.core.tools.text_replace(nginxcmd)
 
-            self._logger.info("cmd: %s" % nginxcmd)
+            self._log_info("cmd: %s" % nginxcmd)
             j.tools.tmux.execute(nginxcmd, window=self.NAME,
                                  pane=self.NAME, reset=True)
 

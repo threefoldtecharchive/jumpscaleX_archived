@@ -13,12 +13,19 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-q', '--quiet', default=False,
-                    action='store_true', help="Turn down logging")
+                    action='store_true', help="Turn off debug mode and logging")
+parser.add_argument('-r', '--reset', default=False,
+                    action='store_true', help="Reset system BCDB and all encryption keys (DANGEROUS)")
+
 options, args = parser.parse_known_args()
 
+if options.quiet:
+    j.shell()
+if options.reset:
+    j.shell()
 
 if len(args) == 1:
-    if j.sal.fs.exists(args[0]):
+    if "(" not in args[0] and j.sal.fs.exists(args[0]):
         from importlib.machinery import SourceFileLoader
         mymodule = SourceFileLoader('main', args[0]).load_module()
     else:
@@ -26,5 +33,7 @@ if len(args) == 1:
         toexec = toexec.strip("'\" ").strip("'\" ")
         exec(toexec,globals(),j._locals_get({}))
 else:
+    j.data.nacl.default #important to make sure private key is loaded
+    j.application.bcdb_system #needed to make sure we have bcdb running, needed for code completion
     j.shell(loc=False,locals_=locals(),globals_=globals())
 

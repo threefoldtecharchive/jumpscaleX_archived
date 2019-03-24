@@ -1,6 +1,6 @@
 from Jumpscale import j
 import os
-from jinja2 import Template
+from jinja2 import Template,StrictUndefined
 
 
 class Jinja2(j.application.JSBaseClass):
@@ -12,7 +12,7 @@ class Jinja2(j.application.JSBaseClass):
     def _init(self):
         self._codegendir = j.core.tools.text_replace("{DIR_VAR}/CODEGEN")
 
-        # self._logger_enable()
+        #
         self.reset(destroyall=False)
 
     def reset(self, destroyall=True):
@@ -54,7 +54,7 @@ class Jinja2(j.application.JSBaseClass):
             md5 = j.data.hash.md5_string(text)
 
         if md5 not in self._hash_to_template:
-            self._hash_to_template[md5] = Template(text)
+            self._hash_to_template[md5] = Template(text,undefined=StrictUndefined)
             self._hash_to_template[md5].md5 = md5
 
         return self._hash_to_template[md5]
@@ -73,13 +73,13 @@ class Jinja2(j.application.JSBaseClass):
         :return:
         """
 
-        # self._logger.debug("template render:%s"%path)
+        # self._log_debug("template render:%s"%path)
         t = self.template_get(path=path, text=text, reload=reload)
         txt = t.render(**args)
         if dest is None:
             return txt
         else:
-            # self._logger.debug("write template:%s on dest:%s"%(path,dest))
+            # self._log_debug("write template:%s on dest:%s"%(path,dest))
             j.sal.fs.createDir(j.sal.fs.getDirName(dest))
             j.sal.fs.writeFile(dest, txt)
 
@@ -122,7 +122,7 @@ class Jinja2(j.application.JSBaseClass):
             dest = "%s/_%s.py" % (self._codegendir, md5)
             dest_md5 = None
 
-        self._logger.debug("python code render:%s" % (dest))
+        self._log_debug("python code render:%s" % (dest))
 
         render = False
         if dest_md5 is not None and j.sal.fs.exists(dest_md5) and j.sal.fs.exists(dest):
@@ -189,7 +189,7 @@ class Jinja2(j.application.JSBaseClass):
 
         src = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/jumpscale_lib/tree/development/apps/example")
         dest = j.sal.fs.getTmpDirPath("jumpscale/jinja2test")
-        self._logger.info("copy templates to:%s"%dest)
+        self._log_info("copy templates to:%s"%dest)
         j.tools.jinja2.copy_dir_render(src,dest,j=j,name="aname")
 
         """
@@ -213,11 +213,12 @@ class Jinja2(j.application.JSBaseClass):
         """
         js_shell 'j.tools.jinja2.test()'
         """
+        raise RuntimeError("need to go to jumpscaleX something, also tests are really not tests, need to be better")
 
         src = j.clients.git.getContentPathFromURLorPath(
             "https://github.com/threefoldtech/jumpscale_lib/tree/development/apps/example")
         dest = j.sal.fs.getTmpDirPath("jumpscale/jinja2test")
-        self._logger.info("copy templates to:%s" % dest)
+        self._log_info("copy templates to:%s" % dest)
         j.tools.jinja2.copy_dir_render(src, dest, j=j, name="aname")
 
         self.test_performance()

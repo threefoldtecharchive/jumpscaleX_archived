@@ -132,8 +132,8 @@ class Row(j.application.JSBaseClass):
         try:
             interpolated = j.tools.numtools.interpolateList(tointerpolate, floatnr=self.nrfloat)
         except Exception as e:
-            self._logger.error(("could not interpolate row %s" % self.name))
-            self._logger.error("DEBUG NOW cannot interpolate, explore self & tointerpolate")
+            self._log_error(("could not interpolate row %s" % self.name))
+            self._log_error("DEBUG NOW cannot interpolate, explore self & tointerpolate")
         xx = 0
         for x in range(start, stop + 1):
             self.cells[x] = interpolated[xx]
@@ -186,7 +186,7 @@ class Row(j.application.JSBaseClass):
         if maxvalue is not None and value > maxvalue:
             value = maxvalue
         if posx > self.nrcols - 1:
-            self._logger.debug(("out of range: x:%s y:%s" % (posx, value)))
+            self._log_debug(("out of range: x:%s y:%s" % (posx, value)))
             return None, None
         self.cells[posx] = value
         return posx, value

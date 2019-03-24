@@ -40,7 +40,7 @@ class ZOSVB(ZOS):
     def _get_free_port(self):
         port = 4001
         while j.sal.nettools.checkListenPort(port)==True:
-            self._logger.debug("check for free tcp port:%s"%port)
+            self._log_debug("check for free tcp port:%s"%port)
             port+=1
         return port
 

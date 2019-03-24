@@ -164,14 +164,14 @@ class StoryBot(JSConfigBase):
             check_broken_urls bool -- Check the story/task lists from broken links/URLs (default: False)
         """
 
-        self._logger.info("Running StoryBot every %s minutes.\nPress ctl+c to stop." % interval)
+        self._log_info("Running StoryBot every %s minutes.\nPress ctl+c to stop." % interval)
         try:
             while True:
                 self.link_stories(check_broken_urls=check_broken_urls)
 
                 time.sleep(interval * 60)
         except KeyboardInterrupt:
-            self._logger.info("Stopping StoryBot")
+            self._log_info("Stopping StoryBot")
 
     def link_stories(self, check_broken_urls=False):
         """Link stories and tasks from all repos to eachother.
@@ -213,12 +213,12 @@ class StoryBot(JSConfigBase):
         for gl in gls:
             stories = _extend_stories(stories, gl.value)
         end = time.time()
-        self._logger.debug("Fetching stories took %ss" % (end-start))
+        self._log_debug("Fetching stories took %ss" % (end-start))
         
         if not stories:
-            self._logger.debug("No stories were found, skipping linking task to stories")
+            self._log_debug("No stories were found, skipping linking task to stories")
             return
-        self._logger.debug("Found stories: %s", stories)
+        self._log_debug("Found stories: %s", stories)
 
         # link task with stories with stories
         start = time.time()
@@ -233,13 +233,13 @@ class StoryBot(JSConfigBase):
         for gl in gls:
             tasks.extend(gl.value)
         end = time.time()
-        self._logger.debug("Linking stories took %ss" % (end-start))
-        self._logger.debug("Found tasks: %s", tasks)
+        self._log_debug("Linking stories took %ss" % (end-start))
+        self._log_debug("Found tasks: %s", tasks)
 
         if check_broken_urls:
             start = time.time()
             gls = []
-            self._logger.info("Checking lists for broken urls...")
+            self._log_info("Checking lists for broken urls...")
             # check story bodies
             for s in stories:
                 gls.append(gevent.spawn(s.check_broken_urls))
@@ -249,5 +249,5 @@ class StoryBot(JSConfigBase):
 
             gevent.joinall(gls)
             end = time.time()
-            self._logger.info("Done checking lists for broken urls")
-            self._logger.debug("Checking lists for broken urls took %ss" % (end-start))
+            self._log_info("Done checking lists for broken urls")
+            self._log_debug("Checking lists for broken urls took %ss" % (end-start))

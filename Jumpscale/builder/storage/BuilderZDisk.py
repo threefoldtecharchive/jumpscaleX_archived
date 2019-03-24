@@ -20,7 +20,7 @@ class BuilderZDisk(j.builder.system._BaseClass):
         :return:
         '''
         if self.is_installed() and not reset:
-            self._logger.info("0-Disk was already installed, pass reset=True to reinstall.")
+            self._log_info("0-Disk was already installed, pass reset=True to reinstall.")
             return
         
         # install dependencies

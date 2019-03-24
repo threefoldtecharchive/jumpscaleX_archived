@@ -37,6 +37,7 @@ class Types(j.application.JSBaseClass):
         self.email = Email()
         self.date = Date()
         self.datetime = DateTime()
+        self.duration = Duration()
         self.numeric = Numeric()
         self.percent = Percent()
         self.hash = Hash()
@@ -65,6 +66,7 @@ class Types(j.application.JSBaseClass):
         self._email = Email
         self._date = Date
         self._datetime = DateTime
+        self._duration = Duration()
         self._numeric = Numeric
         self._percent = Percent
         self._hash = Hash
@@ -118,6 +120,7 @@ class Types(j.application.JSBaseClass):
         - tel, mobile
         - d, date
         - t, datetime
+        - td, duration
         - n, numeric
         - h, hash       #set of 2 int
         - p, percent
@@ -162,6 +165,8 @@ class Types(j.application.JSBaseClass):
         elif ttype in ["d", "date"]:
             res = self._date
         elif ttype in ["t", "datetime"]:
+            res = self._datetime
+        elif ttype in ["td", "duration"]:
             res = self._datetime
         elif ttype in ["h", "hash"]:
             res = self._hash

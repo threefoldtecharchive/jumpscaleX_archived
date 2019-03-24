@@ -3,7 +3,6 @@ import copy
 import getpass
 # import socket
 import grp
-import logging
 import os
 import random
 import select
@@ -18,304 +17,340 @@ from os import O_NONBLOCK, read
 from pathlib import Path
 from subprocess import Popen, check_output
 
+import inspect
 
-# Returns escape codes from format codes
-def esc(*x):
-    return '\033[' + ';'.join(x) + 'm'
+serializer=None
+try:
+    import yaml
+    def serializer(data):
+        return yaml.dump(
+            data,
+            default_flow_style=False,
+            default_style='',
+            indent=4,
+            line_break="\n")
+except:
+    pass
+if not serializer:
+    try:
+        import json
+        def serializer(data):
+            return json.dumps(data, ensure_ascii=False, sort_keys=True, indent=True)
+    except:
+        pass
 
-
-# The initial list of escape codes
-escape_codes = {
-    'reset': esc('0'),
-    'bold': esc('01'),
-    'thin': esc('02')
-}
-
-# The color names
-COLORS = [
-    'black',
-    'red',
-    'green',
-    'yellow',
-    'blue',
-    'purple',
-    'cyan',
-    'gray',
-    'white'
-]
-
-PREFIXES = [
-    # Foreground without prefix
-    ('3', ''), ('01;3', 'bold_'), ('02;3', 'thin_'),
-
-    # Foreground with fg_ prefix
-    ('3', 'fg_'), ('01;3', 'fg_bold_'), ('02;3', 'fg_thin_'),
-
-    # Background with bg_ prefix - bold/light works differently
-    ('4', 'bg_'), ('10', 'bg_bold_'),
-]
-
-for prefix, prefix_name in PREFIXES:
-    for code, name in enumerate(COLORS):
-        escape_codes[prefix_name + name] = esc(prefix + str(code))
+if not serializer:
+    def serializer(data):
+        return str(data)
 
 
-def parse_colors(sequence):
-    """Return escape codes from a color sequence."""
-    return ''.join(escape_codes[n] for n in sequence.split(',') if n)
+try:
+    import redis
+except:
+    redis = False
 
+if redis:
+    class RedisQueue():
 
-# __all__ = ('escape_codes', 'default_log_colors', 'ColoredFormatter',
-#            'LevelFormatter', 'TTYColoredFormatter')
+        def __init__(self,redis,key):
+            self.__db = redis
+            self.key = key
 
-# The default colors to use for the debug levels
-default_log_colors = {
-    'DEBUG': 'white',
-    'INFO': 'green',
-    'WARNING': 'yellow',
-    'ERROR': 'red',
-    'CRITICAL': 'bold_red',
-}
+        def qsize(self):
+            '''Return the approximate size of the queue.
 
-# # The default format to use for each style
-# default_formats = {
-#     '%': '%(log_color)s%(levelname)s:%(name)s:%(message)s',
-#     '{': '{log_color}{levelname}:{name}:{message}',
-#     '$': '${log_color}${levelname}:${name}:${message}'
-# }
-#
+            :return: approximate size of queue
+            :rtype: int
+            '''
+            return self.__db.llen(self.key)
 
-class ColoredRecord(object):
-    """
-    Wraps a LogRecord, adding named escape codes to the internal dict.
+        @property
+        def empty(self):
+            '''Return True if the queue is empty, False otherwise.'''
+            return self.qsize() == 0
 
-    The internal dict is used when formatting the message (by the PercentStyle,
-    StrFormatStyle, and StringTemplateStyle classes).
-    """
+        def reset(self):
+            '''
+            make empty
+            :return:
+            '''
+            while self.empty == False:
+                self.get_nowait()
 
-    def __init__(self, record):
-        """Add attributes from the escape_codes dict and the record."""
-        self.__dict__.update(escape_codes)
-        self.__dict__.update(record.__dict__)
+        def put(self, item):
+            '''Put item into the queue.'''
+            self.__db.rpush(self.key, item)
 
-        # Keep a reference to the original record so ``__getattr__`` can
-        # access functions that are not in ``__dict__``
-        self.__record = record
+        def get(self, timeout=20):
+            '''Remove and return an item from the queue.'''
+            if timeout > 0:
+                item = self.__db.blpop(self.key, timeout=timeout)
+                if item:
+                    item = item[1]
+            else:
+                item = self.__db.lpop(self.key)
+            return item
 
-    def __getattr__(self, name):
-        return getattr(self.__record, name)
+        def fetch(self, block=True, timeout=None):
+            '''Return an item from the queue without removing'''
+            if block:
+                item = self.__db.brpoplpush(self.key, self.key, timeout)
+            else:
+                item = self.__db.lindex(self.key, 0)
+            return item
 
+        def set_expire(self, time):
+            self.__db.expire(self.key, time)
 
-class ColoredFormatter(logging.Formatter):
-    """
-    A formatter that allows colors to be placed in the format string.
+        def get_nowait(self):
+            """Equivalent to get(False)."""
+            return self.get(False)
 
-    Intended to help in creating more readable logging output.
-    """
+    class Redis(redis.Redis):
 
-    def __init__(self, fmt=None, datefmt=None, style='%',
-                 log_colors=None, reset=True,
-                 secondary_log_colors=None):
-        """
-        Set the format and colors the ColoredFormatter will use.
+        _storedprocedures_to_sha = {}
+        _redis_cli_path_ = None
 
-        The ``fmt``, ``datefmt`` and ``style`` args are passed on to the
-        ``logging.Formatter`` constructor.
+        def __init__(self,*args,**kwargs):
+            redis.Redis.__init__(self,*args,**kwargs)
+            self._storedprocedures_to_sha = {}
 
-        The ``secondary_log_colors`` argument can be used to create additional
-        ``log_color`` attributes. Each key in the dictionary will set
-        ``{key}_log_color``, using the value to select from a different
-        ``log_colors`` set.
+        def dict_get(self, key):
+            return RedisDict(self, key)
 
-        :Parameters:
-        - fmt (str): The format string to use
-        - datefmt (str): A format string for the date
-        - log_colors (dict):
-            A mapping of log level names to color names
-        - reset (bool):
-            Implicitly append a color reset to all records unless False
-        - style ('%' or '{' or '$'):
-            The format style to use. (*No meaning prior to Python 3.2.*)
-        - secondary_log_colors (dict):
-            Map secondary ``log_color`` attributes. (*New in version 2.6.*)
-        """
-        if fmt is None:
-            print("USE DEFAULT FORMATS IN COLORED FORMATTER")
-            fmt = default_formats[style]
+        def queue_get(self, key):
+            '''get redis queue
+            '''
+            return RedisQueue(self, key)
 
-        super(ColoredFormatter, self).__init__(fmt, datefmt, style)
+        def storedprocedure_register(self, name, nrkeys, path_or_content):
+            '''create stored procedure from path
 
-        self.log_colors = (log_colors if log_colors is not None else default_log_colors)
-        self.secondary_log_colors = secondary_log_colors
-        self.reset = reset
+            :param path: the path where the stored procedure exist
+            :type path_or_content: str which is the lua content or the path
+            :raises Exception: when we can not find the stored procedure on the path
 
-    def color(self, log_colors, level_name):
-        """Return escape codes from a ``log_colors`` dict."""
-        return parse_colors(log_colors.get(level_name, ""))
+            will return the sha
 
-    def format(self, record):
-        """Format a message from a record object."""
-        record = ColoredRecord(record)
-        record.log_color = self.color(self.log_colors, record.levelname)
+            to use the stored procedure do
 
-        # Set secondary log colors
-        if self.secondary_log_colors:
-            for name, log_colors in self.secondary_log_colors.items():
-                color = self.color(log_colors, record.levelname)
-                setattr(record, name + '_log_color', color)
+            redisclient.evalsha(sha,3,"a","b","c")  3 is for nr of keys, then the args
 
-        # Format the message
-        message = super(ColoredFormatter, self).format(record)
+            the stored procedure can be found in hset storedprocedures:$name has inside a json with
 
-        # Add a reset code to the end of the message
-        # (if it wasn't explicitly added in format str)
-        if self.reset and not message.endswith(escape_codes['reset']):
-            message += escape_codes['reset']
+            is json encoded dict
+             - script: ...
+             - sha: ...
+             - nrkeys: ...
 
-        return message
+            there is also storedprocedures_sha -> sha without having to decode json
 
+            tips on lua in redis:
+            https://redis.io/commands/eval
 
-class LevelFormatter(ColoredFormatter):
-    """An extension of ColoredFormatter that uses per-level format strings."""
-
-    def __init__(self, fmt=None, datefmt=None, style='%',
-                 log_colors=None, reset=True,
-                 secondary_log_colors=None):
-        """
-        Set the per-loglevel format that will be used.
-
-        Supports fmt as a dict. All other args are passed on to the
-        ``colorlog.ColoredFormatter`` constructor.
-
-        :Parameters:
-        - fmt (dict):
-            A mapping of log levels (represented as strings, e.g. 'WARNING') to
-            different formatters. (*New in version 2.7.0)
-        (All other parameters are the same as in colorlog.ColoredFormatter)
-
-        Example:
-
-        formatter = LevelFormatter(fmt={
-            'DEBUG':'%(log_color)s%(msg)s (%(module)s:%(lineno)d)',
-            'INFO': '%(log_color)s%(msg)s',
-            'WARNING': '%(log_color)sWARN: %(msg)s (%(module)s:%(lineno)d)',
-            'ERROR': '%(log_color)sERROR: %(msg)s (%(module)s:%(lineno)d)',
-            'CRITICAL': '%(log_color)sCRIT: %(msg)s (%(module)s:%(lineno)d)',
-        })
-        """
-        ColoredFormatter.__init__(self,
-            fmt=fmt, datefmt=datefmt, style=style, log_colors=log_colors,
-            reset=reset, secondary_log_colors=secondary_log_colors)
-        self.style = style
-        self.fmt = fmt
-
-    def format(self, record):
-        """Customize the message format based on the log level."""
-        if isinstance(self.fmt, dict):
-            self._fmt = self.fmt[record.levelname]
-            if sys.version_info > (3, 2):
-                # Update self._style because we've changed self._fmt
-                # (code based on stdlib's logging.Formatter.__init__())
-                if self.style not in logging._STYLES:
-                    raise ValueError('Style must be one of: %s' % ','.join(
-                        logging._STYLES.keys()))
-                self._style = logging._STYLES[self.style][0](self._fmt)
-
-        if sys.version_info > (2, 7):
-            message = super(LevelFormatter, self).format(record)
-        else:
-            message = ColoredFormatter.format(self, record)
-
-        return message
-
-
-class TTYColoredFormatter(LevelFormatter):
-    """
-    Blanks all color codes if not running under a TTY.
-
-    This is useful when you want to be able to pipe colorlog output to a file.
-    """
-
-    def __init__(self, *args, **kwargs):
-        """Overwrite the `reset` argument to False if stream is not a TTY."""
-        self.stream = kwargs.pop('stream', sys.stdout)
-
-        # Both `reset` and `isatty` must be true to insert reset codes.
-        kwargs['reset'] = kwargs.get('reset', True) and self.stream.isatty()
-
-        LevelFormatter.__init__(self, *args, **kwargs)
-
-    def color(self, log_colors, level_name):
-        """Only returns colors if STDOUT is a TTY."""
-        if not self.stream.isatty():
-            log_colors = {}
-        return ColoredFormatter.color(self, log_colors, level_name)
-
-#see https://github.com/borntyping/python-colorlog
-class LogFormatter(TTYColoredFormatter):
-
-    def __init__(self, fmt=None, datefmt=None, style="{"):
-        if fmt is None:
-            # fmt = MyEnv.FORMAT_LOG
-            # '{cyan!s}{asctime!s}{reset!s} - {filename:<18}:{name:12}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}'
-            fmt = {
-                'DEBUG': MyEnv.FORMAT_LOG,
-                'INFO': '{yellow!s}* {message!s}',
-                'WARNING': '{purple!s}* {message!s}',
-                # 'ERROR': '{red!s}{asctime!s}{reset!s} - {filename:<18}:{name:15}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}',
-                'ERROR': '{red!s}{asctime!s}{reset!s} {filename:<18}:-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}',
-                'CRITICAL':'{red!s}* {message!s}',
-            }
-        if datefmt is None:
-            datefmt = MyEnv.FORMAT_TIME
+            '''
 
 
 
-        super(LogFormatter, self).__init__(
-            fmt=fmt,
-            datefmt=datefmt,
-            reset=False,
-            log_colors={
-                'DEBUG': 'cyan',
-                'INFO': 'green',
-                'WARNING': 'yellow',
-                'ERROR': 'red',
-                'CRITICAL': 'red,bg_white',
-            },
-            secondary_log_colors={},
-            style=style)
-        self.length = 20
+            if "\n" not in path_or_content:
+                f = open(path_or_content, "r")
+                lua = f.read()
+                path = path_or_content
+            else:
+                lua = path_or_content
+                path = ""
 
-    def format(self, record):
-        if len(record.pathname) > self.length:
-            record.pathname = "..." + record.pathname[-self.length:]
-        if len(record.name) > 15:
-            record.name = record.name[-15:]
-        if len(record.name) > 25:
-            record.name = ""
-        return super(LogFormatter, self).format(record)
+            script =  self.register_script(lua)
 
-MYCOLORS =   { "RED":"\033[1;31m",
-                "BLUE":"\033[1;34m",
-                "CYAN":"\033[1;36m",
-                "GREEN":"\033[0;32m",
-                "GRAY":"\033[0;37m",
-                "YELLOW":"\033[0;33m",
-                "RESET":"\033[0;0m",
-                "BOLD":"\033[;1m",
-                "REVERSE":"\033[;7m"}
+            dd = {}
+            dd["sha"] = script.sha
+            dd["script"] = lua
+            dd["nrkeys"] = nrkeys
+            dd["path"] = path
+
+            data = json.dumps(dd)
+
+            self.hset("storedprocedures",name,data)
+            self.hset("storedprocedures_sha",name,script.sha)
+
+            self._storedprocedures_to_sha = {}
+
+            # sha = self._sp_data(name)["sha"]
+            # assert self.script_exists(sha)[0]
+
+            return script
+
+        def storedprocedure_delete(self, name):
+            self.hdel("storedprocedures",name)
+            self.hdel("storedprocedures_sha",name)
+            self._storedprocedures_to_sha = {}
+
+
+        @property
+        def _redis_cli_path(self):
+            if not self.__class__._redis_cli_path_:
+                from Jumpscale import j
+                if j.core.tools.cmd_installed("redis-cli_"):
+                    self.__class__._redis_cli_path_ =  "redis-cli_"
+                else:
+                    self.__class__._redis_cli_path_ =  "redis-cli"
+            return self.__class__._redis_cli_path_
+
+        def redis_cmd_execute(self,command,debug=False,debugsync=False,keys=[],args=[]):
+            """
+
+            :param command:
+            :param args:
+            :return:
+            """
+            from Jumpscale import j
+            rediscmd = self._redis_cli_path
+            if debug:
+                rediscmd+= " --ldb"
+            elif debugsync:
+                rediscmd+= " --ldb-sync-mode"
+            rediscmd+= " --%s"%command
+            for key in keys:
+                rediscmd+= " %s"%key
+            if len(args)>0:
+                rediscmd+= " , "
+                for arg in args:
+                    rediscmd+= " %s"%arg
+            print(rediscmd)
+
+            rc,out,err = j.sal.process.execute(rediscmd,interactive=True)
+            return out
+
+
+        def _sp_data(self,name):
+            if name not in self._storedprocedures_to_sha:
+                data = self.hget("storedprocedures",name)
+                data2 = json.loads(data)
+                self._storedprocedures_to_sha[name] = data2
+            return self._storedprocedures_to_sha[name]
+
+        def storedprocedure_execute(self,name,*args):
+            """
+
+            :param name:
+            :param args:
+            :return:
+            """
+
+            data = self._sp_data(name)
+            sha = data["sha"]#.encode()
+            assert isinstance(sha, (str))
+            # assert isinstance(sha, (bytes, bytearray))
+            from Jumpscale import j
+            j.shell()
+            return self.evalsha(sha,data["nrkeys"],*args)
+            # self.eval(data["script"],data["nrkeys"],*args)
+            # return self.execute_command("EVALSHA",sha,data["nrkeys"],*args)
+
+        def storedprocedure_debug(self,name,*args):
+            """
+            to see how to use the debugger see https://redis.io/topics/ldb
+
+            to break put: redis.breakpoint() inside your lua code
+            to continue: do 'c'
+
+
+            :param name: name of the sp to execute
+            :param args: args to it
+            :return:
+            """
+            data = self._sp_data(name)
+            path = data["path"]
+            if path =="":
+                from pudb import set_trace; set_trace()
+
+            nrkeys = data['nrkeys']
+            args2 = args[nrkeys:]
+            keys = args[:nrkeys]
+
+            out = self.redis_cmd_execute("eval %s"%path,debug=True,keys=keys,args=args)
+
+            return out
 
 
 class Tools:
 
-    _LogFormatter = LogFormatter
     _supported_editors = ["micro","mcedit","joe","vim","vi"]  #DONT DO AS SET  OR ITS SORTED
     j = None
     _shell = None
 
     @staticmethod
-    def log(msg):
-        logging.debug(msg)
+    def log(msg,cat="",level=10,data=None,context=None,_deeper=False,stdout=True,redis=True):
+        """
+
+        :param msg:
+        :param level:
+            - CRITICAL 	50
+            - ERROR 	40
+            - WARNING 	30
+            - INFO 	    20
+            - STDOUT 	15
+            - DEBUG 	10
+
+        :return:
+        """
+        if _deeper:
+            frame_ = inspect.currentframe().f_back
+        else:
+            frame_ = inspect.currentframe().f_back.f_back
+
+        fname = frame_.f_code.co_filename.split("/")[-1]
+        defname = frame_.f_code.co_name
+        linenr= frame_.f_code.co_firstlineno
+
+        logdict={}
+        logdict["linenr"] = linenr
+        logdict["processid"] = MyEnv.appname
+        logdict["message"] = msg
+        logdict["filepath"] = fname
+        logdict["level"] = level
+        if context:
+            logdict["context"] = context
+        else:
+            logdict["context"] = defname
+        logdict["cat"] = cat
+
+        if data and isinstance(data,dict):
+            if "password" in data or "secret" in data or "passwd" in data:
+                data["password"]="***"
+
+        logdict["data"] = data
+
+        if stdout:
+            Tools.log2stdout(logdict)
+
+    @staticmethod
+    def redis_client_get(addr='localhost',port=6379, unix_socket_path="/sandbox/var/redis.sock",die=True):
+
+        if not redis:
+            if die:
+                raise RuntimeError("redis python lib not installed, do pip3 install redis")
+            else:
+                return None
+        try:
+            cl = Redis(unix_socket_path=unix_socket_path, db=0)
+            cl.ping()
+        except Exception as e:
+            cl = None
+            if addr == "" and die:
+                raise e
+        else:
+            return cl
+
+        try:
+            cl = Redis(host=addr, port=port, db=0)
+            cl.ping()
+        except Exception as e:
+            if die:
+                raise e
+            cl = None
+
+        return cl
 
     @staticmethod
     def _isUnix():
@@ -420,12 +455,14 @@ class Tools:
         @param path: string (File path required to be removed)
         """
         path = Tools.text_replace(path)
-        logger.debug('Remove file with path: %s' % path)
+        Tools.log('Remove file with path: %s' % path)
         if os.path.islink(path):
             os.unlink(path)
         if not Tools.exists(path):
             return
-        if os.path.isfile(path):
+
+        mode = os.stat(path).st_mode
+        if os.path.isfile(path) or stat.S_ISSOCK(mode):
             if len(path) > 0 and path[-1] == os.sep:
                 path = path[:-1]
             os.remove(path)
@@ -462,14 +499,14 @@ class Tools:
         except (OSError, AttributeError):
             pass
         if found and followlinks and stat.S_ISLNK(st.st_mode):
-            logger.debug('path %s exists' % str(path.encode("utf-8")))
+            Tools.log('path %s exists' % str(path.encode("utf-8")))
             linkpath = os.readlink(path)
             if linkpath[0]!="/":
                 linkpath = os.path.join(Tools.path_parent(path), linkpath)
             return Tools.exists(linkpath)
         if found:
             return True
-        # logger.debug('path %s does not exist' % str(path.encode("utf-8")))
+        # Tools.log('path %s does not exist' % str(path.encode("utf-8")))
         return False
 
     @staticmethod
@@ -509,10 +546,18 @@ class Tools:
             print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
 
         if Tools._shell is None:
+            script = """
+            apt-get install -y ipython
+            apt-get install -y python3 python-dev python3-dev build-essential libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev
+            pip3 install ipython
+            apt-get clean && apt-get update && apt-get install -y locales
+            """
+            Tools.execute(script, interactive=False)
             try:
                 from IPython.terminal.embed import InteractiveShellEmbed
             except:
-                Tools._installbase()
+                Tools._installbase_for_shell()
+                from IPython.terminal.embed import InteractiveShellEmbed
             Tools._shell = InteractiveShellEmbed(banner1= "", exit_msg="")
         return Tools._shell(stack_depth=2)
 
@@ -541,6 +586,8 @@ class Tools:
     #     #     Tools._installbase()
     #     # _shell = InteractiveShellEmbed(banner1= "", exit_msg="")
     #     # return _shell(stack_depth=2)
+
+
 
     @staticmethod
     def text_strip(content, ignorecomments=False,args={},replace=False,executor=None,colors=False):
@@ -604,16 +651,21 @@ class Tools:
 
         following colors will be replaced e.g. use {RED} to get red color.
 
-        MYCOLORS =   { "RED":"\033[1;31m",
-                "BLUE":"\033[1;34m",
-                "CYAN":"\033[1;36m",
-                "GREEN":"\033[0;32m",
-                "RESET":"\033[0;0m",
-                "BOLD":"\033[;1m",
-                "REVERSE":"\033[;7m"}
-
+        MYCOLORS =
+                "RED",
+                "BLUE",
+                "CYAN",
+                "GREEN",
+                "RESET",
+                "BOLD",
+                "REVERSE"
 
         """
+        class format_dict(dict):
+            def __missing__(self, key):
+                return '{%s}' % key
+
+
         if args is None:
             args={}
 
@@ -624,15 +676,120 @@ class Tools:
                 args.update(MyEnv.config)
 
             if colors:
-                args.update(MYCOLORS)
+                args.update(MyEnv.MYCOLORS)
 
-            content = content.format(**args)
+            replace_args = format_dict(args)
+            content = content.format_map(replace_args)
 
         if text_strip:
             content = Tools.text_strip(content,ignorecomments=ignorecomments)
 
         return content
 
+
+
+
+    @staticmethod
+    def log2stdout(logdict):
+        """
+
+        :param logdict:
+
+            logdict["linenr"]
+            logdict["processid"]
+            logdict["message"]
+            logdict["filepath"]
+            logdict["level"]
+            logdict["context"]
+            logdict["cat"]
+            logdict["data"]
+            logdict["epoch"]
+
+        :return:
+        """
+
+
+        if "epoch" in logdict:
+            timetuple = time.localtime(logdict["epoch"])
+        else:
+            timetuple = time.localtime(time.time())
+        logdict ["TIME"] = time.strftime(MyEnv.FORMAT_TIME, timetuple)
+
+        if logdict["level"]<11:
+            LOGCAT = "DEBUG"
+        elif logdict["level"]==15:
+            LOGCAT = "STDOUT"
+        elif logdict["level"]<21:
+            LOGCAT = "INFO"
+        elif logdict["level"]<31:
+            LOGCAT = "WARNING"
+        elif logdict["level"]<41:
+            LOGCAT = "ERROR"
+        else:
+            LOGCAT = "CRITICAL"
+
+
+
+        LOGFORMAT = MyEnv.LOGFORMAT[LOGCAT]
+
+        logdict.update(MyEnv.MYCOLORS)
+
+        if len (logdict["filepath"])> 16:
+            logdict["filename"] = logdict["filepath"][len(logdict["filepath"])-18:]
+        else:
+            logdict["filename"] = logdict["filepath"]
+
+        if len (logdict["context"])> 35:
+            logdict["context"] = logdict["context"][len(logdict["context"])-34:]
+        if logdict["context"].startswith("_"):
+            logdict["context"]=""
+        elif logdict["context"].startswith(":"):
+            logdict["context"]=""
+
+
+
+        msg = LOGFORMAT.format(**logdict)
+
+        print(msg)
+
+        if logdict["data"] not in ["",None]:
+            if isinstance(logdict["data"],dict):
+                data = serializer(logdict["data"])
+            else:
+                data = logdict["data"]
+            data=Tools.text_indent(data,10,strip=True)
+            print (data.rstrip())
+
+
+    @staticmethod
+    def pprint(content, ignorecomments=False, text_strip=False,args=None,colors=True,indent=0,end="\n"):
+        """
+
+        :param content: what to print
+        :param ignorecomments: ignore #... on line
+        :param text_strip: remove spaces at start of line
+        :param args: replace args {} is template construct
+        :param colors:
+        :param indent:
+
+
+        MYCOLORS =
+                "RED",
+                "BLUE",
+                "CYAN",
+                "GREEN",
+                "RESET",
+                "BOLD",
+                "REVERSE"
+
+        """
+
+        content = Tools.text_replace(content,args=args,text_strip=text_strip,
+                                     ignorecomments=ignorecomments,colors=colors)
+        if indent>0:
+            content = Tools.text_indent(content)
+        Tools.log(content,level=15,stdout=False)
+        print(content,end=end)
 
     @staticmethod
     def text_indent(content, nspaces=4, wrap=180, strip=True, indentchar=" ",args=None):
@@ -652,15 +809,17 @@ class Tools:
         str|unicode : string indented by ntabs and nspaces.
 
         """
+        if content is None:
+            raise RuntimeError("content cannot be None")
+        content=str(content)
         if args is not None:
             content = Tools.text_replace(content,args=args)
         if strip:
             content = Tools.text_strip(content)
         if wrap > 0:
             content = Tools.text_wrap(content, wrap)
+
             # flatten = True
-        if content is None:
-            return
         ind = indentchar * nspaces
         out = ""
         for line in content.split("\n"):
@@ -684,7 +843,7 @@ class Tools:
         return str(random.getrandbits(16))
 
     @staticmethod
-    def execute(command, showout=True, useShell=True, cwd=None, timeout=600,die=True,
+    def execute(command, showout=True, useShell=True, cwd=None, timeout=800,die=True,
                 async_=False, args=None, env=None,
                 interactive=False,self=None,
                 replace=True,asfile=False):
@@ -696,7 +855,7 @@ class Tools:
         command  = Tools.text_strip(command, args=args, replace=replace)
         if "\n" in command or asfile:
             path = Tools._file_path_tmp_get()
-            MyEnv.logger.debug("execbash:\n'''%s\n%s'''\n" % (path, command))
+            Tools.log("execbash:\n'''%s\n%s'''\n" % (path, command))
             command2 = ""
             if die:
                 command2 = "set -e\n"
@@ -714,10 +873,10 @@ class Tools:
 
             if interactive:
                 res = Tools._execute_interactive(cmd=command, die=die)
-                logger.debug("execute interactive:%s"%command)
+                Tools.log("execute interactive:%s"%command)
                 return res
             else:
-                logger.debug("execute:%s"%command)
+                Tools.log("execute:%s"%command)
 
             os.environ["PYTHONUNBUFFERED"] = "1" #WHY THIS???
 
@@ -769,7 +928,7 @@ class Tools:
                         # Add data to cache
                         data.append(line)
                         if showout:
-                            print(line, end="")
+                            Tools.pprint(line, end="")
 
                     # Fold cache and return
                     return ''.join(data)
@@ -779,8 +938,8 @@ class Tools:
                     def readout(stream):
                         line= stream.read().decode()
                         if showout:
-                            # MyEnv.logger.debug(line)
-                            print(line)
+                            # Tools.log(line)
+                            Tools.pprint(line,end="")
 
 
             if timeout < 0:
@@ -819,7 +978,7 @@ class Tools:
                             if p.poll():
                                 p.terminate()
 
-                        MyEnv.logger.warning("process killed because of timeout")
+                        Tools.log("process killed because of timeout",level=30)
                         return (-2, out, err)
 
                     # Read out process streams, but don't block
@@ -829,11 +988,11 @@ class Tools:
             rc = -1 if p.returncode < 0 else p.returncode
 
             if rc<0 or rc>0:
-                MyEnv.logger.debug('system.process.run ended, exitcode was %d' % rc)
-            if out!="":
-                MyEnv.logger.debug('system.process.run stdout:\n%s' % out)
-            if err!="":
-                MyEnv.logger.debug('system.process.run stderr:\n%s' % err)
+                Tools.log('system.process.run ended, exitcode was %d' % rc)
+            # if out!="":
+            #     Tools.log('system.process.run stdout:\n%s' % out)
+            # if err!="":
+            #     Tools.log('system.process.run stderr:\n%s' % err)
 
             if die and rc!=0:
                 msg="\nCould not execute:"
@@ -1000,6 +1159,7 @@ class Tools:
         args["REPO_DIR"]= REPO_DIR
         args["URL"] = repo_url
         args["NAME"] = repo
+        args["BRANCH"] = branch[0]
 
         if "GITPULL" in os.environ:
             pull = str(os.environ["GITPULL"]) == "1"
@@ -1019,7 +1179,7 @@ class Tools:
                 set -e
                 mkdir -p {ACCOUNT_DIR}
                 cd {ACCOUNT_DIR}
-                git clone  --depth 1 {URL}
+                git clone  --depth 1 {URL} -b {BRANCH}
                 cd {NAME}
                 """
                 Tools.log("get code [git] (first time): %s"%repo)
@@ -1180,7 +1340,7 @@ class Tools:
                 val=True
             elif str(val).find("[")!=-1:
                 val2 = str(val).strip("[").strip("]")
-                val = [item.strip().strip("'").strip().strip("\"").strip() for item in val2.split(",")]
+                val = [item.strip().strip("'").strip().strip("\"").strip() for item in val2.split(",") if item.strip()!=""]
             else:
                 try:
                     val=int(val)
@@ -1315,7 +1475,7 @@ class UbuntuInstall():
                 "blosc>=1.5.1",
                 "Brotli>=0.6.0",
                 "certifi",
-                "cython",
+                "Cython",
                 "click>=6.6",
                 "pygments-github-lexers",
                 "colored-traceback>=0.2.2",
@@ -1379,7 +1539,6 @@ class UbuntuInstall():
                 "jsonschema>=2.5.1",
                 "graphene>=2.0",
                 "gevent-websocket",
-                "Cython",
                 "ovh>=0.4.7",
                 "packet-python>=1.37",
                 "uvloop>=0.8.0",
@@ -1418,7 +1577,7 @@ class UbuntuInstall():
         for pip in UbuntuInstall.pips_list(3):
 
             if not MyEnv.state_exists("pip_%s"%pip):
-                C="pip3 install '%s'"%pip
+                C="pip3 install --user '%s'"%pip
                 Tools.execute(C,die=True)
                 MyEnv.state_set("pip_%s"%pip)
 
@@ -1447,6 +1606,8 @@ class UbuntuInstall():
     #     """
     #     Tools.execute(script,interactive=True)
 
+LOGFORMATBASE = '{CYAN}{TIME} {filename:<16}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}'
+
 class MyEnv():
 
     config = {}
@@ -1457,9 +1618,32 @@ class MyEnv():
     _cmd_installed = {}
     state = None
     __init = False
-    # FORMAT_LOG =  '{cyan!s}{asctime!s}{reset!s} - {filename:<18}:{name:12}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}'
-    FORMAT_LOG =  '{cyan!s}{asctime!s}{reset!s}  {filename:<18}-{lineno:4d}: {log_color!s}{levelname:<10}{reset!s} {message!s}'
+
+    appname = "installer"
+
     FORMAT_TIME = "%a%d %H:%M"
+
+    MYCOLORS =   { "RED":"\033[1;31m",
+                "BLUE":"\033[1;34m",
+                "CYAN":"\033[1;36m",
+                "GREEN":"\033[0;32m",
+                "GRAY":"\033[0;37m",
+                "YELLOW":"\033[0;33m",
+                "RESET":"\033[0;0m",
+                "BOLD":"\033[;1m",
+                "REVERSE":"\033[;7m"}
+
+    LOGFORMAT = {
+        'DEBUG':LOGFORMATBASE.replace("{COLOR}","{CYAN}"),
+        'STDOUT': '{message}',
+        'INFO': '{BLUE}* {message}{RESET}',
+        'WARNING': LOGFORMATBASE.replace("{COLOR}","{BLUE}"),
+        'ERROR': LOGFORMATBASE.replace("{COLOR}","{RED}"),
+        'CRITICAL': '{RED}{TIME} {filename:<16} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}',
+    }
+
+    db = Tools.redis_client_get(die=False)
+
 
     @staticmethod
     def platform():
@@ -1507,13 +1691,14 @@ class MyEnv():
         config["DIR_BIN"] = "/sandbox/bin"
         config["DIR_APPS"] = "/sandbox/apps"
         config["USEGIT"] = True
-        config["DEBUG"] = False
+        config["DEBUG"] = True
         config["SSH_AGENT"] = False
 
-        config["LOGGER_ENABLE"] = True
         config["LOGGER_INCLUDE"] = []
         config["LOGGER_EXCLUDE"] = ["sal.fs"]
-        config["LOGGER_LEVEL"] = 10
+        config["LOGGER_LEVEL"] = 15 #means std out & plus gets logged
+        config["LOGGER_CONSOLE"] = True
+        config["LOGGER_REDIS"] = True
 
         if "INSYSTEM" in os.environ:
             if str(os.environ["INSYSTEM"]).lower().strip() in ["1","true","yes","y"]:
@@ -1599,11 +1784,6 @@ class MyEnv():
                 args["GROUPNAME"] = grp.getgrgid(gid)[0]
                 Tools.execute(script,interactive=True,args=args)
 
-
-            installed = Tools.cmd_installed("git") and Tools.cmd_installed("ssh-agent")
-            MyEnv.config["SSH_AGENT"]=installed
-            MyEnv.config_save()
-
                 # and
             if not os.path.exists(MyEnv.config["DIR_TEMP"]):
                 os.makedirs(MyEnv.config["DIR_TEMP"],exist_ok=True)
@@ -1614,6 +1794,19 @@ class MyEnv():
             MyEnv.sandbox_python_active=True
         else:
             MyEnv.sandbox_python_active=False
+
+
+        MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE",[]) if i.strip().strip("'\'") != ""]
+        MyEnv.log_excludes = [i for i in MyEnv.config.get("LOGGER_EXCLUDE",[]) if i.strip().strip("'\'") != ""]
+        MyEnv.log_loglevel = MyEnv.config.get("LOGGER_LEVEL",100)
+        MyEnv.log_console = MyEnv.config.get("LOGGER_CONSOLE",True)
+        MyEnv.log_redis = MyEnv.config.get("LOGGER_REDIS",False)
+
+        installed = Tools.cmd_installed("git") and Tools.cmd_installed("ssh-agent")
+        MyEnv.config["SSH_AGENT"]=installed
+        MyEnv.config_save()
+
+
 
         MyEnv.__init = True
 
@@ -1800,7 +1993,7 @@ class JumpscaleInstaller():
     def __init__(self):
 
         self.account = "threefoldtech"
-        self.branch = ["master"]
+        self.branch = ["development"]
         self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
     def install(self):
@@ -1915,29 +2108,9 @@ class JumpscaleInstaller():
 
 
 
-formatter = LogFormatter()
-
-logger = logging.Logger("installer")
-logger.level = logging.INFO  #10 is debug
-
-log_handler = logging.StreamHandler()
-log_handler.setLevel(logging.INFO)
-log_handler.setFormatter(formatter)
-logger.addHandler(log_handler)
-
-logging.basicConfig(level=logging.INFO)
-
-MyEnv.logger = logger
-
-# print (Tools.text_replace("{BLUE} this is a test {BOLD}{RED} now red {RESET} go back to white",colors=True))
-
-# MyEnv.logger.debug("test")
-# MyEnv.logger.info("test")
-# MyEnv.logger.error("test")
-# MyEnv.logger.critical("test \033[94m other color")
-
-
 MyEnv._init()
+
+
 
 try:
     from colored_traceback import add_hook

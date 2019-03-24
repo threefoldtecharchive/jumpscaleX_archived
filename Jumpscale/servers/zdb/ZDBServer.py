@@ -4,13 +4,14 @@ JSBASE = j.application.JSBaseClass
 import socket
 
 
+#DO NEVER USE CONFIG MANAGEMENT CLASSES
 class ZDBServer(j.application.JSBaseClass):
 
     def __init__(self):
         self.__jslocation__ = "j.servers.zdb"
         JSBASE.__init__(self)
         self.configure()
-        # self._logger_enable()
+        #
 
     def configure(self, name="main", addr="127.0.0.1", port=9900, datadir="", mode="seq", adminsecret="123456"):
         self.name = name
@@ -58,7 +59,7 @@ class ZDBServer(j.application.JSBaseClass):
         self.tmuxcmd.start()
 
 
-        self._logger.info("waiting for zdb server to start on (%s:%s)" % (self.addr, self.port))
+        self._log_info("waiting for zdb server to start on (%s:%s)" % (self.addr, self.port))
 
         res = j.sal.nettools.waitConnectionTest(self.addr, self.port)
         if res is False:
@@ -67,7 +68,7 @@ class ZDBServer(j.application.JSBaseClass):
         self.client_admin_get() #should also do a test, so we know if we can't connect
 
     def stop(self):
-        self._logger.info("stop zdb")
+        self._log_info("stop zdb")
         self.tmuxcmd.stop()
 
 
@@ -92,7 +93,7 @@ class ZDBServer(j.application.JSBaseClass):
 
     def destroy(self):
         self.stop()
-        self._logger.info("destroy zdb")
+        self._log_info("destroy zdb")
         j.sal.fs.remove(self.datadir)
         # ipath = self.datadir+ "bcdbindex.db" % self.name
 
@@ -104,10 +105,13 @@ class ZDBServer(j.application.JSBaseClass):
         """
 
         """
-        cl = j.clients.zdb.get(name=name, addr=self.addr, port=self.port, secret=self.adminsecret, mode=self.mode, admin=True)
+        cl = j.clients.zdb.client_admin_get(addr=self.addr,
+                                            port=self.port,
+                                            secret=self.adminsecret,
+                                            mode=self.mode)
         return cl
 
-    def client_get(self,name="test", nsname="default", secret="1234"):
+    def client_get(self, nsname="default", secret="1234"):
         """
         get client to zdb
 

@@ -34,7 +34,7 @@ class BuilderMongodb(j.builder.system._BaseClass):
             raise j.exceptions.RuntimeError("unsupported platform")
 
         if url:
-            self._logger.info('Downloading mongodb.')
+            self._log_info('Downloading mongodb.')
             j.builder.tools.file_download(
                 url, to="{DIR_TEMP}", overwrite=False, expand=True)
             tarpaths = j.builder.tools.find(

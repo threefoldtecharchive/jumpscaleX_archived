@@ -6,7 +6,7 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
     __jslocation__ = "j.builder.runtimes"
 
     def _init(self):
-        # self._logger_enable()
+        #
         self._python = None
         self._php = None
         self._lua = None

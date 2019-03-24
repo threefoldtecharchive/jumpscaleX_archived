@@ -26,10 +26,7 @@ from .ZFSManager import ZFSManager
 from .SocatManager import SocatManager
 
 
-
-
 class Client(BaseClient):
-
 
     _raw_chk = typchk.Checker({
         'id': str,
@@ -70,8 +67,7 @@ class Client(BaseClient):
     @property
     def _redis(self):
         password = self.password
-
-        #NOW DONE AS PART OF THE CLIENT FOR ITSYOUONLINE, SHOULD NOT BE DONE AT THIS LEVEL
+        # NOW DONE AS PART OF THE CLIENT FOR ITSYOUONLINE, SHOULD NOT BE DONE AT THIS LEVEL
 
         # if password:
         #     self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
@@ -101,6 +97,7 @@ class Client(BaseClient):
                                            port=self.port,
                                            password=self.password,
                                            db=self.db, ssl=self.ssl,
+                                           ssl_cert_reqs=None,
                                            socket_timeout=socket_timeout,
                                            socket_keepalive=True, socket_keepalive_options=socket_keepalive_options)
 
@@ -252,7 +249,6 @@ class Client(BaseClient):
         self._redis.rpush('core:default', json.dumps(payload))
         if self._redis.brpoplpush(flag, flag, 120) is None:
             TimeoutError('failed to queue job {}'.format(id))
-        self._logger.debug('%s >> g8core.%s(%s)', id, command, ', '.join(("%s=%s" % (k, v) for k, v in arguments.items())))
 
         return Response(self, id)
 

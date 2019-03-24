@@ -86,7 +86,7 @@ class IniFile(j.application.JSBaseClass):
             self.__inifilepath = iniFile
             if create:
                 j.sal.fs.createDir(j.sal.fs.getDirName(iniFile))
-                self._logger.info("Create config file: " + iniFile)
+                self._log_info("Create config file: " + iniFile)
                 j.sal.fs.writeFile(iniFile, '')
             if not j.sal.fs.isFile(iniFile):
                 raise j.exceptions.RuntimeError("Inifile could not be found on location %s" % iniFile)
@@ -115,7 +115,7 @@ class IniFile(j.application.JSBaseClass):
                 fp = self.__file
             return self.__configParser.readfp(fp)
         except Exception as err:
-            self._logger.error(err)
+            self._log_error(err)
             if fp and not fp.closed:
                 fp.close()
             raise j.exceptions.RuntimeError("Failed to read the inifile \nERROR: %s" % (str(err)))
@@ -168,7 +168,7 @@ class IniFile(j.application.JSBaseClass):
             return default
         try:
             result = self.__configParser.get(sectionName, paramName, raw=raw)
-            self._logger.info("Inifile: get %s:%s from %s, result:%s" %
+            self._log_info("Inifile: get %s:%s from %s, result:%s" %
                              (sectionName, paramName, self.__inifilepath, result))
             return result
         except Exception as err:
@@ -181,7 +181,7 @@ class IniFile(j.application.JSBaseClass):
         @param paramName:   name of the parameter"""
         try:
             result = self.__configParser.getboolean(sectionName, paramName)
-            self._logger.info("Inifile: get boolean %s:%s from %s, result:%s" %
+            self._log_info("Inifile: get boolean %s:%s from %s, result:%s" %
                              (sectionName, paramName, self.__inifilepath, result))
             return result
 
@@ -195,7 +195,7 @@ class IniFile(j.application.JSBaseClass):
         @param paramName:   name of the parameter"""
         try:
             result = self.__configParser.getint(sectionName, paramName)
-            self._logger.info("Inifile: get integer %s:%s from %s, result:%s" %
+            self._log_info("Inifile: get integer %s:%s from %s, result:%s" %
                              (sectionName, paramName, self.__inifilepath, result))
             return result
         except Exception as e:
@@ -208,7 +208,7 @@ class IniFile(j.application.JSBaseClass):
         @param paramName:   name of the parameter"""
         try:
             result = self.__configParser.getfloat(sectionName, paramName)
-            self._logger.info("Inifile: get integer %s:%s from %s, result:%s" %
+            self._log_info("Inifile: get integer %s:%s from %s, result:%s" %
                              (sectionName, paramName, self.__inifilepath, result))
             return result
         except Exception as e:
@@ -221,7 +221,7 @@ class IniFile(j.application.JSBaseClass):
         try:
             if(self.checkSection(sectionName)):
                 return
-            self._logger.info("Inifile: add section %s to %s" % (sectionName, self.__inifilepath))
+            self._log_info("Inifile: add section %s to %s" % (sectionName, self.__inifilepath))
             self.__configParser.add_section(sectionName)
             if self.checkSection(sectionName):
                 return True
@@ -238,7 +238,7 @@ class IniFile(j.application.JSBaseClass):
             if str(newvalue) == "none":
                 newvalue == "*NONE*"
             self.__configParser.set(sectionName, paramName, str(newvalue))
-            self._logger.info("Inifile: set %s:%s=%s on %s" %
+            self._log_info("Inifile: set %s:%s=%s on %s" %
                              (sectionName, paramName, str(newvalue), self.__inifilepath))
             # if self.checkParam(sectionName, paramName):
             #    return True
@@ -263,7 +263,7 @@ class IniFile(j.application.JSBaseClass):
             return False
         try:
             self.__configParser.remove_section(sectionName)
-            self._logger.info("inifile: remove section %s on %s" % (sectionName, self.__inifilepath))
+            self._log_info("inifile: remove section %s on %s" % (sectionName, self.__inifilepath))
             if self.checkSection(sectionName):
                 return False
             return True
@@ -278,7 +278,7 @@ class IniFile(j.application.JSBaseClass):
             return False
         try:
             self.__configParser.remove_option(sectionName, paramName)
-            self._logger.info("Inifile:remove %s:%s from %s" % (sectionName, paramName, self.__inifilepath))
+            self._log_info("Inifile:remove %s:%s from %s" % (sectionName, paramName, self.__inifilepath))
             return True
         except Exception as err:
             raise j.exceptions.RuntimeError(
@@ -291,7 +291,7 @@ class IniFile(j.application.JSBaseClass):
         """
         closeFileHandler = True
         fp = None
-        self._logger.info("Inifile: Write configfile %s to disk" % (self.__inifilepath))
+        self._log_info("Inifile: Write configfile %s to disk" % (self.__inifilepath))
         if not filePath:
             if self.__inifilepath:  # Use the inifilepath that was set in the constructor
                 filePath = self.__inifilepath

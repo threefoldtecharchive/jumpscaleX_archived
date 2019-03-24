@@ -125,7 +125,7 @@ class ACL(Index_CLASS,MODEL_CLASS):
 
     def _dict_process_out(self,d):
         res={}
-        self._logger.debug("dict_process_out:\n%s"%d)
+        self._log_debug("dict_process_out:\n%s"%d)
         for group in d["groups"]:
             r=j.data.types.list.clean(group["rights"])
             r="".join(r)
@@ -148,7 +148,7 @@ class ACL(Index_CLASS,MODEL_CLASS):
             res["groups"].append({"uid":uid,"rights":rights})
         for uid,rights in d["users"].items():
             res["users"].append({"uid":uid,"rights":rights})
-        self._logger.debug("dict_process_in_result:\n%s"%res)
+        self._log_debug("dict_process_in_result:\n%s"%res)
         return res
 
     def _set_pre(self,acl):
@@ -165,22 +165,22 @@ class ACL(Index_CLASS,MODEL_CLASS):
             if acl.id is not None:
                 #means the object did not change nothing to do
                 #and the object id is already known, so exists already in DB
-                self._logger.debug("acl alike, id exists")
+                self._log_debug("acl alike, id exists")
                 return False, acl
             else:
-                self._logger.debug("acl alike, new object")
+                self._log_debug("acl alike, new object")
                 return True, acl #is a new one need to save
 
 
         #now check if the acl hash is already in the index
         res = self.get_from_keys(hash=hash)
         if len(res)==1:
-            self._logger.debug("acl is in index")
+            self._log_debug("acl is in index")
             return False,res[0] #no need to save
         elif len(res)>1:
             raise RuntimeError("more than 1 acl found based on hash")
         else:
-            self._logger.debug("new acl")
+            self._log_debug("new acl")
             #MEANS THE HASH IS DIFFERENT & not found in index
             if acl.id is not None:
                 #acl already exists, no need to save but need to index

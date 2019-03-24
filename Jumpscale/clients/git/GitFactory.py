@@ -250,7 +250,7 @@ class GitFactory(j.application.JSBaseClass):
         """
 
         def ignorelocalchanges_do():
-            self._logger.info(
+            self._log_info(
                 ("git pull, ignore changes %s -> %s" %
                     (url, dest)))
             cmd = "cd %s;git fetch" % dest
@@ -258,7 +258,7 @@ class GitFactory(j.application.JSBaseClass):
                 cmd += " --depth %s" % depth
                 self.execute(cmd, executor=executor)
             if branch is not None:
-                self._logger.info("reset branch to:%s" % branch)
+                self._log_info("reset branch to:%s" % branch)
                 self.execute(
                     "cd %s;git fetch; git reset --hard origin/%s" %
                     (dest, branch), timeout=timeout, executor=executor)
@@ -320,7 +320,7 @@ class GitFactory(j.application.JSBaseClass):
             cmd = cmd.format(host=base, port=port or 22)
             self.execute(cmd, timeout=timeout, executor=executor)
 
-        self._logger.info("%s:pull:%s ->%s" % (executor, url, dest))
+        self._log_info("%s:pull:%s ->%s" % (executor, url, dest))
 
         existsDir = j.sal.fs.exists(
             dest) if not executor else executor.exists(dest)
@@ -361,13 +361,13 @@ class GitFactory(j.application.JSBaseClass):
                     branch = branchFound
 
                 # pull
-                self._logger.info(("git pull %s -> %s" % (url, dest)))
+                self._log_info(("git pull %s -> %s" % (url, dest)))
 
                 rc = 1
                 counter = 0
                 while rc > 0 and counter < 4:
                     cmd = "cd %s;git pull origin %s" % (dest, branch or tag)
-                    self._logger.debug(cmd)
+                    self._log_debug(cmd)
                     rc, out, err = self.execute(
                         cmd, timeout=timeout, executor=executor, die=False)
                     if rc > 0:
@@ -379,7 +379,7 @@ class GitFactory(j.application.JSBaseClass):
                                 if cmsg.lower().strip() == "-":
                                     ignorelocalchanges_do()
                                     # cmd="cd %s; git checkout -- ."%dest
-                                    # self._logger.debug(cmd)
+                                    # self._log_debug(cmd)
                                     # rc,out,err=self.execute(cmd, timeout=timeout, executor=executor,die=False)
                                     # if rc>0:
                                     #     print("ERROR: Could not discard changes in :%s, please do manual."%dest)
@@ -387,7 +387,7 @@ class GitFactory(j.application.JSBaseClass):
                                 else:
                                     cmd = "cd %s;git add . -A; git commit -m '%s'" % (
                                         dest, cmsg)
-                                    self._logger.debug(cmd)
+                                    self._log_debug(cmd)
                                     rc, out, err = self.execute(
                                         cmd, timeout=timeout,
                                         executor=executor, die=False)
@@ -408,7 +408,7 @@ class GitFactory(j.application.JSBaseClass):
                                 raise j.exceptions.OPERATIONS(
                                     "merge conflict:%s" % out)
 
-                            self._logger.debug(
+                            self._log_debug(
                                 "git pull rc>0, need to implement further, check what usecase is & build interactivity around")
                             print(out)
                             print(err)
@@ -416,7 +416,7 @@ class GitFactory(j.application.JSBaseClass):
                             sys.exit(1)
 
         else:
-            self._logger.info(("git clone %s -> %s" % (url, dest)))
+            self._log_info(("git clone %s -> %s" % (url, dest)))
             # self.createDir(dest)
             extra = ""
             if depth is not None:
@@ -436,19 +436,19 @@ class GitFactory(j.application.JSBaseClass):
                     cmd = "mkdir -p %s;cd %s;git -c http.sslVerify=false clone %s  %s %s" % (
                         j.sal.fs.getParent(dest), j.sal.fs.getParent(dest), extra, url, dest)
 
-            self._logger.info(cmd)
+            self._log_info(cmd)
 
-            # self._logger.info(str(executor)+" "+cmd)
+            # self._log_info(str(executor)+" "+cmd)
             self.execute(cmd, timeout=timeout, executor=executor)
 
         if tag is not None:
-            self._logger.info("reset tag to:%s" % tag)
+            self._log_info("reset tag to:%s" % tag)
             self.execute("cd %s;git fetch --tags; git checkout tags/%s" %
                          (dest, tag), timeout=timeout, executor=executor)
 
         if revision is not None:
             cmd = "mkdir -p %s;cd %s;git checkout %s" % (dest, dest, revision)
-            self._logger.info(cmd)
+            self._log_info(cmd)
             self.execute(cmd, timeout=timeout, executor=executor)
 
         return dest
@@ -636,8 +636,8 @@ class GitFactory(j.application.JSBaseClass):
         accounttofind = account
 
         def checkaccount(account):
-            # self._logger.info accounts
-            # self._logger.info "%s %s"%(account,accounttofind)
+            # self._log_info accounts
+            # self._log_info "%s %s"%(account,accounttofind)
             if account.startswith("NEW"):
                 return False
 
@@ -651,7 +651,7 @@ class GitFactory(j.application.JSBaseClass):
                         accounts.append(account)
                 else:
                     accounts.append(account)
-            # self._logger.info accountsunt in accounts
+            # self._log_info accountsunt in accounts
             return account in accounts
 
         def _getRepos(codeDir, account=None, name=None):  # NOQA
@@ -714,7 +714,7 @@ class GitFactory(j.application.JSBaseClass):
         if interactive:
             result = []
             if len(repos) > 20:
-                self._logger.info(
+                self._log_info(
                     "Select account to choose from, too many choices.")
                 accounts = j.tools.console.askChoiceMultiple(accounts)
 
@@ -840,7 +840,7 @@ class GitFactory(j.application.JSBaseClass):
         # TODO: make sure we use gitlab or github account if properly filled in
         repos = self.getGitReposListLocal(provider, account, name)
         for name, path in list(repos.items()):
-            self._logger.info(("push git repo:%s" % path))
+            self._log_info(("push git repo:%s" % path))
             cmd = "cd %s;git add . -A" % (path)
             j.sal.process.executeInteractive(cmd)
             cmd = "cd %s;git commit -m \"%s\"" % (path, message)
@@ -855,7 +855,7 @@ class GitFactory(j.application.JSBaseClass):
     def updateGitRepos(self, provider="", account="", name="", message=""):
         repos = self.getGitReposListLocal(provider, account, name)
         for name, path in list(repos.items()):
-            self._logger.info(("push git repo:%s" % path))
+            self._log_info(("push git repo:%s" % path))
             branch = self.getGitBranch(path)
             cmd = "cd %s;git add . -A" % (path)
             j.sal.process.executeInteractive(cmd)
@@ -903,9 +903,9 @@ class GitFactory(j.application.JSBaseClass):
                 change = False
                 for line in text.split("\n"):
                     if line.replace(" ", "").find("url=") != -1:
-                        # self._logger.info line
+                        # self._log_info line
                         if line.find("@git") == -1:
-                            # self._logger.info 'REPLACE'
+                            # self._log_info 'REPLACE'
                             provider2 = line.split(
                                 "//", 1)[1].split("/", 1)[0].strip()
                             account2 = line.split("//", 1)[1].split("/", 2)[1]
@@ -919,15 +919,15 @@ class GitFactory(j.application.JSBaseClass):
                             line = "\turl = git@%s:%s/%s.git" % (
                                 provider2, account2, name2)
                             change = True
-                        # self._logger.info line
+                        # self._log_info line
                     text2 += "%s\n" % line
 
                 if change:
-                    # self._logger.info text
-                    # self._logger.info "===="
-                    # self._logger.info text2
-                    # self._logger.info "++++"
-                    self._logger.info(
+                    # self._log_info text
+                    # self._log_info "===="
+                    # self._log_info text2
+                    # self._log_info "++++"
+                    self._log_info(
                         ("changed login/passwd/git on %s" % configpath))
                     j.sal.fs.writeFile(configpath, text2)
 

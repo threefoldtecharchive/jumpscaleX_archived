@@ -34,8 +34,8 @@ class GiteaTokens(j.application.JSBaseClass):
             self._items = self.user.client.api.users.userGetTokens(username=self.user.username).json()
         except Exception as e:
             if e.response.status_code == 401:
-                self._logger.debug('not authorized')
-                self._logger.error('#FIX ME: THIS API not working')
+                self._log_debug('not authorized')
+                self._log_error('#FIX ME: THIS API not working')
         return self
 
     def __repr__ (self):

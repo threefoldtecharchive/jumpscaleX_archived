@@ -1,5 +1,7 @@
 from Jumpscale import j
 
+from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChainExplorerGetClientStub
+
 def main(self):
     """
     to run:
@@ -14,6 +16,10 @@ def main(self):
     # for standard net you could also immediate create a new wallet using
     # `c = j.tfchain.clients.mydevclient`, or the more explicit form
     # `c = j.clients.tfchain.new("mydevclient", network_type="STD")`
+
+    # (we replace internal client logic with custom logic as to ensure we can test without requiring an active network)
+    explorer_client = TFChainExplorerGetClientStub()
+    c._explorer_get = explorer_client.explorer_get
 
     # create a new devnet wallet
     w = c.wallets.mywallet # is the implicit form of `c.wallets.new("mywallet")`
@@ -31,11 +37,11 @@ def main(self):
     # a wallet address is generated from the blake2 hash of a public key, owned by the wallet
     assert len(w.addresses) == 1
     # should you want to know the address count there is a property for that
-    assert w.address_count == 1
+    assert w.key_count == 1
 
     # generating a new address is easy as well
     assert len(w.address_new()) == 78 # all addresses have a fixed length of 78
-    assert w.address_count == 2
+    assert w.key_count == 2
     assert w.addresses[0] != w.addresses[1]
     for address in w.addresses:
         assert address[:2] == '01' # all wallet addresses start with the `01` prefix

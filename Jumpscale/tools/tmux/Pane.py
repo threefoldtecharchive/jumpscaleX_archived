@@ -16,7 +16,7 @@ class Pane(j.application.JSBaseClass):
             self.name_set(name)
         else:
             self.name = self.mgmt.get("pane_title")
-        # self._logger_enable()
+        #
 
     # @property
     # def name(self):
@@ -65,7 +65,7 @@ class Pane(j.application.JSBaseClass):
         else:
             cmd="tmux capture-pane -t %%%s -pS -%s -E %s > /tmp/out.txt"%(self.id,start,end)
 
-        self._logger.debug(cmd)
+        self._log_debug(cmd)
 
 
         cmd=cmd.replace("%%","%")
@@ -89,7 +89,7 @@ class Pane(j.application.JSBaseClass):
 
 
     def execute(self, cmd, wait=False):
-        self._logger.debug (cmd)
+        self._log_debug (cmd)
         if not cmd.endswith("\n"):
             cmd+="\n"
         self.mgmt.send_keys(cmd)
@@ -168,18 +168,18 @@ class Pane(j.application.JSBaseClass):
                 child.kill()
 
         while running:
-            self._logger.debug("kill all processes")
+            self._log_debug("kill all processes")
             cs = self.process_obj_children
             if len(cs)==0:
                 running=False
                 break
             for child in  self.process_obj_children:
-                self._logger.debug("try to kill:%s"%child)
+                self._log_debug("try to kill:%s"%child)
                 status = None
                 try:
                     status = child.status()
                 except Exception as e:
-                    self._logger.debug(str(e))
+                    self._log_debug(str(e))
                     if str(e).find("process no longer exists")!=-1:
                         continue
                     raise e

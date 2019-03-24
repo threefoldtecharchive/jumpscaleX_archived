@@ -182,7 +182,7 @@ class BuilderTools(j.builder.system._BaseClass):
                     url, to, user, minsp, retry, timeout)
                 if self.file_exists(to):
                     cmd += " -C -"
-                self._logger.info(cmd)
+                self._log_info(cmd)
                 j.sal.fs.remove("%s.downloadok" % to)
                 rc, out, err = self.run(cmd, die=False, timeout=timeout)
                 if rc == 33:  # resume is not support try again withouth resume
@@ -208,7 +208,7 @@ class BuilderTools(j.builder.system._BaseClass):
         return to
 
     def file_expand(self, path, destination="", removeTopDir=False):
-        self._logger.info("file_expand:%s" % path)
+        self._log_info("file_expand:%s" % path)
         path = j.core.tools.text_replace(path)
         base = j.sal.fs.getBaseName(path)
         if base.endswith(".tgz"):
@@ -575,8 +575,8 @@ class BuilderTools(j.builder.system._BaseClass):
         """Updates the mode / owner / group for the given remote directory."""
         location = j.core.tools.text_replace(location)
         if showout:
-            # self._logger.info("set dir attributes:%s"%location)
-            self._logger.debug('set dir attributes:%s"%location')
+            # self._log_info("set dir attributes:%s"%location)
+            self._log_debug('set dir attributes:%s"%location')
         recursive = recursive and "-R " or ""
         if mode:
             self.run('chmod %s %s %s' %
@@ -667,8 +667,8 @@ class BuilderTools(j.builder.system._BaseClass):
 
         out = self.run(cmd, showout=False)[1]
 
-        # self._logger.info(cmd)
-        self._logger.debug(cmd)
+        # self._log_info(cmd)
+        self._log_debug(cmd)
 
         paths = []
         for item in out.split("\n"):
@@ -706,7 +706,7 @@ class BuilderTools(j.builder.system._BaseClass):
         """
         @param profile, execute the bash profile first
         """
-        self._logger.info(cmd)
+        self._log_info(cmd)
         if cmd.strip() == "":
             raise RuntimeError("cmd cannot be empty")
         if not env:
@@ -715,7 +715,7 @@ class BuilderTools(j.builder.system._BaseClass):
             env = args.update(env)
 
         rc, out, err = j.sal.process.execute(cmd, cwd=None, timeout=timeout, die=True,
-                                             env=env, interactive=False, replace=replace)
+                                             env=env, interactive=False, replace=replace, showout=showout)
         return rc, out, err
 
     def cd(self, path):
@@ -761,7 +761,7 @@ class BuilderTools(j.builder.system._BaseClass):
         command = j.core.tools.text_replace(command)
         rc, out, err = self.run("which '%s'" % command,
                                 die=False, showout=False, profile=True)
-        if rc>0:
+        if rc > 0:
             raise RuntimeError("command '%s' does not exist, cannot find" % command)
         return out.strip()
 
@@ -779,15 +779,15 @@ class BuilderTools(j.builder.system._BaseClass):
 
     @property
     def isUbuntu(self):
-        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("ubuntu")!=-1
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("ubuntu") != -1
 
     @property
     def isLinux(self):
-        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("linux")!=-1
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("linux") != -1
 
     @property
     def isAlpine(self):
-        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("alpine")!=-1
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("alpine") != -1
 
     @property
     def isArch(self):
@@ -795,8 +795,8 @@ class BuilderTools(j.builder.system._BaseClass):
 
     @property
     def isMac(self):
-        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("darwin")!=-1
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("darwin") != -1
 
     @property
     def isCygwin(self):
-        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("cygwin")!=-1
+        return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("cygwin") != -1

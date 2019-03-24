@@ -19,7 +19,7 @@ class BuilderUFW(j.builder.system._BaseClass):
             if not j.core.platformtype.myplatform.isMac:
                 if #j.builder.sandbox.cmdGetPath("nft", die=False) is not False:
                     self._ufw_enabled = False
-                    self._logger.info("cannot use ufw, nft installed")
+                    self._log_info("cannot use ufw, nft installed")
                 if #j.builder.sandbox.cmdGetPath("ufw", die=False) is False:
                     j.builder.tools.package_install("ufw")
                     #j.builder.sandbox.cmdGetPath("ufw")
@@ -98,9 +98,9 @@ class BuilderUFW(j.builder.system._BaseClass):
             return                 
         a = self.ufw_rules_allow
         b = self.ufw_rules_deny
-        self._logger.info("ALLOW")
-        self._logger.info(a)
-        self._logger.info("DENY")
-        self._logger.info(b)
+        self._log_info("ALLOW")
+        self._log_info(a)
+        self._log_info("DENY")
+        self._log_info(b)
 
-        # self._logger.info(j.sal.process.execute("iptables -t nat -nvL"))
+        # self._log_info(j.sal.process.execute("iptables -t nat -nvL"))

@@ -5,10 +5,6 @@ JSBASE = j.builder.system._BaseClass
 
 class BuilderCapnp(j.builder.system._BaseClass):
 
-
-    def __init(self):
-        self._logger_enable()
-
     def build(self, reset=False):
         """
         install capnp
@@ -25,11 +21,11 @@ class BuilderCapnp(j.builder.system._BaseClass):
         if self.prefab.core.isUbuntu:
             j.builder.tools.package_install('g++')
 
-        url="https://capnproto.org/capnproto-c++-0.6.1.tar.gz"
+        url = "https://capnproto.org/capnproto-c++-0.6.1.tar.gz"
         dest = j.core.tools.text_replace("{DIR_VAR}/build/capnproto")
         j.sal.fs.createDir(dest)
         self.prefab.core.file_download(url, to=dest, overwrite=False, retry=3,
-                    expand=True, minsizekb=900, removeTopDir=True, deletedest=True)
+                                       expand=True, minsizekb=900, removeTopDir=True, deletedest=True)
 
         script = """
         cd {DIR_VAR}/build/capnproto
@@ -41,14 +37,11 @@ class BuilderCapnp(j.builder.system._BaseClass):
 
         self._done_set('capnp')
 
-
     def install(self):
         self.build()
         self.prefab.runtimes.pip.multiInstall(['cython', 'setuptools', 'pycapnp'], upgrade=True)
 
-
         self._done_set('capnp')
-
 
     def test(self, build=False):
         """

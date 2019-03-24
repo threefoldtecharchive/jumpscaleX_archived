@@ -2,7 +2,7 @@ import logging
 import time
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+
 
 
 class ZeroStor():
@@ -27,7 +27,7 @@ class ZeroStor():
         if not is_running:
             return
 
-        logger.debug('stop %s', self)
+        self._log_debug('stop %s', self)
 
         self.container.client.job.kill(job['cmd']['id'])
 

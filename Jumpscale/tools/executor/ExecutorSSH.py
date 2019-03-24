@@ -62,7 +62,7 @@ class ExecutorSSH(ExecutorBase):
             cmds, die, checkok=checkok, env=env, sudo=sudo)
         if cmds.find("\n") != -1 and asScript:
             if showout:
-                self._logger.info(
+                self._log_info(
                     "EXECUTESCRIPT} %s:%s:\n%s" %
                     (self.sshclient.addr, self.sshclient.port, cmds))
             # sshkey = self.sshclient.key_filename or ""
@@ -78,7 +78,7 @@ class ExecutorSSH(ExecutorBase):
 
         # online command, we use prefab
         if showout:
-            self._logger.info("EXECUTE %s:%s: %s" %
+            self._log_info("EXECUTE %s:%s: %s" %
                              (self.sshclient.addr, self.sshclient.port, cmds))
 
         if sudo:
@@ -87,7 +87,7 @@ class ExecutorSSH(ExecutorBase):
             cmds2, die=die, showout=showout, timeout=timeout)
 
         if showout:
-            self._logger.debug("EXECUTE OK")
+            self._log_debug("EXECUTE OK")
 
         if checkok and die:
             out = self._docheckok(cmds, out)
@@ -114,7 +114,7 @@ class ExecutorSSH(ExecutorBase):
             raise RuntimeError(content)
 
         if showout:
-            self._logger.info(
+            self._log_info(
                 "EXECUTESCRIPT {}:{}:\n'''\n{}\n'''\n".format(
                     self.sshclient.addr,
                     self.sshclient.port,

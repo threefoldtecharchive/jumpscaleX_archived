@@ -76,14 +76,14 @@ class BuilderFW(j.builder.system._BaseClass):
         f.write(C)
 
         #now applying
-        self._logger.info("applied ruleset")
+        self._log_info("applied ruleset")
         rc=os.system("nft -f /etc/nftables.conf")
         time.sleep(1)
 
         rc2=os.system("ping -c 1 $pinghost")
 
         if rc2!=0:
-            self._logger.info("could not apply, restore")
+            self._log_info("could not apply, restore")
             #could not ping need to restore
             os.system("cp /tmp/firelwallruleset_old /etc/nftables.conf")
             rc=os.system("nft -f /etc/nftables.conf")

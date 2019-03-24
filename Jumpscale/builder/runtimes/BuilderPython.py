@@ -4,7 +4,7 @@ from Jumpscale import j
 class BuilderPython(j.builder.system._BaseClass):
     def _init(self):
 
-        self._logger_enable()
+
 
         self.DIR_BUILD_L = j.core.tools.text_replace("{DIR_VAR}/build/python3")
         j.sal.fs.createDir(self.DIR_BUILD_L)
@@ -104,8 +104,8 @@ class BuilderPython(j.builder.system._BaseClass):
 
             j.sal.fs.writeFile("%s/mycompile_all.sh" % self.DIR_CODE_L, script)
 
-            self._logger.info("compiling python3...")
-            self._logger.debug(script)
+            self._log_info("compiling python3...")
+            self._log_debug(script)
 
             # makes it easy to test & make changes where required
             j.sal.process.execute("bash %s/mycompile_all.sh" % self.DIR_CODE_L)
@@ -181,7 +181,7 @@ class BuilderPython(j.builder.system._BaseClass):
         msg = "\n\nto test do:\ncd {DIR_VAR}/build/;source env.sh;python3"
         msg = j.core.tools.text_replace(msg)
 
-        self._logger.info(msg)
+        self._log_info(msg)
 
     def _pip_all(self, reset=False):
         """
@@ -206,7 +206,7 @@ class BuilderPython(j.builder.system._BaseClass):
         # self.sandbox(deps=False)
         self._done_set("pipall")
 
-        self._logger.info("PIP DONE")
+        self._log_info("PIP DONE")
 
     # need to do it here because all runs in the sandbox
     def _pip(self, pips, reset=False):
@@ -244,10 +244,10 @@ class BuilderPython(j.builder.system._BaseClass):
 
         """
 
-        self._logger.info("COPY FILES TO SANDBOX")
+        self._log_info("COPY FILES TO SANDBOX")
 
         path = self.DIR_BUILD_L
-        self._logger.info("sandbox:%s" % path)
+        self._log_info("sandbox:%s" % path)
 
         if j.core.platformtype.myplatform.isMac:
             j.builder.system.package.install("redis")
@@ -303,7 +303,7 @@ class BuilderPython(j.builder.system._BaseClass):
             files = j.sal.fs.listFilesInDir(path, recursive=True, filter="*.so", followSymlinks=True)
             files += j.sal.fs.listFilesInDir(path, recursive=True, filter="*.so.*", followSymlinks=True)
             if len(files) > 0:
-                self._logger.debug("found binary files in:%s" % path)
+                self._log_debug("found binary files in:%s" % path)
                 return True
             return False
 
@@ -323,7 +323,7 @@ class BuilderPython(j.builder.system._BaseClass):
                         dest0 = "%s/lib/pythonbin/%s" % (dest, ddir)
                     else:
                         dest0 = "%s/lib/python/%s" % (dest, ddir)
-                    self._logger.debug("copy lib:%s ->%s" % (src0, dest0))
+                    self._log_debug("copy lib:%s ->%s" % (src0, dest0))
                     j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=True, overwriteFiles=True,
                                          ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True,
                                          createdir=True)
@@ -335,7 +335,7 @@ class BuilderPython(j.builder.system._BaseClass):
                     dest0 = "%s/lib/pythonbin/%s" % (dest, fname)
                 if fname.endswith(".py"):
                     dest0 = "%s/lib/python/%s" % (dest, fname)
-                self._logger.debug("copy %s %s" % (item, dest0))
+                self._log_debug("copy %s %s" % (item, dest0))
                 if dest0 is not "":
                     j.sal.fs.copyFile(item, dest0)
 
@@ -368,7 +368,7 @@ class BuilderPython(j.builder.system._BaseClass):
         C = j.core.tools.text_replace(C, args=self.__dict__)
         j.sal.process.execute(C)
 
-        self._logger.info("copy to sandbox done")
+        self._log_info("copy to sandbox done")
 
 
 

@@ -18,7 +18,7 @@ class Tmux(j.application.JSBaseClass):
         self._server = None
         self._session = None
         self._windows_active = {}
-        self._logger_enable()
+
 
 
     @property
@@ -72,7 +72,7 @@ class Tmux(j.application.JSBaseClass):
                 raise RuntimeError("did not find tmux session -t main")
 
             self._server = tmuxp.Server()
-            self._logger.info("tmux server is running")
+            self._log_info("tmux server is running")
 
         return self._server
 
@@ -243,7 +243,7 @@ class Tmux(j.application.JSBaseClass):
         res = p.out_get()
         p=self.pane_get("test2","test2",reset=True)
 
-        self._logger.info("tests ok for tmux")
+        self._log_info("tests ok for tmux")
 
 
     def test_multi(self):

@@ -12,7 +12,7 @@ C="""
 def _init(self):
     self.lexers = Lexers()
     self.formatters = Formatters()
-    self._logger_enable()
+
 
 def print_python(self,text,formatter="terminal"):
     C=Tools.text_replace(text)

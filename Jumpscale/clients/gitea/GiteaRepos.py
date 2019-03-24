@@ -29,9 +29,9 @@ class GiteaRepos(j.application.JSBaseClass):
                     setattr(r, k, v)
             except Exception as e:
                 if e.response.status_code == 404:
-                    self._logger.error('repo does not exist')
+                    self._log_error('repo does not exist')
                 else:
-                    self._logger.error(e.response.content)
+                    self._log_error(e.response.content)
                 return
         return r
 
@@ -132,7 +132,7 @@ class GiteaRepos(j.application.JSBaseClass):
                 setattr(repo, k, v)
             return repo
         except Exception as e:
-            self._logger.debug(e.response.content)
+            self._log_debug(e.response.content)
 
     def search(
             self,

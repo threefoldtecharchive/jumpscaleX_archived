@@ -14,6 +14,6 @@ def main(self):
     c.namespaces_list()
     assert c.namespaces_list() == ['default']
 
-    self._logger.info("test ok")
+    self._log_info("test ok")
 
     return "OK"

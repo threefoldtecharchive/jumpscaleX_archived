@@ -36,14 +36,14 @@ class JSWebServer(j.application.JSBaseClass):
 
         self.path_blueprints = j.sal.fs.joinPaths(j.dirs.VARDIR,"dm_packages","blueprints")
 
-        self._logger_enable()
+
 
     def start(self, debug=False):
-        self._logger.info("start")
+        self._log_info("start")
         self._init(debug=debug)
 
         self._register_blueprints()
-        self._logger.info("%s"%self)
+        self._log_info("%s"%self)
         self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
         self.http_server.serve_forever()
 
@@ -56,13 +56,13 @@ class JSWebServer(j.application.JSBaseClass):
         for h in self._sig_handler:
             h.cancel()
 
-        self._logger.info('stopping server')
+        self._log_info('stopping server')
         self.server.stop()
 
 
     def _register_blueprints(self):
 
-        self._logger.info("register blueprints")
+        self._log_info("register blueprints")
 
         j.shell()
         if self.path_blueprints not in sys.path:
@@ -81,11 +81,11 @@ class JSWebServer(j.application.JSBaseClass):
                 self.sockets.register_blueprint(module.ws_blueprint)
 
 
-    def _configure_logs(self):
-        # TODO: why can we not use jumpscale logging?
-        basicConfig(filename='error.log', level=DEBUG)
-        self._logger = getLogger()
-        self._logger.addHandler(StreamHandler())
+    # def _configure_logs(self):
+    #     # TODO: why can we not use jumpscale logging?
+    #     basicConfig(filename='error.log', level=DEBUG)
+    #     self._logger = getLogger()
+    #     self._log_addHandler(StreamHandler())
 
     def _init(self, selenium=False, debug=True, websocket_support=False): #TODO: websocket support should be in openresty
 

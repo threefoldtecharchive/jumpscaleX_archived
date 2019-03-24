@@ -84,7 +84,7 @@ class OVCClient(JSConfigBase):
                 url = url.split("//")[1].rstrip("/")
             if "/" in url:
                 url = url.split("/")[0]
-            self._logger.info("Get OpenvCloud client on URL: %s" % url)
+            self._log_info("Get OpenvCloud client on URL: %s" % url)
             return url
 
         self.address = urlClean(self.address)

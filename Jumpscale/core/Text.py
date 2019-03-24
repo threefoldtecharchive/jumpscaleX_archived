@@ -203,7 +203,7 @@ class Text(object):
         str|unicode : string indented by ntabs and nspaces.
 
         """
-        self._j.core.tools.text_strip(instr, ignorecomments=True, args={})
+        return self._j.core.tools.text_strip(instr, ignorecomments=True, args={})
 
     def toUnicode(self, value, codec='utf-8'):
         if isinstance(value, str):
@@ -410,7 +410,7 @@ class Text(object):
                 regex = None
 
             if len(descr) > 30 and ttype not in ('dict', 'multiline'):
-                self._logger.info(descr)
+                self._log_info(descr)
                 descr = ""
 
             # print "type:'%s'"%ttype
@@ -458,7 +458,7 @@ class Text(object):
 
             elif ttype == "bool":
                 if descr != "":
-                    self._logger.info(descr)
+                    self._log_info(descr)
                 result = self._j.tools.console.askYesNo()
                 if result:
                     result = True

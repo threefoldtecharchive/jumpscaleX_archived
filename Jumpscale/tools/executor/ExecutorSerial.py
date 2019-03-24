@@ -32,8 +32,8 @@ class ExecutorSerial(ExecutorBase):
         self.timeout = timeout
 
         self._id = None
-        self._logger = self._logger
-        self._logger.info("Initialized")
+
+        self._log_info("Initialized")
 
         self.reconnect()
         self.fetch()
@@ -64,7 +64,7 @@ class ExecutorSerial(ExecutorBase):
             showout=True,
             timeout=0,
             env={}):
-        self._logger.debug("Serial command: %s" % cmds)
+        self._log_debug("Serial command: %s" % cmds)
 
         if not cmds.endswith("\n"):
             cmds += "\n"

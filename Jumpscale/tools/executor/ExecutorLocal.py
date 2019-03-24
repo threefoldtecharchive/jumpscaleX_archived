@@ -45,7 +45,7 @@ class ExecutorLocal(ExecutorBase):
         if sudo:
             raise RuntimeError("sudo not supported")
 
-        # self._logger.debug(cmd)
+        # self._log_debug(cmd)
 
         rc, out, err = j.sal.process.execute(cmd, die=die, showout=showout, timeout=timeout,replace=replace)
 

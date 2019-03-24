@@ -101,7 +101,7 @@ class FormattersFactory(j.application.JSBaseClass):
     def _init(self):
         self.lexers = Lexers()
         self.formatters = Formatters()
-        self._logger_enable()
+
 
     def print_python(self,text,formatter="terminal"):
         C=j.core.tools.text_replace(text)
@@ -129,7 +129,7 @@ class FormattersFactory(j.application.JSBaseClass):
         def _init(self):
             self.lexers = Lexers()
             self.formatters = Formatters()
-            self._logger_enable()
+            
     
         def print_python(self,text,formatter="terminal"):
             C=Tools.text_replace(text)

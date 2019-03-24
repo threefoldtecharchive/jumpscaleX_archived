@@ -4,7 +4,7 @@ from ..disks.Disks import StorageType
 
 from Jumpscale import j
 
-logger = j.logger.get(__name__)
+
 
 
 class Zerodbs(DynamicCollection):
@@ -86,7 +86,7 @@ class Zerodbs(DynamicCollection):
         # create a storage pool on all the disk which doesn't any storage pool yet
         for device in set(all_disks) - set(disks_used):
             name = j.data.idgenerator.generateGUID()
-            logger.info("create storage pool %s on %s", name, device)
+            self._log_info("create storage pool %s on %s", name, device)
             sp = self.node.storagepools.create(
                 name, device=device, metadata_profile='single', data_profile='single', overwrite=True)
             storagepools.append(sp)
@@ -97,10 +97,10 @@ class Zerodbs(DynamicCollection):
         # at this point we have a storage pool on each eligible disk
         for sp in storagepools:
             if not sp.mountpoint:
-                logger.info("mount storagepool %s", sp.name)
+                self._log_info("mount storagepool %s", sp.name)
                 sp.mount()
             if not sp.exists("zdb"):
-                logger.info("create filesystem on storage pool %s", sp.name)
+                self._log_info("create filesystem on storage pool %s", sp.name)
                 fs = sp.create("zdb")
             else:
                 fs = sp.get("zdb")
@@ -145,7 +145,7 @@ def _zdb_friendly(disk):
     filter function to remove disk not suitable for zerodb usage
     """
     if disk.type not in [StorageType.HDD, StorageType.SSD, StorageType.NVME, StorageType.ARCHIVE]:
-        logger.info("skipping unsupported disk type %s" % disk.type)
+        self._log_info("skipping unsupported disk type %s" % disk.type)
         return False
     # this check is there to be able to test with a qemu setup. Not needed if you start qemu with --nodefaults
     if disk.model in ['QEMU HARDDISK   ', 'QEMU DVD-ROM    '] or disk.transport == 'usb':

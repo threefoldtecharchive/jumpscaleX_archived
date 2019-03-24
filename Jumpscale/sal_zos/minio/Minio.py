@@ -6,7 +6,7 @@ from Jumpscale import j
 from .. import templates
 from ..abstracts import Service
 
-logger = j.logger.get(__name__)
+
 DEFAULT_PORT = 9000
 
 
@@ -107,7 +107,7 @@ class Minio(Service):
                 try:
                     fs = sp.create(self._id)
                 except Exception as err:
-                    logger.warning('couldn create storage pool filesystem: %s\nTrying another disk' % str(err))
+                    self._log_warning('couldn create storage pool filesystem: %s\nTrying another disk' % str(err))
                     continue
             if fs:
                 break
@@ -132,7 +132,7 @@ class Minio(Service):
         if self.is_running():
             return
 
-        logger.info('start minio %s' % self.name)
+        self._log_info('start minio %s' % self.name)
 
         self.create_config()
 
@@ -159,7 +159,7 @@ class Minio(Service):
         return "replication" if self._nr_parityshards <= 0 else "distribution"
 
     def create_config(self):
-        logger.info('Creating minio config for %s' % self.name)
+        self._log_info('Creating minio config for %s' % self.name)
         config = self._config_as_text()
         self.container.upload_content(j.sal.fs.joinPaths(self._config_dir, self._config_name), config)
 
@@ -174,7 +174,7 @@ class Minio(Service):
         tell minio process to reload its configuration by reading the config file again
         """
         if not self.is_running():
-            logger.error("cannot reload when minio is not running")
+            self._log_error("cannot reload when minio is not running")
             return
 
         self.container.client.job.kill(self._id, signal.SIGHUP)
@@ -196,7 +196,7 @@ class Minio(Service):
         job = self.container.client.system(cmd)
         while job.running:
             time.sleep(10)
-            logger.info("Check and repair still running")
+            self._log_info("Check and repair still running")
 
         result = job.get()
         if result.state == 'ERROR':

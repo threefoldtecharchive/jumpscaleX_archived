@@ -3,12 +3,10 @@ from Jumpscale import j
 from unittest import TestCase
 from uuid import uuid4
 
-logger = j.logger.get('testsuite.log')
 
 class BaseTest(TestCase):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.logger = logger
         self.schema = Schema
 
     def SetUp(self):
@@ -18,7 +16,7 @@ class BaseTest(TestCase):
         pass
     
     def log(self, msg):
-        self.logger.info(msg)
+        j.core.tools.log(msg, level=20)
 
     def random_string(self):
         return 's' + str(uuid4()).replace('-', '')[:10]

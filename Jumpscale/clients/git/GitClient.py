@@ -88,7 +88,7 @@ class GitClient(j.application.JSBaseClass):
         if len(self.repo.remotes) <= 0:
             #raise j.exceptions.Input(
             #    "There is not remote configured for this repository")
-            self._logger.warning("no remote repo configured (local repo?)")
+            self._log_warning("no remote repo configured (local repo?)")
             return "" # XXX issue #60?
         return self.repo.remotes[0].url
 
@@ -315,7 +315,7 @@ class GitClient(j.application.JSBaseClass):
         if addremove:
             self.addRemoveFiles()
         if self.hasModifiedFiles() is False:
-            self._logger.info("no need to commit, no changed files")
+            self._log_info("no need to commit, no changed files")
             return
         return self.repo.index.commit(message)
 

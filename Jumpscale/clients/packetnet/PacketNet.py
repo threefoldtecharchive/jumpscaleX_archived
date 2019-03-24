@@ -74,7 +74,7 @@ class PacketNet(JSConfigBase):
 
         if self._plans is None:
             self._plans = self.client.list_plans()
-            self._logger.debug("plans:%s" % self._plans)
+            self._log_debug("plans:%s" % self._plans)
         return self._plans
 
     @property
@@ -86,7 +86,7 @@ class PacketNet(JSConfigBase):
 
         if self._facilities is None:
             self._facilities = self.client.list_facilities()
-            self._logger.debug("facilities:%s" % self._facilities)
+            self._log_debug("facilities:%s" % self._facilities)
         return self._facilities
 
     @property
@@ -98,7 +98,7 @@ class PacketNet(JSConfigBase):
 
         if self._oses is None:
             self._oses = self.client.list_operating_systems()
-            self._logger.debug("operatingsystems:%s" % self._oses)
+            self._log_debug("operatingsystems:%s" % self._oses)
         return self._oses
 
     @property
@@ -110,7 +110,7 @@ class PacketNet(JSConfigBase):
 
         if self._projects is None:
             self._projects = self.client.list_projects()
-            self._logger.debug("projects:%s" % self._projects)
+            self._log_debug("projects:%s" % self._projects)
         return self._projects
 
     @property
@@ -122,7 +122,7 @@ class PacketNet(JSConfigBase):
 
         if self._devices is None:
             self._devices = self.client.list_devices(self.projectid)
-            self._logger.debug("devices:%s" % self._devices)
+            self._log_debug("devices:%s" % self._devices)
         return self._devices
 
     def getPlans(self):
@@ -218,7 +218,7 @@ class PacketNet(JSConfigBase):
         res = self.getDevice(name)
         if res is not None:
             self._devices = None
-            self._logger.debug("found machine, remove:%s" % name)
+            self._log_debug("found machine, remove:%s" % name)
             res.delete()
         j.tools.nodemgr.delete(instance=name)
 
@@ -249,7 +249,7 @@ class PacketNet(JSConfigBase):
         :rtype: Object
         '''
 
-        self._logger.info("start device:%s plan:%s os:%s facility:%s wait:%s" % (hostname, plan, os, facility, wait))
+        self._log_info("start device:%s plan:%s os:%s facility:%s wait:%s" % (hostname, plan, os, facility, wait))
         if ipxeUrl is None:
             zerotierId = ""
         else:
@@ -286,7 +286,7 @@ class PacketNet(JSConfigBase):
         :return: zero-os-client, pubIpAddress, zerotierIpAddress
         :rtype: ,str,str
         '''
-        self._logger.info(
+        self._log_info(
             "start device:%s plan:%s facility:%s zerotierId:%s wait:%s" % (hostname, plan, facility, zerotierId, wait)
         )
         if zerotierId.strip() == "" or zerotierId is None:
@@ -321,10 +321,10 @@ class PacketNet(JSConfigBase):
                 break
             except RuntimeError as e:
                 # case where we don't find the member in zerotier
-                self._logger.info("[-] %s" % e)
+                self._log_info("[-] %s" % e)
                 time.sleep(5)
 
-        self._logger.info("[+] zerotier IP: %s" % ipaddr_priv)
+        self._log_info("[+] zerotier IP: %s" % ipaddr_priv)
         data = {'host': ipaddr_priv, 'timeout': 10, 'port': 6379, 'password_': '', 'db': 0, 'ssl': True}
         zosclient = j.clients.zero_os.get(ipaddr_priv, data=data)
         return zosclient, node, ipaddr_priv
@@ -379,15 +379,15 @@ class PacketNet(JSConfigBase):
   #               break
   #           except RuntimeError as e:
   #               # case where we don't find the member in zerotier
-  #               logger.error(e)
+  #               self._log_error(e)
   #               time.sleep(1)
   #           except IndexError as e:
   #               # case were we the member doesn't have a private ip
-  #               logger.error("please authorize the server with the public ip %s in the zerotier network" % ip_pub[0])
+  #               self._log_error("please authorize the server with the public ip %s in the zerotier network" % ip_pub[0])
   #               time.sleep(1)
   #
-  #       logger.debug("server found: %s" % device.id)
-  #       logger.debug("zerotier IP: %s" % ipaddr_priv)
+  #       self._log_debug("server found: %s" % device.id)
+  #       self._log_debug("zerotier IP: %s" % ipaddr_priv)
   #
   #       return ip_pub, ipaddr_priv
   #
@@ -428,14 +428,14 @@ class PacketNet(JSConfigBase):
         while res["state"] not in ["active"]:
             res = device.update()
             time.sleep(1)
-            self._logger.debug(res["state"])
+            self._log_debug(res["state"])
 
         ipaddr = [netinfo['address']
                   for netinfo in res["ip_addresses"] if netinfo['public'] and netinfo['address_family'] == 4]
 
         ipaddr = ipaddr[0]
 
-        self._logger.info("ipaddress found = %s" % ipaddr)
+        self._log_info("ipaddress found = %s" % ipaddr)
 
         sshinstance = ""
         if zerotierId == "":

@@ -620,7 +620,7 @@ class Deployment(JSConfigBase):
         # Create deployment
         api_response = self.master._extensionv1b1.create_namespaced_deployment(
             body=self.object, namespace=self.object.metadata.namespace)
-        self._logger.info("Deployment created. status='%s'" % str(api_response.status))
+        self._log_info("Deployment created. status='%s'" % str(api_response.status))
 
     def update(self):
         """
@@ -631,7 +631,7 @@ class Deployment(JSConfigBase):
         api_response = self.master._extensionv1b1.patch_namespaced_deployment(name=self.object.metadata.name,
                                                                               namespace=self.object.metadata.namespace,
                                                                               body=self.object)
-        self._logger.info("Deployment updated. status='%s'" % str(api_response.status))
+        self._log_info("Deployment updated. status='%s'" % str(api_response.status))
 
     def delete(self, grace_period_seconds=0, propagation_policy='Foreground'):
         """
@@ -650,7 +650,7 @@ class Deployment(JSConfigBase):
         api_response = self.master._extensionv1b1.delete_namespaced_deployment(name=self.object.metadata.name,
                                                                                namespace=self.object.metadata.namespace,
                                                                                body=delete_options)
-        self._logger.info("Deployment deleted. status='%s'" % str(api_response.status))
+        self._log_info("Deployment deleted. status='%s'" % str(api_response.status))
 
 ######################
 #     POD            #
@@ -721,7 +721,7 @@ class Pod(client.V1Pod, JSConfigBase):
         # Create deployment
         api_response = self.master._extensionv1b1.create_namespaced_pod(
             body=self.object, namespace=self.object.metadata.namespace)
-        self._logger.info("Pod created. status='%s'" % str(api_response.status))
+        self._log_info("Pod created. status='%s'" % str(api_response.status))
 
     def update(self):
         """
@@ -731,7 +731,7 @@ class Pod(client.V1Pod, JSConfigBase):
         api_response = self.master._extensionv1b1.patch_namespaced_pod(name=self.object.metadata.name,
                                                                        namespace=self.object.metadata.namespace,
                                                                        body=self.object)
-        self._logger.info("Pod updated. status='%s'" % str(api_response.status))
+        self._log_info("Pod updated. status='%s'" % str(api_response.status))
 
     def delete(self, grace_period_seconds=0, propagation_policy='Foreground'):
         """
@@ -750,7 +750,7 @@ class Pod(client.V1Pod, JSConfigBase):
         api_response = self.master._extensionv1b1.delete_namespaced_pod(name=self.object.metadata.name,
                                                                         namespace=self.object.metadata.namespace,
                                                                         body=delete_options)
-        self._logger.info("Pod deleted. status='%s'" % str(api_response.status))
+        self._log_info("Pod deleted. status='%s'" % str(api_response.status))
 
 
 ######################
@@ -814,7 +814,7 @@ class Service(client.V1Service, JSConfigBase):
         # Create deployment
         api_response = self.master._v1.create_namespaced_service(
             body=self.object, namespace=self.object.metadata.namespace)
-        self._logger.info("service created. status='%s'" % str(api_response.status))
+        self._log_info("service created. status='%s'" % str(api_response.status))
 
     def update(self):
         """
@@ -824,7 +824,7 @@ class Service(client.V1Service, JSConfigBase):
         api_response = self.master._v1.patch_namespaced_service(name=self.object.metadata.name,
                                                                 namespace=self.object.metadata.namespace,
                                                                 body=self.object)
-        self._logger.info("service updated. status='%s'" % str(api_response.status))
+        self._log_info("service updated. status='%s'" % str(api_response.status))
 
     def delete(self):
         """
@@ -834,4 +834,4 @@ class Service(client.V1Service, JSConfigBase):
         # Delete service
         api_response = self.master._v1.delete_namespaced_service(name=self.object.metadata.name,
                                                                  namespace=self.object.metadata.namespace)
-        self._logger.info("service deleted. status='%s'" % str(api_response.status))
+        self._log_info("service deleted. status='%s'" % str(api_response.status))

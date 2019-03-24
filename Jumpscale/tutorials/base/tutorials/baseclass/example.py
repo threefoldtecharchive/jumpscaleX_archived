@@ -39,16 +39,16 @@ class TutorialCacheClass(j.application.JSBaseClass):
         return self._cache.get("amounts_servers_active",do,expire=60,retry=100,refresh=reload,me=self)
 
     def logger_test(self):
-        self._logger.info("info")
-        self._logger.warning("warning")
-        self._logger.error("error")
-        self._logger.debug("debug")
+        self._log_info("info")
+        self._log_warning("warning")
+        self._log_error("error")
+        self._log_debug("debug")
 
     def get_dir_path(self):
-        self._logger.debug("should show path in codegenerator dir")
-        self._logger.info(self._dirpath)
-        self._logger.debug("lets see path of a module in jumpscale")
-        self._logger.info(j.tools.dnstools._dirpath)
+        self._log_debug("should show path in codegenerator dir")
+        self._log_info(self._dirpath)
+        self._log_debug("lets see path of a module in jumpscale")
+        self._log_info(j.tools.dnstools._dirpath)
 
 
 

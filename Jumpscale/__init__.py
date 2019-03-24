@@ -48,30 +48,30 @@ from .core.InstallTools import Tools
 
 class Core():
     def __init__(self,j):
-        self._db = None
+        self._db = MyEnv.db
         self._dir_home = None
         self._dir_jumpscaleX = None
         self._isSandbox = None
+        self._db_fakeredis = False
 
+
+    @property
+    def _db_fake(self):
+        # print("CORE_MEMREDIS")
+        import fakeredis
+        self._db = fakeredis.FakeStrictRedis()
+        self._db_fakeredis = True
 
     @property
     def db(self):
         if not self._db:
-            # if tcpPortConnectionTest("localhost", 6379):
-            try:
-                from redis import StrictRedis
-                # print("CORE_REDIS")
-                if self.isSandbox:
-                    self._db = StrictRedis(host='localhost', port=6379, unix_socket_path='/sandbox/var/redis.sock', db=0)
-                else:
-                    self._db = StrictRedis(host='localhost', port=6379, db=0)
-                self._db.get("jumpscale.config")
-                self._db_fakeredis = False
-            except Exception as e:
-                # print("CORE_MEMREDIS")
-                import fakeredis
-                self._db = fakeredis.FakeStrictRedis()
-                self._db_fakeredis = True
+            #check db is already there, if not try to do again
+            MyEnv.db = Tools.redis_client_get(die=False)
+            self._db = MyEnv.db
+
+            if not self._db:
+                self._db = self._db_fake
+
         return self._db
 
     def db_reset(self):
@@ -196,8 +196,8 @@ j.core.installer_ubuntu = UbuntuInstall
 j.core.installer_jumpscale = JumpscaleInstaller()
 j.core.tools = Tools
 
-j._profileStart = profileStart
-j._profileStop = profileStop
+j.core.profileStart = profileStart
+j.core.profileStop = profileStop
 
 # pr=profileStart()
 
@@ -208,9 +208,9 @@ from .core.Dirs import Dirs
 j.dirs = Dirs(j)
 j.core.dirs = j.dirs
 
-from .core.logging.LoggerFactory import LoggerFactory
-j.logger = LoggerFactory(j)
-j.core.logger = j.logger
+# from .core.logging.LoggerFactory import LoggerFactory
+# j.logger = LoggerFactory(j)
+# j.core.logger = j.logger
 
 from .core.Application import Application
 j.application = Application(j)
@@ -251,7 +251,9 @@ ipath = j.core.tools.text_replace("{DIR_BASE}/lib/jumpscale/Jumpscale")
 if ipath not in sys.path:
     sys.path.append(ipath)
 
+
 import jumpscale_generated
+
 
 if generated  and len(j.core.application.errors_init)>0:
     print("THERE ARE ERRORS: look in /tmp/jumpscale/ERRORS_report.md")
@@ -264,6 +266,7 @@ if generated  and len(j.core.application.errors_init)>0:
 
 # import time
 # time.sleep(1000)
+
 
 
 

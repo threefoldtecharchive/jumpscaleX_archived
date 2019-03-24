@@ -92,7 +92,7 @@ class GiteaUserCurrentOrg(j.application.JSBaseClass):
         is_valid, err = self._validate(create=True)
 
         if not commit or not is_valid:
-            self._logger.debug(err)
+            self._log_debug(err)
             return is_valid
         try:
             resp = self.user.client.api.admin.adminCreateOrg(data=self.data, username=self.user.username)
@@ -101,20 +101,20 @@ class GiteaUserCurrentOrg(j.application.JSBaseClass):
                 setattr(self, k, v)
             return True
         except Exception as e:
-            self._logger.debug(e.response.content)
+            self._log_debug(e.response.content)
             return False
 
     def update(self, commit=True):
         is_valid, err = self._validate(update=True)
 
         if not commit or not is_valid:
-            self._logger.debug(err)
+            self._log_debug(err)
             return is_valid
         try:
             resp = self.user.client.api.orgs.orgEdit(data=self.data, org=self.username)
             return True
         except Exception as e:
-            self._logger.debug(e.response.content)
+            self._log_debug(e.response.content)
             return False
 
     @property

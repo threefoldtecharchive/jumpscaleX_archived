@@ -51,7 +51,7 @@ class S3Client(JSConfigBase):
             )
         )
         #Create Minio client
-        self._logger.info("open connection to minio:%s" % self)
+        self._log_info("open connection to minio:%s" % self)
         self.client = Minio('%s:%s' % (self.address, self.port),
                             access_key=self.accesskey_,
                             secret_key=self.secretkey_,

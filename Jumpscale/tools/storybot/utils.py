@@ -2,7 +2,7 @@ import requests
 
 from Jumpscale import j
 
-logger = j.logger.get("j.tools.StoryBot")
+
 
 def _parse_body(body, item):
     """Parses story or task item into the provided body
@@ -20,7 +20,7 @@ def _parse_body(body, item):
 
     start_list, end_list = _get_indexes_list(body, title=item.LIST_TITLE)
     if start_list == -1:
-        logger.debug("list not found, adding one")
+        self._log_debug("list not found, adding one")
         if not body.endswith("\n\n") and not body.endswith("\r\n"):
             body += "\n"
         body +="\n## %s\n\n%s" % (item.LIST_TITLE, item.md_item)
@@ -28,7 +28,7 @@ def _parse_body(body, item):
     elif end_list == -1:
         item_i = item.index_in_body(body, start_i=start_list, end_i=end_list)
         if item_i != -1 :
-            logger.debug("Item already in list at index %s" % str(item_i))
+            self._log_debug("Item already in list at index %s" % str(item_i))
             body = _update_done_item(body,item_i, item.done_char)
         else:
             if not body.endswith("\n"):
@@ -39,7 +39,7 @@ def _parse_body(body, item):
     else:
         item_i = item.index_in_body(body, start_i=start_list, end_i=end_list)
         if item_i != -1 :
-            logger.debug("Item already in list")
+            self._log_debug("Item already in list")
             body = _update_done_item(body, item_i, item.done_char)
         else:
             # squeeze in task at the end of list
@@ -117,7 +117,7 @@ def _update_done_item(body, index, done_char):
 
     if cur_tick != done_char:
         # update line
-        logger.debug("Updating item at line: %s" % index)
+        self._log_debug("Updating item at line: %s" % index)
         line = line[:start] + done_char + line[end:]
         lines[index] = line
         body = "\n".join(lines)
@@ -251,7 +251,7 @@ def _extend_stories(story_list_1, story_list_2):
 
     for s in story_list_2:
         if s in story_list_1:
-            logger.error("Story with id '%s' already exists! (%s)" % (s.title, s.url))
+            self._log_error("Story with id '%s' already exists! (%s)" % (s.title, s.url))
             continue
         story_list_1.append(s)
 

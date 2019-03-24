@@ -133,7 +133,7 @@ class BtrfsExtension(j.application.JSBaseClass):
         for i in range(4):
             # ugly for now, but cannot delete subvols, by doing this, it words brute force
             for path2 in self.subvolumeList(path, filter=filter, filterExclude=filterExclude):
-                self._logger.debug("delete:%s" % path2)
+                self._log_debug("delete:%s" % path2)
                 try:
                     self.subvolumeDelete(path2)
                 except BaseException:
@@ -174,7 +174,7 @@ class BtrfsExtension(j.application.JSBaseClass):
 
         for disk in res:
             if disk.mountpoint == path:
-                self._logger.debug("no need to format btrfs, was already done, warning: did not check if redundant")
+                self._log_debug("no need to format btrfs, was already done, warning: did not check if redundant")
                 return
             disk.erase()
 
@@ -195,18 +195,18 @@ class BtrfsExtension(j.application.JSBaseClass):
         else:
             cmd = "mkfs.btrfs -f -m raid10 -d raid10 %s" % disksLine
 
-        self._logger.info(cmd)
+        self._log_info(cmd)
         self._executor.execute(cmd)
 
         cmd = "mkdir -p %s;mount %s %s" % (path, res[0].name, path)
-        self._logger.info(cmd)
+        self._log_info(cmd)
         self._executor.execute(cmd)
 
-        self._logger.info(self.getSpaceUsage(path))
+        self._log_info(self.getSpaceUsage(path))
 
         cmd = "btrfs filesystem show %s" % res[0].name
         rc, out, err = self._executor.execute(cmd)
-        self._logger.info(out)
+        self._log_info(out)
 
     def deviceAdd(self, path, dev):
         """

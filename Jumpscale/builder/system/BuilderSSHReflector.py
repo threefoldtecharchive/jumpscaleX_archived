@@ -42,7 +42,7 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
         path = "/home/sshreflector/.ssh/reflector"
         ftp = j.builder.tools.executor.sshclient.sftp
         if j.sal.fs.exists(lpath) and j.sal.fs.exists(lpath + ".pub"):
-            self._logger.info("UPLOAD EXISTING SSH KEYS")
+            self._log_info("UPLOAD EXISTING SSH KEYS")
             ftp.put(lpath, path)
             ftp.put(lpath + ".pub", path + ".pub")
         else:
@@ -110,7 +110,7 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
             lpath = os.environ["HOME"] + "/.ssh/reflector"
 
             if reset or not j.sal.fs.exists(lpath) or not j.sal.fs.exists(lpath_pub):
-                self._logger.info("DOWNLOAD SSH KEYS")
+                self._log_info("DOWNLOAD SSH KEYS")
                 # get private key from reflector
                 ftp = remoteprefab.core.executor.sshclient.sftp
                 path = "/home/sshreflector/.ssh/reflector"
@@ -145,7 +145,7 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
             j.builder.system.ns.hostfile_set(rname, addr)
 
             if remoteprefab.core.file_exists("/home/sshreflector/reflectorclients") is False:
-                self._logger.info("reflectorclientsfile does not exist")
+                self._log_info("reflectorclientsfile does not exist")
                 remoteprefab.core.file_write("/home/sshreflector/reflectorclients", "%s:%s\n" %
                                              (j.builder.platformtype.hostname, 9800))
                 newport = 9800
@@ -175,11 +175,11 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
 
             reflport = "9222"
 
-            self._logger.info("check ssh connection to reflector")
+            self._log_info("check ssh connection to reflector")
             j.sal.process.execute(
                 "ssh -i /root/.ssh/reflector -o StrictHostKeyChecking=no sshreflector@%s -p %s 'ls /'" %
                 (rname, reflport))
-            self._logger.info("OK")
+            self._log_info("OK")
 
             _, cpath, _ = j.sal.process.execute("which autossh")
             cmd = "%s -M 0 -N -o ExitOnForwardFailure=yes -o \"ServerAliveInterval 60\" -o \"ServerAliveCountMax 3\" -R %s:localhost:22 sshreflector@%s -p %s -i /root/.ssh/reflector" % (
@@ -188,7 +188,7 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
             pm = j.builder.system.processmanager.get()
             pm.ensure("autossh_%s" % rname_short, cmd, descr='')
 
-            self._logger.info("On %s:%s remote SSH port:%s" % (remoteprefab.core.executor.addr, port, newport))
+            self._log_info("On %s:%s remote SSH port:%s" % (remoteprefab.core.executor.addr, port, newport))
 
     def createconnection(self, remoteids):
         """
@@ -232,9 +232,9 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
                 port, port, addr, keypath)
             j.sal.process.execute(cmd)
 
-        self._logger.info("\n\n\n")
-        self._logger.info("Reflector:%s" % addr)
-        self._logger.info(out)
+        self._log_info("\n\n\n")
+        self._log_info("Reflector:%s" % addr)
+        self._log_info(out)
 
     def __str__(self):
         return "prefab.reflector:%s:%s" % (getattr(self.executor, 'addr', 'local'),

@@ -67,7 +67,7 @@ class HTMLFactory(j.application.JSBaseClass):
         if path not in sys.path:
             sys.path.append(path)
         for webpart_name in  j.sal.fs.listDirsInDir(path,False,True):
-            self._logger.info("found webpart:%s"%webpart_name)
+            self._log_info("found webpart:%s"%webpart_name)
             path2="%s/%s/add.py"%(path,webpart_name)
             if not j.sal.fs.exists(path2):
                 raise RuntimeError("cannot find webpart:%s"%path2)

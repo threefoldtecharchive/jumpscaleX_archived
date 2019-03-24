@@ -3,7 +3,7 @@ from redis import ResponseError
 
 from ..abstracts import Collection
 
-logger = j.logger.get(__name__)
+
 
 
 class NamespaceInfo:

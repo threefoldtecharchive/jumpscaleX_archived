@@ -29,7 +29,7 @@ class BuilderNodeJS(j.builder.system._BaseClass):
             for item in name:
                 self.bowerInstall(item)
         else:
-            self._logger.info("bower install %s" % name)
+            self._log_info("bower install %s" % name)
             j.sal.process.execute(
                 "cd %s;bower --allow-root install  %s" % (self._bowerDir, name), profile=True)
 
@@ -42,10 +42,10 @@ class BuilderNodeJS(j.builder.system._BaseClass):
         if "npm" not in installedDict or "node" not in installedDict:
             return False
         if j.core.text.strToVersionInt(installedDict["npm"]) < 5000000:
-            self._logger.info("npm too low version, need to install.")
+            self._log_info("npm too low version, need to install.")
             return False
         if j.core.text.strToVersionInt(installedDict["node"]) < 7000000:
-            self._logger.info("node too low version, need to install.")
+            self._log_info("node too low version, need to install.")
             return False
 
         if self._done_get("install") is False:
@@ -81,7 +81,7 @@ class BuilderNodeJS(j.builder.system._BaseClass):
         """
         @PARAM cmdname is the optional cmd name which will be used to put in path of the env (as alias to the name)
         """
-        self._logger.info("npm install:%s" % name)
+        self._log_info("npm install:%s" % name)
         key = "npm_%s" % name
         if self._done_get(key) and not reset:
             return

@@ -86,7 +86,7 @@ class PostgresClient(JSConfigClient):
         for name, obj in list(base.classes.items()):
             if name in tables_ignore:
                 continue
-            self._logger.debug("process table:%s" % name)
+            self._log_debug("process table:%s" % name)
             args["table"] = name
             args["path"] = "%s/%s.sql" % (path, name)
             # --quote-all-identifiers

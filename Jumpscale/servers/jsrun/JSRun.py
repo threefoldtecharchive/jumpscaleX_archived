@@ -11,7 +11,7 @@ class JSRun(j.application.JSBaseClass):
         self.latest = None
         self.processes = {}
         self._installed = False
-        self._logger_enable()
+
 
 
     def install(self):

@@ -11,7 +11,7 @@ class SSHClient(SSHClientBase):
 
     def _init(self):
         SSHClientBase._init(self)
-        self._logger = j.logger.get("ssh client: %s:%s(%s)" % (self.addr_variable, self.port, self.login))
+        self._logger_prefix = "ssh client: %s:%s(%s)" % (self.addr_variable, self.port, self.login)
 
     @property
     def _client(self):
@@ -21,7 +21,7 @@ class SSHClient(SSHClientBase):
             if pkey:
                 passwd = self.sshkey_obj.passphrase
 
-            from pssh.ssh2_client import SSHClient as PSSHClient
+            from pssh.clients import SSHClient as PSSHClient
             PSSHClient = functools.partial(PSSHClient, retry_delay=1)
 
             self._client_ = PSSHClient(self.addr_variable,
@@ -48,11 +48,11 @@ class SSHClient(SSHClientBase):
                     printer(line)
             return buffer
 
-        out = _consume_stream(stdout, self._logger.debug)
-        err = _consume_stream(stderr, self._logger.error)
+        out = _consume_stream(stdout, self._log_debug)
+        err = _consume_stream(stderr, self._log_error)
         self._client.wait_finished(channel)
-        _consume_stream(stdout, self._logger.debug, out)
-        _consume_stream(stderr, self._logger.error, err)
+        _consume_stream(stdout, self._log_debug, out)
+        _consume_stream(stderr, self._log_error, err)
 
         rc = channel.get_exit_status()
         output = out.getvalue()
@@ -110,9 +110,8 @@ class SSHClient(SSHClientBase):
         # TODO: make sure we don't need to clean anything
         pass
 
-    # def copy_file(self, local_file, remote_file, recurse=False):
-    #     #DOES THIS WORK?
-    #     return self._client.copy_file(local_file, remote_file, recurse=recurse, sftp=self.sftp)
+    def copy_file(self, local_file, remote_file, recurse=False):
+        return self._client.copy_file(local_file, remote_file, recurse=recurse, sftp=self.sftp)
 
 
 

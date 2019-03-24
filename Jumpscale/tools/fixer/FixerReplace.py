@@ -36,7 +36,7 @@ class FixerReplacer(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
         self.rules=[]
-        self._logger_enable()
+
 
         for rule in DO.split("\n"):
             if rule.strip()=="":
@@ -91,7 +91,7 @@ class FixerReplacer(j.application.JSBaseClass):
         self.changes={}
         for ext in extensions:
             for p in j.sal.fs.listFilesInDir(path, recursive=recursive, filter="*.%s"%ext, followSymlinks=False):
-                self._logger.debug("process file:%s"%p)
+                self._log_debug("process file:%s"%p)
                 self.file_process(root=path,path=p,write=write)
         print(j.data.serializers.yaml.dumps(self.changes))
 

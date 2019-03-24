@@ -209,7 +209,7 @@ class TarantoolClient(JSBASE):
             self.eval("require ('%s')" % name)
 
     def addScript(self, path, name="", require=True):
-        self._logger.debug("addscript %s %s" % (path, name))
+        self._log_debug("addscript %s %s" % (path, name))
         C = j.sal.fs.readFile(path)
         if name == "":
             name = j.sal.fs.getBaseName(path)[:-4]
@@ -219,5 +219,5 @@ class TarantoolClient(JSBASE):
             self.eval("package.loaded['%s']=nil" % name)
             self.eval("require ('%s')" % name)
             cmd = "%s=require('%s')" % (name, name)
-            self._logger.debug(cmd)
+            self._log_debug(cmd)
             self.eval(cmd)

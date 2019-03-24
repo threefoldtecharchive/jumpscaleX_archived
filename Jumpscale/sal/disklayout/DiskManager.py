@@ -103,7 +103,7 @@ class DiskManager(j.application.JSBaseClass):
                     with mount.Mount(partition.name, options='ro', executor=self._executor) as mnt:
                         config = self._loadconfig(mnt.path)
                 partition.config = config
-                self._logger.debug("found partition: %s:%s" % (disk, partition))
+                self._log_debug("found partition: %s:%s" % (disk, partition))
 
         def findDisk(devices, name):
 

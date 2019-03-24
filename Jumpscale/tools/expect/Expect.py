@@ -74,11 +74,11 @@ class Popen(subprocess.Popen, JSBASE):
                 x = msvcrt.get_osfhandle(self.stdin.fileno())
                 (errCode, written) = WriteFile(x, input)
             except ValueError:
-                self._logger.debug("close stdin")
+                self._log_debug("close stdin")
                 return self._close('stdin')
             except (subprocess.pywintypes.error, Exception) as why:
                 if why[0] in (109, errno.ESHUTDOWN):
-                    self._logger.debug("close stdin")
+                    self._log_debug("close stdin")
                     return self._close('stdin')
                 raise
             return written
@@ -118,7 +118,7 @@ class Popen(subprocess.Popen, JSBASE):
                 written = os.write(self.stdin.fileno(), input)
             except OSError as why:
                 if why[0] == errno.EPIPE:  # broken pipe
-                    self._logger.error("close stdin")
+                    self._log_error("close stdin")
                     return self._close('stdin')
                 raise
 
@@ -182,7 +182,6 @@ class Expect(j.application.JSBaseClass):
 
     def __init__(self, cmd=""):
         JSBASE.__init__(self)
-        j.logger.addConsoleLogCategory("expect")
         PIPE = subprocess.PIPE
         self._prompt = ""
 
@@ -270,12 +269,12 @@ class Expect(j.application.JSBaseClass):
         result = self.expect("password:", timeout=timeout)
 
         if result == "E":
-            self._logger.debug("did not see passwd")
+            self._log_debug("did not see passwd")
             result = self.expect("continue connecting", timeout=timeout / 2)
 
             if result == 0:
-                self._logger.debug("saw confirmation ssh key")
-                self._logger.debug("send yes for ssh key")
+                self._log_debug("saw confirmation ssh key")
+                self._log_debug("send yes for ssh key")
                 self.send("yes\n")
                 result = self.expect("password:", timeout=timeout / 2)
             else:
@@ -289,14 +288,14 @@ class Expect(j.application.JSBaseClass):
             if result == "E":
                 result = self.expect("Permission denied")
                 if result != "E" and seedpasswd != "":
-                    self._logger.debug("permission denied, will try to use seedpasswd")
+                    self._log_debug("permission denied, will try to use seedpasswd")
                     self.send(seedpasswd)
                     result = self.expect("#")
                     if result == "E":
                         raise j.exceptions.RuntimeError("could not login with std passwd nor with seedpasswd")
-                    self._logger.debug("seedpasswd worked")
+                    self._log_debug("seedpasswd worked")
 
-                    self._logger.debug("change passwd")
+                    self._log_debug("change passwd")
                     self.send("passwd")
                     result = self.expect("password:")
                     if result == "E":
@@ -393,10 +392,10 @@ class Expect(j.application.JSBaseClass):
         classes C{_out} & C{_error}.
         """
         out, err = self.receive()
-        self._logger.debug(out)
+        self._log_debug(out)
         if err != "":
-            self._logger.error("ERROR:")
-            self._logger.error(err)
+            self._log_error("ERROR:")
+            self._log_error(err)
 
     def _receiveOut(self):  # windows only
         """
@@ -533,7 +532,7 @@ class Expect(j.application.JSBaseClass):
         After sending a command, one of the receive functions must be called to
         check for the result on C{stdout} or C{stderr}.
         """
-        self._logger.info("send: %s" % data, category="send")
+        self._log_info("send: %s" % data, category="send")
         self._lastsend = data
         self._lastOutput = ""
         self._lastError = ""
@@ -609,7 +608,7 @@ class Expect(j.application.JSBaseClass):
                 o = self.receive()[0]
                 o += "\nSTEP: %s: %s\n%s\n" % (nr, stepname, o)
                 out += "%s\n" % o
-                self._logger.debug(o)
+                self._log_debug(o)
                 self.send(tosend, False)
 
             elif result is False:
@@ -698,7 +697,7 @@ class Expect(j.application.JSBaseClass):
 
         @param timeoutval: time in seconds we maximum will wait
         """
-        self._logger.info("wait: %s sec" % timeoutval, category="wait")
+        self._log_info("wait: %s sec" % timeoutval, category="wait")
         timeout = False
         starttime = j.data.time.getTimeEpoch()
         r = ""  # full return
@@ -708,7 +707,7 @@ class Expect(j.application.JSBaseClass):
         self._timeout = False
         while(timeout is False and done is False):
             returnpart, err = self.receive()
-            self._logger.debug(returnpart)
+            self._log_debug(returnpart)
             tokenfound = self._checkForTokens(returnpart)
             # j.logger.log("tokenfound:%s"%tokenfound)
             returnpart = self._ignoreLinesBasedOnFilter(returnpart)

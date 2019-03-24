@@ -14,13 +14,13 @@ class VirtualboxClient(j.application.JSBaseClass):
 
     def __init__(self):
         JSBASE.__init__(self)
-        self._logger_enable()
+
         self.vms={}
         self.disks = {}
 
     def _cmd(self, cmd):
         cmd = "VBoxManage %s" % cmd
-        self._logger.debug("vb cmd:%s" % cmd)
+        self._log_debug("vb cmd:%s" % cmd)
         rc, out, err = j.sal.process.execute(cmd)
         return out
 

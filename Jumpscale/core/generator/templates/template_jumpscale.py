@@ -26,10 +26,6 @@ class group_{{jsgroup.name}}(JSGroup):
         if self._{{module.jname}} is None:
             from {{module.importlocation}} import {{module.name}}
             self._{{module.jname}} =  {{module.name}}()
-            if hasattr(self._{{module.jname}},"_init"):
-                self._{{module.jname}}._init()
-            if hasattr(self._{{module.jname}},"_init2"):
-                self._{{module.jname}}._init2()
         return self._{{module.jname}}
     {%- endfor %}
 

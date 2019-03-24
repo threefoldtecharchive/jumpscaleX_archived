@@ -31,7 +31,7 @@ class BuilderBrotli(j.builder.system._BaseClass):
 
     def install(self, reset=False):
         if reset is False and self.isInstalled():
-            self._logger.info("Brotli already installed")
+            self._log_info("Brotli already installed")
             return
         if not self._done_get('build'):
             self.build()

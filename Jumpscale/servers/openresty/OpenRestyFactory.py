@@ -9,7 +9,7 @@ class OpenRestyFactory(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
-        self._logger_enable()
+
         self._cmd = None
 
 
@@ -91,7 +91,7 @@ class OpenRestyFactory(j.application.JSBaseClass):
     #
     #         if p.platformtype.isMac:
     #
-    #             self._logger.info("INSTALLING OPENRESTY")
+    #             self._log_info("INSTALLING OPENRESTY")
     #
     #             # will make sure we have the lobs here for web
     #             d = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/openresty_build_osx")

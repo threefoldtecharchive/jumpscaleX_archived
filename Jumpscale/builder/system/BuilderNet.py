@@ -6,7 +6,7 @@ class BuilderNet(j.builder.system._BaseClass):
 
 
     def __init(self):
-        self._logger_enable()
+
 
 
     def tcpport_check(self, port, prefix=""):
@@ -47,7 +47,7 @@ class BuilderNet(j.builder.system._BaseClass):
             for line in out.split("\n"):
                 res = re.search(p, line)
                 if res is not None:
-                    # self._logger.info(line)
+                    # self._log_info(line)
                     d = res.groupdict()
                     d["process"] = d["process"].lower()
                     if d["state"] == "LISTEN":
@@ -59,7 +59,7 @@ class BuilderNet(j.builder.system._BaseClass):
             for line in out.split("\n"):
                 res = re.search(p, line)
                 if res is not None:
-                    # self._logger.info(line)
+                    # self._log_info(line)
                     d = res.groupdict()
                     d["process"] = d["process"].lower()
                     if d["state"] == "LISTEN":

@@ -1,7 +1,7 @@
 from Jumpscale import j
 from ..vm.ZOS_VM import ZOS_VM
 
-logger = j.logger.get(__name__)
+
 
 
 class Hypervisor:
@@ -9,7 +9,7 @@ class Hypervisor:
         self.node = node
 
     def create(self, name, flist=None, vcpus=2, memory=2048):
-        logger.info('Creating kvm %s' % name)
+        self._log_info('Creating kvm %s' % name)
         return ZOS_VM(self.node, name, flist, vcpus, memory)
 
     def list(self):

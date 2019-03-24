@@ -112,12 +112,12 @@ class ServiceBase(j.application.JSBaseClass):
 
 
     def _main(self):
-        self._logger.info("%s:mainloop started"%self)
+        self._log_info("%s:mainloop started"%self)
         #make sure communication is only 1 way
         #TODO: put metadata
         while True:
             action,data=self.q_in.get()
-            self._logger.info("%s:action:%s:%s"%(self,action,data))
+            self._log_info("%s:action:%s:%s"%(self,action,data))
             method = getattr(self,action)
             res = method(data)
             print("main res:%s"%res)

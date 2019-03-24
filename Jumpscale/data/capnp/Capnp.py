@@ -217,7 +217,7 @@ class Capnp(j.application.JSBaseClass):
                     ee = str(e).split("stack:")[0]
                     ee = ee.split("failed:")[1]
                     msg += "capnperror:%s" % ee
-                    self._logger.debug(msg)
+                    self._log_debug(msg)
                     raise j.exceptions.Input(message=msg)
                 if str(e).find("Value type mismatch") != -1:
                     msg = "cannot create data for schema from "
@@ -230,7 +230,7 @@ class Capnp(j.application.JSBaseClass):
                     ee = str(e).split("stack:")[0]
                     ee = ee.split("failed:")[1]
                     msg += "capnperror:%s" % ee
-                    self._logger.debug(msg)
+                    self._log_debug(msg)
                     raise j.exceptions.Input(message=msg)
                 raise e
 
@@ -274,21 +274,21 @@ class Capnp(j.application.JSBaseClass):
         collection = self.getModelCollection(
             schema, category="test", modelBaseClass=None, db=mydb)
         start = time.time()
-        self._logger.debug("start populate 100.000 records")
+        self._log_debug("start populate 100.000 records")
         collection.logger.disabled = True
         for i in range(100000):
             obj = collection.new()
             obj.dbobj.name = "test%s" % i
             obj.save()
 
-        self._logger.debug("population done")
+        self._log_debug("population done")
         end_populate = time.time()
         collection.logger.disabled = False
 
-        self._logger.debug(collection.find(name="test839"))
+        self._log_debug(collection.find(name="test839"))
         end_find = time.time()
-        self._logger.debug("population in %.2fs" % (end_populate - start))
-        self._logger.debug("find in %.2fs" % (end_find - end_populate))
+        self._log_debug("population in %.2fs" % (end_populate - start))
+        self._log_debug("find in %.2fs" % (end_find - end_populate))
 
         # tests need to be non-interactive.  use a different function name
         # (e.g. noninteractive_test or just _test())
@@ -338,7 +338,7 @@ class Capnp(j.application.JSBaseClass):
             obj = collection.new()
             obj.dbobj.name = "test%s" % i
             obj.save()
-            self._logger.debug(collection.list())
+            self._log_debug(collection.list())
 
         subobj = collection.list_olist_constructor(
             state="new", text="something")
@@ -348,7 +348,7 @@ class Capnp(j.application.JSBaseClass):
         obj.addSubItem(name="tlist", data=subobj)
         obj.addSubItem(name="tlist", data="sometext2")
 
-        self._logger.debug(obj)
+        self._log_debug(obj)
 
         obj.initSubItem("tlist")
         assert len(obj.list_tlist) == 2

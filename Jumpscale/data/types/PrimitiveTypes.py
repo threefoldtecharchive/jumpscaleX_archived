@@ -635,3 +635,5 @@ class Enumeration(String):
         return "ENNUM: %s (default:%s)" % (self.values_str, self.default)
 
     __repr__ = __str__
+
+

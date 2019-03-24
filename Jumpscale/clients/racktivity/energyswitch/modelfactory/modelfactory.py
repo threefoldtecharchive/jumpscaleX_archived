@@ -205,7 +205,7 @@ class ModelFactory(j.application.JSBaseClass):
                             self._slave_power_models[int_version] = version
 
         # get master models, power models, and sensor models
-        self._logger.debug("{} {} {}".format(os.path.dirname(__file__), "models", self._model_dir))
+        self._log_debug("{} {} {}".format(os.path.dirname(__file__), "models", self._model_dir))
         model_dir_path = os.path.join(os.path.dirname(__file__), "models", self._model_dir)
         match = re.search(r'.*\.egg', model_dir_path)
         if not match:  # outside an egg, so listing files will work

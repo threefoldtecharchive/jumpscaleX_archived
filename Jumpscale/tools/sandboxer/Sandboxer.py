@@ -18,7 +18,7 @@ class Sandboxer(j.application.JSBaseClass):
 
         self.original_size = 0
         self.new_size = 0
-        self._logger_enable()
+
 
     def sandbox_build(self,reset=False):
         """
@@ -42,7 +42,7 @@ class Sandboxer(j.application.JSBaseClass):
             j.shell()
 
     def _ldd(self, path, result=dict(), done=list(), exclude_sys_libs=True):
-        self._logger.debug("find deb:%s" % path)
+        self._log_debug("find deb:%s" % path)
         if j.sal.fs.getFileExtension(path) in ["py", "pyc", "cfg", "bak", "txt",
                                                "png", "gif", "css", "js", "wiki", "spec", "sh", "jar", "xml", "lua"]:
             return result
@@ -80,14 +80,14 @@ class Sandboxer(j.application.JSBaseClass):
                         if name.lower().find(toexeclude.lower()) != -1:
                             excl = True
                     if not excl:
-                        self._logger.debug(("found:%s" % name))
+                        self._log_debug(("found:%s" % name))
 
                         result[lpath] = Dep(name, lpath)
                         result = self._ldd(lpath, result, done=done)
                         # try:
                         #     result = self._ldd(lpath, result, done=done)
                         # except Exception as e:
-                        #     self._logger.debug(e)
+                        #     self._log_debug(e)
             done.append(path)
         return result
 
@@ -110,12 +110,12 @@ class Sandboxer(j.application.JSBaseClass):
                      "libutil.dylib","libc++.1.dylib","libxml2.2.dylib","binascii"]
             for toexeclude in exclude:
                 if name.lower().find(toexeclude.lower()) != -1:
-                    self._logger.debug("exclude:%s"%name)
+                    self._log_debug("exclude:%s"%name)
                     return True
             return False
 
         if path not in done:
-            self._logger.debug(("check:%s" % path))
+            self._log_debug(("check:%s" % path))
             name = j.sal.fs.getBaseName(path)
             cmd = "otool -L %s" % path
             rc, out, err = j.sal.process.execute(cmd, die=False)
@@ -134,7 +134,7 @@ class Sandboxer(j.application.JSBaseClass):
                 if lpath == "":
                     continue
                 if not excl(lpath):
-                    self._logger.debug(("found:%s" % name))
+                    self._log_debug(("found:%s" % name))
                     if lpath not in result:
                         if "@" in lpath:
                             #need to check if @ can be current dir
@@ -156,7 +156,7 @@ class Sandboxer(j.application.JSBaseClass):
         """
         not needed to use manually, is basically ldd
         """
-        self._logger.info("find deb:%s" % path)
+        self._log_info("find deb:%s" % path)
         if j.core.platformtype.myplatform.isMac:
             result = self._otool(path, result=dict(), done=list(),exclude_sys_libs=exclude_sys_libs)
         else:
@@ -177,7 +177,7 @@ class Sandboxer(j.application.JSBaseClass):
         dest=j.core.tools.text_replace(dest)
         path=j.core.tools.text_replace(path)
 
-        self._logger.info("lib sandbox:%s" % path)
+        self._log_info("lib sandbox:%s" % path)
 
         j.sal.fs.createDir(dest)
 
@@ -198,7 +198,7 @@ class Sandboxer(j.application.JSBaseClass):
 
     def copyTo(self, path, dest, excludeFileRegex=[], excludeDirRegex=[], excludeFiltersExt=["pyc", "bak"]):
 
-        self._logger.info("SANDBOX COPY: %s to %s" % (path, dest))
+        self._log_info("SANDBOX COPY: %s to %s" % (path, dest))
 
         excludeFileRegex = [re.compile(r'%s' % item)
                             for item in excludeFileRegex]
@@ -208,14 +208,14 @@ class Sandboxer(j.application.JSBaseClass):
             excludeFileRegex.append(re.compile(r'(\.%s)$' % extregex))
 
         def callbackForMatchDir(path, arg):
-            # self._logger.debug ("P:%s"%path)
+            # self._log_debug ("P:%s"%path)
             for item in excludeDirRegex:
                 if(len(re.findall(item, path)) > 0):
                     return False
             return True
 
         def callbackForMatchFile(path, arg):
-            # self._logger.debug ("F:%s"%path)
+            # self._log_debug ("F:%s"%path)
             for item in excludeFileRegex:
                 if(len(re.findall(item, path)) > 0):
                     return False
@@ -231,7 +231,7 @@ class Sandboxer(j.application.JSBaseClass):
 
             dest2 = dest + "/" + subpath
             j.sal.fs.createDir(j.sal.fs.getDirName(dest2))
-            # self._logger.debug ("C:%s"%dest2)
+            # self._log_debug ("C:%s"%dest2)
             j.sal.fs.copyFile(src, dest2, overwriteFile=True)
 
         j.sal.fswalker.walkFunctional(path, callbackFunctionFile=callbackFile, callbackFunctionDir=None, arg=(
@@ -286,10 +286,10 @@ class Sandboxer(j.application.JSBaseClass):
     #         path_src = j.tools.path.get(srcReal)
     #         self.original_size += path_src.size
     #         if compress:
-    #             self._logger.debug("- %-100s %sMB" % (srcReal, round(path_src.size / 1000000, 1)))
+    #             self._log_debug("- %-100s %sMB" % (srcReal, round(path_src.size / 1000000, 1)))
     #             if delete or not j.sal.fs.exists(dest2_bro):
     #                 cmd = "bro --quality 7 --input '%s' --output %s" % (srcReal, dest2_bro)
-    #                 # self._logger.debug (cmd)
+    #                 # self._log_debug (cmd)
     #                 j.sal.process.execute(cmd)
     #                 if not j.sal.fs.exists(dest2_bro):
     #                     raise j.exceptions.RuntimeError("Could not do:%s" % cmd)
@@ -304,7 +304,7 @@ class Sandboxer(j.application.JSBaseClass):
     #                     efficiency_now = round(path_dest.size / path_src.size, 3)
     #                 else:
     #                     efficiency_now = 0
-    #                 self._logger.debug("- %-100s %-6s %-6s %sMB" %
+    #                 self._log_debug("- %-100s %-6s %-6s %sMB" %
     #                       ("", efficiency, efficiency_now, round(self.original_size / 1000000, 1)))
     #         else:
     #             j.sal.fs.copyFile(srcReal, dest2)
@@ -330,7 +330,7 @@ class Sandboxer(j.application.JSBaseClass):
     #         for i2 in "1234567890abcdef":
     #             j.sal.fs.createDir("%s/%s/%s" % (storpath2, i1, i2))
 
-    #     self._logger.debug("DEDUPE: %s to %s" % (path, storpath))
+    #     self._log_debug("DEDUPE: %s to %s" % (path, storpath))
 
     #     plistfile = j.sal.fs.joinPaths(storpath, "md", "%s.flist" % name)
 

@@ -8,6 +8,11 @@ def main(self):
     js_shell 'j.data.types.test(name="base")'
     """
 
+    j.data.types.datetime.test()
+    j.data.types.date.test()
+    j.data.types.numeric.test()
+
+
     e = j.data.types.get_custom("e",values="yellow,blue,red")
 
     assert str(e)=="ENNUM: BLUE,RED,YELLOW (default:YELLOW)"
@@ -43,6 +48,6 @@ def main(self):
 
     assert e._jumpscale_location=="j.data.types.enumerations['6d9fe6d18a520e26fce3841a7065c93b']"
 
-    # self._logger.info("TEST DONE")
+    # self._log_info("TEST DONE")
 
     return ("OK")

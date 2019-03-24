@@ -2,7 +2,7 @@ from Jumpscale import j
 import capnp
 from . import model_capnp as ModelCapnp
 
-logger = j.logger.get(__name__)
+
 
 
 class FlistMerger:
@@ -102,7 +102,7 @@ def dirFunction(dirobj, type, name, args, key):
         copy.pop('contents')
         dest_dirobj.dbobj.from_dict(copy)
         dest_dirobj.key = key
-        logger.debug(
+        self._log_debug(
             "copy directory :{} {}".format(
                 src_dir.dbobj.location,
                 src_dir.key))
@@ -128,7 +128,7 @@ def dirFunction(dirobj, type, name, args, key):
         aci_dest = dest_fs.aciCollection.new()
         aci_src = src_fs.aciCollection.get(dirobj.dbobj.aclkey)
         aci_dest.dbobj.from_dict(aci_src.dbobj.to_dict())
-        logger.debug("copy aci :{}".format(aci_dest.key))
+        self._log_debug("copy aci :{}".format(aci_dest.key))
         aci_dest.save()
 
     return True
@@ -146,7 +146,7 @@ def fileFunction(dirobj, type, name, args, subobj):
         aci_dest = dest_fs.aciCollection.new()
         aci_src = src_fs.aciCollection.get(subobj.aclkey)
         aci_dest.dbobj.from_dict(aci_src.dbobj.to_dict())
-        logger.debug("copy aci :{}".format(aci_dest.key))
+        self._log_debug("copy aci :{}".format(aci_dest.key))
         aci_dest.save()
 
 
@@ -166,7 +166,7 @@ def linkFunction(dirobj, type, name, args, subobj):
         aci_dest = dest_fs.aciCollection.new()
         aci_src = src_fs.aciCollection.get(subobj.aclkey)
         aci_dest.dbobj.from_dict(aci_src.dbobj.to_dict())
-        logger.debug("copy aci :{}".format(aci_dest.key))
+        self._log_debug("copy aci :{}".format(aci_dest.key))
         aci_dest.save()
 
 
@@ -186,7 +186,7 @@ def specialFunction(dirobj, type, name, args, subobj):
         aci_dest = dest_fs.aciCollection.new()
         aci_src = src_fs.aciCollection.get(subobj.aclkey)
         aci_dest.dbobj.from_dict(aci_src.dbobj.to_dict())
-        logger.debug("copy aci :{}".format(aci_dest.key))
+        self._log_debug("copy aci :{}".format(aci_dest.key))
         aci_dest.save()
 
 

@@ -27,10 +27,51 @@ class SSHKeys(j.application.JSBaseConfigsClass):
             j.sal.fs.writeFile(path, out)
 
     def test(self):
-        """
-        js_shell 'j.clients.sshkey.test()'
-        """
+        '''
+        -Generates key manually first
+        -j.clients.sshkey.get(name="test",path="~/.ssh/test_key")
+        -checks self.pubkey, self.privkey
+        -deletes from ssh dir --> check path doesnt exist
+        -writes to ssh dir --> check path exists
+        -generate(reset=True)
+        -checks saved sshkeys with sshkeys before generate and compare it after generate
 
-        self._logger_enable()
-        j.shell()
-        # TODO:
+        Agent:
+        -checks is_loaded is False
+        -loads keys to agent         -->check is_loaded is True
+        -unloads sshkeys from agent  --> check is_loaded is False
+        '''
+        path = "/root/.ssh/test_key"
+        sshkey_client = j.clients.sshkey.get(name="test_key", path=path)
+        assert sshkey_client.path == path
+        assert sshkey_client.privkey == j.sal.fs.readFile(path)
+        assert sshkey_client.pubkey == j.sal.fs.readFile('%s.pub' % (path))
+
+        try:
+            sshkey_client.delete_from_sshdir()
+        except ValueError as e:
+            pass
+
+        sshkey_client.write_to_sshdir()
+        assert sshkey_client.privkey == j.sal.fs.readFile(path)
+        assert sshkey_client.pubkey == j.sal.fs.readFile('%s.pub' % (path))
+
+        old_pubkey = sshkey_client.pubkey
+        old_privkey = sshkey_client.privkey
+        sshkey_client.generate(reset=True)
+        assert sshkey_client.privkey == j.sal.fs.readFile(path)
+        assert sshkey_client.pubkey == j.sal.fs.readFile('%s.pub' % (path))
+        assert sshkey_client.privkey != old_privkey
+        assert sshkey_client.pubkey != old_pubkey
+        sshkey_client.save()
+
+        assert sshkey_client.is_loaded() == False
+        sshkey_client.load()
+        assert sshkey_client.is_loaded()
+        sshkey_client.unload()
+        assert sshkey_client.is_loaded() == False
+
+        # Clean up after test
+        sshkey_client.delete_from_sshdir()
+        sshkey_client.delete()
+

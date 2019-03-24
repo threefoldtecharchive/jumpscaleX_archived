@@ -24,10 +24,10 @@ class BuilderSmartmontools(j.builder.system._BaseClass):
         Ensures smartctl is installed
         """
         if self.isInstalled():
-            self._logger.info("smartctl version %s is present" % self._VERSION)
+            self._log_info("smartctl version %s is present" % self._VERSION)
             return
             
-        self._logger.info("installing smartctl...")
+        self._log_info("installing smartctl...")
 
         tmp_location = j.builder.tools.file_download(self._DOWNLOAD_URL, expand=True)
 
@@ -48,15 +48,15 @@ class BuilderSmartmontools(j.builder.system._BaseClass):
         cmd = "smartctl --version"
         rc, out, err = j.sal.process.execute(cmd, die=False)
         if rc != 0:
-            self._logger.warning("'smartctl --version' failed, assuming it's not installed: %s", err)
+            self._log_warning("'smartctl --version' failed, assuming it's not installed: %s", err)
             return False
 
         # version number should be the second word of the first line
         version = out.split()[1]
-        self._logger.debug("smartctl version '%s' found" % version)
+        self._log_debug("smartctl version '%s' found" % version)
 
         if version != self._VERSION:
-            self._logger.warning("smartctl found but was version: %s\nNeed version %s to be installed" % (version, self._VERSION))
+            self._log_warning("smartctl found but was version: %s\nNeed version %s to be installed" % (version, self._VERSION))
             return False
         
         return True

@@ -9,7 +9,7 @@ class DocsFactory(j.application.JSFactoryBaseClass):
     _CHILDCLASS = DocSite
 
     def _init(self):
-        self._logger_enable()
+
         self._bcdb = j.data.bcdb.new("docs") #will be a BCDB custom for this one using sqlite
         self._macros_modules = {}
         self._macros = {}
@@ -20,7 +20,7 @@ class DocsFactory(j.application.JSFactoryBaseClass):
         @param pathOrUrl can be existing path or url
         e.g. https://github.com/threefoldtech/jumpscale_lib/docsite/tree/master/examples
         """
-        self._logger.info("load macros:%s"%pathOrUrl)
+        self._log_info("load macros:%s"%pathOrUrl)
         path = j.clients.git.getContentPathFromURLorPath(pathOrUrl)
 
         if path not in self._macros_modules:

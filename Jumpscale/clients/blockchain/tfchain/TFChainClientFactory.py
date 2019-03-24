@@ -7,7 +7,7 @@ from Jumpscale import j
 from .TFChainClient import TFChainClient
 
 from .TFChainExplorerClient import TFChainExplorerClient
-from .TFChainTransactionFactory import TFChainTransactionFactory
+from .types.Errors import ErrorTypes
 from .TFChainTypesFactory import TFChainTypesFactory
 
 
@@ -18,17 +18,22 @@ class TFChainClientFactory(j.application.JSBaseConfigsClass):
     __jslocation__ = "j.clients.tfchain"
     _CHILDCLASS = TFChainClient
 
-    @property
-    def explorer(self):
-        return TFChainExplorerClient()
+    def _init(self):
+        self._explorer_client = TFChainExplorerClient()
+        self._types_factory = TFChainTypesFactory()
+        self._error_types = ErrorTypes()
 
     @property
-    def transactions(self):
-        return TFChainTransactionFactory()
+    def explorer(self):
+        return self._explorer_client
 
     @property
     def types(self):
-        return TFChainTypesFactory()
+        return self._types_factory
+
+    @property
+    def errors(self):
+        return self._error_types
 
     def test(self, name=''):
         """

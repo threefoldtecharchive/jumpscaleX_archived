@@ -97,7 +97,7 @@ class BuilderARDB(j.builder.system._BaseClass):
         url = "https://github.com/yinqiwen/ardb.git"
         cpath = j.clients.git.pullGitRepo(
             url, tag="v0.9.3", reset=reset, ssh=False)
-        self._logger.info(cpath)
+        self._log_info(cpath)
 
         assert cpath.rstrip("/") == self.CODEDIRARDB.rstrip("/")
 

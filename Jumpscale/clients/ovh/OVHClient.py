@@ -38,7 +38,7 @@ class OVHClient(JSConfigBase):
         ck.add_recursive_rules(ovh.API_READ_WRITE, '/')
         # ck.add_rules(["GET", "POST", "PUT", "DELETE"], "/*")
         validation = ck.request()
-        self._logger.info(validation['consumerKey'])
+        self._log_info(validation['consumerKey'])
         self.consumerkey_ = validation['consumerKey']
         self.save
 
@@ -66,7 +66,7 @@ class OVHClient(JSConfigBase):
         gets installation templates
         """
         def getData():
-            self._logger.debug("get installationtemplates_get")
+            self._log_debug("get installationtemplates_get")
             return self.client.get('/dedicated/installationTemplate')
         return self._cache.get("installationtemplates_get", getData, expire=3600)
 
@@ -75,7 +75,7 @@ class OVHClient(JSConfigBase):
         lists ssh keys in server
         """
         def getData():
-            self._logger.debug("get sshkeys")
+            self._log_debug("get sshkeys")
             return self.client.get('/me/sshKey')
         return self._cache.get("sshKeys", getData)
 
@@ -97,7 +97,7 @@ class OVHClient(JSConfigBase):
         list servers
         """
         def getData():
-            self._logger.debug("get serversList")
+            self._log_debug("get serversList")
             llist = self.client.get("/dedicated/server")
             llist = [item for item in llist if item.find("ns302912") == -1]
             return llist
@@ -130,7 +130,7 @@ class OVHClient(JSConfigBase):
             self._cache.delete(key)
 
         def getData(name):
-            self._logger.debug("get %s" % key)
+            self._log_debug("get %s" % key)
             try:
                 return self.client.get("/dedicated/server/%s/install/status" % name)
             except Exception as e:
@@ -158,13 +158,13 @@ class OVHClient(JSConfigBase):
                 key = "server_detail_get_%s" % item  # lets make sure server is out of cache too
                 self._cache.delete(key)
                 if status != "active":
-                    self._logger.debug(item)
-                    self._logger.debug(j.data.serializers.yaml.dumps(status))
-                    self._logger.debug("-------------")
+                    self._log_debug(item)
+                    self._log_debug(j.data.serializers.yaml.dumps(status))
+                    self._log_debug("-------------")
                     nrInstalling += 1
             time.sleep(2)
         self.details = {}
-        self._logger.info("server install done")
+        self._log_info("server install done")
 
     def server_install(self, name, ovh_id, installationTemplate="ubuntu1710-server_64", sshKeyName=None,
                        useDistribKernel=True, noRaid=True, hostname="", wait=True):
@@ -216,7 +216,7 @@ class OVHClient(JSConfigBase):
                              ovh_id, details=details, templateName=installationTemplate)
         except Exception as e:
             if "A reinstallation is already in todo" in str(e):
-                self._logger.debug("%s:%s" % (name, e))
+                self._log_debug("%s:%s" % (name, e))
                 pass
             else:
                 raise e
@@ -287,7 +287,7 @@ class OVHClient(JSConfigBase):
         return None
 
     def _bootloader_set(self, target, bootid):
-        self._logger.info("[+] bootloader selected: %s" % bootid)
+        self._log_info("[+] bootloader selected: %s" % bootid)
 
         payload = {"bootId": int(bootid)}
         self.client.put("/dedicated/server/%s" % target, **payload)
@@ -330,7 +330,7 @@ class OVHClient(JSConfigBase):
         """
         # strip trailing flash
         url = url.rstrip('/')
-        self._logger.info("zero hub url:%s" % url)
+        self._log_info("zero hub url:%s" % url)
         # downloading original ipxe script
         try:
             script = requests.get(url)
@@ -376,11 +376,11 @@ class OVHClient(JSConfigBase):
         url = "%s/%s" % (self.ipxeBase, zerotierNetworkID)
         ipxe = self._zos_build(url)
 
-        self._logger.info("[+] description: %s" % ipxe['description'])
-        self._logger.info("[+] boot loader: %s" % ipxe['name'])
+        self._log_info("[+] description: %s" % ipxe['description'])
+        self._log_info("[+] boot loader: %s" % ipxe['name'])
 
         if not self.boot_image_pxe_available(ipxe['name']):
-            self._logger.info("[+] installing the bootloader")
+            self._log_info("[+] installing the bootloader")
             self.boot_image_pxe_set(ipxe['name'], ipxe['script'], ipxe['description'])
         self.bootloader_set(target, ipxe['name'])
         return self.server_reboot(target)
@@ -401,7 +401,7 @@ class OVHClient(JSConfigBase):
 
             if status['status'] != current:
                 current = status['status']
-                self._logger.info("[+] rebooting %s: %s" % (target, current))
+                self._log_info("[+] rebooting %s: %s" % (target, current))
 
             if status['status'] == 'done':
                 return True
@@ -424,12 +424,12 @@ class OVHClient(JSConfigBase):
     #
     #     cl = OVHClient
     #
-    #     logger.debug("booting server {} to zero-os".format(OVHHostName))
+    #     self._log_debug("booting server {} to zero-os".format(OVHHostName))
     #     task = cl.zero_os_boot(target=OVHHostName, zerotierNetworkID=zerotierNetworkID)
-    #     logger.debug("waiting for {} to reboote".format(OVHHostName))
+    #     self._log_debug("waiting for {} to reboote".format(OVHHostName))
     #     cl.server_wait_reboot(OVHHostName, task['taskId'])
     #     ip_pub = cl.server_detail_get(OVHHostName)["ip"]
-    #     logger.info("ip addr is:%s" % ip_pub)
+    #     self._log_info("ip addr is:%s" % ip_pub)
     #
     #     while True:
     #         try:
@@ -439,14 +439,14 @@ class OVHClient(JSConfigBase):
     #             break
     #         except RuntimeError as e:
     #             # case where we don't find the member in zerotier
-    #             logger.error(e)
+    #             self._log_error(e)
     #             time.sleep(1)
     #         except IndexError as e:
     #             # case were we the member doesn't have a private ip
-    #             logger.error("please authorize the server with the public ip %s in the zerotier network" % ip_pub)
+    #             self._log_error("please authorize the server with the public ip %s in the zerotier network" % ip_pub)
     #             time.sleep(1)
     #
-    #     logger.debug("server found: %s" % member['id'])
-    #     logger.debug("zerotier IP: %s" % ipaddr_priv)
+    #     self._log_debug("server found: %s" % member['id'])
+    #     self._log_debug("zerotier IP: %s" % ipaddr_priv)
     #
     #     return ip_pub, ipaddr_priv

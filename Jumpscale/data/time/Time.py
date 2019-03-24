@@ -1,6 +1,7 @@
 import datetime
 import time
 from .TimeInterval import TimeInterval
+from Jumpscale import j
 import struct
 
 TIMES = {'s': 1,

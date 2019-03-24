@@ -90,10 +90,10 @@ class GiteaUser(j.application.JSBaseClass):
                 is_member = False
 
         if is_member:
-            self._logger.debug('{0} is member of organization {1}'.format(self.username, org))
+            self._log_debug('{0} is member of organization {1}'.format(self.username, org))
             return True
         else:
-            self._logger.debug('{0} is not member of organization {1}'.format(self.username, org))
+            self._log_debug('{0} is not member of organization {1}'.format(self.username, org))
             return False
 
     @property
@@ -177,7 +177,7 @@ class GiteaUser(j.application.JSBaseClass):
         is_valid, err = self._validate(create=True)
 
         if not commit or not is_valid:
-            self._logger.debug(err)
+            self._log_debug(err)
             return is_valid
 
         try:
@@ -187,35 +187,35 @@ class GiteaUser(j.application.JSBaseClass):
                 setattr(self, k, v)
             return True
         except Exception as e:
-            self._logger.debug(e.response.content)
+            self._log_debug(e.response.content)
             return False
 
     def update(self, commit=True):
         is_valid, err = self._validate(update=True)
 
         if not commit or not is_valid:
-            self._logger.debug(err)
+            self._log_debug(err)
             return is_valid
 
         try:
             self.client.api.admin.adminEditUser(data=self.data, username=self.username)
             return True
         except Exception as e:
-            self._logger.debug(e.response.content)
+            self._log_debug(e.response.content)
             return False
 
     def delete(self, commit=True):
         is_valid, err = self._validate(delete=True)
 
         if not commit or not is_valid:
-            self._logger.debug(err)
+            self._log_debug(err)
             return is_valid
         try:
             self.client.api.admin.adminDeleteUser(username=self.username)
             self.id = None
             return True
         except Exception as e:
-            self._logger.debug(e.response.content)
+            self._log_debug(e.response.content)
             return False
 
     @property
@@ -244,7 +244,7 @@ class GiteaUser(j.application.JSBaseClass):
             return True
         except Exception as e:
             if e.response.status_code != 404:
-                self._logger.debug('username does not exist')
+                self._log_debug('username does not exist')
             return False
 
     @property

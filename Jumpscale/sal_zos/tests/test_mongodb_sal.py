@@ -11,6 +11,7 @@ This test script executes the following scenario:
 
 import time
 import re
+import pytest
 from Jumpscale import j
 
 FLIST = 'https://hub.gig.tech/ekaterina_evdokimova_1/ubuntu-16.04-mongodb.flist'
@@ -65,7 +66,7 @@ def get_mongod_shard_config(shard, port):
     roles = re.findall(r'"stateStr" : "\w+"', result.stdout)
     return dict(zip(names, roles))
 
-
+@pytest.mark.skip(reason="not a unit-test")
 def test_deploy_cluster(node_ip, cluster_id):
     """ Test case covers mongodb cluster deployment, connection to mongos,
         check db avaliability after nocking out a PRIMARY node for both shard and config replica sets """
@@ -213,5 +214,5 @@ def test_deploy_cluster(node_ip, cluster_id):
 
     print('test was completed successfully')
 
-
-test_deploy_cluster('192.168.122.89', cluster_id='32')
+if __name__ == "__main__":
+    test_deploy_cluster('192.168.122.89', cluster_id='32')

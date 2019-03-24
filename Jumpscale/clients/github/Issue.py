@@ -43,7 +43,7 @@ class Issue(Base):
 
         with self._lock:
             if self._comments is None:
-                self._logger.debug(
+                self._log_debug(
                     "Loading comments for issue: %s" % self.number)
                 self._comments = []
                 for comment in self.api.get_comments():
@@ -97,7 +97,7 @@ class Issue(Base):
         try:
             self.api.edit(body=self._ddict['body'])
         except Exception as e:
-            self._logger.error('Failed to update the issue body: %s' % e)
+            self._log_error('Failed to update the issue body: %s' % e)
 
     @property
     def time(self):
@@ -257,7 +257,7 @@ class Issue(Base):
                     newlabels.append(label)
 
         if labels != newlabels:
-            self._logger.info(
+            self._log_info(
                 "change label:%s for %s" %
                 (labels, self.api.title))
             labels2set = [self.repo.getLabel(item) for item in newlabels]
@@ -280,7 +280,7 @@ class Issue(Base):
         self._ddict["time"] = j.data.time.any2HRDateTime(
             [self.api.last_modified, self.api.created_at])
 
-        self._logger.debug("LOAD:%s %s" %
+        self._log_debug("LOAD:%s %s" %
                           (self.repo.fullname, self._ddict["title"]))
 
         if self.api.milestone is None:

@@ -27,7 +27,7 @@ class KubernetesFactory(JSConfigBaseFactory):
             path = j.sal.fs.joinPaths(directory, 'config')
         data = j.data.serializers.yaml.dumps(config)
         j.sal.fs.writeFile(path, data)
-        self._logger.info('file saved at %s' % path)
+        self._log_info('file saved at %s' % path)
 
     def test(self):
         """

@@ -118,6 +118,7 @@ def main(self):
     """
 
     o = j.data.schema.get(schema).new()
+
     assert o.bool1 == True
     assert o.bool2 == True
     assert o.bool3 == False
@@ -128,6 +129,6 @@ def main(self):
     assert o.bool8 == False
     assert o.int1 == 10
 
-    self._logger.info("TEST DONE BASE")
+    self._log_info("TEST DONE BASE")
 
     return ("OK")

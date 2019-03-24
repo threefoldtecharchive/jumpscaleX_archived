@@ -2,11 +2,9 @@ from Jumpscale import j
 import time
 
 CMD_APT_GET = "apt-get "
+
+
 class BuilderSystemPackage(j.builder.system._BaseClass):
-
-
-    def __init(self):
-        self._logger_enable()
 
     def _repository_ensure_apt(self, repository):
         self.ensure('python-software-properties')
@@ -61,7 +59,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
         """
         if self._done_check("mdupdate", reset):
             return
-        self._logger.info("packages mdupdate")
+        self._log_info("packages mdupdate")
         if j.core.platformtype.myplatform.isUbuntu:
             j.sal.process.execute("apt-get update")
         elif j.builder.tools.isAlpine:
@@ -81,7 +79,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
         if self._done_check("upgrade", reset):
             return
         self.mdupdate()
-        self._logger.info("packages upgrade")
+        self._log_info("packages upgrade")
         if j.core.platformtype.myplatform.isUbuntu:
             if distupgrade:
                 raise NotImplementedError()
@@ -124,12 +122,12 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
 
             key = "install_%s" % package
             if self._done_check(key, reset):
-                self._logger.info("package:%s already installed"%package)
+                self._log_info("package:%s already installed" % package)
                 continue
             todo.append(package)
             print("+ install: %s" % package)
 
-            self._logger.info("prepare to install:%s" % package)
+            self._log_info("prepare to install:%s" % package)
 
             if j.core.platformtype.myplatform.isUbuntu:
                 cmd += "%s install %s\n" % (CMD_APT_GET, package)
@@ -149,8 +147,9 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
                 cmd = "pacman -S %s  --noconfirm\n" % package
 
             elif j.core.platformtype.myplatform.isMac:
-                for unsupported in ["libpython3.4-dev", "python3.4-dev", "libpython3.5-dev", "python3.5-dev",
-                                    "libffi-dev", "libssl-dev", "make", "build-essential", "libpq-dev", "libsqlite3-dev"]:
+                for unsupported in [
+                    "libpython3.4-dev", "python3.4-dev", "libpython3.5-dev", "python3.5-dev", "libffi-dev",
+                        "libssl-dev", "make", "build-essential", "libpq-dev", "libsqlite3-dev"]:
                     if 'libsnappy-dev' in package or 'libsnappy1v5' in package:
                         package = 'snappy'
 
@@ -349,4 +348,3 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
                 self._apt_get("autoclean")
         elif j.core.platformtype.myplatform.isMac:
             j.sal.process.execute("brew remove %s 2>&1 > /dev/null|echo """ % package)
-

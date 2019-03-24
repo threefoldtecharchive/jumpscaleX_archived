@@ -10,7 +10,7 @@ JSBASE = j.application.JSBaseClass
 class NetworkingError(Exception, JSBASE):
     def __init__(self, msg=""):
         JSBASE.__init__(self)
-        self._logger.error(msg)
+        self._log_error(msg)
 
 
 class UnixNetworkManager(j.application.JSBaseClass):
@@ -69,7 +69,7 @@ class UnixNetworkManager(j.application.JSBaseClass):
         if commit:
             self.commit(device)
         else:
-            self._logger.info('Do NOT FORGET TO COMMIT')
+            self._log_info('Do NOT FORGET TO COMMIT')
 
     def ipReset(self, device, commit=False):
         self._nicExists(device)
@@ -79,7 +79,7 @@ class UnixNetworkManager(j.application.JSBaseClass):
         if commit:
             self.commit()
         else:
-            self._logger.info('Do NOT FORGET TO COMMIT')
+            self._log_info('Do NOT FORGET TO COMMIT')
 
     @property
     def nics(self):
@@ -96,8 +96,8 @@ class UnixNetworkManager(j.application.JSBaseClass):
         content = 'auto lo\niface lo inet loopback\n'
         j.tools.path.get('/etc/network/interfaces.d/lo').write_text(content)
         if device:
-            self._logger.info('Restarting interface %s' % device)
+            self._log_info('Restarting interface %s' % device)
             (ip, _) = self.ipGet(device)
             self._executor.execute('ip a del %s dev %s'% (ip, device))
         self._executor.execute('systemctl restart networking')
-        self._logger.info('DONE')
+        self._log_info('DONE')

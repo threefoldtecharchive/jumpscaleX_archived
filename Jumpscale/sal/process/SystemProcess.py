@@ -53,13 +53,13 @@ class SystemProcess(j.application.JSBaseClass):
         """
 
         if printCommandToStdout:
-            self._logger.info("system.process.executeWithoutPipe [%s]" % command)
+            self._log_info("system.process.executeWithoutPipe [%s]" % command)
         else:
-            self._logger.debug("system.process.executeWithoutPipe [%s]" % command)
+            self._log_debug("system.process.executeWithoutPipe [%s]" % command)
         exitcode = os.system(command)
 
         if exitcode != 0 and die:
-            self._logger.error(
+            self._log_error(
                 "command: [%s]\nexitcode:%s" % (command, exitcode))
             raise j.exceptions.RuntimeError(
                 "Error during execution!\nCommand: %s\nExitcode: %s" % (command, exitcode))
@@ -155,7 +155,7 @@ class SystemProcess(j.application.JSBaseClass):
 
             if pending != set():
                 # timeout happened
-                self._logger.debug("ERROR TIMEOUT happend")
+                self._log_debug("ERROR TIMEOUT happend")
                 for task in pending:
                     task.cancel()
                 process.kill()
@@ -223,7 +223,7 @@ class SystemProcess(j.application.JSBaseClass):
 
     # def executeScript(self, scriptName):
     #     """execute python script from shell/Interactive Window"""
-    #     self._logger.debug('Excecuting script with name: %s' % scriptName)
+    #     self._log_debug('Excecuting script with name: %s' % scriptName)
     #     if scriptName is None:
     #         raise ValueError(
     #             'Error, Script name in empty in system.process.executeScript')
@@ -295,7 +295,7 @@ class SystemProcess(j.application.JSBaseClass):
     #     @param command: string (command to be executed)
     #     @param timeout: 0 means to ever, expressed in seconds
     #     """
-    #     self._logger.debug('Executing command %s in sandbox' % command)
+    #     self._log_debug('Executing command %s in sandbox' % command)
     #     if command is None:
     #         raise j.exceptions.RuntimeError(
     #             'Error, cannot execute command not specified')
@@ -344,7 +344,7 @@ class SystemProcess(j.application.JSBaseClass):
     #         code2 += "%s\n" % line
     #
     #     # try to load the code
-    #     self._logger.debug(code2)
+    #     self._log_debug(code2)
     #     execContext = {}
     #     try:
     #         exec((code2, globals(), locals()), execContext)
@@ -369,7 +369,7 @@ class SystemProcess(j.application.JSBaseClass):
            For windows, the process information is retrieved and it is double checked that the process is python.exe
            or pythonw.exe
         """
-        self._logger.info('Checking whether process with PID %d is alive' % pid)
+        self._log_info('Checking whether process with PID %d is alive' % pid)
         if self.isUnix:
             # Unix strategy: send signal SIGCONT to process pid
             # Achilles heal: another process which happens to have the same pid could be running
@@ -398,7 +398,7 @@ class SystemProcess(j.application.JSBaseClass):
         @param sig: signal. If no signal is specified signal.SIGKILL is used
         """
         pid=int(pid)
-        j.sal.process._logger.debug('Killing process %d' % pid)
+        j.sal.process._log_debug('Killing process %d' % pid)
         if self.isUnix:
             try:
                 if sig is None:
@@ -441,7 +441,7 @@ class SystemProcess(j.application.JSBaseClass):
                 continue
             line = line.strip()
             pid = line.split(" ")[0]
-            self._logger.info("kill:%s (%s)" % (name, pid))
+            self._log_info("kill:%s (%s)" % (name, pid))
             self.kill(pid)
         if self.psfind(name):
             raise RuntimeError(
@@ -643,7 +643,7 @@ class SystemProcess(j.application.JSBaseClass):
         @param min: (int) minimal threads that should run.
         @return True if ok
         """
-        self._logger.debug(
+        self._log_debug(
             'Checking whether at least %d processes %s are running' % (min, process))
         if self.isUnix:
             pids = self.getProcessPid(process)
@@ -663,7 +663,7 @@ class SystemProcess(j.application.JSBaseClass):
         @param process: (str) the process that should have the pid
         @return status: (int) 0 when ok, 1 when not ok.
         """
-        self._logger.info(
+        self._log_info(
             'Checking whether process with PID %d is actually %s' % (pid, process))
         if self.isUnix:
             command = "ps -p %i" % pid
@@ -861,7 +861,7 @@ class SystemProcess(j.application.JSBaseClass):
     #         else:
     #             raise j.exceptions.RuntimeError("Platform not supported")
     #
-    #     self._logger.info("system.process.executeAsync [%s]" % command)
+    #     self._log_info("system.process.executeAsync [%s]" % command)
     #     if printCommandToStdout:
     #         print(("system.process.executeAsync [%s]" % command))
     #

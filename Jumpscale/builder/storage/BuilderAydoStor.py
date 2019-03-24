@@ -17,7 +17,7 @@ class BuilderAydoStor(j.builder.system._BaseClass):
         @input backend, directory where to save the data push to the store
         """
         if self.isInstalled() and not reset:
-            self._logger.info('Aydostor is already installed, pass reinstall=True parameter to reinstall')
+            self._log_info('Aydostor is already installed, pass reinstall=True parameter to reinstall')
             return
 
         j.builder.system.package.mdupdate()

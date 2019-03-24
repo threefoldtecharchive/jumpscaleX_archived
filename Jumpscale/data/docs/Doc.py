@@ -235,7 +235,7 @@ class Doc(j.application.JSBaseConfigClass):
             if not macro_name in j.tools.markdowndocs._macros:
                 e = "COULD NOT FIND MACRO"
                 block = "```python\nERROR IN MACRO*** TODO: *1 ***\nmacro:\n%s\nERROR:\n%s\n```\n" % (macro_name, e)
-                self._logger.error(block)
+                self._log_error(block)
                 self.docsite.error_raise(block, doc=self)
 
             method = j.tools.markdowndocs._macros[macro_name]
@@ -247,7 +247,7 @@ class Doc(j.application.JSBaseConfigClass):
                 part.result = method(self,*args,**kwargs,content=part.data)
             except Exception as e:
                 block = "```python\nERROR IN MACRO*** TODO: *1 ***\nmacro:\n%s\nERROR:\n%s\n```\n" % (macro_name, e)
-                self._logger.error(block)
+                self._log_error(block)
                 self.docsite.error_raise(block, doc=self)
                 part.result = block
 
@@ -262,7 +262,7 @@ class Doc(j.application.JSBaseConfigClass):
             return
         regex = "!*\[.*\] *\(.*\)"
         for match in j.data.regex.yieldRegexMatches(regex, self.markdown_source, flags=0):
-            self._logger.debug("##:file:link:%s" % match)
+            self._log_debug("##:file:link:%s" % match)
             link = Link(self,match.founditem)
             if not link.link_source=="":
                 self._links.append(link)

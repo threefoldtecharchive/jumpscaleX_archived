@@ -21,7 +21,7 @@ from .models import ACIModel
 from .models import ACICollection
 # from .FuseExample import FuseExample # test also disabled (see below)
 
-logger = j.logger.get('j.tools.flist.merger')
+
 
 
 class FListFactory:
@@ -156,7 +156,7 @@ class FListFactory:
         flist.add(testDir)
 
         def pprint(path, ddir, name):
-            logger.debug(path)
+            self._log_debug(path)
 
         flist.walk(
             fileFunction=pprint,
@@ -216,7 +216,7 @@ class FListArchiver:
             if not flist.isRegular(files[0]):
                 continue
 
-                logger.debug("Processing: %s" % hash)
+                self._log_debug("Processing: %s" % hash)
 
             root = "%s/%s/%s" % (backend, hash[0:2], hash[2:4])
             file = hash
@@ -231,10 +231,10 @@ class FListArchiver:
 
             # adding it to ipfs network
             hash = self.push_to_ipfs(target)
-            logger.debug("Network hash: %s" % hash)
+            self._log_debug("Network hash: %s" % hash)
 
             # updating flist hash with ipfs hash
             for f in files:
                 flist.setHash(f, hash)
 
-        logger.debug("Files compressed and shared")
+        self._log_debug("Files compressed and shared")

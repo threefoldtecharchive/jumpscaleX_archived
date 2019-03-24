@@ -1,13 +1,12 @@
-from Jumpscale import tcpPortConnectionTest
+
 import time
 import os
-import socket
+
 from redis._compat import nativestr
-from .RedisQueue import RedisQueue
-from .Redis import Redis
+
 from Jumpscale import j
 
-
+from core.InstallTools import Redis
 
 class RedisFactory(j.application.JSBaseClass):
 
@@ -18,7 +17,7 @@ class RedisFactory(j.application.JSBaseClass):
 
     def _init(self):
         self._cache_clear()
-        # self._logger_enable()
+        #
 
     def _cache_clear(self):
         '''
@@ -29,10 +28,6 @@ class RedisFactory(j.application.JSBaseClass):
         self._redisq = {}
         self._config = {}
 
-    @property
-    def _REDIS_CLIENT_CLASS(self):
-        self._logger.debug("REDIS CLASS")
-        return Redis
 
     def get(
             self,
@@ -90,13 +85,13 @@ class RedisFactory(j.application.JSBaseClass):
 
         if key not in self._redis or not fromcache:
             if ipaddr and port:
-                self._logger.debug("REDIS:%s:%s" % (ipaddr, port))
+                self._log_debug("REDIS:%s:%s" % (ipaddr, port))
                 self._redis[key] = Redis(ipaddr, port, password=password, ssl=ssl, ssl_certfile=ssl_certfile,
                                          ssl_keyfile=ssl_keyfile,unix_socket_path=unixsocket,
                                          # socket_timeout=timeout,
                                          **args)
             else:
-                self._logger.debug("REDIS:%s" % unixsocket)
+                self._log_debug("REDIS:%s" % unixsocket)
                 self._redis[key] = Redis(unix_socket_path=unixsocket,
                                          # socket_timeout=timeout,
                                          password=password,
@@ -130,23 +125,11 @@ class RedisFactory(j.application.JSBaseClass):
         client.response_callbacks['SET'] = lambda r: r
         client.response_callbacks['DEL'] = lambda r: r
 
-    def queue_get(self, name, redisclient=None, namespace="queues", fromcache=True):
-        '''get an instance of redis queue, store it in cache so we can easily retrieve it later
+    def queue_get(self, key, redisclient=None, fromcache=True):
 
-        :param name:  name of queue
-        :type name: str
-        :param redisclient: [description], defaults to None
-        :type redisclient: [type], optional
-        :param namespace: value of namespace for the queue, defaults to "queues"
-        :type namespace: str, optional
-        :param fromcache: if False, will create a new one instead of checking cache, defaults to True
-        :type fromcache: bool, optional
-        :return: RedisQueue
-        :rtype: [type]
+        if redisclient is None:
+            redisclient = j.core.db
 
-        :param ipaddr: used to form the key when no unixsocket
-        :param port: used to form the key when no unixsocket
-        '''
         if "host" not in redisclient.connection_pool.connection_kwargs:
             ipaddr = redisclient.connection_pool.connection_kwargs["path"]
             port = 0
@@ -158,15 +141,8 @@ class RedisFactory(j.application.JSBaseClass):
         #     return RedisQueue(self.get(ipaddr, port, fromcache=False), name, namespace=namespace)
         key = "%s_%s_%s_%s" % (ipaddr, port, name, namespace)
         if fromcache == False or key not in self._redisq:
-            self._redisq[key] = RedisQueue(redisclient, name, namespace=namespace)
+            self._redisq[key] = redisclient.queue_get(key)
         return self._redisq[key]
-
-    @property
-    def unix_socket_path(self):
-        if j.core.isSandbox:
-            return '/sandbox/var/redis.sock'
-        else:
-            return '%s/redis.sock' % j.dirs.TMPDIR
 
 
     def core_get(self, reset=False, tcp=True):
@@ -192,22 +168,25 @@ class RedisFactory(j.application.JSBaseClass):
         if reset:
             self.core_stop()
 
+        if j.core.db and j.core.db.ping() and j.core._db_fakeredis is False:
+            return j.core.db
+
         if not self.core_running(tcp=tcp):
+            j.core._db = None
             self._core_start(tcp=tcp)
 
-        nr = 0
-        while True:
-            self._logger.info("try to connect to redis of unixsocket:%s or tcp port 6379" % self.unix_socket_path)
-            if self.core_running():
-                if tcp:
-                    j.core._db = self.get(ipaddr="localhost", port=6379, unixsocket=self.unix_socket_path)
-                    break
-                else:
-                    j.core._db = self.get(ipaddr=None, port=None, unixsocket=self.unix_socket_path)
-                    break
-            if nr > 200:
-                raise RuntimeError("could not start redis")
-            time.sleep(0.05)
+        # nr = 0
+        # while True:
+        #     if j.core.db and j.core.db.ping() and j.core._db_fakeredis is False:
+        #         return j.core.db
+        #
+        #     self._log_info("try to connect to redis on unixsocket or tcp port 6379")
+        #
+        #     nr+=1
+        #
+        #     if nr > 20:
+        #         raise RuntimeError("could not start redis")
+        #     time.sleep(0.1)
 
         return j.core._db
 
@@ -219,6 +198,7 @@ class RedisFactory(j.application.JSBaseClass):
         :return: True if redis is not running
         :rtype: bool
         '''
+        j.core._db = None
         j.sal.process.execute("redis-cli -s %s shutdown" % self.unix_socket_path, die=False, showout=False)
         j.sal.process.execute("redis-cli shutdown", die=False, showout=False)
         nr = 0
@@ -240,24 +220,16 @@ class RedisFactory(j.application.JSBaseClass):
         :rtype: bool
         '''
 
+        try:
+            r = self.get(unixsocket=self.unix_socket_path)
+            return r.ping()
+        except Exception as e:
+            pass
+
         if tcp and j.sal.nettools.tcpPortConnectionTest("localhost", 6379):
             r = self.get(ipaddr="localhost", port=6379)
             return r.ping()
 
-        if j.core.isSandbox:
-            if not j.sal.fs.exists(self.unix_socket_path):
-                return False
-            try:
-                r = self.get(ipaddr="", port=0, unixsocket=self.unix_socket_path)
-            except Exception as e:
-                if str(e).find("did not answer") != -1:
-                    return False
-                raise e
-            return r.ping()
-        else:
-            if j.sal.nettools.tcpPortConnectionTest("localhost", 6379) == False:
-                r = self.get(ipaddr="localhost", port=6379, unixsocket=self.unix_socket_path)
-                return r.ping()
         return False
 
 
@@ -315,14 +287,13 @@ class RedisFactory(j.application.JSBaseClass):
         if reset:
             self.core_stop()
 
-        if "TMPDIR" in os.environ:
-            tmpdir = os.environ["TMPDIR"]
-        else:
-            tmpdir = "/tmp"
+
+
         cmd = "mkdir -p /sandbox/var;redis-server --unixsocket /sandbox/var/redis.sock " \
               "--port 6379 " \
               "--maxmemory 100000000 --daemonize yes"
-        self._logger.info(cmd)
+
+        self._log_info(cmd)
         j.sal.process.execute(cmd)
         limit_timeout = time.time() + timeout
         while time.time() < limit_timeout:
@@ -331,6 +302,8 @@ class RedisFactory(j.application.JSBaseClass):
             time.sleep(0.1)
         else:
             raise j.exceptions.Timeout("Couldn't start redis server")
+
+        j.core._db = None
 
     def test(self, name=""):
         """

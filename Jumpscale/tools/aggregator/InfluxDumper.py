@@ -94,7 +94,7 @@ class InfluxDumper(Dumper.BaseDumper):
         }
 
     def _dump_hour(self, stats):
-        self._logger.debug(stats)
+        self._log_debug(stats)
 
     def _flush(self):
         if len(self._points) == 0:

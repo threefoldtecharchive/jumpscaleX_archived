@@ -13,7 +13,7 @@ class VirtualboxDisk(j.application.JSBaseClass):
 
     def _cmd(self, cmd):
         cmd = "VBoxManage %s" % cmd
-        self._logger.debug("vb cmd:%s" % cmd)
+        self._log_debug("vb cmd:%s" % cmd)
         rc, out, err = j.sal.process.execute(cmd)
         return out
 

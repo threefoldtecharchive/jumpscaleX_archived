@@ -63,7 +63,7 @@ class Offliner(j.application.JSBaseClass):
             cmd += " --domains %s" % domain
 
         cmd += " %s" % url
-        self._logger.debug(cmd)
+        self._log_debug(cmd)
         return cmd
 
         # # Create the subprocess, redirect the standard output into a pipe

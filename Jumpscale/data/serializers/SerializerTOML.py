@@ -170,7 +170,7 @@ class SerializerTOML(SerializerBase):
         ddicttest = {'name': 'something', 'multiline': 'these are multiple lines\nnext line\n', 'nr': 87, 'nr2': 0, 'nr3': 1, 'nr4': 34.4, 'nr5': 34.4, 'bbool': True,
                      'bbool2': True, 'bbool3': False, 'list1': ['1', '2', '3', '4'], 'list2': [1, 2, 3], 'list3': ['a', 'b', 'c'], 'list4': ['ab'], 'list5': ['a', 'b', 'c', 'd']}
 
-        self._logger.debug(ddictout)
+        self._log_debug(ddictout)
 
         assert ddictout == ddicttest
 
@@ -202,7 +202,7 @@ class SerializerTOML(SerializerBase):
         ddictout, errors = self.merge(ddicttest, ddictmerge, listunique=True)
 
         yyaml = self.fancydumps(ddictout)
-        self._logger.debug(yyaml)
+        self._log_debug(yyaml)
 
         compare = {'bbool': True,
                    'bbool2': True,

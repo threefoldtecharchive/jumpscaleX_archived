@@ -213,10 +213,10 @@ class TextCharEditor(j.application.JSBaseClass):
             linepositions.append(pos)
             line += (self.chars[pos][0])
             if self.chars[pos][0] == "\n":
-                self._logger.debug(line)
+                self._log_debug(line)
                 # print blocknames
-                self._logger.debug((string.join(["%s" % self.chars[pos][1] for pos in linepositions])))
+                self._log_debug((string.join(["%s" % self.chars[pos][1] for pos in linepositions])))
                 # print blocknrs
-                self._logger.debug((string.join(["%s" % self.chars[pos][2] for pos in linepositions])))
+                self._log_debug((string.join(["%s" % self.chars[pos][2] for pos in linepositions])))
                 line = ""
                 linepositions = []

@@ -258,5 +258,5 @@ class AggregatorClient(j.application.JSBaseClass):
         """
         realities = self.redis.lrange('queues:reality', 0, 1000)
         for reality in realities:
-            self._logger.debug(reality)
+            self._log_debug(reality)
             yield self.realityGet(reality, removeFromQueue=False)

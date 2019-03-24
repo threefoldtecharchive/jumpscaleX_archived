@@ -42,13 +42,13 @@ class BuilderLibffi(j.builder.system._BaseClass):
             make install
             """
             j.sal.fs.writeFile("%s/mycompile_all.sh" % self.CODEDIRL, j.core.tools.text_replace(C))
-            self._logger.info("compile libffi")
-            self._logger.debug(C)
+            self._log_info("compile libffi")
+            self._log_debug(C)
             j.sal.process.execute("sh %s/mycompile_all.sh" % self.CODEDIRL)            
             self._done_set("compile")
-            self._logger.info("BUILD DONE")
+            self._log_info("BUILD DONE")
         else:
-            self._logger.info("NO NEED TO BUILD")
+            self._log_info("NO NEED TO BUILD")
 
-        self._logger.info("BUILD COMPLETED OK")
+        self._log_info("BUILD COMPLETED OK")
         self._done_set("build")

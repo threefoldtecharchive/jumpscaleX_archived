@@ -93,10 +93,10 @@ class Pwiz(j.application.JSBaseClass):
             self.introspector.get_database_name(),
             repr(self.introspector.get_database_kwargs()))
 
-        self._logger.debug("INTROSPECTION DONE")
+        self._log_debug("INTROSPECTION DONE")
 
         def _process_table(out, table):
-            self._logger.debug("Process table:%s" % table)
+            self._log_debug("Process table:%s" % table)
             # accum = accum or []
             # foreign_keys = database.foreign_keys[table]
             # for foreign_key in foreign_keys:
@@ -156,7 +156,7 @@ class Pwiz(j.application.JSBaseClass):
                 out += '        primary_key = CompositeKey(%s)\n' % pk_list
             out += '\n'
 
-            self._logger.info("OK")
+            self._log_info("OK")
             return out
 
         seen = set()

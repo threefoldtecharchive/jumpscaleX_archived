@@ -7,7 +7,7 @@ from .. import templates
 from ..abstracts import Nics, Service
 from ..globals import TIMEOUT_DEPLOY
 
-logger = j.logger.get(__name__)
+
 
 CLIENT_PORT = 2379
 PEER_PORT = 2380
@@ -127,7 +127,7 @@ class ETCD(Service):
         if self.is_running():
             return
 
-        logger.info('start etcd {}'.format(self.name))
+        self._log_info('start etcd {}'.format(self.name))
         self.deploy()
         self.create_config()
         cmd = '/bin/etcd --config-file {}'.format(self._config_path)

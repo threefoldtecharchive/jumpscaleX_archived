@@ -120,6 +120,6 @@ def main(self):
 
     # assert result == {7: 'name7', 8: 'name8', 9: 'name9'} # TODO illogical test case
 
-    self._logger.info("TEST DONE")
+    self._log_info("TEST DONE")
 
     return ("OK")

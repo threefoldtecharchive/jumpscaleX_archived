@@ -65,7 +65,7 @@ class GDriveFile(j.application.JSBaseClass):
             self.__dict__.update(j.data.serializers.json.loads(json))
 
         except BaseException:
-            j.clients.gdrive.logger.warning("description was wrong format, was not json, lets re-write")
+            j.clients.gdrive.self._log_warning("description was wrong format, was not json, lets re-write")
             self.changed = True
             self.description = json  # the old description
 
@@ -165,7 +165,7 @@ class GDriveFile(j.application.JSBaseClass):
                 new_type = self.mimetype
 
             request = j.clients.gdrive.files.export_media(fileId=self.id, mimeType=new_type)
-            self._logger.debug("\033[92m Downloading -- \033[0m" + path)
+            self._log_debug("\033[92m Downloading -- \033[0m" + path)
             response = request.execute()
             with open(path, "wb") as wer:
                 wer.write(response)
@@ -178,7 +178,7 @@ class GDriveFile(j.application.JSBaseClass):
                 done = False
                 while done is False:
                     status, done = downloader.next_chunk()
-                    self._logger.debug("\033[92m Downloading : \033[0m", " %s -- %d%%. " % (path, int(status.progress() * 100)))
+                    self._log_debug("\033[92m Downloading : \033[0m", " %s -- %d%%. " % (path, int(status.progress() * 100)))
 
     def save(self):
         if self.changed:

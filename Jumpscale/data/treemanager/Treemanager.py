@@ -265,7 +265,7 @@ class TreemanagerFactory(j.application.JSBaseClass):
 
         dumped = t.dumps()
 
-        self._logger.debug(dumped)
+        self._log_debug(dumped)
 
         t2 = self.get(dumped)
 
@@ -286,4 +286,4 @@ class TreemanagerFactory(j.application.JSBaseClass):
         ee = t2.find("", maxAmount=200, getItems=False, selected=True)
         assert len(ee) == 2
 
-        self._logger.debug("TEST OK")
+        self._log_debug("TEST OK")

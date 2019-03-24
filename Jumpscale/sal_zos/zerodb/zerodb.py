@@ -7,7 +7,7 @@ from ..abstracts import Nics, Service
 from ..disks.Disks import Disk
 from .namespace import Namespaces
 
-logger = j.logger.get(__name__)
+
 DEFAULT_PORT = 9900
 PUBLIC_THREEFOLD_NETWORK = "9bee8941b5717835"
 
@@ -252,7 +252,7 @@ class Zerodb(Service):
         if self.is_running():
             return
 
-        logger.info('start zerodb %s' % self.name)
+        self._log_info('start zerodb %s' % self.name)
 
         cmd = '/bin/zdb \
             --port {port} \

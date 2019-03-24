@@ -119,11 +119,13 @@ class ModelOBJ():
         :return:
         """
         self._changed_items = {}
+        #LIST
         {% for ll in obj.lists %}
         self._{{ll.name}} = List0(self._schema.property_{{ll.name}})
         for capnpbin in self._cobj_.{{ll.name_camel}}:
             self._{{ll.name}}.new(data=capnpbin)
         {% endfor %}
+        #PROP
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
         self._schema_{{prop.name}} = j.data.schema.get(url="{{prop.jumpscaletype.SUBTYPE}}")
@@ -166,7 +168,7 @@ class ModelOBJ():
         if val != self.{{prop.name}}:
             self._changed_items["{{prop.name}}"] = val
             if self.model:
-                # self._logger.debug("change:{{prop.name}} %s"%(val))
+                # self._log_debug("change:{{prop.name}} %s"%(val))
                 self.model.triggers_call(obj=self, action="change", propertyname="{{prop.name}}")
             if self.autosave:
                 self.save()
@@ -216,7 +218,13 @@ class ModelOBJ():
             if self.readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s"%self)
             # print (self.model.__class__.__name__)
-            if not self.model.__class__.__name__=="acl" and self.acl is not None:
+            {% for prop in obj.properties %}
+            if self.model.schema.property_{{prop.name}}.unique:
+                for mm in self.model.get_all():
+                    if mm.{{prop.name}} == self.model.schema.property_{{prop.name}}.default:
+                        raise RuntimeError("cannot save , {{prop.name}} should be unique")
+            {% endfor %}
+            if not self.model.__class__._name=="acl" and self.acl is not None:
                 if self.acl.id is None:
                     self.acl.save()
                 if self.acl.id != self.acl_id:
@@ -225,7 +233,7 @@ class ModelOBJ():
             if self._changed:
                 o=self.model._set(self)
                 self.id = o.id
-                # self._logger.debug("MODEL CHANGED, SAVE DONE")
+                # self._log_debug("MODEL CHANGED, SAVE DONE")
                 return o
 
             return self
@@ -294,7 +302,7 @@ class ModelOBJ():
             except:
                 msg+=j.core.text.indent(str(ddict),4)+"\n"
             msg+="schema:\n"
-            msg+=j.core.text.indent(str(self._schema.capnp_schema),4)+"\n"
+            msg+=j.core.text.indent(str(self._schema._capnp_schema),4)+"\n"
             msg+="error was:\n%s\n"%e
             raise RuntimeError(msg)
 
@@ -390,6 +398,9 @@ class ModelOBJ():
         if len(str(res))<maxsize:
             d["{{prop.name}}"] = res
         {% endif %}
+        {% endfor %}
+        {% for prop in obj.lists %}
+        d["{{prop.name}}"] = self._{{prop.name}}.pylist(subobj_format="H")
         {% endfor %}
         if self.id is not None:
             d["id"] = self.id

@@ -9,6 +9,6 @@ class ZeroStorFactoryDeprecated(ZeroStorFactory, JSBASE):
     def __init__(self):
         self.__jslocation__ = "j.clients.zerostor"
         JSBASE.__init__(self)
-        self._logger.warning("`j.clients.zerostor` is deprecated, please use `j.clients.zstor` instead")
+        self._log_warning("`j.clients.zerostor` is deprecated, please use `j.clients.zstor` instead")
 
         ZeroStorFactory.__init__(self)

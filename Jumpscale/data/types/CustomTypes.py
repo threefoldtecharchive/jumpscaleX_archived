@@ -11,7 +11,8 @@ from uuid import UUID
 from ipaddress import IPv4Address, IPv6Address
 from ipaddress import AddressValueError, NetmaskValueError
 from Jumpscale import j
-from datetime import datetime
+from datetime import datetime, timedelta
+from functools import reduce
 
 
 class Guid(String):
@@ -264,7 +265,7 @@ class IPPort(Integer):
 
     def __init__(self):
         Integer.__init__(self)
-        self.BASETYPE = 'string'
+        self.BASETYPE = 'integer'
 
     def check(self, value):
         '''
@@ -478,7 +479,10 @@ class Numeric(String):
             # dirty trick to see if value can be float, if not will look for currencies
             v = float(value)
             cur2 = "usd"
-        except Exception as e:
+        except ValueError as e:
+            cur2 = None
+
+        if cur2 is None:
             value, cur2 = self.getCur(value)
 
         if value.find("k") != -1:
@@ -660,7 +664,7 @@ class DateTime(String):
     def clean(self, v):
         """
         support following formats:
-        - 0: means undefined date
+        - None, 0: means undefined date
         - epoch = int
         - month/day 22:50
         - month/day  (will be current year if specified this way)
@@ -718,10 +722,13 @@ class DateTime(String):
                 else:
                     fstr = "%H:%M:%S"
             return (v, fstr)
+        
+        if v is None:
+            v=0
 
         if j.data.types.string.check(v):
-            v=v.strip("\"").strip("'")
-            if v.strip() in ["0", ""]:
+            v=v.replace("'","").replace("\"","").strip()
+            if v.strip() in ["0", "",0]:
                 return 0
 
             if "+" in v or "-" in v:
@@ -772,18 +779,27 @@ class DateTime(String):
             out += "%s -> %s\n" % (line, self.toString(epoch))
         out_compare = """
         11/30 22:50 -> 2019/11/30 22:50:00
-        11/30 -> 2019/11/30 10:00:00
-        1990/11/30 -> 1990/11/30 10:00:00
+        11/30 -> 2019/11/30 00:00:00
+        1990/11/30 -> 1990/11/30 00:00:00
         1990/11/30 10am:50 -> 1990/11/30 10:50:00
         1990/11/30 10pm:50 -> 1990/11/30 22:50:00
         1990/11/30 22:50 -> 1990/11/30 22:50:00
-        30/11/1990 -> 1990/11/30 10:00:00
+        30/11/1990 -> 1990/11/30 00:00:00
         30/11/1990 10pm:50 -> 1990/11/30 22:50:00
         """
         print(out)
         out = j.core.text.strip(out)
         out_compare = j.core.text.strip(out_compare)
         assert out == out_compare
+
+        assert self.clean(0) == 0
+        
+        self.clean("-0s") == j.data.time.epoch
+
+        self.clean("'0'") == 0
+
+
+        print("test j.data.types.date.datetime() ok")
 
 class Date(DateTime):
     '''
@@ -811,6 +827,10 @@ class Date(DateTime):
         will return epoch
 
         """
+        if isinstance(v,str):
+            v=v.replace("'","").replace("\"","").strip()
+        if v in [0,"0",None,""]:
+            return 0
         #am sure there are better ways how to do this but goes to beginning of day
         v2 = DateTime.clean(self,v)
         dt = datetime.fromtimestamp(v2)
@@ -849,4 +869,129 @@ class Date(DateTime):
         out_compare = j.core.text.strip(out_compare)
         assert out == out_compare
 
+        assert self.clean(0) == 0
+        assert self.clean("") == 0
 
+        self.clean("-0s") == j.data.time.epoch
+
+        print("test j.data.types.date.test() ok")
+
+
+class Duration(String):
+    '''
+    internal representation is an int (seconds)
+    '''
+    NAME = 'duration'
+
+    def __init__(self):
+        String.__init__(self)
+        # inspired by https://stackoverflow.com/a/51916936
+        self._RE = re.compile(r'^((?P<days>[\.\d]+?)d)?((?P<hours>[\.\d]+?)h)?((?P<minutes>[\.\d]+?)m)?((?P<seconds>[\.\d]+?)s)?$')
+
+    def get_default(self):
+        return 0
+
+    def python_code_get(self, value):
+        """
+        produce the python code which represents this value
+        """
+        return self.clean(value)
+
+    def check(self, value):
+        '''
+        Check whether provided value is a valid duration representation
+        be carefull is SLOW
+        '''
+        try:
+            self.clean(value)
+            return True
+        except:
+            return False
+
+    def fromString(self, txt):
+        return self.clean(txt)
+
+    def toString(self, val):
+        val = self.clean(val)
+        if val == 0:
+            return ""
+        days = val//86400
+        hours = (val - days*86400)//3600
+        minutes = (val - days*86400 - hours*3600)//60
+        seconds = val - days*86400 - hours*3600 - minutes*60
+        return reduce(
+            (lambda r, p: r+str(p[0])+p[1] if p[0] > 0 else r),
+            [(days, "d"), (hours, "h"), (minutes, "m"), (seconds, "s")], "")
+
+    def toHR(self, v):
+        return self.toString(v)
+
+    def clean(self, v):
+        """
+        support following formats:
+        - None, 0: means undefined date
+        - seconds = int
+        - 1 (seconds)
+        - 1s (seconds)
+        - 2m (minutes)
+        - 3h (hours)
+        - 4d (days)
+        - 1d4h2m3s (can also combine multiple, has to be from biggest to smallest and each unit has to be unique (e.g. cannot have 2 times hour specified))
+
+        will return seconds
+        """
+        if v in [0,"0",None,""]:
+            return 0
+        if j.data.types.string.check(v):
+            v = v.replace("'","").replace("\"","").strip()
+            if v.isdigit():
+                return int(v) # shortcut for when string is an integer
+            parts = self._RE.match(v)
+            if parts is None:
+                raise ValueError("Could not parse any time information from '{}'.  Examples of valid strings: '8h', '2d8h5m20s', '2m4s'".format(v))
+            time_params = {name: float(param) for name, param in parts.groupdict().items() if param}
+            return int(timedelta(**time_params).total_seconds())
+        elif j.data.types.int.check(v):
+            return v
+        else:
+            raise ValueError("Input needs to be string or int: {} ({})".format(v, type(v)))
+
+    def capnp_schema_get(self, name, nr):
+        return "%s @%s :UInt32;" % (name, nr)
+
+    def test(self):
+        """
+        js_shell 'j.data.types.duration.test()'
+        """
+        c = """
+        1s
+        2m
+        3h
+        4d
+        1m2s
+        1h2s
+        1h2m
+        1h2m3s
+        1d2s
+        1d2m
+        1d2m3s
+        1d2h
+        1d2h3s
+        1d2h3m
+        1d2h3m4s
+        """
+        c = j.core.text.strip(c)
+        for line in c.split("\n"):
+            if line.strip() == "":
+                continue
+            seconds = self.clean(line)
+            out = self.toString(seconds)
+            print(out)
+            assert line == out
+
+        self.clean("'0'") == 0
+        self.clean("'42'") == 42
+        self.clean(None) == 0
+        self.clean(23) == 23
+
+        print("test j.data.types.date.duration() ok")

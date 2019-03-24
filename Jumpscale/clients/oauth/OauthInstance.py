@@ -133,7 +133,7 @@ class OauthInstance():
 
         if not result.ok or 'error' in result.json():
             msg = result.json()['error']
-            self._logger.error(msg)
+            self._log_error(msg)
             raise AuthError(msg)
         return result.json()
 
@@ -142,7 +142,7 @@ class OauthInstance():
         userinforesp = requests.get(self.user_info_url, params=params)
         if not userinforesp.ok:
             msg = 'Failed to get user details'
-            self._logger.error(msg)
+            self._log_error(msg)
             raise AuthError(msg)
 
         userinfo = userinforesp.json()

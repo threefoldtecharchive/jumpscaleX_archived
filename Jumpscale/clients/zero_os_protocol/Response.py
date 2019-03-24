@@ -6,7 +6,7 @@ import sys
 
 from Jumpscale import j
 
-logger = logging.getLogger('g8core')
+
 
 
 class JobNotFoundError(Exception):
@@ -261,12 +261,11 @@ class Response():
                 if not v is None:
                     payload = json.loads(v.decode())
                     r = Return(payload)
-                    logger.debug('%s << %s, stdout="%s", stderr="%s", data="%s"',
-                                 self._id, r.state, r.stdout, r.stderr, r.data[:1000])
+                    print('%s << %s, stdout="%s", stderr="%s", data="%s"',self._id, r.state, r.stdout, r.stderr, r.data[:1000])
                     return r
             except TimeoutError:
                 pass
-            logger.debug('%s still waiting (%ss)', self._id, int(time.time() - start))
+            self._log_debug('%s still waiting (%ss)', self._id, int(time.time() - start))
             maxwait -= 10
         raise TimeoutError()
 

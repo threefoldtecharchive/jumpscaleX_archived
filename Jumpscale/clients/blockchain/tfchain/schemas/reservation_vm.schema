@@ -1,0 +1,7 @@
+@url = tfchain.reservation.zos_vm
+type = "vm" (S)
+duration = (I)
+size = (I)
+email = (email)
+created = (I)
+location = (S)

@@ -30,19 +30,34 @@ class TIMER(j.application.JSBaseClass):
         return False
 
     @staticmethod
-    def start(cat=""):
+    def start(cat="",memory=False):
+        """
+
+        :param cat: name for your measurment
+        :param memory: if memory needs to be tracked
+        :return:
+        """
         TIMER._cat = cat
         TIMER.clean()
         TIMER._start = time.time()
+        if memory:
+            TIMER._memory = j.application.getMemoryUsage()
+        else:
+            TIMER._memory = None
 
     @staticmethod
     def stop(nritems=0, log=True):
+        if TIMER._memory:
+            TIMER._memory_stop = j.application.getMemoryUsage()
         TIMER._stop = time.time()
         TIMER.duration = TIMER._stop - TIMER._start
         if nritems > 0:
             TIMER.nritems = float(nritems)
             if TIMER.duration > 0:
                 TIMER.performance = float(nritems) / float(TIMER.duration)
+            if TIMER._memory:
+                TIMER.memory_used = TIMER._memory_stop  - TIMER._memory
+                TIMER.memory_peritem = float((TIMER._memory_stop * 1000 - TIMER._memory * 1000)) / float(nritems)
         if log:
             TIMER.result()
         return TIMER.performance
@@ -54,6 +69,9 @@ class TIMER(j.application.JSBaseClass):
         TIMER.duration = 0.0
         TIMER.performance = 0.0
         TIMER.nritems = 0.0
+        TIMER.memory_used = 0.0
+        TIMER.memory_peritem = 0.0
+
 
     @staticmethod
     def result():
@@ -62,6 +80,9 @@ class TIMER(j.application.JSBaseClass):
         print(("duration:%s" % TIMER.duration))
         print(("nritems:%s" % TIMER.nritems))
         print(("performance:%s/sec" % int(TIMER.performance)))
+        if TIMER._memory:
+            print("memory used: %s"%TIMER.memory_used)
+            print("memory per item (bytes): %s"%TIMER.memory_peritem)
 
     def test(self):
         """
