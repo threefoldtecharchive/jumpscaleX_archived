@@ -43,7 +43,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         @url = jumpscale.tfchain.client
         name* = "" (S)
         network_type = "STD,TEST,DEV" (E)
-        explorer_nodes = (LS) !jumpscale.tfchain.explorer
+        explorer_nodes = (LO) !jumpscale.tfchain.explorer
         """
 
     _CHILDCLASSES = [TFChainWalletFactory]
@@ -81,7 +81,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         """
         if len(self.explorer_nodes) > 0:
             return self.explorer_nodes.pylist()
-        return _EXPLORER_NODES[self.network]
+        return _EXPLORER_NODES[str(self.network)]
 
     @property
     def network(self):
