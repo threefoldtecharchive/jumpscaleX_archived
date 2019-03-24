@@ -1,19 +1,3 @@
-## same repo
-!!!include("threefoldtech:jumpscaleX(master):test_src.md", remarks_skip=True)
-
-!!!include("threefoldtech:jumpscaleX(master):test_src.md", header_levels_modify=2)
-
-
-
-## external repos
-!!!include("abom:test_custom_md:test_src.md!A")
-
-```
-!!!include
-link = "abom:test_custom_md:docs/test_src.md!B"
-```
-
-
 ```!!!dot
  graph graphname {
      a -- b -- c;

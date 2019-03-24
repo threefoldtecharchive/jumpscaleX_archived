@@ -288,7 +288,7 @@ class DocSite(j.application.JSBaseClass):
         ext = j.sal.fs.getFileExtension(path).lower()
         base = j.sal.fs.getBaseName(path)
         if ext in ["png", "jpg", "jpeg", "pdf", "docx", "doc", "xlsx", "xls", \
-                    "ppt", "pptx", "mp4","css","js","mov"]:
+                    "ppt", "pptx", "mp4","css","js","mov", "py"]:
             self._log_debug("found file:%s"%path)
             base=self._clean(base)
             if duplication_test and base in self._files:
