@@ -556,8 +556,7 @@ class Tools:
             try:
                 from IPython.terminal.embed import InteractiveShellEmbed
             except:
-                Tools._installbase_for_shell()
-                from IPython.terminal.embed import InteractiveShellEmbed
+                Tools._installbase()
             Tools._shell = InteractiveShellEmbed(banner1= "", exit_msg="")
         return Tools._shell(stack_depth=2)
 
@@ -664,8 +663,6 @@ class Tools:
         class format_dict(dict):
             def __missing__(self, key):
                 return '{%s}' % key
-
-
         if args is None:
             args={}
 
