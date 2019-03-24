@@ -121,7 +121,7 @@ class BuilderBaseClass(BaseClass):
             j.sal.fs.copyFile('/lib64/ld-linux-x86-64.so.2', ld_dest)
 
 
-        huburl= zhub_client.upload(self._sandbox_dir)  #does the tar
+        huburl= zhub_client.upload(self._sandbox_dir)  #does the tar and the upload
 
         # self._log_info('building flist')
         # tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
@@ -136,3 +136,11 @@ class BuilderBaseClass(BaseClass):
         # self._log_info("uploaded at https://hub.grid.tf/{}/{}.flist".format(hub.username,self.NAME))
 
         return tarfile
+
+        # if hub_instance:
+        #     self._log_info("uploading flist to the hub")
+        #     return hub_instance.sandbox_upload(self.NAME, self.sandbox_dir)
+        # else:
+        #     tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
+        #     j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, sandbox_dir))
+        #     return tarfile

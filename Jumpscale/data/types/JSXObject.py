@@ -28,9 +28,9 @@ class JSDataObjectFactory(TypeBaseObjFactory):
         return self._schema_
 
     def python_code_get(self, value):
-        raise NotImplemented()
+        return self.toJSON(value)
 
-    def fromString(self, s):
+    def fromString(self, val):
         """
         will use json
         """
