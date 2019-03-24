@@ -41,7 +41,7 @@ def main(self):
     """
     C=j.core.text.strip(C).strip()
     assert str(l).strip() == C
-
+    l = tt.clean(l[:])  # avoid manipulating list factory default
     l.append(4)
     l.append('5')
 
