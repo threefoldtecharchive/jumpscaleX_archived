@@ -43,8 +43,6 @@ class StartupCMD(j.application.JSBaseDataObjClass):
     def save(self):
         j.shell()
         self.pid = None
-        tdir = j.sal.fs.joinPaths(j.sal.fs.joinPaths(j.dirs.VARDIR,"tmuxcmds"))
-        j.sal.fs.createDir(tdir)
         self._cmd_path = j.sal.fs.joinPaths(tdir,self.name)
         tpath = self._cmd_path+".toml"
 

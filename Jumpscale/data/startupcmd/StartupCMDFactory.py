@@ -17,7 +17,7 @@ class StartupCMDFactory(j.application.JSBaseClass):
 
         self.StartupCMDClass = StartupCMD
 
-    def get(self,name,cmd,path=""):
+    def get(self,name,cmd,path=""): #TODO:*1 better get
         return self.StartupCMDClass(cmd_start=cmd,path=path,name=name)
 
     def test(self):
@@ -27,6 +27,8 @@ class StartupCMDFactory(j.application.JSBaseClass):
         """
 
         o=j.data.startupcmd.StartupCMDClass()
+
+        j.shell()
 
         o.name = "test"
 
@@ -43,6 +45,6 @@ class StartupCMDFactory(j.application.JSBaseClass):
 
         o2.start()
 
-        # o2.running()
+        assert o2.running()
 
         j.shell()

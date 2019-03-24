@@ -11,10 +11,14 @@ class builder_method(object):
             self.log = j.data.types.bool.clean(kwargs_["log"])
         else:
             self.log = True
-
+        if "done_check" in kwargs_:
+            self.done_check = j.data.types.bool.clean(kwargs_["done_check"])
+        else:
+            self.done_check = True
     def __call__(self, func):
         print("Inside __call__()")
         log = self.log
+        done_check = self.done_check
 
         def wrapper_action(*args, **kwargs):
             self=args[0]
@@ -43,15 +47,19 @@ class builder_method(object):
                 reset = kwargs["reset"]
             else:
                 reset = False
-            if not self._done_check(name, reset):
+
+            if name in ["start","stop","running"]:
+                done_check = False
+
+            if not done_check or not self._done_check(name, reset):
                 if log:
                     self._log_debug("action:%s() start"%name)
                 res = func(self,*args,**kwargs)
 
                 if name == "sandbox":
                     res = self._flist_create(zhub_client=zhub_client)
-
-                self._done_set(name)
+                if done_check:
+                    self._done_set(name)
                 if log:
                     self._log_debug("action:%s() done -> %s"%(name,res))
                 return res
@@ -93,6 +101,27 @@ class BuilderBaseClass(BaseClass):
         when zhub_client None will look for j.clients.get("test"), if not exist will die
         '''
         return
+
+    @property
+    def startup_cmds(self):
+        raise RuntimeError("not implemented")
+
+    @builder_method()
+    def start(self):
+        for startupcmd in self.startup_cmds:
+            startupcmd.start()
+
+    @builder_method()
+    def stop(self):
+        for startupcmd in self.startup_cmds:
+            startupcmd.stop()
+
+    @builder_method()
+    def running(self):
+        for startupcmd in self.startup_cmds:
+            if startupcmd.running() == False:
+                return False
+        return True
 
 
     def _flist_create(self, zhub_client=None):

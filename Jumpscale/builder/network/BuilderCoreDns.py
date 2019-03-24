@@ -5,7 +5,7 @@ builder_method = j.builder.system._builder_method
 class BuilderCoreDns(j.builder.system._BaseClass):
     NAME = "coredns"
 
-    @builder_method(log=False)
+    @builder_method(log=False,done_check=True)
     def _init(self):
         self.golang = j.builder.runtimes.golang
         self._package_path = j.builder.runtimes.golang.package_path_get('coredns', host='github.com/coredns')
@@ -45,29 +45,36 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         j.builder.tools.dir_ensure(dir_dest)
         j.sal.fs.copyFile(coredns_bin, dir_dest)
 
-        dir_dest = j.sal.fs.joinPaths(dest_path, sandbox_dir, 'etc/ssl/certs/')
+        dir_dest = j.sal.fs.joinPaths(dest_path, self._sandbox_dir, 'etc/ssl/certs/')
         j.builder.tools.dir_ensure(dir_dest)
         j.sal.fs.copyDirTree('/etc/ssl/certs', dir_dest)
 
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'coredns_startup.toml')
         self.startup = j.sal.fs.readFile(startup_file)
-        j.sal.fs.copyFile(startup_file,  j.sal.fs.joinPaths(dest_path, sandbox_dir))
+        j.sal.fs.copyFile(startup_file,  j.sal.fs.joinPaths(dest_path, self._sandbox_dir))
 
 
-
-    def start(self, config_file=None, args=None):
-        """Starts coredns with the configuration file provided
-
-        :param config_file: config file path e.g. ~/coredns.json
-        :raises j.exceptions.RuntimeError: in case config file does not exist
-        :return: tmux pane
-        :rtype: tmux.Pane
-        """
-        self._init()
+    @property
+    def startup_cmds(self):
         cmd = "{coredns_path}/coredns -conf {path_config}".format(coredns_path=self._package_path, path_config=config_file)
-        return j.tools.tmux.execute(window="coredns", cmd=cmd)
+        cmds = [j.data.startupcmd.get(cmd)
+        return cmds
+
+    # @builder_method()
+    # def start(self, config_file=None, args=None):
+    #     """Starts coredns with the configuration file provided
+    #
+    #     :param config_file: config file path e.g. ~/coredns.json
+    #     :raises j.exceptions.RuntimeError: in case config file does not exist
+    #     :return: tmux pane
+    #     :rtype: tmux.Pane
+    #     """
+    #     self._init()
+
+    #     return j.tools.tmux.execute(window="coredns", cmd=cmd)
 
 
+    @builder_method()
     def test(self,reset=False):
         """
         build on local ubuntu & test a client
