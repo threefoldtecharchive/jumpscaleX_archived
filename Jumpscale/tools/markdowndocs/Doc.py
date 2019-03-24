@@ -183,13 +183,18 @@ class Doc(j.application.JSBaseClass):
     #             self.kwargs[key]=val
     #     return self.markdown
 
+    def _process(self):
+        if not self._processed:
+            self._macros_process()
+            self._links_process()
+            self._processed = True
+
     @property
     def markdown(self):
         """
         markdown after processing of the full doc
         """
-        self._macros_process()
-        self._links_process()
+        self._process()
         res = self.markdown_obj.markdown
         # try:
         #     res = self.markdown_obj.markdown

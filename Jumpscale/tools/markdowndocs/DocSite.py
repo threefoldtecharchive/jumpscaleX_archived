@@ -624,10 +624,11 @@ class DocSite(j.application.JSBaseClass):
         #                     name = alias.lower().replace("_", "").replace("-", "").replace(" ", "")
         #                     self.defs[name] = doc
 
-        for key, doc in self.docs.items():
-            # doc.defs_process()
-            if doc:
-                doc.write()
+        # this block is repeated
+        # for key, doc in self.docs.items():
+        #     # doc.defs_process()
+        #     if doc:
+        #         doc.write()
 
         # if j.sal.fs.exists(j.sal.fs.joinPaths(self.path, "static"), followlinks=True):
         #     j.sal.fs.copyDirTree(j.sal.fs.joinPaths(self.path, "static"), j.sal.fs.joinPaths(self.outpath, "public"))
