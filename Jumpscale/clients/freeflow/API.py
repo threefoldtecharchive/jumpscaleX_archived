@@ -4,6 +4,7 @@ class Api(object):
     def __init__(self, request):
         self.request = request
 
+
 class UserAPI(Api):
     def list(self, query=None):
         if not query:
@@ -334,4 +335,4 @@ class WikiAPI(Api):
             if 'code' in res and res['code'] != 200:
                 return res
             to_container = res['contentcontainer_id']
-        return self.request.post('/wiki/migrate/{0}/{1}'.format(from_container, to_container))
+        return self.request.post('/wiki/migrate/{0}/{1}'.format(from_container, to_container), {})
