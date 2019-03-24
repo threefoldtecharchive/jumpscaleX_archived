@@ -22,8 +22,7 @@ class NACL(j.application.JSBaseClass):
                 self.init(name=name, privkey=privkey, secret=secret, reset=reset, interactive=interactive)
                 break
             except nacl.exceptions.CryptoError as e:
-                print(e)
-                self._log_warning("ERROR in decrypting")
+                self._log_warning("ERROR in decrypting: %s" % str(e))
                 secret = j.tools.console.askPassword("issue in decrypting the private key, try other secret")
 
     def reset(self, privkey=None, secret=None):
@@ -36,7 +35,7 @@ class NACL(j.application.JSBaseClass):
         JSBASE.__init__(self)
 
         self.name = name
-        self.interactive = interactive #  should remove interactive completely
+        self.interactive = interactive  # should remove interactive completely
 
         self.path = j.core.tools.text_replace("{DIR_CFG}/nacl")
         j.sal.fs.createDir(self.path)
@@ -51,10 +50,10 @@ class NACL(j.application.JSBaseClass):
 
         self.clear_keys()
 
-        self.path_privatekey = "%s/%s.priv" % (self.path, self.name)
+        self.path_signaturekey = "%s/%s.priv" % (self.path, self.name)
         if reset:
-            j.sal.fs.remove(self.path_privatekey)
-        if not j.sal.fs.exists(self.path_privatekey):
+            j.sal.fs.remove(self.path_signaturekey)
+        if not j.sal.fs.exists(self.path_signaturekey):
             if interactive:
                 self.generate_interactive()
             else:
@@ -126,7 +125,7 @@ class NACL(j.application.JSBaseClass):
             print("{BLUE}"+self.words+"{RESET}\n")
             print("\n{RED}ITS IMPORTANT TO STORE THIS KEY IN A SAFE PLACE{RESET}")
             if not j.tools.console.askYesNo("Did you write the words down and store them in safe place?"):
-                j.sal.fs.remove(self.path_privatekey)
+                j.sal.fs.remove(self.path_signaturekey)
                 print("WE HAVE REMOVED THE KEY, need to restart this procedure.")
                 sys.exit(1)
         else:
@@ -152,29 +151,18 @@ class NACL(j.application.JSBaseClass):
         return m.digest()
 
     @property
-    def privkey(self):
-        if self._privkey == "":
-            self._privkey = self.file_read_hex(self.path_privatekey)
-        key = self.decryptSymmetric(self._privkey)
-        privkey = PrivateKey(key)
-        self._pubkey = privkey.public_key
-        return privkey
-
-    @property
     def words(self):
         """
         js_shell 'print(j.data.nacl.default.words)'
         """
-        privkey = self.privkey.encode()
-        return j.data.encryption.mnemonic.to_mnemonic(privkey)
-        # if not j.sal.fs.exists(self.path_words):
-        #     self._log_info("GENERATED words")
-        #     words = j.data.encryption.mnemonic_generate()
-        #     words = self.encryptSymmetric(words)
-        #     self.file_write_hex(self.path_words,words)
-        # words = self.file_read_hex(self.path_words)
-        # words = self.decryptSymmetric(words)
-        # return words.decode()
+        raw_key = self.signingkey.encode()
+        return j.data.encryption.mnemonic.to_mnemonic(raw_key)
+
+    @property
+    def privkey(self):
+        if self._privkey == "":
+            self._privkey = self.signingkey.to_curve25519_private_key()
+        return self._privkey
 
     @property
     def pubkey(self):
@@ -185,7 +173,9 @@ class NACL(j.application.JSBaseClass):
     @property
     def signingkey(self):
         if self._signingkey == "":
-            self._signingkey = nacl.signing.SigningKey(self.privkey.encode())
+            encrypted_key = self.file_read_hex(self.path_signaturekey)
+            key = self.decryptSymmetric(encrypted_key)
+            self._signingkey = nacl.signing.SigningKey(key)
         return self._signingkey
 
     @property
@@ -265,24 +255,26 @@ class NACL(j.application.JSBaseClass):
         will load in this class
         """
         if words:
-            key2 = j.data.encryption.mnemonic.to_entropy(words)
+            # generate key from mnemonic words
+            entropy = j.data.encryption.mnemonic.to_entropy(words)
+            key = nacl.signing.SigningKey(entropy).encode()
         else:
-            key = PrivateKey.generate()
-            key2 = key.encode()  # generates a bytes representation of the key
-        key3 = self.encryptSymmetric(key2)
-        self.file_write_hex(self.path_privatekey, key3)
+            key = nacl.signing.SigningKey.generate().encode()   # generates a bytes representation of the key
+
+        encrypted_key = self.encryptSymmetric(key)
+        self.file_write_hex(self.path_signaturekey, encrypted_key)
 
         # build in verification
-        key4 = self.file_read_hex(self.path_privatekey)
-        assert key3 == key4
+        verify = self.file_read_hex(self.path_signaturekey)
+        assert encrypted_key == verify
 
     def sign(self, data):
         """
         sign using your private key using Ed25519 algorithm
         the result will be 64 bytes
         """
-        res = self.signingkey.sign(data)
-        return res[:-len(data)]
+        signed = self.signingkey.sign(data)
+        return signed.signature
 
     def verify(self, data, signature, pubkey=""):
         """ data is the original data we have to verify with signature
