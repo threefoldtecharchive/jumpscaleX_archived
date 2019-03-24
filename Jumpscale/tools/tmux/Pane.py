@@ -10,7 +10,7 @@ class Pane(j.application.JSBaseClass):
     def __init__(self, window, pane,name=""):
         JSBASE.__init__(self)
         self.mgmt = pane
-        self.id = pane.get("pane_id")
+        self.id = pane.get("pane_id").strip("%").strip()
         self.window = window
         if name != "":
             self.name_set(name)
@@ -47,15 +47,15 @@ class Pane(j.application.JSBaseClass):
         """
 
         if not end:
-            cmd="tmux capture-pane -t %%%s -pS -%s > /tmp/out.txt"%(self.id,start)
+            cmd="tmux capture-pane -t %%%s -pS -%s "%(self.id,start)
         else:
-            cmd="tmux capture-pane -t %%%s -pS -%s -E %s > /tmp/out.txt"%(self.id,start,end)
+            cmd="tmux capture-pane -t %%%s -pS -%s -E %s "%(self.id,start,end)
 
         self._log_debug(cmd)
 
 
         cmd=cmd.replace("%%","%")
-        rc,out,err = j.sal.process.execute(cmd)
+        rc,out,err = j.sal.process.execute(cmd,showout=False)
 
 
         out2=""
@@ -189,6 +189,6 @@ class Pane(j.application.JSBaseClass):
 
 
     def __repr__(self):
-        return ("panel:%s:%s" % (self.id, self.name))
+        return ("panel:%s:%s" % (self.window.name   , self.name))
 
     __str__ = __repr__

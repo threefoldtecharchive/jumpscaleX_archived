@@ -9,13 +9,16 @@ class StartupCMD(j.application.JSBaseDataObjClass):
         @url = jumpscale.startupcmd.1
         name* = ""
         cmd_start = ""
+        interpreter = "bash,jumpscale" (E) 
         cmd_stop = ""
+        debug = False (b)
         path = ""
         env = (dict)
         ports = (li)
         timeout = 0
         process_strings = (ls)
         pid = 0
+        daemon = true (b)
         """
 
     def _init(self):
@@ -112,8 +115,11 @@ class StartupCMD(j.application.JSBaseDataObjClass):
         self._log_debug("wait to run:%s (timeout:%s)" % (self.name, timeout))
         while j.data.time.epoch < end:
             if self.ports == []:
-                if self.process and self.process.status().casefold() in ['running', 'sleeping', 'idle']:
-                    self._log_info("IS RUNNING %s" % self.name)
+                if self.process:
+                    if self.process.status().casefold() in ['running', 'sleeping', 'idle']:
+                        self._log_info("IS RUNNING %s" % self.name)
+                        return True
+                elif self.daemon==False:
                     return True
             else:
                 nr = 0
@@ -132,7 +138,7 @@ class StartupCMD(j.application.JSBaseDataObjClass):
         self._log_debug("start:%s" % self.name)
         if reset:
             self.stop()
-            self._pane.reset()
+            self._pane.kill()
         else:
             if self.running:
                 self._log_info("no need to start was already started:%s" % self.name)
@@ -140,22 +146,32 @@ class StartupCMD(j.application.JSBaseDataObjClass):
 
         self._pid = None
 
-        C = """         
-        reset
-        tmux clear
-        clear
-        cat /sandbox/var/cmds/{{name}}.sh
-        set +ex
-        {% for key,val in args.items() %}
-        export {{key}}='{{val}}'
-        {% endfor %}
-        source /sandbox/env.sh
-        {% if cmdpath != None %}
-        cd {{cmdpath}}
-        {% endif %}
-        {{cmd}} 
+        if self.interpreter=="bash":
+            C = """         
+            reset
+            tmux clear
+            clear
+            cat /sandbox/var/cmds/{{name}}.sh
+            set +ex
+            {% for key,val in args.items() %}
+            export {{key}}='{{val}}'
+            {% endfor %}
+            source /sandbox/env.sh
+            {% if cmdpath != None %}
+            cd {{cmdpath}}
+            {% endif %}
+            {{cmd}} 
+    
+            """
+        else:
+            C = """
+            from Jumpscale import j
+            {% if cmdpath != None %}
+            #cd {{cmdpath}}
+            {% endif %}            
+            {{cmd}}          
+            """
 
-        """
 
         C2 = j.core.text.strip(C)
         C3 = j.tools.jinja2.template_render(text=C2, args=self.env, cmdpath=self.path,
@@ -165,15 +181,27 @@ class StartupCMD(j.application.JSBaseDataObjClass):
 
         self._log_debug("\n%s" % C3)
 
-        tpath = self._cmd_path+".sh"
-        j.sal.fs.writeFile(tpath, C3+"\n\n")
 
+        if self.interpreter=="bash":
+            tpath = self._cmd_path+".sh"
+        elif self.interpreter=="jumpscale":
+            tpath = self._cmd_path+".py"
+        else:
+            raise RuntimeError("only jumpscale or bash supported")
+
+        j.sal.fs.writeFile(tpath, C3+"\n\n")
         j.sal.fs.chmod(tpath, 0o770)
 
         if "__" in self._pane.name:
             self._pane.kill()
-        # self._pane.name_set(self._pane.name+"__"+self.name)
-        self._pane.execute("source %s" % tpath)
+
+        if self.interpreter=="bash":
+            self._pane.execute("source %s" % tpath)
+        else:
+            if self.debug:
+                self._pane.execute("kosmos %s --debug" % tpath)
+            else:
+                self._pane.execute("kosmos %s" % tpath)
 
         if checkrunning:
             running = self.wait_running()
