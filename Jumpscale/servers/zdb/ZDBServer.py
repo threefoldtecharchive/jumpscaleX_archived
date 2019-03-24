@@ -84,16 +84,18 @@ class ZDBServer(j.application.JSBaseClass):
 
 
         cmd="zdb --listen %s --port %s --index %s --data %s --mode %s --admin %s --protect"%(addr,self.port,idir,ddir,self.mode,self.adminsecret)
+        return j.tools.startupcmd.get(name="zdb",cmd=cmd,path="/tmp",ports=[self.port])
 
-        tmux_window = "digitalme"
-        tmux_panel = "p13"
+        # tmux_window = "digitalme"
+        # tmux_panel = "p13"
+        #
+        # j.tools.tmux.window_digitalme_get()
+        # return j.tools.tmux.cmd_get(name="zdb_%s"%self.name,
+        #             window_name=tmux_window,pane_name=tmux_panel,
+        #             cmd=cmd,path="/tmp",ports=[self.port],
+        #             process_strings = ["wwwww:"])
 
-        j.tools.tmux.window_digitalme_get()
 
-        return j.tools.tmux.cmd_get(name="zdb_%s"%self.name,
-                    window_name=tmux_window,pane_name=tmux_panel,
-                    cmd=cmd,path="/tmp",ports=[self.port],
-                    process_strings = ["wwwww:"])
 
     def destroy(self):
         self.stop()

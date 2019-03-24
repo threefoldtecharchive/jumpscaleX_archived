@@ -30,7 +30,7 @@ class StartupCMD(j.application.JSBaseDataObjClass):
 
     @property
     def _cmd_path(self):
-        return j.sal.fs.joinPaths(j.data.startupcmd._cmdsdir, self.name)
+        return j.sal.fs.joinPaths(j.tools.startupcmd._cmdsdir, self.name)
 
     def _error_raise(self, msg):
         msg = "error in jsrunprocess:%s\n%s\n" % (self, msg)

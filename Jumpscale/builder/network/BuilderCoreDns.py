@@ -57,7 +57,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
     @property
     def startup_cmds(self):
         cmd = "{coredns_path}/coredns -conf {path_config}".format(coredns_path=self._package_path, path_config=config_file)
-        cmds = [j.data.startupcmd.get(cmd)
+        cmds = [j.tools.startupcmd.get(cmd)
         return cmds
 
     # @builder_method()

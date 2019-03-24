@@ -685,6 +685,7 @@ class group_tools(JSGroup):
         self._timer = None
         self._cython = None
         self._formatters = None
+        self._startupcmd = None
         self._capacity = None
         self._team_manager = None
         self._memusagetest = None
@@ -827,6 +828,12 @@ class group_tools(JSGroup):
             from Jumpscale.tools.formatters.FormattersFactory import FormattersFactory
             self._formatters =  FormattersFactory()
         return self._formatters
+    @property
+    def startupcmd(self):
+        if self._startupcmd is None:
+            from Jumpscale.tools.startupcmd.StartupCMDFactory import StartupCMDFactory
+            self._startupcmd =  StartupCMDFactory()
+        return self._startupcmd
     @property
     def capacity(self):
         if self._capacity is None:
@@ -1023,7 +1030,6 @@ class group_data(JSGroup):
         self._html = None
         self._docs = None
         self._regex = None
-        self._startupcmd = None
         self._time = None
         self._timeinterval = None
         self._schema = None
@@ -1126,12 +1132,6 @@ class group_data(JSGroup):
             from Jumpscale.data.regex.RegexTools import RegexTools
             self._regex =  RegexTools()
         return self._regex
-    @property
-    def startupcmd(self):
-        if self._startupcmd is None:
-            from Jumpscale.data.startupcmd.StartupCMDFactory import StartupCMDFactory
-            self._startupcmd =  StartupCMDFactory()
-        return self._startupcmd
     @property
     def time(self):
         if self._time is None:
