@@ -4,15 +4,13 @@ class Api(object):
     def __init__(self, request):
         self.request = request
 
-
 class UserAPI(Api):
     def list(self, query=None):
         if not query:
             return self.request.get('/user')
         return self.request.get('/user', q=query)
 
-    def create(self, username, email, password, firstname, lastname, title=None, gender=None, street=None,
-               city=None, country=None, zip=None):
+    def create(self, username, email, password, firstname, lastname, title=None, gender=None, street=None, city=None, country=None, zip=None):
 
         data = {
             "account": {
@@ -39,8 +37,7 @@ class UserAPI(Api):
     def get(self, user_id):
         return self.request.get('/user/{}'.format(user_id))
 
-    def update(self, user_id, username=None, email=None, password=None, firstname=None, lastname=None, title=None,
-               gender=None, street=None, city=None, country=None, zip=None, enabled=None):
+    def update(self, user_id, username=None, email=None, password=None, firstname=None, lastname=None, title=None, gender=None, street=None, city=None, country=None, zip=None, enabled=None):
         """
         IMPORTANT: Set Parameter value to '' if you want to remove it, otherwise it will be ignored
         """
@@ -86,8 +83,6 @@ class UserAPI(Api):
     def delete(self, user_id):
         return self.request.delete('/user/full/{}'.format(user_id))
 
-    def log_out(self, user_id):
-        return self.request.delete('/user/session/all/{}'.format(user_id))
 
     def enable(self, user_id):
         data = {'account': {'status': 1}}
@@ -106,7 +101,10 @@ class CommentApi(Api):
 class PostAPI(Api):
     def list(self, space_id=None):
         if space_id:
-            return self.request.get('/post/container/{}'.format(space_id))
+            res = self.request.get('/space/{}'.format(space_id))
+            if 'code' in res and res['code'] != 200:
+                return res
+            return self.request.get('/post/container/{}'.format(res['contentcontainer_id']))
         return self.request.get('/post')
 
     def get(self, post_id):
@@ -117,20 +115,21 @@ class PostAPI(Api):
 
     def update(self, post_id, message):
         data = {
-            "post": {
-                "message": message
-            }
+
+            "message": message
         }
 
         return self.request.put('/post/{}'.format(post_id), data)
 
     def create(self, space_id, message):
+        res = self.request.get('/space/{}'.format(space_id))
+        if 'code' in res and res['code'] != 200:
+            return res
+
         data = {
-            "post": {
                 "message": message
-            }
         }
-        return self.request.post('/post/container/{}'.format(space_id), data)
+        return self.request.post('/post/container/{}'.format(res['contentcontainer_id']), data)
 
 
 class SpaceAPI(Api):
@@ -153,55 +152,55 @@ class SpaceAPI(Api):
         """
 
         data = {
-            "space": {
                 "name": name,
                 "description": description,
                 "tags": ','.join(tags),
                 "visibility": 0 if private else 1,  # 0 means members only, 1 means for registerd users
-            }
         }
 
         if not private:
-            data['space']['join_policy'] = 0 if join_policy_invites_only else 1
+            data['join_policy'] = 0 if join_policy_invites_only else 1
         else:
-            data['space']['join_policy'] = 0
+            data['join_policy'] = 0
         return self.request.post('/space', data)
 
     def enable(self, space_id):
-        data = {'space': {'status': 1}}
+        data = {'status': 1}
         return self.request.put('/space/{}'.format(space_id), data)
 
     def disable(self, space_id):
-        data = {'space': {'status': 0}}
+        data = {'status': 0}
         return self.request.put('/space/{}'.format(space_id), data)
 
     def archive(self, space_id):
-        data = {'space': {'status': 2}}
+        data = {'status': 2}
         return self.request.put('/space/{}'.format(space_id), data)
 
+    def unarchive(self, space_id):
+        return self.enable(space_id)
+
     def update(self, space_id, name=None, description=None, tags=None, private=None, join_policy_invites_only=None):
-        data = {
-            'space': {}
-        }
+        data = {}
 
         if name:
-            data['space']['name'] = name
-            data['space']['url'] = name
+            data['name'] = name
+            data['url'] = name
 
         if description:
-            data['space']['description'] = description
+            data['description'] = description
 
         if tags is not None:
-            data['space']['tags'] = ','.join(tags)
+            data['tags'] = ','.join(tags)
 
         if private is not None:
             if private is True:
-                data['space']['visibility'] = 0
-                data['space']['join_policy'] = 0
+                data['visibility'] = 0
+                data['join_policy'] = 0
             else:
-                data['space']['visibility'] = 1
+                data['visibility'] = 1
                 if join_policy_invites_only is not None:
-                    data['space']['join_policy'] = 0 if join_policy_invites_only is True else 1
+
+                    data['join_policy'] = 0 if join_policy_invites_only is True else 1
 
         return self.request.put('/space/{}'.format(space_id), data)
 
@@ -215,38 +214,45 @@ class LikeAPI(Api):
 
     def list(self, post_id=None, comment_id=None, wiki_page_id=None):
         if post_id:
-            return self.request.get('/like/type/post/{}'.format(post_id))
-        if comment_id:
-            return self.request.get('/like/type/comment/{}'.format(comment_id))
-        if wiki_page_id:
-            return self.request.get('/like/type/wikipage/{}'.format(wiki_page_id))
-        return self.request.get('/like')
+            params = {'model':'post', 'pk':post_id}
+        elif comment_id:
+            params = {'model':'comment', 'pk':comment_id}
+        elif wiki_page_id:
+            params = {'model':'wikipage', 'pk':wiki_page_id}
+        else:
+            params = {}
+        return self.request.get('/like', **params)
 
     def like(self, post_id=None, comment_id=None, wiki_page_id=None, ):
         if post_id:
-            return self.request.put('/like/type/post/{}'.format(post_id), {})
+            return self.request.put('/like/post/{}'.format(post_id), {})
         if comment_id:
-            return self.request.put('/like/type/comment/{}'.format(comment_id), {})
+            return self.request.put('/like/comment/{}'.format(comment_id), {})
         if wiki_page_id:
-            return self.request.put('/like/type/wikipage/{}'.format(wiki_page_id), {})
+            return self.request.put('/like/wikipage/{}'.format(wiki_page_id), {})
         return {'code': 404, 'message': 'Select post or comment or wiki page to like', 'name': 'Not Found'}
 
 
 class WikiAPI(Api):
     def get(self, wiki_page_id):
-        return self.request.get('/wiki/{}'.format(wiki_page_id),
-                                formatter=Formatter.replace_contentcontainer_with_space)
+        return self.request.get('/wiki/{}'.format(wiki_page_id))
 
     def list(self, space_id=None):
         if not space_id:
             return self.request.get('/wiki')
-        return self.request.get('/wiki/container/{}'.format(space_id))
+
+        res = self.request.get('/space/{}'.format(space_id))
+        if 'code' in res and res['code'] != 200:
+            return res
+
+        container_id = res['contentcontainer_id']
+
+        return self.request.get('/wiki/container/{}'.format(container_id))
 
     def delete(self, wiki_page_id):
         return self.request.delete('/wiki/{}'.format(wiki_page_id))
 
-    def create(self, title, space_id=None, user_id=None, content=None, is_category=False,
-               parent_category_page_id=None, is_home=False, only_admin_can_edit=False, is_public=False):
+    def create(self, title, space_id=None, user_id=None, content=None, is_category=False, parent_category_page_id=None, is_home=False, only_admin_can_edit=False, is_public=False):
         if space_id:
             res = self.request.get('/space/{}'.format(space_id))
             if 'code' in res and res['code'] != 200:
@@ -261,25 +267,24 @@ class WikiAPI(Api):
             container_id = res['account']['contentcontainer_id']
 
         data = {
-            "title": title,
-            "is_home": 1 if is_home else 0,
-            "is_category": 1 if is_category else 0,
-            "protected": 1 if only_admin_can_edit else 0,
-            "parent_page_id": parent_category_page_id,
-            "is_public": 1 if is_public else 0,
-            "content": content
+                "title": title,
+                "is_home": 1 if is_home else 0,
+                "is_category": 1 if is_category else 0,
+                "protected": 1 if only_admin_can_edit else 0,
+                "parent_page_id": parent_category_page_id,
+                "is_public": 1 if is_public else 0,
+                "content": content,
         }
 
         if is_category:
-            data['wikipage'].pop('parent_category_page_id')
+            data.pop('parent_page_id')
 
         return self.request.post('/wiki/container/{}'.format(container_id), data)
 
-    def update(self, wiki_page_id, title, content=None, is_category=None, parent_category_page_id=None,
-               is_home=None, only_admin_can_edit=None, is_public=None):
+    def update(self, wiki_page_id, title, content=None, is_category=None, parent_category_page_id=None, is_home=None, only_admin_can_edit=None, is_public=None):
         data = {
-            "title": title,
-            "content": content
+                "title": title,
+                "content": content
         }
 
         if is_category is not None:
@@ -301,6 +306,7 @@ class WikiAPI(Api):
             data['is_public'] = 1 if is_public else 0
 
         return self.request.put('/wiki/{}'.format(wiki_page_id), data)
+
 
     def migrate(self, from_use_id=None, from_space_id=None, to_user_id=None, to_space_id=None):
         from_container = None

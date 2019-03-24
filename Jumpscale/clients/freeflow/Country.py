@@ -251,4 +251,8 @@ class Country(object):
 
     @staticmethod
     def get_code(country):
+        if country is None:
+            return None
+        if country not in Country.COUNTRIES:
+            raise RuntimeError('Unrecognized country')
         return Country.COUNTRIES[country]
