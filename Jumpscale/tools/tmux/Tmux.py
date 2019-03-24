@@ -113,7 +113,9 @@ class Tmux(j.application.JSBaseClass):
         p.execute(cmd)
         return p
 
-    def cmd_get(self,name,window="digitalme",pane="p11",cmd="",path=None,env={},ports=[],stopcmd=None,process_strings=[]):
+    def cmd_get(self,name,window_name=None,pane_name="main",
+                cmd="",path=None,
+                env={},ports=[],stopcmd=None,process_strings=[]):
         """
 
         example
@@ -127,8 +129,8 @@ class Tmux(j.application.JSBaseClass):
 
 
         :param name: name of the command
-        :param window: window to use std multi
-        :param pane: pane in the window, make sure there is no overlap
+        :param window: window to use std multi, if None then use windowname as name
+        :param pane: pane in the window, make sure there is no overlap e.g. p11
         :param cmd: command to execute in the pane
         :param path: path where to execute
         :param env: are the arguments wich will become env arguments, useful to pass variable to process
@@ -137,20 +139,23 @@ class Tmux(j.application.JSBaseClass):
         :param process_strings: which strings to check if the process is running
         :return:
         """
-        if not self.session.window_exists(window):
-            if window == "multi":
-                self.panes_multi_create(window_name=window)
-            elif window == "digitalme":
-                self.panes_digitalme_create(window_name=window)
-            elif window == "2x2":
-                self.panes_2x2_get(window_name=window)
-            else:
-                self.window_get(window=window, reset=True)
+        if not window_name:
+            window_name = name
+        if not self.session.window_exists(window_name):
+            window = self.window_get(window=window_name, reset=True)
+        else:
+            window = self.window_get(window=window_name)
 
         print("need to reimplement using StartupCMD, dont forget to set the _pane as property")
         j.shell()
 
     def panes_2x2_get(self, window_name="multi", reset=True):
+        """
+
+        :param window_name:
+        :param reset:
+        :return: (p11,p12,p21,p22) are 4 panes
+        """
 
         window = self.window_get(window_name, reset=reset)
 
@@ -171,7 +176,7 @@ class Tmux(j.application.JSBaseClass):
 
         return p11,p12,p21,p22
 
-    def panes_digitalme_create(self, window_name="digitalme", reset=True):
+    def window_digitalme_get(self, window_name="digitalme", reset=True):
 
         window = self.window_get(window_name, reset=reset)
 
@@ -189,11 +194,10 @@ class Tmux(j.application.JSBaseClass):
 
             return window
 
-
-    def panes_multi_create(self, window_name="multi", reset=False):
+    def window_multi_get(self, window_name="multi", reset=False):
         """
 
-        js_shell 'j.tools.tmux.panes_multi_get()'
+        js_shell 'j.tools.tmux.window_multi_get()'
 
         :param window_name:
         :param reset:
@@ -225,10 +229,9 @@ class Tmux(j.application.JSBaseClass):
 
         return window
 
-
     def test(self):
         """
-        js_shell 'j.tools.tmux.test()'
+        kosmos 'j.tools.tmux.test()'
 
         :return:
         """
@@ -241,6 +244,7 @@ class Tmux(j.application.JSBaseClass):
         p = self.execute("ls /","multi","p22")
 
         assert p.process_obj.name()=="bash"
+
         assert p.process_obj_child == None
 
         p = self.execute("htop","multi","p22")
@@ -252,6 +256,7 @@ class Tmux(j.application.JSBaseClass):
 
 
         assert p.process_obj.name()=="bash"
+
         assert p.process_obj_child.name()=="htop"
 
 
