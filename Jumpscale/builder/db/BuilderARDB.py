@@ -39,7 +39,7 @@ class BuilderARDB(j.builder.system._BaseClass):
         if self._done_check("buildforestdb", reset):
             return
 
-        j.builder.tools.package_install(["git-core",
+        j.builder.system.package.ensure(["git-core",
                                                  "cmake",
                                                  "libsnappy-dev",
                                                  "g++"])
@@ -81,7 +81,7 @@ class BuilderARDB(j.builder.system._BaseClass):
             storageEngine = "rocksdb"
             # ForestDB
             packages += ["git", "cmake", "libsnappy-dev", "gcc48"]
-            # j.builder.tools.package_install("boost")
+            # j.builder.system.package.ensure("boost")
         else:
             # ForestDB
             packages += ["git", "cmake", "libsnappy-dev", "g++"]
@@ -92,7 +92,7 @@ class BuilderARDB(j.builder.system._BaseClass):
         packages += ["unzip"]
 
         # Install dependancies
-        j.builder.tools.package_install(packages)
+        j.builder.system.package.ensure(packages)
 
         url = "https://github.com/yinqiwen/ardb.git"
         cpath = j.clients.git.pullGitRepo(

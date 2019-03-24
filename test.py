@@ -20,6 +20,7 @@ def bcdb():
     j.data.bcdb.test()
 
 def servers():
+    j.tools.tmux.kill()
     if j.core.platformtype.myplatform.isUbuntu:
         j.builder.web.traefik.install()
         # j.builder.db.etcd.install()

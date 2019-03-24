@@ -79,7 +79,7 @@ class BuilderLua(j.builder.system._BaseClass):
 
         if j.core.platformtype.myplatform.isUbuntu:
             # j.builder.system.package.mdupdate()
-            j.builder.tools.package_install("geoip-database,libgeoip-dev")
+            j.builder.system.package.ensure("geoip-database,libgeoip-dev")
 
         C = """
         luaossl

@@ -18,9 +18,9 @@ class BuildersTFMUX(j.builder.system._BaseClass):
         if self._done_get("build") and not reset:
             return
 
-        j.builder.system.package.ensure("gcc,g++,make")
+       j.builder.system.package.ensure("gcc,g++,make")
 
-        j.builder.system.package.ensure("cmake, g++ pkg-config, git, vim-common, libwebsockets-dev, libjson-c-dev, libssl-dev")
+       j.builder.system.package.ensure("cmake, g++ pkg-config, git, vim-common, libwebsockets-dev, libjson-c-dev, libssl-dev")
 
         path = j.clients.git.getContentPathFromURLorPath("https://github.com/threefoldtech/tfmux")
 

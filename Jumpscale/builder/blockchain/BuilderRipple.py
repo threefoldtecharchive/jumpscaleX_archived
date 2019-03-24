@@ -17,7 +17,7 @@ class BuilderRipple(j.builder.system._BaseClass):
         
         # rfer to: https://ripple.com/build/rippled-setup/#installing-rippled
     
-        j.builder.tools.package_install(['yum-utils', 'alien'])
+        j.builder.system.package.ensure(['yum-utils', 'alien'])
         cmds = """
         rpm -Uvh https://mirrors.ripple.com/ripple-repo-el7.rpm
         yumdownloader --enablerepo=ripple-stable --releasever=el7 rippled

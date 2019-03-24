@@ -67,10 +67,10 @@ class BuilderNodeJS(j.builder.system._BaseClass):
             j.builder.tools.run("mv %s/bin/phantomjs /opt/bin/phantomjs" % cdest)
             j.builder.tools.run("rm -rf %s" % cdest)
 
-            j.builder.tools.package_install("libfontconfig")
+            j.builder.system.package.ensure("libfontconfig")
 
         elif j.core.platformtype.myplatform.isMac:
-            j.builder.tools.package_install("phantomjs")
+            j.builder.system.package.ensure("phantomjs")
 
         else:
             raise RuntimeError("phantomjs only supported don ubuntu or osx")

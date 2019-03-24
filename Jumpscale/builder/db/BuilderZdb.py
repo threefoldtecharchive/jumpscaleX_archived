@@ -15,7 +15,7 @@ class BuilderZdb(j.builder.system._BaseClass):
             return
 
         j.builder.system.package.mdupdate()
-        j.builder.tools.package_install("git")
+        j.builder.system.package.ensure("git")
         path = j.builder.tools.joinpaths(j.sal.fs.getTmpDirPath(), '0-db')
         dest = j.clients.git.pullGitRepo(self.git_url, dest=path, ssh=False)
 

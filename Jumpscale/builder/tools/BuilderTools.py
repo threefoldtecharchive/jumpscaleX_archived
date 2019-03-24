@@ -227,9 +227,9 @@ class BuilderTools(j.builder.system._BaseClass):
             cmd = "tar -C %s -xzf %s" % (destination, path)
         elif path.endswith(".xz"):
             if self.isMac:
-                j.builder.tools.package_install('xz')
+                j.builder.system.package.ensure('xz')
             else:
-                j.builder.tools.package_install('xz-utils')
+                j.builder.system.package.ensure('xz-utils')
             cmd = "tar -C %s -xzf %s" % (destination, path)
         elif path.endswith("tar.bz2"):
             #  cmd = "cd %s;bzip2 -d %s | tar xvf -" % (j.sal.fs.getDirName(path), path)
@@ -747,7 +747,7 @@ class BuilderTools(j.builder.system._BaseClass):
         return out.strip()
 
 
-    #USE: j.builder.system.package.ensure
+    #USE:j.builder.system.package.ensure
 
     # def command_ensure(self, command, package=None):
     #     """Ensures that the given command is present, if not installs the
@@ -767,7 +767,7 @@ class BuilderTools(j.builder.system._BaseClass):
     #     if package is None:
     #         package = command
     #     if not self.command_check(command):
-    #         j.builder.tools.package_install(package)
+    #         j.builder.system.package.ensure(package)
     #     assert self.command_check(command), \
     #         "Command was not installed, check for errors: %s" % (command)
 

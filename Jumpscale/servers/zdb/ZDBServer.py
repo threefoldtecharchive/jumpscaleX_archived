@@ -68,7 +68,7 @@ class ZDBServer(j.application.JSBaseClass):
 
     def stop(self):
         self._log_info("stop zdb")
-        self.tmuxcmd.stop()
+        self.startupcmd.stop()
 
 
     @property
@@ -174,9 +174,9 @@ class ZDBServer(j.application.JSBaseClass):
         """
         kosmos 'j.servers.zdb.test(build=True)'
         """
+        self.destroy()
         if build:
             self.build()
-        self.destroy()
         self.start_test_instance(namespaces=["test"])
         self.stop()
         self.start()

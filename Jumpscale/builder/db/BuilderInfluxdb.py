@@ -17,7 +17,7 @@ class BuilderInfluxdb(j.builder.system._BaseClass):
         j.core.tools.dir_ensure('{DIR_BIN}')
 
         if j.core.platformtype.myplatform.isMac:
-            j.builder.tools.package_install('influxdb')
+            j.builder.system.package.ensure('influxdb')
             j.core.tools.dir_ensure("{DIR_VAR}/templates/cfg/influxdb")
             j.builder.tools.file_copy(
                 "/usr/local/etc/influxdb.conf", "{DIR_VAR}/templates/cfg/influxdb/influxdb.conf")

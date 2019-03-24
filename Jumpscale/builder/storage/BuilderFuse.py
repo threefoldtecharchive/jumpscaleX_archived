@@ -8,7 +8,7 @@ class BuilderFuse(j.builder.system._BaseClass):
     NAME = "fuse"
 
     def install(self):
-        j.builder.tools.package_install([
+        j.builder.system.package.ensure([
             "python3.5",
             "python3-pkgconfig",
             "pkg-config",

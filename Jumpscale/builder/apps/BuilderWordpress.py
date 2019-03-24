@@ -20,7 +20,7 @@ class BuilderWordpress(j.builder.system._BaseClass):
         if self._done_check("build", reset):
             return
         # 1- install php
-        j.builder.tools.package_install(
+        j.builder.system.package.ensure(
             "php7.0-fpm, php7.0-mysql, php7.0-curl, php7.0-gd, php7.0-mbstring, php7.0-mcrypt, php7.0-xml, php7.0-xmlrpc")
 
         # 2- install mysql

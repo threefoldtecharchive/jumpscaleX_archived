@@ -35,7 +35,7 @@ class BuilderMariadb(j.builder.system._BaseClass):
 
         if self._done_check("install", reset):
             return
-        j.builder.tools.package_install("mariadb-server")
+        j.builder.system.package.ensure("mariadb-server")
         j.core.tools.dir_ensure("/data/db")
         j.core.tools.dir_ensure("/var/run/mysqld")
         script = """

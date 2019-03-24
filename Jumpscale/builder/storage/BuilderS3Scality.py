@@ -13,8 +13,8 @@ class BuilderS3Scality(j.builder.system._BaseClass):
         put backing store on /storage/...
         """
         j.builder.system.package.mdupdate()
-        j.builder.tools.package_install('build-essential')
-        j.builder.tools.package_install('python2.7')
+        j.builder.system.package.ensure('build-essential')
+        j.builder.system.package.ensure('python2.7')
         j.core.tools.dir_ensure(storageLocation)
         j.core.tools.dir_ensure(metaLocation)
 

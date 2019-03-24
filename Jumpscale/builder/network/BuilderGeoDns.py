@@ -20,7 +20,7 @@ class BuilderGeoDns(j.builder.system._BaseClass):
         # deps
         # j.builder.runtimes.golang.install(force=False)
         j.builder.system.package.mdupdate()
-        j.builder.tools.package_install(["libgeoip-dev", 'build-essential', 'pkg-config'])
+        j.builder.system.package.ensure(["libgeoip-dev", 'build-essential', 'pkg-config'])
 
         # build
         j.builder.runtimes.golang.get("github.com/abh/geodns")
