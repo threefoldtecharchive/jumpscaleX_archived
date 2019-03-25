@@ -2,7 +2,36 @@ from Jumpscale import j
 
 BaseClass = j.application.JSBaseClass
 
-from Jumpscale.clients.zero_hub_direct.HubDirectClient import HubDirectClient
+class action:
+
+    def __init__(self, **kwargs):
+        self.depends = kwargs.get('depends', [])
+        self.log = kwargs.get('log', True)
+
+    def __call__(self, func):
+        def wrapper_action(*args, **kwargs):
+            builder = args[0]  # self of the builder
+            reset = kwargs.get("reset", False)
+            for dep in self.depends:
+                if hasattr(builder, dep):
+                    if builder._done_check(dep) and not reset:
+                        builder._log_debug("{} already done".format(dep))
+                    else:
+                        act = getattr(builder, dep)
+                        act(reset=reset)
+                else:
+                    raise RuntimeError("Builder {} doesn't have {} action, please check your dependencies"
+                                       .format(builder.NAME, dep))
+
+            if builder._done_check(func.__name__) and not reset:
+                builder._log_debug("{} already done".format(func.__name__))
+            else:
+                func(*args, **kwargs)
+                builder._done_set(func.__name__)
+
+        return wrapper_action
+
+from Jumpscale.clients.zero_hub.ZeroHubClient import ZeroHubClient
 
 class builder_method(object):
 
@@ -87,7 +116,7 @@ class BuilderBaseClass(BaseClass):
     def reset(self):
         self._done_reset()
 
-    @builder_method()
+    @action(depends=["_init"])
     def install(self):
         """
         will build as first step
@@ -95,7 +124,7 @@ class BuilderBaseClass(BaseClass):
         """
         return
 
-    @builder_method()
+    @action(depends=["build"])
     def sandbox(self, zhub_client=None):
         '''
         when zhub_client None will look for j.clients.get("test"), if not exist will die
@@ -106,38 +135,39 @@ class BuilderBaseClass(BaseClass):
     def startup_cmds(self):
         raise RuntimeError("not implemented")
 
-    @builder_method()
+    @action(depends=["build"])
     def start(self):
         for startupcmd in self.startup_cmds:
             startupcmd.start()
 
-    @builder_method()
+    @action(depends=["start"])
     def stop(self):
         for startupcmd in self.startup_cmds:
             startupcmd.stop()
 
-    @builder_method()
+    @action(depends=[])
     def running(self):
         for startupcmd in self.startup_cmds:
             if startupcmd.running() == False:
                 return False
         return True
 
-
+    @action(depends=["sandbox"])
     def _flist_create(self, zhub_client=None):
         """
         build a flist for the builder and upload the created flist to the hub
 
         This method builds and optionally upload the flist to the hub
 
-        :param hub_instance: instance name of the zerohub client to use to upload the flist, defaults to None if None
+        :param hub_instance: zerohub client to use to upload the flist, defaults to None if None
         the flist will be created but not uploaded to the hub
-        :param hub_instance: str, optional
-        :raises j.exceptions.Input: raised if the zerohub client instance does not exist in the config manager
-        :return: path to the tar.gz created
+        :param hub_instance: j.clients.zhub instance, optional
+        :return: path to the tar.gz created or the url of the uploaded flist
         :rtype: str
         """
 
+        self.copy_dirs(self.root_dirs, self._sandbox_dir)
+        self.write_files(self.root_files, self._sandbox_dir)
 
         if self.startup:
             file_dest = j.sal.fs.joinPaths(self._sandbox_dir, '.startup.toml')
@@ -149,27 +179,10 @@ class BuilderBaseClass(BaseClass):
             j.builder.tools.dir_ensure(ld_dest)
             j.sal.fs.copyFile('/lib64/ld-linux-x86-64.so.2', ld_dest)
 
-
-        huburl= zhub_client.upload(self._sandbox_dir)  #does the tar and the upload
-
-        # self._log_info('building flist')
-        # tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
-        # j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, sandbox_dir))
-
-        # if not j.clients.zhub.exists(name=hub_instance):
-        #     raise j.exceptions.Input("hub instance %s does not exists, can't upload to the hub" % hub_instance)
-        # hub = j.clients.zhub.get(hub_instance)
-        # hub.authenticate()
-        # self._log_info("uploading flist to the hub")
-        # hub.upload(tarfile)
-        # self._log_info("uploaded at https://hub.grid.tf/{}/{}.flist".format(hub.username,self.NAME))
-
-        return tarfile
-
-        # if hub_instance:
-        #     self._log_info("uploading flist to the hub")
-        #     return hub_instance.sandbox_upload(self.NAME, self.sandbox_dir)
-        # else:
-        #     tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
-        #     j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, sandbox_dir))
-        #     return tarfile
+        if zhub_client:
+            self._log_info("uploading flist to the hub")
+            return zhub_client.sandbox_upload(self.NAME, self.sandbox_dir)
+        else:
+            tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
+            j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, self._sandbox_dir))
+            return tarfile
