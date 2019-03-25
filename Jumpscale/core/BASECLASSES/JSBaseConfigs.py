@@ -83,8 +83,8 @@ class JSBaseConfigs(JSBase):
             if len(res) < 1:
                 if create_new:
                     new = True
+                    kwargs["name"] = name
                     data = self._model.new(data=kwargs)
-                    data.name = name
                 else:
                     if not die:
                         return
@@ -97,6 +97,8 @@ class JSBaseConfigs(JSBase):
             else:
                 data = res[0]
         else:
+            if kwargs=={}:
+                raise RuntimeError("kwargs need to be specified is name is not.")
             res = self.findData(**kwargs)
             if len(res) < 1:
                 if create_new:
@@ -113,6 +115,7 @@ class JSBaseConfigs(JSBase):
                 data = res[0]
 
         kl = self._childclass_selector(**kwargs)
+
         self._children[name] = kl(data=data, parent=self, **kwargs)
         if new:
             self._children[name]._isnew = True

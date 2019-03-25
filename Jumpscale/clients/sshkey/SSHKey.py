@@ -14,6 +14,7 @@ class SSHKey(j.application.JSBaseConfigClass):
         path = "" (S) #path of the private key
         """
 
+
     def _init(self):
 
         self._connected = None

@@ -3,9 +3,6 @@ import traceback
 import sys
 
 
-def ssh():
-    # j.clients.sshagent.test()  #should not do, because in container there will be no ssh-key loaded any more to continue the tests
-    j.clients.sshkey.test()
 
 def schema():
     j.data.schema.test()
@@ -26,12 +23,18 @@ def servers():
         # j.builder.db.etcd.install()
         j.builder.network.coredns.install()
 
-# ssh()
+
+def ssh():
+    # j.clients.sshagent.test()  #should not do, because in container there will be no ssh-key loaded any more to continue the tests
+    j.clients.sshkey.test()
+
+
 # schema()
 # bcdb()
+
+ssh()
 # servers()
 
 
-j.data.bcdb.test()
 
 

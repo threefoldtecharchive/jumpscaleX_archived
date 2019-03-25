@@ -280,7 +280,7 @@ class Schema(j.application.JSBaseClass):
         """
         if data is None:
             data = {}
-        r = self.get(data=data)
+        r = self.get(data=data,model=model)
         if model is not None:
             model.notify_new(r)
         return r

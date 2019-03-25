@@ -41,7 +41,8 @@ class SSHKeys(j.application.JSBaseConfigsClass):
         -loads keys to agent         -->check is_loaded is True
         -unloads sshkeys from agent  --> check is_loaded is False
         '''
-        path = "/root/.ssh/test_key"
+        path = "/tmp/test_key"
+        from pudb import set_trace; set_trace()
         sshkey_client = j.clients.sshkey.get(name="test_key", path=path)
         assert sshkey_client.path == path
         assert sshkey_client.privkey.strip() == j.sal.fs.readFile(path).strip()

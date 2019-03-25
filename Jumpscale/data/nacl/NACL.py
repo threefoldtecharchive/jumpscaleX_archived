@@ -17,7 +17,7 @@ print = j.tools.console.echo
 class NACL(j.application.JSBaseClass):
 
 
-    def _init(self, name=None):
+    def _init2(self, name=None):
         assert name is not None
         self.name = name
         self._box = None
