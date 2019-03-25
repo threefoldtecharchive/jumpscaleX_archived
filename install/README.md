@@ -1,3 +1,1 @@
-
-
-see [docs/installation/install.md]
+see [../docs/Installation/install.md](../docs/Installation/install.md)
