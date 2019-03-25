@@ -1921,10 +1921,10 @@ class MyEnv():
         if not os.path.exists("/sandbox"):
             script = """
             cd /
-            sudo mkdir -p /sandbox/cfg
-            sudo chown -R {USERNAME}:{GROUPNAME} /sandbox
+            mkdir -p /sandbox/cfg
+            chown -R {USERNAME}:{GROUPNAME} /sandbox
             mkdir -p /usr/local/EGG-INFO
-            sudo chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
+            chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
             """
             args={}
             args["USERNAME"] = getpass.getuser()
