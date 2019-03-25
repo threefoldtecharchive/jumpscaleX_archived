@@ -15,7 +15,8 @@ class JSBaseConfig(JSBaseDataObj):
         the self.data object is a jsobject (result of using the jsx schemas)
 
         """
-        JSBaseDataObj.__init__(self,parent=parent, topclass=False,**kwargs)
+
+        JSBaseDataObj.__init__(self,data=data, parent=parent, topclass=False,**kwargs)
 
         self._isnew = False
 
