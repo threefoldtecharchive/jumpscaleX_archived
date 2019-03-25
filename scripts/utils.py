@@ -97,10 +97,7 @@ class Utils:
                 break
             except Exception:
                 time.sleep(1)
-<<<<<<< HEAD
                 self.github_cl = j.clients.github.get('test', token=self.access_token)
-=======
->>>>>>> development_types
 
     def github_get_content(self, repo, ref, file_path='0-Test.sh'):
         """Get file content from github with specific ref.
@@ -119,11 +116,8 @@ class Utils:
                 break
             except Exception:
                 time.sleep(1)
-<<<<<<< HEAD
                 self.github_cl = j.clients.github.get('test', token=self.access_token)
-=======
->>>>>>> development_types
-        else:        
+        else:
             return None
         content = j.data.serializers.base64.decode(content_b64.content)
         content = content.decode()

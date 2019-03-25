@@ -15,57 +15,20 @@ print = j.tools.console.echo
 
 
 class NACL(j.application.JSBaseClass):
-<<<<<<< HEAD
-    def __init__(self, name, privkey=None, secret=None, reset=False, interactive=True):
-        while True:
-            try:
-                self.init(name=name, privkey=privkey, secret=secret, reset=reset, interactive=interactive)
-                break
-            except nacl.exceptions.CryptoError as e:
-                self._log_warning("ERROR in decrypting: %s" % str(e))
-                secret = j.tools.console.askPassword("issue in decrypting the private key, try other secret")
 
-    def reset(self, privkey=None, secret=None):
-        self.init(name=self.name, privkey=privkey, secret=secret, reset=True, interactive=True)
-
-    def init(self, name, privkey=None, secret=None, reset=False, interactive=True):
-        """
-        :param if secret given will be used in nacl
-        """
-        JSBASE.__init__(self)
-=======
->>>>>>> development_types
 
     def _init(self, name=None):
         assert name is not None
         self.name = name
-<<<<<<< HEAD
-        self.interactive = interactive  # should remove interactive completely
-=======
         self._box = None
->>>>>>> development_types
 
     @property
     def _path(self):
         return "/sandbox/cfg/nacl/%s" % self.name
 
-<<<<<<< HEAD
-        self.path_signaturekey = "%s/%s.priv" % (self.path, self.name)
-        if reset:
-            j.sal.fs.remove(self.path_signaturekey)
-        if not j.sal.fs.exists(self.path_signaturekey):
-            if interactive:
-                self.generate_interactive()
-            else:
-                self._keys_generate()
-                print(
-                    '{RED}a private key is generated for you, please store the following key secret in a safe place:{RESET}')
-                print('{BLUE}%s{RESET}' % self.words)
-=======
     @property
     def _path_privatekey(self):
         return "%s/key.priv" % (self._path)
->>>>>>> development_types
 
     @property
     def _path_encryptor_for_secret(self):
@@ -90,11 +53,7 @@ class NACL(j.application.JSBaseClass):
             print("{BLUE}"+self.words+"{RESET}\n")
             print("\n{RED}ITS IMPORTANT TO STORE THIS KEY IN A SAFE PLACE{RESET}")
             if not j.tools.console.askYesNo("Did you write the words down and store them in safe place?"):
-<<<<<<< HEAD
-                j.sal.fs.remove(self.path_signaturekey)
-=======
                 j.sal.fs.remove(self._path_privatekey)
->>>>>>> development_types
                 print("WE HAVE REMOVED THE KEY, need to restart this procedure.")
                 sys.exit(1)
         else:
@@ -108,19 +67,8 @@ class NACL(j.application.JSBaseClass):
         word3_to_check = j.tools.console.askString("give the 3e word of the private key string")
 
         if not word3 == word3_to_check:
-<<<<<<< HEAD
-            print("the control word was not correct, please restart the procedure.")
-            sys.exit(1)
-
-    def _hash(self, data):
-        m = hashlib.sha256()
-        if not j.data.types.bytes.check(data):
-            data = data.encode()
-        m.update(data)
-        return m.digest()
-=======
             self._error_raise ("the control word was not correct, please restart the procedure.")
->>>>>>> development_types
+
 
     @property
     def words(self):
@@ -128,16 +76,6 @@ class NACL(j.application.JSBaseClass):
         e.g.
         js_shell 'print(j.data.nacl.default.words)'
         """
-<<<<<<< HEAD
-        raw_key = self.signingkey.encode()
-        return j.data.encryption.mnemonic.to_mnemonic(raw_key)
-
-    @property
-    def privkey(self):
-        if self._privkey == "":
-            self._privkey = self.signingkey.to_curve25519_private_key()
-        return self._privkey
-=======
         assert self.privkey is not None
         privkey = self.privkey.encode()
         return j.data.encryption.mnemonic.to_mnemonic(privkey)
@@ -315,8 +253,6 @@ class NACL(j.application.JSBaseClass):
         m.update(data)
         return m.digest()
 
->>>>>>> development_types
-
     @property
     def pubkey(self):
         return self.privkey.public_key
@@ -400,27 +336,7 @@ class NACL(j.application.JSBaseClass):
             data = self._hex_to_bin(data)
         return unseal_box.decrypt(data)
 
-<<<<<<< HEAD
-    def _keys_generate(self, words=None):
-        """
-        Generate private key (strong) & store in chosen path &
-        will load in this class
-        """
-        if words:
-            # generate key from mnemonic words
-            entropy = j.data.encryption.mnemonic.to_entropy(words)
-            key = nacl.signing.SigningKey(entropy).encode()
-        else:
-            key = nacl.signing.SigningKey.generate().encode()   # generates a bytes representation of the key
 
-        encrypted_key = self.encryptSymmetric(key)
-        self.file_write_hex(self.path_signaturekey, encrypted_key)
-
-        # build in verification
-        verify = self.file_read_hex(self.path_signaturekey)
-        assert encrypted_key == verify
-=======
->>>>>>> development_types
 
     def sign(self, data):
         """

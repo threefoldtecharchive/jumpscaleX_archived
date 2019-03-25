@@ -31,10 +31,7 @@ cl.get('maxux', 'ubuntu1604.flist')
 ```
 
 ### Authentication
-<<<<<<< HEAD
-=======
 
->>>>>>> development_types
 In order to use upload, delete, ... feature, you need to authenticate yourself by setting a token on your client. In order to push flists to the hub under the official apps repository you will need to be a member of this organisation on itsyouonline.
 
 ```

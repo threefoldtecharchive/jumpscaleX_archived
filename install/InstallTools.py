@@ -669,10 +669,6 @@ class Tools:
             Tools.execute(script, interactive=False)
             try:
                 from IPython.terminal.embed import InteractiveShellEmbed
-<<<<<<< HEAD
-            except:
-                Tools._installbase()
-=======
 
             except Exception as e:
                 Tools._installbase_for_shell()
@@ -680,7 +676,7 @@ class Tools:
             if f:
                 print("\n*** file: %s"%f.filename)
                 print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
->>>>>>> development_types
+
             Tools._shell = InteractiveShellEmbed(banner1= "", exit_msg="")
         return Tools._shell(stack_depth=2)
 
@@ -792,11 +788,7 @@ class Tools:
         class format_dict(dict):
             def __missing__(self, key):
                 return '{%s}' % key
-<<<<<<< HEAD
-=======
 
-
->>>>>>> development_types
         if args is None:
             args={}
 
