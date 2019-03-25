@@ -619,7 +619,7 @@ class Tools:
 
         if 'darwin' in MyEnv.platform():
 
-            script = """            
+            script = """
             pip3 install ipython
             """
             Tools.execute(script, interactive=True)
@@ -639,7 +639,7 @@ class Tools:
                 pip3 install ipython
                 pip3 install pudb
                 pip3 install pygments
-                locale-gen --purge en_US.UTF-8                
+                locale-gen --purge en_US.UTF-8
             """
             Tools.execute(script, interactive=True)
 
@@ -1551,13 +1551,13 @@ class OSXInstall():
     def brew_uninstall():
         cmd='sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"'
         Tools.execute(cmd,interactive=True)
-        toremove = """                
+        toremove = """
         sudo rm -rf /usr/local/.com.apple.installer.keep
         sudo rm -rf /usr/local/include/
         sudo rm -rf /usr/local/etc/
         sudo rm -rf /usr/local/var/
         sudo rm -rf /usr/local/FlashcardService/
-        sudo rm -rf /usr/local/texlive/ 
+        sudo rm -rf /usr/local/texlive/
         """
         Tools.execute(toremove,interactive=True)
 
@@ -2203,7 +2203,7 @@ class JumpscaleInstaller():
     def __init__(self):
 
         self.account = "threefoldtech"
-        self.branch = ["development_types"]
+        self.branch = ["development"]
         self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
     def install(self,branch=None,secret="1234",private_key_words=None):
