@@ -1729,7 +1729,6 @@ class UbuntuInstall():
                 "pymongo>=3.4.0",
                 "docker>=3",
                 "dnspython>=1.15.0",
-                "git+https://github.com/threefoldtech/0-hub#egg=zerohub&subdirectory=client",
                 "etcd3>=0.7.0",
                 "Flask-Inputs>=0.2.0",
                 "Flask>=0.12.2",
