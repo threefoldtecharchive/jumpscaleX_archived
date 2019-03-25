@@ -1,6 +1,8 @@
 from Jumpscale import j
 from .Request import Request
 from .API import UserAPI, SpaceAPI, WikiAPI, CommentApi, LikeAPI, PostAPI
+from .Country import Country
+
 JSConfigClient = j.application.JSBaseConfigClass
 
 
@@ -38,8 +40,6 @@ class FreeFlowClient(JSConfigClient):
     def spaces(self):
         return SpaceAPI(self.request)
 
-
-
     @property
     def likes(self):
         return LikeAPI(self.request)
@@ -51,3 +51,7 @@ class FreeFlowClient(JSConfigClient):
     @property
     def wikis(self):
         return WikiAPI(self.request)
+
+    @property
+    def countries(self):
+        return Country.COUNTRIES.keys()

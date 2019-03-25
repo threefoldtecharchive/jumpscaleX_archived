@@ -54,6 +54,7 @@ class Utils:
                 break
             except Exception:
                 time.sleep(1)
+                self.telegram_cl = j.clients.telegram_bot.get("test")
 
     def write_file(self, text, file_name, file_path=''):
         """Write result file.
@@ -96,6 +97,7 @@ class Utils:
                 break
             except Exception:
                 time.sleep(1)
+                self.github_cl = j.clients.github.get('test', token=self.access_token)
 
     def github_get_content(self, repo, ref, file_path='0-Test.sh'):
         """Get file content from github with specific ref.
@@ -114,7 +116,8 @@ class Utils:
                 break
             except Exception:
                 time.sleep(1)
-        else:        
+                self.github_cl = j.clients.github.get('test', token=self.access_token)
+        else:
             return None
         content = j.data.serializers.base64.decode(content_b64.content)
         content = content.decode()

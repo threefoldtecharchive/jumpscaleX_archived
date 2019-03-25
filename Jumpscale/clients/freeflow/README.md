@@ -14,7 +14,9 @@ wikis = client.wikis
 comments = client.comments
 spaces = client.spaces
 
+
 ```
+
 
 ### User manipulation
 
@@ -24,9 +26,9 @@ users.list() # List all users
 users.list(query='username-email-or-tag') # search users by username, email or tag
 users.get(user_id=1)
 users.delete(user_id=1)
+client.countries # List all supported countries (used when creating/updating user)
 users.create(username='Required-field', email='Required-field', firstname='Required-field', lastname='Required-field', title=None, ..)
 users.update(user_id=1, email='new-email', city='new-city', ..)
-users.log_out(user_id=1)
 ```
 
 ### Post manipulation
@@ -61,19 +63,19 @@ wikis.list(space_id=1) # all wiki pages in certain space
 wikis.get(wiki_page_id=1) # get certain wiki page
 wikis.delete(wiki_page_id=1) # delete certain wiki page
 # create normal page in certain space
-wikis.create(space_id='Required-space-id-integer', title='Required-field', content=None, is_category=False, parent_category_page_id=None, is_home=False, only_admin_can_edit=False, is_public=False)
+wikis.create(space_id='space-id-integer', title='Required-field', content=None, is_category=False, parent_category_page_id=None, is_home=False, only_admin_can_edit=False, is_public=False)
 # create category page (can have sub pages) in certain space 
-wikis.create(space_id='Required-space-id-integer', title='Required-field', content=None, is_category=True, parent_category_page_id=None, is_home=False, only_admin_can_edit=False, is_public=False)
+# Category pages can not be sub pages themselves so value `parent_category_page_id` will be ignoed
+wikis.create(space_id='space-id-integer', title='Required-field', content=None, is_category=True, parent_category_page_id=None, is_home=False, only_admin_can_edit=False, is_public=False)
 # create wiki page [Sub page/Child page] in another Category page
-wikis.create(space_id='Required-space-id-integer', title='Required-field', content=None, is_category=False, parent_category_page_id='Parent-Category-page-id', is_home=False, only_admin_can_edit=False, is_public=False) 
-# create page in personal space of user
-wikis.create_personal(user_id='Required-user-id-integer', title='Required-field', content=None, is_category=False, parent_category_page_id='Parent-Category-page-id', is_home=False, only_admin_can_edit=False, is_public=False)
+# provide parent_category_page_id (Parent page ID) & set is_category to false
+wikis.create(space_id='space-id-integer', title='Required-field', content=None, is_category=False, parent_category_page_id='Parent-Category-page-id', is_home=False, only_admin_can_edit=False, is_public=False) 
+# create personal wiki for certain user
+wikis.create(user_id='user-id-integer', title='Required-field', content=None, is_category=False, parent_category_page_id='Parent-Category-page-id', is_home=False, only_admin_can_edit=False, is_public=False) 
 # Update wiki page
-wiki.update(wiki_page_id='Required-wiki-page-id-integer', title='Required-field', content=None, is_category=False, parent_category_page_id=None, is_home=False, only_admin_can_edit=False, is_public=False) 
-# Move certain wiki page into another space
-wikis.move_to_space(space_id=1, wiki_page_id=1)
-# Move certain wiki page into personal wiki for user
-wikis.move_to_user_space(user_id=1)
+wikis.update(wiki_page_id='Required-wiki-page-id-integer', title='Required-field', content=None, is_category=False, parent_category_page_id=None, is_home=False, only_admin_can_edit=False, is_public=False) 
+# migrate all wikipages in space/user wiki to another space/user wiki
+wikis.migrate(from_use_id=None, from_space_id=None, to_user_id=None, to_space_id=None)
 ```
 
 ### Comments

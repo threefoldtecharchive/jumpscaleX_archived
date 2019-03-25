@@ -16,6 +16,7 @@ print = j.tools.console.echo
 
 class NACL(j.application.JSBaseClass):
 
+
     def _init(self, name=None):
         assert name is not None
         self.name = name
@@ -67,6 +68,7 @@ class NACL(j.application.JSBaseClass):
 
         if not word3 == word3_to_check:
             self._error_raise ("the control word was not correct, please restart the procedure.")
+
 
     @property
     def words(self):
@@ -251,7 +253,6 @@ class NACL(j.application.JSBaseClass):
         m.update(data)
         return m.digest()
 
-
     @property
     def pubkey(self):
         return self.privkey.public_key
@@ -260,7 +261,9 @@ class NACL(j.application.JSBaseClass):
     @property
     def signingkey(self):
         if self._signingkey == "":
-            self._signingkey = nacl.signing.SigningKey(self.privkey.encode())
+            encrypted_key = self.file_read_hex(self.path_signaturekey)
+            key = self.decryptSymmetric(encrypted_key)
+            self._signingkey = nacl.signing.SigningKey(key)
         return self._signingkey
 
     @property
@@ -334,13 +337,14 @@ class NACL(j.application.JSBaseClass):
         return unseal_box.decrypt(data)
 
 
+
     def sign(self, data):
         """
         sign using your private key using Ed25519 algorithm
         the result will be 64 bytes
         """
-        res = self.signingkey.sign(data)
-        return res[:-len(data)]
+        signed = self.signingkey.sign(data)
+        return signed.signature
 
     def verify(self, data, signature, pubkey=""):
         """ data is the original data we have to verify with signature

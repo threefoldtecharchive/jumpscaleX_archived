@@ -676,6 +676,7 @@ class Tools:
             if f:
                 print("\n*** file: %s"%f.filename)
                 print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
+
             Tools._shell = InteractiveShellEmbed(banner1= "", exit_msg="")
         return Tools._shell(stack_depth=2)
 
@@ -787,7 +788,6 @@ class Tools:
         class format_dict(dict):
             def __missing__(self, key):
                 return '{%s}' % key
-
 
         if args is None:
             args={}
