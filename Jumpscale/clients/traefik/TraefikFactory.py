@@ -40,7 +40,18 @@ class TraefikFactory(JSConfigBaseFactory):
         j.clients.etcd.get(name=kwargs['etcd_instance'], host=host, port=port, user=user, password_=password)
         return JSConfigBaseFactory.get(self, name=name, id=id, die=die, create_new=create_new, childclass_name=childclass_name,**kwargs)
 
-    def test(self):
+    def test(self,build=False):
+
+        if build:
+
+            #check is ubuntu 1804
+            #build etcd
+            #start etcd
+
+            raise RuntimeError("not implemented")
+
+        #make client connection to it
+
         cl = self.get(name="traefik_test",etcd_name="traefik_test_etcd", user="root", password="v16ffehxnq")
 
         # create a proxy object. A proxy has a name and is combination of frontends and backends

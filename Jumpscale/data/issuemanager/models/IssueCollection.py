@@ -123,7 +123,7 @@ class IssueCollection(ModelBaseCollection):
                 if isinstance(val, list):  # get range in list
                     clauses.append(field.between(val[0], val[1]))
                 elif isinstance(field, peewee.BooleanField) or isinstance(val, bool):
-                    if j.data.types.bool.fromString(val):
+                    if j.data.types.bool.clean(val):
                         clauses.append(field)
                     else:
                         clauses.append(~field)

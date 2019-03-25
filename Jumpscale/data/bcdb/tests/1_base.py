@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.bcdb.test(name="base")'
+    kosmos 'j.data.bcdb.test(name="base")'
 
     """
 
@@ -78,6 +78,7 @@ def main(self):
     model_obj.name = "name2"
 
     # because data did not change, was already that data
+
     assert model_obj._changed_items == {}
     model_obj.name = "name3"
     assert model_obj._changed_items == {

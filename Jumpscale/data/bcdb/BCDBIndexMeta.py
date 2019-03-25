@@ -11,7 +11,7 @@ class IndexField():
         self.jumpscaletype = property.jumpscaletype
         if self.jumpscaletype.NAME == "string":
             self.type = "TextField"
-        elif self.jumpscaletype.NAME in ["integer",'date']:
+        elif self.jumpscaletype.NAME in ["int",'date']:
             self.type = "IntegerField"
         elif self.jumpscaletype.NAME in ["boolean"]:
             self.type = "BooleanField"

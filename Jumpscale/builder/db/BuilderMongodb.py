@@ -26,7 +26,7 @@ class BuilderMongodb(j.builder.system._BaseClass):
             url = 'https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-3.4.0.tgz'
             dest = "{DIR_TEMP}/mongodb-linux-x86_64-ubuntu1604-3.4.0/bin/"
         elif j.builder.tools.isArch:
-            j.builder.tools.package_install("mongodb")
+            j.builder.system.package.ensure("mongodb")
         elif j.core.platformtype.myplatform.isMac:
             url = 'https://fastdl.mongodb.org/osx/mongodb-osx-ssl-x86_64-3.4.0.tgz'
             dest = "{DIR_TEMP}/mongodb-osx-x86_64-3.4.0/bin/"

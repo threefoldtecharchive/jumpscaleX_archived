@@ -1,7 +1,6 @@
 import sys
-# import JSExceptions
-import Jumpscale.core.errorhandler.JSExceptions as JSExceptions
-# import inspect
+
+from Jumpscale.core.errorhandler.JSExceptions import JSExceptions
 
 try:
     import colored_traceback
@@ -17,6 +16,7 @@ except BaseException:
     pygmentsObj = False
 
 import traceback
+import pudb
 
 class ErrorHandler():
 
@@ -25,8 +25,8 @@ class ErrorHandler():
         # JSBASE.__init__(self)
         self._j = j
         self.setExceptHook()
-        self.exceptions = JSExceptions
-        self._j.exceptions = JSExceptions
+        self.exceptions = JSExceptions()
+        self._j.exceptions = self.exceptions
         self.redis = False
         self.exit_on_error = True
 
@@ -54,7 +54,7 @@ class ErrorHandler():
             self._j.tools.alerthandler.log(err, tb_text=tb_text)
         return err
 
-    def excepthook(self, ttype, err, tb, die=False):
+    def excepthook(self, ttype, err, tb, die=True):
         """ every fatal error in jumpscale or by python itself will result in an exception
         in this function the exception is caught.
         @ttype : is the description of the error
@@ -64,28 +64,38 @@ class ErrorHandler():
         # print ("jumpscale EXCEPTIONHOOK")
         if self.inException:
             print("**ERROR IN EXCEPTION HANDLING ROUTINES, which causes recursive errorhandling behavior.**")
-            print(exceptionObject)
+            print(err)
             sys.exit(1)
             return
 
-        print(err)
-        tb_text=""
-        if "trace_do" in err.__dict__:
-            if err.trace_do:
-                err._trace = self._trace_get(ttype, err, tb)
-                # err.trace_print()
-                print(err)
-                tb_text = err._trace
-        else:
-            tb_text = self._trace_get(ttype, err, tb)
-            self._trace_print(tb_text)
-
-        self.inException = True
-        self._error_process(err, tb_text=tb_text)
-        self.inException = False
-
+        self._j.core.tools.log(msg=err,tb=tb,level=40)
         if die:
+            if self._j.core.myenv.debug:
+                pudb.post_mortem(tb)
+            self._j.core.tools.pprint("{RED}CANNOT CONTINUE{RESET}")
             sys.exit(1)
+        else:
+            print("WARNING IGNORE EXCEPTIONHOOK, NEED TO IMPLEMENT: #TODO:")
+        #
+        #
+        # print(err)
+        # tb_text=""
+        # if "trace_do" in err.__dict__:
+        #     if err.trace_do:
+        #         err._trace = self._trace_get(ttype, err, tb)
+        #         # err.trace_print()
+        #         print(err)
+        #         tb_text = err._trace
+        # else:
+        #     tb_text = self._trace_get(ttype, err, tb)
+        #     self._trace_print(tb_text)
+        #
+        # self.inException = True
+        # self._error_process(err, tb_text=tb_text)
+        # self.inException = False
+        #
+        # if die:
+        #     sys.exit(1)
 
     def _filterLocals(self, k, v):
         try:
@@ -141,8 +151,6 @@ class ErrorHandler():
 
     def bug_escalate_developer(self, errorConditionObject, tb=None):
 
-        self._j.logger.enabled = False  # no need to further log, there is error
-
         tracefile = ""
 
         def findEditorLinux():
@@ -194,7 +202,6 @@ class ErrorHandler():
                         result, out, err = self._j.sal.process.execute(
                             cmd, die=False, showout=False)
 
-                self._j.logger.clear()
                 if res == "c":
                     return
                 elif res == "d":
@@ -209,7 +216,6 @@ class ErrorHandler():
                 # print errorConditionObject
                 res = self._j.tools.console.askString(
                     "\nAn error has occurred. Do you want do you want to do? (s=stop, c=continue, d=debug)")
-                self._j.logger.clear()
                 if res == "c":
                     return
                 elif res == "d":

@@ -81,7 +81,7 @@ class SystemProcess(j.application.JSBaseClass):
         :return: (rc,out,err)
         """
         if args!={} and args is not None:
-            j.core.tools.text_replace(command,args=args)
+            command = j.core.tools.text_replace(command,args=args)
         return j.core.tools.execute(command=command, showout=showout, useShell=useShell, cwd=cwd,
                                           timeout=timeout,die=die, async_=async_,
                                           env=env,interactive=interactive,replace=replace)
@@ -398,7 +398,7 @@ class SystemProcess(j.application.JSBaseClass):
         @param sig: signal. If no signal is specified signal.SIGKILL is used
         """
         pid=int(pid)
-        j.sal.process._log_debug('Killing process %d' % pid)
+        self._log_debug('Killing process %d' % pid)
         if self.isUnix:
             try:
                 if sig is None:

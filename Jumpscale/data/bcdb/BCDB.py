@@ -29,8 +29,7 @@ class BCDB(j.application.JSBaseClass):
 
         if zdbclient is not None:
             if not isinstance(zdbclient, ZDBClientBase):
-                raise RuntimeError(
-                    "zdbclient needs to be type: clients.zdb.ZDBClientBase")
+                raise RuntimeError("zdbclient needs to be type: clients.zdb.ZDBClientBase")
 
         self.name = name
         self._sqlclient = None
@@ -85,6 +84,7 @@ class BCDB(j.application.JSBaseClass):
         self.results = {}
         self.results_id = 0
 
+
         # need to do this to make sure we load the classes from scratch
         for item in ["ACL", "USER", "GROUP"]:
             key = "Jumpscale.data.bcdb.models_system.%s" % item
@@ -99,8 +99,7 @@ class BCDB(j.application.JSBaseClass):
         self.user = self.model_add(USER())
         self.group = self.model_add(GROUP())
 
-        #
-        # self._log_info("BCDB INIT DONE:%s" % self.name)
+        self._log_info("BCDB INIT DONE:%s" % self.name)
 
     def redis_server_start(self, port=6380, secret="123456"):
 
@@ -250,7 +249,7 @@ class BCDB(j.application.JSBaseClass):
         :return:
         """
 
-        if j.data.types.str.check(schema):
+        if j.data.types.string.check(schema):
             schema_text = schema
             schema = j.data.schema.get(schema_text)
             self._log_debug(
@@ -291,7 +290,7 @@ class BCDB(j.application.JSBaseClass):
             dir_path = j.sal.fs.getDirName(path_parent)
             dest = "%s/%s_index.py" % (dir_path, name)
 
-        if j.data.types.str.check(schema):
+        if j.data.types.string.check(schema):
             schema = j.data.schema.get(schema)
 
         elif not isinstance(schema, j.data.schema.SCHEMA_CLASS):
@@ -399,7 +398,7 @@ class BCDB(j.application.JSBaseClass):
             obj = model.schema.get(capnpbin=bdata)
             obj.id = id
             obj.acl_id = acl_id
-            obj.model = model
+            obj._model = model
             if model.readonly:
                 obj.readonly = True  # means we fetched from DB, we need to make sure cannot be changed
             return obj

@@ -16,7 +16,7 @@ def main(self):
     name = "" 
     an_id = 0
     """
-    return #TODO:*1
+
 
     def do(bcdb):
 
@@ -93,7 +93,11 @@ def main(self):
     zdbclient = zdbclient_admin.namespace_new("test", secret="1234")
     zdbclient.flush()  # empty
     bcdb = j.data.bcdb.new(name="test", zdbclient=zdbclient, reset=True)
-    j.shell()
+
+    return
+
+    #TODO:#1
+
     do(bcdb)
     bcdb.reset()
 

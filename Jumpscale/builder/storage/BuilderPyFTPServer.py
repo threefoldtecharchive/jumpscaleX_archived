@@ -58,7 +58,7 @@ class BuilderPyFTPServer(j.builder.system._BaseClass):
         see install docstring for config example
         """
         if j.builder.platformtype.isLinux:
-            j.builder.system.package.ensure('btrfs-tools')
+           j.builder.system.package.ensure('btrfs-tools')
         elif j.builder.platformtype.isOSX():
             # TODO install btrfs for mac
             pass

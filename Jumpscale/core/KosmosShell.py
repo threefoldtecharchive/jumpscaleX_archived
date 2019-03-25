@@ -15,6 +15,9 @@ from ptpython.utils import get_jedi_script_from_document
 from pygments.lexers import PythonLexer
 
 
+HIDDEN_PREFIXES = ('_', '__')
+
+
 class KosmosShellConfig():
 
     pass
@@ -98,6 +101,29 @@ def sort_members_key(name):
         return 0
 
 
+def filter_completions_on_prefix(completions, prefix=''):
+    for completion in completions:
+        text = completion.text
+        if prefix not in HIDDEN_PREFIXES and text.startswith(HIDDEN_PREFIXES):
+            continue
+        yield completion
+
+
+def get_current_line(document):
+    tbc = document.current_line_before_cursor
+    if tbc:
+        line = tbc.split('.')
+        parent, member = '.'.join(line[:-1]), line[-1]
+        if member.startswith('__'):  # then we want to show private methods
+            prefix = '__'
+        elif member.startswith('_'):  # then we want to show private methods
+            prefix = '_'
+        else:
+            prefix = ''
+        return parent, member, prefix
+    raise ValueError('nothing is written')
+
+
 def get_completions(self, document, complete_event):
     """
     get completions for j objects (using _method_) and others (using dir)
@@ -115,28 +141,22 @@ def get_completions(self, document, complete_event):
                     display=name, style='bg:%s fg:ansiblack' % color,
                     selected_style='bg:ansidarkgray')
 
-    tbc = document.current_line_before_cursor
-    if tbc:
-        line = tbc.split('.')
-        parent, member = '.'.join(line[:-1]), line[-1]
-        if member.startswith('__'):  # then we want to show private methods
-            prefix = '__'
-        elif member.startswith('_'):  # then we want to show private methods
-            prefix = '_'
-        else:
-            prefix = ''
+    try:
+        parent, member, prefix = get_current_line(document)
+    except ValueError:
+        return
 
-        obj = get_object(parent, self.get_locals(), self.get_globals())
-        if obj:
-            if hasattr(obj.__class__, '_methods_'):
-                yield from colored_completions(obj._properties_children(), 'ansigreen')
-                yield from colored_completions(obj._properties_model(), 'ansiyellow')
-                yield from colored_completions(obj._methods(prefix=prefix), 'ansiblue')
-                yield from colored_completions(obj._properties(prefix=prefix), 'ansigray')
-            else:
-                # try dir()
-                members = sorted(dir(obj), key=sort_members_key)
-                yield from colored_completions(members, 'ansigray')
+    obj = get_object(parent, self.get_locals(), self.get_globals())
+    if obj:
+        if hasattr(obj.__class__, '_methods_'):
+            yield from colored_completions(obj._properties_children(), 'ansigreen')
+            yield from colored_completions(obj._properties_model(), 'ansiyellow')
+            yield from colored_completions(obj._methods(prefix=prefix), 'ansiblue')
+            yield from colored_completions(obj._properties(prefix=prefix), 'ansigray')
+        else:
+            # try dir()
+            members = sorted(dir(obj), key=sort_members_key)
+            yield from colored_completions(members, 'ansigray')
 
 
 def get_doc_string(tbc):
@@ -335,13 +355,15 @@ def ptconfig(repl):
     old_get_completions = repl._completer.__class__.get_completions
 
     def custom_get_completions(self, document, complete_event):
+        try:
+            _, _, prefix = get_current_line(document)
+        except ValueError:
+            return
+
         completions = list(old_get_completions(self, document, complete_event))
         if not completions:
-            js_completions = get_completions(self, document, complete_event)
-            if js_completions:
-                yield from js_completions
-        else:
-            yield from iter(completions)
+            completions = get_completions(self, document, complete_event)
+        yield from filter_completions_on_prefix(completions, prefix)
 
     repl._completer.__class__.get_completions = custom_get_completions
 

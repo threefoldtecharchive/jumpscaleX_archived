@@ -16,9 +16,6 @@ class JSGroup():
 class group_clients(JSGroup):
     def __init__(self):
         
-        self._gedis = None
-        self._multicast = None
-        self._gedis_backend = None
         self._syncthing = None
         self._postgres = None
         self._s3 = None
@@ -79,26 +76,11 @@ class group_clients(JSGroup):
         self._git = None
         self._traefik = None
         self._packetnet = None
+        self._gedis = None
+        self._multicast = None
+        self._gedis_backend = None
 
     
-    @property
-    def gedis(self):
-        if self._gedis is None:
-            from DigitalMe.clients.gedis.GedisClientFactory import GedisClientFactory
-            self._gedis =  GedisClientFactory()
-        return self._gedis
-    @property
-    def multicast(self):
-        if self._multicast is None:
-            from DigitalMe.clients.multicast.MulticastFactory import MulticastFactory
-            self._multicast =  MulticastFactory()
-        return self._multicast
-    @property
-    def gedis_backend(self):
-        if self._gedis_backend is None:
-            from DigitalMe.clients.gedis_backends.GedisBackendClientFactory import GedisBackendClientFactory
-            self._gedis_backend =  GedisBackendClientFactory()
-        return self._gedis_backend
     @property
     def syncthing(self):
         if self._syncthing is None:
@@ -459,654 +441,27 @@ class group_clients(JSGroup):
             from Jumpscale.clients.packetnet.PacketNetFactory import PacketNetFactory
             self._packetnet =  PacketNetFactory()
         return self._packetnet
-
-j.clients = group_clients()
-j.core._groups["clients"] = j.clients
-
-
-class group_world(JSGroup):
-    def __init__(self):
-        
-        self._system = None
-        self._hypervisor = None
-
-    
-    @property
-    def system(self):
-        if self._system is None:
-            from DigitalMe.tools.kosmos.WorldSystem import WorldSystem
-            self._system =  WorldSystem()
-        return self._system
-    @property
-    def hypervisor(self):
-        if self._hypervisor is None:
-            from DigitalMe.tools.kosmos.world_example.HyperVisorCoordinator.CoordinatorHypervisor import CoordinatorHypervisor
-            self._hypervisor =  CoordinatorHypervisor()
-        return self._hypervisor
-
-j.world = group_world()
-j.core._groups["world"] = j.world
-
-
-class group_tools(JSGroup):
-    def __init__(self):
-        
-        self._kosmos = None
-        self._tfbot = None
-        self._sandboxer = None
-        self._fixer = None
-        self._logger = None
-        self._legal_contracts = None
-        self._imagelib = None
-        self._markdowndocs = None
-        self._googleslides = None
-        self._jinja2 = None
-        self._performancetrace = None
-        self._code = None
-        self._codeloader = None
-        self._offliner = None
-        self._rexplorer = None
-        self._path = None
-        self._aggregator = None
-        self._realityprocess = None
-        self._timer = None
-        self._cython = None
-        self._formatters = None
-        self._capacity = None
-        self._team_manager = None
-        self._memusagetest = None
-        self._objectinspector = None
-        self._dnstools = None
-        self._tmux = None
-        self._dash = None
-        self._executor = None
-        self._executorLocal = None
-        self._storybot = None
-        self._syncer = None
-        self._code = None
-        self._reportlab = None
-        self._notapplicableyet = None
-        self._typechecker = None
-        self._console = None
-        self._expect = None
-        self._bash = None
-        self._flist = None
-        self._tarfile = None
-        self._zipfile = None
-        self._numtools = None
-        self._issuemanager = None
-        self._email = None
-
-    
-    @property
-    def kosmos(self):
-        if self._kosmos is None:
-            from DigitalMe.tools.kosmos.kosmos_OLD.Kosmos import Kosmos
-            self._kosmos =  Kosmos()
-        return self._kosmos
-    @property
-    def tfbot(self):
-        if self._tfbot is None:
-            from DigitalMe.tools.tfbot.TFBotFactory import TFBotFactory
-            self._tfbot =  TFBotFactory()
-        return self._tfbot
-    @property
-    def sandboxer(self):
-        if self._sandboxer is None:
-            from Jumpscale.tools.sandboxer.Sandboxer import Sandboxer
-            self._sandboxer =  Sandboxer()
-        return self._sandboxer
-    @property
-    def fixer(self):
-        if self._fixer is None:
-            from Jumpscale.tools.fixer.Fixer import Fixer
-            self._fixer =  Fixer()
-        return self._fixer
-    @property
-    def logger(self):
-        if self._logger is None:
-            from Jumpscale.tools.logger.LoggerFactory import LoggerFactory
-            self._logger =  LoggerFactory()
-        return self._logger
-    @property
-    def legal_contracts(self):
-        if self._legal_contracts is None:
-            from Jumpscale.tools.legal_contracts.LegalContractsFactory import LegalContractsFactory
-            self._legal_contracts =  LegalContractsFactory()
-        return self._legal_contracts
-    @property
-    def imagelib(self):
-        if self._imagelib is None:
-            from Jumpscale.tools.imagelib.ImageLib import ImageLib
-            self._imagelib =  ImageLib()
-        return self._imagelib
-    @property
-    def markdowndocs(self):
-        if self._markdowndocs is None:
-            from Jumpscale.tools.markdowndocs.MarkDownDocs import MarkDownDocs
-            self._markdowndocs =  MarkDownDocs()
-        return self._markdowndocs
-    @property
-    def googleslides(self):
-        if self._googleslides is None:
-            from Jumpscale.tools.googleslides.GoogleSlides import GoogleSlides
-            self._googleslides =  GoogleSlides()
-        return self._googleslides
-    @property
-    def jinja2(self):
-        if self._jinja2 is None:
-            from Jumpscale.tools.jinja2.Jinja2 import Jinja2
-            self._jinja2 =  Jinja2()
-        return self._jinja2
-    @property
-    def performancetrace(self):
-        if self._performancetrace is None:
-            from Jumpscale.tools.performancetrace.PerformanceTrace import PerformanceTraceFactory
-            self._performancetrace =  PerformanceTraceFactory()
-        return self._performancetrace
-    @property
-    def code(self):
-        if self._code is None:
-            from Jumpscale.tools.codeloader.CodeTools import CodeTools
-            self._code =  CodeTools()
-        return self._code
-    @property
-    def codeloader(self):
-        if self._codeloader is None:
-            from Jumpscale.tools.codeloader.CodeLoader import CodeLoader
-            self._codeloader =  CodeLoader()
-        return self._codeloader
-    @property
-    def offliner(self):
-        if self._offliner is None:
-            from Jumpscale.tools.offliner.Offliner import Offliner
-            self._offliner =  Offliner()
-        return self._offliner
-    @property
-    def rexplorer(self):
-        if self._rexplorer is None:
-            from Jumpscale.tools.offliner.Rexplorer import Rexplorer
-            self._rexplorer =  Rexplorer()
-        return self._rexplorer
-    @property
-    def path(self):
-        if self._path is None:
-            from Jumpscale.tools.path.PathFactory import PathFactory
-            self._path =  PathFactory()
-        return self._path
-    @property
-    def aggregator(self):
-        if self._aggregator is None:
-            from Jumpscale.tools.aggregator.Aggregator import Aggregator
-            self._aggregator =  Aggregator()
-        return self._aggregator
-    @property
-    def realityprocess(self):
-        if self._realityprocess is None:
-            from Jumpscale.tools.aggregator.RealityProcess import RealitProcess
-            self._realityprocess =  RealitProcess()
-        return self._realityprocess
-    @property
-    def timer(self):
-        if self._timer is None:
-            from Jumpscale.tools.timer.Timer import TIMER
-            self._timer =  TIMER()
-        return self._timer
-    @property
-    def cython(self):
-        if self._cython is None:
-            from Jumpscale.tools.cython.CythonFactory import CythonFactory
-            self._cython =  CythonFactory()
-        return self._cython
-    @property
-    def formatters(self):
-        if self._formatters is None:
-            from Jumpscale.tools.formatters.FormattersFactory import FormattersFactory
-            self._formatters =  FormattersFactory()
-        return self._formatters
-    @property
-    def capacity(self):
-        if self._capacity is None:
-            from Jumpscale.tools.capacity.Factory import Factory
-            self._capacity =  Factory()
-        return self._capacity
-    @property
-    def team_manager(self):
-        if self._team_manager is None:
-            from Jumpscale.tools.teammgr.Teammgr import Teammgr
-            self._team_manager =  Teammgr()
-        return self._team_manager
-    @property
-    def memusagetest(self):
-        if self._memusagetest is None:
-            from Jumpscale.tools.memusagetest.MemUsageTest import MemUsageTest
-            self._memusagetest =  MemUsageTest()
-        return self._memusagetest
-    @property
-    def objectinspector(self):
-        if self._objectinspector is None:
-            from Jumpscale.tools.objectinspector.ObjectInspector import ObjectInspector
-            self._objectinspector =  ObjectInspector()
-        return self._objectinspector
-    @property
-    def dnstools(self):
-        if self._dnstools is None:
-            from Jumpscale.tools.dnstools.DNSTools import DNSTools
-            self._dnstools =  DNSTools()
-        return self._dnstools
-    @property
-    def tmux(self):
-        if self._tmux is None:
-            from Jumpscale.tools.tmux.Tmux import Tmux
-            self._tmux =  Tmux()
-        return self._tmux
-    @property
-    def dash(self):
-        if self._dash is None:
-            from Jumpscale.tools.dash.DASH import DASH
-            self._dash =  DASH()
-        return self._dash
-    @property
-    def executor(self):
-        if self._executor is None:
-            from Jumpscale.tools.executor.ExecutorFactory import ExecutorFactory
-            self._executor =  ExecutorFactory()
-        return self._executor
-    @property
-    def executorLocal(self):
-        if self._executorLocal is None:
-            from Jumpscale.tools.executor.ExecutorLocal import ExecutorLocal
-            self._executorLocal =  ExecutorLocal()
-        return self._executorLocal
-    @property
-    def storybot(self):
-        if self._storybot is None:
-            from Jumpscale.tools.storybot.StoryBotFactory import StoryBotFactory
-            self._storybot =  StoryBotFactory()
-        return self._storybot
-    @property
-    def syncer(self):
-        if self._syncer is None:
-            from Jumpscale.tools.syncer.SyncerFactory import SyncerFactory
-            self._syncer =  SyncerFactory()
-        return self._syncer
-    @property
-    def code(self):
-        if self._code is None:
-            from Jumpscale.tools.codetools.CodeTools import CodeTools
-            self._code =  CodeTools()
-        return self._code
-    @property
-    def reportlab(self):
-        if self._reportlab is None:
-            from Jumpscale.tools.reportlab.ReportlabFactory import ReportlabFactory
-            self._reportlab =  ReportlabFactory()
-        return self._reportlab
-    @property
-    def notapplicableyet(self):
-        if self._notapplicableyet is None:
-            from Jumpscale.tools.builder.Builder import Builder
-            self._notapplicableyet =  Builder()
-        return self._notapplicableyet
-    @property
-    def typechecker(self):
-        if self._typechecker is None:
-            from Jumpscale.tools.typechecker.TypeChecker import TypeCheckerFactory
-            self._typechecker =  TypeCheckerFactory()
-        return self._typechecker
-    @property
-    def console(self):
-        if self._console is None:
-            from Jumpscale.tools.console.Console import Console
-            self._console =  Console()
-        return self._console
-    @property
-    def expect(self):
-        if self._expect is None:
-            from Jumpscale.tools.expect.Expect import ExpectTool
-            self._expect =  ExpectTool()
-        return self._expect
-    @property
-    def bash(self):
-        if self._bash is None:
-            from Jumpscale.sal.bash.BashFactory import BashFactory
-            self._bash =  BashFactory()
-        return self._bash
-    @property
-    def flist(self):
-        if self._flist is None:
-            from Jumpscale.data.flist.FListFactory import FListFactory
-            self._flist =  FListFactory()
-        return self._flist
-    @property
-    def tarfile(self):
-        if self._tarfile is None:
-            from Jumpscale.data.tarfile.TarFile import TarFileFactory
-            self._tarfile =  TarFileFactory()
-        return self._tarfile
-    @property
-    def zipfile(self):
-        if self._zipfile is None:
-            from Jumpscale.data.zip.ZipFile import ZipFileFactory
-            self._zipfile =  ZipFileFactory()
-        return self._zipfile
-    @property
-    def numtools(self):
-        if self._numtools is None:
-            from Jumpscale.data.numtools.NumTools import NumTools
-            self._numtools =  NumTools()
-        return self._numtools
-    @property
-    def issuemanager(self):
-        if self._issuemanager is None:
-            from Jumpscale.data.issuemanager.IssueManager import IssueManager
-            self._issuemanager =  IssueManager()
-        return self._issuemanager
-    @property
-    def email(self):
-        if self._email is None:
-            from Jumpscale.data.email.Email import EmailTool
-            self._email =  EmailTool()
-        return self._email
-
-j.tools = group_tools()
-j.core._groups["tools"] = j.tools
-
-
-class group_kosmos(JSGroup):
-    def __init__(self):
-        
-        self._zos = None
-
-    
-    @property
-    def zos(self):
-        if self._zos is None:
-            from DigitalMe.kosmos.zos.ZOSFactory import ZOSCmdFactory
-            self._zos =  ZOSCmdFactory()
-        return self._zos
-
-j.kosmos = group_kosmos()
-j.core._groups["kosmos"] = j.kosmos
-
-
-class group_data(JSGroup):
-    def __init__(self):
-        
-        self._nltk = None
-        self._encryption = None
-        self._cachelru = None
-        self._inifile = None
-        self._types = None
-        self._randomnames = None
-        self._worksheets = None
-        self._treemanager = None
-        self._hash = None
-        self._indexfile = None
-        self._markdown = None
-        self._latex = None
-        self._capnp = None
-        self._html = None
-        self._docs = None
-        self._regex = None
-        self._time = None
-        self._timeinterval = None
-        self._schema = None
-        self._serializers = None
-        self._rivine = None
-        self._nacl = None
-        self._bcdb = None
-        self._dict_editor = None
-        self._idgenerator = None
-
-    
-    @property
-    def nltk(self):
-        if self._nltk is None:
-            from DigitalMe.data.nltk.NLTK import NLTKFactory
-            self._nltk =  NLTKFactory()
-        return self._nltk
-    @property
-    def encryption(self):
-        if self._encryption is None:
-            from Jumpscale.data.encryption.EncryptionFactory import EncryptionFactory
-            self._encryption =  EncryptionFactory()
-        return self._encryption
-    @property
-    def cachelru(self):
-        if self._cachelru is None:
-            from Jumpscale.data.cachelru.LRUCacheFactory import LRUCacheFactory
-            self._cachelru =  LRUCacheFactory()
-        return self._cachelru
-    @property
-    def inifile(self):
-        if self._inifile is None:
-            from Jumpscale.data.inifile.IniFile import InifileTool
-            self._inifile =  InifileTool()
-        return self._inifile
-    @property
-    def types(self):
-        if self._types is None:
-            from Jumpscale.data.types.Types import Types
-            self._types =  Types()
-        return self._types
-    @property
-    def randomnames(self):
-        if self._randomnames is None:
-            from Jumpscale.data.random_names.RandomNames import RandomNames
-            self._randomnames =  RandomNames()
-        return self._randomnames
-    @property
-    def worksheets(self):
-        if self._worksheets is None:
-            from Jumpscale.data.worksheets.Sheets import Sheets
-            self._worksheets =  Sheets()
-        return self._worksheets
-    @property
-    def treemanager(self):
-        if self._treemanager is None:
-            from Jumpscale.data.treemanager.Treemanager import TreemanagerFactory
-            self._treemanager =  TreemanagerFactory()
-        return self._treemanager
-    @property
-    def hash(self):
-        if self._hash is None:
-            from Jumpscale.data.hash.HashTool import HashTool
-            self._hash =  HashTool()
-        return self._hash
-    @property
-    def indexfile(self):
-        if self._indexfile is None:
-            from Jumpscale.data.indexFile.IndexFiles import IndexDB
-            self._indexfile =  IndexDB()
-        return self._indexfile
-    @property
-    def markdown(self):
-        if self._markdown is None:
-            from Jumpscale.data.markdown.MarkdownFactory import MarkdownFactory
-            self._markdown =  MarkdownFactory()
-        return self._markdown
-    @property
-    def latex(self):
-        if self._latex is None:
-            from Jumpscale.data.latex.Latex import Latex
-            self._latex =  Latex()
-        return self._latex
-    @property
-    def capnp(self):
-        if self._capnp is None:
-            from Jumpscale.data.capnp.Capnp import Capnp
-            self._capnp =  Capnp()
-        return self._capnp
-    @property
-    def html(self):
-        if self._html is None:
-            from Jumpscale.data.html.HTMLFactory import HTMLFactory
-            self._html =  HTMLFactory()
-        return self._html
-    @property
-    def docs(self):
-        if self._docs is None:
-            from Jumpscale.data.docs.DocsFactory import DocsFactory
-            self._docs =  DocsFactory()
-        return self._docs
-    @property
-    def regex(self):
-        if self._regex is None:
-            from Jumpscale.data.regex.RegexTools import RegexTools
-            self._regex =  RegexTools()
-        return self._regex
-    @property
-    def time(self):
-        if self._time is None:
-            from Jumpscale.data.time.Time import Time_
-            self._time =  Time_()
-        return self._time
-    @property
-    def timeinterval(self):
-        if self._timeinterval is None:
-            from Jumpscale.data.time.TimeInterval import TimeInterval
-            self._timeinterval =  TimeInterval()
-        return self._timeinterval
-    @property
-    def schema(self):
-        if self._schema is None:
-            from Jumpscale.data.schema.SchemaFactory import SchemaFactory
-            self._schema =  SchemaFactory()
-        return self._schema
-    @property
-    def serializers(self):
-        if self._serializers is None:
-            from Jumpscale.data.serializers.SerializersFactory import SerializersFactory
-            self._serializers =  SerializersFactory()
-        return self._serializers
-    @property
-    def rivine(self):
-        if self._rivine is None:
-            from Jumpscale.data.rivine.RivineDataFactory import RivineDataFactory
-            self._rivine =  RivineDataFactory()
-        return self._rivine
-    @property
-    def nacl(self):
-        if self._nacl is None:
-            from Jumpscale.data.nacl.NACLFactory import NACLFactory
-            self._nacl =  NACLFactory()
-        return self._nacl
-    @property
-    def bcdb(self):
-        if self._bcdb is None:
-            from Jumpscale.data.bcdb.BCDBFactory import BCDBFactory
-            self._bcdb =  BCDBFactory()
-        return self._bcdb
-    @property
-    def dict_editor(self):
-        if self._dict_editor is None:
-            from Jumpscale.data.dicteditor.DictEditor import DictEditorFactory
-            self._dict_editor =  DictEditorFactory()
-        return self._dict_editor
-    @property
-    def idgenerator(self):
-        if self._idgenerator is None:
-            from Jumpscale.data.idgenerator.IDGenerator import IDGenerator
-            self._idgenerator =  IDGenerator()
-        return self._idgenerator
-
-j.data = group_data()
-j.core._groups["data"] = j.data
-
-
-class group_servers(JSGroup):
-    def __init__(self):
-        
-        self._gedis = None
-        self._digitalme = None
-        self._myjobs = None
-        self._raftserver = None
-        self._dns = None
-        self._errbot = None
-        self._openresty = None
-        self._web = None
-        self._etcd = None
-        self._capacity = None
-        self._zdb = None
-        self._jsrun = None
-
-    
     @property
     def gedis(self):
         if self._gedis is None:
-            from DigitalMe.servers.gedis.GedisFactory import GedisFactory
-            self._gedis =  GedisFactory()
+            from DigitalMe.clients.gedis.GedisClientFactory import GedisClientFactory
+            self._gedis =  GedisClientFactory()
         return self._gedis
     @property
-    def digitalme(self):
-        if self._digitalme is None:
-            from DigitalMe.servers.digitalme.DigitalMe import DigitalMe
-            self._digitalme =  DigitalMe()
-        return self._digitalme
+    def multicast(self):
+        if self._multicast is None:
+            from DigitalMe.clients.multicast.MulticastFactory import MulticastFactory
+            self._multicast =  MulticastFactory()
+        return self._multicast
     @property
-    def myjobs(self):
-        if self._myjobs is None:
-            from DigitalMe.servers.myjobs.MyJobs import MyJobs
-            self._myjobs =  MyJobs()
-        return self._myjobs
-    @property
-    def raftserver(self):
-        if self._raftserver is None:
-            from DigitalMe.servers.raft.RaftServerFactory import RaftServerFactory
-            self._raftserver =  RaftServerFactory()
-        return self._raftserver
-    @property
-    def dns(self):
-        if self._dns is None:
-            from DigitalMe.servers.dns.DNSServerFactory import DNSServerFactory
-            self._dns =  DNSServerFactory()
-        return self._dns
-    @property
-    def errbot(self):
-        if self._errbot is None:
-            from Jumpscale.servers.errbot.ErrBotFactory import ErrBotFactory
-            self._errbot =  ErrBotFactory()
-        return self._errbot
-    @property
-    def openresty(self):
-        if self._openresty is None:
-            from Jumpscale.servers.openresty.OpenRestyFactory import OpenRestyFactory
-            self._openresty =  OpenRestyFactory()
-        return self._openresty
-    @property
-    def web(self):
-        if self._web is None:
-            from Jumpscale.servers.webserver.JSWebServers import JSWebServers
-            self._web =  JSWebServers()
-        return self._web
-    @property
-    def etcd(self):
-        if self._etcd is None:
-            from Jumpscale.servers.etcd.EtcdServer import EtcdServer
-            self._etcd =  EtcdServer()
-        return self._etcd
-    @property
-    def capacity(self):
-        if self._capacity is None:
-            from Jumpscale.servers.grid_capacity.CapacityFactory import CapacityFactory
-            self._capacity =  CapacityFactory()
-        return self._capacity
-    @property
-    def zdb(self):
-        if self._zdb is None:
-            from Jumpscale.servers.zdb.ZDBServer import ZDBServer
-            self._zdb =  ZDBServer()
-        return self._zdb
-    @property
-    def jsrun(self):
-        if self._jsrun is None:
-            from Jumpscale.servers.jsrun.JSRun import JSRun
-            self._jsrun =  JSRun()
-        return self._jsrun
+    def gedis_backend(self):
+        if self._gedis_backend is None:
+            from DigitalMe.clients.gedis_backends.GedisBackendClientFactory import GedisBackendClientFactory
+            self._gedis_backend =  GedisBackendClientFactory()
+        return self._gedis_backend
 
-j.servers = group_servers()
-j.core._groups["servers"] = j.servers
+j.clients = group_clients()
+j.core._groups["clients"] = j.clients
 
 
 class group_sal(JSGroup):
@@ -1308,6 +663,338 @@ j.sal = group_sal()
 j.core._groups["sal"] = j.sal
 
 
+class group_tools(JSGroup):
+    def __init__(self):
+        
+        self._sandboxer = None
+        self._fixer = None
+        self._logger = None
+        self._legal_contracts = None
+        self._imagelib = None
+        self._markdowndocs = None
+        self._googleslides = None
+        self._jinja2 = None
+        self._performancetrace = None
+        self._code = None
+        self._codeloader = None
+        self._offliner = None
+        self._rexplorer = None
+        self._path = None
+        self._aggregator = None
+        self._realityprocess = None
+        self._timer = None
+        self._cython = None
+        self._formatters = None
+        self._startupcmd = None
+        self._capacity = None
+        self._team_manager = None
+        self._memusagetest = None
+        self._objectinspector = None
+        self._dnstools = None
+        self._tmux = None
+        self._dash = None
+        self._executor = None
+        self._executorLocal = None
+        self._storybot = None
+        self._syncer = None
+        self._code = None
+        self._reportlab = None
+        self._notapplicableyet = None
+        self._typechecker = None
+        self._console = None
+        self._expect = None
+        self._bash = None
+        self._flist = None
+        self._tarfile = None
+        self._zipfile = None
+        self._numtools = None
+        self._issuemanager = None
+        self._email = None
+        self._kosmos = None
+        self._tfbot = None
+
+    
+    @property
+    def sandboxer(self):
+        if self._sandboxer is None:
+            from Jumpscale.tools.sandboxer.Sandboxer import Sandboxer
+            self._sandboxer =  Sandboxer()
+        return self._sandboxer
+    @property
+    def fixer(self):
+        if self._fixer is None:
+            from Jumpscale.tools.fixer.Fixer import Fixer
+            self._fixer =  Fixer()
+        return self._fixer
+    @property
+    def logger(self):
+        if self._logger is None:
+            from Jumpscale.tools.logger.LoggerFactory import LoggerFactory
+            self._logger =  LoggerFactory()
+        return self._logger
+    @property
+    def legal_contracts(self):
+        if self._legal_contracts is None:
+            from Jumpscale.tools.legal_contracts.LegalContractsFactory import LegalContractsFactory
+            self._legal_contracts =  LegalContractsFactory()
+        return self._legal_contracts
+    @property
+    def imagelib(self):
+        if self._imagelib is None:
+            from Jumpscale.tools.imagelib.ImageLib import ImageLib
+            self._imagelib =  ImageLib()
+        return self._imagelib
+    @property
+    def markdowndocs(self):
+        if self._markdowndocs is None:
+            from Jumpscale.tools.markdowndocs.MarkDownDocs import MarkDownDocs
+            self._markdowndocs =  MarkDownDocs()
+        return self._markdowndocs
+    @property
+    def googleslides(self):
+        if self._googleslides is None:
+            from Jumpscale.tools.googleslides.GoogleSlides import GoogleSlides
+            self._googleslides =  GoogleSlides()
+        return self._googleslides
+    @property
+    def jinja2(self):
+        if self._jinja2 is None:
+            from Jumpscale.tools.jinja2.Jinja2 import Jinja2
+            self._jinja2 =  Jinja2()
+        return self._jinja2
+    @property
+    def performancetrace(self):
+        if self._performancetrace is None:
+            from Jumpscale.tools.performancetrace.PerformanceTrace import PerformanceTraceFactory
+            self._performancetrace =  PerformanceTraceFactory()
+        return self._performancetrace
+    @property
+    def code(self):
+        if self._code is None:
+            from Jumpscale.tools.codeloader.CodeTools import CodeTools
+            self._code =  CodeTools()
+        return self._code
+    @property
+    def codeloader(self):
+        if self._codeloader is None:
+            from Jumpscale.tools.codeloader.CodeLoader import CodeLoader
+            self._codeloader =  CodeLoader()
+        return self._codeloader
+    @property
+    def offliner(self):
+        if self._offliner is None:
+            from Jumpscale.tools.offliner.Offliner import Offliner
+            self._offliner =  Offliner()
+        return self._offliner
+    @property
+    def rexplorer(self):
+        if self._rexplorer is None:
+            from Jumpscale.tools.offliner.Rexplorer import Rexplorer
+            self._rexplorer =  Rexplorer()
+        return self._rexplorer
+    @property
+    def path(self):
+        if self._path is None:
+            from Jumpscale.tools.path.PathFactory import PathFactory
+            self._path =  PathFactory()
+        return self._path
+    @property
+    def aggregator(self):
+        if self._aggregator is None:
+            from Jumpscale.tools.aggregator.Aggregator import Aggregator
+            self._aggregator =  Aggregator()
+        return self._aggregator
+    @property
+    def realityprocess(self):
+        if self._realityprocess is None:
+            from Jumpscale.tools.aggregator.RealityProcess import RealitProcess
+            self._realityprocess =  RealitProcess()
+        return self._realityprocess
+    @property
+    def timer(self):
+        if self._timer is None:
+            from Jumpscale.tools.timer.Timer import TIMER
+            self._timer =  TIMER()
+        return self._timer
+    @property
+    def cython(self):
+        if self._cython is None:
+            from Jumpscale.tools.cython.CythonFactory import CythonFactory
+            self._cython =  CythonFactory()
+        return self._cython
+    @property
+    def formatters(self):
+        if self._formatters is None:
+            from Jumpscale.tools.formatters.FormattersFactory import FormattersFactory
+            self._formatters =  FormattersFactory()
+        return self._formatters
+    @property
+    def startupcmd(self):
+        if self._startupcmd is None:
+            from Jumpscale.tools.startupcmd.StartupCMDFactory import StartupCMDFactory
+            self._startupcmd =  StartupCMDFactory()
+        return self._startupcmd
+    @property
+    def capacity(self):
+        if self._capacity is None:
+            from Jumpscale.tools.capacity.Factory import Factory
+            self._capacity =  Factory()
+        return self._capacity
+    @property
+    def team_manager(self):
+        if self._team_manager is None:
+            from Jumpscale.tools.teammgr.Teammgr import Teammgr
+            self._team_manager =  Teammgr()
+        return self._team_manager
+    @property
+    def memusagetest(self):
+        if self._memusagetest is None:
+            from Jumpscale.tools.memusagetest.MemUsageTest import MemUsageTest
+            self._memusagetest =  MemUsageTest()
+        return self._memusagetest
+    @property
+    def objectinspector(self):
+        if self._objectinspector is None:
+            from Jumpscale.tools.objectinspector.ObjectInspector import ObjectInspector
+            self._objectinspector =  ObjectInspector()
+        return self._objectinspector
+    @property
+    def dnstools(self):
+        if self._dnstools is None:
+            from Jumpscale.tools.dnstools.DNSTools import DNSTools
+            self._dnstools =  DNSTools()
+        return self._dnstools
+    @property
+    def tmux(self):
+        if self._tmux is None:
+            from Jumpscale.tools.tmux.Tmux import Tmux
+            self._tmux =  Tmux()
+        return self._tmux
+    @property
+    def dash(self):
+        if self._dash is None:
+            from Jumpscale.tools.dash.DASH import DASH
+            self._dash =  DASH()
+        return self._dash
+    @property
+    def executor(self):
+        if self._executor is None:
+            from Jumpscale.tools.executor.ExecutorFactory import ExecutorFactory
+            self._executor =  ExecutorFactory()
+        return self._executor
+    @property
+    def executorLocal(self):
+        if self._executorLocal is None:
+            from Jumpscale.tools.executor.ExecutorLocal import ExecutorLocal
+            self._executorLocal =  ExecutorLocal()
+        return self._executorLocal
+    @property
+    def storybot(self):
+        if self._storybot is None:
+            from Jumpscale.tools.storybot.StoryBotFactory import StoryBotFactory
+            self._storybot =  StoryBotFactory()
+        return self._storybot
+    @property
+    def syncer(self):
+        if self._syncer is None:
+            from Jumpscale.tools.syncer.SyncerFactory import SyncerFactory
+            self._syncer =  SyncerFactory()
+        return self._syncer
+    @property
+    def code(self):
+        if self._code is None:
+            from Jumpscale.tools.codetools.CodeTools import CodeTools
+            self._code =  CodeTools()
+        return self._code
+    @property
+    def reportlab(self):
+        if self._reportlab is None:
+            from Jumpscale.tools.reportlab.ReportlabFactory import ReportlabFactory
+            self._reportlab =  ReportlabFactory()
+        return self._reportlab
+    @property
+    def notapplicableyet(self):
+        if self._notapplicableyet is None:
+            from Jumpscale.tools.builder.Builder import Builder
+            self._notapplicableyet =  Builder()
+        return self._notapplicableyet
+    @property
+    def typechecker(self):
+        if self._typechecker is None:
+            from Jumpscale.tools.typechecker.TypeChecker import TypeCheckerFactory
+            self._typechecker =  TypeCheckerFactory()
+        return self._typechecker
+    @property
+    def console(self):
+        if self._console is None:
+            from Jumpscale.tools.console.Console import Console
+            self._console =  Console()
+        return self._console
+    @property
+    def expect(self):
+        if self._expect is None:
+            from Jumpscale.tools.expect.Expect import ExpectTool
+            self._expect =  ExpectTool()
+        return self._expect
+    @property
+    def bash(self):
+        if self._bash is None:
+            from Jumpscale.sal.bash.BashFactory import BashFactory
+            self._bash =  BashFactory()
+        return self._bash
+    @property
+    def flist(self):
+        if self._flist is None:
+            from Jumpscale.data.flist.FListFactory import FListFactory
+            self._flist =  FListFactory()
+        return self._flist
+    @property
+    def tarfile(self):
+        if self._tarfile is None:
+            from Jumpscale.data.tarfile.TarFile import TarFileFactory
+            self._tarfile =  TarFileFactory()
+        return self._tarfile
+    @property
+    def zipfile(self):
+        if self._zipfile is None:
+            from Jumpscale.data.zip.ZipFile import ZipFileFactory
+            self._zipfile =  ZipFileFactory()
+        return self._zipfile
+    @property
+    def numtools(self):
+        if self._numtools is None:
+            from Jumpscale.data.numtools.NumTools import NumTools
+            self._numtools =  NumTools()
+        return self._numtools
+    @property
+    def issuemanager(self):
+        if self._issuemanager is None:
+            from Jumpscale.data.issuemanager.IssueManager import IssueManager
+            self._issuemanager =  IssueManager()
+        return self._issuemanager
+    @property
+    def email(self):
+        if self._email is None:
+            from Jumpscale.data.email.Email import EmailTool
+            self._email =  EmailTool()
+        return self._email
+    @property
+    def kosmos(self):
+        if self._kosmos is None:
+            from DigitalMe.tools.kosmos.kosmos_OLD.Kosmos import Kosmos
+            self._kosmos =  Kosmos()
+        return self._kosmos
+    @property
+    def tfbot(self):
+        if self._tfbot is None:
+            from DigitalMe.tools.tfbot.TFBotFactory import TFBotFactory
+            self._tfbot =  TFBotFactory()
+        return self._tfbot
+
+j.tools = group_tools()
+j.core._groups["tools"] = j.tools
+
+
 class group_tutorials(JSGroup):
     def __init__(self):
         
@@ -1323,6 +1010,191 @@ class group_tutorials(JSGroup):
 
 j.tutorials = group_tutorials()
 j.core._groups["tutorials"] = j.tutorials
+
+
+class group_data(JSGroup):
+    def __init__(self):
+        
+        self._encryption = None
+        self._cachelru = None
+        self._inifile = None
+        self._types = None
+        self._randomnames = None
+        self._worksheets = None
+        self._treemanager = None
+        self._hash = None
+        self._indexfile = None
+        self._markdown = None
+        self._latex = None
+        self._capnp = None
+        self._html = None
+        self._docs = None
+        self._regex = None
+        self._time = None
+        self._timeinterval = None
+        self._schema = None
+        self._serializers = None
+        self._rivine = None
+        self._nacl = None
+        self._bcdb = None
+        self._dict_editor = None
+        self._idgenerator = None
+        self._nltk = None
+
+    
+    @property
+    def encryption(self):
+        if self._encryption is None:
+            from Jumpscale.data.encryption.EncryptionFactory import EncryptionFactory
+            self._encryption =  EncryptionFactory()
+        return self._encryption
+    @property
+    def cachelru(self):
+        if self._cachelru is None:
+            from Jumpscale.data.cachelru.LRUCacheFactory import LRUCacheFactory
+            self._cachelru =  LRUCacheFactory()
+        return self._cachelru
+    @property
+    def inifile(self):
+        if self._inifile is None:
+            from Jumpscale.data.inifile.IniFile import InifileTool
+            self._inifile =  InifileTool()
+        return self._inifile
+    @property
+    def types(self):
+        if self._types is None:
+            from Jumpscale.data.types.Types import Types
+            self._types =  Types()
+        return self._types
+    @property
+    def randomnames(self):
+        if self._randomnames is None:
+            from Jumpscale.data.random_names.RandomNames import RandomNames
+            self._randomnames =  RandomNames()
+        return self._randomnames
+    @property
+    def worksheets(self):
+        if self._worksheets is None:
+            from Jumpscale.data.worksheets.Sheets import Sheets
+            self._worksheets =  Sheets()
+        return self._worksheets
+    @property
+    def treemanager(self):
+        if self._treemanager is None:
+            from Jumpscale.data.treemanager.Treemanager import TreemanagerFactory
+            self._treemanager =  TreemanagerFactory()
+        return self._treemanager
+    @property
+    def hash(self):
+        if self._hash is None:
+            from Jumpscale.data.hash.HashTool import HashTool
+            self._hash =  HashTool()
+        return self._hash
+    @property
+    def indexfile(self):
+        if self._indexfile is None:
+            from Jumpscale.data.indexFile.IndexFiles import IndexDB
+            self._indexfile =  IndexDB()
+        return self._indexfile
+    @property
+    def markdown(self):
+        if self._markdown is None:
+            from Jumpscale.data.markdown.MarkdownFactory import MarkdownFactory
+            self._markdown =  MarkdownFactory()
+        return self._markdown
+    @property
+    def latex(self):
+        if self._latex is None:
+            from Jumpscale.data.latex.Latex import Latex
+            self._latex =  Latex()
+        return self._latex
+    @property
+    def capnp(self):
+        if self._capnp is None:
+            from Jumpscale.data.capnp.Capnp import Capnp
+            self._capnp =  Capnp()
+        return self._capnp
+    @property
+    def html(self):
+        if self._html is None:
+            from Jumpscale.data.html.HTMLFactory import HTMLFactory
+            self._html =  HTMLFactory()
+        return self._html
+    @property
+    def docs(self):
+        if self._docs is None:
+            from Jumpscale.data.docs.DocsFactory import DocsFactory
+            self._docs =  DocsFactory()
+        return self._docs
+    @property
+    def regex(self):
+        if self._regex is None:
+            from Jumpscale.data.regex.RegexTools import RegexTools
+            self._regex =  RegexTools()
+        return self._regex
+    @property
+    def time(self):
+        if self._time is None:
+            from Jumpscale.data.time.Time import Time_
+            self._time =  Time_()
+        return self._time
+    @property
+    def timeinterval(self):
+        if self._timeinterval is None:
+            from Jumpscale.data.time.TimeInterval import TimeInterval
+            self._timeinterval =  TimeInterval()
+        return self._timeinterval
+    @property
+    def schema(self):
+        if self._schema is None:
+            from Jumpscale.data.schema.SchemaFactory import SchemaFactory
+            self._schema =  SchemaFactory()
+        return self._schema
+    @property
+    def serializers(self):
+        if self._serializers is None:
+            from Jumpscale.data.serializers.SerializersFactory import SerializersFactory
+            self._serializers =  SerializersFactory()
+        return self._serializers
+    @property
+    def rivine(self):
+        if self._rivine is None:
+            from Jumpscale.data.rivine.RivineDataFactory import RivineDataFactory
+            self._rivine =  RivineDataFactory()
+        return self._rivine
+    @property
+    def nacl(self):
+        if self._nacl is None:
+            from Jumpscale.data.nacl.NACLFactory import NACLFactory
+            self._nacl =  NACLFactory()
+        return self._nacl
+    @property
+    def bcdb(self):
+        if self._bcdb is None:
+            from Jumpscale.data.bcdb.BCDBFactory import BCDBFactory
+            self._bcdb =  BCDBFactory()
+        return self._bcdb
+    @property
+    def dict_editor(self):
+        if self._dict_editor is None:
+            from Jumpscale.data.dicteditor.DictEditor import DictEditorFactory
+            self._dict_editor =  DictEditorFactory()
+        return self._dict_editor
+    @property
+    def idgenerator(self):
+        if self._idgenerator is None:
+            from Jumpscale.data.idgenerator.IDGenerator import IDGenerator
+            self._idgenerator =  IDGenerator()
+        return self._idgenerator
+    @property
+    def nltk(self):
+        if self._nltk is None:
+            from DigitalMe.data.nltk.NLTK import NLTKFactory
+            self._nltk =  NLTKFactory()
+        return self._nltk
+
+j.data = group_data()
+j.core._groups["data"] = j.data
 
 
 class group_data_units(JSGroup):
@@ -1462,6 +1334,100 @@ class group_builder(JSGroup):
 
 j.builder = group_builder()
 j.core._groups["builder"] = j.builder
+
+
+class group_servers(JSGroup):
+    def __init__(self):
+        
+        self._errbot = None
+        self._openresty = None
+        self._web = None
+        self._etcd = None
+        self._capacity = None
+        self._zdb = None
+        self._jsrun = None
+        self._gedis = None
+        self._digitalme = None
+        self._myjobs = None
+        self._raftserver = None
+        self._dns = None
+
+    
+    @property
+    def errbot(self):
+        if self._errbot is None:
+            from Jumpscale.servers.errbot.ErrBotFactory import ErrBotFactory
+            self._errbot =  ErrBotFactory()
+        return self._errbot
+    @property
+    def openresty(self):
+        if self._openresty is None:
+            from Jumpscale.servers.openresty.OpenRestyFactory import OpenRestyFactory
+            self._openresty =  OpenRestyFactory()
+        return self._openresty
+    @property
+    def web(self):
+        if self._web is None:
+            from Jumpscale.servers.webserver.JSWebServers import JSWebServers
+            self._web =  JSWebServers()
+        return self._web
+    @property
+    def etcd(self):
+        if self._etcd is None:
+            from Jumpscale.servers.etcd.EtcdServer import EtcdServer
+            self._etcd =  EtcdServer()
+        return self._etcd
+    @property
+    def capacity(self):
+        if self._capacity is None:
+            from Jumpscale.servers.grid_capacity.CapacityFactory import CapacityFactory
+            self._capacity =  CapacityFactory()
+        return self._capacity
+    @property
+    def zdb(self):
+        if self._zdb is None:
+            from Jumpscale.servers.zdb.ZDBServer import ZDBServer
+            self._zdb =  ZDBServer()
+        return self._zdb
+    @property
+    def jsrun(self):
+        if self._jsrun is None:
+            from Jumpscale.servers.jsrun.JSRun import JSRun
+            self._jsrun =  JSRun()
+        return self._jsrun
+    @property
+    def gedis(self):
+        if self._gedis is None:
+            from DigitalMe.servers.gedis.GedisFactory import GedisFactory
+            self._gedis =  GedisFactory()
+        return self._gedis
+    @property
+    def digitalme(self):
+        if self._digitalme is None:
+            from DigitalMe.servers.digitalme.DigitalMe import DigitalMe
+            self._digitalme =  DigitalMe()
+        return self._digitalme
+    @property
+    def myjobs(self):
+        if self._myjobs is None:
+            from DigitalMe.servers.myjobs.MyJobs import MyJobs
+            self._myjobs =  MyJobs()
+        return self._myjobs
+    @property
+    def raftserver(self):
+        if self._raftserver is None:
+            from DigitalMe.servers.raft.RaftServerFactory import RaftServerFactory
+            self._raftserver =  RaftServerFactory()
+        return self._raftserver
+    @property
+    def dns(self):
+        if self._dns is None:
+            from DigitalMe.servers.dns.DNSServerFactory import DNSServerFactory
+            self._dns =  DNSServerFactory()
+        return self._dns
+
+j.servers = group_servers()
+j.core._groups["servers"] = j.servers
 
 
 class group_sal_zos(JSGroup):
@@ -1661,6 +1627,47 @@ class group_sal_zos(JSGroup):
 
 j.sal_zos = group_sal_zos()
 j.core._groups["sal_zos"] = j.sal_zos
+
+
+class group_world(JSGroup):
+    def __init__(self):
+        
+        self._system = None
+        self._hypervisor = None
+
+    
+    @property
+    def system(self):
+        if self._system is None:
+            from DigitalMe.tools.kosmos.WorldSystem import WorldSystem
+            self._system =  WorldSystem()
+        return self._system
+    @property
+    def hypervisor(self):
+        if self._hypervisor is None:
+            from DigitalMe.tools.kosmos.world_example.HyperVisorCoordinator.CoordinatorHypervisor import CoordinatorHypervisor
+            self._hypervisor =  CoordinatorHypervisor()
+        return self._hypervisor
+
+j.world = group_world()
+j.core._groups["world"] = j.world
+
+
+class group_kosmos(JSGroup):
+    def __init__(self):
+        
+        self._zos = None
+
+    
+    @property
+    def zos(self):
+        if self._zos is None:
+            from DigitalMe.kosmos.zos.ZOSFactory import ZOSCmdFactory
+            self._zos =  ZOSCmdFactory()
+        return self._zos
+
+j.kosmos = group_kosmos()
+j.core._groups["kosmos"] = j.kosmos
 
 
 

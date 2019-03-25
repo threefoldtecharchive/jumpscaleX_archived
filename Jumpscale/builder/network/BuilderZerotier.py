@@ -38,9 +38,9 @@ class BuilderZerotier(j.builder.system._BaseClass):
                 j.sal.process.execute("xcode-select --install", die=False, showout=True)
                 self._done_set("xcode_install")
         elif j.core.platformtype.myplatform.isUbuntu:
-            j.builder.system.package.ensure("gcc")
-            j.builder.system.package.ensure("g++")
-            j.builder.system.package.ensure('make')
+           j.builder.system.package.ensure("gcc")
+           j.builder.system.package.ensure("g++")
+           j.builder.system.package.ensure('make')
 
         codedir = j.clients.git.pullGitRepo(
             "https://github.com/zerotier/ZeroTierOne", reset=reset, depth=1, branch='master')

@@ -60,6 +60,7 @@ class BuilderLua(j.builder.system._BaseClass):
         self._done_set("build")
 
     def lua_rock_install(self, name, reset=False):
+        self._log_info("lua_rock_install: %s"%name)
         if self._done_check("lua_rock_install_%s" % name) and not reset:
             return
 
@@ -78,7 +79,7 @@ class BuilderLua(j.builder.system._BaseClass):
 
         if j.core.platformtype.myplatform.isUbuntu:
             # j.builder.system.package.mdupdate()
-            j.builder.tools.package_install("geoip-database,libgeoip-dev")
+            j.builder.system.package.ensure("geoip-database,libgeoip-dev")
 
         C = """
         luaossl
@@ -88,7 +89,7 @@ class BuilderLua(j.builder.system._BaseClass):
         lapis-console
         LuaFileSystem
         luasocket
-        lua-geoip
+        # lua-geoip
         lua-cjson
         lua-term
         penlight
@@ -97,12 +98,12 @@ class BuilderLua(j.builder.system._BaseClass):
         # luajwt
         # mooncrafts
         inspect
-        lua-resty-jwt
+        
         lua-resty-redis-connector
         lua-resty-openidc
 
         LuaRestyRedis
-        lua-resty-qless
+        # lua-resty-qless
 
         lua-capnproto
         lua-toml
@@ -111,7 +112,6 @@ class BuilderLua(j.builder.system._BaseClass):
 
         lua-resty-influx
         lua-resty-repl
-
 
         lua-resty-iputils
 
@@ -130,7 +130,7 @@ class BuilderLua(j.builder.system._BaseClass):
 
         alt-getopt
 
-        lua-resty-iyo-auth
+        
         lua-messagepack
         """
 
@@ -142,13 +142,15 @@ class BuilderLua(j.builder.system._BaseClass):
                 continue
             self.lua_rock_install(line, reset)
 
-        C = """
-        export LUALIB=/sandbox/openresty/lualib
-        rsync -rav /sandbox/var/build/luarocks/lua_modules/lib/lua/5.1/ $LUALIB/
-        rsync -rav /sandbox/var/build/luarocks/lua_modules/share/lua/5.1/ $LUALIB/
 
-        """
-        self.tools.run(C)
+        if j.core.platformtype.myplatform.isUbuntu:
+            self.lua_rock_install("lua-geoip", reset)
+            self.lua_rock_install("lua-resty-jwt", reset)
+            self.lua_rock_install("lua-resty-iyo-auth", reset)  #need to check how to get this to work on OSX
+
+
+        self.tools.run("rsync -rav /sandbox/var/build/luarocks/lua_modules/lib/lua/5.1/ /sandbox/openresty/lualib",die=False)
+        self.tools.run("rsync -rav /sandbox/var/build/luarocks/lua_modules/share/lua/5.1/ /sandbox/openresty/lualib",die=False)
 
     # def build_crypto(self):
     #
@@ -224,6 +226,46 @@ class BuilderLua(j.builder.system._BaseClass):
         j.sal.fs.copyDirTree(src, "/sandbox/bin/", rsyncdelete=False, recursive=False, overwriteFiles=True)
 
         self._log_info("install lua & openresty done.")
+
+    def sandbox(self, dest_path="/tmp/builders/lua", reset=False, create_flist=False, zhub_instance=None):
+        '''Copy built bins to dest_path and create flist if create_flist = True
+
+        :param dest_path: destination path to copy files into
+        :type dest_path: str
+        :param sandbox_dir: path to sandbox
+        :type sandbox_dir: str
+        :param reset: reset sandbox file transfer
+        :type reset: bool
+        :param create_flist: create flist after copying files
+        :type create_flist:bool
+        :param zhub_instance: hub instance to upload flist to
+        :type zhub_instance:str
+        '''
+        if self._done_check('sandbox', reset):
+            return
+        self.build(reset=reset)
+
+        j.builder.web.openresty.sandbox(dest_path=dest_path, reset=reset)
+
+        self.bins = [ 'lua','_lapis.lua', '_moonc.lua', '_moon.lua', '_moonrocks.lua']
+
+        for bin_name in self.bins:
+            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
+            dir_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR[1:])
+            j.builder.tools.dir_ensure(dir_dest)
+            j.sal.fs.copyFile(dir_src, dir_dest)
+            # j.sal.fs.copyDirTree(dir_src, dir_dest)
+
+        lib_dest = j.sal.fs.joinPaths(dest_path, 'sandbox/lib')
+        j.builder.tools.dir_ensure(lib_dest)
+        for bin in self.bins:
+            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
+            j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)    
+
+        self._done_set('sandbox')
+
+        if create_flist:
+            self.flist_create(dest_path, zhub_instance)
 
     def copy_to_github(self):
         """

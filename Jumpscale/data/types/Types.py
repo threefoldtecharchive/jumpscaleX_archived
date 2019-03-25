@@ -1,11 +1,15 @@
-
-
 '''Definition of several primitive type properties (integer, string,...)'''
-
-from .CustomTypes import *
+from Jumpscale import j
+from .AdvTypes import *
 from .CollectionTypes import *
 from .PrimitiveTypes import *
-from Jumpscale import j
+from .Enumeration import Enumeration
+from .IPAddress import *
+from .JSXObject import *
+from .List import *
+
+import copy
+
 
 
 class Types(j.application.JSBaseClass):
@@ -13,106 +17,74 @@ class Types(j.application.JSBaseClass):
     __jslocation__ = "j.data.types"
 
     def _init(self):
-        self.dict = Dictionary()
+
+        self._types_list = [List,Dictionary, Guid, Path, Boolean, Integer, Float, String, Bytes, StringMultiLine,
+                            IPRange, IPPort, Tel, YAML, JSON, Email, Date, DateTime, Numeric, Percent,
+                            Hash, CapnpBin, JSDataObjectFactory, JSConfigObjectFactory, Url, Enumeration, IPAddress]
+
+
+        self._TypeBaseObjClass = TypeBaseObjClass
+
+        self._type_check_list = []
+        self._aliases = {}
+
+        for typeclass in self._types_list:
+            name = typeclass.NAME.strip().strip("_").lower()
+            if "," in name:
+                aliases = [name.strip() for name in name.split(",")]
+                name=aliases[0]
+                aliases.pop(aliases.index(name))
+            else:
+                aliases = None
+            name = name.split(",")[0].strip()
+
+            o = self.__attach(name, typeclass)
+            if name in self._type_check_list:
+                raise RuntimeError("there is duplicate type:%s"%name)
+            if not hasattr(o,"NOCHECK") or o.NOCHECK is False:
+                if not hasattr(typeclass,"CUSTOM") or typeclass.CUSTOM is False:
+                    self._type_check_list.append(name)
+            if aliases:
+                for alias in aliases:
+                    self._aliases[alias] = name
+
+        self._types = {}
+
         self.list = List()
-        self.guid = Guid()
-        self.path = Path()
-        self.bool = Boolean()
-        self.boolean = Boolean()
-        self.int = Integer()
-        self.integer = self.int
-        self.float = Float()
-        self.string = String()
-        self.str = self.string
-        self.bytes = Bytes()
-        self.multiline = StringMultiLine()
-        # self.set = Set()
-        self.ipaddr = IPAddress()
-        self.ipaddress = IPAddress()
-        self.iprange = IPRange()
-        self.ipport = IPPort()
-        self.tel = Tel()
-        self.yaml = YAML()
-        self.json = JSON()
-        self.email = Email()
-        self.date = Date()
-        self.datetime = DateTime()
-        self.duration = Duration()
-        self.numeric = Numeric()
-        self.percent = Percent()
-        self.hash = Hash()
-        self.object = Object()
-        self.jsobject = JSObject()
-        self.url = Url()
-        self.enumerations = {}
 
-        self._dict = Dictionary
-        self._list = List
-        self._guid = Guid
-        self._path = Path
-        self._bool = Boolean
-        self._int = Integer
-        self._float = Float
-        self._string = String
-        self._bytes = Bytes
-        self._multiline = StringMultiLine
-        # self._set = Set
-        self._ipaddr = IPAddress
-        self._iprange = IPRange
-        self._ipport = IPPort
-        self._tel = Tel
-        self._yaml = YAML
-        self._json = JSON
-        self._email = Email
-        self._date = Date
-        self._datetime = DateTime
-        self._duration = Duration()
-        self._numeric = Numeric
-        self._percent = Percent
-        self._hash = Hash
-        self._object = Object
-        self._jsobject = JSObject
-        self._url = Url
-        self._enumeration = Enumeration
 
-        self.types_list = [self.bool, self.dict, self.list, self.bytes,
-                           self.guid, self.float, self.int, self.multiline,
-                           self.string, self.date, self.numeric, self.percent, self.hash, self.object, self.jsobject,
-                           self.url]
+    def __attach(self, name, typeclass):
+        name = name.strip().lower()
+        name2 = "_%s" % name
+        typeclass.NAME = name
+        self.__dict__[name2] = typeclass  # attach class
+
+
+        if not hasattr(typeclass,"CUSTOM") or typeclass.CUSTOM is False:
+            o = typeclass()
+            o._jsx_location = "j.data.types.%s"%name
+            self.__dict__[name] = o
+
+            return o
 
     def type_detect(self, val):
         """
         check for most common types
         """
-        for ttype in self.types_list:
+        for key in self._type_check_list:
+            ttype = self.__dict__[key]
             if ttype.check(val):
                 return ttype
         raise RuntimeError("did not detect val for :%s" % val)
 
-    def get_custom(self, ttype, **kwargs):
+
+    def get(self, ttype, default=None):
         """
-        e.g. for enum, but there can be other types in future who take certain input
-        :param ttype:
-        :param kwargs: e.g. values="red,blue,green" can also a list for e.g. enum
-        :return:
 
-        e.g. for enumeration
+        mytype = j.data.types.get("s") #will return string type (which is a primitive type)  !!!TYPES!!!
 
-        j.data.types.get_custom("e",values="blue,red")
-
-        """
-        ttype = ttype.lower().strip()
-        if ttype in ["e", "enum"]:
-            cl = self._enumeration
-            cl = cl(values=kwargs["values"])
-            self.enumerations[cl._md5] = cl
-            return self.enumerations[cl._md5]
-        else:
-            raise j.exceptions.RuntimeError("did not find custom type:'%s'" % ttype)
-
-    def get(self, ttype, return_class=False):
-        """
         type is one of following
+
         - s, str, string
         - i, int, integer
         - f, float
@@ -120,7 +92,6 @@ class Types(j.application.JSBaseClass):
         - tel, mobile
         - d, date
         - t, datetime
-        - td, duration
         - n, numeric
         - h, hash       #set of 2 int
         - p, percent
@@ -134,77 +105,59 @@ class Types(j.application.JSBaseClass):
         - dict
         - yaml
         - guid
-        - url, u
-        - e,enum        #enumeration
-        """
-        ttype = ttype.lower().strip()
-        if ttype in ["s", "str", "string"]:
-            res = self._string
-        elif ttype in ["i", "int", "integer"]:
-            res = self._int
-        elif ttype in ["f", "float"]:
-            res = self._float
-        elif ttype in ["o", "obj", "object"]:
-            res = self._object
-        elif ttype in ["b", "bool", "boolean"]:
-            res = self._bool
-        elif ttype in ["tel", "mobile"]:
-            res = self._tel
-        elif ttype in ["ipaddr", "ipaddress"]:
-            res = self._ipaddr
-        elif ttype in ["iprange", "ipaddressrange"]:
-            res = self._iprange
-        elif ttype in ["ipport", "ipport"]:
-            res = self._ipport
-        elif ttype in ["jo", "jsobject"]:
-            res = self._jsobject
-        elif ttype == "email":
-            res = self._email
-        elif ttype == "multiline":
-            res = self._multiline
-        elif ttype in ["d", "date"]:
-            res = self._date
-        elif ttype in ["t", "datetime"]:
-            res = self._datetime
-        elif ttype in ["td", "duration"]:
-            res = self._datetime
-        elif ttype in ["h", "hash"]:
-            res = self._hash
-        elif ttype in ["p", "perc", "percent"]:
-            res = self._percent
-        elif ttype in ["n", "num", "numeric"]:
-            res = self._numeric
-        elif ttype.startswith("l"):
-            tt = self._list()  # need to create new instance
-            if return_class:
-                raise RuntimeError("cannot return class if subtype specified")
-            if len(ttype) > 1:
-                tt.SUBTYPE = self.get(ttype[1:], return_class=True)()
-                return tt
-            elif len(ttype) == 1:
-                assert tt.SUBTYPE == None
-                return tt
-        elif ttype == "dict":
-            res = self._dict
-        elif ttype == "yaml":
-            res = self._yaml
-        elif ttype == "json":
-            res = self._json
-        # elif ttype == "set":
-        #     res = self._set
-        elif ttype == "guid":
-            res = self._guid
-        elif ttype == "url" or ttype == "u":
-            res = self._url
-        elif ttype in ["bin", "bytes"]:
-            res = self._bytes
-        else:
-            raise j.exceptions.RuntimeError("did not find type:'%s'" % ttype)
+        - url
+        - e, enum        #enumeration
+        - a, acl
+        - u, user
+        - g, group
 
-        if return_class:
-            return res
+        !!!TYPES!!!
+
+        :param default: e.g. "red,blue,green" for an enumerator
+            for certain types e.g. enumeration the default value is needed to create the right type
+
+        """
+
+        ttype = ttype.lower().strip()
+
+        if ttype!="list" and ttype.startswith("l"):
+            default = {"default":default,"subtype":ttype[1:]}
+            ttype = "list"
+
+        #check if there is an alias
+        if ttype in self._aliases:
+            ttype = self._aliases[ttype]
+
+        klasstype = "_%s" % ttype
+        if klasstype not in self.__dict__:
+            raise RuntimeError("did not find type class:%s"%klasstype)
+        tt_class = self.__dict__[klasstype]  #is the class
+
+        if default:
+            # key0=default_copy.replace(" ","").replace(",","_").replace("[","").replace("]","").replace("\"","")
+            key0 = j.data.hash.md5_string(str(default))
+            key="%s_%s"%(tt_class.NAME,key0)
         else:
-            return res()
+            if ttype not in self.__dict__:
+                raise j.exceptions.RuntimeError("did not find type:'%s'" % ttype)
+            return self.__dict__[ttype]
+
+        if key in self._types:
+            return self._types[key]
+
+        tt = tt_class(default=default)
+        tt._jsx_location = "j.data.types._types['%s']"%key
+
+        # #not sure this is the right way (despiegk)
+        # if ttype.startswith("l"):
+        #     #is a list, copy default values in
+        #     tt._default_values = tt.clean(default_copy)._inner_list #make sure they are clean
+
+        self._types[key] = tt
+
+        return self._types[key]
+
+
 
     def test(self, name=""):
         """
@@ -218,7 +171,10 @@ class Types(j.application.JSBaseClass):
         """
         will convert val to type of default
 
-        , separated string goes to [] if default = []
+        separated string goes to [] if default = []
+
+        BE CAREFULL THIS IS A SLOW PROCESS, USE CAREFULLY
+
         """
         if val is None or val == "" or val == []:
             return default

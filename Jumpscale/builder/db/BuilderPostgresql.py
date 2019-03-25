@@ -27,7 +27,7 @@ class BuilderPostgresql(j.builder.system._BaseClass):
         j.core.tools.dir_ensure("{DIR_BASE}/apps/pgsql")
         j.core.tools.dir_ensure("{DIR_BIN}")
         j.core.tools.dir_ensure("$LIBDIR/postgres")
-        j.builder.tools.package_install(
+        j.builder.system.package.ensure(
             ['build-essential', 'zlib1g-dev', 'libreadline-dev'])
         cmd = """
         cd {}

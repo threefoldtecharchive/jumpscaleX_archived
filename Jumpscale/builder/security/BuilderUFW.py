@@ -21,7 +21,7 @@ class BuilderUFW(j.builder.system._BaseClass):
                     self._ufw_enabled = False
                     self._log_info("cannot use ufw, nft installed")
                 if #j.builder.sandbox.cmdGetPath("ufw", die=False) is False:
-                    j.builder.tools.package_install("ufw")
+                    j.builder.system.package.ensure("ufw")
                     #j.builder.sandbox.cmdGetPath("ufw")
                 self._ufw_enabled = "inactive" not in j.sal.process.execute("ufw status")[1]
         return self._ufw_enabled

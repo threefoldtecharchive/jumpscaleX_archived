@@ -20,22 +20,26 @@ class CoreDnsFactory(JSConfigs):
         j.clients.etcd.get(etcd_instance, host=host, port=port, user=user, password_=password_)
         return self.get(name, etcd_instance=etcd_instance)
 
-    def test(self):
-        # create etcd client
-        cl = j.sal.coredns.configure(instance_name="main", host="127.0.0.1", password="1234")
+    def test(self,client):
+        """
+        e.g. client = j.sal.coredns.configure(instance_name="main", host="127.0.0.1", password="1234")
+        :param client:
+        :return:
+        """
+
         # create zones
-        zone1 = cl.zone_create('test.example.com', '10.144.13.199', record_type='A')
-        zone2 = cl.zone_create('example.com', '2003::8:1', record_type='AAAA')
+        zone1 = client.zone_create('test.example.com', '10.144.13.199', record_type='A')
+        zone2 = client.zone_create('example.com', '2003::8:1', record_type='AAAA')
         # add records in etcd
-        cl.deploy()
+        client.deploy()
         # create zones
-        zone2 = cl.zone_create('test.example.com', '10.144.13.198', record_type='A')
-        zone3 = cl.zone_create('example.com', '2003::8:2', record_type='AAAA')
-        zone4 = cl.zone_create('test2.example.com', '10.144.13.198', record_type='A')
-        zone5 = cl.zone_create('example2.com', '2003::8:2', record_type='AAAA')
+        zone2 = client.zone_create('test.example.com', '10.144.13.198', record_type='A')
+        zone3 = client.zone_create('example.com', '2003::8:2', record_type='AAAA')
+        zone4 = client.zone_create('test2.example.com', '10.144.13.198', record_type='A')
+        zone5 = client.zone_create('example2.com', '2003::8:2', record_type='AAAA')
         # add records in etcd
-        cl.deploy()
+        client.deploy()
         # get records from etcd
-        cl.zones
+        client.zones
         # remove records from etcd
-        cl.remove([zone1, zone2, zone3, zone4, zone5])
+        client.remove([zone1, zone2, zone3, zone4, zone5])

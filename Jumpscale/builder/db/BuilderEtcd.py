@@ -1,16 +1,19 @@
 from Jumpscale import j
 
 
+ETCD_CONFIG="""
+name: "etcd_builder"
+data-dir: "/mnt/data"
+listen-peer-urls: "http://0.0.0.0:2380"
+listen-client-urls: "http://0.0.0.0:2379"
+initial-advertise-peer-urls: "http://'$node_addr':2380"
+"""
+
 class BuilderEtcd(j.builder.system._BaseClass):
     NAME = 'etcd'
 
     def _init(self):
         self.package_path = j.builder.runtimes.golang.package_path_get('etcd', host='go.etcd.io')
-        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'etcd_startup.toml')
-        self.startup = j.sal.fs.readFile(startup_file)
-
-
-
 
     def build(self, reset=False):
         """
@@ -28,19 +31,60 @@ class BuilderEtcd(j.builder.system._BaseClass):
         self._done_set('build')
         # self._cache.get(key='build', method=do, expire=3600*30*24, refresh=False, retry=2, die=True)
 
-    def sandbox(self):
-        def do():
-            if self._done_check('sandbox'):
-                return
-            if not self._done_check('build'):
-                self.build()
+    def install(self,reset=False):
+        if self._done_check('install', reset):
+            return
 
-            j.sal.fs.copyFile(j.sal.fs.joinPaths(self.package_path, 'bin', 'etcd'), j.core.dirs.BINDIR)
-            j.sal.fs.copyFile(j.sal.fs.joinPaths(self.package_path, 'bin', 'etcdctl'), j.core.dirs.BINDIR)
+        self.build(reset=reset)
 
-            self._done_set('sandbox')
+        bin_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR[1:])
+        j.builder.tools.dir_ensure(bin_dest)
+        j.sal.fs.copyFile(j.sal.fs.joinPaths(self.package_path, 'bin', 'etcd'), bin_dest)
+        j.sal.fs.copyFile(j.sal.fs.joinPaths(self.package_path, 'bin', 'etcdctl'), bin_dest)
 
-        #self._cache.get(key="sandbox", method=do, expire=3600*30*24, refresh=False, retry=1, die=True)
+        self._done_set('install')
+
+
+    def start(self):
+
+        C="""
+        etcdctl  user add root:{etcd_password}
+        etcdctl  auth enable
+        etcdctl  --user=root:$etcd_password put "traefik/acme/account" "foo"
+        etcd --config-file etcd.conf
+        """
+        j.shell()
+
+
+    def sandbox(self, dest_path="/tmp/builders/etcd", reset=False, create_flist=False, zhub_instance=None):
+        '''Copy built bins to dest_path and create flist if create_flist = True
+
+        :param dest_path: destination path to copy files into
+        :type dest_path: str
+        :param sandbox_dir: path to sandbox
+        :type sandbox_dir: str
+        :param reset: reset sandbox file transfer
+        :type reset: bool
+        :param create_flist: create flist after copying files
+        :type create_flist:bool
+        :param zhub_instance: hub instance to upload flist to
+        :type zhub_instance:str
+        '''
+        if self._done_check('sandbox', reset):
+            return
+
+        self.install(reset=reset)
+
+        dir_dest = j.sal.fs.joinPaths(dest_path, 'sandbox')
+        j.builder.tools.dir_ensure(dir_dest)
+        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'etcd_startup.toml')
+        self.startup = j.sal.fs.readFile(startup_file)
+        j.sal.fs.copyFile(startup_file,   dir_dest)
+
+        self._done_set('sandbox')
+
+        if create_flist:
+            self.flist_create(dest_path, zhub_instance)
 
     def client_get(self, name):
         """
@@ -49,13 +93,27 @@ class BuilderEtcd(j.builder.system._BaseClass):
         """
         return j.clients.etcd.get(name)
 
-    def _test(self, name=''):
-        """Run tests under tests directory
+    def test(self):
 
-        :param name: basename of the file to run, defaults to "".
-        :type name: str, optional
-        """
-        self._test_run(name=name, obj_key='test_main')
+        self.stop()
+        self.build(reset=True)
+        self.sandbox()
+    
+        # try to start/stop
+        tmux_pane = j.servers.etcd.start()
+        tmux_process = tmux_pane.process_obj
+        child_process = tmux_pane.process_obj_child
+        assert child_process.is_running()
+    
+        client = self.client_get('etcd_test')
+        j.sal.nettools.waitConnectionTest(client.host, client.port)
+        client.api.put('foo', 'etcd_bar')
+        assert client.get('foo') == 'etcd_bar'
+        j.servers.etcd.stop(tmux_process.pid)
+
+        print ("TEST OK")
+
+
 
     def build_flist(self, hub_instance=None):
         """

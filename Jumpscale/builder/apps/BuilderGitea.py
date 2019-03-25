@@ -61,8 +61,8 @@ class BuilderGitea(j.builder.system._BaseClass):
         """
 
         j.builder.system.package.mdupdate()
-        j.builder.system.package.ensure('git-core')
-        j.builder.system.package.ensure('gcc')
+       j.builder.system.package.ensure('git-core')
+       j.builder.system.package.ensure('gcc')
         j.builder.runtimes.golang.install()
         j.builder.db.postgresql.install()
 

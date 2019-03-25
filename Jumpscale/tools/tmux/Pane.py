@@ -10,26 +10,12 @@ class Pane(j.application.JSBaseClass):
     def __init__(self, window, pane,name=""):
         JSBASE.__init__(self)
         self.mgmt = pane
-        self.id = pane.get("pane_id")
+        self.id = pane.get("pane_id").strip("%").strip()
         self.window = window
         if name != "":
             self.name_set(name)
         else:
             self.name = self.mgmt.get("pane_title")
-        #
-
-    # @property
-    # def name(self):
-    #     res = j.core.db.hget("tmux:%s:name" % self.window.name, str(self.id))
-    #     if res is None:
-    #         return ""
-    #     else:
-    #         res = res.decode()
-    #         return res
-
-    # @name.setter
-    # def name(self, name):
-    #     j.core.db.hset("tmux:%s:name" % self.window.name, str(self.id), name)
 
     def name_set(self,name):
         cmd="\nprintf '\\033]2;%s\\033\\\\' '"+name+"'\n"
@@ -61,15 +47,15 @@ class Pane(j.application.JSBaseClass):
         """
 
         if not end:
-            cmd="tmux capture-pane -t %%%s -pS -%s > /tmp/out.txt"%(self.id,start)
+            cmd="tmux capture-pane -t %%%s -pS -%s "%(self.id,start)
         else:
-            cmd="tmux capture-pane -t %%%s -pS -%s -E %s > /tmp/out.txt"%(self.id,start,end)
+            cmd="tmux capture-pane -t %%%s -pS -%s -E %s "%(self.id,start,end)
 
         self._log_debug(cmd)
 
 
         cmd=cmd.replace("%%","%")
-        rc,out,err = j.sal.process.execute(cmd)
+        rc,out,err = j.sal.process.execute(cmd,showout=False)
 
 
         out2=""
@@ -198,48 +184,11 @@ class Pane(j.application.JSBaseClass):
 
 
 
-
-
-
-
     def clear(self):
         self.mgmt.clear()
 
-    # def resetState(self):
-    #     """
-    #     make sure that previous exit code is removed and all is clean for next run
-    #     """
-    #     j.core.db.hset("tmux:%s:exec" % self.window.name, self.name, "")
-
-    # def check(self):
-    #     # res = j.core.db.hget("tmux:%s:exec" % self.window.name, self.name)
-    #     if res == "":
-    #         return ""
-    #     res = res.decode()
-    #     if ":" in res:
-    #         epoch, rc = res.split(":")
-    #         state = "OK"
-    #     else:
-    #         state = "INIT"
-    #         rc = 0
-    #         epoch = res
-    #
-    #     epoch = int(epoch)
-    #     rc = int(rc)
-    #     if rc > 0:
-    #         state = "ERROR"
-    #
-    #     # duration=j.data.time.getTimeEpoch()-epoch
-    #     return state, epoch, rc
-    #
-    # def wait(self):
-    #     while True:
-    #         state, epoch, rc = self.check()
-    #         if state != "INIT":
-    #             return state, epoch, rc
-    #         time.sleep(0.1)
 
     def __repr__(self):
-        return ("panel:%s:%s" % (self.id, self.name))
+        return ("panel:%s:%s" % (self.window.name   , self.name))
 
     __str__ = __repr__
