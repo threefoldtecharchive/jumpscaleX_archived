@@ -14,6 +14,7 @@ class BuilderSystemPackage(j.application.JSBaseClass):
     BaseClass = _BaseClass
     _BaseFactoryClass = BuilderBaseFactoryClass
     _builder_method = builder_method
+    action = action
 
     def _init(self):
         self._package = None

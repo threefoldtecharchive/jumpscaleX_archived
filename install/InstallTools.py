@@ -619,7 +619,7 @@ class Tools:
 
         if 'darwin' in MyEnv.platform():
 
-            script = """            
+            script = """
             pip3 install ipython
             """
             Tools.execute(script, interactive=True)
@@ -639,7 +639,7 @@ class Tools:
                 pip3 install ipython
                 pip3 install pudb
                 pip3 install pygments
-                locale-gen --purge en_US.UTF-8                
+                locale-gen --purge en_US.UTF-8
             """
             Tools.execute(script, interactive=True)
 
@@ -1551,13 +1551,13 @@ class OSXInstall():
     def brew_uninstall():
         cmd='sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"'
         Tools.execute(cmd,interactive=True)
-        toremove = """                
+        toremove = """
         sudo rm -rf /usr/local/.com.apple.installer.keep
         sudo rm -rf /usr/local/include/
         sudo rm -rf /usr/local/etc/
         sudo rm -rf /usr/local/var/
         sudo rm -rf /usr/local/FlashcardService/
-        sudo rm -rf /usr/local/texlive/ 
+        sudo rm -rf /usr/local/texlive/
         """
         Tools.execute(toremove,interactive=True)
 
@@ -1729,6 +1729,7 @@ class UbuntuInstall():
                 "pymongo>=3.4.0",
                 "docker>=3",
                 "dnspython>=1.15.0",
+                "git+https://github.com/threefoldtech/0-hub#egg=zerohub&subdirectory=client",
                 "etcd3>=0.7.0",
                 "Flask-Inputs>=0.2.0",
                 "Flask>=0.12.2",
@@ -1752,6 +1753,8 @@ class UbuntuInstall():
                 C="pip3 install --user '%s'"%pip
                 Tools.execute(C,die=True)
                 MyEnv.state_set("pip_%s"%pip)
+        #install zerohub because we need it in builder
+        Tools.execute("pip3 install -e 'git+https://github.com/threefoldtech/0-hub#egg=zerohub&subdirectory=client'",die=True)
 
     @staticmethod
     def apts_list():
@@ -1921,10 +1924,10 @@ class MyEnv():
         if not os.path.exists("/sandbox"):
             script = """
             cd /
-            sudo mkdir -p /sandbox/cfg
-            sudo chown -R {USERNAME}:{GROUPNAME} /sandbox
+            mkdir -p /sandbox/cfg
+            chown -R {USERNAME}:{GROUPNAME} /sandbox
             mkdir -p /usr/local/EGG-INFO
-            sudo chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
+            chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
             """
             args={}
             args["USERNAME"] = getpass.getuser()
@@ -2203,7 +2206,7 @@ class JumpscaleInstaller():
     def __init__(self):
 
         self.account = "threefoldtech"
-        self.branch = ["development_types"]
+        self.branch = ["development"]
         self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
     def install(self,branch=None,secret="1234",private_key_words=None):

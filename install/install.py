@@ -3,7 +3,7 @@ import os
 import subprocess
 import sys
 
-BRANCH = "development_types"
+BRANCH = "development"
 
 # get current install.py directory
 rootdir = os.path.dirname(os.path.abspath(__file__))
@@ -59,42 +59,42 @@ def help():
     -h = this help
 
     ## type of installation
-    
+
     -1 = in system install
     -2 = sandbox install
     -3 = install in a docker (make sure docker is installed)
     -w = install the wiki at the end, which includes openresty, lapis, lua, ...
-    
+
 
     ## interactivity
-    
+
     -y = answer yes on every question (for unattended installs)
     -c = will confirm all filled in questions at the end (useful when using -y)
     -r = reinstall, basically means will try to re-do everything without removing (keep data)
     --debug will launch the debugger if something goes wrong
-    
+
     ## encryption
-    
+
     --secret = std is '1234', if you use 'SSH' then a secret will be derived from the SSH-Agent (only if only 1 ssh key loaded
     --private_key = std is '' otherwise is 24 words, use '' around the private key
                 if secret specified and private_key not then will ask in -y mode will autogenerate
 
     ## docker related
-    
+
     --name = name of docker, only relevant when docker option used
     -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install
-    --portrange = 1 is the default 
+    --portrange = 1 is the default
                   1 means 8100-8199 on host gets mapped to 8000-8099 in docker
-                  2 means 8200-8299 on host gets mapped to 8000-8099 in docker                  
-    --image=/path/to/image.tar or name of image (use docker images) 
+                  2 means 8200-8299 on host gets mapped to 8000-8099 in docker
+    --image=/path/to/image.tar or name of image (use docker images)
     --port = port of container SSH std is 9022 (normally not needed to use because is in portrange:22 e.g. 9122 if portrange 1)
 
     ## code related
-    
+
     --codepath = "/sandbox/code" can overrule, is where the github code will be checked out
     -p = pull code from git, if not specified will only pull if code directory does not exist yet
     --branch = jumpscale branch: normally 'development'
-    
+
 
     """
     print(IT.Tools.text_replace(T))
@@ -189,7 +189,7 @@ def ui():
         args["codepath"] = codepath
 
     if not "branch" in args:
-        args["branch"]="development_types"
+        args["branch"]="development"
 
     if "y" not in args and "r" not in args and IT.MyEnv.installer_only is False and IT.Tools.exists(IT.MyEnv.state_file_path):
         if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
@@ -368,6 +368,7 @@ if "1" in args or "2" in args:
 
     if "w" in args:
         if "1" in args:
+            
             #in system need to install the lua env
             IT.Tools.execute("source /sandbox/env.sh;kosmos 'j.builder.runtimes.lua.install(reset=True)'", showout=False)
         IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.tools.markdowndocs.test()'", showout=False)
