@@ -1898,8 +1898,6 @@ class MyEnv():
 
     @staticmethod
     def _init(force=False,install=False):
-        MyEnv.check_platform()
-
         if MyEnv.__init:
             return
 

@@ -345,6 +345,8 @@ else:
     os.environ["GITPULL"] = "0"
 
 if "1" in args or "2" in args:
+    # Only install on supported platforms
+    IT.MyEnv.check_platform()
     IT.MyEnv._init(install=True)
 
 if "1" in args:
