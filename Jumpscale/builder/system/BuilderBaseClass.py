@@ -31,8 +31,6 @@ class action:
 
         return wrapper_action
 
-from Jumpscale.clients.zero_hub.ZeroHubClient import ZeroHubClient
-
 class builder_method(object):
 
     def __init__(self, **kwargs_):
@@ -63,6 +61,7 @@ class builder_method(object):
                 self.install()
                 zhub_client = args["zhub_client"]
                 if not zhub_client:
+                    # from Jumpscale.clients.zero_hub.ZeroHubClient import ZeroHubClient
                     if not j.clients.zhubdirect.exists(name="test"): #TODO:*1 is this the right client?
                         raise RuntimeError("cannot find zhub client")
                     zhub_client = j.clients.zhubdirect.get(name="test")
