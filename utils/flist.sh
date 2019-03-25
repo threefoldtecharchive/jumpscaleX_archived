@@ -32,7 +32,7 @@ done
 pushd $HOME/code/github/threefoldtech
 
 # cloning source code
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_types/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py 1 y y y y y
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py 1 y y y y y
 
 #ssh generate
 ssh-keygen -f ~/.ssh/id_rsa -P ''
