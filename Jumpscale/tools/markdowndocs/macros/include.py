@@ -1,149 +1,131 @@
+import os
+import re
+from functools import partial
+from Jumpscale.tools.markdowndocs.Link import CustomLink, GithubLinker
 
-def _file_process(j,content,start="",end="",paragraph=False,docstring=""):
-    if start=="" and end=="" and docstring=="":
+
+def with_code_block(content, _type=''):
+    if not _type:
         return content
-
-    if start is not "":
-        start = start.lower()
-        out=""
-        state="START"
-        for line in content.split("\n"):
-            lstrip = line.strip().lower()
-
-            if lstrip.startswith(start):
-                state = "FOUND"
-                out+="%s\n"%line
-                continue
-            if state=="FOUND":
-                if paragraph:
-                    #means looking for paragraph
-                    if len(line)>0 and line[0]!=" ":
-                        return out
-                out+="%s\n"%line
-                if end!="" and lstrip.find(end.lower())!=-1:
-                    return out
-    elif docstring is not "":
-        #now find the docstring attached to class or method
-        docstring = docstring.lower()
-        out=""
-        state="START"
-
-        for line in content.split("\n"):
-            lstrip = line.strip().lower()
-            lstrip = lstrip.replace("\"","`")
-            lstrip = lstrip.replace("'","`")
-            if lstrip.startswith("def %s"%docstring) or lstrip.startswith("class %s"%docstring):
-                state = "FOUND"
-                continue
-            if state=="FOUND":
-                if lstrip.startswith("```"):
-                    state = "FOUND2"
-                    continue
-            if state == "FOUND2":
-                if lstrip.startswith("```"):
-                    out=j.core.text.strip(out).replace("\n\n\n","\n\n")
-                    return out
-                out+="%s\n"%line
-
-    else:
-        raise RuntimeError("start of docstring needs to be specified")
-    return out
+    return '\n'.join(('```%s' % _type, content, '```'))
 
 
-def include(doc, name="test5",docsite="",repo="",start="",end="",paragraph=False, codeblock = False, docstring="", **args):
+def update_header_level(line, level):
+    current_level = 0
+    for c in line:
+        if c == ' ':
+            continue
+        if c != '#':
+            break
+        current_level += 1
+
+    if current_level:
+        new_level = current_level + level
+        return '%s%s' % ('#' * new_level, line[current_level:])
+    return line
+
+
+def get_by_marker(lines, marker):
+    found = False
+    matched = []
+
+    marker = re.compile(marker.strip(), re.IGNORECASE)
+    for line in lines:
+        if marker.findall(line):
+            found = not found
+            matched.append(marker.sub('', line))
+            continue
+
+        if not found:
+            continue
+        matched.append(line)
+
+    return matched
+
+
+DOCSTRING_RE = re.compile(r'(?:\'\'\'|\"\"\")([\w\W]*?)(?:\'\'\'|\"\"\")', re.MULTILINE)
+
+
+def get_docstrings(content):
+    return '\n\n'.join(DOCSTRING_RE.findall(content))
+
+
+def process_content(content, marker, doc_only, header_levels_modify, ignore):
+    def should_skip(line):
+        return not any([re.findall(pattern, line.strip()) for pattern in ignore])
+
+    lines = content.split('\n')
+    if marker:
+        marker = '!!%s!!' % marker
+        lines = get_by_marker(lines, marker)
+
+    lines = filter(should_skip, lines)
+
+    update_header = partial(update_header_level, level=header_levels_modify)
+    if header_levels_modify:
+        lines = map(update_header, lines)
+
+    new_content = '\n'.join(lines)
+    if doc_only:
+        return get_docstrings(new_content)
+    return new_content
+
+
+def include(
+        doc, link, docsite_name=None, doc_only=False, remarks_skip=False, header_levels_modify=0, ignore=None,
+        codeblock_type=None, **kwargs):
+    """include other documents or files
+
+    :param doc: curent document (that include was called from)
+    :type doc: Doc
+    :param link: the link using our custom link format, can include markers/parts like e.g. 'wiki/document.md!A'
+    :type link: str
+    :param docsite_name: name of the docsite, if provided, will search for link in it, defaults to None
+    :type docsite_name: str, optional
+    :param doc_only: only docstring will be captured, relevant for python code, defaults to False
+    :type doc_only: bool, optional
+    :param remarks_skip: all lines that starts with `#` will be skipped, relevant for python code, defaults to False
+    :type remarks_skip: bool, optional
+    :param header_levels_modify: modify (increase or decrease) headers level with the given value, defaults to 0
+    :type header_levels_modify: int, optional
+    :param ignore: a list of regular expressions to ignore (the whole line will be ignored), defaults to None
+    :type ignore: list of str, optional
+    :param codeblock_type: the type of code block, if not provided, the content won't be inside a codeblock , defaults to None
+    :type codeblock_type: str , optional
+    :raises RuntimeError: in case a document cannot be found or more than 1 document found
+    :return: the content to be included
+    :rtype: str
     """
+    current_docsite = doc.docsite
+    j = current_docsite._j
+    custom_link = CustomLink(link)
 
-    :param name: name of the document to look for (will always be made lowercase)
-    :param docsite: name of the docsite
-    :param repo: url of the repo, if url given then will checkout the required content from a git repo
-    :param start: will walk over the content of the file specified (name) and only include starting from line where the start argument is found
-    :param end: will match till end
-    :param paragraph: if True then will include from start till next line is found which is at same prefix (basically taking out a paragraph)
-    :param codeblock: will put the found result in a codeblock if True
-    :param docstring: will look for def $name or class $name and include the docstring directly specified after it as markdown
-    :return:
-    """
-
-
-    name = name.lower()
-
-    j=doc.docsite._j
-
-    if repo!="":
-        path=j.clients.git.getContentPathFromURLorPath(repo)
-        key = j.data.hash.md5_string("macro_include_%s_%s"%(repo,name))
-
-        def do(path="",name="",start="",end="",paragraph=False,docstring=""):
-            tofind = name.lower().replace("\\","/").replace("//","/")
-            ext = j.sal.fs.getFileExtension(name)
-            extlower = ext.lower()
-            res=[]
-            for item in j.sal.fs.listFilesInDir(path, recursive=True,followSymlinks=False, listSymlinks=False):
-                if item.lower().find(tofind)!=-1:
-                    res.append(item)
-            if len(res)>1:
-                raise RuntimeError("found more than 1 document for:%s %s"%(path,name))
-            if len(res)==0:
-                raise RuntimeError("could not find document in repo:%s name:%s"%(path,name))
-            content = j.sal.fs.readFile(res[0])
-            content = j.core.text.strip(content)
-            content2=_file_process(j=j,content=content,start=start,end=end,paragraph=paragraph,docstring=docstring)
-
-            if extlower in ["","md"]:
-                return content2
-            else:
-                if extlower in ["py"]:
-                    lang="python"
-                elif extlower in ["toml"]:
-                    lang="toml"
-                elif extlower in ["json"]:
-                    lang="json"
-                elif extlower in ["yaml"]:
-                    lang="yaml"
-                elif extlower in ["txt"]:
-                    lang="txt"
-                elif extlower in ["bash","sh"]:
-                    lang="bash"
-                else:
-                    raise RuntimeError("did not find extension to define which code language")
-
-                content3 = content2.replace("```","'''")
-                content4="```%s\n\n%s\n\n```\n\n"%(lang,content3)
-            return content4
-
-        content = j.tools.markdowndocs._cache.get(key, method=do, expire=600, refresh=True, path=path,
-                                                  name=name, start=start,end=end,docstring=docstring,paragraph=paragraph)
-        return content
-
-    if name.find(":") == -1:
-        doc = doc.docsite.doc_get(name, die=False)
-        if doc==None:
-            #walk over all docsites
-            res=[]
-            for key,ds in j.tools.markdowndocs.docsites.items():
-                doc = ds.doc_get(name, die=False)
-                if doc != None:
-                    res.append(doc)
-            if len(res)==1:
-                doc=res[0]
-            else:
-                #did not find or more than 1
-                doc = None
-                
-        if doc != None:            
-            newcontent = doc.markdown
-        else:
-            raise RuntimeError("ERROR: COULD NOT INCLUDE:%s (not found)" % name)
-
+    if docsite_name:
+        docsite = j.tools.markdowndocs.docsite_get(docsite_name)
     else:
-        docsiteName, name = name.split(":")
-        docsite = j.tools.markdowndocs.docsite_get(docsiteName)
-        doc = docsite.doc_get(name, die=False)
-        if doc != None:
-            newcontent = doc.markdown
+        repo = current_docsite.get_real_source(custom_link)
+        if not CustomLink(repo).is_url:
+            docsite = current_docsite
         else:
-            raise RuntimeError("ERROR: COULD NOT INCLUDE:%s:%s (not found)" % (docsiteName, name))
+            # the real source is a url, get a new link and docsite
+            custom_link = GithubLinker.to_custom_link(repo)
+            # to match any path, start with root `/`
+            url = GithubLinker(custom_link.account, custom_link.repo).tree('/')
+            docsite = j.tools.markdowndocs.load(url, name=custom_link.repo)
 
+    try:
+        content = j.sal.fs.readFile(docsite.file_get(custom_link.path))
+    except j.exceptions.BaseJSException:
+        content = docsite.doc_get(custom_link.path).markdown_source
 
-    return newcontent
+    if not ignore:
+        ignore = []
+    if remarks_skip:
+        ignore.append(r'^\#')
 
+    if custom_link.marker or ignore or doc_only or header_levels_modify:
+        content = process_content(
+            content, marker=custom_link.marker, doc_only=doc_only,
+            header_levels_modify=header_levels_modify, ignore=ignore)
+
+    return with_code_block(content, _type=codeblock_type)

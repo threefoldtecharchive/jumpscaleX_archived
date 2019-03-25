@@ -38,8 +38,8 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         self.dirs = {
             self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/openresty.cfg'): 'cfg/',
             self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/mime.types'): 'cfg/',
-            self.tools.joinpaths(j.core.dirs.BASEDIR, 'openresty/'): 'openresty/'
-            '/lib/x86_64-linux-gnu/libnss_files.so.2': 'lib',
+            self.tools.joinpaths(j.core.dirs.BASEDIR, 'openresty/'): 'openresty/',
+                '/lib/x86_64-linux-gnu/libnss_files.so.2': 'lib',
         }
         lua_files = j.sal.fs.listFilesInDir(self.tools.joinpaths(j.core.dirs.BASEDIR, 'bin/'), filter='*.lua')
         for file in lua_files:
@@ -73,7 +73,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
 
     def _build_prepare(self):
         j.builder.system.package.mdupdate()
-        j.builder.tools.package_install('build-essential libpcre3-dev libssl-dev zlib1g-dev')
+        j.builder.system.package.ensure('build-essential libpcre3-dev libssl-dev zlib1g-dev')
         j.builder.tools.dir_remove('{DIR_VAR}/build/openresty')
         j.core.tools.dir_ensure('{DIR_VAR}/build/openresty')
         url = 'https://openresty.org/download/openresty-1.13.6.2.tar.gz'

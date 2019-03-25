@@ -5,49 +5,58 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.types.test(name="base")'
+    kosmos 'j.data.types.test(name="base")'
     """
 
-    j.data.types.datetime.test()
-    j.data.types.date.test()
-    j.data.types.numeric.test()
+
+    assert j.data.types.string.__class__.NAME == 'string'
+
+    assert j.data.types.get("s") == j.data.types.get("string")
+    assert j.data.types.get("s") == j.data.types.get("str")
+
+    t = j.data.types.get("i")
+
+    assert t.clean("1") == 1
+    assert t.clean(1) == 1
+    assert t.clean(0) == 0
+    assert t.default_get() == 4294967295
+
+    t = j.data.types.get("li",default="1,2,3")  #list of integers
+
+    assert t._default == [1,2,3]
 
 
-    e = j.data.types.get_custom("e",values="yellow,blue,red")
+    assert t.default_get() == [1,2,3]
 
-    assert str(e)=="ENNUM: BLUE,RED,YELLOW (default:YELLOW)"
+    t2 = j.data.types.get("ls",default="1,2,3")  #list of strings
+    assert t2.default_get() == ['1', '2', '3']
 
-    assert e.toString(1)=="BLUE"
-    assert e.toString(2)=="RED"
+    t3 = j.data.types.get("ls")
+    assert t3.default_get() == []
 
-    try:
-        e.clean(3)
-        raise RuntimeError("should not work")
-    except Exception:
-        pass
+    t=j.data.types.email
+    assert t.check("kristof@in.com")
+    assert t.check("kristof.in.com") == False
 
-    try:
-        e.clean(0)
-        raise RuntimeError("should not work")
-    except Exception:
-        pass
-
-    assert e.toString(" blue")=="BLUE"
-    assert e.toString("Red ")=="RED"
-
-    assert e.clean("Red ")== "RED"
-    assert e.clean("BLUE ")== "BLUE"
-    assert e.clean("YELLOW ")== "YELLOW"
-
-    assert e.toData("BLUE ")== 1
-    assert e.toData("Red ")== 2
-    assert e.toData("YELLOW ")== 3
+    t = j.data.types.bool
+    assert t.clean("true")==True
+    assert t.clean("True")==True
+    assert t.clean(1)==True
+    assert t.clean("1")==True
+    assert t.clean("False")==False
+    assert t.clean("false")==False
+    assert t.clean("0")==False
+    assert t.clean(0)==False
+    assert t.check(1) == False
+    assert t.check(True) == True
 
 
+    b = j.data.types.get('b',default='true')
 
+    assert b.default_get() == True
 
-    assert e._jumpscale_location=="j.data.types.enumerations['6d9fe6d18a520e26fce3841a7065c93b']"
+    #TODO: need more tests here
 
-    # self._log_info("TEST DONE")
+    self._log_info("TEST DONE FOR TYPES BASE")
 
     return ("OK")

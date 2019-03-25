@@ -149,7 +149,7 @@ class MarkDownDocs(j.application.JSBaseClass):
             if not j.sal.fs.exists(path=path):
                 raise j.exceptions.Input("Cannot find path:'%s' for macro's, does it exist?" % path)
 
-            for path0 in j.sal.fs.listFilesInDir(path, recursive=True, filter="*.py", followSymlinks=True):
+            for path0 in j.sal.fs.listFilesInDir(path, recursive=False, filter="*.py", followSymlinks=True):
                 name = j.sal.fs.getBaseName(path0)[:-3]  # find name, remove .py
                 self._macros[name] = j.tools.jinja2.code_python_render(
                     obj_key=name, path=path0, reload=False, objForHash=name)

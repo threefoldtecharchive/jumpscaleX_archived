@@ -1,11 +1,13 @@
-from Jumpscale import j
 import toml
-
 import copy
+import re
+
+from urllib.parse import urlparse, parse_qs, parse_qsl
+from .Link import Link
+from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
-from .Link import Link
-from urllib.parse import urlparse,parse_qs,parse_qsl
+
 
 class Doc(j.application.JSBaseClass):
     """
@@ -20,8 +22,8 @@ class Doc(j.application.JSBaseClass):
         if "/blogs/" in path or "/blog/" in path:
             self.cat = "blog"
         if "/defs/" in path or "/def/" in path:
-            self.cat = "def"            
-        
+            self.cat = "def"
+
         self.path_dir = j.sal.fs.getDirName(self.path)
         self.path_dir_rel = j.sal.fs.pathRemoveDirPart(self.path_dir, self.docsite.path).strip("/")
         self.name = self._clean(name)
@@ -30,9 +32,8 @@ class Doc(j.application.JSBaseClass):
         self.name_original = name
         self.path_rel = j.sal.fs.pathRemoveDirPart(path, self.docsite.path).strip("/")
 
-        name_dot =  "%s/%s" % (self.path_dir_rel,self.name)
-        self.name_dot_lower = self._clean("%s/%s" % (self.path_dir_rel,self.name))
-
+        name_dot = "%s/%s" % (self.path_dir_rel, self.name)
+        self.name_dot_lower = self._clean("%s/%s" % (self.path_dir_rel, self.name))
 
         # self.markdown_source = ""
         # self.show = True
@@ -46,7 +47,7 @@ class Doc(j.application.JSBaseClass):
 
         self._extension = None
 
-        self._data = {} #is all data, from parents as well, also from default data
+        self._data = {}  # is all data, from parents as well, also from default data
 
         self._md = None
 
@@ -58,9 +59,9 @@ class Doc(j.application.JSBaseClass):
         self._links = []
         self.render_obj = None
 
-    def _clean(self,name):
-        name=name.replace("/",".")
-        name=name.strip(".")
+    def _clean(self, name):
+        name = name.replace("/", ".")
+        name = name.strip(".")
         return j.core.text.convert_to_snake_case(name)
 
     # def _get_file_path_new(self,name="",extension="jpeg"):
@@ -90,11 +91,10 @@ class Doc(j.application.JSBaseClass):
     def images(self):
         return self.links_get(cat="image")
 
-
     @property
     def extension(self):
         if not self._extension:
-           self._extension = j.sal.fs.getFileExtension(self.path)        
+            self._extension = j.sal.fs.getFileExtension(self.path)
         return self._extension
 
     @property
@@ -105,7 +105,7 @@ class Doc(j.application.JSBaseClass):
             self.error_raise("Could not find title in doc.")
 
     def error_raise(self, msg):
-        return self.docsite.error_raise(msg, doc=self)            
+        return self.docsite.error_raise(msg, doc=self)
 
     # def htmlpage_get(self,htmlpage=None):
     #     if htmlpage is None:
@@ -122,11 +122,11 @@ class Doc(j.application.JSBaseClass):
 
     @property
     def data(self):
-        if self._data=={}:
+        if self._data == {}:
 
-            #look for parts which are data
+            # look for parts which are data
             for part in self.parts_get(cat="data"):
-                for key,val in part.ddict.items():
+                for key, val in part.ddict.items():
                     print("data update")
                     if j.data.types.list.check(val):
                         if key not in self._data:
@@ -137,7 +137,7 @@ class Doc(j.application.JSBaseClass):
                     else:
                         self._data[key] = val
 
-            #now we have all data from the document itself
+            # now we have all data from the document itself
 
             keys = [part for part in self.docsite.data_default.keys()]
             keys.sort(key=len)
@@ -147,7 +147,6 @@ class Doc(j.application.JSBaseClass):
                     data = self.docsite.data_default[key]
                     self._data_update(data)
             print("data process doc")
-
 
         return self._data
 
@@ -168,8 +167,8 @@ class Doc(j.application.JSBaseClass):
 
     def header_get(self, level=1, nr=0):
         res = self.markdown_obj.parts_get(cat="header")
-        if len(res)<1:
-            return self.error_raise("header level:%s %s could not be found"%(level,nr))
+        if len(res) < 1:
+            return self.error_raise("header level:%s %s could not be found" % (level, nr))
         for header in res:
             if header.level == level:
                 return header
@@ -184,13 +183,18 @@ class Doc(j.application.JSBaseClass):
     #             self.kwargs[key]=val
     #     return self.markdown
 
+    def _process(self):
+        if not self._processed:
+            self._macros_process()
+            self._links_process()
+            self._processed = True
+
     @property
     def markdown(self):
         """
         markdown after processing of the full doc
         """
-        self._macros_process()
-        self._links_process()
+        self._process()
         res = self.markdown_obj.markdown
         # try:
         #     res = self.markdown_obj.markdown
@@ -201,7 +205,7 @@ class Doc(j.application.JSBaseClass):
         #     res = msg
 
         if "{{" in res:
-            #TODO:*1 rendering does not seem to be ok
+            # TODO:*1 rendering does not seem to be ok
             res = j.tools.jinja2.template_render(text=res, obj=self.render_obj, **self.data)
         return res
 
@@ -218,7 +222,8 @@ class Doc(j.application.JSBaseClass):
     def markdown_clean(self):
         # remove the code blocks (comments are already gone)
         print('markdown_clean')
-        from IPython import embed;embed(colors='Linux')
+        from IPython import embed
+        embed(colors='Linux')
         return None
 
     @property
@@ -244,35 +249,34 @@ class Doc(j.application.JSBaseClass):
             if key not in self._data:
                 self._data[key] = copy.copy(valUpdate2)  # needs to be copy.copy otherwise we rewrite source later
 
-
-    def link_get(self,filename=None,cat=None,nr=0,die=True):
+    def link_get(self, filename=None, cat=None, nr=0, die=True):
         """
         @param cat: image, doc,link, officedoc, imagelink  #doc is markdown
         """
         res = self.links_get(filename=filename, cat=cat)
-        if len(res)== 0:
+        if len(res) == 0:
             if die:
-                raise RuntimeError("could not find link %s:%s"%(filename,cat))
+                raise RuntimeError("could not find link %s:%s" % (filename, cat))
             else:
                 return None
-        if nr>len(res):
+        if nr > len(res):
             if die:
-                raise RuntimeError("could not find link %s:%s at position:%s"%(filename,cat,nr))
+                raise RuntimeError("could not find link %s:%s at position:%s" % (filename, cat, nr))
             else:
-                return None            
+                return None
         return res[nr]
 
-    def links_get(self,filename=None,cat=None):
+    def links_get(self, filename=None, cat=None):
         """
         @param cat: image, doc,link, officedoc, imagelink  #doc is markdown
         :param filename:
         :return:
         """
         self._links_process()
-        res=[]
+        res = []
         for link in self._links:
-            found=True
-            if cat is not None and not link.cat==cat:
+            found = True
+            if cat is not None and not link.cat == cat:
                 found = False
             if filename is not None and not link.filename.startswith(filename):
                 found = False
@@ -280,25 +284,26 @@ class Doc(j.application.JSBaseClass):
                 res.append(link)
         return res
 
-    def _args_get(self,methodcode):
+    def _args_get(self, methodcode):
         if "(" in methodcode:
             methodcode = methodcode.split("(", 1)[1]
             methodcode = methodcode.rstrip(", )")  # remove end )
-            args = [ item.strip().strip("\"").strip("'").strip() for item in methodcode.split(",") if item.find("=")==-1]
+            args = [item.strip().strip("\"").strip("'").strip()
+                    for item in methodcode.split(",") if item.find("=") == -1]
         else:
-            args=[]
+            args = []
         return args
 
     def _kwargs_get(self, methodcode):
         if "(" in methodcode:
             methodcode = methodcode.split("(", 1)[1]
             methodcode = methodcode.rstrip(", )")  # remove end )
-        kwargs_ = [ item.strip() for item in methodcode.split(",") if item.find("=")!=-1]
+        kwargs_ = [item.strip() for item in methodcode.split(",") if item.find("=") != -1]
         if kwargs_ != []:
-            kw={}
+            kw = {}
             for item in kwargs_:
-                pre,post=item.split("=",1)
-                kw[pre.strip()]=eval(post)
+                pre, post = item.split("=", 1)
+                kw[pre.strip()] = eval(post)
             return kw
         else:
             return {}
@@ -309,10 +314,10 @@ class Doc(j.application.JSBaseClass):
         """
 
         for part in self.parts_get(cat="macro"):
-            if part.method.strip()=="":
+            if part.method.strip() == "":
                 return self.docsite.error_raise("empty macro cannot be executed", doc=self)
 
-            macro_name = part.method.split("(",1)[0].strip()
+            macro_name = part.method.split("(", 1)[0].strip()
 
             if not macro_name in j.tools.markdowndocs._macros:
                 e = "COULD NOT FIND MACRO"
@@ -328,7 +333,7 @@ class Doc(j.application.JSBaseClass):
 
             # part.result = method(self,*args,**kwargs,content=part.data)
             try:
-                part.result = method(self,*args,**kwargs,content=part.data)
+                part.result = method(self, *args, **kwargs, content=part.data)
             except Exception as e:
                 block = "```python\nERROR IN MACRO*** TODO: *1 ***\nmacro:\n%s\nERROR:\n%s\n```\n" % (macro_name, e)
                 self._log_error(block)
@@ -344,42 +349,42 @@ class Doc(j.application.JSBaseClass):
             return
         if self.markdown_source == "":
             return
-        regex = "!*\[.*?\] *\(.*?\)"
-        for match in j.data.regex.yieldRegexMatches(regex, self.markdown_source, flags=0):
+        regex = Link.LINK_MARKDOWN_PATTERN
+        for match in j.data.regex.yieldRegexMatches(regex, self.markdown_source, flags=re.X):
             self._log_debug("##:file:link:%s" % match)
-            link = Link(self,match.founditem)
-            if not link.link_source=="" and not self._link_exists(link):
+            link = Link(self, match.founditem)
+            if not link.link_source == "" and not self._link_exists(link):
                 self._links.append(link)
 
-    def part_get(self,text_to_find=None,cat=None,nr=0,die=True):
+    def part_get(self, text_to_find=None, cat=None, nr=0, die=True):
         """
         return part of markdown document e.g. header
 
         @param cat is: table, header, macro, code, comment1line, comment, block, data, image
         @param nr is the one you need to have 0 = first one which matches
         @param text_to_find looks into the text
-        """        
-        return self.markdown_obj.part_get(text_to_find=text_to_find,cat=cat, nr=nr,die=die)
+        """
+        return self.markdown_obj.part_get(text_to_find=text_to_find, cat=cat, nr=nr, die=die)
 
-    def parts_get(self,text_to_find=None,cat=None):  
+    def parts_get(self, text_to_find=None, cat=None):
         """
         @param cat is: table, header, macro, code, comment1line, comment, block, data, image
         @param text_to_find looks into the text
-        """         
-        return self.markdown_obj.parts_get(text_to_find=text_to_find,cat=cat)
+        """
+        return self.markdown_obj.parts_get(text_to_find=text_to_find, cat=cat)
 
     def write(self):
-        self._log_info("write:%s"%self)
-        md = self.markdown #just to trigger the error checking
+        self._log_info("write:%s" % self)
+        md = self.markdown  # just to trigger the error checking
         j.sal.fs.createDir(j.sal.fs.joinPaths(self.docsite.outpath, self.path_dir_rel))
 
         for link in self._links:
-            replace=False
+            replace = False
             if link.filename:
                 dest_file = j.sal.fs.joinPaths(self.docsite.outpath, self.path_dir_rel, link.filename)
 
                 if link.filepath:
-                    j.sal.fs.copyFile(link.filepath,dest_file)
+                    j.sal.fs.copyFile(link.filepath, dest_file)
                 else:
                     if link.source.startswith("!"):
                         link.download(dest=dest_file)
@@ -389,22 +394,17 @@ class Doc(j.application.JSBaseClass):
                 link.link_source = link.filename
                 md = link.replace_in_txt(md)
 
+        dest = j.sal.fs.joinPaths(self.docsite.outpath, self.path_dir_rel, self.name)+".md"
+        j.sal.fs.writeFile(dest, md)
 
-        dest = j.sal.fs.joinPaths(self.docsite.outpath, self.path_dir_rel,self.name)+".md"
-        j.sal.fs.writeFile(dest,md)
-
-
-
-
-    def _link_exists(self,link):
+    def _link_exists(self, link):
         for l in self._links:
             if l.link_source == link.link_source:
                 return True
         return False
 
-
-    def link_add(self,link_src,path=None):
-        l = Link(self,link_src)
+    def link_add(self, link_src, path=None):
+        l = Link(self, link_src)
         if not self._link_exists(l):
             self._links.append(l)
 
@@ -412,5 +412,3 @@ class Doc(j.application.JSBaseClass):
         return "doc:%s:%s" % (self.name, self.path)
 
     __str__ = __repr__
-
-

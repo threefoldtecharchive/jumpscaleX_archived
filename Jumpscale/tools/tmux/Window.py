@@ -72,7 +72,7 @@ class Window(j.application.JSBaseClass):
                         if pane2.name != name and  get_name(pane.name) != name:
                             pane2.kill()
                 if reset:
-                    pane.reset()
+                    pane.kill()
                 else:
                     if clear:
                         pane.clear()

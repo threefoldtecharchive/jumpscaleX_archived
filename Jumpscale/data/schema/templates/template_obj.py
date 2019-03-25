@@ -1,114 +1,17 @@
 from Jumpscale import j
-
-List0 = j.data.schema.list_base_class_get()
-
-class ModelOBJ():
-    
-    def __init__(self,schema,data=None, capnpbin=None, model=None):
-
-        if data is None:
-            data = {}
-        self.id = None
-        self._schema = schema
-        self._capnp_schema = schema._capnp_schema
-        self.model = model
-        self.autosave = False
-        self.readonly = False
-        self._JSOBJ = True
-        self._load_from_data(data=data, capnpbin=capnpbin, keepid=False, keepacl=False)
-
-    def _load_from_data(self,data=None, capnpbin=None, keepid=True, keepacl=True):
-
-        if self.readonly:
-            raise RuntimeError("cannot load from data, obj is readonly.\n%s"%self)
-
-        if capnpbin is not None:
-            self._cobj_ = self._capnp_schema.from_bytes_packed(capnpbin)
-            set_default = False
-        else:
-            self._cobj_ = self._capnp_schema.new_message()
-            set_default = True
-
-        self._reset()
-
-        if set_default:
-            #should only be done when not capnpbin
-            self._defaults_set()
-
-        if not keepid:
-            #means we are overwriting id, need to remove from cache
-            if self.model is not None and self.model.obj_cache is not None:
-                if self.id is not None and self.id in self.model.obj_cache:
-                    self.model.obj_cache.pop(self.id)
-
-        if not keepacl:
-            self.acl_id = 0
-            self._acl = None
-
-        if data is not None:
-            self.data_update(data=data)
-
-    def edit(self):
-        e = j.data.dict_editor.get(self._ddict)
-        e.edit()
-        self.data_update(e._dict)
-
-    def view(self):
-        e = j.data.dict_editor.get(self._ddict)
-        e.view()
-
-    def data_update(self,data=None):
-        """
-        upload data
-        :param data:
-        :return:
-        """
-
-        if data is None:
-            data={}
+from Jumpscale.data.schema.DataObjBase import DataObjBase
 
 
-        if self.readonly:
-            raise RuntimeError("cannot load from data, obj is readonly.\n%s"%self)
+class ModelOBJ(DataObjBase):
 
-        if j.data.types.json.check(data):
-            data = j.data.serializers.json.loads(data)
-
-        if not j.data.types.dict.check(data):
-            raise RuntimeError("data needs to be of type dict, now:%s"%data)
-
-        if data!=None and data!={}:
-            if self.model is not None:
-                data = self.model._dict_process_in(data)
-            for key,val in data.items():
-                setattr(self, key, val)
-
-    @property
-    def acl(self):
-        if self._acl is None:
-            if self.acl_id ==0:
-                self._acl = self.model.bcdb.acl.new()
-        return self._acl
-
-    def _hr_get(self,exclude=[]):
-        """
-        human readable test format
-        """
-        out = "\n"
-        res = self._ddict_hr_get(exclude=exclude)
-        keys = [name for name in res.keys()]
-        keys.sort()
-        for key in keys:
-            item = res[key]
-            out += "- %-20s: %s\n" % (key, item)
-        return out
-
+    __slots__ = ["id","_schema","_model","_autosave","_readonly","_JSOBJ","_cobj_","_changed_items","_acl_id","_acl",
+                        {% for prop in obj.lists %}"_{{prop.name}}",{% endfor %}]
 
     def _defaults_set(self):
         pass
         {% for prop in obj.properties %}
         {% if not prop.jumpscaletype.NAME == "jsobject" %}
-        if {{prop.default_as_python_code}} is not None:
+        if {{prop.default_as_python_code}} not in [None,"","0.0",0,'0']:
             self.{{prop.name}} = {{prop.default_as_python_code}}
         {% endif %}
         {% endfor %}
@@ -120,16 +23,21 @@ class ModelOBJ():
         """
         self._changed_items = {}
         #LIST
+
         {% for ll in obj.lists %}
-        self._{{ll.name}} = List0(self._schema.property_{{ll.name}})
+        # self._{{ll.name}} = j.data.types.get("l",self._schema.property_{{ll.name}}.js_typelocation)
+        raise RuntimeError("not get here")
+
+        self._{{ll.name}} = {{ll.js_typelocation}}.default_get()
+
         for capnpbin in self._cobj_.{{ll.name_camel}}:
             self._{{ll.name}}.new(data=capnpbin)
         {% endfor %}
+
         #PROP
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
-        self._schema_{{prop.name}} = j.data.schema.get(url="{{prop.jumpscaletype.SUBTYPE}}")
-        
+        self._schema_{{prop.name}} = j.data.schema.get(url="{{prop.jumpscaletype._schema_url}}")
         if self._cobj_.{{prop.name_camel}}:
             self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.get(capnpbin=self._cobj_.{{prop.name_camel}})
         else:
@@ -140,54 +48,58 @@ class ModelOBJ():
 
     {# generate the properties #}
     {% for prop in obj.properties %}
-    @property 
+    @property
     def {{prop.name}}(self):
         {% if prop.comment != "" %}
         '''
         {{prop.comment}}
         '''
-        {% endif %} 
+        {% endif %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
         return self._changed_items["{{prop.name}}"]
-        {% else %} 
+        {% else %}
         if "{{prop.name}}" in self._changed_items:
             return self._changed_items["{{prop.name}}"]
         else:
-            return self._cobj_.{{prop.name_camel}}
-        {% endif %} 
-        
+            v = {{prop.js_typelocation}}.clean(self._cobj_.{{prop.name_camel}})
+            if isinstance(v,j.data.types._TypeBaseObjClass):
+                self._changed_items["{{prop.name}}"] = v
+            return v
+
+        {% endif %}
+
     @{{prop.name}}.setter
     def {{prop.name}}(self,val):
-        if self.readonly:
+        if self._readonly:
             raise RuntimeError("object readonly, cannot set.\n%s"%self)
         {% if prop.jumpscaletype.NAME == "jsobject" %}
         self._changed_items["{{prop.name}}"] = val
-        {% else %} 
+        {% else %}
         #will make sure that the input args are put in right format
         val = {{prop.js_typelocation}}.clean(val)  #is important because needs to come in right format e.g. binary for numeric
         if val != self.{{prop.name}}:
             self._changed_items["{{prop.name}}"] = val
-            if self.model:
+            if self._model:
                 # self._log_debug("change:{{prop.name}} %s"%(val))
-                self.model.triggers_call(obj=self, action="change", propertyname="{{prop.name}}")
-            if self.autosave:
+                self._model.triggers_call(obj=self, action="change", propertyname="{{prop.name}}")
+            if self._autosave:
                 self.save()
         {% endif %}
 
     {% if prop.jumpscaletype.NAME == "numeric" %}
     @property
     def {{prop.name}}_usd(self):
-        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.name}})
+        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.name}}._data)
 
     @property
     def {{prop.name}}_eur(self):
-        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.name}},curcode="eur")
+        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.name}}._data,curcode="eur")
 
     def {{prop.name}}_cur(self,curcode):
         """
         @PARAM curcode e.g. usd, eur, egp, ...
         """
-        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.name}}, curcode = curcode)
+        return {{prop.js_typelocation}}.bytes2cur(self.{{prop.name}}._data, curcode = curcode)
 
     {% endif %}
 
@@ -201,63 +113,25 @@ class ModelOBJ():
 
     @{{ll.name}}.setter
     def {{ll.name}}(self,val):
-        if self.readonly:
+        if self._readonly:
             raise RuntimeError("object readonly, cannot set.\n%s"%self)
         self._{{ll.name}}._inner_list=[]
         if j.data.types.string.check(val):
             val = [i.strip() for i in val.split(",")]
         for item in val:
             self._{{ll.name}}.append(item)
-        if self.autosave:
+        if self._autosave:
             self.save()
     {% endfor %}
 
 
-    def save(self):
-        if self.model:
-            if self.readonly:
-                raise RuntimeError("object readonly, cannot be saved.\n%s"%self)
-            # print (self.model.__class__.__name__)
-            {% for prop in obj.properties %}
-            if self.model.schema.property_{{prop.name}}.unique:
-                for mm in self.model.get_all():
-                    if mm.{{prop.name}} == self.model.schema.property_{{prop.name}}.default:
-                        raise RuntimeError("cannot save , {{prop.name}} should be unique")
-            {% endfor %}
-            if not self.model.__class__._name=="acl" and self.acl is not None:
-                if self.acl.id is None:
-                    self.acl.save()
-                if self.acl.id != self.acl_id:
-                    self._changed_items["ACL"]=True
-
-            if self._changed:
-                o=self.model._set(self)
-                self.id = o.id
-                # self._log_debug("MODEL CHANGED, SAVE DONE")
-                return o
-
-            return self
-        raise RuntimeError("cannot save, model not known")
-
-    def delete(self):
-        if self.model:
-            if self.readonly:
-                raise RuntimeError("object readonly, cannot be saved.\n%s"%self)
-            if not self.model.__class__.__name__=="ACL":
-                self.model.delete(self)
-            return self
-        raise RuntimeError("cannot save, model not known")
-
-    def _check(self):
-        self._ddict
-        return True
 
     @property
     def _changed(self):
         if  self._changed_items != {}:
             return True
         {% for ll in obj.lists %}
-        if self._{{ll.name}}.changed:
+        if self._{{ll.name}}._changed:
             return True
         {% endfor %}
         return False
@@ -270,16 +144,20 @@ class ModelOBJ():
         ddict = self._cobj_.to_dict()
 
         {% for prop in obj.lists %}
-        if self._{{prop.name}}.changed:
-            #means the list was modified
-            if "{{prop.name_camel}}" in ddict:
-                ddict.pop("{{prop.name_camel}}")
-            ddict["{{prop.name_camel}}"]=[]
-            for item in self._{{prop.name}}._inner_list:
-                if self._{{prop.name}}.schema_property.pointer_type is not None:
-                    #use data in stead of rich object
-                    item = item._data
-                ddict["{{prop.name_camel}}"].append(item)
+        if self._{{prop.name}}._changed:
+            raise RuntimeError("should not get here")
+            # #means the list was modified
+            # if "{{prop.name_camel}}" in ddict:
+            #     ddict.pop("{{prop.name_camel}}")
+            # ddict["{{prop.name_camel}}"]=[] #make sure we have empty list
+            #
+            # for item in self._{{prop.name}}._inner_list:
+            #     if self._{{prop.name}}._child_type.NAME is "jsobject":
+            #         #use data in stead of rich object
+            #         item = item._data
+            #     elif hasattr(item,"_data"):
+            #         item = item._data
+            #     ddict["{{prop.name_camel}}"].append(item)
         {% endfor %}
 
         {% for prop in obj.properties %}
@@ -288,7 +166,8 @@ class ModelOBJ():
             {% if prop.jumpscaletype.NAME == "jsobject" %}
             ddict["{{prop.name_camel}}"] = self._changed_items["{{prop.name}}"]._data
             {% else %}
-            ddict["{{prop.name_camel}}"] = {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
+            o =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
+            ddict["{{prop.name_camel}}"] = o
             {% endif %}
         {% endfor %}
 
@@ -310,80 +189,37 @@ class ModelOBJ():
 
         return self._cobj_
 
-    @property
-    def _data(self):        
-        try:
-            self._cobj_.clear_write_flag()
-            return self._cobj.to_bytes_packed()
-        except:
-            self._cobj_=self._cobj_.as_builder()
-            return self._cobj.to_bytes_packed()
 
     @property
     def _ddict(self):
         d={}
         {% for prop in obj.properties %}
-        {% if prop.jumpscaletype.NAME == "jsobject" %}
+        {% if prop.jumpscaletype.NAME == "jsobject" %} #NEED TO CHECK : #TODO: despiegk
         d["{{prop.name}}"] = self.{{prop.name}}._ddict
+        {% elif prop.jumpscaletype.BASETYPE == "OBJ" %}
+        d["{{prop.name}}"] = self.{{prop.name}}._dictdata
+        j.shell()
         {% else %}
-        d["{{prop.name}}"] = self.{{prop.name}}
-        {% endif %}    
-        {% endfor %}
-
-        {% for prop in obj.lists %}
-        d["{{prop.name}}"] = self._{{prop.name}}.pylist()
-        {% endfor %}
-        if self.id is not None:
-            d["id"]=self.id
-
-        if self.model is not None:
-            d=self.model._dict_process_out(d)
-        return d
-
-    @property
-    def _ddict_hr(self):
-        """
-        human readable dict
-        """
-        d={}
-        {% for prop in obj.properties %}
-        {% if prop.jumpscaletype.NAME == "jsobject" %}
-        d["{{prop.name}}"] = self.{{prop.name}}._ddict_hr
-        {% else %}
-        d["{{prop.name}}"] = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
+        if isinstance(self.{{prop.name}},j.data.types._TypeBaseObjClass):
+            d["{{prop.name}}"] = self.{{prop.name}}._dictdata
+        else:
+            d["{{prop.name}}"] = self.{{prop.name}}
         {% endif %}
         {% endfor %}
+
         {% for prop in obj.lists %}
-        d["{{prop.name}}"] = self._{{prop.name}}.pylist(subobj_format="H")
+        raise RuntimeError("not here")
+        # d["{{prop.name}}"] = self._{{prop.name}}.pylist()
         {% endfor %}
+
         if self.id is not None:
             d["id"]=self.id
-        if self.model is not None:
-            d=self.model._dict_process_out(d)
+
+        if self._model is not None:
+            d=self._model._dict_process_out(d)
         return d
 
-    @property
-    def _ddict_json_hr(self):
-        """
-        json readable dict
-        """
-        # d={}
-        # {% for prop in obj.properties %}
-        # {% if prop.jumpscaletype.NAME == "jsobject" %}
-        # d["{{prop.name}}"] = self.{{prop.name}}._ddict_json
-        # {% else %}
-        # d["{{prop.name}}"] = {{prop.js_typelocation}}.toJSON(self.{{prop.name}})
-        # {% endif %}
-        # {% endfor %}
-        # {% for prop in obj.lists %}
-        # d["{{prop.name}}"] = self._{{prop.name}}.pylist(subobj_format="J")
-        # {% endfor %}
-        # if self.id is not None:
-        #     d["id"]=self.id
-        # if self.model is not None:
-        #     d=self.model._dict_process_out(d)
-        # return d
-        return j.data.serializers.json.dumps(self._ddict_hr)
+
 
     def _ddict_hr_get(self,exclude=[],maxsize=100):
         """
@@ -392,11 +228,14 @@ class ModelOBJ():
         d = {}
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
-        d["{{prop.name}}"] = self.{{prop.name}}._ddict_hr
+        # d["{{prop.name}}"] = j.data.serializers.yaml.dumps(self.{{prop.name}}._ddict_hr)
+        d["{{prop.name}}"] = "\n"+j.core.text.indent(self.{{prop.name}}._str(),4)
         {% else %}
         res = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
         if len(str(res))<maxsize:
             d["{{prop.name}}"] = res
+        else:
+            d["{{prop.name}}"] = "\n"+j.core.text.indent(res,4)
         {% endif %}
         {% endfor %}
         {% for prop in obj.lists %}
@@ -407,25 +246,7 @@ class ModelOBJ():
         for item in exclude:
             if item in d:
                 d.pop(item)
+        if self._model is not None:
+            d=self._model._dict_process_out(d)
         return d
 
-
-
-    @property
-    def _json(self):
-        return j.data.serializers.json.dumps(str(self._ddict),True,True)
-
-    @property
-    def _toml(self):
-        return j.data.serializers.toml.dumps(self._ddict)
-
-
-
-    @property
-    def _msgpack(self):
-        return j.data.serializers.msgpack.dumps(self._ddict)
-
-    def __str__(self):
-        return j.data.serializers.json.dumps(str(self._ddict_hr),sort_keys=True, indent=True)
-
-    __repr__ = __str__

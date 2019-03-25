@@ -10,6 +10,7 @@ from .BASECLASSES.JSFactoryBase import JSFactoryBase
 from .BASECLASSES.JSBaseConfig import JSBaseConfig
 from .BASECLASSES.JSBaseConfigs import JSBaseConfigs
 from .BASECLASSES.JSBaseConfigParent import JSBaseConfigParent
+from .BASECLASSES.JSBaseDataObj import JSBaseDataObj
 import gc
 import sys
 import types
@@ -36,7 +37,7 @@ class Application(object):
 
         self._systempid = None
 
-        self.interactive = True
+        self.interactive = False
 
         self.schemas = None
 
@@ -46,6 +47,9 @@ class Application(object):
         self._JSGroup = JSGroup
 
         self.appname = "unknown"
+
+
+        self.JSBaseDataObjClass = JSBaseDataObj
 
     @property
     def appname(self):
@@ -133,6 +137,9 @@ class Application(object):
         """
         return JSFactoryBase
 
+
+
+
     @property
     def JSBaseConfigClass(self):
         """
@@ -186,8 +193,7 @@ class Application(object):
     @property
     def debug(self):
         if self._debug is None:
-            self._debug = self._j.core.state.configGetFromDictBool(
-                "system", "debug", False)
+            return self._j.core.myenv.debug
         return self._debug
 
     @debug.setter
@@ -277,7 +283,7 @@ class Application(object):
         # Both are wrong! One should call self._j.application.stop(<exitcode>)
         # TODO: can we get the line of code which called sys.exit here?
 
-        # self._j.logger.log("UNCLEAN EXIT OF APPLICATION, SHOULD HAVE USED self._j.application.stop()", 4)
+        # self._self._log_debug("UNCLEAN EXIT OF APPLICATION, SHOULD HAVE USED self._j.application.stop()", 4)
         import sys
         if not self._calledexit:
             self.stop(stop=False)
@@ -360,7 +366,7 @@ class Application(object):
                     continue
                 if key in ["exceptions","core","dirs","application","data_units","errorhandler"]:
                     continue
-                self._j.core.tools.log("iterate jumpscale factory:%s"%key)
+                # self._j.core.tools.log("iterate jumpscale factory:%s"%key)
                 for key2,item2 in item.__dict__.items():
                     # self._j.core.tools.log("iterate rootobj:%s"%key2)
                     if item2 is not None:

@@ -205,7 +205,7 @@ class Expect(j.application.JSBaseClass):
     def log(self, message, category="", level=5):
         category = "expect.%s" % category
         category = category.strip(".")
-        j.logger.log(message, category=category, level=level)
+        self._log_debug(message, category=category, level=level)
 
     def enableCleanString(self):
         """
@@ -348,7 +348,7 @@ class Expect(j.application.JSBaseClass):
     #     if not self._pxssh.login(ip, login, password, login_timeout=login_timeout):
     #         raise ValueError('Could not connect to %s, check either login/password are not correct or host is not reacheable over SSH.'%ip)
     #     else:
-    #         j.logger.log('SSH %s@%s session login successful' % (login, ip), 6)
+    #         self._log_debug('SSH %s@%s session login successful' % (login, ip), 6)
 
     def logout(self):
         """This sends exit. If there are stopped jobs then this sends exit twice.
@@ -406,7 +406,7 @@ class Expect(j.application.JSBaseClass):
         if self._cleanStringEnabled:
             out = self._cleanStr(out)
         self._add2lastOutput(out)
-        j.logger.log("stdout:%s" % out, 9)
+        self._log_debug("stdout:%s" % out, 9)
         return out
 
         # TODO: P2 not right,can never work, needs to check if expect or popen or, ...
@@ -669,12 +669,12 @@ class Expect(j.application.JSBaseClass):
         tokens = self._waitTokens
         tokennr = 0
         for token in tokens:
-            #j.logger.log("checktoken %s : %s" % (token,text))
+            #self._log_debug("checktoken %s : %s" % (token,text))
             tokennr = tokennr + 1
             token = token.lower()
             if text.find(token) != -1:
                 # token found
-                j.logger.log("Found token:%s" % token, 9)
+                self._log_debug("Found token:%s" % token, 9)
                 return tokennr
         return 0
 
@@ -685,7 +685,7 @@ class Expect(j.application.JSBaseClass):
             foundmatch = False
             for filter in self._ignoreLineFilter:
                 if line.find(filter) != -1:
-                    j.logger.log("Found ignore line:%s:%s" % (filter, line), 9)
+                    self._log_debug("Found ignore line:%s:%s" % (filter, line), 9)
                     foundmatch = True
             if foundmatch is False:
                 returnstr = returnstr + line + "\n"
@@ -709,13 +709,13 @@ class Expect(j.application.JSBaseClass):
             returnpart, err = self.receive()
             self._log_debug(returnpart)
             tokenfound = self._checkForTokens(returnpart)
-            # j.logger.log("tokenfound:%s"%tokenfound)
+            # self._log_debug("tokenfound:%s"%tokenfound)
             returnpart = self._ignoreLinesBasedOnFilter(returnpart)
             r = r + returnpart
             curtime = j.data.time.getTimeEpoch()
-            j.logger.log("TimeoutCheck on waitreceive: %s %s %s" % (curtime, starttime, timeoutval), 8)
+            self._log_debug("TimeoutCheck on waitreceive: %s %s %s" % (curtime, starttime, timeoutval), 8)
             if(curtime - starttime > timeoutval):
-                j.logger.log("WARNING: execute %s timed out (timeout was %s)" % (self._lastsend, timeoutval), 6)
+                self._log_debug("WARNING: execute %s timed out (timeout was %s)" % (self._lastsend, timeoutval), 6)
                 timeout = True
             if tokenfound > 0:
                 done = True
@@ -747,7 +747,7 @@ class Expect(j.application.JSBaseClass):
         @return 'E' when error
 
         """
-        j.logger.log('Expect %s ' % outputToExpect, 7)
+        self._log_debug('Expect %s ' % outputToExpect, 7)
 
         try:
             result = self.pexpect.expect(outputToExpect, timeout=timeout)
@@ -755,5 +755,5 @@ class Expect(j.application.JSBaseClass):
         except BaseException:
             msg = 'Failed to expect \"%s\", found \"%s\" instead' % (outputToExpect, self.receive())
             # print msg
-            j.logger.log(msg, 7)
+            self._log_debug(msg, 7)
         return "E"

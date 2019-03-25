@@ -9,7 +9,7 @@ class BuilderAtomicswap(j.builder.system._BaseClass):
         if self._done_get('build') and reset is False:
             return
         j.builder.system.package.mdupdate()
-        j.builder.tools.package_install("git")
+        j.builder.system.package.ensure("git")
         golang = j.builder.runtimes.golang
         golang.install()
         GOPATH = golang.GOPATH

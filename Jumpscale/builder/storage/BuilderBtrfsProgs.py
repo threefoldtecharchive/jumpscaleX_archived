@@ -38,7 +38,7 @@ class BuilderBtrfsProgs(BuilderApp):
         deps = """
         uuid-dev libattr1-dev zlib1g-dev libacl1-dev e2fslibs-dev libblkid-dev liblzo2-dev autoconf
         """
-        j.builder.tools.package_install(deps)
+        j.builder.system.package.ensure(deps)
         self._run("cd {DIR_TEMP}; wget -c %s/%s" % (self._host, self._file))
         self._run("cd {DIR_TEMP}; tar -xf %s -C {CODEDIR}" % self._file)
         self._run("cd {CODEDIR}/btrfs-progs-v4.8; ./autogen.sh")

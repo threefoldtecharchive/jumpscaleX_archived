@@ -19,8 +19,7 @@ class ZDBServer(j.application.JSBaseClass):
         self.port = port
         self.mode = mode
         self.adminsecret = adminsecret
-        self.tmux_window = "digitalme"
-        self.tmux_panel = "p13"
+
 
 
     def isrunning(self):
@@ -56,7 +55,7 @@ class ZDBServer(j.application.JSBaseClass):
         if destroydata:
             self.destroy()
 
-        self.tmuxcmd.start()
+        self.startupcmd.start()
 
 
         self._log_info("waiting for zdb server to start on (%s:%s)" % (self.addr, self.port))
@@ -69,11 +68,11 @@ class ZDBServer(j.application.JSBaseClass):
 
     def stop(self):
         self._log_info("stop zdb")
-        self.tmuxcmd.stop()
+        self.startupcmd.stop()
 
 
     @property
-    def tmuxcmd(self):
+    def startupcmd(self):
 
         idir =  "%s/index/"%(self.datadir)
         ddir =  "%s/data/"%(self.datadir)
@@ -85,11 +84,18 @@ class ZDBServer(j.application.JSBaseClass):
 
 
         cmd="zdb --listen %s --port %s --index %s --data %s --mode %s --admin %s --protect"%(addr,self.port,idir,ddir,self.mode,self.adminsecret)
+        return j.tools.startupcmd.get(name="zdb",cmd=cmd,path="/tmp",ports=[self.port])
 
-        return j.tools.tmux.cmd_get(name="zdb_%s"%self.name,
-                    window=self.tmux_window,pane=self.tmux_panel,
-                    cmd=cmd,path="/tmp",ports=[self.port],
-                    process_strings = ["wwwww:"])
+        # tmux_window = "digitalme"
+        # tmux_panel = "p13"
+        #
+        # j.tools.tmux.window_digitalme_get()
+        # return j.tools.tmux.cmd_get(name="zdb_%s"%self.name,
+        #             window_name=tmux_window,pane_name=tmux_panel,
+        #             cmd=cmd,path="/tmp",ports=[self.port],
+        #             process_strings = ["wwwww:"])
+
+
 
     def destroy(self):
         self.stop()
@@ -116,7 +122,7 @@ class ZDBServer(j.application.JSBaseClass):
         get client to zdb
 
         """
-        cl = j.clients.zdb.get(name=name, nsname=nsname, addr=self.addr, port=self.port, secret=secret, mode=self.mode)
+        cl = j.clients.zdb.client_get( nsname=nsname, addr=self.addr, port=self.port, secret=secret, mode=self.mode)
 
         assert cl.ping()
 
@@ -160,22 +166,22 @@ class ZDBServer(j.application.JSBaseClass):
 
         return self.client_admin_get()
 
-    def build(self):
+    def build(self,reset=True):
         """
-        js_shell 'j.servers.zdb.build()'
+        kosmos 'j.servers.zdb.build()'
         """
-        j.builder.zero_os.zos_db.build(install=True, reset=True)
+        j.builder.db.zdb.install(reset=reset)
 
     def test(self, build=False):
         """
-        js_shell 'j.servers.zdb.test(build=True)'
+        kosmos 'j.servers.zdb.test(build=True)'
         """
+        self.destroy()
         if build:
             self.build()
-        self.destroy()
-        self.start_test_instance()
+        self.start_test_instance(namespaces=["test"])
         self.stop()
-        self.start(mode='seq')
+        self.start()
         cl = self.client_get(nsname="test")
 
         print("TEST OK")

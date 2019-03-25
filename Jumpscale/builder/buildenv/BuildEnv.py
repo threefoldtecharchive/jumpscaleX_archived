@@ -25,11 +25,11 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
         j.builder.system.package.mdupdate()
 
         # if not j.core.platformtype.myplatform.isMac and not j.builder.tools.isCygwin:
-        #     j.builder.tools.package_install("fuse")
+        #     j.builder.system.package.ensure("fuse")
 
         if j.builder.tools.isArch:
             # is for wireless auto start capability
-            j.builder.tools.package_install("wpa_actiond,redis-server")
+            j.builder.system.package.ensure("wpa_actiond,redis-server")
 
         if j.core.platformtype.myplatform.isMac:
             C = ""
@@ -37,7 +37,7 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
             C = "sudo net-tools python3 python3-distutils python3-psutil"
 
         C += " openssl wget curl git mc tmux rsync"
-        j.builder.tools.package_install(C)
+        j.builder.system.package.ensure(C)
 
         # j.builder.sandbox.profileJS.addPath("{DIR_BIN}")
         # j.builder.sandbox.profileJS.save()
@@ -92,7 +92,7 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
         self.install()
         if self._done_check("development", reset):
             return
-        j.builder.tools.package_install(C)
+        j.builder.system.package.ensure(C)
         self._done_set("development")
 
     def upgrade(self, reset=False, update=True):

@@ -73,7 +73,7 @@ class BuilderSSH(j.builder.system._BaseClass):
                                                   (ip_range, port))
             except Exception as e:
                 if str(e).find('command not found') != -1:
-                    j.builder.tools.package_install('nmap')
+                    j.builder.system.package.ensure('nmap')
                     # out=j.sal.process.execute('nmap -p 22 %s | grep for'%range)
                     _, out, _ = j.sal.process.execute('nmap %s -p %s --open -oX {DIR_TEMP}/nmap' %
                                                       (ip_range, port))
@@ -275,8 +275,8 @@ class BuilderSSH(j.builder.system._BaseClass):
         self._log_info('backdoor is working (with passwd)')
 
         self._log_info('make sure some required packages are installed')
-        j.builder.tools.package_install('openssl')
-        j.builder.tools.package_install('rsync')
+        j.builder.system.package.ensure('openssl')
+        j.builder.system.package.ensure('rsync')
 
         self.unauthorizeAll()
 

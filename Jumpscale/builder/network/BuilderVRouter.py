@@ -41,8 +41,8 @@ class BuilderVRouter(j.builder.system._BaseClass):
         self.proxy()
 
     def prepare(self):
-        j.builder.tools.package_install('inetutils-ping')
-        j.builder.tools.package_install('nftables')
+        j.builder.system.package.ensure('inetutils-ping')
+        j.builder.system.package.ensure('nftables')
         self.check()
         j.builder.systemservices.fw.flush(permanent=True)
 
@@ -157,7 +157,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         if not specified then will look for wireless interface which is used in accesspoint and use that one
         """
         self.check()
-        j.builder.tools.package_install("isc-dhcp-server")
+        j.builder.system.package.ensure("isc-dhcp-server")
         if interfaces == []:
             interfaces = [self.wirelessInterfaceNonDefGW]
         r = self.freeNetworkRangeDMZ

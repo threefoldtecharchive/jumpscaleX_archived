@@ -6,9 +6,11 @@
 
 #### basic docker install
 
+```bash
+python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py -3 --portrange=3 --name=test -d -y -c --secret="ssh"
 ```
-python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py -3 --portrange=3 --name=test -d -y -c
-```
+
+will use secret from ssh and autogenerate the private key
 
 #### start from an image
 

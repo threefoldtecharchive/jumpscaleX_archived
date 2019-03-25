@@ -35,7 +35,7 @@ class BuilderMariadb(j.builder.system._BaseClass):
 
         if self._done_check("install", reset):
             return
-        j.builder.tools.package_install("mariadb-server")
+        j.builder.system.package.ensure("mariadb-server")
         j.core.tools.dir_ensure("/data/db")
         j.core.tools.dir_ensure("/var/run/mysqld")
         script = """
@@ -51,7 +51,7 @@ class BuilderMariadb(j.builder.system._BaseClass):
             try:
                 self.start()
             except Exception:
-                j.logger.get().warning("MySql didn't started, maybe it's "
+                self._log_debug("MySql didn't started, maybe it's "
                         "already running or the port 3306 is used by other service")
 
     def start(self):

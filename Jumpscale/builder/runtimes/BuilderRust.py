@@ -8,7 +8,7 @@ class BuilderRust(j.builder.system._BaseClass):
 
     def install(self, reset=False):
         """
-        https://static.rust-lang.org/dist/rust-1.12.0-x86_64-unknown-linux-gnu.tar.gz
+
         """
         if self._done_get("install") and not reset:
             return

@@ -3,6 +3,9 @@
 
 - only work items attached to story (in other words story needs to exist) or critical bug where in scrum was defined we need to work on it
 - story = issue with level type_story
+- the stories need to be visible in sort of kanban overview per iteration called sprint
+- no-one should work on stories not being in sprint & approved by stakeholders, unless if blocking issue which is then approved by scrum team/lead
+- on home repo should be clear who the scrum teams are and they should be linked to their kanban overviews of the stroies being worked on
 
 ### reporting
 
@@ -17,6 +20,6 @@
 - branchname development_$revelantname
 - sometimes multiple story cards can have same branchname
 - use pull request, leave open untill all stories linked to this branch are done (can merge in into development whenever useful & reviewed)
-- put the branchname without development_ in the title in [] e.g. development_builder would be [builder] at end of title
+- put the branchname without development_ in the title of the issue in [] e.g. development_builder would be [builder] at end of title of issue
 
 

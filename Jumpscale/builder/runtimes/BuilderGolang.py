@@ -104,6 +104,8 @@ class BuilderGolang(j.builder.system._BaseClass):
     def install(self, reset=False):
         """install go
 
+        kosmos 'j.builder.runtimes.golang.install()'
+
         :param reset: reset installation, defaults to False
         :type reset: bool, optional
         :raises j.exceptions.RuntimeError: in case the platform is not supported

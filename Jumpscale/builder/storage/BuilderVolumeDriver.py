@@ -43,7 +43,7 @@ class BuilderVolumeDriver(j.builder.system._BaseClass):
         supervisor rpcbind \
         libxio0 libxio-dev libev4
         """
-        j.builder.tools.package_install(apt_deps, allow_unauthenticated=True)
+        j.builder.system.package.ensure(apt_deps, allow_unauthenticated=True)
 
     def _build(self, version='6.0.0'):
         workspace = j.core.tools.text_replace("{DIR_TEMP}/volumedriver-workspace")

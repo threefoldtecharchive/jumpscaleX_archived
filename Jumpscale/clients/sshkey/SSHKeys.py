@@ -44,8 +44,8 @@ class SSHKeys(j.application.JSBaseConfigsClass):
         path = "/root/.ssh/test_key"
         sshkey_client = j.clients.sshkey.get(name="test_key", path=path)
         assert sshkey_client.path == path
-        assert sshkey_client.privkey == j.sal.fs.readFile(path)
-        assert sshkey_client.pubkey == j.sal.fs.readFile('%s.pub' % (path))
+        assert sshkey_client.privkey.strip() == j.sal.fs.readFile(path).strip()
+        assert sshkey_client.pubkey.strip() == j.sal.fs.readFile('%s.pub' % (path)).strip()
 
         try:
             sshkey_client.delete_from_sshdir()
@@ -53,14 +53,14 @@ class SSHKeys(j.application.JSBaseConfigsClass):
             pass
 
         sshkey_client.write_to_sshdir()
-        assert sshkey_client.privkey == j.sal.fs.readFile(path)
-        assert sshkey_client.pubkey == j.sal.fs.readFile('%s.pub' % (path))
+        assert sshkey_client.privkey.strip() == j.sal.fs.readFile(path).strip()
+        assert sshkey_client.pubkey.strip() == j.sal.fs.readFile('%s.pub' % (path)).strip()
 
         old_pubkey = sshkey_client.pubkey
         old_privkey = sshkey_client.privkey
         sshkey_client.generate(reset=True)
-        assert sshkey_client.privkey == j.sal.fs.readFile(path)
-        assert sshkey_client.pubkey == j.sal.fs.readFile('%s.pub' % (path))
+        assert sshkey_client.privkey == j.sal.fs.readFile(path).strip()
+        assert sshkey_client.pubkey == j.sal.fs.readFile('%s.pub' % (path)).strip()
         assert sshkey_client.privkey != old_privkey
         assert sshkey_client.pubkey != old_pubkey
         sshkey_client.save()
@@ -75,3 +75,5 @@ class SSHKeys(j.application.JSBaseConfigsClass):
         sshkey_client.delete_from_sshdir()
         sshkey_client.delete()
 
+
+        print("TEST FOR SSHKEYS OK")

@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.bcdb.test(name="async")'
+    kosmos 'j.data.bcdb.test(name="async")'
 
     this is a test where we use the queuing mechanism for processing data changes
 

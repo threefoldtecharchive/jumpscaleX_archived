@@ -27,7 +27,7 @@ class BuilderProxyClassic(j.builder.system._BaseClass):
         """
         j.builder.ufw.ufw_enable(force=False)
         j.builder.ufw.allowIncoming(port)
-        j.builder.tools.package_install("privoxy")
+        j.builder.system.package.ensure("privoxy")
 
         CONFIG = """
             #trust-info-url  http://www.example.com/why_we_block.html
@@ -204,7 +204,7 @@ class BuilderProxyClassic(j.builder.system._BaseClass):
         else:
             j.core.tools.dir_ensure(cachedir)
 
-        j.builder.tools.package_install("polipo")
+        j.builder.system.package.ensure("polipo")
 
         forbiddentunnels = """
             # simple case, exact match of hostnames

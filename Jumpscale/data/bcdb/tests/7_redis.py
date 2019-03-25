@@ -7,7 +7,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.bcdb.test(name="redis")'
+    kosmos 'j.data.bcdb.test(name="redis")'
 
     use a bcdb which is using sqlite
 
@@ -16,7 +16,7 @@ def main(self):
     ```
     apt-get install python3.6-dev
     mkdir -p /root/opt/bin
-    js_shell 'j.servers.zdb.build()'
+    kosmos 'j.servers.zdb.build()'
     pip3 install pycapnp peewee cryptocompare
 
     #MAKE SURE YOU DON't USE THE SSH CONFIG, USE THE LOCAL CONFIG

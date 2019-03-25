@@ -1,4 +1,5 @@
 
+from .Session import Session
 from Jumpscale import j
 import libtmux as tmuxp
 import time
@@ -6,8 +7,6 @@ import psutil
 
 JSBASE = j.application.JSBaseClass
 
-from .Session import Session
-from .TmuxCmd import TmuxCmd
 
 class Tmux(j.application.JSBaseClass):
 
@@ -19,8 +18,6 @@ class Tmux(j.application.JSBaseClass):
         self._session = None
         self._windows_active = {}
 
-
-
     @property
     def session(self):
         """
@@ -30,13 +27,13 @@ class Tmux(j.application.JSBaseClass):
         if self._session is None:
             try:
                 sessions = self.server.list_sessions()
-                self._session =  Session(session=sessions[0])
+                self._session = Session(session=sessions[0])
             except Exception as e:
                 session1 = self.server.new_session("main")
                 self._session = Session(session=session1)
         return self._session
 
-    def _find_procs_by_name(self,name,startswith_is_ok=True):
+    def _find_procs_by_name(self, name, startswith_is_ok=True):
         "Return a list of processes matching 'name'."
         ls = []
         for p in psutil.process_iter(attrs=['name']):
@@ -55,23 +52,36 @@ class Tmux(j.application.JSBaseClass):
 
     @property
     def server(self):
+
+        def start():
+            cmd = "/sandbox/bin/js_mux start"
+            j.sal.process.execute(cmd, die=True)
+            time.sleep(0.1)
+
         if self._server is None:
-            rc,out,err = j.core.tools.execute("tmux ls",die=False)
-            if out.strip().count("\n")>0:
+            rc, out, err = j.core.tools.execute("tmux ls", die=False)
+            if rc > 0:
+                if err.find("No such file or directory") != -1:
+                    start()
+                    rc, out, err = j.core.tools.execute("tmux ls", die=False)
+                if err.find("no server running") != -1:
+                    start()
+                    rc, out, err = j.core.tools.execute("tmux ls", die=False)
+
+            if rc > 0:
+                raise RuntimeError("could not execute tmux ls\n%s" % err)
+
+            if out.strip().count("\n") > 0:
+                j.shell()
                 raise RuntimeError("found too many tmux sessions, there should only be 1")
 
-            if rc>0 and "out".find("no server")==-1:
-                cmd = "/sandbox/bin/js_mux start"
-                j.sal.process.executeWithoutPipe(cmd)
-                time.sleep(0.1)
-            elif rc>0:
+            rc, out, err = j.sal.process.execute("tmux -f /sandbox/cfg/.tmux.conf has-session -t main", die=False)
+            if rc > 0:
                 j.shell()
-
-            rc,out,err=j.sal.process.execute("tmux -f /sandbox/cfg/.tmux.conf has-session -t main",die=False)
-            if rc>0:
                 raise RuntimeError("did not find tmux session -t main")
 
             self._server = tmuxp.Server()
+            time.sleep(1)
             self._log_info("tmux server is running")
 
         return self._server
@@ -80,24 +90,30 @@ class Tmux(j.application.JSBaseClass):
         """
         js_shell 'j.tools.tmux.kill()'
         """
-        self.session.kill()
+        if len(j.sal.process.getPidsByFilter("tmux")) == 1 and len(j.sal.process.getPidsByFilter("tmux -f /sandbox/cfg/.tmux.conf")) == 1:
+            # means is only our tmux running so can stop cleanly
+            self.session.kill()
+        # kill remaining processes
+        j.sal.process.killProcessByName("tmux")
 
-    def pane_get(self,window="main", pane="main",reset=False):
-        w=self.window_get(window=window)
+    def pane_get(self, window="main", pane="main", reset=False):
+        w = self.window_get(window=window)
         return w.pane_get(name=pane, killothers=False, reset=reset)
 
-    def window_get(self,window="main",reset=False):
-        s=self.session
-        return s.window_get(window,reset=reset)
+    def window_get(self, window="main", reset=False):
+        s = self.session
+        return s.window_get(window, reset=reset)
 
-    def execute(self, cmd, window="main", pane="main",reset=True):
+    def execute(self, cmd, window="main", pane="main", reset=True):
         """
         """
-        p = self.pane_get(window=window,pane=pane,reset=reset)
+        p = self.pane_get(window=window, pane=pane, reset=reset)
         p.execute(cmd)
         return p
 
-    def cmd_get(self,name,window="digitalme",pane="p11",cmd="",path=None,env={},ports=[],stopcmd=None,process_strings=[]):
+    def cmd_get(self,name,window_name=None,pane_name="main",
+                cmd="",path=None,timeout=30,
+                env={},ports=[],cmd_stop=None,process_strings=[]):
         """
 
         example
@@ -111,8 +127,8 @@ class Tmux(j.application.JSBaseClass):
 
 
         :param name: name of the command
-        :param window: window to use std multi
-        :param pane: pane in the window, make sure there is no overlap
+        :param window: window to use std multi, if None then use windowname as name
+        :param pane: pane in the window, make sure there is no overlap e.g. p11
         :param cmd: command to execute in the pane
         :param path: path where to execute
         :param env: are the arguments wich will become env arguments, useful to pass variable to process
@@ -121,20 +137,30 @@ class Tmux(j.application.JSBaseClass):
         :param process_strings: which strings to check if the process is running
         :return:
         """
-        if not self.session.window_exists(window):
-            if window == "multi":
-                self.panes_multi_create(window_name=window)
-            elif window == "digitalme":
-                self.panes_digitalme_create(window_name=window)
-            elif window == "2x2":
-                self.panes_2x2_get(window_name=window)
-            else:
-                self.window_get(window=window, reset=True)
+        if not window_name:
+            window_name = name
+        if not self.session.window_exists(window_name):
+            window = self.window_get(window=window_name, reset=True)
+        else:
+            window = self.window_get(window=window_name)
 
-        return TmuxCmd(name=name,pane_name=pane,window_name=window,
-                       cmd=cmd,path=path,env=env,ports=ports,stopcmd=stopcmd,process_strings=process_strings)
+        pane = window.pane_get(pane_name)
+
+        startup_cmd = j.tools.startupcmd.get(name=name, cmd=cmd, path=path, timeout=timeout,
+                                            env=env,ports=ports,cmd_stop=cmd_stop,process_strings=process_strings)
+
+        startup_cmd._pane_ = pane
+
+        return startup_cmd
+
 
     def panes_2x2_get(self, window_name="multi", reset=True):
+        """
+
+        :param window_name:
+        :param reset:
+        :return: (p11,p12,p21,p22) are 4 panes
+        """
 
         window = self.window_get(window_name, reset=reset)
 
@@ -144,25 +170,23 @@ class Tmux(j.application.JSBaseClass):
             p21 = window.pane_get(name="p21")
             p22 = window.pane_get(name="p22")
 
-
         else:
-            #xy notation
+            # xy notation
             p11 = window.pane_get(name="p11", killothers=True)
             p12 = p11.splitVertical("p12")
             p21 = p11.splitHorizontal("p21")
             p22 = p12.splitHorizontal("p22")
 
+        return p11, p12, p21, p22
 
-        return p11,p12,p21,p22
-
-    def panes_digitalme_create(self, window_name="digitalme", reset=True):
+    def window_digitalme_get(self, window_name="digitalme", reset=True):
 
         window = self.window_get(window_name, reset=reset)
 
         if len(window.panes) == 6 and reset is False:
             return window
         else:
-            #xy notation
+            # xy notation
             p11 = window.pane_get(name="p11", killothers=True)
             p13 = p11.splitVertical("p13")
             p21 = p11.splitHorizontal("p21")
@@ -173,24 +197,22 @@ class Tmux(j.application.JSBaseClass):
 
             return window
 
-
-    def panes_multi_create(self, window_name="multi", reset=False):
+    def window_multi_get(self, window_name="multi", reset=False):
         """
 
-        js_shell 'j.tools.tmux.panes_multi_get()'
+        js_shell 'j.tools.tmux.window_multi_get()'
 
         :param window_name:
         :param reset:
         :return:
         """
 
-
         window = self.window_get(window_name, reset=reset)
 
         if len(window.panes) == 13 and reset is False:
             return window
 
-        p11,p13,p31,p33 = self.panes_2x2_get(window_name, reset=reset)
+        p11, p13, p31, p33 = self.panes_2x2_get(window_name, reset=reset)
         p13.name_set("p13")
         p31.name_set("p31")
         p33.name_set("p33")
@@ -205,46 +227,55 @@ class Tmux(j.application.JSBaseClass):
         p32 = p31.splitVertical("p32")
         p42 = p41.splitVertical("p42")
 
-
-
         return window
-
 
     def test(self):
         """
-        js_shell 'j.tools.tmux.test()'
+        kosmos 'j.tools.tmux.test()'
 
         :return:
         """
+        j.builder.system.package.ensure("htop")
 
-        self.panes_2x2_create()
+        self.panes_2x2_get()
         window = self.window_get("multi")
         for pane in window.panes:
             pane.execute("clear;echo %s" % pane.name)
 
-        p = self.execute("ls /","multi","p22")
+        p = self.execute("ls /", "multi", "p22")
 
         assert p.process_obj.name()=="bash"
+
+        time.sleep(2)
+        p.process_obj_child
+
         assert p.process_obj_child == None
 
-        p = self.execute("htop","multi","p22")
+        p = self.execute("htop", "multi", "p22")
 
         assert p.process_obj.is_running()
         # assert p.process_obj.name()=="htop"
 
-        assert len(p.process_obj_children)==1
+        assert len(p.process_obj_children) == 1
 
+        assert p.process_obj.name() == "bash"
+
+        time.sleep(2)
+        p.process_obj_child
+
+        assert p.process_obj_child.name() == "htop"
 
         assert p.process_obj.name()=="bash"
+
         assert p.process_obj_child.name()=="htop"
 
 
         p = self.execute("find /tmp","test","test")
+
         res = p.out_get()
-        p=self.pane_get("test2","test2",reset=True)
+        p = self.pane_get("test2", "test2", reset=True)
 
         self._log_info("tests ok for tmux")
-
 
     def test_multi(self):
         """
@@ -254,7 +285,7 @@ class Tmux(j.application.JSBaseClass):
         """
         j.tools.tmux.panes_multi_get()
 
-        cmd = self.cmd_get(name="htop",window="multi",pane="p11",cmd="htop")
+        cmd = self.cmd_get(name="htop", window="multi", pane="p11", cmd="htop")
         cmd.start()
 
         j.shell()

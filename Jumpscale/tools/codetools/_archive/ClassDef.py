@@ -47,5 +47,5 @@ class ClassDef(j.application.JSBaseClass):
                 pd = classDef.getProp(propname, True)
                 if pd is not None:
                     return pd
-        j.logger.log("Could not find the property [%s]" % propname, 3)
+        self._log_debug("Could not find the property [%s]" % propname, 3)
         return None

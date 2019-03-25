@@ -4,7 +4,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.bcdb.test(name="keys")'
+    kosmos 'j.data.bcdb.test(name="keys")'
 
     """
 
@@ -26,13 +26,14 @@ def main(self):
 
     m.reset()
 
-
     o = m.new()
+    assert o._model.schema.url == 'threefoldtoken.wallet.test'
     o.addr = "something"
     o.email = "myemail"
     o.username="myuser"
     o.save()
 
+    assert o._model.schema.url == 'threefoldtoken.wallet.test'
 
     o2= m.get_by_addr(o.addr)[0]
     assert len(m.get_by_addr(o.addr))==1
@@ -54,6 +55,8 @@ def main(self):
     o.email = "myemail2"
     o.username="myuser2"
     o.save()
+
+    assert o._model.schema.url == 'threefoldtoken.wallet.test'
 
 
     l= m.get_by_username("myuser")
@@ -132,7 +135,7 @@ def main(self):
 
     #default
     assert o.addr == "aa"
-    assert o.ipaddr == ""
+    assert o.ipaddr == "0.0.0.0"
     assert o.email == ""
     assert o.nr == 10
     assert o.nr2 == 4294967295
@@ -141,10 +144,11 @@ def main(self):
     assert o.nr4_usd == 5
     assert o.date == 0
 
-    o.ipaddr = "something"
+    o.ipaddr = "192.168.1.1"
     o.email = "ename"
     o.addr = "test"
     o.save()
+    assert o._model.schema.url == 'threefoldtoken.wallet.test2'
 
     data=bcdb._hset_index_key_get(schema=m3.schema,returndata=True)
     redisid = data[bcdb.name][m3.schema.url]
@@ -159,54 +163,59 @@ def main(self):
 
     assert len(m.get_all())==3
 
-    assert m.get_all()[0].model.schema.sid == o2.model.schema.sid
+    assert m.get_all()[0]._model.schema.sid == o2._model.schema.sid
 
     assert len(m3.get_by_addr("test"))==1
 
-    assert len(m3.get_from_keys(addr="test",email="ename",ipaddr="something")) == 1
-    assert len(m3.get_from_keys(addr="test",email="ename",ipaddr="something2")) == 0
+    assert len(m3.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.1")) == 1
+    assert len(m3.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.2")) == 0
 
     a=j.servers.zdb.client_admin_get()
     zdbclient2 = a.namespace_new("test2",secret="12345")
 
     bcdb2 = j.data.bcdb.new("test2",zdbclient2,reset=True)
-    assert len(m3.get_from_keys(addr="test",email="ename",ipaddr="something")) == 1
+    assert len(m3.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.1")) == 1
     bcdb2.reset()
-    assert len(m3.get_from_keys(addr="test",email="ename",ipaddr="something")) == 1
+    assert len(m3.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.1")) == 1
 
     #now we know that the previous indexes where not touched
 
     m4  = bcdb2.model_get_from_schema(SCHEMA3)
     o=m4.new()
-    o.ipaddr = "something"
+    o.ipaddr = "192.168.1.1"
     o.email = "ename"
     o.addr = "test"
     o.save()
 
+    assert o._model.schema.url == 'threefoldtoken.wallet.test2'
+
     myid = o.id+0 #make copy
 
-    assert len(m4.get_from_keys(addr="test",email="ename",ipaddr="something")) == 1
+    assert len(m4.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.1")) == 1
 
-    o5=m4.get_from_keys(addr="test",email="ename",ipaddr="something")[0]
+    o5=m4.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.1")[0]
     assert o5.id == myid
 
 
     myid=m.get_all()[2].id+0
     nr = len(m.get_all())
     assert nr==3
+
     o6=m.get(myid)
+    assert o6._model.schema.url == 'threefoldtoken.wallet.test'
+
     o6.delete()
     nr = len(m.get_all())
     assert nr==2
 
     bcdb.reset()
 
-    assert m3.get_from_keys(addr="test",email="ename",ipaddr="something") == []
-    assert len(m4.get_from_keys(addr="test",email="ename",ipaddr="something")) == 1
+    assert m3.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.1") == []
+    assert len(m4.get_from_keys(addr="test",email="ename",ipaddr="192.168.1.1")) == 1
 
     bcdb2.reset()
 
-    #check 2 bcdb are empty (doesnt work yet)
+    #check 2 bcdb are empty (doesnt work yet): #TODO:*3
     # assert len(j.sal.fs.listDirsInDir("/sandbox/var/bcdb/test"))==0
     # assert len(j.sal.fs.listDirsInDir("{DIR_BASE}/var/bcdb/test2"))==0
     # assert len(j.sal.fs.listDirsInDir("{DIR_VAR}/bcdb/test2"))==0
