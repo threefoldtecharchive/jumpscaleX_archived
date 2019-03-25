@@ -368,10 +368,7 @@ if "1" in args or "2" in args:
 
     if "w" in args:
         if "1" in args:
-            #install zerohub because we need it in builder
-            IT.Tools.execute(
-                "pip3 install -e 'git+https://github.com/threefoldtech/0-hub#egg=zerohub&subdirectory=client'",
-                showout=False)
+            
             #in system need to install the lua env
             IT.Tools.execute("source /sandbox/env.sh;kosmos 'j.builder.runtimes.lua.install(reset=True)'", showout=False)
         IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.tools.markdowndocs.test()'", showout=False)

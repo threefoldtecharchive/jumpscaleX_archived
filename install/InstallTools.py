@@ -1729,6 +1729,7 @@ class UbuntuInstall():
                 "pymongo>=3.4.0",
                 "docker>=3",
                 "dnspython>=1.15.0",
+                "git+https://github.com/threefoldtech/0-hub#egg=zerohub&subdirectory=client",
                 "etcd3>=0.7.0",
                 "Flask-Inputs>=0.2.0",
                 "Flask>=0.12.2",
@@ -1752,6 +1753,8 @@ class UbuntuInstall():
                 C="pip3 install --user '%s'"%pip
                 Tools.execute(C,die=True)
                 MyEnv.state_set("pip_%s"%pip)
+        #install zerohub because we need it in builder
+        Tools.execute("pip3 install -e 'git+https://github.com/threefoldtech/0-hub#egg=zerohub&subdirectory=client'",die=True)
 
     @staticmethod
     def apts_list():
