@@ -18,3 +18,5 @@
 ## external repo
 
 !!!include("abom:test_custom_md:test_src.md!A")
+
+!!!include("https://github.com/abom/test_custom_md/tree/master/docs/test_src.md")

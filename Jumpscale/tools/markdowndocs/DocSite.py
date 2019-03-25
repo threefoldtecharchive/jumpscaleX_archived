@@ -284,7 +284,7 @@ class DocSite(j.application.JSBaseClass):
 
         self._loaded=True
 
-    def file_add(self,path,duplication_test=True):
+    def file_add(self,path,duplication_test=False):
         ext = j.sal.fs.getFileExtension(path).lower()
         base = j.sal.fs.getBaseName(path)
         if ext in ["png", "jpg", "jpeg", "pdf", "docx", "doc", "xlsx", "xls", \

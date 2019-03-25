@@ -301,16 +301,12 @@ class MarkDownDocs(j.application.JSBaseClass):
         tf_grid = self.load(url, name="harvested")
         tf_grid.write()
 
-
     def test(self, watch=False):
         """
         js_shell 'j.tools.markdowndocs.test()'
         """
         url = "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/docsites_examples/test/"
         ds = self.load(url, name="test")
-
-        url = "https://github.com/threefoldtech/jumpscaleX/blob/master/docs"
-        ds_js = self.load(url, name="jumpscale")
 
         doc = ds.doc_get("links")
 
@@ -359,8 +355,6 @@ class MarkDownDocs(j.application.JSBaseClass):
         # next will rewrite the full pre-processed docsite
         ds.write()
 
-        ds_js.write()
-
         url = "https://github.com/threefoldfoundation/info_tokens/tree/master/docs"
         ds4 = self.load(url, name="tf_tokens")
         ds4.write()
@@ -373,13 +367,12 @@ class MarkDownDocs(j.application.JSBaseClass):
         ds6 = self.load(url, name="tf_grid")
         try:
             ds6.write()
-        except :
+        except:
             pass
 
         url = "https://github.com/threefoldtech/info_tftech/tree/master/docs"
         ds7 = self.load(url, name="tech")
         ds7.write()
-
 
         self.webserver(watch)
 

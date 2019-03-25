@@ -9,9 +9,11 @@ JSBASE = j.application.JSBaseClass
 
 
 # Some links that needs to be skipped from verifying because the crawling is forbidden
-SKIPPED_LINKS = ['t.me', 'chat.grid.tf', 'linkedin.com', 'docs.grid.tf', 'btc-alpha',
-                 'kraken.com', 'bitoasis.net', 'cex.io',  'itsyou.online', 'skype:',
-                 'medium.com', "mailto:"]
+SKIPPED_LINKS = [
+    't.me', 'chat.grid.tf', 'linkedin.com', 'docs.grid.tf', 'btc-alpha',
+    'kraken.com', 'bitoasis.net', 'cex.io',  'itsyou.online', 'skype:',
+    'medium.com', "mailto:"
+]
 
 
 class CustomLink:
@@ -294,6 +296,10 @@ class Link(j.application.JSBaseClass):
 
     def _process(self):
         self.link_descr, self.link_source = self.parse_markdown(self.source)
+
+        if self.should_skip():
+            return
+
         if self.link_source.strip() == "":
             return self.error("link is empty, but url is:%s" % self.source)
 
@@ -332,12 +338,13 @@ class Link(j.application.JSBaseClass):
                 if self.docsite.links_verify:
                     self.link_verify()
 
-                if not custom_link.is_url:
-                    # a custom link that wasn't a full url originally, get its docsite
-                    self.get_docsite(self.link_source, name=custom_link.repo)
-                    self.filename = self._clean(Linker().join(custom_link.repo, custom_link.path))
-                else:
-                    self.filename = None  # because is e.g. other site
+                # until custom links are clear
+                # if not custom_link.is_url:
+                #     # a custom link that wasn't a full url originally, get its docsite
+                #     self.get_docsite(self.link_source, name=custom_link.repo)
+                #     self.filename = self._clean(Linker().join(custom_link.repo, custom_link.path))
+                # else:
+                #     self.filename = None  # because is e.g. other site
 
         else:
             if self.link_source.strip() == "/":
@@ -409,9 +416,12 @@ class Link(j.application.JSBaseClass):
             cmd = "cd %s;rm -f %s;curl '%s' -o '%s'" % (ddir, dest, self.link_source_original, dest)
             j.sal.process.execute(cmd, die=False)
 
+    def should_skip(self):
+        return any(link in self.link_source for link in SKIPPED_LINKS)
+
     def link_verify(self):
         def do():
-            if any(link in self.link_source for link in SKIPPED_LINKS):
+            if self.should_skip():
                 return True
             self._log_info("check link exists:%s" % self.link_source)
             if not j.clients.http.ping(self.link_source_original):
