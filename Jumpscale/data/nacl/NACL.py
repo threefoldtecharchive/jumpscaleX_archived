@@ -153,8 +153,7 @@ class NACL(j.application.JSBaseClass):
         #create path where the files for nacl will be
         j.sal.fs.createDir(self._path)
 
-        # if j.sal.fs.exists(self._path_privatekey):
-        #     #lets try to load
+
         self.load(die=False)
 
         if self.privkey is None:
@@ -178,6 +177,8 @@ class NACL(j.application.JSBaseClass):
             sys.exit(1)
         else:
             raise RuntimeError(msg)
+
+
 
     def load(self,die=True):
         """

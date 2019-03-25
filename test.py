@@ -30,9 +30,9 @@ def ssh():
 
 
 # schema()
-# bcdb()
+bcdb()
 
-ssh()
+# ssh()
 # servers()
 
 

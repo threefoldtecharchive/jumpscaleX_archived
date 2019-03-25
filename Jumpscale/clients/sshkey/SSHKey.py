@@ -28,9 +28,9 @@ class SSHKey(j.application.JSBaseConfigClass):
             if j.sal.fs.exists(keyspath):
                 # means we are in directory where keys dir is found
                 self.path = keyspath
-            elif j.sal.fs.exists(keyspath_system):
+            else:
                 self.path = keyspath_system
-
+        from pudb import set_trace; set_trace()
         if not self.pubkey:
             path = '%s.pub' % (self.path)
             if not j.sal.fs.exists(path):
