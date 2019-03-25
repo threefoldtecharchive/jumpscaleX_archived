@@ -6,7 +6,7 @@
 ### if you have nothing on your system, just get the installer
 
 ```bash
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_types/install/install.py?$RANDOM > /tmp/install.py
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py
 ```
 
 ### if you want to work from code
@@ -76,7 +76,7 @@ python3 /tmp/install.py -1 -y -c
 One liner for ubuntu, without having to install the installer
 
 ```bash
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_types/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py
 ```
 
 
