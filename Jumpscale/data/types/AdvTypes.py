@@ -228,10 +228,16 @@ class IPPort(Integer):
         if not self.check(value):
             raise ValueError("invalid port: %s" % value)
         else:
-            return value
+            return int(value)
 
     def check(self, value):
         return self.possible(value)
+
+    def toHR(self, v):
+        if int(v) == 65535:
+            return "-"  # means not set yet
+        return self.clean(v)
+
 
 class NumericObject(TypeBaseObjClassNumeric):
 

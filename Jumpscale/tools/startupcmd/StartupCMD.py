@@ -176,8 +176,9 @@ class StartupCMD(j.application.JSBaseDataObjClass):
         C2 = j.core.text.strip(C)
         C3 = j.tools.jinja2.template_render(text=C2, args=self.env, cmdpath=self.path,
                                             cmd=self.cmd_start, name=self.name)
-        C3 = C3.replace("\"", "'").replace("''", "'")
-        # for key,val in self.env.items():
+        if self.interpreter == "bash":
+            # C3 = C3.replace("\"", "'").replace("''", "'")
+            C3 = C3.replace("\"", "'")
 
         self._log_debug("\n%s" % C3)
 

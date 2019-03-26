@@ -8,7 +8,6 @@ class SchemaProperty(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
         self.name = ""
-        #self.name = ""
         self.jumpscaletype = None
         # self.isList = False
         # self.enumeration = []

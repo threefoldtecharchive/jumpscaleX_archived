@@ -134,6 +134,9 @@ class JSBaseDataObj(JSBase):
             return self.data.__getattribute__(attr)
         return self.__getattribute__(attr)
 
+    def _update_trigger(self,key,val):
+        pass
+
     def __setattr__(self, key, value):
         if key.startswith("_") or key == "data":
             self.__dict__[key] = value
@@ -141,6 +144,7 @@ class JSBaseDataObj(JSBase):
         elif "data" in self.__dict__ and key in self._schema.propertynames:
             # if value != self.data.__getattribute__(key):
             self._log_debug("SET:%s:%s" % (key, value))
+            self._update_trigger(key,value)
             self.__dict__["data"].__setattr__(key, value)
         else:
             self.__dict__[key] = value

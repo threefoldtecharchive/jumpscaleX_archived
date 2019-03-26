@@ -8,15 +8,15 @@ from Jumpscale import j
 
 
 class Schema(j.application.JSBaseClass):
-    def __init__(self, text):
+    def __init__(self, text,url=None):
         j.application.JSBaseClass.__init__(self)
         self.properties = []
         self._systemprops = {}
-        self.lists = []
+        # self.lists = []
         self._obj_class = None
         self._capnp = None
         self._index_list = None
-        self.url = ""
+        self.url = url
         self._schema_from_text(text)
         self.key = j.core.text.strip_to_ascii_dense(self.url).replace(".", "_")
 
@@ -207,6 +207,8 @@ class Schema(j.application.JSBaseClass):
                 self.properties.append(p)
 
         for key, val in systemprops.items():
+            if key=="url" and self.url:
+                continue #skip when url given
             self.__dict__[key] = val
 
         nr = 0
@@ -349,20 +351,20 @@ class Schema(j.application.JSBaseClass):
     #     res = [item.name for item in self.lists]
     #     return res
 
-    @property
-    def properties_list(self):
-        res = [item for item in self.lists]
-        return res
+    # @property
+    # def properties_list(self):
+    #     res = [item for item in self.lists]
+    #     return res
 
     # @property
     # def propertynames_nonlist(self):
     #     res = [item.name for item in self.properties]
     #     return res
 
-    @property
-    def properties_nonlist(self):
-        res = [item for item in self.properties]
-        return res
+    # @property
+    # def properties_nonlist(self):
+    #     res = [item for item in self.properties]
+    #     return res
 
     def __str__(self):
         out = ""

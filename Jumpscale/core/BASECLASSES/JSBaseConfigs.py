@@ -188,17 +188,6 @@ class JSBaseConfigs(JSBase):
             del self._children[key]
             self._children.pop(key)
 
-    def __getattr__(self, name):
-        # if private then just return
-        if name.startswith("_") or name in self._methods() or name in self._properties():
-            return self.__getattribute__(name)
-        # else see if we can from the factory find the child object
-        r = self.get(name=name, die=False, create_new=False)
-        # if none means does not exist yet will have to create a new one
-        if r is None:
-            r = self.new(name=name)
-        return r
-
     def _properties_children(self):
         # list the children from the factory
         if not j.data._bcdb:
@@ -210,6 +199,19 @@ class JSBaseConfigs(JSBase):
             if item.name not in x:
                 x.append(item.name)
         return x
+
+    def __getattr__(self, name):
+        # if private then just return
+        if name.startswith("_") or name in self._methods() or name in self._properties():
+            return self.__getattribute__(name)
+        # else see if we can from the factory find the child object
+        r = self.get(name=name, die=False, create_new=False)
+        # if none means does not exist yet will have to create a new one
+        if r is None:
+            r = self.new(name=name)
+        return r
+
+
 
     def __setattr__(self, key, value):
         self.__dict__[key] = value

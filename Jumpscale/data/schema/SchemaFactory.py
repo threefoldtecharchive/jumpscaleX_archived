@@ -54,7 +54,7 @@ class SchemaFactory(j.application.JSBaseClass):
 
         if schema_text != "":
             if j.data.types.string.check(schema_text):
-                return self._add(schema_text)
+                return self._add(schema_text,url=url)
             else:
                 raise RuntimeError("need to be text ")
         else:
@@ -76,7 +76,7 @@ class SchemaFactory(j.application.JSBaseClass):
     def exists(self, url):
         return self.get(url=url, die=False) is not None
 
-    def _add(self, schema_text):
+    def _add(self, schema_text,url=None):
         """
         :param schema_text or schema_path
         :return: incache,schema  (incache is bool, when True means was in cache)
@@ -104,13 +104,17 @@ class SchemaFactory(j.application.JSBaseClass):
         # process last block
         if block is not "":
             blocks.append(block)
+
+        if url and len(blocks)>1:
+            raise RuntimeError("can only use url if max 1 schema")
+
         res = []
         for block in blocks:
             md5 = self._md5(block)
             if md5 in self._md5_schema:
                 res.append(self._md5_schema[md5])
             else:
-                s = Schema(text=block)
+                s = Schema(text=block,url=url)
                 if s._md5 in self._md5_schema:
                     raise RuntimeError("should not be there")
                 else:

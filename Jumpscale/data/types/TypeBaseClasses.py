@@ -166,7 +166,12 @@ class TypeBaseClass(): #!!TYPEBASECLASS!!
         :param v:
         :return:
         """
-        return self.clean(v)
+        o = self.clean(v)
+        if isinstance(o,TypeBaseObjClass):
+            data = o._dictdata
+        else:
+            data = o
+        return data
 
     def check(self, value):
         '''

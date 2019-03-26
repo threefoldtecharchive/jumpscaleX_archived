@@ -231,15 +231,22 @@ class ModelOBJ(DataObjBase):
         # d["{{prop.name}}"] = j.data.serializers.yaml.dumps(self.{{prop.name}}._ddict_hr)
         d["{{prop.name}}"] = "\n"+j.core.text.indent(self.{{prop.name}}._str(),4)
         {% else %}
-        res = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
-        if len(str(res))<maxsize:
-            d["{{prop.name}}"] = res
+        if {{prop.js_typelocation}}.NAME in ["list"]:
+            res = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
         else:
-            d["{{prop.name}}"] = "\n"+j.core.text.indent(res,4)
+            res = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
+            # if len(str(res))<maxsize:
+            #     res = "\n"+j.core.text.indent(res,4)
+        d["{{prop.name}}"] = res
+        # if len(str(res))<maxsize:
+        #     d["{{prop.name}}"] = res
+        # else:
+        #     d["{{prop.name}}"] = "\n"+j.core.text.indent(res,4)
         {% endif %}
         {% endfor %}
         {% for prop in obj.lists %}
-        d["{{prop.name}}"] = self._{{prop.name}}.pylist(subobj_format="H")
+        raise RuntimeError("not here")
+        # d["{{prop.name}}"] = self._{{prop.name}}.pylist(subobj_format="H")
         {% endfor %}
         if self.id is not None:
             d["id"] = self.id
