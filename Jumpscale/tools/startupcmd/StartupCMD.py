@@ -66,7 +66,7 @@ class StartupCMD(j.application.JSBaseDataObjClass):
             self._log_warning("stopcmd:%s" % cmd)
             rc, out, err = j.sal.process.execute(cmd, die=False)
             time.sleep(0.2)
-        if self.pid > 0:
+        if self.pid and self.pid > 0:
             self._log_info("found process to stop:%s" % self.pid)
             j.sal.process.kill(self.pid)
             time.sleep(0.2)
@@ -114,6 +114,7 @@ class StartupCMD(j.application.JSBaseDataObjClass):
             time.sleep(1)  # need this one or it doesn't check if it failed
         self._log_debug("wait to run:%s (timeout:%s)" % (self.name, timeout))
         while j.data.time.epoch < end:
+            time.sleep(1)
             if self.ports == []:
                 if self.process:
                     if self.process.status().casefold() in ['running', 'sleeping', 'idle']:

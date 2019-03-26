@@ -8,7 +8,7 @@ mkdir -p $ARCHIVE
 
 # install system deps
 apt-get update
-apt-get install -y curl locales git wget netcat tar sudo tmux ssh python3-pip redis-server libffi-dev python3-dev libssl-dev libpython3-dev libssh-dev libsnappy-dev build-essential pkg-config libvirt-dev libsqlite3-dev -y
+apt-get install -y curl unzip rsync locales git wget netcat tar sudo tmux ssh python3-pip redis-server libffi-dev python3-dev libssl-dev libpython3-dev libssh-dev libsnappy-dev build-essential pkg-config libvirt-dev libsqlite3-dev -y
 
 
 # setting up locales
