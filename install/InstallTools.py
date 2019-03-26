@@ -619,7 +619,7 @@ class Tools:
 
         if 'darwin' in MyEnv.platform():
 
-            script = """            
+            script = """
             pip3 install ipython
             """
             Tools.execute(script, interactive=True)
@@ -639,7 +639,7 @@ class Tools:
                 pip3 install ipython
                 pip3 install pudb
                 pip3 install pygments
-                locale-gen --purge en_US.UTF-8                
+                locale-gen --purge en_US.UTF-8
             """
             Tools.execute(script, interactive=True)
 
@@ -878,9 +878,13 @@ class Tools:
             logdict["context"]=""
 
 
+        p = print
+        if MyEnv.config.get('log_printer') and MyEnv.config['DEBUG']:
+            p = MyEnv.config['log_printer']
+
         msg=Tools.text_replace(LOGFORMAT,args=logdict)
         msg=Tools.text_replace(msg,args=logdict)
-        print(msg)
+        p(msg)
 
         if data_show:
             if logdict["data"] not in ["",None,{}]:
@@ -890,7 +894,7 @@ class Tools:
                     data = logdict["data"]
                 data=Tools.text_indent(data,10,strip=True)
                 data=Tools.text_replace(data,text_strip=False)
-                print (data.rstrip())
+                p(data.rstrip())
 
 
     @staticmethod
@@ -1551,13 +1555,13 @@ class OSXInstall():
     def brew_uninstall():
         cmd='sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"'
         Tools.execute(cmd,interactive=True)
-        toremove = """                
+        toremove = """
         sudo rm -rf /usr/local/.com.apple.installer.keep
         sudo rm -rf /usr/local/include/
         sudo rm -rf /usr/local/etc/
         sudo rm -rf /usr/local/var/
         sudo rm -rf /usr/local/FlashcardService/
-        sudo rm -rf /usr/local/texlive/ 
+        sudo rm -rf /usr/local/texlive/
         """
         Tools.execute(toremove,interactive=True)
 

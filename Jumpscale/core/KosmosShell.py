@@ -3,11 +3,13 @@ import inspect
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.document import Document
 from prompt_toolkit.completion import Completion
-from prompt_toolkit.filters import is_done
+from prompt_toolkit.filters import Condition, is_done
+from prompt_toolkit.formatted_text import ANSI, to_formatted_text, fragment_list_to_text
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.containers import ConditionalContainer, Window
 from prompt_toolkit.layout.controls import BufferControl
 from prompt_toolkit.layout.dimension import Dimension
+from prompt_toolkit.layout.processors import HighlightIncrementalSearchProcessor, Processor, Transformation
 from prompt_toolkit.lexers import PygmentsLexer
 from ptpython.filters import ShowDocstring, PythonInputFilter
 from ptpython.prompt_style import PromptStyle
@@ -19,7 +21,6 @@ HIDDEN_PREFIXES = ('_', '__')
 
 
 class KosmosShellConfig():
-
     pass
 
 
@@ -138,8 +139,8 @@ def get_completions(self, document, complete_event):
             if name.startswith(member):
                 completion = name[len(member):]
                 yield Completion(completion, 0,
-                    display=name, style='bg:%s fg:ansiblack' % color,
-                    selected_style='bg:ansidarkgray')
+                                 display=name, style='bg:%s fg:ansiblack' % color,
+                                 selected_style='bg:ansidarkgray')
 
     try:
         parent, member, prefix = get_current_line(document)
@@ -168,7 +169,7 @@ def get_doc_string(tbc):
     signature = ''
     try:
         signature = inspect.signature(obj)
-        signature = obj.__name__  + str(signature)
+        signature = obj.__name__ + str(signature)
     except (ValueError, TypeError):
         # no signature can be provided or it's not supported e.g.
         # a built-in functions or not a module/class/function...
@@ -180,10 +181,29 @@ def get_doc_string(tbc):
     return '\n\n'.join([signature, doc])
 
 
+class LogPane:
+    Buffer = Buffer(name='logging', read_only=True)
+    Show = True
+
+
 class HasDocString(PythonInputFilter):
 
     def __call__(self):
         return len(self.python_input.docstring_buffer.text) > 0
+
+
+class FormatANSIText(Processor):
+    """see https://github.com/prompt-toolkit/python-prompt-toolkit/issues/711"""
+
+    def apply_transformation(self, ti):
+        fragments = to_formatted_text(ANSI(fragment_list_to_text(ti.fragments)))
+        return Transformation(fragments)
+
+
+class HasLogs(PythonInputFilter):
+
+    def __call__(self):
+        return len(LogPane.Buffer.text) > 0 and LogPane.Show
 
 
 class IsInsideString(PythonInputFilter):
@@ -194,12 +214,13 @@ class IsInsideString(PythonInputFilter):
         return bool(grammer.match(text))
 
 
-def setup_docstring_containers(repl):
+def get_ptpython_parent_container(repl):
     # see ptpython.layout
-    parent_container = repl.app.layout.container.children[0].children[0]
-    # remove ptpython docstring containers, we have ours now
-    parent_container.children = parent_container.children[:-2]
+    return repl.app.layout.container.children[0].children[0]
 
+
+def setup_docstring_containers(repl):
+    parent_container = get_ptpython_parent_container(repl)
     # the same as ptpython containers, but without signature checking
     parent_container.children.extend([
         ConditionalContainer(
@@ -219,7 +240,36 @@ def setup_docstring_containers(repl):
     ])
 
 
+def add_logs_to_pane(msg):
+    text = '\n'.join([LogPane.Buffer.text, msg])
+    LogPane.Buffer.reset(document=Document(text, cursor_position=len(text)))
+
+
+def setup_logging_containers(repl):
+    parent_container = get_ptpython_parent_container(repl)
+    parent_container.children.extend([
+        ConditionalContainer(
+            content=Window(
+                height=Dimension.exact(1),
+                char='\u2500',
+                style='class:separator'),
+            filter=HasLogs(repl) & ~is_done),
+        ConditionalContainer(
+            content=Window(
+                BufferControl(
+                    buffer=LogPane.Buffer,
+                    input_processors=[FormatANSIText(), HighlightIncrementalSearchProcessor()],
+                    focusable=True,
+                    preview_search=True
+                ),
+                height=Dimension(max=12)),
+            filter=HasLogs(repl) & ~is_done),
+    ])
+
+
 def ptconfig(repl):
+    j = KosmosShellConfig.j
+
     repl.exit_message = "We hope you had fun using te kosmos shell"
     repl.show_docstring = True
 
@@ -335,6 +385,11 @@ def ptconfig(repl):
         else:
             repl.docstring_buffer.reset()
 
+    sidebar_visible = Condition(lambda: repl.show_sidebar)
+    @repl.add_key_binding('c-p', filter=~sidebar_visible)
+    def _logevent(event):
+        LogPane.Show = not LogPane.Show
+
     class CustomPrompt(PromptStyle):
         """
         The classic Python prompt.
@@ -367,4 +422,11 @@ def ptconfig(repl):
 
     repl._completer.__class__.get_completions = custom_get_completions
 
+    j.core.myenv.config['log_printer'] = add_logs_to_pane
+
+    parent_container = get_ptpython_parent_container(repl)
+    # remove ptpython docstring containers, we have ours now
+    parent_container.children = parent_container.children[:-2]
+    # setup docstring and logging containers
     setup_docstring_containers(repl)
+    setup_logging_containers(repl)
