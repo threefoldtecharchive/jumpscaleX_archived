@@ -10,8 +10,10 @@ export HOME=/root
 export LANG=en_US.UTF-8
 export LANGUAGE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
-. /sandbox/env.sh
 
+. /sandbox/env.sh
+cd /sandbox
+git clone $REPO_URL -b $REPO_BRANCH
 ln -s $src1 $dest1
 ln -s $src2 $dest2
 ln -s $src3 $dest3
