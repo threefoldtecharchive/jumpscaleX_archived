@@ -22,14 +22,14 @@ IT.MyEnv._init()
 sys.excepthook = IT.my_excepthook
 
 
-def dexec(cmd,interactive=True):
+def dexec(cmd,interactive=False):
     if "'" in cmd:
         cmd = cmd.replace("'","\"")
     if interactive:
         cmd2 = "docker exec -ti %s bash -c '%s'"%(args["name"],cmd)
     else:
         cmd2 = "docker exec -t %s bash -c '%s'"%(args["name"],cmd)
-    IT.Tools.execute(cmd2,interactive=interactive,showout=False,replace=False,asfile=True)
+    IT.Tools.execute(cmd2,interactive=interactive,showout=True,replace=False,asfile=True)
 
 def sshexec(cmd):
     if "'" in cmd:
@@ -110,8 +110,6 @@ def ui():
 
     if "reset" in args:
         IT.Tools.shell()
-        w
-
 
     if "incontainer" not in args:
 
@@ -225,7 +223,6 @@ def ui():
             if args["image"] not in image_names():
                 if IT.Tools.exists(args["image"]):
                     IT.Tools.shell()
-                    w
                 else:
                     print("Cannot continue, image '%s' specified does not exist."%args["image"])
                     sys.exit(1)
@@ -439,7 +436,7 @@ elif "3" in args:
     install.repos_get()
 
     cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py %s"%args_txt
-
+    print(" - Installing jumpscaleX ")
     sshexec(cmd)
 
 
