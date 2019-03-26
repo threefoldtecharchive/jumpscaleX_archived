@@ -203,7 +203,9 @@ class FormatANSIText(Processor):
 class HasLogs(PythonInputFilter):
 
     def __call__(self):
-        return len(LogPane.Buffer.text) > 0 and LogPane.Show
+        j = KosmosShellConfig.j
+        debug = j.core.myenv.config.get('DEBUG', False)
+        return len(LogPane.Buffer.text) > 0 and LogPane.Show and debug
 
 
 class IsInsideString(PythonInputFilter):
