@@ -10,13 +10,16 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         self.golang = j.builder.runtimes.golang
         self._package_path = j.builder.runtimes.golang.package_path_get('coredns', host='github.com/coredns')
 
-    @action(depends=["_init"])
+    @action()
     def build(self, reset=False):
         """
         kosmos 'j.builder.network.coredns.build(reset=False)'
 
         installs and runs coredns server with redis plugin
         """
+
+        self._init()
+
         # install golang
         j.builder.runtimes.golang.install(reset=reset)
         j.builder.runtimes.golang.get('github.com/coredns/coredns', install=False, update=True)
@@ -70,6 +73,11 @@ class BuilderCoreDns(j.builder.system._BaseClass):
 
         if flist_create:
             return self._flist_create()
+
+    @property
+    def startup_cmds(self):
+        raise RuntimeError("")
+
 
     def test(self):
         if self.running():
