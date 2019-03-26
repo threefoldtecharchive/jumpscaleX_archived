@@ -2,35 +2,6 @@ from Jumpscale import j
 
 BaseClass = j.application.JSBaseClass
 
-class action:
-
-    def __init__(self, **kwargs):
-        self.depends = kwargs.get('depends', [])
-        self.log = kwargs.get('log', True)
-
-    def __call__(self, func):
-        def wrapper_action(*args, **kwargs):
-            builder = args[0]  # self of the builder
-            reset = kwargs.get("reset", False)
-            for dep in self.depends:
-                if hasattr(builder, dep):
-                    if builder._done_check(dep) and not reset:
-                        builder._log_debug("{} already done".format(dep))
-                    else:
-                        act = getattr(builder, dep)
-                        act(reset=reset)
-                else:
-                    raise RuntimeError("Builder {} doesn't have {} action, please check your dependencies"
-                                       .format(builder.NAME, dep))
-
-            if builder._done_check(func.__name__) and not reset:
-                builder._log_debug("{} already done".format(func.__name__))
-            else:
-                func(*args, **kwargs)
-                builder._done_set(func.__name__)
-
-        return wrapper_action
-
 class builder_method(object):
 
     def __init__(self, **kwargs_):
@@ -42,57 +13,55 @@ class builder_method(object):
             self.done_check = j.data.types.bool.clean(kwargs_["done_check"])
         else:
             self.done_check = True
+
     def __call__(self, func):
-        print("Inside __call__()")
-        log = self.log
-        done_check = self.done_check
 
         def wrapper_action(*args, **kwargs):
-            self=args[0]
+            builder=args[0]
             args=args[1:]
             name= func.__name__
-            if log:
-                self._log_debug("do once:%s"%name)
+            if self.log:
+                builder._log_debug("do once:%s"%name)
             if name is not "_init":
-                self._init()
+                builder._init()
             if name == "install":
-                self.build()
+                builder.build()
             if name == "sandbox":
-                self.install()
+                builder.install()
                 zhub_client = args["zhub_client"]
                 if not zhub_client:
-                    # from Jumpscale.clients.zero_hub.ZeroHubClient import ZeroHubClient
-                    if not j.clients.zhubdirect.exists(name="test"): #TODO:*1 is this the right client?
-                        raise RuntimeError("cannot find zhub client")
-                    zhub_client = j.clients.zhubdirect.get(name="test")
+                    if not j.clients.zhub.exists(name="test"):
+                        raise RuntimeError("cannot find test zhub client")
+                    zhub_client = j.clients.zhub.get(name="test")
                 else:
-                    if not isinstance(zhub_client,HubDirectClient):
+                    if not hasattr(zhub_client, "sandbox_upload"):
                         raise RuntimeError("specify valid zhub_client")
                 zhub_client.ping() #should do a test it works
-                args["zhub_client"] = zhub_client
+                kwargs["zhub_client"] = zhub_client
 
             if "reset" in kwargs:
                 reset = kwargs["reset"]
             else:
                 reset = False
 
-            if name in ["start","stop","running"]:
-                done_check = False
+            if name in ["start", "stop", "running"]:
+                self.done_check = False
 
-            if not done_check or not self._done_check(name, reset):
-                if log:
-                    self._log_debug("action:%s() start"%name)
+            if not self.done_check or not builder._done_check(name, reset):
+                if self.log:
+                    builder._log_debug("action:%s() start"%name)
                 res = func(self,*args,**kwargs)
 
                 if name == "sandbox":
-                    res = self._flist_create(zhub_client=zhub_client)
-                if done_check:
-                    self._done_set(name)
-                if log:
-                    self._log_debug("action:%s() done -> %s"%(name,res))
+                    if "flist_create" in kwargs and kwargs["flist_create"]:
+                        res = builder._flist_create(zhub_client=kwargs["zhub_client"])
+                if self.done_check:
+                    builder._done_set(name)
+                if self.log:
+                    builder._log_debug("action:%s() done -> %s"%(name,res))
                 return res
             else:
-                self._log_debug("action:%s() no need to do, was already done"%name)
+                builder._log_debug("action:%s() no need to do, was already done"%name)
 
         return wrapper_action
 
@@ -115,7 +84,7 @@ class BuilderBaseClass(BaseClass):
     def reset(self):
         self._done_reset()
 
-    @action(depends=["_init"])
+    @builder_method(log=False, done_check=True)
     def install(self):
         """
         will build as first step
@@ -123,7 +92,7 @@ class BuilderBaseClass(BaseClass):
         """
         return
 
-    @action(depends=["build"])
+    @builder_method(log=False, done_check=True)
     def sandbox(self, zhub_client=None):
         '''
         when zhub_client None will look for j.clients.get("test"), if not exist will die
@@ -134,24 +103,24 @@ class BuilderBaseClass(BaseClass):
     def startup_cmds(self):
         raise RuntimeError("not implemented")
 
-    @action(depends=["build"])
+    @builder_method(log=False, done_check=True)
     def start(self):
         for startupcmd in self.startup_cmds:
             startupcmd.start()
 
-    @action(depends=["start"])
+    @builder_method(log=False, done_check=True)
     def stop(self):
         for startupcmd in self.startup_cmds:
             startupcmd.stop()
 
-    @action(depends=[])
+    @builder_method(log=False, done_check=True)
     def running(self):
         for startupcmd in self.startup_cmds:
             if startupcmd.running() == False:
                 return False
         return True
 
-    @action(depends=["sandbox"])
+    @builder_method(log=False, done_check=True)
     def _flist_create(self, zhub_client=None):
         """
         build a flist for the builder and upload the created flist to the hub
