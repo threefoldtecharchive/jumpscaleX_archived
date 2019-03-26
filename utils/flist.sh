@@ -66,13 +66,13 @@ git pull
 cd /sandbox/code/github/threefoldfoundation/lapis-wiki
 git pull
 cd /sandbox/code/github/threefoldtech/digitalmeX
-git stash
+git reset --hard origin/development
 git pull
 
 
 ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/static/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/static
 ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/views/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/views
-ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/applications/chat.moon /sandbox/code/github/threefoldfoundation/lapis-wiki/app.moon 
+ln -sf /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/applications/chat.moon /sandbox/code/github/threefoldfoundation/lapis-wiki/app.moon 
 
 tmux new -d -s main  \" export NACL_SECRET=123 ; js_shell ' server = j.servers.gedis.configure(host=\\\"0.0.0.0\\\", port=8888) ; server.actor_add(\\\"/sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/actors/chatbot.py\\\"); server.chatbot.chatflows_load(\\\"/sandbox/code/github/threefoldtech/digitalmeX/packages/system/base/chatflows\\\"); server.start()' \"
 
