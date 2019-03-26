@@ -3,7 +3,7 @@ import inspect
 from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.document import Document
 from prompt_toolkit.completion import Completion
-from prompt_toolkit.filters import is_done
+from prompt_toolkit.filters import Condition, is_done
 from prompt_toolkit.formatted_text import ANSI, to_formatted_text, fragment_list_to_text
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.containers import ConditionalContainer, Window
@@ -181,13 +181,15 @@ def get_doc_string(tbc):
     return '\n\n'.join([signature, doc])
 
 
+class LogPane:
+    Buffer = Buffer(name='logging', read_only=True)
+    Show = True
+
+
 class HasDocString(PythonInputFilter):
 
     def __call__(self):
         return len(self.python_input.docstring_buffer.text) > 0
-
-
-log_pane_buffer = Buffer()
 
 
 class FormatANSIText(Processor):
@@ -201,7 +203,7 @@ class FormatANSIText(Processor):
 class HasLogs(PythonInputFilter):
 
     def __call__(self):
-        return len(log_pane_buffer.text) > 0
+        return len(LogPane.Buffer.text) > 0 and LogPane.Show
 
 
 class IsInsideString(PythonInputFilter):
@@ -219,9 +221,6 @@ def get_ptpython_parent_container(repl):
 
 def setup_docstring_containers(repl):
     parent_container = get_ptpython_parent_container(repl)
-    # remove ptpython docstring containers, we have ours now
-    parent_container.children = parent_container.children[:-2]
-
     # the same as ptpython containers, but without signature checking
     parent_container.children.extend([
         ConditionalContainer(
@@ -242,8 +241,8 @@ def setup_docstring_containers(repl):
 
 
 def add_logs_to_pane(msg):
-    text = '\n'.join([log_pane_buffer.text, msg])
-    log_pane_buffer.reset(document=Document(text, cursor_position=len(text)))
+    text = '\n'.join([LogPane.Buffer.text, msg])
+    LogPane.Buffer.reset(document=Document(text, cursor_position=len(text)))
 
 
 def setup_logging_containers(repl):
@@ -254,17 +253,17 @@ def setup_logging_containers(repl):
                 height=Dimension.exact(1),
                 char='\u2500',
                 style='class:separator'),
-            filter=HasLogs(repl)),
+            filter=HasLogs(repl) & ~is_done),
         ConditionalContainer(
             content=Window(
                 BufferControl(
-                    buffer=log_pane_buffer,
+                    buffer=LogPane.Buffer,
                     input_processors=[FormatANSIText(), HighlightIncrementalSearchProcessor()],
                     focusable=True,
                     preview_search=True
                 ),
                 height=Dimension(max=12)),
-            filter=HasLogs(repl)),
+            filter=HasLogs(repl) & ~is_done),
     ])
 
 
@@ -386,6 +385,11 @@ def ptconfig(repl):
         else:
             repl.docstring_buffer.reset()
 
+    sidebar_visible = Condition(lambda: repl.show_sidebar)
+    @repl.add_key_binding('c-p', filter=~sidebar_visible)
+    def _logevent(event):
+        LogPane.Show = not LogPane.Show
+
     class CustomPrompt(PromptStyle):
         """
         The classic Python prompt.
@@ -419,5 +423,10 @@ def ptconfig(repl):
     repl._completer.__class__.get_completions = custom_get_completions
 
     j.core.myenv.config['log_printer'] = add_logs_to_pane
+
+    parent_container = get_ptpython_parent_container(repl)
+    # remove ptpython docstring containers, we have ours now
+    parent_container.children = parent_container.children[:-2]
+    # setup docstring and logging containers
     setup_docstring_containers(repl)
     setup_logging_containers(repl)
