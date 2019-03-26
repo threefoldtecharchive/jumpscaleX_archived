@@ -77,6 +77,37 @@ class JSBase:
             #lets make sure the initial loglevel gets set
             self._log_init()
 
+    def is_logging_disabled(self):
+        """check if logging should be disabled for current js location
+
+        according to logger includes and excludes (configured)
+        includes have a higher priority over excludes
+
+        :return: True if it should be excluded, else False
+        :rtype: bool
+        """
+
+        def normalize(location):
+            location = location.lower().strip()
+            if location == '*':
+                return ''
+            return location
+
+        includes = list(map(normalize, j.core.myenv.log_includes))
+        excludes = list(map(normalize, j.core.myenv.log_excludes))
+
+        if '' in includes:
+            return False
+
+        if '' in excludes and not includes:
+            return True
+
+        if any([location in self._key for location in includes]):
+            return False
+        if any([location in self._key for location in excludes]):
+            return True
+        return False
+
     def _log_init(self,children=False):
         """
 
@@ -89,27 +120,11 @@ class JSBase:
             self._logger_minlevel_set(1)
             return
 
-        incl = False
-        if "*" in j.core.myenv.log_includes:
-            incl = True
-        else:
-            for item in j.core.myenv.log_includes:
-                item=item.replace("*","")
-                if self.__class__._location.find(item)!=-1:
-                    incl=True
-        if "*" in j.core.myenv.log_excludes:
-            incl = False
-        else:
-            for item in j.core.myenv.log_excludes:
-                item=item.replace("*","")
-                if self.__class__._location.find(item)!=-1:
-                    incl=False
-
-        if incl:
-            minlevel = j.core.myenv.log_loglevel
-
-        else:
+        if self.is_logging_disabled():
+            # exclude all
             minlevel = 100
+        else:
+            minlevel = j.core.myenv.log_loglevel
 
         self._logger_minlevel_set(minlevel)
 
@@ -151,31 +166,31 @@ class JSBase:
         return self.__class__._dirpath_
 
 
-    @property	
-    def _objid(self):	
-        if self._objid_ is None:	
-            id = self.__class__._location	
-            id2 = ""	
-            try:	
-                id2 = self.data.name	
-            except:	
-                pass	
-            if id2 == "":	
-                try:	
-                    if self.data.id is not None:	
-                        id2 = self.data.id	
-                except:	
-                    pass	
-            if id2 == "":	
-                for item in ["instance", "_instance", "_id", "id", "name", "_name"]:	
-                    if item in self.__dict__ and self.__dict__[item]:	
-                        self._log_debug("found extra for obj_id")	
-                        id2 = str(self.__dict__[item])	
-                        break	
-            if id2 != "":	
-                self._objid_ = "%s_%s" % (id, id2)	
-            else:	
-                self._objid_ = id	
+    @property
+    def _objid(self):
+        if self._objid_ is None:
+            id = self.__class__._location
+            id2 = ""
+            try:
+                id2 = self.data.name
+            except:
+                pass
+            if id2 == "":
+                try:
+                    if self.data.id is not None:
+                        id2 = self.data.id
+                except:
+                    pass
+            if id2 == "":
+                for item in ["instance", "_instance", "_id", "id", "name", "_name"]:
+                    if item in self.__dict__ and self.__dict__[item]:
+                        self._log_debug("found extra for obj_id")
+                        id2 = str(self.__dict__[item])
+                        break
+            if id2 != "":
+                self._objid_ = "%s_%s" % (id, id2)
+            else:
+                self._objid_ = id
         return self._objid_
 
     def _logger_enable(self):
@@ -318,7 +333,6 @@ class JSBase:
         - DEBUG 	10
 
         """
-
         if level < self.__class__._logger_level:
             return
 
