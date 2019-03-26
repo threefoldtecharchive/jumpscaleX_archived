@@ -25,7 +25,7 @@ class BuilderRedis(j.builder.system._BaseClass):
 
         if j.core.platformtype.myplatform.isUbuntu:
             j.builder.system.package.mdupdate()
-            j.builder.tools.package_install("build-essential")
+            j.builder.system.package.ensure("build-essential")
 
             j.builder.tools.dir_remove("{DIR_TEMP}/build/redis")
 

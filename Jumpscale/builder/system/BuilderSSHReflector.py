@@ -24,7 +24,7 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
         port = 9222
 
         package = "dropbear"
-        j.builder.tools.package_install(package)
+        j.builder.system.package.ensure(package)
 
         j.sal.process.execute("rm -f /etc/default/dropbear", die=False)
         j.sal.process.execute("killall dropbear", die=False)
@@ -105,7 +105,7 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
             remoteprefab = j.tools.prefab.get(remoteids)
 
             package = "autossh"
-            j.builder.tools.package_install(package)
+            j.builder.system.package.ensure(package)
 
             lpath = os.environ["HOME"] + "/.ssh/reflector"
 
@@ -195,7 +195,7 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
         @param remoteids are the id's of the reflectors e.g. 'ovh3,ovh5:3333'
         """
         j.sal.process.execute("killall autossh", die=False)
-        j.builder.tools.package_install("autossh")
+        j.builder.system.package.ensure("autossh")
 
         if remoteids.find(",") != -1:
             prefab = None

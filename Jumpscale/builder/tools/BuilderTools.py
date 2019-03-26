@@ -46,6 +46,7 @@ class BuilderTools(j.builder.system._BaseClass):
         self.file_update(
             '/etc/hosts', lambda x: text_replace_line(x, old, new)[0])
 
+    @property
     def system_uuid(self):
         """Gets a machines UUID (Universally Unique Identifier)."""
         return self.run('dmidecode -s system-uuid | tr "[A-Z]" "[a-z]"')
@@ -116,20 +117,8 @@ class BuilderTools(j.builder.system._BaseClass):
         return x
 
     def file_download(
-            self,
-            url,
-            to="",
-            overwrite=True,
-            retry=3,
-            timeout=0,
-            login="",
-            passwd="",
-            minspeed=0,
-            multithread=False,
-            expand=False,
-            minsizekb=40,
-            removeTopDir=False,
-            deletedest=False):
+            self,url,to="",overwrite=True,retry=3,timeout=0,login="",passwd="",minspeed=0,
+            multithread=False,expand=False,minsizekb=40,removeTopDir=False,deletedest=False):
         """
         download from url
         @return path of downloaded file
@@ -238,9 +227,9 @@ class BuilderTools(j.builder.system._BaseClass):
             cmd = "tar -C %s -xzf %s" % (destination, path)
         elif path.endswith(".xz"):
             if self.isMac:
-                j.builder.tools.package_install('xz')
+                j.builder.system.package.ensure('xz')
             else:
-                j.builder.tools.package_install('xz-utils')
+                j.builder.system.package.ensure('xz-utils')
             cmd = "tar -C %s -xzf %s" % (destination, path)
         elif path.endswith("tar.bz2"):
             #  cmd = "cd %s;bzip2 -d %s | tar xvf -" % (j.sal.fs.getDirName(path), path)
@@ -389,9 +378,9 @@ class BuilderTools(j.builder.system._BaseClass):
         # TODO:
         return self.prefab.system.ns
 
-    def setIDs(self, name, grid, domain="aydo.com"):
-        self.fqn = "%s.%s.%s" % (name, grid, domain)
-        self.hostname = name
+    # def setIDs(self, name, grid, domain="aydo.com"):
+    #     self.fqn = "%s.%s.%s" % (name, grid, domain)
+    #     self.hostname = name
 
     @property
     def hostfile(self):
@@ -523,20 +512,13 @@ class BuilderTools(j.builder.system._BaseClass):
         location = j.core.tools.text_replace(location)
         return j.data.hash.md5(location)
 
-    def package_install(self, name):
-        name = ' '.join(name.split(','))
-        # TODO do same for list
-        # check if ubuntu or osx, use right package manager to install
-        if self.isUbuntu or self.isLinux:
-            j.sal.ubuntu.apt_install(name)
-
     # =============================================================================
     #
     # Network OPERATIONS
     #
     # =============================================================================
 
-    def getNetworkInfoGenrator(self):
+    def getNetworkInfoGenerator(self):
         from Jumpscale.tools.nettools.NetTools import parseBlock, IPBLOCKS, IPMAC, IPIP, IPNAME
         exitcode, output, err = self.run("ip a", showout=False)
         for m in IPBLOCKS.finditer(output):
@@ -709,13 +691,9 @@ class BuilderTools(j.builder.system._BaseClass):
         self._log_info(cmd)
         if cmd.strip() == "":
             raise RuntimeError("cmd cannot be empty")
-        if not env:
-            env = {}
-        else:
-            env = args.update(env)
 
-        rc, out, err = j.sal.process.execute(cmd, cwd=None, timeout=timeout, die=True,
-                                             env=env, interactive=False, replace=replace, showout=showout)
+        rc, out, err = j.sal.process.execute(cmd, cwd=None, timeout=timeout, die=die,env=env,
+                                             args=args, interactive=False, replace=replace, showout=showout)
         return rc, out, err
 
     def cd(self, path):
@@ -725,21 +703,24 @@ class BuilderTools(j.builder.system._BaseClass):
         self._cd = path
 
     def pwd(self):
+        """
+        :return current path
+        """
         return self._cd
 
-    def execute_jumpscript(self, script, die=True, profile=True, tmux=False, replace=True, showout=True):
-        """
-        execute a jumpscript(script as content) in a remote tmux command, the stdout will be returned
-        """
-        script = j.core.tools.text_replace(script)
-        script = j.core.text.strip(script)
-
-        if script.find("from Jumpscale import j") == -1:
-            script = "from Jumpscale import j\n\n%s" % script
-
-        # TODO:
-        return self.execute_script(script, die=die, profile=profile, interpreter="jspython", tmux=tmux,
-                                   replace=replace, showout=showout)
+    # def execute_jumpscript(self, script, die=True, profile=True, tmux=False, replace=True, showout=True):
+    #     """
+    #     execute a jumpscript(script as content) in a remote tmux command, the stdout will be returned
+    #     """
+    #     script = j.core.tools.text_replace(script)
+    #     script = j.core.text.strip(script)
+    #
+    #     if script.find("from Jumpscale import j") == -1:
+    #         script = "from Jumpscale import j\n\n%s" % script
+    #
+    #     # TODO:
+    #     return self.execute_script(script, die=die, profile=profile, interpreter="jspython", tmux=tmux,
+    #                                replace=replace, showout=showout)
 
     # =============================================================================
     #
@@ -765,17 +746,30 @@ class BuilderTools(j.builder.system._BaseClass):
             raise RuntimeError("command '%s' does not exist, cannot find" % command)
         return out.strip()
 
-    def command_ensure(self, command, package=None):
-        """Ensures that the given command is present, if not installs the
-        package with the given name, which is the same as the command by
-        default."""
-        command = j.core.tools.text_replace(command)
-        if package is None:
-            package = command
-        if not self.command_check(command):
-            j.builder.tools.package_install(package)
-        assert self.command_check(command), \
-            "Command was not installed, check for errors: %s" % (command)
+
+    #USE:j.builder.system.package.ensure
+
+    # def command_ensure(self, command, package=None):
+    #     """Ensures that the given command is present, if not installs the
+    #     package with the given name, which is the same as the command by
+    #     default.
+    #
+    #     command can be comma separated or a list
+    #
+    #     """
+    #     if "," in command:
+    #         command = [i.strip() for i in command.split(",")]
+    #     if isinstance(command,list):
+    #         for commanditem in command:
+    #             self.command_ensure(commanditem,package=package)
+    #         return
+    #     command = j.core.tools.text_replace(command)
+    #     if package is None:
+    #         package = command
+    #     if not self.command_check(command):
+    #         j.builder.system.package.ensure(package)
+    #     assert self.command_check(command), \
+    #         "Command was not installed, check for errors: %s" % (command)
 
     @property
     def isUbuntu(self):

@@ -8,9 +8,5 @@ struct Schema {
     {{prop.capnp_schema}}
     {% endfor %}
 
-    {% for prop in obj.lists %}
-    {{prop.capnp_schema}}
-    {% endfor %}
-
 
 }

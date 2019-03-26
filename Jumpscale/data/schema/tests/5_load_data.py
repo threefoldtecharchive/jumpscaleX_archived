@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.schema.test(name="load_data")'
+    kosmos 'j.data.schema.test(name="load_data")'
 
     test loading of data from toml source
 
@@ -51,10 +51,6 @@ def main(self):
 
     schema_object = j.data.schema.get(schema_package)
     data = schema_object.get(data=data)
-
-    assert(
-        j.core.text.strip_to_ascii_dense(str(data)) ==
-        "name_digitalme.base_enable_true_args_loaders_giturl_https_github.com_threefoldtech_digital_me_tree_development960_packages_system_base_dest_enable_true_giturl_https_github.com_threefoldtech_jumpscale_weblibs_tree_master_static_dest_blueprints_base_static_enable_true")
 
     self._log_info("TEST DONE LOADDATA")
 

@@ -57,12 +57,6 @@ def main(self):
     txn = explorer_client.posted_transaction_get(result.transaction.id)
     assert txn.json() == expected_transaction
 
-    # balance will be updated
-    balance = w.balance
-    assert balance.available == '3500 TFT'
-    assert balance.unconfirmed == '187'
-    assert balance.locked == 0
-
     # if the index is negative or beyond the upper bounds, a ValueError is raised:
     with pytest.raises(ValueError):
         w.erc20.address_register(value=-1)
@@ -75,17 +69,11 @@ def main(self):
     assert result.submitted # it is expected the transaction is submitted, as we do not use Multi-Sig coin inputs
 
     # validate the transaction is as expected
-    expected_transaction = {'version': 210, 'data': {'pubkey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'tftaddress': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a', 'erc20address': '0x3001cb4e707f6389e55cc714a3b5e42e1b7a12d5', 'signature': 'c7baa36180994473042fdb96d788457f4d97783682b74ecef2079a55cac4db7bf26c7e1716d8b5283f1e40d5dbaf350b2e8bc7ec8a8047df254c4ae80f29e001', 'regfee': '10000000000', 'txfee': '1000000000', 'coininputs': [{'parentid': 'b90422bad2dffde79f0a46bd0a41055cf7974b080e115d76f69891ca31d31f11', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': 'f948ae9cf054cd77ff9840e43b0641e0c5a33856aa8b65a4ddebc5e329434bb888d435c6a995acbb2689d36a46ea5c642fa7cf97b3c3be55c5a490c869e4e309'}}}], 'refundcoinoutput': {'value': '489000000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}}}
+    expected_transaction = {'version': 210, 'data': {'pubkey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'tftaddress': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a', 'erc20address': '0x3001cb4e707f6389e55cc714a3b5e42e1b7a12d5', 'signature': '59d530c71cb1f6bba142c5aadb047abdda236f67b70238253267e55f4f7bb10f1b9cc4e2715612cc6e0e5e50634527c1964030554c37a9a53e0df613d15f930e', 'regfee': '10000000000', 'txfee': '1000000000', 'coininputs': [{'parentid': '19d4e81d057b4c93a7763f3dfe878f6a37d6111a3808b93afff4b369de0f5376', 'fulfillment': {'type': 1, 'data': {'publickey': 'ed25519:64ae81a176302ea9ea47ec673f105da7a25e52bdf0cbb5b63d49fc2c69ed2eaa', 'signature': '6321484f53e3ecd6bb9fe39ec4808cefe4c9f9df617b5a54f7331a16e548ed03abe33b78ba407f13f9c5420d789da0dca869180f2081d2d47db08f382698860e'}}}], 'refundcoinoutput': {'value': '187000000000', 'condition': {'type': 1, 'data': {'unlockhash': '014ad318772a09de75fb62f084a33188a7f6fb5e7b68c0ed85a5f90fe11246386b7e6fe97a5a6a'}}}}}
     assert result.transaction.json() == expected_transaction
     # ensure the transaction is posted and as expected there as well
     txn = explorer_client.posted_transaction_get(result.transaction.id)
     assert txn.json() == expected_transaction
-
-    # balance will be updated
-    balance = w.balance
-    assert balance.available == 3000
-    assert balance.unconfirmed == '676 TFT'
-    assert balance.locked == '0.0'
 
     # if the address is not owned by this wallet,
     # a j.clients.tfchain.errors.ERC20RegistrationForbidden error is raised

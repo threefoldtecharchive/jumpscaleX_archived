@@ -6,6 +6,10 @@ JSConfigClient = j.application.JSBaseConfigClass
 
 
 class HubDirectClient(JSConfigClient):
+    """
+    Communicates directly to the remote storage
+    don't use this if you just want to upload or list flists, use j.clients.zhub instead
+    """
     _SCHEMATEXT = """
     @url = jumpscale.hubdirect.client
     name* = "" (S)

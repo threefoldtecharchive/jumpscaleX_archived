@@ -22,7 +22,7 @@ RI| self.prefab.core.file_write | j.sal.fs.writeFile
 RI| self.prefab.core.run | j.sal.process.execute
 RI| self.prefab.core.createDir | j.sal.fs.createDir
 RI| self.prefab.core.file_download | self.prefab.core.file_download
-RI| self.prefab.system.package.install | j.builder.tools.package_install
+RI| self.prefab.system.package.install | j.builder.system.package.ensure
 
 """
 

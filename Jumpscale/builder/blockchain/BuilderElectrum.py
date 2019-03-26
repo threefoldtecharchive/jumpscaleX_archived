@@ -21,7 +21,7 @@ class BuilderElectrum(j.builder.system._BaseClass):
         if self._done_get('build') and reset is False:
             return
         j.builder.system.package.mdupdate()
-        j.builder.tools.package_install("git")
+        j.builder.system.package.ensure("git")
         url = 'https://github.com/spesmilo/electrum.git'
         path = j.builder.tools.joinpaths(j.sal.fs.getTmpDirPath(), 'electrum')
         dest = j.clients.git.pullGitRepo(url,

@@ -40,8 +40,12 @@ class TFChainExplorerClient(j.application.JSBaseClass):
                     raise j.clients.tfchain.errors.ExplorerNoContent("GET: no content available (code: 204)", endpoint)
                 raise j.clients.tfchain.errors.ExplorerServerError("error (code: {})".format(resp.getcode()), endpoint)
             except HTTPError as e:
-                if e.status_code == 400 and (b'unrecognized hash' in e.msg) or (b'not found' in e.msg):
-                    raise j.clients.tfchain.errors.ExplorerNoContent("GET: no content available for specified hash (code: 400)", endpoint)
+                if e.status_code == 400:
+                    msg = e.msg
+                    if isinstance(msg, (bytes, bytearray)):
+                        msg = msg.decode('utf-8')
+                    if isinstance(msg, str) and (('unrecognized hash' in msg) or ('not found' in msg)):
+                        raise j.clients.tfchain.errors.ExplorerNoContent("GET: no content available for specified hash (code: 400)", endpoint)
                 if e.status_code:
                     raise j.clients.tfchain.errors.ExplorerServerError("GET: error (code: {}): {}".format(e.status_code, e.msg), endpoint)
                 self._log_debug("tfchain explorer get exception at endpoint {} on {}: {}".format(endpoint, address, e))

@@ -25,7 +25,6 @@ class BCDBMeta(j.application.JSBaseClass):
         self.bcdb = bcdb
         self._meta_local_path = j.sal.fs.joinPaths(self.bcdb._data_dir,"meta.db")
         self._schema = j.data.schema.get(SCHEMA)
-        #
         self.reset()
 
     @property
@@ -34,6 +33,7 @@ class BCDBMeta(j.application.JSBaseClass):
             if self.bcdb.zdbclient is not None:
                 data = self.bcdb.zdbclient.get(0)
             else:
+                #no ZDB used, is a file in local filesystem
                 if not j.sal.fs.exists(self._meta_local_path):
                     data = None
                 else:
@@ -55,8 +55,6 @@ class BCDBMeta(j.application.JSBaseClass):
                 self.md5sid[s.md5] = s.sid
                 if s.sid > self._schema_last_id:
                     self._schema_last_id = s.sid
-
-
 
         return self._data
 
@@ -99,7 +97,7 @@ class BCDBMeta(j.application.JSBaseClass):
                     self.sid2schema[schema_id].sid = schema_id
                     return self.sid2schema[schema_id]
             if die:
-                raise RuntimeError("schema_id does not exist in db:%s"%schema_id)
+                raise RuntimeError("schema_id does not exist in db (id:%s)"%schema_id)
         return self.sid2schema[schema_id]
 
     def schema_get_from_url(self, url, die=True):
@@ -143,6 +141,7 @@ class BCDBMeta(j.application.JSBaseClass):
 
         # not known yet in namespace in ZDB
         self._schema_last_id += 1
+
         s = self.data.schemas.new()
         s.url = schema.url
         s.sid = self._schema_last_id
@@ -153,7 +152,7 @@ class BCDBMeta(j.application.JSBaseClass):
         self.url2sid[s.url] = s.sid
         schema.sid = s.sid
 
-        return self.schema_get_from_id(schema.sid)
+        return self.schema_get_from_id(s.sid)
 
     def __repr__(self):
         return str(self._data)

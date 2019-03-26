@@ -129,6 +129,9 @@ class SSHAgent(j.application.JSBaseClass):
         j.sal.process.execute(
             'ssh-agent -a {}'.format(os.environ['SSH_AUTH_SOCK']), showout=False, die=True, timeout=1)
 
+        self._init_ssh_env()
+        self._available = None
+
     def check(self):
         '''
         will check that agent started if not will start it.
@@ -212,6 +215,34 @@ class SSHAgent(j.application.JSBaseClass):
         else:
             return list(map(lambda key: key[2], keys))
 
+
+    def keys_get(self):
+        import paramiko.agent
+        a = paramiko.agent.Agent()
+        return [key for key in a.get_keys()]
+
+    def sign(self,data,hash=True):
+        """
+        will sign the data with the ssh-agent loaded
+        :param data: the data to sign
+        :param hash, if True, will use
+        :return:
+        """
+        if not j.data.types.bytes.check(data):
+            data = data.encode()
+        self.check()
+        assert self.available_1key_check() == True
+        import hashlib
+        data_sha1 = hashlib.sha1(data).digest()
+        key = self.keys_get()[0]
+        res = key.sign_ssh_data(data_sha1)
+        if hash:
+            m = hashlib.sha256()
+            m.update(res)
+            return m.digest()
+        else:
+            return res
+
     def start(self):
         '''
         start ssh-agent, kills other agents if more than one are found
@@ -262,6 +293,7 @@ class SSHAgent(j.application.JSBaseClass):
                 j.sal.fs.writeFile(socket_path, str(pid))
                 # self.sshagent_init()
                 j.clients.sshkey._sshagent = None
+                self._available = None
             return
 
         # ssh agent should be loaded because ssh-agent socket has been
@@ -302,6 +334,15 @@ class SSHAgent(j.application.JSBaseClass):
                 return True
         return self._available
 
+    def available_1key_check(self):
+        """
+        checks that ssh-agent is active and there is 1 key loaded
+        :return:
+        """
+        if not self.available():
+            return False
+        return len(self.keys_list())==1
+
     def kill(self, socketpath=None):
         '''
         Kill all agents if more than one is found
@@ -313,6 +354,7 @@ class SSHAgent(j.application.JSBaseClass):
         socketpath = self.ssh_socket_path if not socketpath else socketpath
         j.sal.fs.remove(socketpath)
         j.sal.fs.remove(j.sal.fs.joinPaths('/tmp', "ssh-agent-pid"))
+        self._available = None
         self._log_debug("ssh-agent killed")
 
     def test(self):
@@ -321,20 +363,23 @@ class SSHAgent(j.application.JSBaseClass):
 
         """
 
-        self._log_info("sshkeys:%s" % j.clients.sshkey.listnames())
+        # self._log_info("sshkeys:%s" % j.clients.sshkey.listnames())
+        if self.available():
+            self._log_info("sshkeys:%s" % self.keys_list())
 
-        self.sshagent_kill()  # goal is to kill & make sure it get's loaded automatically
+        j.clients.sshagent.kill()  # goal is to kill & make sure it get's loaded automatically
+        j.clients.sshagent.start()
 
         # lets generate an sshkey with a passphrase
-        skey = self.SSHKey(name="test")
-        skey.passphrase = "12345"
-        skey.path = "apath"
+        passphrase = "12345"
+        path = "/root/.ssh/test_key"
+        skey = j.clients.sshkey.get(name="test", path=path,passphrase=passphrase)
         skey.save()
 
         # this will reload the key from the db
-        skey2 = self.SSHKey(name="test")
+        skey_loaded =  j.clients.sshkey.get(name="test")
 
-        assert skey2._ddict == skey.data._ddict
+        assert skey_loaded.data._ddict == skey.data._ddict
 
         skey.generate(reset=True)
         skey.load()
@@ -346,16 +391,24 @@ class SSHAgent(j.application.JSBaseClass):
             skey.unload()
             assert skey.is_loaded() is False
 
-        skey = self.SSHKey(name="test2")
-        skey.generate()
-        skey.load()
-        assert skey.is_loaded()
-        skey.unload()
-        assert skey.is_loaded() is False
+        path="/root/.ssh/test_key_2"
+        skey2 = j.clients.sshkey.get(name="test2", path=path)
+        skey2.generate()
+        skey2.load()
+        assert skey2.is_loaded()
+        skey2.unload()
+        assert skey2.is_loaded() is False
 
         assert self.available()
-        self.sshagent_kill()
+        self.kill()
         assert self.available() is False
 
         self.sshagent_start()
         assert self.available()
+        # Clean up after test
+        self.kill()
+        assert self.available() is False
+        skey.delete_from_sshdir()
+        skey2.delete_from_sshdir()
+        skey.delete()
+        skey2.delete()

@@ -3,8 +3,10 @@
 ## Builder tools 
 Builder tools is a set of tools to perform the common tasks in your builder (e.g read a file
 , write to a file, execute bash commands and many other handy methods that you will probably need in your builder)
-Check [BuilderTools.py](https://github.com/threefoldtech/jumpscaleX/blob/development/Jumpscale/builder/tools/BuilderTools.py)
- to see the full list of methods available 
+
+[methods & properties of the tools lib](BuildersInternalToolsLib.md)
+
+use them as much as you can !!!
 
 ## methods you should implement in your builder
 
@@ -42,6 +44,7 @@ a binary loacted in `/sanbox/bin/{name}` should be copied to `{destinatrion_dir}
 afterward if `flist=True` this method should call `self.flist_create(sandbox_dir,zhub_instance)` which is a method 
 implemented in the base builder class which will tar the sandbox directory and upload it the hub using the provided 
 zhub instance
+
 ### clean()
 
 removes all files as result from building 
@@ -49,7 +52,6 @@ removes all files as result from building
 ### uninstall()
 
 optional, removes installed, build & sandboxed files
-
 
 
 ## what not to do

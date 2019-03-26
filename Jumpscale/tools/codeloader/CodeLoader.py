@@ -12,7 +12,7 @@ class CodeLoader(j.application.JSBaseClass):
     def _init(self):
 
         #
-        j.sal.fs.createDir("%s/CODEGEN"%j.dirs.VARDIR)
+        j.sal.fs.createDir("%s/codegen"%j.dirs.VARDIR)
         self._hash_to_codeobj = {}
 
     def _basename(self,path):
@@ -26,20 +26,20 @@ class CodeLoader(j.application.JSBaseClass):
     def load_text(self,obj_key=None,text=None,dest=None, reload=False,md5=None):
         """
 
-        write text as code file or in CODEGEN location or specified dest
+        write text as code file or in codegen location or specified dest
         load this text as code in mem (module python)
         get the objkey out of the code e.g. a method or a class
 
         :param obj_key:  is name of function or class we need to evaluate when the code get's loaded
         :param text: if not path used, text = is the text of the template (the content)
-        :param dest: if not specified will be in j.dirs.VARDIR,"CODEGEN",md5+".py" (md5 is md5 of template+msgpack of args)
+        :param dest: if not specified will be in j.dirs.VARDIR,"codegen",md5+".py" (md5 is md5 of template+msgpack of args)
         :param reload: will reload the template and re-render
         :return:
         """
         if md5 is None:
             md5 = j.data.hash.md5_string(text)
         if dest is None:
-            dest = j.sal.fs.joinPaths(j.dirs.VARDIR,"CODEGEN",md5+".py")
+            dest = j.sal.fs.joinPaths(j.dirs.VARDIR,"codegen",md5+".py")
 
         if reload or not j.sal.fs.exists(dest):
             j.sal.fs.writeFile(dest,text)

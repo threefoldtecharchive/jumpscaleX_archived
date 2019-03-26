@@ -60,3 +60,28 @@ def main(self):
     # ensure the transaction is posted and as expected there as well
     txn = explorer_client.posted_transaction_get(result.transaction.id)
     assert txn.json() == expected_transaction
+
+    # Add output for the poor seed
+    explorer_client.hash_add('0143b6f062e892e168f554827bdad2462a03e7e8a2b0fe152e3889042b10b418754b4305d6aec3', '{"hashtype":"unlockhash","block":{"minerpayoutids":null,"transactions":null,"rawblock":{"parentid":"0000000000000000000000000000000000000000000000000000000000000000","timestamp":0,"pobsindexes":{"BlockHeight":0,"TransactionIndex":0,"OutputIndex":0},"minerpayouts":null,"transactions":null},"blockid":"0000000000000000000000000000000000000000000000000000000000000000","difficulty":"0","estimatedactivebs":"0","height":0,"maturitytimestamp":0,"target":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"totalcoins":"0","arbitrarydatatotalsize":0,"minerpayoutcount":0,"transactioncount":0,"coininputcount":0,"coinoutputcount":0,"blockstakeinputcount":0,"blockstakeoutputcount":0,"minerfeecount":0,"arbitrarydatacount":0},"blocks":null,"transaction":{"id":"0000000000000000000000000000000000000000000000000000000000000000","height":0,"parent":"0000000000000000000000000000000000000000000000000000000000000000","rawtransaction":{"version":0,"data":{"coininputs":[],"minerfees":null}},"coininputoutputs":null,"coinoutputids":null,"coinoutputunlockhashes":null,"blockstakeinputoutputs":null,"blockstakeoutputids":null,"blockstakeunlockhashes":null,"unconfirmed":false},"transactions":[{"id":"61f7fd8d316762fc548e7f1e2f3a4eb089dd66cb7314615866763b6f930720d5","height":225344,"parent":"b6e8fb02568b6361f44decbe742aab3a01168942c1e6168edc41fdbb9cbf2339","rawtransaction":{"version":1,"data":{"coininputs":[{"parentid":"f0c0f8ac8b9d370adadc0e99df0850e3f734c605489b3a08193a004e0af42ac9","fulfillment":{"type":1,"data":{"publickey":"ed25519:c2e41428d4662a2aaa9badf71b206f282c585cbab33e54ee60072b126287a366","signature":"c4cdb456ec080721e9169c9b4d35ae96b7aac0c4740e5a7c911323c096809d801555b809001036a908f8489f3613d0e3173d1970988c0de1ec00942776777105"}}}],"coinoutputs":[{"value":"100000000000","condition":{"type":1,"data":{"unlockhash":"0143b6f062e892e168f554827bdad2462a03e7e8a2b0fe152e3889042b10b418754b4305d6aec3"}}},{"value":"199900000000","condition":{"type":1,"data":{"unlockhash":"0167d645ab5ad87dfa9e45eaf95152938f3a95c8400a48fa246de2da478d670a1ff7c435f920f3"}}}],"minerfees":["100000000"]}},"coininputoutputs":[{"value":"300000000000","condition":{"type":1,"data":{"unlockhash":"019805f0d72fb5759f0dd0e88fc663891150e8c5e227e633c6d0fdd91bb1e32bf658d46a527695"}},"unlockhash":"019805f0d72fb5759f0dd0e88fc663891150e8c5e227e633c6d0fdd91bb1e32bf658d46a527695"}],"coinoutputids":["4ec82e367c9e2235317694d0fd241995aedf47ba99a1d65f333e4a8309149bdc","2f83a83a223e3325a60f67f785c7ba023d3eb67746d16ead1e82a80819f3e4f7"],"coinoutputunlockhashes":["0143b6f062e892e168f554827bdad2462a03e7e8a2b0fe152e3889042b10b418754b4305d6aec3","0167d645ab5ad87dfa9e45eaf95152938f3a95c8400a48fa246de2da478d670a1ff7c435f920f3"],"blockstakeinputoutputs":null,"blockstakeoutputids":null,"blockstakeunlockhashes":null,"unconfirmed":false}],"multisigaddresses":null,"unconfirmed":false}')
+
+    # Random seed with insufficient funds to create a new transaction
+    DEVNET_POOR_SEED = "merge weekend armed harbor giant exact puppy caution nerve donkey then foam random doll slight front relief want edge rare digital already rib volcano"
+    w = c.wallets.new("mywallet2", seed=DEVNET_POOR_SEED)
+
+    # New wallet should still be on devnet
+    assert w.network_type == "DEV"
+
+    # Do some checks to ensure the balance is as expected
+    balance = w.balance
+
+    assert str(balance.available) == '100'
+    assert str(balance.locked) == '0'
+
+    # now try to create a new record, should fail
+    with pytest.raises(j.clients.tfchain.errors.InsufficientFunds):
+        w.threebot.record_new(
+            months=5,
+            names=["another.example", "another.testcase"],
+            addresses=["some.org", "test.org"],
+            key_index=0
+        )

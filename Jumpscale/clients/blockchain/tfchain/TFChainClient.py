@@ -3,6 +3,9 @@ Tfchain Client
 """
 
 from Jumpscale import j
+
+import sys
+
 from .types.ConditionTypes import UnlockHash, UnlockHashType, ConditionMultiSignature
 from .types.PrimitiveTypes import Hash, Currency
 from .types.IO import CoinOutput, BlockstakeOutput
@@ -40,7 +43,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         @url = jumpscale.tfchain.client
         name* = "" (S)
         network_type = "STD,TEST,DEV" (E)
-        explorer_nodes = (LS) !jumpscale.tfchain.explorer
+        explorer_nodes = (LO) !jumpscale.tfchain.explorer
         """
 
     _CHILDCLASSES = [TFChainWalletFactory]
@@ -78,7 +81,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         """
         if len(self.explorer_nodes) > 0:
             return self.explorer_nodes.pylist()
-        return _EXPLORER_NODES[self.network]
+        return _EXPLORER_NODES[str(self.network)]
 
     @property
     def network(self):
@@ -246,6 +249,9 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
                     confirmations=int(info['confirmations']),
                 )
 
+            # sort the transactions by height
+            transactions.sort(key=(lambda txn: sys.maxsize if txn.height < 0 else txn.height), reverse=True)
+
             # return explorer data for the unlockhash
             return ExplorerUnlockhashResult(
                 unlockhash=UnlockHash.from_json(unlockhash),
@@ -361,6 +367,9 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
             transaction.blockstake_outputs[idx].id = Hash.from_json(obj=id)
         # set the unconfirmed state
         transaction.unconfirmed = etxn.get('unconfirmed', False)
+        # set the height of the transaction only if confirmed
+        if not transaction.unconfirmed:
+            transaction.height = int(etxn.get('height'))
         # return the transaction
         return transaction
 

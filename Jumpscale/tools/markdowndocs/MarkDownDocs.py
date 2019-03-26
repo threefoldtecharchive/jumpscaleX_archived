@@ -149,7 +149,7 @@ class MarkDownDocs(j.application.JSBaseClass):
             if not j.sal.fs.exists(path=path):
                 raise j.exceptions.Input("Cannot find path:'%s' for macro's, does it exist?" % path)
 
-            for path0 in j.sal.fs.listFilesInDir(path, recursive=True, filter="*.py", followSymlinks=True):
+            for path0 in j.sal.fs.listFilesInDir(path, recursive=False, filter="*.py", followSymlinks=True):
                 name = j.sal.fs.getBaseName(path0)[:-3]  # find name, remove .py
                 self._macros[name] = j.tools.jinja2.code_python_render(
                     obj_key=name, path=path0, reload=False, objForHash=name)
@@ -293,15 +293,20 @@ class MarkDownDocs(j.application.JSBaseClass):
         tf_grid = self.load(url, name="grid")
         tf_grid.write()
 
-    def test(self):
+        url = "https://github.com/BetterToken/info_bettertoken/tree/master/docs"
+        tf_grid = self.load(url, name="bettertoken")
+        tf_grid.write()
+
+        url = "https://github.com/harvested-io/info_harvested.io/tree/master/docs"
+        tf_grid = self.load(url, name="harvested")
+        tf_grid.write()
+
+    def test(self, watch=False):
         """
         js_shell 'j.tools.markdowndocs.test()'
         """
         url = "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/docsites_examples/test/"
         ds = self.load(url, name="test")
-
-        url = "https://github.com/threefoldtech/jumpscaleX/blob/master/docs"
-        ds_js = self.load(url, name="jumpscale")
 
         doc = ds.doc_get("links")
 
@@ -350,8 +355,6 @@ class MarkDownDocs(j.application.JSBaseClass):
         # next will rewrite the full pre-processed docsite
         ds.write()
 
-        ds_js.write()
-
         url = "https://github.com/threefoldfoundation/info_tokens/tree/master/docs"
         ds4 = self.load(url, name="tf_tokens")
         ds4.write()
@@ -362,8 +365,15 @@ class MarkDownDocs(j.application.JSBaseClass):
 
         url = "https://github.com/threefoldfoundation/info_grid/tree/development/docs"
         ds6 = self.load(url, name="tf_grid")
-        ds6.write()
+        try:
+            ds6.write()
+        except:
+            pass
 
-        self.webserver()
+        url = "https://github.com/threefoldtech/info_tftech/tree/master/docs"
+        ds7 = self.load(url, name="tech")
+        ds7.write()
+
+        self.webserver(watch)
 
         print("TEST FOR MARKDOWN PREPROCESSING IS DONE")

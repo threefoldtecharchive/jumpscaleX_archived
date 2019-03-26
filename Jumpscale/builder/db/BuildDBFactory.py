@@ -2,6 +2,7 @@ from Jumpscale import j
 
 from .BuilderEtcd import BuilderEtcd
 from .BuilderMariadb import BuilderMariadb
+from .BuilderZdb import BuilderZdb
 
 
 class BuildDBFactory(j.builder.system._BaseFactoryClass):
@@ -12,4 +13,4 @@ class BuildDBFactory(j.builder.system._BaseFactoryClass):
 
         self.etcd = BuilderEtcd()
         self.mariadb = BuilderMariadb()
-
+        self.zdb = BuilderZdb()

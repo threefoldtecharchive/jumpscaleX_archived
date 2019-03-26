@@ -10,6 +10,11 @@ export HOME=/root
 export LANG=en_US.UTF-8
 export LANGUAGE=en_US.UTF-8
 export LC_ALL=en_US.UTF-8
-source /sandbox/env.sh
-exec js_shell "j.tools.markdowndocs.webserver()"
+. /sandbox/env.sh
+
+ln -s $src1 $dest1
+ln -s $src2 $dest2
+ln -s $src3 $dest3
+
+exec js_shell \"j.tools.markdowndocs.webserver()\"
 """

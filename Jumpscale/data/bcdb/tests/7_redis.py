@@ -7,7 +7,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.bcdb.test(name="redis")'
+    kosmos 'j.data.bcdb.test(name="redis")'
 
     use a bcdb which is using sqlite
 
@@ -16,11 +16,8 @@ def main(self):
     ```
     apt-get install python3.6-dev
     mkdir -p /root/opt/bin
-    js_shell 'j.servers.zdb.build()'
+    kosmos 'j.servers.zdb.build()'
     pip3 install pycapnp peewee cryptocompare
-
-    #MAKE SURE YOU DON't USE THE SSH CONFIG, USE THE LOCAL CONFIG
-    js_shell 'j.tools.myconfig'
 
     ```
 
@@ -45,7 +42,7 @@ def main(self):
         date_start* = 0 (D)
         description = ""
         token_price* = "10 USD" (N)
-        cost_estimate:hw_cost = 0.0 #this is a comment
+        cost_estimate = 0.0 #this is a comment
         llist = []
         llist3 = "1,2,3" (LF)
         llist4 = "1,2,3" (L)
@@ -93,7 +90,7 @@ def main(self):
 
         if zdb:
             self._log_debug("validate list")
-            cl = j.clients.zdb.client_get()
+            cl = j.clients.zdb.client_get(port=9901)
             assert cl.list() == [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 
         id = int(id.decode())
@@ -159,24 +156,24 @@ def main(self):
 
     def sqlite_test():
         # SQLITE BACKEND
-        self.redis_server_start(
-            port=6380, background=True, zdbclient_addr=None)
+        self.redis_server_start(port=6380, background=True, zdbclient_addr=None)
         do()
         # restart redis lets see if schema's are there autoloaded
-        self.redis_server_start(
-            port=6380, background=True, zdbclient_addr=None)
+        self.redis_server_start(port=6380, background=True, zdbclient_addr=None)
         check_after_restart()
 
     def zdb_test():
         # ZDB test
-        c = j.clients.zdb.client_admin_get()
+        c = j.clients.zdb.client_admin_get(port=9901)
         c.reset()  # removes the namespace from zdb, all is gone, need to create again
         c.namespace_new("test", secret="1234")
         self.redis_server_start(port=6380, background=True)
-        do()
+
+    return
 
     sqlite_test()
     zdb_test()
+    do()
 
     self._log_debug("TEST OK")
 

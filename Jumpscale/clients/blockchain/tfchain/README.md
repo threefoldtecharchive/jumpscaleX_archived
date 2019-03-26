@@ -20,6 +20,8 @@ All methods have docstrings, _read_ them.
 5. [Atomic Swap Contacts](#atomic-swap-contracts): explains how to work with cross-chain atomic swaps, from a TFChain perspective, using your TFChain wallet
 6. [ERC20 Interaction](#erc20-interaction): send coins to an ERC20 address and register a TFT address as ERC20 Withdrawel addresses
 7. [Coin Minting](#coin-minting): a subsection devoted to the coin minters of the network
+8. [Examples](#examples): examples that show how to use the TFChain client as a library
+9. [Capacity reservation](#capacity-reservation): reserve and deploy some workloads on the TF grid
 
 ### Client
 
@@ -29,14 +31,14 @@ Create a client as follows:
 c = j.clients.tfchain.my_client
 ```
 
-or 
+or
 
 ```python
 c = j.clients.tfchain.new('my_client')
 # available as `j.clients.tfchain.my_client` from now on
 ```
 
-or 
+or
 
 ```python
 # valid types: STD, TEST and DEV, by default it is set to STD
@@ -75,7 +77,7 @@ Should you desire you can use the client
 to get a block by height or ID (`c.block_get`), as well
 as transactions by ID (`c.transaction_get`) and more.
 
-Create a TFChain client in Kosmos to explore all its options or check out 
+Create a TFChain client in Kosmos to explore all its options or check out
 the [./tests](./tests) directory for documented tests.
 
 ##### Unlockhash Get
@@ -364,12 +366,12 @@ w.threebot.record_update(4, months=1)
 
 ```python
 # add one (IPv6) address to 3Bot #10
-w.threebot.record_update(10, addresses_to_add=["2001:db8:85a3::8a2e:370:7334"]) 
+w.threebot.record_update(10, addresses_to_add=["2001:db8:85a3::8a2e:370:7334"])
 ```
 
 ```python
 # remove one name from 3Bot #1
-w.threebot.record_update(1, names_to_remove=["example.chatbot"]) 
+w.threebot.record_update(1, names_to_remove=["example.chatbot"])
 ```
 
 ```python
@@ -491,7 +493,7 @@ Refund a contract (only possible when the defined contract duration has expired)
 ```python
 transaction = w.atomicswap.refund('a5e0159688d300ed7a8f2685829192d8dd1266ce6e82a0d04a3bbbb080de30d0')
 # an exception is raised when the contract is not found, has already been spent,
-# the defined secret is incorrect or the wallet is not authorized as sender. 
+# the defined secret is incorrect or the wallet is not authorized as sender.
 ```
 > See [The AtomicSwap Refund Unit Test](./tests/15_atomicswap_refund.py) for a detailed example.
 
@@ -648,3 +650,80 @@ Creating coins as a Coin Minter can be done as follows:
 
 See [The Minter Coins New Unit Test](./tests/27_minter_coins_new.py)
 for detailed examples for minting new coins.
+
+### Examples
+
+The TFChain Client is kept simple and focussed. It can do a lot, and it is very easy to use it.
+However, that does mean that we do not support every possible use case out-of-the box.
+Building an application on top of the TFChain Client and as such using this client as a library.
+
+#### Wallet Statements
+
+You can find a detailed example in [The Wallet Statements Example](./tests/100_examples_wallet_statements.py)
+on how to assemble your own statements for a wallet using the TFChain Wallet Client.
+
+The example is simple and prints the statements directly to the STDOUT as follows:
+
+```
+$ js_shell 'j.clients.tfchain.test(name="examples_wallet_statements")'
+unconfirmed  Tx: 573290763024ae0a5e981412598a3d41bc02f8da628fa1e1adfe07d98818c689 |                          |         + 10 TFT         |
+        > to: 0125c0156f6c1c0bc43c7d38e17f8948300564bef63caac05c08b0fd68996e494704bbbe0268cb
+        > from: 01f0f397fd6b7b51b46ddd2ffda1e2240e639b19b47d27a4adc2bed78da0fc3d97c1fe7b972d1e
+39997        Tx: 779cf13ecee7f45f032af92429056cd5976cb75ce968bab98e3e2fdf9a9b1034 |         - 1 TFT          |                          |
+        > to: this wallet
+        > from: this wallet
+39995        Tx: b104308e683d4353a5a6b6cdfd4f6dfce39e241ff1218d6d6189bae89945034f |                          |        + 200 TFT         |
+        > to: 0125c0156f6c1c0bc43c7d38e17f8948300564bef63caac05c08b0fd68996e494704bbbe0268cb
+        > from: 015827a0cabfb4be5531ecd2b42470a25cf9910a868b857029c2bdabdc05cad51e66d5dd899064
+39994        Tx: 208d9f524e937176e50a7399fd3886f584290948983bbd0ed781f59cefc343a8 |         - 11 TFT         |                          |
+        > to: 01cb0aedd4098efd926195c2f7bba9323d919f99ecd95cf3626f0508f6be33f49bcae3dd62cca6
+        > from: this wallet
+39991        Tx: e7785bacd0d12f93ab435cf3e29301f15b84be82ae8abbdaed1cfd034f4ed652 |                          |        + 100 TFT         |
+        > to: 0125c0156f6c1c0bc43c7d38e17f8948300564bef63caac05c08b0fd68996e494704bbbe0268cb
+        > from: 01456d748fc44c753f63671cb384b8cb8a2aebb1d48b4e0be82c302d71c10f2448b2d8e3d164f6
+39990        Tx: 544a204f0211e7642f508a7918c5d29334bd7d6892b2612e8acfb6dc36d39bd9 |                          |        + 400 TFT         |
+        > to: 0125c0156f6c1c0bc43c7d38e17f8948300564bef63caac05c08b0fd68996e494704bbbe0268cb
+        > from: 01773a1dd123347e1030f0822cb8d22082fe3f9b0ea8563d4ac8e7abc377eba920c47efb2fd736
+```
+
+### Capacity reservation
+
+During the fist beta phase of the public launch of the TF grid, beta tester will be able to reserve 2 kind of workload on the grid.
+
+- Zero-OS virtual machines
+- S3 archive storage instances
+
+**At the time of writing, everything happens on the testnet network**
+**Don't send real TFT from the main network !!**
+
+#### How to reserve some capacity on the Threefold Grid
+
+To be able to make a reservation you first need to:
+
+- have a wallet with sufficient funds
+- record a threebot on the tfchain
+
+Once you have both, you can then use your wallet client to do a reservation.
+The wallet expose a module called `capacity`. On this module you will find function to reserver the different type of capacity.
+
+Examples:
+
+```python
+c = j.clients.tfchain.myclient
+w = c.wallets.mywallet
+result = w.capacity.reserve_s3(
+    email='user@email.com', # the email on which you will received the connection information
+    threebot_id='my3bot.example.org', # your threebot id, it can be any of the names you gave to your 3bot
+    location='farm_name', # name of the farm where to deploy the workload
+    size=1) # each workload have a different size available
+```
+
+
+The result of the `reserve_s3` method call is a tuple containing the transaction and the submission status as a boolean.
+You can check it on our [explorer](https://explorer.testnet.threefoldtoken.com/) by entering the transaction ID in the `Search by hash` field of the explorer form or using the tfchain client:
+
+```python
+transaction = c.transaction_get(result.transaction.id)
+```
+
+As soon as it is ready, usually within a few minutes, you will receive an email with the connection information.

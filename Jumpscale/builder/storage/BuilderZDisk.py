@@ -24,7 +24,7 @@ class BuilderZDisk(j.builder.system._BaseClass):
             return
         
         # install dependencies
-        j.builder.tools.package_install("git")
+        j.builder.system.package.ensure("git")
         j.builder.runtimes.golang.install()
 
         # install 0-Disk

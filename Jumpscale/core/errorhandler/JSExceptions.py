@@ -8,6 +8,7 @@ import sys
 LEVELMAP = {1: 'CRITICAL', 2: 'WARNING', 3: 'INFO', 4: 'DEBUG'}
 
 
+
 class BaseJSException(Exception):
 
     def __init__(self, message="", level=1, cat="", msgpub=""):
@@ -144,3 +145,21 @@ class SSHError(BaseJSException):
         super().__init__(message=message,level=level,cat=cat,msgpub=msgpub)
         self.trace_do = True
 SSHTimeout = pssh.exceptions.Timeout
+
+
+class JSExceptions():
+    def __init__(self):
+        self.SSHTimeout = SSHTimeout
+        self.SSHError = SSHError
+        self.Timeout = Timeout
+        self.NotFound = NotFound
+        self.IOError = IOError
+        self.OPERATIONS = OPERATIONS
+        self.JSBUG = JSBUG
+        self.BUG = BUG
+        self.NotImplemented = NotImplemented
+        self.Input = Input
+        self.RuntimeError = RuntimeError
+        self.HaltException = HaltException
+        self.BaseJSException = BaseJSException
+

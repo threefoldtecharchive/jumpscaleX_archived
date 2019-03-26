@@ -30,3 +30,37 @@ def property_js(func):
     return wrapper_action
 
 
+# # PythonDecorators/decorator_function_with_arguments.py
+# def decorator_function_with_arguments(arg1, arg2, arg3):
+#     def wrap(f):
+#         print("Inside wrap()")
+#         def wrapped_f(*args):
+#             print("Inside wrapped_f()")
+#             print("Decorator arguments:", arg1, arg2, arg3)
+#             f(*args)
+#             print("After f(*args)")
+#         return wrapped_f
+#     return wrap
+#
+# def do_once2(*args_,**kwargs_):
+#     def wrap(func):
+#         print("Inside wrap()")
+#         def wrapper_action(*args, **kwargs):
+#             j.shell()
+#             self=args[0]
+#             args=args[1:]
+#             name= func.__name__
+#
+#             if name is not "_init":
+#                 self._init()
+#             if "reset" in kwargs:
+#                 reset = kwargs["reset"]
+#             else:
+#                 reset = False
+#             if not self._done_check(name, reset):
+#                 res = func(*args,**kwargs)
+#                 self._done_set(name)
+#                 return res
+#         return wrapper_action
+#     return wrap
+

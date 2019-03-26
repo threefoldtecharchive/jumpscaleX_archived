@@ -8,7 +8,7 @@ mkdir -p $ARCHIVE
 
 # install system deps
 apt-get update
-apt-get install -y curl locales git wget netcat tar sudo tmux ssh python3-pip redis-server libffi-dev python3-dev libssl-dev libpython3-dev libssh-dev libsnappy-dev build-essential pkg-config libvirt-dev libsqlite3-dev -y
+apt-get install -y curl unzip rsync locales git wget netcat tar sudo tmux ssh python3-pip redis-server libffi-dev python3-dev libssl-dev libpython3-dev libssh-dev libsnappy-dev build-essential pkg-config libvirt-dev libsqlite3-dev -y
 
 
 # setting up locales
@@ -32,7 +32,7 @@ done
 pushd $HOME/code/github/threefoldtech
 
 # cloning source code
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py 1 y y y y y
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py 1 y y y y y
 
 #ssh generate
 ssh-keygen -f ~/.ssh/id_rsa -P ''
@@ -49,6 +49,64 @@ echo "Waiting webserver to launch on 8080..."
 while ! nc -z localhost 8080; do   
   sleep 10 # wait for 10 seconds before check again
 done
+js_shell "j.builder.runtimes.lua.lua_rocks_install() "
+
+cd /sandbox 
+echo """ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    locale-gen
+export HOME=/root
+export LANG=en_US.UTF-8
+export LANGUAGE=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+. /sandbox/env.sh
+cd /sandbox/code/github/threefoldfoundation/info_foundation
+git pull
+cd /sandbox/code/github/threefoldfoundation/info_tokens
+git pull
+cd /sandbox/code/github/threefoldfoundation/lapis-wiki
+git pull
+cd /sandbox/code/github/threefoldtech/digitalmeX
+git stash
+git pull
+
+
+ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/static/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/static
+ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/views/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/views
+ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/applications/chat.moon /sandbox/code/github/threefoldfoundation/lapis-wiki/app.moon 
+
+tmux new -d -s main  \" export NACL_SECRET=123 ; js_shell ' server = j.servers.gedis.configure(host=\\\"0.0.0.0\\\", port=8888) ; server.actor_add(\\\"/sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/actors/chatbot.py\\\"); server.chatbot.chatflows_load(\\\"/sandbox/code/github/threefoldtech/digitalmeX/packages/system/base/chatflows\\\"); server.start()' \"
+
+js_shell \"j.tools.markdowndocs.webserver()\"
+""" > 3bot_startup.sh
+
+cd /sandbox
+echo """ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+    locale-gen
+export HOME=/root
+export LANG=en_US.UTF-8
+export LANGUAGE=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+. /sandbox/env.sh
+cd /sandbox/code/github/threefoldfoundation/info_foundation
+git pull
+cd /sandbox/code/github/threefoldfoundation/info_tokens
+git pull
+cd /sandbox/code/github/threefoldfoundation/lapis-wiki
+git pull
+cd /sandbox/code/github/threefoldtech/digitalmeX
+git pull
+
+
+ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/static/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/static
+ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/views/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/views
+ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/applications/chat.moon /sandbox/code/github/threefoldfoundation/lapis-wiki/app.moon 
+
+tmux new -d -s main  \"export NACL_SECRET=123 ; js_shell 'j.builder.db.zdb.start(); zdb_cl = j.clients.zdb.client_admin_get(); zdb_cl = zdb_cl.namespace_new(\\\"notary_namespace\\\", secret=\\\"1234\\\"); bcdb = j.data.bcdb.new(zdbclient=zdb_cl, name=\\\"notary_bcdb\\\");bcdb.models_add(\\\"/sandbox/code/github/threefoldtech/digitalmeX/packages/notary/models \\\"); server = j.servers.gedis.configure(host=\\\"0.0.0.0\\\", port=8888);server.actor_add(\\\"/sandbox/code/github/threefoldtech/digitalmeX/packages/notary/actors/notary_actor.py\\\");server.models_add(models=bcdb.models.values());server.save();server.start()' \"
+
+cd /sandbox/code/github/threefoldtech/digitalmeX/packages/notary
+moonc . &&lapis server
+""" > notary_startup.sh
+
 cd /sandbox/code/github/threefoldtech/jumpscaleX/
 cp utils/startup.toml /.startup.toml
 tar -cpzf "/tmp/archives/JSX.tar.gz" --exclude dev --exclude sys --exclude proc  /

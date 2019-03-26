@@ -11,6 +11,13 @@ class TransactionFactory(j.application.JSBaseClass):
     TFChain Transaction Factory class
     """
 
+    @property
+    def version(self):
+        """
+        Version Enum class, containing all known TFChain transactions
+        """
+        return TransactionVersion
+
     def new(self):
         """
         Creates and returns a default transaction.
@@ -171,6 +178,10 @@ class TransactionFactory(j.application.JSBaseClass):
         assert v144_txn.json() == v144_txn_json
         assert v144_txn.signature_hash_get(BotTransactionBaseClass.SPECIFIER_SENDER).hex() == 'f9204641c6a945af6d262154f3d1dfa82aa291c4fc4000936ee72fc3506cfd2c'
         assert v144_txn.binary_encode().hex() == '90e112115bc6aec02c6578616d706c652e6f72671e63686174626f742e6578616d706c65083b9aca0002a3c8f44d64c0636018a929d2caeec09fb9698bfdcbfa3a8225585a51e09ee56301c401d285f92d6d449d9abb27f4c6cf82713cec0696d62b8c123f1627e054dc6d778080909a7df820ec3cee1c99bd2c297b938f830da891439ef7d78452e29efb0c7e593683274c356f72d3b627c2954a24b2bc2276fed47b24cd62816c540c88f13d051001634560d9784e00014201b49da2ff193f46ee0fc684d7a6121a8b8e324144dffc7327471a4da79f1730960100bde9571b30e1742c41fcca8c730183402d967df5b17b5f4ced22c67780661498e71668dfe7726a357039d7c0e871b6c0ca8fa49dc1fcdccb5f23f5f0a5cab95cfcfd72a9fd2c5045ba899ecb0207ff01125a0151f3e35e3c6e13a7538b340a'
+        # ensure no constants are mutated
+        assert BotTransactionBaseClass.BOT_FEE_REGISTRATION == 90
+        assert v144_txn.required_bot_fees == '100 TFT'
+        assert BotTransactionBaseClass.BOT_FEE_REGISTRATION == 90
 
         # v145 Transactions are supported
         v145_txn_json = {"version":145,"data":{"id":3,"addresses":{"add":["example.com","127.0.0.1"],"remove":["example.org"]},"names":{"add":["giveme.yourfeedback","thisis.anexample"],"remove":["chatbot.example"]},"nrofmonths":4,"txfee":"1000000000","coininputs":[{"parentid":"81a0c1f3094b99b0858da8ebc95b52f2c3593ea399d7b72a66a930521aae61bb","fulfillment":{"type":1,"data":{"publickey":"ed25519:880ee50bd7efa4c8b2b5949688a09818a652727fd3c0cb406013be442df68b34","signature":"d612b679377298e6ccb8a877f7a129d34c65b8850cff1806b9f62d392b6ab173020c3698658275c748047642f8012a4ac75ea23e319bcc405c9d7f2b462b6a0b"}}}],"refundcoinoutput":{"value":"99998737000000000","condition":{"type":1,"data":{"unlockhash":"01972837ee396f22f96846a0c700f9cf7c8fa83ab4110da91a1c7d02f94f28ff03e45f1470df82"}}},"signature":"f76e7ed808a9efe405804109d5e3c8695daf8b9bc7abf1e471fef94b3c4d36789b460f9e45cdf27d83d270b0836fef56bd499e1be8e1f279d367e961bbe62f03"}}
@@ -178,6 +189,15 @@ class TransactionFactory(j.application.JSBaseClass):
         assert v145_txn.json() == v145_txn_json
         assert v145_txn.signature_hash_get(BotTransactionBaseClass.SPECIFIER_SENDER).hex() == '3d86ed117c97718a9d0d644188e019b4fa55ec22f2c32c187d223d4e73a1ab72'
         assert v145_txn.binary_encode().hex() == '9103000000e4122c6578616d706c652e636f6d117f0000012c6578616d706c652e6f72671226676976656d652e796f7572666565646261636b207468697369732e616e6578616d706c651e63686174626f742e6578616d706c65083b9aca000281a0c1f3094b99b0858da8ebc95b52f2c3593ea399d7b72a66a930521aae61bb01c401880ee50bd7efa4c8b2b5949688a09818a652727fd3c0cb406013be442df68b3480d612b679377298e6ccb8a877f7a129d34c65b8850cff1806b9f62d392b6ab173020c3698658275c748047642f8012a4ac75ea23e319bcc405c9d7f2b462b6a0b10016344524cdf6a00014201972837ee396f22f96846a0c700f9cf7c8fa83ab4110da91a1c7d02f94f28ff0380f76e7ed808a9efe405804109d5e3c8695daf8b9bc7abf1e471fef94b3c4d36789b460f9e45cdf27d83d270b0836fef56bd499e1be8e1f279d367e961bbe62f03'
+        # ensure no constants are mutated
+        assert BotTransactionBaseClass.BOT_FEE_NETWORK_ADDRESS_UPDATE == 20
+        assert BotTransactionBaseClass.BOT_FEE_ADDITIONAL_NAME == 50
+        assert BotTransactionBaseClass.BOT_FEE_MONTHLY == 10
+        assert v145_txn.required_bot_fees == '160 TFT'
+        assert BotTransactionBaseClass.BOT_FEE_NETWORK_ADDRESS_UPDATE == 20
+        assert BotTransactionBaseClass.BOT_FEE_ADDITIONAL_NAME == 50
+        assert BotTransactionBaseClass.BOT_FEE_MONTHLY == 10
+
 
         # v146 Transactions are supported
         v146_txn_json = {"version":146,"data":{"sender":{"id":1,"signature":"f1c6109c685c7452efaf20cec6b170817f1faeb6f0a4ff49a7a0872343e62810f51dee051d8eb7883fb0ad7a848aa5bf18b8bd30fe109daa04f13e7d76af750a"},"receiver":{"id":2,"signature":"ae9dc9fa308e76de123b5f889fed93d6d9a701dc8d5369787dc25095f3d6eb833f6d47302697d2da22e05854d08f26d723463f328cc6ec445529cff583903308"},"names":["hello.threebot"],"txfee":"1000000000","coininputs":[{"parentid":"572635ceed12c61cd78e97391c75fefb01cc969211aa827de4c44eb66285a37c","fulfillment":{"type":1,"data":{"publickey":"ed25519:3079d97d169f96b996ff87677483bb601150c1bae8b1061ecbb137b9597d7cb9","signature":"88e8c0d168ac60c1c6b47caad1bf660192064f2cd74ea38def15ff91d50e50b9bf2046c70c363d2ba152c51fcdaa017a27ab26a75bca76252df852785dd47007"}}}],"refundcoinoutput":{"value":"99993832000000000","condition":{"type":1,"data":{"unlockhash":"014195d5ada0434d0766bf9e3d9b87d2f63ef7b1820739cff88335d45cbae2dac58ec00841c570"}}}}}
@@ -186,6 +206,10 @@ class TransactionFactory(j.application.JSBaseClass):
         assert v146_txn.signature_hash_get(BotTransactionBaseClass.SPECIFIER_SENDER).hex() == 'ade263bfbc693e95463f19c201dd672bbd2616412362217c70317dfb42ab73cb'
         assert v146_txn.signature_hash_get(BotTransactionBaseClass.SPECIFIER_RECEIVER).hex() == '36445975184c68e13f8b74e2e87dd72f23cb47ff3bd4f22e80c4654ec63015d9'
         assert v146_txn.binary_encode().hex() == '920100000080f1c6109c685c7452efaf20cec6b170817f1faeb6f0a4ff49a7a0872343e62810f51dee051d8eb7883fb0ad7a848aa5bf18b8bd30fe109daa04f13e7d76af750a0200000080ae9dc9fa308e76de123b5f889fed93d6d9a701dc8d5369787dc25095f3d6eb833f6d47302697d2da22e05854d08f26d723463f328cc6ec445529cff583903308111c68656c6c6f2e7468726565626f74083b9aca0002572635ceed12c61cd78e97391c75fefb01cc969211aa827de4c44eb66285a37c01c4013079d97d169f96b996ff87677483bb601150c1bae8b1061ecbb137b9597d7cb98088e8c0d168ac60c1c6b47caad1bf660192064f2cd74ea38def15ff91d50e50b9bf2046c70c363d2ba152c51fcdaa017a27ab26a75bca76252df852785dd470071001633fdc441710000142014195d5ada0434d0766bf9e3d9b87d2f63ef7b1820739cff88335d45cbae2dac5'
+        # ensure no constants are mutated
+        assert BotTransactionBaseClass.BOT_FEE_ADDITIONAL_NAME == 50
+        assert v146_txn.required_bot_fees == '50 TFT'
+        assert BotTransactionBaseClass.BOT_FEE_ADDITIONAL_NAME == 50
         # another v146 Txn, to guarantee the signature hash with how rivine expects it
         v146_txn_json = {'version': 146, 'data': {'sender': {'id': 3, 'signature': ''}, 'receiver': {'id': 4, 'signature': ''}, 'names': ['foobar', 'thisis.justan.example'], 'txfee': '1000000000', 'coininputs': [{'parentid': '825eecc33a194e087c7d6f711cae384c1b0f7515f3aa3feb590fd04fd1f22613', 'fulfillment': {'type': 1, 'data': {'publickey': ':0000000000000000000000000000000000000000000000000000000000000000', 'signature': ''}}}], 'refundcoinoutput': {'value': '99000000000', 'condition': {'type': 1, 'data': {'unlockhash': '01b73c4e869b6167abe6180ebe7a907f56e0357b4a2f65eb53d22baad84650eb62fce66ba036d0'}}}}}
         v146_txn = self.from_json(v146_txn_json)

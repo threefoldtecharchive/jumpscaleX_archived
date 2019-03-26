@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.schema.test(name="lists")'
+    kosmos 'j.data.schema.test(name="lists")'
 
     tests an issue with lists, they were gone at one point after setting a value
 
@@ -41,18 +41,19 @@ def main(self):
     schema_object = j.data.schema.get(schema1)
     schema_test = schema_object.new()
     schema_test.return_queues = ["a", "b"]
-    assert schema_test._return_queues.pylist() == ["a", "b"]
-    assert schema_test._return_queues._inner_list == ["a", "b"]
+    assert schema_test.return_queues.pylist() == ["a", "b"]
+    assert schema_test.return_queues._inner_list == ["a", "b"]
     assert schema_test.return_queues == ["a", "b"]
 
     schema_test.return_queues[1] = "c"
-    assert schema_test._return_queues.pylist() == ["a", "c"]
-    assert schema_test._return_queues._inner_list == ["a", "c"]
+
+    assert schema_test.return_queues.pylist() == ["a", "c"]
+    assert schema_test.return_queues._inner_list == ["a", "c"]
     assert schema_test.return_queues == ["a", "c"]
 
     schema_test.return_queues.pop(0)
-    assert schema_test._return_queues.pylist() == ["c"]
-    assert schema_test._return_queues._inner_list == ["c"]
+    assert schema_test.return_queues.pylist() == ["c"]
+    assert schema_test.return_queues._inner_list == ["c"]
     assert schema_test.return_queues == ["c"]
 
     cmd = schema_test.cmds.new()
@@ -81,23 +82,25 @@ def main(self):
         "cmds": [{"name": "aname", "comment": "test", "nr": 10}],
     }
 
-    for item1, item2 in zip(schema_test._ddict, schema_test1):
-        assert item1 == item2
+    schema_test._ddict
+    assert schema_test._ddict["cmds"]==[{"name": "aname", "comment": "test", "nr": 10}]
+
+    w = schema_test._ddict["cmds"][0]
+
+    assert isinstance(w,dict)
+
 
     schema_test._data
     schema_test._json
 
-    for item1, item2 in zip(schema_test._ddict, schema_test1):
-        assert item1 == item2
 
     schema_test2 = schema_object.get(capnpbin=schema_test._data)
 
-    for item1, item2 in zip(schema_test._ddict, schema_test2._ddict):
-        assert item1 == item2
+    assert schema_test._ddict == schema_test1
     assert schema_test._data == schema_test2._data
 
-    assert schema_test.readonly == False
-    schema_test.readonly = True
+    assert schema_test._readonly == False
+    schema_test._readonly = True
 
     # test we cannot change a subobj
     try:
@@ -105,7 +108,7 @@ def main(self):
     except Exception as e:
         assert str(e).find("object readonly, cannot set") != -1
 
-    # THERE IS STILL ERROR, readonly does not work for subobjects, need to change template
+
 
     self._log_info("TEST DONE LIST")
 

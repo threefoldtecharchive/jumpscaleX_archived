@@ -36,8 +36,8 @@ def code_python_render(self, obj_key="", path=None,text=None,dest=None,
             otherwise will use obj: objForHash
     :param path: path of the template (is path or text to be used)
     :param text: if not path used, text = is the text of the template (the content)
-    :param dest: if not specified will be in j.dirs.VARDIR,"CODEGEN",md5+".py" (md5 is md5 of template+msgpack of args)
-                    or if name is specified will use the name  j.dirs.VARDIR,"CODEGEN",name+".py
+    :param dest: if not specified will be in j.dirs.VARDIR,"codegen",md5+".py" (md5 is md5 of template+msgpack of args)
+                    or if name is specified will use the name  j.dirs.VARDIR,"codegen",name+".py
     :param args: arguments for the template (DIRS will be passed by default)
     :return:
     """

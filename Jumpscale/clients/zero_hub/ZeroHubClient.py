@@ -6,14 +6,14 @@ JSConfigClient = j.application.JSBaseConfigClass
 
 class ZeroHubClient(JSConfigClient):
     """
-    Provide an easy way to communicate and do some actions on the ZeroHub
+    Provide an easy way to communicate and do some actions on the ZeroHub like uploading or listing flists
     """
     _SCHEMATEXT = """
     @url =  jumpscale.zerohub.client
     name* = "" (S)
     token_ = "" (S)
     username = "" (S)
-    url = "https://hub.grid.tf//api" (S)
+    url = "https://hub.grid.tf/api" (S)
     """
 
     def _init(self):
@@ -136,7 +136,7 @@ class ZeroHubClient(JSConfigClient):
         """
         return self.api.flist.flist_meflist_delete(filename).json()
 
-    def sandbox_upload(self, path):
+    def sandbox_upload(self, name, path):
         """
         use sandboxer in jumpscale, to create clean destination with all libs inside
         upload this to hub in most performant & efficient manner
@@ -144,7 +144,9 @@ class ZeroHubClient(JSConfigClient):
         all what people need to do this action should be called from this method
 
         """
-        pass
+        tarfile = '/tmp/{}.tar.gz'.format(name)
+        j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, path))
+        return self.upload(tarfile)
 
     def exists(self, chunks):
         import ipdb

@@ -1,8 +1,7 @@
 from Jumpscale import j
 
 
-class BuilderRsync()
-    Rsync(j.builder.system._BaseClass):
+class BuilderRsync(j.builder.system._BaseClass):
 
 
     def __init(self):
@@ -26,9 +25,9 @@ class BuilderRsync()
 
         j.core.tools.dir_ensure(self.BUILDDIRL)
 
-        j.builder.system.package.ensure("gcc")
-        j.builder.system.package.ensure("g++")
-        j.builder.system.package.ensure('make')
+       j.builder.system.package.ensure("gcc")
+       j.builder.system.package.ensure("g++")
+       j.builder.system.package.ensure('make')
 
         j.builder.tools.file_download(
             "https://download.samba.org/pub/rsync/src/%s.tar.gz" %
@@ -63,7 +62,7 @@ class BuilderRsync()
                 self.VERSION),
                 '{DIR_BIN}')
         else:
-            j.builder.tools.package_install("rsync")
+            j.builder.system.package.ensure("rsync")
 
     def configure(self):
         self.install(build=False)

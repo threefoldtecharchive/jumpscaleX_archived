@@ -25,9 +25,9 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
         else:
             return SSHClient
 
-    def Test(self):
+    def test(self):
         '''
-        js_shell 'j.clients.ssh.Test()'
+        js_shell 'j.clients.ssh.test()'
         '''
 
         s=j.clients.ssh.test1
@@ -43,9 +43,6 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
 
         #j.clients.ssh.test2.shell()  #NOT TO BE DONE IN TEST but can use to do ssh
 ```
-
-note that Test is with T
-these configs objects are special, we want to give them the nicest possible representation and as such we have chosen to do the methods with capital and the instances lower case.
 
 ![](images/configs_ssh_example.png)
 

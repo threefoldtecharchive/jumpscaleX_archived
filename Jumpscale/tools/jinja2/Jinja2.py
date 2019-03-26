@@ -10,7 +10,7 @@ class Jinja2(j.application.JSBaseClass):
     __jslocation__ = "j.tools.jinja2"
 
     def _init(self):
-        self._codegendir = j.core.tools.text_replace("{DIR_VAR}/CODEGEN")
+        self._codegendir = j.core.tools.text_replace("{DIR_VAR}/codegen")
 
         #
         self.reset(destroyall=False)
@@ -92,8 +92,8 @@ class Jinja2(j.application.JSBaseClass):
                otherwise will use obj: objForHash
         :param path: path of the template (is path or text to be used)
         :param text: if not path used, text = is the text of the template (the content)
-        :param dest: if not specified will be in j.dirs.VARDIR,"CODEGEN",md5+".py" (md5 is md5 of template+msgpack of args)
-                        or if name is specified will use the name  j.dirs.VARDIR,"CODEGEN",name+".py
+        :param dest: if not specified will be in j.dirs.VARDIR,"codegen",md5+".py" (md5 is md5 of template+msgpack of args)
+                        or if name is specified will use the name  j.dirs.VARDIR,"codegen",name+".py
         :param args: arguments for the template (DIRS will be passed by default)
         :return:
         """

@@ -5,7 +5,6 @@ import os
 import inspect
 import types
 
-
 class JSBase:
 
     def __init__(self, parent=None, topclass=True,**kwargs):
@@ -18,8 +17,8 @@ class JSBase:
 
 
         if topclass:
-            self._init()
             self._init2(**kwargs)
+            self._init()
 
     def _class_init(self, topclass=True):
 
@@ -27,7 +26,6 @@ class JSBase:
             # print("_class init:%s"%self.__class__.__name__)
             # only needed to execute once, needs to be done at init time, class inheritance does not exist
             self.__class__._dirpath_ = ""  # path of the directory hosting this class
-            # self.__class__._logger_ = None  # logger attached to this class
 
             self.__class__._cache_expiration = 3600  # expiration of the cache
             self.__class__._test_runs = {}
@@ -126,7 +124,7 @@ class JSBase:
 
     def _init2(self,**kwargs):
         """
-        happens after _init by the caller of the object, meant to be used by developers of the base classes
+        meant to be used by developers of the base classes
         :return:
         """
         self._obj_cache_reset()
@@ -359,11 +357,13 @@ class JSBase:
         logdict["context"] = self._key
         logdict["cat"] = cat
 
-        if data and isinstance(data,dict):
-            if "password" in data or "secret" in data or "passwd" in data:
-                data["password"]="***"
-
         logdict["data"] = data
+        if data and isinstance(data,dict):
+            # shallow copy the data to avoid changing the original data
+            hidden_data = data.copy()
+            if "password" in data or "secret" in data or "passwd" in data:
+                hidden_data["password"] = "***"
+            logdict["data"] = hidden_data
 
         if j.application.logger:
             j.application.logger._process(logdict)
@@ -438,6 +438,7 @@ class JSBase:
 
     def __test_run(self, name=None, obj_key="main", die=True, **kwargs):
 
+
         if name == '':
             name = None
 
@@ -461,11 +462,12 @@ class JSBase:
                         bname2 = "_".join(bname.split("_", 1)[1:])  # remove part before first '_'
                     else:
                         bname2 = bname
-                    if bname2.startswith(name):
+                    if bname2.endswith(".py"):
+                        bname2 = bname2[:-3]
+                    if bname2.strip().lower()==name:
                         self.__test_run(name=bname, obj_key=obj_key, **kwargs)
                         return
-                return self._test_error(
-                    name, RuntimeError("Could not find, test:%s in %s/tests/" % (name, self._dirpath)))
+                return self._test_error(name, RuntimeError("Could not find, test:%s in %s/tests/" % (name, self._dirpath)))
 
             self._log_debug("##: path: %s\n\n" % tpath)
         else:
@@ -479,13 +481,16 @@ class JSBase:
 
         method = j.tools.codeloader.load(obj_key=obj_key, path=tpath)
         self._log_debug("##:LOAD: path: %s\n\n" % tpath)
-        if die:
+        if die or j.application.debug:
             res = method(self=self, **kwargs)
         else:
             try:
                 res = method(self=self, **kwargs)
             except Exception as e:
-                j.errorhandler.try_except_error_process(e, die=False)
+                if j.application.debug:
+                    raise e
+                else:
+                    j.errorhandler.try_except_error_process(e, die=False)
                 self.__class__._test_runs_error[name] = e
                 return e
             self.__class__._test_runs[name] = res

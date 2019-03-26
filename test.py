@@ -2,26 +2,39 @@ from Jumpscale import j
 import traceback
 import sys
 
-try:
-    j.clients.zdb.test()
-except Exception as e:
-    sys.stderr.write('\nError In ZDB Client\n')
-    traceback.print_exc()
 
-try:
-    j.data.bcdb.test()
-except Exception as e:
-    sys.stderr.write('\nError In BCDB\n')
-    traceback.print_exc()
 
-try:
+def schema():
     j.data.schema.test()
-except Exception as e:
-    sys.stderr.write('\nError In SCHEMA\n')
-    traceback.print_exc()
+    j.data.types.test()
 
-try:
-    j.servers.zdb.test()
-except Exception as e:
-    sys.stderr.write('\nError In ZDB Server\n')
-    traceback.print_exc()
+
+def bcdb():
+    j.tools.tmux.kill()
+    assert len(j.tools.tmux.server.sessions) == 1
+    # j.servers.zdb.test(build=True)
+    # j.clients.zdb.test()
+    j.data.bcdb.test()
+
+def servers():
+    j.tools.tmux.kill()
+    if j.core.platformtype.myplatform.isUbuntu:
+        j.builder.web.traefik.install()
+        # j.builder.db.etcd.install()
+        j.builder.network.coredns.install()
+
+
+def ssh():
+    # j.clients.sshagent.test()  #should not do, because in container there will be no ssh-key loaded any more to continue the tests
+    j.clients.sshkey.test()
+
+
+# schema()
+bcdb()
+
+# ssh()
+# servers()
+
+
+
+
