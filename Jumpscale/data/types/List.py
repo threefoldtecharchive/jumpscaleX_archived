@@ -132,8 +132,7 @@ class ListObject(TypeBaseObjClass,MutableSequence):
                 elif subobj_format=="J":
                     res.append(self._child_type.toJSON(item))
                 elif subobj_format == "D":
-                    raise RuntimeError("need to think this through")
-                    res.append(str(self._child_type.clean(item)))
+                    res.append(self._child_type.toData(item))
                 else:
                     raise RuntimeError("only support type J,D,H")
         return res

@@ -8,7 +8,7 @@ def main(self):
 
     """
 
-    c = self.client_admin_get()
+    c = self.client_admin_get(port=9901)
     c.reset()
 
     c.namespaces_list()

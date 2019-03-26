@@ -86,11 +86,15 @@ class BCDBFactory(j.application.JSBaseClass):
             args+="zdbclient_port=%s, "%zdbclient_port
             args+="zdbclient_namespace=\"%s\", "%zdbclient_namespace
             args+="zdbclient_secret=\"%s\", "%zdbclient_secret
-            args+="zdbclient_mode=\"%s\", "%zdbclient_mode
+            args+="zdbclient_mode=\"%s\""%zdbclient_mode
 
 
-            cmd = 'js_shell \'j.data.bcdb.redis_server_start(%s)\''%args
-            j.tools.tmux.execute(cmd,window='multi',pane='main',reset=True)
+            cmd = 'kosmos \'j.data.bcdb.redis_server_start(%s)\''%args
+
+            cmdcmd = j.tools.startupcmd.get(name="bcdbredis_%s"%port,cmd=cmd,ports=[port])
+
+            cmdcmd.start()
+
             j.sal.nettools.waitConnectionTest(ipaddr=ipaddr, port=port, timeoutTotal=5)
             r = j.clients.redis.get(ipaddr=ipaddr, port=port, password=secret)
             assert r.ping()

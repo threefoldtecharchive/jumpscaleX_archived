@@ -46,18 +46,18 @@ class Schema(j.application.JSBaseClass):
     def _path(self):
         return j.sal.fs.getDirName(os.path.abspath(__file__))
 
-    # def _error_raise(self, msg, e=None, schema=None):
-    #     if self.url == "" and "url" in self._systemprops:
-    #         self.url = self._systemprops["url"]
-    #     out = "\nerror in schema:\n"
-    #     out += "    url:%s\n" % self.url
-    #     out += "    msg:%s\n" % j.core.text.prefix("    ", msg)
-    #     if schema:
-    #         out += "    schema:\n%s" % schema
-    #     if e is not None:
-    #         out += "\nERROR:\n"
-    #         out += j.core.text.prefix("        ", str(e))
-    #     raise RuntimeError(out)
+    def _error_raise(self, msg, e=None, schema=None):
+        if self.url == "" and "url" in self._systemprops:
+            self.url = self._systemprops["url"]
+        out = "\nerror in schema:\n"
+        out += "    url:%s\n" % self.url
+        out += "    msg:%s\n" % j.core.text.prefix("    ", msg)
+        if schema:
+            out += "    schema:\n%s" % schema
+        if e is not None:
+            out += "\nERROR:\n"
+            out += j.core.text.prefix("        ", str(e))
+        raise RuntimeError(out)
 
     def _proptype_get(self, txt):
         """
@@ -252,9 +252,6 @@ class Schema(j.application.JSBaseClass):
             for prop in self.properties:
                 self._log_debug("prop for obj gen: %s:%s"%(prop, prop.js_typelocation))
 
-            for prop in self.lists:
-                self._log_debug("list for obj gen: %s:%s"%(prop, prop.js_typelocation))
-
 
             tpath = "%s/templates/template_obj.py" % self._path
             self._obj_class = j.tools.jinja2.code_python_render(
@@ -311,18 +308,6 @@ class Schema(j.application.JSBaseClass):
                 res.append(prop)
         return res
 
-    # @property
-    # def propertynames_index_keys(self):
-    #     """
-    #     list of the property names which are used for indexing with keys
-    #     :return:
-    #     """
-    #     res=[]
-    #     for prop in self.properties:
-    #         if prop.index_key:
-    #             res.append(prop.name)
-    #     return res
-
     @property
     def properties_index_keys(self):
         """
@@ -342,8 +327,6 @@ class Schema(j.application.JSBaseClass):
         :return:
         """
         res = [item.name for item in self.properties]
-        for item in self.lists:
-            res.append(item.name)
         return res
 
     # @property
@@ -369,8 +352,6 @@ class Schema(j.application.JSBaseClass):
     def __str__(self):
         out = ""
         for item in self.properties:
-            out += str(item) + "\n"
-        for item in self.lists:
             out += str(item) + "\n"
         return out
 

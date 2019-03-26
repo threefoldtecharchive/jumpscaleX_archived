@@ -12,7 +12,7 @@ JSBASE = j.application.JSBaseClass
 
 class RedisServer(j.application.JSBaseClass):
 
-    def _init(self,bcdb=None, addr="localhost",port=6380,secret="123456"):
+    def _init2(self,bcdb=None, addr="localhost",port=6380,secret="123456"):
         self.bcdb = bcdb
         self._sig_handler = []
         #
@@ -21,6 +21,9 @@ class RedisServer(j.application.JSBaseClass):
         self.secret = secret
         self.ssl = False
         # j.clients.redis.core_check()  #need to make sure we have a core redis
+
+        if self.bcdb.models is None:
+            raise RuntimeError("models are not filled in")
 
         self.init()
 
@@ -298,6 +301,7 @@ class RedisServer(j.application.JSBaseClass):
             if id == 0:
                 response.error('trying to overwrite first metadata entry, not allowed')
                 return
+            j.shell()
             try:
                 o = model.set_dynamic(val, obj_id=id)
             except Exception as e:

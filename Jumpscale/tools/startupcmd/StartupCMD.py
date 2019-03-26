@@ -177,9 +177,11 @@ class StartupCMD(j.application.JSBaseDataObjClass):
         C2 = j.core.text.strip(C)
         C3 = j.tools.jinja2.template_render(text=C2, args=self.env, cmdpath=self.path,
                                             cmd=self.cmd_start, name=self.name)
-        if self.interpreter == "bash":
-            # C3 = C3.replace("\"", "'").replace("''", "'")
-            C3 = C3.replace("\"", "'")
+
+        #NEED TO BE CAREFUL< THINGS WILL FAIL IF WE ENABLE AGAIN
+        # if self.interpreter == "bash":
+        #     # C3 = C3.replace("\"", "'").replace("''", "'")
+        #     C3 = C3.replace("\"", "'")
 
         self._log_debug("\n%s" % C3)
 
@@ -190,6 +192,7 @@ class StartupCMD(j.application.JSBaseDataObjClass):
             tpath = self._cmd_path+".py"
         else:
             raise RuntimeError("only jumpscale or bash supported")
+
 
         j.sal.fs.writeFile(tpath, C3+"\n\n")
         j.sal.fs.chmod(tpath, 0o770)

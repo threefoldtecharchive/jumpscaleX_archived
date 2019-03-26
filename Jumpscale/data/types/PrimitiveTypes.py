@@ -46,7 +46,12 @@ class String(TypeBaseClass):
         except Exception as e:
             raise j.exceptions.input("cannot convert to string")
 
-        value = value.strip().strip("'").strip().strip("\"").strip()
+        value=value.strip()
+        if len(value)>1:
+            if value[0]=="'" and value[-1]=="'":
+                value = value.strip("'")
+            if value[0]=="\"" and value[-1]=="\"":
+                value = value.strip("\"")
 
         return value
 
