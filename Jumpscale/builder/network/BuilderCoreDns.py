@@ -32,7 +32,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
 
         cp /sandbox/go_proj/src/github.com/coredns/coredns/coredns /sandbox/bin/coredns
         """
-        self.tools.run(C, args={"GITDIR":self._package_path}, replace=True)
+        j.builder.tools.run(C, args={"GITDIR":self._package_path}, replace=True)
 
     @property
     def startup_cmds(self):
