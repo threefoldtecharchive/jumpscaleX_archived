@@ -65,9 +65,11 @@ cd /sandbox/code/github/threefoldfoundation/info_tokens
 git pull
 cd /sandbox/code/github/threefoldfoundation/lapis-wiki
 git pull
+rm -rf /sandbox/code/github/threefoldtech/digitalmeX
+cd  /sandbox/code/github/threefoldtech && git clone https://github.com/threefoldtech/digitalmeX.git -b development
 cd /sandbox/code/github/threefoldtech/digitalmeX
-git reset --hard origin/development
-git pull
+git checkout c7599c9f59abe3a68038eacf9776aa3e2360d094
+git cherry-pick a9ef0d31eaa4a632e8aa0d4f8192dd49d107b29b^..6f3547879b95bf3f9f321bad5485cf8333069b9e
 
 
 ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/static/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/static
