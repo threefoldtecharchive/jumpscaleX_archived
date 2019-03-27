@@ -34,7 +34,7 @@ def dexec(cmd,interactive=False):
 def sshexec(cmd):
     if "'" in cmd:
         cmd = cmd.replace("'","\"")
-    cmd2 = "ssh -t root@localhost -A -p %s '%s'"%(args["port"],cmd)
+    cmd2 = "ssh -oStrictHostKeyChecking=no -t root@localhost -A -p %s '%s'"%(args["port"],cmd)
     IT.Tools.execute(cmd2,interactive=False,showout=False,replace=False,asfile=True)
 
 def docker_names():
@@ -367,7 +367,7 @@ if "1" in args or "2" in args:
 
     if "w" in args:
         if "1" in args:
-            
+
             #in system need to install the lua env
             IT.Tools.execute("source /sandbox/env.sh;kosmos 'j.builder.runtimes.lua.install(reset=True)'", showout=False)
         IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.tools.markdowndocs.test()'", showout=False)
