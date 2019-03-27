@@ -9,9 +9,9 @@ class BuilderCaddyFilemanager(j.builder.system._BaseClass):
         self.go_runtime = j.builder.runtimes.golang
         self.templates_dir = self.tools.joinpaths(
             j.sal.fs.getDirName(__file__), 'templates')
-        self.root_dirs = {
-            '/etc/ssl/certs': '/etc/ssl/certs'
-        }
+        # self.root_dirs = {
+        #     '/etc/ssl/certs': '/etc/ssl/certs'
+        # }
 
     def build(self, reset=False):
         """
@@ -55,6 +55,10 @@ class BuilderCaddyFilemanager(j.builder.system._BaseClass):
         caddy_bin_path = self.tools.joinpaths(self.go_runtime.go_path_bin, 'caddy')
         bin_dest = self.tools.joinpaths(dest_path, 'sandbox', 'bin')
         self.tools.dir_ensure(bin_dest)
+
+        self.root_dirs = {
+            '/etc/ssl/certs': '/etc/ssl/certs'
+        }
 
         # empty dirs
         self.tools.dir_ensure(self.tools.joinpaths(dest_path, 'sandbox', 'var', 'log'))

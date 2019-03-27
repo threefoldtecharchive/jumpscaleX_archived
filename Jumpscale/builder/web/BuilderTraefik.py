@@ -113,10 +113,10 @@ class BuilderTraefik(j.builder.system._BaseClass):
         bin = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
         j.sal.fs.copyFile(bin, j.sal.fs.joinPaths(bin_dest, self.NAME))
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'traefik_startup.toml')
-        self.startup = j.sal.fs.readFile(startup_file)
+        startup = j.sal.fs.readFile(startup_file)
         file_dest = j.sal.fs.joinPaths(dest_path, '.startup.toml')
         j.builder.tools.file_ensure(file_dest)
-        j.builder.tools.file_write(file_dest, self.startup)
+        j.builder.tools.file_write(file_dest, startup)
         if create_flist:
             print(self.flist_create(sandbox_dir=dest_path, hub_instance=zhub_instance))
         self._done_set('sandbox')

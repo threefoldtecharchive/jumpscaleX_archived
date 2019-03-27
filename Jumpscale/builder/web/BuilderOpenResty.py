@@ -10,11 +10,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
     def _init(self):
         self.BUILDDIR = j.core.tools.text_replace('{DIR_VAR}/build/')
 
-        self.new_dirs = ['var/pid/', 'var/log/']
-        self.root_files = {
-            'etc/passwd': 'nobody:x:65534:65534:nobody:/:/sandbox/bin/openresty',
-            'etc/group': 'nogroup:x:65534:'
-        }
+    
 
     def sandbox(self, dest_path="/tmp/builders/openresty", reset=False, create_flist=False, zhub_instance=None):
         '''Copy built bins to dest_path and create flist if create_flist = True
@@ -34,37 +30,55 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             return
         self.build(reset=reset)
 
-        self.bins = ['openresty', 'lua', 'resty', 'restydoc', 'restydoc-index', 'lapis', 'moon', 'moonc']
-        self.dirs = {
-            self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/openresty.cfg'): 'cfg/',
-            self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/mime.types'): 'cfg/',
-            self.tools.joinpaths(j.core.dirs.BASEDIR, 'openresty/'): 'openresty/',
-                '/lib/x86_64-linux-gnu/libnss_files.so.2': 'lib',
+        bins = ['openresty', 'lua', 'resty', 'restydoc', 'restydoc-index', 'lapis', 'moon', 'moonc']
+        dirs = {
+            self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/openresty.cfg'): 'sandbox/cfg/',
+            self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/mime.types'): 'sandbox/cfg/',
+            self.tools.joinpaths(j.core.dirs.BASEDIR, 'openresty/'): 'sandbox/openresty/',
+            '/lib/x86_64-linux-gnu/libnss_files.so.2': 'sandbox/lib/'
+        }
+        new_dirs = ['sandbox/var/pid/', 'sandbox/var/log/']
+        root_files = {
+            'etc/passwd': 'nobody:x:65534:65534:nobody:/:/sandbox/bin/openresty',
+            'etc/group': 'nogroup:x:65534:'
         }
         lua_files = j.sal.fs.listFilesInDir(self.tools.joinpaths(j.core.dirs.BASEDIR, 'bin/'), filter='*.lua')
         for file in lua_files:
-            self.dirs[file] = 'bin/'
+            dirs[file] = 'sandbox/bin/'
 
-        for bin_name in self.bins:
+        for bin_name in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
             dir_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR[1:])
             j.builder.tools.dir_ensure(dir_dest)
             j.sal.fs.copyFile(dir_src, dir_dest)
 
-        lib_dest = j.sal.fs.joinPaths(dest_path, 'sandbox/lib')
+        lib_dest = j.sal.fs.joinPaths(dest_path,'sandbox/lib')
         j.builder.tools.dir_ensure(lib_dest)
-        for bin in self.bins:
+        for bin in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
             j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
 
-        for dir_src in self.dirs:
-            dir_dest = j.sal.fs.joinPaths(dest_path, dir_src[1:])
+        for dir_src, dir_dest in dirs.items():
+            dir_dest = j.sal.fs.joinPaths(dest_path, dir_dest)
             j.builder.tools.dir_ensure(dir_dest)
             j.sal.fs.copyDirTree(dir_src, dir_dest)
+        
+        for dir_dest in new_dirs:
+            dir_dest = j.sal.fs.joinPaths(dest_path, self.tools.path_relative(dir_dest))
+            j.builder.tools.dir_ensure(dir_dest)  
+
+        for file_dest, content in root_files.items():
+            file_dest = j.sal.fs.joinPaths(dest_path, self.tools.path_relative(file_dest))
+            dir = j.sal.fs.getDirName(file_dest)
+            j.builder.tools.dir_ensure(dir)
+            j.builder.tools.file_ensure(file_dest)
+            j.builder.tools.file_write(file_dest, content)  
 
         startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'openresty_startup.toml')
-        self.startup = j.sal.fs.readFile(startup_file)
-        j.sal.fs.copyFile(startup_file,j.sal.fs.joinPaths(dest_path, 'sandbox'))
+        startup = j.sal.fs.readFile(startup_file)
+        file_dest = j.sal.fs.joinPaths(dest_path, '.startup.toml')
+        j.builder.tools.file_ensure(file_dest)
+        j.builder.tools.file_write(file_dest, startup)
 
         self._done_set('sandbox')
 
