@@ -142,6 +142,7 @@ class BuilderBaseClass(BaseClass):
         self.write_files(self.root_files, self._sandbox_dir)
 
         if self.startup:
+            #TODO differently, use info from self.startup_cmds
             file_dest = j.sal.fs.joinPaths(self._sandbox_dir, '.startup.toml')
             j.builder.tools.file_ensure(file_dest)
             j.builder.tools.file_write(file_dest, self.startup)

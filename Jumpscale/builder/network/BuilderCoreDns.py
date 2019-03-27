@@ -2,16 +2,30 @@ from Jumpscale import j
 
 builder_method = j.builder.system.builder_method
 
+
+CONFIGTEMPLATE="""
+.{
+    etcd $domain {
+        stubzones
+        path /hosts
+        endpoint $etcd_endpoint
+        fallthrough
+        debug
+    }
+    loadbalance
+    reload 5s
+}        
+"""
+
 class BuilderCoreDns(j.builder.system._BaseClass):
     NAME = "coredns"
 
-    @builder_method(log=True, done_check=True)
+    @builder_method()
     def _init(self, reset=False):
-        self.golang = j.builder.runtimes.golang
-        self._package_path = j.builder.runtimes.golang.package_path_get('coredns', host='github.com/coredns')
+        self.DIR_BUILD = j.builder.runtimes.golang.package_path_get('coredns', host='github.com/coredns')
 
-    @builder_method(log=True, done_check=True)
-    def build(self, reset=False):
+    @builder_method()
+    def build(self):
         """
         kosmos 'j.builder.network.coredns.build(reset=False)'
 
@@ -24,38 +38,36 @@ class BuilderCoreDns(j.builder.system._BaseClass):
 
         # go to package path and build (for coredns)
         C="""
-        cd {GITDIR}
+        cd {DIR_BUILD}
         git remote add threefoldtech_coredns https://github.com/threefoldtech/coredns
         git fetch threefoldtech_coredns
         git checkout threefoldtech_coredns/master
         make
-
-        cp /sandbox/go_proj/src/github.com/coredns/coredns/coredns /sandbox/bin/coredns
         """
-        j.builder.tools.run(C, args={"GITDIR":self._package_path}, replace=True)
+        j.builder.tools.run(C)
+
+
+    @builder_method()
+    def install(self):
+        """
+        kosmos 'j.builder.network.coredns.install()'
+
+        installs and runs coredns server with redis plugin
+        """
+
+        self.run("cp {GITDIR}/coredns/coredns /sandbox/bin/coredns")
+
+        #WRITE THE CONFIG FILE IN THE SANDBOX DIR /sandbox/cfg/coredns.conf
+
 
     @property
     def startup_cmds(self):
-        cmd = """
-        echo '''. {
-    etcd $domain {
-        stubzones
-        path /hosts
-        endpoint $etcd_endpoint
-        fallthrough
-        debug
-    }
-    loadbalance
-    reload 5s
-}''' > coredns.conf
-
-        """
-        cmd += "{coredns_path}/coredns -conf coredns.conf".format(coredns_path=self._package_path)
+        cmd = "/sandbox/bin/coredns -conf /sandbox/cfg/coredns.conf"
         cmds = [j.data.startupcmd.get(cmd)]
         return cmds
 
-    @builder_method(log=True, done_check=True)
-    def sandbox(self, reset=False, flist_create=True):
+    @builder_method()
+    def sandbox(self, ...):
         coredns_bin = j.sal.fs.joinPaths(self._package_path, 'coredns')
         dir_dest = j.sal.fs.joinPaths(self._sandbox_dir, coredns_bin[1:])
         j.builder.tools.dir_ensure(dir_dest)
@@ -65,14 +77,14 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         j.builder.tools.dir_ensure(dir_dest)
         j.sal.fs.copyDirTree('/etc/ssl/certs', dir_dest)
 
-        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'coredns_startup.toml')
-        self.startup = j.sal.fs.readFile(startup_file)
-        j.sal.fs.copyFile(startup_file,  j.sal.fs.joinPaths(self._sandbox_dir, self._sandbox_dir))
+        #copy the /sandbox/cfg/coredns.conf to the sandbox dir
+        #TODO:*1
 
-        if flist_create:
-            return self._flist_create()
 
-    @builder_method(log=True, done_check=True)
+
+
+
+    @builder_method()
     def test(self):
         if self.running():
             self.stop()
@@ -83,7 +95,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         client.zone_create("example.com", "0.0.0.0")
         client.deploy()
 
-    @builder_method(log=True, done_check=True)
+    @builder_method()
     def test_zos(self, zos_client, flist=None, build=False):
         if build:
             flist = self.sandbox(flist_create=True)

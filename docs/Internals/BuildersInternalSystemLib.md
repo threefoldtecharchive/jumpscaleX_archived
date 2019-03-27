@@ -1,4 +1,4 @@
-# builder library for tools
+# builder library for self.system
 
 use as 
 
