@@ -2,6 +2,8 @@ from Jumpscale import j
 
 BaseClass = j.application.JSBaseClass
 
+
+
 class builder_method(object):
 
     def __init__(self, **kwargs_):
@@ -67,6 +69,9 @@ class builder_method(object):
 
 
 class BuilderBaseClass(BaseClass):
+    """
+    doc in /sandbox/code/github/threefoldtech/jumpscaleX/docs/Internals/Builders.md
+    """
     def __init__(self):
         BaseClass.__init__(self)
         if hasattr(self.__class__,"NAME"):
@@ -84,7 +89,7 @@ class BuilderBaseClass(BaseClass):
     def reset(self):
         self._done_reset()
 
-    @builder_method(log=False, done_check=True)
+    @builder_method()
     def install(self):
         """
         will build as first step
@@ -92,7 +97,7 @@ class BuilderBaseClass(BaseClass):
         """
         return
 
-    @builder_method(log=False, done_check=True)
+    @builder_method()
     def sandbox(self, zhub_client=None):
         '''
         when zhub_client None will look for j.clients.get("test"), if not exist will die
@@ -103,24 +108,24 @@ class BuilderBaseClass(BaseClass):
     def startup_cmds(self):
         raise RuntimeError("not implemented")
 
-    @builder_method(log=False, done_check=True)
+    @builder_method()
     def start(self):
         for startupcmd in self.startup_cmds:
             startupcmd.start()
 
-    @builder_method(log=False, done_check=True)
+    @builder_method()
     def stop(self):
         for startupcmd in self.startup_cmds:
             startupcmd.stop()
 
-    @builder_method(log=False, done_check=True)
+    @builder_method()
     def running(self):
         for startupcmd in self.startup_cmds:
             if startupcmd.running() == False:
                 return False
         return True
 
-    @builder_method(log=False, done_check=True)
+    @builder_method()
     def _flist_create(self, zhub_client=None):
         """
         build a flist for the builder and upload the created flist to the hub
@@ -130,8 +135,7 @@ class BuilderBaseClass(BaseClass):
         :param hub_instance: zerohub client to use to upload the flist, defaults to None if None
         the flist will be created but not uploaded to the hub
         :param hub_instance: j.clients.zhub instance, optional
-        :return: path to the tar.gz created or the url of the uploaded flist
-        :rtype: str
+        :return: the flist url
         """
 
         self.copy_dirs(self.root_dirs, self._sandbox_dir)
@@ -147,10 +151,53 @@ class BuilderBaseClass(BaseClass):
             j.builder.tools.dir_ensure(ld_dest)
             j.sal.fs.copyFile('/lib64/ld-linux-x86-64.so.2', ld_dest)
 
-        if zhub_client:
-            self._log_info("uploading flist to the hub")
-            return zhub_client.sandbox_upload(self.NAME, self.sandbox_dir)
-        else:
-            tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
-            j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, self._sandbox_dir))
-            return tarfile
+        #for now only upload to HUB
+        self._log_info("uploading flist to the hub")
+        return zhub_client.sandbox_upload(self.NAME, self.sandbox_dir)
+
+        # if zhub_client:
+        #     self._log_info("uploading flist to the hub")
+        #     return zhub_client.sandbox_upload(self.NAME, self.sandbox_dir)
+        # else:
+        #     tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
+        #     j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, self._sandbox_dir))
+        #     return tarfile
+
+    def clean(self):
+        """
+        removes all files as result from building
+        :return:
+        """
+        raise RuntimeError("not implemented")
+
+    def uninstall(self):
+        """
+        optional, removes installed, build & sandboxed files
+        :return:
+        """
+        raise RuntimeError("not implemented")
+
+    def test(self):
+        """
+        -  a basic test to see if the build was successfull
+        - will automatically call start() at start
+        - is optional
+        """
+        raise RuntimeError("not implemented")
+
+    def test_api(self,ipaddr="localhost"):
+        """
+        - will test the api on specified ipaddr e.g. rest calls, tcp calls, port checks, ...
+        """
+        raise RuntimeError("not implemented")
+
+    def test_zos(self,zhub_client,zos_client):
+        """
+
+        - a basic test to see if the build was successfull
+        - will automatically call sandbox(zhub_client=zhub_client) at start
+        - will start the container on specified zos_client with just build flist
+        - will call .test_api() with ip addr of the container
+
+        """
+        raise RuntimeError("not implemented")

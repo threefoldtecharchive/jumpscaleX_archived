@@ -3,6 +3,15 @@ import textwrap
 
 
 class BuilderDigitalME(j.builder.system._BaseClass):
+    """
+    specs:
+
+        - build all required components (only work on ub 1804) using self.build
+        - sandbox to sandbox dir
+        - create flist
+        - in self.test_zos() start the created flist & do the network tests for the openresty
+
+    """
     NAME = "digitalme"
 
     def _init(self):

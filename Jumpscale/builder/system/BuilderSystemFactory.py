@@ -55,12 +55,6 @@ class BuilderSystemPackage(j.application.JSBaseClass):
             self._net = BuilderNet()
         return self._net
 
-    @property
-    def process(self):
-        if self._process is None:
-            from .BuilderProcess import BuilderProcess
-            self._process = BuilderProcess()
-        return self._process
 
     @property
     def ssh(self):

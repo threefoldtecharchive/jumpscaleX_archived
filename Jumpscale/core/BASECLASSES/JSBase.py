@@ -77,7 +77,7 @@ class JSBase:
             #lets make sure the initial loglevel gets set
             self._log_init()
 
-    def is_logging_disabled(self):
+    def _is_logging_disabled(self):
         """check if logging should be disabled for current js location
 
         according to logger includes and excludes (configured)
@@ -120,7 +120,7 @@ class JSBase:
             self._logger_minlevel_set(1)
             return
 
-        if self.is_logging_disabled():
+        if self._is_logging_disabled():
             # exclude all
             minlevel = 100
         else:
