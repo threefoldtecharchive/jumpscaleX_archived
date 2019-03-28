@@ -77,7 +77,7 @@ cd  /sandbox/code/github/threefoldtech && git clone https://github.com/threefold
 cd /sandbox/code/github/threefoldtech/digitalmeX
 git checkout c7599c9f59abe3a68038eacf9776aa3e2360d094
 git cherry-pick a9ef0d31eaa4a632e8aa0d4f8192dd49d107b29b^..6f3547879b95bf3f9f321bad5485cf8333069b9e
-git cherry-pick 8caf6e331b3c94cb9004a3da075b152768c39cdf^..4991397c679a44554b89160e993cfe82474168cd
+git cherry-pick 8caf6e331b3c94cb9004a3da075b152768c39cdf^..58623979094c7001546a9df8b681a5bc39831095
 
 
 ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/static/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/static
