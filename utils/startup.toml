@@ -14,9 +14,9 @@ export LC_ALL=en_US.UTF-8
 . /sandbox/env.sh
 cd /sandbox
 git clone $REPO_URL -b $REPO_BRANCH
-ln -s $src1 $dest1
-ln -s $src2 $dest2
-ln -s $src3 $dest3
+ln -sf $src1 $dest1
+ln -sf $src2 $dest2
+ln -sf $src3 $dest3
 
 exec js_shell \"j.tools.markdowndocs.webserver()\"
 """
