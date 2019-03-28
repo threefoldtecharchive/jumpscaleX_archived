@@ -65,6 +65,11 @@ cd /sandbox/code/github/threefoldfoundation/info_tokens
 git pull
 cd /sandbox/code/github/threefoldfoundation/lapis-wiki
 git pull
+rm -rf /sandbox/code/github/threefoldtech/jumpscaleX
+cd  /sandbox/code/github/threefoldtech && git clone https://github.com/threefoldtech/jumpscaleX.git -b development
+cd /sandbox/code/github/threefoldtech/jumpscaleX
+git checkout f99f9af1948ac2bb4afccc3ca29bbeb953c2bd87
+
 rm -rf /sandbox/code/github/threefoldtech/digitalmeX
 cd  /sandbox/code/github/threefoldtech && git clone https://github.com/threefoldtech/digitalmeX.git -b development
 cd /sandbox/code/github/threefoldtech/digitalmeX
