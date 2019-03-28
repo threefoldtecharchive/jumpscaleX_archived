@@ -51,10 +51,9 @@ class SchemaFactory(j.application.JSBaseClass):
         Returns:
             Schema
         """
-
         if schema_text != "":
             if j.data.types.string.check(schema_text):
-                return self._add(schema_text,url=url)
+                return self._add(schema_text, url=url)
             else:
                 raise RuntimeError("need to be text ")
         else:
@@ -76,13 +75,11 @@ class SchemaFactory(j.application.JSBaseClass):
     def exists(self, url):
         return self.get(url=url, die=False) is not None
 
-    def _add(self, schema_text,url=None):
+    def _add(self, schema_text, url=None):
         """
         :param schema_text or schema_path
         :return: incache,schema  (incache is bool, when True means was in cache)
         """
-
-
         block = ""
         blocks = []
         txt = j.core.text.strip(schema_text)
@@ -105,7 +102,7 @@ class SchemaFactory(j.application.JSBaseClass):
         if block is not "":
             blocks.append(block)
 
-        if url and len(blocks)>1:
+        if url and len(blocks) > 1:
             raise RuntimeError("can only use url if max 1 schema")
 
         res = []
@@ -114,7 +111,7 @@ class SchemaFactory(j.application.JSBaseClass):
             if md5 in self._md5_schema:
                 res.append(self._md5_schema[md5])
             else:
-                s = Schema(text=block,url=url)
+                s = Schema(text=block, url=url)
                 if s._md5 in self._md5_schema:
                     raise RuntimeError("should not be there")
                 else:
@@ -125,7 +122,6 @@ class SchemaFactory(j.application.JSBaseClass):
             raise RuntimeError("did not find schema in txt")
 
         return res[0]
-
 
     def test(self, name=""):
         """

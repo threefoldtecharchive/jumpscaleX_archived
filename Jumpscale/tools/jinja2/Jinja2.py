@@ -1,6 +1,6 @@
 from Jumpscale import j
 import os
-from jinja2 import Template,StrictUndefined
+from jinja2 import Template, StrictUndefined
 
 
 class Jinja2(j.application.JSBaseClass):
@@ -54,7 +54,7 @@ class Jinja2(j.application.JSBaseClass):
             md5 = j.data.hash.md5_string(text)
 
         if md5 not in self._hash_to_template:
-            self._hash_to_template[md5] = Template(text,undefined=StrictUndefined)
+            self._hash_to_template[md5] = Template(text, undefined=StrictUndefined)
             self._hash_to_template[md5].md5 = md5
 
         return self._hash_to_template[md5]
@@ -97,6 +97,7 @@ class Jinja2(j.application.JSBaseClass):
         :param args: arguments for the template (DIRS will be passed by default)
         :return:
         """
+
         if dest is not None and name is not None:
             raise RuntimeError("cannot specify name & dest at same time")
 
@@ -108,7 +109,9 @@ class Jinja2(j.application.JSBaseClass):
         if objForHash:
             tohash = j.data.serializers.msgpack.dumps(objForHash)+t.md5.encode()
         else:
-            tohash = j.data.serializers.msgpack.dumps(str(args))+t.md5.encode()  # make sure we have unique identifier
+            name_for_hash = name or ''
+            tohash = j.data.serializers.msgpack.dumps(
+                str(args))+name_for_hash.encode()+t.md5.encode()  # make sure we have unique identifier
         md5 = j.data.hash.md5_string(tohash)
 
         if md5 in self._hash_to_codeobj:
@@ -139,7 +142,6 @@ class Jinja2(j.application.JSBaseClass):
             j.sal.fs.writeFile(dest, out)
             if dest_md5 is not None:
                 j.sal.fs.writeFile(dest_md5, md5)  # remember the md5
-
         obj = j.tools.codeloader.load(obj_key=obj_key, path=dest, md5=md5)
 
         self._hash_to_codeobj[md5] = obj

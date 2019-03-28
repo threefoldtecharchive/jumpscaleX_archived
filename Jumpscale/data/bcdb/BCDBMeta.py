@@ -23,7 +23,7 @@ class BCDBMeta(j.application.JSBaseClass):
     def __init__(self, bcdb):
         JSBASE.__init__(self)
         self.bcdb = bcdb
-        self._meta_local_path = j.sal.fs.joinPaths(self.bcdb._data_dir,"meta.db")
+        self._meta_local_path = j.sal.fs.joinPaths(self.bcdb._data_dir, "meta.db")
         self._schema = j.data.schema.get(SCHEMA)
         self.reset()
 
@@ -33,7 +33,7 @@ class BCDBMeta(j.application.JSBaseClass):
             if self.bcdb.zdbclient is not None:
                 data = self.bcdb.zdbclient.get(0)
             else:
-                #no ZDB used, is a file in local filesystem
+                # no ZDB used, is a file in local filesystem
                 if not j.sal.fs.exists(self._meta_local_path):
                     data = None
                 else:
@@ -48,7 +48,6 @@ class BCDBMeta(j.application.JSBaseClass):
 
             if self._data.name != self.bcdb.name:
                 raise RuntimeError("name given to bcdb does not correspond with name in the metadata stor")
-
 
             for s in self._data.schemas:
                 self.url2sid[s.url] = s.sid
@@ -97,7 +96,7 @@ class BCDBMeta(j.application.JSBaseClass):
                     self.sid2schema[schema_id].sid = schema_id
                     return self.sid2schema[schema_id]
             if die:
-                raise RuntimeError("schema_id does not exist in db (id:%s)"%schema_id)
+                raise RuntimeError("schema_id does not exist in db (id:%s)" % schema_id)
         return self.sid2schema[schema_id]
 
     def schema_get_from_url(self, url, die=True):
@@ -111,7 +110,7 @@ class BCDBMeta(j.application.JSBaseClass):
     def model_get_from_id(self, schema_id, bcdb=None):
         if schema_id not in self.sid2model:
             if bcdb is None:
-                raise RuntimeError("need to specify bcdb when getting model from schema:%s"%schema_id)
+                raise RuntimeError("need to specify bcdb when getting model from schema:%s" % schema_id)
             schema = self.schema_get_from_id(schema_id)
             self.sid2model[schema_id] = bcdb.model_get_from_schema(schema=schema)
             self.bcdb.models[schema.url] = self.sid2model[schema_id]

@@ -5,8 +5,7 @@ import types
 
 class JSBaseDataObj(JSBase):
 
-
-    def __init__(self, data=None,parent=None, topclass=True, **kwargs):
+    def __init__(self, data=None, parent=None, topclass=True, **kwargs):
         """
         :param kwargs: will be updated in the self.data object
 
@@ -14,7 +13,7 @@ class JSBaseDataObj(JSBase):
 
         """
 
-        JSBase.__init__(self,parent=parent, topclass=False)
+        JSBase.__init__(self, parent=parent, topclass=False)
 
         self._schema_ = None
 
@@ -33,7 +32,7 @@ class JSBaseDataObj(JSBase):
             self._init2(**kwargs)
             self._init()
 
-        if kwargs=={} and data==None:
+        if kwargs == {} and data == None:
             self.load()
 
     @property
@@ -42,7 +41,6 @@ class JSBaseDataObj(JSBase):
             self._schema_ = j.data.schema.get(self.__class__._SCHEMATEXT)
         return self._schema_
 
-
     def _class_init(self):
 
         if not hasattr(self.__class__, "_class_init_done"):
@@ -50,17 +48,17 @@ class JSBaseDataObj(JSBase):
             if not hasattr(self.__class__, "_SCHEMATEXT"):
                 raise RuntimeError("need _SCHEMATEXT as class property.\n")
 
-            #always needs to be in this order at end
+            # always needs to be in this order at end
             JSBase._class_init(self)
             self.__class__.__objcat_name = "instance"
 
             # print("classinit:%s"%self.__class__)
 
-    def _init2(self,**kwargs):
-        self._key = "%s:%s:%s" % (self.__class__._location,self.__class__._name, self.data.name)
+    def _init2(self, **kwargs):
+        self._key = "%s:%s:%s" % (self.__class__._location, self.__class__._name, self.data.name)
 
-        #always needs to be last
-        JSBase._init2(self,**kwargs)
+        # always needs to be last
+        JSBase._init2(self, **kwargs)
 
     def _obj_cache_reset(self):
         """
@@ -70,11 +68,9 @@ class JSBaseDataObj(JSBase):
         JSBase._obj_cache_reset(self)
         self.__dict__["_data"] = None
 
-
     @property
     def _id(self):
         return self.data.id
-
 
     def _data_update(self, **kwargs):
         """
@@ -85,7 +81,6 @@ class JSBaseDataObj(JSBase):
         """
         ddict = self.data._ddict
         self.data._data_update(data=kwargs)
-
 
     def edit(self):
         """
@@ -103,7 +98,7 @@ class JSBaseDataObj(JSBase):
         data_out = j.sal.fs.readFile(path)
         if data_in != data_out:
             self._log_debug("'%s' instance '%s' has been edited (changed)" %
-                               (self._parent.__jslocation__, self.data.name))
+                            (self._parent.__jslocation__, self.data.name))
             data2 = j.data.serializers.toml.loads(data_out)
             self.data.data_update(data2)
         j.sal.fs.remove(path)
@@ -121,7 +116,6 @@ class JSBaseDataObj(JSBase):
         items.sort()
         return items
 
-
     def __getattr__(self, attr):
         # if attr.startswith("_"):
         #     return self.__getattribute__(attr)
@@ -137,7 +131,7 @@ class JSBaseDataObj(JSBase):
 
         return self.__getattribute__(attr)
 
-    def _update_trigger(self,key,val):
+    def _update_trigger(self, key, val):
         pass
 
     def __setattr__(self, key, value):
@@ -147,24 +141,24 @@ class JSBaseDataObj(JSBase):
         elif "data" in self.__dict__ and key in self._schema.propertynames:
             # if value != self.data.__getattribute__(key):
             self._log_debug("SET:%s:%s" % (key, value))
-            self._update_trigger(key,value)
+            self._update_trigger(key, value)
             self.__dict__["data"].__setattr__(key, value)
         else:
             self.__dict__[key] = value
 
     def __str__(self):
         out = "## "
-        out += "{BLUE}%s{RESET} "%self.__class__._location
+        out += "{BLUE}%s{RESET} " % self.__class__._location
         out += "{GRAY}Instance: "
-        out += "{RED}'%s'{RESET} "%self.name
+        out += "{RED}'%s'{RESET} " % self.name
         out += "{GRAY}\n"
-        out += self.data._hr_get()#.replace("{","[").replace("}","]")
+        out += self.data._hr_get()  # .replace("{","[").replace("}","]")
         out += "{RESET}\n\n"
         out = j.core.tools.text_strip(out)
         # out = out.replace("[","{").replace("]","}")
 
-        #TODO: *1 dirty hack, the ansi codes are not printed, need to check why
-        print (out)
+        # TODO: *1 dirty hack, the ansi codes are not printed, need to check why
+        print(out)
         return ""
 
     __repr__ = __str__
