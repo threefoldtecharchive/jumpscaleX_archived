@@ -30,15 +30,11 @@ class builder_method(object):
                 builder.build()
             if name == "sandbox":
                 builder.install()
-                zhub_client = args["zhub_client"]
-                if not zhub_client:
-                    if not j.clients.zhub.exists(name="test"):
-                        raise RuntimeError("cannot find test zhub client")
-                    zhub_client = j.clients.zhub.get(name="test")
-                else:
+                zhub_client = kwargs.get("zhub_client", None)
+                if zhub_client:
                     if not hasattr(zhub_client, "sandbox_upload"):
                         raise RuntimeError("specify valid zhub_client")
-                zhub_client.ping() #should do a test it works
+                    # zhub_client.ping() #should do a test it works
                 kwargs["zhub_client"] = zhub_client
 
             if "reset" in kwargs:
@@ -52,11 +48,11 @@ class builder_method(object):
             if not self.done_check or not builder._done_check(name, reset):
                 if self.log:
                     builder._log_debug("action:%s() start"%name)
-                res = func(self,*args,**kwargs)
+                res = func(builder,*args,**kwargs)
 
                 if name == "sandbox":
                     if "flist_create" in kwargs and kwargs["flist_create"]:
-                        res = builder._flist_create(zhub_client=kwargs["zhub_client"])
+                        res = builder._flist_create(zhub_client=zhub_client)
                 if self.done_check:
                     builder._done_set(name)
                 if self.log:
@@ -138,31 +134,30 @@ class BuilderBaseClass(BaseClass):
         :return: the flist url
         """
 
-        self.copy_dirs(self.root_dirs, self._sandbox_dir)
-        self.write_files(self.root_files, self._sandbox_dir)
+        # self.copy_dirs(self.root_dirs, self._sandbox_dir)
+        # self.write_files(self.root_files, self._sandbox_dir)
 
-        if self.startup:
-            #TODO differently, use info from self.startup_cmds
-            file_dest = j.sal.fs.joinPaths(self._sandbox_dir, '.startup.toml')
-            j.builder.tools.file_ensure(file_dest)
-            j.builder.tools.file_write(file_dest, self.startup)
+        # if self.startup:
+        #     #TODO differently, use info from self.startup_cmds
+        #     file_dest = j.sal.fs.joinPaths(self._sandbox_dir, '.startup.toml')
+        #     j.builder.tools.file_ensure(file_dest)
+        #     j.builder.tools.file_write(file_dest, self.startup)
 
         if j.core.platformtype.myplatform.isLinux:
             ld_dest = j.sal.fs.joinPaths(self._sandbox_dir, 'lib64/')
             j.builder.tools.dir_ensure(ld_dest)
             j.sal.fs.copyFile('/lib64/ld-linux-x86-64.so.2', ld_dest)
 
-        #for now only upload to HUB
-        self._log_info("uploading flist to the hub")
-        return zhub_client.sandbox_upload(self.NAME, self.sandbox_dir)
+        if zhub_client:
+            self._log_info("uploading flist to the hub")
+            return zhub_client.sandbox_upload(self.NAME, self._sandbox_dir)
+        else:
+            tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
+            j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, self._sandbox_dir))
+            return tarfile
 
-        # if zhub_client:
-        #     self._log_info("uploading flist to the hub")
-        #     return zhub_client.sandbox_upload(self.NAME, self.sandbox_dir)
-        # else:
-        #     tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
-        #     j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, self._sandbox_dir))
-        #     return tarfile
+    def copy_dirs(self, src, dst):
+        return j.tools.sandboxer.copyTo(src, dst)
 
     def clean(self):
         """

@@ -55,7 +55,7 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
             j.sal.fs.writeFile("%s/mycompile_all.sh" % self.CODEDIRL, j.core.tools.text_replace(C))
             self._log_info("compile openssl")
             self._log_debug(C)
-            j.sal.process.execute("sh %s/mycompile_all.sh" % self.CODEDIRL)
+            j.sal.process.execute("cd %s; sh ./mycompile_all.sh" % self.CODEDIRL)
             self._done_set("compile")
             self._log_info("BUILD DONE")
         else:

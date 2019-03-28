@@ -95,12 +95,12 @@ class BuilderPython(j.builder.system._BaseClass):
                 mkdir -p {DIR_BUILD_L}
 
                 # THIS WILL MAKE SURE ALL TESTS ARE DONE, WILL TAKE LONG TIME
-                ./configure --prefix={DIR_BUILD_L}/ --enable-optimizations
+                ./configure --prefix={DIR_BUILD_L}/ --enable-optimizations CFLAGS="-I{PATH_OPENSSL}/include -L{PATH_OPENSSL}/lib"
 
                 make clean
                 make -j8 EXTRATESTOPTS=--list-tests install
                 """
-                script = script.format(DIR_BUILD_L=self.DIR_BUILD_L, DIR_CODE_L=self.DIR_CODE_L)
+                script = script.format(DIR_BUILD_L=self.DIR_BUILD_L, DIR_CODE_L=self.DIR_CODE_L, PATH_OPENSSL=self.PATH_OPENSSL)
 
             j.sal.fs.writeFile("%s/mycompile_all.sh" % self.DIR_CODE_L, script)
 
@@ -199,9 +199,10 @@ class BuilderPython(j.builder.system._BaseClass):
         self._pip(j.core.installer_ubuntu.pips_list(),reset=reset)
 
         if not self.tools.isMac:
-            # raise NotImplementedError()
-            j.builders.zero_os.zos_stor_client.build(python_build=True)  # builds the zos_stor_client
-            self._pip(["g8storclient"])
+            # TODO: implement zerostor builder and use it
+            # j.builder.zero_os.zos_stor_client.build(python_build=True)  # builds the zos_stor_client
+            # self._pip(["g8storclient"])
+            pass
 
         # self.sandbox(deps=False)
         self._done_set("pipall")
@@ -260,8 +261,8 @@ class BuilderPython(j.builder.system._BaseClass):
 
         dest = self.DIR_PACKAGE
 
-        j.sal.fs.remove(dest)
-        j.sal.fs.createDir(dest)
+        # j.sal.fs.remove(dest)
+        # j.sal.fs.createDir(dest)
 
         for item in ["bin", "root", "lib"]:
             j.sal.fs.createDir("%s/%s" % (dest, item))

@@ -202,8 +202,7 @@ class BuilderLua(j.builder.system._BaseClass):
         :return:
         """
         self.build(reset=reset)
-        src = j.clients.git.getContentPathFromURLorPath(
-            "https://github.com/threefoldtech/sandbox_base/tree/master/base/bin", pull=True)
+        src = "/sandbox/code/github/threefoldtech/sandbox_base/base/bin"
         C = """
 
         set -e
@@ -227,7 +226,7 @@ class BuilderLua(j.builder.system._BaseClass):
 
         self._log_info("install lua & openresty done.")
 
-    def sandbox(self, dest_path="/tmp/builders/lua", reset=False, create_flist=False, zhub_instance=None):
+    def sandbox(self, reset=False, create_flist=False, zhub_instance=None):
         '''Copy built bins to dest_path and create flist if create_flist = True
 
         :param dest_path: destination path to copy files into
@@ -238,15 +237,14 @@ class BuilderLua(j.builder.system._BaseClass):
         :type reset: bool
         :param create_flist: create flist after copying files
         :type create_flist:bool
-        :param zhub_instance: hub instance to upload flist to
+        :param zhub_instance: hub instance to upload flist tos
         :type zhub_instance:str
         '''
         if self._done_check('sandbox', reset):
             return
-        self.build(reset=reset)
-
-        # j.builder.web.openresty.sandbox(dest_path=dest_path, reset=reset)  
-        bins = [ 'lua','_lapis.lua', '_moonc.lua', '_moon.lua', '_moonrocks.lua']
+        self.install(reset=reset)
+        dest_path = self._sandbox_dir
+        j.builder.web.openresty.sandbox(dest_path=dest_path, reset=reset)
 
         for bin_name in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
