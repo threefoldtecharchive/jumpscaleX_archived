@@ -1,0 +1,8 @@
+@url = tfchain.reservation.reverse_proxy
+type = "reverse_proxy" (S)
+duration = (I)
+email = (email)
+created = (I)
+location = (S)
+domain = (S)
+backend_urls = (LS)

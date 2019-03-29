@@ -95,6 +95,7 @@ class TFChainCapacity():
             'type': 's3',
             'location': location,
         })
+        _validate_reservation_s3(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
     def reserve_zos_vm(self, email, threebot_id, location, size=1, source=None, refund=None):
@@ -128,10 +129,40 @@ class TFChainCapacity():
             'type': 'vm',
             'location': location,
         })
+        _validate_reservation_vm(reservation)
+        return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
+
+    def reserve_zdb_namespace(self, email, threebot_id, location, size=1,
+                              disk_type='ssd', mode='seq', password=None,
+                              source=None, refund=None):
+        reservation = j.data.schema.get(url='tfchain.reservation.zdb_namespace').new(data={
+            'type': 'namespace',
+            'size': size,
+            'email': email,
+            'created': j.data.time.epoch,
+            'location': location,
+            'disk_type': disk_type,
+            'mode': mode,
+            'password': password,
+        })
+        _validate_reservation_namespace(reservation)
+        return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
+
+    def reserve_reverse_proxy(self, email, threebot_id, domain, backend_urls,
+                              source=None, refund=None):
+        reservation = j.data.schema.get(url='tfchain.reservation.reverse_proxy').new(data={
+            'type': 'namespace',
+            'email': email,
+            'created': j.data.time.epoch,
+            # 'location': location,
+            'domain': domain,
+            'backend_urls': backend_urls,
+        })
+        _validate_reservation_namespace(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
     def _process_reservation(self, reservation, threebot_id, source=None, refund=None):
-        _validate_reservation(reservation)
+        _validate_reservation_base(reservation)
         amount = reservation_amount(reservation)
 
         # validate bot id exists
@@ -157,16 +188,48 @@ class TFChainCapacity():
                                        refund=refund)
 
 
-def _validate_reservation(reservation):
-    for field in ['size', 'email']:
+def _validate_reservation_base(reservation):
+    for field in ['email']:
+        if not getattr(reservation, field):
+            raise ValueError("field '%s' cannot be empty" % field)
+
+    if not _validate_location(reservation.location):
+        raise ValueError("location '%s' is not valid" % reservation.location)
+
+
+def _validate_reservation_s3(reservation):
+    for field in ['size']:
         if not getattr(reservation, field):
             raise ValueError("field '%s' cannot be empty" % field)
 
     if reservation.size < 0 or reservation.size > 2:
         raise ValueError('reservation size can only be 1 or 2')
 
-    if not _validate_location(reservation.location):
-        raise ValueError("location '%s' is not valid" % reservation.location)
+
+def _validate_reservation_vm(reservation):
+    for field in ['size']:
+        if not getattr(reservation, field):
+            raise ValueError("field '%s' cannot be empty" % field)
+
+    if reservation.size < 0 or reservation.size > 2:
+        raise ValueError('reservation size can only be 1 or 2')
+
+
+def _validate_reservation_namespace(reservation):
+    for field in ['size']:
+        if not getattr(reservation, field):
+            raise ValueError("field '%s' cannot be empty" % field)
+
+    if not reservation.mode or reservation.mode not in ['seq', 'user', 'direct']:
+        raise ValueError("mode can only be 'seq', 'user' or 'direct'")
+    if not reservation.disk_type or reservation.disk_type not in ['hdd', 'ssd']:
+        raise ValueError("disk_type can only be 'ssd' or 'hdd'")
+
+
+def _validate_reverse_proxy(reservation):
+    for field in ['domain', 'backend_urls']:
+        if not getattr(reservation, field):
+            raise ValueError("field '%s' cannot be empty" % field)
 
 
 def encode_reservation(reservation):
@@ -180,17 +243,43 @@ def _signing_key_to_private_key(sk):
 
 
 def reservation_amount(reservation):
-    amounts = {
-        's3': {
-            1: 10,
-            2: 40,
-        },
-        'vm': {
-            1: 1,
-            2: 4,
-        }
-    }
-    return amounts[reservation.type][reservation.size]
+    # https://github.com/threefoldfoundation/info_grid/tree/development/docs/capacity_reservation#amount-of-tft-for-each-type-of-reservation
+    if reservation.type == 's3':
+        return s3_price(reservation.size)
+    elif reservation.type == 'vm':
+        return vm_price(reservation.size)
+    elif reservation.type == 'namespace':
+        return namespace_price(reservation.size)
+    elif reservation.type == 'reverse_proxy':
+        return proxy_price(reservation.size)
+    else:
+        raise ValueError("unsupported reservation type")
+
+
+def s3_price(size):
+    if size == 1:
+        return 41.65
+    elif size == 2:
+        return 83.3
+    else:
+        raise ValueError("size for s3 can only be 1 or 2")
+
+
+def vm_price(size):
+    if size == 1:
+        return 41.65
+    elif size == 2:
+        83.3
+    else:
+        raise ValueError("size for vm can only be 1 or 2")
+
+
+def namespace_price(size):
+    return size * 83.3
+
+
+def proxy_price(size):
+    return 10
 
 
 def _validate_location(location):
