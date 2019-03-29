@@ -39,7 +39,6 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         name* = "" (S)
         seed = "" (S)
         key_count = 1 (I)
-
         key_scan_count = -1 (I)
         """
 

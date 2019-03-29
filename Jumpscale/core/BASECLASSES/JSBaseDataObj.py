@@ -117,17 +117,10 @@ class JSBaseDataObj(JSBase):
         return items
 
     def __getattr__(self, attr):
-        # if attr.startswith("_"):
-        #     return self.__getattribute__(attr)
+        if attr.startswith("_"):
+            return self.__getattribute__(attr)
         if attr in self._schema.propertynames:
             return self.data.__getattribute__(attr)
-
-        # try:
-        #     return self.__getattribute__(attr)
-        # except AttributeError as e:
-        #     raise e # attribute errors needs to be raised as-is, otherwise we get in trouble when using `hasattr`
-        # except Exception as e:
-        #     raise RuntimeError(str(e))
 
         return self.__getattribute__(attr)
 

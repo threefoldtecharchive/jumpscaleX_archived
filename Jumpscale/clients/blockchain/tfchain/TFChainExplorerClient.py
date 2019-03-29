@@ -97,7 +97,7 @@ class TFChainExplorerClient(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.clients.tfchain.explorer.test()'
+        kosmos 'j.clients.tfchain.explorer.test()'
         """
         resp = self.get(addresses=['https://explorer2.threefoldtoken.com'], endpoint='/explorer/constants')
         data = j.data.serializers.json.loads(resp)

@@ -319,7 +319,7 @@ class Integer(TypeBaseClass):
             return "%s = %s" % (key, self.clean(value))
 
     def capnp_schema_get(self, name, nr):
-        return "%s @%s :UInt32;" % (name, nr)
+        return "%s @%s :Int32;" % (name, nr)
 
 
 class Float(TypeBaseClass):
