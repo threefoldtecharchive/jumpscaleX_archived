@@ -142,7 +142,7 @@ This will put full jumpscale in a debug mode.
 
 ```python
 
-def _log_set(self):
+def _logger_set(self):
     """
 
     :param min_level if not set then will use the LOGGER_LEVEL from /sandbox/cfg/jumpscale_config.toml

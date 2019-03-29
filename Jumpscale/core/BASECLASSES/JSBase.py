@@ -76,7 +76,7 @@ class JSBase:
             self._key = "%s:%s" % (self.__class__._location,self.__class__._name)
 
             #lets make sure the initial loglevel gets set
-            self._log_set(children=False, parents=False)
+            self._logger_set(children=False, parents=False)
 
     def _logging_enable_check(self):
         """
@@ -121,7 +121,7 @@ class JSBase:
         return False
 
 
-    def _log_set(self,minlevel=None, children=True, parents=True):
+    def _logger_set(self,minlevel=None, children=True, parents=True):
         """
 
         :param min_level if not set then will use the LOGGER_LEVEL from /sandbox/cfg/jumpscale_config.toml
@@ -232,7 +232,7 @@ class JSBase:
         return self._objid_
 
     def _logger_enable(self):
-        self._logger_minlevel_set(0)
+        self._logger_set(0)
 
 
     @property
