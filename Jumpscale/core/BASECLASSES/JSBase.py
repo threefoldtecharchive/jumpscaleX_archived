@@ -67,7 +67,7 @@ class JSBase:
             # print("classinit_2:%s"%self.__class__)
             # print(self.__class__._properties_)
 
-            self.__class__._logger_level = 100
+            self.__class__._logger_min_level = 100
             self.__class__.__objcat_name = ""
 
             self.__class__._class_init_done = True
@@ -75,63 +75,100 @@ class JSBase:
             self._key = "%s:%s" % (self.__class__._location,self.__class__._name)
 
             #lets make sure the initial loglevel gets set
-            self._log_init()
+            self._log_set(children=False, parents=False)
 
-    def _is_logging_disabled(self):
-        """check if logging should be disabled for current js location
+    def _logging_enable_check(self):
+        """
+
+        check if logging should be disabled for current js location
 
         according to logger includes and excludes (configured)
         includes have a higher priority over excludes
 
-        :return: True if it should be excluded, else False
+        will not take minlevel into consideration, its only the excludes & includes
+
+        :return: True if logging is enabled
         :rtype: bool
         """
-
-        def normalize(location):
-            location = location.lower().strip()
-            if location == '*':
-                return ''
-            return location
-
-        includes = list(map(normalize, j.core.myenv.log_includes))
-        excludes = list(map(normalize, j.core.myenv.log_excludes))
-
-        if '' in includes:
-            return False
-
-        if '' in excludes and not includes:
+        if j.core.myenv.config.get("DEBUG",False):
             return True
-
-        if any([location in self._key for location in includes]):
+        self._key = self._key.lower()
+        def check(checkitems):
+            for finditem in checkitems:
+                finditem = finditem.strip().lower()
+                if finditem=="*":
+                    return True
+                if finditem=="":
+                    continue
+                if "*" in finditem:
+                    if finditem[-1]=="*":
+                        #means at end
+                        if self._key.startswith(finditem[:-1]):
+                            return True
+                    elif finditem[0]=="*":
+                        if self._key.endswith(finditem[1:]):
+                            return True
+                    else:
+                        raise RuntimeError("find item can only have * at start or at end")
+                else:
+                    if self._key == finditem:
+                        return True
             return False
-        if any([location in self._key for location in excludes]):
+
+        if check(j.core.myenv.log_includes) and not check(j.core.myenv.log_excludes):
             return True
         return False
 
-    def _log_init(self,children=False):
+
+    def _log_set(self,minlevel=None, children=True, parents=True):
         """
 
-        :param children: means will reset the log level on children classes
+        :param min_level if not set then will use the LOGGER_LEVEL from /sandbox/cfg/jumpscale_config.toml
+
+        make sure that logging above minlevel will happen, std = 100
+        if 100 means will not log anything
+
+
+        - CRITICAL 	50
+        - ERROR 	40
+        - WARNING 	30
+        - INFO 	    20
+        - STDOUT 	15
+        - DEBUG 	10
+        - NOTSET 	0
+
+
+        if parents and children: will be set on all classes of the self.location e.g. j.clients.ssh (children, ...)
+
+        if minlevel specified then it will always consider the logging to be enabled
 
         :return:
         """
-        # print ("%s:loginit"%self.__class__._name)
-        if j.core.myenv.config.get("DEBUG",False):
-            self._logger_minlevel_set(1)
-            return
+        if minlevel is not None or self._logging_enable_check():
+            #if minlevel specified we overrule anything
 
-        if self._is_logging_disabled():
-            # exclude all
-            minlevel = 100
-        else:
-            minlevel = j.core.myenv.log_loglevel
+            # print ("%s:loginit"%self.__class__._name)
+            if minlevel is None:
+                minlevel = int(j.core.myenv.config.get("LOGGER_LEVEL",15))
 
-        self._logger_minlevel_set(minlevel)
+            if minlevel is not None or not self._logging_enable_check():
 
-        if children:
-            for kl in self.__class__._class_children:
-                print("%s:minlevel:%s"%(kl,minlevel))
-                kl.minlevel = minlevel
+                self.__class__._logger_min_level = minlevel
+
+                if parents:
+                    parent = self._parent
+                    while parent is not None:
+                        parent._logger_minlevel_set(minlevel)
+                        parent = parent._parent
+
+                if children:
+
+                    for kl in self.__class__._class_children:
+                        # print("%s:minlevel:%s"%(kl,minlevel))
+                        kl._logger_min_level = minlevel
+
+
+
 
     def _init(self):
         pass
@@ -195,28 +232,6 @@ class JSBase:
 
     def _logger_enable(self):
         self._logger_minlevel_set(0)
-
-    def _logger_minlevel_set(self,minlevel):
-        """
-        make sure that logging above minlevel will happen, std = 100
-
-        always done on all classes of the self.location e.g. j.clients.ssh (children, ...)
-
-        :return:
-        """
-
-        parent = self._parent
-        while parent is not None:
-            parent._logger_minlevel_set(minlevel)
-            parent = parent._parent
-
-        for kl in self.__class__._class_children:
-            # print("%s:minlevel:%s"%(kl,minlevel))
-            kl.minlevel = minlevel
-
-        self.__class__._logger_level = minlevel
-
-
 
 
     @property
@@ -333,55 +348,52 @@ class JSBase:
         - DEBUG 	10
 
         """
-        if level < self.__class__._logger_level:
-            return
+        if self.__class__._logger_min_level-1 < level:
+            #now we will log
 
-        frame_ = inspect.currentframe().f_back
-        levelup = 0
-        while frame_ and levelup<_levelup:
-            frame_ = frame_.f_back
-            levelup+=1
+            frame_ = inspect.currentframe().f_back
+            levelup = 0
+            while frame_ and levelup<_levelup:
+                frame_ = frame_.f_back
+                levelup+=1
 
-        fname = frame_.f_code.co_filename.split("/")[-1]
-        defname = frame_.f_code.co_name
-        linenr= frame_.f_lineno
+            fname = frame_.f_code.co_filename.split("/")[-1]
+            defname = frame_.f_code.co_name
+            linenr= frame_.f_lineno
 
-        # while obj is None and frame_:
-        #     locals_ = frame_.f_locals
-        #
-        #     if tbc2 in locals_:
-        #         obj = locals_[tbc2]
-        #     else:
-        #         frame_ = frame_.f_back
+            # while obj is None and frame_:
+            #     locals_ = frame_.f_locals
+            #
+            #     if tbc2 in locals_:
+            #         obj = locals_[tbc2]
+            #     else:
+            #         frame_ = frame_.f_back
 
-        # if self._location not in [None,""]:
-        #     if not self._location.endswith(self._name):
-        #         context = "%s:%s:%s"%(self._location,self._name,defname)
-        #     else:
-        #         context = "%s:%s"%(self._location,defname)
-        # if context=="":
-        #     context = defname
+            # if self._location not in [None,""]:
+            #     if not self._location.endswith(self._name):
+            #         context = "%s:%s:%s"%(self._location,self._name,defname)
+            #     else:
+            #         context = "%s:%s"%(self._location,defname)
+            # if context=="":
+            #     context = defname
 
-        logdict={}
-        logdict["linenr"] = linenr
-        logdict["processid"] = j.application.appname
-        logdict["message"] = msg
-        logdict["filepath"] = fname
-        logdict["level"] = level
-        logdict["context"] = self._key
-        logdict["cat"] = cat
+            logdict={}
+            logdict["linenr"] = linenr
+            logdict["processid"] = j.application.appname
+            logdict["message"] = msg
+            logdict["filepath"] = fname
+            logdict["level"] = level
+            logdict["context"] = self._key
+            logdict["cat"] = cat
 
-        logdict["data"] = data
-        if data and isinstance(data,dict):
-            # shallow copy the data to avoid changing the original data
-            hidden_data = data.copy()
-            if "password" in data or "secret" in data or "passwd" in data:
-                hidden_data["password"] = "***"
-            logdict["data"] = hidden_data
+            logdict["data"] = data
+            if data and isinstance(data,dict):
+                # shallow copy the data to avoid changing the original data
+                hidden_data = data.copy()
+                if "password" in data or "secret" in data or "passwd" in data:
+                    hidden_data["password"] = "***"
+                logdict["data"] = hidden_data
 
-        if j.application.logger:
-            j.application.logger._process(logdict)
-        else:
             j.core.tools.log2stdout(logdict)
 
     ################

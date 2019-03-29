@@ -68,7 +68,7 @@ they are under self.system
 
 ### .test()
 
--  a basic test to see if the build was successfull
+- a basic test to see if the build was successfull
 - will automatically call start() at start
 - will automatically call test_api() at end, is against localhost 
 - is optional
@@ -100,9 +100,9 @@ they are under self.system
 
 ### .sandbox(zhub_client)
 
-- this method should be responsible for collecting all bins and libs and dirs that was a result
-of the build and copy it to `destination_dir` in the same directory structure.  
-- example: a binary loacted in `/sanbox/bin/{name}` should be copied to `{destination_dir}/sandbox/bin/{name}`
+- copy all required files from /sandbox (NO OTHER LOCATION)  to self.DIR_PACKAGE
+    - example: a binary loacted in `/sanbox/bin/{name}` should be copied to `{DIR_PACKAGE}/sandbox/bin/{name}`
+    - directory structure as how it will be in flist and the container but chroot = `{DIR_PACKAGE}`
 - this method will call: self._flist_create(zhub_client=zhub_client) which will create flist & upload to your zhub
 - will return: the flist url 
 

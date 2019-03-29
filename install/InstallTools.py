@@ -859,8 +859,6 @@ class Tools:
         else:
             LOGCAT = "CRITICAL"
 
-
-
         LOGFORMAT = MyEnv.LOGFORMAT[LOGCAT]
 
         logdict.update(MyEnv.MYCOLORS)
@@ -1782,7 +1780,7 @@ class UbuntuInstall():
     #     """
     #     Tools.execute(script,interactive=True)
 
-LOGFORMATBASE = '{CYAN}{TIME} {filename:<16}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}'
+LOGFORMATBASE = '{COLOR}{TIME} {filename:<16}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}'  #DO NOT CHANGE COLOR
 
 class MyEnv():
 
@@ -1814,8 +1812,9 @@ class MyEnv():
     LOGFORMAT = {
         'DEBUG':LOGFORMATBASE.replace("{COLOR}","{CYAN}"),
         'STDOUT': '{message}',
-        'INFO': '{BLUE}* {message}{RESET}',
-        'WARNING': LOGFORMATBASE.replace("{COLOR}","{BLUE}"),
+        # 'INFO': '{BLUE}* {message}{RESET}',
+        'INFO':LOGFORMATBASE.replace("{COLOR}","{BLUE}"),
+        'WARNING': LOGFORMATBASE.replace("{COLOR}","{YELLOW}"),
         'ERROR': LOGFORMATBASE.replace("{COLOR}","{RED}"),
         'CRITICAL': '{RED}{TIME} {filename:<16} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}',
     }

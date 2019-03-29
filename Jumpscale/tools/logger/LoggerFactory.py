@@ -67,7 +67,7 @@ class LoggerFactory(j.application.JSBaseClass):
         :return:
         """
         for obj in j.application._iterate_rootobj():
-            obj._log_init(children=True)
+            obj._log_set(children=True)
             # self._print(obj._key)
 
 

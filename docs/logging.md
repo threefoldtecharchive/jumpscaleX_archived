@@ -105,7 +105,7 @@ DEBUG = true
 
 LOGGER_INCLUDE = ['*']
 LOGGER_EXCLUDE = ['sal.fs']
-LOGGER_LEVEL = 15
+LOGGER_LEVEL = 15  #this means all logs stdout+ will be shown if the include is there as well ofcourse
 # if false then will not show on console (also not in debug)
 LOGGER_CONSOLE = false 
 # will log to redis server
@@ -137,6 +137,42 @@ This will make sure that all logging functions are enabled on all objects in jum
 Will also make sure redis is running for core functions
 
 This will put full jumpscale in a debug mode.
+
+### on each class
+
+```python
+
+def _log_set(self):
+    """
+
+    :param min_level if not set then will use the LOGGER_LEVEL from /sandbox/cfg/jumpscale_config.toml
+
+    make sure that logging above minlevel will happen, std = 100
+    if 100 means will not log anything
+
+
+    - CRITICAL 	50
+    - ERROR 	40
+    - WARNING 	30
+    - INFO 	    20
+    - STDOUT 	15
+    - DEBUG 	10
+    - NOTSET 	0
+
+
+    if parents and children: will be set on all classes of the self.location e.g. j.clients.ssh (children, ...)
+
+    if minlevel specified then it will always consider the logging to be enabled
+
+    :return:
+    """
+
+
+def _logger_enable(self):
+    #means all logging will be on
+    self._logger_minlevel_set(0)
+
+```
 
 ### use logging redis aggregator (NOT DONE)
 

@@ -20,7 +20,7 @@
 
 ### logging on a jumpscale object
 
-- _logger_enable() will make sure self._logger_level = 0 (is for all classes related to self._location
+- _logger_enable() will make sure self._logger_min_level = 0 (is for all classes related to self._location
 - _logger_minlevel_set(100), 100 means no logging, 0 is all logging
   - 10 means logs debugs and up
   - 15 means logs stdout & above, ...
