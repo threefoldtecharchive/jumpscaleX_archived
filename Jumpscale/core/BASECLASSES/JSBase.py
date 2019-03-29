@@ -23,9 +23,11 @@ class JSBase:
     def _class_init(self, topclass=True):
 
         if not hasattr(self.__class__, "_class_init_done"):
+
             # print("_class init:%s"%self.__class__.__name__)
             # only needed to execute once, needs to be done at init time, class inheritance does not exist
             self.__class__._dirpath_ = ""  # path of the directory hosting this class
+            self.__class__.__objcat_name = ""
 
             self.__class__._cache_expiration = 3600  # expiration of the cache
             self.__class__._test_runs = {}
@@ -68,7 +70,6 @@ class JSBase:
             # print(self.__class__._properties_)
 
             self.__class__._logger_min_level = 100
-            self.__class__.__objcat_name = ""
 
             self.__class__._class_init_done = True
 
@@ -313,22 +314,22 @@ class JSBase:
     def _print(self,msg,cat=""):
         self._log(msg,cat=cat,level=15)
 
-    def _log_debug(self,msg,cat="",data=None,_levelup=1):
-        self._log(msg,cat=cat,level=10,data=data,_levelup=_levelup)
+    def _log_debug(self,msg,cat="",data=None,context=None,_levelup=1):
+        self._log(msg,cat=cat,level=10,data=data,context=context,_levelup=_levelup)
 
-    def _log_info(self,msg,cat="",data=None,_levelup=1):
-        self._log(msg,cat=cat,level=20,data=data,_levelup=_levelup)
+    def _log_info(self,msg,cat="",data=None,context=None,_levelup=1):
+        self._log(msg,cat=cat,level=20,data=data,context=context,_levelup=_levelup)
 
-    def _log_warning(self,msg,cat="",data=None,_levelup=1):
-        self._log(msg,cat=cat,level=30,data=data,_levelup=_levelup)
+    def _log_warning(self,msg,cat="",data=None,context=None,_levelup=1):
+        self._log(msg,cat=cat,level=30,data=data,context=context,_levelup=_levelup)
 
-    def _log_error(self,msg,cat="",data=None,_levelup=1):
-        self._log(msg,cat=cat,level=40,data=data,_levelup=_levelup)
+    def _log_error(self,msg,cat="",data=None,context=None,_levelup=1):
+        self._log(msg,cat=cat,level=40,data=data,context=context,_levelup=_levelup)
 
-    def _log_critical(self,msg,cat="",data=None,_levelup=1):
-        self._log(msg,cat=cat,level=50,data=data,_levelup=_levelup)
+    def _log_critical(self,msg,cat="",data=None,context=None,_levelup=1):
+        self._log(msg,cat=cat,level=50,data=data,context=context,_levelup=_levelup)
 
-    def _log(self,msg,cat="",level=10,data=None,context="",_levelup=1):
+    def _log(self,msg,cat="",level=10,data=None,context=None,_levelup=1):
         """
 
         :param msg: what you want to log
@@ -383,7 +384,10 @@ class JSBase:
             logdict["message"] = msg
             logdict["filepath"] = fname
             logdict["level"] = level
-            logdict["context"] = self._key
+            if context:
+                logdict["context"] = context
+            else:
+                logdict["context"] = self._key
             logdict["cat"] = cat
 
             logdict["data"] = data
