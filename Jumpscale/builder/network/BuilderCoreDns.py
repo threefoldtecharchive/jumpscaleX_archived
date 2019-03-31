@@ -20,20 +20,19 @@ CONFIGTEMPLATE="""
 class BuilderCoreDns(j.builder.system._BaseClass):
     NAME = "coredns"
 
-    @builder_method()
     def _init(self, reset=False):
         self.DIR_BUILD = j.builder.runtimes.golang.package_path_get('coredns', host='github.com/coredns')
 
     @builder_method()
     def build(self):
         """
-        kosmos 'j.builder.network.coredns.build(reset=False)'
+        kosmos 'j.builder.network.coredns.build(reset=True)'
 
         installs and runs coredns server with redis plugin
         """
 
         # install golang
-        j.builder.runtimes.golang.install(reset=reset)
+        j.builder.runtimes.golang.install()
         j.builder.runtimes.golang.get('github.com/coredns/coredns', install=False, update=True)
 
         # go to package path and build (for coredns)
@@ -67,7 +66,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         return cmds
 
     @builder_method()
-    def sandbox(self, ...):
+    def sandbox(self):
         coredns_bin = j.sal.fs.joinPaths(self._package_path, 'coredns')
         dir_dest = j.sal.fs.joinPaths(self.DIR_PACKAGE, coredns_bin[1:])
         j.builder.tools.dir_ensure(dir_dest)
