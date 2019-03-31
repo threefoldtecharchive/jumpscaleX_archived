@@ -219,17 +219,14 @@ class BuilderBaseClass(BaseClass):
     def startup_cmds(self):
         return []
 
-    @builder_method()
     def start(self):
         for startupcmd in self.startup_cmds:
             startupcmd.start()
 
-    @builder_method()
     def stop(self):
         for startupcmd in self.startup_cmds:
             startupcmd.stop()
 
-    @builder_method()
     def running(self):
         for startupcmd in self.startup_cmds:
             if startupcmd.running() == False:

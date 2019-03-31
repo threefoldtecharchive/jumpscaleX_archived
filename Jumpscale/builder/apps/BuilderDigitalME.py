@@ -55,6 +55,7 @@ class BuilderDigitalME(j.builder.system._BaseClass):
         self.sandbox()
         self.start()
         assert j.sal.nettools.waitConnectionTest("localhost", 8081, timeoutTotal=10)
+        self._log_info("TEST OK FOR DIGITAL ME BUILDING")
 
     def test_zos(self, zos_client, zhubclient):
         flist = self.sandbox(zhub_client=zhubclient)
