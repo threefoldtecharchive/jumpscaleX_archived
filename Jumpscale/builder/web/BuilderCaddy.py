@@ -1,13 +1,15 @@
 from Jumpscale import j
+
 builder_method = j.builder.system.builder_method
+
 
 class BuilderCaddy(j.builder.system._BaseClass):
     NAME = "caddy"
-    PLUGINS = ['iyo']
+    PLUGINS = ["iyo"]
 
     def _init(self):
+
         self.go_runtime = j.builder.runtimes.golang
-        
 
     def clean(self):
         self.stop()
@@ -16,6 +18,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
 
     @builder_method()
     def build(self, plugins=None):
+
         """
         Get/Build the binaries of caddy itself.
 
@@ -30,14 +33,31 @@ class BuilderCaddy(j.builder.system._BaseClass):
 
         self.go_runtime.install()
 
-        # build caddy from source using our caddyman
-        j.clients.git.pullGitRepo("https://github.com/incubaid/caddyman", dest="/tmp/caddyman")
-        self.go_runtime._execute("cd /tmp/caddyman && chmod u+x caddyman.sh")
+        self.go_runtime.get("gopkg.in/yaml.v2")
+        self.go_runtime.get("github.com/naoina/toml")
+        self.go_runtime.get("github.com/mholt/caddy")
+        self.go_runtime.get("github.com/caddyserver/builds")
+        cmd = """
+        cd {go_path}/src/github.com/mholt/caddy/caddy
+        go run build.go -goos=linux -goarch={ARCH}
+        """.format(
+            go_path=self.go_runtime.DIR_GO_PATH, ARCH=self.go_runtime.current_arch
+        )
+
+        self._execute(cmd)
+        j.clients.git.pullGitRepo(
+            "https://github.com/incubaid/caddyman", dest=self.DIR_BUILD
+        )
+
+        self._execute("cd {DIR_BUILD} && chmod u+x caddyman.sh")
+
         if not plugins:
             plugins = self.PLUGINS
-        cmd = "/tmp/caddyman/caddyman.sh install {plugins}".format(plugins=" ".join(plugins))
-        self.go_runtime._execute(cmd, timeout=60*60)
-        self._done_set('build')
+        cmd = "{dir_build}/caddyman.sh install {plugins}".format(
+            plugins=" ".join(plugins), dir_build=self.DIR_BUILD
+        )
+        self._execute(cmd, timeout=60 * 60)
+        self._done_set("build")
 
     @builder_method()
     def install(self, plugins=None):
@@ -49,8 +69,12 @@ class BuilderCaddy(j.builder.system._BaseClass):
         kosmos 'j.builder.web.caddy.install()'
 
         """
-        caddy_bin_path = self.tools.joinpaths(self.go_runtime.DIR_GO_PATH_BIN, self.NAME)
-        j.builder.tools.file_copy(caddy_bin_path, '{DIR_BIN}/caddy')
+
+        caddy_bin_path = self.tools.joinpaths(
+            self.go_runtime.DIR_GO_PATH_BIN, self.NAME
+        )
+        j.builder.tools.file_copy(caddy_bin_path, "{DIR_BIN}/caddy")
+        self._done_set("install")
 
     # def start(self, config_file=None, agree=True):
     #     """start caddy
@@ -75,22 +99,19 @@ class BuilderCaddy(j.builder.system._BaseClass):
     #     cmd = 'ulimit -n 8192; %s' % cmd
     #     return j.tools.tmux.execute(cmd, window=self.NAME, pane=self.NAME, reset=True)
     #
-
-
-    def sandbox(self, zhub_client):
-
-        bin_dest = j.sal.fs.joinPaths(dest_path, 'sandbox', 'bin')
+    @builder_method()
+    def sandbox(self, reset=False, zhub_client=None, flist_create=False):
+        bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox".format(self.DIR_PACKAGE))
         self.tools.dir_ensure(bin_dest)
-        caddy_bin_path = self.tools.joinpaths(self.go_runtime.DIR_GO_PATH_BIN, self.NAME)
+        caddy_bin_path = self.tools.joinpaths("{go_path}/src/github.com/mholt/caddy/caddy".format(go_path=self.go_runtime.DIR_GO_PATH), self.NAME)
         self.tools.file_copy(caddy_bin_path, bin_dest)
-        if create_flist:
-            print(self.flist_create(sandbox_dir=dest_path, hub_instance=zhub_instance))
-        self._done_set('sandbox')
-    
+
+        self._done_set("sandbox")
+
     def _test(self, name=""):
         """Run tests under tests directory
 
         :param name: basename of the file to run, defaults to "".
         :type name: str, optional
         """
-        self._test_run(name=name, obj_key='test_main')
+        self._test_run(name=name, obj_key="test_main")
