@@ -46,8 +46,8 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
     #                 package = " ".join(package)
     #             return self._apt_get(' upgrade ' + package)
     #     elif j.builder.tools.isAlpine:
-    #         j.builder.tools.run("apk update")
-    #         j.builder.tools.run("apk upgrade")
+    #         j.builder.tools.execute("apk update")
+    #         j.builder.tools.execute("apk upgrade")
     #     else:
     #         raise j.exceptions.RuntimeError(
     #             "could not install:%s, platform not supported" % package)
@@ -63,7 +63,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
         if j.core.platformtype.myplatform.isUbuntu:
             j.sal.process.execute("apt-get update")
         elif j.builder.tools.isAlpine:
-            j.builder.tools.run("apk update")
+            j.builder.tools.execute("apk update")
         elif j.core.platformtype.myplatform.isMac:
             location = j.builder.tools.command_location("brew")
             # j.sal.process.execute("run chown root %s" % location)
@@ -92,8 +92,8 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
         elif j.core.platformtype.myplatform.isMac:
             j.sal.process.execute("brew upgrade")
         elif j.builder.tools.isAlpine:
-            j.builder.tools.run("apk update")
-            j.builder.tools.run("apk upgrade")
+            j.builder.tools.execute("apk update")
+            j.builder.tools.execute("apk upgrade")
         elif j.builder.tools.isCygwin:
             return  # no such functionality in apt-cyg
         else:
@@ -201,7 +201,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
 
         if len(todo) > 0:
             print(cmd)
-            j.builder.tools.run(cmd)
+            j.builder.tools.execute(cmd)
 
         for package in todo:
             key = "install_%s," % package

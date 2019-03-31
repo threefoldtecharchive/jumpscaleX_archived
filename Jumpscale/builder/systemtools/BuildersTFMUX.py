@@ -33,6 +33,6 @@ class BuildersTFMUX(j.builder.system._BaseClass):
         make
         make install
         """
-        self.tools.run(C,args={"PATH":path})
+        self.tools.execute(C,args={"PATH":path})
 
         self._done_set("build")

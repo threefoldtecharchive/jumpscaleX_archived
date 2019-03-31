@@ -116,7 +116,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         rm -rf /sandbox/openresty/
 
         """
-        self.tools.run(C)
+        self.tools.execute(C)
 
     def build(self, reset=False):
         """
@@ -155,7 +155,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             ln -s /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
 
             """
-            self.tools.run(C)
+            self.tools.execute(C)
 
 
         else:
@@ -189,7 +189,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             cp /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
 
             """
-            self.tools.run(C)
+            self.tools.execute(C)
 
         self._done_set("build")
 
@@ -251,7 +251,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         args["SRCBINDIR"]=j.core.tools.text_replace("{DIR_BASE}/openresty/bin")
         args["BINDIR"]=j.core.tools.text_replace("{DIR_BASE}/bin")
 
-        self.tools.run(C,args=args)
+        self.tools.execute(C,args=args)
 
     def start(self, config_file=None, args=None):
         test_dir = j.core.tools.text_replace('{DIR_TEMP}/lapis_test')

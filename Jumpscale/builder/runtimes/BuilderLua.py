@@ -19,7 +19,7 @@ class BuilderLua(j.builder.system._BaseClass):
         cd /sandbox
 
         """
-        self.tools.run(C)
+        self.tools.execute(C)
 
     def build(self, reset=True):
         """
@@ -53,7 +53,7 @@ class BuilderLua(j.builder.system._BaseClass):
 
         """
         # set showout to False to avoid text_replace of output log
-        self.tools.run(C, showout=False)
+        self.tools.execute(C, showout=False)
 
         self.lua_rocks_install(reset)
 
@@ -149,8 +149,8 @@ class BuilderLua(j.builder.system._BaseClass):
             self.lua_rock_install("lua-resty-iyo-auth", reset)  #need to check how to get this to work on OSX
 
 
-        self.tools.run("rsync -rav /sandbox/var/build/luarocks/lua_modules/lib/lua/5.1/ /sandbox/openresty/lualib",die=False)
-        self.tools.run("rsync -rav /sandbox/var/build/luarocks/lua_modules/share/lua/5.1/ /sandbox/openresty/lualib",die=False)
+        self.tools.execute("rsync -rav /sandbox/var/build/luarocks/lua_modules/lib/lua/5.1/ /sandbox/openresty/lualib",die=False)
+        self.tools.execute("rsync -rav /sandbox/var/build/luarocks/lua_modules/share/lua/5.1/ /sandbox/openresty/lualib",die=False)
 
     # def build_crypto(self):
     #
@@ -193,7 +193,7 @@ class BuilderLua(j.builder.system._BaseClass):
 
 
         """
-        self.tools.run(C)
+        self.tools.execute(C)
 
     def install(self, reset=False):
         """
@@ -220,7 +220,7 @@ class BuilderLua(j.builder.system._BaseClass):
         popd
 
         """
-        self.tools.run(C)
+        self.tools.execute(C)
 
         j.sal.fs.copyDirTree(src, "/sandbox/bin/", rsyncdelete=False, recursive=False, overwriteFiles=True)
 
@@ -243,7 +243,7 @@ class BuilderLua(j.builder.system._BaseClass):
         if self._done_check('sandbox', reset):
             return
         self.install(reset=reset)
-        dest_path = self._sandbox_dir
+        dest_path = self.DIR_PACKAGE
         j.builder.web.openresty.sandbox(dest_path=dest_path, reset=reset)
 
         for bin_name in bins:

@@ -32,7 +32,7 @@ class BuilderSmartmontools(j.builder.system._BaseClass):
         tmp_location = j.builder.tools.file_download(self._DOWNLOAD_URL, expand=True)
 
         # move downloaded binary to installation destination
-        j.builder.tools.run("mv %s %s" % (j.sal.fs.joinPaths(tmp_location, self._REL_INSTALL_LOCATION, "smartctl") , j.sal.fs.joinPaths(os.sep, self._REL_INSTALL_LOCATION)))
+        j.builder.tools.execute("mv %s %s" % (j.sal.fs.joinPaths(tmp_location, self._REL_INSTALL_LOCATION, "smartctl") , j.sal.fs.joinPaths(os.sep, self._REL_INSTALL_LOCATION)))
         
         # cleanup
         j.builder.tools.dir_remove(tmp_location)

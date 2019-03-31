@@ -42,5 +42,5 @@ class BuilderNIM(j.builder.system._BaseClass):
         ./koch tools
         """
 
-        j.builder.tools.run(j.core.tools.text_replace(C))
+        j.builder.tools.execute(j.core.tools.text_replace(C))
 

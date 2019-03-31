@@ -3,16 +3,11 @@
 ## there are 3 directories used
 
 - /sandbox      : sandbox directory, has the files in production 
-- /builddir     : is the directory used for building e.g. compilation of a C program
+- DIR_BUILD     : is the directory used for building e.g. compilation of a C program
     - build dir should only be relevant during build step and as starting point for install step 
     - property: self.DIR_BUILD
-- /packagedir   : the location from which we create an flist, files are copied in here from /sandbox (dont copy from /builddir)
-  - property: self.DIR_PACKAGE
-
-## internal properties used
-
-- self._sandbox_dir is where the sandboxed files will reside, if not specified then its     
-    - self._sandbox_dir = /tmp/builders/$NAME
+- DIR_SANDBOX  : the location from which we create an flist, files are copied in here from /sandbox (dont copy from /builddir)
+  - property: self.DIR_SANDBOX
 
 ## methods / properties available in each builder class
 
@@ -23,19 +18,6 @@ reset the state of your builder, important to let the state checking restart
 ### .tools:  Builder tools 
 Builder tools is a set of tools to perform the common tasks in your builder (e.g read a file
 , write to a file, execute bash commands and many other handy methods that you will probably need in your builder)
-
-### txt = self.replace(txt)
-
-will replace arguments like {DIR_PACKAGE} but also arguments from  j.core.myenv.config inside the text
-
-### .write(path,txt)
-
-- will write and also call self._replace()
-
-### .execute(txt)
-
-- will write in {DIR_BUILD}/cmds/run.sh (which will replace)
-- will run the {DIR_BUILD}/cmds/run.sh
 
 [methods & properties of the tools lib](BuildersInternalToolsLib.md)
 
@@ -48,6 +30,11 @@ they are under self.tools
 see [BuildersInternalSystemLib](BuildersInternalSystemLib.md)
 
 they are under self.system
+
+### bash
+
+Bash for the sandbox
+e.g. self.bash.profile is very useful
 
 
 ## methods you should implement in your builder
@@ -113,6 +100,36 @@ they are under self.system
 ### .uninstall()
 
 - optional, removes installed, build & sandboxed files
+
+### .running()
+
+- check that the daemon is running
+
+### startup_cmds is a property
+
+- get from j.tools.startupcmd
+- is a way how to start any daemon in generic way, if you specify this one then start() stop() and running() do not need to be implemented
+
+
+
+## methods which are on each builder to make life easy
+
+### _replace(txt)
+
+will replace arguments like {DIR_PACKAGE} but also arguments from  j.core.myenv.config inside the text
+
+### ._write(path,txt)
+
+- will write and also call self._replace()
+
+### ._execute(txt)
+
+- will write in {DIR_BUILD}/cmds/run.sh (which will replace)
+- will run the {DIR_BUILD}/cmds/run.sh
+
+### def _copy(src, dst):
+
+- src & dest can be file, dir, ...
 
 
 ## IMPORTANT INSTRUCTIONS HOW TO CREATE A BUILDER CLASS

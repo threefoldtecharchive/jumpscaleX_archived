@@ -49,7 +49,7 @@ class BuilderTools(j.builder.system._BaseClass):
     @property
     def system_uuid(self):
         """Gets a machines UUID (Universally Unique Identifier)."""
-        return self.run('dmidecode -s system-uuid | tr "[A-Z]" "[a-z]"')
+        return self.execute('dmidecode -s system-uuid | tr "[A-Z]" "[a-z]"')
 
     # =============================================================================
     #
@@ -58,13 +58,13 @@ class BuilderTools(j.builder.system._BaseClass):
     # =============================================================================
 
     def locale_check(self, locale):
-        locale_data = self.run("locale -a | egrep '^%s$' ; true" % (locale,))
+        locale_data = self.execute("locale -a | egrep '^%s$' ; true" % (locale,))
         return locale_data == locale
 
     def locale_ensure(self, locale):
         if not self.locale_check(locale):
-            self.run("/usr/share/locales/install-language-pack %s" % (locale))
-            self.run("dpkg-reconfigure locales")
+            self.execute("/usr/share/locales/install-language-pack %s" % (locale))
+            self.execute("dpkg-reconfigure locales")
 
     # =============================================================================
     #
@@ -73,13 +73,15 @@ class BuilderTools(j.builder.system._BaseClass):
     # =============================================================================
 
     def copyTree(self, source, dest, keepsymlinks=False, deletefirst=False,
-                 overwriteFiles=True, ignoredir=[".egg-info", ".dist-info"], ignorefiles=[".egg-info"],
+                 overwriteFiles=True, ignoredir=None, ignorefiles=None,
                  recursive=True, rsyncdelete=False, createdir=False):
         """
         std excludes are done like "__pycache__" no matter what you specify
         Recursively copy an entire directory tree rooted at src.
         The dest directory may already exist; if not,
         it will be created as well as missing parent directories
+        :param ignoredir: the following are always in, no need to specify ['.egg-info', '.dist-info', '__pycache__']
+        :param ignorefiles: the following are always in, no need to specify: ["*.egg-info","*.pyc","*.bak"]
         @param source: string (source of directory tree to be copied)
         @param dest: string (path directory to be copied to...should not already exist)
         @param keepsymlinks: bool (True keeps symlinks instead of copying the content of the file)
@@ -102,7 +104,7 @@ class BuilderTools(j.builder.system._BaseClass):
         if once and self.file_exists(backup_location):
             return False
         else:
-            return self.run("cp -a {0} {1}".format(
+            return self.execute("cp -a {0} {1}".format(
                 location,
                 self.shell_safe(backup_location)
             ))[1]
@@ -173,12 +175,12 @@ class BuilderTools(j.builder.system._BaseClass):
                     cmd += " -C -"
                 self._log_info(cmd)
                 j.sal.fs.remove("%s.downloadok" % to)
-                rc, out, err = self.run(cmd, die=False, timeout=timeout)
+                rc, out, err = self.execute(cmd, die=False, timeout=timeout)
                 if rc == 33:  # resume is not support try again withouth resume
                     j.sal.fs.remove(to)
                     cmd = "curl -L '%s' -o '%s' %s %s --connect-timeout 5 --retry %s --retry-max-time %s" % (
                         url, to, user, minsp, retry, timeout)
-                    rc, out, err = self.run(cmd, die=False, timeout=timeout)
+                    rc, out, err = self.execute(cmd, die=False, timeout=timeout)
                 fsize = self.file_size(to)
                 if minsizekb != 0 and fsize < minsizekb:
                     raise j.exceptions.RuntimeError(
@@ -245,7 +247,7 @@ class BuilderTools(j.builder.system._BaseClass):
                 "file_expand format not supported yet for %s" % path)
 
         # print(cmd)
-        self.run(cmd)
+        self.execute(cmd)
 
         if removeTopDir:
             res = self.find(destination, recursive=False, type="d")
@@ -329,10 +331,10 @@ class BuilderTools(j.builder.system._BaseClass):
         location = location.replace("//", "/")
         if self.file_exists(location):
             if self.isMac:
-                fs_check = self.run('stat -f %s %s' %
+                fs_check = self.execute('stat -f %s %s' %
                                     ('"%a %u %g"', location), showout=False)[1]
             else:
-                fs_check = self.run('stat %s %s' % (
+                fs_check = self.execute('stat %s %s' % (
                     location, '--format="%a %U %G"'), showout=False)[1]
             (mode, owner, group) = fs_check.split(' ')
             return {'mode': mode, 'owner': owner, 'group': group}
@@ -346,7 +348,7 @@ class BuilderTools(j.builder.system._BaseClass):
         path = j.core.tools.text_replace(path)
         return j.sal.fs.fileSize(path)
         # print("du -Lck %s" % path)
-        # rc, out, err = self.run("du -Lck %s" % path, showout=False)
+        # rc, out, err = self.execute("du -Lck %s" % path, showout=False)
         # if rc != 0:
         #     raise j.exceptions.RuntimeError("Failed to define size of path '%s' \nerror: %s" % (path, err))
         # res = out.split("\n")[-1].split("\t")[0].split(" ")[0]
@@ -369,7 +371,7 @@ class BuilderTools(j.builder.system._BaseClass):
         else:
             hostfile = "/etc/hostname"
             self.file_write(hostfile, val)
-        self.run("hostname %s" % val)
+        self.execute("hostname %s" % val)
         self._hostname = val
         self.ns.hostfile_set(val, '127.0.0.1')
 
@@ -520,7 +522,7 @@ class BuilderTools(j.builder.system._BaseClass):
 
     def getNetworkInfoGenerator(self):
         from Jumpscale.tools.nettools.NetTools import parseBlock, IPBLOCKS, IPMAC, IPIP, IPNAME
-        exitcode, output, err = self.run("ip a", showout=False)
+        exitcode, output, err = self.execute("ip a", showout=False)
         for m in IPBLOCKS.finditer(output):
             block = m.group('block')
             yield parseBlock(block)
@@ -561,13 +563,13 @@ class BuilderTools(j.builder.system._BaseClass):
             self._log_debug('set dir attributes:%s"%location')
         recursive = recursive and "-R " or ""
         if mode:
-            self.run('chmod %s %s %s' %
+            self.execute('chmod %s %s %s' %
                      (recursive, mode, location), showout=False)
         if owner:
-            self.run('chown %s %s %s' %
+            self.execute('chown %s %s %s' %
                      (recursive, owner, location), showout=False)
         if group:
-            self.run('chgrp %s %s %s' %
+            self.execute('chgrp %s %s %s' %
                      (recursive, group, location), showout=False)
 
     def dir_exists(self, location):
@@ -647,7 +649,7 @@ class BuilderTools(j.builder.system._BaseClass):
         if contentsearch != "":
             cmd += " -print0 | xargs -r -0 grep -l '%s'" % contentsearch
 
-        out = self.run(cmd, showout=False)[1]
+        out = self.execute(cmd, showout=False)[1]
 
         # self._log_info(cmd)
         self._log_debug(cmd)
@@ -683,7 +685,7 @@ class BuilderTools(j.builder.system._BaseClass):
     # CORE
     # -----------------------------------------------------------------------------
 
-    def run(self, cmd, die=True, debug=None,  showout=True, profile=True, replace=True,
+    def execute(self, cmd, die=True,  showout=True, profile=True, replace=True,
             shell=False, env=None, timeout=600, args={}):
         """
         @param profile, execute the bash profile first
@@ -691,6 +693,9 @@ class BuilderTools(j.builder.system._BaseClass):
         self._log_info(cmd)
         if cmd.strip() == "":
             raise RuntimeError("cmd cannot be empty")
+
+        if profile:
+            cmd="%s\n%s"%(j.builder.system.bash.profile,cmd)
 
         rc, out, err = j.sal.process.execute(cmd, cwd=None, timeout=timeout, die=die,env=env,
                                              args=args, interactive=False, replace=replace, showout=showout)
@@ -731,7 +736,7 @@ class BuilderTools(j.builder.system._BaseClass):
     def command_check(self, command):
         """Tests if the given command is available on the system."""
         command = j.core.tools.text_replace(command)
-        rc, out, err = self.run("which '%s'" % command,
+        rc, out, err = self.execute("which '%s'" % command,
                                 die=False, showout=False, profile=True)
         return rc == 0
 
@@ -740,7 +745,7 @@ class BuilderTools(j.builder.system._BaseClass):
         return location of cmd
         """
         command = j.core.tools.text_replace(command)
-        rc, out, err = self.run("which '%s'" % command,
+        rc, out, err = self.execute("which '%s'" % command,
                                 die=False, showout=False, profile=True)
         if rc > 0:
             raise RuntimeError("command '%s' does not exist, cannot find" % command)

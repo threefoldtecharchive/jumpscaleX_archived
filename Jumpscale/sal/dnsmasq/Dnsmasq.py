@@ -28,7 +28,7 @@ class DNSMasq(JSBASE):
         """
         if not j.sal.process.checkInstalled('dnsmasq'):
             j.sal.ubuntu.apt_install('dnsmasq')
-        cmd = j.tools.bash.local.cmdGetPath('dnsmasq')
+        cmd = j.tools.bash.local.cmd_path_get('dnsmasq')
         j.sal.process.killProcessByName(cmd)
 
         self.config(device=device, rangefrom=rangefrom, rangeto=rangeto, deviceonly=deviceonly)
@@ -39,7 +39,7 @@ class DNSMasq(JSBASE):
         """
         Restarts Dnsmasq.
         """
-        cmd = j.tools.bash.local.cmdGetPath('dnsmasq')
+        cmd = j.tools.bash.local.cmd_path_get('dnsmasq')
         j.sal.process.killProcessByName(cmd)
         j.tools.tmux.execute('%s -d --conf-file=%s' % (cmd, self._configfile), window='main', pane='dnsmasq')
 

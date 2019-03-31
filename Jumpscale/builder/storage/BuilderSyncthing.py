@@ -33,9 +33,9 @@ class BuilderSyncthing(j.builder.system._BaseClass):
                                      depth=1)
 
         if version is not None:
-            j.builder.tools.run("cd %s && go run build.go -version %s -no-upgrade" % (dest, version))
+            j.builder.tools.execute("cd %s && go run build.go -version %s -no-upgrade" % (dest, version))
         else:
-            j.builder.tools.run("cd %s && go run build.go" % dest)
+            j.builder.tools.execute("cd %s && go run build.go" % dest)
 
         j.builder.tools.copyTree(
             syncthing_path + "/bin",
@@ -79,11 +79,11 @@ class BuilderSyncthing(j.builder.system._BaseClass):
     def start(self, reset=False):
 
         if reset:
-            j.builder.tools.run("killall syncthing")
-            j.builder.tools.run(j.core.tools.text_replace("rm -rf {DIR_CFG}/syncthing"))
+            j.builder.tools.execute("killall syncthing")
+            j.builder.tools.execute(j.core.tools.text_replace("rm -rf {DIR_CFG}/syncthing"))
 
         if j.builder.tools.dir_exists(j.core.tools.text_replace("{DIR_CFG}/syncthing")) == False:
-            j.builder.tools.run(j.core.tools.text_replace("rm -rf {DIR_CFG}/syncthing;cd {DIR_BIN};./syncthing -generate  {DIR_CFG}/syncthing"))
+            j.builder.tools.execute(j.core.tools.text_replace("rm -rf {DIR_CFG}/syncthing;cd {DIR_BIN};./syncthing -generate  {DIR_CFG}/syncthing"))
         cmd = j.tools.tmux.cmd_get(name="syncthing", window="syncthing", cmd=j.core.tools.text_replace("./syncthing -home  {DIR_CFG}/syncthing"), path=j.core.tools.text_replace("{DIR_BIN}"))
         cmd.start()
 

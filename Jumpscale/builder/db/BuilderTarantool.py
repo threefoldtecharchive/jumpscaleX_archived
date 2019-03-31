@@ -63,7 +63,7 @@ class BuilderTarantool(j.builder.system._BaseClass):
 
             popd
             """
-            j.builder.tools.run(C)
+            j.builder.tools.execute(C)
         elif j.core.platformtype.myplatform.isUbuntu:
             if not self._done_check('dependencies', reset):
                 # j.builder.system.package.ensure('build-essential,cmake,coreutils,sed,libreadline-dev,'
@@ -135,7 +135,7 @@ class BuilderTarantool(j.builder.system._BaseClass):
             luarocks install {name}
             popd
             """.format(name=name)
-        j.builder.tools.run(command)
+        j.builder.tools.execute(command)
 
     def install_tarantool_rock(self, name):
         """
@@ -151,7 +151,7 @@ class BuilderTarantool(j.builder.system._BaseClass):
         tarantoolctl rocks install {name}
         popd
         """.format(name=name)
-        j.builder.tools.run(command)
+        j.builder.tools.execute(command)
 
     def start(self, port=3301, passwd='admin007'):
         """

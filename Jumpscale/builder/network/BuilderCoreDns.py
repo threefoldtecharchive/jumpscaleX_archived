@@ -44,7 +44,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         git checkout threefoldtech_coredns/master
         make
         """
-        j.builder.tools.run(C)
+        j.builder.tools.execute(C)
 
 
     @builder_method()
@@ -55,7 +55,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         installs and runs coredns server with redis plugin
         """
 
-        self.run("cp {GITDIR}/coredns/coredns /sandbox/bin/coredns")
+        self.execute("cp {GITDIR}/coredns/coredns /sandbox/bin/coredns")
 
         #WRITE THE CONFIG FILE IN THE SANDBOX DIR /sandbox/cfg/coredns.conf
 
@@ -69,11 +69,11 @@ class BuilderCoreDns(j.builder.system._BaseClass):
     @builder_method()
     def sandbox(self, ...):
         coredns_bin = j.sal.fs.joinPaths(self._package_path, 'coredns')
-        dir_dest = j.sal.fs.joinPaths(self._sandbox_dir, coredns_bin[1:])
+        dir_dest = j.sal.fs.joinPaths(self.DIR_PACKAGE, coredns_bin[1:])
         j.builder.tools.dir_ensure(dir_dest)
         j.sal.fs.copyFile(coredns_bin, dir_dest)
 
-        dir_dest = j.sal.fs.joinPaths(self._sandbox_dir, self._sandbox_dir, 'etc/ssl/certs/')
+        dir_dest = j.sal.fs.joinPaths(self.DIR_PACKAGE, self.DIR_PACKAGE, 'etc/ssl/certs/')
         j.builder.tools.dir_ensure(dir_dest)
         j.sal.fs.copyDirTree('/etc/ssl/certs', dir_dest)
 

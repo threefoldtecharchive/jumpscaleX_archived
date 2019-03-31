@@ -17,19 +17,19 @@ class BuilderUFW(j.builder.system._BaseClass):
             return  False        
         if not self._ufw_enabled:
             if not j.core.platformtype.myplatform.isMac:
-                if #j.builder.sandbox.cmdGetPath("nft", die=False) is not False:
+                if #j.builder.sandbox.cmd_path_get("nft", die=False) is not False:
                     self._ufw_enabled = False
                     self._log_info("cannot use ufw, nft installed")
-                if #j.builder.sandbox.cmdGetPath("ufw", die=False) is False:
+                if #j.builder.sandbox.cmd_path_get("ufw", die=False) is False:
                     j.builder.system.package.ensure("ufw")
-                    #j.builder.sandbox.cmdGetPath("ufw")
+                    #j.builder.sandbox.cmd_path_get("ufw")
                 self._ufw_enabled = "inactive" not in j.sal.process.execute("ufw status")[1]
         return self._ufw_enabled
 
     def ufw_enable(self):
         if not self.ufw_enabled:
             if not j.core.platformtype.myplatform.isMac:
-                if #j.builder.sandbox.cmdGetPath("nft", die=False) is not False:
+                if #j.builder.sandbox.cmd_path_get("nft", die=False) is not False:
                     self._fw_enabled = False
                     raise j.exceptions.RuntimeError("Cannot use ufw, nft installed")
                 if self.executor.type != 'local':

@@ -146,7 +146,7 @@ class BCDBMeta(j.application.JSBaseClass):
         s.sid = self._schema_last_id
         s.text = schema.text  # + "\n"  # only 1 \n at end
         s.md5 = j.data.hash.md5_string(s.text)
-        self._log_info("new schema in meta:\n%s" % self.data)
+        self._log_debug("new schema in meta:\n%s" % self.data)
         self.save()
         self.url2sid[s.url] = s.sid
         schema.sid = s.sid

@@ -59,7 +59,7 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         mysql -e "GRANT ALL ON humhub.* TO 'humhub'@'localhost' IDENTIFIED BY 'Hum_flist_hubB';"
         mysql -e "FLUSH PRIVILEGES;"
         """
-        j.builder.tools.run(sql_init_script)
+        j.builder.tools.execute(sql_init_script)
 
         j.builder.tools.file_download("https://raw.githubusercontent.com/freeflowpages/freeflow-iyo-module/master/IYO.php",
                                       "/var/www/html/humhub/protected/humhub/modules/user/authclient/IYO.php")
@@ -191,4 +191,3 @@ chown -R mysql /var/run/mysqld/
         self._done_set('sandbox')
         if create_flist:
             print(self.flist_create(sandbox_dir=dest_path, hub_instance=zhub_instance))
-            
