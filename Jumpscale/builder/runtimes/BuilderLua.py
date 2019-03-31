@@ -246,6 +246,7 @@ class BuilderLua(j.builder.system._BaseClass):
         dest_path = self.DIR_PACKAGE
         j.builder.web.openresty.sandbox(dest_path=dest_path, reset=reset)
 
+        bins = ['lua', '_lapis.lua', '_moonc.lua', '_moon.lua', '_moonrocks.lua']
         for bin_name in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
             dir_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR[1:])
