@@ -433,7 +433,8 @@ class JSBase:
                 item = item.decode()
                 # print("reset todo:%s" % item)
                 if item.find(self._objid) != -1:
-                    j.core.db.hdel("done", self._objid)
+                    j.core.db.hdel("done", item)
+                    # print("reset did:%s" % item)
         else:
             return j.core.db.hdel("done", "%s:%s" % (self._objid, name))
 

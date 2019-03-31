@@ -1996,6 +1996,7 @@ class MyEnv():
         MyEnv.log_loglevel = MyEnv.config.get("LOGGER_LEVEL",100)
         MyEnv.log_console = MyEnv.config.get("LOGGER_CONSOLE",True)
         MyEnv.log_redis = MyEnv.config.get("LOGGER_REDIS",False)
+        MyEnv.debug = MyEnv.config.get("DEBUG",False)
 
         installed = Tools.cmd_installed("git") and Tools.cmd_installed("ssh-agent")
         MyEnv.config["SSH_AGENT"]=installed

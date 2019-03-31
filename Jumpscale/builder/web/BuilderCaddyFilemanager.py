@@ -1,5 +1,5 @@
 from Jumpscale import j
-
+builder_method = j.builder.system.builder_method
 
 class BuilderCaddyFilemanager(j.builder.system._BaseClass):
     NAME = 'filemanager'
@@ -7,13 +7,13 @@ class BuilderCaddyFilemanager(j.builder.system._BaseClass):
 
     def _init(self):
         self.go_runtime = j.builder.runtimes.golang
-        self.templates_dir = self.tools.joinpaths(
-            j.sal.fs.getDirName(__file__), 'templates')
+        self.templates_dir = self.tools.joinpaths(j.sal.fs.getDirName(__file__), 'templates')
         # self.root_dirs = {
         #     '/etc/ssl/certs': '/etc/ssl/certs'
         # }
 
-    def build(self, reset=False):
+    @builder_method()
+    def build(self):
         """
         build caddy with iyo authentication and filemanager plugins
 
@@ -22,7 +22,8 @@ class BuilderCaddyFilemanager(j.builder.system._BaseClass):
         """
         j.builder.web.caddy.build(plugins=self.PLUGINS, reset=reset)
 
-    def install(self, reset=False):
+    @builder_method()
+    def install(self):
         """
         install caddy binary
 
@@ -31,28 +32,10 @@ class BuilderCaddyFilemanager(j.builder.system._BaseClass):
         """
         j.builder.web.caddy.install(reset=reset)
 
-   
-    def sandbox(self, dest_path='/tmp/builder/caddyfilemanager',create_flist=True, zhub_instance=None, reset=False):
 
-        '''Copy built bins to dest_path and create flist if create_flist = True
+    def sandbox(self, zhub_client):
 
-        :param dest_path: destination path to copy files into
-        :type dest_path: str
-        :param sandbox_dir: path to sandbox
-        :type sandbox_dir: str
-        :param reset: reset sandbox file transfer
-        :type reset: bool
-        :param create_flist: create flist after copying files
-        :type create_flist:bool
-        :param zhub_instance: hub instance to upload flist to
-        :type zhub_instance:str
-        '''
-
-        if self._done_check('sandbox') and reset is False:
-             return
-        self.build(reset = reset)
-
-        caddy_bin_path = self.tools.joinpaths(self.go_runtime.go_path_bin, 'caddy')
+        caddy_bin_path = self.tools.joinpaths(self.go_runtime.DIR_GO_PATH_BIN, 'caddy')
         bin_dest = self.tools.joinpaths(dest_path, 'sandbox', 'bin')
         self.tools.dir_ensure(bin_dest)
 
@@ -87,3 +70,19 @@ class BuilderCaddyFilemanager(j.builder.system._BaseClass):
         if create_flist:
             print(self.flist_create(sandbox_dir=dest_path, hub_instance=zhub_instance))
         self._done_set('sandbox') 
+
+    def test(self):
+        if not j.sal.process.checkInstalled(j.builder.web.caddy.NAME):
+            j.builder.web.caddy.stop()
+            j.builder.web.caddy.build(reset=True)
+            j.builder.web.caddy.install()
+            j.builder.web.caddy.sandbox()
+
+        # try to start/stop
+        tmux_pane = j.builder.web.caddy.start()
+        tmux_process = tmux_pane.process_obj
+        child_process = tmux_pane.process_obj_child
+        assert child_process.is_running()
+        assert j.sal.nettools.waitConnectionTest("localhost", 2015)
+
+

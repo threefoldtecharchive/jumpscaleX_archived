@@ -192,9 +192,7 @@ class Application(object):
 
     @property
     def debug(self):
-        if self._debug is None:
-            return self._j.core.myenv.debug
-        return self._debug
+        return self._j.core.myenv.debug
 
     @debug.setter
     def debug(self, value):

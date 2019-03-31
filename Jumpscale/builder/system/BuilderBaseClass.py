@@ -20,13 +20,22 @@ class builder_method(object):
 
         def wrapper_action(*args, **kwargs):
             builder=args[0]
-            if "reset" in kwargs:
-                builder.reset()
-                kwargs.pop("reset")
             args=args[1:]
             name= func.__name__
+
             if self.log:
                 builder._log_debug("do once:%s"%name)
+
+            if "reset" in kwargs:
+                reset = j.data.types.bool.clean(kwargs["reset"])
+                kwargs.pop("reset")
+            else:
+                reset = False
+
+            if reset:
+                builder._done_reset()
+                builder.reset()
+
             if name is not "_init":
                 builder._init()
             if name == "install":
@@ -42,10 +51,6 @@ class builder_method(object):
                     zhub_client.ping() #should do a test it works
                 kwargs["zhub_client"] = zhub_client
 
-            if "reset" in kwargs:
-                reset = kwargs["reset"]
-            else:
-                reset = False
 
             if name in ["start", "stop", "running"]:
                 self.done_check = False
@@ -162,6 +167,7 @@ class BuilderBaseClass(BaseClass):
         :param path:
         :return:
         """
+        self._log_debug("remove:%s"%path)
         path = self._replace(path)
 
         j.sal.fs.remove(path)
@@ -184,6 +190,7 @@ class BuilderBaseClass(BaseClass):
         reset the state of your builder, important to let the state checking restart
         :return:
         """
+        self.clean()
         self._done_reset()
 
     @builder_method()
@@ -202,7 +209,7 @@ class BuilderBaseClass(BaseClass):
         return
 
     @builder_method()
-    def sandbox(self, zhub_client=None):
+    def sandbox(self, zhub_client):
         '''
         when zhub_client None will look for j.clients.get("test"), if not exist will die
         '''
@@ -210,7 +217,7 @@ class BuilderBaseClass(BaseClass):
 
     @property
     def startup_cmds(self):
-        raise RuntimeError("not implemented")
+        return []
 
     @builder_method()
     def start(self):
@@ -277,14 +284,15 @@ class BuilderBaseClass(BaseClass):
         removes all files as result from building
         :return:
         """
-        raise RuntimeError("not implemented")
+        self.uninstall()
+        return
 
     def uninstall(self):
         """
         optional, removes installed, build & sandboxed files
         :return:
         """
-        raise RuntimeError("not implemented")
+        return
 
     def test(self):
         """

@@ -54,7 +54,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         installs and runs coredns server with redis plugin
         """
 
-        self.execute("cp {GITDIR}/coredns/coredns /sandbox/bin/coredns")
+        self._execute("cp {GITDIR}/coredns/coredns /sandbox/bin/coredns")
 
         #WRITE THE CONFIG FILE IN THE SANDBOX DIR /sandbox/cfg/coredns.conf
 
@@ -67,6 +67,8 @@ class BuilderCoreDns(j.builder.system._BaseClass):
 
     @builder_method()
     def sandbox(self):
+        print("#TODO:*1")
+        j.shell()
         coredns_bin = j.sal.fs.joinPaths(self._package_path, 'coredns')
         dir_dest = j.sal.fs.joinPaths(self.DIR_PACKAGE, coredns_bin[1:])
         j.builder.tools.dir_ensure(dir_dest)
