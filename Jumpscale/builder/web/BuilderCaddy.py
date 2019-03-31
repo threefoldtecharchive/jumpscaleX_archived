@@ -3,7 +3,7 @@ builder_method = j.builder.system.builder_method
 
 class BuilderCaddy(j.builder.system._BaseClass):
     NAME = "caddy"
-    PLUGINS = ['iyo']
+    PLUGINS = ['iyo']  #PLEASE ADD MORE PLUGINS #TODO:*1
 
     def _init(self):
         self.go_runtime = j.builder.runtimes.golang
@@ -29,6 +29,15 @@ class BuilderCaddy(j.builder.system._BaseClass):
             raise j.exceptions.RuntimeError("only ubuntu supported")
 
         self.go_runtime.install()
+
+        #SOMETHING GOES WRONG, #TODO: *1
+        self.go_runtime.get("gopkg.in/yaml.v2")
+        self.go_runtime.get("github.com/naoina/toml")
+        self.go_runtime.get("github.com/mholt/caddy/caddy")
+        self.go_runtime.get("github.com/caddyserver/builds")
+        self._execute("cd $GOPATH/src/github.com/mholt/caddy/caddy;go run build.go")
+
+        j.shell()
 
         # build caddy from source using our caddyman
         j.clients.git.pullGitRepo("https://github.com/incubaid/caddyman", dest="/tmp/caddyman")
