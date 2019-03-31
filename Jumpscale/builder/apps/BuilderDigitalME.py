@@ -41,23 +41,26 @@ class BuilderDigitalME(j.builder.system._BaseClass):
         git_repo_path = "/sandbox/code/github/threefoldtech/digitalmeX"
         j.tools.sandboxer.copyTo(git_repo_path, j.sal.fs.joinPaths(self.DIR_PACKAGE, git_repo_path[1:]))
 
+    @property
+    def startup_cmds(self):
+        cmd = j.tools.startupcmd.get("openresty", "openresty", cmd_stop="openresty -s stop", path="/sandbox/bin")
+        return [cmd]
+
     def test(self, zos_client=None):
         """
-
+        j.builder.apps.digitalme.test()
+        test locally, start openresty and do network check
         :return:
         """
-
-        self.build()
-        flist = self.sandbox()  #will not upload to zhub_instance
-
-
-        #create container and use this flist
-        #see that openresty is working
+        self.sandbox()
+        self.start()
+        assert j.sal.nettools.waitConnectionTest("localhost", 8081, timeoutTotal=10)
 
     def test_zos(self, zos_client, zhubclient):
         flist = self.sandbox(zhub_client=zhubclient)
         container_id = zos_client.container.create(flist, name="test_digitalme").get()
         container_client = zos_client.cotainer.client(container_id)
         assert container_client.ping()
+        # TODO: find a way to check if openresty started on the container
 
 
