@@ -96,7 +96,10 @@ class BuilderBaseClass(BaseClass):
         for key,item in self.__dict__.items():
             if key.upper() == key:
                 args[key] = item
-        return j.core.tools.text_replace(content=txt, args=args, text_strip=True)
+        res =  j.core.tools.text_replace(content=txt, args=args, text_strip=True)
+        if res.find("{")!=-1:
+            raise RuntimeError("replace was not complete, still { inside, '%s'"%res)
+        return res
 
     def _execute(self, cmd, die=True, args={}, timeout=600,
                  profile=True, replace=True, showout=True, interactive=False):
@@ -152,6 +155,16 @@ class BuilderBaseClass(BaseClass):
         txt = self._replace(txt)
         j.shell()
 
+
+    def _remove(self, path):
+        """
+        will use the replace function on text and on path
+        :param path:
+        :return:
+        """
+        path = self._replace(path)
+
+        j.sal.fs.remove(path)
 
     @property
     def system(self):

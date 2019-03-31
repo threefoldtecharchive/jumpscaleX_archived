@@ -131,6 +131,9 @@ will replace arguments like {DIR_PACKAGE} but also arguments from  j.core.myenv.
 
 - src & dest can be file, dir, ...
 
+### def _remove(src):
+
+- remove dir/file
 
 ## IMPORTANT INSTRUCTIONS HOW TO CREATE A BUILDER CLASS
 

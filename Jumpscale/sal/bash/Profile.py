@@ -110,6 +110,11 @@ class Profile(j.application.JSBaseClass):
         self._env.pop('PATH', None)
 
     def path_add(self, path):
+        """
+
+        :param path:
+        :return:
+        """
         path = path.strip()
         path = path.replace("//", "/")
         path = path.replace("//", "/")

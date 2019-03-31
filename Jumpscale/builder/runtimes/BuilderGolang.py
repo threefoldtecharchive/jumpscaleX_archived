@@ -19,18 +19,6 @@ class BuilderGolang(j.builder.system._BaseClass):
         self.DIR_GO_ROOT_BIN = self.tools.joinpaths(self.DIR_GO_ROOT, 'bin')
         self.DIR_GO_PATH_BIN = self.tools.joinpaths(self.DIR_GO_PATH, 'bin')
 
-        self.bash.profile.env_set('GOROOT',self.DIR_GO_ROOT)
-        self.bash.profile.env_set('GOPATH',self.DIR_GO_PATH)
-
-        if self.bash.profile.env_exists('GOROOT'):
-            go_root = self.bash.profile.env_get('GOROOT')
-            self.bash.profile.path_delete(go_root)
-        if self.bash.profile.env_exists('GOPATH'):
-            go_path = self.bash.profile.env_get('GOPATH')
-            self.bash.profile.path_delete(go_path)
-
-        self.bash.profile .save()
-
 
     @property
     def version(self):
@@ -84,30 +72,37 @@ class BuilderGolang(j.builder.system._BaseClass):
         else:
             raise j.exceptions.RuntimeError('platform not supported')
 
-        self._execute('rm -rf $GOPATH', die=True)
+
+        self._remove("{DIR_GO_PATH}")
+        self._remove("{DIR_GO_ROOT}")
+
         j.core.tools.dir_ensure(self.DIR_GO_PATH)
 
-        self.env.env_set('GOROOT', self.DIR_GO_ROOT)
-        self.env.env_set('GOPATH', self.DIR_GO_PATH)
-        self.env.path_add(self.DIR_GO_ROOT_BIN)
-        self.env.path_add(self.DIR_GO_PATH_BIN)
-        self.env.save()
+        self.bash.profile.env_set('GOROOT',self.DIR_GO_ROOT)
+        self.bash.profile.env_set('GOPATH',self.DIR_GO_PATH)
+
+        #remove old parts of profile
+        self.bash.profile.path_delete("/go/")
+        self.bash.profile.path_delete("/go_proj")
+
+        self.bash.profile.path_add(self.DIR_GO_PATH_BIN)
+        self.bash.profile.path_add(self.DIR_GO_ROOT_BIN)
+
+        self.bash.profile.save()
 
         self.tools.file_download(
             download_url, self.DIR_GO_ROOT, overwrite=False, retry=3,
             timeout=0, expand=True, removeTopDir=True)
 
-        j.shell()
+        self._remove('{DIR_BIN}/go')
 
-        if self.tools.file_exists('{DIR_BIN}/go'):
-            self._execute('unlink {DIR_BIN}/go')
-
-        self._execute('ln -s $GOROOT/bin/go {DIR_BIN}/go')
+        self._execute('ln -s {DIR_GO_ROOT} {DIR_BIN}/go')
 
         self.get("github.com/tools/godep")
         self._done_set("install")
 
-    def goraml(self, reset=False):
+    @builder_method()
+    def goraml(self):
         """install (using go get) goraml.
 
         :param reset: reset installation, defaults to False
@@ -125,25 +120,24 @@ class BuilderGolang(j.builder.system._BaseClass):
         go get -u github.com/jteeuwen/go-bindata/...
         go get -u github.com/Jumpscale/go-raml
         set -ex
-        cd $GOPATH/src/github.com/Jumpscale/go-raml
+        cd {DIR_GO_PATH}/src/github.com/Jumpscale/go-raml
         sh build.sh
         '''
         self._execute(C)
         self._done_set('goraml')
 
-    def bindata(self, reset=False):
+    @builder_method()
+    def bindata(self):
         """install (using go get) go-bindata.
 
         :param reset: reset installation, defaults to False
         :type reset: bool, optional
         """
 
-        if reset is False and self._done_get('bindata'):
-            return
         C = '''
         set -ex
         go get -u github.com/jteeuwen/go-bindata/...
-        cd $GOPATH/src/github.com/jteeuwen/go-bindata/go-bindata
+        cd {DIR_GO_PATH}/src/github.com/jteeuwen/go-bindata/go-bindata
         go build
         go install
         '''
@@ -219,10 +213,19 @@ class BuilderGolang(j.builder.system._BaseClass):
             ssh=False)
         self._execute('cd %s && godep restore' % dest)
 
-    def _test(self, name=""):
-        """Run tests under tests directory
+    def test(self):
+        """test go installation
 
-        :param name: basename of the file to run, defaults to "".
-        :type name: str, optional
+        to run:
+        kosmos 'j.builder.runtimes.golang.test()'
         """
-        self._test_run(name=name, obj_key='test_main')
+        self.install()
+
+        assert j.builder.runtimes.golang.is_installed
+
+        # test go get
+        j.builder.runtimes.golang.get('github.com/containous/go-bindata')
+        package_path = j.builder.runtimes.golang.package_path_get('containous/go-bindata')
+        j.builder.runtimes.golang.execute('cd %s && go install' % package_path)
+
+
