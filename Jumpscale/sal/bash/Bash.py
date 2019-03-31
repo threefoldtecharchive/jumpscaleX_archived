@@ -26,7 +26,7 @@ class Bash(object):
 
     @property
     def env(self):
-        dest = dict(self.profileJS.env)
+        dest = dict(self.profile.env)
         dest.update(self.executor.env)
         return dest
 
@@ -53,23 +53,23 @@ class Bash(object):
         return out
 
     def locale_check(self):
-        self.profileJS.locale_check()
+        self.profile.locale_check()
 
     def locale_fix(self):
-        self.profileJS.locale_fix()
+        self.profile.locale_fix()
 
     def env_set(self, key, val):
-        self.profileJS.env_set(key, val)
-        self.profileJS.save(True)
+        self.profile.env_set(key, val)
+        self.profile.save(True)
 
     def env_get(self, key):
-        dest = dict(self.profileJS.env)
+        dest = dict(self.profile.env)
         dest.update(self.executor.env)
         return dest[key]
 
     def env_delete(self, key):
-        if self.profileJS.env_exists(key):
-            self.profileJS.env_delete(key)
-            self.profileJS.save(True) # issue #70
+        if self.profile.env_exists(key):
+            self.profile.env_delete(key)
+            self.profile.save(True) # issue #70
         else:
             del self.executor.env[key]
