@@ -150,7 +150,7 @@ class BuilderNGINX(j.builder.system._BaseClass):
         if self._done_check("build") and reset is False:
             return
 
-        j.tools.bash.local.locale_check()
+        j.tools.bash.get().locale_check()
 
         if j.core.platformtype.myplatform.isUbuntu:
             j.sal.ubuntu.apt_update()

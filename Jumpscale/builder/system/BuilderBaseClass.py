@@ -44,7 +44,7 @@ class builder_method(object):
                 builder.install()
                 #only use "main" client, because should be generic usable
                 zhub_client = kwargs.get("zhub_client", None)
-                if not zhub_client:
+                if not zhub_client and kwargs.get("flist_create"):
                     if not j.clients.zhub.exists(name="main"):
                         raise RuntimeError("cannot find main zhub client")
                     zhub_client = j.clients.zhub.get(name="main")
@@ -60,7 +60,7 @@ class builder_method(object):
                     builder._log_debug("action:%s() start"%name)
                 res = func(builder,*args,**kwargs)
 
-                if name == "sandbox":
+                if name == "sandbox" and kwargs.get("flist_create", False):
                     res = builder._flist_create(zhub_client=zhub_client)
 
                 if self.done_check:
@@ -85,7 +85,7 @@ class BuilderBaseClass(BaseClass):
         if hasattr(self.__class__,"NAME"):
             assert isinstance(self.__class__.NAME,str)
             self.DIR_BUILD = "/tmp/builders/{}".format(self.__class__.NAME)
-            self.DIR_SANDBOX = "/tmp/package/{}".format(self.__class__.NAME)
+            self.DIR_PACKAGE = "/tmp/package/{}".format(self.__class__.NAME)
 
     @property
     def bash(self):

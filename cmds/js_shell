@@ -4,7 +4,7 @@ import os
 import sys
 from Jumpscale import *
 
-# j.tools.bash.local.locale_check()
+# j.tools.bash.get().locale_check()
 
 
 import argparse

@@ -20,6 +20,7 @@ class Profile(j.application.JSBaseClass):
         j.application.JSBaseClass.__init__(self)
         self.bash = bash
         self.executor = bash.executor
+        self.home = self.bash.home
         if profile_path:
             self.profile_path = profile_path
         else:

@@ -28,7 +28,7 @@ class DNSMasq(JSBASE):
         """
         if not j.sal.process.checkInstalled('dnsmasq'):
             j.sal.ubuntu.apt_install('dnsmasq')
-        cmd = j.tools.bash.local.cmd_path_get('dnsmasq')
+        cmd = j.tools.bash.get().cmd_path_get('dnsmasq')
         j.sal.process.killProcessByName(cmd)
 
         self.config(device=device, rangefrom=rangefrom, rangeto=rangeto, deviceonly=deviceonly)
@@ -39,7 +39,7 @@ class DNSMasq(JSBASE):
         """
         Restarts Dnsmasq.
         """
-        cmd = j.tools.bash.local.cmd_path_get('dnsmasq')
+        cmd = j.tools.bash.get().cmd_path_get('dnsmasq')
         j.sal.process.killProcessByName(cmd)
         j.tools.tmux.execute('%s -d --conf-file=%s' % (cmd, self._configfile), window='main', pane='dnsmasq')
 
@@ -770,7 +770,7 @@ class DNSMasq(JSBASE):
             config, {'range': '%s,%s' % (rangefrom, rangeto), 'lease_file': self._leasesfile})
         j.sal.fs.createDir('/etc/dnsmasq.d/')
         j.sal.fs.createDir(self._configdir)
-        j.tools.bash.local.executor.file_write(self._configfile, config)
+        j.tools.bash.get().executor.file_write(self._configfile, config)
 
     def _test(self, name=''):
         """Run tests under tests
