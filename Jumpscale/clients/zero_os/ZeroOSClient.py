@@ -19,3 +19,13 @@ class ZeroOSClient(j.application.JSBaseConfigClass, Node):
     def _init(self):
         client = j.clients.zos_protocol.new(**self.data._ddict)
         Node.__init__(self, client=client)
+
+    def _update_trigger(self, key, value):
+        try:
+            data = {}
+            data.update(self.data._ddict)
+            data[key] = value
+            self.client.data._data_update(data=data)
+        except AttributeError:
+            # not yet initializaed
+            pass
