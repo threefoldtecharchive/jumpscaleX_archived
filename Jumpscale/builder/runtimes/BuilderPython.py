@@ -42,8 +42,12 @@ class BuilderPython(j.builder.system._BaseClass):
         """
         self.profile_home_select()
 
-        j.clients.git.pullGitRepo('https://github.com/python/cpython', dest=self.DIR_CODE_L, depth=1,
-            tag=tag,reset=reset, ssh=False, timeout=20000)
+        if not self.tools.dir_exists(self._replace("{DIR_CODE_L}/cpython")):
+            self._execute("""
+            cd {DIR_CODE_L}
+            git clone https://github.com/python/cpython
+            """)
+
 
         if j.core.platformtype.myplatform.isMac:
             # clue to get it finally working was in
@@ -129,10 +133,9 @@ class BuilderPython(j.builder.system._BaseClass):
 
         self.profile_sandbox_select()
 
-        self.pip_install()
+        self.profile_builder_set()
 
-
-        j.shell()
+        self._pip_install()
 
 
     def profile_builder_set(self):
@@ -143,11 +146,10 @@ class BuilderPython(j.builder.system._BaseClass):
 
         self.profile.env_set("PYTHONHTTPSVERIFY",0)
 
-        ##WEIRD, would have expected this to work but it doesn't
-        # self.profile.env_set("PYTHONHOME",self._replace("{DIR_BUILD}"))
-        # self.profile.env_set_part("PYTHONPATH",self._replace("{DIR_BUILD}/lib"))
-        # self.profile.env_set_part("PYTHONPATH",self._replace("{DIR_BUILD}/lib/python3.7"))
-        # self.profile.env_set_part("PYTHONPATH",self._replace("{DIR_BUILD}/lib/python3.7/site-packages"))
+        self.profile.env_set("PYTHONHOME",self._replace("{DIR_BUILD}"))
+        self.profile.env_set_part("PYTHONPATH",self._replace("{DIR_BUILD}/lib"))
+        self.profile.env_set_part("PYTHONPATH",self._replace("{DIR_BUILD}/lib/python3.7"))
+        self.profile.env_set_part("PYTHONPATH",self._replace("{DIR_BUILD}/lib/python3.7/site-packages"))
 
 
         self.profile.env_set_part("LIBRARY_PATH",self._replace("{PATH_OPENSSL}/lib"))
@@ -237,7 +239,7 @@ class BuilderPython(j.builder.system._BaseClass):
 
 
     @builder_method()
-    def sandbox(self):
+    def sandbox(self, reset=False, zhub_client=None, flist_create=False):
         """
         js_shell 'j.builder.runtimes.python.sandbox()'
         :return:
