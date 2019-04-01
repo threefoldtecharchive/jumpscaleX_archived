@@ -53,7 +53,8 @@ class builder_method(object):
                     zhub_client.ping()  # should do a test it works
                 kwargs["zhub_client"] = zhub_client
 
-            if name in ["start", "stop", "running"]:
+
+            if name in ["start", "stop", "running", "_init"]:
                 self.done_check = False
 
             if not self.done_check or not builder._done_check(done_key, reset):
