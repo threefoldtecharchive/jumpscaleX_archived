@@ -91,9 +91,9 @@ e.g. self.bash.profile is very useful
 
 ### .sandbox(zhub_client)
 
-- copy all required files from /sandbox (NO OTHER LOCATION)  to self.DIR_PACKAGE
-    - example: a binary loacted in `/sanbox/bin/{name}` should be copied to `{DIR_PACKAGE}/sandbox/bin/{name}`
-    - directory structure as how it will be in flist and the container but chroot = `{DIR_PACKAGE}`
+- copy all required files from /sandbox (NO OTHER LOCATION)  to self.DIR_SANDBOX
+    - example: a binary loacted in `/sanbox/bin/{name}` should be copied to `{DIR_SANDBOX}/sandbox/bin/{name}`
+    - directory structure as how it will be in flist and the container but chroot = `{DIR_SANDBOX}`
 - this method will call: self._flist_create(zhub_client=zhub_client) which will create flist & upload to your zhub
 - will return: the flist url 
 
@@ -120,7 +120,7 @@ e.g. self.bash.profile is very useful
 
 ### _replace(txt)
 
-will replace arguments like {DIR_PACKAGE} but also arguments from  j.core.myenv.config inside the text
+will replace arguments like {DIR_SANDBOX} but also arguments from  j.core.myenv.config inside the text
 
 ### ._write(path,txt)
 
