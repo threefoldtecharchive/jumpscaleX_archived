@@ -67,7 +67,7 @@ class Coredns(Service):
         create configuration of coredns and upload it in the container
         """
 
-        self._log_info('Creating coredns config for %s' % self.name)
+        j.tools.logger._log_info('Creating coredns config for %s' % self.name)
 
         config = self._config_as_text()
         self.container.upload_content(self._config_path, config)
@@ -86,7 +86,7 @@ class Coredns(Service):
         if self.is_running():
             return
 
-        self._log_info('start coredns %s' % self.name)
+        j.tools.logger._log_info('start coredns %s' % self.name)
 
         self.deploy()
         self.create_config()

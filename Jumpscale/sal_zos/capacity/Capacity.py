@@ -92,7 +92,7 @@ class Capacity:
         try:
             _, resp = client.api.RegisterCapacity(data)
         except requests.exceptions.HTTPError as err:
-            self._log_error("error pusing total capacity to the directory: %s" % err.response.content)
+            j.tools.logger._log_error("error pusing total capacity to the directory: %s" % err.response.content)
 
     def update_reality(self):
         farmer_id = self._node.kernel_args.get('farmer_id')

@@ -252,7 +252,7 @@ class Zerodb(Service):
         if self.is_running():
             return
 
-        self._log_info('start zerodb %s' % self.name)
+        j.tools.logger._log_info('start zerodb %s' % self.name)
 
         cmd = '/bin/zdb \
             --port {port} \

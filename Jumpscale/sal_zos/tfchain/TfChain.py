@@ -58,7 +58,7 @@ class TfChainDaemon:
         if not self.is_running():
             return
 
-        self._log_debug('stop %s', self)
+        j.tools.logger._log_debug('stop %s', self)
         self.container.stop_job(self.id, signal=signal.SIGINT, timeout=timeout)
 
     def is_running(self):
@@ -124,7 +124,7 @@ class TfChainExplorer:
         if self.is_running():
             return
 
-        self._log_info('Creating caddy config for %s' % self.name)
+        j.tools.logger._log_info('Creating caddy config for %s' % self.name)
         config_location = '/mnt/explorer/explorer/caddy/Caddyfile'
         config = templates.render('tf_explorer_caddy.conf', domain=self.domain)
         self.container.upload_content(config_location, config)
@@ -150,14 +150,14 @@ class TfChainExplorer:
         if not self._is_tf_running():
             return
 
-        self._log_debug('stop tf daemon %s', self)
+        j.tools.logger._log_debug('stop tf daemon %s', self)
         self.container.stop_job(self.tf_ps_id, signal=signal.SIGINT, timeout=timeout)
 
     def _stop_caddy_daemon(self, timeout=30):
         if not self._is_caddy_running():
             return
 
-        self._log_debug('stop caddy %s', self)
+        j.tools.logger._log_debug('stop caddy %s', self)
         self.container.stop_job(self.caddy_ps_id, signal=signal.SIGINT, timeout=timeout)
 
     def is_running(self):
