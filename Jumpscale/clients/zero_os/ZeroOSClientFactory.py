@@ -122,3 +122,51 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
         self._log_debug("zerotier IP: %s" % ipaddr_priv)
 
         return ip_pub, ipaddr_priv
+
+    def get_from_itsyouonline(self, name="default", iyo_instance="default",
+                              iyo_organization=None, host="localhost", port=6379, reset=False, save=True):
+        """
+
+        :param name: name for this instance
+        :param iyo_instance: the instance name of the IYO client you will use
+        :param iyo_organization: the organization in IYO to connect
+        :param host: addr of the zos
+        :param port: por tof the zos (for the redis protocol)
+        :param reset: to refresh you'r jwt
+        :param save: if the resulting client will be stored on your bcdb
+        :return:
+        """
+
+        if iyo_organization is None:
+            raise RuntimeError("need to specify name of organization.")
+
+        jwt_name = j.core.text.strip_to_ascii_dense("zos_%s" % iyo_organization)
+
+        iyo = j.clients.itsyouonline.get(name=iyo_instance)
+        jwt = iyo.jwt_get(name=jwt_name, scope="user:memberof:%s" % iyo_organization,
+                          reset=reset)  # there should be enough protection in here to refresh
+
+        # print(jwt)
+
+        cl = self.get(name=name, host=host, port=port, password=jwt.jwt, ssl=True)
+        print(cl)
+        cl.ping()
+        if save:
+            cl.save()
+        return cl
+
+    def test(self):
+        """
+        js_shell 'j.clients.zos.test()'
+        :return:
+        """
+
+        cl = j.clients.zos.get_from_itsyouonline(
+            name="default", host="10.102.90.219", port=6379, iyo_organization="tf-production", reset=True)
+
+        print(cl)
+
+        print(cl.ping())
+
+        # use j.clients.zoscmd... to start a local zos
+        # connect client to zos do quite some tests
