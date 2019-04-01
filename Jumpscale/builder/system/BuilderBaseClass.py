@@ -83,13 +83,13 @@ class BuilderBaseClass(BaseClass):
     doc in /sandbox/code/github/threefoldtech/jumpscaleX/docs/Internals/Builders.md
     """
     def __init__(self):
-        BaseClass.__init__(self)
         if hasattr(self.__class__,"NAME"):
             assert isinstance(self.__class__.NAME,str)
             self.DIR_BUILD = "/tmp/builders/{}".format(self.__class__.NAME)
             self.DIR_SANDBOX = "/tmp/package/{}".format(self.__class__.NAME)
 
         self._bash = None
+        BaseClass.__init__(self)
 
     def state_sandbox_set(self):
         """
@@ -179,7 +179,7 @@ class BuilderBaseClass(BaseClass):
 
     def _profile_sandbox_set(self):
 
-        self._bash = j.tools.bash.get("/sandbox/env.sh")
+        self._bash = j.tools.bash.get("/sandbox")
 
         self.profile.state = "sandbox"
 

@@ -262,7 +262,7 @@ class Profile(j.application.JSBaseClass):
                 "WARNING: locale has been fixed, please do: "
                 "`source ~/.profile_js`")
             self.locale_fix()
-            self._save(True)
+            self._save()
 
     def locale_fix(self, reset=False):
         items = self.locale_items_get()

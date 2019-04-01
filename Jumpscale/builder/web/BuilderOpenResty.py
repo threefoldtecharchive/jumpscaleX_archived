@@ -129,7 +129,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         if reset:
             self.reset()
 
-        j.tools.bash.get().locale_check()
+        j.tools.bash.get().profile.locale_check()
 
         if j.core.platformtype.myplatform.isUbuntu:
             self._build_prepare()

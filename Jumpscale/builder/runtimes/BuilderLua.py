@@ -33,7 +33,7 @@ class BuilderLua(j.builder.system._BaseClass):
         if j.core.platformtype.myplatform.isUbuntu:
             j.builder.system.package.install(['libsqlite3-dev'])
 
-        j.tools.bash.get().locale_check()
+        j.tools.bash.get().profile.locale_check()
         # need openresty & openssl to start from
         j.builder.web.openresty.build(reset)
         j.builder.libs.openssl.build(reset)
