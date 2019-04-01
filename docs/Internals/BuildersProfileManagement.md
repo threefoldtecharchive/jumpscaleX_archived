@@ -1,18 +1,16 @@
 # profile management
 
-there are 2 profiles in the builders
+there are 3 profiles in the builders
 
-- home, is te default one, uses the home dir as base & uses the system environments
+- home
 - building 
-- sandbox
-
+- sandbox, is the default one
 
 ## how to select a profile
 
-- profile_home_select()  #is the default
-- profile_sandbox_select()
+- profile_home_select()  
+- profile_sandbox_select() #is the default
 - profile_builder_select()
-
 
 ## default profile for building is
 
@@ -58,7 +56,7 @@ def profile_builder_set(self):
     self.profile.env_set("PYTHONHTTPSVERIFY",0)
     self.profile.env_set("PYTHONHOME",self._replace("{DIR_BUILD}"))
 
-    self.profile.env_set_part("LIBRARY_PATH",self._replace("{PATH_OPENSSL}/lib"))
+    self.profile.env_set_part("LIBRARY_PATH",self._replace("{PATH_OPENSSL}/lib"),end=True)
 
     self.profile.env_set_part("CPPPATH",self._replace("{DIR_BUILD}/include/python3.7m"))
     self.profile.env_set_part("CPPPATH",self._replace("{PATH_OPENSSL}/include"))

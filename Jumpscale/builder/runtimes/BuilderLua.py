@@ -243,7 +243,7 @@ class BuilderLua(j.builder.system._BaseClass):
         if self._done_check('sandbox', reset):
             return
         self.install(reset=reset)
-        dest_path = self.DIR_PACKAGE
+        dest_path = self.DIR_SANDBOX
         j.builder.web.openresty.sandbox(dest_path=dest_path, reset=reset)
 
         bins = ['lua', '_lapis.lua', '_moonc.lua', '_moon.lua', '_moonrocks.lua']

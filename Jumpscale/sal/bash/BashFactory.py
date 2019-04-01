@@ -39,31 +39,33 @@ class BashFactory(j.application.JSBaseClass):
         :return:
         """
 
-        bash = self.get(profile_path="/tmp/env.sh")
+        bash = self.get(path="/tmp/")
         p = bash.profile
         p.delete()
 
-        assert p.paths == ['/sandbox/bin', '/usr/local/bin', '/usr/bin']
+        assert p.paths == []
 
         p.path_add("/tmp/1/",check_exists=False)
-        assert p.paths == ["/tmp/1", '/sandbox/bin', '/usr/local/bin', '/usr/bin']
+
+        assert p.paths == ['/tmp/1', '/bin', '/sbin', '/usr/bin', '/usr/sbin', '/usr/local/bin', '/usr/local/sbin']
         p.path_add("/tmp/1/",check_exists=False)
-        assert p.paths == ["/tmp/1", '/sandbox/bin', '/usr/local/bin', '/usr/bin']
+        assert p.paths == ['/tmp/1', '/bin', '/sbin', '/usr/bin', '/usr/sbin', '/usr/local/bin', '/usr/local/sbin']
         p.path_add("/tmp/2",end=True,check_exists=False)
-        assert p.paths == ['/tmp/1', '/sandbox/bin', '/usr/local/bin', '/usr/bin', '/tmp/2']
+        assert p.paths == ['/tmp/1', "/tmp/2", '/bin', '/sbin', '/usr/bin', '/usr/sbin', '/usr/local/bin', '/usr/local/sbin']
 
-        assert p.env == {'PATH': '/tmp/1:/sandbox/bin:/usr/local/bin:/usr/bin:/tmp/2'}
+
+        assert p.env == {'PATH': '/tmp/1:/tmp/2:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin'}
 
         p.path_delete("/tmp/1")
 
-        assert p.env == {'PATH': '/sandbox/bin:/usr/local/bin:/usr/bin:/tmp/2'}
+        assert p.env == {'PATH': '/tmp/2:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin'}
 
         p.env_set_part("TEST","A",1)
 
         p.env_set_part("TEST","A")
         p.env_set_part("TEST","B")
 
-        assert p.env == {'PATH': '/sandbox/bin:/usr/local/bin:/usr/bin:/tmp/2', 'TEST': 'B:A'}
+        assert p.env == {'PATH': '/tmp/2:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin', 'TEST': 'B:A'}
 
         self._log_info ("TEST FOR j.tools.bash is OK")
 

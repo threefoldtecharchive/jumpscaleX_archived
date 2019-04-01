@@ -100,7 +100,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
     #
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
-        bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox".format(self.DIR_PACKAGE))
+        bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX))
         self.tools.dir_ensure(bin_dest)
         caddy_bin_path = self.tools.joinpaths("{go_path}/src/github.com/mholt/caddy/caddy".format(go_path=self.go_runtime.DIR_GO_PATH), self.NAME)
         self.tools.file_copy(caddy_bin_path, bin_dest)

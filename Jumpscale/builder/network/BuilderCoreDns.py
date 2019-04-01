@@ -70,11 +70,11 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         print("#TODO:*1")
         j.shell()
         coredns_bin = j.sal.fs.joinPaths(self._package_path, 'coredns')
-        dir_dest = j.sal.fs.joinPaths(self.DIR_PACKAGE, coredns_bin[1:])
+        dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, coredns_bin[1:])
         j.builder.tools.dir_ensure(dir_dest)
         j.sal.fs.copyFile(coredns_bin, dir_dest)
 
-        dir_dest = j.sal.fs.joinPaths(self.DIR_PACKAGE, self.DIR_PACKAGE, 'etc/ssl/certs/')
+        dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, self.DIR_SANDBOX, 'etc/ssl/certs/')
         j.builder.tools.dir_ensure(dir_dest)
         j.sal.fs.copyDirTree('/etc/ssl/certs', dir_dest)
 

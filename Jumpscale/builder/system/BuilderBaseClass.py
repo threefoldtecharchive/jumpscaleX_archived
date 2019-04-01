@@ -87,7 +87,7 @@ class BuilderBaseClass(BaseClass):
         if hasattr(self.__class__,"NAME"):
             assert isinstance(self.__class__.NAME,str)
             self.DIR_BUILD = "/tmp/builders/{}".format(self.__class__.NAME)
-            self.DIR_PACKAGE = "/tmp/package/{}".format(self.__class__.NAME)
+            self.DIR_SANDBOX = "/tmp/package/{}".format(self.__class__.NAME)
 
         self._bash = None
 
@@ -210,7 +210,7 @@ class BuilderBaseClass(BaseClass):
     @property
     def bash(self):
         if not self._bash:
-            self._bash = j.tools.bash.home
+            self._bash = j.tools.bash.sandbox
         return self._bash
 
     @property
@@ -379,12 +379,12 @@ class BuilderBaseClass(BaseClass):
         :return: the flist url
         """
 
-        # self.copy_dirs(self.root_dirs, self.DIR_PACKAGE)
-        # self.write_files(self.root_files, self.DIR_PACKAGE)
+        # self.copy_dirs(self.root_dirs, self.DIR_SANDBOX)
+        # self.write_files(self.root_files, self.DIR_SANDBOX)
 
         # if self.startup:
         #     #TODO differently, use info from self.startup_cmds
-        #     file_dest = j.sal.fs.joinPaths(self.DIR_PACKAGE, '.startup.toml')
+        #     file_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, '.startup.toml')
         #     j.builder.tools.file_ensure(file_dest)
         #     j.builder.tools.file_write(file_dest, self.startup)
 
@@ -394,17 +394,17 @@ class BuilderBaseClass(BaseClass):
 
 
         if j.core.platformtype.myplatform.isLinux:
-            ld_dest = j.sal.fs.joinPaths(self.DIR_PACKAGE, 'lib64/')
+            ld_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'lib64/')
             j.builder.tools.dir_ensure(ld_dest)
             j.sal.fs.copyFile('/lib64/ld-linux-x86-64.so.2', ld_dest)
 
         # if zhub_client:
         #for now only upload to HUB
         self._log_info("uploading flist to the hub")
-        return zhub_client.sandbox_upload(self.NAME, self.DIR_PACKAGE)
+        return zhub_client.sandbox_upload(self.NAME, self.DIR_SANDBOX)
         # else:
         #     tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
-        #     j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, self.DIR_PACKAGE))
+        #     j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, self.DIR_SANDBOX))
         #     return tarfile
 
 

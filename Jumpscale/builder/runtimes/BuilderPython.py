@@ -17,13 +17,13 @@ class BuilderPython(j.builder.system._BaseClass):
             rc,out,err=j.sal.process.execute("brew --prefix openssl")
             self.PATH_OPENSSL=out.strip()
 
-        self.DIR_PACKAGE = j.core.tools.text_replace("{DIR_VAR}/build/sandbox_digitalme/")
-        j.sal.fs.createDir(self.DIR_PACKAGE)
+        self.DIR_SANDBOX = j.core.tools.text_replace("{DIR_VAR}/build/sandbox_digitalme/")
+        j.sal.fs.createDir(self.DIR_SANDBOX)
 
     def clean(self):
-        j.sal.fs.remove(self.DIR_BUILD)
-        j.sal.fs.remove(self.DIR_CODE_L)
-        j.sal.fs.remove(self.DIR_PACKAGE)
+        self._remove("{DIR_BUILD}")
+        self._remove(self.DIR_CODE_L)
+        self._remove(self.DIR_SANDBOX)
 
     @builder_method()
     def build(self, tag="v3.7.2",reset=False): #"v3.6.7"
@@ -94,12 +94,9 @@ class BuilderPython(j.builder.system._BaseClass):
             make -j8 EXTRATESTOPTS=--list-tests install
             """
 
-        self._write("%s/mycompile_all.sh" % self.DIR_CODE_L, script)
-
         self._log_info("compiling python3...")
-        self._log_debug(script)
 
-        self._execute("bash %s/mycompile_all.sh" % self.DIR_CODE_L)
+        self._execute(script)
 
 
     @builder_method()
@@ -197,10 +194,13 @@ class BuilderPython(j.builder.system._BaseClass):
     @builder_method()
     def _pip_packages_all(self):
         """
-        kosmos 'j.builder.runtimes.python.pip_packages_all()'
+        kosmos 'j.builder.runtimes.python._pip_packages_all()'
         """
 
-        j.builder.libs.capnp.install()
+        self.profile_builder_select()
+
+        j.builder.libs.capnp.build()
+        self.pip_package_install(['cython', 'setuptools', 'pycapnp'])  #DOES NOT WORK YET
 
         # list comes from /sandbox/code/github/threefoldtech/jumpscale_core/install/InstallTools.py
         self.pip_package_install(j.core.installer_ubuntu.pips_list())
@@ -217,7 +217,7 @@ class BuilderPython(j.builder.system._BaseClass):
     def pip_package_install(self, pips):
         pips = j.core.text.getList(pips, "str")
         if len(pips)==1:
-            self._execute("pip3 install --trusted-host pypi.python.org '{PACKAGE}'",args={"PACKAGE":pips[0]})
+            self._execute("pip3 install --trusted-host pypi.python.org '{PACKAGE}' --upgrade",args={"PACKAGE":pips[0]})
         else:
             for item in pips:
                 self.pip_package_install(item)
@@ -242,9 +242,9 @@ class BuilderPython(j.builder.system._BaseClass):
         js_shell 'j.builder.runtimes.python.sandbox()'
         :return:
         """
-        path=self._replace("{DIR_PACKAGE}/bin/")
+        path=self._replace("{DIR_SANDBOX}/bin/")
         j.tools.sandboxer.libs_sandbox(path,path,True)
-        path=j.core.tools.text_replace("{DIR_PACKAGE}/lib/pythonbin/",args=self.__dict__)
+        path=j.core.tools.text_replace("{DIR_SANDBOX}/lib/pythonbin/",args=self.__dict__)
         j.tools.sandboxer.libs_sandbox(path,path,True)
 
     def _copy2sandbox_github(self):
@@ -271,7 +271,7 @@ class BuilderPython(j.builder.system._BaseClass):
         if not j.sal.fs.exists("%s/bin/python3.7" % path):
             raise RuntimeError("am not in compiled python dir, need to find %s/bin/python3.7" % path)
 
-        dest = self.DIR_PACKAGE
+        dest = self.DIR_SANDBOX
 
         # j.sal.fs.remove(dest)
         # j.sal.fs.createDir(dest)
@@ -367,14 +367,14 @@ class BuilderPython(j.builder.system._BaseClass):
 
         if j.core.platformtype.myplatform.isMac:
             C = """
-            mv {DIR_PACKAGE}/lib/python/_sysconfigdata_m_darwin_darwin.py {DIR_PACKAGE}/lib/pythonbin/_sysconfigdata_m_darwin_darwin.py
-            rm -rf {DIR_PACKAGE}/lib/python/config-3.6m-darwin
+            mv {DIR_SANDBOX}/lib/python/_sysconfigdata_m_darwin_darwin.py {DIR_SANDBOX}/lib/pythonbin/_sysconfigdata_m_darwin_darwin.py
+            rm -rf {DIR_SANDBOX}/lib/python/config-3.6m-darwin
     
             """
         else:
             C = """
-            mv {DIR_PACKAGE}/lib/python/_sysconfigdata_m_linux_x86_64-linux-gnu.py {DIR_PACKAGE}/lib/pythonbin/_sysconfigdata_m_linux_x86_64-linux-gnu.py
-            rm -rf {DIR_PACKAGE}/lib/python/config-3.6m-x86_64-linux-gnu
+            mv {DIR_SANDBOX}/lib/python/_sysconfigdata_m_linux_x86_64-linux-gnu.py {DIR_SANDBOX}/lib/pythonbin/_sysconfigdata_m_linux_x86_64-linux-gnu.py
+            rm -rf {DIR_SANDBOX}/lib/python/config-3.6m-x86_64-linux-gnu
     
             """
 
@@ -397,7 +397,7 @@ class BuilderPython(j.builder.system._BaseClass):
         ignorefiles = ['.egg-info', ".pyc", "_64-linux-gnu.py"]
 
         path = j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_base.git")
-        src0 = "%s/lib/python" % self.DIR_PACKAGE
+        src0 = "%s/lib/python" % self.DIR_SANDBOX
         dest0 = "%s/base/lib/python" % path
         j.sal.fs.createDir(dest0)
 
@@ -407,7 +407,7 @@ class BuilderPython(j.builder.system._BaseClass):
         if j.core.platformtype.myplatform.isUbuntu:
             url = "git@github.com:threefoldtech/sandbox_ubuntu.git"
             path = j.clients.git.getContentPathFromURLorPath(url)
-            src0 = "%s/lib/pythonbin/" % self.DIR_PACKAGE
+            src0 = "%s/lib/pythonbin/" % self.DIR_SANDBOX
             dest0 = "%s/base/lib/pythonbin/" % path
             j.sal.fs.createDir(dest0)
             j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
@@ -416,7 +416,7 @@ class BuilderPython(j.builder.system._BaseClass):
         if j.core.platformtype.myplatform.isMac:
             url = "git@github.com:threefoldtech/sandbox_osx.git"
             path = j.clients.git.getContentPathFromURLorPath(url)
-            src0 = "%s/lib/pythonbin/" % self.DIR_PACKAGE
+            src0 = "%s/lib/pythonbin/" % self.DIR_SANDBOX
             dest0 = "%s/base/lib/pythonbin/" % path
             j.sal.fs.createDir(dest0)
             j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,

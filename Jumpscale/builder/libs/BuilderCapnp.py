@@ -50,7 +50,7 @@ class BuilderCapnp(j.builder.system._BaseClass):
         """
 
         self.build()
-        self.prefab.runtimes.pip.multiInstall(['cython', 'setuptools', 'pycapnp'], upgrade=True)
+        j.builder.runtimes.python.pip_package_install(['cython', 'setuptools', 'pycapnp'])
 
         self._done_set('capnp')
 
