@@ -1,49 +1,25 @@
-from Jumpscale import j
+import time
 from urllib.parse import urlparse
-from .Client import Client
+
+from Jumpscale import j
+from .ZeroOSClient import ZeroOSClient
 
 
 class ZeroOSFactory(j.application.JSBaseConfigsClass):
     """
     """
-    _CHILDCLASS = Client
-    __jslocation__ = "j.clients.zos_protocol"
-
-    def _init(self):
-        self.connections = {}
-
-    # def list(self, prefix=''):
-    #     return j.clients.zos.list(prefix=prefix)
-    #
-    # def count(self):
-    #     return j.clients.zos.count()
-    #
-    # def delete(self, name):
-    #     return j.clients.zos.delete(name)
-    #
-    # def exists(self, name):
-    #     return j.clients.zos.exists(name)
-    #
-    # def getall(self):
-    #     return j.clients.zos.getall()
-    #
-    # def new(self, name, data={}):
-    #     return j.clients.zos.new(name=name, **data)
+    _CHILDCLASS = ZeroOSClient
+    __jslocation__ = "j.clients.zos"
 
     def get_by_id(self, node_id):
-        """
-        get zos client based on id in the ThreeFold Directory
-        :param node_id:
-        :return:
-        """
         directory = j.clients.threefold_directory.get()
         node, resp = directory.api.GetCapacity(node_id)
         resp.raise_for_status()
         u = urlparse(node.robot_address)
         node = self.get(node_id)
-        if node.host != u.hostname:
-            node.host = u.hostname
-            node.save()
+        if node.client.config.data['host'] != u.hostname:
+            node.client.config.data_set('host', u.hostname)
+            node.client.config.save()
         return self.get(node_id)
 
     def zero_node_ovh_install(self, OVHHostName, OVHClient, zerotierNetworkID, zerotierClient):
@@ -52,7 +28,7 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
         OVHHostName is server name as known by OVH
 
         get clients as follows:
-        - zerotierClient = j.clients.zerotier.get(name='main', data={'data': ZT_API_TOKEN})
+        - zerotierClient = j.clients.zerotier.get(instance='main', data={'data': ZT_API_TOKEN})
         - OVHClient = j.clients.ovh.get(...)
 
         """
@@ -86,12 +62,11 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
 
         return ip_pub, ipaddr_priv
 
-    def zero_node_packetnet_install(
-            self, packetnetClient, zerotierClient, project_name, plan_type, location, server_name, zerotierNetworkID,
-            ipxe_base='https://bootstrap.grid.tf/ipxe/master'):
+    def zero_node_packetnet_install(self, packetnetClient, zerotierClient, project_name,
+                                    plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.grid.tf/ipxe/master'):
         """
         packetnetClient = j.clients.packetnet.get('TOKEN')
-        zerotierClient = j.clients.zerotier.get(name='main', data={'token': 'TOKEN'})
+        zerotierClient = j.clients.zerotier.get(instance='main', data={'token': 'TOKEN'})
         project_name = packet.net project
         plan_type: one of "Type 0", "Type 1", "Type 2" ,"Type 2A", "Type 3", "Type S"
         location: one of "Amsterdam", "Tokyo", "Synnuvale", "Parsippany"
@@ -147,51 +122,3 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
         self._log_debug("zerotier IP: %s" % ipaddr_priv)
 
         return ip_pub, ipaddr_priv
-
-    def get_from_itsyouonline(self, name="default", iyo_instance="default",
-                              iyo_organization=None, host="localhost", port=6379, reset=False, save=True):
-        """
-
-        :param name: name for this instance
-        :param iyo_instance: the instance name of the IYO client you will use
-        :param iyo_organization: the organization in IYO to connect
-        :param host: addr of the zos
-        :param port: por tof the zos (for the redis protocol)
-        :param reset: to refresh you'r jwt
-        :param save: if the resulting client will be stored on your bcdb
-        :return:
-        """
-
-        if iyo_organization is None:
-            raise RuntimeError("need to specify name of organization.")
-
-        jwt_name = j.core.text.strip_to_ascii_dense("zos_%s" % iyo_organization)
-
-        iyo = j.clients.itsyouonline.get(name=iyo_instance)
-        jwt = iyo.jwt_get(name=jwt_name, scope="user:memberof:%s" % iyo_organization,
-                          reset=reset)  # there should be enough protection in here to refresh
-
-        # print(jwt)
-
-        cl = self.get(name=name, host=host, port=port, password=jwt.jwt, ssl=True)
-        print(cl)
-        cl.ping()
-        if save:
-            cl.save()
-        return cl
-
-    def test(self):
-        """
-        js_shell 'j.clients.zos.test()'
-        :return:
-        """
-
-        cl = j.clients.zos.get_from_itsyouonline(
-            name="default", host="10.102.90.219", port=6379, iyo_organization="tf-production", reset=True)
-
-        print(cl)
-
-        print(cl.ping())
-
-        # use j.clients.zoscmd... to start a local zos
-        # connect client to zos do quite some tests
