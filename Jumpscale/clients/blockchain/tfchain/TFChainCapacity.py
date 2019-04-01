@@ -135,6 +135,30 @@ class TFChainCapacity():
     def reserve_zdb_namespace(self, email, threebot_id, location, size=1,
                               disk_type='ssd', mode='seq', password=None,
                               source=None, refund=None):
+        """
+        reserve an 0-DB namespace
+
+        :param email: email address on which to send the connection information
+        :type email: string
+        :param threebot_id: name or address of your threebot
+        :type threebot_id: string
+        :param size: size of the namespace in GB, defaults to 1
+        :type size: int, optional
+        :param disk_type: type of disk used for the 0-db
+                          can be or 'ssd' or 'hdd'
+        :type disk_type: string
+        :param mode: 0-db mode, for more detail see: https://github.com/threefoldtech/0-db#running-modes
+                     valid values are: 'seq' or 'user'
+        :type mode: string
+        :param password: is specified, the namespace will required authentication using the password
+        :type password: string
+        :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
+        :type source: string, optional
+        :param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
+        :type refund: string, optional
+        :return: a tuple containing the transaction and the submission status as a boolean
+        :rtype: tuple
+        """
         reservation = j.data.schema.get(url='tfchain.reservation.zdb_namespace').new(data={
             'type': 'namespace',
             'size': size,
@@ -150,6 +174,29 @@ class TFChainCapacity():
 
     def reserve_reverse_proxy(self, email, threebot_id, domain, backend_urls,
                               source=None, refund=None):
+        """
+        reserve a HTTP reverse proxy
+
+
+        :param email: email address on which to send the connection information
+        :type email: string
+        :param threebot_id: name or address of your threebot
+        :type threebot_id: string
+        :param domain: the domain name you want to proxy from
+        :type domain: string
+        :param backend_urls: List of http url of your backend
+                             the proxy will forward incoming requests on domain and forward it
+                             to the backend. If multiple url are specified, round robin is used.
+                             Format of the url should be a full url with port.
+                             example: http://10.244.1.10:8080
+        :type backend_urls: list
+        :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
+        :type source: string, optional
+        :param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
+        :type refund: string, optional
+        :return: a tuple containing the transaction and the submission status as a boolean
+        :rtype: tuple
+        """
         reservation = j.data.schema.get(url='tfchain.reservation.reverse_proxy').new(data={
             'type': 'namespace',
             'email': email,
