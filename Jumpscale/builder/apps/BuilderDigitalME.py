@@ -46,6 +46,16 @@ class BuilderDigitalME(j.builder.system._BaseClass):
         cmd = j.tools.startupcmd.get("openresty", "openresty", cmd_stop="openresty -s stop", path="/sandbox/bin")
         return [cmd]
 
+
+    def gslides(self):
+        """
+        kosmos 'j.builder.apps.digitalme.gslides()'
+        google slides option
+        :return:
+        """
+        j.shell()
+        "google-api-python-client,google-auth-httplib2,google-auth-oauthlib"
+
     def test(self, zos_client=None):
         """
         j.builder.apps.digitalme.test()

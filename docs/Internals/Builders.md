@@ -27,9 +27,13 @@ they are under self.tools
 
 ### .system:  Some System Tools
 
-see [BuildersInternalSystemLib](BuildersInternalSystemLib.md)
+see [Builders Internal System Lib](BuildersInternalSystemLib.md)
 
 they are under self.system
+
+### profile management
+
+see [Builders Profile Management](BuildersProfileManagement.md)
 
 ### bash
 

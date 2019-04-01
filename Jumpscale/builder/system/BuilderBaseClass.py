@@ -2,7 +2,7 @@ from Jumpscale import j
 
 BaseClass = j.application.JSBaseClass
 
-
+from Jumpscale.sal.bash.Profile import Profile
 
 class builder_method(object):
 
@@ -23,8 +23,10 @@ class builder_method(object):
             args=args[1:]
             name= func.__name__
 
+            done_key = name+"_"+j.data.hash.md5_string(str(args)+str(kwargs))
+
             if self.log:
-                builder._log_debug("do once:%s"%name)
+                builder._log_debug("do once:%s"%name,data=kwargs)
 
             if "reset" in kwargs:
                 reset = j.data.types.bool.clean(kwargs["reset"])
@@ -55,7 +57,7 @@ class builder_method(object):
             if name in ["start", "stop", "running"]:
                 self.done_check = False
 
-            if not self.done_check or not builder._done_check(name, reset):
+            if not self.done_check or not builder._done_check(done_key, reset):
                 if self.log:
                     builder._log_debug("action:%s() start"%name)
                 res = func(builder,*args,**kwargs)
@@ -64,14 +66,14 @@ class builder_method(object):
                     res = builder._flist_create(zhub_client=zhub_client)
 
                 if self.done_check:
-                    builder._done_set(name)
+                    builder._done_set(done_key)
 
                 if self.log:
                     builder._log_debug("action:%s() done -> %s"%(name,res))
 
                 return res
             else:
-                builder._log_debug("action:%s() no need to do, was already done"%name)
+                builder._log_debug("action:%s() no need to do, was already done"%done_key)
 
         return wrapper_action
 
@@ -87,10 +89,133 @@ class BuilderBaseClass(BaseClass):
             self.DIR_BUILD = "/tmp/builders/{}".format(self.__class__.NAME)
             self.DIR_PACKAGE = "/tmp/package/{}".format(self.__class__.NAME)
 
+        self._bash = None
+
+    def state_sandbox_set(self):
+        """
+        bring builde in sandbox state
+        :return:
+        """
+        self.state = self.state.SANDBOX
+        self._bash = None
+        
+    def profile_home_select(self):
+        if self.profile.state == "home":
+            return
+        self._profile_home_set()
+
+    def profile_home_set(self):
+        pass
+
+    def _profile_home_set(self):
+
+        self._bash = j.tools.bash.get(self._replace("{DIR_HOME}"))
+        self.profile.state = "home"
+
+        self.profile_home_set()
+
+        self._profile_defaults_system()
+
+        self.profile.env_set("PS1","HOME: ")
+
+        self._log_info("home profile path in:%s"%self.profile.profile_path)
+
+
+    def profile_builder_select(self):
+        if self.profile.state == "builder":
+            return
+        self._profile_builder_set()
+
+    def profile_builder_set(self):
+        pass
+
+    def _profile_defaults_system(self):
+
+        self.profile.env_set("PYTHONHTTPSVERIFY",0)
+
+        self.profile.env_set("LC_ALL","en_US.UTF-8")
+        self.profile.env_set("LANG","en_US.UTF-8")
+
+        self.profile.path_add("${PATH}",end=True)
+
+    def _profile_builder_set(self):
+
+        self._remove("{DIR_BUILD}/env.sh")
+        self._bash = j.tools.bash.get(self._replace("{DIR_BUILD}"))
+
+        self.profile.state = "builder"
+
+        self.profile_builder_set()
+
+        self.profile.env_set_part("LIBRARY_PATH","/usr/lib")
+        self.profile.env_set_part("LIBRARY_PATH","/usr/local/lib")
+        self.profile.env_set_part("LIBRARY_PATH","/lib")
+        self.profile.env_set_part("LIBRARY_PATH","/lib/x86_64-linux-gnu")
+        self.profile.env_set_part("LIBRARY_PATH","$LIBRARY_PATH",end=True)
+
+        self.profile.env_set("LD_LIBRARY_PATH",self.profile.env_get("LIBRARY_PATH")) #makes copy
+        self.profile.env_set("LDFLAGS","-L'%s'"%self.profile.env_get("LIBRARY_PATH"))
+
+        self.profile.env_set_part("CPPPATH","/usr/include")
+        self.profile.env_set("CPATH",self.profile.env_get("CPPPATH"))
+        self.profile.env_set("CPPFLAGS","-I'%s'"%self.profile.env_get("CPPPATH"))
+
+        self.profile.env_set("PS1","PYTHONBUILDENV: ")
+
+        self._profile_defaults_system()
+
+        self.profile.path_add(self._replace("{DIR_BUILD}/bin"))
+
+        self._log_info("build profile path in:%s"%self.profile.profile_path)
+
+    def profile_sandbox_select(self):
+        if self.profile.state == "sandbox":
+            return
+        self._profile_sandbox_set()
+
+
+    def profile_sandbox_set(self):
+        pass
+
+    def _profile_sandbox_set(self):
+
+        self._bash = j.tools.bash.get("/sandbox/env.sh")
+
+        self.profile.state = "sandbox"
+
+        self.profile.path_add("/sandbox/bin")
+
+        self.profile.env_set("PYTHONHTTPSVERIFY",0)
+
+        self.profile.env_set_part("PYTHONPATH","/sandbox/lib")
+        self.profile.env_set_part("PYTHONPATH","/sandbox/lib/jumpscale")
+
+        self.profile.env_set("LC_ALL","en_US.UTF-8")
+        self.profile.env_set("LANG","en_US.UTF-8")
+        self.profile.env_set("PS1","JSX: ")
+
+
+        self.profile_sandbox_set()
+
+        self.profile.path_delete("${PATH}")
+
+        if j.core.platformtype.myplatform.isMac:
+            self.profile.path_add("${PATH}",end=True)
+
+        self.profile.env_set_part("PYTHONPATH","$PYTHONPATH",end=True)
+
+        self._log_info("sandbox profile path in:%s"%self.profile.profile_path)
+
+
     @property
     def bash(self):
-        return j.builder.system.bash
+        if not self._bash:
+            self._bash = j.tools.bash.home
+        return self._bash
 
+    @property
+    def profile(self):
+        return self.bash.profile
 
     def _replace(self, txt,args={}):
         """
@@ -107,7 +232,7 @@ class BuilderBaseClass(BaseClass):
         return res
 
     def _execute(self, cmd, die=True, args={}, timeout=600,
-                 profile=True, replace=True, showout=True, interactive=False):
+                 replace=True, showout=True, interactive=False):
         """
 
         :param cmd:
@@ -123,10 +248,20 @@ class BuilderBaseClass(BaseClass):
             cmd = self._replace(cmd,args=args)
         if cmd.strip() == "":
             raise RuntimeError("cmd cannot be empty")
-        if profile:
-            cmd="%s\n%s"%(self.bash.profile,cmd)
 
-        return j.sal.process.execute(cmd, cwd=None, timeout=timeout, die=die,
+        cmd="cd %s\n. %s\n%s"%(self.bash.path,self.profile.profile_path,cmd)
+        name = self.__class__._name
+        name = name.replace("builder","")
+        path = "%s/builder_%s.sh"%(self.bash.path,name)
+        self._log_debug("execute: '%s'"%path)
+
+        if die:
+            if cmd.find("set -xe")==-1 and cmd.find("set -e")==-1:
+                cmd="set -ex\n%s"%(cmd)
+
+        j.sal.fs.writeFile(path,contents=cmd)
+
+        return j.sal.process.execute("bash %s"%path, cwd=None, timeout=timeout, die=die,
                                              args=args, interactive=interactive, replace=False, showout=showout)
 
     def _copy(self, src, dst, deletefirst=False,ignoredir=None,ignorefiles=None,deleteafter=False):
@@ -158,8 +293,7 @@ class BuilderBaseClass(BaseClass):
         """
         path = self._replace(path)
         txt = self._replace(txt)
-        j.shell()
-
+        j.sal.fs.writeFile(path,txt)
 
     def _remove(self, path):
         """
@@ -190,7 +324,6 @@ class BuilderBaseClass(BaseClass):
         reset the state of your builder, important to let the state checking restart
         :return:
         """
-        self.clean()
         self._done_reset()
 
     @builder_method()
