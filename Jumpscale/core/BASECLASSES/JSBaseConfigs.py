@@ -56,6 +56,7 @@ class JSBaseConfigs(JSBase):
             if(model.name == name):
                 raise RuntimeError("can't create , this name already exist")
         data.name = name
+        
         self._children[name] = kl(parent=self, data=data, **kwargs)
         self._children[name]._isnew = True
         return self._children[name]
@@ -173,8 +174,8 @@ class JSBaseConfigs(JSBase):
         o = self.get(name)
         o.delete()
 
-    def exists(self, **kwargs):
-        res = self.findData(**kwargs)
+    def exists(self, name):
+        res = self.findData(name=name)
         if len(res) > 1:
             raise RuntimeError("found too many items for :%s, args:\n%s\n%s" % (self.__class__.__name__, kwargs, res))
         elif len(res) == 1:
