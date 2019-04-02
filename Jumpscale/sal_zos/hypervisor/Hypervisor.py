@@ -9,7 +9,7 @@ class Hypervisor:
         self.node = node
 
     def create(self, name, flist=None, vcpus=2, memory=2048):
-        self._log_info('Creating kvm %s' % name)
+        j.tools.logger._log_info('Creating kvm %s' % name)
         return ZOS_VM(self.node, name, flist, vcpus, memory)
 
     def list(self):

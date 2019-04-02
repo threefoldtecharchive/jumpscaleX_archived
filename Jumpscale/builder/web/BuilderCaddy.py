@@ -1,4 +1,5 @@
 from Jumpscale import j
+
 builder_method = j.builder.system.builder_method
 
 
@@ -88,6 +89,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
             self.main_file, 'This is where other plugins get plugged in (imported)',
             '_ "%s"' % url
         )
+        self._execute('gofmt -w %s' % self.main_file)
 
         if not directive:
             return
@@ -95,6 +97,8 @@ class BuilderCaddy(j.builder.system._BaseClass):
         self._append_after(
             self.plugins_file, '"prometheus",', '"%s",' % directive
         )
+
+        self._execute('gofmt -w %s' % self.main_file)
 
     def get_plugin(self, name):
         """get a supported plugin
@@ -108,7 +112,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
             raise j.exceptions.RuntimeError('plugin not supported')
 
         url = ALL_PLUGINS[name]
-        self.go_runtime.get(url)
+        self.go_runtime.get(url, install=False)
         self.update_imports_and_directves(url, PLUGIN_DIRECTIVES.get(name))
 
     @builder_method()
@@ -127,28 +131,16 @@ class BuilderCaddy(j.builder.system._BaseClass):
         self.go_runtime.install()
 
         # get caddy and plugins source
-        self.go_runtime.get("github.com/mholt/caddy/caddy")
+        self.go_runtime.get("github.com/mholt/caddy")
         if not plugins:
             plugins = self.PLUGINS
 
-        for plugin in self.PLUGINS:
+        for plugin in plugins:
             self.get_plugin(plugin)
-
-        # gofmt main and plugins file
-        self._execute('gofmt -w %s' % self.main_file)
-        self._execute('gofmt -w %s' % self.plugins_file)
 
         # build caddy
         self.go_runtime.get("github.com/caddyserver/builds")
-        self._execute("cd $GOPATH/src/github.com/mholt/caddy/caddy;go run build.go")
-
-        # # build caddy from source using our caddyman
-        # j.clients.git.pullGitRepo("https://github.com/incubaid/caddyman", dest="/tmp/caddyman")
-        # self.go_runtime._execute("cd /tmp/caddyman && chmod u+x caddyman.sh")
-
-        # cmd = "/tmp/caddyman/caddyman.sh install {plugins}".format(plugins=" ".join(plugins))
-        # self.go_runtime._execute(cmd, timeout=60*60)
-        # self._done_set('build')
+        self._execute("cd $GOPATH/src/github.com/mholt/caddy/caddy;go run build.go && cp caddy $GOPATH/bin")
 
     @builder_method()
     def install(self, plugins=None):
@@ -160,23 +152,24 @@ class BuilderCaddy(j.builder.system._BaseClass):
         kosmos 'j.builder.web.caddy.install()'
 
         """
-        caddy_bin_path = self.tools.joinpaths(self.go_runtime.DIR_GO_PATH_BIN, self.NAME)
-        j.builder.tools.file_copy(caddy_bin_path, '{DIR_BIN}/caddy')
+
+        caddy_bin_path = self.tools.joinpaths(
+            self.go_runtime.DIR_GO_PATH_BIN, self.NAME
+        )
+        j.builder.tools.file_copy(caddy_bin_path, "{DIR_BIN}/caddy")
 
     @property
     def startup_cmds(self):
         cmd = j.tools.startupcmd.get('caddy', 'caddy', path='/sandbox/bin')
         return [cmd]
 
-    def sandbox(self, zhub_client, create_flist=True):
-        dest_path = self.DIR_PACKAGE
-        bin_dest = j.sal.fs.joinPaths(dest_path, 'sandbox', 'bin')
+    @builder_method()
+    def sandbox(self, reset=False, zhub_client=None, flist_create=False):
+        bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX))
         self.tools.dir_ensure(bin_dest)
-        caddy_bin_path = self.tools.joinpaths(self.go_runtime.DIR_GO_PATH_BIN, self.NAME)
+        caddy_bin_path = self.tools.joinpaths(
+            "{go_path}/src/github.com/mholt/caddy/caddy".format(go_path=self.go_runtime.DIR_GO_PATH), self.NAME)
         self.tools.file_copy(caddy_bin_path, bin_dest)
-        if create_flist:
-            print(self.flist_create(sandbox_dir=dest_path, hub_instance=zhub_instance))
-        self._done_set('sandbox')
 
     def _test(self, name=""):
         """Run tests under tests directory
@@ -184,4 +177,4 @@ class BuilderCaddy(j.builder.system._BaseClass):
         :param name: basename of the file to run, defaults to "".
         :type name: str, optional
         """
-        self._test_run(name=name, obj_key='test_main')
+        self._test_run(name=name, obj_key="test_main")

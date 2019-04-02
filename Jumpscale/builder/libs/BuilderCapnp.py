@@ -2,53 +2,63 @@ from Jumpscale import j
 
 JSBASE = j.builder.system._BaseClass
 
+builder_method = j.builder.system.builder_method
 
 class BuilderCapnp(j.builder.system._BaseClass):
 
-    def build(self, reset=False):
+    def _init(self):
+
+        self.DIR_BUILD = j.core.tools.text_replace("{DIR_VAR}/build/capnp")
+        j.sal.fs.createDir(self.DIR_BUILD)
+
+    @builder_method()
+    def build(self):
         """
         install capnp
 
-        js_shell 'j.builder.libs.capnp.build(reset=True)'
+        kosmos 'j.builder.libs.capnp.build(reset=True)'
+        kosmos 'j.builder.libs.capnp.build()'
 
         """
 
-        if self._done_get('capnp') and not reset:
-            return
-
         # self.prefab.system.package.mdupdate()
         j.builder.buildenv.install()
-        if self.prefab.core.isUbuntu:
+        if self.tools.isUbuntu:
             j.builder.system.package.ensure('g++')
 
-        url = "https://capnproto.org/capnproto-c++-0.6.1.tar.gz"
-        dest = j.core.tools.text_replace("{DIR_VAR}/build/capnproto")
-        j.sal.fs.createDir(dest)
-        self.prefab.core.file_download(url, to=dest, overwrite=False, retry=3,
+        # url = "https://capnproto.org/capnproto-c++-0.6.1.tar.gz"
+        url = "https://capnproto.org/capnproto-c++-0.7.0.tar.gz"
+        self.tools.file_download(url, to=self.DIR_BUILD, overwrite=False, retry=3,
                                        expand=True, minsizekb=900, removeTopDir=True, deletedest=True)
 
+        self.profile_builder_select()
+
         script = """
-        cd {DIR_VAR}/build/capnproto
         ./configure
         make -j6 check
         make install
         """
-        j.sal.process.execute(script)
+        self._execute(script)
 
-        self._done_set('capnp')
 
+    @builder_method()
     def install(self):
+        """
+        install capnp
+
+        kosmos 'j.builder.libs.capnp.install()'
+        """
+
         self.build()
-        self.prefab.runtimes.pip.multiInstall(['cython', 'setuptools', 'pycapnp'], upgrade=True)
+        j.builder.runtimes.python.pip_package_install(['cython', 'setuptools', 'pycapnp'])
 
         self._done_set('capnp')
 
-    def test(self, build=False):
+    def test(self):
         """
-        js_shell 'j.builder.buildenv(build=True)'
+        kosmos 'j.builder.builder.libs.capnp.test()'
         """
-        if build:
-            self.build()
+        self.build()
 
         raise RuntimeError("implement")
 

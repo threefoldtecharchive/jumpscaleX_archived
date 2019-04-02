@@ -168,11 +168,11 @@ class BuilderTarantool(j.builder.system._BaseClass):
         LUA = LUA.replace('$passwd', passwd)
         LUA = LUA.replace('$port', str(port))
 
-        luapath = prefab.core.replace('{DIR_TEMP}/tarantool.lua')
+        luapath = tools.replace('{DIR_TEMP}/tarantool.lua')
 
         self._log_info('write lua startup to:%s' % luapath)
 
-        prefab.core.file_write(luapath, LUA)
+        tools.file_write(luapath, LUA)
 
         cmd = 'cd {DIR_TEMP};rm -rf tarantool;mkdir tarantool;cd tarantool;tarantool %s' % luapath
         pm = j.builder.system.processmanager.get()

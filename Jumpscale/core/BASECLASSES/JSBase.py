@@ -349,7 +349,7 @@ class JSBase:
         - DEBUG 	10
 
         """
-        if self.__class__._logger_min_level-1 < level:
+        if j.application.debug or self.__class__._logger_min_level-1 < level:
             #now we will log
 
             frame_ = inspect.currentframe().f_back
