@@ -9,12 +9,12 @@ import ipcalc
 JSConfigClient = j.application.JSBaseConfigClass
 
 
-class NetworkMember():
+class NetworkMember(j.application.JSBaseClass):
     """
     Represent a zerotier network member
     """
 
-    def __init__(self, network, address, data):
+    def _init2(self, network, address, data):
         """
         Initialize new memeber
         """
@@ -65,7 +65,7 @@ class NetworkMember():
         """
         # check if the network is private/public, it does not make sense to authorize on public nets
         if self._network.config['private'] is False:
-            self._log_warn('Cannot authorize on public network.')
+            self._log_warning('Cannot authorize on public network.')
             return
         if self.data['config']['authorized'] != authorize:
             data = copy.deepcopy(self.data)
@@ -78,7 +78,7 @@ class NetworkMember():
                 time.sleep(2)
                 timeout_ -= 2
             if self.data['config']['authorized'] != authorize:
-                self._log_warn(
+                self._log_warning(
                     '{}uthorization request sent but data is not updated after {} seconds'.format(
                         'A' if authorize else 'Dea', timeout))
         else:

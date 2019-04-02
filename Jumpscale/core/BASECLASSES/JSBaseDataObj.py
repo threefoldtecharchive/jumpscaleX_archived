@@ -35,6 +35,9 @@ class JSBaseDataObj(JSBase):
         if kwargs == {} and data == None:
             self.load()
 
+    def load(self):
+        pass
+
     @property
     def _schema(self):
         if self._schema_ is None:

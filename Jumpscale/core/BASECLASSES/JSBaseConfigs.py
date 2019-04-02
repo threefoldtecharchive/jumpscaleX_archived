@@ -6,11 +6,11 @@ from .JSBase import JSBase
 class JSBaseConfigs(JSBase):
 
     def __init__(self, parent=None, topclass=True, **kwargs):
+        self._children = {}
+
         JSBase.__init__(self, parent=parent, topclass=False)
 
         self._model_ = None
-
-        self._children = {}
 
         if topclass:
             self._init2(**kwargs)
@@ -60,7 +60,7 @@ class JSBaseConfigs(JSBase):
         self._children[name]._isnew = True
         return self._children[name]
 
-    def get(self, name=None, id=None, die=True, create_new=True, **kwargs):
+    def get(self, name="main", id=None, die=True, create_new=True, **kwargs):
         """
         :param id: id of the obj to find, is a unique id
         :param name: of the object, can be empty when searching based on id or the search criteria (kwargs)
@@ -173,8 +173,8 @@ class JSBaseConfigs(JSBase):
         o = self.get(name)
         o.delete()
 
-    def exists(self, **kwargs):
-        res = self.findData(**kwargs)
+    def exists(self, name):
+        res = self.findData(name=name)
         if len(res) > 1:
             raise RuntimeError("found too many items for :%s, args:\n%s\n%s" % (self.__class__.__name__, kwargs, res))
         elif len(res) == 1:
@@ -183,6 +183,7 @@ class JSBaseConfigs(JSBase):
             return False
 
     def _obj_cache_reset(self):
+        JSBase._obj_cache_reset(self)
         for key, obj in self._children.items():
             obj._obj_cache_reset()
             del self._children[key]

@@ -20,13 +20,25 @@ from .LogManager import LogManager
 from .Nft import Nft
 from .Response import Response
 from .RTInfoManager import RTInfoManager
+from .SocatManager import SocatManager
 from .WebManager import WebManager
 from .ZerotierManager import ZerotierManager
 from .ZFSManager import ZFSManager
-from .SocatManager import SocatManager
 
 
-class Client(BaseClient):
+class Client(j.application.JSBaseConfigClass, BaseClient):
+
+    _SCHEMATEXT = """
+    @url = jumpscale.zos.client.connection.1
+    name* = "" (S)
+    host = "127.0.0.1" (S)
+    port = 6379 (ipport)
+    unixsocket = "" (S)
+    password = ""  (S)
+    db = 0 (I)
+    ssl = true (B)
+    timeout = 120 (I)
+    """
 
     _raw_chk = typchk.Checker({
         'id': str,
@@ -40,7 +52,7 @@ class Client(BaseClient):
     })
 
     def _init(self):
-        BaseClient._init(self)
+        BaseClient.__init__(self, self.timeout)
         self.__redis = None
 
         self._container_manager = ContainerManager(self)
@@ -66,18 +78,20 @@ class Client(BaseClient):
 
     @property
     def _redis(self):
+        # make sure the jwt token used as password is still valid
+        # if not, we try to refresh it and force to re-created the redis connection
         password = self.password
-        # NOW DONE AS PART OF THE CLIENT FOR ITSYOUONLINE, SHOULD NOT BE DONE AT THIS LEVEL
 
-        # if password:
-        #     self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
-        # if self._jwt_expire_timestamp and self._jwt_expire_timestamp - 300 < time.time():
-        #     password = j.clients.itsyouonline.refresh_jwt_token(password, validity=3600)
-        #     self.config.data_set('password_', password)
-        #     self.config.save()
-        #     if self.__redis:
-        #         self.__redis = None
-        #     self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
+        if password:
+            self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
+        if self._jwt_expire_timestamp and self._jwt_expire_timestamp - 300 < time.time():
+            password = j.clients.itsyouonline.jwt_refresh(password, validity=3600)
+            self.data.password = password
+            self.save()
+            # force recreation of redis connection
+            if self.__redis:
+                self.__redis = None
+            self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
 
         if self.__redis is None:
             if self.unixsocket:
@@ -254,4 +268,3 @@ class Client(BaseClient):
 
     def response_for(self, id):
         return Response(self, id)
-    

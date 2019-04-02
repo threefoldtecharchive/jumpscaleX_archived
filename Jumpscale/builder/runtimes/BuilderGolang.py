@@ -13,7 +13,6 @@ class BuilderGolang(j.builder.system._BaseClass):
         self.base_dir = j.core.tools.text_replace('{DIR_BASE}')
 
         self.env = self.bash.profile
-        self.bash.profile.env_set("GO111MODULE", "on")
         self.DIR_GO_ROOT = self.tools.joinpaths(self.base_dir, 'go')
         self.DIR_GO_PATH = self.tools.joinpaths(self.base_dir, 'go_proj')
         self.DIR_GO_ROOT_BIN = self.tools.joinpaths(self.DIR_GO_ROOT, 'bin')
@@ -77,7 +76,7 @@ class BuilderGolang(j.builder.system._BaseClass):
         self._remove("{DIR_GO_ROOT}")
 
         j.core.tools.dir_ensure(self.DIR_GO_PATH)
-        self.bash.profile.env_set("GO111MODULE", "auto")
+
         self.bash.profile.env_set('GOROOT', self.DIR_GO_ROOT)
         self.bash.profile.env_set('GOPATH', self.DIR_GO_PATH)
 

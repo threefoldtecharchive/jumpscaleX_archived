@@ -19,6 +19,52 @@ class World(j.application.JSFactoryBaseClass):
     _CHILDCLASSES = [Cars,Ships]
 
 
+class Cars(j.application.JSBaseConfigsClass):
+    """
+    ...
+    """
+    _CHILDCLASS = Car
+
+
+class Car(j.application.JSBaseConfigClass):
+    """
+    one car instance
+    """
+
+    _SCHEMATEXT = """
+        @url = jumpscale.example.car.1
+        name* = ""
+        city = ""
+        """
+
+    def _init(self):    
+        pass
+
+
+
+class Ships(j.application.JSBaseConfigsClass):
+    """
+    ...
+    """
+    _CHILDCLASS = Ship
+
+
+class Ship(j.application.JSBaseConfigClass):
+    """
+    one ship instance
+    """
+
+    _SCHEMATEXT = """
+        @url = jumpscale.example.ship.1
+        name* = ""
+        location = ""
+        onsea = true (b)
+        """
+
+    def _init(self):    
+        pass
+
+
 ```
 
 The `_CHILDCLASSES` are one or more config(s) classes, always defined as a (Python) List.

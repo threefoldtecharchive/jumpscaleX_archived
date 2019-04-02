@@ -267,7 +267,7 @@ class Integer(TypeBaseClass):
     def __init__(self,default=None):
         self.BASETYPE = "int"
         if not default:
-            default = 4294967295
+            default = 2147483647
         self._default = default
 
     def checkString(self, s):
@@ -278,7 +278,7 @@ class Integer(TypeBaseClass):
         return isinstance(value, int)
 
     def toHR(self, v):
-        if int(v) == 4294967295:
+        if int(v) == 2147483647:
             return "-"  # means not set yet
         return '{:,}'.format(self.clean(v))
 
