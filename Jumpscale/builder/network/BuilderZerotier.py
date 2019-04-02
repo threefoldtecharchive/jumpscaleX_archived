@@ -9,7 +9,7 @@ class BuilderZerotier(j.builder.system._BaseClass):
 
     def _init(self):
         self.DIR_BUILD = j.core.tools.text_replace("{DIR_VAR}/build/zerotier/")
-        self.CLI = j.sal.fs.joinPaths('{DIR_BIN}', 'zerotier-cli')
+        self.CLI = '/sandbox/bin/zerotier-cli'
 
 
     def clean(self):

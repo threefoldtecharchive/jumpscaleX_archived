@@ -9,7 +9,8 @@ mymember = mynetwork.member_get(address='hfivivk' || name='geert' || public_ip='
 mymember.authorize()
 mymember.deauthorize()
 """
-import json
+
+import time
 from Jumpscale import j
 
 JSConfigs = j.application.JSBaseConfigsClass
@@ -37,7 +38,7 @@ class ZerotierFactory(JSConfigs):
 
     def _cmd_get(self,cmd,pre=None,post=None):
 
-        CLI = j.builder.network.zerotier.CLI
+        CLI = j.builder.network.zerotier._replace("{CLI}")
         c=CLI+" "
         if self.config_path:
             c += "-D%s " % self.config_path
@@ -45,12 +46,13 @@ class ZerotierFactory(JSConfigs):
             c += "%s "%pre
         c += cmd
         if post:
-            c += "%s "%post
+            c += " %s "%post
+        self._log_debug(cmd)
         return c
 
     def _cmd(self,cmd,pre=None,post=None):
         cmd1 = self._cmd_get(cmd,pre,post)
-        rc, out, _ = j.sal.process.execute(cmd1, die=True)
+        rc, out, _ = j.sal.process.execute(cmd1, die=True,showout=False)
         return out
 
 
@@ -62,6 +64,18 @@ class ZerotierFactory(JSConfigs):
         rc, out, err = j.sal.process.execute(cmd, die=False)
         if rc != 0 or out.find('OK') == -1:
             raise j.exceptions.RuntimeError("error while joinning network: \n{}".format(err))
+
+        ok=False
+        while not ok:
+            networks_joined = self.networks_joined()
+            for network in networks_joined:
+                if network["network_id"]==network_id and network["status"]=="OK":
+                    ok=True
+            if not ok:
+                time.sleep(0.2)
+                self._log_debug("wait join: %s"%network_id)
+
+
         if zerotier_client:
             machine_address = self.get_zerotier_machine_address()
             zerotier_client.client.network.updateMember(address=machine_address, id=network_id,
@@ -69,7 +83,7 @@ class ZerotierFactory(JSConfigs):
 
     def network_leave(self, network_id):
         """
-        leave the netowrk identied by network_id
+        leave the network identied by network_id
         """
         cmd = self._cmd_get("leave",post=network_id)
         rc, out, _ = j.sal.process.execute(cmd, die=False)
@@ -96,7 +110,7 @@ class ZerotierFactory(JSConfigs):
         }
         """
         out = self._cmd('listnetworks',pre="-j")
-        lines = json.loads(out)
+        lines = j.data.serializers.json.loads(out)
         if len(lines) < 1:
             return {}
 
@@ -181,9 +195,6 @@ class ZerotierFactory(JSConfigs):
         raise RuntimeError("no networks found with id {}, make sure that you properly joined this network".format(network_id))
 
 
-
-
-
     def test(self):
         """
         kosmos 'j.clients.zerotier.test()'
@@ -203,7 +214,7 @@ class ZerotierFactory(JSConfigs):
 
         # try to make the the current machine join the new network
         self.network_join(network_id=network.id)
-        time.sleep(20)
+
 
         # lets list the members then
         members = network.members_list()
@@ -228,3 +239,5 @@ class ZerotierFactory(JSConfigs):
 
         # now lets delete the testnetwork we created
         zt_client.network_delete(network_id=network.id)
+
+        self._log_info("TEST OK")

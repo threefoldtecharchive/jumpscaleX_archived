@@ -307,9 +307,9 @@ class SyncthingClient(JSConfigClient):
                                       json=data, timeout=2)
                 ok = True
             except Exception as e:
-                self._log_warn(
+                self._log_warning(
                     "Warning, Error in API call, will retry:\n%s" % e)
-                self._log_warn("retry API CALL %s" % url)
+                self._log_warning("retry API CALL %s" % url)
                 time.sleep(0.2)
 
         if ok is False or r.ok is False:
