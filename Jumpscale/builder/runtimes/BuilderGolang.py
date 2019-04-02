@@ -2,12 +2,12 @@ from Jumpscale import j
 
 builder_method = j.builder.system.builder_method
 
+
 class BuilderGolang(j.builder.system._BaseClass):
 
     NAME = 'go'
     STABLE_VERSION = '1.12'
     DOWNLOAD_URL = 'https://dl.google.com/go/go{version}.{platform}-{arch}.tar.gz'
-
 
     def _init(self):
         self.base_dir = j.core.tools.text_replace('{DIR_BASE}')
@@ -17,7 +17,6 @@ class BuilderGolang(j.builder.system._BaseClass):
         self.DIR_GO_PATH = self.tools.joinpaths(self.base_dir, 'go_proj')
         self.DIR_GO_ROOT_BIN = self.tools.joinpaths(self.DIR_GO_ROOT, 'bin')
         self.DIR_GO_PATH_BIN = self.tools.joinpaths(self.DIR_GO_PATH, 'bin')
-
 
     @property
     def version(self):
@@ -53,7 +52,7 @@ class BuilderGolang(j.builder.system._BaseClass):
         :rtype: str
         """
         if j.core.platformtype.myplatform.is32bit:
-            return  '386'
+            return '386'
         return 'amd64'
 
     @builder_method()
@@ -65,27 +64,28 @@ class BuilderGolang(j.builder.system._BaseClass):
         """
         # only check for linux for now
         if j.core.platformtype.myplatform.isLinux:
-            download_url = self.DOWNLOAD_URL.format(version=self.STABLE_VERSION, platform='linux', arch=self.current_arch)
+            download_url = self.DOWNLOAD_URL.format(version=self.STABLE_VERSION,
+                                                    platform='linux', arch=self.current_arch)
         elif j.core.platformtype.myplatform.isMac:
-            download_url = self.DOWNLOAD_URL.format(version=self.STABLE_VERSION, platform='darwin', arch=self.current_arch)
+            download_url = self.DOWNLOAD_URL.format(version=self.STABLE_VERSION,
+                                                    platform='darwin', arch=self.current_arch)
         else:
             raise j.exceptions.RuntimeError('platform not supported')
-
 
         self._remove("{DIR_GO_PATH}")
         self._remove("{DIR_GO_ROOT}")
 
         j.core.tools.dir_ensure(self.DIR_GO_PATH)
-        self.bash.profile.env_set('GOROOT',self.DIR_GO_ROOT)
-        self.bash.profile.env_set('GOPATH',self.DIR_GO_PATH)
 
-        #remove old parts of profile
+        self.bash.profile.env_set('GOROOT', self.DIR_GO_ROOT)
+        self.bash.profile.env_set('GOPATH', self.DIR_GO_PATH)
+
+        # remove old parts of profile
         self.bash.profile.path_delete("/go/")
         self.bash.profile.path_delete("/go_proj")
 
         self.bash.profile.path_add(self.DIR_GO_PATH_BIN)
         self.bash.profile.path_add(self.DIR_GO_ROOT_BIN)
-
 
         self.tools.file_download(
             download_url, self.DIR_GO_ROOT, overwrite=False, retry=3,
@@ -224,5 +224,3 @@ class BuilderGolang(j.builder.system._BaseClass):
         j.builder.runtimes.golang.get('github.com/containous/go-bindata')
         package_path = j.builder.runtimes.golang.package_path_get('containous/go-bindata')
         j.builder.runtimes.golang.execute('cd %s && go install' % package_path)
-
-

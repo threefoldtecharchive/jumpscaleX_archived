@@ -1,6 +1,7 @@
 from Jumpscale import j
 builder_method = j.builder.system.builder_method
 
+
 class BuilderCaddyFilemanager(j.builder.system._BaseClass):
     NAME = 'filemanager'
     PLUGINS = ['iyo', 'filemanager']
@@ -20,7 +21,7 @@ class BuilderCaddyFilemanager(j.builder.system._BaseClass):
         :param reset: reset the build process, defaults to False
         :type reset: bool, optional
         """
-        j.builder.web.caddy.build(plugins=self.PLUGINS, reset=reset)
+        j.builder.web.caddy.build(plugins=self.PLUGINS)
 
     @builder_method()
     def install(self):
@@ -30,11 +31,11 @@ class BuilderCaddyFilemanager(j.builder.system._BaseClass):
         :param reset: reset build and installation, defaults to False
         :type reset: bool, optional
         """
-        j.builder.web.caddy.install(reset=reset)
+        j.builder.web.caddy.install()
 
-
-    def sandbox(self, zhub_client):
-
+    @builder_method()
+    def sandbox(self, reset=False, zhub_client=None, flist_create=False):
+        dest_path = self.DIR_SANDBOX
         caddy_bin_path = self.tools.joinpaths(self.go_runtime.DIR_GO_PATH_BIN, 'caddy')
         bin_dest = self.tools.joinpaths(dest_path, 'sandbox', 'bin')
         self.tools.dir_ensure(bin_dest)
@@ -47,29 +48,26 @@ class BuilderCaddyFilemanager(j.builder.system._BaseClass):
         self.tools.dir_ensure(self.tools.joinpaths(dest_path, 'sandbox', 'var', 'log'))
         self.tools.dir_ensure(self.tools.joinpaths(dest_path, 'sandbox', 'filemanager', 'files'))
 
-        cfg_dir = self.tools.joinpaths(dest_path, 'sandbox', 'cfg', 'filemanager')
-        
         # bin
-        self.tools.file_copy(caddy_bin_path, bin_dest)
+        self._copy(caddy_bin_path, bin_dest)
 
         # caddy config
+        cfg_dir = self.tools.joinpaths(dest_path, 'sandbox', 'cfg', 'filemanager')
         caddyfile = self.tools.joinpaths(self.templates_dir, 'filemanager_caddyfile')
-        self.tools.file_copy(self.tools.joinpaths(cfg_dir, caddyfile))
+        self._copy(caddyfile, self.tools.joinpaths(cfg_dir, 'filemanager_caddyfile'))
 
         # startup
         startup_file = self.tools.joinpaths(self.templates_dir, 'filemanager_startup.toml')
-        self.startup = j.sal.fs.readFile(startup_file)
         file_dest = self.tools.joinpaths(dest_path, '.startup.toml')
-        j.builder.tools.file_ensure(file_dest)
-        j.builder.tools.file_write(file_dest, self.startup)
+        self._write(file_dest, self.tools.file_read(startup_file))
 
         # copy /etc/ssl/cert
         certs = self.tools.joinpaths(dest_path, 'etc', 'ssl', 'certs')
         self.tools.dir_ensure(certs)
-        j.builder.tools.copyTree(source='/etc/ssl/certs', dest=certs)
-        if create_flist:
-            print(self.flist_create(sandbox_dir=dest_path, hub_instance=zhub_instance))
-        self._done_set('sandbox') 
+        self.tools.copyTree(source='/etc/ssl/certs', dest=certs)
+        if flist_create:
+            print(self._flist_create(zhub_client=zhub_client))
+        self._done_set('sandbox')
 
     def test(self):
         if not j.sal.process.checkInstalled(j.builder.web.caddy.NAME):
@@ -84,5 +82,3 @@ class BuilderCaddyFilemanager(j.builder.system._BaseClass):
         child_process = tmux_pane.process_obj_child
         assert child_process.is_running()
         assert j.sal.nettools.waitConnectionTest("localhost", 2015)
-
-

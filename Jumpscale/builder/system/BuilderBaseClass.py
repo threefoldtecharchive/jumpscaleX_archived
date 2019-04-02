@@ -26,7 +26,7 @@ class builder_method(object):
             done_key = name+"_"+j.data.hash.md5_string(str(args)+str(kwargs))
 
             if self.log:
-                builder._log_debug("do once:%s" % name, data=kwargs)
+                builder._log_debug("do once:%s" % name)
 
             if "reset" in kwargs:
                 reset = j.data.types.bool.clean(kwargs["reset"])
@@ -53,9 +53,8 @@ class builder_method(object):
                     if not j.clients.zhub.exists(name="main"):
                         raise RuntimeError("cannot find main zhub client")
                     zhub_client = j.clients.zhub.get(name="main")
-                    zhub_client.ping()  # should do a test it works
+                    zhub_client.list(username=zhub_client.username)
                 kwargs["zhub_client"] = zhub_client
-
 
             if name in ["stop", "running", "_init"]:
                 builder.profile_sandbox_select()
@@ -74,7 +73,6 @@ class builder_method(object):
 
                 if name == "build":
                     builder.profile_sandbox_select()
-
 
                 if self.log:
                     builder._log_debug("action:%s() done -> %s" % (name, res))
@@ -269,16 +267,16 @@ class BuilderBaseClass(BaseClass):
         return j.sal.process.execute("bash %s" % path, cwd=None, timeout=timeout, die=die,
                                      args=args, interactive=interactive, replace=False, showout=showout)
 
-    def _copy(self, src, dst, deletefirst=False, ignoredir=None, ignorefiles=None, deleteafter=False,keepsymlink=True):
+    def _copy(self, src, dst, deletefirst=False, ignoredir=None, ignorefiles=None, deleteafter=False, keepsymlink=True):
         """
 
         :param src:
-        :param dst: 
-        :param deletefirst: 
+        :param dst:
+        :param deletefirst:
         :param ignoredir: the following are always in, no need to specify ['.egg-info', '.dist-info', '__pycache__']
         :param ignorefiles: the following are always in, no need to specify: ["*.egg-info","*.pyc","*.bak"]
         :param deleteafter, means that files which exist at destination but not at source will be deleted
-        :return: 
+        :return:
         """
         src = self._replace(src)
         dst = self._replace(dst)
@@ -372,7 +370,7 @@ class BuilderBaseClass(BaseClass):
         return True
 
     @builder_method()
-    def _flist_create(self, zhub_client=None):
+    def _flist_create(self, zhub_client):
         """
         build a flist for the builder and upload the created flist to the hub
 
@@ -393,23 +391,19 @@ class BuilderBaseClass(BaseClass):
         #     j.builder.tools.file_ensure(file_dest)
         #     j.builder.tools.file_write(file_dest, self.startup)
 
-        j.shell()
-
-        j.tools.sandboxer.copyTo(src, dst)
-
         if j.core.platformtype.myplatform.isLinux:
             ld_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'lib64/')
             j.builder.tools.dir_ensure(ld_dest)
-            j.sal.fs.copyFile('/lib64/ld-linux-x86-64.so.2', ld_dest)
+            self._copy('/lib64/ld-linux-x86-64.so.2', ld_dest)
 
-        # if zhub_client:
-        # for now only upload to HUB
         self._log_info("uploading flist to the hub")
         return zhub_client.sandbox_upload(self.NAME, self.DIR_SANDBOX)
-        # else:
-        #     tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
-        #     j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, self.DIR_SANDBOX))
-        #     return tarfile
+
+    @builder_method()
+    def _tarfile_create(self):
+        tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
+        j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, self.DIR_SANDBOX))
+        return tarfile
 
     def clean(self):
         """
