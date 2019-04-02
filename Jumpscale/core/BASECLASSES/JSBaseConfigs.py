@@ -60,7 +60,7 @@ class JSBaseConfigs(JSBase):
         self._children[name]._isnew = True
         return self._children[name]
 
-    def get(self, name=None, id=None, die=True, create_new=True, **kwargs):
+    def get(self, name="main", id=None, die=True, create_new=True, **kwargs):
         """
         :param id: id of the obj to find, is a unique id
         :param name: of the object, can be empty when searching based on id or the search criteria (kwargs)

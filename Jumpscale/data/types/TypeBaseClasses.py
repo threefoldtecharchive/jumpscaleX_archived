@@ -194,6 +194,8 @@ class TypeBaseClass(): #!!TYPEBASECLASS!!
             return False
 
     def default_get(self):
+        if self._default is None:
+            raise RuntimeError("self._default cannot be None")
         return self.clean(self._default)
 
     def clean(self, value):
