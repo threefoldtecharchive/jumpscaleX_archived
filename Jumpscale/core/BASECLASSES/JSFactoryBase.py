@@ -6,9 +6,10 @@ from .JSBase import JSBase
 class JSFactoryBase(JSBase):
 
     def __init__(self,parent=None, topclass=True,**kwargs):
+        self._factories = {}
+
         JSBase.__init__(self,parent=parent, topclass=False)
 
-        self._factories = {}
         for kl in self.__class__._CHILDCLASSES:
             obj = kl(parent=self)
             # j.shell()

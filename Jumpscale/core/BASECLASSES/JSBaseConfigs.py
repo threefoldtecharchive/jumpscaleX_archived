@@ -6,11 +6,11 @@ from .JSBase import JSBase
 class JSBaseConfigs(JSBase):
 
     def __init__(self, parent=None, topclass=True, **kwargs):
+        self._children = {}
+
         JSBase.__init__(self, parent=parent, topclass=False)
 
         self._model_ = None
-
-        self._children = {}
 
         if topclass:
             self._init2(**kwargs)
@@ -56,7 +56,6 @@ class JSBaseConfigs(JSBase):
             if(model.name == name):
                 raise RuntimeError("can't create , this name already exist")
         data.name = name
-        
         self._children[name] = kl(parent=self, data=data, **kwargs)
         self._children[name]._isnew = True
         return self._children[name]
@@ -184,6 +183,7 @@ class JSBaseConfigs(JSBase):
             return False
 
     def _obj_cache_reset(self):
+        JSBase._obj_cache_reset(self)
         for key, obj in self._children.items():
             obj._obj_cache_reset()
             del self._children[key]
