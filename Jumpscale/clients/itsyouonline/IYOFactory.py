@@ -1,8 +1,11 @@
-from Jumpscale import j
-from .IYOClient import IYOClient
+import time
+
 import requests
 
-import time
+from jose import jwt
+from Jumpscale import j
+
+from .IYOClient import IYOClient
 
 DEFAULT_BASE_URL = "https://itsyou.online/api"
 
@@ -21,6 +24,32 @@ class IYOFactory(j.application.JSBaseConfigsClass):
         if self._default is None:
             self._default = self.get(name="default")
         return self._default
+
+    def jwt_refresh(self, jwt_token, validity=2592000, die=True):
+        """
+        refreshes a jwt token, if the jwt isn't expired return the same jwt
+        :param jwt_token: the jwt to be refreshed
+        :param validity: the validity of the new jwt
+        :param die: die if the jwt is not refreshable
+        :return: jwt token text
+        """
+        claims = jwt.get_unverified_claims(jwt_token)
+
+        if not claims['refresh_token']:
+            if die:
+                raise RuntimeError("jwt token can't be refreshed, no refresh token claim found")
+            else:
+                return
+
+        headers = {'Authorization': 'bearer %s' % jwt_token}
+        params = {'validity': validity}
+        resp = requests.get('https://itsyou.online/v1/oauth/jwt/refresh', headers=headers, params=params)
+        resp.raise_for_status()
+        return resp.content.decode('utf8')
+
+    def jwt_expire_timestamp(self, jwt_token):
+        claims = jwt.get_unverified_claims(jwt_token)
+        return claims['exp']
 
     def test(self):
         """
@@ -42,7 +71,6 @@ class IYOFactory(j.application.JSBaseConfigsClass):
         self._log_debug("deleting the test organization")
         res = client.api.organizations.DeleteOrganization(test_globa_id)
         assert res.ok
-
 
         # Read all the API keys registered for your user
         self._log_debug("list all API keys")
@@ -81,7 +109,7 @@ class IYOFactory(j.application.JSBaseConfigsClass):
 
         assert token.jwt == token2.jwt
 
-        #test is still very minimal would be good to do more
+        # test is still very minimal would be good to do more
 
         # from time import sleep
         # sleep(10)

@@ -23,10 +23,10 @@ class IYOClient(j.application.JSBaseConfigClass):
         baseurl = "https://itsyou.online/api" (S)
         application_id = "" (S)
         secret = "" (S)
-        jwt_list =  (LO) !jumpscale.itsyouonline.jwt.1 
-        
-        @url = jumpscale.itsyouonline.jwt.1    
-        name = "" (S)    
+        jwt_list =  (LO) !jumpscale.itsyouonline.jwt.1
+
+        @url = jumpscale.itsyouonline.jwt.1
+        name = "" (S)
         jwt = "" (S)
         scope = "" (S)
         validity = 2592000 (I)  #the time in sec when to expire after last refresh, std 1 month
@@ -34,8 +34,6 @@ class IYOClient(j.application.JSBaseConfigClass):
         last_refresh = (D)
         refreshable = true (B)
         refresh_token = "" (S)
-        
-        
         """
 
     def _init(self):
@@ -47,9 +45,6 @@ class IYOClient(j.application.JSBaseConfigClass):
             self.secret = j.tools.console.askString(
                 "Please provide itsyouonline secret:\ncan find on https://itsyou.online/#/settings\n")
             self.save()
-
-
-
 
     @property
     def client(self):
@@ -76,7 +71,7 @@ class IYOClient(j.application.JSBaseConfigClass):
             self._oauth2_client = self.client.Oauth2ClientOauth_2_0  # WEIRD NAME???
         return self._oauth2_client
 
-    def jwt_get(self, name="default", refreshable=True, validity=2592000, scope=None, die=False,reset=False):
+    def jwt_get(self, name="default", refreshable=True, validity=2592000, scope=None, die=False, reset=False):
         """
         returns a jwt if not set and update authorization header with that jwt
         :param name: jwt name
@@ -89,16 +84,16 @@ class IYOClient(j.application.JSBaseConfigClass):
 
         if self.application_id == "" or self.secret == "":
             raise RuntimeError("please go to j.clients.itsyouonline.get() to get a new client")
-        x=0
+        x = 0
         for item in self.data.jwt_list:
             if item.name == name:
                 if reset:
                     self.data.jwt_list.pop(x)
                 else:
-                    item.jwt = self._jwt_refresh(item.jwt)
+                    item.jwt = j.clients.itsyouonline.jwt_refresh(item.jwt)
                     self._lastjwt = item.jwt
                     return item
-            x+=1
+            x += 1
         if die:
             raise RuntimeError("could not find jwt with name:%s" % name)
 
@@ -134,7 +129,7 @@ class IYOClient(j.application.JSBaseConfigClass):
         :return: return the token as string
         """
         if scope is None:
-            scope=""
+            scope = ""
         url = urllib.parse.urljoin(self.baseurl, '/v1/oauth/access_token')
         if refreshable:
             if scope.find("offline_access") == -1:
@@ -152,32 +147,6 @@ class IYOClient(j.application.JSBaseConfigClass):
         resp.raise_for_status()
 
         return resp.content.decode('utf8')
-
-    def _jwt_refresh(self, jwt_token, validity=2592000, die=True):
-        """
-        refreshes a jwt token, if the jwt isn't expired return the same jwt
-        :param jwt_token: the jwt to be refreshed
-        :param validity: the validity of the new jwt
-        :param die: die if the jwt is not refreshable
-        :return: jwt token text
-        """
-        claims = jwt.get_unverified_claims(jwt_token)
-        # if the jwt isn't expired return the same jwt
-        if claims['exp'] > time():
-            return jwt_token
-
-        if not claims['refresh_token']:
-            if die:
-                raise RuntimeError("jwt token can't be refreshed, no refresh token claim found")
-            else:
-                return
-
-        headers = {'Authorization': 'bearer %s' % jwt_token}
-        params = {'validity': validity}
-        resp = requests.get('https://itsyou.online/v1/oauth/jwt/refresh', headers=headers, params=params)
-        resp.raise_for_status()
-        return resp.content.decode('utf8')
-
 
     def reset(self):
         self._client = None
