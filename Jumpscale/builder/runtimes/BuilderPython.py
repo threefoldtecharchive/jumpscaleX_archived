@@ -101,7 +101,7 @@ class BuilderPython(j.builder.system._BaseClass):
         self._log_info("compiling python3...")
 
         self._execute(script)
-
+        self.build_pip()
 
     @builder_method()
     def build_pip(self):
@@ -110,7 +110,7 @@ class BuilderPython(j.builder.system._BaseClass):
         :return:
         """
 
-        self.build()
+        # self.build()
 
         self.profile_builder_select() #now select builder profile in the builder directory
 
@@ -201,8 +201,8 @@ class BuilderPython(j.builder.system._BaseClass):
 
         self.profile_builder_select()
 
-        j.builder.libs.capnp.build()
-        self.pip_package_install(['cython', 'setuptools', 'pycapnp'])  #DOES NOT WORK YET
+        j.builder.libs.capnp.install()
+        # self.pip_package_install(['cython', 'setuptools', 'pycapnp'])  #DOES NOT WORK YET
 
         # list comes from /sandbox/code/github/threefoldtech/jumpscale_core/install/InstallTools.py
         self.pip_package_install(j.core.installer_ubuntu.pips_list())
@@ -443,11 +443,10 @@ class BuilderPython(j.builder.system._BaseClass):
         """
         js_shell 'j.builder.runtimes.python.test(build=True)'
         """
-        # TODO: need to test
-        if build:
-            self.build()
-
-        raise RuntimeError("implement")
+        self.profile_builder_select()
+        assert self._execute("{DIR_BUILD}/bin/python3 -c \"print('python')\"")[1] == "python\n"
+        assert self._execute("{DIR_BUILD}/bin/python3 -c \"import capnp\"")[0] == 0
+        assert self._execute("{DIR_BUILD}/bin/python3 -c \"import ssl\"")[0] == 0
 
         print("TEST OK")
 
