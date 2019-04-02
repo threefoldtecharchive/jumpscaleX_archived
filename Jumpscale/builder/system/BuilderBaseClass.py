@@ -40,9 +40,12 @@ class builder_method(object):
 
             if name is not "_init":
                 builder._init()
+            if name == "build":
+                builder.profile_builder_select()
             if name == "install":
                 builder.build()
             if name == "sandbox":
+                builder.profile_sandbox_select()
                 builder.install()
                 # only use "main" client, because should be generic usable
                 zhub_client = kwargs.get("zhub_client", None)
@@ -54,7 +57,8 @@ class builder_method(object):
                 kwargs["zhub_client"] = zhub_client
 
 
-            if name in ["start", "stop", "running", "_init"]:
+            if name in ["stop", "running", "_init"]:
+                builder.profile_sandbox_select()
                 self.done_check = False
 
             if not self.done_check or not builder._done_check(done_key, reset):
@@ -67,6 +71,10 @@ class builder_method(object):
 
                 if self.done_check:
                     builder._done_set(done_key)
+
+                if name == "build":
+                    builder.profile_sandbox_select()
+
 
                 if self.log:
                     builder._log_debug("action:%s() done -> %s" % (name, res))
@@ -261,10 +269,10 @@ class BuilderBaseClass(BaseClass):
         return j.sal.process.execute("bash %s" % path, cwd=None, timeout=timeout, die=die,
                                      args=args, interactive=interactive, replace=False, showout=showout)
 
-    def _copy(self, src, dst, deletefirst=False, ignoredir=None, ignorefiles=None, deleteafter=False):
+    def _copy(self, src, dst, deletefirst=False, ignoredir=None, ignorefiles=None, deleteafter=False,keepsymlink=True):
         """
 
-        :param src: 
+        :param src:
         :param dst: 
         :param deletefirst: 
         :param ignoredir: the following are always in, no need to specify ['.egg-info', '.dist-info', '__pycache__']
@@ -275,7 +283,7 @@ class BuilderBaseClass(BaseClass):
         src = self._replace(src)
         dst = self._replace(dst)
         if j.builder.tools.file_is_dir:
-            j.builder.tools.copyTree(src, dst, keepsymlinks=False, deletefirst=deletefirst, overwriteFiles=True,
+            j.builder.tools.copyTree(src, dst, keepsymlinks=keepsymlink, deletefirst=deletefirst, overwriteFiles=True,
                                      ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=deleteafter,
                                      createdir=True)
         else:
