@@ -88,6 +88,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         self.stop()
         print("TEST OK")
 
+    @builder_method()
     def sandbox(self, create_flist=False, zhub_instance=None):
 
         """Copy built bins to dest_path and create flist if create_flist = True
