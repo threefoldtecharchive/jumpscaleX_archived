@@ -131,7 +131,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
         self.go_runtime.install()
 
         # get caddy and plugins source
-        self.go_runtime.get("github.com/mholt/caddy")
+        self.go_runtime.get("github.com/mholt/caddy/caddy")
         if not plugins:
             plugins = self.PLUGINS
 
