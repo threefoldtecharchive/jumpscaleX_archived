@@ -6,7 +6,7 @@ from Jumpscale import j
 # from gevent import monkey
 # monkey.patch_all()
 
-# j.tools.bash.get().locale_check()
+# j.tools.bash.get().profile.locale_check()
 
 
 import argparse

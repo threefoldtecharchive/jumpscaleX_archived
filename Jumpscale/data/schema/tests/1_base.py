@@ -49,7 +49,7 @@ def main(self):
     o = schema_object.get()
 
     assert o.nrdefault == 0
-    assert o.nrdefault2 == 4294967295
+    assert o.nrdefault2 == 2147483647
     assert o.nrdefault == 0
     assert o.description == ""
     assert o.description2 == ""

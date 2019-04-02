@@ -3,11 +3,33 @@ from .Profile import  Profile
 
 class Bash(object):
 
-    def __init__(self, executor=None,profile_path=None):
+    def __init__(self, path=None, profile_name=None ,executor=None):
+        """
+        :param path: if None then will be '~' = Home dir
+        :param executor:
+        :param profile_name: if None will look for env.sh, .profile_js in this order
+        """
         self._executor = executor
-        self._profile = None
+
+        if not path:
+            self.path = j.dirs.HOMEDIR
+        else:
+            self.path = path
+
+        if not profile_name:
+            for i in ["env.sh",".profile_js"]:
+                if j.sal.fs.exists(j.sal.fs.joinPaths(self.path,i)):
+                    profile_name = i
+                    break
+
+        if not profile_name:
+            profile_name = "env.sh"
+
+        profile_path = j.sal.fs.joinPaths(self.path,profile_name)
+
         self.profile = Profile(self,profile_path)
-        self.reset()
+
+        # self.reset()
 
     @property
     def executor(self):
@@ -20,8 +42,6 @@ class Bash(object):
         self._executor = newexecutor
 
     def reset(self):
-        self._profile = None
-        self._profile_default = None
         self.executor.reset()
 
     @property
@@ -30,9 +50,6 @@ class Bash(object):
         dest.update(self.executor.env)
         return dest
 
-    @property
-    def home(self):
-        return self.executor.env.get("HOME") or self.executor.replace("{DIR_CODE}")
 
     def cmd_path_get(self, cmd, die=True):
         """
@@ -52,24 +69,3 @@ class Bash(object):
 
         return out
 
-    def locale_check(self):
-        self.profile.locale_check()
-
-    def locale_fix(self):
-        self.profile.locale_fix()
-
-    def env_set(self, key, val):
-        self.profile.env_set(key, val)
-        self.profile.save(True)
-
-    def env_get(self, key):
-        dest = dict(self.profile.env)
-        dest.update(self.executor.env)
-        return dest[key]
-
-    def env_delete(self, key):
-        if self.profile.env_exists(key):
-            self.profile.env_delete(key)
-            self.profile.save(True) # issue #70
-        else:
-            del self.executor.env[key]

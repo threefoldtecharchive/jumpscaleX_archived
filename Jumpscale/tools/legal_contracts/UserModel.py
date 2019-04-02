@@ -8,11 +8,11 @@ users = (LO) !jumpscale.bcdb.acl.user
 hash* = ""
 
 @url = jumpscale.bcdb.acl.group
-uid= 4294967295 (I)
+uid= 2147483647 (I)
 rights = ""
 
 @url = jumpscale.bcdb.acl.user
-uid= 4294967295 (I)
+uid= 2147483647 (I)
 rights = ""
 
 """

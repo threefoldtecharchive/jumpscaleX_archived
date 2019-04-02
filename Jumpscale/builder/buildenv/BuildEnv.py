@@ -13,7 +13,7 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
         self.upgrade()
 
         if not self._done_check("fixlocale", reset):
-            j.tools.bash.get().locale_check()
+            j.tools.bash.get().profile.locale_check()
             self._done_set("fixlocale")
 
         # out = ""

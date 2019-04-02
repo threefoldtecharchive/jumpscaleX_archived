@@ -36,15 +36,25 @@ class BuilderDigitalME(j.builder.system._BaseClass):
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
         j.builder.runtimes.python.sandbox()
         j.builder.runtimes.lua.sandbox()
-        j.tools.sandboxer.copyTo("/sandbox/var/build/sandbox/tfbot/", "{}/sandbox".format(self.DIR_PACKAGE))
-        j.tools.sandboxer.copyTo(j.builder.runtimes.lua.DIR_PACKAGE,  self.DIR_PACKAGE)
+        j.tools.sandboxer.copyTo("/sandbox/var/build/sandbox/tfbot/", "{}/sandbox".format(self.DIR_SANDBOX))
+        j.tools.sandboxer.copyTo(j.builder.runtimes.lua.DIR_SANDBOX,  self.DIR_SANDBOX)
         git_repo_path = "/sandbox/code/github/threefoldtech/digitalmeX"
-        j.tools.sandboxer.copyTo(git_repo_path, j.sal.fs.joinPaths(self.DIR_PACKAGE, git_repo_path[1:]))
+        j.tools.sandboxer.copyTo(git_repo_path, j.sal.fs.joinPaths(self.DIR_SANDBOX, git_repo_path[1:]))
 
     @property
     def startup_cmds(self):
         cmd = j.tools.startupcmd.get("openresty", "openresty", cmd_stop="openresty -s stop", path="/sandbox/bin")
         return [cmd]
+
+
+    def gslides(self):
+        """
+        kosmos 'j.builder.apps.digitalme.gslides()'
+        google slides option
+        :return:
+        """
+        j.shell()
+        "google-api-python-client,google-auth-httplib2,google-auth-oauthlib"
 
     def test(self, zos_client=None):
         """
@@ -55,6 +65,7 @@ class BuilderDigitalME(j.builder.system._BaseClass):
         self.sandbox()
         self.start()
         assert j.sal.nettools.waitConnectionTest("localhost", 8081, timeoutTotal=10)
+        self._log_info("TEST OK FOR DIGITAL ME BUILDING")
 
     def test_zos(self, zos_client, zhubclient):
         flist = self.sandbox(zhub_client=zhubclient)

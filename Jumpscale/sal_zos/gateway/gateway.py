@@ -712,7 +712,7 @@ class Gateway:
             #         resp = zerotier.network.getMember(self.container.model.data.zerotiernodeid, zerotierbridge['id'])
             #         member = resp.json()
 
-            #         self._log_info("Enable bridge in member {} on network {}".format(member['nodeId'], zerotierbridge['id']))
+            #         j.tools.logger._log_info("Enable bridge in member {} on network {}".format(member['nodeId'], zerotierbridge['id']))
             #         member['config']['activeBridge'] = True
             #         zerotier.network.updateMember(member, member['nodeId'], zerotierbridge['id'])
 

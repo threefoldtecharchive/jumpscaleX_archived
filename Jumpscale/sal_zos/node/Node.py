@@ -109,7 +109,7 @@ class Node:
 
     @property
     def storageAddr(self):
-        self._log_warning("storageAddr is deprecated, use storage_addr instead")
+        j.tools.logger._log_warning("storageAddr is deprecated, use storage_addr instead")
         return self.storage_addr
 
     @property
@@ -310,30 +310,30 @@ class Node:
         self.client.filesystem.upload(remote, bytes)
 
     def wipedisks(self):
-        self._log_debug('Wiping node {hostname}'.format(**self.client.info.os()))
+        j.tools.logger._log_debug('Wiping node {hostname}'.format(**self.client.info.os()))
 
         jobs = []
         # for disk in self.client.disk.list():
         for disk in self.disks.list():
             if disk.type == StorageType.CDROM:
-                self._log_debug('   * Not wiping cdrom {kname} {model}'.format(**disk._disk_info))
+                j.tools.logger._log_debug('   * Not wiping cdrom {kname} {model}'.format(**disk._disk_info))
                 continue
 
             if disk.transport == 'usb':
-                self._log_debug('   * Not wiping usb {kname} {model}'.format(**disk._disk_info))
+                j.tools.logger._log_debug('   * Not wiping usb {kname} {model}'.format(**disk._disk_info))
                 continue
 
             if not disk.mountpoint:
                 for part in disk.partitions:
                     if part.mountpoint:
-                        self._log_debug('   * Not wiping {device} because {part} is mounted at {mountpoint}'
+                        j.tools.logger._log_debug('   * Not wiping {device} because {part} is mounted at {mountpoint}'
                                      .format(device=disk.devicename, part=part.devicename,  mountpoint=part.mountpoint))
                         break
                 else:
-                    self._log_debug('   * Wiping disk {kname}'.format(**disk._disk_info))
+                    j.tools.logger._log_debug('   * Wiping disk {kname}'.format(**disk._disk_info))
                     jobs.append(self.client.system('dd if=/dev/zero of={} bs=1M count=50'.format(disk.devicename)))
             else:
-                self._log_debug(
+                j.tools.logger._log_debug(
                     '   * Not wiping {device} mounted at {mountpoint}'.format(device=disk.devicename, mountpoint=disk.mountpoint))
 
         # wait for wiping to complete
@@ -377,7 +377,7 @@ class Node:
                 err = error
                 time.sleep(1)
         else:
-            self._log_debug("Could not ping %s within 30 seconds due to %s" % (self.addr, err))
+            j.tools.logger._log_debug("Could not ping %s within 30 seconds due to %s" % (self.addr, err))
 
         return state
 

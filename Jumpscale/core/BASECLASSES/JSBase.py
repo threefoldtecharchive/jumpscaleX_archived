@@ -15,10 +15,11 @@ class JSBase:
         self._parent = parent
         self._class_init()  # is needed to init class properties
 
-
         if topclass:
             self._init2(**kwargs)
             self._init()
+
+        self._obj_cache_reset()
 
     def _class_init(self, topclass=True):
 
@@ -349,7 +350,7 @@ class JSBase:
         - DEBUG 	10
 
         """
-        if self.__class__._logger_min_level-1 < level:
+        if j.application.debug or self.__class__._logger_min_level-1 < level:
             #now we will log
 
             frame_ = inspect.currentframe().f_back

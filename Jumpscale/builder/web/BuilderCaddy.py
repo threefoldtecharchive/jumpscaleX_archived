@@ -5,8 +5,7 @@ builder_method = j.builder.system.builder_method
 
 class BuilderCaddy(j.builder.system._BaseClass):
     NAME = "caddy"
-    PLUGINS = ["iyo"]
-
+    PLUGINS = ['iyo']  #PLEASE ADD MORE PLUGINS #TODO:*1
     def _init(self):
 
         self.go_runtime = j.builder.runtimes.golang
@@ -50,7 +49,6 @@ class BuilderCaddy(j.builder.system._BaseClass):
         )
 
         self._execute("cd {DIR_BUILD} && chmod u+x caddyman.sh")
-
         if not plugins:
             plugins = self.PLUGINS
         cmd = "{dir_build}/caddyman.sh install {plugins}".format(
@@ -101,7 +99,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
     #
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
-        bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox".format(self.DIR_PACKAGE))
+        bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX))
         self.tools.dir_ensure(bin_dest)
         caddy_bin_path = self.tools.joinpaths("{go_path}/src/github.com/mholt/caddy/caddy".format(go_path=self.go_runtime.DIR_GO_PATH), self.NAME)
         self.tools.file_copy(caddy_bin_path, bin_dest)

@@ -15,7 +15,7 @@ class BuilderRedis(j.builder.system._BaseClass):
         if self._done_check("build", reset):
             return
 
-        j.tools.bash.get().locale_check()
+        j.tools.bash.get().profile.locale_check()
 
         """Building and installing redis"""
         if reset is False and self.isInstalled():

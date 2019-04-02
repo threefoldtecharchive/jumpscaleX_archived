@@ -127,7 +127,7 @@ class ETCD(Service):
         if self.is_running():
             return
 
-        self._log_info('start etcd {}'.format(self.name))
+        j.tools.logger._log_info('start etcd {}'.format(self.name))
         self.deploy()
         self.create_config()
         cmd = '/bin/etcd --config-file {}'.format(self._config_path)

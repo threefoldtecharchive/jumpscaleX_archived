@@ -72,9 +72,18 @@ class Email(String):
         '''
         if not j.data.types.string.check(value):
             return False
+        if value.strip()=="":
+            return True
         return self._RE.fullmatch(value) is not None
 
+    def default_get(self):
+        if self._default:
+            return self.clean(self._default)
+        return ""
+
     def clean(self, v):
+        if isinstance(v,Email):
+            return v
         if v is None or v == 'None':
             return self.default_get()
         v = j.data.types.string.clean(v)

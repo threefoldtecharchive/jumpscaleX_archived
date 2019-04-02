@@ -27,7 +27,7 @@ class ZeroStor():
         if not is_running:
             return
 
-        self._log_debug('stop %s', self)
+        j.tools.logger._log_debug('stop %s', self)
 
         self.container.client.job.kill(job['cmd']['id'])
 
