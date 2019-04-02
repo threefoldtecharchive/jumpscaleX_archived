@@ -71,7 +71,7 @@ class Traefik(Service):
         """
         create configuration of traefik and upload it in the container
         """
-        self._log_info('Creating traefik config for %s' % self.name)
+        j.tools.logger._log_info('Creating traefik config for %s' % self.name)
         config = self._config_as_text()
         self.container.upload_content(self._config_path, config)
 
@@ -91,7 +91,7 @@ class Traefik(Service):
         if self.is_running():
             return
 
-        self._log_info('start traefik %s' % self.name)
+        j.tools.logger._log_info('start traefik %s' % self.name)
 
         self.deploy()
         self.create_config()

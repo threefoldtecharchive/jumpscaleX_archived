@@ -1,8 +1,8 @@
+from Jumpscale.sal.bash.Profile import Profile
 from Jumpscale import j
 
 BaseClass = j.application.JSBaseClass
 
-from Jumpscale.sal.bash.Profile import Profile
 
 class builder_method(object):
 
@@ -19,14 +19,14 @@ class builder_method(object):
     def __call__(self, func):
 
         def wrapper_action(*args, **kwargs):
-            builder=args[0]
-            args=args[1:]
-            name= func.__name__
+            builder = args[0]
+            args = args[1:]
+            name = func.__name__
 
             done_key = name+"_"+j.data.hash.md5_string(str(args)+str(kwargs))
 
             if self.log:
-                builder._log_debug("do once:%s"%name,data=kwargs)
+                builder._log_debug("do once:%s" % name, data=kwargs)
 
             if "reset" in kwargs:
                 reset = j.data.types.bool.clean(kwargs["reset"])
@@ -44,23 +44,23 @@ class builder_method(object):
                 builder.build()
             if name == "sandbox":
                 builder.install()
-                #only use "main" client, because should be generic usable
+                # only use "main" client, because should be generic usable
                 zhub_client = kwargs.get("zhub_client", None)
                 if not zhub_client and kwargs.get("flist_create"):
                     if not j.clients.zhub.exists(name="main"):
                         raise RuntimeError("cannot find main zhub client")
                     zhub_client = j.clients.zhub.get(name="main")
-                    zhub_client.ping() #should do a test it works
+                    zhub_client.ping()  # should do a test it works
                 kwargs["zhub_client"] = zhub_client
 
 
-            if name in ["start", "stop", "running"]:
+            if name in ["start", "stop", "running", "_init"]:
                 self.done_check = False
 
             if not self.done_check or not builder._done_check(done_key, reset):
                 if self.log:
-                    builder._log_debug("action:%s() start"%name)
-                res = func(builder,*args,**kwargs)
+                    builder._log_debug("action:%s() start" % name)
+                res = func(builder, *args, **kwargs)
 
                 if name == "sandbox" and kwargs.get("flist_create", False):
                     res = builder._flist_create(zhub_client=zhub_client)
@@ -69,11 +69,11 @@ class builder_method(object):
                     builder._done_set(done_key)
 
                 if self.log:
-                    builder._log_debug("action:%s() done -> %s"%(name,res))
+                    builder._log_debug("action:%s() done -> %s" % (name, res))
 
                 return res
             else:
-                builder._log_debug("action:%s() no need to do, was already done"%done_key)
+                builder._log_debug("action:%s() no need to do, was already done" % done_key)
 
         return wrapper_action
 
@@ -82,9 +82,10 @@ class BuilderBaseClass(BaseClass):
     """
     doc in /sandbox/code/github/threefoldtech/jumpscaleX/docs/Internals/Builders.md
     """
+
     def __init__(self):
-        if hasattr(self.__class__,"NAME"):
-            assert isinstance(self.__class__.NAME,str)
+        if hasattr(self.__class__, "NAME"):
+            assert isinstance(self.__class__.NAME, str)
             self.DIR_BUILD = "/tmp/builders/{}".format(self.__class__.NAME)
             self.DIR_SANDBOX = "/tmp/package/{}".format(self.__class__.NAME)
 
@@ -98,7 +99,7 @@ class BuilderBaseClass(BaseClass):
         """
         self.state = self.state.SANDBOX
         self._bash = None
-        
+
     def profile_home_select(self):
         if self.profile.state == "home":
             return
@@ -116,10 +117,9 @@ class BuilderBaseClass(BaseClass):
 
         self._profile_defaults_system()
 
-        self.profile.env_set("PS1","HOME: ")
+        self.profile.env_set("PS1", "HOME: ")
 
-        self._log_info("home profile path in:%s"%self.profile.profile_path)
-
+        self._log_info("home profile path in:%s" % self.profile.profile_path)
 
     def profile_builder_select(self):
         if self.profile.state == "builder":
@@ -131,12 +131,12 @@ class BuilderBaseClass(BaseClass):
 
     def _profile_defaults_system(self):
 
-        self.profile.env_set("PYTHONHTTPSVERIFY",0)
+        self.profile.env_set("PYTHONHTTPSVERIFY", 0)
 
-        self.profile.env_set("LC_ALL","en_US.UTF-8")
-        self.profile.env_set("LANG","en_US.UTF-8")
+        self.profile.env_set("LC_ALL", "en_US.UTF-8")
+        self.profile.env_set("LANG", "en_US.UTF-8")
 
-        self.profile.path_add("${PATH}",end=True)
+        self.profile.path_add("${PATH}", end=True)
 
     def _profile_builder_set(self):
 
@@ -147,32 +147,31 @@ class BuilderBaseClass(BaseClass):
 
         self.profile_builder_set()
 
-        self.profile.env_set_part("LIBRARY_PATH","/usr/lib")
-        self.profile.env_set_part("LIBRARY_PATH","/usr/local/lib")
-        self.profile.env_set_part("LIBRARY_PATH","/lib")
-        self.profile.env_set_part("LIBRARY_PATH","/lib/x86_64-linux-gnu")
-        self.profile.env_set_part("LIBRARY_PATH","$LIBRARY_PATH",end=True)
+        self.profile.env_set_part("LIBRARY_PATH", "/usr/lib")
+        self.profile.env_set_part("LIBRARY_PATH", "/usr/local/lib")
+        self.profile.env_set_part("LIBRARY_PATH", "/lib")
+        self.profile.env_set_part("LIBRARY_PATH", "/lib/x86_64-linux-gnu")
+        self.profile.env_set_part("LIBRARY_PATH", "$LIBRARY_PATH", end=True)
 
-        self.profile.env_set("LD_LIBRARY_PATH",self.profile.env_get("LIBRARY_PATH")) #makes copy
-        self.profile.env_set("LDFLAGS","-L'%s'"%self.profile.env_get("LIBRARY_PATH"))
+        self.profile.env_set("LD_LIBRARY_PATH", self.profile.env_get("LIBRARY_PATH"))  # makes copy
+        self.profile.env_set("LDFLAGS", "-L'%s'" % self.profile.env_get("LIBRARY_PATH"))
 
-        self.profile.env_set_part("CPPPATH","/usr/include")
-        self.profile.env_set("CPATH",self.profile.env_get("CPPPATH"))
-        self.profile.env_set("CPPFLAGS","-I'%s'"%self.profile.env_get("CPPPATH"))
+        self.profile.env_set_part("CPPPATH", "/usr/include")
+        self.profile.env_set("CPATH", self.profile.env_get("CPPPATH"))
+        self.profile.env_set("CPPFLAGS", "-I'%s'" % self.profile.env_get("CPPPATH"))
 
-        self.profile.env_set("PS1","PYTHONBUILDENV: ")
+        self.profile.env_set("PS1", "PYTHONBUILDENV: ")
 
         self._profile_defaults_system()
 
         self.profile.path_add(self._replace("{DIR_BUILD}/bin"))
 
-        self._log_info("build profile path in:%s"%self.profile.profile_path)
+        self._log_info("build profile path in:%s" % self.profile.profile_path)
 
     def profile_sandbox_select(self):
         if self.profile.state == "sandbox":
             return
         self._profile_sandbox_set()
-
 
     def profile_sandbox_set(self):
         pass
@@ -185,27 +184,25 @@ class BuilderBaseClass(BaseClass):
 
         self.profile.path_add("/sandbox/bin")
 
-        self.profile.env_set("PYTHONHTTPSVERIFY",0)
+        self.profile.env_set("PYTHONHTTPSVERIFY", 0)
 
-        self.profile.env_set_part("PYTHONPATH","/sandbox/lib")
-        self.profile.env_set_part("PYTHONPATH","/sandbox/lib/jumpscale")
+        self.profile.env_set_part("PYTHONPATH", "/sandbox/lib")
+        self.profile.env_set_part("PYTHONPATH", "/sandbox/lib/jumpscale")
 
-        self.profile.env_set("LC_ALL","en_US.UTF-8")
-        self.profile.env_set("LANG","en_US.UTF-8")
-        self.profile.env_set("PS1","JSX: ")
-
+        self.profile.env_set("LC_ALL", "en_US.UTF-8")
+        self.profile.env_set("LANG", "en_US.UTF-8")
+        self.profile.env_set("PS1", "JSX: ")
 
         self.profile_sandbox_set()
 
         self.profile.path_delete("${PATH}")
 
         if j.core.platformtype.myplatform.isMac:
-            self.profile.path_add("${PATH}",end=True)
+            self.profile.path_add("${PATH}", end=True)
 
-        self.profile.env_set_part("PYTHONPATH","$PYTHONPATH",end=True)
+        self.profile.env_set_part("PYTHONPATH", "$PYTHONPATH", end=True)
 
-        self._log_info("sandbox profile path in:%s"%self.profile.profile_path)
-
+        self._log_info("sandbox profile path in:%s" % self.profile.profile_path)
 
     @property
     def bash(self):
@@ -217,18 +214,18 @@ class BuilderBaseClass(BaseClass):
     def profile(self):
         return self.bash.profile
 
-    def _replace(self, txt,args={}):
+    def _replace(self, txt, args={}):
         """
 
         :param txt:
         :return:
         """
-        for key,item in self.__dict__.items():
+        for key, item in self.__dict__.items():
             if key.upper() == key:
                 args[key] = item
-        res =  j.core.tools.text_replace(content=txt, args=args, text_strip=True)
-        if res.find("{")!=-1:
-            raise RuntimeError("replace was not complete, still { inside, '%s'"%res)
+        res = j.core.tools.text_replace(content=txt, args=args, text_strip=True)
+        if res.find("{") != -1:
+            raise RuntimeError("replace was not complete, still { inside, '%s'" % res)
         return res
 
     def _execute(self, cmd, die=True, args={}, timeout=600,
@@ -245,28 +242,28 @@ class BuilderBaseClass(BaseClass):
         """
         self._log_debug(cmd)
         if replace:
-            cmd = self._replace(cmd,args=args)
+            cmd = self._replace(cmd, args=args)
         if cmd.strip() == "":
             raise RuntimeError("cmd cannot be empty")
 
-        cmd="cd %s\n. %s\n%s"%(self.bash.path,self.profile.profile_path,cmd)
+        cmd = "cd %s\n. %s\n%s" % (self.bash.path, self.profile.profile_path, cmd)
         name = self.__class__._name
-        name = name.replace("builder","")
-        path = "%s/builder_%s.sh"%(self.bash.path,name)
-        self._log_debug("execute: '%s'"%path)
+        name = name.replace("builder", "")
+        path = "%s/builder_%s.sh" % (self.bash.path, name)
+        self._log_debug("execute: '%s'" % path)
 
         if die:
-            if cmd.find("set -xe")==-1 and cmd.find("set -e")==-1:
-                cmd="set -ex\n%s"%(cmd)
+            if cmd.find("set -xe") == -1 and cmd.find("set -e") == -1:
+                cmd = "set -ex\n%s" % (cmd)
 
-        j.sal.fs.writeFile(path,contents=cmd)
+        j.sal.fs.writeFile(path, contents=cmd)
 
-        return j.sal.process.execute("bash %s"%path, cwd=None, timeout=timeout, die=die,
-                                             args=args, interactive=interactive, replace=False, showout=showout)
+        return j.sal.process.execute("bash %s" % path, cwd=None, timeout=timeout, die=die,
+                                     args=args, interactive=interactive, replace=False, showout=showout)
 
-    def _copy(self, src, dst, deletefirst=False,ignoredir=None,ignorefiles=None,deleteafter=False):
+    def _copy(self, src, dst, deletefirst=False, ignoredir=None, ignorefiles=None, deleteafter=False):
         """
-        
+
         :param src: 
         :param dst: 
         :param deletefirst: 
@@ -279,8 +276,8 @@ class BuilderBaseClass(BaseClass):
         dst = self._replace(dst)
         if j.builder.tools.file_is_dir:
             j.builder.tools.copyTree(src, dst, keepsymlinks=False, deletefirst=deletefirst, overwriteFiles=True,
-                                 ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=deleteafter,
-                                 createdir=True)
+                                     ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=deleteafter,
+                                     createdir=True)
         else:
             j.builder.tools.file_copy(src, dst, recursive=False, overwrite=True)
 
@@ -293,7 +290,7 @@ class BuilderBaseClass(BaseClass):
         """
         path = self._replace(path)
         txt = self._replace(txt)
-        j.sal.fs.writeFile(path,txt)
+        j.sal.fs.writeFile(path, txt)
 
     def _remove(self, path):
         """
@@ -301,7 +298,7 @@ class BuilderBaseClass(BaseClass):
         :param path:
         :return:
         """
-        self._log_debug("remove:%s"%path)
+        self._log_debug("remove:%s" % path)
         path = self._replace(path)
 
         j.sal.fs.remove(path)
@@ -362,7 +359,7 @@ class BuilderBaseClass(BaseClass):
 
     def running(self):
         for startupcmd in self.startup_cmds:
-            if startupcmd.running() == False:
+            if startupcmd.running is False:
                 return False
         return True
 
@@ -392,22 +389,19 @@ class BuilderBaseClass(BaseClass):
 
         j.tools.sandboxer.copyTo(src, dst)
 
-
         if j.core.platformtype.myplatform.isLinux:
             ld_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'lib64/')
             j.builder.tools.dir_ensure(ld_dest)
             j.sal.fs.copyFile('/lib64/ld-linux-x86-64.so.2', ld_dest)
 
         # if zhub_client:
-        #for now only upload to HUB
+        # for now only upload to HUB
         self._log_info("uploading flist to the hub")
         return zhub_client.sandbox_upload(self.NAME, self.DIR_SANDBOX)
         # else:
         #     tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
         #     j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, self.DIR_SANDBOX))
         #     return tarfile
-
-
 
     def clean(self):
         """
@@ -432,13 +426,13 @@ class BuilderBaseClass(BaseClass):
         """
         raise RuntimeError("not implemented")
 
-    def test_api(self,ipaddr="localhost"):
+    def test_api(self, ipaddr="localhost"):
         """
         - will test the api on specified ipaddr e.g. rest calls, tcp calls, port checks, ...
         """
         raise RuntimeError("not implemented")
 
-    def test_zos(self,zhub_client,zos_client):
+    def test_zos(self, zhub_client, zos_client):
         """
 
         - a basic test to see if the build was successfull
