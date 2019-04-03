@@ -417,9 +417,9 @@ def ptconfig(repl):
         except ValueError:
             return
 
-        completions = list(old_get_completions(self, document, complete_event))
+        completions = list(get_completions(self, document, complete_event))
         if not completions:
-            completions = get_completions(self, document, complete_event)
+            completions = old_get_completions(self, document, complete_event)
         yield from filter_completions_on_prefix(completions, prefix)
 
     repl._completer.__class__.get_completions = custom_get_completions
