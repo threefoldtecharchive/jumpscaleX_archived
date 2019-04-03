@@ -97,8 +97,7 @@ class JSBaseConfigs(JSBase):
             else:
                 data = res[0]
                 if kwargs:
-                    #means we need to update
-                    j.shell()
+                    data._data_update(data=kwargs)
         else:
             if kwargs=={}:
                 raise RuntimeError("kwargs need to be specified is name is not.")

@@ -43,7 +43,10 @@ class SSHClientBase(j.application.JSBaseConfigClass):
     @property
     def isprivate(self):
         if self._private is None:
-            self._private = j.sal.nettools.tcpPortConnectionTest(self.addr_priv, self.port_priv, 1)
+            if self.addr_priv=="":
+                self._private = False
+            else:
+                self._private = j.sal.nettools.tcpPortConnectionTest(self.addr_priv, self.port_priv, 1)
         return self._private
 
     @property

@@ -410,10 +410,10 @@ class Docker(j.application.JSBaseClass):
 
         container = self.container_get_by_id(id)
 
-        if ssh:
+        if sshkey: #sshkey can be name or instance
             if setrootrndpasswd:
                 if rootpasswd is None or rootpasswd == '':
-                    rootpasswd = 'gig1234'
+                    rootpasswd = 'tf1234'
             ex = j.tools.executor.getLocalDocker(name)
             ex.execute("apt-get update")
             ex.execute("apt-get install sudo")

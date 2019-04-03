@@ -104,7 +104,7 @@ class SSHAgent(j.application.JSBaseClass):
         return [i[0] for i in self._keys]
 
     @property
-    def key_default(self):
+    def key_default_or_none(self):
         '''
         see if we can find the default sshkey using sshagent
 
@@ -113,7 +113,7 @@ class SSHAgent(j.application.JSBaseClass):
         :raises RuntimeError: sshkey not found in sshagent
         :raises RuntimeError: more than one sshkey is found in sshagent
         :return: j.clients.sshkey.new() ...
-        :rtype: str
+        :rtype: sshkey object or None
         '''
         if not self._default_key:
             self.check()
@@ -135,10 +135,26 @@ class SSHAgent(j.application.JSBaseClass):
                     else:
                         self._default_key = j.clients.sshkey.get(name=name,pubkey=key,path=path)
 
-
                     return self._default_key
+            return None
+        return self._default_key
 
+    @property
+    def key_default(self):
+        '''
+        see if we can find the default sshkey using sshagent
+
+        j.clients.sshagent.key_default
+
+        :raises RuntimeError: sshkey not found in sshagent
+        :raises RuntimeError: more than one sshkey is found in sshagent
+        :return: j.clients.sshkey.new() ...
+        :rtype: sshkey object or error
+        '''
+        r = self.key_default_or_none
+        if r is None:
             raise RuntimeError("Could not define key_default")
+        return r
 
 
         return self._default_key
