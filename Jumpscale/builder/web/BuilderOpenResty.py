@@ -42,7 +42,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             make install
             rm -rf {DIR_BUILD}
             rm -f /sandbox/bin/lua
-            ln -s /sandbox/openresty/opernresty/luajit/bin/luajit /sandbox/bin/lua
+            ln -s /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
 
             """
             self._execute(C)

@@ -24,7 +24,6 @@ class BuilderLua(j.builder.system._BaseClass):
         url = "https://luarocks.org/releases/luarocks-3.0.4.tar.gz"
         dest = self._replace("{DIR_BUILD}/luarocks")
         self.tools.dir_ensure(dest)
-        self.tools.dir_ensure('/sandbox/openresty/luajit')
         self.tools.file_download(url, to=dest, overwrite=False, retry=3,
                                  expand=True, minsizekb=100, removeTopDir=True, deletedest=True)
         C = """
