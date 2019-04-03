@@ -33,8 +33,9 @@ class BuilderCoreDns(j.builder.system._BaseClass):
 
         # install golang
         j.builder.runtimes.golang.install()
+        j.builder.db.etcd.install()
         j.builder.runtimes.golang.get('github.com/coredns/coredns', install=False, update=True)
-
+        
         # go to package path and build (for coredns)
         C="""
         cd {DIR_BUILD}
@@ -43,8 +44,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         git checkout threefoldtech_coredns/master
         make
         """
-        j.builder.tools.execute(C)
-
+        self._execute(C)
 
     @builder_method()
     def install(self):
@@ -53,48 +53,40 @@ class BuilderCoreDns(j.builder.system._BaseClass):
 
         installs and runs coredns server with redis plugin
         """
-
-        self._execute("cp {GITDIR}/coredns/coredns /sandbox/bin/coredns")
-
-        #WRITE THE CONFIG FILE IN THE SANDBOX DIR /sandbox/cfg/coredns.conf
-
+        self._copy(src='{DIR_BUILD}/coredns', dst='/sandbox/bin/coredns')
+        j.sal.fs.writeFile(filename='/sandbox/cfg/coredns.conf', contents=CONFIGTEMPLATE)
 
     @property
     def startup_cmds(self):
         cmd = "/sandbox/bin/coredns -conf /sandbox/cfg/coredns.conf"
-        cmds = [j.data.startupcmd.get(cmd)]
+        cmds = [j.tools.startupcmd.get(name='coredns', cmd=cmd)]
         return cmds
 
     @builder_method()
     def sandbox(self):
-        print("#TODO:*1")
-        j.shell()
-        coredns_bin = j.sal.fs.joinPaths(self._package_path, 'coredns')
+        coredns_bin = j.sal.fs.joinPaths(self.DIR_BUILD, self.NAME)
         dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, coredns_bin[1:])
         j.builder.tools.dir_ensure(dir_dest)
-        j.sal.fs.copyFile(coredns_bin, dir_dest)
+        self._copy(coredns_bin, dir_dest)
 
-        dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, self.DIR_SANDBOX, 'etc/ssl/certs/')
+        dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'etc/ssl/certs/')
         j.builder.tools.dir_ensure(dir_dest)
-        j.sal.fs.copyDirTree('/etc/ssl/certs', dir_dest)
-
-        #copy the /sandbox/cfg/coredns.conf to the sandbox dir
-        #TODO:*1
-
-
-
-
+        self._copy('/etc/ssl/certs', dir_dest)
+        self._copy('/sandbox/cfg/coredns.conf', self.DIR_SANDBOX)
 
     @builder_method()
     def test(self):
         if self.running():
             self.stop()
 
+        j.servers.etcd.start()
         self.start()
-
-        client = j.clients.coredns.get("test_builder", "etcd_instance")
+        j.clients.etcd.get('test_coredns')
+        client = j.clients.coredns.get(name='test_builder', etcd_instance='test_coredns')
         client.zone_create("example.com", "0.0.0.0")
         client.deploy()
+        self.stop()
+        j.servers.etcd.stop()
 
     @builder_method()
     def test_zos(self, zos_client, flist=None, build=False):
@@ -106,4 +98,3 @@ class BuilderCoreDns(j.builder.system._BaseClass):
 
         container = zos_client.container.create("test_coredns_builder", flist)
         # TODO: do more tests on the created container
-
