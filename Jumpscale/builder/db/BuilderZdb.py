@@ -1,66 +1,78 @@
 from Jumpscale import j
+builder_method = j.builder.system.builder_method
 
 
 class BuilderZdb(j.builder.system._BaseClass):
+    NAME = '0-db'
 
     def _init(self):
         self.git_url = 'https://github.com/threefoldtech/0-db.git'
 
-    def build(self, reset=False, branch='development'):
+    @builder_method()
+    def build(self):
         """
         build zdb
         :return:
         """
-        if self._done_get('build') and reset is False:
-            return
+        self.DIR_BUILD = j.sal.fs.getTmpDirPath()
+        self.tools.dir_ensure(self.DIR_BUILD)
+        C = """
+        cd {DIR_BUILD}
+        git clone https://github.com/threefoldtech/0-db.git --branch development
+        cd {DIR_BUILD}/0-db
+        make
+        """
+        self._execute(C)
 
-        j.builder.system.package.mdupdate()
-        j.builder.system.package.ensure("git")
-        path = j.builder.tools.joinpaths(j.sal.fs.getTmpDirPath(), '0-db')
-        dest = j.clients.git.pullGitRepo(self.git_url, dest=path, ssh=False)
-
-        self._done_set('build')
-        return dest
-
-    def install(self, branch="development", reset=False):
+    @builder_method()
+    def install(self):
         """
         Installs the zdb binary to the correct location
         """
+        zdb_bin_path = j.builder.tools.joinpaths(self.DIR_BUILD, '0-db/bin/zdb')
+        self._copy(zdb_bin_path, '{DIR_BIN}')
 
-        if self._done_get('install') and reset is False:
-            return
+    @property
+    def startup_cmds(self):
+        addr = '127.0.0.1'
+        port = 9900
+        datadir = self.DIR_BUILD
+        mode = 'seq'
+        adminsecret = '123456'
+        idir = '{}/index/'.format(datadir)
+        ddir = '{}/data/'.format(datadir)
+        j.sal.fs.createDir(idir)
+        j.sal.fs.createDir(ddir)
+        cmd = '/sandbox/bin/zdb --listen {} --port {} --index {} --data {} --mode {} --admin {} --protect'.format(
+            addr, port, idir, ddir, mode, adminsecret)
+        cmds=[j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
+        return cmds
 
-        base_dir = self.build(branch=branch, reset=reset)
-        c = """
-        cd {}
-        make
-        """.format(base_dir)
+    @builder_method()
+    def sandbox(self):
+        bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
+        self.tools.dir_ensure(bin_dest)
+        zdb_bin_path = self.tools.joinpaths("{DIR_BIN}", 'zdb')
+        self._copy(zdb_bin_path, bin_dest)
 
-        j.sal.process.execute(c)
-        zdb_bin_path = j.builder.tools.joinpaths(base_dir, 'bin/zdb')
+    @builder_method()
+    def clean(self):
+        self._remove(self.DIR_BUILD)
+        self._remove(self.DIR_SANDBOX)
 
-        j.core.tools.dir_ensure("{DIR_BIN}")
-        j.builder.tools.file_copy(zdb_bin_path, "{DIR_BIN}/")
+    @builder_method()
+    def test(self):
+        if self.running():
+            self.stop()
+        
+        self.start()
+        admin_client = j.clients.zdb.client_admin_get()
+        namespaces = admin_client.namespaces_list()
+        assert namespaces == ['default']
 
-        self._done_set('install')
+        admin_client.namespace_new(name='test', maxsize=10)
+        namespaces = admin_client.namespaces_list()
+        assert namespaces == ['default', 'test']
 
-    def start(self, destroydata=False):
-        """
-        start zdb in tmux using this directory
-        will only start when the server is not life yet
-        """
-
-        return j.servers.zdb.start(destroydata)
-
-    def stop(self):
-        """
-        stop zdb in tmux
-        """
-        return j.servers.zdb.stop()
-
-    def isrunning(self):
-        """
-        check zdb binary is running or not
-        """
-
-        return j.servers.zdb.isrunning()
+        admin_client.namespace_delete('test')
+        self.stop()

@@ -56,6 +56,10 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         self._copy(src='{DIR_BUILD}/coredns', dst='/sandbox/bin/coredns')
         j.sal.fs.writeFile(filename='/sandbox/cfg/coredns.conf', contents=CONFIGTEMPLATE)
 
+    def clean(self):
+        self._remove(self.DIR_BUILD)
+        self._remove(self.DIR_SANDBOX)
+    
     @property
     def startup_cmds(self):
         cmd = "/sandbox/bin/coredns -conf /sandbox/cfg/coredns.conf"
@@ -65,12 +69,12 @@ class BuilderCoreDns(j.builder.system._BaseClass):
     @builder_method()
     def sandbox(self):
         coredns_bin = j.sal.fs.joinPaths(self.DIR_BUILD, self.NAME)
-        dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, coredns_bin[1:])
-        j.builder.tools.dir_ensure(dir_dest)
+        dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'sandbox')
+        self.tools.dir_ensure(dir_dest)
         self._copy(coredns_bin, dir_dest)
 
         dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'etc/ssl/certs/')
-        j.builder.tools.dir_ensure(dir_dest)
+        self.tools.dir_ensure(dir_dest)
         self._copy('/etc/ssl/certs', dir_dest)
         self._copy('/sandbox/cfg/coredns.conf', self.DIR_SANDBOX)
 
