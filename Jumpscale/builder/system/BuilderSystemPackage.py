@@ -6,7 +6,8 @@ CMD_APT_GET = "apt-get "
 builder_method = j.builder.system.builder_method
 
 class BuilderSystemPackage(j.builder.system._BaseClass):
-
+    NAME = "SystemPackage"
+    
     @builder_method()
     def _repository_ensure_apt(self, repository):
         self.ensure('python-software-properties')

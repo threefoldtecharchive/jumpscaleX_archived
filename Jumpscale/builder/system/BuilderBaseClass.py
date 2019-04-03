@@ -160,11 +160,11 @@ class BuilderBaseClass(BaseClass):
         self.profile.env_set_part("LIBRARY_PATH", "$LIBRARY_PATH", end=True)
 
         self.profile.env_set("LD_LIBRARY_PATH", self.profile.env_get("LIBRARY_PATH"))  # makes copy
-        self.profile.env_set("LDFLAGS", "-L'%s'" % self.profile.env_get("LIBRARY_PATH"))
+        self.profile.env_set("LDFLAGS", "-L%s" % self.profile.env_get("LIBRARY_PATH"))
 
         self.profile.env_set_part("CPPPATH", "/usr/include")
         self.profile.env_set("CPATH", self.profile.env_get("CPPPATH"))
-        self.profile.env_set("CPPFLAGS", "-I'%s'" % self.profile.env_get("CPPPATH"))
+        self.profile.env_set("CPPFLAGS", "-I%s" % self.profile.env_get("CPPPATH"))
 
         self.profile.env_set("PS1", "PYTHONBUILDENV: ")
 
