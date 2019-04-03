@@ -96,6 +96,9 @@ class JSBaseConfigs(JSBase):
                     "Found more than 1 service for :%s, name searched for:%s" % (self.__class__._location, name))
             else:
                 data = res[0]
+                if kwargs:
+                    #means we need to update
+                    j.shell()
         else:
             if kwargs=={}:
                 raise RuntimeError("kwargs need to be specified is name is not.")

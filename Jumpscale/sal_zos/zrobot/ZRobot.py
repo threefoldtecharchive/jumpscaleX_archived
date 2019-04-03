@@ -14,8 +14,8 @@ class ZeroRobot:
         self.telegram_bot_token = telegram_bot_token
         self.telegram_chat_id = telegram_chat_id
         self.template_repos = template_repos if template_repos else list()
-        self.data_repo = data_repo or '/opt/code/zrobot'
-        self.config_repo = config_repo or '/opt/code/zrobot/config'
+        self.data_repo = data_repo or '/sandbox/code/zrobot'
+        self.config_repo = config_repo or '/sandbox/code/zrobot/config'
         self.organization = organization
         self.config_key = config_key
         self.auto_push = auto_push

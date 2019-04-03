@@ -18,7 +18,7 @@ class BuilderS3Scality(j.builder.system._BaseClass):
         j.core.tools.dir_ensure(storageLocation)
         j.core.tools.dir_ensure(metaLocation)
 
-        j.core.tools.dir_ensure('/opt/code/github/scality')
+        j.core.tools.dir_ensure('/sandbox/code/github/scality')
         path = j.clients.git.pullGitRepo('https://github.com/scality/S3.git', ssh=False)
         profile = #j.builder.sandbox.profile_default
         profile.path_add('{DIR_BIN}')

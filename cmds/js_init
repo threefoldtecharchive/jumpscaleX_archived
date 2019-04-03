@@ -11,7 +11,7 @@ try:
     from Jumpscale import j
 except:
     for item in ["{DIR_HOME}/code/github/threefoldtech/jumpscaleX/Jumpscale",
-                 "/opt/code/github/threefoldtech/jumpscaleX/Jumpscale"]:
+                 "/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale"]:
         item = item.replace("$HOME",os.environ["HOME"])
         if os.path.exists(item) and item not in sys.path:
             sys.path.append(item)

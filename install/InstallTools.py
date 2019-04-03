@@ -1860,14 +1860,18 @@ class MyEnv():
             dir_home = "/root"
         config["DIR_HOME"] = dir_home
         config["USEGIT"] = True
-        config["DEBUG"] = True
-        config["SSH_AGENT"] = False
+        config["DEBUG"] = False
 
-        config["LOGGER_INCLUDE"] = []
+        config["SSH_AGENT"] = False
+        config["SSH_KEY_DEFAULT"] = ""
+
+        config["LOGGER_INCLUDE"] = ["*"]
         config["LOGGER_EXCLUDE"] = ["sal.fs"]
         config["LOGGER_LEVEL"] = 15 #means std out & plus gets logged
         config["LOGGER_CONSOLE"] = True
         config["LOGGER_REDIS"] = False
+
+
 
         if MyEnv.installer_only:
             config["DIR_TEMP"] = "/tmp/jumpscale_installer"

@@ -6,7 +6,7 @@ class SSHKey(j.application.JSBaseConfigClass):
     _SCHEMATEXT = """
         @url = jumpscale.sshkey.client
         name* = "" (S)
-        pubkey = "" (S)
+        pubkey = "" (S) 
         allow_agent = True (B)
         passphrase = "" (S)
         privkey = "" (S)
@@ -15,12 +15,36 @@ class SSHKey(j.application.JSBaseConfigClass):
         """
 
 
-    def _init(self):
+    def _init2(self,**kwargs):
 
         self._connected = None
 
         if self.name == "":
             raise RuntimeError("need to specify name")
+
+        self.autosave = True  # means every write will be saved (is optional to set)
+
+        if self.path!="" and j.sal.fs.exists(self.path):
+            if not self.privkey:
+                self.privkey = j.sal.fs.readFile(self.path)
+
+            if not self.pubkey and self.privkey:
+                path = '%s.pub' % (self.path)
+                if not j.sal.fs.exists(path):
+                    cmd = 'ssh-keygen -f {} -N "{}"'.format(self.path, self.passphrase)
+                    j.sal.process.execute(cmd)
+                self.pubkey = j.sal.fs.readFile(path)
+                self.save()
+
+
+    def generate(self, reset=False):
+        '''
+        Generate ssh key
+
+        :param reset: if True, then delete old ssh key from dir, defaults to False
+        :type reset: bool, optional
+        '''
+        self._log_debug("generate ssh key")
 
         if self.path == "":
             keyspath = "%s/keys" % (j.sal.fs.getcwd())
@@ -30,19 +54,27 @@ class SSHKey(j.application.JSBaseConfigClass):
                 self.path = keyspath
             else:
                 self.path = keyspath_system
-        from pudb import set_trace; set_trace()
-        if not self.pubkey:
-            path = '%s.pub' % (self.path)
-            if not j.sal.fs.exists(path):
-                cmd = 'ssh-keygen -f {} -N "{}"'.format(self.path, self.passphrase)
-                j.sal.process.execute(cmd)
-            self.pubkey = j.sal.fs.readFile(path)
 
-        if not self.privkey:
-            self.privkey = j.sal.fs.readFile(self.path)
+        if reset:
+            self.delete_from_sshdir()
+            self.pubkey=""
+            self.privkey=""
 
-        self.save()
-        self.autosave = True  # means every write will be saved (is optional to set)
+        else:
+            if not j.sal.fs.exists(self.path):
+                if self.privkey != "" and self.pubkey != "":
+                    self.write_to_sshdir()
+
+        if self.pubkey:
+            raise RuntimeError("cannot generate key because pubkey already known")
+        if self.privkey:
+            raise RuntimeError("cannot generate key because privkey already known")
+
+        if not j.sal.fs.exists(self.path) or reset:
+            cmd = 'ssh-keygen -t rsa -f {} -N "{}"'.format(self.path, self.passphrase)
+            j.sal.process.execute(cmd, timeout=10)
+            self._init2()
+
 
     def delete(self):
         """
@@ -63,28 +95,7 @@ class SSHKey(j.application.JSBaseConfigClass):
         j.sal.fs.writeFile(self.path, self.privkey)
         j.sal.fs.writeFile(self.path + ".pub", self.pubkey)
 
-    def generate(self, reset=False):
-        '''
-        Generate ssh key
 
-        :param reset: if True, then delete old ssh key from dir, defaults to False
-        :type reset: bool, optional
-        '''
-        self._log_debug("generate ssh key")
-        if reset:
-            self.delete_from_sshdir()
-        else:
-            if not j.sal.fs.exists(self.path):
-                if self.privkey != "" and self.pubkey != "":
-                    self.write_to_sshdir()
-
-        if not j.sal.fs.exists(self.path) or reset:
-            cmd = 'ssh-keygen -t rsa -f {} -N "{}"'.format(self.path, self.passphrase)
-            j.sal.process.execute(cmd, timeout=10)
-
-        self.pubkey=""
-        self.privkey=""
-        self._init()  # will load the info from fs
 
     def sign_ssh_data(self, data):
         return self.agent.sign_ssh_data(data)

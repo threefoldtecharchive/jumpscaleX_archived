@@ -30,7 +30,7 @@ class BuilderGateOne(j.builder.system._BaseClass):
             return
 
         cmd = """
-cd /opt/code/github/liftoff/GateOne
+cd /sandbox/code/github/liftoff/GateOne
 apt-get install build-essential python3-dev python3-setuptools python3-pip -y
 pip3 install tornado==4.5.3
 python3 setup.py install

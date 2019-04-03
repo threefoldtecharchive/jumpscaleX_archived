@@ -222,14 +222,11 @@ class Docker(j.application.JSBaseClass):
             replace=True,
             cpu=None,
             mem=0,
-            ssh=True,
             myinit=True,
             sharecode=False,
-            sshkeyname="",
-            sshpubkey="",
+            sshkey=None,
             setrootrndpasswd=True,
             rootpasswd="",
-            jumpscalebranch="master",
             aysfs=[],
             detach=False,
             privileged=False,
@@ -240,10 +237,10 @@ class Docker(j.application.JSBaseClass):
         j.sal.docker.create(...)
         @param ports in format as follows  "22:8022 80:8080"  the first arg e.g. 22 is the port in the container
         @param vols in format as follows "/var/insidemachine:/var/inhost # /var/1:/var/1 # ..."   '#' is separator
-        @param sshkeyname : use ssh-agent (can even do remote through ssh -A) and then specify key you want to use in docker
+        @param sshkey : kan be a j.clients.sshkey name or instance, if not used then no ssh
         @param ssh : if True it will authorize the sskey name givin and creates a node for it
         """
-        if ssh is True and myinit is False:
+        if sshkey is True and myinit is False:
             raise ValueError("SSH can't be enabled without myinit.")
 
         name = name.lower().strip()
@@ -289,7 +286,7 @@ class Docker(j.application.JSBaseClass):
                 else:
                     portsdict[int(key)] = val
 
-        if ssh:
+        if sshkey:
             if 22 not in portsdict:
                 for port in range(9022, 9190):
                     if not j.sal.nettools.tcpPortConnectionTest(self.docker_host, port):
@@ -304,10 +301,10 @@ class Docker(j.application.JSBaseClass):
                 key, val = item.split(":", 1)
                 volsdict[str(key).strip()] = str(val).strip()
 
-        if sharecode and j.sal.fs.exists(path="/opt/code"):
+        if sharecode and j.sal.fs.exists(path="/sandbox/code"):
             self._log_info("share jumpscale code enable")
-            if "/opt/code" not in volsdict:
-                volsdict["/opt/code"] = "/opt/code"
+            if "/sandbox/code" not in volsdict:
+                volsdict["/sandbox/code"] = "/sandbox/code"
 
         for fs in aysfs:
             self._init_aysfs(fs, name)

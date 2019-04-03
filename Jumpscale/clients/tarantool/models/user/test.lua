@@ -76,7 +76,7 @@ obj={
 
 
 
-package.path = '/opt/code/github/threefoldtech/jumpscaleX/Jumpscale/clients/tarantool/systemscripts/?.lua;' .. package.path
+package.path = '/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/clients/tarantool/systemscripts/?.lua;' .. package.path
 package.path = '/tmp/lua/?.lua;' .. package.path
 
 -- model_capnp_user=require("model_capnp_user")

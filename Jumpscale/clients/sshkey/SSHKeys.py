@@ -12,6 +12,10 @@ class SSHKeys(j.application.JSBaseConfigsClass):
         # self._sshagent = None
         self.SSHKey = SSHKey  # is the child class, can have more than 1
 
+    @property
+    def default(self):
+        return j.clients.sshagent.key_default
+
     def knownhosts_remove(self, item):
         """
         :param item: is ip addr or hostname to be removed from known_hosts
