@@ -27,14 +27,14 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
         C = """
         set -ex
         cd {DIR_BUILD}
-        git clone https://github.com/openssl/openssl.git
+        git clone --depth 1 https://github.com/openssl/openssl.git
         cd openssl
         ./config
-        ./Configure {TARGET} shared enable-ec_nistp_64_gcc_128 no-ssl2 no-ssl3 no-comp --openssldir={DIR_BUILD} --prefix={DIR_BUILD} zlib
+        ./Configure {TARGET} shared enable-ec_nistp_64_gcc_128 no-ssl2 no-ssl3 no-comp --openssldir=/sandbox/var/openssl --prefix=/sandbox/ zlib
         make depend
         make install
-        rm -rf {DIR_BUILD}/share
-        rm -rf {DIR_BUILD}/build/private
+        rm -rf /sandbox/share
+        rm -rf /sandbox/build/private
         echo "**BUILD DONE**"
         """
         self._write("{DIR_BUILD}/mycompile_all.sh", C)

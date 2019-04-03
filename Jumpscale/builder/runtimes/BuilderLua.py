@@ -45,7 +45,7 @@ class BuilderLua(j.builder.system._BaseClass):
         if self._done_check("lua_rock_install_%s" % name) and not reset:
             return
 
-        C = "luarocks install $NAME OPENSSL_DIR=/sandbox/var/build/openssl CRYPTO_DIR=/sandbox/var/build/openssl"
+        C = "luarocks install $NAME OPENSSL_DIR=/sandbox/ CRYPTO_DIR=/sandbox/"
         C = C.replace("$NAME", name)
         self._execute(C)
 
