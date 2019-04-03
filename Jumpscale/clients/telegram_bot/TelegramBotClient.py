@@ -44,3 +44,4 @@ class TelegramBot(JSConfigClient):
         url = "/bot{}/sendMessage?{}".format(self.bot_token_, urlencode(params))
         self._conn.request("GET", url)
         return self._conn.getresponse().read()
+

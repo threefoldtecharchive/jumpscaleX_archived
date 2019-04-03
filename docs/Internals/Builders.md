@@ -1,5 +1,7 @@
 # Builders guidlines
 
+[Video with more explanation](https://drive.google.com/open?id=19uvro52lbOumFNPb7DrnORy31QKJKu6S)
+
 ## there are 3 directories used
 
 - /sandbox      : sandbox directory, has the files in production 
