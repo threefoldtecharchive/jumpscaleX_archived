@@ -9,9 +9,10 @@ from .JobManager import JobManager
 from .ProcessManager import ProcessManager
 from .Response import ResultError
 
+DEFAULT_TIMEOUT = 10  # seconds
 
-class BaseClientMain:
 
+class BaseClient:
 
     _system_chk = typchk.Checker({
         'name': str,
@@ -26,7 +27,8 @@ class BaseClientMain:
         'script': str,
     })
 
-    def _init(self):
+    def __init__(self, timeout=None, **kwargs):
+        self.timeout = DEFAULT_TIMEOUT if timeout is None else timeout
         self._info = InfoManager(self)
         self._job = JobManager(self)
         self._process = ProcessManager(self)
@@ -219,18 +221,3 @@ class BaseClientMain:
         :return: the subscribe Job object
         """
         return self.raw('core.subscribe', {'id': job}, stream=True, id=id)
-
-class BaseClient(j.application.JSBaseConfigClass,BaseClientMain):
-
-    _SCHEMATEXT = """
-    @url = jumpscale.zos.client.connection.1
-    name* = "" (S)
-    host = "127.0.0.1" (S)
-    port = 6379 (ipport)
-    unixsocket = "" (S)
-    password = ""  (S)
-    db = 0 (I)
-    ssl = true (B)
-    timeout = 120 (I)
-    """
-

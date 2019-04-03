@@ -1,6 +1,6 @@
 import shlex
 import json
-from .BaseClient import BaseClientMain
+from .BaseClient import BaseClient
 from .Response import JSONResponse
 from .FlistManager import FlistManager
 
@@ -9,7 +9,7 @@ from . import typchk
 DefaultTimeout = 10  # seconds
 
 
-class ContainerClient(BaseClientMain):
+class ContainerClient(BaseClient):
     class ContainerZerotierManager:
         def __init__(self, client, container):
             self._container = container
@@ -36,7 +36,7 @@ class ContainerClient(BaseClientMain):
     })
 
     def __init__(self, client, container):
-        BaseClientMain._init(self)
+        super().__init__(client.timeout)
         self._client = client
         self._container = container
         self._zerotier = ContainerClient.ContainerZerotierManager(client, container)  # not (self) we use core0 client
@@ -278,7 +278,7 @@ class ContainerManager():
         The layering is done in runtime, no pause or restart of the container is needed
 
         The layer can be called multiple times, each call will only replace the last layer
-        with the passed flist 
+        with the passed flist
         """
         args = {
             'container': container,

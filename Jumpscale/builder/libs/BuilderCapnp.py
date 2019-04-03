@@ -34,7 +34,7 @@ class BuilderCapnp(j.builder.system._BaseClass):
         self.profile_builder_select()
 
         script = """
-        ./configure
+        ./configure CXXFLAGS="-DHOLES_NOT_SUPPORTED"
         make -j6 check
         make install
         """
@@ -48,11 +48,9 @@ class BuilderCapnp(j.builder.system._BaseClass):
 
         kosmos 'j.builder.libs.capnp.install()'
         """
-
-        self.build()
+        if self.tools.isUbuntu:
+            j.builder.system.package.ensure('g++')
         j.builder.runtimes.python.pip_package_install(['cython', 'setuptools', 'pycapnp'])
-
-        self._done_set('capnp')
 
     def test(self):
         """

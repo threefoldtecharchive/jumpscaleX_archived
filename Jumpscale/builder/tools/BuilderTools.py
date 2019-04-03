@@ -274,8 +274,7 @@ class BuilderTools(j.builder.system._BaseClass):
                 location), "prefab.file_read: file does not exists {0}".format(location)
         elif not self.file_exists(location):
             return default
-        frame = self.file_base64(location)
-        return base64.decodebytes(frame.encode(errors='replace')).decode()
+        return j.sal.fs.readFile(location)
 
     def file_exists(self, location):
         """Tests if there is a file at the given location."""
