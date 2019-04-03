@@ -887,11 +887,17 @@ class Tools:
         if data_show:
             if logdict["data"] not in ["",None,{}]:
                 if isinstance(logdict["data"],dict):
-                    data = serializer(logdict["data"])
+                    try:
+                        data = serializer(logdict["data"])
+                    except Exception as e:
+                        data = logdict["data"]
                 else:
                     data = logdict["data"]
                 data=Tools.text_indent(data,10,strip=True)
-                data=Tools.text_replace(data,text_strip=False)
+                try:
+                    data=Tools.text_replace(data,text_strip=False)
+                except:
+                    pass
                 p(data.rstrip())
 
 

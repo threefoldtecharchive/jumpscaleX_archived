@@ -141,7 +141,7 @@ class SystemFS(j.application.JSBaseClass):
 
     def copyDirTree(self, src, dst, keepsymlinks=False, deletefirst=False,
                     overwriteFiles=True, ignoredir=None, ignorefiles=None, rsync=True,ssh=False,
-                    sshport=22, recursive=True, rsyncdelete=True, createdir=False):
+                    sshport=22, recursive=True, rsyncdelete=True, createdir=False,showout=False):
         """Recursively copy an entire directory tree rooted at src.
         The dst directory may already exist; if not,
         it will be created as well as missing parent directories
@@ -259,8 +259,10 @@ class SystemFS(j.application.JSBaseClass):
             else:
                 self.createDir(self.getParent(dstpath))
             cmd += " '%s' '%s'" % (src, dst)
+            cmd += " --verbose"
             # print(cmd)
-            rc,out,err = j.sal.process.execute(cmd)
+            rc,out,err = j.sal.process.execute(cmd,showout=showout)
+
 
     @path_check(path={"required", "replace", "exists", "dir"})
     def changeDir(self, path):

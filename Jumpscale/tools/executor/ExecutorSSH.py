@@ -221,7 +221,8 @@ class ExecutorSSH(ExecutorBase):
             sshport=self.sshclient.port,
             recursive=recursive,
             createdir=createdir,
-            rsyncdelete=rsyncdelete)
+            rsyncdelete=rsyncdelete,
+            showout=True)
         self._cache.reset()
 
     def download(self, source, dest, source_prefix="",
