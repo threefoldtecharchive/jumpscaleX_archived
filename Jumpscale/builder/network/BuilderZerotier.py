@@ -74,3 +74,28 @@ class BuilderZerotier(j.builder.system._BaseClass):
     def startup_cmds(self):
         cmd = j.tools.startupcmd.get("zerotier", "zerotier-one", path="/tmp", timeout=10,ports=[9993])
         return [cmd]
+
+    @builder_method()
+    def sandbox(self):
+
+        """Copy built bins to dest_path and create flist
+        """
+        self.install()
+        bin_dest = j.sal.fs.joinPaths(
+            "/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX)
+        )
+
+        self.tools.dir_ensure(bin_dest)
+        zt_bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
+        self.tools.file_copy(zt_bin_path, bin_dest)
+
+    def test(self):
+        """Run tests under tests directory
+
+        :param name: basename of the file to run, defaults to "".
+        :type name: str, optional
+        """
+        self.install()
+        self.start()
+        self.stop()
+        print("TEST OK")
