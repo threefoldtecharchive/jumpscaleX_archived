@@ -9,28 +9,22 @@ builder_method = j.builder.system.builder_method
 class BuilderOpenResty(j.builder.system._BaseClass):
     NAME = 'openresty'
 
-    def _build_prepare(self):
-        j.builder.system.package.mdupdate()
-        j.builder.system.package.ensure('build-essential libpcre3-dev libssl-dev zlib1g-dev')
-        self.tools.dir_remove('{DIR_BUILD}')
-        self.tools.dir_ensure('{DIR_BUILD}')
-        url = 'https://openresty.org/download/openresty-1.13.6.2.tar.gz'
-        dest = self._replace('{DIR_BUILD}')
-        j.sal.fs.createDir(dest)
-        self.tools.file_download(url, to=dest, overwrite=False, retry=3,
-                                 expand=True, minsizekb=1000, removeTopDir=True, deletedest=True)
-
     @builder_method()
-    def build(self):
+    def build(self, reset=False):
         """
         js_shell 'j.builder.web.openresty.build()'
         :return:
         """
-
         if j.core.platformtype.myplatform.isUbuntu:
-            self._build_prepare()
+            j.builder.system.package.mdupdate()
+            j.builder.system.package.ensure('build-essential libpcre3-dev libssl-dev zlib1g-dev')
+            url = 'https://openresty.org/download/openresty-1.13.6.2.tar.gz'
+
+            dest = self._replace('{DIR_BUILD}/openresty')
+            self.tools.file_download(url, to=dest, overwrite=False, retry=3,
+                                     expand=True, minsizekb=1000, removeTopDir=True, deletedest=True)
             C = """
-            cd {DIR_BUILD}
+            cd {DIR_BUILD}/openresty
             mkdir -p /sandbox/var/pid
             mkdir -p /sandbox/var/log
             ./configure \
@@ -48,7 +42,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             make install
             rm -rf {DIR_BUILD}
             rm -f /sandbox/bin/lua
-            ln -s /sandbox/openresty/luajit/bin/luajit /sandbox/bin/lua
+            ln -s /sandbox/openresty/opernresty/luajit/bin/luajit /sandbox/bin/lua
 
             """
             self._execute(C)
@@ -87,7 +81,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             self.tools.execute(C)
 
     @builder_method()
-    def sandbox(self, zhub_client=None):
+    def sandbox(self, zhub_client=None, reset=False):
         '''Copy built bins to dest_path and create flist if create_flist = True
 
         :param dest_path: destination path to copy files into
@@ -152,7 +146,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         self._copy(startup_file, file_dest)
 
     @builder_method()
-    def clean(self):
+    def clean(self, reset=False):
         """
         js_shell 'j.builder.web.openresty.clean()'
         :return:

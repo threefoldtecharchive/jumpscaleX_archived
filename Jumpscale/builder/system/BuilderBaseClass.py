@@ -1,5 +1,6 @@
 from Jumpscale.sal.bash.Profile import Profile
 from Jumpscale import j
+import os
 
 BaseClass = j.application.JSBaseClass
 
@@ -145,6 +146,10 @@ class BuilderBaseClass(BaseClass):
         self.profile.path_add("${PATH}", end=True)
 
     def _profile_builder_set(self):
+        def _build_flags(env_name, delimiter):
+            flags = self.profile.env_get(env_name).split(':')
+            flags = ['-{}{}'.format(delimiter, flag) for flag in flags]
+            return '"{}"'.format(' '.join(flags))
 
         self._remove("{DIR_BUILD}/env.sh")
         self._bash = j.tools.bash.get(self._replace("{DIR_BUILD}"))
@@ -157,14 +162,19 @@ class BuilderBaseClass(BaseClass):
         self.profile.env_set_part("LIBRARY_PATH", "/usr/local/lib")
         self.profile.env_set_part("LIBRARY_PATH", "/lib")
         self.profile.env_set_part("LIBRARY_PATH", "/lib/x86_64-linux-gnu")
-        self.profile.env_set_part("LIBRARY_PATH", "$LIBRARY_PATH", end=True)
+        library_path = os.environ.get('LIBRARY_PATH') or ''
+        self.profile.env_set_part("LIBRARY_PATH", library_path, end=True)
 
         self.profile.env_set("LD_LIBRARY_PATH", self.profile.env_get("LIBRARY_PATH"))  # makes copy
-        self.profile.env_set("LDFLAGS", "-L%s" % self.profile.env_get("LIBRARY_PATH"))
+
+        lds = _build_flags('LIBRARY_PATH', 'L')
+        self.profile.env_set("LDFLAGS", lds)
 
         self.profile.env_set_part("CPPPATH", "/usr/include")
-        self.profile.env_set("CPATH", self.profile.env_get("CPPPATH"))
-        self.profile.env_set("CPPFLAGS", "-I%s" % self.profile.env_get("CPPPATH"))
+        self.profile.env_set("CPPPATH", self.profile.env_get("CPPPATH"))
+
+        cps = _build_flags('CPPPATH', 'I')
+        self.profile.env_set("CPPFLAGS", cps)
 
         self.profile.env_set("PS1", "PYTHONBUILDENV: ")
 

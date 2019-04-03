@@ -8,20 +8,7 @@ class BuilderLua(j.builder.system._BaseClass):
     NAME = "lua"
 
     @builder_method()
-    def reset(self):
-        """
-        js_shell 'j.builder.runtimes.lua.reset()'
-        :return:
-        """
-        j.builder.web.openresty.reset()  # make sure openresty gets build properly
-        C = """
-        cd /sandbox
-
-        """
-        self._execute(C)
-
-    @builder_method()
-    def build(self):
+    def build(self, reset=False):
         """
         js_shell 'j.builder.runtimes.lua.build()'
         :param install:
@@ -31,12 +18,13 @@ class BuilderLua(j.builder.system._BaseClass):
             j.builder.system.package.install(['libsqlite3-dev'])
 
         # need openresty & openssl to start from
-        j.builder.web.openresty.build()
-        j.builder.libs.openssl.build()
+        j.builder.web.openresty.build(reset=reset)
+        j.builder.libs.openssl.build(reset=reset)
 
         url = "https://luarocks.org/releases/luarocks-3.0.4.tar.gz"
         dest = self._replace("{DIR_BUILD}/luarocks")
         self.tools.dir_ensure(dest)
+        self.tools.dir_ensure('/sandbox/openresty/luajit')
         self.tools.file_download(url, to=dest, overwrite=False, retry=3,
                                  expand=True, minsizekb=100, removeTopDir=True, deletedest=True)
         C = """
@@ -162,7 +150,7 @@ class BuilderLua(j.builder.system._BaseClass):
     #     :return:
     #     """
 
-    def clean(self):
+    def clean(self, reset=False):
         """
         js_shell 'j.builder.runtimes.lua.cleanup()'
         :param install:
@@ -190,7 +178,7 @@ class BuilderLua(j.builder.system._BaseClass):
         self._execute(C)
 
     @builder_method()
-    def install(self):
+    def install(self, reset=False):
         """
         will build & install in sandbox
         js_shell 'j.builder.runtimes.lua.install()'
@@ -221,7 +209,7 @@ class BuilderLua(j.builder.system._BaseClass):
         self._log_info("install lua & openresty done.")
 
     @builder_method()
-    def sandbox(self, zhub_instance=None):
+    def sandbox(self, zhub_client=None, reset=False):
         '''Copy built bins to dest_path and create flist if create_flist = True
 
         :param dest_path: destination path to copy files into
@@ -232,8 +220,8 @@ class BuilderLua(j.builder.system._BaseClass):
         :type reset: bool
         :param create_flist: create flist after copying files
         :type create_flist:bool
-        :param zhub_instance: hub instance to upload flist tos
-        :type zhub_instance:str
+        :param zhub_client: hub instance to upload flist tos
+        :type zhub_client:str
         '''
         dest_path = self.DIR_SANDBOX
         j.builder.web.openresty.sandbox(dest_path=dest_path, reset=reset)

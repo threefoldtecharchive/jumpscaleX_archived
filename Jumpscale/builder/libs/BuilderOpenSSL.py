@@ -7,9 +7,7 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
 
     NAME = "openssl"
 
-
     def __init__(self):
-        self.CODEDIRL = j.core.tools.text_replace("{DIR_VAR}/build/code/openssl")
         if j.core.platformtype.myplatform.isMac:
             self.TARGET = "darwin64-x86_64-cc"
         else:
@@ -18,46 +16,29 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
         j.builder.system._BaseClass.__init__(self)
 
     @builder_method()
-    def _init(self):
-        pass
-
-
-    @builder_method()
-    def install(self):
-        raise RuntimeError("implement")
-
-    @builder_method()
     def reset(self):
-        self._remove("{BUILDDIRL}")
-        self._remove("{CODEDIRL}")
+        self._remove("{DIR_BUILD}")
 
     @builder_method()
     def build(self, reset=False):
         """
         js_shell 'j.builder.libs..openssl.build()'
         """
-        if not self.tools.dir_exists(self._replace("{CODEDIRL}/openssl")):
-            self._execute("""
-            cd {CODEDIRL}
-            git clone https://github.com/openssl/openssl.git
-            """)
-
         C = """
         set -ex
-        mkdir -p {DIR_BUILD}
-        cd {CODEDIRL}
+        cd {DIR_BUILD}
+        git clone https://github.com/openssl/openssl.git
+        cd openssl
         ./config
-        ./Configure {TARGET} shared enable-ec_nistp_64_gcc_128 no-ssl2 no-ssl3 no-comp --openssldir={DIR_BUILD}\
-         --prefix={DIR_BUILD}
+        ./Configure {TARGET} shared enable-ec_nistp_64_gcc_128 no-ssl2 no-ssl3 no-comp --openssldir={DIR_BUILD} --prefix={DIR_BUILD} zlib
         make depend
         make install
         rm -rf {DIR_BUILD}/share
         rm -rf {DIR_BUILD}/build/private
         echo "**BUILD DONE**"
         """
-        self._write("{CODEDIRL}/mycompile_all.sh", C)
-        self._execute("cd {CODEDIRL}; sh ./mycompile_all.sh")
-
+        self._write("{DIR_BUILD}/mycompile_all.sh", C)
+        self._execute("cd {DIR_BUILD}; sh ./mycompile_all.sh")
 
     def test(self, build=False):
         """
