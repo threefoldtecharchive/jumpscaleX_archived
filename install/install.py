@@ -37,6 +37,11 @@ def sshexec(cmd):
     cmd2 = "ssh -oStrictHostKeyChecking=no -t root@localhost -A -p %s '%s'"%(args["port"],cmd)
     IT.Tools.execute(cmd2,interactive=True,showout=False,replace=False,asfile=True)
 
+
+
+
+
+
 def docker_names():
     names = IT.Tools.execute("docker container ls -a --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
     names = [i.strip("\"'") for i in names if i.strip()!=""]
@@ -197,6 +202,10 @@ def ui():
     if "3" in args: #means we want docker
         if "name" not in args:
             args["name"] = "default"
+
+        if IT.MyEnv.platform()=="linux" and not IT.Tools.cmd_installed("docker"):
+             IT.UbuntuInstall.docker_install()
+
 
         container_exists = args["name"] in docker_names()
         args["container_exists"]=container_exists
@@ -374,6 +383,7 @@ if "1" in args or "2" in args:
         print("Jumpscale X installed successfully")
 
 elif "3" in args:
+
 
     if args["container_exists"] and "d" in args:
         IT.Tools.execute("docker rm -f %s"%args["name"])

@@ -388,7 +388,10 @@ class JSBase:
             if context:
                 logdict["context"] = context
             else:
-                logdict["context"] = self._key
+                try:
+                    logdict["context"] = self._key
+                except:
+                    pass #TODO:*1 is not good
             logdict["cat"] = cat
 
             logdict["data"] = data

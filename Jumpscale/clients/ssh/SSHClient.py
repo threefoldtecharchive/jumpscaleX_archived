@@ -7,8 +7,6 @@ from .SSHClientBase import SSHClientBase
 class SSHClient(SSHClientBase):
 
 
-
-
     def _init(self):
         SSHClientBase._init(self)
         self._logger_prefix = "ssh client: %s:%s(%s)" % (self.addr_variable, self.port, self.login)
@@ -18,6 +16,7 @@ class SSHClient(SSHClientBase):
             if j.clients.sshagent.key_default_or_none:
                 self.sshkey_name = j.clients.sshagent.key_default_or_none.name
                 self.save()
+        print (self._key)
 
     @property
     def _client(self):

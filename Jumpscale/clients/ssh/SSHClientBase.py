@@ -35,6 +35,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
 
         self._ftp = None
         self._syncer = None
+        self.autosave = True
 
     def mkdir(self,path):
         cmd = "mkdir -p %s"%path

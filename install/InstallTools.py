@@ -1588,9 +1588,9 @@ class UbuntuInstall():
         if not os.path.exists("/etc/lsb-release"):
             raise RuntimeError("Your operating system is not supported")
 
-        with open("/etc/lsb-release", "r") as f:
-            if "DISTRIB_CODENAME=bionic" not in f.read():
-                raise RuntimeError("Your distribution is not supported. Only Ubuntu Bionic is supported.")
+        # with open("/etc/lsb-release", "r") as f:
+        #     if "DISTRIB_CODENAME=bionic" not in f.read() and :
+        #         raise RuntimeError("Your distribution is not supported. Only Ubuntu Bionic is supported.")
 
         return True
 
@@ -1623,6 +1623,23 @@ class UbuntuInstall():
         """
         Tools.execute(script, interactive=True)
         MyEnv.state_set("ubuntu_base_install")
+
+    def docker_install():
+        if MyEnv.state_exists("ubuntu_docker_install"):
+            return
+        script="""
+        apt update
+        apt upgrade -y
+        apt install python3-pip  -y
+        pip3 install pudb
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+        add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+        apt update
+        sudo apt install docker-ce -y
+        """
+        Tools.execute(script, interactive=True)
+        MyEnv.state_set("ubuntu_docker_install")
+
 
     @staticmethod
     def python_redis_install():

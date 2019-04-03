@@ -1,4 +1,42 @@
-## tricks how to use docker for install
+# tricks how to use docker for install
+
+
+## all in one example using jumpscale
+
+start the syncer to get code on remote host
+```python
+#ipaddress is from the remote ubuntu VM, forward your SSH key
+#this will get your local jumpscale code repo's on remote machine and will keep them in sycn
+r = j.clients.ssh.get(name="remote1", addr="10.18.0.7")
+r.syncer.sync()
+```
+
+now start the installer remotely
+```python
+r = j.clients.ssh.remote1
+#will install in docker a full jumpscale environment in the VM, if docker doesn't exist will install it
+r.execute("python3  /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py -3 --name=test -y")
+```
+
+## step by step
+
+### prepare the VM
+
+
+```
+#use -A to make sure your SSH key is forwarded to the remote machine
+#ipaddress is from the remote ubuntu VM, forward your SSH key
+ssh -A root@ipaddress  
+
+#INSTALL DOCKER
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+apt update
+apt upgrade -y    
+sudo apt install docker-ce
+
+```
+
 
 ### Install Docker on ubuntu
 
