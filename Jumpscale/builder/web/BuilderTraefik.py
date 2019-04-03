@@ -13,7 +13,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         self.go_runtime = j.builder.runtimes.golang
 
     @builder_method()
-    def install(self):
+    def install(self , reset=True):
         """
 
         kosmos 'j.builder.web.traefik.install()'
@@ -89,7 +89,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         print("TEST OK")
 
     @builder_method()
-    def sandbox(self, create_flist=False, zhub_instance=None):
+    def sandbox(self):
 
         """Copy built bins to dest_path and create flist if create_flist = True
 
@@ -111,8 +111,3 @@ class BuilderTraefik(j.builder.system._BaseClass):
         self.tools.dir_ensure(bin_dest)
         traefik_bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
         self.tools.file_copy(traefik_bin_path, bin_dest)
-
-        if create_flist:
-            self.flist_create(bin_dest, zhub_instance)
-
-        self._done_set("sandbox")
