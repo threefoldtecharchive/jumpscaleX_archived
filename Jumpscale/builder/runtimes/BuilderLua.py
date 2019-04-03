@@ -32,7 +32,7 @@ class BuilderLua(j.builder.system._BaseClass):
         make build
         make install
 
-        cp /sandbox/var/build/luarocks/luarocks /sandbox/bin/luarocks
+        cp {DIR_BUILD}/ luarocks/luarocks /sandbox/bin/luarocks
 
         """
         # set showout to False to avoid text_replace of output log
