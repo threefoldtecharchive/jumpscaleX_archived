@@ -35,7 +35,7 @@ def sshexec(cmd):
     if "'" in cmd:
         cmd = cmd.replace("'","\"")
     cmd2 = "ssh -oStrictHostKeyChecking=no -t root@localhost -A -p %s '%s'"%(args["port"],cmd)
-    IT.Tools.execute(cmd2,interactive=False,showout=False,replace=False,asfile=True)
+    IT.Tools.execute(cmd2,interactive=True,showout=False,replace=False,asfile=True)
 
 def docker_names():
     names = IT.Tools.execute("docker container ls -a --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
@@ -166,16 +166,16 @@ def ui():
             if "y" not in args:
                 if not IT.Tools.ask_yes_no("OK to continue?"):
                     sys.exit(1)
-        else:
-            sshkey = IT.MyEnv.sshagent_key_get()
-            sshkey+=".pub"
-
-            if not IT.Tools.exists(sshkey):
-                print ("ERROR: could not find SSH key:%s"%sshkey)
-                sys.exit(1)
-            sshkey2 = IT.Tools.file_text_read(sshkey)
-
-            args["sshkey"]=sshkey2
+        # else:
+        #     sshkey2 = IT.Tools.execute("ssh-add -L",die=False,showout=False)[1].strip().split(" ")[-2].strip()
+        #     # sshkey = IT.MyEnv.sshagent_key_get()
+        #     # sshkey+=".pub"
+        #     #
+        #     # if not IT.Tools.exists(sshkey):
+        #     #     print ("ERROR: could not find SSH key:%s"%sshkey)
+        #     #     sys.exit(1)
+        #     # sshkey2 = IT.Tools.file_text_read(sshkey)
+        #     args["sshkey"]=sshkey2
 
     if not "codepath" in args:
         codepath = "/sandbox/code"
@@ -409,8 +409,9 @@ elif "3" in args:
     else:
         print(" - Docker machine was already there.")
 
-    if "sshkey" in args:
-        dexec('echo "%s" > /root/.ssh/authorized_keys'%args["sshkey"])
+    SSHKEYS = IT.Tools.execute("ssh-add -L",die=False,showout=False)[1]
+    if SSHKEYS.strip()!="":
+        dexec('echo "%s" > /root/.ssh/authorized_keys'%SSHKEYS)
 
     dexec("/usr/bin/ssh-keygen -A")
     dexec('/etc/init.d/ssh start')

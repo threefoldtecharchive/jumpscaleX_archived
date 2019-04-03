@@ -105,7 +105,8 @@ class Syncer(j.application.JSBaseConfigClass):
         for item in self._get_paths():
             source,dest = item
             self._log_info("upload:%s to %s"%(source,dest))
-            self.executor.upload(source, dest, recursive=True, createdir=True,
+            for i in range(2):
+                self.executor.upload(source, dest, recursive=True, createdir=True,
                                  rsyncdelete=True, ignoredir=self.IGNOREDIR, ignorefiles=None)
 
         if monitor:

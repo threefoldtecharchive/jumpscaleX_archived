@@ -6,7 +6,7 @@
 #use -A to make sure your SSH key is forwarded to the remote machine
 ssh -A root@ipaddress
 
-apt install docker -y
+apt  install docker.io -y
 ```
 
 ### example
@@ -20,6 +20,7 @@ python3 /tmp/install.py -3 --name=test -d -y -c --secret="ssh"
 ```
 
 will use secret from ssh and autogenerate the private key
+will delete if container exists
 
 #### start from an image
 
@@ -32,7 +33,7 @@ python3 /tmp/install.py -3 --portrange=3 --name=test --image=despiegk:jsx_develo
 #### continue where left off last time
 
 ```
-python3 /tmp/install.py -3 --portrange=3 --name=test -y -c
+python3 /tmp/install.py -3 --portrange=3 --name=test -y
 ```
 
 
@@ -54,6 +55,12 @@ docker image save despiegk/jsx_develop -o ~/Downloads/docker_image_despiegk_jsx_
 ### see which dockers running
 
 ```docker ps -a ```
+
+### go inside docker without ssh
+
+```docker exec -ti bf580d0240fc bash```
+
+the id is from docker ps
 
 ### how to do installer from an existing docker image
 
