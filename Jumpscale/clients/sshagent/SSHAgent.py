@@ -2,7 +2,7 @@ from Jumpscale import j
 from Jumpscale.core.InstallTools import Tools
 
 import os
-
+import sys
 
 class SSHAgent(j.application.JSBaseClass):
 
@@ -21,6 +21,32 @@ class SSHAgent(j.application.JSBaseClass):
         socketpath = Tools.text_replace("{DIR_VAR}/sshagent_socket")
         os.environ['SSH_AUTH_SOCK'] = socketpath
         return socketpath
+
+
+
+    def default_key_select(self):
+        """
+
+        kosmos 'j.clients.sshagent.default_key_select()'
+
+        will give you a dropdown to choose from
+        its to choose the default sshkey and if needed sshagent will be loaded
+        :return:
+        """
+        self.check()
+        if len(self.key_names)==1:
+            j.tools.console.askYesNo("Ok to use key: '%s' as your default key?"%self.key_names[0])
+            name = self.key_names[0]
+        elif len(self.key_names)==0:
+            print("Cannot find a possible ssh-key, please load your possible keys in your ssh-agent")
+            sys.exit(1)
+        else:
+            name = j.tools.console.askChoice("Which is your default sshkey to use",self.key_names)
+
+        j.core.myenv.config["SSH_KEY_DEFAULT"] = name
+
+        self.reset()
+
 
     def check(self):
 
@@ -97,6 +123,7 @@ class SSHAgent(j.application.JSBaseClass):
 
     @property
     def key_names(self):
+        self.check()
         return [j.sal.fs.getBaseName(i[0]) for i in self._keys]
 
     @property
@@ -108,7 +135,7 @@ class SSHAgent(j.application.JSBaseClass):
         '''
         see if we can find the default sshkey using sshagent
 
-        j.clients.sshagent.key_default
+        j.clients.sshagent.key_default_or_none
 
         :raises RuntimeError: sshkey not found in sshagent
         :raises RuntimeError: more than one sshkey is found in sshagent
@@ -123,7 +150,10 @@ class SSHAgent(j.application.JSBaseClass):
                 if len(r) == 0:
                     raise RuntimeError("could not find sshkey in sshagent")
                 elif len(r) > 1:
-                    raise RuntimeError("default sshkey not specified in j.core.myenv.config[\"SSH_KEY_DEFAULT\"]")
+                    if j.application.interactive:
+                        self.default_key_select()
+                    else:
+                        raise RuntimeError("default sshkey not specified in j.core.myenv.config[\"SSH_KEY_DEFAULT\"]")
                 else:
                     raise RuntimeError("bug")
 
@@ -151,6 +181,7 @@ class SSHAgent(j.application.JSBaseClass):
         :return: j.clients.sshkey.new() ...
         :rtype: sshkey object or error
         '''
+
         r = self.key_default_or_none
         if r is None:
             raise RuntimeError("Could not define key_default")
@@ -235,10 +266,6 @@ class SSHAgent(j.application.JSBaseClass):
         j.sal.fs.writeFile(bashprofile_path, out)
 
 
-
-
-
-
     def key_path_get(self, keyname="", die=True):
         '''
         Returns Path of public key that is loaded in the agent
@@ -311,6 +338,9 @@ class SSHAgent(j.application.JSBaseClass):
 
     def start(self):
         '''
+
+        kosmos 'j.clients.sshagent.start()'
+
         start ssh-agent, kills other agents if more than one are found
 
         :raises RuntimeError: Couldn't start ssh-agent
@@ -325,6 +355,7 @@ class SSHAgent(j.application.JSBaseClass):
 
     def _start(self):
         '''
+
         start ssh-agent, kills other agents if more than one are found
 
         :raises RuntimeError: Couldn't start ssh-agent
