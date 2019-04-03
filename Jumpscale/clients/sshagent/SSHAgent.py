@@ -43,7 +43,7 @@ class SSHAgent(j.application.JSBaseClass):
 
             return_code, out = get_key_list()
             if return_code:
-                self.sshagent_start()
+                self._start()
             #only try once
             return_code, out = get_key_list()
 
@@ -236,12 +236,7 @@ class SSHAgent(j.application.JSBaseClass):
 
 
 
-    def sshagent_start(self):
-        self.check()
-        self._available = None        
-        j.sal.process.execute('ssh-agent -a {}'.format(os.environ['SSH_AUTH_SOCK']), showout=False, die=True, timeout=1)
 
-        
 
 
     def key_path_get(self, keyname="", die=True):
@@ -322,6 +317,23 @@ class SSHAgent(j.application.JSBaseClass):
         :raises RuntimeError: ssh-agent was not started while there was no error
         :raises RuntimeError: Could not find pid items in ssh-add -l
         '''
+
+        # ssh agent should be loaded because ssh-agent socket has been
+        # found
+        self.check()
+
+
+    def _start(self):
+        '''
+        start ssh-agent, kills other agents if more than one are found
+
+        :raises RuntimeError: Couldn't start ssh-agent
+        :raises RuntimeError: ssh-agent was not started while there was no error
+        :raises RuntimeError: Could not find pid items in ssh-add -l
+        '''
+
+
+
         socketpath = self.ssh_socket_path
 
         ssh_agents = j.sal.process.getPidsByFilter('ssh-agent')
@@ -367,10 +379,6 @@ class SSHAgent(j.application.JSBaseClass):
                 self._available = None
             return
 
-        # ssh agent should be loaded because ssh-agent socket has been
-        # found
-        if os.environ.get("SSH_AUTH_SOCK") != socketpath:
-            self.check()
 
         j.clients.sshkey._sshagent = None
 
