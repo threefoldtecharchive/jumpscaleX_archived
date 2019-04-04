@@ -7,6 +7,7 @@ class BuilderZdb(j.builder.system._BaseClass):
 
     def _init(self):
         self.git_url = 'https://github.com/threefoldtech/0-db.git'
+        self.DIR_BUILD = self._replace("{DIR_TEMP}/zdb")
 
     @builder_method()
     def build(self):
@@ -14,7 +15,6 @@ class BuilderZdb(j.builder.system._BaseClass):
         build zdb
         :return:
         """
-        self.DIR_BUILD = j.sal.fs.getTmpDirPath()
         self.tools.dir_ensure(self.DIR_BUILD)
         C = """
         cd {DIR_BUILD}
@@ -45,7 +45,7 @@ class BuilderZdb(j.builder.system._BaseClass):
         j.sal.fs.createDir(ddir)
         cmd = '/sandbox/bin/zdb --listen {} --port {} --index {} --data {} --mode {} --admin {} --protect'.format(
             addr, port, idir, ddir, mode, adminsecret)
-        cmds=[j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
+        cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
         return cmds
 
     @builder_method()
@@ -64,7 +64,7 @@ class BuilderZdb(j.builder.system._BaseClass):
     def test(self):
         if self.running():
             self.stop()
-        
+
         self.start()
         admin_client = j.clients.zdb.client_admin_get()
         namespaces = admin_client.namespaces_list()
@@ -76,3 +76,5 @@ class BuilderZdb(j.builder.system._BaseClass):
 
         admin_client.namespace_delete('test')
         self.stop()
+
+        print('TEST OK')

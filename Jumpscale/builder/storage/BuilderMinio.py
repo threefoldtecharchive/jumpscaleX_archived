@@ -1,6 +1,7 @@
 from Jumpscale import j
 import os
 import textwrap
+builder_method = j.builder.system.builder_method
 
 
 
@@ -8,65 +9,63 @@ class BuilderMinio(j.builder.system._BaseClass):
     NAME = "minio"
 
     def _init(self):
-        self.BUILDDIR = j.core.tools.text_replace("{DIR_TEMP}/minio")
+        self.DIR_BUILD = self._replace("{DIR_TEMP}/minio")
+        self.datadir = ''
 
-    def build(self, reset=False, install=False):
+    @builder_method()
+    def build(self):
         """
         Builds minio
-
-        @param reset boolean: forces the build operation.
         """
-        if self._done_check("build", reset):
-            return
-        j.core.tools.dir_ensure(self.BUILDDIR)
-
+        self.tools.dir_ensure(self.DIR_BUILD)
+        self.minio_path = self._replace('{DIR_BUILD}/minio')
         minio_url = "https://dl.minio.io/server/minio/release/linux-amd64/minio"
-        j.builder.tools.file_download(minio_url, overwrite=True, to=self.BUILDDIR, expand=False, removeTopDir=True)
-        self._done_set('build')
+        self.tools.file_download(minio_url, overwrite=True, to=self.minio_path, expand=False, removeTopDir=True)
+        cmd = 'chmod +x {}'.format(self.minio_path)
+        self._execute(cmd)
 
-        if install:
-            self.install(False)
-
-    def install(self, reset=False, start=False):
+    @builder_method()
+    def install(self):
         """
         Installs minio
-
-        @param reset boolean: forces the install operation.
         """
-        if self._done_check("install", reset):
-            return
-        j.sal.process.execute("cp {DIR_TEMP}/minio {DIR_BIN}/")
-        self._done_set('install')
+        self._copy(self.minio_path, '{DIR_BIN}')
 
-        if start:
-            self.start()
-
-    def start(self, name="main", datadir="/tmp/shared", address="0.0.0.0", port=90000, miniokey="", miniosecret=""):
+    @property
+    def startup_cmds(self):
         """
         Starts minio.
         """
-        j.core.tools.dir_ensure(datadir)
+        self.datadir = self.DIR_BUILD
+        address = '0.0.0.0'
+        self.tools.dir_ensure(self.datadir)
+        port = 9000
+        access_key = 'admin'
+        secret_key = 'adminadmin'
+        cmd = "MINIO_ACCESS_KEY={} MINIO_SECRET_KEY={} minio server --address {}:{} {}".format(access_key, secret_key, address, port, self.datadir)
+        cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
+        return cmds
 
-        cmd = "MINIO_ACCESS_KEY={} MINIO_SECRET_KEY={} minio server --address {}:{} {}".format(miniokey, miniosecret, address, port, datadir)
-        pm = j.builder.system.processmanager.get()
-        pm.ensure(name='minio_{}'.format(name), cmd=cmd)
+    @builder_method()
+    def clean(self):
+        self._remove(self.DIR_BUILD)
+        self._remove(self.DIR_SANDBOX)
+    
+    @builder_method()
+    def sandbox(self):
+        bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
+        self.tools.dir_ensure(bin_dest)
+        bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
+        self._copy(bin_path, bin_dest)
 
+    @builder_method()
+    def test(self):
+        if self.running():
+            self.stop()
 
-    def stop(self, name='main'):
-        """
-        Stops minio 
-        """
+        self.start()
+        pid = j.sal.process.getProcessPid(self.NAME)
+        assert pid is not []
+        self.stop()
 
-        pm.stop(name='minio_{}'.format(name))
-
-
-    def restart(self, name="main"):
-        self.stop(name)
-        self.start(name)
-
-    def reset(self):
-        """
-        helper method to clean what this module generates.
-        """
-        pass
-
+        print('TEST OK')

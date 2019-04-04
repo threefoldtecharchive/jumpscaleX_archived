@@ -92,6 +92,8 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         self.stop()
         j.servers.etcd.stop()
 
+        print('TEST OK')
+
     @builder_method()
     def test_zos(self, zos_client, flist=None, build=False):
         if build:
