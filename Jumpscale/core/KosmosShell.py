@@ -182,7 +182,7 @@ def get_doc_string(tbc):
 
 
 class LogPane:
-    Buffer = Buffer(name='logging', read_only=True)
+    Buffer = Buffer(name='logging')
     Show = True
 
 
@@ -243,8 +243,8 @@ def setup_docstring_containers(repl):
 
 
 def add_logs_to_pane(msg):
-    text = '\n'.join([LogPane.Buffer.text, msg])
-    LogPane.Buffer.reset(document=Document(text, cursor_position=len(text)))
+    LogPane.Buffer.insert_text(msg)
+    LogPane.Buffer.insert_line_below()
 
 
 def setup_logging_containers(repl):
