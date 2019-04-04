@@ -127,11 +127,10 @@ class BuilderLua(j.builder.system._BaseClass):
             self.lua_rock_install("lua-geoip", reset)
             self.lua_rock_install("lua-resty-jwt", reset)
             self.lua_rock_install("lua-resty-iyo-auth", reset)  # need to check how to get this to work on OSX
-
-        self.tools.execute(
-            "rsync -rav {DIR_BUILD}/luarocks/lua_modules/lib/lua/5.1/ /sandbox/openresty/lualib", die=False)
-        self.tools.execute(
-            "rsync -rav {DIR_BUILD}/luarocks/lua_modules/share/lua/5.1/ /sandbox/openresty/lualib", die=False)
+        cmd = self._replace("rsync -rav {DIR_BUILD}/luarocks/lua_modules/lib/lua/5.1/ /sandbox/openresty/lualib")
+        self.tools.execute(cmd, die=False)
+        cmd = self._replace("rsync -rav {DIR_BUILD}/luarocks/lua_modules/share/lua/5.1/ /sandbox/openresty/lualib")
+        self.tools.execute(cmd, die=False)
 
     # def build_crypto(self):
     #
