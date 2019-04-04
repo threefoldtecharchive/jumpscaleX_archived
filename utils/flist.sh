@@ -40,18 +40,25 @@ eval `ssh-agent -s`
 ssh-add ~/.ssh/id_rsa
 #change in permission
 chown root:root /tmp
-source /sandbox/env.sh 
+source /sandbox/env.sh
 cd /sandbox
 js_shell "j.builder.runtimes.lua.install(reset=True)"
 js_shell "j.tools.tmux.execute('source /sandbox/env.sh \n js_shell \'j.tools.markdowndocs.webserver()\'',window ='flist')"
 
 echo "Waiting webserver to launch on 8080..."
-while ! nc -z localhost 8080; do   
-  sleep 10 # wait for 10 seconds before check again
+TRIALS=0
+while [[ $TRIALS -lt 3 ]] && ! nc -z localhost 8080; do
+    sleep 5
+    let TRIALS=TRIALS+1
 done
+if [[ $TRIALS -eq 3 ]]; then
+        echo "Failed to start webserver at 8080, check openresty/lapis setup..."
+        exit 1
+fi
+
 js_shell "j.builder.runtimes.lua.lua_rocks_install() "
 
-cd /sandbox 
+cd /sandbox
 echo """ sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
     locale-gen
 export HOME=/root
@@ -83,7 +90,7 @@ git cherry-pick ad677617e6d1685486dd5a6430975f8586e9371e
 
 ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/static/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/static
 ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/views/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/views
-ln -sf /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/applications/chat.moon /sandbox/code/github/threefoldfoundation/lapis-wiki/app.moon 
+ln -sf /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/applications/chat.moon /sandbox/code/github/threefoldfoundation/lapis-wiki/app.moon
 
 tmux new -d -s main  \" export NACL_SECRET=123 ; js_shell ' server = j.servers.gedis.configure(host=\\\"0.0.0.0\\\", port=8888) ; server.actor_add(\\\"/sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/actors/chatbot.py\\\"); server.chatbot.chatflows_load(\\\"/sandbox/code/github/threefoldtech/digitalmeX/packages/system/base/chatflows\\\"); server.start()' \"
 
@@ -110,7 +117,7 @@ git pull
 
 ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/static/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/static
 ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/views/chat /sandbox/code/github/threefoldfoundation/lapis-wiki/views
-ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/applications/chat.moon /sandbox/code/github/threefoldfoundation/lapis-wiki/app.moon 
+ln -s /sandbox/code/github/threefoldtech/digitalmeX/packages/system/chat/lapis/applications/chat.moon /sandbox/code/github/threefoldfoundation/lapis-wiki/app.moon
 
 tmux new -d -s main  \"export NACL_SECRET=123 ; js_shell 'j.builder.db.zdb.start(); zdb_cl = j.clients.zdb.client_admin_get(); zdb_cl = zdb_cl.namespace_new(\\\"notary_namespace\\\", secret=\\\"1234\\\"); bcdb = j.data.bcdb.new(zdbclient=zdb_cl, name=\\\"notary_bcdb\\\");bcdb.models_add(\\\"/sandbox/code/github/threefoldtech/digitalmeX/packages/notary/models \\\"); server = j.servers.gedis.configure(host=\\\"0.0.0.0\\\", port=8888);server.actor_add(\\\"/sandbox/code/github/threefoldtech/digitalmeX/packages/notary/actors/notary_actor.py\\\");server.models_add(models=bcdb.models.values());server.save();server.start()' \"
 
