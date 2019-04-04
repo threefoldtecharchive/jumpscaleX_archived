@@ -45,7 +45,7 @@ class BuilderLua(j.builder.system._BaseClass):
         if self._done_check("lua_rock_install_%s" % name) and not reset:
             return
 
-        C = "luarocks install $NAME OPENSSL_DIR=/sandbox/ CRYPTO_DIR=/sandbox/"
+        C = "luarocks install $NAME"
         C = C.replace("$NAME", name)
         self._execute(C)
 
@@ -129,9 +129,9 @@ class BuilderLua(j.builder.system._BaseClass):
             self.lua_rock_install("lua-resty-iyo-auth", reset)  # need to check how to get this to work on OSX
 
         self.tools.execute(
-            "rsync -rav /sandbox/var/build/luarocks/lua_modules/lib/lua/5.1/ /sandbox/openresty/lualib", die=False)
+            "rsync -rav {DIR_BUILD}/luarocks/lua_modules/lib/lua/5.1/ /sandbox/openresty/lualib", die=False)
         self.tools.execute(
-            "rsync -rav /sandbox/var/build/luarocks/lua_modules/share/lua/5.1/ /sandbox/openresty/lualib", die=False)
+            "rsync -rav {DIR_BUILD}/luarocks/lua_modules/share/lua/5.1/ /sandbox/openresty/lualib", die=False)
 
     # def build_crypto(self):
     #
@@ -191,11 +191,11 @@ class BuilderLua(j.builder.system._BaseClass):
         cp resty /sandbox/bin/resty
         popd
 
-        pushd /sandbox/var/build/luarocks/lua_modules/lib/luarocks/rocks-5.1/lapis/1.7.0-1/bin
+        pushd {DIR_BUILD}/luarocks/lua_modules/lib/luarocks/rocks-5.1/lapis/1.7.0-1/bin
         cp lapis /sandbox/bin/_lapis.lua
         popd
 
-        pushd '/sandbox/var/build/luarocks/lua_modules/lib/luarocks/rocks-5.1/moonscript/0.5.0-1/bin'
+        pushd '{DIR_BUILD}/luarocks/lua_modules/lib/luarocks/rocks-5.1/moonscript/0.5.0-1/bin'
         cp moon /sandbox/bin/_moon.lua
         cp moonc /sandbox/bin/_moonc.lua
         popd
