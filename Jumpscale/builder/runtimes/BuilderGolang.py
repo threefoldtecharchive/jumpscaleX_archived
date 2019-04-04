@@ -81,19 +81,15 @@ class BuilderGolang(j.builder.system._BaseClass):
         self.bash.profile.env_set('GOPATH', self.DIR_GO_PATH)
 
         # remove old parts of profile
+        # and add them to PATH (without existence check)
         self.bash.profile.path_delete("/go/")
         self.bash.profile.path_delete("/go_proj")
-
-        self.bash.profile.path_add(self.DIR_GO_PATH_BIN)
-        self.bash.profile.path_add(self.DIR_GO_ROOT_BIN)
+        self.bash.profile.path_add(self.DIR_GO_PATH_BIN, check_exists=False)
+        self.bash.profile.path_add(self.DIR_GO_ROOT_BIN, check_exists=False)
 
         self.tools.file_download(
             download_url, self.DIR_GO_ROOT, overwrite=False, retry=3,
             timeout=0, expand=True, removeTopDir=True)
-
-        self._remove('{DIR_BIN}/go')
-
-        self._execute('ln -s {DIR_GO_ROOT} {DIR_BIN}/go')
 
         self.get("github.com/tools/godep")
         self._done_set("install")
@@ -106,11 +102,8 @@ class BuilderGolang(j.builder.system._BaseClass):
         :type reset: bool, optional
         """
 
-        if reset is False and self._done_get('goraml'):
-            return
-
         self.install()
-        self.bindata(reset=reset)
+        self.bindata()
 
         C = '''
         go get -u github.com/tools/godep
