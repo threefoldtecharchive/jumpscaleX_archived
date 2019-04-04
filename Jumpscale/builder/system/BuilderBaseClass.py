@@ -308,6 +308,10 @@ class BuilderBaseClass(BaseClass):
         txt = self._replace(txt)
         j.sal.fs.writeFile(path, txt)
 
+    def _read(self,location):
+        location = self._replace(location)
+        return j.core.tools.file_text_read(location)    
+
     def _remove(self, path):
         """
         will use the replace function on text and on path
