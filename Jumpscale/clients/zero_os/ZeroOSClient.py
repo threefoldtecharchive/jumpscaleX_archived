@@ -17,7 +17,10 @@ class ZeroOSClient(j.application.JSBaseConfigClass, Node):
     """
 
     def _init(self):
-        client = j.clients.zos_protocol.new(**self.data._ddict)
+        if j.clients.zos_protocol.exists(self.data.name):
+            client = j.clients.zos_protocol.get(self.data.name)
+        else:
+            client = j.clients.zos_protocol.new(**self.data._ddict)
         Node.__init__(self, client=client)
 
     def _update_trigger(self, key, value):
