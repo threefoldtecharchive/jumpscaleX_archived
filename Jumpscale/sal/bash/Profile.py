@@ -4,6 +4,7 @@ import os
 from io import StringIO
 import locale
 
+
 class Profile(j.application.JSBaseClass):
     _env_pattern = re.compile(r'([A-Za-z0-9_]+)=(.*)\n', re.MULTILINE)
     _include_pattern = re.compile(r'(source|\.) (.*)$', re.MULTILINE)
@@ -23,7 +24,6 @@ class Profile(j.application.JSBaseClass):
         self.profile_path = profile_path
         self.state = "home"
         self.load()
-
 
     def _env_vars_find(self, content):
         """get defined environment variables in `content`
@@ -47,64 +47,56 @@ class Profile(j.application.JSBaseClass):
         """
         return [match.group(2) for match in self._include_pattern.finditer(content)]
 
+    def _quote(self, value):
+        return '"%s"' % value
+
     def load(self):
-
-        if self.profile_path=="/sandbox/env.sh":
-            self.is_sandbox = True
-        else:
-            self.is_sandbox = False
-
         self._env = {}
         self._includes = []
 
         if not self.executor.exists(self.profile_path):
-            self.executor.file_write(self.profile_path,"")
+            self.executor.file_write(self.profile_path, "")
+            return
 
         # to let bash evaluate the profile source, we source the profile
         # then get the current environment variables using printenv
-        content = self.executor.file_read(self.profile_path)
-
+        _, current_env, _ = self.executor.execute('source %s && printenv' % self.profile_path)
 
         # get a set of profile variables and current environment variables
+        content = self.executor.file_read(self.profile_path)
         profile_vars = self._env_vars_find(content)
-        for var, value in profile_vars.items():
-            self._env[var] = value
+        current_env = self._env_vars_find(current_env)
+        for var, value in current_env.items():
+            if var in profile_vars:
+                # only get the evaluated value from current env
+                # if it's already in current profile
+                self._env[var] = self._quote(value)
 
         # includes
         self._includes.extend(self._includes_find(content))
 
-        # make sure to add the js bin dir to the path
-        # if "SSHKEYNAME" not in self._env:
-        #     self._env['sshkeyname'] = os.environ.get('SSHKEYNAME', 'id_rsa')
-
-        if self.is_sandbox:
-            _, current_env, _ = self.executor.execute('source /sandbox/env.sh;printenv')
-        else:
-            _, current_env, _ = self.executor.execute('source %s && printenv' % self.profile_path)
-
-
-    def _path_clean(self,path):
+    def _path_clean(self, path):
         path = path.strip()
         path = path.replace("//", "/")
         path = path.replace("//", "/")
         path = path.rstrip("/")
         return path
 
-    def path_add(self, path, end=False, check_exists=True,save=True):
+    def path_add(self, path, end=False, check_exists=True, save=True):
         """
         :param path:
         :return:
         """
         if check_exists and not j.sal.fs.exists(path):
             return
-        self.env_set_part("PATH",self._path_clean(path),end=end,stringify=True,save=save)
+        self.env_set_part("PATH", self._path_clean(path), end=end, quote=True, save=save)
 
     def path_delete(self, path):
         """
         :param path:
         :return:
         """
-        self.env_delete_part("PATH",self._path_clean(path))
+        self.env_delete_part("PATH", self._path_clean(path))
 
     @property
     def paths(self):
@@ -116,28 +108,30 @@ class Profile(j.application.JSBaseClass):
             self._includes.append(path)
             self._save()
 
-    def env_set(self, key, value,save=True):
+    def env_set(self, key, value, save=True):
         self._env[key] = value
         if save:
             self._save()
 
-    def env_set_part(self, key, value, end=False,stringify=False,save=True):
+    def env_set_part(self, key, value, end=False, quote=False, save=True):
         """
         will check that there are no double entries in the environment variable
         env parts are separated by : or ;
         :param key:
         :param value:
-        :param stringify: means will put '' around env parts if space in the item
+        :param quote: means will put '' around env parts if space in the item
         :return:
         """
-        value=j.data.types.string.clean(value).strip().strip("'").strip("\"").strip()
-        sep=":"
+        value = j.data.types.string.clean(value).strip().strip("'").strip("\"").strip()
+        sep = ":"
         if key in self._env:
             line = self._env[key].strip().strip("'").strip("\"").strip()
             if sep is ";" and ":" in line:
-                raise j.exceptions.Input("cannot have 2 separators, should be : or ;, %s in %s"%(line,self.profile_path))
+                raise j.exceptions.Input("cannot have 2 separators, should be : or ;, %s in %s" %
+                                         (line, self.profile_path))
             elif sep is ":" and ";" in line:
-                raise j.exceptions.Input("cannot have 2 separators, should be : or ;, %s in %s"%(line,self.profile_path))
+                raise j.exceptions.Input("cannot have 2 separators, should be : or ;, %s in %s" %
+                                         (line, self.profile_path))
             items0 = [i.strip().strip("'").strip("\"").strip() for i in line.split(sep)]
             items = []
             for i in items0:
@@ -147,26 +141,26 @@ class Profile(j.application.JSBaseClass):
             if end and value in items:
                 items.pop(items.index(value))
             if value not in items:
-                if stringify and " " in value:
-                    value = "'%s'"%value
+                if quote and " " in value:
+                    value = self._quote(value)
                 if end:
                     items.append(value.strip())
                 else:
-                    items.insert(0,value.strip())
-            self.env_set(key,sep.join(items).strip(sep),save=save)
+                    items.insert(0, value.strip())
+            self.env_set(key, sep.join(items).strip(sep), save=save)
         else:
-            self.env_set(key,value,save=save)
+            self.env_set(key, value, save=save)
 
     def env_get_parts(self, key):
 
         if key in self._env:
             line = self._env[key]
             if ":" in line:
-                sep=":"
+                sep = ":"
             elif ";" in line:
-                sep=";"
+                sep = ";"
             else:
-                sep=None
+                sep = None
             if sep:
                 items = [i.strip() for i in line.split(sep)]
                 return items
@@ -192,15 +186,15 @@ class Profile(j.application.JSBaseClass):
         :param value:
         :return:
         """
-        value=j.data.types.string.clean(value).strip().strip("'").strip("\"").strip()
-        sep=":"
-        value=value.strip()
+        value = j.data.types.string.clean(value).strip().strip("'").strip("\"").strip()
+        sep = ":"
+        value = value.strip()
         if key in self._env:
             line = self._env[key].strip().strip("'").strip("\"").strip()
             items = [i.strip().strip("'").strip("\"").strip() for i in line.split(sep)]
             if value in items:
                 items.pop(items.index(value))
-                self.env_set(key,sep.join(items).strip(sep))
+                self.env_set(key, sep.join(items).strip(sep))
 
     def env_delete(self, key):
         if self.env_exists(key):
@@ -208,9 +202,8 @@ class Profile(j.application.JSBaseClass):
             self._save()
 
     def delete(self):
-        self.executor.file_write(self.profile_path,"")
+        self.executor.file_write(self.profile_path, "")
         self.load()
-
 
     @property
     def env(self):
@@ -230,12 +223,12 @@ class Profile(j.application.JSBaseClass):
         """
 
         if "PATH" in self.env:
-            self.path_add("/bin",end=True,check_exists=True,save=False)
-            self.path_add("/sbin",end=True,check_exists=True,save=False)
-            self.path_add("/usr/bin",end=True,check_exists=True,save=False)
-            self.path_add("/usr/sbin",end=True,check_exists=True,save=False)
-            self.path_add("/usr/local/bin",end=True,check_exists=True,save=False)
-            self.path_add("/usr/local/sbin",end=True,check_exists=True,save=False)
+            self.path_add("/bin", end=True, check_exists=True, save=False)
+            self.path_add("/sbin", end=True, check_exists=True, save=False)
+            self.path_add("/usr/bin", end=True, check_exists=True, save=False)
+            self.path_add("/usr/sbin", end=True, check_exists=True, save=False)
+            self.path_add("/usr/local/bin", end=True, check_exists=True, save=False)
+            self.path_add("/usr/local/sbin", end=True, check_exists=True, save=False)
 
         self.executor.file_write(self.profile_path, str(self))
 

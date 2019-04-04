@@ -207,7 +207,6 @@ class BuilderBaseClass(BaseClass):
 
         self.profile.env_set("LC_ALL", "en_US.UTF-8")
         self.profile.env_set("LANG", "en_US.UTF-8")
-        self.profile.env_set("PS1", "JSX: ")
 
         self.profile_sandbox_set()
 
