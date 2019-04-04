@@ -1747,6 +1747,7 @@ class UbuntuInstall():
 
             # level 2: full install
             2: [
+                "psycopg2-binary",
                 "psycopg2>=2.7.1",
                 "pystache>=0.5.4",
                 # "pypandoc>=1.3.3",
@@ -1783,7 +1784,8 @@ class UbuntuInstall():
         return [
             'iproute2',
             'python-ufw',
-            'ufw'
+            'ufw',
+            'libpq-dev',
         ]
 
     def apts_install():
