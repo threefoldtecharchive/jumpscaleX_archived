@@ -95,6 +95,13 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         print('TEST OK')
 
     @builder_method()
+    def uninstall(self):
+        bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
+        self._remove(bin_path)
+        self.clean()
+        self.clean()
+
+    @builder_method()
     def test_zos(self, zos_client, flist=None, build=False):
         if build:
             flist = self.sandbox(flist_create=True)

@@ -69,3 +69,9 @@ class BuilderMinio(j.builder.system._BaseClass):
         self.stop()
 
         print('TEST OK')
+
+    @builder_method()
+    def uninstall(self):
+        bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
+        self._remove(bin_path)
+        self.clean()
