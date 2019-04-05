@@ -22,8 +22,8 @@ class TFChainCapacity():
         """
 
         if self._notary_client_ is None:
-            c = j.clients.gedis.configure('tfnotary', host='notary.grid.tf', port=5000)
-            self._notary_client_ = c.cmds.notary_actor
+            c = j.clients.gedis.new('tfnotary', host='notary.grid.tf', port=5000)
+            self._notary_client_ = c.actors.notary_actor
         return self._notary_client_
 
     def _threebot_singing_key(self, threebot_id):
