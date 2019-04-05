@@ -1,6 +1,7 @@
 from Jumpscale import j
 from Jumpscale.sal_zos.node.Node import Node
 
+from .protocol.Client import Client as ProtocolClient
 
 class ZeroOSClient(j.application.JSBaseConfigClass, Node):
 
@@ -17,10 +18,10 @@ class ZeroOSClient(j.application.JSBaseConfigClass, Node):
     """
 
     def _init(self):
-        if j.clients.zos_protocol.exists(self.data.name):
-            client = j.clients.zos_protocol.get(self.data.name)
-        else:
-            client = j.clients.zos_protocol.new(**self.data._ddict)
+        client = ProtocolClient(host=self.host, port=self.port,
+            unixsocket=self.unixsocket,
+            password=self.password, db=self.db,
+            ssl=self.ssl, timeout=self.timeout)
         Node.__init__(self, client=client)
 
     def _update_trigger(self, key, value):

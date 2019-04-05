@@ -26,20 +26,7 @@ from .ZerotierManager import ZerotierManager
 from .ZFSManager import ZFSManager
 
 
-class Client(j.application.JSBaseConfigClass, BaseClient):
-
-    _SCHEMATEXT = """
-    @url = jumpscale.zos.client.connection.1
-    name* = "" (S)
-    host = "127.0.0.1" (S)
-    port = 6379 (ipport)
-    unixsocket = "" (S)
-    password = ""  (S)
-    db = 0 (I)
-    ssl = true (B)
-    timeout = 120 (I)
-    """
-
+class Client(BaseClient):
     _raw_chk = typchk.Checker({
         'id': str,
         'command': str,
@@ -51,7 +38,15 @@ class Client(j.application.JSBaseConfigClass, BaseClient):
         'recurring_period': typchk.Or(int, typchk.IsNone()),
     })
 
-    def _init(self):
+    def __init__(self, host, port=6379, unixsocket=None, password=None, db=0, ssl=True, timeout=120):
+        self.host = host
+        self.port = port
+        self.unixsocket = unixsocket
+        self.password = password
+        self.db = db
+        self.ssl = ssl
+        self.timeout = timeout
+
         BaseClient.__init__(self, self.timeout)
         self.__redis = None
 
@@ -86,8 +81,7 @@ class Client(j.application.JSBaseConfigClass, BaseClient):
             self._jwt_expire_timestamp = j.clients.itsyouonline.jwt_expire_timestamp(password)
         if self._jwt_expire_timestamp and self._jwt_expire_timestamp - 300 < time.time():
             password = j.clients.itsyouonline.jwt_refresh(password, validity=3600)
-            self.data.password = password
-            self.save()
+            self.password = password
             # force recreation of redis connection
             if self.__redis:
                 self.__redis = None
