@@ -38,7 +38,6 @@ def gedis(listen, zdb, namespace, secret):
     host, port = _split_hostport(listen)
     server = j.servers.gedis.configure(host=host, port=port)
     server.actor_add('/sandbox/code/github/threefoldtech/digitalmeX/packages/notary/actors/notary_actor.py')
-    server.models_add(models=bcdb.models.values())
     print('start listening on %s' % listen)
     server.start()
 
