@@ -8,7 +8,7 @@ mkdir -p $ARCHIVE
 
 # install system deps
 apt-get update
-apt-get install -y curl unzip rsync locales git wget netcat tar sudo tmux ssh python3-pip redis-server libffi-dev python3-dev libssl-dev libpython3-dev libssh-dev libsnappy-dev build-essential pkg-config libvirt-dev libsqlite3-dev -y
+apt-get install -y curl unzip rsync locales git wget netcat tar sudo tmux ssh python3-pip redis-server libffi-dev python3-dev libssl-dev libpython3-dev libssh-dev libsnappy-dev build-essential pkg-config libvirt-dev libsqlite3-dev
 
 
 # setting up locales
@@ -47,11 +47,11 @@ js_shell "j.tools.tmux.execute('source /sandbox/env.sh \n js_shell \'j.tools.mar
 
 echo "Waiting webserver to launch on 8080..."
 TRIALS=0
-while [[ $TRIALS -lt 3 ]] && ! nc -z localhost 8080; do
+while [[ $TRIALS -lt 30 ]] && ! nc -z localhost 8080; do
     sleep 5
     let TRIALS=TRIALS+1
 done
-if [[ $TRIALS -eq 3 ]]; then
+if [[ $TRIALS -eq 30 ]]; then
         echo "Failed to start webserver at 8080, check openresty/lapis setup..."
         exit 1
 fi
