@@ -34,7 +34,7 @@ class BuilderCockroachDB(j.builder.system._BaseClass):
             self._copy(file, '{DIR_BIN}')
 
     @property
-    def startup_cmds(self, host="localhost", insecure=True, background=False, reset=False, port=26257, http_port=8581):
+    def startup_cmds(self):
         host = 'localhost'
         port = 26257
         http_port = 8581
