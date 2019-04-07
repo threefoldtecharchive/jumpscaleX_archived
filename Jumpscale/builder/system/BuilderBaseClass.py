@@ -24,8 +24,6 @@ class builder_method(object):
             args = args[1:]
             name = func.__name__
 
-            done_key = name+"_"+j.data.hash.md5_string(str(args)+str(kwargs))
-
             if self.log:
                 builder._log_debug("do once:%s" % name)
 
@@ -34,6 +32,8 @@ class builder_method(object):
                 kwargs.pop("reset")
             else:
                 reset = False
+
+            done_key = name+"_"+j.data.hash.md5_string(str(args)+str(kwargs))
 
             if reset:
                 builder._done_reset()
@@ -307,9 +307,9 @@ class BuilderBaseClass(BaseClass):
         txt = self._replace(txt)
         j.sal.fs.writeFile(path, txt)
 
-    def _read(self,location):
+    def _read(self, location):
         location = self._replace(location)
-        return j.core.tools.file_text_read(location)    
+        return j.core.tools.file_text_read(location)
 
     def _remove(self, path):
         """
