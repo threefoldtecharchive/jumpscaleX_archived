@@ -307,7 +307,13 @@ class BuilderBaseClass(BaseClass):
         txt = self._replace(txt)
         j.sal.fs.writeFile(path, txt)
 
-    def _read(self, location):
+    def _read(self,location):
+        """
+        will use the replace function on location then read a file from the given location
+        :param location: location to read file from 
+        :return 
+        """
+
         location = self._replace(location)
         return j.core.tools.file_text_read(location)
 
