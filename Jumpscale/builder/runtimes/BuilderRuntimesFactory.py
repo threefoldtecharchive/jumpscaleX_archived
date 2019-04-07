@@ -11,6 +11,7 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
         self._php = None
         self._lua = None
         self._golang = None
+        self._nimlang = None
 
     @property
     def python(self):
@@ -39,4 +40,11 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
             from .BuilderGolang import BuilderGolang
             self._golang = BuilderGolang()
         return self._golang
+    
+    @property
+    def nimlang(self):
+        if self._nimlang is None:
+            from .BuilderNIM import BuilderNIM
+            self._nimlang = BuilderNIM()
+        return self._nimlang
 

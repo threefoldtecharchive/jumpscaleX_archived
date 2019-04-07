@@ -232,7 +232,7 @@ class BuilderTools(j.builder.system._BaseClass):
                 j.builder.system.package.ensure('xz')
             else:
                 j.builder.system.package.ensure('xz-utils')
-            cmd = "tar -C %s -xzf %s" % (destination, path)
+            cmd = "tar -C %s -xf %s" % (destination, path)
         elif path.endswith("tar.bz2"):
             #  cmd = "cd %s;bzip2 -d %s | tar xvf -" % (j.sal.fs.getDirName(path), path)
             cmd = "tar -C %s -jxvf %s" % (destination, path)
