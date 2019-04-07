@@ -1822,7 +1822,7 @@ class MyEnv():
 
     appname = "installer"
 
-    FORMAT_TIME = "%a%d %H:%M"
+    FORMAT_TIME = "%a %d %H:%M:%S"
 
     MYCOLORS =   { "RED":"\033[1;31m",
                 "BLUE":"\033[1;34m",

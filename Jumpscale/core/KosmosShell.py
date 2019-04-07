@@ -4,6 +4,7 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.document import Document
 from prompt_toolkit.completion import Completion
 from prompt_toolkit.filters import Condition, is_done
+from prompt_toolkit.filters.utils import to_filter
 from prompt_toolkit.formatted_text import ANSI, to_formatted_text, fragment_list_to_text
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.containers import ConditionalContainer, Window
@@ -243,8 +244,9 @@ def setup_docstring_containers(repl):
 
 
 def add_logs_to_pane(msg):
-    LogPane.Buffer.insert_text(msg)
-    LogPane.Buffer.insert_line_below()
+    LogPane.Buffer.auto_down(count=LogPane.Buffer.document.line_count)
+    LogPane.Buffer.insert_text(data=msg, fire_event=False)
+    LogPane.Buffer.newline()
 
 
 def setup_logging_containers(repl):
@@ -261,10 +263,11 @@ def setup_logging_containers(repl):
                 BufferControl(
                     buffer=LogPane.Buffer,
                     input_processors=[FormatANSIText(), HighlightIncrementalSearchProcessor()],
-                    focusable=True,
+                    focusable=False,
                     preview_search=True
                 ),
-                height=Dimension(max=12)),
+                height=Dimension(max=12),
+                cursorline=to_filter(True)),
             filter=HasLogs(repl) & ~is_done),
     ])
 
