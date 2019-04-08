@@ -57,7 +57,7 @@ class BuilderZdb(j.builder.system._BaseClass):
 
     @builder_method()
     def clean(self):
-        self._remove(self.DIR_BUILD)
+        self._remove('{DIR_BUILD}/0-db')
         self._remove(self.DIR_SANDBOX)
 
     @builder_method()
