@@ -115,6 +115,10 @@ class BuilderCaddy(j.builder.system._BaseClass):
         self.go_runtime.get(url, install=False)
         self.update_imports_and_directves(url, PLUGIN_DIRECTIVES.get(name))
 
+    def profile_builder_set(self):
+        # make sure go binaries are in path while building
+        self.go_runtime.update_profile_paths(self.bash.profile)
+
     @builder_method()
     def build(self, plugins=None):
         """

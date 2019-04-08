@@ -55,6 +55,20 @@ class BuilderGolang(j.builder.system._BaseClass):
             return '386'
         return 'amd64'
 
+    def update_profile_paths(self, profile=None):
+        if not profile:
+            profile = self.bash.profile
+
+        profile.env_set('GOROOT', self.DIR_GO_ROOT)
+        profile.env_set('GOPATH', self.DIR_GO_PATH)
+
+        # remove old parts of profile
+        # and add them to PATH (without existence check)
+        profile.path_delete("/go/")
+        profile.path_delete("/go_proj")
+        profile.path_add(self.DIR_GO_PATH_BIN, check_exists=False)
+        profile.path_add(self.DIR_GO_ROOT_BIN, check_exists=False)
+
     @builder_method()
     def install(self):
         """install goq
@@ -77,15 +91,7 @@ class BuilderGolang(j.builder.system._BaseClass):
 
         j.core.tools.dir_ensure(self.DIR_GO_PATH)
 
-        self.bash.profile.env_set('GOROOT', self.DIR_GO_ROOT)
-        self.bash.profile.env_set('GOPATH', self.DIR_GO_PATH)
-
-        # remove old parts of profile
-        # and add them to PATH (without existence check)
-        self.bash.profile.path_delete("/go/")
-        self.bash.profile.path_delete("/go_proj")
-        self.bash.profile.path_add(self.DIR_GO_PATH_BIN, check_exists=False)
-        self.bash.profile.path_add(self.DIR_GO_ROOT_BIN, check_exists=False)
+        self.update_profile_paths()
 
         self.tools.file_download(
             download_url, self.DIR_GO_ROOT, overwrite=False, retry=3,
