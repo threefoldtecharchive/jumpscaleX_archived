@@ -84,3 +84,8 @@ class BuilderZdb(j.builder.system._BaseClass):
         bin_path = self.tools.joinpaths("{DIR_BIN}", 'zdb')
         self._remove(bin_path)
         self.clean()
+
+    @builder_method()
+    def reset(self):
+        super().reset()
+        self.clean()
