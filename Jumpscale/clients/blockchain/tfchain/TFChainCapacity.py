@@ -1,5 +1,6 @@
 import nacl
 from Jumpscale import j
+import decimal
 
 from . import schemas
 
@@ -198,14 +199,14 @@ class TFChainCapacity():
         :rtype: tuple
         """
         reservation = j.data.schema.get(url='tfchain.reservation.reverse_proxy').new(data={
-            'type': 'namespace',
+            'type': 'reverse_proxy',
             'email': email,
             'created': j.data.time.epoch,
             # 'location': location,
             'domain': domain,
             'backend_urls': backend_urls,
         })
-        _validate_reservation_namespace(reservation)
+        _validate_reverse_proxy(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
     def _process_reservation(self, reservation, threebot_id, source=None, refund=None):
@@ -240,9 +241,6 @@ def _validate_reservation_base(reservation):
         if not getattr(reservation, field):
             raise ValueError("field '%s' cannot be empty" % field)
 
-    if not _validate_location(reservation.location):
-        raise ValueError("location '%s' is not valid" % reservation.location)
-
 
 def _validate_reservation_s3(reservation):
     for field in ['size']:
@@ -252,6 +250,9 @@ def _validate_reservation_s3(reservation):
     if reservation.size < 0 or reservation.size > 2:
         raise ValueError('reservation size can only be 1 or 2')
 
+    if not _validate_location(reservation.location):
+        raise ValueError("location '%s' is not valid" % reservation.location)
+
 
 def _validate_reservation_vm(reservation):
     for field in ['size']:
@@ -260,6 +261,9 @@ def _validate_reservation_vm(reservation):
 
     if reservation.size < 0 or reservation.size > 2:
         raise ValueError('reservation size can only be 1 or 2')
+
+    if not _validate_location(reservation.location):
+        raise ValueError("location '%s' is not valid" % reservation.location)
 
 
 def _validate_reservation_namespace(reservation):
@@ -271,6 +275,9 @@ def _validate_reservation_namespace(reservation):
         raise ValueError("mode can only be 'seq', 'user' or 'direct'")
     if not reservation.disk_type or reservation.disk_type not in ['hdd', 'ssd']:
         raise ValueError("disk_type can only be 'ssd' or 'hdd'")
+
+    if not _validate_location(reservation.location):
+        raise ValueError("location '%s' is not valid" % reservation.location)
 
 
 def _validate_reverse_proxy(reservation):
@@ -298,34 +305,34 @@ def reservation_amount(reservation):
     elif reservation.type == 'namespace':
         return namespace_price(reservation.size)
     elif reservation.type == 'reverse_proxy':
-        return proxy_price(reservation.size)
+        return proxy_price()
     else:
         raise ValueError("unsupported reservation type")
 
 
 def s3_price(size):
     if size == 1:
-        return 41.65
+        return decimal.Decimal('41.65')
     elif size == 2:
-        return 83.3
+        return decimal.Decimal('83.3')
     else:
         raise ValueError("size for s3 can only be 1 or 2")
 
 
 def vm_price(size):
     if size == 1:
-        return 41.65
+        return decimal.Decimal('41.65')
     elif size == 2:
-        83.3
+        return decimal.Decimal('83.3')
     else:
         raise ValueError("size for vm can only be 1 or 2")
 
 
 def namespace_price(size):
-    return size * 83.3
+    return size * decimal.Decimal('83.3')
 
 
-def proxy_price(size):
+def proxy_price():
     return 10
 
 
