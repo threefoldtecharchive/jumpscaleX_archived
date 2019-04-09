@@ -333,7 +333,7 @@ class Doc(j.application.JSBaseClass):
 
             # part.result = method(self,*args,**kwargs,content=part.data)
             try:
-                part.result = method(self, *args, **kwargs, content=part.data)
+                part.result = method(self, *args, **kwargs)
             except Exception as e:
                 block = "```python\nERROR IN MACRO*** TODO: *1 ***\nmacro:\n%s\nERROR:\n%s\n```\n" % (macro_name, e)
                 self._log_error(block)

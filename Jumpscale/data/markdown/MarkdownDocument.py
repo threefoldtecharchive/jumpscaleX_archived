@@ -1,8 +1,9 @@
+from . import mistune
+import copy
 from Jumpscale import j
 from .MarkdownComponents import *
 JSBASE = j.application.JSBaseClass
-import copy
-from . import mistune
+
 
 class MarkdownDocument(j.application.JSBaseClass):
 
@@ -59,7 +60,7 @@ class MarkdownDocument(j.application.JSBaseClass):
         if ddict is None:
             ddict = {}
         ddict = copy.copy(ddict)
-        self.parts.append(MDData(ddict=ddict,toml=toml,yaml=yaml))
+        self.parts.append(MDData(ddict=ddict, toml=toml, yaml=yaml))
 
     def macro_add(self, method, data=""):
         self.parts.append(MDMacro(method=method, data=data))
@@ -69,10 +70,9 @@ class MarkdownDocument(j.application.JSBaseClass):
         state = ""
         block = ""
 
-        #needed to calculate the level of the lists
+        # needed to calculate the level of the lists
         prevListLevel = 0
         curListLevel = 1
-
 
         listblocklines = []
         # substate = ""
@@ -109,9 +109,9 @@ class MarkdownDocument(j.application.JSBaseClass):
                 state = ""
                 continue
 
-            if line.startswith("!!!") and state == "": #is 1 line macro
+            if line.startswith("!!!") and state == "":  # is 1 line macro
                 lang = ""
-                self.codeblock_add(line,lang=lang)
+                self.codeblock_add(line, lang=lang)
                 continue
 
             if line.startswith("<!-"):
@@ -129,7 +129,7 @@ class MarkdownDocument(j.application.JSBaseClass):
                 block += "%s\n" % line
 
             # LIST
-            if linestripped.startswith("-") or linestripped.startswith("*") and state in ["","LIST"]:
+            if linestripped.startswith("-") or linestripped.startswith("*") and state in ["", "LIST"]:
                 state = "LIST"
                 listblocklines.append(line)
                 continue
@@ -138,7 +138,7 @@ class MarkdownDocument(j.application.JSBaseClass):
                 if state == "LIST":
                     state = ""
                     self.parts.append(MDList("\n".join(listblocklines)))
-                    listblocklines = [] 
+                    listblocklines = []
 
             if state == "TABLE" and not linestripped.startswith("|"):
                 state = ""
@@ -173,18 +173,18 @@ class MarkdownDocument(j.application.JSBaseClass):
                     state = "CODE"
                     lang = line.strip("'` ")
                     if linestripped.startswith("```"):
-                        end="```"
+                        end = "```"
                     else:
-                        end="'''"
+                        end = "'''"
                     continue
 
             if state == "CODE":
                 if linestripped.startswith(end):
                     state = ""
-                    self.codeblock_add(block,lang=lang)
+                    self.codeblock_add(block, lang=lang)
                     block = ""
                     lang = ""
-                    end=""
+                    end = ""
                 else:
                     block += "%s\n" % line
                 continue
@@ -193,44 +193,46 @@ class MarkdownDocument(j.application.JSBaseClass):
                 block += "%s\n" % line
             block = block_add(block)
 
-
-    def codeblock_add(self,block,lang=""):
+    def codeblock_add(self, block, lang=""):
         """
         add the full code block
         """
-        lang=lang.lower().strip()
-        c=block.strip().split("\n")[0].lower()
-        if c.startswith("!!!data") and lang in ["toml","yaml"]:
-            #is data
-            block="\n".join(block.strip().split("\n")[1:])+"\n"
-            if lang=="toml":
+        lang = lang.lower().strip()
+        c = block.strip().split("\n")[0].lower()
+        if c.startswith("!!!data") and lang in ["toml", "yaml"]:
+            # is data
+            block = "\n".join(block.strip().split("\n")[1:])+"\n"
+            if lang == "toml":
                 self.data_add(toml=block)
-            elif lang=="yaml":
+            elif lang == "yaml":
                 self.data_add(yaml=block)
             else:
-                raise RuntimeError("could not add codeblock for %s"%block)            
-        elif c.startswith("!!!") and lang=="":
-            method=block.strip().split("\n")[0][3:].strip() #remove !!!
-            data="\n".join(block.strip().split("\n")[1:])+"\n"
+                raise RuntimeError("could not add codeblock for %s" % block)
+        elif c.startswith("!!!") and lang == "":
+            method = block.strip().split("\n")[0][3:].strip()  # remove !!!
+            data = "\n".join(block.strip().split("\n")[1:])+"\n"
             if "(" in method:
                 data2 = data
             else:
-                data=data.replace("True","true")
-                data=data.replace("False","false")
-                if data.strip()!="":
-                    data2 = j.data.serializers.toml.loads(data)
+                data = data.replace("True", "true")
+                data = data.replace("False", "false")
+                if data.strip() != "":
+                    try:
+                        data2 = j.data.serializers.toml.loads(data)
+                    except RuntimeError:
+                        data2 = {'content': data}
                 else:
                     data2 = {}
-            self.macro_add(method=method,data=data2)
+            self.macro_add(method=method, data=data2)
         else:
-            self.code_add(text=block,lang=lang)
+            self.code_add(text=block, lang=lang)
 
     @property
     def content(self):
         return self._content
 
     @property
-    def markdown(self):    
+    def markdown(self):
         out = ""
         prevtype = ""
         for part in self.parts:
@@ -244,45 +246,45 @@ class MarkdownDocument(j.application.JSBaseClass):
             prevtype = part.type
         return out
 
-    def __repr__(self):        
-        out=""
+    def __repr__(self):
+        out = ""
         for part in self.parts:
-            part0=str(part).rstrip("\n")+"\n\n"
-            out+=part0
+            part0 = str(part).rstrip("\n")+"\n\n"
+            out += part0
         return out
 
     __str__ = __repr__
 
-    def part_get(self,text_to_find=None,cat=None,nr=0,die=True):
+    def part_get(self, text_to_find=None, cat=None, nr=0, die=True):
         """
         @param cat is: table, header, macro, code, comment1line, comment, block, data, image
         @param nr is the one you need to have 0 = first one which matches
         @param text_to_find looks into the text
-        """        
+        """
         res = self.parts_get(text_to_find=text_to_find, cat=cat)
-        if len(res)== 0:
+        if len(res) == 0:
             if die:
-                raise RuntimeError("could not find part %s:%s"%(text_to_find,cat))
+                raise RuntimeError("could not find part %s:%s" % (text_to_find, cat))
             else:
                 return None
-        if nr>len(res):
+        if nr > len(res):
             if die:
-                raise RuntimeError("could not find part %s:%s at position:%s"%(text_to_find,cat,nr))
+                raise RuntimeError("could not find part %s:%s at position:%s" % (text_to_find, cat, nr))
             else:
-                return None            
-        return res[nr]        
+                return None
+        return res[nr]
 
-    def parts_get(self,text_to_find=None,cat=None):  
+    def parts_get(self, text_to_find=None, cat=None):
         """
         @param cat is: table, header, macro, code, comment1line, comment, block, data, image
         @param text_to_find looks into the text
-        """         
-        res=[]
+        """
+        res = []
         for part in self.parts:
-            found=True
+            found = True
             if cat is not None and not part.type.startswith(cat):
                 found = False
-            if text_to_find is not None and part.text.find(text_to_find)==-1:
+            if text_to_find is not None and part.text.find(text_to_find) == -1:
                 found = False
             if found:
                 res.append(part)
@@ -292,7 +294,7 @@ class MarkdownDocument(j.application.JSBaseClass):
     def html(self):
         return str(self.htmlpage_get())
 
-    def pdf(self,path):
+    def pdf(self, path):
         """
         write pdf to path specified,
 
@@ -301,9 +303,7 @@ class MarkdownDocument(j.application.JSBaseClass):
         """
         raise NotImplemented()
 
-
-
-    def htmlpage_get(self,htmlpage=None, webparts=True):
+    def htmlpage_get(self, htmlpage=None, webparts=True):
         """
         is the htmlpage, if not specified then its j.data.html.page_get()
 
@@ -316,21 +316,22 @@ class MarkdownDocument(j.application.JSBaseClass):
             htmlpage = j.data.html.page_get()
 
         for part in self.parts:
-            if part.type=="block":
+            if part.type == "block":
                 htmlpage.paragraph_add(mistune.markdown(part.markdown.strip()))
-            elif part.type=="header":
-                htmlpage.header_add(part.title,level= part.level)
-            elif part.type=="code":
-                # codemirror code generator                
-                j.data.html.webparts.codemirror_add(self=htmlpage,code=part.markdown)
-            elif part.type=="table":
-                #can also use htmlpage.table_add  #TODO: need to see whats best
-                htmlpage.html_add(part.html) #there will be more optimal ways how to do this in future, with real javascript                
-            elif part.type=="data":
+            elif part.type == "header":
+                htmlpage.header_add(part.title, level=part.level)
+            elif part.type == "code":
+                # codemirror code generator
+                j.data.html.webparts.codemirror_add(self=htmlpage, code=part.markdown)
+            elif part.type == "table":
+                # can also use htmlpage.table_add  #TODO: need to see whats best
+                # there will be more optimal ways how to do this in future, with real javascript
+                htmlpage.html_add(part.html)
+            elif part.type == "data":
                 pass
-            elif part.type=="list":
+            elif part.type == "list":
                 htmlpage.html_add(mistune.markdown(part.markdown))
-            elif part.type=="macro":
+            elif part.type == "macro":
                 htmlpage.paragraph_add(mistune.markdown(part.markdown.strip()))
                 # if j.tools.markdowndocs_loaded is not []:
                 #     #means there is no doc generator so cannot load macro
@@ -341,12 +342,11 @@ class MarkdownDocument(j.application.JSBaseClass):
                 #     s
             else:
                 print("htmlpage_get")
-                from IPython import embed;embed(colors='Linux')
+                from IPython import embed
+                embed(colors='Linux')
                 s
-                
-        return htmlpage
-            
 
+        return htmlpage
 
     # def _findFancyHeaders(self):
     #     if not self.content or self.content.strip() == "":
@@ -363,7 +363,6 @@ class MarkdownDocument(j.application.JSBaseClass):
     #         out.append(line)
 
     #     self._content = "\n".join(out)
-
 
         # def dataobj_get(self, ttype, guid):
     #     """
