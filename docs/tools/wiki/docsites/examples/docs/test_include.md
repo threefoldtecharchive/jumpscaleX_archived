@@ -9,7 +9,7 @@
 !!!include("threefoldtech:jumpscaleX(development):test.py", doc_only=True)
 
 ### skip remarks (lines start with hash)
-!!!include("threefoldtech:jumpscaleX(development):test_src.md", remarks_skip=True)
+!!!include("threefoldtech:jumpscaleX(development):test.py", remarks_skip=True)
 
 ### get only part A
 !!!include("threefoldtech:jumpscaleX(development):test_src.md!A")
