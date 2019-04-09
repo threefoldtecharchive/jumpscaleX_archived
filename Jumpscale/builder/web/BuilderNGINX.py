@@ -197,6 +197,25 @@ class BuilderNGINX(j.builder.system._BaseClass):
         """
         # test is already implemented in php runtime
         pass
+    
+    def test(self):
+        '''tests the builder by performing the following:
+        build(), install(), start()-> nginx running, stop()-> nginx not running    
+        '''
+
+        self.build(reset=True)
+        self.install()
+        if self.running():
+            self.stop()
+
+        assert not self.running()
+        # check start is working
+        self.start()
+        assert self.running()
+        # check stop is working
+        self.stop()
+        assert not self.running()
+        self._log_info("Nginx test successfull")
 
     @builder_method()
     def sandbox(self,zhub_client=None,flist_create=True):
@@ -214,5 +233,5 @@ class BuilderNGINX(j.builder.system._BaseClass):
         bin_dest = self.tools.joinpaths(dir_dest , "bin" , self.NAME)
         self.tools.file_copy(bin_path, bin_dest)
 
-        self.tools.file_copy(self._replace('{DIR_BUILD}/conf/fastcgi.conf'), "{}/conf/fastcgi.conf".format(dir_dest))
-        self.tools.file_copy(self._replace('{DIR_BUILD}/conf/nginx.conf'), "{}/conf/nginx.conf".format(dir_dest))
+        self.tools.file_copy(self._replace('{DIR_BUILD}/conf/fastcgi.conf'), "{}/cfg/fastcgi.conf".format(dir_dest))
+        self.tools.file_copy(self._replace('{DIR_BUILD}/conf/nginx.conf'), "{}/cfg/nginx.conf".format(dir_dest))
