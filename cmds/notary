@@ -47,7 +47,7 @@ def gedis(listen, zdb, namespace, secret):
 @click.option('--gedis', help='address of the gedis notary (default localhost:5000)', default='localhost:5000')
 def lapis(port, gedis):
     gedis_host, gedis_port = _split_hostport(gedis)
-    cfg = _lapis_cfg_tmpl.format(port=port, gedis_host=gedis_port, gedis_port=gedis_port)
+    cfg = _lapis_cfg_tmpl.format(port=port, gedis_host=gedis_host, gedis_port=gedis_port)
     j.sal.fs.writeFile('/sandbox/code/github/threefoldtech/digitalmeX/packages/notary/config.lua', cfg)
     os.chdir('/sandbox/code/github/threefoldtech/digitalmeX/packages/notary')
     args = ['lapis', 'server', 'production']
