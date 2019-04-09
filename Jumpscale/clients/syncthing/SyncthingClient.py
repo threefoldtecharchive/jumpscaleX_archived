@@ -16,7 +16,7 @@ class SyncthingClient(JSConfigClient):
     @url = jumpscale.syncthing.client
     name* = "" (S)
     addr = "localhost" (S)
-    port = 0 (ipport)
+    port = 8384 (ipport)
     sshport = 22 (ipport)
     rootpasswd_ = "" (S)
     apikey = "" (S)

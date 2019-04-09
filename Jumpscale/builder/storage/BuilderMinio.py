@@ -9,7 +9,7 @@ class BuilderMinio(j.builder.system._BaseClass):
     NAME = "minio"
 
     def _init(self):
-        self.DIR_BUILD = self._replace("{DIR_TEMP}/minio")
+        self.DIR_BUILD = j.builder.runtimes.golang.package_path_get('minio', host='github.com/minio')
         self.datadir = ''
 
     @builder_method()
@@ -17,19 +17,18 @@ class BuilderMinio(j.builder.system._BaseClass):
         """
         Builds minio
         """
+        self.profile_sandbox_select()
         self.tools.dir_ensure(self.DIR_BUILD)
-        self.minio_path = self._replace('{DIR_BUILD}/minio')
-        minio_url = "https://dl.minio.io/server/minio/release/linux-amd64/minio"
-        self.tools.file_download(minio_url, overwrite=True, to=self.minio_path, expand=False, removeTopDir=True)
-        cmd = 'chmod +x {}'.format(self.minio_path)
-        self._execute(cmd)
+        j.builder.runtimes.golang.install()
+        j.builder.runtimes.golang.get('github.com/minio/minio', install=False, update=True)
+        self._execute('cd {DIR_BUILD}; make')
 
     @builder_method()
     def install(self):
         """
         Installs minio
         """
-        self._copy(self.minio_path, '{DIR_BIN}')
+        self._copy('{DIR_BUILD}/minio', '{DIR_BIN}')
 
     @property
     def startup_cmds(self):

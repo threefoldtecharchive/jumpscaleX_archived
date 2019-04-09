@@ -1,5 +1,5 @@
 from Jumpscale import j
-from time import sleep
+import requests
 builder_method = j.builder.system.builder_method
 
 
@@ -63,8 +63,8 @@ class BuilderTIDB(j.builder.system._BaseClass):
         self.start()
         pid = j.sal.process.getProcessPid(self.NAME)
         assert pid is not []
-        response = self._execute('curl http://127.0.0.1:10080/status', showout=False)
-        assert 'TiDB' in response[1]
+        response = requests.get('http://127.0.0.1:10080/status')
+        assert response.status_code == requests.codes.ok
         self.stop()
 
         print('TEST OK')

@@ -99,7 +99,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
         self._remove(bin_path)
         self.clean()
-        self.clean()
+
 
     @builder_method()
     def test_zos(self, zos_client, flist=None, build=False):
