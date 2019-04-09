@@ -9,7 +9,7 @@ There is also a macro system involved which allows the markdown documents to be 
 
 do
 ```bash
-js_shell 'j.tools.docsite.test()'
+kosmos 'j.tools.markdowndocs.test()'
 ```
 
 ### the test code

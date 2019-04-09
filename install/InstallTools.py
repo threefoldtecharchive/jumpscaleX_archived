@@ -1786,6 +1786,7 @@ class UbuntuInstall():
             'python-ufw',
             'ufw',
             'libpq-dev',
+            'graphviz',
         ]
 
     def apts_install():

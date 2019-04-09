@@ -14,14 +14,13 @@ when there are many arguments then there is also a multiline one
 
 ```python
 !!!include
-name = "Fixer.py"
-repo = "https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/tools/fixer"
-docstring = "write_changes"
+link = "https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/tools/fixer/Fixer.py"
+doc_only = "True"
 ```
 
 the arguments need to be a dict in toml format
 
-in this case the include macro will be called with the 3 arguments specified: name, repo, docstring
+in this case the include macro will be called with the 2 arguments specified: link and doc_only
 
 
 

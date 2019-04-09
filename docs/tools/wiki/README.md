@@ -1,15 +1,17 @@
 # Markdown docsites:
 
-[Docsites](/Jumpscale/tools/markdowndocs/readme.md) are a collection of markdown documents, images and data files that can be generated using jumpscale `markdowndocs` tool.
+[Docsites](docsites/README.md) are a collection of markdown documents, images and data files that can be generated using jumpscale `markdowndocs` tool.
 
 The tool pre-process the given markdown directory (it adds some extension to markdown like custom link format and macros), also, it verifies and follows all the links and download it if needed, so you end up having a static directory that can be served using e.g. **openresty**.
 
 ### Markdown extensions:
 * [Custom Link format](docsites/links.md) to make it easy to reference other documents and files.
-* [Macros](/Jumpscale/tools/markdowndocs/macros/readme.md):
+* [Macros](docsites/macros/README.md):
     * [data](docsites/macros/data.md): to add data that can be
     * [include](docsites/macros/include.md): to include content from other documents and files.
-
+    * [dot](docsites/macros/dot.md): to directly convert DOT graph to an image.
+    * [gslide](docsites/macros/gslide.md)
+    * [slideshow](docsites/macros/slideshow.md)
 
 ## Tool usage
 
