@@ -1,12 +1,12 @@
 # Markdown docsites:
 
-[Docsites](docsites/readme.md) are a collection of markdown documents, images and data files that can be generated using jumpscale `markdowndocs` tool.
+[Docsites](/Jumpscale/tools/markdowndocs/readme.md) are a collection of markdown documents, images and data files that can be generated using jumpscale `markdowndocs` tool.
 
 The tool pre-process the given markdown directory (it adds some extension to markdown like custom link format and macros), also, it verifies and follows all the links and download it if needed, so you end up having a static directory that can be served using e.g. **openresty**.
 
 ### Markdown extensions:
-* [Custom Link format](links.md) to make it easy to reference other documents and files.
-* [Macros](docsites/macros/readme.md):
+* [Custom Link format](docsites/links.md) to make it easy to reference other documents and files.
+* [Macros](/Jumpscale/tools/markdowndocs/macros/readme.md):
     * [data](docsites/macros/data.md): to add data that can be
     * [include](docsites/macros/include.md): to include content from other documents and files.
 
@@ -14,13 +14,13 @@ The tool pre-process the given markdown directory (it adds some extension to mar
 ## Tool usage
 
 Given a markdown documents directory (a link to repository), the tool will pull, pre-process and generate the docsite.
-You can find some markdown docs examples [here](https://github.com/threefoldtech/jumpscale_weblibs/tree/master/docsites_examples) and [here](https://github.com/threefoldtech/jumpscaleX/tree/development_markdown/docs/tools/wiki/docsites/examples/docs).
+You can find some markdown docs examples [here](https://github.com/threefoldtech/jumpscale_weblibs/tree/master/docsites_examples) and [here](https://github.com/threefoldtech/jumpscaleX/tree/development/docs/tools/wiki/docsites/examples/docs).
 
 Usage example:
 
 ```python
-url = "https://github.com/threefoldtech/jumpscaleX/tree/development_markdown/docs/tools/wiki/docsites/examples/docs"
-docsite = j.tools.markdowndocs.load(url, name="test_example"
+url = "https://github.com/threefoldtech/jumpscaleX/tree/development/docs/tools/wiki/docsites/examples/docs"
+docsite = j.tools.markdowndocs.load(url, name="test_example")
 docsite.write()
 ```
 

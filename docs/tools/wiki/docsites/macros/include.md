@@ -39,22 +39,22 @@ basically ! marks the PART name, in this case it will link to that section
 
 ## macro arguments  #TODO:*1 needs to be implemented in the doc generator macro include (the others can be removed)
 
-### doc_only 
+### doc_only
 
 - if True, means only documentation strings are being captured
 - only relevant for .py files
 - default = False
-  
-### remarks_skip 
+
+### remarks_skip
 
 - if True, means skip all lines starting with '#' (after lstrip())
 - only relevant for .py files
 - default = False
 
-### header_level_modify = -2,-1,1,2...  
+### header_level_modify = -2,-1,1,2...
 
 - if 1 means every header level will be done +1 e.g. ## becomes ###
-- if -1 means every header level will be done -1 
+- if -1 means every header level will be done -1
     - e.g. ## becomes #
     - e.g. # stays # because is the top
 - only relevant for markdown
@@ -67,5 +67,5 @@ basically ! marks the PART name, in this case it will link to that section
 
 ### codeblock_type
 
-- will put result in code block of specified type e.g. ```python``` 
+- will put result in code block of specified type e.g. ```python```
 - default = None (means no codeblock)

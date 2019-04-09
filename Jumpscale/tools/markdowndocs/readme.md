@@ -7,7 +7,7 @@ There is also a macro system involved which allows the markdown documents to be 
 
 ### to test
 
-do 
+do
 ```bash
 js_shell 'j.tools.docsite.test()'
 ```
