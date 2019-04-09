@@ -1,8 +1,7 @@
 from Jumpscale import j
 
 
-class DataObjBase():
-
+class DataObjBase:
     def __init__(self, schema, data={}, capnpbin=None, model=None):
         # if data is None:
         #     data = {}
@@ -17,8 +16,6 @@ class DataObjBase():
         self._acl = None
         self._JSOBJ = True
         self._load_from_data(data=data, capnpbin=capnpbin, keepid=False, keepacl=False)
-
-
 
     @property
     def _capnp_schema(self):
@@ -55,7 +52,9 @@ class DataObjBase():
             if j.data.types.string.check(data):
                 data = j.data.serializers.json.loads(data)
             if not isinstance(data, dict):
-                raise j.exceptions.Input("_load_from_data when string needs to be dict as json")
+                raise j.exceptions.Input(
+                    "_load_from_data when string needs to be dict as json"
+                )
             self._data_update(data=data)
 
     def Edit(self):
@@ -172,7 +171,8 @@ class DataObjBase():
 
     @property
     def _json(self):
-        return j.data.serializers.json.dumps(str(self._ddict), True, True)
+        # TODO: fix when use self._ddict
+        return j.data.serializers.json.dumps(self._ddict_hr)
 
     @property
     def _toml(self):
