@@ -27,7 +27,7 @@ class SonicClient(JSConfigClient):
         mode = "search" (S)
         """
     def _init(self):
-        self._client = None
+        pass
 
     @property
     def client(self):
@@ -37,15 +37,12 @@ class SonicClient(JSConfigClient):
             j.builder.runtimes.python.pip_package_install("sonic-client")
             from sonic import SearchClient, IngestClient
 
-        if not self._client:
-            if self.mode.casefold() == "search":
-                self._client = SearchClient(host=self.host, port=self.port, password=self.password)
-            elif self.mode.casefold() == "ingest":
-                self._client = IngestClient(host=self.host, port=self.port, password=self.password)
-            else:
-                raise ValueError("{} is nit a supported sonic client mode".format(self.mode))
-
-        return self._client
+        if self.mode.casefold() == "search":
+            return SearchClient(host=self.host, port=self.port, password=self.password)
+        elif self.mode.casefold() == "ingest":
+            return IngestClient(host=self.host, port=self.port, password=self.password)
+        else:
+            raise ValueError("{} is nit a supported sonic client mode".format(self.mode))
 
     def __enter__(self):
         return self.client.__enter__()
