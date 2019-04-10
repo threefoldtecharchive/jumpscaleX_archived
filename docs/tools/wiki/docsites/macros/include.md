@@ -15,7 +15,7 @@ if repo or docsite not mentioned then will look in current repo
 - how to use markers see [code_wiki_parts.md]
 
 ```
-\!!!include("$LINK")
+!!!include("$LINK")
 ```
 
 - $LINK is the link info see previous section
@@ -25,7 +25,7 @@ if repo or docsite not mentioned then will look in current repo
 - how to use markers see [code_wiki_parts.md]
 
 ```
-\!!!include("wiki/links.md!LINK")
+!!!include("wiki/links.md!LINK")
 ```
 
 basically ! marks the PART name, in this case it will link to that section
@@ -34,7 +34,7 @@ basically ! marks the PART name, in this case it will link to that section
 ## some python code
 
 ```
-\!!!include("console/Console.py!CONSOLE",doc_only=True)
+!!!include("console/Console.py!CONSOLE",doc_only=True)
 ```
 
 ## macro arguments  #TODO:*1 needs to be implemented in the doc generator macro include (the others can be removed)
@@ -51,7 +51,7 @@ basically ! marks the PART name, in this case it will link to that section
 - only relevant for .py files
 - default = False
 
-### header_level_modify = -2,-1,1,2...
+### header_levels_modify = -2,-1,1,2...
 
 - if 1 means every header level will be done +1 e.g. ## becomes ###
 - if -1 means every header level will be done -1
