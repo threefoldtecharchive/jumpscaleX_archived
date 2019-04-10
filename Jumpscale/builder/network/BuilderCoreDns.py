@@ -21,6 +21,9 @@ CONFIGTEMPLATE = """
 class BuilderCoreDns(j.builder.system._BaseClass):
     NAME = "coredns"
 
+    def _init(self):
+        self.package_path = j.builder.runtimes.golang.package_path_get('coredns', 'github.com/coredns')
+
     @builder_method()
     def build(self):
         """
@@ -36,12 +39,12 @@ class BuilderCoreDns(j.builder.system._BaseClass):
 
         # go to package path and build (for coredns)
         C = """
-        cd {DIR_BUILD}
+        cd {}
         git remote add threefoldtech_coredns https://github.com/threefoldtech/coredns
         git fetch threefoldtech_coredns
         git checkout threefoldtech_coredns/master
         make
-        """
+        """.format(self.package_path)
         self._execute(C)
 
     @builder_method()
@@ -51,11 +54,13 @@ class BuilderCoreDns(j.builder.system._BaseClass):
 
         installs and runs coredns server with redis plugin
         """
-        self._copy(src='{DIR_BUILD}/coredns', dst='/sandbox/bin/coredns')
+        src = '{}/coredns'.format(self.package_path)
+        dest = self._replace('{DIR_BIN}/coredns')
+        self._copy(src=src, dst=dest)
         j.sal.fs.writeFile(filename='/sandbox/cfg/coredns.conf', contents=CONFIGTEMPLATE)
 
     def clean(self):
-        self._remove(self.DIR_BUILD)
+        self._remove(self.package_path)
         self._remove(self.DIR_SANDBOX)
 
     @property
@@ -66,7 +71,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
 
     @builder_method()
     def sandbox(self):
-        coredns_bin = j.sal.fs.joinPaths(self.DIR_BUILD, self.NAME)
+        coredns_bin = j.sal.fs.joinPaths('{DIR_BIN}', self.NAME)
         dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'sandbox')
         self.tools.dir_ensure(dir_dest)
         self._copy(coredns_bin, dir_dest)
@@ -96,6 +101,11 @@ class BuilderCoreDns(j.builder.system._BaseClass):
     def uninstall(self):
         bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
         self._remove(bin_path)
+        self.clean()
+
+    @builder_method()
+    def reset(self):
+        super().reset()
         self.clean()
 
     @builder_method()
