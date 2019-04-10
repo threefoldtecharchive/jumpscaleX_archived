@@ -27,6 +27,10 @@ docsite.write()
 
 This will pull the repo at the branch specified, then generate a docsite at `$DIR_VAR/docsites` with the name `test_example`.
 
+To run a web server that listens on 8080 and serves this docsites as `/wiki/<docsite_name>` do:
+
+`j.tools.markdowndocs.webserver()`
+
 
 ## Openresty
 This docsite can be served as static files by nginx/openresty like:
