@@ -3,7 +3,7 @@ from Jumpscale import j
 builder_method = j.builder.system.builder_method
 
 
-CONFIGTEMPLATE="""
+CONFIGTEMPLATE = """
 .{
     etcd $domain {
         stubzones
@@ -14,14 +14,12 @@ CONFIGTEMPLATE="""
     }
     loadbalance
     reload 5s
-}        
+}
 """
+
 
 class BuilderCoreDns(j.builder.system._BaseClass):
     NAME = "coredns"
-
-    def _init(self, reset=False):
-        self.DIR_BUILD = j.builder.runtimes.golang.package_path_get('coredns', host='github.com/coredns')
 
     @builder_method()
     def build(self):
@@ -35,9 +33,9 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         j.builder.runtimes.golang.install()
         j.builder.db.etcd.install()
         j.builder.runtimes.golang.get('github.com/coredns/coredns', install=False, update=True)
-        
+
         # go to package path and build (for coredns)
-        C="""
+        C = """
         cd {DIR_BUILD}
         git remote add threefoldtech_coredns https://github.com/threefoldtech/coredns
         git fetch threefoldtech_coredns
@@ -59,7 +57,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
     def clean(self):
         self._remove(self.DIR_BUILD)
         self._remove(self.DIR_SANDBOX)
-    
+
     @property
     def startup_cmds(self):
         cmd = "/sandbox/bin/coredns -conf /sandbox/cfg/coredns.conf"
@@ -99,7 +97,6 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
         self._remove(bin_path)
         self.clean()
-
 
     @builder_method()
     def test_zos(self, zos_client, flist=None, build=False):
