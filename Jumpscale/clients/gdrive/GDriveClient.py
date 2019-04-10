@@ -8,7 +8,7 @@ import io
 try:
     from apiclient import discovery
 except BaseException:
-    j.sal.process.execute("pip3 install google-api-python-client")
+    j.sal.process.execute("python3 -m pip install google-api-python-client")
 from apiclient import discovery
 # from apiclient.http import *
 from oauth2client import client
@@ -27,12 +27,9 @@ APPLICATION_NAME = 'Google Drive Exporter'
 JSBASE = j.application.JSBaseClass
 
 
-class GDriveFactory(j.application.JSBaseClass):
+class GDrive(j.application.JSBaseClass):
 
-    def __init__(self):
-        JSBASE.__init__(self)
-        self.__imports__ = "google-api-python-client"
-
+    def _init(self):
         self.secretsFilePath = 'gdrive_client_secrets.json'
         if not j.sal.fs.exists(self.secretsFilePath, followlinks=True):
             self.secretsFilePath = os.path.expanduser('~') + '/.gdrive_client_secrets.json'

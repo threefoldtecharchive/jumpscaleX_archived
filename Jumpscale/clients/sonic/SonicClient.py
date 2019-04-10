@@ -19,7 +19,7 @@ class SonicClient(JSConfigClient):
     """
 
     _SCHEMATEXT = """
-        @url =  jumpscale.zerohub.client
+        @url =  jumpscale.sonic.client
         name* = "" (S)
         host = "" (S)
         port = 1491 (I)
