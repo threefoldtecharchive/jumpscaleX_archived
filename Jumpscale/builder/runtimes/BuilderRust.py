@@ -14,7 +14,7 @@ class BuilderRust(j.builder.system._BaseClass):
 
     @builder_method()
     def build(self):
-
+        self.profile_sandbox_select()
         self._execute(
             "curl -o {}/rust.tar.gz {}".format(self.DIR_BUILD, self.DOWNLOAD_URL)
         )
