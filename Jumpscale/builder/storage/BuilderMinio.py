@@ -9,7 +9,6 @@ class BuilderMinio(j.builder.system._BaseClass):
     NAME = "minio"
 
     def _init(self):
-        self.DIR_BUILD = j.builder.runtimes.golang.package_path_get('minio', host='github.com/minio')
         self.datadir = ''
 
     @builder_method()
@@ -17,18 +16,19 @@ class BuilderMinio(j.builder.system._BaseClass):
         """
         Builds minio
         """
-        self.profile_sandbox_select()
-        self.tools.dir_ensure(self.DIR_BUILD)
         j.builder.runtimes.golang.install()
-        j.builder.runtimes.golang.get('github.com/minio/minio', install=False, update=True)
-        self._execute('cd {DIR_BUILD}; make')
+        self.profile.env_set('GO111MODULE', 'on')
+        cmd = """
+        go get github.com/minio/minio
+        """
+        self._execute(cmd, timeout=10000)
 
     @builder_method()
     def install(self):
         """
         Installs minio
         """
-        self._copy('{DIR_BUILD}/minio', '{DIR_BIN}')
+        self._copy('{}/bin/minio'.format(j.builder.runtimes.golang.DIR_GO_PATH), '{DIR_BIN}')
 
     @property
     def startup_cmds(self):
@@ -47,8 +47,8 @@ class BuilderMinio(j.builder.system._BaseClass):
 
     @builder_method()
     def clean(self):
-        self._remove(self.DIR_BUILD)
         self._remove(self.DIR_SANDBOX)
+        self._remove('{}/bin/minio'.format(j.builder.runtimes.golang.DIR_GO_PATH))
     
     @builder_method()
     def sandbox(self):
