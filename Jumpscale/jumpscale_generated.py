@@ -1231,6 +1231,7 @@ class group_clients(JSGroup):
         self._zhub = None
         self._racktivity = None
         self._s3 = None
+        self._gdrive = None
         self._traefik = None
         self._coredns = None
         self._graphite = None
@@ -1244,6 +1245,7 @@ class group_clients(JSGroup):
         self._kubernetes = None
         self._etcd = None
         self._zboot = None
+        self._tfmux = None
         self._ssh = None
         self._zerotier = None
         self._sonic = None
@@ -1255,7 +1257,6 @@ class group_clients(JSGroup):
         self._gitea = None
         self._openvcloud = None
         self._rogerthat = None
-        self._zos_protocol = None
         self._sqlalchemy = None
         self._threefold_directory = None
         self.__template = None
@@ -1444,6 +1445,12 @@ class group_clients(JSGroup):
             self._s3 =  S3Factory()
         return self._s3
     @property
+    def gdrive(self):
+        if self._gdrive is None:
+            from Jumpscale.clients.gdrive.GDriveFactory import GDriveFactory
+            self._gdrive =  GDriveFactory()
+        return self._gdrive
+    @property
     def traefik(self):
         if self._traefik is None:
             from Jumpscale.clients.traefik.TraefikFactory import TraefikFactory
@@ -1522,6 +1529,12 @@ class group_clients(JSGroup):
             self._zboot =  ZerobootFactory()
         return self._zboot
     @property
+    def tfmux(self):
+        if self._tfmux is None:
+            from Jumpscale.clients.tfmux.TFMuxFactory import TFMuxClientFactory
+            self._tfmux =  TFMuxClientFactory()
+        return self._tfmux
+    @property
     def ssh(self):
         if self._ssh is None:
             from Jumpscale.clients.ssh.SSHClientFactory import SSHClientFactory
@@ -1587,12 +1600,6 @@ class group_clients(JSGroup):
             from Jumpscale.clients.rogerthat.RogerthatFactory import RogerthatFactory
             self._rogerthat =  RogerthatFactory()
         return self._rogerthat
-    @property
-    def zos_protocol(self):
-        if self._zos_protocol is None:
-            from Jumpscale.clients.zero_os_protocol.ZeroOSFactory import ZeroOSFactory
-            self._zos_protocol =  ZeroOSFactory()
-        return self._zos_protocol
     @property
     def sqlalchemy(self):
         if self._sqlalchemy is None:

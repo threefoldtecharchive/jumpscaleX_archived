@@ -2,6 +2,7 @@ from Jumpscale import j
 from dateutil import parser
 import copy
 from apiclient.http import *
+from apiclient.http import MediaIoBaseDownload
 
 GOOGLEMIME = ['application/vnd.google-apps.audio',
               'application/vnd.google-apps.document',
@@ -20,13 +21,10 @@ GOOGLEMIME = ['application/vnd.google-apps.audio',
               'application/vnd.google-apps.video',
               'application/vnd.google-apps.drive-sdk']
 
-JSBASE = j.application.JSBaseClass
+class GDriveFile:
 
-
-class GDriveFile(j.application.JSBaseClass):
-
-    def __init__(self, id="", json=""):
-        JSBASE.__init__(self)
+    def __init__(self, service, id="", json=""):
+        self.service = service
         self._mime_type = None
         self._gmd = None
 
@@ -65,7 +63,6 @@ class GDriveFile(j.application.JSBaseClass):
             self.__dict__.update(j.data.serializers.json.loads(json))
 
         except BaseException:
-            j.clients.gdrive.self._log_warning("description was wrong format, was not json, lets re-write")
             self.changed = True
             self.description = json  # the old description
 
@@ -97,7 +94,7 @@ class GDriveFile(j.application.JSBaseClass):
     @property
     def gmd(self):
         if self._gmd is None:
-            self._gmd = j.clients.gdrive.files.get(fileId=self.id).execute()
+            self._gmd = self.service.files().get(fileId=self.id).execute()
         return self._gmd
 
     @property
@@ -138,7 +135,7 @@ class GDriveFile(j.application.JSBaseClass):
     def saveMetadata(self):
         if self.changed:
             name2 = "%s <%s>" % (self.name, self.sid)
-            j.clients.gdrive.files.update(fileId=self.id, body={"description": self.json, "name": name2}).execute()
+            self.service.files().update(fileId=self.id, body={"description": self.json, "name": name2}).execute()
             self.changed = False
 
     def exportPDF(self, path=""):
@@ -164,21 +161,19 @@ class GDriveFile(j.application.JSBaseClass):
             else:
                 new_type = self.mimetype
 
-            request = j.clients.gdrive.files.export_media(fileId=self.id, mimeType=new_type)
-            self._log_debug("\033[92m Downloading -- \033[0m" + path)
+            request = self.service.files().export_media(fileId=self.id, mimeType=new_type)
             response = request.execute()
             with open(path, "wb") as wer:
                 wer.write(response)
             return
 
         else:
-            request = j.clients.gdrive.files.get_media(fileId=self.id)
+            request = self.service.files().get_media(fileId=self.id)
             with open(path, "wb") as fh:
                 downloader = MediaIoBaseDownload(fh, request)
                 done = False
                 while done is False:
                     status, done = downloader.next_chunk()
-                    self._log_debug("\033[92m Downloading : \033[0m", " %s -- %d%%. " % (path, int(status.progress() * 100)))
 
     def save(self):
         if self.changed:
