@@ -3,7 +3,7 @@ from Jumpscale import j
 builder_method = j.builder.system.builder_method
 
 
-CONFIGTEMPLATE = """
+CONFIGTEMPLATE="""
 .{
     etcd $domain {
         stubzones
@@ -14,9 +14,8 @@ CONFIGTEMPLATE = """
     }
     loadbalance
     reload 5s
-}
+}        
 """
-
 
 class BuilderCoreDns(j.builder.system._BaseClass):
     NAME = "coredns"
@@ -36,7 +35,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         j.builder.runtimes.golang.install()
         j.builder.db.etcd.install()
         j.builder.runtimes.golang.get('github.com/coredns/coredns', install=False, update=True)
-
+        
         # go to package path and build (for coredns)
         C = """
         cd {}
@@ -62,7 +61,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
     def clean(self):
         self._remove(self.package_path)
         self._remove(self.DIR_SANDBOX)
-
+    
     @property
     def startup_cmds(self):
         cmd = "/sandbox/bin/coredns -conf /sandbox/cfg/coredns.conf"
@@ -102,6 +101,7 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
         self._remove(bin_path)
         self.clean()
+
 
     @builder_method()
     def reset(self):
