@@ -2,7 +2,9 @@ from Jumpscale import j
 from . import mistune
 import re
 from itertools import takewhile
-getindentlevel = lambda l:  len(list(takewhile(lambda c: c.isspace(), l)))
+
+
+def getindentlevel(l): return len(list(takewhile(lambda c: c.isspace(), l)))
 
 
 def lines2list(lines):
@@ -33,13 +35,12 @@ class MDBase():
     def markdown(self):
         return str(self.text)
 
-
     @property
     def html(self):
         return mistune.markdown(self.text, escape=True, hard_wrap=True)
 
     def __repr__(self):
-        return "%s:\n%s"%(self.type,self.text)
+        return "%s:\n%s" % (self.type, self.text)
 
     __str__ = __repr__
 
@@ -52,14 +53,12 @@ class MDList(MDBase):
     @property
     def as_list(self):
         return lines2list(self.text)
-    
+
     @property
     def markdown(self):
         return self.text
 
 
-        
-    
 class MDTable(MDBase):
 
     def __init__(self):
@@ -68,31 +67,30 @@ class MDTable(MDBase):
         self.type = "table"
 
     def rows_as_objects(self):
-        nrcols=len(self.header)
-        res=[]
+        nrcols = len(self.header)
+        res = []
         for row in self.rows:
             oo = object()
             for x in range(nrcols):
-                val=row[x]
-                if val.strip()==".":
-                    val=""
+                val = row[x]
+                if val.strip() == ".":
+                    val = ""
                 else:
                     try:
-                        val=int(val)
+                        val = int(val)
                     except:
                         pass
-                key=self.header[x]
-                oo.__dict__[key]=val
+                key = self.header[x]
+                oo.__dict__[key] = val
             res.append(oo)
         return res
-
 
     def header_add(self, cols):
         """
         cols = columns can be comma separated string or can be list
         """
         if j.data.types.string.check(cols):
-            cols=[item.strip().strip("'").strip('"').strip() for item in cols.split(",")]
+            cols = [item.strip().strip("'").strip('"').strip() for item in cols.split(",")]
 
         self.header = cols
         for nr in range(len(self.header)):
@@ -102,21 +100,21 @@ class MDTable(MDBase):
     def row_add(self, cols):
         """
         cols = columns  can be comma separated string or can be list
-        """        
+        """
         if j.data.types.string.check(cols):
-            cols=[item.strip().strip("'").strip('"').strip() for item in cols.split(",")]
+            cols = [item.strip().strip("'").strip('"').strip() for item in cols.split(",")]
 
-        if len(cols)  > len(self.header):
-            diff = len(cols)  - len(self.header)
+        if len(cols) > len(self.header):
+            diff = len(cols) - len(self.header)
             for i in range(diff):
                 cols.pop()
         elif len(self.header) > len(cols):
             diff = len(self.header) - len(cols)
-            cols.extend([" "]* diff)
+            cols.extend([" "] * diff)
 
         if len(cols) != len(self.header):
             raise j.exceptions.Input(
-                "cols need to be same size as header.\n %s vs %s\nline:%s\n" % (len(cols), len(self.header),cols))
+                "cols need to be same size as header.\n %s vs %s\nline:%s\n" % (len(cols), len(self.header), cols))
 
         for nr in range(len(cols)):
             if cols[nr] is None or str(cols[nr]).strip() == "":
@@ -137,26 +135,27 @@ class MDTable(MDBase):
 
         for row in self.rows:
             for i, col in enumerate(row):
-                col=str(col)
+                col = str(col)
                 try:
                     if len(col) > m[i]:
                         m[i] = len(col)
-                        if m[i]<3:
-                            m[i]=3
+                        if m[i] < 3:
+                            m[i] = 3
                 except:
-                    import ipdb; ipdb.set_trace()
+                    import ipdb
+                    ipdb.set_trace()
         return m
 
     @property
-    def text(self):        
+    def text(self):
         return str(self.markdown)
 
     @property
     def markdown(self):
         def pad(text, l, add=" "):
-            if l<4:
-                l=4
-            text=str(text)
+            if l < 4:
+                l = 4
+            text = str(text)
             while(len(text) < l):
                 text += add
             return text
@@ -194,14 +193,13 @@ class MDTable(MDBase):
         return out
 
 
-
 class MDHeader(MDBase):
 
     def __init__(self, level, title):
         self.level = level
         self.title = title
         self.type = "header"
-        
+
     @property
     def markdown(self):
         pre = ""
@@ -209,9 +207,8 @@ class MDHeader(MDBase):
             pre += "#"
         return "%s %s" % (pre, self.title)
 
-
     @property
-    def text(self):        
+    def text(self):
         return self.markdown
 
 # class MDListItem(MDBase):
@@ -220,7 +217,7 @@ class MDHeader(MDBase):
 #         self.level = level
 #         self.text = text
 #         self.type = "list"
-        
+
 
 #     def __repr__(self):
 #         pre = ''
@@ -236,11 +233,9 @@ class MDComment(MDBase):
     def __init__(self, text):
         self.text = text
         self.type = "comment"
-        
 
     def markdown(self):
         out = "<!--\n%s\n-->\n" % self.text
-
 
 
 class MDComment1Line(MDBase):
@@ -248,12 +243,11 @@ class MDComment1Line(MDBase):
     def __init__(self, text):
         self.text = text
         self.type = "comment1line"
-        
+
     @property
     def markdown(self):
         out = "<!--%s-->\n" % self.text
         return out
-
 
 
 # def _transform_links(self, text):
@@ -266,7 +260,7 @@ class MDComment1Line(MDBase):
 #     markup_regex = '\[({0})]\(\s*({1})\s*\)'.format(name_regex, url_regex)
 
 #     return re.sub(markup_regex, r'<a href="\2">\1</a>', text)
-    
+
 class MDBlock(MDBase):
 
     def __init__(self, text):
@@ -276,7 +270,6 @@ class MDBlock(MDBase):
     @property
     def html(self):
         return mistune.markdown(self.text, escape=True, hard_wrap=True)
-
 
     @property
     def markdown(self):
@@ -289,16 +282,13 @@ class MDBlock(MDBase):
         return out
 
 
-
-
 class MDCodeMacroDataBase(MDBase):
-      
 
     @property
     def html(self):
-        return "<code>\n\n%s\n</code>\n\n"%self.text    
+        return "<code>\n\n%s\n</code>\n\n" % self.text
 
-    
+
 class MDCode(MDCodeMacroDataBase):
 
     def __init__(self, text, lang):
@@ -306,60 +296,60 @@ class MDCode(MDCodeMacroDataBase):
         self.type = "code"
         self.lang = lang
         self.method = ""
-        
+
     @property
-    def markdown(self):        
-        out = "```%s\n"%self.lang
+    def markdown(self):
+        out = "```%s\n" % self.lang
         out += self.text.strip()
         out += "\n```\n"
         return out
-
 
 
 class MDMacro(MDCodeMacroDataBase):
 
     def __init__(self, data=None, method=""):
         if data is None:
-            data={}
+            data = {}
         self.data = data
         self.type = "macro"
         self.method = method.strip()
-        self.result = ""
+        self.result = None
 
     @property
     def _markdown(self):
-        out = "```\n!!!%s\n"%(self.method)
+        out = "```\n!!!%s\n" % (self.method)
         if j.data.types.dict.check(self.data):
             t = j.data.serializers.toml.dumps(self.data)
         else:
-            t= self.data.strip()
+            t = self.data.strip()
         out += t
         if t:
-            out+="\n"
+            out += "\n"
         out += "```\n"
         return out
 
     @property
     def markdown(self):
-        if self.result:
-            return self.result        
+        if self.result is not None:
+            return self.result
         else:
             return self._markdown
 
     @property
-    def text(self):        
+    def text(self):
         return str(self.markdown)
+
 
 class MDData(MDCodeMacroDataBase):
 
-    def __init__(self, ddict={},toml="",yaml=""):
-        
+    def __init__(self, ddict={}, toml="", yaml=""):
+
         self.type = "data"
 
         self._toml = toml
         self._yaml = yaml
         self._ddict = ddict
-        
+
         self._hash = ""
 
     @property
@@ -379,14 +369,14 @@ class MDData(MDCodeMacroDataBase):
             return j.data.serializers.toml.loads(self._toml)
         elif self._yaml:
             return j.data.serializers.yaml.loads(self._yaml)
-        elif self._ddict is not {}:            
-            return  self._ddict
+        elif self._ddict is not {}:
+            return self._ddict
         else:
-            RuntimeError ("toml or ddict needs to be filled in in data object")
+            RuntimeError("toml or ddict needs to be filled in in data object")
 
     @property
     def text(self):
-        out = "```toml\n!!!data\n%s\n```\n"%self.toml  #need new header
+        out = "```toml\n!!!data\n%s\n```\n" % self.toml  # need new header
         return out
 
     @property
@@ -405,22 +395,20 @@ class MDData(MDCodeMacroDataBase):
 
 
 class MDImage(MDCodeMacroDataBase):
-    
+
     def __init__(self, name, path):
-        self.path=path
-        self.name=name   
-        self.type = "image"     
-        self.extension=j.sal.fs.getFileExtension(path)
+        self.path = path
+        self.name = name
+        self.type = "image"
+        self.extension = j.sal.fs.getFileExtension(path)
 
     @property
-    def markdown(self):        
-        return "![](%s)"%self.name
+    def markdown(self):
+        return "![](%s)" % self.name
 
     @property
-    def text(self):        
+    def text(self):
         return str(self.markdown)
-
-
 
 
 # class Object(MDBase):
@@ -436,4 +424,3 @@ class MDImage(MDCodeMacroDataBase):
 #         return out
 
 #     __repr__ = __str__
-
