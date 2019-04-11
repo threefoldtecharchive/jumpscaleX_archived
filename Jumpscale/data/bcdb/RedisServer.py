@@ -259,7 +259,7 @@ class RedisServer(j.application.JSBaseClass):
 
         response.error("cannot delete, cat:'%s' not found" % cat)
 
-    def scan(self, response, startid, match="*", count=10000):
+    def scan(self, response, startid, match="*", count=10000, *args):
         """
 
         :param scan: id to start from
