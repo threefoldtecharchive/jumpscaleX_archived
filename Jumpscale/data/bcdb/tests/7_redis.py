@@ -137,8 +137,8 @@ def main(self):
 
     def check_after_restart():
         redis_cl = j.clients.redis.get(ipaddr="localhost", port=6380)
-        # len 11  because( after last delete we have  9 and we set twice  so result it 11)
-        assert redis_cl.hlen("objects:despiegk.test2") == 11
+        # len 10  because( after last delete we have  9 and we set one  so result it 10)
+        assert redis_cl.hlen("objects:despiegk.test2") == 10
 
         json = redis_cl.hget("objects:despiegk.test2", 3)
         ddict = j.data.serializers.json.loads(json)
