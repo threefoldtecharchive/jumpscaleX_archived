@@ -1747,8 +1747,8 @@ class UbuntuInstall():
 
             # level 2: full install
             2: [
-                "psycopg2-binary",
-                "psycopg2>=2.7.1",
+                # "psycopg2-binary",
+                # "psycopg2>=2.7.1",
                 "pystache>=0.5.4",
                 # "pypandoc>=1.3.3",
                 # "SQLAlchemy>=1.1.9",

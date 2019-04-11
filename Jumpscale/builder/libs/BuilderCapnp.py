@@ -4,12 +4,8 @@ JSBASE = j.builder.system._BaseClass
 
 builder_method = j.builder.system.builder_method
 
-class BuilderCapnp(j.builder.system._BaseClass):
-
-    def _init(self):
-
-        self.DIR_BUILD = j.core.tools.text_replace("{DIR_VAR}/build/capnp")
-        j.sal.fs.createDir(self.DIR_BUILD)
+class BuilderCapnp(JSBASE):
+    NAME = "capnp"
 
     @builder_method()
     def build(self):
@@ -28,12 +24,13 @@ class BuilderCapnp(j.builder.system._BaseClass):
 
         # url = "https://capnproto.org/capnproto-c++-0.6.1.tar.gz"
         url = "https://capnproto.org/capnproto-c++-0.7.0.tar.gz"
-        self.tools.file_download(url, to=self.DIR_BUILD, overwrite=False, retry=3,
+        self.tools.file_download(url, to="{}/capnproto".format(self.DIR_BUILD), overwrite=False, retry=3,
                                        expand=True, minsizekb=900, removeTopDir=True, deletedest=True)
 
         self.profile_builder_select()
 
         script = """
+        cd {DIR_BUILD}
         ./configure CXXFLAGS="-DHOLES_NOT_SUPPORTED"
         make -j6 check
         make install
