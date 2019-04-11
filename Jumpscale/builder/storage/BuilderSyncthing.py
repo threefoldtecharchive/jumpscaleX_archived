@@ -8,7 +8,7 @@ class BuilderSyncthing(j.builder.system._BaseClass):
     NAME = 'syncthing'
 
     def _init(self):
-        self.DIR_BUILD = j.builder.runtimes.golang.package_path_get('syncthing', host='github.com/syncthing')
+        self.package_path = j.builder.runtimes.golang.package_path_get('syncthing', host='github.com/syncthing')
 
     @builder_method()
     def build(self, version=None):
@@ -21,16 +21,17 @@ class BuilderSyncthing(j.builder.system._BaseClass):
         j.builder.runtimes.golang.get('github.com/syncthing/syncthing/...', install=False, update=True)
 
         if version is not None:
-            self._execute("cd %s && go run build.go -version %s -no-upgrade" % (self.DIR_BUILD, version))
+            self._execute("cd %s && go run build.go -version %s -no-upgrade" % (self.package_path, version))
         else:
-            self._execute("cd %s && go run build.go" % self.DIR_BUILD)
+            self._execute("cd %s && go run build.go" % self.package_path)
 
     @builder_method()
     def install(self, start=True, reset=False, homedir=""):
         """
         download, install, move files to appropriate places, and create relavent configs
         """
-        self._copy('{DIR_BUILD}/bin', '{DIR_BIN}', ignorefiles=['testutil', 'stbench'])
+        src = '{}/bin/syncthing'.format(self.package_path)
+        self._copy(src, '{DIR_BIN}')
         if not self.tools.dir_exists('{DIR_CFG}/syncthing'):
             cmd = '{DIR_BIN}/syncthing -generate  {DIR_CFG}/syncthing'
         else:
@@ -41,11 +42,11 @@ class BuilderSyncthing(j.builder.system._BaseClass):
     def sandbox(self):
         bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
         self.tools.dir_ensure(bin_dest)
-        self._copy('{DIR_BUILD}/bin/', bin_dest, ignorefiles=['testutil', 'stbench'])
+        self._copy('{DIR_BIN}/bin/syncthing', bin_dest)
 
     @builder_method()
     def clean(self):
-        self._remove(self.DIR_BUILD)
+        self._remove(self.package_path)
         self._remove(self.DIR_SANDBOX)
 
     @property
