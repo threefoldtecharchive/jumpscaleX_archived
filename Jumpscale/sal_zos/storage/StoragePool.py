@@ -2,10 +2,11 @@ import logging
 import os
 import time
 
+from Jumpscale import j
+
 from ..abstracts import Mountable
 
 logging.basicConfig(level=logging.INFO)
-
 
 
 def _prepare_device(node, devicename):
