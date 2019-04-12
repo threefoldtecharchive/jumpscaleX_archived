@@ -8,7 +8,7 @@ from Jumpscale import j
 
 from . import typchk
 from .AggregatorManager import AggregatorManager
-from .BaseClient import BaseClient, DefaultTimeout
+from .BaseClient import BaseClient, DEFAULT_TIMEOUT
 from .BridgeManager import BridgeManager
 from .BtrfsManager import BtrfsManager
 from .CGroupManager import CGroupManager
@@ -261,7 +261,7 @@ class Client(BaseClient):
         self._raw_chk.check(payload)
         flag = 'result:{}:flag'.format(id)
         self._redis.rpush('core:default', json.dumps(payload))
-        if self._redis.brpoplpush(flag, flag, DefaultTimeout) is None:
+        if self._redis.brpoplpush(flag, flag, DEFAULT_TIMEOUT) is None:
             TimeoutError('failed to queue job {}'.format(id))
 
         return Response(self, id)
