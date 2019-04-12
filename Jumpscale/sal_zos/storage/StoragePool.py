@@ -5,6 +5,8 @@ import time
 from Jumpscale import j
 
 from ..abstracts import Mountable
+from ..disks.Disks import Disk
+from ..disks.Partition import Partition
 
 logging.basicConfig(level=logging.INFO)
 
@@ -100,11 +102,13 @@ class StoragePool(Mountable):
 
     @property
     def type(self):
-        disk_name = self.device[len('/dev/'):]
-        disk = self.node.disks.get(disk_name[:-1])
-        if not disk:
-            raise RuntimeError("could not find disk used by the storage pool %s" % self.name)
-        return disk.type
+        medium = self.node.disks.get_device(self.device)
+        if isinstance(medium, Disk):
+            return medium.type
+        elif isinstance(medium, Partition):
+            return medium.disk.type
+
+        raise RuntimeError("unsupported device type")
 
     @property
     def devicename(self):

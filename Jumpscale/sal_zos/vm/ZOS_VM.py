@@ -295,12 +295,13 @@ class VMNotRunningError(RuntimeError):
 
 
 class ZOS_VM:
-    def __init__(self, node, name, flist=None, vcpus=2, memory=2048):
+    def __init__(self, node, name, flist=None, vcpus=2, memory=2048, kvm=False):
         self.node = node
         self._name = name
         self._memory = memory
         self._vcpus = vcpus
         self._flist = flist
+        self._kvm = kvm
         self.loading = False
         self.disks = Disks(self)
         self.nics = VMNics(self)
@@ -427,7 +428,7 @@ Type=simple
         cmdline = ' '.join([arg.parameter() for arg in self.kernel_args])
         self.node.client.kvm.create(self.name, media, self.flist, self.vcpus,
                                     self.memory, nics, ports, mounts, self.tags, config, cmdline=cmdline,
-                                    share_cache=share_cache_enabled(self._flist))
+                                    share_cache=share_cache_enabled(self._flist), kvm=self.kvm)
 
     def load_from_reality(self):
         info = self.info
@@ -478,6 +479,7 @@ Type=simple
             'configs': [],
             'mounts': [],
             'kernelArgs': [],
+            'kvm': self.kvm
         }
         for nic in self.nics:
             data['nics'].append(nic.to_dict())
@@ -524,6 +526,7 @@ Type=simple
             self._flist = data['flist']
             self._vcpus = data['cpu']
             self._memory = data['memory']
+            self._kvm = data.get('kvm', False)
             self.tags = data['tags']
             self.disks = Disks(self)
             self.nics = VMNics(self)
@@ -614,6 +617,18 @@ Type=simple
         self._memory = value
 
     @property
+    def kvm(self):
+        return self._kvm
+
+    @kvm.setter
+    def kvm(self, boolean):
+        if not isinstance(boolean, bool):
+            raise RuntimeError('Provided value need to be of type boolean')
+        if self.is_running():
+            raise RuntimeError('Can not change kvm flag of running vm')
+        self._kvm = boolean
+
+    @property
     def flist(self):
         return self._flist
 
@@ -676,7 +691,8 @@ class IpxeVM(ZOS_VM):
 
 
 def share_cache_enabled(flist):
-    if flist == 'https://hub.grid.tf/tf-autobuilder/zero-os-development.flist':
-        return True
-    return False
-
+    valid = [
+        'https://hub.grid.tf/tf-autobuilder/zero-os-master.flist',
+        'https://hub.grid.tf/tf-autobuilder/zero-os-development.flist',
+    ]
+    return flist in valid

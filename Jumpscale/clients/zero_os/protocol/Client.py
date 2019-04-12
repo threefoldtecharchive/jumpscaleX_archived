@@ -8,7 +8,7 @@ from Jumpscale import j
 
 from . import typchk
 from .AggregatorManager import AggregatorManager
-from .BaseClient import BaseClient
+from .BaseClient import BaseClient, DefaultTimeout
 from .BridgeManager import BridgeManager
 from .BtrfsManager import BtrfsManager
 from .CGroupManager import CGroupManager
@@ -20,10 +20,11 @@ from .LogManager import LogManager
 from .Nft import Nft
 from .Response import Response
 from .RTInfoManager import RTInfoManager
-from .SocatManager import SocatManager
 from .WebManager import WebManager
 from .ZerotierManager import ZerotierManager
 from .ZFSManager import ZFSManager
+from .SocatManager import SocatManager
+from .PowerManager import PowerManager
 
 
 class Client(BaseClient):
@@ -66,6 +67,11 @@ class Client(BaseClient):
         self._cgroup = CGroupManager(self)
         self._zfs = ZFSManager(self)
         self._socat = SocatManager(self)
+        self._power = PowerManager(self)
+
+    @property
+    def power(self):
+        return self._power
 
     @property
     def socat(self):
@@ -255,7 +261,7 @@ class Client(BaseClient):
         self._raw_chk.check(payload)
         flag = 'result:{}:flag'.format(id)
         self._redis.rpush('core:default', json.dumps(payload))
-        if self._redis.brpoplpush(flag, flag, 120) is None:
+        if self._redis.brpoplpush(flag, flag, DefaultTimeout) is None:
             TimeoutError('failed to queue job {}'.format(id))
 
         return Response(self, id)

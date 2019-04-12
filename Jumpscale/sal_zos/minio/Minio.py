@@ -122,6 +122,8 @@ class Minio(Service):
             'nics': [{'type': 'default'}],
             'env': envs,
             'mounts': {fs.path: metadata_path},
+            'cpu': 2,
+            'memory': 4906,  # 4GiB
         }
 
     def start(self, timeout=15):
@@ -131,12 +133,26 @@ class Minio(Service):
         """
         if self.is_running():
             return
-
+        
         j.tools.logger._log_info('start minio %s' % self.name)
+
+        def test_started():
+            self._container = None
+            return self.container.is_running()
+        if not j.tools.timer.execute_until(test_started, 10, 1):
+            raise RuntimeError('failed to start container')
 
         self.create_config()
 
-        cmd = '/bin/minio gateway zerostor --address 0.0.0.0:{port} --config-dir {dir}'.format(
+        logo_path = None
+        if self.logo_url:
+            logo_path = self.download_logo()
+
+        cmd = '/bin/minio gateway '
+        if logo_path:
+            cmd += ' --logo %s' % logo_path
+
+        cmd += ' zerostor --address 0.0.0.0:{port} --config-dir {dir}'.format(
             port=DEFAULT_PORT, dir=self._config_dir)
 
         # wait for minio to start
@@ -162,6 +178,13 @@ class Minio(Service):
         j.tools.logger._log_info('Creating minio config for %s' % self.name)
         config = self._config_as_text()
         self.container.upload_content(j.sal.fs.joinPaths(self._config_dir, self._config_name), config)
+
+    def download_logo(self):
+        dest = os.path.join('/mnt/containers', str(self.container.id), 'minio_metadata', 'logo.svg')
+        resp = self.node.client.web.download(self.logo_url, dest).get()
+        if resp.state != 'SUCCESS':
+            raise RuntimeError('impossible to download the minio logo: %s' % resp.stderr)
+        return '/minio_metadata/logo.svg'
 
     def _config_as_text(self):
         return templates.render(

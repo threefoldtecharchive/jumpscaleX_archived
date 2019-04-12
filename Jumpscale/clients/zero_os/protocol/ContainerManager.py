@@ -295,6 +295,15 @@ class ContainerManager():
         """
         return self._client.json('corex.list', {})
 
+    def get(self, name):
+        """
+        Get a container with the given name
+        """
+        args = {
+            'query': name,
+        }
+        return self._client.json('corex.get', args)
+
     def find(self, *tags):
         """
         Find containers that matches set of tags

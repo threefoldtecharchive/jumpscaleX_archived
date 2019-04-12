@@ -324,6 +324,9 @@ class Service:
         """
         Stop the service process and stop the container
         """
+        if not self._container_exists():
+            return
+
         if self.is_running():
             self.container.client.job.unschedule(self._id)
             self.container.client.job.kill(self._id)

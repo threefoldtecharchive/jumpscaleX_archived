@@ -11,6 +11,8 @@ from .namespace import Namespaces
 DEFAULT_PORT = 9900
 PUBLIC_THREEFOLD_NETWORK = "9bee8941b5717835"
 
+GiB = 1024**3
+
 
 class Zerodb(Service):
     def __init__(self, node, name, node_port, path=None, mode='user', sync=False, admin=''):
@@ -112,7 +114,7 @@ class Zerodb(Service):
         else:
             devicetype = device.disk.type.value
         for namespace in self.namespaces:
-            reserved += namespace.size * 1024 ** 3
+            reserved += namespace.size * GiB
 
         return {
             'used': used,
@@ -151,7 +153,7 @@ class Zerodb(Service):
         :type container: container sal object
         """
         if not container:
-            container = self.node.containers.get(self.name)
+            container = self.node.containers.get(self._container_name)
 
         for k, v in container.mounts.items():
             if v == '/zerodb':
@@ -232,6 +234,9 @@ class Zerodb(Service):
         Deploy zerodb by creating a container and running zerodb in the container, creating the namespaces in self.namespaces and
         removing namespaces that are not in self.namespaces.
         """
+        total_namespaces_sizes = sum([ns.size * GiB for ns in self.namespaces])
+        self._filesystem.quota = total_namespaces_sizes
+
         self.start()
 
         live_namespaces = self._live_namespaces()
@@ -288,6 +293,18 @@ class Zerodb(Service):
                 if fs.path == self.path:
                     fs.delete()
                     return
+
+    @property
+    def _storage_pool(self):
+        return self.node.storagepools.get(self.path.split('/')[3])
+
+    @property
+    def _filesystem(self):
+        return self._storage_pool.get(self.path.split('/')[-1])
+
+    @property
+    def disk_type(self):
+        return self._storage_pool.type
 
     @property
     def path(self):

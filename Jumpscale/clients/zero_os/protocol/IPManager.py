@@ -209,39 +209,39 @@ class IPRouteManager():
 
 
 class IPBondManager:
-        def __init__(self, client):
-            self._client = client
+    def __init__(self, client):
+        self._client = client
 
-        def add(self, bond, interfaces, mtu=1500):
-            """
-            Add a bond
+    def add(self, bond, interfaces, mtu=1500):
+        """
+        Add a bond
 
-            :param bond: bond name
-            :param interfaces: list of slave links
-            :param mtu: mtu value
-            :return:
-            """
-            args = {
-                'bond': bond,
-                'interfaces': interfaces,
-                'mtu': mtu,
-            }
-            return self._client.json('ip.bond.add', args)
+        :param bond: bond name
+        :param interfaces: list of slave links
+        :param mtu: mtu value
+        :return:
+        """
+        args = {
+            'bond': bond,
+            'interfaces': interfaces,
+            'mtu': mtu,
+        }
+        return self._client.json('ip.bond.add', args)
 
-        def delete(self, bond):
-            """
-            Delete a bond
+    def delete(self, bond):
+        """
+        Delete a bond
 
-            :param bond: bond name
-            :return:
-            """
-            args = {
-                'bond': bond,
-            }
-            return self._client.json('ip.bond.del', args)
+        :param bond: bond name
+        :return:
+        """
+        args = {
+            'bond': bond,
+        }
+        return self._client.json('ip.bond.del', args)
 
-        def list(self):
-            return self._client.json('ip.bond.list', {})
+    def list(self):
+        return self._client.json('ip.bond.list', {})
 
 
 class IPManager():

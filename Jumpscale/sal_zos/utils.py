@@ -33,7 +33,9 @@ def get_zt_ip(nics, network=False, network_range=''):
     for nic in nics:
         if nic['name'].startswith('zt'):
             ipAdress = get_ip_from_nic(nic['addrs'])
-            ip = netaddr.IPAddress(ipAdress) if ipAdress else ''
+            if not ipAdress:
+                continue
+            ip = netaddr.IPAddress(ipAdress)
             ip_network = netaddr.IPNetwork(network_range) if network_range else ''
             if network and network_range and ip not in ip_network:
                 # required network range is not satisfied

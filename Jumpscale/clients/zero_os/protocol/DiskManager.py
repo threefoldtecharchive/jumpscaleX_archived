@@ -306,6 +306,21 @@ class DiskManager:
         if result.state != 'SUCCESS':
             raise RuntimeError("Failed to spindown disk {} to {}.".format(disk, spindown))
 
+    def isstandby(self, disk):
+        """
+        Verify if a disk is powered down (i.e. it's still available, but went
+        in standby mode, and stopped spinning after spindown (see above) interval)
+        NOTE: default of spindown is 1, so after 5 seconds, and not accessed the disk
+        will stop spinning
+        :param disk str: Full path to a disk like /dev/sda
+        """
+        args = {
+            "disk": disk,
+        }
+        self._isstandby_chk.check(args)
+
+        return self._client.json("disk.isstandby",args)
+
     def seektime(self, disk):
         """
         Gives seek latency on disk which is a very good indication to the `type` of the disk.
