@@ -17,9 +17,9 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
         resp.raise_for_status()
         u = urlparse(node.robot_address)
         node = self.get(node_id)
-        if node.client.config.data['host'] != u.hostname:
-            node.client.config.data_set('host', u.hostname)
-            node.client.config.save()
+        if node.host != u.hostname:
+            node.host = u.hostname
+            node.save()
         return self.get(node_id)
 
     def zero_node_ovh_install(self, OVHHostName, OVHClient, zerotierNetworkID, zerotierClient):
