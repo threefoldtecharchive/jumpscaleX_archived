@@ -89,6 +89,7 @@ class BuilderPython(j.builder.system._BaseClass):
                 'cmake',
                 'libjpeg-dev',
                 'zlib1g-dev',
+                'libffi-dev',
             ])
             script = """
             set -ex

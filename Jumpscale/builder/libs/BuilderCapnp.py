@@ -30,7 +30,7 @@ class BuilderCapnp(JSBASE):
         self.profile_builder_select()
 
         script = """
-        cd {DIR_BUILD}
+        cd {DIR_BUILD}/capnproto
         ./configure CXXFLAGS="-DHOLES_NOT_SUPPORTED"
         make -j6 check
         make install
