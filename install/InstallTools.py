@@ -1706,7 +1706,7 @@ class UbuntuInstall():
                 "psutil>=5.4.3",
                 "pudb>=2017.1.2",
                 "pyblake2>=0.9.3",
-                "pycapnp>=0.5.12",
+                # "pycapnp>=0.5.12",
                 "PyGithub>=1.34",
                 "pymux>=0.13",
                 "pynacl>=1.2.1",

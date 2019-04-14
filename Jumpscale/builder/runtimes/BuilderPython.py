@@ -10,6 +10,7 @@ class BuilderPython(j.builder.system._BaseClass):
         j.sal.fs.createDir(self.DIR_BUILD)
 
         self.DIR_CODE_L = j.core.tools.text_replace("{DIR_VAR}/build/code/python3")
+        j.sal.fs.createDir(self.DIR_CODE_L)
 
         if not j.core.platformtype.myplatform.isMac:
             self.PATH_OPENSSL = j.core.tools.text_replace("{DIR_VAR}/build/openssl")
@@ -56,7 +57,7 @@ class BuilderPython(j.builder.system._BaseClass):
 
             script = """
             set -ex
-            cd {DIR_CODE_L}
+            cd {DIR_CODE_L}/cpython
             mkdir -p {DIR_BUILD}
 
             # export CPPFLAGS=-I/opt/X11/include
@@ -84,13 +85,14 @@ class BuilderPython(j.builder.system._BaseClass):
                 'libsnappy-dev',
                 'wget',
                 'gcc',
-                'make'
+                'make',
+                'cmake',
+                'libjpeg-dev',
+                'zlib1g-dev',
             ])
             script = """
             set -ex
-            cd {DIR_CODE_L}
-            mkdir -p {DIR_BUILD}
-
+            cd {DIR_CODE_L}/cpython
             # THIS WILL MAKE SURE ALL TESTS ARE DONE, WILL TAKE LONG TIME
             ./configure --prefix={DIR_BUILD}/ --enable-optimizations CFLAGS="-I{PATH_OPENSSL}/include -L{PATH_OPENSSL}/lib"
 
@@ -205,7 +207,7 @@ class BuilderPython(j.builder.system._BaseClass):
         # self.pip_package_install(['cython', 'setuptools', 'pycapnp'])  #DOES NOT WORK YET
 
         # list comes from /sandbox/code/github/threefoldtech/jumpscale_core/install/InstallTools.py
-        self.pip_package_install(j.core.installer_ubuntu.pips_list())
+        self.pip_package_install(j.core.installer_ubuntu.pips_list(0))
 
         if not self.tools.isMac:
             # TODO: implement zerostor builder and use it
