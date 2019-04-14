@@ -4,7 +4,6 @@ from prompt_toolkit.buffer import Buffer
 from prompt_toolkit.document import Document
 from prompt_toolkit.completion import Completion
 from prompt_toolkit.filters import Condition, is_done
-from prompt_toolkit.filters.utils import to_filter
 from prompt_toolkit.formatted_text import ANSI, to_formatted_text, fragment_list_to_text
 from prompt_toolkit.keys import Keys
 from prompt_toolkit.layout.containers import ConditionalContainer, Window
@@ -266,8 +265,7 @@ def setup_logging_containers(repl):
                     focusable=False,
                     preview_search=True
                 ),
-                height=Dimension(max=12),
-                cursorline=to_filter(True)),
+                height=Dimension(max=12)),
             filter=HasLogs(repl) & ~is_done),
     ])
 
