@@ -18,7 +18,6 @@ class BuilderRust(j.builder.system._BaseClass):
         self._execute(
             "curl {} -sSf | sh -s -- -y".format(self.DOWNLOAD_URL)
         )
-        self._copy(self.DIR_BUILD, "{DIR_BIN}")
 
         self._execute("source $HOME/.cargo/env")
         self._execute("echo  'export PATH='/root/.cargo/bin:$PATH'' >> ~/.bashrc ")
@@ -27,6 +26,7 @@ class BuilderRust(j.builder.system._BaseClass):
     def install(self):
         self.profile_sandbox_select()
         self.build()
+        self._copy(self.DIR_BUILD, "{DIR_BIN}")
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
@@ -35,12 +35,12 @@ class BuilderRust(j.builder.system._BaseClass):
         :return:
         """
         dest_path = self.DIR_SANDBOX
+        dir_dest = j.sal.fs.joinPaths(dest_path, "sandbox")
+        self.tools.dir_ensure(dir_dest)
 
         bins = ['cargo', 'cargo-clippy', 'cargo-fmt', '_moon.lua', 'cargo-miri', 'clippy-driver', 'rls', 'rustc', 'rustdoc', 'rustfmt', 'rust-gdb', 'rust-lldb', 'rustup']
         for bin_name in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
-            dir_dest = self.tools.joinpaths(dest_path, j.core.dirs.BINDIR[1:])
-            self.tools.dir_ensure(dir_dest)
             self._copy(dir_src, dir_dest)
 
     @builder_method()
