@@ -447,14 +447,21 @@ elif "3" in args:
     # add install from a specific branch
     install = IT.JumpscaleInstaller(branch=args["branch"])
 
+    def getbranch():
+        cmd = "cd {}/github/threefoldtech/jumpscaleX; git branch | grep \* | cut -d ' ' -f2".format(args["codepath"])
+        rc,stdout,err = IT.Tools.execute(cmd)
+        return stdout.strip()
+
     # check if already code exists and checkout the argument branch
     if os.path.exists("{}/github/threefoldtech/jumpscaleX".format(args["codepath"])):
-        print("Already found code on local machine, checking out required branch")
-        IT.Tools.execute("""cd {}/github/threefoldtech/jumpscaleX
-                                git remote set-branches origin '*'
-                                git fetch -v
-                                git checkout {} -f
-                                git pull""".format(args["codepath"], args["branch"]))
+        if getbranch() != args["branch"]:
+            print("found JS on machine, Checking out branch {}...".format(args["branch"])) 
+            IT.Tools.execute("""cd {}/github/threefoldtech/jumpscaleX
+                        git remote set-branches origin '*'
+                        git fetch -v
+                        git checkout {} -f
+                        git pull""".format(args["codepath"], args["branch"]))
+
         print("On {} branch".format(args["branch"]))
     else:
         print("no local code at {}".format(args["codepath"]))
