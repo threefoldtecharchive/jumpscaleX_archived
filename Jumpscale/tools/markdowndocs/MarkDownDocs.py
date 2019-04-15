@@ -254,7 +254,7 @@ class MarkDownDocs(j.application.JSBaseClass):
         else:
             return None
 
-    def webserver(self, watch=True):
+    def webserver(self, watch=True, branch='master'):
         url = "https://github.com/threefoldfoundation/lapis-wiki"
         server_path = j.clients.git.getContentPathFromURLorPath(url)
         url = "https://github.com/threefoldtech/jumpscale_weblibs"
@@ -268,40 +268,40 @@ class MarkDownDocs(j.application.JSBaseClass):
             watcher = Watcher(self.docsites)
 
             threads = list()
-            threads.append(gevent.spawn(self.syncer))
+            threads.append(gevent.spawn(self.syncer, branch=branch))
             threads.append(gevent.spawn(watcher.start))
 
             gevent.joinall(threads)
 
-    def syncer(self):
+    def syncer(self, branch):
         print("syncer started, will reload every 5 mins")
         while True:
             print("Reloading")
-            self.load_wikis()
+            self.load_wikis(branch=branch)
             gevent.sleep(300)
 
-    def load_wikis(self):
-        url = "https://github.com/threefoldfoundation/info_tokens/tree/master/docs"
+    def load_wikis(self, branch='master'):
+        url = "https://github.com/threefoldfoundation/info_tokens/tree/%s/docs" % branch
         tf_tokens = self.load(url, name="tokens")
         tf_tokens.write()
 
-        url = "https://github.com/threefoldfoundation/info_foundation/tree/master/docs"
+        url = "https://github.com/threefoldfoundation/info_foundation/tree/%s/docs" % branch
         tf_foundation = self.load(url, name="foundation")
         tf_foundation.write()
 
-        url = "https://github.com/threefoldfoundation/info_grid/tree/master/docs"
+        url = "https://github.com/threefoldfoundation/info_grid/tree/%s/docs" % branch
         tf_grid = self.load(url, name="grid")
         tf_grid.write()
 
-        url = "https://github.com/BetterToken/info_bettertoken/tree/master/docs"
+        url = "https://github.com/BetterToken/info_bettertoken/tree/%s/docs" % branch
         tf_grid = self.load(url, name="bettertoken")
         tf_grid.write()
 
-        url = "https://github.com/harvested-io/info_harvested.io/tree/master/docs"
+        url = "https://github.com/harvested-io/info_harvested.io/tree/%s/docs" % branch
         tf_grid = self.load(url, name="harvested")
         tf_grid.write()
 
-        url = "https://github.com/freeflownation/info_freeflowevents/tree/master/docs"
+        url = "https://github.com/freeflownation/info_freeflowevents/tree/%s/docs" % branch
         ff_event_wiki = self.load(url, name="freeflowevent")
         ff_event_wiki.write()
 
