@@ -443,7 +443,22 @@ elif "3" in args:
             args_txt+=" --%s='%s'"%(item,args[item])
 
     IT.MyEnv.config["DIR_BASE"] = args["codepath"].replace("/code", "")
-    install = IT.JumpscaleInstaller()
+
+    # add install from a specific branch
+    install = IT.JumpscaleInstaller(branch=args["branch"])
+
+    # check if already code exists and checkout the argument branch
+    if os.path.exists("{}/github/threefoldtech/jumpscaleX".format(args["codepath"])):
+        print("Already found code on local machine, checking out required branch")
+        IT.Tools.execute("""cd {}/github/threefoldtech/jumpscaleX
+                                git remote set-branches origin '*'
+                                git fetch -v
+                                git checkout {} -f
+                                git pull""".format(args["codepath"], args["branch"]))
+        print("On {} branch".format(args["branch"]))
+    else:
+        print("no local code at {}".format(args["codepath"]))
+
     install.repos_get()
 
     cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py %s"%args_txt

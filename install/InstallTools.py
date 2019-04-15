@@ -2232,10 +2232,10 @@ class MyEnv():
 
 class JumpscaleInstaller():
 
-    def __init__(self):
+    def __init__(self, branch=["development"]):
 
         self.account = "threefoldtech"
-        self.branch = ["development"]
+        self.branch = branch
         self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
     def install(self,branch=None,secret="1234",private_key_words=None):
