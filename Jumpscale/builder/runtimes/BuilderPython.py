@@ -149,7 +149,6 @@ class BuilderPython(j.builder.system._BaseClass):
 
         self.profile.env_set("PYTHONHTTPSVERIFY",0)
 
-        self.profile.env_set("PYTHONHOME",self._replace("{DIR_BUILD}"))
         self.profile.env_set_part("PYTHONPATH",self._replace("{DIR_BUILD}/lib"))
         self.profile.env_set_part("PYTHONPATH",self._replace("{DIR_BUILD}/lib/python3.7"))
         self.profile.env_set_part("PYTHONPATH",self._replace("{DIR_BUILD}/lib/python3.7/site-packages"))
@@ -169,7 +168,6 @@ class BuilderPython(j.builder.system._BaseClass):
 
         self.profile.env_set_part("PYTHONPATH","/sandbox/bin")
 
-        self.profile.env_set("PYTHONHOME","/sandbox")
         self.profile.env_set_part("LIBRARY_PATH","/sandbox/bin")
         self.profile.env_set_part("LIBRARY_PATH","/sandbox/lib")
         self.profile.env_set("LD_LIBRARY_PATH",self.profile.env_get("LIBRARY_PATH")) #makes copy
