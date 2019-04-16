@@ -1,4 +1,3 @@
-
 import os
 from copy import copy
 from .SchemaProperty import SchemaProperty
@@ -8,7 +7,7 @@ from Jumpscale import j
 
 
 class Schema(j.application.JSBaseClass):
-    def __init__(self, text,url=None):
+    def __init__(self, text, url=None):
         j.application.JSBaseClass.__init__(self)
         self.properties = []
         self._systemprops = {}
@@ -29,7 +28,10 @@ class Schema(j.application.JSBaseClass):
                 # will remove the version from the url
                 self.url_noversion = ".".join(self.url.split(".")[:-1])
                 if self.url_noversion in j.data.schema.schemas_versionless:
-                    if j.data.schema.schemas_versionless[self.url_noversion].version < self.version+1:
+                    if (
+                        j.data.schema.schemas_versionless[self.url_noversion].version
+                        < self.version + 1
+                    ):
                         # version itself can be replaced as well, there could be an update
                         j.data.schema.schemas_versionless[self.url_noversion] = self
                 else:
@@ -40,7 +42,6 @@ class Schema(j.application.JSBaseClass):
             urls = ".".join(urls)
 
         j.data.schema.schemas[self.url] = self
-
 
     @property
     def _path(self):
@@ -67,23 +68,23 @@ class Schema(j.application.JSBaseClass):
         """
 
         if "\\n" in txt:
-            return j.data.types.get("multiline",default=txt)
+            return j.data.types.get("multiline", default=txt)
 
-        if "'" in txt or '"' in txt or txt.strip("'")=="":
-            txt=txt.strip().strip("\"").strip("'").strip()
-            return j.data.types.get("string",default=txt)
+        if "'" in txt or '"' in txt or txt.strip("'") == "":
+            txt = txt.strip().strip('"').strip("'").strip()
+            return j.data.types.get("string", default=txt)
 
         if "." in txt:
-            return j.data.types.get("float",default=txt)
+            return j.data.types.get("float", default=txt)
 
         if "true" in txt.lower() or "false" in txt.lower():
-            return j.data.types.get("bool",default=txt)
+            return j.data.types.get("bool", default=txt)
 
         if "[]" in txt:
-            return j.data.types.get("ls",default=txt)
+            return j.data.types.get("ls", default=txt)
 
         if j.data.types.int.checkString(txt):  # means is digit
-            return j.data.types.get("i",default=txt)
+            return j.data.types.get("i", default=txt)
         else:
             raise RuntimeError("cannot find type for:%s" % txt)
 
@@ -102,24 +103,24 @@ class Schema(j.application.JSBaseClass):
         self.properties = []
         # self._systemprops = systemprops
 
-
         def process(line):
-
-
             def _getdefault(txt):
-                if "\"" in txt or "'" in txt:
-                    txt=txt.strip().strip("\"").strip("'").strip()
-                if txt.strip()=="":
+                if '"' in txt or "'" in txt:
+                    txt = txt.strip().strip('"').strip("'").strip()
+                if txt.strip() == "":
                     return None
-                txt=txt.strip()
+                txt = txt.strip()
                 return txt
-            
+
             line_original = copy(line)
             propname, line = line.split("=", 1)
             propname = propname.strip()
             if ":" in propname:
-                self._error_raise("Aliases no longer supported in names, remove  ':' in name '%s'" %
-                                  propname, schema=text)
+                self._error_raise(
+                    "Aliases no longer supported in names, remove  ':' in name '%s'"
+                    % propname,
+                    schema=text,
+                )
             line = line.strip()
 
             if "!" in line:
@@ -138,30 +139,40 @@ class Schema(j.application.JSBaseClass):
 
             p = SchemaProperty()
 
-            name = propname+""  # make sure there is copy
+            name = propname + ""  # make sure there is copy
             if name.endswith("**"):
                 name = name[:-2]
                 p.index = True
             if name.endswith("*"):
                 name = name[:-1]
                 p.index_key = True
+            if name.startswith("&"):
+                name = name[1:]
+                p.unique = True
 
             if name in ["id"]:
-                self._error_raise("do not use 'id' in your schema, is reserved for system.", schema=text)
+                self._error_raise(
+                    "do not use 'id' in your schema, is reserved for system.",
+                    schema=text,
+                )
 
             if "(" in line:
-                line_proptype = line.split("(")[1].split(")")[0].strip().lower() #in between the ()
-                self._log_debug("line:%s; lineproptype:'%s'" % (line_original, line_proptype))
-                line_wo_proptype = line.split("(")[0].strip() #before the (
+                line_proptype = (
+                    line.split("(")[1].split(")")[0].strip().lower()
+                )  # in between the ()
+                self._log_debug(
+                    "line:%s; lineproptype:'%s'" % (line_original, line_proptype)
+                )
+                line_wo_proptype = line.split("(")[0].strip()  # before the (
 
                 if pointer_type:
                     default = pointer_type
-                    #means the default is a link to another object
+                    # means the default is a link to another object
                 else:
-                    #will make sure we convert the default to the right possible type int,float, string
+                    # will make sure we convert the default to the right possible type int,float, string
                     default = _getdefault(line_wo_proptype)
-                    
-                jumpscaletype = j.data.types.get(line_proptype,default=default)
+
+                jumpscaletype = j.data.types.get(line_proptype, default=default)
 
                 defvalue = None
 
@@ -194,7 +205,10 @@ class Schema(j.application.JSBaseClass):
             if line.startswith("#"):
                 continue
             if "=" not in line:
-                raise j.exceptions.Input("did not find =, need to be there to define field, line=%s\ntext:%s"%(line,text))
+                raise j.exceptions.Input(
+                    "did not find =, need to be there to define field, line=%s\ntext:%s"
+                    % (line, text)
+                )
 
             p = process(line)
 
@@ -207,8 +221,8 @@ class Schema(j.application.JSBaseClass):
                 self.properties.append(p)
 
         for key, val in systemprops.items():
-            if key=="url" and self.url:
-                continue #skip when url given
+            if key == "url" and self.url:
+                continue  # skip when url given
             self.__dict__[key] = val
 
         nr = 0
@@ -239,7 +253,8 @@ class Schema(j.application.JSBaseClass):
         tpath = "%s/templates/schema.capnp" % self._path
         # j.shell()
         _capnp_schema_text = j.tools.jinja2.template_render(
-            path=tpath, reload=False, obj=self, objForHash=self._md5)
+            path=tpath, reload=False, obj=self, objForHash=self._md5
+        )
         return _capnp_schema_text
 
     @property
@@ -250,12 +265,18 @@ class Schema(j.application.JSBaseClass):
                 raise RuntimeError("md5 cannot be None")
 
             for prop in self.properties:
-                self._log_debug("prop for obj gen: %s:%s"%(prop, prop.js_typelocation))
-
+                self._log_debug(
+                    "prop for obj gen: %s:%s" % (prop, prop.js_typelocation)
+                )
 
             tpath = "%s/templates/template_obj.py" % self._path
             self._obj_class = j.tools.jinja2.code_python_render(
-                name="schema_%s" % self.key, obj_key="ModelOBJ", path=tpath, obj=self, objForHash=self._md5)
+                name="schema_%s" % self.key,
+                obj_key="ModelOBJ",
+                path=tpath,
+                obj=self,
+                objForHash=self._md5,
+            )
 
         return self._obj_class
 
@@ -279,7 +300,7 @@ class Schema(j.application.JSBaseClass):
         """
         if data is None:
             data = {}
-        r = self.get(data=data,model=model)
+        r = self.get(data=data, model=model)
         if model is not None:
             model.notify_new(r)
         return r
