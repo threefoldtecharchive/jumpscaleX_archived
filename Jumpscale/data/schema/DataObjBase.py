@@ -122,6 +122,15 @@ class DataObjBase:
             #     if self.acl.id != self.acl_id:
             #         self._changed_items["ACL"]=True
 
+            for prop in self._model.schema.properties:
+                prop = getattr(self._model.schema, "property_{}".format(prop.name))
+                if prop.unique:
+                    for mm in self._model.get_all():
+                        model = getattr(mm, "{}".format(prop.name))
+                        if model == getattr(self, "{}".format(prop.name)):
+                            raise RuntimeError(
+                                "cannot save , {} should be unique".format(prop.name)
+                            )
             if self._changed:
                 o = self._model._set(self)
                 self.id = o.id

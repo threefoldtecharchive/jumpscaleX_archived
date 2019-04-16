@@ -262,7 +262,7 @@ class Response():
                     return r
             except TimeoutError:
                 pass
-            self._log_debug('%s still waiting (%ss)', self._id, int(time.time() - start))
+            self._client._log_debug('%s still waiting (%ss)', self._id, int(time.time() - start))
             maxwait -= 10
         raise TimeoutError()
 

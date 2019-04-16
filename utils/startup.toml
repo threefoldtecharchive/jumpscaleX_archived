@@ -18,5 +18,5 @@ ln -sf $src1 $dest1
 ln -sf $src2 $dest2
 ln -sf $src3 $dest3
 
-exec js_shell \"j.tools.markdowndocs.webserver()\"
+exec js_shell \"j.tools.markdowndocs.webserver(branch='\"${WIKI_BRANCH:-master}\"')\"
 """

@@ -387,7 +387,7 @@ class Node:
         return float(output[0])
 
     def reboot(self):
-        self.client.raw('core.reboot', {})
+        self.client.power.reboot()
 
     def __str__(self):
         return "Node <{host}:{port}>".format(

@@ -395,10 +395,18 @@ class RedisServer(j.application.JSBaseClass):
         return urls
 
     def hscan(self, response, key, startid, count=10000):
+
+        cat, url, _, model = self._split(key)
+        objs = model.get_all()
         res = []
+
+        for obj in objs:
+            res.append(obj.id)
+            res.append(obj._json)
+
         response._array(["0", res])
 
-    def info_internal(self, response):
+    def info_internal(self, response, *args):
         C = """
         # Server
         redis_version:4.0.11
