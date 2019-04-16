@@ -57,9 +57,10 @@ class GDriveClient(JSConfigClient):
         downloader = Downloader(presentation, service, size)
         downloader.download(destpath)
         presentation_dir = j.sal.fs.joinPaths(destpath, presentation)
-        slides = [x for x in os.listdir(presentation_dir) if "png" in x and "_" in x and "background_" not in x]
+        os.makedirs(presentation_dir, exist_ok=True)
+        slides = [x for x in os.listdir(destpath) if x.endswith(".png") and "_" in x and "background_" not in x]
         for image in slides:
-            imagepath = j.sal.fs.joinPaths(presentation_dir, image)
+            imagepath = j.sal.fs.joinPaths(destpath, image)
             slideimage = image.split("_",maxsplit=1)[1]   # 00_asdsadasda.png remove the leading zeros and _
             newimagepath = j.sal.fs.joinPaths(presentation_dir, slideimage)
             j.sal.fs.moveFile(imagepath, newimagepath)
