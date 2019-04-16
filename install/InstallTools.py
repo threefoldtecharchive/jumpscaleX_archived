@@ -1671,6 +1671,7 @@ class UbuntuInstall():
             0: [
                 "blosc>=1.5.1",
                 "Brotli>=0.6.0",
+                "captcha",
                 "certifi",
                 "Cython",
                 "click>=6.6",
