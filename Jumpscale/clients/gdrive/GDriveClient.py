@@ -1,4 +1,4 @@
-
+import Jumpscale
 from Jumpscale import j
 from dateutil import parser
 import os
@@ -47,3 +47,9 @@ class GDriveClient(JSConfigClient):
     def getFile(self, file_id, service_name="drive", service_version="v3"):
         file = GDriveFile(self.service_get(service_name, service_version), id=file_id)
         return file
+
+    def exportSlides(self, presentation, destpath="/tmp", size='MEDIUM'):
+        from Jumpscale.tools.googleslides.slides2html.downloader import Downloader
+        service = self.service_get("slides", "v1")
+        downloader = Downloader(presentation, service, size)
+        downloader.download(destpath)
