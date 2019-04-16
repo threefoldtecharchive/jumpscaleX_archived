@@ -48,8 +48,20 @@ class GDriveClient(JSConfigClient):
         file = GDriveFile(self.service_get(service_name, service_version), id=file_id)
         return file
 
-    def exportSlides(self, presentation, destpath="/tmp", size='MEDIUM'):
+    def exportSlides(self, presentation, destpath="/tmp", staticdir=None, size='MEDIUM'):
         from Jumpscale.tools.googleslides.slides2html.downloader import Downloader
+        # presentation should be the guid 
+        # should extract the presentation if full path
+        os.makedirs(destpath, exist_ok=True)
         service = self.service_get("slides", "v1")
         downloader = Downloader(presentation, service, size)
         downloader.download(destpath)
+        presentation_dir = j.sal.fs.joinPaths(destpath, presentation)
+        slides = [x for x in os.listdir(presentation_dir) if "png" in x and "_" in x and "background_" not in x]
+        for image in slides:
+            imagepath = j.sal.fs.joinPaths(presentation_dir, image)
+            slideimage = image.split("_",maxsplit=1)[1]   # 00_asdsadasda.png remove the leading zeros and _
+            newimagepath = j.sal.fs.joinPaths(presentation_dir, slideimage)
+            j.sal.fs.moveFile(imagepath, newimagepath)
+        if staticdir:
+            j.sal.fs.moveDir(presentation_dir, staticdir)
