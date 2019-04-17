@@ -8,7 +8,7 @@ class BuilderLua(j.builder.system._BaseClass):
     NAME = "lua"
 
     @builder_method()
-    def build(self, reset=False):
+    def build(self):
         """
         js_shell 'j.builder.runtimes.lua.build()'
         :param install:
@@ -17,9 +17,8 @@ class BuilderLua(j.builder.system._BaseClass):
         if j.core.platformtype.myplatform.isUbuntu:
             j.builder.system.package.install(['libsqlite3-dev'])
 
-        # need openresty & openssl to start from
-        j.builder.web.openresty.build(reset=reset)
-        j.builder.libs.openssl.build(reset=reset)
+        j.builder.web.openresty.build(reset=True)
+        j.builder.libs.openssl.build(reset=True)
 
         url = "https://luarocks.org/releases/luarocks-3.0.4.tar.gz"
         dest = self._replace("{DIR_BUILD}/luarocks")
@@ -33,16 +32,15 @@ class BuilderLua(j.builder.system._BaseClass):
         make install
 
         cp {DIR_BUILD}/luarocks/luarocks /sandbox/bin/luarocks
-
         """
         # set showout to False to avoid text_replace of output log
         self._execute(C, showout=False)
 
         self.lua_rocks_install()
 
-    def lua_rock_install(self, name, reset=False):
+    def lua_rock_install(self, name):
         self._log_info("lua_rock_install: %s" % name)
-        if self._done_check("lua_rock_install_%s" % name) and not reset:
+        if self._done_check("lua_rock_install_%s" % name):
             return
 
         C = "luarocks install $NAME"
@@ -51,7 +49,7 @@ class BuilderLua(j.builder.system._BaseClass):
 
         self._done_set("lua_rock_install_%s" % name)
 
-    def lua_rocks_install(self, reset=False):
+    def lua_rocks_install(self):
         """
         js_shell 'j.builder.runtimes.lua.lua_rocks_install()'
         :param install:
@@ -121,12 +119,12 @@ class BuilderLua(j.builder.system._BaseClass):
                 continue
             if line.startswith("#"):
                 continue
-            self.lua_rock_install(line, reset)
+            self.lua_rock_install(line)
 
         if j.core.platformtype.myplatform.isUbuntu:
-            self.lua_rock_install("lua-geoip", reset)
-            self.lua_rock_install("lua-resty-jwt", reset)
-            self.lua_rock_install("lua-resty-iyo-auth", reset)  # need to check how to get this to work on OSX
+            self.lua_rock_install("lua-geoip")
+            self.lua_rock_install("lua-resty-jwt")
+            self.lua_rock_install("lua-resty-iyo-auth")  # need to check how to get this to work on OSX
         cmd = self._replace("rsync -rav {DIR_BUILD}/luarocks/lua_modules/lib/lua/5.1/ /sandbox/openresty/lualib")
         self.tools.execute(cmd, die=False)
         cmd = self._replace("rsync -rav {DIR_BUILD}/luarocks/lua_modules/share/lua/5.1/ /sandbox/openresty/lualib")
@@ -148,12 +146,14 @@ class BuilderLua(j.builder.system._BaseClass):
     #     :return:
     #     """
 
-    def clean(self, reset=False):
+    @builder_method()
+    def clean(self):
         """
         js_shell 'j.builder.runtimes.lua.cleanup()'
         :param install:
         :return:
         """
+
         C = """
 
         set -ex
@@ -166,17 +166,16 @@ class BuilderLua(j.builder.system._BaseClass):
         rm -rf /sandbox/openresty/luajit/include
         rm -rf /sandbox/openresty/luajit/lib/lua
         rm -rf /sandbox/openresty/luajit/lib/pkgconfig
-        rm -rf  /sandbox/openresty/luajit/share
-        rm -rf  /sandbox/var/build
-        rm -rf  /sandbox/root
+        rm -rf /sandbox/openresty/luajit/share
+        rm -rf /sandbox/var/build
+        rm -rf /sandbox/root
         mkdir -p /sandbox/root
-
 
         """
         self._execute(C)
 
     @builder_method()
-    def install(self, reset=False):
+    def install(self):
         """
         will build & install in sandbox
         js_shell 'j.builder.runtimes.lua.install()'
@@ -207,22 +206,20 @@ class BuilderLua(j.builder.system._BaseClass):
         self._log_info("install lua & openresty done.")
 
     @builder_method()
-    def sandbox(self, zhub_client=None, reset=False):
+    def sandbox(self, zhub_client=None):
         '''Copy built bins to dest_path and create flist if create_flist = True
 
         :param dest_path: destination path to copy files into
         :type dest_path: str
         :param sandbox_dir: path to sandbox
         :type sandbox_dir: str
-        :param reset: reset sandbox file transfer
-        :type reset: bool
         :param create_flist: create flist after copying files
         :type create_flist:bool
         :param zhub_client: hub instance to upload flist tos
         :type zhub_client:str
         '''
         dest_path = self.DIR_SANDBOX
-        j.builder.web.openresty.sandbox(dest_path=dest_path, reset=reset)
+        j.builder.web.openresty.sandbox(dest_path=dest_path)
 
         bins = ['lua', '_lapis.lua', '_moonc.lua', '_moon.lua', '_moonrocks.lua']
         for bin_name in bins:
