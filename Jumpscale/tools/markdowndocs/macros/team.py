@@ -34,7 +34,7 @@ def team(doc, link, order='random', projects=None, contribution_types=None, **kw
     """
 
     repo = doc.docsite.get_real_source(CustomLink(link))
-    path = j.clients.git.getContentPathFromURLorPath(repo)
+    path = j.clients.git.getContentPathFromURLorPath(repo, pull=True)
 
     # options passed to team plugin (docsify)
     options = {'order': order}
