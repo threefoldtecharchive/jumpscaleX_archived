@@ -1,5 +1,5 @@
 from Jumpscale import j
-from Jumpscale.builder.test.base_test import BaseTest
+from Jumpscale.builder.test.flist.base_test import BaseTest
 import unittest 
 
 

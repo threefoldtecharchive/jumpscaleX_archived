@@ -28,10 +28,10 @@ class BaseTest(TestCase):
         self.hub_instance = 'hub_instance_{}'.format(randint(1, 1000))
         self.zhub = j.clients.zhub.get(name=self.hub_instance, token=self.jwt, username=self.username)
         self.zhub.save()
-        
+
         self.node_instance = 'node_instance_{}'.format(randint(1, 1000))
         self.node = j.clients.zos.get(name=self.node_instance, password=self.jwt, host=self.node_ip)
-        
+
     def tearDown(self):
         pass
 
