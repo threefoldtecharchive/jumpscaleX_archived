@@ -6,7 +6,10 @@ def filter_on(data, attr, values):
     values = set(values)
 
     def filter_by_attr(person):
-        return any([value in person[attr] for value in values])
+        try:
+            return any([value in person[attr] for value in values])
+        except KeyError:
+            return False
 
     return list(filter(filter_by_attr, data))
 
@@ -39,13 +42,18 @@ def team(doc, link, order='random', projects=None, contribution_types=None, **kw
     data = []
     for directory in j.sal.fs.listDirsInDir(path):
         person_data = {}
+
         for filepath in j.sal.fs.listFilesInDir(directory):
-            if 'publicinfo.toml' in filepath.lower():
+            basename = j.sal.fs.getBaseName(filepath).lower()
+            extname = j.sal.fs.getFileExtension(filepath)
+            if basename.startswith('publicinfo') and extname == 'toml':
                 person_data.update(j.data.serializers.toml.load(filepath))
-            elif j.sal.fs.getFileExtension(filepath).lower() in ('png', 'jpg', 'jpeg'):
-                person_data['avatar'] = j.sal.fs.getBaseName(filepath)
-                doc_dir = j.sal.fs.joinPaths(doc.docsite.outpath, doc.path_dir_rel)
-                j.sal.fs.copyFile(filepath, doc_dir, createDirIfNeeded=True)
+            elif extname in ('png', 'jpg', 'jpeg'):
+                person_data['avatar'] = basename
+                dest = j.sal.fs.joinPaths(doc.docsite.outpath, doc.path_dir_rel, basename)
+                j.sal.fs.copyFile(filepath, dest, createDirIfNeeded=True)
+
+        if person_data:
             data.append(person_data)
 
     if projects:
