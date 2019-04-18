@@ -83,3 +83,9 @@ class TestCases(BaseTest):
             j.sal.process.execute('which python')
         except:
             self.assertTrue(False)
+
+    def test010_digitalme(self):
+        j.builder.apps.digitalme.build(reset=True)
+        j.builder.apps.digitalme.install()
+        j.builder.apps.digitalme.start()
+        
