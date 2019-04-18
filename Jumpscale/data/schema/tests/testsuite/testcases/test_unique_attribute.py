@@ -8,11 +8,14 @@ class Unique(BaseTest):
     def setUp(self):
         super().setUp()
         j.servers.zdb.start_test_instance()
-        self.zdb = j.clients.zdb.client_get(port=9901)
+        self.admin_zdb = j.clients.zdb.client_admin_get(port=9901)
+        self.admin_zdb.namespace_new('unique')
+        self.zdb = j.clients.zdb.client_get(nsname='unique', port=9901)
         self.bcdb = j.data.bcdb.new("test", zdbclient=self.zdb)
-    
+
     def tearDown(self):
-        self.bcdb.reset()
+        self.admin_zdb = j.clients.zdb.client_admin_get(port=9901)
+        self.admin_zdb.namespace_delete('unique')
         j.servers.zdb.stop()
         super().tearDown()
 
@@ -71,14 +74,14 @@ class Unique(BaseTest):
         self.log('On the second object, try to use same new_name for first one, should success')
         schema_obj2.new_name = new_name
         schema_obj2.save()
+
         self.log('On the second object, try to use same number for first one, should fail')
         schema_obj2.number = number
         with self.assertRaises(Exception):
             schema_obj2.save()
         schema_obj2.number = random.randint(100, 199)
-        
+
         self.log('Change name of the first object and try to use the first name again, should success')
-        
         schema_obj.name = self.random_string()
         schema_obj.save()
         schema_obj2.name = name
