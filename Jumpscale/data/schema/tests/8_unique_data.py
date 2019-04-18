@@ -34,7 +34,9 @@ def main(self):
     test_case = TestCase()
 
     j.servers.zdb.start_test_instance()
-    self.zdb = j.clients.zdb.client_get(port=9901)
+    self.admin_zdb = j.clients.zdb.client_admin_get(port=9901)
+    self.admin_zdb.namespace_new("unique")
+    self.zdb = j.clients.zdb.client_get(nsname="unique", port=9901)
     self.bcdb = j.data.bcdb.new("test", zdbclient=self.zdb)
     schema = j.data.schema.get(scm)
     self.model = self.bcdb.model_get_from_schema(schema)
@@ -126,6 +128,6 @@ def main(self):
     schema_obj3.save()
     schema_obj3.number = number
     schema_obj3.save()
-    self.bcdb.reset()
+    self.admin_zdb.namespace_delete("unique")
     j.servers.zdb.stop()
 

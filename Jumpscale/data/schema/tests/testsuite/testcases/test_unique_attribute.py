@@ -4,18 +4,16 @@ import random
 
 
 class Unique(BaseTest):
-
     def setUp(self):
         super().setUp()
         j.servers.zdb.start_test_instance()
         self.admin_zdb = j.clients.zdb.client_admin_get(port=9901)
-        self.admin_zdb.namespace_new('unique')
-        self.zdb = j.clients.zdb.client_get(nsname='unique', port=9901)
+        self.admin_zdb.namespace_new("unique")
+        self.zdb = j.clients.zdb.client_get(nsname="unique", port=9901)
         self.bcdb = j.data.bcdb.new("test", zdbclient=self.zdb)
 
     def tearDown(self):
-        self.admin_zdb = j.clients.zdb.client_admin_get(port=9901)
-        self.admin_zdb.namespace_delete('unique')
+        self.admin_zdb.namespace_delete("unique")
         j.servers.zdb.stop()
         super().tearDown()
 
@@ -37,7 +35,7 @@ class Unique(BaseTest):
         #. Delete the second object and create new one.
         #. Set the new object's attributes with the same attributes of the second object, should success. 
         """
-        self.log('Create schema with unique attributes and save it')
+        self.log("Create schema with unique attributes and save it")
         scm = """
         @url = test.schema.1
         name* = "" (S)
@@ -58,52 +56,68 @@ class Unique(BaseTest):
         schema_obj.number = number
         schema_obj.save()
 
-        self.log('Create another object and try to use same name for first one, should fail')
+        self.log(
+            "Create another object and try to use same name for first one, should fail"
+        )
         schema_obj2 = self.model.new()
         schema_obj2.name = name
         with self.assertRaises(Exception):
             schema_obj2.save()
         schema_obj2.name = self.random_string()
 
-        self.log('On the second object, try to use same test var for first one, should fail')
+        self.log(
+            "On the second object, try to use same test var for first one, should fail"
+        )
         schema_obj2.test = test
         with self.assertRaises(Exception):
             schema_obj2.save()
         schema_obj2.test = self.random_string()
 
-        self.log('On the second object, try to use same new_name for first one, should success')
+        self.log(
+            "On the second object, try to use same new_name for first one, should success"
+        )
         schema_obj2.new_name = new_name
         schema_obj2.save()
 
-        self.log('On the second object, try to use same number for first one, should fail')
+        self.log(
+            "On the second object, try to use same number for first one, should fail"
+        )
         schema_obj2.number = number
         with self.assertRaises(Exception):
             schema_obj2.save()
         schema_obj2.number = random.randint(100, 199)
 
-        self.log('Change name of the first object and try to use the first name again, should success')
+        self.log(
+            "Change name of the first object and try to use the first name again, should success"
+        )
         schema_obj.name = self.random_string()
         schema_obj.save()
         schema_obj2.name = name
         schema_obj2.save()
 
-        self.log('Change test var of the first object and try to use the first test var again, should success')
+        self.log(
+            "Change test var of the first object and try to use the first test var again, should success"
+        )
         schema_obj.test = self.random_string()
         schema_obj.save()
         schema_obj2.test = test
         schema_obj2.save()
 
-        self.log('Change number of the first object and try to use the first number again, should success')
+        self.log(
+            "Change number of the first object and try to use the first number again, should success"
+        )
         schema_obj.number = random.randint(200, 299)
         schema_obj.save()
         schema_obj2.number = number
         schema_obj2.save()
 
-        self.log('Delete the second object and create new one.')
+        self.log("Delete the second object and create new one.")
         schema_obj2.delete()
         schema_obj3 = self.model.new()
 
-        self.log("Set the new object's attributes with the same attributes of the second object, should success.")
+        self.log(
+            "Set the new object's attributes with the same attributes of the second object, should success."
+        )
         schema_obj3.name = name
         schema_obj3.save()
         schema_obj3.test = test
