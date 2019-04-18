@@ -7,6 +7,7 @@ MASTER_BRANCH = "master"
 DEV_BRANCH = "development"
 DEV_SUFFIX = "_dev"
 CONFIG_TEMPLATE = "CONF_TEMPLATE"
+OPEN_PUBLISH_REPO = "https://github.com/threefoldfoundation/lapis-wiki"
 
 
 class OpenPublishClient(JSConfigClient):
@@ -15,21 +16,26 @@ class OpenPublishClient(JSConfigClient):
         name* = "" (S)
         websites = (LO) !jumpscale.open_publish.website.1
         wikis = (LO) !jumpscale.open_publish.wiki.1
+        gedis_port = 8888 (I)
+        zdb_port = 9901 (I)
             
         @url = jumpscale.open_publish.website.1
         name = "" (S)
         repo_url = "" (S)
         domain = "" (S)
+        ip = "" (ipaddr)
         
         @url = jumpscale.open_publish.wiki.1
         name = "" (S)
         repo_url = "" (S)
         domain = "" (S)
+        ip = "" (ipaddr)
     """
 
     def _init(self):
-        open_publish_repo = "https://github.com/threefoldfoundation/lapis-wiki"
-        self.open_publish_path = j.clients.git.getContentPathFromURLorPath(open_publish_repo)
+        self.open_publish_path = j.clients.git.getContentPathFromURLorPath(OPEN_PUBLISH_REPO)
+        self.gedis_server = None
+        self.dns_server = None
 
     def auto_update(self):
         while True:
@@ -40,13 +46,42 @@ class OpenPublishClient(JSConfigClient):
             print("Reloading docsites")
             gevent.sleep(300)
 
-    def server_start(self):
+    def servers_start(self):
+        # TODO Move lapis to a seperate server and just call it from here
         url = "https://github.com/threefoldtech/jumpscale_weblibs"
         weblibs_path = j.clients.git.getContentPathFromURLorPath(url)
         j.sal.fs.symlink("{}/static".format(weblibs_path), "{}/static/weblibs".format(self.open_publish_path),
                          overwriteTarget=False)
-        cmd = "cd {0} && moonc . && lapis server".format(self.open_publish_path)
-        j.tools.tmux.execute(cmd, reset=False, window="web_server")
+
+        # Start Lapis Server
+        self._log_info("Starting Lapis Server")
+        cmd = "moonc . && lapis server".format(self.open_publish_path)
+        j.tools.startupcmd.get(name="Lapis", cmd=cmd, path=self.open_publish_path).start()
+
+        # Start ZDB Server and create dns namespace
+        self._log_info("Starting ZDB Server")
+        j.servers.zdb.configure(port=self.zdb_port)
+        j.servers.zdb.start()
+        zdb_admin_client = j.clients.zdb.client_admin_get(port=self.zdb_port)
+        zdb_std_client = zdb_admin_client.namespace_new("dns")
+
+        # Start bcdb server and create corresponding dns namespace
+        self._log_info("Starting BCDB Server")
+        bcdb_name = "dns"
+        j.data.bcdb.redis_server_start(name=bcdb_name, zdbclient_port=self.zdb_port,
+                                       background=True, zdbclient_namespace="dns")
+        bcdb = j.data.bcdb.new(bcdb_name, zdb_std_client)
+
+        # Start DNS Server
+        self.dns_server = j.servers.dns.get(bcdb=bcdb)
+        gevent.spawn(self.dns_server.serve_forever)
+
+        # Start Gedis Server
+        self._log_info("Starting Gedis Server")
+        self.gedis_server = j.servers.gedis.configure(host="0.0.0.0", port=self.gedis_port)
+        actor_path = j.sal.fs.joinPaths(j.sal.fs.getDirName(os.path.abspath(__file__)), "actors", "open_publish.py")
+        self.gedis_server.actor_add(actor_path)
+        self.gedis_server.start()
 
     def load_site(self, obj, branch, suffix=""):
         dest = j.clients.git.getGitRepoArgs(obj.repo_url)[-3] + suffix
@@ -74,10 +109,11 @@ class OpenPublishClient(JSConfigClient):
             'app': app
         }
         j.tools.jinja2.file_render(path=path, dest=dest, **args)
+        self.dns_server.resolver.create_item(domain=obj.domain, value=obj.ip)
         self.reload_server()
 
-    def add_wiki(self, name, repo_url, domain):
-        wiki = self.wikis.new(data=dict(name=name, repo_url=repo_url, domain=domain))
+    def add_wiki(self, name, repo_url, domain, ip):
+        wiki = self.wikis.new(data=dict(name=name, repo_url=repo_url, domain=domain, ip=ip))
 
         # Generate md files for master and dev branches
         self.load_site(wiki, MASTER_BRANCH)
@@ -87,8 +123,8 @@ class OpenPublishClient(JSConfigClient):
         self.generate_nginx_conf(wiki)
         self.save()
 
-    def add_website(self, name, repo_url, domain):
-        website = self.websites.new(name=name, repo_url=repo_url, domain=domain)
+    def add_website(self, name, repo_url, domain, ip):
+        website = self.websites.new(data=dict(name=name, repo_url=repo_url, domain=domain, ip=ip))
 
         # Generate md files for master and dev branches
         for branch in [DEV_BRANCH and MASTER_BRANCH]:
