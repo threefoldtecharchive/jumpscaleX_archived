@@ -196,7 +196,10 @@ class NACL(j.application.JSBaseClass):
             redis_key="secret_%s"%self.name
             key = j.sal.fs.readFile(self._path_encryptor_for_secret,binary=True)
             sb=nacl.secret.SecretBox(key)
-            r = j.core.db.get(redis_key)
+            try:
+                r = j.core.db.get(redis_key)
+            except AttributeError:
+                r = None
             if r is None:
                 self._error_raise("cannot find secret in memory, please use 'kosmos --init' to fix.")
             secret = sb.decrypt(r)
