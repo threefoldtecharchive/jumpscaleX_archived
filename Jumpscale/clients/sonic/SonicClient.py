@@ -27,25 +27,33 @@ class SonicClient(JSConfigClient):
         mode = "search" (S)
         """
     def _init(self):
-        pass
+        self.count = self._client_ingest.count
+        self.query = self._client_search.query
 
     @property
-    def client(self):
+    def _client_search(self):
         try:
             from sonic import SearchClient, IngestClient
         except ImportError:
             j.builder.runtimes.python.pip_package_install("sonic-client")
             from sonic import SearchClient, IngestClient
 
-        if self.mode.casefold() == "search":
-            return SearchClient(host=self.host, port=self.port, password=self.password)
-        elif self.mode.casefold() == "ingest":
-            return IngestClient(host=self.host, port=self.port, password=self.password)
-        else:
-            raise ValueError("{} is nit a supported sonic client mode".format(self.mode))
+        return SearchClient(host=self.host, port=self.port, password=self.password)
 
-    def __enter__(self):
-        return self.client.__enter__()
+    @property
+    def _client_ingest(self):
+        try:
+            from sonic import SearchClient, IngestClient
+        except ImportError:
+            j.builder.runtimes.python.pip_package_install("sonic-client")
+            from sonic import SearchClient, IngestClient
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.client.__exit__()
+        return IngestClient(host=self.host, port=self.port, password=self.password)
+
+
+    # def __enter__(self):
+    #     return self.client_search.__enter__()
+    #     return self.client_search.__enter__()
+    #
+    # def __exit__(self, exc_type, exc_val, exc_tb):
+    #     self.client.__exit__()
