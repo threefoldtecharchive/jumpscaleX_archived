@@ -24,12 +24,17 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
         """
         js_shell 'j.builder.libs..openssl.build()'
         """
+        if not self.tools.exists(self.DIR_BUILD):
+            C = """
+            set -ex
+            cd {DIR_BUILD}
+            git clone --depth 1 https://github.com/openssl/openssl.git
+            """
+            self._execute(C)
+
         C = """
-        set -ex
-        cd {DIR_BUILD}
-        git clone --depth 1 https://github.com/openssl/openssl.git
-        cd openssl
-        ./config
+        cd {DIR_BUILD}/openssl
+        ./config -Wl,--enable-new-dtags,-rpath,'$(LIBRPATH)'
         ./Configure {TARGET} shared enable-ec_nistp_64_gcc_128 no-ssl2 no-ssl3 no-comp --openssldir=/sandbox/var/openssl --prefix=/sandbox/ zlib
         make depend
         make install
@@ -37,6 +42,7 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
         rm -rf /sandbox/build/private
         echo "**BUILD DONE**"
         """
+        self.tools.dir_ensure("{DIR_BUILD}")
         self._write("{DIR_BUILD}/mycompile_all.sh", C)
         self._execute("cd {DIR_BUILD}; sh ./mycompile_all.sh")
 

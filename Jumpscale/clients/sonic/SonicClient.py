@@ -10,7 +10,7 @@ class SonicClient(JSConfigClient):
 
     cl = j.clients.sonic.get("ingest_client", host="XXXXX", port=XXXX, password="XXX", mode="ingest")
     with cl.client as ingest_client:
-      ingest_client.query("collection", "bucket", "object", "text")
+      ingest_client.push("collection", "bucket", "object", "text")
 
     cl = j.clients.sonic.get("search_client", host="XXXXX", port=XXXX, password="XXX", mode="search")
     with cl.client as search_client:
@@ -24,10 +24,9 @@ class SonicClient(JSConfigClient):
         host = "" (S)
         port = 1491 (I)
         password = "" (S)
-        mode = "search" (S)
         """
     def _init(self):
-        self.count = self._client_ingest.count
+        self.push = self._client_ingest.push
         self.query = self._client_search.query
 
     @property
@@ -49,11 +48,3 @@ class SonicClient(JSConfigClient):
             from sonic import SearchClient, IngestClient
 
         return IngestClient(host=self.host, port=self.port, password=self.password)
-
-
-    # def __enter__(self):
-    #     return self.client_search.__enter__()
-    #     return self.client_search.__enter__()
-    #
-    # def __exit__(self, exc_type, exc_val, exc_tb):
-    #     self.client.__exit__()
