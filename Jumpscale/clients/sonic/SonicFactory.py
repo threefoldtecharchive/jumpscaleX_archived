@@ -11,10 +11,7 @@ class SonicFactory(JSConfigs):
     __jslocation__ = "j.clients.sonic"
     _CHILDCLASS = SonicClient
 
-    def _init(self):
-        pass
-
-    def test1(self):
+    def test(self):
         data = {
             'post:1': "this is some test text hello",
             'post:2': 'this is a hello world post',
@@ -22,9 +19,10 @@ class SonicFactory(JSConfigs):
             'post:4': "for the love of god?",
             'post:5': "for the love lorde?",
         }
-        client = j.clients.sonic.get('main', host="127.0.0.1", port=1491, password='dmdm')
+        client = self.get('test', host="127.0.0.1", port=1491, password='dmdm')
         for articleid, content in data.items():
             client.push("forum", "posts", articleid, content)
-        print(client.query("forum", "posts", "hello"))
-        print(client.query("forum", "posts", "love"))
-        print(client.query("forum", "posts", "world"))
+        assert client.query("forum", "posts", "love") == ['post:5', 'post:4']
+        assert client.suggest("forum", "posts", "lo") == ['lorde', 'love']
+
+        print("TEST OK")
