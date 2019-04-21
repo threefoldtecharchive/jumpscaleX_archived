@@ -291,6 +291,10 @@ class BCDBModel(j.application.JSBaseClass):
             # means there is already one
             self._log_debug("get key(exists):%s" % key)
             ids = j.data.serializers.msgpack.loads(r)
+            for model in self.get_all():
+                if "name__" + model.name == key:
+                    ids = [model.id]
+
         else:
             self._log_debug("get key(new):%s" % key)
             ids = []
