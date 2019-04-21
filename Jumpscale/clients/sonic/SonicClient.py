@@ -50,7 +50,7 @@ class SonicClient(JSConfigClient):
         if not self._cached_client_search:
             self._cached_client_search = SearchClient(host=self.host, port=self.port, password=self.password)
             self._cached_client_search.connect()
-            return self._cached_client_search
+        return self._cached_client_search
 
     @property
     def _client_ingest(self):
@@ -63,5 +63,5 @@ class SonicClient(JSConfigClient):
         if not self._cached_client_ingest:
             self._cached_client_ingest = IngestClient(host=self.host, port=self.port, password=self.password)
             self._cached_client_ingest.connect()
-            return self._cached_client_ingest
+        return self._cached_client_ingest
     
