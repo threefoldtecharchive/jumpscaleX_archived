@@ -8,11 +8,11 @@ class SonicClient(JSConfigClient):
     Sonic server client
     usage example:-
 
-    cl = j.clients.sonic.get("ingest_client", host="XXXXX", port=XXXX, password="XXX", mode="ingest")
+    cl = j.clients.sonic.get("ingest_client", host="XXXXX", port=XXXX, password="XXX")
     with cl.client as ingest_client:
       ingest_client.push("collection", "bucket", "object", "text")
 
-    cl = j.clients.sonic.get("search_client", host="XXXXX", port=XXXX, password="XXX", mode="search")
+    cl = j.clients.sonic.get("search_client", host="XXXXX", port=XXXX, password="XXX")
     with cl.client as search_client:
       search_client.query("collection", "bucket", "key")
 
@@ -37,7 +37,9 @@ class SonicClient(JSConfigClient):
             j.builder.runtimes.python.pip_package_install("sonic-client")
             from sonic import SearchClient, IngestClient
 
-        return SearchClient(host=self.host, port=self.port, password=self.password)
+        c = SearchClient(host=self.host, port=self.port, password=self.password)
+        c.connect()
+        return c
 
     @property
     def _client_ingest(self):
@@ -47,4 +49,6 @@ class SonicClient(JSConfigClient):
             j.builder.runtimes.python.pip_package_install("sonic-client")
             from sonic import SearchClient, IngestClient
 
-        return IngestClient(host=self.host, port=self.port, password=self.password)
+        c = IngestClient(host=self.host, port=self.port, password=self.password)
+        c.connect()
+        return c
