@@ -6,15 +6,27 @@ JSConfigClient = j.application.JSBaseConfigClass
 class SonicClient(JSConfigClient):
     """
     Sonic server client
+    
     usage example:-
+    
+    data = { 
+         'post:1': "this is some test text hello", 
+         'post:2': 'this is a hello world post', 
+         'post:3': "hello how is it going?", 
+         'post:4': "for the love of god?", 
+         'post:5': "for the love lorde?", 
+     } 
+     client = j.clients.sonic.get('main', host="127.0.0.1", port=1491, password='dmdm') 
+     for articleid, content in data.items(): 
+         client.push("forum", "posts", articleid, content) 
+     print(client.query("forum", "posts", "love")) 
 
-    cl = j.clients.sonic.get("ingest_client", host="XXXXX", port=XXXX, password="XXX")
-    with cl.client as ingest_client:
-      ingest_client.push("collection", "bucket", "object", "text")
+    # ['post:5', 'post:4']
 
-    cl = j.clients.sonic.get("search_client", host="XXXXX", port=XXXX, password="XXX")
-    with cl.client as search_client:
-      search_client.query("collection", "bucket", "key")
+    print(client.suggest("forum", "posts", "lo"))                                
+    # ['lorde', 'love']
+
+
 
     """
     _SCHEMATEXT = """
