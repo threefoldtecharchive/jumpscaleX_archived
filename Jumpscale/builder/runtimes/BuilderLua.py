@@ -206,7 +206,7 @@ class BuilderLua(j.builder.system._BaseClass):
         self._log_info("install lua & openresty done.")
 
     @builder_method()
-    def sandbox(self):
+    def sandbox(self, zhub_client=None):
         '''Copy built bins to dest_path and create flist if create_flist = True
 
         :param dest_path: destination path to copy files into
