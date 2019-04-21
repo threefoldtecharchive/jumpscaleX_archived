@@ -18,7 +18,7 @@ class BuilderPython(j.builder.system._BaseClass):
             rc,out,err=j.sal.process.execute("brew --prefix openssl")
             self.PATH_OPENSSL=out.strip()
 
-        self.DIR_SANDBOX = j.core.tools.text_replace("{DIR_VAR}/build/sandbox_digitalme/")
+        self.DIR_SANDBOX = j.core.tools.text_replace("{DIR_VAR}/build/sandbox_python/")
         j.sal.fs.createDir(self.DIR_SANDBOX)
 
     def clean(self):
