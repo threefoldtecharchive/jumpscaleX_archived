@@ -67,7 +67,7 @@ class builder_method(object):
                 res = func(builder, *args, **kwargs)
 
                 if name == "sandbox" and kwargs.get("flist_create", False):
-                    res = builder._flist_create(zhub_client=zhub_client)
+                    res = builder._flist_create(*args, **kwargs)
 
                 if self.done_check:
                     builder._done_set(done_key)
@@ -412,7 +412,7 @@ class BuilderBaseClass(BaseClass):
         if with_base:
             self._log_info("merging the produced flist with {}".format(baseflist))
             target = "{}_merged_{}".format(self.NAME, baseflist)
-            flist_name = '/'.join(flist_url.split('/'))[-2:]
+            flist_name = "{username}/{flist_name}.flist".format(username=zhub_client.username, flist_name=self.NAME)
             flist_url = zhub_client.merge(target, [baseflist, flist_name])
 
         return flist_url
