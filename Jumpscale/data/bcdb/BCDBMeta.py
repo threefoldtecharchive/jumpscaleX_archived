@@ -65,7 +65,7 @@ class BCDBMeta(j.application.JSBaseClass):
         self.md5sid = {}
         self.url2sid = {}
         self._schema_last_id = -1
-        j.sal.fs.remove(self._meta_local_path)
+        self.data
 
     def save(self):
         if self._data is None:
@@ -170,6 +170,7 @@ class BCDBMeta(j.application.JSBaseClass):
         """
         backup_data = self.data.schemas
         self.reset()
+        j.sal.fs.remove(self._meta_local_path)
         for schemas in backup_data:
             if schemas.url != schema.url:
                 self._schema_last_id += 1
