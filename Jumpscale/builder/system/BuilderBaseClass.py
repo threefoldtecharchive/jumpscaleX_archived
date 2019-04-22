@@ -310,8 +310,8 @@ class BuilderBaseClass(BaseClass):
     def _read(self,location):
         """
         will use the replace function on location then read a file from the given location
-        :param location: location to read file from 
-        :return 
+        :param location: location to read file from
+        :return
         """
 
         location = self._replace(location)
@@ -389,16 +389,16 @@ class BuilderBaseClass(BaseClass):
         return True
 
     @builder_method()
-    def _flist_create(self, zhub_client, with_base=False,
-                baseflist="tf-autobuilder/threefoldtech-jumpscaleX-autostart-development.flist"):
+    def _flist_create(self, zhub_client,
+                merge_base_flist=""):
         """
         build a flist for the builder and upload the created flist to the hub
 
         This method builds and optionally upload the flist to the hub
 
-        :param hub_instance: zerohub client to use to upload the flist, defaults to None if None
+        :param zhub_instance: zerohub client to use to upload the flist, defaults to None if None
         the flist will be created but not uploaded to the hub
-        :param hub_instance: j.clients.zhub instance, optional
+        :param merge_base_flist: a base flist to merge the created flist with. If supplied, both merged and normal flists will be uploaded, optional
         :return: the flist url
         """
 
@@ -409,11 +409,12 @@ class BuilderBaseClass(BaseClass):
 
         self._log_info("uploading flist to the hub")
         flist_url = zhub_client.sandbox_upload(self.NAME, self.DIR_SANDBOX)
-        if with_base:
-            self._log_info("merging the produced flist with {}".format(baseflist))
-            target = "{}_merged_{}".format(self.NAME, baseflist)
+        if merge_base_flist:
+            self._log_info("merging the produced flist with {}".format(merge_base_flist))
+
+            target = "{}_merged_{}".format(self.NAME, merge_base_flist.replace('/', '_').replace('.flist', ''))
             flist_name = "{username}/{flist_name}.flist".format(username=zhub_client.username, flist_name=self.NAME)
-            flist_url = zhub_client.merge(target, [baseflist, flist_name])
+            flist_url = zhub_client.merge(target, [merge_base_flist, flist_name])
 
         return flist_url
 
