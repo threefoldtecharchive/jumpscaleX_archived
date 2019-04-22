@@ -81,7 +81,7 @@ class BuildImage(Utils):
             self.image_push()
 
     def install_jsx_in_docker_option(self):
-        cmd = 'eval `ssh-agent; ssh-add; curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/install.py?$RANDOM > /tmp/install.py;\
+        cmd = 'eval `ssh-agent`; ssh-add; curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/install.py?$RANDOM > /tmp/install.py;\
                  python3.6 /tmp/install.py -3 -y --name=jsx'
         response = self.execute_cmd(cmd)
         if response.returncode:
@@ -91,9 +91,9 @@ class BuildImage(Utils):
             text = '{}:failure'.format(file_name)
             self.write_file(text=text, file_name='status.log', file_path='.')
             self.send_msg('Failed to install jumpscaleX with docker option {}'.format(file_link))
+        else:
+            self.send_msg('jumpscaleX installed in docker successfully')
         self.execute_cmd('docker rm jsx -f')
-        self.send_msg('jumpscaleX installed in docker successfully')
-
 
 if __name__ == "__main__":
     build = BuildImage()

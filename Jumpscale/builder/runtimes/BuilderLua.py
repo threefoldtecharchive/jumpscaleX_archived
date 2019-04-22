@@ -219,7 +219,7 @@ class BuilderLua(j.builder.system._BaseClass):
         :type zhub_client:str
         '''
         dest_path = self.DIR_SANDBOX
-        j.builder.web.openresty.sandbox(dest_path=dest_path)
+        j.builder.web.openresty.sandbox()
 
         bins = ['lua', '_lapis.lua', '_moonc.lua', '_moon.lua', '_moonrocks.lua']
         for bin_name in bins:

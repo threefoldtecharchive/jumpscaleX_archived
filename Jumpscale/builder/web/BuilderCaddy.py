@@ -1,4 +1,5 @@
 from Jumpscale import j
+from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
 
 builder_method = j.builder.system.builder_method
 
@@ -51,54 +52,37 @@ PLUGIN_DIRECTIVES = {
 }
 
 
-class BuilderCaddy(j.builder.system._BaseClass):
+# see https://github.com/mholt/caddy#build
+CADDY_RUNNER = """
+package main
+
+import (
+	"github.com/mholt/caddy/caddy/caddymain"
+
+	// plug in plugins here, for example:
+%s
+)
+
+func main() {
+	// optional: disable telemetry
+	// caddymain.EnableTelemetry = false
+	caddymain.Run()
+}"""
+
+
+class BuilderCaddy(BuilderGolangTools):
     NAME = "caddy"
     PLUGINS = ['iyo', 'filemanager']  # PLEASE ADD MORE PLUGINS #TODO:*1
+    VERSION = 'master' # make sure the way to build with plugin is ok
 
     def _init(self):
-        self.go_runtime = j.builder.runtimes.golang
-        self.package_path = self.go_runtime.package_path_get('mholt/caddy')
-        self.plugins_file = self.tools.joinpaths(self.package_path, 'caddyhttp/httpserver/plugin.go')
-        self.main_file = self.tools.joinpaths(self.package_path, 'caddy/caddymain/run.go')
+        super()._init()
+        self.package_path = self.package_path_get('mholt/caddy')
 
     def clean(self):
         self.stop()
         self._init()
         j.builder.tools.dir_remove("{DIR_BIN}/caddy")
-
-    def _append_after(self, file_path, match, new_line):
-        content = self.tools.file_read(file_path)
-
-        lines = content.split('\n')
-
-        line_no = None
-        match = match.lower()
-        for i, line in enumerate(lines):
-            if match in line.lower():
-                line_no = i
-                break
-
-        if line_no is None:
-            raise ValueError('cannot find "%s" in content' % match)
-
-        lines.insert(line_no + 1, new_line)
-        self.tools.file_write(file_path, '\n'.join(lines))
-
-    def update_imports_and_directves(self, url, directive=None):
-        self._append_after(
-            self.main_file, 'This is where other plugins get plugged in (imported)',
-            '_ "%s"' % url
-        )
-        self._execute('gofmt -w %s' % self.main_file)
-
-        if not directive:
-            return
-
-        self._append_after(
-            self.plugins_file, '"prometheus",', '"%s",' % directive
-        )
-
-        self._execute('gofmt -w %s' % self.main_file)
 
     def get_plugin(self, name):
         """get a supported plugin
@@ -112,12 +96,12 @@ class BuilderCaddy(j.builder.system._BaseClass):
             raise j.exceptions.RuntimeError('plugin not supported')
 
         url = ALL_PLUGINS[name]
-        self.go_runtime.get(url, install=False)
-        self.update_imports_and_directves(url, PLUGIN_DIRECTIVES.get(name))
+        self.get(url, install=False)
 
     def profile_builder_set(self):
         # make sure go binaries are in path while building
-        self.go_runtime.update_profile_paths(self.bash.profile)
+        self.profile.env_set('GO111MODULE', 'on')
+        self.update_profile_paths(self.bash.profile)
 
     @builder_method()
     def build(self, plugins=None):
@@ -132,19 +116,24 @@ class BuilderCaddy(j.builder.system._BaseClass):
             raise j.exceptions.RuntimeError("only ubuntu supported")
 
         # install go runtime
-        self.go_runtime.install()
+        j.builder.runtimes.golang.install()
 
-        # get caddy and plugins source
-        self.go_runtime.get("github.com/mholt/caddy/caddy")
+        # get caddy and plugins
         if not plugins:
             plugins = self.PLUGINS
 
         for plugin in plugins:
             self.get_plugin(plugin)
 
-        # build caddy
-        self.go_runtime.get("github.com/caddyserver/builds")
-        self._execute("cd $GOPATH/src/github.com/mholt/caddy/caddy;go run build.go && cp caddy $GOPATH/bin")
+        # build caddy with a plugins
+        plugin_imports = '\n'.join([
+            '\t_ "%s"' % ALL_PLUGINS[name] for name in plugins
+        ])
+
+        self.get('github.com/mholt/caddy/caddy@%s' % self.VERSION)
+        runner_file = self._replace('{DIR_BUILD}/caddy.go')
+        self.tools.file_write(runner_file, CADDY_RUNNER % plugin_imports)
+        self._execute('cd {DIR_BUILD} && gofmt caddy.go && go mod init caddy && go install')
 
     @builder_method()
     def install(self, plugins=None):
@@ -158,7 +147,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
         """
 
         caddy_bin_path = self.tools.joinpaths(
-            self.go_runtime.DIR_GO_PATH_BIN, self.NAME
+            self.DIR_GO_PATH_BIN, self.NAME
         )
         j.builder.tools.file_copy(caddy_bin_path, "{DIR_BIN}/caddy")
 
@@ -171,8 +160,7 @@ class BuilderCaddy(j.builder.system._BaseClass):
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
         bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX))
         self.tools.dir_ensure(bin_dest)
-        caddy_bin_path = self.tools.joinpaths(
-            "{go_path}/src/github.com/mholt/caddy/caddy".format(go_path=self.go_runtime.DIR_GO_PATH), self.NAME)
+        caddy_bin_path = self.tools.joinpaths(self.package_path, '/caddy', self.NAME)
         self.tools.file_copy(caddy_bin_path, bin_dest)
 
     def _test(self, name=""):

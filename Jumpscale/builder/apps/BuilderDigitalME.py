@@ -36,7 +36,7 @@ class BuilderDigitalME(j.builder.system._BaseClass):
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
         j.builder.runtimes.python.sandbox()
         j.builder.runtimes.lua.sandbox()
-        j.tools.sandboxer.copyTo("/sandbox/var/build/sandbox/tfbot/", "{}/sandbox".format(self.DIR_SANDBOX))
+        j.tools.sandboxer.copyTo(j.builder.runtimes.python.DIR_SANDBOX, "{}/sandbox".format(self.DIR_SANDBOX))
         j.tools.sandboxer.copyTo(j.builder.runtimes.lua.DIR_SANDBOX,  self.DIR_SANDBOX)
         git_repo_path = "/sandbox/code/github/threefoldtech/digitalmeX"
         j.tools.sandboxer.copyTo(git_repo_path, j.sal.fs.joinPaths(self.DIR_SANDBOX, git_repo_path[1:]))
