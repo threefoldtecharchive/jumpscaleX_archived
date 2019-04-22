@@ -17,8 +17,6 @@ class ZeroHubClient(JSConfigClient):
     """
 
     def _init(self):
-
-        self.token = self.token_
         self.username = self.username
         self.client = ZHubClient(self.url)
         self.api = self.client.api
@@ -38,7 +36,7 @@ class ZeroHubClient(JSConfigClient):
         If you have scope for another username than your, you can specify
         which username you want to use via the 'username' argument.
         """
-        self.api.set_token(self.token)
+        self.api.set_token(self.token_)
 
         if self.username:
             self.api.set_user(self.username)
