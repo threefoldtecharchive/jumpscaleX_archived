@@ -389,7 +389,8 @@ class BuilderBaseClass(BaseClass):
         return True
 
     @builder_method()
-    def _flist_create(self, zhub_client):
+    def _flist_create(self, zhub_client, with_base=False,
+                baseflist="tf-autobuilder/threefoldtech-jumpscaleX-autostart-development.flist"):
         """
         build a flist for the builder and upload the created flist to the hub
 
@@ -401,22 +402,20 @@ class BuilderBaseClass(BaseClass):
         :return: the flist url
         """
 
-        # self.copy_dirs(self.root_dirs, self.DIR_SANDBOX)
-        # self.write_files(self.root_files, self.DIR_SANDBOX)
-
-        # if self.startup:
-        #     #TODO differently, use info from self.startup_cmds
-        #     file_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, '.startup.toml')
-        #     j.builder.tools.file_ensure(file_dest)
-        #     j.builder.tools.file_write(file_dest, self.startup)
-
         if j.core.platformtype.myplatform.isLinux:
             ld_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'lib64/')
             j.builder.tools.dir_ensure(ld_dest)
             self._copy('/lib64/ld-linux-x86-64.so.2', ld_dest)
 
         self._log_info("uploading flist to the hub")
-        return zhub_client.sandbox_upload(self.NAME, self.DIR_SANDBOX)
+        flist_url = zhub_client.sandbox_upload(self.NAME, self.DIR_SANDBOX)
+        if with_base:
+            self._log_info("merging the produced flist with {}".format(baseflist))
+            target = "{}_merged_{}".format(self.NAME, baseflist)
+            flist_name = '/'.join(flist_url.split('/'))[-2:]
+            flist_url = zhub_client.merge(target, [baseflist, flist_name])
+
+        return flist_url
 
     @builder_method()
     def _tarfile_create(self):

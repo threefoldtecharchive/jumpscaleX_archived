@@ -19,7 +19,6 @@ md5 = ""
 
 
 class BCDBMeta(j.application.JSBaseClass):
-
     def __init__(self, bcdb):
         JSBASE.__init__(self)
         self.bcdb = bcdb
@@ -47,7 +46,9 @@ class BCDBMeta(j.application.JSBaseClass):
                 self._data = self._schema.get(capnpbin=data)
 
             if self._data.name != self.bcdb.name:
-                raise RuntimeError("name given to bcdb does not correspond with name in the metadata stor")
+                raise RuntimeError(
+                    "name given to bcdb does not correspond with name in the metadata stor"
+                )
 
             for s in self._data.schemas:
                 self.url2sid[s.url] = s.sid
@@ -64,7 +65,7 @@ class BCDBMeta(j.application.JSBaseClass):
         self.md5sid = {}
         self.url2sid = {}
         self._schema_last_id = -1
-        self.data
+        j.sal.fs.remove(self._meta_local_path)
 
     def save(self):
         if self._data is None:
@@ -89,6 +90,7 @@ class BCDBMeta(j.application.JSBaseClass):
         return self.schema_get_from_id(self.md5sid[md5])
 
     def schema_get_from_id(self, schema_id, die=True):
+
         if schema_id not in self.sid2schema:
             for s in self._data.schemas:
                 if s.sid == schema_id:
@@ -110,7 +112,9 @@ class BCDBMeta(j.application.JSBaseClass):
     def model_get_from_id(self, schema_id, bcdb=None):
         if schema_id not in self.sid2model:
             if bcdb is None:
-                raise RuntimeError("need to specify bcdb when getting model from schema:%s" % schema_id)
+                raise RuntimeError(
+                    "need to specify bcdb when getting model from schema:%s" % schema_id
+                )
             schema = self.schema_get_from_id(schema_id)
             self.sid2model[schema_id] = bcdb.model_get_from_schema(schema=schema)
             self.bcdb.models[schema.url] = self.sid2model[schema_id]
@@ -137,6 +141,10 @@ class BCDBMeta(j.application.JSBaseClass):
         if schema_existing is not None:  # means exists
             if schema_existing._md5 == schema._md5:
                 return schema_existing
+            else:
+                # for migration meta
+                if schema_existing.url == schema.url:
+                    self.migrate_meta(schema)
 
         # not known yet in namespace in ZDB
         self._schema_last_id += 1
@@ -150,8 +158,45 @@ class BCDBMeta(j.application.JSBaseClass):
         self.save()
         self.url2sid[s.url] = s.sid
         schema.sid = s.sid
-
+        if schema_existing:
+            # for migrate all database using new schema
+            self.migrate_data(schema)
         return self.schema_get_from_id(s.sid)
+
+    def migrate_meta(self, schema):
+        """
+        migrate meta using new schema 
+        WARNING : if you delete any parameter in schema you can't get it again because we migrate it with new schema
+        """
+        backup_data = self.data.schemas
+        self.reset()
+        for schemas in backup_data:
+            if schemas.url != schema.url:
+                self._schema_last_id += 1
+                s = self.data.schemas.new()
+                s.url = schemas.url
+                s.sid = self._schema_last_id
+                s.text = schemas.text  # + "\n"  # only 1 \n at end
+                s.md5 = j.data.hash.md5_string(s.text)
+                self._log_debug("new schema in meta:\n%s" % self.data)
+                self.save()
+                self.url2sid[s.url] = s.sid
+                schema.sid = s.sid
+
+    def migrate_data(self, schema):
+        """
+        migrate database when we have different schema with the same url 
+        WARNING : if you delete any parameter in schema you can't get it again because we migrate it with new schema
+        """
+        models = self.bcdb.get_all()
+        self.bcdb.reset()
+        for model in models:
+            m = schema.new()
+            for prop in schema.properties:
+                prop = getattr(m, "{}".format(prop.name))
+                if getattr(model, "{}".format(prop.name)):
+                    prop = getattr(model, "{}".format(prop.name))
+            m.save()
 
     def __repr__(self):
         return str(self._data)
