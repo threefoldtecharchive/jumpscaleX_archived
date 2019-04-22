@@ -19,7 +19,7 @@ class BuilderGolangTools(j.builder.system._BaseClass):
         if not profile:
             profile = self.bash.profile
 
-        # profile.env_set('GOROOT', self.DIR_GO_ROOT)
+        profile.env_set('GOROOT', self.DIR_GO_ROOT)
         profile.env_set('GOPATH', self.DIR_GO_PATH)
 
         # remove old parts of profile
@@ -93,7 +93,7 @@ class BuilderGolangTools(j.builder.system._BaseClass):
             flags += ' -u'
         if verbose:
             flags += ' -v'
-        self._execute('go get %s %s' % (flags, url), die=die)
+        self._execute('go get %s %s' % (flags, url), timeout=10000, die=die)
 
     def package_path_get(self, name, host='github.com', go_path=None):
         """A helper method to get a package path installed by `get`
@@ -134,7 +134,7 @@ class BuilderGolangTools(j.builder.system._BaseClass):
         self._execute('cd %s && godep restore' % dest)
 
 
-class BuilderGolang(BuilderGolangTools, j.builder.system._BaseClass):
+class BuilderGolang(BuilderGolangTools):
 
     NAME = 'go'
     STABLE_VERSION = '1.12.1'
@@ -185,20 +185,6 @@ class BuilderGolang(BuilderGolangTools, j.builder.system._BaseClass):
         if j.core.platformtype.myplatform.is32bit:
             return '386'
         return 'amd64'
-
-    def update_profile_paths(self, profile=None):
-        if not profile:
-            profile = self.bash.profile
-
-        profile.env_set('GOROOT', self.DIR_GO_ROOT)
-        profile.env_set('GOPATH', self.DIR_GO_PATH)
-
-        # remove old parts of profile
-        # and add them to PATH (without existence check)
-        profile.path_delete("/go/")
-        profile.path_delete("/go_proj")
-        profile.path_add(self.DIR_GO_PATH_BIN, check_exists=False)
-        profile.path_add(self.DIR_GO_ROOT_BIN, check_exists=False)
 
     @builder_method()
     def install(self):

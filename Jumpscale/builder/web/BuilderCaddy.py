@@ -70,7 +70,7 @@ func main() {
 }"""
 
 
-class BuilderCaddy(BuilderGolangTools, j.builder.system._BaseClass):
+class BuilderCaddy(BuilderGolangTools):
     NAME = "caddy"
     PLUGINS = ['iyo', 'filemanager']  # PLEASE ADD MORE PLUGINS #TODO:*1
     VERSION = 'master' # make sure the way to build with plugin is ok

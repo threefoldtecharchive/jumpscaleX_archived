@@ -1,4 +1,5 @@
 from Jumpscale import j
+from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
 
 builder_method = j.builder.system.builder_method
 
@@ -14,14 +15,14 @@ CONFIGTEMPLATE="""
     }
     loadbalance
     reload 5s
-}        
+}
 """
 
-class BuilderCoreDns(j.builder.system._BaseClass):
+class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
     NAME = "coredns"
 
-    def _init(self):
-        self.package_path = j.builder.runtimes.golang.package_path_get('coredns', 'github.com/coredns')
+    def profile_builder_set(self):
+        self.profile.env_set('GO111MODULE', 'on')
 
     @builder_method()
     def build(self):
@@ -34,16 +35,16 @@ class BuilderCoreDns(j.builder.system._BaseClass):
         # install golang
         j.builder.runtimes.golang.install()
         j.builder.db.etcd.install()
-        j.builder.runtimes.golang.get('github.com/coredns/coredns', install=False, update=True)
-        
+
+        # https://github.com/coredns/coredns#compilation-from-source
+
         # go to package path and build (for coredns)
         C = """
-        cd {}
-        git remote add threefoldtech_coredns https://github.com/threefoldtech/coredns
-        git fetch threefoldtech_coredns
-        git checkout threefoldtech_coredns/master
+        cd {DIR_BUILD}
+        git clone https://github.com/threefoldtech/coredns
+        cd coredns
         make
-        """.format(self.package_path)
+        """
         self._execute(C)
 
     @builder_method()
@@ -53,15 +54,13 @@ class BuilderCoreDns(j.builder.system._BaseClass):
 
         installs and runs coredns server with redis plugin
         """
-        src = '{}/coredns'.format(self.package_path)
-        dest = self._replace('{DIR_BIN}/coredns')
-        self._copy(src=src, dst=dest)
+        self._copy('{DIR_BUILD}/coredns', '{DIR_BIN}/coredns')
         j.sal.fs.writeFile(filename='/sandbox/cfg/coredns.conf', contents=CONFIGTEMPLATE)
 
     def clean(self):
-        self._remove(self.package_path)
+        self._remove(self.DIR_BUILD)
         self._remove(self.DIR_SANDBOX)
-    
+
     @property
     def startup_cmds(self):
         cmd = "/sandbox/bin/coredns -conf /sandbox/cfg/coredns.conf"
