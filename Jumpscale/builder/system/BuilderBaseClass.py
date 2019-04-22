@@ -67,7 +67,7 @@ class builder_method(object):
                 res = func(builder, *args, **kwargs)
 
                 if name == "sandbox" and kwargs.get("flist_create", False):
-                    res = builder._flist_create(*args, **kwargs)
+                    res = builder._flist_create(kwargs['zhub_client'], kwargs.get('merge_base_flist'))
 
                 if self.done_check:
                     builder._done_set(done_key)
@@ -401,7 +401,6 @@ class BuilderBaseClass(BaseClass):
         :param merge_base_flist: a base flist to merge the created flist with. If supplied, both merged and normal flists will be uploaded, optional
         :return: the flist url
         """
-
         if j.core.platformtype.myplatform.isLinux:
             ld_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'lib64/')
             j.builder.tools.dir_ensure(ld_dest)
