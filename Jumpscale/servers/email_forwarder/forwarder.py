@@ -132,18 +132,3 @@ class MailForwarder(SMTPServer):
         """
         print("Starting forwarder on port: {}".format(self._addr_port))
         self.serve_forever()
-
-
-if __name__ == "__main__":
-    f_config = {
-        "codescalers.com": ["incubaid.com", "threefoldtech.com"]
-    }
-    r_config = {
-        "host": "smtp.gmail.com",
-        "port": 587,
-        "user": "husseina@codescalers.com",
-        "password": "abdelra7man",
-        "ssl": True
-    }
-    mf = MailForwarder("localhost", 8823, f_config, r_config)
-    mf.run()
