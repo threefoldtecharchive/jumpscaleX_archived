@@ -184,6 +184,7 @@ class group_tools(JSGroup):
         self._bash = None
         self._tfbot = None
         self._kosmos = None
+        self._open_publish = None
         self._threefold_directory = None
         self._threefoldgrid = None
 
@@ -464,6 +465,12 @@ class group_tools(JSGroup):
             from DigitalMe.tools.kosmos.kosmos_OLD.Kosmos import Kosmos
             self._kosmos =  Kosmos()
         return self._kosmos
+    @property
+    def open_publish(self):
+        if self._open_publish is None:
+            from DigitalMe.tools.openpublish.OpenPublishFactory import OpenPublishFactory
+            self._open_publish =  OpenPublishFactory()
+        return self._open_publish
     @property
     def threefold_directory(self):
         if self._threefold_directory is None:
@@ -1023,7 +1030,6 @@ class group_clients(JSGroup):
         self._btc_alpha = None
         self._openvcloud = None
         self._threefold_directory = None
-        self._open_publish = None
         self._gdrive = None
         self._graphite = None
         self._tfmux = None
@@ -1227,12 +1233,6 @@ class group_clients(JSGroup):
             from Jumpscale.clients.threefold_directory.GridCapacityFactory import GridCapacityFactory
             self._threefold_directory =  GridCapacityFactory()
         return self._threefold_directory
-    @property
-    def open_publish(self):
-        if self._open_publish is None:
-            from Jumpscale.clients.openpublish.OpenPublishFactory import OpenPublishFactory
-            self._open_publish =  OpenPublishFactory()
-        return self._open_publish
     @property
     def gdrive(self):
         if self._gdrive is None:
