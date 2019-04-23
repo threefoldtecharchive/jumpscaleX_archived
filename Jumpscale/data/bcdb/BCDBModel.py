@@ -98,10 +98,9 @@ class BCDBModel(j.application.JSBaseClass):
 
         self.schema = self.bcdb.meta.schema_set(self.schema)
 
-        # load all the objects in redis to make sure it is up to date
-        for obj in self.get_all():
-            self._index_key_set("name", obj.name, obj.id)
-
+        if not j.clients.credis_core.keys(self._redis_prefix + b"*"):
+            for model in self.get_all():
+                self._index_key_set("name", model.name, model.id)
         self._init_index()  # goal is to be overruled by users
 
     def trigger_add(self, method):
