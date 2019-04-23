@@ -88,58 +88,58 @@ class TestCases(BaseTest):
         j.builder.apps.digitalme.build(reset=True)
         j.builder.apps.digitalme.install()
         j.builder.apps.digitalme.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('openresty'))
+        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('openresty')))
         j.builder.apps.digitalme.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid('openresty'))
+        self.assertEqual(0, len(j.sal.process.getProcessPid('openresty')))
 
     def test011_bitcion(self):
         j.builder.blockchain.bitcoin.build(reset=True)
         j.builder.blockchain.bitcoin.install()
         j.builder.blockchain.bitcoin.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('bitcoin'))
+        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('bitcoin')))
         j.builder.blockchain.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid('bitcoin'))
+        self.assertEqual(0, len(j.sal.process.getProcessPid('bitcoin')))
 
     def test012_ethereum(self):
         j.builder.blockchain.ethereum.build(reset=True)
         j.builder.blockchain.ethereum.install()
         j.builder.blockchain.ethereum.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('ethereum'))
+        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('ethereum')))
         j.builder.blockchain.ethereum.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid('ethereum'))
+        self.assertEqual(0, len(j.sal.process.getProcessPid('ethereum')))
         
     
     def test013_etcd(self):
         j.builder.db.etcd.build(reset=True)
         j.builder.db.etcd.install()
         j.builder.db.etcd.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('etcd'))
+        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('etcd')))
         j.builder.db.etcd.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid('etcd'))
+        self.assertEqual(0, len(j.sal.process.getProcessPid('etcd')))
 
     def test014_capnp(self):
         j.builder.libs.capnp.build(reset=True)
         j.builder.libs.capnp.install()
         j.builder.libs.capnp.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('capnp'))
+        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('capnp')))
         j.builder.libs.capnp.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid('capnp'))
+        self.assertEqual(0, len(j.sal.process.getProcessPid('capnp')))
 
     def test015_coredns(self):
         j.builder.network.coredns.build(reset=True)
         j.builder.network.coredns.install()
         j.builder.network.coredns.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('coredns'))
+        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('coredns')))
         j.builder.network.coredns.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid('coredns'))
+        self.assertEqual(0, len(j.sal.process.getProcessPid('coredns')))
 
     def test016_zerotier(self):
         j.builder.network.zerotier.build(reset=True)
         j.builder.network.zerotier.install()
         j.builder.network.zerotier.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('zerotier'))
+        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('zerotier')))
         j.builder.network.zerotier.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid('zerotier'))
+        self.assertEqual(0, len(j.sal.process.getProcessPid('zerotier')))
         
     def test017_rust(self):
         j.builder.runtimes.rust.build(reset=True) 
@@ -149,16 +149,16 @@ class TestCases(BaseTest):
         except:
             self.assertTrue(False)
     
-    def test018_redis(self):
+    #def test018_redis(self):
 
     def test019_syncthing(self):
         j.builder.storage.syncthing.build(reset=True)
         j.builder.storage.syncthing.install()
         j.builder.storage.syncthing.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('syncthing'))
+        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('syncthing')))
         j.builder.storage.syncthing.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid('syncthing'))
+        self.assertEqual(0, len(j.sal.process.getProcessPid('syncthing')))
 
-    def test020_caddyfilemanager(self):
+    #def test020_caddyfilemanager(self):
 
     
