@@ -116,6 +116,15 @@ class MarkDownDocs(j.application.JSBaseClass):
 
         # lets make sure we have default macros
         self.macros_load()
+        self._sonic_client = None
+
+    def sonic_client_set(self, sonic_client):
+        """
+        set sonic client to be used to index docsites content
+        :param sonic_client:
+        :return:
+        """
+        self._sonic_client = sonic_client
 
     def _git_get(self, path):
         if path not in self._git_repos:
@@ -156,11 +165,11 @@ class MarkDownDocs(j.application.JSBaseClass):
         # else:
         #     self._log_debug("macros not loaded, already there")
 
-    def load(self, path="", name=""):
+    def load(self, path="", name="", sonic_client=None):
         self.macros_load()
         if path.startswith("http"):
             path = j.clients.git.getContentPathFromURLorPath(path, pull=True)
-        ds = DocSite(path=path, name=name)
+        ds = DocSite(path=path, name=name, sonic_client=sonic_client or self._sonic_client)
         self.docsites[ds.name] = ds
         return self.docsites[ds.name]
 
@@ -254,7 +263,7 @@ class MarkDownDocs(j.application.JSBaseClass):
         else:
             return None
 
-    def webserver(self, watch=True, branch='master'):
+    def webserver(self, watch=True, branch='master', sonic_server=None):
         url = "https://github.com/threefoldfoundation/lapis-wiki"
         server_path = j.clients.git.getContentPathFromURLorPath(url)
         url = "https://github.com/threefoldtech/jumpscale_weblibs"

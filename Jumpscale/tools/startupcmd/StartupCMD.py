@@ -9,7 +9,7 @@ class StartupCMD(j.application.JSBaseDataObjClass):
         @url = jumpscale.startupcmd.1
         name* = ""
         cmd_start = ""
-        interpreter = "bash,jumpscale" (E) 
+        interpreter = "bash,jumpscale" (E)
         cmd_stop = ""
         debug = False (b)
         path = ""
@@ -28,7 +28,8 @@ class StartupCMD(j.application.JSBaseDataObjClass):
     @property
     def _pane(self):
         if self._pane_ is None:
-            self._pane_ = j.tools.tmux.pane_get(window=self.name, pane="main", reset=False)
+            self._pane_ = j.tools.tmux.pane_get(
+                window=self.name, pane="main", reset=False)
         return self._pane_
 
     @property
@@ -62,7 +63,8 @@ class StartupCMD(j.application.JSBaseDataObjClass):
     def stop(self):
         self._log_warning("stop:\n%s" % self.name)
         if self.cmd_stop:
-            cmd = j.tools.jinja2.template_render(text=self.cmd_stop, args=self.data._ddict)
+            cmd = j.tools.jinja2.template_render(
+                text=self.cmd_stop, args=self.data._ddict)
             self._log_warning("stopcmd:%s" % cmd)
             rc, out, err = j.sal.process.execute(cmd, die=False)
             time.sleep(0.2)
@@ -120,7 +122,7 @@ class StartupCMD(j.application.JSBaseDataObjClass):
                     if self.process.status().casefold() in ['running', 'sleeping', 'idle']:
                         self._log_info("IS RUNNING %s" % self.name)
                         return True
-                elif self.daemon==False:
+                elif self.daemon == False:
                     return True
             else:
                 nr = 0
@@ -142,13 +144,14 @@ class StartupCMD(j.application.JSBaseDataObjClass):
             self._pane.kill()
         else:
             if self.running:
-                self._log_info("no need to start was already started:%s" % self.name)
+                self._log_info(
+                    "no need to start was already started:%s" % self.name)
                 return
 
         self._pid = None
 
-        if self.interpreter=="bash":
-            C = """         
+        if self.interpreter == "bash":
+            C = """
             reset
             tmux clear
             clear
@@ -161,38 +164,35 @@ class StartupCMD(j.application.JSBaseDataObjClass):
             {% if cmdpath != None %}
             cd {{cmdpath}}
             {% endif %}
-            {{cmd}} 
-    
+            {{cmd}}
+
             """
         else:
             C = """
             from Jumpscale import j
             {% if cmdpath != None %}
             #cd {{cmdpath}}
-            {% endif %}            
-            {{cmd}}          
+            {% endif %}
+            {{cmd}}
             """
-
 
         C2 = j.core.text.strip(C)
         C3 = j.tools.jinja2.template_render(text=C2, args=self.env, cmdpath=self.path,
                                             cmd=self.cmd_start, name=self.name)
 
-        #NEED TO BE CAREFUL< THINGS WILL FAIL IF WE ENABLE AGAIN
+        # NEED TO BE CAREFUL< THINGS WILL FAIL IF WE ENABLE AGAIN
         # if self.interpreter == "bash":
         #     # C3 = C3.replace("\"", "'").replace("''", "'")
         #     C3 = C3.replace("\"", "'")
 
         self._log_debug("\n%s" % C3)
 
-
-        if self.interpreter=="bash":
+        if self.interpreter == "bash":
             tpath = self._cmd_path+".sh"
-        elif self.interpreter=="jumpscale":
+        elif self.interpreter == "jumpscale":
             tpath = self._cmd_path+".py"
         else:
             raise RuntimeError("only jumpscale or bash supported")
-
 
         j.sal.fs.writeFile(tpath, C3+"\n\n")
         j.sal.fs.chmod(tpath, 0o770)
@@ -200,7 +200,7 @@ class StartupCMD(j.application.JSBaseDataObjClass):
         if "__" in self._pane.name:
             self._pane.kill()
 
-        if self.interpreter=="bash":
+        if self.interpreter == "bash":
             self._pane.execute("source %s" % tpath)
         else:
             if self.debug:
@@ -210,4 +210,4 @@ class StartupCMD(j.application.JSBaseDataObjClass):
 
         if checkrunning:
             running = self.wait_running()
-            assert self.running
+            assert running

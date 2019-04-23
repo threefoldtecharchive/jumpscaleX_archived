@@ -21,11 +21,23 @@ class BuilderPython(j.builder.system._BaseClass):
         self.DIR_SANDBOX = j.core.tools.text_replace("{DIR_VAR}/build/sandbox_python/")
         j.sal.fs.createDir(self.DIR_SANDBOX)
 
+    @builder_method()
     def clean(self):
         self._remove("{DIR_BUILD}")
         self._remove(self.DIR_CODE_L)
         self._remove(self.DIR_SANDBOX)
 
+        C = """
+        set -ex
+        rm -rf {DIR_CODE_L}/cpython
+        """
+        self._execute(C)
+    
+    @builder_method()
+    def reset(self):
+        super().reset()
+        self.clean()
+        
     @builder_method()
     def build(self, tag="v3.6.7"): # default "v3.6.7" else may cause locals problem
         """
