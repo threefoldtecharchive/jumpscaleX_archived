@@ -58,6 +58,7 @@ class group_tools(JSGroup):
     def __init__(self):
         
         self._kosmos = None
+        self._open_publish = None
         self._tfbot = None
         self._threefold_directory = None
         self._threefoldgrid = None
@@ -113,6 +114,12 @@ class group_tools(JSGroup):
             from DigitalMe.tools.kosmos.kosmos_OLD.Kosmos import Kosmos
             self._kosmos =  Kosmos()
         return self._kosmos
+    @property
+    def open_publish(self):
+        if self._open_publish is None:
+            from DigitalMe.tools.openpublish.OpenPublishFactory import OpenPublishFactory
+            self._open_publish =  OpenPublishFactory()
+        return self._open_publish
     @property
     def tfbot(self):
         if self._tfbot is None:
@@ -606,7 +613,6 @@ class group_clients(JSGroup):
         self._credis_core = None
         self._redis = None
         self._zboot = None
-        self._open_publish = None
         self._google_compute = None
         self._ipmi = None
         self._racktivity = None
@@ -765,12 +771,6 @@ class group_clients(JSGroup):
             from Jumpscale.clients.zero_boot.ZerobootFactory import ZerobootFactory
             self._zboot =  ZerobootFactory()
         return self._zboot
-    @property
-    def open_publish(self):
-        if self._open_publish is None:
-            from Jumpscale.clients.openpublish.OpenPublishFactory import OpenPublishFactory
-            self._open_publish =  OpenPublishFactory()
-        return self._open_publish
     @property
     def google_compute(self):
         if self._google_compute is None:
