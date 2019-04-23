@@ -98,9 +98,9 @@ class BCDBModel(j.application.JSBaseClass):
 
         self.schema = self.bcdb.meta.schema_set(self.schema)
 
-        if not j.clients.credis_core.keys(self._redis_prefix + b"*"):
-            for model in self.get_all():
-                self._index_key_set("name", model.name, model.id)
+        # load all objects in redis
+        for obj in self.get_all():
+            self._index_key_set("name", obj.name, obj.id)
         self._init_index()  # goal is to be overruled by users
 
     def trigger_add(self, method):
@@ -291,9 +291,6 @@ class BCDBModel(j.application.JSBaseClass):
             # means there is already one
             self._log_debug("get key(exists):%s" % key)
             ids = j.data.serializers.msgpack.loads(r)
-            for model in self.get_all():
-                if "name__" + model.name == key:
-                    ids = [model.id]
 
         else:
             self._log_debug("get key(new):%s" % key)
