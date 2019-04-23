@@ -149,5 +149,16 @@ class TestCases(BaseTest):
         except:
             self.assertTrue(False)
     
+    def test018_redis(self):
+
+    def test019_syncthing(self):
+        j.builder.storage.syncthing.build(reset=True)
+        j.builder.storage.syncthing.install()
+        j.builder.storage.syncthing.start()
+        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('syncthing'))
+        j.builder.storage.syncthing.stop()
+        self.assertEqual(0, len(j.sal.process.getProcessPid('syncthing'))
+
+    def test020_caddyfilemanager(self):
 
     
