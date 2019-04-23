@@ -1,0 +1,8 @@
+[startup.mystartup]
+name = "core.system"
+
+[startup.mystartup.args]
+name = "bash"
+args = [
+    "/bot_startup.sh"
+]

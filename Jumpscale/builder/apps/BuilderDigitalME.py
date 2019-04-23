@@ -30,12 +30,12 @@ class BuilderDigitalME(j.builder.system._BaseClass):
         """
         j.builder.runtimes.python.build(reset=reset)
         j.builder.runtimes.lua.build()  # will build openresty & lua & openssl
-        j.clients.git.pullGitRepo(url="https://github.com/threefoldtech/digitalmeX.git", branch="development")
+        j.clients.git.pullGitRepo(url="https://github.com/threefoldtech/digitalmeX.git", branch="3bot_registeration")
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
-        j.builder.runtimes.python.sandbox()
-        j.builder.runtimes.lua.sandbox()
+        j.builder.runtimes.python.sandbox(reset=reset)
+        j.builder.runtimes.lua.sandbox(reset=reset)
         j.tools.sandboxer.copyTo(j.builder.runtimes.python.DIR_SANDBOX, "{}/sandbox".format(self.DIR_SANDBOX))
         j.tools.sandboxer.copyTo(j.builder.runtimes.lua.DIR_SANDBOX,  self.DIR_SANDBOX)
         git_repo_path = "/sandbox/code/github/threefoldtech/digitalmeX"
