@@ -1,7 +1,8 @@
 # Sonic server client
-    
+Sonic is a fast, lightweight and schema-less search backend. It ingests search texts and identifier tuples that can then be queried against in a microsecond's time.
+read the docs [here](https://github.com/valeriansaliou/sonic)
 ## usage example:
-
+first make sure that you have sonic server running
 ```python
     data = { 
          'post:1': "this is some test text hello", 
