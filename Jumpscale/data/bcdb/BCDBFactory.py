@@ -194,8 +194,6 @@ class BCDBFactory(j.application.JSBaseClass):
                 m.save()
                 model_s.delete()
                 # create new one
-        schema = j.data.bcdb.latest.meta.schema_get_from_url(second_url)
-        j.data.bcdb.latest.meta._migrate_meta(schema)
 
     def test(self, name=""):
         """
