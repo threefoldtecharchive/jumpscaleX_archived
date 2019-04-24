@@ -3,6 +3,7 @@ from concurrent.futures import ThreadPoolExecutor, wait
 import requests
 from configparser import ConfigParser
 from Jumpscale.tools.googleslides.slides2html.google_links_utils import get_slide_id, get_presentation_id, link_info
+from Jumpscale import j
 
 # logging.basicConfig()
 # logger = logging.getLogger('downloader')
@@ -40,9 +41,6 @@ def download_entry(entry, destdir="/tmp"):
     print("Metapath: ", metapath)
     with open(metapath, 'w') as f:
         f.write("".join(slide_meta))
-    if slide_title:
-        with open("{}/{}".format(destdir, "presentation.meta"), "a") as f:
-            f.write("{} = {}\n".format(slide_title, save_as))
 
     download_one(url, destfile)
 
@@ -130,6 +128,7 @@ class Downloader:
                 if len(parts) == 2:
                     return parts[1].strip()
         return None
+
     def get_background(self, slidelink, destdir):
         presentation_id, background_slide_id = link_info(slidelink)
 
@@ -199,6 +198,17 @@ class Downloader:
             parser.write(metafile)
 
         download_entries(entries, destdir)
+        presentations_meta_path = "{}/{}".format(destdir, "presentations.meta.json")
+        if not j.sal.fs.exists(presentations_meta_path):
+            j.data.serializers.json.dump(presentations_meta_path, {})
+        presentation_meta = {}
+        for entry in entries:
+            _, save_as, _, slide_title, _ = entry
+            if slide_title:
+                presentation_meta[slide_title] = save_as
 
+        meta = j.data.serializers.json.load(presentations_meta_path)
+        meta[self.presentation_id] = presentation_meta
+        j.data.serializers.json.dump(presentations_meta_path, meta)
         print("done downloading.")
         return (entries, destdir)
