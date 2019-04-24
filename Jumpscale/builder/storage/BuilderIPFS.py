@@ -24,10 +24,10 @@ class BuilderIPFS(j.builder.system._BaseClass):
             url = "https://dist.ipfs.io/go-ipfs/v0.4.4/go-ipfs_v0.4.4_darwin-amd64.tar.gz"
 
         name = url.split('/')[-1]
-        compress_path = j.core.tools.text_replace('{DIR_TEMP}/{}'.format(name))
+        compress_path = self._replace('{DIR_TEMP}/{}'.format(name))
         j.builder.tools.file_download(url, compress_path)
 
-        uncompress_path = j.core.tools.text_replace('{DIR_TEMP}/go-ipfs')
+        uncompress_path = self._replace('{DIR_TEMP}/go-ipfs')
         if j.builder.tools.file_exists(uncompress_path):
             j.builder.tools.dir_remove(uncompress_path)
 

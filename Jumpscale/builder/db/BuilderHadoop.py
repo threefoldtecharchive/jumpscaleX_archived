@@ -17,7 +17,7 @@ class BuilderHadoop(j.builder.system._BaseClass):
             tar -xf hadoop-2.7.2.tar.gz -C /opt/
             """
             C = j.builder.tools.replace(C)
-            C = j.core.tools.text_replace(C)
+            C = self._replace(C)
             j.sal.process.execute(C, profile=True)
             #j.builder.sandbox.path_add("/opt/hadoop-2.7.2/bin")
             #j.builder.sandbox.path_add("/opt/hadoop-2.7.2/sbin")

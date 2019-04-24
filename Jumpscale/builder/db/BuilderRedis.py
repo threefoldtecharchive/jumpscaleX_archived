@@ -43,7 +43,7 @@ class BuilderRedis(j.builder.system._BaseClass):
             rm -f /usr/local/bin/redis-cli
             """
             C = j.builder.tools.replace(C)
-            C = j.core.tools.text_replace(C)
+            C = self._replace(C)
             j.sal.process.execute(C)
 
             # move action
@@ -55,7 +55,7 @@ class BuilderRedis(j.builder.system._BaseClass):
             rm -rf {DIR_BASE}/apps/redis
             """
             C = j.builder.tools.replace(C)
-            C = j.core.tools.text_replace(C)
+            C = self._replace(C)
             j.sal.process.execute(C)
         else:
             raise j.exceptions.NotImplemented(message="only ubuntu supported for building redis")
@@ -95,7 +95,7 @@ class BuilderRedis(j.builder.system._BaseClass):
         _, c_path = self._get_paths(name)
 
         cmd = "{DIR_BIN}/redis-server %s" % c_path
-        cmd = j.core.tools.text_replace(cmd)
+        cmd = self._replace(cmd)
         pm = j.builder.system.processmanager.get()
         pm.ensure(name="redis_%s" % name, cmd=cmd,
                   env={}, path='{DIR_BIN}', autostart=True)
@@ -117,7 +117,7 @@ class BuilderRedis(j.builder.system._BaseClass):
         else:
             raise j.exceptions.RuntimeError("can't connect to redis")
 
-        ping_cmd = j.core.tools.text_replace(ping_cmd)
+        ping_cmd = self._replace(ping_cmd)
         if password is not None and password.strip():
             ping_cmd += ' -a %s ' % password
         ping_cmd += ' ping'

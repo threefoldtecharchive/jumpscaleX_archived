@@ -372,6 +372,10 @@ class BuilderBaseClass(BaseClass):
 
     @property
     def startup_cmds(self):
+        """
+        is list if j.tools.startupcmd...
+        :return:
+        """
         return []
 
     def start(self):

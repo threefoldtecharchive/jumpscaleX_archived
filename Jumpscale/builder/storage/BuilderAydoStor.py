@@ -42,7 +42,7 @@ class BuilderAydoStor(j.builder.system._BaseClass):
         pm.stop("stor")  # will also kill
 
         j.core.tools.dir_ensure("{DIR_BASE}/cfg/stor")
-        backend = j.core.tools.text_replace(backend)
+        backend = self._replace(backend)
         j.core.tools.dir_ensure(backend)
         config = {
             'listen_addr': addr,

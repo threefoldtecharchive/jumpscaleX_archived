@@ -32,7 +32,7 @@ class BuilderWordpress(j.builder.system._BaseClass):
         #4- nstall wp-cli
         url = "https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar"
         cli_path = "/usr/local/bin/wp"
-        cli_path = j.core.tools.text_replace(cli_path)
+        cli_path = self._replace(cli_path)
         j.builder.tools.file_download(url=url, to=cli_path, overwrite=True, retry=3, timeout=0, removeTopDir=False)
 
         j.builder.executor.execute('chmod +x %s' % cli_path)

@@ -46,10 +46,10 @@ class BuilderPHP(j.builder.system._BaseClass):
             mv {DIR_TEMP}/php-7.3.0/ {DIR_TEMP}/php
             """
 
-            C = j.core.tools.text_replace(C)
+            C = self._replace(C)
             j.sal.process.execute(C)
 
-            compileconfig['with_apxs2'] = j.core.tools.text_replace("{DIR_APPS}/apache2/bin/apxs")
+            compileconfig['with_apxs2'] = self._replace("{DIR_APPS}/apache2/bin/apxs")
             buildconfig = deepcopy(compileconfig)
             buildconfig.update(config)  # should be defaultconfig.update(config) instead of overriding the explicit ones.
 
@@ -65,13 +65,13 @@ class BuilderPHP(j.builder.system._BaseClass):
                     args_string += " --{k}".format(k=k)
                 else:
                     args_string += " --{k}={v}".format(k=k, v=v)
-            args_string = j.core.tools.text_replace(args_string)
+            args_string = self._replace(args_string)
             C = """cd {DIR_TEMP}/php && ./configure %s""" % args_string
-            C = j.core.tools.text_replace(C)
+            C = self._replace(C)
             j.sal.process.execute(C)
 
             C = """cd {DIR_TEMP}/php && make"""
-            C = j.core.tools.text_replace(C)
+            C = self._replace(C)
             j.sal.process.execute(C)
         else:
             raise j.exceptions.NotImplemented(
@@ -109,19 +109,19 @@ class BuilderPHP(j.builder.system._BaseClass):
         C = """
         cd {DIR_TEMP}/php && make install
         """
-        C = j.core.tools.text_replace(C)
+        C = self._replace(C)
         j.sal.process.execute(C)
 
-        j.core.tools.dir_ensure(j.core.tools.text_replace(
+        j.core.tools.dir_ensure(self._replace(
             "{DIR_APPS}/php/etc/php-fpm.d"))
         
-        fpmdefaultconf = j.core.tools.text_replace(fpmdefaultconf)
-        fpmwwwconf = j.core.tools.text_replace(fpmwwwconf)
+        fpmdefaultconf = self._replace(fpmdefaultconf)
+        fpmwwwconf = self._replace(fpmwwwconf)
         j.sal.fs.writeFile("{DIR_APPS}/php/etc/php-fpm.conf", contents=fpmdefaultconf)
         j.sal.fs.writeFile("{DIR_APPS}/php/etc/php-fpm.d/www.conf", contents=fpmwwwconf)
 
-        php_tmp_path = j.core.tools.text_replace("{DIR_TEMP}/php")
-        php_app_path = j.core.tools.text_replace("{DIR_APPS}/php")
+        php_tmp_path = self._replace("{DIR_TEMP}/php")
+        php_app_path = self._replace("{DIR_APPS}/php")
         j.sal.fs.copyFile(j.sal.fs.joinPaths(
             php_tmp_path, 'php.ini-development'),
             j.sal.fs.joinPaths(php_app_path, 'php.ini'))
@@ -140,7 +140,7 @@ class BuilderPHP(j.builder.system._BaseClass):
         cp {DIR_APPS}/php/bin/* {DIR_BIN}
         cp {DIR_APPS}/php/sbin/* {DIR_BIN}
         """
-        C = j.core.tools.text_replace(C)
+        C = self._replace(C)
         j.sal.process.execute(C)
         
         if start:
@@ -148,7 +148,7 @@ class BuilderPHP(j.builder.system._BaseClass):
 
     def start(self):
         phpfpmcmd = "%s -F -y {DIR_APPS}/php/etc/php-fpm.conf" % self.NAME  # foreground
-        phpfpmcmd = j.core.tools.text_replace(phpfpmcmd)
+        phpfpmcmd = self._replace(phpfpmcmd)
         j.tools.tmux.execute(phpfpmcmd, window=self.NAME, pane=self.NAME, reset=True)
         
 

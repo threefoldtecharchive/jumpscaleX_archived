@@ -7,7 +7,7 @@ class BuilderBitcoin(j.builder.system._BaseClass):
 
     def _init(self):
         self.DIR_BUILD = self._replace("{DIR_VAR}/build/bitcoin")
-        j.sal.fs.createDir(self.DIR_BUILD)
+        self.tools.dir_ensure(self.DIR_BUILD)
 
     @builder_method()
     def build(self): 

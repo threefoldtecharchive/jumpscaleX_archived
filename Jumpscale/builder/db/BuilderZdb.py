@@ -41,8 +41,8 @@ class BuilderZdb(j.builder.system._BaseClass):
         adminsecret = '123456'
         idir = '{}/index/'.format(datadir)
         ddir = '{}/data/'.format(datadir)
-        j.sal.fs.createDir(idir)
-        j.sal.fs.createDir(ddir)
+        self.tools.dir_ensure(idir)
+        self.tools.dir_ensure(ddir)
         cmd = '/sandbox/bin/zdb --listen {} --port {} --index {} --data {} --mode {} --admin {} --protect'.format(
             addr, port, idir, ddir, mode, adminsecret)
         cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]

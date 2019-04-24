@@ -9,14 +9,14 @@ class BuilderBtrfsProgs(BuilderApp):
 
     def _init(self):
         # if the module builds something, define BUILDDIR and CODEDIR folders.
-        self.BUILDDIR = j.core.tools.text_replace("{DIR_VAR}/build/btrfs-progs/")
-        self.CODEDIR = j.core.tools.text_replace("{DIR_CODE}")
+        self.BUILDDIR = self._replace("{DIR_VAR}/build/btrfs-progs/")
+        self.CODEDIR = self._replace("{DIR_CODE}")
 
         self._host = "https://www.kernel.org/pub/linux/kernel/people/kdave/btrfs-progs"
         self._file = "btrfs-progs-v4.8.tar.xz"
 
     def _run(self, command):
-        return j.sal.process.execute(j.core.tools.text_replace(command))
+        return j.sal.process.execute(self._replace(command))
 
     def reset(self):
         """
@@ -50,9 +50,9 @@ class BuilderBtrfsProgs(BuilderApp):
 
     def install(self, reset=False):
         # copy binaries, shared librairies, configuration templates,...
-        j.builder.tools.file_copy(j.core.tools.text_replace("{DIR_VAR}/build/bin/btrfs"), '{DIR_BIN}')
+        j.builder.tools.file_copy(self._replace("{DIR_VAR}/build/bin/btrfs"), '{DIR_BIN}')
 
-        j.builder.tools.file_copy(j.core.tools.text_replace("{DIR_VAR}/build/lib/libbtrfs.so"), '$LIBDIR')
+        j.builder.tools.file_copy(self._replace("{DIR_VAR}/build/lib/libbtrfs.so"), '$LIBDIR')
         self._run("cd $LIBDIR; ln -s libbtrfs.so libbtrfs.so.0.1")
         self._run("cd $LIBDIR; ln -s libbtrfs.so libbtrfs.so.0")
 

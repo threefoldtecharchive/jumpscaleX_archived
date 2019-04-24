@@ -6,8 +6,8 @@ from Jumpscale import j
 class BuilderLibffi(j.builder.system._BaseClass):
 
     def _init(self):
-        self.BUILDDIRL = j.core.tools.text_replace("{DIR_VAR}/build/libffi")
-        self.CODEDIRL = j.core.tools.text_replace("{DIR_VAR}/build/code/libffi")
+        self.BUILDDIRL = self._replace("{DIR_VAR}/build/libffi")
+        self.CODEDIRL = self._replace("{DIR_VAR}/build/code/libffi")
 
     def reset(self):
         base.reset(self)
@@ -41,7 +41,7 @@ class BuilderLibffi(j.builder.system._BaseClass):
             make
             make install
             """
-            j.sal.fs.writeFile("%s/mycompile_all.sh" % self.CODEDIRL, j.core.tools.text_replace(C))
+            j.sal.fs.writeFile("%s/mycompile_all.sh" % self.CODEDIRL, self._replace(C))
             self._log_info("compile libffi")
             self._log_debug(C)
             j.sal.process.execute("sh %s/mycompile_all.sh" % self.CODEDIRL)            

@@ -6,32 +6,26 @@ class BuilderPython(j.builder.system._BaseClass):
 
     def _init(self):
 
-        self.DIR_BUILD = j.core.tools.text_replace("{DIR_VAR}/build/python3")
-        j.sal.fs.createDir(self.DIR_BUILD)
+        self.DIR_BUILD = self._replace("{DIR_VAR}/build/python3")
+        self.tools.dir_ensure(self.DIR_BUILD)
 
-        self.DIR_CODE_L = j.core.tools.text_replace("{DIR_VAR}/build/code/python3")
-        j.sal.fs.createDir(self.DIR_CODE_L)
+        self.DIR_CODE_L = self._replace("{DIR_VAR}/build/code/python3")
+        self.tools.dir_ensure(self.DIR_CODE_L)
 
         if not j.core.platformtype.myplatform.isMac:
-            self.PATH_OPENSSL = j.core.tools.text_replace("{DIR_VAR}/build/openssl")
+            self.PATH_OPENSSL = self._replace("{DIR_VAR}/build/openssl")
         else:
             rc,out,err=j.sal.process.execute("brew --prefix openssl")
             self.PATH_OPENSSL=out.strip()
 
-        self.DIR_SANDBOX = j.core.tools.text_replace("{DIR_VAR}/build/sandbox_python/")
-        j.sal.fs.createDir(self.DIR_SANDBOX)
+        self.DIR_SANDBOX = self._replace("{DIR_VAR}/build/sandbox_python/")
+        self.tools.dir_ensure(self.DIR_SANDBOX)
 
     @builder_method()
     def clean(self):
         self._remove("{DIR_BUILD}")
         self._remove(self.DIR_CODE_L)
         self._remove(self.DIR_SANDBOX)
-
-        C = """
-        set -ex
-        rm -rf {DIR_CODE_L}/cpython
-        """
-        self._execute(C)
     
     @builder_method()
     def reset(self):
@@ -262,7 +256,7 @@ class BuilderPython(j.builder.system._BaseClass):
         """
         path=self._replace("{DIR_SANDBOX}/bin/")
         j.tools.sandboxer.libs_sandbox(path,path,True)
-        path=j.core.tools.text_replace("{DIR_SANDBOX}/lib/pythonbin/",args=self.__dict__)
+        path=self._replace("{DIR_SANDBOX}/lib/pythonbin/",args=self.__dict__)
         j.tools.sandboxer.libs_sandbox(path,path,True)
 
     def _copy2sandbox_github(self):
@@ -292,10 +286,10 @@ class BuilderPython(j.builder.system._BaseClass):
         dest = self.DIR_SANDBOX
 
         # j.sal.fs.remove(dest)
-        # j.sal.fs.createDir(dest)
+        # self.tools.dir_ensure(dest)
 
         for item in ["bin", "root", "lib"]:
-            j.sal.fs.createDir("%s/%s" % (dest, item))
+            self.tools.dir_ensure("%s/%s" % (dest, item))
 
         for item in ["pip3", "python3.7", "ipython", "bpython", "electrum", "pudb3", "zrobot"]:
             src0 = "%s/bin/%s" % (path, item)
@@ -396,7 +390,7 @@ class BuilderPython(j.builder.system._BaseClass):
     
             """
 
-        C = j.core.tools.text_replace(C, args=self.__dict__)
+        C = self._replace(C, args=self.__dict__)
         j.sal.process.execute(C)
 
         self._log_info("copy to sandbox done")
@@ -417,7 +411,7 @@ class BuilderPython(j.builder.system._BaseClass):
         path = j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_base.git")
         src0 = "%s/lib/python" % self.DIR_SANDBOX
         dest0 = "%s/base/lib/python" % path
-        j.sal.fs.createDir(dest0)
+        self.tools.dir_ensure(dest0)
 
         j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
                              ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
@@ -427,7 +421,7 @@ class BuilderPython(j.builder.system._BaseClass):
             path = j.clients.git.getContentPathFromURLorPath(url)
             src0 = "%s/lib/pythonbin/" % self.DIR_SANDBOX
             dest0 = "%s/base/lib/pythonbin/" % path
-            j.sal.fs.createDir(dest0)
+            self.tools.dir_ensure(dest0)
             j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
                                  ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
 
@@ -436,7 +430,7 @@ class BuilderPython(j.builder.system._BaseClass):
             path = j.clients.git.getContentPathFromURLorPath(url)
             src0 = "%s/lib/pythonbin/" % self.DIR_SANDBOX
             dest0 = "%s/base/lib/pythonbin/" % path
-            j.sal.fs.createDir(dest0)
+            self.tools.dir_ensure(dest0)
             j.sal.fs.copyDirTree(src0, dest0, keepsymlinks=False, deletefirst=False, overwriteFiles=True,
                                  ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=True)
 
@@ -472,7 +466,7 @@ class BuilderPython(j.builder.system._BaseClass):
     #
     # def pip_ensure(self):
     #
-    #     tmpdir = j.core.tools.text_replace("{DIR_TEMP}")
+    #     tmpdir = self._replace("{DIR_TEMP}")
     #     cmd1 = """
     #         #important remove olf pkg_resources, will conflict with new pip
     #         rm -rf /usr/lib/python3/dist-packages/pkg_resources

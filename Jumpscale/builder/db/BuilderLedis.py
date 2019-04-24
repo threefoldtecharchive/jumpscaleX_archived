@@ -28,12 +28,12 @@ class BuilderLedis(j.builder.system._BaseClass):
                                            dest="{DIR_BASE}/go/src/github.com/siddontang/ledisdb")
 
             # set the backend in the server config
-            ledisdir = j.core.tools.text_replace(
+            ledisdir = self._replace(
                 "{DIR_BASE}/go/src/github.com/siddontang/ledisdb")
 
             configcontent = j.core.tools.file_text_read(
                 os.path.join(ledisdir, "config", "config.toml"))
-            ledisdir = j.core.tools.text_replace(
+            ledisdir = self._replace(
                 "{DIR_BASE}/go/src/github.com/siddontang/ledisdb")
 
             if backend == "rocksdb":
@@ -58,7 +58,7 @@ class BuilderLedis(j.builder.system._BaseClass):
     def _prepareleveldb(self):
         # execute the build script in tools/build_leveldb.sh
         # it will install snappy/leveldb in /usr/local{snappy/leveldb} directories
-        ledisdir = j.core.tools.text_replace("{DIR_BASE}/go/src/github.com/siddontang/ledisdb")
+        ledisdir = self._replace("{DIR_BASE}/go/src/github.com/siddontang/ledisdb")
         # leveldb_build file : ledisdir/tools/build_leveldb.sh
         rc, out, err = j.sal.process.execute(
             "bash {ledisdir}/tools/build_leveldb.sh".format(ledisdir=ledisdir))
@@ -71,7 +71,7 @@ class BuilderLedis(j.builder.system._BaseClass):
         if self._done_check("install", reset):
             return
 
-        ledisdir = j.core.tools.text_replace("{DIR_BASE}/go/src/github.com/siddontang/ledisdb")
+        ledisdir = self._replace("{DIR_BASE}/go/src/github.com/siddontang/ledisdb")
 
         #rc, out, err = j.sal.process.execute("cd {ledisdir} && source dev.sh && make install".format(ledisdir=ledisdir), profile=True)
         j.core.tools.dir_ensure("{DIR_VAR}/templates/cfg")

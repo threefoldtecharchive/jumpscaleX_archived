@@ -390,7 +390,9 @@ class JSBase:
             else:
                 try:
                     logdict["context"] = self._key
-                except:
+                except Exception as e:
+                    from pudb import set_trace; set_trace()
+                    logdict["context"] = ""
                     pass #TODO:*1 is not good
             logdict["cat"] = cat
 

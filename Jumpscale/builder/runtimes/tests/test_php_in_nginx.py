@@ -51,14 +51,14 @@ def test_main(self=None):
     if not j.sal.process.checkInstalled(j.builder.runtimes.php.NAME):
         j.builder.runtimes.php.build(install=True)
     try:
-        www_path = j.core.tools.text_replace(
+        www_path = self._replace(
             "{DIR_TEMP}/www/html"
         )
         j.core.tools.dir_ensure(www_path)
         default_enabled_sites_conf = get_test_nginx_site(www_path)
-        default_site_path = j.core.tools.text_replace(
+        default_site_path = self._replace(
             "{DIR_APPS}/nginx/conf/sites-enabled/default")
-        default_site_backup_path = j.core.tools.text_replace("{DIR_TEMP}/default_nginx_site.bak")
+        default_site_backup_path = self._replace("{DIR_TEMP}/default_nginx_site.bak")
         j.sal.fs.moveFile(default_site_path, default_site_backup_path)
         j.sal.fs.writeFile(default_site_path, contents=default_enabled_sites_conf)
         j.sal.fs.writeFile(j.sal.fs.joinPaths(www_path, 'index.php'),

@@ -49,7 +49,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         # will make sure jumpscale has been installed (&base)
         j.builder.development.js8.install()
 
-        dest = j.core.tools.text_replace('{DIR_CODE}/github/threefoldtech/jumpscale_smartproxy')
+        dest = self._replace('{DIR_CODE}/github/threefoldtech/jumpscale_smartproxy')
        j.clients.git.pullGitRepo("git@github.com:despiegk/smartproxy.git", dest=dest)
 
         j.builder.tools.upload("{DIR_CODE}/github/threefoldtech/jumpscale_smartproxy")

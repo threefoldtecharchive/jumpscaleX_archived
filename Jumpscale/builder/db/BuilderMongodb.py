@@ -40,7 +40,7 @@ class BuilderMongodb(j.builder.system._BaseClass):
             tarpaths = j.builder.tools.find(
                 "{DIR_TEMP}", recursive=False, pattern="*mongodb*.tgz", type='f')
             if len(tarpaths) == 0:
-                raise j.exceptions.Input(message="could not download:%s, did not find in %s" % (url, j.core.tools.text_replace("{DIR_TEMP}")))
+                raise j.exceptions.Input(message="could not download:%s, did not find in %s" % (url, self._replace("{DIR_TEMP}")))
             tarpath = tarpaths[0]
             j.builder.tools.file_expand(tarpath, "{DIR_TEMP}")
 

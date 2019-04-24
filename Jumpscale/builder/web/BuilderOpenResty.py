@@ -211,14 +211,14 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         args = {}
         args["CODE_SB_BIN"] = CODE_SB_BIN
         args["CODE_SB_BASE"] = CODE_SB_BASE
-        args["SRCBINDIR"] = j.core.tools.text_replace("{DIR_BASE}/openresty/bin")
-        args["BINDIR"] = j.core.tools.text_replace("{DIR_BASE}/bin")
+        args["SRCBINDIR"] = self._replace("{DIR_BASE}/openresty/bin")
+        args["BINDIR"] = self._replace("{DIR_BASE}/bin")
 
         self.tools.execute(C, args=args)
 
     @property
     def startup_cmds(self):
-        test_dir = j.core.tools.text_replace('{DIR_TEMP}/lapis_test')
+        test_dir = self._replace('{DIR_TEMP}/lapis_test')
         if self.tools.exists(test_dir):
             self.tools.dir_remove(test_dir)
         self.tools.dir_ensure(test_dir)

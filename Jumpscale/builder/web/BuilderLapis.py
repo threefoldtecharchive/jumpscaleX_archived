@@ -8,7 +8,7 @@ class BuilderLapis(j.builder.system._BaseClass):
     NAME = 'lapis'
 
     def _init(self):
-        self.BUILDDIR = j.core.tools.text_replace('{DIR_VAR}/build/')
+        self.BUILDDIR = self._replace('{DIR_VAR}/build/')
         self.bins = [
             '/bin/mkdir',
             '/bin/touch',

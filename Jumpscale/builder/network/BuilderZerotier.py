@@ -8,7 +8,7 @@ builder_method = j.builder.system.builder_method
 class BuilderZerotier(j.builder.system._BaseClass):
 
     def _init(self):
-        self.DIR_BUILD = j.core.tools.text_replace("{DIR_VAR}/build/zerotier/")
+        self.DIR_BUILD = self._replace("{DIR_VAR}/build/zerotier/")
         self.CLI = '/sandbox/bin/zerotier-cli'
 
 

@@ -8,7 +8,7 @@ class BuilderRestic(j.builder.system._BaseClass):
     NAME = 'restic'
 
     def _init(self):
-        self.BUILDDIR = j.core.tools.text_replace("{DIR_VAR}/build/restic")
+        self.BUILDDIR = self._replace("{DIR_VAR}/build/restic")
         self.DOWNLOAD_DEST = '{}/linux_amd64.bz2'.format(self.BUILDDIR)
         self.FILE_NAME = '{}/linux_amd64'.format(self.BUILDDIR)
 

@@ -17,6 +17,10 @@ class BuilderTools(j.builder.system._BaseClass):
 
         self._cd = '/tmp'
 
+    def _replace(self,txt):
+        return j.core.tools.text_replace(txt)
+
+
     def shell_safe(self, path):
         SHELL_ESCAPE = " '\";`|"
         """Makes sure that the given path/string is escaped and safe for shell"""
@@ -33,7 +37,7 @@ class BuilderTools(j.builder.system._BaseClass):
         """
         @format py3, bash
         """
-        text = j.core.tools.text_replace(text)
+        text = self._replace(text)
         return j.core.text.print(text, lexer=lexer)
 
     def system_uuid_alias_add(self):
@@ -88,8 +92,8 @@ class BuilderTools(j.builder.system._BaseClass):
         @param deletefirst: bool (Set to True if you want to erase destination first, be carefull, this can erase directories)
         @param overwriteFiles: if True will overwrite files, otherwise will not overwrite when destination exists
         """
-        source = j.core.tools.text_replace(source)
-        dest = j.core.tools.text_replace(dest)
+        source = self._replace(source)
+        dest = self._replace(dest)
 
         return j.sal.fs.copyDirTree(src=source, dst=dest, keepsymlinks=keepsymlinks, deletefirst=deletefirst,
                                     overwriteFiles=overwriteFiles, ignoredir=ignoredir, ignorefiles=ignorefiles,
@@ -99,7 +103,7 @@ class BuilderTools(j.builder.system._BaseClass):
         """Backups the file at the given location in the same directory, appending
         the given suffix. If `once` is True, then the backup will be skipped if
         there is already a backup file."""
-        location = j.core.tools.text_replace(location)
+        location = self._replace(location)
         backup_location = location + suffix
         if once and self.file_exists(backup_location):
             return False
@@ -110,12 +114,12 @@ class BuilderTools(j.builder.system._BaseClass):
             ))[1]
 
     def file_get_tmp_path(self, basepath=""):
-        basepath = j.core.tools.text_replace(basepath)
+        basepath = self._replace(basepath)
         if basepath == "":
             x = "{DIR_TEMP}/%s" % j.data.idgenerator.generateXCharID(10)
         else:
             x = "{DIR_TEMP}/%s" % basepath
-        x = j.core.tools.text_replace(x)
+        x = self._replace(x)
         return x
 
     def file_download(
@@ -130,7 +134,7 @@ class BuilderTools(j.builder.system._BaseClass):
         @param removeTopDir : if True and there is only 1 dir in the destination then will move files away from the one dir to parent (often in tgz the top dir is not relevant)
         """
 
-        to = j.core.tools.text_replace(to)
+        to = self._replace(to)
 
         # DO NOT CHANGE minsizekb<40, is to protect us against file not found, if
         # there is a specific need then change the argument only for that 1
@@ -144,7 +148,7 @@ class BuilderTools(j.builder.system._BaseClass):
         if to == "" or expand:
             to = self.joinpaths("{DIR_TEMP}", j.sal.fs.getBaseName(url))
 
-        to = j.core.tools.text_replace(to)
+        to = self._replace(to)
 
         if deletedest:
             self.dir_remove(to)
@@ -156,7 +160,7 @@ class BuilderTools(j.builder.system._BaseClass):
 
         if not (self.file_exists(to) and self.file_exists("%s.downloadok" % to)):
 
-            j.sal.fs.createDir(j.sal.fs.getDirName(to))
+            self.tools.dir_ensure(j.sal.fs.getDirName(to))
 
             if multithread is False:
                 minspeed = 0
@@ -200,7 +204,7 @@ class BuilderTools(j.builder.system._BaseClass):
 
     def file_expand(self, path, destination="", removeTopDir=False):
         self._log_info("file_expand:%s" % path)
-        path = j.core.tools.text_replace(path)
+        path = self._replace(path)
         base = j.sal.fs.getBaseName(path)
         if base.endswith(".tgz"):
             base = base[:-4]
@@ -221,9 +225,9 @@ class BuilderTools(j.builder.system._BaseClass):
         if destination == "":
             destination = self.joinpaths("{DIR_TEMP}", base)
         j.sal.fs.remove(destination)
-        j.sal.fs.createDir(destination)
-        path = j.core.tools.text_replace(path)
-        destination = j.core.tools.text_replace(destination)
+        self.tools.dir_ensure(destination)
+        path = self._replace(path)
+        destination = self._replace(destination)
         self.dir_ensure(destination)
         if path.endswith(".tar.gz") or path.endswith(".tgz"):
             cmd = "tar -C %s -xzf %s" % (destination, path)
@@ -260,15 +264,15 @@ class BuilderTools(j.builder.system._BaseClass):
         return destination
 
     def touch(self, path):
-        path = j.core.tools.text_replace(path)
+        path = self._replace(path)
         self.file_write(path, "")
 
     def file_read(self, location, default=None):
-        location = j.core.tools.text_replace(location)
+        location = self._replace(location)
         import base64
         """Reads the *remote* file at the given location, if default is not `None`,
         default will be returned if the file does not exist."""
-        location = j.core.tools.text_replace(location)
+        location = self._replace(location)
         if default is None:
             assert self.file_exists(
                 location), "prefab.file_read: file does not exists {0}".format(location)
@@ -278,7 +282,7 @@ class BuilderTools(j.builder.system._BaseClass):
 
     def file_exists(self, location):
         """Tests if there is a file at the given location."""
-        location = j.core.tools.text_replace(location)
+        location = self._replace(location)
         if j.sal.fs.exists(location) and j.sal.fs.isFile(location):
             return True
         return False
@@ -288,19 +292,19 @@ class BuilderTools(j.builder.system._BaseClass):
         check if dir or file or exists
         """
         if replace:
-            location = j.core.tools.text_replace(location)
+            location = self._replace(location)
         return j.sal.fs.exists(location)
 
     def file_is_file(self, location):
-        location = j.core.tools.text_replace(location)
+        location = self._replace(location)
         return j.sal.fs.isFile(location)
 
     def file_is_dir(self, location):
-        location = j.core.tools.text_replace(location)
+        location = self._replace(location)
         return j.sal.fs.isDir(location)
 
     def file_is_link(self, location):
-        location = j.core.tools.text_replace(location)
+        location = self._replace(location)
         return j.sal.fs.isLink(location)
 
     def file_attribs(self, location, mode=None, owner=None, group=None):
@@ -315,7 +319,7 @@ class BuilderTools(j.builder.system._BaseClass):
         :param group: owning group, defaults to None
         :type group: string, optional
         """
-        location = j.core.tools.text_replace(location)
+        location = self._replace(location)
         if mode:
             j.sal.fs.chmod(location, mode)
         if owner or group:
@@ -326,7 +330,7 @@ class BuilderTools(j.builder.system._BaseClass):
         Return mode, owner, and group if remote path exists, 'None'
         otherwise.
         """
-        location = j.core.tools.text_replace(location)
+        location = self._replace(location)
         location = location.replace("//", "/")
         if self.file_exists(location):
             if self.isMac:
@@ -344,7 +348,7 @@ class BuilderTools(j.builder.system._BaseClass):
         """
         return in kb
         """
-        path = j.core.tools.text_replace(path)
+        path = self._replace(path)
         return j.sal.fs.fileSize(path)
         # print("du -Lck %s" % path)
         # rc, out, err = self.execute("du -Lck %s" % path, showout=False)
@@ -421,7 +425,7 @@ class BuilderTools(j.builder.system._BaseClass):
         :param sudo: defaults to False
         :type sudo: bool, optional
         """
-        path = j.core.tools.text_replace(location)
+        path = self._replace(location)
         if strip:
             content = j.core.text.strip(content)
         j.sal.fs.writeFile(path, content, append=append)
@@ -433,7 +437,7 @@ class BuilderTools(j.builder.system._BaseClass):
         :param filename: file path to be removed
         :type filename: str
         """
-        filename = j.core.tools.text_replace(filename)
+        filename = self._replace(filename)
         if self.file_exists(filename):
             j.sal.fs.unlinkFile(filename)
 
@@ -451,7 +455,7 @@ class BuilderTools(j.builder.system._BaseClass):
         :param group: owning group, defaults to None
         :type group: string, optional
         """
-        location = j.core.tools.text_replace(location)
+        location = self._replace(location)
         if self.file_exists(location):
             self.file_attribs(location, mode=mode, owner=owner, group=group)
         else:
@@ -459,7 +463,7 @@ class BuilderTools(j.builder.system._BaseClass):
 
     def file_remove_prefix(self, location, prefix, strip=True):
         # look for each line which starts with prefix & remove
-        location = j.core.tools.text_replace(location)
+        location = self._replace(location)
         content = self.file_read(location)
         out = ""
         for l in content.split("\n"):
@@ -475,27 +479,27 @@ class BuilderTools(j.builder.system._BaseClass):
     def file_link(self, source, destination, symbolic=True, mode=None, owner=None, group=None):
         """Creates a (symbolic) link between source and destination on the remote host,
         optionally setting its mode / owner / group."""
-        source = j.core.tools.text_replace(source)
-        destination = j.core.tools.text_replace(destination)
+        source = self._replace(source)
+        destination = self._replace(destination)
         if self.file_exists(destination) and (not self.file_is_link(destination)):
             raise Exception(
                 "Destination already exists and is not a link: %s" % (destination))
         self.file_attribs(destination, mode, owner, group)
 
     def replace(self, text, args={}):
-        text = j.core.tools.text_replace(text, args=args)
+        text = self._replace(text, args=args)
         if "$" in text:
             raise RuntimeError("found $ in the text to replace, should use {}")
         return text
 
     def file_copy(self, source, dest, recursive=False, overwrite=True):
-        source = j.core.tools.text_replace(source)
-        dest = j.core.tools.text_replace(dest)
+        source = self._replace(source)
+        dest = self._replace(dest)
         j.sal.fs.copyFile(source, dest, createDirIfNeeded=True, overwriteFile=overwrite)
 
     def file_move(self, source, dest, recursive=False):
-        source = j.core.tools.text_replace(source)
-        dest = j.core.tools.text_replace(dest)
+        source = self._replace(source)
+        dest = self._replace(dest)
         j.sal.fs.moveFile(source, dest)
 
     def file_base64(self, location):
@@ -505,12 +509,12 @@ class BuilderTools(j.builder.system._BaseClass):
 
     def file_sha256(self, location):
         """Returns the SHA - 256 sum (as a hex string) for the remote file at the given location."""
-        location = j.core.tools.text_replace(location)
+        location = self._replace(location)
         return j.data.hash.sha512(location)
 
     def file_md5(self, location):
         """Returns the MD5 sum (as a hex string) for the remote file at the given location."""
-        location = j.core.tools.text_replace(location)
+        location = self._replace(location)
         return j.data.hash.md5(location)
 
     # =============================================================================
@@ -556,7 +560,7 @@ class BuilderTools(j.builder.system._BaseClass):
 
     def dir_attribs(self, location, mode=None, owner=None, group=None, recursive=False, showout=False):
         """Updates the mode / owner / group for the given remote directory."""
-        location = j.core.tools.text_replace(location)
+        location = self._replace(location)
         if showout:
             # self._log_info("set dir attributes:%s"%location)
             self._log_debug('set dir attributes:%s"%location')
@@ -578,12 +582,12 @@ class BuilderTools(j.builder.system._BaseClass):
         :param location: location of dir to check
         :type location: string
         """
-        location = j.core.tools.text_replace(location)
+        location = self._replace(location)
         return j.sal.fs.exists(location)
 
     def dir_remove(self, location, recursive=True):
         """ Removes a directory """
-        location = j.core.tools.text_replace(location)
+        location = self._replace(location)
         j.sal.fs.remove(location)
 
     def dir_ensure(self, location, recursive=True, mode=None, owner=None, group=None):
@@ -592,8 +596,8 @@ class BuilderTools(j.builder.system._BaseClass):
 
         If we are not updating the owner / group then this can be done as a single
         ssh call, so use that method, otherwise set owner / group after creation."""
-        location = j.core.tools.text_replace(location)
-        j.sal.fs.createDir(location)
+        location = self._replace(location)
+        self.tools.dir_ensure(location)
         self.file_attribs(location, mode, owner, group)
 
     def find(self, path, recursive=True, pattern="", findstatement="", type="", contentsearch="",
@@ -625,7 +629,7 @@ class BuilderTools(j.builder.system._BaseClass):
 
         @param extendinfo: this will return [[$path, $sizeinkb, $epochmod]]
         """
-        path = j.core.tools.text_replace(path)
+        path = self._replace(path)
         cmd = "cd %s;find ." % path
         if recursive is False:
             cmd += " -maxdepth 1"
@@ -702,7 +706,7 @@ class BuilderTools(j.builder.system._BaseClass):
 
     def cd(self, path):
         """cd to the given path"""
-        path = j.core.tools.text_replace(path)
+        path = self._replace(path)
         j.sal.fs.changeDir(path)
         self._cd = path
 
@@ -716,7 +720,7 @@ class BuilderTools(j.builder.system._BaseClass):
     #     """
     #     execute a jumpscript(script as content) in a remote tmux command, the stdout will be returned
     #     """
-    #     script = j.core.tools.text_replace(script)
+    #     script = self._replace(script)
     #     script = j.core.text.strip(script)
     #
     #     if script.find("from Jumpscale import j") == -1:
@@ -734,7 +738,7 @@ class BuilderTools(j.builder.system._BaseClass):
 
     def command_check(self, command):
         """Tests if the given command is available on the system."""
-        command = j.core.tools.text_replace(command)
+        command = self._replace(command)
         rc, out, err = self.execute("which '%s'" % command,
                                 die=False, showout=False, profile=True)
         return rc == 0
@@ -743,7 +747,7 @@ class BuilderTools(j.builder.system._BaseClass):
         """
         return location of cmd
         """
-        command = j.core.tools.text_replace(command)
+        command = self._replace(command)
         rc, out, err = self.execute("which '%s'" % command,
                                 die=False, showout=False, profile=True)
         if rc > 0:
@@ -767,7 +771,7 @@ class BuilderTools(j.builder.system._BaseClass):
     #         for commanditem in command:
     #             self.command_ensure(commanditem,package=package)
     #         return
-    #     command = j.core.tools.text_replace(command)
+    #     command = self._replace(command)
     #     if package is None:
     #         package = command
     #     if not self.command_check(command):

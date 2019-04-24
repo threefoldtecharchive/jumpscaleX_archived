@@ -16,7 +16,6 @@ class SSHClient(SSHClientBase):
             if j.clients.sshagent.key_default_or_none:
                 self.sshkey_name = j.clients.sshagent.key_default_or_none.name
                 self.save()
-        print (self._key)
 
     @property
     def _client(self):

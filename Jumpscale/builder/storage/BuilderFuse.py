@@ -28,4 +28,4 @@ class BuilderFuse(j.builder.system._BaseClass):
         cd llfuse-1.1.1
         python3 setup.py install
         """.format(LLFUSE_URL=LLFUSE_URL)
-        j.sal.process.execute(j.core.tools.text_replace(CMD))
+        j.sal.process.execute(self._replace(CMD))

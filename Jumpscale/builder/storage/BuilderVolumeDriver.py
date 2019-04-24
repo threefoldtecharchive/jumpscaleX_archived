@@ -46,7 +46,7 @@ class BuilderVolumeDriver(j.builder.system._BaseClass):
         j.builder.system.package.ensure(apt_deps, allow_unauthenticated=True)
 
     def _build(self, version='6.0.0'):
-        workspace = j.core.tools.text_replace("{DIR_TEMP}/volumedriver-workspace")
+        workspace = self._replace("{DIR_TEMP}/volumedriver-workspace")
         j.core.tools.dir_ensure(workspace)
 
         str_repl = {

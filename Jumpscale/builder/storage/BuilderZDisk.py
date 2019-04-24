@@ -42,7 +42,7 @@ class BuilderZDisk(j.builder.system._BaseClass):
         cp -a bin/. {DIR_BIN}
         """.format(install_path, branch)
 
-        cmd = j.core.tools.text_replace(cmd)
+        cmd = self._replace(cmd)
 
         j.sal.process.execute(cmd)
 
@@ -116,7 +116,7 @@ class BuilderZDisk(j.builder.system._BaseClass):
         if tlsonly is not None:
             cmd += " --tlsonly {}".format(tlsonly)
         
-        cmd = j.core.tools.text_replace(cmd)
+        cmd = self._replace(cmd)
 
         j.sal.process.execute(cmd)
 

@@ -43,7 +43,7 @@ class BuilderGrafana(j.builder.system._BaseClass):
     def start(self, influx_addr='127.0.0.1', influx_port=8086, port=3000):
 
         cmd = "{DIR_BIN}/grafana-server --config={DIR_BASE}/cfg/grafana/grafana.ini\n"
-        cmd = j.core.tools.text_replace(cmd)
+        cmd = self._replace(cmd)
         j.sal.fs.writeFile("/opt/jumpscale/bin/start_grafana.sh", cmd, 777, replaceArgs=True)
         j.builder.system.process.kill("grafana-server")
         pm = j.builder.system.processmanager.get()

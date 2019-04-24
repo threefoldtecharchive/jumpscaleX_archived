@@ -11,11 +11,11 @@ class BuilderNodeJS(j.builder.system._BaseClass):
 
     @property
     def npm(self):
-        return j.core.tools.text_replace('{DIR_BASE}/node/bin/npm')
+        return self._replace('{DIR_BASE}/node/bin/npm')
 
     @property
     def NODE_PATH(self):
-        return j.core.tools.text_replace('{DIR_BASE}/node/lib/node_modules')
+        return self._replace('{DIR_BASE}/node/lib/node_modules')
 
     def bowerInstall(self, name):
         """
@@ -24,7 +24,7 @@ class BuilderNodeJS(j.builder.system._BaseClass):
         if self._bowerDir == "":
             self.install()
             j.core.tools.dir_ensure("{DIR_TEMP}/bower")
-            self._bowerDir = j.core.tools.text_replace("{DIR_TEMP}/bower")
+            self._bowerDir = self._replace("{DIR_TEMP}/bower")
         if j.data.types.list.check(name):
             for item in name:
                 self.bowerInstall(item)
@@ -160,14 +160,14 @@ class BuilderNodeJS(j.builder.system._BaseClass):
             "npm config get init-module", profile=True)
         j.builder.tools.file_unlink(initmodulepath)
         j.sal.process.execute("npm config set global true -g", profile=True)
-        j.sal.process.execute(j.core.tools.text_replace(
+        j.sal.process.execute(self._replace(
             "npm config set init-module {DIR_BASE}/node/.npm-init.js -g"), profile=True)
-        j.sal.process.execute(j.core.tools.text_replace(
+        j.sal.process.execute(self._replace(
             "npm config set init-cache {DIR_BASE}/node/.npm -g"), profile=True)
         j.sal.process.execute("npm config set global true ", profile=True)
-        j.sal.process.execute(j.core.tools.text_replace(
+        j.sal.process.execute(self._replace(
             "npm config set init-module {DIR_BASE}/node/.npm-init.js "), profile=True)
-        j.sal.process.execute(j.core.tools.text_replace(
+        j.sal.process.execute(self._replace(
             "npm config set init-cache {DIR_BASE}/node/.npm "), profile=True)
         j.sal.process.execute("npm install -g bower", profile=True, shell=True)
 

@@ -25,7 +25,7 @@ class BuilderBrotli(j.builder.system._BaseClass):
         make
         make test
         """.format(self.src_dir)
-        cmd = j.core.tools.text_replace(cmd)
+        cmd = self._replace(cmd)
         j.sal.process.execute(cmd)
         self._done_set('build')
 
