@@ -8,6 +8,7 @@ export LC_ALL=en_US.UTF-8
 cp /sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/chatflows/bot_init.py /sandbox/code/github/threefoldtech/digitalmeX/DigitalMe/tools/openpublish/base_chatflows/
 cp /sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/actors/userbot/userbot.py /sandbox/code/github/threefoldtech/digitalmeX/DigitalMe/tools/openpublish/base_actors/
 
+rm -r /sandbox/cfg/nacl/*
 
 kosmos --instruct /bot_nacl_configure.toml
 

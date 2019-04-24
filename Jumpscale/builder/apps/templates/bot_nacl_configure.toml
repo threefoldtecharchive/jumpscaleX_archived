@@ -3,3 +3,4 @@ instruction_method = "j.data.nacl.configure"
 name = "default"
 secret = "123"
 generate = true
+sshagent_use = false
