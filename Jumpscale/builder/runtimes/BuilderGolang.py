@@ -29,6 +29,10 @@ class BuilderGolangTools(j.builder.system._BaseClass):
         profile.path_add(self.DIR_GO_PATH_BIN, check_exists=False)
         profile.path_add(self.DIR_GO_ROOT_BIN, check_exists=False)
 
+    def profile_builder_set(self):
+        # make sure go binaries are in path while building
+        self.update_profile_paths(self.profile)
+
     @builder_method()
     def goraml(self):
         """install (using go get) goraml.
