@@ -73,7 +73,7 @@ func main() {
 class BuilderCaddy(BuilderGolangTools):
     NAME = "caddy"
     PLUGINS = ['iyo', 'filemanager']  # PLEASE ADD MORE PLUGINS #TODO:*1
-    VERSION = 'master' # make sure the way to build with plugin is ok
+    VERSION = 'master'  # make sure the way to build with plugin is ok
 
     def _init(self):
         super()._init()
@@ -99,9 +99,8 @@ class BuilderCaddy(BuilderGolangTools):
         self.get(url, install=False)
 
     def profile_builder_set(self):
-        # make sure go binaries are in path while building
+        super().profile_builder_set()
         self.profile.env_set('GO111MODULE', 'on')
-        self.update_profile_paths(self.bash.profile)
 
     @builder_method()
     def build(self, plugins=None):
