@@ -413,7 +413,7 @@ class BuilderBaseClass(BaseClass):
 
             target = "{}_merged_{}".format(self.NAME, merge_base_flist.replace('/', '_').replace('.flist', ''))
             flist_name = "{username}/{flist_name}.flist".format(username=zhub_client.username, flist_name=self.NAME)
-            flist_url = zhub_client.merge(target, [merge_base_flist, flist_name])
+            flist_url = zhub_client.merge(target, [flist_name, merge_base_flist])
 
         return flist_url
 
