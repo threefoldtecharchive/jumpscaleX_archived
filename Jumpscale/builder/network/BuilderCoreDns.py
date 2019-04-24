@@ -4,7 +4,7 @@ from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
 builder_method = j.builder.system.builder_method
 
 
-CONFIGTEMPLATE="""
+CONFIGTEMPLATE = """
 .{
     etcd $domain {
         stubzones
@@ -18,10 +18,12 @@ CONFIGTEMPLATE="""
 }
 """
 
+
 class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
     NAME = "coredns"
 
     def profile_builder_set(self):
+        super().profile_builder_set()
         self.profile.env_set('GO111MODULE', 'on')
 
     @builder_method()
@@ -100,7 +102,6 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
         bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
         self._remove(bin_path)
         self.clean()
-
 
     @builder_method()
     def reset(self):

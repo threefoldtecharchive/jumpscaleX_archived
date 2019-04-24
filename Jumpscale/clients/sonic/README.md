@@ -1,7 +1,9 @@
 # Sonic server client
-    
+Sonic is a fast, lightweight and schema-less search backend. It ingests search texts and identifier tuples that can then be queried against in a microsecond's time.
+read the docs [here](https://github.com/valeriansaliou/sonic)
 ## usage example:
-
+first make sure that you have sonic server running
+to populate data:
 ```python
     data = { 
          'post:1': "this is some test text hello", 
@@ -13,7 +15,10 @@
      client = j.clients.sonic.get('main', host="127.0.0.1", port=1491, password='dmdm') 
      for articleid, content in data.items(): 
          client.push("forum", "posts", articleid, content) 
-     print(client.query("forum", "posts", "love")) 
+```
+to query or getting suggestions:
+```
+    print(client.query("forum", "posts", "love")) 
 
     # ['post:5', 'post:4']
 
