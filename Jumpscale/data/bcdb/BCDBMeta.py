@@ -182,7 +182,7 @@ class BCDBMeta(j.application.JSBaseClass):
                 self._log_debug("new schema in meta:\n%s" % self.data)
                 self.save()
                 self.url2sid[s.url] = s.sid
-                schema.sid = s.sid
+                schemas.sid = s.sid
 
     def migrate_data(self, schema):
         """
@@ -190,9 +190,8 @@ class BCDBMeta(j.application.JSBaseClass):
         WARNING : if you delete any parameter in schema you can't get it again because we migrate it with new schema
         """
         models = self.bcdb.get_all()
-        self.bcdb.reset()
         for model in models:
-            m = schema.new()
+            m = model.new()
             for prop in schema.properties:
                 if hasattr(model, "{}".format(prop.name)):
                     setattr(m, prop.name, getattr(model, "{}".format(prop.name)))
