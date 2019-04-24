@@ -49,6 +49,13 @@ class builder_method(object):
 
         arg_names = arg_names[:len(args)]
         kwargs.update(dict(zip(arg_names, args)))
+
+        signature = inspect.signature(func)
+        for _, param in signature.parameters.items():
+            if param.name not in kwargs:
+                if not isinstance(param.default, inspect._empty):
+                    kwargs[param.name] = param.default
+
         return kwargs
 
     def apply_method(self, func, kwargs):

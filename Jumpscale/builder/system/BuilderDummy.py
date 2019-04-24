@@ -11,7 +11,7 @@ class BuilderDummy(j.builder.system._BaseClass):
         self._log_debug('build called reset=%s' % reset)
 
     @builder_method()
-    def install(self):
+    def install(self, reset=True):
         self._log_debug('install called')
 
     @builder_method()
