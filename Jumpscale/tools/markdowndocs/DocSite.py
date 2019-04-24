@@ -557,7 +557,6 @@ class DocSite(j.application.JSBaseClass):
 
     def verify(self):
         self.load(reset=True)
-        self.links_verify=True
         keys = [item for item in self.docs.keys()]
         keys.sort()
         for key in keys:
