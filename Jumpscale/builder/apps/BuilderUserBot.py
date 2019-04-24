@@ -47,6 +47,11 @@ class BuilderUserBot(j.builder.system._BaseClass):
         j.builder.db.zdb.sandbox(reset=True)
         j.tools.sandboxer.copyTo(j.builder.db.zdb.DIR_SANDBOX,  self.DIR_SANDBOX)
 
+        file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), 'templates', 'bot_nacl_configure.toml')
+        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, 'bot_nacl_configure.toml')
+        self._copy(file, file_dest)
+
+
         startup_file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), 'templates', 'bot_startup.toml')
         file_dest = self.tools.joinpaths(self.DIR_SANDBOX, '.startup.toml')
         self._copy(startup_file, file_dest)
