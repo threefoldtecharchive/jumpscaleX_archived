@@ -41,7 +41,6 @@ class BuilderUserBot(j.builder.system._BaseClass):
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=True, merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-autostart-development.flist"):
-        import ipdb; ipdb.set_trace()
         j.builder.apps.digitalme.sandbox(reset=True)
         j.tools.sandboxer.copyTo(j.builder.apps.digitalme.DIR_SANDBOX, self.DIR_SANDBOX)
 
