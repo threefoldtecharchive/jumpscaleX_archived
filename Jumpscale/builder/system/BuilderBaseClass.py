@@ -1,5 +1,6 @@
 from Jumpscale.sal.bash.Profile import Profile
 from Jumpscale import j
+import inspect
 import os
 
 BaseClass = j.application.JSBaseClass
@@ -17,23 +18,68 @@ class builder_method(object):
         else:
             self.done_check = True
 
+    def get_default_zhub_client(self, kwargs):
+        # only use "main" client, because should be generic usable
+        zhub_client = kwargs.get("zhub_client")
+        if not zhub_client and kwargs.get("flist_create"):
+            if not j.clients.zhub.exists(name="main"):
+                raise RuntimeError("cannot find main zhub client")
+
+            # verifying the client
+            zhub_client = j.clients.zhub.get(name="main")
+            zhub_client.list(username=zhub_client.username)
+        return zhub_client
+
+    def get_argument_names(self, func):
+        argspec = inspect.getargspec(func)
+        args = argspec.args
+        if argspec.varargs:
+            args += argspec.varargs
+        if argspec.keywords:
+            args += argspec.keywords
+        return args
+
+    def get_all_as_keyword_arguments(self, func, args, kwargs):
+        arg_names = self.get_argument_names(func)
+        if 'self' in arg_names:
+            arg_names.remove('self')
+
+        if not arg_names:
+            return kwargs
+
+        arg_names = arg_names[:len(args)]
+        kwargs.update(dict(zip(arg_names, args)))
+        return kwargs
+
+    def apply_method(self, func, kwargs):
+        arg_names = self.get_argument_names(func)
+        kwargs = {
+            key: value for key, value in kwargs.items() if key in arg_names
+        }
+        return func(**kwargs)
+
     def __call__(self, func):
 
-        def wrapper_action(*args, **kwargs):
-            builder = args[0]
-            args = args[1:]
+        def wrapper_action(builder, *args, **kwargs):
             name = func.__name__
+            kwargs = self.get_all_as_keyword_arguments(func, args, kwargs)
 
             if self.log:
                 builder._log_debug("do once:%s" % name)
 
             if "reset" in kwargs:
                 reset = j.data.types.bool.clean(kwargs["reset"])
-                kwargs.pop("reset")
             else:
                 reset = False
 
-            done_key = name+"_"+j.data.hash.md5_string(str(args)+str(kwargs))
+            kwargs_without_reset = {
+                key: value for key, value in kwargs.items() if key != 'reset'
+            }
+            done_key = name + "_" + j.data.hash.md5_string(str(kwargs_without_reset))
+
+            if self.done_check and builder._done_check(done_key, reset):
+                builder._log_debug("action:%s() no need to do, was already done" % done_key)
+                return
 
             if reset:
                 builder._done_reset()
@@ -48,39 +94,31 @@ class builder_method(object):
             if name == "sandbox":
                 builder.profile_sandbox_select()
                 builder.install()
-                # only use "main" client, because should be generic usable
-                zhub_client = kwargs.get("zhub_client", None)
-                if not zhub_client and kwargs.get("flist_create"):
-                    if not j.clients.zhub.exists(name="main"):
-                        raise RuntimeError("cannot find main zhub client")
-                    zhub_client = j.clients.zhub.get(name="main")
-                    zhub_client.list(username=zhub_client.username)
-                kwargs["zhub_client"] = zhub_client
+                kwargs["zhub_client"] = self.get_default_zhub_client(kwargs)
 
             if name in ["stop", "running", "_init"]:
                 builder.profile_sandbox_select()
                 self.done_check = False
 
-            if not self.done_check or not builder._done_check(done_key, reset):
-                if self.log:
-                    builder._log_debug("action:%s() start" % name)
-                res = func(builder, *args, **kwargs)
+            if self.log:
+                builder._log_debug("action:%s() start" % name)
 
-                if name == "sandbox" and kwargs.get("flist_create", False):
-                    res = builder._flist_create(kwargs['zhub_client'], kwargs.get('merge_base_flist'))
+            kwargs['self'] = builder
+            res = self.apply_method(func, kwargs)
 
-                if self.done_check:
-                    builder._done_set(done_key)
+            if name == "sandbox" and kwargs.get("flist_create", False):
+                res = builder._flist_create(kwargs['zhub_client'], kwargs.get('merge_base_flist'))
 
-                if name == "build":
-                    builder.profile_sandbox_select()
+            if self.done_check:
+                builder._done_set(done_key)
 
-                if self.log:
-                    builder._log_debug("action:%s() done -> %s" % (name, res))
+            if name == "build":
+                builder.profile_sandbox_select()
 
-                return res
-            else:
-                builder._log_debug("action:%s() no need to do, was already done" % done_key)
+            if self.log:
+                builder._log_debug("action:%s() done -> %s" % (name, res))
+
+            return res
 
         return wrapper_action
 
@@ -307,7 +345,7 @@ class BuilderBaseClass(BaseClass):
         txt = self._replace(txt)
         j.sal.fs.writeFile(path, txt)
 
-    def _read(self,location):
+    def _read(self, location):
         """
         will use the replace function on location then read a file from the given location
         :param location: location to read file from
@@ -390,7 +428,7 @@ class BuilderBaseClass(BaseClass):
 
     @builder_method()
     def _flist_create(self, zhub_client,
-                merge_base_flist=""):
+                      merge_base_flist=""):
         """
         build a flist for the builder and upload the created flist to the hub
 

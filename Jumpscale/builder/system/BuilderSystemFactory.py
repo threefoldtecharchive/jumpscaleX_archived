@@ -2,9 +2,8 @@
 
 from Jumpscale import j
 
-from .BuilderBaseClass import *
+from .BuilderBaseClass import BuilderBaseClass, builder_method
 from .BuilderBaseFactoryClass import BuilderBaseFactoryClass
-
 
 
 class BuilderSystemPackage(j.application.JSBaseClass):
@@ -25,6 +24,7 @@ class BuilderSystemPackage(j.application.JSBaseClass):
         self._ssh = None
         self._user = None
         self._bash = None
+        self._dummy = None
 
         j.clients.redis.core_get()
 
@@ -44,7 +44,6 @@ class BuilderSystemPackage(j.application.JSBaseClass):
             from .BuilderSystemPackage import BuilderSystemPackage
             self._package = BuilderSystemPackage()
         return self._package
-
 
     @property
     def python_pip(self):
@@ -67,7 +66,6 @@ class BuilderSystemPackage(j.application.JSBaseClass):
             self._net = BuilderNet()
         return self._net
 
-
     @property
     def ssh(self):
         if self._ssh is None:
@@ -81,3 +79,10 @@ class BuilderSystemPackage(j.application.JSBaseClass):
             from .BuilderUser import BuilderUser
             self._user = BuilderUser()
         return self._user
+
+    @property
+    def dummy(self):
+        if self._dummy is None:
+            from .BuilderDummy import BuilderDummy
+            self._dummy = BuilderDummy()
+        return self._dummy
