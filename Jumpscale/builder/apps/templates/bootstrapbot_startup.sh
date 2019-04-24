@@ -9,6 +9,3 @@ cp /sandbox/code/github/threefoldtech/digitalmeX/packages/bootstrap_bot/chatflow
 
 rm -r /sandbox/cfg/nacl/
 kosmos --instruct /bot_nacl_configure.toml
-
-# Start open_publish server to be able to talk to the chatflows
-tmux new -d -s main  "kosmos 'j.tools.open_publish.default.servers_start()'"

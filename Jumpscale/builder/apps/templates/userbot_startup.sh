@@ -10,13 +10,10 @@ cp /sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/actors/userbo
 
 rm -r /sandbox/cfg/nacl/*
 
-kosmos --instruct /bot_nacl_configure.toml
-
-# Start open_publish server to be able to talk to the chatflows
-tmux new -d -s main  "kosmos 'j.tools.open_publish.default.servers_start()'"
+kosmos --instruct /bot_configure.toml
 
 # Wait for openpublish to start zdb
-RETRY=15
+RETRY=30
 while [ $RETRY -gt 0 ]
 do
     echo >/dev/tcp/localhost/9900
