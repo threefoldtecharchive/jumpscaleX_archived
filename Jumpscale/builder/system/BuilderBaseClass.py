@@ -67,7 +67,7 @@ class builder_method(object):
                 res = func(builder, *args, **kwargs)
 
                 if name == "sandbox" and kwargs.get("flist_create", False):
-                    res = builder._flist_create(zhub_client=zhub_client)
+                    res = builder._flist_create(kwargs['zhub_client'], kwargs.get('merge_base_flist'))
 
                 if self.done_check:
                     builder._done_set(done_key)
@@ -310,8 +310,8 @@ class BuilderBaseClass(BaseClass):
     def _read(self,location):
         """
         will use the replace function on location then read a file from the given location
-        :param location: location to read file from 
-        :return 
+        :param location: location to read file from
+        :return
         """
 
         location = self._replace(location)
@@ -389,34 +389,33 @@ class BuilderBaseClass(BaseClass):
         return True
 
     @builder_method()
-    def _flist_create(self, zhub_client):
+    def _flist_create(self, zhub_client,
+                merge_base_flist=""):
         """
         build a flist for the builder and upload the created flist to the hub
 
         This method builds and optionally upload the flist to the hub
 
-        :param hub_instance: zerohub client to use to upload the flist, defaults to None if None
+        :param zhub_instance: zerohub client to use to upload the flist, defaults to None if None
         the flist will be created but not uploaded to the hub
-        :param hub_instance: j.clients.zhub instance, optional
+        :param merge_base_flist: a base flist to merge the created flist with. If supplied, both merged and normal flists will be uploaded, optional
         :return: the flist url
         """
-
-        # self.copy_dirs(self.root_dirs, self.DIR_SANDBOX)
-        # self.write_files(self.root_files, self.DIR_SANDBOX)
-
-        # if self.startup:
-        #     #TODO differently, use info from self.startup_cmds
-        #     file_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, '.startup.toml')
-        #     j.builder.tools.file_ensure(file_dest)
-        #     j.builder.tools.file_write(file_dest, self.startup)
-
         if j.core.platformtype.myplatform.isLinux:
             ld_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'lib64/')
             j.builder.tools.dir_ensure(ld_dest)
             self._copy('/lib64/ld-linux-x86-64.so.2', ld_dest)
 
         self._log_info("uploading flist to the hub")
-        return zhub_client.sandbox_upload(self.NAME, self.DIR_SANDBOX)
+        flist_url = zhub_client.sandbox_upload(self.NAME, self.DIR_SANDBOX)
+        if merge_base_flist:
+            self._log_info("merging the produced flist with {}".format(merge_base_flist))
+
+            target = "{}_merged_{}".format(self.NAME, merge_base_flist.replace('/', '_').replace('.flist', ''))
+            flist_name = "{username}/{flist_name}.flist".format(username=zhub_client.username, flist_name=self.NAME)
+            flist_url = zhub_client.merge(target, [merge_base_flist, flist_name])
+
+        return flist_url
 
     @builder_method()
     def _tarfile_create(self):

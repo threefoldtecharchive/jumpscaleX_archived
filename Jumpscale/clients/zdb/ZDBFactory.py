@@ -54,7 +54,8 @@ class ZDBFactory(j.application.JSBaseClass):
         return j.servers.zdb.start_test_instance(destroydata=destroydata,admin_secret=admin_secret,
                                  namespaces_secret=namespaces_secret)
 
-
+    def stop_test_instance(self):
+        j.servers.zdb.stop()
 
     def test(self):
         """
@@ -68,6 +69,7 @@ class ZDBFactory(j.application.JSBaseClass):
         self._test_run(name="base")
         self._test_run(name="admin")
 
+        j.clients.zdb.stop_test_instance()
 
 
 

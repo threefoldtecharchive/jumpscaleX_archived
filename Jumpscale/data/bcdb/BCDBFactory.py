@@ -165,6 +165,36 @@ class BCDBFactory(j.application.JSBaseClass):
 
         return bcdb, model
 
+    def migrate(self, base_url, second_url, bcdb="system", **kwargs):
+        bcdb_instance = self.get(bcdb)
+        j.data.bcdb.latest.get_all()
+        base_model = bcdb_instance.model_get(base_url)
+        second_model = bcdb_instance.model_get(second_url)
+        # create new meta with new migration
+
+        for model_s in second_model.get_all():
+            overwrite = False
+            for model_b in base_model.get_all():
+                if model_b.name == model_s.name:
+                    overwrite = True
+                    if kwargs.items():
+                        for key, val in kwargs.items():
+                            second = getattr(model_s, "{}".format(val))
+                            setattr(model_b, key, second)
+
+                    model_b.save()
+                    model_s.delete()
+                    # overwtite
+            if not overwrite:
+                m = base_model.new()
+                for prop in base_model.schema.properties:
+
+                    if hasattr(model_s, "{}".format(prop.name)):
+                        setattr(m, prop.name, getattr(model_s, "{}".format(prop.name)))
+                m.save()
+                model_s.delete()
+                # create new one
+
     def test(self, name=""):
         """
         following will run all tests

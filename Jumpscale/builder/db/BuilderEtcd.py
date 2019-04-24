@@ -1,4 +1,5 @@
 from Jumpscale import j
+from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
 
 builder_method = j.builder.system.builder_method
 ETCD_CONFIG = """
@@ -10,27 +11,23 @@ initial-advertise-peer-urls: "http://'$node_addr':2380"
 """
 
 
-class BuilderEtcd(j.builder.system._BaseClass):
+class BuilderEtcd(BuilderGolangTools):
     NAME = "etcd"
 
     def _init(self):
-        self.go_runtime = j.builder.runtimes.golang
-
-        self.package_path = self.go_runtime.package_path_get("etcd", host="go.etcd.io")
+        super()._init()
+        self.package_path = self.package_path_get("etcd", host="go.etcd.io")
 
     @builder_method()
     def build(self):
         """
         Build etcd
         """
-        self.go_runtime.install()
+        j.builder.runtimes.golang.install()
         # get a vendored etcd from master
-        self.go_runtime.get("go.etcd.io/etcd", install=False, update=False)
+        self.get("go.etcd.io/etcd", install=False, update=False)
         # go to package path and build (for etcdctl)
         self._execute("cd %s && ./build" % self.package_path)
-
-        self._done_set("build")
-        # self._cache.get(key='build', method=do, expire=3600*30*24, refresh=False, retry=2, die=True)
 
     @builder_method()
     def install(self):
@@ -43,7 +40,6 @@ class BuilderEtcd(j.builder.system._BaseClass):
         j.builder.tools.file_copy("%s/etcdctl" % etcd_bin_path, "{DIR_BIN}/etcdctl")
 
         self._write("/sandbox/cfg/etcd.conf", ETCD_CONFIG)
-        self._done_set("install")
 
     @property
     def startup_cmds(self):

@@ -78,3 +78,13 @@ class GDriveClient(JSConfigClient):
             return True
 
         return self._cache.get("exportSlides", method=do, expire=300)
+
+    def get_presentation_meta(self, meta_file, presentation_id):
+        def do():
+            if not j.sal.fs.exists(meta_file):
+                return None
+
+            presentations_meta = j.data.serializers.json.load(meta_file)
+            meta = presentations_meta[presentation_id]
+            return meta
+        return self._cache.get("get_presentation_meta", method=do, expire=300)

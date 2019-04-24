@@ -396,7 +396,8 @@ class BCDB(j.application.JSBaseClass):
             schema_id, acl_id, bdata_encrypted = res
             if model:
                 if schema_id != model.schema.sid:
-                    self._log_warning("schema id in db not same as in mem")
+                    pass
+                    # self._log_warning("schema id in db not same as in mem")
                     # raise RuntimeError("fetched an object with if from other model.")
             else:
                 model = self.meta.model_get_from_id(schema_id, bcdb=self)

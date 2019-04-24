@@ -21,15 +21,26 @@ class BuilderPython(j.builder.system._BaseClass):
         self.DIR_SANDBOX = j.core.tools.text_replace("{DIR_VAR}/build/sandbox_python/")
         j.sal.fs.createDir(self.DIR_SANDBOX)
 
+    @builder_method()
     def clean(self):
         self._remove("{DIR_BUILD}")
         self._remove(self.DIR_CODE_L)
         self._remove(self.DIR_SANDBOX)
 
-    @builder_method()
-    def build(self, tag="v3.7.2",reset=False): #"v3.6.7"
+        C = """
+        set -ex
+        rm -rf {DIR_CODE_L}/cpython
         """
-
+        self._execute(C)
+    
+    @builder_method()
+    def reset(self):
+        super().reset()
+        self.clean()
+        
+    @builder_method()
+    def build(self, tag="v3.6.7"): # default "v3.6.7" else may cause locals problem
+        """
         kosmos 'j.builder.runtimes.python.build()'
             kosmos 'j.builder.runtimes.python.build(reset=True)'
 
@@ -48,7 +59,11 @@ class BuilderPython(j.builder.system._BaseClass):
             cd {DIR_CODE_L}
             git clone https://github.com/python/cpython
             """)
-
+        # checkout the selected tag version
+        self._execute("""
+        cd {}/cpython
+        git checkout tags/{}
+        """.format(self.DIR_CODE_L, tag))
 
         if j.core.platformtype.myplatform.isMac:
             # clue to get it finally working was in

@@ -1,14 +1,22 @@
 from Jumpscale import j
+from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
+
 builder_method = j.builder.system.builder_method
 import xml.etree.ElementTree as etree
 
 
-class BuilderSyncthing(j.builder.system._BaseClass):
+class BuilderSyncthing(BuilderGolangTools):
 
     NAME = 'syncthing'
 
     def _init(self):
-        self.package_path = j.builder.runtimes.golang.package_path_get('syncthing', host='github.com/syncthing')
+        super()._init()
+        # isolate GOPATH, some dependences conflict with other builders
+        self.DIR_GO_PATH = self._replace('{DIR_BUILD}/go_proj')
+        self.package_path = self.package_path_get('syncthing', host='github.com/syncthing')
+
+    def profile_builder_set(self):
+        self.update_profile_paths(self.profile)
 
     @builder_method()
     def build(self, version=None):
@@ -16,9 +24,8 @@ class BuilderSyncthing(j.builder.system._BaseClass):
         build and setup syncthing to run on :8384 , this can be changed from the config file in /optvar/cfg/syncthing
         version e.g. 'v0.14.5'
         """
-        self.profile_sandbox_select()
         j.builder.runtimes.golang.install()
-        j.builder.runtimes.golang.get('github.com/syncthing/syncthing/...', install=False, update=True)
+        self.get('github.com/syncthing/syncthing/...', install=False, update=True)
 
         if version is not None:
             self._execute("cd %s && go run build.go -version %s -no-upgrade" % (self.package_path, version))
@@ -57,7 +64,7 @@ class BuilderSyncthing(j.builder.system._BaseClass):
 
     @builder_method()
     def test(self):
-        # trying to get syncthing id from api and compare it with the one in config files 
+        # trying to get syncthing id from api and compare it with the one in config files
         if self.running():
             self.stop()
 
@@ -77,7 +84,7 @@ class BuilderSyncthing(j.builder.system._BaseClass):
         gui = root.find('gui')
         apikey = gui.find('apikey')
         return apikey.text
-        
+
     @property
     def myid(self):
         tree = etree.parse(self._replace("{DIR_CFG}/syncthing/config.xml"))

@@ -26,7 +26,7 @@ class DNSTools(j.application.JSBaseClass):
         JSBASE.__init__(self)
         self._default = None
 
-    def get(self, nameservers=["8.26.56.26", "8.20.247.20"],port=53):  #https://www.computerworld.com/article/2872700/endpoint-security/6-dns-services-protect-against-malware-and-other-unwanted-content.html?page=3
+    def get(self, nameservers=["8.8.8.8", "8.8.4.4"],port=53):  #https://www.computerworld.com/article/2872700/endpoint-security/6-dns-services-protect-against-malware-and-other-unwanted-content.html?page=3
         if "localhost" in nameservers:
             nameservers.pop(nameservers.index("localhost"))
             nameservers.append("127.0.0.1")
