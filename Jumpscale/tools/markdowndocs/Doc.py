@@ -78,7 +78,7 @@ class Doc(j.application.JSBaseClass):
             return
         for chunck in self.chunks(text, int(self.sonic_client._client_ingest.bufsize) // 2):
             try:
-                self.sonic_client.push("docsites", self.docsite.name, self.name, chunck)
+                self.sonic_client.push("docsites", self.docsite.name, self.path_rel, chunck)
             except Exception as e:
                 print("Couldn't index {}".format(self.name))
 
