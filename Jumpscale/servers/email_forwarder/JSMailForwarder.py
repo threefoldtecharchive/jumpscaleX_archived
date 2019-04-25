@@ -62,9 +62,9 @@ class JSMailForwarderBase(j.application.JSBaseConfigClass):
     def test(self, gdomain_user, gdomain_password):
         mf = j.servers.mail_forwarder.get(name = "test",
                                           listening_host="localhost",
-                                          listening_port="8823",
+                                          listening_port=8823,
                                           relay_host="smtp.gmail.com",
-                                          relay_port="587",
+                                          relay_port=587,
                                           relay_user=gdomain_user,
                                           relay_password=gdomain_password,
                                           relay_ssl=True,
