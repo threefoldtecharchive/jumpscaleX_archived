@@ -15,12 +15,6 @@ class BaseTest(TestCase):
         self.node_ip = self.config['zos_node']['node_ip']
 
     def setUp(self):
-        # self.jwt = requests.post("https://itsyou.online/v1/oauth/access_token",
-        #                          data={'client_id': self.client_id,
-        #                                'client_secret': self.client_secret,
-        #                                'scope': 'user:memberof:kristof-farm',
-        #                                'grant_type': 'client_credentials'})
-
         self.iyo_instance = 'iyo_instance_{}'.format(randint(1, 1000))
         self.iyo_client = j.clients.itsyouonline.get(self.iyo_instance, application_id=self.client_id,
                                                      secret=self.client_secret)
