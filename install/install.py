@@ -39,6 +39,10 @@ def sshexec(cmd):
 
 
 
+def docker_running():
+    names = IT.Tools.execute("docker ps --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
+    names = [i.strip("\"'") for i in names if i.strip()!=""]
+    return names
 
 
 
@@ -87,11 +91,11 @@ def help():
     ## docker related
 
     --name = name of docker, only relevant when docker option used
-    -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install
+    -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install    
     --portrange = 1 is the default
                   1 means 8100-8199 on host gets mapped to 8000-8099 in docker
                   2 means 8200-8299 on host gets mapped to 8000-8099 in docker
-    --image=/path/to/image.tar or name of image (use docker images)
+    --image=/path/to/image.tar or name of image (use docker images) if "hub" then will download despiegk/jsx_develop from docker hub as base
     --port = port of container SSH std is 9022 (normally not needed to use because is in portrange:22 e.g. 9122 if portrange 1)
 
     ## code related
@@ -227,15 +231,19 @@ def ui():
                 #     sys.exit(1)
 
         if "image" in args:
+            if "d" not in args:
+                args["d"]=True
+            if args["image"] == "hub":
+                args["image"] = "despiegk/jsx_develop"
             if ":" not in args["image"]:
-                args["image"]="%s:latest"%args["image"]
+                args["image"]="%s:latest" % args["image"]
             if args["image"] not in image_names():
                 if IT.Tools.exists(args["image"]):
                     IT.Tools.shell()
                 else:
                     print("Cannot continue, image '%s' specified does not exist."%args["image"])
                     sys.exit(1)
-            args["d"]=True
+
 
         if "portrange" not in args:
             if "y" in args:
@@ -246,13 +254,16 @@ def ui():
                 else:
                     args["portrange"] = 1
 
-        a=8000+int(args["portrange"])*100
-        b=8099+int(args["portrange"])*100
-        portrange_txt="%s-%s:8000-8099"%(a,b)
+        a=8000+int(args["portrange"])*10
+        b=8004+int(args["portrange"])*10
+        portrange_txt="%s-%s:8000-8004"%(a,b)
+        portrange_txt +=" -p %s:9999/udp"%(a+9)  #udp port for wireguard
+
         args["portrange_txt"] = "-p %s"%portrange_txt
 
         if "port" not in args:
             args["port"] = 9000+int(args["portrange"])*100 + 22
+
 
     else:
         if "p" not in args:
@@ -418,6 +429,12 @@ elif "3" in args:
         print(" - Start SSH server")
     else:
         print(" - Docker machine was already there.")
+        if "default" not in docker_running():
+            IT.Tools.execute("docker start %s"% args["name"])
+            if not "default" in docker_running():
+                print("could not start container:%s"%args["name"])
+                sys.exit(1)
+            IT.Tools.shell()
 
     SSHKEYS = IT.Tools.execute("ssh-add -L",die=False,showout=False)[1]
     if SSHKEYS.strip()!="":

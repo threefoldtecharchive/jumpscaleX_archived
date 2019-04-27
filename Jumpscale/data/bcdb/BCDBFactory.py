@@ -23,6 +23,9 @@ class BCDBFactory(j.application.JSBaseClass):
 
     def new(self, name, zdbclient=None, reset=False):
 
+        if reset==False and name in self.bcdb_instances:
+            return self.bcdb_instances[name]
+
         self._log_debug("new bcdb:%s" % name)
         if zdbclient != None and j.data.types.string.check(zdbclient):
             raise RuntimeError("zdbclient cannot be str")
