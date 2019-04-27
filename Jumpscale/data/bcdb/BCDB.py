@@ -19,7 +19,7 @@ class BCDB(j.application.JSBaseClass):
     def __init__(self, name=None, zdbclient=None, reset=False):
         """
         :param name: name for the BCDB
-        :param zdbclient: if zdbclient == None then will only use sqlite db
+        :param zdbclient: if zdbclient == None then will use sqlite db
         """
         JSBASE.__init__(self)
 
@@ -28,9 +28,7 @@ class BCDB(j.application.JSBaseClass):
 
         if zdbclient is not None:
             if not isinstance(zdbclient, ZDBClientBase):
-                raise RuntimeError(
-                    "zdbclient needs to be type: clients.zdb.ZDBClientBase"
-                )
+                raise RuntimeError("zdbclient needs to be type: clients.zdb.ZDBClientBase")
 
         self.name = name
         self._sqlclient = None
