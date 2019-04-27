@@ -58,7 +58,18 @@ python3 /tmp/install.py -3
 #will install in docker, delete if exists and starting from already created docker image (is faster)
 python3 /tmp/install.py -3 -y -d --image=hub
 ```
+#### on OSX
 
+- make sure /sandbox has been created (sudo was probably required and then you need to give yourself permission)
+- in 'share' in docker preferences you need to add /sandbox otherwise you will get
+
+```bash
+docker: Error response from daemon: Mounts denied:
+The path /sandbox/code
+is not shared from OS X and is not known to Docker.
+You can configure shared paths from Docker -> Preferences... -> File Sharing.
+See https://docs.docker.com/docker-for-mac/osxfs/#namespaces for more info.
+```
 
 ### Ubuntu (without docker)
 
