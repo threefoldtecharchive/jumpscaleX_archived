@@ -1,6 +1,7 @@
 from Jumpscale import j
 from Jumpscale.builder.test.flist.base_test import BaseTest
 import unittest
+import time
 
 class TestCases(BaseTest):
     def test001_zbd(self):
@@ -31,8 +32,10 @@ class TestCases(BaseTest):
         j.builder.web.openresty.build(reset=True)
         j.builder.web.openresty.install()
         j.builder.web.openresty.start()
+        time.sleep(10)
         self.assertTrue(len(j.sal.process.getProcessPid('openresty')))
         j.builder.web.openresty.stop()
+        time.sleep(10)
         self.assertEqual(0, len(j.sal.process.getProcessPid('openresty')))
 
     def test005_traefik(self):
@@ -109,8 +112,10 @@ class TestCases(BaseTest):
         j.builder.db.etcd.build(reset=True)
         j.builder.db.etcd.install()
         j.builder.db.etcd.start()
+        time.sleep(10)
         self.assertTrue(len(j.sal.process.getProcessPid('etcd')))
         j.builder.db.etcd.stop()
+        time.sleep(10)
         self.assertEqual(0, len(j.sal.process.getProcessPid('etcd')))
 
     def test014_capnp(self):
