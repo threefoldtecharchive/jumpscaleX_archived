@@ -11,6 +11,8 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
         self._php = None
         self._lua = None
         self._golang = None
+        self._nimlang = None
+        self._rust = None
 
     @property
     def python(self):
@@ -39,4 +41,17 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
             from .BuilderGolang import BuilderGolang
             self._golang = BuilderGolang()
         return self._golang
+    
+    @property
+    def nimlang(self):
+        if self._nimlang is None:
+            from .BuilderNIM import BuilderNIM
+            self._nimlang = BuilderNIM()
+        return self._nimlang
 
+    @property
+    def rust(self):
+        if self._rust is None:
+            from .BuilderRust import BuilderRust
+            self._rust = BuilderRust()
+        return self._rust

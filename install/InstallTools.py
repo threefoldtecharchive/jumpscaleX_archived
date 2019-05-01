@@ -16,6 +16,7 @@ from fcntl import F_GETFL, F_SETFL, fcntl
 from os import O_NONBLOCK, read
 from pathlib import Path
 from subprocess import Popen, check_output
+import inspect
 
 try:
     import traceback
@@ -619,7 +620,7 @@ class Tools:
 
         if 'darwin' in MyEnv.platform():
 
-            script = """            
+            script = """
             pip3 install ipython
             """
             Tools.execute(script, interactive=True)
@@ -639,7 +640,7 @@ class Tools:
                 pip3 install ipython
                 pip3 install pudb
                 pip3 install pygments
-                locale-gen --purge en_US.UTF-8                
+                locale-gen --purge en_US.UTF-8
             """
             Tools.execute(script, interactive=True)
 
@@ -660,16 +661,9 @@ class Tools:
         else:
             f = None
         if Tools._shell is None:
-            script = """
-            apt-get install -y ipython
-            apt-get install -y python3 python-dev python3-dev build-essential libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev
-            pip3 install ipython
-            apt-get clean && apt-get update && apt-get install -y locales
-            """
-            Tools.execute(script, interactive=False)
+
             try:
                 from IPython.terminal.embed import InteractiveShellEmbed
-
             except Exception as e:
                 Tools._installbase_for_shell()
                 from IPython.terminal.embed import InteractiveShellEmbed
@@ -677,12 +671,14 @@ class Tools:
                 print("\n*** file: %s"%f.filename)
                 print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
 
+
             Tools._shell = InteractiveShellEmbed(banner1= "", exit_msg="")
+            Tools._shell.Completer.use_jedi = False
         return Tools._shell(stack_depth=2)
 
 
     # @staticmethod
-    # def shell2(loc=True,exit=True):
+    # def shell(loc=True,exit=True):
     #     if loc:
     #         import inspect
     #         curframe = inspect.currentframe()
@@ -695,17 +691,11 @@ class Tools:
     #     history_filename="~/.jsx_history"
     #     if not Tools.exists(history_filename):
     #         Tools.file_write(history_filename,"")
+    #     ptconfig = None
     #     if exit:
     #         sys.exit(embed(globals(), locals(),configure=ptconfig,history_filename=history_filename))
     #     else:
     #         embed(globals(), locals(),configure=ptconfig,history_filename=history_filename)
-    #     # try:
-    #     #     from IPython.terminal.embed import InteractiveShellEmbed
-    #     # except:
-    #     #     Tools._installbase()
-    #     # _shell = InteractiveShellEmbed(banner1= "", exit_msg="")
-    #     # return _shell(stack_depth=2)
-
 
 
     @staticmethod
@@ -859,8 +849,6 @@ class Tools:
         else:
             LOGCAT = "CRITICAL"
 
-
-
         LOGFORMAT = MyEnv.LOGFORMAT[LOGCAT]
 
         logdict.update(MyEnv.MYCOLORS)
@@ -878,19 +866,29 @@ class Tools:
             logdict["context"]=""
 
 
+        p = print
+        if MyEnv.config.get('log_printer') and MyEnv.config['DEBUG']:
+            p = MyEnv.config['log_printer']
+
         msg=Tools.text_replace(LOGFORMAT,args=logdict)
         msg=Tools.text_replace(msg,args=logdict)
-        print(msg)
+        p(msg)
 
         if data_show:
             if logdict["data"] not in ["",None,{}]:
                 if isinstance(logdict["data"],dict):
-                    data = serializer(logdict["data"])
+                    try:
+                        data = serializer(logdict["data"])
+                    except Exception as e:
+                        data = logdict["data"]
                 else:
                     data = logdict["data"]
                 data=Tools.text_indent(data,10,strip=True)
-                data=Tools.text_replace(data,text_strip=False)
-                print (data.rstrip())
+                try:
+                    data=Tools.text_replace(data,text_strip=False)
+                except:
+                    pass
+                p(data.rstrip())
 
 
     @staticmethod
@@ -1551,13 +1549,13 @@ class OSXInstall():
     def brew_uninstall():
         cmd='sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"'
         Tools.execute(cmd,interactive=True)
-        toremove = """                
+        toremove = """
         sudo rm -rf /usr/local/.com.apple.installer.keep
         sudo rm -rf /usr/local/include/
         sudo rm -rf /usr/local/etc/
         sudo rm -rf /usr/local/var/
         sudo rm -rf /usr/local/FlashcardService/
-        sudo rm -rf /usr/local/texlive/ 
+        sudo rm -rf /usr/local/texlive/
         """
         Tools.execute(toremove,interactive=True)
 
@@ -1580,9 +1578,9 @@ class UbuntuInstall():
         if not os.path.exists("/etc/lsb-release"):
             raise RuntimeError("Your operating system is not supported")
 
-        with open("/etc/lsb-release", "r") as f:
-            if "DISTRIB_CODENAME=bionic" not in f.read():
-                raise RuntimeError("Your distribution is not supported. Only Ubuntu Bionic is supported.")
+        # with open("/etc/lsb-release", "r") as f:
+        #     if "DISTRIB_CODENAME=bionic" not in f.read() and :
+        #         raise RuntimeError("Your distribution is not supported. Only Ubuntu Bionic is supported.")
 
         return True
 
@@ -1616,6 +1614,23 @@ class UbuntuInstall():
         Tools.execute(script, interactive=True)
         MyEnv.state_set("ubuntu_base_install")
 
+    def docker_install():
+        if MyEnv.state_exists("ubuntu_docker_install"):
+            return
+        script="""
+        apt update
+        apt upgrade -y
+        apt install python3-pip  -y
+        pip3 install pudb
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+        add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+        apt update
+        sudo apt install docker-ce -y
+        """
+        Tools.execute(script, interactive=True)
+        MyEnv.state_set("ubuntu_docker_install")
+
+
     @staticmethod
     def python_redis_install():
         if MyEnv.state_exists("python_redis_install"):
@@ -1646,6 +1661,7 @@ class UbuntuInstall():
             0: [
                 "blosc>=1.5.1",
                 "Brotli>=0.6.0",
+                "captcha",
                 "certifi",
                 "Cython",
                 "click>=6.6",
@@ -1659,6 +1675,8 @@ class UbuntuInstall():
                 "ed25519>=1.4",
                 "fakeredis",
                 "future>=0.15.0",
+                "geopy",
+                "geocoder",
                 "gevent >= 1.2.2",
                 "gipc",
                 "GitPython>=2.1.1",
@@ -1681,7 +1699,7 @@ class UbuntuInstall():
                 "psutil>=5.4.3",
                 "pudb>=2017.1.2",
                 "pyblake2>=0.9.3",
-                "pycapnp>=0.5.12",
+                # "pycapnp>=0.5.12",
                 "PyGithub>=1.34",
                 "pymux>=0.13",
                 "pynacl>=1.2.1",
@@ -1693,6 +1711,7 @@ class UbuntuInstall():
                 "redis>=2.10.5",
                 "requests>=2.13.0",
                 "six>=1.10.0",
+                "sendgrid",
                 "toml>=0.9.2",
                 "Unidecode>=0.04.19",
                 "watchdog>=0.8.3",
@@ -1715,6 +1734,7 @@ class UbuntuInstall():
                 "packet-python>=1.37",
                 "uvloop>=0.8.0",
                 "pycountry",
+                "pycountry_convert",
                 "cson>=0.7",
                 "ujson",
                 "Pillow>=4.1.1",
@@ -1722,7 +1742,8 @@ class UbuntuInstall():
 
             # level 2: full install
             2: [
-                "psycopg2>=2.7.1",
+                # "psycopg2-binary",
+                # "psycopg2>=2.7.1",
                 "pystache>=0.5.4",
                 # "pypandoc>=1.3.3",
                 # "SQLAlchemy>=1.1.9",
@@ -1758,7 +1779,9 @@ class UbuntuInstall():
         return [
             'iproute2',
             'python-ufw',
-            'ufw'
+            'ufw',
+            'libpq-dev',
+            'graphviz',
         ]
 
     def apts_install():
@@ -1778,7 +1801,7 @@ class UbuntuInstall():
     #     """
     #     Tools.execute(script,interactive=True)
 
-LOGFORMATBASE = '{CYAN}{TIME} {filename:<16}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}'
+LOGFORMATBASE = '{COLOR}{TIME} {filename:<16}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}'  #DO NOT CHANGE COLOR
 
 class MyEnv():
 
@@ -1795,7 +1818,7 @@ class MyEnv():
 
     appname = "installer"
 
-    FORMAT_TIME = "%a%d %H:%M"
+    FORMAT_TIME = "%a %d %H:%M:%S"
 
     MYCOLORS =   { "RED":"\033[1;31m",
                 "BLUE":"\033[1;34m",
@@ -1810,8 +1833,9 @@ class MyEnv():
     LOGFORMAT = {
         'DEBUG':LOGFORMATBASE.replace("{COLOR}","{CYAN}"),
         'STDOUT': '{message}',
-        'INFO': '{BLUE}* {message}{RESET}',
-        'WARNING': LOGFORMATBASE.replace("{COLOR}","{BLUE}"),
+        # 'INFO': '{BLUE}* {message}{RESET}',
+        'INFO':LOGFORMATBASE.replace("{COLOR}","{BLUE}"),
+        'WARNING': LOGFORMATBASE.replace("{COLOR}","{YELLOW}"),
         'ERROR': LOGFORMATBASE.replace("{COLOR}","{RED}"),
         'CRITICAL': '{RED}{TIME} {filename:<16} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}',
     }
@@ -1857,14 +1881,18 @@ class MyEnv():
             dir_home = "/root"
         config["DIR_HOME"] = dir_home
         config["USEGIT"] = True
-        config["DEBUG"] = True
-        config["SSH_AGENT"] = False
+        config["DEBUG"] = False
 
-        config["LOGGER_INCLUDE"] = []
+        config["SSH_AGENT"] = False
+        config["SSH_KEY_DEFAULT"] = ""
+
+        config["LOGGER_INCLUDE"] = ["*"]
         config["LOGGER_EXCLUDE"] = ["sal.fs"]
         config["LOGGER_LEVEL"] = 15 #means std out & plus gets logged
         config["LOGGER_CONSOLE"] = True
         config["LOGGER_REDIS"] = False
+
+
 
         if MyEnv.installer_only:
             config["DIR_TEMP"] = "/tmp/jumpscale_installer"
@@ -1898,10 +1926,15 @@ class MyEnv():
 
     @staticmethod
     def _init(force=False,install=False):
-        MyEnv.check_platform()
-
         if MyEnv.__init:
             return
+
+        installpath = os.path.dirname(inspect.getfile(os.path))
+        if installpath.find("/_MEI")!=-1 or installpath.endswith("dist/install"):
+            MyEnv.installer = True
+        else:
+            MyEnv.installer = False
+
 
         if install:
             #will make sure we install and manipulate local system
@@ -1918,7 +1951,7 @@ class MyEnv():
             return
 
 
-        if not os.path.exists("/sandbox"):
+        if MyEnv.installer==False and not os.path.exists("/sandbox"):
             script = """
             cd /
             sudo mkdir -p /sandbox/cfg
@@ -1937,7 +1970,6 @@ class MyEnv():
         if "DIR_CFG" in os.environ:
             DIR_CFG = os.environ["DIR_CFG"].strip()
         else:
-
             DIR_CFG = "/sandbox/cfg"
 
         MyEnv.config_file_path = os.path.join(DIR_CFG,"jumpscale_config.toml")
@@ -1995,12 +2027,11 @@ class MyEnv():
         MyEnv.log_loglevel = MyEnv.config.get("LOGGER_LEVEL",100)
         MyEnv.log_console = MyEnv.config.get("LOGGER_CONSOLE",True)
         MyEnv.log_redis = MyEnv.config.get("LOGGER_REDIS",False)
+        MyEnv.debug = MyEnv.config.get("DEBUG",False)
 
         installed = Tools.cmd_installed("git") and Tools.cmd_installed("ssh-agent")
         MyEnv.config["SSH_AGENT"]=installed
         MyEnv.config_save()
-
-
 
         MyEnv.__init = True
 
@@ -2200,10 +2231,10 @@ class MyEnv():
 
 class JumpscaleInstaller():
 
-    def __init__(self):
+    def __init__(self, branch=["development"]):
 
         self.account = "threefoldtech"
-        self.branch = ["development_types"]
+        self.branch = branch
         self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
     def install(self,branch=None,secret="1234",private_key_words=None):

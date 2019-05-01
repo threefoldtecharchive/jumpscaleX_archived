@@ -118,7 +118,7 @@ class Disk(Mountable):
                         self._type = StorageType.ARCHIVE
                     else:
                         self._type = StorageType.HDD
-                elif res['type'] == 'SSD':
+                elif res['type'] in ['SSD', 'SDD']:
                     if "nvme" in self._disk_info['name']:
                         self._type = StorageType.NVME
                     else:

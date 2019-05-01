@@ -8,10 +8,10 @@ def main(self):
 
     """
 
-    c = self.client_admin_get()
+    c = self.client_admin_get(port=9901)
     c.namespace_new("test", secret="1234")
 
-    cl = self.client_get(nsname="test", addr="localhost", port=9900, secret="1234")
+    cl = self.client_get(nsname="test", addr="localhost", port=9901, secret="1234")
 
     nr = cl.nsinfo["entries"]
     assert nr == 0
@@ -77,9 +77,10 @@ def main(self):
 
     nsname = "newnamespace"
 
-    c = self.client_admin_get()
+    c = self.client_admin_get(port=9901)
     c.namespace_new(nsname, secret="1234", maxsize=1000)
-    ns = self.client_get(nsname, secret="1234")
+    ns = self.client_get(nsname, secret="1234",port=9901)
+    ns.flush()
 
     assert ns.nsinfo["data_limits_bytes"] == 1000
     assert ns.nsinfo["data_size_bytes"] == 0
@@ -114,7 +115,7 @@ def main(self):
 
     res = j.tools.timer.stop(nritems)
 
-    assert res>5000
+    assert res>3000
 
     self._log_info("PERF TEST SEQ OK")
     return "OK"

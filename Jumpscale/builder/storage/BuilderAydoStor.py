@@ -23,7 +23,7 @@ class BuilderAydoStor(j.builder.system._BaseClass):
         j.builder.system.package.mdupdate()
         j.builder.system.package.ensure('build-essential')
 
-        j.builder.tools.dir_remove("%s/src" % #j.builder.sandbox.envGet('GOPATH'))
+        j.builder.tools.dir_remove("%s/src" % #j.builder.sandbox.env_get('GOPATH'))
         j.builder.runtimes.golang.get("github.com/g8os/stor")
 
         if install:
@@ -36,7 +36,7 @@ class BuilderAydoStor(j.builder.system._BaseClass):
         j.core.tools.dir_ensure('{DIR_BIN}')
         j.builder.tools.file_copy(j.builder.tools.joinpaths(
             j.builder.tools.dir_paths['GODIR'], 'bin', 'stor'), '{DIR_BIN}', overwrite=True)
-        #j.builder.sandbox.addPath("{DIR_BASE}/bin")
+        #j.builder.sandbox.path_add("{DIR_BASE}/bin")
 
         pm = j.builder.system.processmanager.get()
         pm.stop("stor")  # will also kill
@@ -69,6 +69,6 @@ class BuilderAydoStor(j.builder.system._BaseClass):
 
         j.core.tools.dir_ensure("{DIR_BASE}/cfg/stor/", recursive=True)
         j.builder.tools.file_copy("{DIR_VAR}/templates/cfg/stor/config.toml", "{DIR_BASE}/cfg/stor/")
-        cmd = #j.builder.sandbox.cmdGetPath("stor")
+        cmd = #j.builder.sandbox.cmd_path_get("stor")
         pm = j.builder.system.processmanager.get()
         pm.ensure("stor", '%s --config {DIR_BASE}/cfg/stor/config.toml' % cmd)

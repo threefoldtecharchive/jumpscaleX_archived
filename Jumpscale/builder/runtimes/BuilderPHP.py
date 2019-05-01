@@ -29,7 +29,7 @@ class BuilderPHP(j.builder.system._BaseClass):
         :param config:
         :return:
         '''
-        j.tools.bash.local.locale_check()
+        j.tools.bash.get().profile.locale_check()
 
         if j.core.platformtype.myplatform.isUbuntu:
             pkgs = "libxml2-dev libpng-dev libcurl4-openssl-dev libzip-dev zlibc zlib1g zlib1g-dev \

@@ -46,7 +46,12 @@ class String(TypeBaseClass):
         except Exception as e:
             raise j.exceptions.input("cannot convert to string")
 
-        value = value.strip().strip("'").strip().strip("\"").strip()
+        value=value.strip()
+        if len(value)>1:
+            if value[0]=="'" and value[-1]=="'":
+                value = value.strip("'")
+            if value[0]=="\"" and value[-1]=="\"":
+                value = value.strip("\"")
 
         return value
 
@@ -262,7 +267,7 @@ class Integer(TypeBaseClass):
     def __init__(self,default=None):
         self.BASETYPE = "int"
         if not default:
-            default = 4294967295
+            default = 2147483647
         self._default = default
 
     def checkString(self, s):
@@ -273,7 +278,7 @@ class Integer(TypeBaseClass):
         return isinstance(value, int)
 
     def toHR(self, v):
-        if int(v) == 4294967295:
+        if int(v) == 2147483647:
             return "-"  # means not set yet
         return '{:,}'.format(self.clean(v))
 
@@ -314,7 +319,7 @@ class Integer(TypeBaseClass):
             return "%s = %s" % (key, self.clean(value))
 
     def capnp_schema_get(self, name, nr):
-        return "%s @%s :UInt32;" % (name, nr)
+        return "%s @%s :Int32;" % (name, nr)
 
 
 class Float(TypeBaseClass):

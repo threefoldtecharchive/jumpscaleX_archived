@@ -43,7 +43,7 @@ class BuilderGitea(j.builder.system._BaseClass):
         if not j.builder.tools.file_is_link(self.CUSTOM_PATH):
             j.builder.tools.dir_remove(self.CUSTOM_PATH)
 
-        j.builder.tools.file_link(source='/opt/code/github/incubaid/gitea-custom',
+        j.builder.tools.file_link(source='/sandbox/code/github/incubaid/gitea-custom',
                                    destination=self.CUSTOM_PATH)
 
         self._configure()

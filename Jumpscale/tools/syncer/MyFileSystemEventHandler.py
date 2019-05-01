@@ -23,6 +23,7 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
                 raise RuntimeError("cannot have : in source")
             self.sync_paths_src.append(j.builder.tools.replace(source))
             self.sync_paths_dest.append(j.builder.tools.replace(dest))
+        self._logger_enable()
 
     def path_dest_get(self,src):
         nr=0
@@ -55,23 +56,29 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
             error = False
 
             if error is False:
+                print(changedfile)
                 if changedfile.find("/.git") != -1:
                     return
                 elif changedfile.find("/__pycache__/") != -1:
                     return
+                elif changedfile.find("/_tmp_/") != -1:
+                    return
                 elif changedfile.endswith(".pyc"):
+                    return
+                elif changedfile.endswith("___"):
                     return
                 dest = self.path_dest_get(changedfile)
                 e = ""
 
                 if action == "copy":
                     self._log_debug("copy: %s:%s" % (changedfile, dest))
+                    print("copy: %s:%s" % (changedfile, dest))
                     try:
                         self.syncer.ssh_client.copy_file(changedfile,dest)
                     except Exception as e:
-                        self._log_debug("Couldn't sync file: %s:%s" % (changedfile,dest))
-                        self._log_debug("** ERROR IN COPY, WILL SYNC ALL")
-                        self._log_debug(str(e))
+                        self._log_error("Couldn't sync file: %s:%s" % (changedfile,dest))
+                        self._log_error("** ERROR IN COPY, WILL SYNC ALL")
+                        self._log_error(str(e))
                         error = True
                 elif action == "delete":
                     self._log_debug("delete: %s:%s" % (changedfile, dest))
@@ -79,15 +86,14 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
                         cmd = 'rm %s' % dest
                         self.syncer.ssh_client.exec_command(cmd)
                     except Exception as e:
-                        self._log_debug("Couldn't remove file: %s" % (dest))
+                        self._log_error("Couldn't remove file: %s" % (dest))
                         if "No such file" in str(e):
                             return
                         else:
                             error = True
                             # raise RuntimeError(e)
                 else:
-                    raise j.exceptions.RuntimeError(
-                        "action not understood in filesystemhandler on sync:%s" % action)
+                    raise j.exceptions.RuntimeError("action not understood in filesystemhandler on sync:%s" % action)
 
                 if error:
                     try:

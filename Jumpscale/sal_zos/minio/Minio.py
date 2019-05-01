@@ -107,7 +107,7 @@ class Minio(Service):
                 try:
                     fs = sp.create(self._id)
                 except Exception as err:
-                    self._log_warning('couldn create storage pool filesystem: %s\nTrying another disk' % str(err))
+                    j.tools.logger._log_warning('couldn create storage pool filesystem: %s\nTrying another disk' % str(err))
                     continue
             if fs:
                 break
@@ -122,6 +122,8 @@ class Minio(Service):
             'nics': [{'type': 'default'}],
             'env': envs,
             'mounts': {fs.path: metadata_path},
+            'cpu': 2,
+            'memory': 4906,  # 4GiB
         }
 
     def start(self, timeout=15):
@@ -131,12 +133,26 @@ class Minio(Service):
         """
         if self.is_running():
             return
+        
+        j.tools.logger._log_info('start minio %s' % self.name)
 
-        self._log_info('start minio %s' % self.name)
+        def test_started():
+            self._container = None
+            return self.container.is_running()
+        if not j.tools.timer.execute_until(test_started, 10, 1):
+            raise RuntimeError('failed to start container')
 
         self.create_config()
 
-        cmd = '/bin/minio gateway zerostor --address 0.0.0.0:{port} --config-dir {dir}'.format(
+        logo_path = None
+        if self.logo_url:
+            logo_path = self.download_logo()
+
+        cmd = '/bin/minio gateway '
+        if logo_path:
+            cmd += ' --logo %s' % logo_path
+
+        cmd += ' zerostor --address 0.0.0.0:{port} --config-dir {dir}'.format(
             port=DEFAULT_PORT, dir=self._config_dir)
 
         # wait for minio to start
@@ -159,9 +175,16 @@ class Minio(Service):
         return "replication" if self._nr_parityshards <= 0 else "distribution"
 
     def create_config(self):
-        self._log_info('Creating minio config for %s' % self.name)
+        j.tools.logger._log_info('Creating minio config for %s' % self.name)
         config = self._config_as_text()
         self.container.upload_content(j.sal.fs.joinPaths(self._config_dir, self._config_name), config)
+
+    def download_logo(self):
+        dest = os.path.join('/mnt/containers', str(self.container.id), 'minio_metadata', 'logo.svg')
+        resp = self.node.client.web.download(self.logo_url, dest).get()
+        if resp.state != 'SUCCESS':
+            raise RuntimeError('impossible to download the minio logo: %s' % resp.stderr)
+        return '/minio_metadata/logo.svg'
 
     def _config_as_text(self):
         return templates.render(
@@ -174,7 +197,7 @@ class Minio(Service):
         tell minio process to reload its configuration by reading the config file again
         """
         if not self.is_running():
-            self._log_error("cannot reload when minio is not running")
+            j.tools.logger._log_error("cannot reload when minio is not running")
             return
 
         self.container.client.job.kill(self._id, signal.SIGHUP)
@@ -196,7 +219,7 @@ class Minio(Service):
         job = self.container.client.system(cmd)
         while job.running:
             time.sleep(10)
-            self._log_info("Check and repair still running")
+            j.tools.logger._log_info("Check and repair still running")
 
         result = job.get()
         if result.state == 'ERROR':

@@ -5,7 +5,7 @@ from Jumpscale.data.schema.DataObjBase import DataObjBase
 class ModelOBJ(DataObjBase):
 
     __slots__ = ["id","_schema","_model","_autosave","_readonly","_JSOBJ","_cobj_","_changed_items","_acl_id","_acl",
-                        {% for prop in obj.lists %}"_{{prop.name}}",{% endfor %}]
+                        {% for prop in obj.properties %}"_{{prop.name}}",{% endfor %}]
 
     def _defaults_set(self):
         pass
@@ -22,18 +22,6 @@ class ModelOBJ(DataObjBase):
         :return:
         """
         self._changed_items = {}
-        #LIST
-
-        {% for ll in obj.lists %}
-        # self._{{ll.name}} = j.data.types.get("l",self._schema.property_{{ll.name}}.js_typelocation)
-        raise RuntimeError("not get here")
-
-        self._{{ll.name}} = {{ll.js_typelocation}}.default_get()
-
-        for capnpbin in self._cobj_.{{ll.name_camel}}:
-            self._{{ll.name}}.new(data=capnpbin)
-        {% endfor %}
-
         #PROP
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
@@ -105,35 +93,11 @@ class ModelOBJ(DataObjBase):
 
     {% endfor %}
 
-    {#generate the properties for lists#}
-    {% for ll in obj.lists %}
-    @property
-    def {{ll.name}}(self):
-        return self._{{ll.name}}
-
-    @{{ll.name}}.setter
-    def {{ll.name}}(self,val):
-        if self._readonly:
-            raise RuntimeError("object readonly, cannot set.\n%s"%self)
-        self._{{ll.name}}._inner_list=[]
-        if j.data.types.string.check(val):
-            val = [i.strip() for i in val.split(",")]
-        for item in val:
-            self._{{ll.name}}.append(item)
-        if self._autosave:
-            self.save()
-    {% endfor %}
-
-
 
     @property
     def _changed(self):
         if  self._changed_items != {}:
             return True
-        {% for ll in obj.lists %}
-        if self._{{ll.name}}._changed:
-            return True
-        {% endfor %}
         return False
 
     @property
@@ -142,23 +106,6 @@ class ModelOBJ(DataObjBase):
             return self._cobj_
 
         ddict = self._cobj_.to_dict()
-
-        {% for prop in obj.lists %}
-        if self._{{prop.name}}._changed:
-            raise RuntimeError("should not get here")
-            # #means the list was modified
-            # if "{{prop.name_camel}}" in ddict:
-            #     ddict.pop("{{prop.name_camel}}")
-            # ddict["{{prop.name_camel}}"]=[] #make sure we have empty list
-            #
-            # for item in self._{{prop.name}}._inner_list:
-            #     if self._{{prop.name}}._child_type.NAME is "jsobject":
-            #         #use data in stead of rich object
-            #         item = item._data
-            #     elif hasattr(item,"_data"):
-            #         item = item._data
-            #     ddict["{{prop.name_camel}}"].append(item)
-        {% endfor %}
 
         {% for prop in obj.properties %}
         #convert jsobjects to capnpbin data
@@ -207,11 +154,6 @@ class ModelOBJ(DataObjBase):
         {% endif %}
         {% endfor %}
 
-        {% for prop in obj.lists %}
-        raise RuntimeError("not here")
-        # d["{{prop.name}}"] = self._{{prop.name}}.pylist()
-        {% endfor %}
-
         if self.id is not None:
             d["id"]=self.id
 
@@ -231,15 +173,18 @@ class ModelOBJ(DataObjBase):
         # d["{{prop.name}}"] = j.data.serializers.yaml.dumps(self.{{prop.name}}._ddict_hr)
         d["{{prop.name}}"] = "\n"+j.core.text.indent(self.{{prop.name}}._str(),4)
         {% else %}
-        res = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
-        if len(str(res))<maxsize:
-            d["{{prop.name}}"] = res
+        if {{prop.js_typelocation}}.NAME in ["list"]:
+            res = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
         else:
-            d["{{prop.name}}"] = "\n"+j.core.text.indent(res,4)
+            res = {{prop.js_typelocation}}.toHR(self.{{prop.name}})
+            # if len(str(res))<maxsize:
+            #     res = "\n"+j.core.text.indent(res,4)
+        d["{{prop.name}}"] = res
+        # if len(str(res))<maxsize:
+        #     d["{{prop.name}}"] = res
+        # else:
+        #     d["{{prop.name}}"] = "\n"+j.core.text.indent(res,4)
         {% endif %}
-        {% endfor %}
-        {% for prop in obj.lists %}
-        d["{{prop.name}}"] = self._{{prop.name}}.pylist(subobj_format="H")
         {% endfor %}
         if self.id is not None:
             d["id"] = self.id

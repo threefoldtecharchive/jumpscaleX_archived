@@ -2,45 +2,56 @@
 from Jumpscale import j
 
 
-
+builder_method = j.builder.system.builder_method
 
 class BuilderNIM(j.builder.system._BaseClass):
-    """
-    """
-
+    NAME ="nim"
     def _init(self):
 
-        self.BUILDDIRL = j.core.tools.text_replace("{DIR_VAR}/build/nimlang/")
-        self.CODEDIRL = j.core.tools.text_replace("{DIR_VAR}/build/code/nimlang/")
+        self.DIR_BUILD = self._replace("{DIR_VAR}/build/nimlang")
 
-    def build(self,reset=False):
+    @builder_method()
+    def build(self):
+
         """
-        js_shell 'j.builder.runtimes.nim.build(reset=False)'
+        js_shell 'j.builder.runtimes.nim.build()'
         :return:
         """
-
-        if reset:
-            self.reset()
-
-        if self._done_check("build", reset):
-            return
-
-        url = "https://nim-lang.org/download/nim-0.19.0.tar.xz"
-
-
-        j.builder.tools.file_download(url, to=self.CODEDIRL, overwrite=False,
-                                       expand=True, minsizekb=400, removeTopDir=True, deletedest=True)
-
+        self.profile_sandbox_select()
+        download_url = "https://nim-lang.org/download/nim-0.19.4.tar.xz"
+        
+        self.tools.file_download(download_url, overwrite=False, to=self.DIR_BUILD, expand=True, removeTopDir=True)
+        
         C="""
-        cd {CODEDIRL}
-        export LDFLAGS="-L/usr/local/opt/openssl/lib"
-        export CPPFLAGS="-I/usr/local/opt/openssl/include"
-        export DYLD_LIBRARY_PATH=/usr/local/opt/openssl/lib
+        cd {DIR_BUILD}
         sh build.sh
-        sh install.sh ~/.nimble/
         bin/nim c koch
         ./koch tools
         """
 
-        j.builder.tools.run(j.core.tools.text_replace(C))
+        self._execute(C)
 
+    @builder_method()
+    def install(self):
+
+        self.build()
+        nim_bin_path = self.tools.joinpaths(self.DIR_BUILD, "bin")
+
+        j.builder.tools.dir_ensure(nim_bin_path)
+        self._copy("%s/nim" % nim_bin_path, "{DIR_BIN}/nim")
+
+    @builder_method()
+    def sandbox(self):
+        bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
+        self.tools.dir_ensure(bin_dest)
+        self._copy('{DIR_BUILD}/bin/', bin_dest)
+        
+    @builder_method()
+    def test(self):
+        self.install()
+
+        rc,_,_ =self._execute("nim --v | grep Version")
+        if rc:
+            print("TEST Failed")
+            return
+        print("TEST DONE")

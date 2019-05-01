@@ -64,8 +64,8 @@ class BuilderNodeJS(j.builder.system._BaseClass):
             cdest = j.builder.tools.file_download(
                 url, expand=True, overwrite=False, to="{DIR_TEMP}/phantomjs", removeTopDir=True, deletedest=True)
 
-            j.builder.tools.run("mv %s/bin/phantomjs /opt/bin/phantomjs" % cdest)
-            j.builder.tools.run("rm -rf %s" % cdest)
+            j.builder.tools.execute("mv %s/bin/phantomjs /opt/bin/phantomjs" % cdest)
+            j.builder.tools.execute("rm -rf %s" % cdest)
 
             j.builder.system.package.ensure("libfontconfig")
 
@@ -143,10 +143,10 @@ class BuilderNodeJS(j.builder.system._BaseClass):
         cdest = j.builder.tools.file_download(
             url, expand=True, overwrite=False, to="{DIR_TEMP}/node")
 
-        j.builder.tools.run("rm -rf {DIR_BASE}/node;mv %s {DIR_BASE}/node" % (cdest))
+        j.builder.tools.execute("rm -rf {DIR_BASE}/node;mv %s {DIR_BASE}/node" % (cdest))
 
         # if j.core.platformtype.myplatform.isMac:
-        #     j.builder.tools.run('mv {DIR_BASE}/node/%s/* {DIR_BASE}/node' %
+        #     j.builder.tools.execute('mv {DIR_BASE}/node/%s/* {DIR_BASE}/node' %
         #                   j.sal.fs.getBaseName(url.strip('.tar.gz')))
 
 

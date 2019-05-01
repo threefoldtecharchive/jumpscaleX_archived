@@ -8,27 +8,27 @@ class BuilderFreeflow(j.builder.system._BaseClass):
     def _init(self):
 
         self.HUMHUB_PATH = "/var/www/html/humhub"
-        self.dirs = {
-            "/var/www/html/humhub": "/var/www/html/humhub",
-            "/var/lib/mysql/": "/var/lib/mysql/",
-            "/var/log/mysql/": "/var/log/mysql/",
-            "/var/run/mysqld/": "/var/run/mysqld/",
-            "/etc/apache2": "/etc/apache2"
+        # self.dirs = {
+        #     "/var/www/html/humhub": "/var/www/html/humhub",
+        #     "/var/lib/mysql/": "/var/lib/mysql/",
+        #     "/var/log/mysql/": "/var/log/mysql/",
+        #     "/var/run/mysqld/": "/var/run/mysqld/",
+        #     "/etc/apache2": "/etc/apache2"
 
-        }
-        self.dirs.update(j.builder.db.mariadb.dirs)
+        # }
+        # self.dirs.update(j.builder.db.mariadb.dirs)
 
-        self.bins = [
-            "/usr/bin/mysql",
-            "/usr/sbin/apache2"
-        ]
-        self.bins.extend(j.builder.db.mariadb.bins)
+        # self.bins = [
+        #     "/usr/bin/mysql",
+        #     "/usr/sbin/apache2"
+        # ]
+        # self.bins.extend(j.builder.db.mariadb.bins)
 
         self.new_files = dict()
         self.new_files.update(j.builder.db.mariadb.new_files)
 
-        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'freeflow_startup.toml')
-        self.startup = j.sal.fs.readFile(startup_file)
+        # startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'freeflow_startup.toml')
+        # self.startup = j.sal.fs.readFile(startup_file)
 
 
     def build(self, reset =False):
@@ -59,12 +59,12 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         mysql -e "GRANT ALL ON humhub.* TO 'humhub'@'localhost' IDENTIFIED BY 'Hum_flist_hubB';"
         mysql -e "FLUSH PRIVILEGES;"
         """
-        j.builder.tools.run(sql_init_script)
+        j.builder.tools.execute(sql_init_script)
 
-        j.builder.tools.file_download("https://raw.githubusercontent.com/threefoldgrid/freeflow/master/utils/IYO.php",
+        j.builder.tools.file_download("https://raw.githubusercontent.com/freeflowpages/freeflow-iyo-module/master/IYO.php",
                                       "/var/www/html/humhub/protected/humhub/modules/user/authclient/IYO.php")
 
-        j.builder.tools.file_download("https://raw.githubusercontent.com/threefoldgrid/freeflow/master/utils/common.php",
+        j.builder.tools.file_download("https://raw.githubusercontent.com/freeflowpages/freeflow-flist/master/common.php",
                                       "/var/www/html/humhub/protected/config/common.php")
 
         j.sal.fs.chmod("/var/www", 0o775)
@@ -154,19 +154,40 @@ chown -R mysql /var/run/mysqld/
         if self._done_check('sandbox') and reset is False:
             return
         self.build(reset = reset)
+        dirs = {
+            "/var/www/html/humhub": "/var/www/html/humhub",
+            "/var/lib/mysql/": "/var/lib/mysql/",
+            "/var/log/mysql/": "/var/log/mysql/",
+            "/var/run/mysqld/": "/var/run/mysqld/",
+            "/etc/apache2": "/etc/apache2"
 
-        self.bins = ['/usr/bin/mysql','/usr/sbin/apache2']
-        for bin_name in self.bins:
+        }
+        self.dirs.update(j.builder.db.mariadb.dirs)
+        bins = ['/usr/bin/mysql','/usr/sbin/apache2']
+        self.bins.extend(j.builder.db.mariadb.bins)
+        for bin_name in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
             dir_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR)
             j.builder.tools.dir_ensure(dir_dest)
             j.sal.fs.copyFile(dir_src, dir_dest)
+        
+        
+        for dir_dest in dirs:
+            dir_dest = j.sal.fs.joinPaths(dest_path, self.tools.path_relative(dir_dest))
+            j.builder.tools.dir_ensure(dir_dest)
+        
         lib_dest = j.sal.fs.joinPaths(dest_path, 'sandbox/lib')
         j.builder.tools.dir_ensure(lib_dest)
-        for bin in self.bins:
-            j.tools.sandboxer.libs_sandbox(bin, lib_dest, exclude_sys_libs=False)
+        for bin in bins:
+            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
+            j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
 
+        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'freeflow_startup.toml')
+        startup = j.sal.fs.readFile(startup_file)
+        file_dest = j.sal.fs.joinPaths(dest_path, '.startup.toml')
+        j.builder.tools.file_ensure(file_dest)
+        j.builder.tools.file_write(file_dest, startup)
+        
         self._done_set('sandbox')
         if create_flist:
             print(self.flist_create(sandbox_dir=dest_path, hub_instance=zhub_instance))
-            

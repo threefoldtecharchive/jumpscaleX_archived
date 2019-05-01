@@ -134,7 +134,7 @@ class ZDBServer(j.application.JSBaseClass):
         js_shell 'j.servers.zdb.start_test_instance(reset=True)'
 
         start a test instance with self.adminsecret 123456
-        will use port 9900
+        will use port 9901
         and name = test
 
         production is using other ports and other secret

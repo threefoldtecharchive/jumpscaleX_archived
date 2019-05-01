@@ -13,7 +13,7 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
         self.upgrade()
 
         if not self._done_check("fixlocale", reset):
-            j.tools.bash.local.locale_check()
+            j.tools.bash.get().profile.locale_check()
             self._done_set("fixlocale")
 
         # out = ""
@@ -39,7 +39,7 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
         C += " openssl wget curl git mc tmux rsync"
         j.builder.system.package.ensure(C)
 
-        # j.builder.sandbox.profileJS.addPath("{DIR_BIN}")
+        # j.builder.sandbox.profileJS.path_add("{DIR_BIN}")
         # j.builder.sandbox.profileJS.save()
 
         if upgrade:

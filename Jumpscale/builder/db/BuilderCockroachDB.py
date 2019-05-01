@@ -1,57 +1,74 @@
 from Jumpscale import j
-
+builder_method = j.builder.system.builder_method
 
 
 class BuilderCockroachDB(j.builder.system._BaseClass):
-    NAME = 'cockroachdb'
+    NAME = 'cockroach'
 
-    def install(self, start=True, reset=False):
+    def _init(self):
+        self.DIR_BUILD = self._replace('{DIR_TEMP}/cockroachdb')
+
+    @builder_method()
+    def build(self):
         """
-        download, install, move files to appropriate places, and create relavent configs
+        Builds cockroachdb
         """
-        if self._done_check("install", reset):
-            return
-
-        appbase = "%s/" % j.builder.tools.dir_paths["BINDIR"]
-        j.core.tools.dir_ensure(appbase)
-
+        self.tools.dir_ensure(self.DIR_BUILD)
         url = 'https://binaries.cockroachdb.com/cockroach-latest.linux-amd64.tgz'
-        dest = "{DIR_TEMP}/cockroach-latest.linux-amd64"
+        dest = '{}/cockroach-latest.linux-amd64.tgz'.format(self.DIR_BUILD)
 
-        self._log_info('Downloading CockroachDB.')
-        j.builder.tools.file_download(
-            url, to="{DIR_TEMP}", overwrite=False, expand=True)
-        tarpaths = j.builder.tools.find(
-            "{DIR_TEMP}", recursive=False, pattern="*cockroach*.tgz", type='f')
+        self.tools.file_download(url, to=dest, overwrite=False, expand=True)
+        tarpaths = self.tools.find('{DIR_TEMP}', recursive=False, pattern='*cockroach*.tgz', type='f')
         if len(tarpaths) == 0:
-            raise j.exceptions.Input(message="could not download:%s, did not find in %s" % (url, j.core.tools.text_replace("{DIR_TEMP}")))
-        tarpath = tarpaths[0]
-        j.builder.tools.file_expand(tarpath, "{DIR_TEMP}")
+            raise j.exceptions.Input(message='could not download:%s, did not find in %s' % (url, self.DIR_BUILD))
 
-        for file in j.builder.tools.find(dest, type='f'):
-            j.builder.tools.file_copy(file, appbase)
-        self._done_set("install")
-        if start:
-            self.start(reset=reset)
+        for file in self.tools.find(self.DIR_BUILD, type='f'):
+            self._copy(file, '{DIR_BIN}')
 
-    def build(self, start=True, reset=False):
-        raise RuntimeError("not implemented")
+    @builder_method()
+    def install(self):
+        """
+        Installs cockroach
+        """
+        for file in self.tools.find(self.DIR_BUILD, type='f'):
+            self._copy(file, '{DIR_BIN}')
 
-    def start(self, host="localhost", insecure=True, background=False, reset=False, port=26257, http_port=8581):
-        if self.isStarted() and not reset:
-            return
-        cmd = "{DIR_BIN}/cockroach start --host=%s" % host
-        if insecure:
-            cmd = "%s --insecure" % (cmd)
-        if background:
-            cmd = "%s --background" % (cmd)
-        cmd = "%s --port=%s --http-port=%s" % (cmd, port, http_port)
+    @property
+    def startup_cmds(self):
+        host = 'localhost'
+        port = 26257
+        http_port = 8581
 
-        # cmd = "{DIR_BIN}/cockroach start --insecure --host=localhost --background"
-        j.builder.system.process.kill("cockroach")
-        pm = j.builder.system.processmanager.get()
-        pm.ensure(name="cockroach", cmd=cmd, env={}, path="", autostart=True)
+        cmd = '/sandbox/bin/cockroach start --host={} --insecure --port={} --http-port={}'.format(host, port, http_port)
+        cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
+        return cmds
 
-    def stop(self):
-        pm = j.builder.system.processmanager.get()
-        pm.stop("cockroach")
+    @builder_method()
+    def clean(self):
+        self._remove(self.DIR_BUILD)
+        self._remove(self.DIR_SANDBOX)
+
+    @builder_method()
+    def sandbox(self):
+        bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
+        self.tools.dir_ensure(bin_dest)
+        bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
+        self._copy(bin_path, bin_dest)
+
+    @builder_method()
+    def test(self):
+        if self.running():
+            self.stop()
+
+        self.start()
+        pid = j.sal.process.getProcessPid(self.NAME)
+        assert pid is not []
+        self.stop()
+
+        print('TEST OK')
+
+    @builder_method()
+    def uninstall(self):
+        bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
+        self._remove(bin_path)
+        self.clean()

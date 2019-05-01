@@ -34,7 +34,7 @@ class Syncer(j.application.JSBaseConfigClass):
         t = ""  (S)  
         """
 
-    def _init(self,sshclient_name=None,ssh_client=None):
+    def _init2(self,sshclient_name=None,ssh_client=None,**kwargs):
 
         if ssh_client:
             self.ssh_client = ssh_client
@@ -47,9 +47,12 @@ class Syncer(j.application.JSBaseConfigClass):
         self._executor = None
 
         # self.paths = []
-        if self._isnew and self.paths==[]:
+        if self.paths==[]:
             self.paths.append("{DIR_CODE}/github/threefoldtech/jumpscaleX")
             self.paths.append("{DIR_CODE}/github/threefoldtech/digitalmeX")
+            self.save()
+
+        self._log_debug(self)
 
 
     def delete(self):
@@ -102,7 +105,8 @@ class Syncer(j.application.JSBaseConfigClass):
         for item in self._get_paths():
             source,dest = item
             self._log_info("upload:%s to %s"%(source,dest))
-            self.executor.upload(source, dest, recursive=True, createdir=True,
+            for i in range(2):
+                self.executor.upload(source, dest, recursive=True, createdir=True,
                                  rsyncdelete=True, ignoredir=self.IGNOREDIR, ignorefiles=None)
 
         if monitor:

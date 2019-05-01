@@ -166,7 +166,12 @@ class TypeBaseClass(): #!!TYPEBASECLASS!!
         :param v:
         :return:
         """
-        return self.clean(v)
+        o = self.clean(v)
+        if isinstance(o,TypeBaseObjClass):
+            data = o._dictdata
+        else:
+            data = o
+        return data
 
     def check(self, value):
         '''
@@ -189,6 +194,8 @@ class TypeBaseClass(): #!!TYPEBASECLASS!!
             return False
 
     def default_get(self):
+        if self._default is None:
+            raise RuntimeError("self._default cannot be None")
         return self.clean(self._default)
 
     def clean(self, value):

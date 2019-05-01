@@ -116,6 +116,15 @@ class MarkDownDocs(j.application.JSBaseClass):
 
         # lets make sure we have default macros
         self.macros_load()
+        self._sonic_client = None
+
+    def sonic_client_set(self, sonic_client):
+        """
+        set sonic client to be used to index docsites content
+        :param sonic_client:
+        :return:
+        """
+        self._sonic_client = sonic_client
 
     def _git_get(self, path):
         if path not in self._git_repos:
@@ -156,11 +165,11 @@ class MarkDownDocs(j.application.JSBaseClass):
         # else:
         #     self._log_debug("macros not loaded, already there")
 
-    def load(self, path="", name=""):
+    def load(self, path="", name="", sonic_client=None):
         self.macros_load()
         if path.startswith("http"):
-            path = j.clients.git.getContentPathFromURLorPath(path)
-        ds = DocSite(path=path, name=name)
+            path = j.clients.git.getContentPathFromURLorPath(path, pull=True)
+        ds = DocSite(path=path, name=name, sonic_client=sonic_client or self._sonic_client)
         self.docsites[ds.name] = ds
         return self.docsites[ds.name]
 
@@ -254,7 +263,7 @@ class MarkDownDocs(j.application.JSBaseClass):
         else:
             return None
 
-    def webserver(self, watch=True):
+    def webserver(self, watch=True, branch='master', sonic_server=None):
         url = "https://github.com/threefoldfoundation/lapis-wiki"
         server_path = j.clients.git.getContentPathFromURLorPath(url)
         url = "https://github.com/threefoldtech/jumpscale_weblibs"
@@ -268,39 +277,42 @@ class MarkDownDocs(j.application.JSBaseClass):
             watcher = Watcher(self.docsites)
 
             threads = list()
-            threads.append(gevent.spawn(self.syncer))
+            threads.append(gevent.spawn(self.syncer, branch=branch))
             threads.append(gevent.spawn(watcher.start))
 
             gevent.joinall(threads)
 
-    def syncer(self):
+    def syncer(self, branch):
         print("syncer started, will reload every 5 mins")
         while True:
             print("Reloading")
-            self.load_wikis()
+            self.load_wikis(branch=branch)
             gevent.sleep(300)
 
-    def load_wikis(self):
-        url = "https://github.com/threefoldfoundation/info_tokens/tree/master/docs"
+    def load_wikis(self, branch='master'):
+        url = "https://github.com/threefoldfoundation/info_tokens/tree/%s/docs" % branch
         tf_tokens = self.load(url, name="tokens")
         tf_tokens.write()
 
-        url = "https://github.com/threefoldfoundation/info_foundation/tree/master/docs"
+        url = "https://github.com/threefoldfoundation/info_foundation/tree/%s/docs" % branch
         tf_foundation = self.load(url, name="foundation")
         tf_foundation.write()
 
-        url = "https://github.com/threefoldfoundation/info_grid/tree/master/docs"
+        url = "https://github.com/threefoldfoundation/info_grid/tree/%s/docs" % branch
         tf_grid = self.load(url, name="grid")
         tf_grid.write()
 
-        url = "https://github.com/BetterToken/info_bettertoken/tree/master/docs"
+        url = "https://github.com/BetterToken/info_bettertoken/tree/%s/docs" % branch
         tf_grid = self.load(url, name="bettertoken")
         tf_grid.write()
 
-        url = "https://github.com/harvested-io/info_harvested.io/tree/master/docs"
+        url = "https://github.com/harvested-io/info_harvested.io/tree/%s/docs" % branch
         tf_grid = self.load(url, name="harvested")
         tf_grid.write()
 
+        url = "https://github.com/freeflownation/info_freeflowevents/tree/%s/docs" % branch
+        ff_event_wiki = self.load(url, name="freeflowevent")
+        ff_event_wiki.write()
 
     def test(self, watch=False):
         """
@@ -308,9 +320,6 @@ class MarkDownDocs(j.application.JSBaseClass):
         """
         url = "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/docsites_examples/test/"
         ds = self.load(url, name="test")
-
-        url = "https://github.com/threefoldtech/jumpscaleX/blob/master/docs"
-        ds_js = self.load(url, name="jumpscale")
 
         doc = ds.doc_get("links")
 
@@ -359,8 +368,6 @@ class MarkDownDocs(j.application.JSBaseClass):
         # next will rewrite the full pre-processed docsite
         ds.write()
 
-        ds_js.write()
-
         url = "https://github.com/threefoldfoundation/info_tokens/tree/master/docs"
         ds4 = self.load(url, name="tf_tokens")
         ds4.write()
@@ -373,13 +380,12 @@ class MarkDownDocs(j.application.JSBaseClass):
         ds6 = self.load(url, name="tf_grid")
         try:
             ds6.write()
-        except :
+        except:
             pass
 
         url = "https://github.com/threefoldtech/info_tftech/tree/master/docs"
         ds7 = self.load(url, name="tech")
         ds7.write()
-
 
         self.webserver(watch)
 

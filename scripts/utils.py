@@ -50,7 +50,7 @@ class Utils:
             msg = '\n'.join([msg, repo, branch, committer, commit])
         for _ in range(0, 5):
             try:    
-                self.telegram_cl.send_message(chatid=self.chat_id, text=msg)
+                self.telegram_cl.bot.sendMessage(chat_id=self.chat_id, text=msg)
                 break
             except Exception:
                 time.sleep(1)

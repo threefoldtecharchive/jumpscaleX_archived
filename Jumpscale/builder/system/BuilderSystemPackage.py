@@ -3,9 +3,12 @@ import time
 
 CMD_APT_GET = "apt-get "
 
+builder_method = j.builder.system.builder_method
 
 class BuilderSystemPackage(j.builder.system._BaseClass):
-
+    NAME = "SystemPackage"
+    
+    @builder_method()
     def _repository_ensure_apt(self, repository):
         self.ensure('python-software-properties')
         j.sal.process.execute("add-apt-repository --yes " + repository)
@@ -13,14 +16,14 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
     def _apt_wait_free(self):
         timeout = time.time() + 300
         while time.time() < timeout:
-            _, out, _ = j.sal.process.execute(
-                'fuser /var/lib/dpkg/lock', showout=False, die=False)
+            _, out, _ = self._execute('fuser /var/lib/dpkg/lock', showout=False, die=False)
             if out.strip():
                 time.sleep(1)
             else:
                 return
         raise TimeoutError("resource dpkg is busy")
 
+    @builder_method()
     def _apt_get(self, cmd):
 
         cmd = CMD_APT_GET + cmd
@@ -29,8 +32,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
         # E: dpkg was interrupted, you must manually j.sal.process.execute 'run
         # dpkg --configure -a' to correct the problem.
         if "run dpkg --configure -a" in result:
-            j.sal.process.execute(
-                "DEBIAN_FRONTEND=noninteractive dpkg --configure -a")
+            j.sal.process.execute("DEBIAN_FRONTEND=noninteractive dpkg --configure -a")
             result = j.sal.process.execute(cmd)
         return result
 
@@ -46,38 +48,35 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
     #                 package = " ".join(package)
     #             return self._apt_get(' upgrade ' + package)
     #     elif j.builder.tools.isAlpine:
-    #         j.builder.tools.run("apk update")
-    #         j.builder.tools.run("apk upgrade")
+    #         j.builder.tools.execute("apk update")
+    #         j.builder.tools.execute("apk upgrade")
     #     else:
     #         raise j.exceptions.RuntimeError(
     #             "could not install:%s, platform not supported" % package)
     #     self._done_set(key)
 
-    def mdupdate(self, reset=False):
+    @builder_method()
+    def mdupdate(self):
         """
         update metadata of system
         """
-        if self._done_check("mdupdate", reset):
-            return
         self._log_info("packages mdupdate")
         if j.core.platformtype.myplatform.isUbuntu:
             j.sal.process.execute("apt-get update")
         elif j.builder.tools.isAlpine:
-            j.builder.tools.run("apk update")
+            j.builder.tools.execute("apk update")
         elif j.core.platformtype.myplatform.isMac:
             location = j.builder.tools.command_location("brew")
             # j.sal.process.execute("run chown root %s" % location)
             j.sal.process.execute("brew update")
         elif j.builder.tools.isArch:
             j.sal.process.execute("pacman -Syy")
-        self._done_set("mdupdate")
 
-    def upgrade(self, distupgrade=False, reset=False):
+    @builder_method()
+    def upgrade(self, distupgrade=False):
         """
         upgrades system, distupgrade means ubuntu 14.04 will fo to e.g. 15.04
         """
-        if self._done_check("upgrade", reset):
-            return
         self.mdupdate()
         self._log_info("packages upgrade")
         if j.core.platformtype.myplatform.isUbuntu:
@@ -92,48 +91,29 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
         elif j.core.platformtype.myplatform.isMac:
             j.sal.process.execute("brew upgrade")
         elif j.builder.tools.isAlpine:
-            j.builder.tools.run("apk update")
-            j.builder.tools.run("apk upgrade")
+            j.builder.tools.execute("apk update")
+            j.builder.tools.execute("apk upgrade")
         elif j.builder.tools.isCygwin:
             return  # no such functionality in apt-cyg
         else:
-            raise j.exceptions.RuntimeError(
-                "could not upgrade, platform not supported")
-        self._done_set("upgrade")
+            raise j.exceptions.RuntimeError("could not upgrade, platform not supported")
 
-    def install(self, package, reset=False):
+    @builder_method()
+    def install(self, packages):
         """
         """
+        packages = j.core.text.getList(packages, "str")
 
-        # bring to list of packages
-        if j.data.types.list.check(package) == False and package.find(",") != -1:
-            package = [item.strip() for item in package.split(",")]
-        elif j.data.types.list.check(package) == False and package.find("\n") != -1:
-            package = [item.strip() for item in package.split("\n")]
-        elif not j.data.types.list.check(package):
-            package = [package]
+        if len(packages)==1:
 
-        packages = [item for item in package if item.strip() != ""]
+            package = packages[0]
 
-        cmd = "set -ex\n"
-
-        todo = []
-        for package in packages:
-
-            key = "install_%s" % package
-            if self._done_check(key, reset):
-                self._log_info("package:%s already installed" % package)
-                continue
-            todo.append(package)
-            print("+ install: %s" % package)
-
-            self._log_info("prepare to install:%s" % package)
-
+            self._log_info("package install :%s" % package)
             if j.core.platformtype.myplatform.isUbuntu:
-                cmd += "%s install %s -y\n" % (CMD_APT_GET, package)
+                cmd = "%s install %s -y" % (CMD_APT_GET, package)
 
             elif j.builder.tools.isAlpine:
-                cmd = "apk add %s \n" % package
+                cmd = "apk add %s" % package
 
             elif j.builder.tools.isArch:
                 if package.startswith("python3"):
@@ -156,145 +136,98 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
                     if unsupported in package:
                         continue
 
-                # rc,out=j.sal.process.execute("brew info --json=v1 %s"%package,showout=False,die=False)
-                # if rc==0:
-                #     info=j.data.serializers.json.loads(out)
-                #     return #means was installed
-
                 if "wget" == package:
                     package = "%s --enable-iri" % package
 
-                cmd += "brew install %s || brew upgrade  %s\n" % (package, package)
+                cmd = "brew install %s || brew upgrade  %s\n" % (package, package)
 
             elif j.builder.tools.isCygwin:
                 if package in ["run", "net-tools"]:
                     return
 
-                installed = j.sal.process.execute(
-                    "apt-cyg list&")[1].splitlines()
+                installed = j.sal.process.execute("apt-cyg list&")[1].splitlines()
                 if package in installed:
                     return  # means was installed
 
                 cmd = "apt-cyg install %s\n" % package
             else:
-                raise j.exceptions.RuntimeError(
-                    "could not install:%s, platform not supported" % package)
+                raise j.exceptions.RuntimeError("could not install:%s, platform not supported" % package)
 
-            # mdupdate = False
-            # while True:
-            #     rc, out, err = j.sal.process.execute(cmd, die=False)
-
-            #     if rc > 0:
-            #         if mdupdate is True:
-            #             raise j.exceptions.RuntimeError(
-            #                 "Could not install:'%s' \n%s" % (package, out))
-
-            #         if out.find("not found") != -1 or out.find("failed to retrieve some files") != -1:
-            #             self.mdupdate()
-            #             mdupdate = True
-            #             continue
-            #         raise j.exceptions.RuntimeError(
-            #             "Could not install:%s %s" % (package, err))
-            #     if rc == 0:
-            #         self._done_set(key)
-            #         return out
-
-        if len(todo) > 0:
-            print(cmd)
-            j.builder.tools.run(cmd)
-
-        for package in todo:
-            key = "install_%s," % package
-            self._done_set(key)
-
-
-    def ensure(self, package, update=False):
-        """Ensure packages are installed"""
-
-        if "," in package:
-            package = [i.strip() for i in package.split(",")]
-        if isinstance(package,list):
-            for package0 in package:
-                self.ensure(package0,update=update)
-            return
-
-        if j.core.platformtype.myplatform.isUbuntu:
-            p = package.strip()
-            # The most reliable way to detect success is to use the command status
-            # and suffix it with OK. This won't break with other locales.
-            rc, out, err = j.sal.process.execute("dpkg -s %s && echo **OK**;true" % p)
-            if "is not installed" in err:
-                self.install(p)
-            else:
-                if update:
-                    self.mdupdate(p)
-            return
-
-        elif j.builder.tools.isArch:
-            j.sal.process.execute("pacman -S %s" % package)
-            return
-        elif j.core.platformtype.myplatform.isMac:
-            self.install(package)
-            return
+            self._execute(cmd)
         else:
-            raise j.exceptions.RuntimeError("could not install/ensure:%s, platform not supported" % package)
+            for package in packages:
+                self.install(package)
 
-        raise j.exceptions.RuntimeError("not supported platform")
+    @builder_method()
+    def ensure(self, packages):
+        return self.install(packages)
 
-    def clean(self, package=None, agressive=False):
+    @builder_method()
+    def clean(self, packages=None, agressive=False):
         """
         clean packaging system e.g. remove outdated packages & caching packages
         @param agressive if True will delete full cache
 
         """
-        if j.core.platformtype.myplatform.isUbuntu:
+        packages = j.core.text.getList(packages, "str")
 
-            if package is not None:
-                return self._apt_get("-y --purge remove %s" % package)
+        if len(packages)==1:
+
+            package = packages[0]
+
+            if j.core.platformtype.myplatform.isUbuntu:
+
+                if package is not None:
+                    return self._apt_get("-y --purge remove %s" % package)
+                else:
+                    j.sal.process.execute("apt-get autoremove -y")
+
+                self._apt_get("autoclean")
+                C = """
+                apt-get clean
+                rm -rf /bd_build
+                rm -rf /var/tmp/*
+                rm -f /etc/dpkg/dpkg.cfg.d/02apt-speedup
+    
+                find -regex '.*__pycache__.*' -delete
+                rm -rf /var/log
+                mkdir -p /var/log/apt
+                rm -rf /var/tmp
+                mkdir -p /var/tmp
+    
+                """
+                j.sal.process.execute(C)
+
+            # elif j.builder.tools.isArch:
+            #     cmd = "pacman -Sc"
+            #     if agressive:
+            #         cmd += "c"
+            #     j.sal.process.execute(cmd)
+            #     if agressive:
+            #         j.sal.process.execute("pacman -Qdttq", showout=False)
+
+            elif j.core.platformtype.myplatform.isMac:
+                if package:
+                    j.sal.process.execute("brew cleanup %s" % package)
+                    j.sal.process.execute("brew remove %s" % package)
+                else:
+                    j.sal.process.execute("brew cleanup")
+
+            elif j.builder.tools.isCygwin:
+                if package:
+                    j.sal.process.execute("apt-cyg remove %s" % package)
+                else:
+                    pass
+
             else:
-                j.sal.process.execute("apt-get autoremove -y")
-
-            self._apt_get("autoclean")
-            C = """
-            apt-get clean
-            rm -rf /bd_build
-            rm -rf /var/tmp/*
-            rm -f /etc/dpkg/dpkg.cfg.d/02apt-speedup
-
-            find -regex '.*__pycache__.*' -delete
-            rm -rf /var/log
-            mkdir -p /var/log/apt
-            rm -rf /var/tmp
-            mkdir -p /var/tmp
-
-            """
-            j.sal.process.execute(C)
-
-        # elif j.builder.tools.isArch:
-        #     cmd = "pacman -Sc"
-        #     if agressive:
-        #         cmd += "c"
-        #     j.sal.process.execute(cmd)
-        #     if agressive:
-        #         j.sal.process.execute("pacman -Qdttq", showout=False)
-
-        elif j.core.platformtype.myplatform.isMac:
-            if package:
-                j.sal.process.execute("brew cleanup %s" % package)
-                j.sal.process.execute("brew remove %s" % package)
-            else:
-                j.sal.process.execute("brew cleanup")
-
-        elif j.builder.tools.isCygwin:
-            if package:
-                j.sal.process.execute("apt-cyg remove %s" % package)
-            else:
-                pass
+                raise j.exceptions.RuntimeError(
+                    "could not package clean:%s, platform not supported" % package)
 
         else:
-            raise j.exceptions.RuntimeError(
-                "could not package clean:%s, platform not supported" % package)
+            for package in packages:
+                self.clean(package,aggresive=agressive)
 
+    @builder_method()
     def remove(self, package, autoclean=False):
         if j.core.platformtype.myplatform.isUbuntu:
             self._apt_get('remove ' + package)

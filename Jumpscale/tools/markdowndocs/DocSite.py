@@ -12,7 +12,7 @@ class DocSite(j.application.JSBaseClass):
     """
     """
 
-    def __init__(self, path, name=""):
+    def __init__(self, path, name="", sonic_client=None):
         JSBASE.__init__(self)
         self._j = j
 
@@ -29,6 +29,7 @@ class DocSite(j.application.JSBaseClass):
         if not j.sal.fs.exists(path):
             raise RuntimeError("Cannot find path:%s"%path)
 
+        self.sonic_client = sonic_client
         self.name = name.lower()
 
         self.name = j.core.text.strip_to_ascii_dense(self.name)
@@ -248,7 +249,7 @@ class DocSite(j.application.JSBaseClass):
             if ext == "md":
                 self._log_debug("found md:%s"%path)
                 base = base[:-3]  # remove extension
-                doc = Doc(path, base, docsite=self)
+                doc = Doc(path, base, docsite=self, sonic_client=self.sonic_client)
                 # if base not in self.docs:
                 #     self.docs[base.lower()] = doc
                 self._docs[doc.name_dot_lower] = doc
@@ -256,7 +257,7 @@ class DocSite(j.application.JSBaseClass):
                 self._log_debug("found html:%s"%path)
                 l = len(ext)+1
                 base = base[:-l]  # remove extension
-                doc = Doc(path, base, docsite=self)
+                doc = Doc(path, base, docsite=self, sonic_client=self.sonic_client)
                 # if base not in self.htmlpages:
                 #     self.htmlpages[base.lower()] = doc
                 self.htmlpages[doc.name_dot_lower] = doc
@@ -284,7 +285,7 @@ class DocSite(j.application.JSBaseClass):
 
         self._loaded=True
 
-    def file_add(self,path,duplication_test=True):
+    def file_add(self,path,duplication_test=False):
         ext = j.sal.fs.getFileExtension(path).lower()
         base = j.sal.fs.getBaseName(path)
         if ext in ["png", "jpg", "jpeg", "pdf", "docx", "doc", "xlsx", "xls", \
@@ -556,7 +557,6 @@ class DocSite(j.application.JSBaseClass):
 
     def verify(self):
         self.load(reset=True)
-        self.links_verify=True
         keys = [item for item in self.docs.keys()]
         keys.sort()
         for key in keys:

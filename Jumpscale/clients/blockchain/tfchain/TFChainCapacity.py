@@ -1,5 +1,6 @@
 import nacl
 from Jumpscale import j
+import decimal
 
 from . import schemas
 
@@ -22,8 +23,8 @@ class TFChainCapacity():
         """
 
         if self._notary_client_ is None:
-            c = j.clients.gedis.configure('tfnotary', host='notary.grid.tf', port=5000)
-            self._notary_client_ = c.cmds.notary_actor
+            c = j.clients.gedis.new('tfnotary', host='notary.grid.tf', port=5000)
+            self._notary_client_ = c.actors.notary_actor
         return self._notary_client_
 
     def _threebot_singing_key(self, threebot_id):
@@ -95,6 +96,7 @@ class TFChainCapacity():
             'type': 's3',
             'location': location,
         })
+        _validate_reservation_s3(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
     def reserve_zos_vm(self, email, threebot_id, location, size=1, source=None, refund=None):
@@ -128,10 +130,87 @@ class TFChainCapacity():
             'type': 'vm',
             'location': location,
         })
+        _validate_reservation_vm(reservation)
+        return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
+
+    def reserve_zdb_namespace(self, email, threebot_id, location, size=1,
+                              disk_type='ssd', mode='seq', password=None,
+                              source=None, refund=None):
+        """
+        reserve an 0-DB namespace
+
+        :param email: email address on which to send the connection information
+        :type email: string
+        :param threebot_id: name or address of your threebot
+        :type threebot_id: string
+        :param size: size of the namespace in GB, defaults to 1
+        :type size: int, optional
+        :param disk_type: type of disk used for the 0-db
+                          can be or 'ssd' or 'hdd'
+        :type disk_type: string
+        :param mode: 0-db mode, for more detail see: https://github.com/threefoldtech/0-db#running-modes
+                     valid values are: 'seq' or 'user'
+        :type mode: string
+        :param password: is specified, the namespace will required authentication using the password
+        :type password: string
+        :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
+        :type source: string, optional
+        :param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
+        :type refund: string, optional
+        :return: a tuple containing the transaction and the submission status as a boolean
+        :rtype: tuple
+        """
+        reservation = j.data.schema.get(url='tfchain.reservation.zdb_namespace').new(data={
+            'type': 'namespace',
+            'size': size,
+            'email': email,
+            'created': j.data.time.epoch,
+            'location': location,
+            'disk_type': disk_type,
+            'mode': mode,
+            'password': password,
+        })
+        _validate_reservation_namespace(reservation)
+        return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
+
+    def reserve_reverse_proxy(self, email, threebot_id, domain, backend_urls,
+                              source=None, refund=None):
+        """
+        reserve a HTTP reverse proxy
+
+
+        :param email: email address on which to send the connection information
+        :type email: string
+        :param threebot_id: name or address of your threebot
+        :type threebot_id: string
+        :param domain: the domain name you want to proxy from
+        :type domain: string
+        :param backend_urls: List of http url of your backend
+                             the proxy will forward incoming requests on domain and forward it
+                             to the backend. If multiple url are specified, round robin is used.
+                             Format of the url should be a full url with port.
+                             example: http://10.244.1.10:8080
+        :type backend_urls: list
+        :param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
+        :type source: string, optional
+        :param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
+        :type refund: string, optional
+        :return: a tuple containing the transaction and the submission status as a boolean
+        :rtype: tuple
+        """
+        reservation = j.data.schema.get(url='tfchain.reservation.reverse_proxy').new(data={
+            'type': 'reverse_proxy',
+            'email': email,
+            'created': j.data.time.epoch,
+            # 'location': location,
+            'domain': domain,
+            'backend_urls': backend_urls,
+        })
+        _validate_reverse_proxy(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
     def _process_reservation(self, reservation, threebot_id, source=None, refund=None):
-        _validate_reservation(reservation)
+        _validate_reservation_base(reservation)
         amount = reservation_amount(reservation)
 
         # validate bot id exists
@@ -157,8 +236,14 @@ class TFChainCapacity():
                                        refund=refund)
 
 
-def _validate_reservation(reservation):
-    for field in ['size', 'email']:
+def _validate_reservation_base(reservation):
+    for field in ['email']:
+        if not getattr(reservation, field):
+            raise ValueError("field '%s' cannot be empty" % field)
+
+
+def _validate_reservation_s3(reservation):
+    for field in ['size']:
         if not getattr(reservation, field):
             raise ValueError("field '%s' cannot be empty" % field)
 
@@ -167,6 +252,38 @@ def _validate_reservation(reservation):
 
     if not _validate_location(reservation.location):
         raise ValueError("location '%s' is not valid" % reservation.location)
+
+
+def _validate_reservation_vm(reservation):
+    for field in ['size']:
+        if not getattr(reservation, field):
+            raise ValueError("field '%s' cannot be empty" % field)
+
+    if reservation.size < 0 or reservation.size > 2:
+        raise ValueError('reservation size can only be 1 or 2')
+
+    if not _validate_location(reservation.location):
+        raise ValueError("location '%s' is not valid" % reservation.location)
+
+
+def _validate_reservation_namespace(reservation):
+    for field in ['size']:
+        if not getattr(reservation, field):
+            raise ValueError("field '%s' cannot be empty" % field)
+
+    if not reservation.mode or reservation.mode not in ['seq', 'user', 'direct']:
+        raise ValueError("mode can only be 'seq', 'user' or 'direct'")
+    if not reservation.disk_type or reservation.disk_type not in ['hdd', 'ssd']:
+        raise ValueError("disk_type can only be 'ssd' or 'hdd'")
+
+    if not _validate_location(reservation.location):
+        raise ValueError("location '%s' is not valid" % reservation.location)
+
+
+def _validate_reverse_proxy(reservation):
+    for field in ['domain', 'backend_urls']:
+        if not getattr(reservation, field):
+            raise ValueError("field '%s' cannot be empty" % field)
 
 
 def encode_reservation(reservation):
@@ -180,17 +297,43 @@ def _signing_key_to_private_key(sk):
 
 
 def reservation_amount(reservation):
-    amounts = {
-        's3': {
-            1: 10,
-            2: 40,
-        },
-        'vm': {
-            1: 1,
-            2: 4,
-        }
-    }
-    return amounts[reservation.type][reservation.size]
+    # https://github.com/threefoldfoundation/info_grid/tree/development/docs/capacity_reservation#amount-of-tft-for-each-type-of-reservation
+    if reservation.type == 's3':
+        return s3_price(reservation.size)
+    elif reservation.type == 'vm':
+        return vm_price(reservation.size)
+    elif reservation.type == 'namespace':
+        return namespace_price(reservation.size)
+    elif reservation.type == 'reverse_proxy':
+        return proxy_price()
+    else:
+        raise ValueError("unsupported reservation type")
+
+
+def s3_price(size):
+    if size == 1:
+        return decimal.Decimal('41.65')
+    elif size == 2:
+        return decimal.Decimal('83.3')
+    else:
+        raise ValueError("size for s3 can only be 1 or 2")
+
+
+def vm_price(size):
+    if size == 1:
+        return decimal.Decimal('41.65')
+    elif size == 2:
+        return decimal.Decimal('83.3')
+    else:
+        raise ValueError("size for vm can only be 1 or 2")
+
+
+def namespace_price(size):
+    return size * decimal.Decimal('83.3')
+
+
+def proxy_price():
+    return 10
 
 
 def _validate_location(location):

@@ -168,7 +168,7 @@ class ZTNic(Nic):
         """
         if not self.client:
             return False
-        self._log_info("authorizing {} on network {}".format(self._parent.name, self.networkid))
+        j.tools.logger._log_info("authorizing {} on network {}".format(self._parent.name, self.networkid))
         network = self.client.network_get(self.networkid)
         network.member_add(publicidentity, self._parent.name)
         return True
@@ -274,7 +274,7 @@ class Service:
     name: the name of the service
     """
 
-    def __init__(self, name, node, service_type, ports):
+    def __init__(self, name, node, service_type, ports, autostart=False):
         self.name = name
         self.node = node
         self._type = service_type
@@ -282,6 +282,7 @@ class Service:
         self._container = None
         self._container_name = '{}_{}'.format(self._type, self.name)
         self._ports = ports
+        self._autostart = autostart
 
     def _container_exists(self):
         """
@@ -310,10 +311,12 @@ class Service:
         """
         if not self._container_exists():
             return False
-        try:
-            self.container.client.job.list(self._id)
-        except:
-            return False
+
+        if not self._autostart:
+            try:
+                self.container.client.job.list(self._id)
+            except:
+                return False
 
         for port in self._ports:
             if not self.container.is_port_listening(port, timeout):
@@ -324,11 +327,14 @@ class Service:
         """
         Stop the service process and stop the container
         """
+        if not self._container_exists():
+            return
+
         if self.is_running():
             self.container.client.job.unschedule(self._id)
             self.container.client.job.kill(self._id)
             if not j.tools.timer.execute_until(lambda: not self.is_running(), timeout, 0.5):
-                self._log_warning('Failed to gracefully stop {} server: {}'.format(self._type, self.name))
+                j.tools.logger._log_warning('Failed to gracefully stop {} server: {}'.format(self._type, self.name))
 
         self.container.stop()
         self._container = None

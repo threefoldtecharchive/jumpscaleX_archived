@@ -35,6 +35,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
 
         self._ftp = None
         self._syncer = None
+        self.autosave = True
 
     def mkdir(self,path):
         cmd = "mkdir -p %s"%path
@@ -43,7 +44,10 @@ class SSHClientBase(j.application.JSBaseConfigClass):
     @property
     def isprivate(self):
         if self._private is None:
-            self._private = j.sal.nettools.tcpPortConnectionTest(self.addr_priv, self.port_priv, 1)
+            if self.addr_priv=="":
+                self._private = False
+            else:
+                self._private = j.sal.nettools.tcpPortConnectionTest(self.addr_priv, self.port_priv, 1)
         return self._private
 
     @property

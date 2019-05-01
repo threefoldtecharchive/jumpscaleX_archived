@@ -143,11 +143,18 @@ class Network():
         else:
             raise ValueError('unknown mode %s' % mode)
 
-    def configure(self, cidr, vlan_tag, ovs_container_name='ovs', bonded=False, mtu=9000, mode='ovs', interfaces=None):
+    def configure(self, cidr, vlan_tag, ovs_container_name='ovs', bonded=False, mtu=9000, mode='ovs', interfaces=None, balance_mode=None, lacp=None):
         interfaces = self._get_interfaces(bonded=bonded, interfaces=interfaces)
 
         if mode == 'ovs' or not mode:
-            return self._configure_ovs(cidr=cidr, vlan_tag=vlan_tag, ovs_container_name='ovs', bonded=bonded, mtu=mtu, interfaces=interfaces)
+            return self._configure_ovs(cidr=cidr,
+                                       vlan_tag=vlan_tag,
+                                       ovs_container_name='ovs',
+                                       bonded=bonded,
+                                       mtu=mtu,
+                                       interfaces=interfaces,
+                                       balance_mode=balance_mode,
+                                       lacp=lacp)
         elif mode == 'native':
             return self._configure_native(cidr=cidr, bonded=bonded, mtu=mtu, interfaces=interfaces)
         else:
@@ -214,7 +221,13 @@ class Network():
         used_interfaces.append('backplane')
         return used_interfaces
 
-    def _configure_ovs(self, cidr, vlan_tag, interfaces, ovs_container_name='ovs', bonded=False, mtu=9000):
+    def _configure_ovs(self, cidr, vlan_tag, interfaces, ovs_container_name='ovs', bonded=False, mtu=9000, balance_mode=None, lacp=None):
+        if balance_mode and balance_mode not in ['tcp', 'slb']:
+            raise ValueError("balance mode can only be 'tcp' or 'slb'")
+
+        if not balance_mode:
+            balance_mode = 'slb'
+
         container = self._ensure_ovs_container(ovs_container_name)
         if not container.is_running():
             container.start()
@@ -244,8 +257,8 @@ class Network():
             container.client.json('ovs.bond-add', {"bridge": "backplane",
                                                    "port": "bond0",
                                                    "links": interfaces,
-                                                   "lacp": False,
-                                                   "mode": "balance-slb",
+                                                   "lacp": lacp or False,
+                                                   "mode": 'balance-%s' % balance_mode,
                                                    "options": {'other_config:updelay': "2000"},
                                                    })
 

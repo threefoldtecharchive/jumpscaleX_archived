@@ -6,7 +6,6 @@ import sys
 import redis
 
 
-
 class BCDBFactory(j.application.JSBaseClass):
 
     __jslocation__ = "j.data.bcdb"
@@ -14,49 +13,51 @@ class BCDBFactory(j.application.JSBaseClass):
     def _init(self):
 
         self._log_debug("bcdb starts")
-        self.bcdb_instances = {}  #key is the name
+        self.bcdb_instances = {}  # key is the name
         self._path = j.sal.fs.getDirName(os.path.abspath(__file__))
 
         self._code_generation_dir = None
-        self.latest=None
+        self.latest = None
 
-        j.clients.redis.core_get() #just to make sure the redis got started
+        j.clients.redis.core_get()  # just to make sure the redis got started
 
+    def new(self, name, zdbclient=None, reset=False):
 
-    def new(self, name, zdbclient=None,reset=False):
+        if reset==False and name in self.bcdb_instances:
+            return self.bcdb_instances[name]
 
-        self._log_debug("new bcdb:%s"%name)
-        if zdbclient!=None and j.data.types.string.check(zdbclient):
+        self._log_debug("new bcdb:%s" % name)
+        if zdbclient != None and j.data.types.string.check(zdbclient):
             raise RuntimeError("zdbclient cannot be str")
 
-        self.bcdb_instances[name] = BCDB(zdbclient=zdbclient,name=name,reset=reset)
+        self.bcdb_instances[name] = BCDB(zdbclient=zdbclient, name=name, reset=reset)
         return self.bcdb_instances[name]
 
-
-    def get(self, name,die=True):
+    def get(self, name, die=True):
         if name not in self.bcdb_instances:
             if die:
-                raise RuntimeError("did not find bcdb with name:%s"%name)
+                raise RuntimeError("did not find bcdb with name:%s" % name)
             return None
         return self.bcdb_instances[name]
 
-    def bcdb_test_get(self,reset=True):
-        bcdb = j.data.bcdb.new(name="test", zdbclient=None,reset=reset)
+    def bcdb_test_get(self, reset=True):
+        bcdb = j.data.bcdb.new(name="test", zdbclient=None, reset=reset)
         assert j.data.bcdb.latest.zdbclient == None
         return bcdb
 
-
-    def redis_server_start(self, name="test",
-                                 ipaddr="localhost",
-                                 port=6380,
-                                 background=False,
-                                 secret="123456",
-                                 zdbclient_addr="localhost",
-                                 zdbclient_port=9900,
-                                 zdbclient_namespace="test",
-                                 zdbclient_secret="1234",
-                                 zdbclient_mode="seq",
-                          ):
+    def redis_server_start(
+        self,
+        name="test",
+        ipaddr="localhost",
+        port=6380,
+        background=False,
+        secret="123456",
+        zdbclient_addr="localhost",
+        zdbclient_port=9900,
+        zdbclient_namespace="test",
+        zdbclient_secret="1234",
+        zdbclient_mode="seq",
+    ):
 
         """
         start a redis server on port 6380 on localhost only
@@ -75,37 +76,43 @@ class BCDBFactory(j.application.JSBaseClass):
         :return:
         """
 
-
         if background:
 
-            args="ipaddr=\"%s\", "%ipaddr
-            args+="name=\"%s\", "%name
-            args+="port=%s, "%port
-            args+="secret=\"%s\", "%secret
-            args+="zdbclient_addr=\"%s\", "%zdbclient_addr
-            args+="zdbclient_port=%s, "%zdbclient_port
-            args+="zdbclient_namespace=\"%s\", "%zdbclient_namespace
-            args+="zdbclient_secret=\"%s\", "%zdbclient_secret
-            args+="zdbclient_mode=\"%s\", "%zdbclient_mode
+            args = 'ipaddr="%s", ' % ipaddr
+            args += 'name="%s", ' % name
+            args += "port=%s, " % port
+            args += 'secret="%s", ' % secret
+            args += 'zdbclient_addr="%s", ' % zdbclient_addr
+            args += "zdbclient_port=%s, " % zdbclient_port
+            args += 'zdbclient_namespace="%s", ' % zdbclient_namespace
+            args += 'zdbclient_secret="%s", ' % zdbclient_secret
+            args += 'zdbclient_mode="%s"' % zdbclient_mode
 
+            cmd = "kosmos 'j.data.bcdb.redis_server_start(%s)'" % args
 
-            cmd = 'js_shell \'j.data.bcdb.redis_server_start(%s)\''%args
-            j.tools.tmux.execute(cmd,window='multi',pane='main',reset=True)
+            cmdcmd = j.tools.startupcmd.get(
+                name="bcdbredis_%s" % port, cmd=cmd, ports=[port]
+            )
+
+            cmdcmd.start()
+
             j.sal.nettools.waitConnectionTest(ipaddr=ipaddr, port=port, timeoutTotal=5)
             r = j.clients.redis.get(ipaddr=ipaddr, port=port, password=secret)
             assert r.ping()
 
         else:
-            if zdbclient_addr not in ["None",None]:
-                zdbclient = j.clients.zdb.client_get(nsname=zdbclient_namespace,
-                                                 addr=zdbclient_addr, port=zdbclient_port,
-                                                 secret=zdbclient_secret, mode=zdbclient_mode)
+            if zdbclient_addr not in ["None", None]:
+                zdbclient = j.clients.zdb.client_get(
+                    nsname=zdbclient_namespace,
+                    addr=zdbclient_addr,
+                    port=zdbclient_port,
+                    secret=zdbclient_secret,
+                    mode=zdbclient_mode,
+                )
             else:
-                zdbclient=None
-            bcdb=self.new(name,zdbclient=zdbclient)
+                zdbclient = None
+            bcdb = self.new(name, zdbclient=zdbclient)
             bcdb.redis_server_start(port=port)
-
-
 
     @property
     def code_generation_dir(self):
@@ -119,7 +126,7 @@ class BCDBFactory(j.application.JSBaseClass):
             self._code_generation_dir = path
         return self._code_generation_dir
 
-    def _load_test_model(self,reset=True,sqlitestor=False):
+    def _load_test_model(self, reset=True, sqlitestor=False):
 
         schema = """
         @url = despiegk.test
@@ -149,7 +156,7 @@ class BCDBFactory(j.application.JSBaseClass):
                 bcdb.reset()  # empty
         else:
             zdbclient_admin = j.servers.zdb.start_test_instance(destroydata=reset)
-            zdbclient = zdbclient_admin.namespace_new("test",secret="1234")
+            zdbclient = zdbclient_admin.namespace_new("test", secret="1234")
             bcdb = j.data.bcdb.new(name="test", zdbclient=zdbclient)
 
         schemaobj = j.data.schema.get(schema)
@@ -159,9 +166,37 @@ class BCDBFactory(j.application.JSBaseClass):
 
         model = bcdb.model_get("despiegk.test")
 
-        assert model.get_all()==[]
+        return bcdb, model
 
-        return bcdb,model
+    def migrate(self, base_url, second_url, bcdb="system", **kwargs):
+        bcdb_instance = self.get(bcdb)
+        j.data.bcdb.latest.get_all()
+        base_model = bcdb_instance.model_get(base_url)
+        second_model = bcdb_instance.model_get(second_url)
+        # create new meta with new migration
+
+        for model_s in second_model.get_all():
+            overwrite = False
+            for model_b in base_model.get_all():
+                if model_b.name == model_s.name:
+                    overwrite = True
+                    if kwargs.items():
+                        for key, val in kwargs.items():
+                            second = getattr(model_s, "{}".format(val))
+                            setattr(model_b, key, second)
+
+                    model_b.save()
+                    model_s.delete()
+                    # overwtite
+            if not overwrite:
+                m = base_model.new()
+                for prop in base_model.schema.properties:
+
+                    if hasattr(model_s, "{}".format(prop.name)):
+                        setattr(m, prop.name, getattr(model_s, "{}".format(prop.name)))
+                m.save()
+                model_s.delete()
+                # create new one
 
     def test(self, name=""):
         """
@@ -171,8 +206,8 @@ class BCDBFactory(j.application.JSBaseClass):
 
 
         """
-        cla=j.servers.zdb.start_test_instance(destroydata=True,namespaces=["test"])
-        cl = cla.namespace_get("test","1234")
+        cla = j.servers.zdb.start_test_instance(destroydata=True, namespaces=["test"])
+        cl = cla.namespace_get("test", "1234")
         assert cla.ping()
         assert cl.ping()
 
@@ -180,8 +215,10 @@ class BCDBFactory(j.application.JSBaseClass):
 
         bcdb.reset()
 
-
         self._test_run(name=name)
 
-
-
+        j.servers.zdb.stop()
+        redis = j.tools.tmux.cmd_get("bcdbredis_6380")
+        redis.stop()
+        self._log_info("All TESTS DONE")
+        return "OK"

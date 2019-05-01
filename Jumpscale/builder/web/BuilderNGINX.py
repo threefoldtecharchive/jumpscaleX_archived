@@ -3,12 +3,9 @@ import os
 import textwrap
 from time import sleep
 
-
+builder_method = j.builder.system.builder_method
 class BuilderNGINX(j.builder.system._BaseClass):
     NAME = 'nginx'
-
-    def _init(self):
-        self.BUILDDIR = j.core.tools.text_replace("{DIR_APPS}")
 
     def get_basic_nginx_conf(self):
         return """\
@@ -37,7 +34,7 @@ class BuilderNGINX(j.builder.system._BaseClass):
         	# server_names_hash_bucket_size 64;
         	# server_name_in_redirect off;
 
-        	include %(DIR_APPS)s/nginx/conf/mime.types;
+        	include %(DIR_APPS)s/conf/mime.types;
         	default_type application/octet-stream;
 
         	##
@@ -51,8 +48,8 @@ class BuilderNGINX(j.builder.system._BaseClass):
         	# Logging Settings
         	##
 
-        	access_log %(DIR_APPS)s/nginx/logs/access.log;
-        	error_log %(DIR_APPS)s/nginx/logs/error.log;
+        	access_log %(DIR_APPS)s/logs/access.log;
+        	error_log %(DIR_APPS)s/logs/error.log;
 
         	##
         	# Gzip Settings
@@ -65,10 +62,10 @@ class BuilderNGINX(j.builder.system._BaseClass):
         	# Virtual Host Configs
         	##
 
-        	include %(DIR_APPS)s/nginx/conf/conf.d/*;
-        	include %(DIR_APPS)s/nginx/conf/sites-enabled/*;
+        	include %(DIR_APPS)s/conf/conf.d/*;
+        	include %(DIR_APPS)s/conf/sites-enabled/*;
         }
-        """ % {"DIR_APPS": self.BUILDDIR}
+        """ % {"DIR_APPS": self.DIR_BUILD}
 
     def get_basic_nginx_site(self, wwwPath="/var/www/html"):
         return """\
@@ -98,9 +95,10 @@ class BuilderNGINX(j.builder.system._BaseClass):
                 # fastcgi_pass unix:/run/php/php7.0-fpm.sock;
             # }
         }
-        """ % (wwwPath, self.BUILDDIR)
+        """ % (wwwPath, self.DIR_BUILD)
 
-    def install(self, start=True):
+    @builder_method()
+    def install(self, tmux=True):
         """
         Moving build files to build directory and copying config files
         """
@@ -113,54 +111,45 @@ class BuilderNGINX(j.builder.system._BaseClass):
         cd {DIR_TEMP}/build/nginx/nginx-1.14.2
         make install
         """
-
-        C = j.core.tools.text_replace(C)
-        j.sal.process.execute(C)
+        self._execute(C)
 
         # COPY BINARIES TO BINDIR
-        j.core.tools.dir_ensure('{DIR_BIN}')
-        cmd = j.core.tools.text_replace(
-            "cp {DIR_APPS}/nginx/sbin/* {DIR_BIN}/")
-        j.sal.process.execute(cmd)
+        self.tools.dir_ensure('{DIR_BIN}')
+        cmd = self._replace(
+            "cp {DIR_BUILD}/sbin/* {DIR_BIN}/")
+        self._execute(cmd)
 
         # Writing config files
-        j.core.tools.dir_ensure("{DIR_APPS}/nginx/conf/conf.d/")
-        j.core.tools.dir_ensure("{DIR_APPS}/nginx/conf/sites-enabled/")
+        self.tools.dir_ensure("{DIR_BUILD}/conf/conf.d/")
+        self.tools.dir_ensure("{DIR_BUILD}/conf/sites-enabled/")
 
         basicnginxconf = self.get_basic_nginx_conf()
         defaultenabledsitesconf = self.get_basic_nginx_site()
+        self.tools.file_write("{DIR_BUILD}/conf/nginx.conf", content=basicnginxconf)
+        self.tools.file_write("{DIR_BUILD}/conf/sites-enabled/default", content=defaultenabledsitesconf)
 
-        j.sal.fs.writeFile("{DIR_APPS}/nginx/conf/nginx.conf", contents=basicnginxconf)
-        j.sal.fs.writeFile("{DIR_APPS}/nginx/conf/sites-enabled/default", contents=defaultenabledsitesconf)
-
-        fst_cgi_conf = j.core.tools.file_text_read("{DIR_APPS}/nginx/conf/fastcgi.conf")
+        fst_cgi_conf = self._read("{DIR_BUILD}/conf/fastcgi.conf")
         fst_cgi_conf = fst_cgi_conf.replace("include fastcgi.conf;",
-                                            j.core.tools.text_replace("include {DIR_APPS}/nginx/conf/fastcgi.conf;"))
-        j.sal.fs.writeFile("{DIR_APPS}/nginx/conf/fastcgi.conf", contents=fst_cgi_conf)
+                                            self._replace("include {DIR_BUILD}/conf/fastcgi.conf;"))
+        self.tools.file_write("{DIR_BUILD}/conf/fastcgi.conf", content=fst_cgi_conf)
 
-        if start:
-            self.start()
 
+    @builder_method()
     def build(self, reset=False):
         """ Builds NGINX server
         Arguments:
             install {[bool]} -- [If True, the server will be installed locally after building](default: {True})
         """
+        j.tools.bash.get().profile.locale_check()
 
-        if self._done_check("build") and reset is False:
-            return
+        if self.tools.isUbuntu:
+            self.system.package.mdupdate()
+            self.system.package.install(["build-essential", "libpcre3-dev", "libssl-dev", "zlibc", "zlib1g", "zlib1g-dev"])
 
-        j.tools.bash.local.locale_check()
-
-        if j.core.platformtype.myplatform.isUbuntu:
-            j.sal.ubuntu.apt_update()
-            j.sal.ubuntu.apt_install(
-                "build-essential libpcre3-dev libssl-dev zlibc zlib1g zlib1g-dev")
-
-            tmp_dir = j.core.tools.text_replace("{DIR_TEMP}/build/nginx")
-            j.core.tools.dir_ensure(tmp_dir, remove_existing=True)
-            build_dir = j.core.tools.text_replace("{DIR_APPS}/nginx")
-            j.core.tools.dir_ensure(tmp_dir, remove_existing=True)
+            tmp_dir = self._replace("{DIR_TEMP}/build/nginx")
+            self.tools.dir_ensure(tmp_dir)
+            build_dir = self._replace("{DIR_BUILD}")
+            self.tools.dir_ensure(build_dir)
 
             C = """
             #!/bin/bash
@@ -171,38 +160,34 @@ class BuilderNGINX(j.builder.system._BaseClass):
             tar xzf nginx-1.14.2.tar.gz
 
             cd nginx-1.14.2
-            ./configure --prefix={DIR_APPS}/nginx --with-http_ssl_module --with-ipv6
+            ./configure --prefix={DIR_BUILD} --with-http_ssl_module --with-ipv6
             make
             """
-            C = j.core.tools.text_replace(C)
-            j.sal.process.execute(C)
+            self._replace(C)
+            self._execute(C, showout=False)
 
         else:
             raise j.exceptions.NotImplemented(message="only ubuntu supported for building nginx")
 
-        self._done_set('build')
 
-    def start(self, nginxconfpath=None):
+    @property
+    def startup_cmds(self,nginxconfpath=None):
         if nginxconfpath is None:
-            nginxconfpath = '{DIR_APPS}/nginx/conf/nginx.conf'
+            nginxconfpath = '{DIR_BUILD}/conf/nginx.conf'
 
-        nginxconfpath = j.core.tools.text_replace(nginxconfpath)
-        nginxconfpath = os.path.normpath(nginxconfpath)
+        nginxconfpath = self._replace(nginxconfpath)
+        nginxconfpath = os.path.normpath(nginxconfpath)        
 
-        if j.sal.fs.exists(nginxconfpath):
+        if self.tools.file_exists(nginxconfpath):
             # foreground
             nginxcmd = "%s -c %s -g 'daemon off;'" % (self.NAME, nginxconfpath)
-            nginxcmd = j.core.tools.text_replace(nginxcmd)
+            nginxcmd = self._replace(nginxcmd)
 
             self._log_info("cmd: %s" % nginxcmd)
-            j.tools.tmux.execute(nginxcmd, window=self.NAME,
-                                 pane=self.NAME, reset=True)
-
+            cmd = j.tools.startupcmd.get("nginx", cmd=nginxcmd, cmd_stop="nginx -s stop", path="/sandbox/bin")
+            return [cmd]
         else:
             raise RuntimeError('Failed to start nginx')
-
-    def stop(self):
-        j.sal.process.killProcessByName(self.NAME, match_predicate=lambda a, b: a.startswith(b))
 
     def _test(self, name=""):
         """Run tests under tests directory
@@ -212,33 +197,41 @@ class BuilderNGINX(j.builder.system._BaseClass):
         """
         # test is already implemented in php runtime
         pass
-
-    def sandbox(self, dest_path='/tmp/builder/nginx', create_flist=True, zhub_instance=None, reset=False):
-        '''Copy built bins to dest_path and create flist if create_flist = True
-            :param dest_path: destination path to copy files into
-            :type dest_path: str
-            :param sandbox_dir: path to sandbox
-            :type sandbox_dir: str
-            :param reset: reset sandbox file transfer
-            :type reset: bool
-            :param create_flist: create flist after copying files
-            :type create_flist:bool
-            :param zhub_instance: hub instance to upload flist to
-            :type zhub_instance:str
+    
+    def test(self):
+        '''tests the builder by performing the following:
+        build(), install(), start()-> nginx running, stop()-> nginx not running    
         '''
-        if self._done_check('sandbox') and not reset:
-            return
-        self.build(reset=reset)
 
-        dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, self.NAME)
-        dir_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR[1:])
-        j.builder.tools.dir_ensure(dir_dest)
-        j.sal.fs.copyFile(dir_src, dir_dest)
-        confs = {'{DIR_APPS}/nginx/conf/fastcgi.conf': '/sandbox/{DIR_APPS}/nginx/conf/fastcgi.conf',
-                 '{DIR_APPS}/nginx/conf/nginx.conf': '/sandbox/nginx/conf/nginx.conf'}
+        self.build(reset=True)
+        self.install()
+        if self.running():
+            self.stop()
 
-        self.copy_dirs(dirs=confs, dest=dest_path)
+        assert not self.running()
+        # check start is working
+        self.start()
+        assert self.running()
+        # check stop is working
+        self.stop()
+        assert not self.running()
+        self._log_info("Nginx test successfull")
 
-        self._done_set('sandbox')
-        if create_flist:
-            self.flist_create(dest_path, zhub_instance)
+    @builder_method()
+    def sandbox(self,zhub_client=None,flist_create=True):
+        '''Copy built bins and config files to sandbox specific directory and create flist and upload it to the hub if flist_create is True
+            :param zhub_client: hub instance to upload flist to
+            :type zhub_client:str
+            :param flist_create: create flist after copying files
+            :type flist_create:bool
+        '''
+        dir_dest = j.sal.fs.joinPaths(
+            "/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX)
+        )
+        self.tools.dir_ensure(dir_dest)
+        bin_path = self.tools.joinpaths(self._replace("{DIR_BIN}"), self.NAME)
+        bin_dest = self.tools.joinpaths(dir_dest , "bin" , self.NAME)
+        self.tools.file_copy(bin_path, bin_dest)
+
+        self.tools.file_copy(self._replace('{DIR_BUILD}/conf/fastcgi.conf'), "{}/cfg/fastcgi.conf".format(dir_dest))
+        self.tools.file_copy(self._replace('{DIR_BUILD}/conf/nginx.conf'), "{}/cfg/nginx.conf".format(dir_dest))

@@ -112,7 +112,7 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
             if reset or not j.sal.fs.exists(lpath) or not j.sal.fs.exists(lpath_pub):
                 self._log_info("DOWNLOAD SSH KEYS")
                 # get private key from reflector
-                ftp = remoteprefab.core.executor.sshclient.sftp
+                ftp = remotetools.executor.sshclient.sftp
                 path = "/home/sshreflector/.ssh/reflector"
                 ftp.get(path, lpath)
                 ftp.get(path + ".pub", lpath + ".pub")
@@ -126,33 +126,33 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
             j.sal.process.execute("chmod 0600 /root/.ssh/reflector")
             j.sal.process.execute("chmod 0600 /root/.ssh/reflector.pub")
 
-            if(remoteprefab.core.executor.addr.find(".") != -1):
+            if(remotetools.executor.addr.find(".") != -1):
                 # is real ipaddress, will put in hostfile as reflector
-                addr = remoteprefab.core.executor.addr
+                addr = remotetools.executor.addr
             else:
-                a = socket.gethostbyaddr(remoteprefab.core.executor.addr)
+                a = socket.gethostbyaddr(remotetools.executor.addr)
                 addr = a[2][0]
 
-            port = remoteprefab.core.executor.port
+            port = remotetools.executor.port
 
             # test if we can reach the port
             if j.sal.nettools.tcpPortConnectionTest(addr, port) is False:
                 raise j.exceptions.RuntimeError("Cannot not connect to %s:%s" % (addr, port))
 
-            rname = "refl_%s" % remoteprefab.core.executor.addr.replace(".", "_")
-            rname_short = remoteprefab.core.executor.addr.replace(".", "_")
+            rname = "refl_%s" % remotetools.executor.addr.replace(".", "_")
+            rname_short = remotetools.executor.addr.replace(".", "_")
 
             j.builder.system.ns.hostfile_set(rname, addr)
 
-            if remoteprefab.core.file_exists("/home/sshreflector/reflectorclients") is False:
+            if remotetools.file_exists("/home/sshreflector/reflectorclients") is False:
                 self._log_info("reflectorclientsfile does not exist")
-                remoteprefab.core.file_write("/home/sshreflector/reflectorclients", "%s:%s\n" %
+                remotetools.file_write("/home/sshreflector/reflectorclients", "%s:%s\n" %
                                              (j.builder.platformtype.hostname, 9800))
                 newport = 9800
-                out2 = remoteprefab.core.file_read("/home/sshreflector/reflectorclients")
+                out2 = remotetools.file_read("/home/sshreflector/reflectorclients")
             else:
-                remoteprefab.core.file_read("/home/sshreflector/reflectorclients")
-                out = remoteprefab.core.file_read("/home/sshreflector/reflectorclients")
+                remotetools.file_read("/home/sshreflector/reflectorclients")
+                out = remotetools.file_read("/home/sshreflector/reflectorclients")
                 out2 = ""
                 newport = 0
                 highestport = 0
@@ -169,7 +169,7 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
                 if newport == 0:
                     newport = highestport + 1
                 out2 += "%s:%s\n" % (j.builder.platformtype.hostname, newport)
-                remoteprefab.core.file_write("/home/sshreflector/reflectorclients", out2)
+                remotetools.file_write("/home/sshreflector/reflectorclients", out2)
 
             j.sal.fs.writeFile("/etc/reflectorclients", out2)
 
@@ -188,7 +188,7 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
             pm = j.builder.system.processmanager.get()
             pm.ensure("autossh_%s" % rname_short, cmd, descr='')
 
-            self._log_info("On %s:%s remote SSH port:%s" % (remoteprefab.core.executor.addr, port, newport))
+            self._log_info("On %s:%s remote SSH port:%s" % (remotetools.executor.addr, port, newport))
 
     def createconnection(self, remoteids):
         """
@@ -211,12 +211,12 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
 
         rpath = "/home/sshreflector/reflectorclients"
         lpath = os.environ["HOME"] + "/.ssh/reflectorclients"
-        ftp = prefab.core.executor.sshclient.sftp
+        ftp = tools.executor.sshclient.sftp
         ftp.get(rpath, lpath)
 
         out = j.core.tools.file_text_read(lpath)
 
-        addr = prefab.core.executor.addr
+        addr = tools.executor.addr
 
         keypath = os.environ["HOME"] + "/.ssh/reflector"
 

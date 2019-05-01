@@ -5,37 +5,60 @@ from Jumpscale.tools.markdowndocs.macros import include
 import pytest
 
 markdowndocs_client = j.tools.markdowndocs
-doc=markdowndocs_client.load("https://github.com/threefoldtech/jumpscale_weblibs/blob/master/docsites_examples/test/blog/",name="test")
-test_doc = doc.doc_get("include_test")
+doc = markdowndocs_client.load(
+    "https://github.com/threefoldtech/jumpscaleX/tree/development/docs/tools/wiki/docsites/examples/docs/", name="test")
+test_doc = doc.doc_get("test")
+
 
 def test_include_from_repo(doc=test_doc):
-    data =include.include(doc=test_doc,name="test5")
-    assert "ag_from_test5" in data
+    data = include.include(doc=test_doc, link="test_src.md")
+    assert "This is a paragraph !!A!!" in data
 
-def test_include_part_of_file_using_start_and_end_line(doc=test_doc):
-    data =include.include(doc=test_doc,name="Fixer.py", repo="https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/tools/fixer",start="def find_changes",end="self.replacer.dir_process(")
-    assert "JSGENERATE_DEBUG" in data
-    assert "BE CAREFULL THIS WILL WRITE THE CHANGES AS FOUND IN self.find_changes" not in data
-    assert "Fixer" not in data
 
-@pytest.mark.skip("https://github.com/threefoldtech/jumpscaleX/issues/162")
-def test_include_part_of_file_using_the_paragraph_argument(doc=test_doc):
-    data = include.include(doc=test_doc,name="Fixer.py", repo="https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/tools/fixer",start="def find_changes", paragraph=True, codeblock=True)
-    assert "JSGENERATE_DEBUG" in data
-    assert "BE CAREFULL THIS WILL WRITE THE CHANGES AS FOUND IN self.find_changes" not in data
-    assert "Fixer" not in data
+def test_include_part_with_marker(doc=test_doc):
+    data = include.include(doc=test_doc, link="test_src.md!A")
+    assert "This is a paragraph \nYou need to include this para, para, para" in data
+    assert "!!A!!" not in data
+    assert "!!B!!" not in data
+    data = include.include(doc=test_doc, link="test_src.md!B")
+    assert "A new para, \nThis is a new para" in data
+    assert "This is a paragraph" not in data
+    assert "!!A!!" not in data
+    assert "!!B!!" not in data
 
-def test_include_document_string_from_python_method(doc=test_doc):
-    data = include.include(doc=test_doc,name="Fixer.py", repo="https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/tools/fixer", docstring="find_changes")
-    assert "JSGENERATE_DEBUG" not in data
-    assert "j.tools.fixer.find_changes" in data
 
-def test_include_from_any_file(doc=test_doc):
-    data = include.include(doc=test_doc,name="tutorials/base/README.md", repo="https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/")
-    assert "see tutorials folder for examples" in data
+def test_include_docstrings(doc=test_doc):
+    data = include.include(doc=test_doc, link="test.py", doc_only=True)
+    assert "method that print self" in data
+    assert "A class\n    for printing" in data
+    assert "nothing is here" in data
+    assert "class A:" not in data
+    assert "def meth(" not in data
+
+
+def test_include_with_remarks_skip(doc=test_doc):
+    data = include.include(doc=test_doc, link="test_src.md", remarks_skip=True)
+    assert "## head" not in data
+
+
+def test_include_headers_modify(doc=test_doc):
+    data = include.include(doc=test_doc, link="test_src.md", header_levels_modify=-1)
+    assert "# head" in data
+    assert "## head" not in data
+
 
 def test_include_from_other_repo(doc=test_doc):
     markdowndocs_client = j.tools.markdowndocs
-    doc=markdowndocs_client.load("https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/tutorials/base/",name="newrepo")
-    data = include.include(doc=test_doc,name="newrepo:README.md")
-    assert "see tutorials folder for examples" in data
+    docsite = markdowndocs_client.load(
+        "https://github.com/abom/test_custom_md/tree/master", name="newdocsite")
+    data = include.include(doc=test_doc, docsite_name="newdocsite", link="test_src.md")
+    assert "[b] (test.md)" in data
+    assert "## head" not in data
+
+
+def test_include_custom_link(doc=test_doc):
+    # test external repo with custom link
+    # the same like above, but using custom links format directly (instead of loading by hand)
+    data = include.include(doc=test_doc, link="abom:test_custom_md(master):docs/test_src.md")
+    assert "[b] (test.md)" in data
+    assert "## head" not in data

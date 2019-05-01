@@ -3,7 +3,7 @@ import os
 import subprocess
 import sys
 
-BRANCH = "development_types"
+BRANCH = "development"
 
 # get current install.py directory
 rootdir = os.path.dirname(os.path.abspath(__file__))
@@ -22,20 +22,29 @@ IT.MyEnv._init()
 sys.excepthook = IT.my_excepthook
 
 
-def dexec(cmd,interactive=True):
+def dexec(cmd,interactive=False):
     if "'" in cmd:
         cmd = cmd.replace("'","\"")
     if interactive:
         cmd2 = "docker exec -ti %s bash -c '%s'"%(args["name"],cmd)
     else:
         cmd2 = "docker exec -t %s bash -c '%s'"%(args["name"],cmd)
-    IT.Tools.execute(cmd2,interactive=interactive,showout=False,replace=False,asfile=True)
+    IT.Tools.execute(cmd2,interactive=interactive,showout=True,replace=False,asfile=True)
 
 def sshexec(cmd):
     if "'" in cmd:
         cmd = cmd.replace("'","\"")
-    cmd2 = "ssh -t root@localhost -A -p %s '%s'"%(args["port"],cmd)
-    IT.Tools.execute(cmd2,interactive=False,showout=False,replace=False,asfile=True)
+    cmd2 = "ssh -oStrictHostKeyChecking=no -t root@localhost -A -p %s '%s'"%(args["port"],cmd)
+    IT.Tools.execute(cmd2,interactive=True,showout=False,replace=False,asfile=True)
+
+
+
+def docker_running():
+    names = IT.Tools.execute("docker ps --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
+    names = [i.strip("\"'") for i in names if i.strip()!=""]
+    return names
+
+
 
 def docker_names():
     names = IT.Tools.execute("docker container ls -a --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
@@ -59,42 +68,42 @@ def help():
     -h = this help
 
     ## type of installation
-    
+
     -1 = in system install
     -2 = sandbox install
     -3 = install in a docker (make sure docker is installed)
     -w = install the wiki at the end, which includes openresty, lapis, lua, ...
-    
+
 
     ## interactivity
-    
+
     -y = answer yes on every question (for unattended installs)
     -c = will confirm all filled in questions at the end (useful when using -y)
     -r = reinstall, basically means will try to re-do everything without removing (keep data)
     --debug will launch the debugger if something goes wrong
-    
+
     ## encryption
-    
+
     --secret = std is '1234', if you use 'SSH' then a secret will be derived from the SSH-Agent (only if only 1 ssh key loaded
     --private_key = std is '' otherwise is 24 words, use '' around the private key
                 if secret specified and private_key not then will ask in -y mode will autogenerate
 
     ## docker related
-    
+
     --name = name of docker, only relevant when docker option used
-    -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install
-    --portrange = 1 is the default 
+    -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install    
+    --portrange = 1 is the default
                   1 means 8100-8199 on host gets mapped to 8000-8099 in docker
-                  2 means 8200-8299 on host gets mapped to 8000-8099 in docker                  
-    --image=/path/to/image.tar or name of image (use docker images) 
+                  2 means 8200-8299 on host gets mapped to 8000-8099 in docker
+    --image=/path/to/image.tar or name of image (use docker images) if "hub" then will download despiegk/jsx_develop from docker hub as base
     --port = port of container SSH std is 9022 (normally not needed to use because is in portrange:22 e.g. 9122 if portrange 1)
 
     ## code related
-    
+
     --codepath = "/sandbox/code" can overrule, is where the github code will be checked out
     -p = pull code from git, if not specified will only pull if code directory does not exist yet
     --branch = jumpscale branch: normally 'development'
-    
+
 
     """
     print(IT.Tools.text_replace(T))
@@ -110,8 +119,6 @@ def ui():
 
     if "reset" in args:
         IT.Tools.shell()
-        w
-
 
     if "incontainer" not in args:
 
@@ -168,16 +175,16 @@ def ui():
             if "y" not in args:
                 if not IT.Tools.ask_yes_no("OK to continue?"):
                     sys.exit(1)
-        else:
-            sshkey = IT.MyEnv.sshagent_key_get()
-            sshkey+=".pub"
-
-            if not IT.Tools.exists(sshkey):
-                print ("ERROR: could not find SSH key:%s"%sshkey)
-                sys.exit(1)
-            sshkey2 = IT.Tools.file_text_read(sshkey)
-
-            args["sshkey"]=sshkey2
+        # else:
+        #     sshkey2 = IT.Tools.execute("ssh-add -L",die=False,showout=False)[1].strip().split(" ")[-2].strip()
+        #     # sshkey = IT.MyEnv.sshagent_key_get()
+        #     # sshkey+=".pub"
+        #     #
+        #     # if not IT.Tools.exists(sshkey):
+        #     #     print ("ERROR: could not find SSH key:%s"%sshkey)
+        #     #     sys.exit(1)
+        #     # sshkey2 = IT.Tools.file_text_read(sshkey)
+        #     args["sshkey"]=sshkey2
 
     if not "codepath" in args:
         codepath = "/sandbox/code"
@@ -189,7 +196,7 @@ def ui():
         args["codepath"] = codepath
 
     if not "branch" in args:
-        args["branch"]="development_types"
+        args["branch"]="development"
 
     if "y" not in args and "r" not in args and IT.MyEnv.installer_only is False and IT.Tools.exists(IT.MyEnv.state_file_path):
         if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
@@ -199,6 +206,10 @@ def ui():
     if "3" in args: #means we want docker
         if "name" not in args:
             args["name"] = "default"
+
+        if IT.MyEnv.platform()=="linux" and not IT.Tools.cmd_installed("docker"):
+             IT.UbuntuInstall.docker_install()
+
 
         container_exists = args["name"] in docker_names()
         args["container_exists"]=container_exists
@@ -220,16 +231,19 @@ def ui():
                 #     sys.exit(1)
 
         if "image" in args:
+            if "d" not in args:
+                args["d"]=True
+            if args["image"] == "hub":
+                args["image"] = "despiegk/jsx_develop"
             if ":" not in args["image"]:
-                args["image"]="%s:latest"%args["image"]
+                args["image"]="%s:latest" % args["image"]
             if args["image"] not in image_names():
                 if IT.Tools.exists(args["image"]):
                     IT.Tools.shell()
-                    w
                 else:
                     print("Cannot continue, image '%s' specified does not exist."%args["image"])
                     sys.exit(1)
-            args["d"]=True
+
 
         if "portrange" not in args:
             if "y" in args:
@@ -240,13 +254,16 @@ def ui():
                 else:
                     args["portrange"] = 1
 
-        a=8000+int(args["portrange"])*100
-        b=8099+int(args["portrange"])*100
-        portrange_txt="%s-%s:8000-8099"%(a,b)
+        a=8000+int(args["portrange"])*10
+        b=8004+int(args["portrange"])*10
+        portrange_txt="%s-%s:8000-8004"%(a,b)
+        portrange_txt +=" -p %s:9999/udp"%(a+9)  #udp port for wireguard
+
         args["portrange_txt"] = "-p %s"%portrange_txt
 
         if "port" not in args:
             args["port"] = 9000+int(args["portrange"])*100 + 22
+
 
     else:
         if "p" not in args:
@@ -345,6 +362,8 @@ else:
     os.environ["GITPULL"] = "0"
 
 if "1" in args or "2" in args:
+    # Only install on supported platforms
+    IT.MyEnv.check_platform()
     IT.MyEnv._init(install=True)
 
 if "1" in args:
@@ -368,12 +387,14 @@ if "1" in args or "2" in args:
 
     if "w" in args:
         if "1" in args:
+
             #in system need to install the lua env
             IT.Tools.execute("source /sandbox/env.sh;kosmos 'j.builder.runtimes.lua.install(reset=True)'", showout=False)
         IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.tools.markdowndocs.test()'", showout=False)
         print("Jumpscale X installed successfully")
 
 elif "3" in args:
+
 
     if args["container_exists"] and "d" in args:
         IT.Tools.execute("docker rm -f %s"%args["name"])
@@ -408,9 +429,16 @@ elif "3" in args:
         print(" - Start SSH server")
     else:
         print(" - Docker machine was already there.")
+        if "default" not in docker_running():
+            IT.Tools.execute("docker start %s"% args["name"])
+            if not "default" in docker_running():
+                print("could not start container:%s"%args["name"])
+                sys.exit(1)
+            IT.Tools.shell()
 
-    if "sshkey" in args:
-        dexec('echo "%s" > /root/.ssh/authorized_keys'%args["sshkey"])
+    SSHKEYS = IT.Tools.execute("ssh-add -L",die=False,showout=False)[1]
+    if SSHKEYS.strip()!="":
+        dexec('echo "%s" > /root/.ssh/authorized_keys'%SSHKEYS)
 
     dexec("/usr/bin/ssh-keygen -A")
     dexec('/etc/init.d/ssh start')
@@ -432,11 +460,33 @@ elif "3" in args:
             args_txt+=" --%s='%s'"%(item,args[item])
 
     IT.MyEnv.config["DIR_BASE"] = args["codepath"].replace("/code", "")
-    install = IT.JumpscaleInstaller()
+
+    # add install from a specific branch
+    install = IT.JumpscaleInstaller(branch=args["branch"])
+
+    def getbranch():
+        cmd = "cd {}/github/threefoldtech/jumpscaleX; git branch | grep \* | cut -d ' ' -f2".format(args["codepath"])
+        rc,stdout,err = IT.Tools.execute(cmd)
+        return stdout.strip()
+
+    # check if already code exists and checkout the argument branch
+    if os.path.exists("{}/github/threefoldtech/jumpscaleX".format(args["codepath"])):
+        if getbranch() != args["branch"]:
+            print("found JS on machine, Checking out branch {}...".format(args["branch"])) 
+            IT.Tools.execute("""cd {}/github/threefoldtech/jumpscaleX
+                        git remote set-branches origin '*'
+                        git fetch -v
+                        git checkout {} -f
+                        git pull""".format(args["codepath"], args["branch"]))
+
+        print("On {} branch".format(args["branch"]))
+    else:
+        print("no local code at {}".format(args["codepath"]))
+
     install.repos_get()
 
     cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py %s"%args_txt
-
+    print(" - Installing jumpscaleX ")
     sshexec(cmd)
 
 

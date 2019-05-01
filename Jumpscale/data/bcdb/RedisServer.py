@@ -11,8 +11,7 @@ JSBASE = j.application.JSBaseClass
 
 
 class RedisServer(j.application.JSBaseClass):
-
-    def _init(self,bcdb=None, addr="localhost",port=6380,secret="123456"):
+    def _init2(self, bcdb=None, addr="localhost", port=6380, secret="123456"):
         self.bcdb = bcdb
         self._sig_handler = []
         #
@@ -21,6 +20,9 @@ class RedisServer(j.application.JSBaseClass):
         self.secret = secret
         self.ssl = False
         # j.clients.redis.core_check()  #need to make sure we have a core redis
+
+        if self.bcdb.models is None:
+            raise RuntimeError("models are not filled in")
 
         self.init()
 
@@ -35,13 +37,11 @@ class RedisServer(j.application.JSBaseClass):
                 spawn=Pool(),
                 handle=self.handle_redis,
                 keyfile=self.ssl_priv_key_path,
-                certfile=self.ssl_cert_path
+                certfile=self.ssl_cert_path,
             )
         else:
             self.redis_server = StreamServer(
-                (self.host, self.port),
-                spawn=Pool(),
-                handle=self.handle_redis
+                (self.host, self.port), spawn=Pool(), handle=self.handle_redis
             )
 
     def start(self):
@@ -58,7 +58,7 @@ class RedisServer(j.application.JSBaseClass):
         for h in self._sig_handler:
             h.cancel()
 
-        self._log_info('stopping server')
+        self._log_info("stopping server")
         self.redis_server.stop()
 
     def handle_redis(self, socket, address):
@@ -69,20 +69,18 @@ class RedisServer(j.application.JSBaseClass):
         try:
             self._handle_redis(socket, address, parser, response)
         except ConnectionError as err:
-            self._log_info('connection error: {}'.format(str(err)))
+            self._log_info("connection error: {}".format(str(err)))
         finally:
             parser.on_disconnect()
-            self._log_info('close connection from {}'.format(address))
+            self._log_info("close connection from {}".format(address))
 
     def _handle_redis(self, socket, address, parser, response):
 
-        self._log_info('connection from {}'.format(address))
+        self._log_info("connection from {}".format(address))
         socket.namespace = "system"
 
         while True:
             request = parser.read_request()
-
-            self._log_debug("%s:%s" % (socket.namespace, request))
 
             if request is None:
                 self._log_debug("connection lost or tcp test")
@@ -108,7 +106,7 @@ class RedisServer(j.application.JSBaseClass):
                 continue
 
             elif redis_cmd == "select":
-                if request[1] == b'0':
+                if request[1] == b"0":
                     response.encode("OK")
                     continue
                 response.error("DB index is out of range")
@@ -130,7 +128,6 @@ class RedisServer(j.application.JSBaseClass):
                 redis_cmd = request[0].decode().lower()
                 args = request[1:] if len(request) > 1 else []
                 args = [x.decode() for x in args]
-                self._log_debug("cmd:%s args:%s"%(redis_cmd,args))
 
                 if redis_cmd == "del":
                     redis_cmd = "delete"
@@ -146,9 +143,9 @@ class RedisServer(j.application.JSBaseClass):
     def info(self):
         return b"NO INFO YET"
 
-    def auth(self,response,*args,**kwargs):
+    def auth(self, response, *args, **kwargs):
         # j.shell()
-         response.encode("OK")
+        response.encode("OK")
 
     def _split(self, key):
         """
@@ -165,7 +162,7 @@ class RedisServer(j.application.JSBaseClass):
         :return: tuple of (category, url, key, model)
         :rtype: tuple
         """
-        if key.strip()=="":
+        if key.strip() == "":
             raise RuntimeError("key cannot be empty")
         splitted = key.split(":")
         len_splitted = len(splitted)
@@ -191,13 +188,16 @@ class RedisServer(j.application.JSBaseClass):
 
     def set(self, response, key, val):
         cat, url, key, model = self._split(key)
-        self._log_debug("set:%s:%s:%s"%(cat, url, key))
         if cat == "objects":
             if url == "":
-                response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
+                response.error(
+                    "url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new"
+                )
                 return
             if key == "":
-                response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
+                response.error(
+                    "key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)"
+                )
                 return
 
         if cat == "schemas":
@@ -210,9 +210,10 @@ class RedisServer(j.application.JSBaseClass):
 
     def get(self, response, key):
         cat, url, key, model = self._split(key)
-        self._log_debug("get:%s:%s:%s"%(cat, url, key))
         if model is "":
-            raise RuntimeError("did not find model from key, maybe models not loaded:%s"%key)
+            raise RuntimeError(
+                "did not find model from key, maybe models not loaded:%s" % key
+            )
 
         if url == "":
             response.encode("ok")
@@ -225,7 +226,7 @@ class RedisServer(j.application.JSBaseClass):
                 response.encode("")
                 return
             if key == "":
-                #get content from schema
+                # get content from schema
                 response.encode(model.schema.text)
                 return
             if url in self.bcdb.models:
@@ -235,15 +236,15 @@ class RedisServer(j.application.JSBaseClass):
 
     def delete(self, response, key):
         cat, url, key, model = self._split(key)
-        self._log_debug("delete:%s:%s:%s"%(cat, url, key))
-        if url == "" or cat == "schemas" or model == '':
-            #DO NOT DELETE SCHEMAS
+
+        if url == "" or cat == "schemas" or model == "":
+            # DO NOT DELETE SCHEMAS
             response.encode("0")
             return
 
         if cat == "objects":
-            if key == "" and url!="":
-                #cannot delete !!! data stays there
+            if key == "" and url != "":
+                # cannot delete !!! data stays there
                 if model.bcdb.zdbclient is None:
                     model.delete_all()
                 nr_deleted = 0
@@ -258,7 +259,7 @@ class RedisServer(j.application.JSBaseClass):
 
         response.error("cannot delete, cat:'%s' not found" % cat)
 
-    def scan(self, response, startid, match='*', count=10000):
+    def scan(self, response, startid, match="*", count=10000, *args):
         """
 
         :param scan: id to start from
@@ -281,28 +282,33 @@ class RedisServer(j.application.JSBaseClass):
 
     def hset(self, response, key, id, val):
         cat, url, _, model = self._split(key)
-        self._log_debug("hset:%s:%s"%(cat, url))
-        if cat != 'objects':
+        if cat != "objects":
             response.error("category %s not valid" % cat)
             return
         if url == "":
-            response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
+            response.error(
+                "url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new"
+            )
             return
         if key == "":
-            response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
+            response.error(
+                "key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)"
+            )
             return
         if id == "new":
             o = model.set_dynamic(val)
         else:
             id = int(id)
             if id == 0:
-                response.error('trying to overwrite first metadata entry, not allowed')
+                response.error("trying to overwrite first metadata entry, not allowed")
                 return
             try:
                 o = model.set_dynamic(val, obj_id=id)
             except Exception as e:
-                if str(e).find("cannot update object")!=-1:
-                    response.error('cannot update object with id:%s, it does not exist'%id)
+                if str(e).find("cannot update object") != -1:
+                    response.error(
+                        "cannot update object with id:%s, it does not exist" % id
+                    )
                     return
                 response.error(str(e))
                 return
@@ -311,15 +317,18 @@ class RedisServer(j.application.JSBaseClass):
 
     def hget(self, response, key, id):
         cat, url, _, model = self._split(key)
-        self._log_debug("hget:%s:%s"%(cat, url))
-        if cat != 'objects':
+        if cat != "objects":
             response.error("category %s not valid" % cat)
             return
         if url == "":
-            response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
+            response.error(
+                "url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new"
+            )
             return
         if key == "":
-            response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
+            response.error(
+                "key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)"
+            )
             return
 
         obj = model.get(int(id))
@@ -330,15 +339,18 @@ class RedisServer(j.application.JSBaseClass):
 
     def hdel(self, response, key, id):
         cat, url, _, model = self._split(key)
-        self._log_debug("hdel:%s:%s"%(cat, url))
-        if cat != 'objects':
+        if cat != "objects":
             response.error("category %s not valid" % cat)
             return
         if url == "":
-            response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
+            response.error(
+                "url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new"
+            )
             return
         if key == "":
-            response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
+            response.error(
+                "key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)"
+            )
             return
 
         if id == "":
@@ -352,12 +364,12 @@ class RedisServer(j.application.JSBaseClass):
 
     def hlen(self, response, key):
         cat, url, _, model = self._split(key)
-        self._log_debug("hlen:%s:%s"%(cat, url))
-        if cat != 'objects':
+
+        if cat != "objects":
             response.error("category %s not valid" % cat)
             return
 
-        if url == "" or cat == "schemas" or model == '':
+        if url == "" or cat == "schemas" or model == "":
             response.encode(0)
             return
         response.encode(len(model.get_all()))
@@ -383,10 +395,18 @@ class RedisServer(j.application.JSBaseClass):
         return urls
 
     def hscan(self, response, key, startid, count=10000):
+
+        cat, url, _, model = self._split(key)
+        objs = model.get_all()
         res = []
+
+        for obj in objs:
+            res.append(obj.id)
+            res.append(obj._json)
+
         response._array(["0", res])
 
-    def info_internal(self, response):
+    def info_internal(self, response, *args):
         C = """
         # Server
         redis_version:4.0.11

@@ -41,13 +41,13 @@ class BuildImage(Utils):
         """
         response = self.execute_cmd('docker login --username={} --password={}'.format(self.username, self.password))
         if not response:
-            self.send_msg('jumpscaleX installed Successfully, but could not login')
+            self.send_msg('jumpscaleX installed insystem successfully, but could not login')
 
         response = self.execute_cmd('docker push {}/jumpscalex:latest'.format(self.username))
         if response.returncode:
-            self.send_msg('jumpscaleX installed Successfully, but could not push')
+            self.send_msg('jumpscaleX installed insystem successfully, but could not push')
         else:
-            self.send_msg('jumpscaleX installed and pushed Successfully')
+            self.send_msg('jumpscaleX installed insystem and pushed successfully')
 
     def image_pull(self, file_link):
         """Pull image from docker hub in case of fail to build one.
@@ -57,28 +57,45 @@ class BuildImage(Utils):
         """
         response = self.execute_cmd('docker login --username={} --password={}'.format(self.username, self.password))
         if not response:
-            self.send_msg('Failed to install jumpscaleX {} and could not login'.format(file_link))
+            self.send_msg('Failed to install jumpscaleX insystem {} and could not login'.format(file_link))
 
         response = self.execute_cmd('docker pull {}/jumpscalex:latest'.format(self.username))
         if response.returncode:
-            self.send_msg('Failed to install jumpscaleX {} and could not pull'.format(file_link))
+            self.send_msg('Failed to install jumpscaleX insystem {} and could not pull'.format(file_link))
         else:
-            self.send_msg('Failed to install jumpscaleX {} and pulled Successfully'.format(file_link))
+            self.send_msg('Failed to install jumpscaleX insystem {} and pulled successfully'.format(file_link))
 
+    def install_jsx_in_system(self):
+        image_name = '{}/jumpscalex'.format(self.username)
+        self.images_clean(image_name=image_name)
+        response = self.image_bulid(image_name=image_name, branch='development')
+        if response.returncode:
+            file_name = '{}_insystem.log'.format(str(datetime.now())[:10])
+            self.write_file(text=response.stdout, file_name=file_name)
+            self.images_clean()
+            file_link = '{}/{}'.format(self.serverip, file_name)
+            text = '{}:failure'.format(file_name)
+            self.write_file(text=text, file_name='status.log', file_path='.')
+            self.image_pull(file_link)
+        else:
+            self.image_push()
+
+    def install_jsx_in_docker_option(self):
+        cmd = 'eval `ssh-agent`; ssh-add; curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/install.py?$RANDOM > /tmp/install.py;\
+                 python3.6 /tmp/install.py -3 -y --name=jsx'
+        response = self.execute_cmd(cmd)
+        if response.returncode:
+            file_name = '{}_docker.log'.format(str(datetime.now())[:10])
+            self.write_file(text=response.stdout, file_name=file_name)
+            file_link = '{}/{}'.format(build.serverip, file_name)
+            text = '{}:failure'.format(file_name)
+            self.write_file(text=text, file_name='status.log', file_path='.')
+            self.send_msg('Failed to install jumpscaleX with docker option {}'.format(file_link))
+        else:
+            self.send_msg('jumpscaleX installed in docker successfully')
+        self.execute_cmd('docker rm jsx -f')
 
 if __name__ == "__main__":
     build = BuildImage()
-    image_name = '{}/jumpscalex'.format(build.username)
-    build.images_clean(image_name=image_name)
-    response = build.image_bulid(image_name=image_name, branch='development')
-    if response.returncode:
-        file_name = '{}.log'.format(str(datetime.now())[:10])
-        build.write_file(text=response.stdout, file_name=file_name)
-        build.images_clean()
-        file_link = '{}/{}'.format(build.serverip, file_name)
-        text = '{}:failure'.format(file_name)
-        build.write_file(text=text, file_name='status.log', file_path='.')
-        build.image_pull(file_link)
-        sys.exit()
-    else:
-        build.image_push()
+    build.install_jsx_in_system()
+    build.install_jsx_in_docker_option()

@@ -22,7 +22,7 @@ def test_main(self=None):
             j.sal.process.execute('systemctl stop systemd-resolved')
         dns_masq.install(start=True, device='lo')
         time.sleep(5)
-        cmd = j.tools.bash.local.cmdGetPath('dnsmasq')
+        cmd = j.tools.bash.get().cmd_path_get('dnsmasq')
         assert j.sal.process.psfind(cmd) is True
 
         # add host

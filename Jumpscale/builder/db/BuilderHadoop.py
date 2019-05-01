@@ -19,10 +19,10 @@ class BuilderHadoop(j.builder.system._BaseClass):
             C = j.builder.tools.replace(C)
             C = j.core.tools.text_replace(C)
             j.sal.process.execute(C, profile=True)
-            #j.builder.sandbox.addPath("/opt/hadoop-2.7.2/bin")
-            #j.builder.sandbox.addPath("/opt/hadoop-2.7.2/sbin")
-            #j.builder.sandbox.envSet("JAVA_HOME", "/usr/lib/jvm/java-7-openjdk-amd64")
-            #j.builder.sandbox.envSet("HADOOP_PREFIX", "/opt/hadoop-2.7.2/")
+            #j.builder.sandbox.path_add("/opt/hadoop-2.7.2/bin")
+            #j.builder.sandbox.path_add("/opt/hadoop-2.7.2/sbin")
+            #j.builder.sandbox.env_set("JAVA_HOME", "/usr/lib/jvm/java-7-openjdk-amd64")
+            #j.builder.sandbox.env_set("HADOOP_PREFIX", "/opt/hadoop-2.7.2/")
         else:
             raise NotImplementedError("unsupported platform")
 

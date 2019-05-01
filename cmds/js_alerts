@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 from Jumpscale import j
-j.tools.bash.local.locale_check()
+j.tools.bash.get().profile.locale_check()
 import click
 
 

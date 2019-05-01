@@ -2,14 +2,17 @@ import logging
 import os
 import time
 
+from Jumpscale import j
+
 from ..abstracts import Mountable
+from ..disks.Disks import Disk
+from ..disks.Partition import Partition
 
 logging.basicConfig(level=logging.INFO)
 
 
-
 def _prepare_device(node, devicename):
-    self._log_debug("prepare device %s", devicename)
+    j.tools.logger._log_debug("prepare device %s", devicename)
     ss = devicename.split('/')
     if len(ss) < 3:
         raise RuntimeError("bad device name: {}".format(devicename))
@@ -76,7 +79,7 @@ class StoragePools:
             raise ValueError("device must be a string not %s" % type(device))
 
         label = 'sp_{}'.format(name)
-        self._log_debug("create storagepool %s", label)
+        j.tools.logger._log_debug("create storagepool %s", label)
 
         part = _prepare_device(self.node, device)
 
@@ -99,11 +102,13 @@ class StoragePool(Mountable):
 
     @property
     def type(self):
-        disk_name = self.device[len('/dev/'):]
-        disk = self.node.disks.get(disk_name[:-1])
-        if not disk:
-            raise RuntimeError("could not find disk used by the storage pool %s" % self.name)
-        return disk.type
+        medium = self.node.disks.get_device(self.device)
+        if isinstance(medium, Disk):
+            return medium.type
+        elif isinstance(medium, Partition):
+            return medium.disk.type
+
+        raise RuntimeError("unsupported device type")
 
     @property
     def devicename(self):
@@ -245,7 +250,7 @@ class StoragePool(Mountable):
         """
         Create filesystem
         """
-        self._log_debug("Create filesystem %s on %s", name, self)
+        j.tools.logger._log_debug("Create filesystem %s on %s", name, self)
         mountpoint = self._get_mountpoint()
         fspath = os.path.join(mountpoint, 'filesystems')
         self.client.filesystem.mkdir(fspath)
@@ -343,7 +348,7 @@ class FileSystem():
         """
         Create snapshot
         """
-        self._log_debug("create snapshot %s on %s", name, self.pool)
+        j.tools.logger._log_debug("create snapshot %s on %s", name, self.pool)
         snapshot = Snapshot(name, self)
         if self.exists(name):
             raise RuntimeError("Snapshot path {} exists.")

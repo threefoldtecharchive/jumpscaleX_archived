@@ -34,14 +34,14 @@ class BuilderFileSystem(j.builder.system._BaseClass):
         mount_point.strip().rstrip('/')
 
         # make sure mount point folder exists
-        prefab.core.createDir(mount_point)
+        tools.createDir(mount_point)
 
         if copy:
             # generate random tmp folder name
             tmp = '/mnt/tmp%s'% str(uuid.uuid4()).replace('-','')
 
             # mount new filesystem in tmp mount point
-            prefab.core.createDir(tmp)
+            tools.createDir(tmp)
             try:
                 prefab.executor.execute("mount %s %s" % (device, tmp))
                 try:
@@ -51,7 +51,7 @@ class BuilderFileSystem(j.builder.system._BaseClass):
                     # unmount the partition
                     prefab.executor.execute("umount %s" % device)
             finally:
-                prefab.core.dir_remove(tmp)
+                tools.dir_remove(tmp)
 
         # mount device
         prefab.executor.execute("mount %s %s" % (device, mount_point))
@@ -61,6 +61,6 @@ class BuilderFileSystem(j.builder.system._BaseClass):
             if not fs_type:
                 raise j.exeptions.Input('fs_type must be given')
             # append to fstab
-            prefab.core.file_append("/etc/fstab", "%s\t%s\t%s\tdefaults\t0 0" % (device, mount_point, fs_type))
+            tools.file_append("/etc/fstab", "%s\t%s\t%s\tdefaults\t0 0" % (device, mount_point, fs_type))
 
 

@@ -1,101 +1,70 @@
 from Jumpscale import j
-from time import sleep
-
-
+import requests
+builder_method = j.builder.system.builder_method
 
 
 class BuilderTIDB(j.builder.system._BaseClass):
     """
     Installs TIDB.
     """
-    NAME = 'tidb-server'
+    NAME = 'tidb'
 
     def _init(self):
-        self.BUILDDIR = j.core.tools.text_replace("{DIR_VAR}/build/tidb/")
+        self.DIR_BUILD = self._replace("{DIR_VAR}/build/tidb")
 
-    def build(self, install=True, reset=False):
-        if self._done_check("build", reset):
-            return
-        j.core.tools.dir_ensure(self.BUILDDIR)
+    @builder_method()
+    def build(self):
+        self.tools.dir_ensure(self.DIR_BUILD)
         tidb_url = 'http://download.pingcap.org/tidb-latest-linux-amd64.tar.gz'
-        j.builder.tools.file_download(
-            tidb_url, overwrite=False, to=self.BUILDDIR, expand=True, removeTopDir=True)
-        self._done_set('build')
+        self.tools.file_download(tidb_url, overwrite=False, to=self.DIR_BUILD, expand=True, removeTopDir=True)
 
-        if install:
-            self.install(False)
-
-    def install(self, start=True, reset=False):
+    @builder_method()
+    def install(self):
         """
         install, move files to appropriate places, and create relavent configs
         """
-        if self._done_check("install", reset):
-            return
-        j.sal.process.execute("cp {DIR_VAR}/build/tidb/bin/* {DIR_BIN}/")
-        self._done_set('install')
+        self._copy('{DIR_BUILD}/bin/', '{DIR_BIN}')
 
-        if start:
-            self.start()
+    @property
+    def startup_cmds(self):
+        cmds = list()
 
-    def start_pd_server(self):
-        data_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, 'pd')
-        pm = j.builder.system.processmanager.get()
-        pm.ensure(
-            'pd-server',
-            'pd-server --data-dir={data_dir}'.format(data_dir=data_dir)
-        )
+        self.DIR_VAR = self._replace('{DIR_VAR}')
+        data_dir = j.sal.fs.joinPaths(self.DIR_VAR, 'pd')
+        self.tools.dir_ensure(data_dir)
+        pd_cmd = 'pd-server --data-dir={data_dir}'.format(data_dir=data_dir)
+        cmds.append(j.tools.startupcmd.get(name='pd', cmd=pd_cmd))
 
-    def start_tikv(self):
-        store_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, 'tikv')
-        pm = j.builder.system.processmanager.get()
-        pm.ensure(
-            "tikv-server",
-            "tikv-server --pd='127.0.0.1:2379' --store={store_dir}".format(
-                store_dir=store_dir)
-        )
+        store_dir = j.sal.fs.joinPaths(self.DIR_VAR, 'tikv')
+        self.tools.dir_ensure(store_dir)
+        kv_cmd = "tikv-server --pd='127.0.0.1:2379' --store={store_dir}".format(store_dir=store_dir)
+        cmds.append(j.tools.startupcmd.get(name='kv', cmd=kv_cmd))
 
-    def start_tidb(self):
-        pm = j.builder.system.processmanager.get()
-        pm.ensure(
-            "tidb-server",
-            "tidb-server --path='127.0.0.1:2379' --store=TiKV"
-        )
+        ti_cmd = "tidb-server --path='127.0.0.1:2379' --store=tikv"
+        cmds.append(j.tools.startupcmd.get(name='ti', cmd=ti_cmd))
+        return cmds
 
-    def start(self):
-        """
-        Read docs here.
-        https://github.com/pingcap/docs/blob/master/op-guide/clustering.md
-        """
-        # Start a standalone cluster
-        self.start_pd_server()
-        if not self._check_running('pd-server', timeout=30):
-            raise j.exceptions.RuntimeError("tipd didn't start")
+    @builder_method()
+    def sandbox(self):
+        bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
+        self.tools.dir_ensure(bin_dest)
+        self._copy('{DIR_BUILD}/bin/', bin_dest)
 
-        self.start_tikv()
-        if not self._check_running('tikv-server', timeout=30):
-            raise j.exceptions.RuntimeError("tikv didn't start")
+    @builder_method()
+    def clean(self):
+        self._remove(self.DIR_BUILD)
+        self._remove(self.DIR_SANDBOX)
 
-        self.start_tidb()
-        if not self._check_running('tidb-server', timeout=30):
-            raise j.exceptions.RuntimeError("tidb didn't start")
+    @builder_method()
+    def test(self):
+        if self.running():
+            self.stop()
 
-    def stop(self):
-        pm = j.builder.system.processmanager.get()
-        pm.stop("tidb-server")
-        pm.stop("pd-server")
-        pm.stop("tikv-server")
+        self.start()
+        pid = j.sal.process.getProcessPid(self.NAME)
+        assert pid is not []
+        response = requests.get('http://127.0.0.1:10080/status')
+        assert response.status_code == requests.codes.ok
+        self.stop()
 
-    def _check_running(self, name, timeout=30):
-        """
-        check that a process is running.
-        name: str, name of the process to check
-        timout: int, timeout in second
-        """
-        now = j.data.time.epoch
-        cmd = "ps aux | grep {}".format(name)
-        rc, _, _ = j.sal.process.execute(cmd, die=False, showout=False)
-        while rc != 0 and j.data.time.epoch < (now + timeout):
-            rc, _, _ = j.sal.process.execute(cmd, die=False, showout=False)
-            if rc != 0:
-                sleep(2)
-        return rc == 0
+        print('TEST OK')

@@ -6,11 +6,11 @@ from .JSBase import JSBase
 class JSBaseConfigs(JSBase):
 
     def __init__(self, parent=None, topclass=True, **kwargs):
+        self._children = {}
+
         JSBase.__init__(self, parent=parent, topclass=False)
 
         self._model_ = None
-
-        self._children = {}
 
         if topclass:
             self._init2(**kwargs)
@@ -60,7 +60,7 @@ class JSBaseConfigs(JSBase):
         self._children[name]._isnew = True
         return self._children[name]
 
-    def get(self, name=None, id=None, die=True, create_new=True, **kwargs):
+    def get(self, name="main", id=None, die=True, create_new=True, **kwargs):
         """
         :param id: id of the obj to find, is a unique id
         :param name: of the object, can be empty when searching based on id or the search criteria (kwargs)
@@ -96,6 +96,8 @@ class JSBaseConfigs(JSBase):
                     "Found more than 1 service for :%s, name searched for:%s" % (self.__class__._location, name))
             else:
                 data = res[0]
+                if kwargs:
+                    data._data_update(data=kwargs)
         else:
             if kwargs=={}:
                 raise RuntimeError("kwargs need to be specified is name is not.")
@@ -173,8 +175,8 @@ class JSBaseConfigs(JSBase):
         o = self.get(name)
         o.delete()
 
-    def exists(self, **kwargs):
-        res = self.findData(**kwargs)
+    def exists(self, name):
+        res = self.findData(name=name)
         if len(res) > 1:
             raise RuntimeError("found too many items for :%s, args:\n%s\n%s" % (self.__class__.__name__, kwargs, res))
         elif len(res) == 1:
@@ -183,21 +185,11 @@ class JSBaseConfigs(JSBase):
             return False
 
     def _obj_cache_reset(self):
+        JSBase._obj_cache_reset(self)
         for key, obj in self._children.items():
             obj._obj_cache_reset()
             del self._children[key]
             self._children.pop(key)
-
-    def __getattr__(self, name):
-        # if private then just return
-        if name.startswith("_") or name in self._methods() or name in self._properties():
-            return self.__getattribute__(name)
-        # else see if we can from the factory find the child object
-        r = self.get(name=name, die=False, create_new=False)
-        # if none means does not exist yet will have to create a new one
-        if r is None:
-            r = self.new(name=name)
-        return r
 
     def _properties_children(self):
         # list the children from the factory
@@ -210,6 +202,19 @@ class JSBaseConfigs(JSBase):
             if item.name not in x:
                 x.append(item.name)
         return x
+
+    def __getattr__(self, name):
+        # if private then just return
+        if name.startswith("_") or name in self._methods() or name in self._properties():
+            return self.__getattribute__(name)
+        # else see if we can from the factory find the child object
+        r = self.get(name=name, die=False, create_new=False)
+        # if none means does not exist yet will have to create a new one
+        if r is None:
+            r = self.new(name=name)
+        return r
+
+
 
     def __setattr__(self, key, value):
         self.__dict__[key] = value

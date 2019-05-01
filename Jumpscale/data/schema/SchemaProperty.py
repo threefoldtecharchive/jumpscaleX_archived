@@ -8,7 +8,6 @@ class SchemaProperty(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
         self.name = ""
-        #self.name = ""
         self.jumpscaletype = None
         # self.isList = False
         # self.enumeration = []
@@ -34,22 +33,7 @@ class SchemaProperty(j.application.JSBaseClass):
 
     @property
     def default_as_python_code(self):
-        #default already set when parsing the schema
         return self.jumpscaletype.python_code_get(self.default)
-        # try:
-        #     return self.jumpscaletype.python_code_get(self.default)
-        # except Exception as e:
-        #     # self._log_error(str(e))
-        #     self._log_error("could not do self.default_as_python_code in schemaprop:%s"%(self.name))
-        #     raise RuntimeError(e)
-
-        # if self.jumpscaletype.NAME == "enum":
-        #     return self.jumpscaletype.python_code_get(self.jumpscaletype.default_get())
-        # res = self.jumpscaletype.python_code_get(self.default)
-        # self._log_debug(res)
-        # if str(res).find("7200")!=-1:
-        #     j.shell()
-        # return res
 
     @property
     def name_camel(self):

@@ -19,11 +19,10 @@ md5 = ""
 
 
 class BCDBMeta(j.application.JSBaseClass):
-
     def __init__(self, bcdb):
         JSBASE.__init__(self)
         self.bcdb = bcdb
-        self._meta_local_path = j.sal.fs.joinPaths(self.bcdb._data_dir,"meta.db")
+        self._meta_local_path = j.sal.fs.joinPaths(self.bcdb._data_dir, "meta.db")
         self._schema = j.data.schema.get(SCHEMA)
         self.reset()
 
@@ -33,7 +32,7 @@ class BCDBMeta(j.application.JSBaseClass):
             if self.bcdb.zdbclient is not None:
                 data = self.bcdb.zdbclient.get(0)
             else:
-                #no ZDB used, is a file in local filesystem
+                # no ZDB used, is a file in local filesystem
                 if not j.sal.fs.exists(self._meta_local_path):
                     data = None
                 else:
@@ -47,8 +46,9 @@ class BCDBMeta(j.application.JSBaseClass):
                 self._data = self._schema.get(capnpbin=data)
 
             if self._data.name != self.bcdb.name:
-                raise RuntimeError("name given to bcdb does not correspond with name in the metadata stor")
-
+                raise RuntimeError(
+                    "name given to bcdb does not correspond with name in the metadata stor"
+                )
 
             for s in self._data.schemas:
                 self.url2sid[s.url] = s.sid
@@ -90,6 +90,7 @@ class BCDBMeta(j.application.JSBaseClass):
         return self.schema_get_from_id(self.md5sid[md5])
 
     def schema_get_from_id(self, schema_id, die=True):
+
         if schema_id not in self.sid2schema:
             for s in self._data.schemas:
                 if s.sid == schema_id:
@@ -97,7 +98,7 @@ class BCDBMeta(j.application.JSBaseClass):
                     self.sid2schema[schema_id].sid = schema_id
                     return self.sid2schema[schema_id]
             if die:
-                raise RuntimeError("schema_id does not exist in db (id:%s)"%schema_id)
+                raise RuntimeError("schema_id does not exist in db (id:%s)" % schema_id)
         return self.sid2schema[schema_id]
 
     def schema_get_from_url(self, url, die=True):
@@ -111,7 +112,9 @@ class BCDBMeta(j.application.JSBaseClass):
     def model_get_from_id(self, schema_id, bcdb=None):
         if schema_id not in self.sid2model:
             if bcdb is None:
-                raise RuntimeError("need to specify bcdb when getting model from schema:%s"%schema_id)
+                raise RuntimeError(
+                    "need to specify bcdb when getting model from schema:%s" % schema_id
+                )
             schema = self.schema_get_from_id(schema_id)
             self.sid2model[schema_id] = bcdb.model_get_from_schema(schema=schema)
             self.bcdb.models[schema.url] = self.sid2model[schema_id]
@@ -138,6 +141,10 @@ class BCDBMeta(j.application.JSBaseClass):
         if schema_existing is not None:  # means exists
             if schema_existing._md5 == schema._md5:
                 return schema_existing
+            else:
+                # for migration meta
+                if schema_existing.url == schema.url:
+                    self._migrate_meta(schema)
 
         # not known yet in namespace in ZDB
         self._schema_last_id += 1
@@ -147,12 +154,48 @@ class BCDBMeta(j.application.JSBaseClass):
         s.sid = self._schema_last_id
         s.text = schema.text  # + "\n"  # only 1 \n at end
         s.md5 = j.data.hash.md5_string(s.text)
-        self._log_info("new schema in meta:\n%s" % self.data)
+        self._log_debug("new schema in meta:\n%s" % self.data)
         self.save()
         self.url2sid[s.url] = s.sid
         schema.sid = s.sid
-
+        if schema_existing:
+            # for migrate all database using new schema
+            self.migrate_data(schema)
         return self.schema_get_from_id(s.sid)
+
+    def _migrate_meta(self, schema):
+        """
+        migrate meta using new schema 
+        WARNING : if you delete any parameter in schema you can't get it again because we migrate it with new schema
+        """
+        backup_data = self.data.schemas
+        j.sal.fs.remove(self._meta_local_path)
+        self.reset()
+        for schemas in backup_data:
+            if schemas.url != schema.url:
+                self._schema_last_id += 1
+                s = self.data.schemas.new()
+                s.url = schemas.url
+                s.sid = self._schema_last_id
+                s.text = schemas.text  # + "\n"  # only 1 \n at end
+                s.md5 = j.data.hash.md5_string(s.text)
+                self._log_debug("new schema in meta:\n%s" % self.data)
+                self.save()
+                self.url2sid[s.url] = s.sid
+                schemas.sid = s.sid
+
+    def migrate_data(self, schema):
+        """
+        migrate database when we have different schema with the same url 
+        WARNING : if you delete any parameter in schema you can't get it again because we migrate it with new schema
+        """
+        models = self.bcdb.get_all()
+        for model in models:
+            m = model.new()
+            for prop in schema.properties:
+                if hasattr(model, "{}".format(prop.name)):
+                    setattr(m, prop.name, getattr(model, "{}".format(prop.name)))
+            m.save()
 
     def __repr__(self):
         return str(self._data)

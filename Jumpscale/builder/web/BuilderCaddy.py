@@ -1,24 +1,112 @@
 from Jumpscale import j
+from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
+
+builder_method = j.builder.system.builder_method
 
 
-class BuilderCaddy(j.builder.system._BaseClass):
+ALL_PLUGINS = {
+    'realip': 'github.com/captncraig/caddy-realip',
+    'git': 'github.com/abiosoft/caddy-git',
+    'proxyprotocol': 'github.com/mastercactapus/caddy-proxyprotocol',
+    'locale': 'github.com/simia-tech/caddy-locale',
+    'cache': 'github.com/nicolasazrak/caddy-cache',
+    'authz': 'github.com/casbin/caddy-authz',
+    'filter': 'github.com/echocat/caddy-filter',
+    'minify': 'github.com/hacdias/caddy-minify',
+    'ipfilter': 'github.com/pyed/ipfilter',
+    'ratelimit': 'github.com/xuqingfeng/caddy-rate-limit',
+    'search': 'github.com/pedronasser/caddy-search',
+    'expires': 'github.com/epicagency/caddy-expires',
+    'cors': 'github.com/captncraig/cors/caddy',
+    'nobots': 'github.com/Xumeiquer/nobots',
+    'login': 'github.com/tarent/loginsrv/caddy',
+    'reauth': 'github.com/freman/caddy-reauth',
+    'jwt': 'github.com/BTBurke/caddy-jwt',
+    'jsonp': 'github.com/pschlump/caddy-jsonp',
+    'upload': 'blitznote.com/src/caddy.upload',
+    'multipass': 'github.com/namsral/multipass/caddy',
+    'datadog': 'github.com/payintech/caddy-datadog',
+    'prometheus': 'github.com/miekg/caddy-prometheus',
+    'cgi': 'github.com/jung-kurt/caddy-cgi',
+    'filemanager': 'github.com/filebrowser/caddy',
+    'iyofilemanager': 'github.com/itsyouonline/filemanager/caddy/filemanager',
+    'webdav': 'github.com/hacdias/caddy-webdav',
+    'jekyll': 'github.com/hacdias/filemanager/caddy/jekyll',
+    'hugo': 'github.com/hacdias/filemanager/caddy/hugo',
+    'mailout': 'github.com/SchumacherFM/mailout',
+    'awses': 'github.com/miquella/caddy-awses',
+    'awslambda': 'github.com/coopernurse/caddy-awslambda',
+    'grpc': 'github.com/pieterlouw/caddy-grpc',
+    'gopkg': 'github.com/zikes/gopkg',
+    'restic': 'github.com/restic/caddy',
+    'iyo': 'github.com/itsyouonline/caddy-integration/oauth',
+    'dns': 'github.com/coredns/coredns',
+    'wsproxy': 'github.com/incubaid/wsproxy',
+}
+
+
+PLUGIN_DIRECTIVES = {
+    'iyo': 'oauth',
+    'dns': 'dns',
+    'wsproxy': 'wsproxy',
+}
+
+
+# see https://github.com/mholt/caddy#build
+CADDY_RUNNER = """
+package main
+
+import (
+	"github.com/mholt/caddy/caddy/caddymain"
+
+	// plug in plugins here, for example:
+%s
+)
+
+func main() {
+	// optional: disable telemetry
+	// caddymain.EnableTelemetry = false
+	caddymain.Run()
+}"""
+
+
+class BuilderCaddy(BuilderGolangTools):
     NAME = "caddy"
+    PLUGINS = ['iyo', 'filemanager']  # PLEASE ADD MORE PLUGINS #TODO:*1
+    VERSION = 'master'  # make sure the way to build with plugin is ok
 
     def _init(self):
-        self.go_runtime = j.builder.runtimes.golang
-        
+        super()._init()
+        self.package_path = self.package_path_get('mholt/caddy')
 
-    def reset(self):
+    def clean(self):
         self.stop()
         self._init()
         j.builder.tools.dir_remove("{DIR_BIN}/caddy")
 
-    def build(self, reset=False, plugins=None):
+    def get_plugin(self, name):
+        """get a supported plugin
+
+        :param name: name
+        :type name: str
+        :raises j.exceptions.RuntimeError: in case the plugin not supported
+        """
+
+        if name not in ALL_PLUGINS:
+            raise j.exceptions.RuntimeError('plugin not supported')
+
+        url = ALL_PLUGINS[name]
+        self.get(url, install=False)
+
+    def profile_builder_set(self):
+        super().profile_builder_set()
+        self.profile.env_set('GO111MODULE', 'on')
+
+    @builder_method()
+    def build(self, plugins=None):
         """
         Get/Build the binaries of caddy itself.
 
-        :param reset: reset the build process, defaults to False
-        :type reset: bool, optional
         :param plugins: list of plugins names to be installed, defaults to None
         :type plugins: list, optional
         :raises j.exceptions.RuntimeError: if platform is not supported
@@ -26,110 +114,58 @@ class BuilderCaddy(j.builder.system._BaseClass):
         if not j.core.platformtype.myplatform.isUbuntu:
             raise j.exceptions.RuntimeError("only ubuntu supported")
 
-        if self._done_check('build', reset):
-            return
+        # install go runtime
+        j.builder.runtimes.golang.install()
 
-        if not self.go_runtime.is_installed:
-            self.go_runtime.install()
-
-        # build caddy from source using our caddyman
-        j.clients.git.pullGitRepo("https://github.com/incubaid/caddyman", dest="/tmp/caddyman")
-        self.go_runtime.execute("cd /tmp/caddyman && chmod u+x caddyman.sh")
+        # get caddy and plugins
         if not plugins:
-            plugins = ["iyo"]
-        cmd = "/tmp/caddyman/caddyman.sh install {plugins}".format(plugins=" ".join(plugins))
-        self.go_runtime.execute(cmd, timeout=60*60)
-        self._done_set('build')
+            plugins = self.PLUGINS
 
-    def install(self, plugins=None, reset=False):
+        for plugin in plugins:
+            self.get_plugin(plugin)
+
+        # build caddy with a plugins
+        plugin_imports = '\n'.join([
+            '\t_ "%s"' % ALL_PLUGINS[name] for name in plugins
+        ])
+
+        self.get('github.com/mholt/caddy/caddy@%s' % self.VERSION)
+        runner_file = self._replace('{DIR_BUILD}/caddy.go')
+        self.tools.file_write(runner_file, CADDY_RUNNER % plugin_imports)
+        self._execute('cd {DIR_BUILD} && gofmt caddy.go && go mod init caddy && go install')
+
+    @builder_method()
+    def install(self, plugins=None):
         """
         will build if required & then install binary on right location
 
         :param plugins: plugins to build with if not build already, defaults to None
-        :type plugins: list, optional
-        :param reset: reset build and installation, defaults to False
-        :type reset: bool, optional
+
+        kosmos 'j.builder.web.caddy.install()'
+
         """
-        if not self._done_check('build', reset):
-            self.build(plugins=plugins, reset=reset)
 
-        if self._done_check('install', reset):
-            return
+        caddy_bin_path = self.tools.joinpaths(
+            self.DIR_GO_PATH_BIN, self.NAME
+        )
+        j.builder.tools.file_copy(caddy_bin_path, "{DIR_BIN}/caddy")
 
-        caddy_bin_path = self.tools.joinpaths(self.go_runtime.go_path_bin, self.NAME)
-        j.builder.tools.file_copy(caddy_bin_path, '{DIR_BIN}/caddy')
+    @property
+    def startup_cmds(self):
+        cmd = j.tools.startupcmd.get('caddy', 'caddy', path='/sandbox/bin')
+        return [cmd]
 
-        self._done_set('install')
-
-    def start(self, config_file=None, agree=True):
-        """start caddy
-
-        :param config_file: config file path (will use ./Caddyfile if not provided), defaults to None
-        :type config_file: str, optional
-        :param agree: agree to Let's Encrypt Subscriber Agreement, defaults to True
-        :type agree: bool, optional
-        :raises RuntimeError: if config file doesn't exist
-        """
-        cmd = j.core.tools.text_replace("{DIR_BIN}/caddy")
-
-        if config_file:
-            configpath = j.core.tools.text_replace(config_file)
-            if not j.builder.tools.exists(configpath):
-                raise RuntimeError('config file does not exist: %s' % configpath)
-            cmd += ' -conf=%s' % configpath
-
-        if agree:
-            cmd += ' -agree'
-
-        cmd = 'ulimit -n 8192; %s' % cmd
-        return j.tools.tmux.execute(cmd, window=self.NAME, pane=self.NAME, reset=True)
-
-    def stop(self, pid=None, sig=None):
-        """Stops process
-
-        :param pid: pid of the process, if not given, will kill by name
-        :type pid: long, defaults to None
-        :param sig: signal, if not given, SIGKILL will be used
-        :type sig: int, defaults to None
-        """
-        if pid:
-            j.sal.process.kill(pid, sig)
-        else:
-            full_path = j.sal.fs.joinPaths(j.core.dirs.BINDIR, self.NAME)
-            j.sal.process.killProcessByName(full_path, sig)
-
-
-    def sandbox(self, dest_path='/tmp/builder/caddy',create_flist=True, zhub_instance=None, reset=False):
-
-        '''Copy built bins to dest_path and create flist if create_flist = True
-
-        :param dest_path: destination path to copy files into
-        :type dest_path: str
-        :param sandbox_dir: path to sandbox
-        :type sandbox_dir: str
-        :param reset: reset sandbox file transfer
-        :type reset: bool
-        :param create_flist: create flist after copying files
-        :type create_flist:bool
-        :param zhub_instance: hub instance to upload flist to
-        :type zhub_instance:str
-        '''
-
-        if self._done_check('sandbox') and reset is False:
-             return
-        self.build(reset = reset)
-        bin_dest = j.sal.fs.joinPaths(dest_path, 'sandbox', 'bin')
+    @builder_method()
+    def sandbox(self, reset=False, zhub_client=None, flist_create=False):
+        bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX))
         self.tools.dir_ensure(bin_dest)
-        caddy_bin_path = self.tools.joinpaths(self.go_runtime.go_path_bin, self.NAME)
+        caddy_bin_path = self.tools.joinpaths(self.package_path, '/caddy', self.NAME)
         self.tools.file_copy(caddy_bin_path, bin_dest)
-        if create_flist:
-            print(self.flist_create(sandbox_dir=dest_path, hub_instance=zhub_instance))
-        self._done_set('sandbox')
-    
+
     def _test(self, name=""):
         """Run tests under tests directory
 
         :param name: basename of the file to run, defaults to "".
         :type name: str, optional
         """
-        self._test_run(name=name, obj_key='test_main')
+        self._test_run(name=name, obj_key="test_main")

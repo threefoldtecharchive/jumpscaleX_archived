@@ -35,14 +35,14 @@ class Mongod:
         self._cmd = self._CMD[db_type]
 
     def start(self, timeout=30, log_to_file=False):
-        """ Start instance of mongod  
-        
+        """ Start instance of mongod
+
             :param timeout: timeout on starting the instance of mongod
             :param log_to_file: if True log mongod output to /tmp/log_shard or /tmp/log_config, depending on the instance type
         """
 
         if not self.is_running():
-            self._log_info('start a member of the replica set "{}"'.format(self.replica_set))
+            j.tools.logger._log_info('start a member of the replica set "{}"'.format(self.replica_set))
 
         # ensure directory
         self.container.client.filesystem.mkdir(self.dir)
@@ -65,7 +65,7 @@ class Mongod:
 
 
     def init_replica_set(self, hosts):
-        """ Init replica set 
+        """ Init replica set
 
             :param hosts: list of addresses of other member of @self.replica_set
         """
@@ -74,7 +74,7 @@ class Mongod:
         if not self.is_running():
             raise RuntimeError('Cannot initialize replica set, "{}" mongodb instance is not running'.format(self.replica_set))
 
-        self._log_info('init replica set {}'.format(self.replica_set))
+        j.tools.logger._log_info('init replica set {}'.format(self.replica_set))
 
         # add current host to the list of hosts
         hosts.append('{}:{}'.format(self.ip, self.port))
@@ -83,22 +83,22 @@ class Mongod:
         config = ''
         for idx, host in enumerate(hosts):
             config = "%s { _id: %d, host: '%s' }," % (config, idx, host)
-            
+
         config = """
-        rs.initiate( 
+        rs.initiate(
             {_id : '%s',
-            members: [ 
+            members: [
                 %s
             ]
         })""" % (self.replica_set, config)
-        
+
         # create config file to init config replica set
         conf_file = '/tmp/config.js'
         self.container.client.filesystem.remove(conf_file)
         self.container.client.bash('echo "%s" >> %s' % (config, conf_file)).get()
         cmd = 'mongo --port {port} {file}'.format(port=self.port, file=conf_file)
         result = self.container.client.system(cmd).get()
-        error_check(result)        
+        error_check(result)
 
 
     def is_running(self):
@@ -110,13 +110,13 @@ class Mongod:
         except Exception as err:
             if str(err).find("invalid container id"):
                 return False
-            raise        
+            raise
 
 
     def stop(self, timeout=30):
         """
         Stop all started mongodb instances
-        
+
         :param timeout: time in seconds to wait for the mongodb instance to stop
         """
         if not self.container.is_running():
@@ -141,13 +141,13 @@ class Mongodb:
         :method stop: stops all mongodb instances in the container.
         :method destroy: stop the container.
 """
-    
+
     FLIST = 'https://hub.gig.tech/ekaterina_evdokimova_1/ubuntu-16.04-mongodb.flist'
     _CONFIG_DIR = '/data/configdb'
     _SHARD_DIR = '/data/db'
 
 
-    def __init__(self, name, node, container_name=None, 
+    def __init__(self, name, node, container_name=None,
                 config_replica_set=None, config_port=None, config_mount=None,
                 shard_replica_set=None, shard_port=None, shard_mount=None,
                 route_port=None):
@@ -162,11 +162,11 @@ class Mongodb:
         :param route_port: route server server port. Default to 27017
         :param config_mount: dictionary with configuration mount directory for config server.
                             If not given db directory will not be mounted on a persistent volume.
-        :param shard_mount: dictionary with configuration of mongo shard server.                    
-                            If not given db directory will not be mounted on a persistent volume.        
+        :param shard_mount: dictionary with configuration of mongo shard server.
+                            If not given db directory will not be mounted on a persistent volume.
         @config_mount and @shard_mount are expected in format:
             {'storagepool': 'zos-cache'      # storagepool name
-             'fs': 'fs_name'                # filesystem mane 
+             'fs': 'fs_name'                # filesystem mane
              'dir': '/mongo/configdb'}      # subdirectory
 
         """
@@ -174,7 +174,7 @@ class Mongodb:
         self.node = node
         self._container_name = container_name or 'mongodb_{}'.format(self.name)
         self._container = None
-        
+
         self.config_replica_set = config_replica_set
         self.shard_replica_set = shard_replica_set
 
@@ -201,7 +201,7 @@ class Mongodb:
                     raise ValueError("""Mount point config should be set to None or given correctly.
                                         Current config: {}, expected: {}""".format(mount,
                                     """ {'storagepool': '<storagepool name>'
-                                        'fs': '<fs_name>'         
+                                        'fs': '<fs_name>'
                                         'dir': '<subdir on fs_name>'}
                                     """
                     ))
@@ -269,7 +269,7 @@ class Mongodb:
         """ Shortcut to ip address of the container """
         if not self.container.is_running:
             raise RuntimeError('container "{}" is not running'.format(self._container_name))
-        
+
         # return self.container.default_ip().ip.format()
 
         # wait for interface to start
@@ -287,9 +287,9 @@ class Mongodb:
 
     def start(self, timeout=15, log_to_file=False):
         """ Start mongodb instance
-            
+
             :param timeout: time in seconds to wait for the mongod gateway to start
-            :param log_to_file: enable writing log for SHARD and CONFIG servers to 
+            :param log_to_file: enable writing log for SHARD and CONFIG servers to
                 the corrsponding files: /tmp/log_SHARD, /tmp/log_CONFIG
         """
 
@@ -344,7 +344,7 @@ class Mongos:
         :method start: deploys instance of mongos server
         :method stop: stops mongos instance
     """
-       
+
     _JOB_ID = 'mongos-routing-service'
 
     def __init__(self, container, port=None):
@@ -361,7 +361,7 @@ class Mongos:
         """ Shortcut to ip address of the container """
         if not self.container.is_running:
             raise RuntimeError('container "{}" is not running'.format(self.container.name))
-        
+
         # wait for interface to start
         start, timeout = time.time(), 30
         while time.time() < start + timeout:
@@ -379,8 +379,8 @@ class Mongos:
     def start(self, config_replica_set, config_hosts, timeout=15, log_to_file=False):
         """
         Start mongos instance with access to previously configured mongodb cluster.
-        
-            :param config_replica_set: name of config replica set.            
+
+            :param config_replica_set: name of config replica set.
             :param config_hosts: list of addresses of config server shards
             :param timeout: time in seconds to wait for the mongod gateway to start
             :param log_to_file: enable writing log to file /tmp/log_mongos
@@ -388,11 +388,11 @@ class Mongos:
         if self.is_running():
             return
 
-        self._log_info('start mongos service')
-    
+        j.tools.logger._log_info('start mongos service')
+
         cmd = "mongos --configdb {}/{}  --bind_ip localhost,{} --port {}".format(
                 config_replica_set, ','.join(config_hosts), self.ip, self.port)
-        
+
         if log_to_file:
             cmd = "{} --logpath /tmp/log_mongos".format(cmd)
 
@@ -415,11 +415,11 @@ class Mongos:
             cmd = """mongo --host {}:{} --eval 'sh.addShard("{}/{}")' """.format(self.ip, self.port, shard_replica_set, shard)
             result = self.container.client.system(cmd).get()
             error_check(result)
-        
+
 
     def is_running(self):
         """ Check if server of type @role is running
-            
+
             Roles: SHARD, CONFIG, ROUTE
         """
         try:
@@ -463,7 +463,7 @@ def error_check(result, message=''):
 
     if result.state != 'SUCCESS':
         err = '{}: {} \n {}'.format(message, result.stderr, result.data)
-        raise RuntimeError(err)    
+        raise RuntimeError(err)
 
 
-    
+

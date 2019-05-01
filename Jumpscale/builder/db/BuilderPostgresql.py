@@ -1,13 +1,10 @@
 from Jumpscale import j
 
 
-
-
 class BuilderPostgresql(j.builder.system._BaseClass):
     NAME = "psql"
 
     def _init(self):
-        self.BUILD_DIR = '{DIR_TEMP}/postgresql'
         self.passwd = "postgres"
         self.dbdir = "{DIR_VAR}/postgresqldb"
 
@@ -23,18 +20,18 @@ class BuilderPostgresql(j.builder.system._BaseClass):
         else:
             postgres_url = 'https://ftp.postgresql.org/pub/source/v9.6.3/postgresql-9.6.3.tar.gz'
         j.builder.tools.file_download(
-            postgres_url, overwrite=False, to=self.BUILD_DIR, expand=True, removeTopDir=True)
+            postgres_url, overwrite=False, to=self.DIR_BUILD, expand=True, removeTopDir=True)
         j.core.tools.dir_ensure("{DIR_BASE}/apps/pgsql")
         j.core.tools.dir_ensure("{DIR_BIN}")
         j.core.tools.dir_ensure("$LIBDIR/postgres")
         j.builder.system.package.ensure(
             ['build-essential', 'zlib1g-dev', 'libreadline-dev'])
-        cmd = """
-        cd {}
-        ./configure --prefix={DIR_BASE}/apps/pgsql --bindir={DIR_BIN} --sysconfdir=$CFGDIR --libdir=$LIBDIR/postgres --datarootdir={DIR_BASE}/apps/pgsql/share
-        make
-        """.format(self.BUILD_DIR)
-        j.sal.process.execute(cmd, profile=True)
+        cmd = self._replace("""
+            cd {DIR_BUILD}
+            ./configure --prefix={DIR_BASE}/apps/pgsql --bindir={DIR_BIN} --sysconfdir={DIR_CFG} --libdir=$LIBDIR/postgres --datarootdir={DIR_BASE}/apps/pgsql/share
+            make
+        """)
+        self._execute(cmd)
         self._done_set('build')
 
     def _group_exists(self, groupname):
@@ -44,33 +41,33 @@ class BuilderPostgresql(j.builder.system._BaseClass):
         if self._done_check("install", reset):
             return
         self.build(beta=beta, reset=reset)
-        cmd = """
-        cd {build_dir}
-        make install with-pgport={port}
-        """.format(build_dir=self.BUILD_DIR, port=port)
+        cmd = self._replace("""
+            cd {DIR_BUILD}
+            make install with-pgport={port}
+        """, port=port)
         j.core.tools.dir_ensure(self.dbdir)
-        j.sal.process.execute(cmd, profile=True)
+        self._execute(cmd)
         if not self._group_exists("postgres"):
-            j.sal.process.execute('adduser --system --quiet --home $LIBDIR/postgres --no-create-home \
+            self._execute('adduser --system --quiet --home $LIBDIR/postgres --no-create-home \
         --shell /bin/bash --group --gecos "PostgreSQL administrator" postgres')
-        c = """
-        cd {DIR_BASE}/apps/pgsql
-        mkdir -p data
-        mkdir -p log
-        chown -R postgres {DIR_BASE}/apps/pgsql/
-        chown -R postgres {postgresdbdir}
-        sudo -u postgres {DIR_BIN}/initdb -D {postgresdbdir} --no-locale
-        echo "\nlocal   all             postgres                                md5\n" >> {postgresdbdir}/pg_hba.conf
-        """.format(postgresdbdir=self.dbdir)
+        c = self._replace("""
+            cd {DIR_BASE}/apps/pgsql
+            mkdir -p data
+            mkdir -p log
+            chown -R postgres {DIR_BASE}/apps/pgsql/
+            chown -R postgres {postgresdbdir}
+            sudo -u postgres {DIR_BIN}/initdb -D {postgresdbdir} --no-locale
+            echo "\nlocal   all             postgres                                md5\n" >> {postgresdbdir}/pg_hba.conf
+        """, postgresdbdir=self.dbdir)
 
         # NOTE pg_hba.conf uses the default trust configurations.
-        j.sal.process.execute(c, profile=True)
+        self._execute(c)
         if start:
             self.start()
 
     def configure(self, passwd, dbdir=None):
         """
-        #TODO
+        # TODO
         if dbdir none then {DIR_VAR}/postgresqldb/
         """
         if dbdir is not None:
@@ -85,9 +82,10 @@ class BuilderPostgresql(j.builder.system._BaseClass):
         chown postgres {DIR_BASE}/apps/pgsql/log/
         """
 
-        j.sal.process.execute(cmd, profile=True)
+        self._execute(cmd)
 
-        cmdpostgres = "sudo -u postgres {DIR_BIN}/postgres -D {postgresdbdir}".format(
+        cmdpostgres = self._replace(
+            "sudo -u postgres {DIR_BIN}/postgres -D {postgresdbdir}",
             postgresdbdir=self.dbdir)
         pm = j.builder.system.processmanager.get()
         pm.ensure(name="postgres", cmd=cmdpostgres,
@@ -97,7 +95,7 @@ class BuilderPostgresql(j.builder.system._BaseClass):
         import time
         timeout = time.time() + 10
         while True:
-            rc, out, err = j.sal.process.execute(
+            rc, out, err = self._execute(
                 "sudo -H -u postgres {DIR_BIN}/pg_isready", die=False)
             if time.time() > timeout:
                 raise j.exceptions.Timeout("Postgres isn't ready")
@@ -106,10 +104,10 @@ class BuilderPostgresql(j.builder.system._BaseClass):
             time.sleep(2)
 
         # change password
-        cmd = """
-        sudo -u postgres {DIR_BIN}/psql -c "ALTER USER postgres WITH PASSWORD '{passwd}'";
-        """.format(passwd=self.passwd)
-        j.sal.process.execute(cmd, profile=True)
+        cmd = self._replace("""
+            sudo -u postgres {DIR_BIN}/psql -c "ALTER USER postgres WITH PASSWORD '{passwd}'";
+        """, passwd=self.passwd)
+        self._execute(cmd)
         print("user: {}, password: {}".format("postgres", self.passwd))
 
     def stop(self):

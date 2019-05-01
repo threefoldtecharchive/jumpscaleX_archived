@@ -7,11 +7,16 @@ from .SSHClientBase import SSHClientBase
 class SSHClient(SSHClientBase):
 
 
-
-
     def _init(self):
         SSHClientBase._init(self)
         self._logger_prefix = "ssh client: %s:%s(%s)" % (self.addr_variable, self.port, self.login)
+
+    def _init2(self,**kwargs):
+        if self.passwd == "" and self.sshkey_name == "":
+            if j.clients.sshagent.key_default_or_none:
+                self.sshkey_name = j.clients.sshagent.key_default_or_none.name
+                self.save()
+        print (self._key)
 
     @property
     def _client(self):
@@ -23,15 +28,8 @@ class SSHClient(SSHClientBase):
 
             from pssh.clients import SSHClient as PSSHClient
             PSSHClient = functools.partial(PSSHClient, retry_delay=1)
-
-            self._client_ = PSSHClient(self.addr_variable,
-                                      user=self.login,
-                                      password=passwd,
-                                      port=self.port,
-                                      pkey=pkey,
-                                      num_retries=self.timeout / 6,
-                                      allow_agent=self.allow_agent,
-                                      timeout=5)
+            self._client_ = PSSHClient(self.addr_variable,user=self.login,password=passwd,port=self.port,
+                                       pkey=pkey,num_retries=self.timeout / 6,allow_agent=self.allow_agent,timeout=5)
 
         return self._client_
 

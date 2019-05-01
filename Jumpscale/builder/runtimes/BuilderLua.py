@@ -1,76 +1,55 @@
 from Jumpscale import j
 
+builder_method = j.builder.system.builder_method
+
 
 class BuilderLua(j.builder.system._BaseClass):
 
     NAME = "lua"
 
-    def _init(self):
-        self.BUILDDIR = j.core.tools.text_replace("{DIR_VAR}/build/")
-
-    def reset(self):
-        """
-        js_shell 'j.builder.runtimes.lua.reset()'
-        :return:
-        """
-        self._done_reset()
-        j.builder.web.openresty.reset()  # make sure openresty gets build properly
-        C = """
-        cd /sandbox
-
-        """
-        self.tools.run(C)
-
-    def build(self, reset=True):
+    @builder_method()
+    def build(self):
         """
         js_shell 'j.builder.runtimes.lua.build()'
         :param install:
         :return:
         """
-        if self._done_check("build") and not reset:
-            return
-
         if j.core.platformtype.myplatform.isUbuntu:
             j.builder.system.package.install(['libsqlite3-dev'])
 
-        j.tools.bash.local.locale_check()
-        # need openresty & openssl to start from
-        j.builder.web.openresty.build(reset)
-        j.builder.libs.openssl.build(reset)
+        j.builder.web.openresty.build(reset=True)
+        j.builder.libs.openssl.build(reset=True)
 
         url = "https://luarocks.org/releases/luarocks-3.0.4.tar.gz"
-        dest = j.core.tools.text_replace("{DIR_VAR}/build/luarocks")
-        j.sal.fs.createDir(dest)
-        j.builder.tools.file_download(url, to=dest, overwrite=False, retry=3,
-                                      expand=True, minsizekb=100, removeTopDir=True, deletedest=True)
+        dest = self._replace("{DIR_BUILD}/luarocks")
+        self.tools.dir_ensure(dest)
+        self.tools.file_download(url, to=dest, overwrite=False, retry=3,
+                                 expand=True, minsizekb=100, removeTopDir=True, deletedest=True)
         C = """
-        cd {DIR_VAR}/build/luarocks
+        cd {DIR_BUILD}/luarocks
         ./configure --prefix=/sandbox/openresty/luarocks --with-lua=/sandbox/openresty/luajit
         make build
         make install
 
-        cp /sandbox/var/build/luarocks/luarocks /sandbox/bin/luarocks
-
+        cp {DIR_BUILD}/luarocks/luarocks /sandbox/bin/luarocks
         """
         # set showout to False to avoid text_replace of output log
-        self.tools.run(C, showout=False)
+        self._execute(C, showout=False)
 
-        self.lua_rocks_install(reset)
+        self.lua_rocks_install()
 
-        self._done_set("build")
-
-    def lua_rock_install(self, name, reset=False):
-        self._log_info("lua_rock_install: %s"%name)
-        if self._done_check("lua_rock_install_%s" % name) and not reset:
+    def lua_rock_install(self, name):
+        self._log_info("lua_rock_install: %s" % name)
+        if self._done_check("lua_rock_install_%s" % name):
             return
 
-        C = "luarocks install $NAME OPENSSL_DIR=/sandbox/var/build/openssl CRYPTO_DIR=/sandbox/var/build/openssl"
+        C = "luarocks install $NAME"
         C = C.replace("$NAME", name)
-        j.sal.process.execute(j.core.tools.text_replace(C))
+        self._execute(C)
 
         self._done_set("lua_rock_install_%s" % name)
 
-    def lua_rocks_install(self, reset=False):
+    def lua_rocks_install(self):
         """
         js_shell 'j.builder.runtimes.lua.lua_rocks_install()'
         :param install:
@@ -98,7 +77,7 @@ class BuilderLua(j.builder.system._BaseClass):
         # luajwt
         # mooncrafts
         inspect
-        
+
         lua-resty-redis-connector
         lua-resty-openidc
 
@@ -125,12 +104,12 @@ class BuilderLua(j.builder.system._BaseClass):
         lua-resty-cookie
         lua-path
 
-        #various encryption
+        # various encryption
         luazen
 
         alt-getopt
 
-        
+
         lua-messagepack
         """
 
@@ -140,17 +119,16 @@ class BuilderLua(j.builder.system._BaseClass):
                 continue
             if line.startswith("#"):
                 continue
-            self.lua_rock_install(line, reset)
-
+            self.lua_rock_install(line)
 
         if j.core.platformtype.myplatform.isUbuntu:
-            self.lua_rock_install("lua-geoip", reset)
-            self.lua_rock_install("lua-resty-jwt", reset)
-            self.lua_rock_install("lua-resty-iyo-auth", reset)  #need to check how to get this to work on OSX
-
-
-        self.tools.run("rsync -rav /sandbox/var/build/luarocks/lua_modules/lib/lua/5.1/ /sandbox/openresty/lualib",die=False)
-        self.tools.run("rsync -rav /sandbox/var/build/luarocks/lua_modules/share/lua/5.1/ /sandbox/openresty/lualib",die=False)
+            self.lua_rock_install("lua-geoip")
+            self.lua_rock_install("lua-resty-jwt")
+            self.lua_rock_install("lua-resty-iyo-auth")  # need to check how to get this to work on OSX
+        cmd = self._replace("rsync -rav {DIR_BUILD}/luarocks/lua_modules/lib/lua/5.1/ /sandbox/openresty/lualib")
+        self.tools.execute(cmd, die=False)
+        cmd = self._replace("rsync -rav {DIR_BUILD}/luarocks/lua_modules/share/lua/5.1/ /sandbox/openresty/lualib")
+        self.tools.execute(cmd, die=False)
 
     # def build_crypto(self):
     #
@@ -168,12 +146,14 @@ class BuilderLua(j.builder.system._BaseClass):
     #     :return:
     #     """
 
-    def cleanup(self):
+    @builder_method()
+    def clean(self):
         """
         js_shell 'j.builder.runtimes.lua.cleanup()'
         :param install:
         :return:
         """
+
         C = """
 
         set -ex
@@ -186,24 +166,22 @@ class BuilderLua(j.builder.system._BaseClass):
         rm -rf /sandbox/openresty/luajit/include
         rm -rf /sandbox/openresty/luajit/lib/lua
         rm -rf /sandbox/openresty/luajit/lib/pkgconfig
-        rm -rf  /sandbox/openresty/luajit/share
-        rm -rf  /sandbox/var/build
-        rm -rf  /sandbox/root
+        rm -rf /sandbox/openresty/luajit/share
+        rm -rf /sandbox/var/build
+        rm -rf /sandbox/root
         mkdir -p /sandbox/root
 
-
         """
-        self.tools.run(C)
+        self._execute(C)
 
-    def install(self, reset=False):
+    @builder_method()
+    def install(self):
         """
         will build & install in sandbox
         js_shell 'j.builder.runtimes.lua.install()'
         :return:
         """
-        self.build(reset=reset)
-        src = j.clients.git.getContentPathFromURLorPath(
-            "https://github.com/threefoldtech/sandbox_base/tree/master/base/bin", pull=True)
+        src = "/sandbox/code/github/threefoldtech/sandbox_base/base/bin"
         C = """
 
         set -e
@@ -211,61 +189,50 @@ class BuilderLua(j.builder.system._BaseClass):
         cp resty /sandbox/bin/resty
         popd
 
-        pushd /sandbox/var/build/luarocks/lua_modules/lib/luarocks/rocks-5.1/lapis/1.7.0-1/bin
+        pushd {DIR_BUILD}/luarocks/lua_modules/lib/luarocks/rocks-5.1/lapis/1.7.0-1/bin
         cp lapis /sandbox/bin/_lapis.lua
         popd
 
-        pushd '/sandbox/var/build/luarocks/lua_modules/lib/luarocks/rocks-5.1/moonscript/0.5.0-1/bin'
+        pushd '{DIR_BUILD}/luarocks/lua_modules/lib/luarocks/rocks-5.1/moonscript/0.5.0-1/bin'
         cp moon /sandbox/bin/_moon.lua
         cp moonc /sandbox/bin/_moonc.lua
         popd
 
         """
-        self.tools.run(C)
+        self._execute(C)
 
-        j.sal.fs.copyDirTree(src, "/sandbox/bin/", rsyncdelete=False, recursive=False, overwriteFiles=True)
+        self.tools.copyTree(src, "/sandbox/bin/", rsyncdelete=False, recursive=False, overwriteFiles=True)
 
         self._log_info("install lua & openresty done.")
 
-    def sandbox(self, dest_path="/tmp/builders/lua", reset=False, create_flist=False, zhub_instance=None):
+    @builder_method()
+    def sandbox(self, reset=False, zhub_client=None):
         '''Copy built bins to dest_path and create flist if create_flist = True
 
         :param dest_path: destination path to copy files into
         :type dest_path: str
         :param sandbox_dir: path to sandbox
         :type sandbox_dir: str
-        :param reset: reset sandbox file transfer
-        :type reset: bool
         :param create_flist: create flist after copying files
         :type create_flist:bool
-        :param zhub_instance: hub instance to upload flist to
-        :type zhub_instance:str
+        :param zhub_client: hub instance to upload flist tos
+        :type zhub_client:str
         '''
-        if self._done_check('sandbox', reset):
-            return
-        self.build(reset=reset)
+        dest_path = self.DIR_SANDBOX
+        j.builder.web.openresty.sandbox(reset=reset)
 
-        j.builder.web.openresty.sandbox(dest_path=dest_path, reset=reset)
-
-        self.bins = [ 'lua','_lapis.lua', '_moonc.lua', '_moon.lua', '_moonrocks.lua']
-
-        for bin_name in self.bins:
+        bins = ['lua', '_lapis.lua', '_moonc.lua', '_moon.lua', '_moonrocks.lua']
+        for bin_name in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
-            dir_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR[1:])
-            j.builder.tools.dir_ensure(dir_dest)
-            j.sal.fs.copyFile(dir_src, dir_dest)
-            # j.sal.fs.copyDirTree(dir_src, dir_dest)
+            dir_dest = self.tools.joinpaths(dest_path, j.core.dirs.BINDIR[1:])
+            self.tools.dir_ensure(dir_dest)
+            self._copy(dir_src, dir_dest)
 
-        lib_dest = j.sal.fs.joinPaths(dest_path, 'sandbox/lib')
-        j.builder.tools.dir_ensure(lib_dest)
-        for bin in self.bins:
+        lib_dest = self.tools.joinpaths(dest_path, 'sandbox/lib')
+        self.tools.dir_ensure(lib_dest)
+        for bin in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
-            j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)    
-
-        self._done_set('sandbox')
-
-        if create_flist:
-            self.flist_create(dest_path, zhub_instance)
+            j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
 
     def copy_to_github(self):
         """
@@ -295,10 +262,9 @@ class BuilderLua(j.builder.system._BaseClass):
                 d2 = dest
             else:
                 raise RuntimeError(item)
-            dir_dest_full = j.sal.fs.getDirName(j.sal.fs.joinPaths(d2, rdest))
-            j.sal.fs.createDir(dir_dest_full)
-            dest_full = j.sal.fs.joinPaths(d2, rdest)
-            print("copy: %s %s" % (item, dest_full))
-            j.sal.fs.copyFile(item, dest_full)
+            dir_dest_full = j.sal.fs.getDirName(self.tools.joinpaths(d2, rdest))
+            self.tools.dir_ensure(dir_dest_full)
+            dest_full = self.tools.joinpaths(d2, rdest)
+            self._copy(item, dest_full)
 
-        self.cleanup()
+        self.clean()

@@ -91,7 +91,7 @@ def main(self):
     assert o.location == 'ac1f6b47a04c'
 
     # try to reserve an S3
-    result = w.capacity.reserve_s3("user@mail.com", "user3bot", "kristof-farm-s3", size=2)
+    result = w.capacity.reserve_s3("user@mail.com", "user3bot", "freefarm.s3-storage", size=2)
     assert result.submitted
 
     reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
@@ -103,13 +103,33 @@ def main(self):
     assert o.size == 2
     assert o.email == 'user@mail.com'
     assert o.created <= j.data.time.epoch
-    assert o.location == 'kristof-farm-s3'
+    assert o.location == 'freefarm.s3-storage'
 
     # try to reserve an S3 with from a non existent threebot
     with pytest.raises(ThreeBotNotFound):
-        result = w.capacity.reserve_s3("user@mail.com", "nonexistent", "kristof-farm-s3")
+        result = w.capacity.reserve_s3("user@mail.com", "nonexistent", "freefarm.s3-storage")
 
     # test validation of location
     # use a non existing location here
     with pytest.raises(ValueError):
         result = w.capacity.reserve_s3("user@mail.com", "user3bot", j.data.idgenerator.generateGUID())
+
+     # try to reserve a namespace
+    result = w.capacity.reserve_zdb_namespace(
+        "user@mail.com", "user3bot", "freefarm.s3-storage",
+        size=2, disk_type='ssd', mode='seq', password=None)
+    assert result.submitted
+
+    reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
+    reservation = box.decrypt(reservation)
+    reservation = j.data.serializers.msgpack.loads(reservation)
+    schema = j.data.schema.get(url='tfchain.reservation.zdb_namespace')
+    o = schema.new(data=reservation)
+    assert o.type == 'namespace'
+    assert o.size == 2
+    assert o.email == 'user@mail.com'
+    assert o.created <= j.data.time.epoch
+    assert o.location == 'freefarm.s3-storage'
+    assert o.disk_type == 'ssd'
+    assert o.mode == 'seq'
+    assert o.password == ''

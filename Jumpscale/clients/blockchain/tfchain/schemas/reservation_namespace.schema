@@ -1,0 +1,10 @@
+@url = tfchain.reservation.zdb_namespace
+type = "namespace" (S)
+duration = (I)
+size = (I)
+email = (email)
+created = (I)
+location = (S)
+disk_type = "hdd,ssd" (enum)
+mode = "seq,user,direct" (enum)
+password = (S)

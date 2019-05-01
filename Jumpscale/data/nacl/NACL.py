@@ -153,8 +153,7 @@ class NACL(j.application.JSBaseClass):
         #create path where the files for nacl will be
         j.sal.fs.createDir(self._path)
 
-        # if j.sal.fs.exists(self._path_privatekey):
-        #     #lets try to load
+
         self.load(die=False)
 
         if self.privkey is None:
@@ -179,6 +178,8 @@ class NACL(j.application.JSBaseClass):
         else:
             raise RuntimeError(msg)
 
+
+
     def load(self,die=True):
         """
         will load private key from filesystem
@@ -195,7 +196,10 @@ class NACL(j.application.JSBaseClass):
             redis_key="secret_%s"%self.name
             key = j.sal.fs.readFile(self._path_encryptor_for_secret,binary=True)
             sb=nacl.secret.SecretBox(key)
-            r = j.core.db.get(redis_key)
+            try:
+                r = j.core.db.get(redis_key)
+            except AttributeError:
+                r = None
             if r is None:
                 self._error_raise("cannot find secret in memory, please use 'kosmos --init' to fix.")
             secret = sb.decrypt(r)

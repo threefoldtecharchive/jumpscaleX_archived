@@ -1,119 +1,120 @@
 from Jumpscale import j
+from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
 
-builder_method = j.builder.system._builder_method
+builder_method = j.builder.system.builder_method
 
-class BuilderCoreDns(j.builder.system._BaseClass):
+
+CONFIGTEMPLATE = """
+.{
+    etcd $domain {
+        stubzones
+        path /hosts
+        endpoint $etcd_endpoint
+        fallthrough
+        debug
+    }
+    loadbalance
+    reload 5s
+}
+"""
+
+
+class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
     NAME = "coredns"
 
-    @builder_method(log=False,done_check=True)
-    def _init(self):
-        self.golang = j.builder.runtimes.golang
-        self._package_path = j.builder.runtimes.golang.package_path_get('coredns', host='github.com/coredns')
+    def profile_builder_set(self):
+        super().profile_builder_set()
+        self.profile.env_set('GO111MODULE', 'on')
 
     @builder_method()
     def build(self):
         """
-
-        kosmos 'j.builder.network.coredns.build(reset=False)'
+        kosmos 'j.builder.network.coredns.build(reset=True)'
 
         installs and runs coredns server with redis plugin
         """
-        print(1)
-        return(2)
+
         # install golang
-        j.builder.runtimes.golang.install(reset=False)
-        j.builder.runtimes.golang.get('github.com/coredns/coredns', install=False, update=True)
+        j.builder.runtimes.golang.install()
+        j.builder.db.etcd.install()
+
+        # https://github.com/coredns/coredns#compilation-from-source
 
         # go to package path and build (for coredns)
-        C="""
-        cd {GITDIR}
-        git remote add threefoldtech_coredns https://github.com/threefoldtech/coredns
-        git fetch threefoldtech_coredns
-        git checkout threefoldtech_coredns/master
+        C = """
+        cd {DIR_BUILD}
+        git clone https://github.com/threefoldtech/coredns
+        cd coredns
         make
-        
-        cp /sandbox/go_proj/src/github.com/coredns/coredns/coredns /sandbox/bin/coredns
         """
-        self.tools.run(C,args={"GITDIR":self._package_path},replace=True)
-
+        self._execute(C)
 
     @builder_method()
-    def sandbox(self, zhub_client=None):
+    def install(self):
+        """
+        kosmos 'j.builder.network.coredns.install()'
 
-        coredns_bin = j.sal.fs.joinPaths(self._package_path, 'coredns')
-        dir_dest = j.sal.fs.joinPaths(dest_path, coredns_bin[1:]) 
-        j.builder.tools.dir_ensure(dir_dest)
-        j.sal.fs.copyFile(coredns_bin, dir_dest)
+        installs and runs coredns server with redis plugin
+        """
+        self._copy('{DIR_BUILD}/coredns', '{DIR_BIN}/coredns')
+        j.sal.fs.writeFile(filename='/sandbox/cfg/coredns.conf', contents=CONFIGTEMPLATE)
 
-        dir_dest = j.sal.fs.joinPaths(dest_path, self._sandbox_dir, 'etc/ssl/certs/')
-        j.builder.tools.dir_ensure(dir_dest)
-        j.sal.fs.copyDirTree('/etc/ssl/certs', dir_dest)
-
-        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'coredns_startup.toml')
-        self.startup = j.sal.fs.readFile(startup_file)
-        j.sal.fs.copyFile(startup_file,  j.sal.fs.joinPaths(dest_path, self._sandbox_dir))
-
+    def clean(self):
+        self._remove(self.DIR_BUILD)
+        self._remove(self.DIR_SANDBOX)
 
     @property
     def startup_cmds(self):
-        cmd = "{coredns_path}/coredns -conf {path_config}".format(coredns_path=self._package_path, path_config=config_file)
-        cmds = [j.tools.startupcmd.get(cmd)
+        cmd = "/sandbox/bin/coredns -conf /sandbox/cfg/coredns.conf"
+        cmds = [j.tools.startupcmd.get(name='coredns', cmd=cmd)]
         return cmds
 
-    # @builder_method()
-    # def start(self, config_file=None, args=None):
-    #     """Starts coredns with the configuration file provided
-    #
-    #     :param config_file: config file path e.g. ~/coredns.json
-    #     :raises j.exceptions.RuntimeError: in case config file does not exist
-    #     :return: tmux pane
-    #     :rtype: tmux.Pane
-    #     """
-    #     self._init()
+    @builder_method()
+    def sandbox(self):
+        coredns_bin = j.sal.fs.joinPaths('{DIR_BIN}', self.NAME)
+        dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'sandbox')
+        self.tools.dir_ensure(dir_dest)
+        self._copy(coredns_bin, dir_dest)
 
-    #     return j.tools.tmux.execute(window="coredns", cmd=cmd)
-
+        dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'etc/ssl/certs/')
+        self.tools.dir_ensure(dir_dest)
+        self._copy('/etc/ssl/certs', dir_dest)
+        self._copy('/sandbox/cfg/coredns.conf', self.DIR_SANDBOX)
 
     @builder_method()
-    def test(self,reset=False):
-        """
-        build on local ubuntu & test a client
-        :return:
-        """
+    def test(self):
+        if self.running():
+            self.stop()
 
+        j.servers.etcd.start()
+        self.start()
+        j.clients.etcd.get('test_coredns')
+        client = j.clients.coredns.get(name='test_builder', etcd_instance='test_coredns')
+        client.zone_create("example.com", "0.0.0.0")
+        client.deploy()
+        self.stop()
+        j.servers.etcd.stop()
 
+        print('TEST OK')
 
-        if not j.sal.process.checkInstalled(j.builder.network.coredns.NAME):
-            # j.builder.network.coredns.stop()
-            # j.builder.network.coredns.build(reset=True)
-            j.builder.network.coredns.sandbox(reset=True)
+    @builder_method()
+    def uninstall(self):
+        bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
+        self._remove(bin_path)
+        self.clean()
 
-        # try to start/stop
-        tmux_pane = j.builder.network.coredns.start()
-        tmux_process = tmux_pane.process_obj
-        child_process = tmux_pane.process_obj_child
-        assert child_process.is_running()
+    @builder_method()
+    def reset(self):
+        super().reset()
+        self.clean()
 
-        #CONFIGURE REDIS BACKEND
-        #TODO: need to do a test on UDP port for some DNS queries
-
-        #use the test on the client
-
-
-    def test_zos(self,zosclient=None,flist=None,build=False):
-
+    @builder_method()
+    def test_zos(self, zos_client, flist=None, build=False):
         if build:
-            #TODO:*1 build the app and sandbox & create flist, created flist is then used here in this test
-            pass
+            flist = self.sandbox(flist_create=True)
 
         if not flist:
-            flist = 1 #TODO:*1 get the std flist which is on tfhub
+            flist = "TODO: the official flist for coredns"
 
-        if not zosclient:
-            zosclient = j.clients.zos.get("test") #NEEDS TO EXIST
-
-        #launch container on selected zosclient
-
-
-
-
+        container = zos_client.container.create("test_coredns_builder", flist)
+        # TODO: do more tests on the created container

@@ -105,13 +105,16 @@ def include(
     else:
         repo = current_docsite.get_real_source(custom_link)
         if not CustomLink(repo).is_url:
+            # bit an external url, use current docsite
             docsite = current_docsite
         else:
-            # the real source is a url, get a new link and docsite
-            custom_link = GithubLinker.to_custom_link(repo)
+            # the real source is a url outside this docsite
+            # get a new link and docsite
+            new_link = GithubLinker.to_custom_link(repo)
             # to match any path, start with root `/`
-            url = GithubLinker(custom_link.account, custom_link.repo).tree('/')
-            docsite = j.tools.markdowndocs.load(url, name=custom_link.repo)
+            url = GithubLinker(new_link.account, new_link.repo).tree('/')
+            docsite = j.tools.markdowndocs.load(url, name=new_link.repo)
+            custom_link.path = new_link.path
 
     try:
         content = j.sal.fs.readFile(docsite.file_get(custom_link.path))

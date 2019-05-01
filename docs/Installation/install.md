@@ -6,7 +6,7 @@
 ### if you have nothing on your system, just get the installer
 
 ```bash
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/install.py?$RANDOM > /tmp/install.py;python3 /tmp/install.py
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/install.py?$RANDOM > /tmp/install.py
 ```
 
 ### if you want to work from code
@@ -16,7 +16,7 @@ mkdir -p /sandbox/code/github/threefoldtech
 cd /sandbox/code/github/threefoldtech
 git clone git@github.com:threefoldtech/jumpscaleX.git
 cd jumpscaleX
-git checkout development_types
+git checkout development
 git pull
 
 #link the installer from tmp to the source directory, makes it easy for the rest of this tutorial
@@ -54,6 +54,9 @@ python3 /tmp/install.py -3 -y -d
 
 #use interactive
 python3 /tmp/install.py -3
+
+#will install in docker, delete if exists and starting from already created docker image (is faster)
+python3 /tmp/install.py -3 -y -d --image=hub
 ```
 
 

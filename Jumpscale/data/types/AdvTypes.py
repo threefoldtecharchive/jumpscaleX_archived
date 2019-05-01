@@ -72,9 +72,18 @@ class Email(String):
         '''
         if not j.data.types.string.check(value):
             return False
+        if value.strip()=="":
+            return True
         return self._RE.fullmatch(value) is not None
 
+    def default_get(self):
+        if self._default:
+            return self.clean(self._default)
+        return ""
+
     def clean(self, v):
+        if isinstance(v,Email):
+            return v
         if v is None or v == 'None':
             return self.default_get()
         v = j.data.types.string.clean(v)
@@ -228,10 +237,16 @@ class IPPort(Integer):
         if not self.check(value):
             raise ValueError("invalid port: %s" % value)
         else:
-            return value
+            return int(value)
 
     def check(self, value):
         return self.possible(value)
+
+    def toHR(self, v):
+        if int(v) == 65535:
+            return "-"  # means not set yet
+        return self.clean(v)
+
 
 class NumericObject(TypeBaseObjClassNumeric):
 

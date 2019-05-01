@@ -25,15 +25,25 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
 
     def test(self):
         '''
-        js_shell 'j.clients.ssh.test()'
+        kosmos 'j.clients.ssh.test()'
         '''
 
+
+        #TODO:*1 create docker make sure default key is used in the docker
+        # d = j.sal.docker.create(name='test', ports='22:8022', vols='', volsro='', stdout=True, base='phusion/baseimage',
+        #                     nameserver=['8.8.8.8'], replace=True, cpu=None, mem=0,
+        #                     myinit=True, sharecode=True)
+
+        #TODO: then connect to the just created docker and do some more tests
+        cl = j.clients.ssh.get(name="remote1",addr="188.166.116.127")
+
+
         s = j.clients.ssh.test2
-        s.addr = "a.b.c.d"
+        s.addr = "188.166.116.127"
         s.port = 1053
         s.sshkey_name = "test"
 
-        j.clients.ssh.test2.data_update(addr="a.b.c.e", port=1054, sshkey_name="test2", passwd="passwd")
+        j.clients.ssh.test2.data_update(addr="188.166.116.127", port=1054, sshkey_name="test2", passwd="passwd")
         print(j.clients.ssh.test2)
 
         assert j.clients.ssh.test2.port == 1054

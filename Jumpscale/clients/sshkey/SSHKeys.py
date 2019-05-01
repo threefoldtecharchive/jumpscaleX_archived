@@ -12,6 +12,10 @@ class SSHKeys(j.application.JSBaseConfigsClass):
         # self._sshagent = None
         self.SSHKey = SSHKey  # is the child class, can have more than 1
 
+    @property
+    def default(self):
+        return j.clients.sshagent.key_default
+
     def knownhosts_remove(self, item):
         """
         :param item: is ip addr or hostname to be removed from known_hosts
@@ -41,8 +45,8 @@ class SSHKeys(j.application.JSBaseConfigsClass):
         -loads keys to agent         -->check is_loaded is True
         -unloads sshkeys from agent  --> check is_loaded is False
         '''
-        path = "/tmp/test_key"
-        from pudb import set_trace; set_trace()
+        path = j.core.tools.text_replace("{DIR_HOME}/.ssh/test_key")
+
         sshkey_client = j.clients.sshkey.get(name="test_key", path=path)
         assert sshkey_client.path == path
         assert sshkey_client.privkey.strip() == j.sal.fs.readFile(path).strip()
@@ -68,6 +72,7 @@ class SSHKeys(j.application.JSBaseConfigsClass):
 
         assert sshkey_client.is_loaded() == False
         sshkey_client.load()
+        from pudb import set_trace; set_trace()
         assert sshkey_client.is_loaded()
         sshkey_client.unload()
         assert sshkey_client.is_loaded() == False

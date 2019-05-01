@@ -71,4 +71,4 @@ class BuilderPEP8(j.builder.system._BaseClass):
 
         # Execute cmd on paths
         for repo_path in paths:
-            j.builder.tools.run(cmd.format(repo_path), tmux=False, die=False)
+            j.builder.tools.execute(cmd.format(repo_path), tmux=False, die=False)

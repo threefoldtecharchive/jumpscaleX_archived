@@ -6,6 +6,7 @@ from .BuilderBaseClass import *
 from .BuilderBaseFactoryClass import BuilderBaseFactoryClass
 
 
+
 class BuilderSystemPackage(j.application.JSBaseClass):
 
     __jslocation__ = "j.builder.system"
@@ -13,7 +14,7 @@ class BuilderSystemPackage(j.application.JSBaseClass):
     # BaseClass property shouldn't start with underscore but we will keep it for backward compatibility
     BaseClass = _BaseClass
     _BaseFactoryClass = BuilderBaseFactoryClass
-    _builder_method = builder_method
+    builder_method = builder_method
 
     def _init(self):
         self._package = None
@@ -23,8 +24,19 @@ class BuilderSystemPackage(j.application.JSBaseClass):
         self._process = None
         self._ssh = None
         self._user = None
+        self._bash = None
 
         j.clients.redis.core_get()
+
+    @property
+    def bash(self):
+        if self._bash is None:
+            self._bash = j.tools.bash.sandbox
+        return self._bash
+
+    @property
+    def profile(self):
+        return self.bash.profile
 
     @property
     def package(self):
@@ -55,12 +67,6 @@ class BuilderSystemPackage(j.application.JSBaseClass):
             self._net = BuilderNet()
         return self._net
 
-    @property
-    def process(self):
-        if self._process is None:
-            from .BuilderProcess import BuilderProcess
-            self._process = BuilderProcess()
-        return self._process
 
     @property
     def ssh(self):

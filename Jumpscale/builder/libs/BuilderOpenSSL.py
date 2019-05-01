@@ -1,69 +1,50 @@
 from Jumpscale import j
 
-JSBASE = j.builder.system._BaseClass
+builder_method = j.builder.system.builder_method
 
 
 class BuilderOpenSSL(j.builder.system._BaseClass):
 
+    NAME = "openssl"
 
-    def _init(self):
+    def __init__(self):
+        if j.core.platformtype.myplatform.isMac:
+            self.TARGET = "darwin64-x86_64-cc"
+        else:
+            self.TARGET = "linux-generic64"
 
-        self.BUILDDIRL = j.core.tools.text_replace("{DIR_VAR}/build/openssl")
-        self.CODEDIRL = j.core.tools.text_replace("{DIR_VAR}/build/code/openssl")
+        j.builder.system._BaseClass.__init__(self)
 
-    def install(self):
-        raise RuntimeError("implement")
-
+    @builder_method()
     def reset(self):
-        j.sal.fs.remove(self.BUILDDIRL)
-        j.sal.fs.remove(self.CODEDIRL)
+        self._remove("{DIR_BUILD}")
 
-
+    @builder_method()
     def build(self, reset=False):
         """
         js_shell 'j.builder.libs..openssl.build()'
         """
-
-        if self._done_check("build") and not reset:
-            return
-        j.builder.buildenv.install()
-        url = "https://github.com/openssl/openssl.git"
-        j.clients.git.pullGitRepo(url, branch="OpenSSL_1_1_0-stable",dest=self.CODEDIRL, reset=False, ssh=False)
-
-        if not self._done_get("compile") or reset:
+        if not self.tools.exists(self.DIR_BUILD):
             C = """
             set -ex
-            mkdir -p {BUILDDIRL}
-            cd {CODEDIRL}
-            ./config
-            ./Configure $target shared enable-ec_nistp_64_gcc_128 no-ssl2 no-ssl3 no-comp --openssldir={BUILDDIRL} --prefix={BUILDDIRL}
-            make depend
-            make install
-            rm -rf {BUILDDIRL}/share
-            rm -rf {BUILDDIRL}/build/private
-            echo "**BUILD DONE**"
+            cd {DIR_BUILD}
+            git clone --depth 1 https://github.com/openssl/openssl.git
             """
-            if j.core.platformtype.myplatform.isMac:
-                C = C.replace("$target", "darwin64-x86_64-cc")
-            else:
-                C = C.replace("$target", "linux-generic64")
-            args={}
-            args["BUILDDIRL"]=self.BUILDDIRL
-            args["CODEDIRL"]=self.CODEDIRL
-            C = j.core.tools.text_replace(C,args=args)
+            self._execute(C)
 
-            j.sal.fs.writeFile("%s/mycompile_all.sh" % self.CODEDIRL, j.core.tools.text_replace(C))
-            self._log_info("compile openssl")
-            self._log_debug(C)
-            j.sal.process.execute("sh %s/mycompile_all.sh" % self.CODEDIRL)
-            self._done_set("compile")
-            self._log_info("BUILD DONE")
-        else:
-            self._log_info("NO NEED TO BUILD")
-
-        self._log_info("BUILD COMPLETED OK")
-        self._done_set("build")
-
+        C = """
+        cd {DIR_BUILD}/openssl
+        ./config -Wl,--enable-new-dtags,-rpath,'$(LIBRPATH)'
+        ./Configure {TARGET} shared enable-ec_nistp_64_gcc_128 no-ssl2 no-ssl3 no-comp --openssldir=/sandbox/var/openssl --prefix=/sandbox/ zlib
+        make depend
+        make install
+        rm -rf /sandbox/share
+        rm -rf /sandbox/build/private
+        echo "**BUILD DONE**"
+        """
+        self.tools.dir_ensure("{DIR_BUILD}")
+        self._write("{DIR_BUILD}/mycompile_all.sh", C)
+        self._execute("cd {DIR_BUILD}; sh ./mycompile_all.sh")
 
     def test(self, build=False):
         """

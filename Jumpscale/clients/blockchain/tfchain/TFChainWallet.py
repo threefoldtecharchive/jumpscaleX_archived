@@ -39,7 +39,6 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         name* = "" (S)
         seed = "" (S)
         key_count = 1 (I)
-
         key_scan_count = -1 (I)
         """
 
@@ -2277,7 +2276,7 @@ class WalletsBalance(WalletBalance):
 
         # ensure at least one address is defined
         if len(addresses) == 0 and len(ms_addresses) == 0:
-            raise j.clients.tfchain.errors.InsufficientFunds("no addresses defined or linked to this wallet")
+            raise j.clients.tfchain.errors.InsufficientFunds("insufficient funds in this wallet")
 
         # if personal addresses are given, try to use these first
         # as these are the easiest kind to deal with

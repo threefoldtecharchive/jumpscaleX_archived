@@ -242,7 +242,7 @@ class GitFactory(j.application.JSBaseClass):
             timeout=600):
         """
         will clone or update repo
-        if dest is None then clone underneath: /opt/code/$type/$account/$repo
+        if dest is None then clone underneath: /sandbox/code/$type/$account/$repo
         will ignore changes !!!!!!!!!!!
 
         @param ssh ==True means will checkout ssh
@@ -613,7 +613,7 @@ class GitFactory(j.application.JSBaseClass):
         walk over repo's known on system
         2 locations are checked
             ~/code
-            /opt/code
+            /sandbox/code
         """
         if name is None:
             name = ""
@@ -667,8 +667,8 @@ class GitFactory(j.application.JSBaseClass):
 
             ```
             #example
-            [['github', 'docker', 'docker-py', '/opt/code/github/docker/docker-py'],
-            ['github', 'jumpscale', 'docs', '/opt/code/github/threefoldtech/jumpscale_docs']]
+            [['github', 'docker', 'docker-py', '/sandbox/code/github/docker/docker-py'],
+            ['github', 'jumpscale', 'docs', '/sandbox/code/github/threefoldtech/jumpscale_docs']]
             ```
 
             """

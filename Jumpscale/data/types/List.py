@@ -127,7 +127,14 @@ class ListObject(TypeBaseObjClass,MutableSequence):
                 else:
                     raise RuntimeError("only support type J,D,H")
             else:
-                res.append(item)
+                if subobj_format=="H":
+                    res.append(self._child_type.toHR(item))
+                elif subobj_format=="J":
+                    res.append(self._child_type.toJSON(item))
+                elif subobj_format == "D":
+                    res.append(self._child_type.toData(item))
+                else:
+                    raise RuntimeError("only support type J,D,H")
         return res
 
     def new(self, data=None):
@@ -157,8 +164,11 @@ class ListObject(TypeBaseObjClass,MutableSequence):
 
     def __repr__(self):
         out = ""
-        for item in self.pylist(subobj_format="D"):
-            out += "- %s\n" % item
+        for item in self.pylist(subobj_format="H"):
+            if isinstance(item,dict):
+                out += "%s" % j.core.text.indent(j.data.serializers.toml.dumps(item))
+            else:
+                out += "- %s\n" % item
         if out.strip() == "":
             return "[]"
         return out
@@ -228,6 +238,9 @@ class List(TypeBaseObjFactory):
                     return False
         return True
 
+    def toHR(self,val):
+        val2 = self.clean(val)
+        return val2.pylist(subobj_format="H")
 
     def toData(self,val=None):
         val2 = self.clean(val)

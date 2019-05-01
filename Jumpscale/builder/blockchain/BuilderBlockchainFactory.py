@@ -12,3 +12,6 @@ class BuilderBlockchainFactory(j.builder.system._BaseFactoryClass):
 
         from .BuilderEthereum import BuilderEthereum
         self.ethereum = BuilderEthereum()
+
+        from .BuilderBitcoin import BuilderBitcoin
+        self.bitcoin = BuilderBitcoin()
