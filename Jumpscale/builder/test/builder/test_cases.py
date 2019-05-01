@@ -24,7 +24,7 @@ class TestCases(BaseTest):
         j.builder.web.nginx.install()
         j.builder.web.nginx.start()
         self.assertTrue(len(j.sal.process.getProcessPid('nginx')))
-        j.builder.web.caddy.stop()
+        j.builder.web.nginx.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('nginx')))
 
     def test004_openresty(self):
