@@ -2,7 +2,6 @@ from Jumpscale import j
 from Jumpscale.builder.test.flist.base_test import BaseTest
 import unittest
 
-
 class TestCases(BaseTest):
     def test001_zbd(self):
         j.builder.db.zdb.build(reset=True)
@@ -24,7 +23,7 @@ class TestCases(BaseTest):
         j.builder.web.nginx.build(reset=True)
         j.builder.web.nginx.install()
         j.builder.web.nginx.start()
-        self.assertEqual(1, len(j.sal.process.getProcessPid('nginx')))
+        self.assertTrue(len(j.sal.process.getProcessPid('nginx')))
         j.builder.web.caddy.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('nginx')))
 
@@ -32,7 +31,7 @@ class TestCases(BaseTest):
         j.builder.web.openresty.build(reset=True)
         j.builder.web.openresty.install()
         j.builder.web.openresty.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('lapis')))
+        self.assertTrue(len(j.sal.process.getProcessPid('lapis')))
         j.builder.web.openresty.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('nginx')))
 
@@ -55,10 +54,7 @@ class TestCases(BaseTest):
     def test007_golang(self):
         j.builder.runtimes.golang.build(reset=True)
         j.builder.runtimes.golang.install()
-        try:
-            j.sal.process.execute('which go')
-        except:
-            self.assertTrue(False)
+        self.assertTrue(j.builder.runtimes.golang.is_installed)
 
     def test008_lua(self):
         j.builder.runtimes.lua.build(reset=True)
@@ -88,7 +84,7 @@ class TestCases(BaseTest):
         j.builder.apps.digitalme.build(reset=True)
         j.builder.apps.digitalme.install()
         j.builder.apps.digitalme.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('openresty')))
+        self.assertTrue(len(j.sal.process.getProcessPid('openresty')))
         j.builder.apps.digitalme.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('openresty')))
 
@@ -145,7 +141,7 @@ class TestCases(BaseTest):
         j.builder.runtimes.rust.build(reset=True) 
         j.builder.runtimes.rust.install()
         try:
-            j.sal.process.execute('which rust')        
+            j.sal.process.execute('which rustup')        
         except:
             self.assertTrue(False)
     
@@ -155,7 +151,7 @@ class TestCases(BaseTest):
         j.builder.storage.syncthing.build(reset=True)
         j.builder.storage.syncthing.install()
         j.builder.storage.syncthing.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('syncthing')))
+        self.assertTrue(len(j.sal.process.getProcessPid('syncthing')))
         j.builder.storage.syncthing.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('syncthing')))
 
