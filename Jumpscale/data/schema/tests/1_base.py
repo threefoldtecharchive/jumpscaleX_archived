@@ -8,6 +8,7 @@ def main(self):
     kosmos 'j.data.schema.test(name="base")' --debug
     """
 
+
     schema = """
         @url = despiegk.test
         llist = []
@@ -27,6 +28,8 @@ def main(self):
         """
 
     schema_object = j.data.schema.get(schema_text=schema)
+
+
 
     assert schema_object.url == "despiegk.test"
     print(schema_object)
@@ -73,6 +76,11 @@ def main(self):
     assert o.U == 1.1
 
 
+    #test the base serialization
+    data = j.data.serializers.jsxdata.dumps(o)
+    o2 = j.data.serializers.jsxdata.loads(data)
+    assert o2==o
+
     schema = """
         @url = despiegk.test2
         enum = "red,green,blue,zhisisaverylongoneneedittotestletsdosomemore" (E) #first one specified is the default one
@@ -87,9 +95,9 @@ def main(self):
         description = ""
         """
 
-    j.data.schema.get(schema_text=schema)
+    j.data.schema.add(schema_text=schema)
 
-    s=j.data.schema.schemas['despiegk.test2']
+    s=j.data.schema.get(url='despiegk.test2')
     e = s.properties[0] #is the enumerator
     assert e.js_typelocation != 'j.data.types.enum' #should not the default location
 
@@ -172,5 +180,26 @@ def main(self):
     assert o.int1 == 10
 
     self._log_info("TEST DONE BASE")
+
+
+    schema = """
+    @url = despiegk.doubletest
+    name = ""
+    llist = []    
+    """
+    s0=j.data.schema.get(schema)
+    schema = """
+    @url = despiegk.doubletest
+    name = ""
+    llist = ""    
+    """
+
+    s1=j.data.schema.get(schema)
+
+    assert s0._md5!=s1._md5
+
+    s2=j.data.schema.get(url="despiegk.doubletest")
+    assert s2._md5==s1._md5
+    assert s2._md5!=s0._md5
 
     return ("OK")

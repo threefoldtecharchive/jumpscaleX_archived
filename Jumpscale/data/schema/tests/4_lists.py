@@ -19,7 +19,9 @@ def main(self):
         comment = ""        
         nr = 0
         """
-    j.data.schema.get(schema0)
+    schemasub=j.data.schema.get(schema0)
+    schemasub2=j.data.schema.get(url="jumpscale.schema.test3.cmd") #now get based on url
+    assert schemasub2._md5==schemasub._md5  #check we get the same schema back
 
     schema1 = """
         @url = jumpscale.myjobs.job
@@ -38,7 +40,16 @@ def main(self):
         cmd = (O) !jumpscale.schema.test3.cmd
         
         """
+
+
     schema_object = j.data.schema.get(schema1)
+
+    q=schema_object.new()
+    qq=q.cmds.new()
+
+    #check that the subschema corresponds to the right one
+    assert qq._schema._md5 == schemasub._md5
+
     schema_test = schema_object.new()
     schema_test.return_queues = ["a", "b"]
     assert schema_test.return_queues.pylist() == ["a", "b"]
@@ -83,6 +94,7 @@ def main(self):
     }
 
     schema_test._ddict
+
     assert schema_test._ddict["cmds"]==[{"name": "aname", "comment": "test", "nr": 10}]
 
     w = schema_test._ddict["cmds"][0]
@@ -94,7 +106,7 @@ def main(self):
     schema_test._json
 
 
-    schema_test2 = schema_object.get(capnpbin=schema_test._data)
+    schema_test2 = schema_object.get(data=schema_test._data)
 
     assert schema_test._ddict == schema_test1
     assert schema_test._data == schema_test2._data

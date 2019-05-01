@@ -1,6 +1,6 @@
 from Jumpscale import j
 from Jumpscale.data.schema.DataObjBase import DataObjBase
-
+import struct
 
 class ModelOBJ(DataObjBase):
 
@@ -18,18 +18,18 @@ class ModelOBJ(DataObjBase):
 
     def _reset(self):
         """
-        reset all values to their default
         :return:
         """
         self._changed_items = {}
         #PROP
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
-        self._schema_{{prop.name}} = j.data.schema.get(url="{{prop.jumpscaletype._schema_url}}")
+        self._schema_{{prop.name}} = j.data.schema.get(md5="{{prop.jumpscaletype._schema_md5}}")
         if self._cobj_.{{prop.name_camel}}:
-            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.get(capnpbin=self._cobj_.{{prop.name_camel}})
+            data = self._cobj_.{{prop.name_camel}}
+            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.get(data=data,model=self)
         else:
-            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.new()
+            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.new(model=self)
         {% endif %}
         {% endfor %}
 
@@ -108,14 +108,16 @@ class ModelOBJ(DataObjBase):
         ddict = self._cobj_.to_dict()
 
         {% for prop in obj.properties %}
-        #convert jsobjects to capnpbin data
+        #convert jsobjects to data data
         if "{{prop.name}}" in self._changed_items:
-            {% if prop.jumpscaletype.NAME == "jsobject" %}
-            ddict["{{prop.name_camel}}"] = self._changed_items["{{prop.name}}"]._data
-            {% else %}
+            # {% if prop.jumpscaletype.NAME == "jsobject" %}
+            # data2 = j.data.serializers.jsxdata.dumps(self._changed_items["{{prop.name}}"])
+            # ddict["{{prop.name_camel}}"] = data2
+            # {% else %}
+            from pudb import set_trace; set_trace()
             o =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
             ddict["{{prop.name_camel}}"] = o
-            {% endif %}
+            # {% endif %}
         {% endfor %}
 
 
@@ -140,12 +142,16 @@ class ModelOBJ(DataObjBase):
     @property
     def _ddict(self):
         d={}
+
         {% for prop in obj.properties %}
-        {% if prop.jumpscaletype.NAME == "jsobject" %} #NEED TO CHECK : #TODO: despiegk
+        # prop.name: {{prop.name}}
+        # prop.jumpscaletype.NAME: {{prop.jumpscaletype.NAME}}
+        # prop.jumpscaletype.BASETYPE: {{prop.jumpscaletype.BASETYPE}}
+        {% endfor %}
+
+        {% for prop in obj.properties %}
+        {% if prop.jumpscaletype.NAME == "jsobject" %}
         d["{{prop.name}}"] = self.{{prop.name}}._ddict
-        {% elif prop.jumpscaletype.BASETYPE == "OBJ" %}
-        d["{{prop.name}}"] = self.{{prop.name}}._dictdata
-        j.shell()
         {% else %}
         if isinstance(self.{{prop.name}},j.data.types._TypeBaseObjClass):
             d["{{prop.name}}"] = self.{{prop.name}}._dictdata

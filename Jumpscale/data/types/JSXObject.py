@@ -13,8 +13,8 @@ class JSDataObjectFactory(TypeBaseObjFactory):
         self.BASETYPE = 'OBJ'
         self.SUBTYPE = None
         if not default:
-            raise j.exceptions.Input("Cannot init JSDataObjectFactory without url")
-        self._schema_url = default
+            raise j.exceptions.Input("Cannot init JSDataObjectFactory without md5 or url")
+        self._default = default
         self._schema_ = None
 
     @property
@@ -24,7 +24,16 @@ class JSDataObjectFactory(TypeBaseObjFactory):
         :return:
         """
         if self._schema_ is None:
-            self._schema_ = j.data.schema.get(url=self._schema_url)
+            if self._default.startswith("md5:"):
+                self._schema_md5 = self._default[4:] #md5 is directly given
+            elif self._default.startswith("sid:"):
+                j.shell() #need to find schema based on sid
+                self._schema_md5 = self._default[4:] #md5 is directly given
+            else:
+                s = j.data.schema.get(url=self._default)
+            self._schema_md5 = s._md5
+
+            self._schema_ = j.data.schema.get(md5=self._schema_md5)
         return self._schema_
 
     def python_code_get(self, value):
@@ -61,9 +70,10 @@ class JSDataObjectFactory(TypeBaseObjFactory):
         if isinstance(value,j.data.schema.DataObjBase):
             return value
         if isinstance(value,bytes):
-            return self._schema.get(data=None, capnpbin=value, model=model)
+            obj = j.data.serializers.jsxdata.loads(value) #when bytes the version of the jsxobj & the schema is embedded in the bin data
+            return obj
         elif isinstance(value,dict):
-            return self._schema.get(data=value, capnpbin=None, model=model)
+            return self._schema.get(data=value, model=model)
         elif value is None:
             return self._schema.new(model=model)
         else:
@@ -80,23 +90,23 @@ class JSDataObjectFactory(TypeBaseObjFactory):
         raise RuntimeError("not implemented")
 
 
-class JSConfigObjectFactory(TypeBaseObjFactory):
-    '''
-    jumpscale object which inherits from j.application.JSBaseConfigClass
-    '''
-    NAME =  'jsconfigobject,configobj'
-
-    def __init__(self,default=None):
-
-        self.BASETYPE = 'capnpbin'
-        self.SUBTYPE = None
-
-        self._default = default
-
-    def check(self, value):
-        return isinstance(value, j.application.JSBaseConfigClass)
-
-    def clean(self,value):
-        if isinstance(value, j.application.JSBaseConfigClass):
-            return value
-        raise NotImplemented("TODO")
+# class JSConfigObjectFactory(TypeBaseObjFactory):
+#     '''
+#     jumpscale object which inherits from j.application.JSBaseConfigClass
+#     '''
+#     NAME =  'jsconfigobject,configobj'
+#
+#     def __init__(self,default=None):
+#
+#         self.BASETYPE = 'capnpbin'
+#         self.SUBTYPE = None
+#
+#         self._default = default
+#
+#     def check(self, value):
+#         return isinstance(value, j.application.JSBaseConfigClass)
+#
+#     def clean(self,value):
+#         if isinstance(value, j.application.JSBaseConfigClass):
+#             return value
+#         raise NotImplemented("TODO")

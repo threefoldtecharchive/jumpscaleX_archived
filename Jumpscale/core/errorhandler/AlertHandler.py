@@ -87,7 +87,7 @@ class AlertHandler(j.application.JSBaseClass):
                 res2 = j.data.serializers.json.loads(res)
                 e = self.schema_alert.get(data=res2)
             else:
-                e = self.schema_alert.get(capnpbin=res)
+                e = self.schema_alert.get(data=res)
             return e
 
     def delete(self, key):

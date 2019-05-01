@@ -19,6 +19,17 @@ class SerializersFactory(j.application.JSBaseClass):
     _snappy = None
     _dumper = None
     _toml = None
+    _jsxdata = None
+
+
+
+    @property
+    def jsxdata(self):
+        if self.__class__._jsxdata is None:
+            from .SerializerJSXDataObj import SerializerJSXDataObj
+            self.__class__._jsxdata = SerializerJSXDataObj()
+        return self.__class__._jsxdata
+
 
     @property
     def yaml(self):

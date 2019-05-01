@@ -26,6 +26,8 @@ def main(self):
 
     tt = j.data.types.get("o","despiegk.test")
 
+    assert tt._schema_md5== schema_object._md5
+
     assert tt.BASETYPE == "OBJ"
 
     o = tt.clean({})
@@ -60,6 +62,8 @@ def main(self):
     assert ll._child_type.BASETYPE == "OBJ"
 
     print(o)
+
+
 
     self._log_info("TEST DONE JSXOBJ")
 

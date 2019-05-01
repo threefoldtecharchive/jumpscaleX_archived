@@ -2,9 +2,7 @@ from Jumpscale import j
 
 
 class DataObjBase:
-    def __init__(self, schema, data={}, capnpbin=None, model=None):
-        # if data is None:
-        #     data = {}
+    def __init__(self, data=None, schema=None, model=None):
         self._cobj_ = None
         self.id = None
         self._schema = schema
@@ -14,48 +12,39 @@ class DataObjBase:
         self._readonly = False
         self.acl_id = None
         self._acl = None
-        self._JSOBJ = True
-        self._load_from_data(data=data, capnpbin=capnpbin, keepid=False, keepacl=False)
+        self._load_from_data(data=data)
 
     @property
     def _capnp_schema(self):
         return self._schema._capnp_schema
 
-    def _load_from_data(self, data=None, capnpbin=None, keepid=True, keepacl=True):
+    def _load_from_data(self, data=None):
 
         if self._readonly:
             raise RuntimeError("cannot load from data, obj is readonly.\n%s" % self)
 
-        if capnpbin is not None:
-            self._cobj_ = self._capnp_schema.from_bytes_packed(capnpbin)
+        if isinstance(data,bytes):
+            assert self._schema is None
+            self._cobj_ = self._capnp_schema.from_bytes_packed(data)
             set_default = False
         else:
             self._cobj_ = self._capnp_schema.new_message()
             set_default = True
+            self.acl_id = 0
+            self._acl = None
 
         self._reset()
 
         if set_default:
             self._defaults_set()  # only do when new message
 
-        if not keepid:
-            # means we are overwriting id, need to remove from cache
-            if self._model is not None and self._model.obj_cache is not None:
-                if self.id is not None and self.id in self._model.obj_cache:
-                    self._model.obj_cache.pop(self.id)
-
-        # if not keepacl:
-        #     self.acl_id = 0
-        #     self._acl = None
-
         if data is not None:
-            if j.data.types.string.check(data):
+            if isinstance(data,str):
                 data = j.data.serializers.json.loads(data)
-            if not isinstance(data, dict):
-                raise j.exceptions.Input(
-                    "_load_from_data when string needs to be dict as json"
-                )
-            self._data_update(data=data)
+            if isinstance(data, dict):
+                self._data_update(data=data)
+            else:
+                raise j.exceptions.Input("_load_from_data when string needs to be dict or json")
 
     def Edit(self):
         e = j.data.dict_editor.get(self._ddict)
@@ -91,12 +80,12 @@ class DataObjBase:
             for key, val in data.items():
                 setattr(self, key, val)
 
-    # @property
-    # def acl(self):
-    #     if self._acl is None:
-    #         if self.acl_id ==0:
-    #             self._acl = self._model.bcdb.acl.new()
-    #     return self._acl
+    @property
+    def acl(self):
+        if self._acl is None:
+            if self.acl_id ==0:
+                self._acl = self._model.bcdb.acl.new()
+        return self._acl
 
     def _hr_get(self, exclude=[]):
         """
@@ -116,33 +105,28 @@ class DataObjBase:
             if self._readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
             # print (self._model.__class__.__name__)
-            # if not self._model.__class__._name=="acl" and self.acl is not None:
-            #     if self.acl.id is None:
-            #         self.acl.save()
-            #     if self.acl.id != self.acl_id:
-            #         self._changed_items["ACL"]=True
+            if not self._model.__class__._name=="acl" and self.acl is not None:
+                if self.acl.id is None:
+                    self.acl.save()
+                if self.acl.id != self.acl_id:
+                    self._changed_items["ACL"]=True
 
-            for model in self._model.get_all():
-                if self.id != model.id:
-                    if model.name == self.name:
-                        raise RuntimeError("can't create , this name already exist")
 
-            for prop in self._model.schema.properties:
-                prop = getattr(self._model.schema, "property_{}".format(prop.name))
-                if prop.unique:
-                    for mm in self._model.get_all():
-                        model = getattr(mm, "{}".format(prop.name))
-                        if self.id != mm.id:
-                            if model == getattr(self, "{}".format(prop.name)):
-                                raise RuntimeError(
-                                    "cannot save , {} should be unique".format(
-                                        prop.name
-                                    )
-                                )
             if self._changed:
+
+                for prop_u in self._model.schema.properties_unique:
+                    #find which properites need to be unique
+                    #unique properties have to be indexed
+                    args_search={prop_u.name:str(getattr(self,prop_u.name))}
+                    r = self._model.get_from_keys(**args_search)
+                    if len(r)>0:
+                        j.shell()
+                        w
+
                 o = self._model._set(self)
                 self.id = o.id
                 # self._log_debug("MODEL CHANGED, SAVE DONE")
+
                 return o
 
             return self

@@ -20,7 +20,7 @@ rights = ""
 import types
 # print("***IMPORT ACL****")
 bcdb = j.data.bcdb.latest
-schema = j.data.schema.get(SCHEMA)
+schema = j.data.schema.add(SCHEMA)[0]
 
 Index_CLASS = bcdb._BCDBModelIndexClass_generate(schema,__file__)
 MODEL_CLASS = bcdb._BCDBModelClass
@@ -186,7 +186,7 @@ class ACL(Index_CLASS,MODEL_CLASS):
                 #acl already exists, no need to save but need to index
                 #existing acl but hash differently, need to fetch new one & get data from existing one
                 assert acl.hash != hash #otherwise it should have been found in the get_from_keys above...
-                acl2 = self.new(capnpbin=acl._data)
+                acl2 = self.new(data=acl._data)
                 acl = acl2
             acl.hash = hash
             return True,acl

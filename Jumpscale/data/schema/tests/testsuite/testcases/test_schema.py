@@ -34,22 +34,6 @@ class SchemaTest(BaseTest):
         schema = self.schema(scm)
         schema_obj = schema.new()
 
-
-
-        # TODO: currently everything is being converted to string not sure if that's what's needed
-        # self.log("Try to set parameter[P1] with non string type, should fail.")
-        # with self.assertRaises(Exception):
-        #     schema_obj.name = random.randint(1, 100)
-        #
-        # with self.assertRaises(Exception):
-        #     schema_obj.name = random.uniform(10, 20)
-
-        # with self.assertRaises(Exception):
-        #     schema_obj.name = [self.random_string(), self.random_string()]
-        #
-        # with self.assertRaises(Exception):
-        #     schema_obj.name = {'name': self.random_string}
-
         self.log("Try to set parameter[P1] with string type, should succeed.")
         name = self.random_string()
         schema_obj.name = name
@@ -64,7 +48,7 @@ class SchemaTest(BaseTest):
 
         **Test Scenario:**
 
-        #. Create schema with integer parameter[P1], should succeed.
+        #. Create schema with integer parameter[P1], should succeed.  #TODO: NOT TRUE, we convert types to the base type if possible !
         #. Try to set parameter[P1] with non integer type, should fail.
         #. Try to set parameter[P1] with integer type, should succeed.
         """
@@ -77,10 +61,10 @@ class SchemaTest(BaseTest):
         schema = self.schema(scm)
         schema_obj = schema.new()
 
-        self.log("Try to set parameter[P1] with non integer type, should fail.")
+        self.log("Try to set parameter[P1] with type which cannot convert to integer should fail.")
 
         with self.assertRaises(Exception):
-            schema_obj.number = self.random_string()
+            schema_obj.number = "a"
 
         with self.assertRaises(Exception):
             schema_obj.number = [random.randint(1, 1000), random.randint(1, 1000)]

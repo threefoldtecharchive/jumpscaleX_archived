@@ -33,7 +33,13 @@ class SchemaProperty(j.application.JSBaseClass):
 
     @property
     def default_as_python_code(self):
-        return self.jumpscaletype.python_code_get(self.default)
+        try:
+            c =  self.jumpscaletype.python_code_get(self.default)
+        except Exception as e:
+            print("ERROR")
+            print(e)
+            raise (e)
+        return c
 
     @property
     def name_camel(self):
