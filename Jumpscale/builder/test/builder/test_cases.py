@@ -31,9 +31,9 @@ class TestCases(BaseTest):
         j.builder.web.openresty.build(reset=True)
         j.builder.web.openresty.install()
         j.builder.web.openresty.start()
-        self.assertTrue(len(j.sal.process.getProcessPid('lapis')))
+        self.assertTrue(len(j.sal.process.getProcessPid('openresty')))
         j.builder.web.openresty.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid('nginx')))
+        self.assertEqual(0, len(j.sal.process.getProcessPid('openresty')))
 
     def test005_traefik(self):
         j.builder.web.traefik.build(reset=True)
@@ -109,7 +109,7 @@ class TestCases(BaseTest):
         j.builder.db.etcd.build(reset=True)
         j.builder.db.etcd.install()
         j.builder.db.etcd.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('etcd')))
+        self.assertTrue(len(j.sal.process.getProcessPid('etcd')))
         j.builder.db.etcd.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('etcd')))
 
