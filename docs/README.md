@@ -9,7 +9,7 @@
 
 ## Help us improve Jumpscale
 
-- For feedback, or to get access to the repository on GitHub, contact us on info@incubaid.com.
+- For feedback, or to get access to the repository on GitHub, contact us on info@threefold.tech.
 
 ## License
 
