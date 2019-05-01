@@ -19,12 +19,6 @@ class DocSite(j.application.JSBaseClass):
         self.docgen = j.tools.markdowndocs
         #init initial arguments
 
-        config_path = j.sal.fs.joinPaths(path,"docs_config.toml")
-        config_path2 = j.sal.fs.joinPaths(path,"docs/docs_config.toml")
-        if not j.sal.fs.exists(config_path) and j.sal.fs.exists(config_path2):
-            config_path=config_path2
-            path = j.sal.fs.joinPaths(path,"docs")
-
         self.path = path
         if not j.sal.fs.exists(path):
             raise RuntimeError("Cannot find path:%s"%path)
