@@ -3,7 +3,7 @@ import os
 import subprocess
 import sys
 
-BRANCH = "development"
+BRANCH = "master"
 
 # get current install.py directory
 rootdir = os.path.dirname(os.path.abspath(__file__))
@@ -72,7 +72,7 @@ def help():
     -1 = in system install
     -2 = sandbox install
     -3 = install in a docker (make sure docker is installed)
-    -w = install the wiki at the end, which includes openresty, lapis, lua, ...
+    -w = install the wiki at the end, which includes openresty, lapis, lua, ... (DONT USE YET)
 
 
     ## interactivity
@@ -95,14 +95,14 @@ def help():
     --portrange = 1 is the default
                   1 means 8100-8199 on host gets mapped to 8000-8099 in docker
                   2 means 8200-8299 on host gets mapped to 8000-8099 in docker
-    --image=/path/to/image.tar or name of image (use docker images) if "hub" then will download despiegk/jsx_develop from docker hub as base
+    --image=/path/to/image.tar or name of image (use docker images) if "hub" then will download despiegk/jsx_development from docker hub as base
     --port = port of container SSH std is 9022 (normally not needed to use because is in portrange:22 e.g. 9122 if portrange 1)
 
     ## code related
 
     --codepath = "/sandbox/code" can overrule, is where the github code will be checked out
     -p = pull code from git, if not specified will only pull if code directory does not exist yet
-    --branch = jumpscale branch: normally 'development'
+    --branch = jumpscale branch: normally 'master' or 'development'
 
 
     """
@@ -137,12 +137,12 @@ def ui():
             --------------------------------------------
 
             Do you want to install
-             - in system (development)                : 1
+             - in system                              : 1
              - using a sandbox                        : 2
 
             """
-
-            mychoice = int(IT.Tools.ask_choices(T,[1,2]))
+            mychoice = 1
+            # mychoice = int(IT.Tools.ask_choices(T,[1,2]))
 
         else:
 
@@ -152,12 +152,12 @@ def ui():
 
             Do you want to install
              - insystem         (ideal for development only in OSX & Ubuntu1804)        : 1
-             - using a sandbox  (only in OSX & Ubuntu1804)                              : 2
+             - using a sandbox  (only in OSX & Ubuntu1804): DONT USE YET                : 2
              - using docker?                                                            : 3
 
             """
 
-            mychoice = int(IT.Tools.ask_choices(T,[1,2,3]))
+            mychoice = int(IT.Tools.ask_choices(T,[1,3]))
         args[str(mychoice)]=True
 
     #means interactive
@@ -450,7 +450,9 @@ elif "3" in args:
 
     #for now only support for insystem
     args_txt = "-1"
-    for item in ["r","p","w"]:
+    #disabled the wiki part for now
+    # for item in ["r","p","w"]:
+    for item in ["r","p"]:
         if item in args:
             args_txt+=" -%s"%item
     args_txt+=" -y"
