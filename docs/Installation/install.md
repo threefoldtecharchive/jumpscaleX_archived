@@ -6,7 +6,10 @@
 ### if you have nothing on your system, just get the installer
 
 ```bash
-curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/install/install.py?$RANDOM > /tmp/install.py
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py
+
+#if you want to use development branch (unstable) do:
+curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py
 ```
 
 ### if you want to work from code
@@ -16,7 +19,8 @@ mkdir -p /sandbox/code/github/threefoldtech
 cd /sandbox/code/github/threefoldtech
 git clone git@github.com:threefoldtech/jumpscaleX.git
 cd jumpscaleX
-git checkout development
+##if you want to work from unstable development branch uncomment next line
+#git checkout development
 git pull
 
 #link the installer from tmp to the source directory, makes it easy for the rest of this tutorial
@@ -40,12 +44,16 @@ This SSH key will be used in docker & non docker install.
 
 ## Installation
 
-### Docker 
+### Docker  (recommended)
 
 - make sure docker installed
 - only tested on Ubuntu & OSX
 
 ```bash
+##RECOMMENDED
+#will install in docker, delete if exists and starting from already created docker image (is faster)
+python3 /tmp/install.py -3 -y -d --image=hub
+
 #will install in docker, all answer yes but show the config params and allow to confirm the choices (so is safe)
 python3 /tmp/install.py -3 -y -c
 
@@ -55,8 +63,6 @@ python3 /tmp/install.py -3 -y -d
 #use interactive
 python3 /tmp/install.py -3
 
-#will install in docker, delete if exists and starting from already created docker image (is faster)
-python3 /tmp/install.py -3 -y -d --image=hub
 ```
 #### on OSX
 

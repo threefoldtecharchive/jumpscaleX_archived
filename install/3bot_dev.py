@@ -4,6 +4,7 @@ import subprocess
 import sys
 
 BRANCH = "master"
+SANDBOX = "~/3bot"
 
 # get current install.py directory
 rootdir = os.path.dirname(os.path.abspath(__file__))
@@ -60,27 +61,17 @@ def image_names():
 
 def help():
     T="""
-    Jumpscale X Installer
-    ---------------------
+    3bot development environment based on docker
+    --------------------------------------------
 
     # options
 
-    --reset : will remove everything (on OSX: brew, /sandbox) BECAREFULL
     -h = this help
-
-    ## type of installation
-
-    -1 = in system install
-    -2 = sandbox install
-    -3 = install in a docker (make sure docker is installed)
-    -w = install the wiki at the end, which includes openresty, lapis, lua, ... (DONT USE YET)
-
-
-    ## interactivity
-
     -y = answer yes on every question (for unattended installs)
     -c = will confirm all filled in questions at the end (useful when using -y)
-    -r = reinstall, basically means will try to re-do everything without removing (keep data)
+    -r = reinstall, basically means will try to re-do everything without removing the data
+    -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install    
+
     --debug will launch the debugger if something goes wrong
 
     ## encryption
@@ -89,21 +80,11 @@ def help():
     --private_key = std is '' otherwise is 24 words, use '' around the private key
                 if secret specified and private_key not then will ask in -y mode will autogenerate
 
-    ## docker related
-
-    --name = name of docker, only relevant when docker option used
-    -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install    
-    --portrange = 1 is the default
-                  1 means 8100-8199 on host gets mapped to 8000-8099 in docker
-                  2 means 8200-8299 on host gets mapped to 8000-8099 in docker
-    --image=/path/to/image.tar or name of image (use docker images) if "hub" then will download despiegk/jsx_development from docker hub as base
-    --port = port of container SSH std is 9022 (normally not needed to use because is in portrange:22 e.g. 9122 if portrange 1)
-
     ## code related
 
-    --codepath = "/sandbox/code" can overrule, is where the github code will be checked out
+    --codepath = "~/code" can overrule, is where the github code will be checked out
     -p = pull code from git, if not specified will only pull if code directory does not exist yet
-    --branch = jumpscale branch: normally 'master' or 'development'
+    --branch = jumpscale branch: normally 'master' or 'development' for unstable release
 
 
     """
@@ -118,50 +99,18 @@ def ui():
     if "h" in args:
         help()
 
-    if "reset" in args:
-        IT.Tools.shell()
 
-    if "incontainer" not in args:
+    rc,out,_=IT.Tools.execute("cat /proc/1/cgroup",die=False,showout=False)
+    if rc==0 and out.find("/docker/")!=-1:
+        args["incontainer"]=True
+        mychoice = 1
+        #means we are in a docker
+    else:
+        args["incontainer"]=False
+        mychoice = 3
+        
+    args[str(mychoice)]=True
 
-        rc,out,_=IT.Tools.execute("cat /proc/1/cgroup",die=False,showout=False)
-        if rc==0 and out.find("/docker/")!=-1:
-            args["incontainer"]=True
-            #means we are in a docker
-        else:
-            args["incontainer"]=False
-
-    if not "1" in args and not "2" in args and not "3" in args:
-        if args["incontainer"]:
-            #means we are inside a container
-            T="""
-            Installer choice for jumpscale in the docker
-            --------------------------------------------
-
-            Do you want to install
-             - in system                              : 1
-             - using a sandbox                        : 2
-
-            """
-            mychoice = 1
-            # mychoice = int(IT.Tools.ask_choices(T,[1,2]))
-
-        else:
-
-            T="""
-            Installer choice for jumpscale
-            ------------------------------
-
-            Do you want to install
-             - insystem         (ideal for development only in OSX & Ubuntu1804)        : 1
-             - using a sandbox  (only in OSX & Ubuntu1804): DONT USE YET                : 2
-             - using docker?                                                            : 3
-
-            """
-
-            mychoice = int(IT.Tools.ask_choices(T,[1,3]))
-        args[str(mychoice)]=True
-
-    #means interactive
 
     if not args["incontainer"]:
         if not IT.MyEnv.sshagent_active_check():
@@ -169,6 +118,9 @@ def ui():
             Did not find an SSH key in ssh-agent, is it ok to continue without?
             It's recommended to have a SSH key as used on github loaded in your ssh-agent
             If the SSH key is not found, repositories will be cloned using https
+
+            if you never used an ssh-agent or github, just say "y"
+
             """
             print("Could not continue, load ssh key in ssh-agent and try again.")
             if "3" in args:
@@ -181,9 +133,9 @@ def ui():
             args["sshkey"]=sshkey2
 
     if not "codepath" in args:
-        codepath = "/sandbox/code"
+        codepath = "%s/code"%SANDBOX
         if "1" in args or "2" in args or IT.Tools.exists("/sandbox"):
-            codepath = "/sandbox/code"
+            codepath = "%s/code"%SANDBOX
         else:
             codepath = "~/code"
         codepath=codepath.replace("~",IT.MyEnv.config["DIR_HOME"])
@@ -199,30 +151,23 @@ def ui():
 
     if "3" in args: #means we want docker
         if "name" not in args:
-            args["name"] = "default"
+            args["name"] = "3bot"
 
         if IT.MyEnv.platform()=="linux" and not IT.Tools.cmd_installed("docker"):
-             IT.UbuntuInstall.docker_install()
-
+            IT.UbuntuInstall.docker_install()
 
         container_exists = args["name"] in docker_names()
         args["container_exists"]=container_exists
-
-        if "name" not in args:
-            dockername = IT.Tools.ask_string("What name do you want to use for your docker (default jsx): ",default="jsx")
-            if dockername == "":
-                dockername = "jsx"
-            args["name"] = dockername
 
         if container_exists:
             if "d" not in args:
                 if not "y" in args:
                     if IT.Tools.ask_yes_no("docker:%s exists, ok to remove? Will otherwise keep and install inside."%args["name"]):
                         args["d"]=True
-                # else:
-                #     #is not interactive and d was not given, so should not continue
-                #     print("ERROR: cannot continue, docker: %s exists."%args["name"])
-                #     sys.exit(1)
+                else:
+                    #is not interactive and d was not given, so should not continue
+                    print("ERROR: cannot continue, docker: %s exists."%args["name"])
+                    sys.exit(1)
 
         if "image" in args:
             if "d" not in args:
