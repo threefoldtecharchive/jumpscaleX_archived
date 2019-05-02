@@ -300,9 +300,12 @@ args = ui()
 
 if "1" in args or "2" in args:
 
+    force = False
     if "r" in args:
         #remove the state
         IT.MyEnv.state_reset()
+        args["pull"]=True
+        force = True
 
     if "2" in args:
         raise RuntimeError("sandboxed not supported yet")
@@ -311,7 +314,7 @@ if "1" in args or "2" in args:
         sandboxed = False
 
     installer = IT.JumpscaleInstaller(branch=args["branch"])
-    installer.install(basedir="/sandbox",config={},sandboxed=sandboxed,force=False,
+    installer.install(basedir="/sandbox",config={},sandboxed=sandboxed,force=force,
             secret=args["secret"],private_key_words=args["private_key"],gitpull= args["pull"])
 
     # if "w" in args:

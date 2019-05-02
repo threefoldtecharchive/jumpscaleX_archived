@@ -19,8 +19,6 @@ if not os.path.exists(path):
 spec = util.spec_from_file_location("IT", path)
 IT = spec.loader.load_module()
 
-IT.MyEnv._init()
-
 sys.excepthook = IT.my_excepthook
 
 args={}
@@ -110,10 +108,11 @@ def install_ui(args):
         if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
             args["r"]=True
 
-        if args["name"] in IT.Docker.docker_names():
+        if args["name"] in docker.docker_names():
             if "d" not in args:
                 if not "y" in args:
                     if IT.Tools.ask_yes_no("docker:%s exists, ok to remove? Will otherwise keep and install inside."%args["name"]):
+                        args["d"]=True
 
 
     if "image" in args:
@@ -122,7 +121,7 @@ def install_ui(args):
             args["d"]=True
         if ":" not in args["image"]:
             args["image"]="%s:latest" % args["image"]
-        if args["image"] not in IT.Docker.image_names():
+        if args["image"] not in docker.image_names():
             if IT.Tools.exists(args["image"]):
                 IT.Tools.shell()
             else:
@@ -186,8 +185,6 @@ def install_ui(args):
         if "image" in args:
             T+=" - will use docker image: '%s'\n"%args["image"]
 
-        if "portrange" not in args:
-            args["portrange"]=1
         portrange = args["portrange"]
 
         a=8000+int(portrange)*10
@@ -211,17 +208,21 @@ def install_ui(args):
 
     return args
 
+if "portrange" not in args:
+    args["portrange"]=1
+
 if "install" in args:
     args = install_ui(args)
 
 delete = "d" in args
 docker=IT.Docker(name="3bot",delete=delete, portrange=args["portrange"],sshkey=args["sshkey"])
 
-
 if "install" in args:
     docker.jumpscale_install(secret=args["secret"],private_key=args["private_key"])
 
-if "stop" in args:
+elif "stop" in args:
     if args["name"] in docker_running():
         IT.Tools.execute("docker stop %s"% args["name"])
+else:
+    print (help())
 

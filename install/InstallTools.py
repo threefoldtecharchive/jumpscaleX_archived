@@ -1276,7 +1276,8 @@ class Tools:
         return rc>0
 
     @staticmethod
-    def code_github_get(repo, account="threefoldtech", branch=["master"], pull=True):
+    def code_github_get(repo, account="threefoldtech", branch=["master"], pull=True, reset=False):
+        Tools.log("get code:%s:%s (%s)"%(repo,account,branch))
         if  MyEnv.sshagent_active_check():
             url = "git@github.com:%s/%s.git"
         else:
@@ -1284,6 +1285,10 @@ class Tools:
 
         repo_url = url % (account, repo)
         exists,foundgit,dontpull,ACCOUNT_DIR,REPO_DIR=Tools._code_location_get(account=account,repo=repo)
+
+        if reset:
+            Tools.delete(REPO_DIR)
+            exists,foundgit,dontpull,ACCOUNT_DIR,REPO_DIR=Tools._code_location_get(account=account,repo=repo)
 
         args={}
         args["ACCOUNT_DIR"]= ACCOUNT_DIR
@@ -1331,33 +1336,36 @@ class Tools:
                     Tools.execute(C, args=args,showout=False)
 
             else:
-                if pull and Tools.code_changed(REPO_DIR):
-                    if Tools.ask_yes_no("\n**: found changes in repo '%s', do you want to commit?"%repo):
-                        if "GITMESSAGE" in os.environ:
-                            args["MESSAGE"] = os.environ["GITMESSAGE"]
+                if pull:
+                    if reset:
+                        C="""
+                        set -x
+                        cd {REPO_DIR}
+                        git checkout . --force
+                        git pull
+                        """
+                        Tools.log("get code & ignore changes: %s"%repo)
+                        Tools.execute(C, args=args)
+                    elif Tools.code_changed(REPO_DIR):
+                        if Tools.ask_yes_no("\n**: found changes in repo '%s', do you want to commit?"%repo):
+                            if "GITMESSAGE" in os.environ:
+                                args["MESSAGE"] = os.environ["GITMESSAGE"]
+                            else:
+                                args["MESSAGE"] = input("\nprovide commit message: ")
+                                assert args["MESSAGE"].strip() != ""
                         else:
-                            args["MESSAGE"] = input("\nprovide commit message: ")
-                            assert args["MESSAGE"].strip() != ""
-                    else:
-                        sys.exit(1)
-                    C="""
-                    set -x
-                    cd {REPO_DIR}
-                    git add . -A
-                    git commit -m "{MESSAGE}"
-                    git pull
-
-                    """
-                    Tools.log("get code & commit [git]: %s"%repo)
-                    Tools.execute(C, args=args)
-                elif pull:
-                    C="""
-                    set -x
-                    cd {REPO_DIR}
-                    git pull
-                    """
-                    Tools.log("pull code [git]: %s"%repo)
-                    Tools.execute(C, args=args)
+                            print("found changes, do not want to commit")
+                            sys.exit(1)
+                        C="""
+                        set -x
+                        cd {REPO_DIR}
+                        git add . -A
+                        git commit -m "{MESSAGE}"
+                        git pull
+    
+                        """
+                        Tools.log("get code & commit [git]: %s"%repo)
+                        Tools.execute(C, args=args)
 
             def getbranch(args):
                 cmd = "cd {REPO_DIR}; git branch | grep \* | cut -d ' ' -f2"
@@ -1747,13 +1755,12 @@ class MyEnv():
         only 1 level deep toml format only for int,string,bool
         no multiline
         """
-        if MyEnv.state == None or MyEnv.state == {}:
-            if Tools.exists(MyEnv.state_file_path):
-                MyEnv.state = Tools.config_load(MyEnv.state_file_path,if_not_exist_create=False)
-            elif not MyEnv.readonly:
-                MyEnv.state = Tools.config_load(MyEnv.state_file_path,if_not_exist_create=True)
-            else:
-                MyEnv.state = {}
+        if Tools.exists(MyEnv.state_file_path):
+            MyEnv.state = Tools.config_load(MyEnv.state_file_path,if_not_exist_create=False)
+        elif not MyEnv.readonly:
+            MyEnv.state = Tools.config_load(MyEnv.state_file_path,if_not_exist_create=True)
+        else:
+            MyEnv.state = {}
 
     @staticmethod
     def state_save():
@@ -1795,7 +1802,7 @@ class MyEnv():
             MyEnv.state_save()
 
     @staticmethod
-    def state_reset(key):
+    def state_reset():
         """
         remove all state
         """
@@ -1825,7 +1832,7 @@ class BaseInstaller():
             args["GROUPNAME"] = grp.getgrgid(gid)[0]
             Tools.execute(script,interactive=True,args=args)
 
-        # MyEnv.init(basedir=basedir,config=config,readonly=False,force=True)
+        MyEnv.init(basedir=basedir,config=config,readonly=False,force=True)
 
         if force:
             MyEnv.state_delete("install")
@@ -1873,23 +1880,19 @@ class BaseInstaller():
                     bashprofile+="\n%s\n"%cmd
                     Tools.file_write(env_path,bashprofile)
 
-        Tools.code_github_get(repo="sandbox_base", branch=["master"])
-
+        print ("- get sandbox base from git")
+        Tools.code_github_get(repo="sandbox_base", branch=["master"],pull=False)
+        print ("- copy files to sandbox")
         #will get the sandbox installed
         if not sandboxed:
 
             script="""
             set -e
             cd {DIR_BASE}
-            rsync -ra code/github/threefoldtech/sandbox_base/base/ .
-
-            #remove parts we don't use in in system deployment
-            rm -rf {DIR_BASE}/openresty
-            rm -rf {DIR_BASE}/lib/python
-            rm -rf {DIR_BASE}/lib/pythonbin
-            rm -rf {DIR_BASE}/var
-            rm -rf {DIR_BASE}/root
-
+            rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/cfg/ {DIR_BASE}/cfg/
+            rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/bin/ {DIR_BASE}/bin/
+            rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/openresty/ {DIR_BASE}/openresty/
+            rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/env.sh {DIR_BASE}/env.sh
             mkdir -p root
             mkdir -p var
 
@@ -1900,11 +1903,9 @@ class BaseInstaller():
 
             #install the sandbox
 
-            Tools.code_github_get(repo="sandbox_base", branch=["master"])
-
             script="""
             cd {DIR_BASE}
-            rsync -ra code/github/threefoldtech/sandbox_base/base/ .
+            rsync -ra {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/ {DIR_BASE}/
             mkdir -p root
             """
             Tools.execute(script,interactive=True)
@@ -2248,7 +2249,7 @@ class JumpscaleInstaller():
         self.branch = branch
         self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
-    def install(self,basedir="/sandbox",config={},sandboxed=False,force=False,secret="1234",private_key_words=None,gitpull=True):
+    def install(self,basedir="/sandbox",config={},sandboxed=False,force=False,secret="1234",private_key_words=None,gitpull=False):
 
         MyEnv.check_platform()
 
@@ -2455,25 +2456,34 @@ class Docker():
             print(" - Docker machine OK")
             print(" - Start SSH server")
         else:
-            print(" - Docker machine was already there.")
             if name not in self.docker_running():
                 Tools.execute("docker start %s"% name)
                 if not name in self.docker_running():
                     print("could not start container:%s"%name)
                     sys.exit(1)
 
-        SSHKEYS = Tools.execute("ssh-add -L",die=False,showout=False)[1]
-        if SSHKEYS.strip()!="":
-            self.dexec('echo "%s" > /root/.ssh/authorized_keys'%SSHKEYS)
+        installed = False
+        try:
+            self.dexec('cat /root/.BASEINSTALL_OK')
+            installed = True
+        except:
+            pass
+        if not installed:
+            self.dexec('rm -f /root/.BASEINSTALL_OK')
+            SSHKEYS = Tools.execute("ssh-add -L",die=False,showout=False)[1]
+            if SSHKEYS.strip()!="":
+                self.dexec('echo "%s" > /root/.ssh/authorized_keys'%SSHKEYS)
 
-        self.dexec("/usr/bin/ssh-keygen -A")
-        self.dexec('/etc/ind/ssh start')
-        self.dexec('rm -f /etc/service/sshd/down')
-        if baseinstall:
-            print(" - Upgrade ubuntu")
-            self.dexec('apt update; apt upgrade -y; apt install mc git -y')
+            self.dexec("/usr/bin/ssh-keygen -A")
+            self.dexec('/etc/init.d/ssh start')
+            self.dexec('rm -f /etc/service/sshd/down')
+            if baseinstall:
+                print(" - Upgrade ubuntu")
+                self.dexec('apt update; apt upgrade -y; apt install mc git -y')
 
-        Tools.execute("rm -f ~/.ssh/known_hosts")  # dirty hack
+            Tools.execute("rm -f ~/.ssh/known_hosts")  # dirty hack
+
+            self.dexec('touch /root/.BASEINSTALL_OK')
 
 
     def dexec(self,cmd,interactive=False):
@@ -2523,19 +2533,19 @@ class Docker():
         # args_txt+=" -c"
         # args_txt+=" --debug"
 
-        cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py %s"%args_txt
+        dirpath = os.path.dirname(inspect.getfile(Tools))
+        if dirpath.startstwith(MyEnv.config["DIR_CODE"]):
+            cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py "
+        else:
+            print("copy installer over from where I install from")
+            for item in ["install.py","InstallTools.py"]:
+                src1 = "%s/%s"%(dirpath,item)
+                cmd = "scp -P %s %s root@localhost:/tmp/" %(self.port,src1)
+                Tools.execute(cmd)
+            cmd = "cd /tmp;python3 install.py "
+        cmd+= args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec(cmd)
-
-        dirpath = os.path.dirname(inspect.getfile(Tools))
-
-        for item in ["install.py","3bot_dev.py","InstallTools.py"]:
-            src1 = "%s/%s"%(dirpath,item)
-            cmd = "scp -P %s %s root@localhost:/tmp/" %(args["port"],src1)
-            Tools.execute(cmd)
-        cmd = "cd /tmp;python3 3bot_dev.py %s"%args_txt
-
-        print(" - Installing jumpscaleX ")
 
         cmd="""
         apt-get autoclean
