@@ -1,6 +1,7 @@
 
 # install
 
+
 ## Get Installer
 
 ### if you have nothing on your system, just get the installer
@@ -12,16 +13,17 @@ curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/i
 curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/master/install/install.py?$RANDOM > /tmp/install.py
 ```
 
-### if you want to work from code
+### if you want to work from code: for experts
 
 ```bash
+#create directory, make sure your user has full access to this director (can be a manual step)
 mkdir -p /sandbox/code/github/threefoldtech
 cd /sandbox/code/github/threefoldtech
 git clone git@github.com:threefoldtech/jumpscaleX.git
 cd jumpscaleX
 ##if you want to work from unstable development branch uncomment next line
 #git checkout development
-git pull
+#git pull
 
 #link the installer from tmp to the source directory, makes it easy for the rest of this tutorial
 rm -f /tmp/install.py
