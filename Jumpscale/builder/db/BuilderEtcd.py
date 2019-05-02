@@ -16,7 +16,9 @@ class BuilderEtcd(BuilderGolangTools):
 
     def _init(self):
         super()._init()
-        self.package_path = self.package_path_get("etcd", host="go.etcd.io")
+
+    def profile_builder_set(self):
+        self.profile.env_set('GO111MODULE', 'on')
 
     @builder_method()
     def build(self):
@@ -24,20 +26,14 @@ class BuilderEtcd(BuilderGolangTools):
         Build etcd
         """
         j.builder.runtimes.golang.install()
-        # get a vendored etcd from master
-        self.get("go.etcd.io/etcd", install=False, update=False)
-        # go to package path and build (for etcdctl)
-        self._execute("cd %s && ./build" % self.package_path)
+        # https://github.com/etcd-io/etcd/blob/master/Documentation/dl_build.md#build-the-latest-version
+        self.get('go.etcd.io/etcd')
+        self.get('go.etcd.io/etcd/etcdctl')
 
     @builder_method()
     def install(self):
-
-        self.build()
-        etcd_bin_path = self.tools.joinpaths(self.package_path, "bin")
-
-        j.builder.tools.dir_ensure(etcd_bin_path)
-        j.builder.tools.file_copy("%s/etcd" % etcd_bin_path, "{DIR_BIN}/etcd")
-        j.builder.tools.file_copy("%s/etcdctl" % etcd_bin_path, "{DIR_BIN}/etcdctl")
+        j.builder.tools.file_copy("%s/etcd" % self.DIR_GO_PATH_BIN, "{DIR_BIN}/etcd")
+        j.builder.tools.file_copy("%s/etcdctl" % self.DIR_GO_PATH_BIN, "{DIR_BIN}/etcdctl")
 
         self._write("/sandbox/cfg/etcd.conf", ETCD_CONFIG)
 
