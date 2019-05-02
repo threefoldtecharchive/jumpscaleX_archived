@@ -17,45 +17,9 @@ if not os.path.exists(path):
 spec = util.spec_from_file_location("IT", path)
 IT = spec.loader.load_module()
 
-IT.MyEnv._init()
-
 sys.excepthook = IT.my_excepthook
 
 args={}
-
-def dexec(cmd,interactive=False):
-    if "'" in cmd:
-        cmd = cmd.replace("'","\"")
-    if interactive:
-        cmd2 = "docker exec -ti %s bash -c '%s'"%(args["name"],cmd)
-    else:
-        cmd2 = "docker exec -t %s bash -c '%s'"%(args["name"],cmd)
-    IT.Tools.execute( cmd2, interactive=interactive,showout=True,replace=False,asfile=True)
-
-def sshexec(cmd):
-    if "'" in cmd:
-        cmd = cmd.replace("'","\"")
-    cmd2 = "ssh -oStrictHostKeyChecking=no -t root@localhost -A -p %s '%s'"%(args["port"],cmd)
-    IT.Tools.execute(cmd2,interactive=True,showout=False,replace=False,asfile=True)
-
-
-
-def docker_running():
-    names = IT.Tools.execute("docker ps --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
-    names = [i.strip("\"'") for i in names if i.strip()!=""]
-    return names
-
-
-
-def docker_names():
-    names = IT.Tools.execute("docker container ls -a --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
-    names = [i.strip("\"'") for i in names if i.strip()!=""]
-    return names
-
-def image_names():
-    names = IT.Tools.execute("docker images --format='{{.Repository}}:{{.Tag}}'",showout=False,replace=False)[1].split("\n")
-    names = [i.strip("\"'") for i in names if i.strip()!=""]
-    return names
 
 
 def help():
@@ -65,7 +29,6 @@ def help():
 
     # options
 
-    --reset : will remove everything (on OSX: brew, /sandbox) BECAREFULL
     -h = this help
 
     ## type of installation
@@ -92,7 +55,7 @@ def help():
     ## docker related
 
     --name = name of docker, only relevant when docker option used
-    -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install    
+    -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install
     --portrange = 1 is the default
                   1 means 8100-8199 on host gets mapped to 8000-8099 in docker
                   2 means 8200-8299 on host gets mapped to 8000-8099 in docker
@@ -102,7 +65,7 @@ def help():
     ## code related
 
     --codepath = "/sandbox/code" can overrule, is where the github code will be checked out
-    -p = pull code from git, if not specified will only pull if code directory does not exist yet
+    --pull = pull code from git, if not specified will only pull if code directory does not exist yet
     --branch = jumpscale branch: normally 'master' or 'development'
 
 
@@ -115,11 +78,19 @@ def ui():
 
     args= IT.Tools.cmd_args_get()
 
-    if "h" in args:
+    if not "codepath" in args:
+        args["codepath"] = None
+
+    if not "branch" in args:
+        args["branch"]=BRANCH
+
+    if "sshkey" not in args:
+        args["sshkey"] = None
+
+    if "h" in args or args=={}:
         help()
 
-    if "reset" in args:
-        IT.Tools.shell()
+    IT.MyEnv.init(basedir=None,config={},readonly=True,codepath=args["codepath"])
 
     if "incontainer" not in args:
 
@@ -177,41 +148,23 @@ def ui():
                 if not IT.Tools.ask_yes_no("OK to continue?"):
                     sys.exit(1)
         else:
-            sshkey2 = IT.Tools.execute("ssh-add -L",die=False,showout=False)[1].strip().split(" ")[-2].strip()
-            args["sshkey"]=sshkey2
+            args["sshkey"]=IT.MyEnv.sshagent_key_get()
 
-    if not "codepath" in args:
-        codepath = "/sandbox/code"
-        if "1" in args or "2" in args or IT.Tools.exists("/sandbox"):
-            codepath = "/sandbox/code"
-        else:
-            codepath = "~/code"
-        codepath=codepath.replace("~",IT.MyEnv.config["DIR_HOME"])
-        args["codepath"] = codepath
-
-    if not "branch" in args:
-        args["branch"]="master"
-
-    if "y" not in args and "r" not in args and IT.MyEnv.installer_only is False and IT.Tools.exists(IT.MyEnv.state_file_path):
+    if "y" not in args and "r" not in args:
         if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
             args["r"]=True
-
 
     if "3" in args: #means we want docker
         if "name" not in args:
             args["name"] = "default"
 
-        if IT.MyEnv.platform()=="linux" and not IT.Tools.cmd_installed("docker"):
-             IT.UbuntuInstall.docker_install()
-
-
-        container_exists = args["name"] in docker_names()
+        container_exists = args["name"] in IT.Docker.docker_names()
         args["container_exists"]=container_exists
 
         if "name" not in args:
-            dockername = IT.Tools.ask_string("What name do you want to use for your docker (default jsx): ",default="jsx")
+            dockername = IT.Tools.ask_string("What name do you want to use for your docker (default=default): ",default="default")
             if dockername == "":
-                dockername = "jsx"
+                dockername = "default"
             args["name"] = dockername
 
         if container_exists:
@@ -228,10 +181,10 @@ def ui():
             if "d" not in args:
                 args["d"]=True
             if args["image"] == "hub":
-                args["image"] = "despiegk/jsx_develop"
+                args["image"] = "despiegk/3bot"
             if ":" not in args["image"]:
                 args["image"]="%s:latest" % args["image"]
-            if args["image"] not in image_names():
+            if args["image"] not in IT.Docker.image_names():
                 if IT.Tools.exists(args["image"]):
                     IT.Tools.shell()
                 else:
@@ -248,27 +201,16 @@ def ui():
                 else:
                     args["portrange"] = 1
 
-        a=8000+int(args["portrange"])*10
-        b=8004+int(args["portrange"])*10
-        portrange_txt="%s-%s:8000-8004"%(a,b)
-        portrange_txt +=" -p %s:9999/udp"%(a+9)  #udp port for wireguard
-
-        args["portrange_txt"] = "-p %s"%portrange_txt
-
-        if "port" not in args:
-            args["port"] = 9000+int(args["portrange"])*100 + 22
-
-
     else:
-        if "p" not in args:
+        if "pull" not in args:
             #is not docker and not pull yet
             if "y" not in args:
                 #not interactive ask
                 if IT.Tools.ask_yes_no("Do you want to pull code changes from git?"):
-                    args["p"]=True
+                    args["pull"]=True
             else:
                 #default is not pull
-                args["p"]=False
+                args["pull"]=False
 
     if "y" in args:
 
@@ -289,10 +231,9 @@ def ui():
             args["private_key"] = IT.Tools.ask_string("please provide 24 words of the private key, or just press 'ENTER' for autogeneration.")
 
 
-    if "y" not in args and "w" not in args:
-        if IT.Tools.ask_yes_no("Do you want to install lua/nginx/openresty & wiki environment?"):
-            args["w"]=True
-
+    # if "y" not in args and "w" not in args:
+    #     if IT.Tools.ask_yes_no("Do you want to install lua/nginx/openresty & wiki environment?"):
+    #         args["w"]=True
 
     T="""
 
@@ -312,12 +253,16 @@ def ui():
     if not "incontainer" in args and sshkey2:
         T+= " - sshkey used will be: %s\n"%sshkey2
 
-    T+=" - location of code path is: %s\n"%args["codepath"]
+    if "1" in args and args["codepath"] is None:
+        T+=" - location of code path is: /sandbox/code\n"
+    else:
+        T+=" - location of code path is: %s\n"%IT.MyEnv.config["DIR_CODE"]
+
     if "w" in args:
         T+=" - will install wiki system at end\n"
     if "3" in args:
         T+=" - name of container is: %s\n"%args["name"]
-        if container_exists:
+        if args["container_exists"]:
             if "d" in args:
                 T+=" - will remove the docker, and recreate\n"
             else:
@@ -326,8 +271,17 @@ def ui():
         if "image" in args:
             T+=" - will use docker image: '%s'\n"%args["image"]
 
-        T+=" - will map ssh port to: '%s'\n"%args["port"]
-        T+=" - will map portrange '%s' (8000-8100) always in container.\n"% portrange_txt
+        if "portrange" not in args:
+            args["portrange"]=1
+        portrange = args["portrange"]
+
+        a=8000+int(portrange)*10
+        b=8004+int(portrange)*10
+        portrange_txt="%s-%s:8000-8004"%(a,b)
+        port = 9000+int(portrange)*100 + 22
+
+        T+=" - will map ssh port to: '%s'\n"%port
+        T+=" - will map portrange '%s' (8000-8004) always in container.\n"% portrange_txt
 
     if "debug" in args:
         IT.MyEnv.debug = True
@@ -342,158 +296,35 @@ def ui():
 
     return args
 
-
-
 args = ui()
-if "r" in args and IT.MyEnv.installer_only is False:
-    #remove the state
-    IT.Tools.delete(IT.MyEnv.state_file_path)
-    IT.MyEnv.state_load()
-
-if "p" in args:
-    os.environ["GITPULL"] = "%s"%(args["p"])
-else:
-    os.environ["GITPULL"] = "0"
-
-if "1" in args or "2" in args:
-    # Only install on supported platforms
-    IT.MyEnv.check_platform()
-    IT.MyEnv._init(install=True)
-
-if "1" in args:
-    IT.MyEnv.config["INSYSTEM"] = True
-    IT.Tools.execute("rm -f /sandbox/bin/pyth*")
-
-elif "2" in args:
-    #is sandbox (2)
-    IT.MyEnv.config["INSYSTEM"] = False
-
-    if "darwin" in IT.MyEnv.platform():
-        print("sandbox node for darwin not yet supported.")
-        sys.exit(1)
-
 
 if "1" in args or "2" in args:
 
-    IT.MyEnv.installer_only = False #need to make sure we will install
-    installer = IT.JumpscaleInstaller()
-    installer.install(branch=args["branch"],secret=args["secret"],private_key_words=args["private_key"])
+    if "r" in args:
+        #remove the state
+        IT.MyEnv.state_reset()
 
-    if "w" in args:
-        if "1" in args:
+    if "2" in args:
+        raise RuntimeError("sandboxed not supported yet")
+        sandboxed = True
+    else:
+        sandboxed = False
 
-            #in system need to install the lua env
-            IT.Tools.execute("source /sandbox/env.sh;kosmos 'j.builder.runtimes.lua.install(reset=True)'", showout=False)
-        IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.tools.markdowndocs.test()'", showout=False)
-        print("Jumpscale X installed successfully")
+    installer = IT.JumpscaleInstaller(branch=args["branch"])
+    installer.install(basedir="/sandbox",config={},sandboxed=False,force=False,
+            secret=args["secret"],private_key_words=args["private_key"],gitpull= "pull" in args)
+
+    # if "w" in args:
+    #     if "1" in args:
+
+    #         #in system need to install the lua env
+    #         IT.Tools.execute("source %s/env.sh;kosmos 'j.builder.runtimes.lua.install(reset=True)'"%SANDBOX, showout=False)
+    #     IT.Tools.execute("source %s/env.sh;js_shell 'j.tools.markdowndocs.test()'"%SANDBOX, showout=False)
+    #     print("Jumpscale X installed successfully")
 
 elif "3" in args:
 
-
-    if args["container_exists"] and "d" in args:
-        IT.Tools.execute("docker rm -f %s"%args["name"])
-        args["container_exists"] = False
-
-    cmd="""
-
-    docker run --name {NAME} \
-    --hostname {NAME} \
-    -d \
-    -p {PORT}:22 {PORTRANGE} \
-    --device=/dev/net/tun \
-    --cap-add=NET_ADMIN --cap-add=SYS_ADMIN \
-    --cap-add=DAC_OVERRIDE --cap-add=DAC_READ_SEARCH \
-    -v {CODEDIR}:/sandbox/code {IMAGE}
-    """
-    print(" - Docker machine gets created: ")
-    if "image" not in args:
-        args["image"] = "phusion/baseimage:master"
-    if not args["container_exists"]:
-        if "port" not in args:
-            args["port"]=8022
-        IT.Tools.execute(cmd,args={"CODEDIR":args["codepath"],
-                                   "NAME":args["name"],
-                                   "PORT":args["port"],
-                                   "PORTRANGE":args["portrange_txt"],
-                                   "IMAGE":args["image"]
-                                   },
-                         interactive=True)
-
-        print(" - Docker machine OK")
-        print(" - Start SSH server")
-    else:
-        print(" - Docker machine was already there.")
-        if "default" not in docker_running():
-            IT.Tools.execute("docker start %s"% args["name"])
-            if not "default" in docker_running():
-                print("could not start container:%s"%args["name"])
-                sys.exit(1)
-            IT.Tools.shell()
-
-    SSHKEYS = IT.Tools.execute("ssh-add -L",die=False,showout=False)[1]
-    if SSHKEYS.strip()!="":
-        dexec('echo "%s" > /root/.ssh/authorized_keys'%SSHKEYS)
-
-    dexec("/usr/bin/ssh-keygen -A")
-    dexec('/etc/init.d/ssh start')
-    dexec('rm -f /etc/service/sshd/down')
-    print(" - Upgrade ubuntu")
-    dexec('apt update; apt upgrade -y; apt install mc git -y')
-
-    IT.Tools.execute("rm -f ~/.ssh/known_hosts")  #rather dirty hack
-
-    #for now only support for insystem
-    args_txt = "-1"
-    #disabled the wiki part for now
-    # for item in ["r","p","w"]:
-    for item in ["r","p"]:
-        if item in args:
-            args_txt+=" -%s"%item
-    args_txt+=" -y"
-    # args_txt+=" -c"
-    for item in ["codepath","secret","private_key","debug"]:
-        if item in args:
-            args_txt+=" --%s='%s'"%(item,args[item])
-
-    IT.MyEnv.config["DIR_BASE"] = args["codepath"].replace("/code", "")
-
-    # add install from a specific branch
-    install = IT.JumpscaleInstaller(branch=args["branch"])
-
-    def getbranch():
-        cmd = "cd {}/github/threefoldtech/jumpscaleX; git branch | grep \* | cut -d ' ' -f2".format(args["codepath"])
-        _,stdout,_ = IT.Tools.execute(cmd)
-        return stdout.strip()
-
-    # check if already code exists and checkout the argument branch
-    if os.path.exists("{}/github/threefoldtech/jumpscaleX".format(args["codepath"])):
-        if getbranch() != args["branch"]:
-            print("found JS on machine, Checking out branch {}...".format(args["branch"])) 
-            IT.Tools.execute("""cd {}/github/threefoldtech/jumpscaleX
-                        git remote set-branches origin '*'
-                        git fetch -v
-                        git checkout {} -f
-                        git pull""".format(args["codepath"], args["branch"]))
-
-        print("On {} branch".format(args["branch"]))
-    else:
-        print("no local code at {}".format(args["codepath"]))
-
-    install.repos_get()
-
-    cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py %s"%args_txt
-    print(" - Installing jumpscaleX ")
-    sshexec(cmd)
-
-
-
-    # dirpath = os.path.dirname(inspect.getfile(IT))
-    #
-    # for item in ["install.py","InstallTools.py"]:
-    #     src1 = "%s/%s"%(dirpath,item)
-    #     cmd = "scp -P %s %s root@localhost:/tmp/" %(args["port"],src1)
-    #     IT.Tools.execute(cmd)
-    # cmd = "cd /tmp;python3 install.py -1 -y"
+    j.shell()
 
     k = """
 
@@ -513,6 +344,8 @@ elif "3" in args:
 """
 #TO TEST:
 python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py
+#OR
+python3 ~/code/github/threefoldtech/jumpscaleX/install/install.py
 """
 
 

@@ -780,7 +780,9 @@ class Tools:
             if executor:
                 args.update(executor.config)
             else:
-                args.update(MyEnv.config)
+                for key,val in MyEnv.config.items():
+                    if key not in args:
+                        args[key]=val
 
             args.update(MyEnv.MYCOLORS)
 
@@ -1524,10 +1526,8 @@ LOGFORMATBASE = '{COLOR}{TIME} {filename:<16}{RESET} -{linenr:4d} - {GRAY}{conte
 
 class MyEnv():
 
-    config = {}
     _sshagent_active = None
     readonly = False #if readonly will not manipulate local filesystem appart from /tmp
-    codeonly = False #means system is readonly appart from ~/code which will be the code directory
     sandbox_python_active = False   #means we have a sandboxed environment where python3 works in
     sandbox_lua_active = False      #same for lua
     config_changed = False
@@ -1611,11 +1611,10 @@ class MyEnv():
         config["LOGGER_CONSOLE"] = True
         config["LOGGER_REDIS"] = False
 
-        if MyEnv.readonly or MyEnv.codeonly:
+        if MyEnv.readonly:
             config["DIR_TEMP"] = "/tmp/jumpscale_installer"
             config["LOGGER_REDIS"] = False
             config["LOGGER_CONSOLE"] = True
-            return config
 
         if not "DIR_TEMP" in config:
             config["DIR_TEMP"] = "/tmp/jumpscale"
@@ -1639,8 +1638,8 @@ class MyEnv():
             raise RuntimeError("myenv should have been inited by system")
 
     @staticmethod
-    def init(basedir=None,config={},readonly=None,codepath=None):
-        if MyEnv.__init:
+    def init(basedir=None,config={},readonly=None,codepath=None,force=False):
+        if MyEnv.__init and not force:
             return
 
         if readonly is not None:
@@ -1809,16 +1808,30 @@ class BaseInstaller():
     @staticmethod
     def install(basedir="/sandbox",config={},sandboxed=False,force=False):
 
-        MyEnv.init(basedir=basedir,config=config)
+        if not os.path.exists(basedir):
+            script = """
+            set -ex
+            cd /
+            sudo mkdir -p {DIR_BASE}/cfg
+            sudo chown -R {USERNAME}:{GROUPNAME} {DIR_BASE}
+            mkdir -p /usr/local/EGG-INFO
+            sudo chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
+            """
+            args={}
+            args["DIR_BASE"] = basedir
+            args["USERNAME"] = getpass.getuser()
+            st = os.stat(MyEnv.config["DIR_HOME"])
+            gid = st.st_gid
+            args["GROUPNAME"] = grp.getgrgid(gid)[0]
+            Tools.execute(script,interactive=True,args=args)
+
+        # MyEnv.init(basedir=basedir,config=config,readonly=False,force=True)
 
         if force:
             MyEnv.state_delete("install")
 
         if MyEnv.state_get("install"):
             return #nothing to do
-
-        if MyEnv.readonly:
-            raise RuntimeError("cannot install in readonly env")
 
         BaseInstaller.base()
         if MyEnv.platform() == "linux":
@@ -1934,27 +1947,12 @@ class BaseInstaller():
         if MyEnv.state_get("generic_base"):
             return
 
-        if not os.path.exists(Tools.text_replace("{DIR_BASE}")):
-            script = """
-            cd /
-            sudo mkdir -p {DIR_BASE}/cfg
-            sudo chown -R {USERNAME}:{GROUPNAME} {DIR_BASE}
-            mkdir -p /usr/local/EGG-INFO
-            sudo chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
-            """
-            args={}
-            args["USERNAME"] = getpass.getuser()
-            st = os.stat(MyEnv.config["DIR_HOME"])
-            gid = st.st_gid
-            args["GROUPNAME"] = grp.getgrgid(gid)[0]
-            Tools.execute(script,interactive=True,args=args)
-
         if not os.path.exists(MyEnv.config["DIR_TEMP"]):
             os.makedirs(MyEnv.config["DIR_TEMP"],exist_ok=True)
 
         script="""
 
-        mkdir -p {DIR_TMP}/scripts
+        mkdir -p {DIR_TEMP}/scripts
         mkdir -p {DIR_VAR}/log
 
         """
