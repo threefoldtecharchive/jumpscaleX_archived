@@ -12,6 +12,7 @@ class TestCases(BaseTest):
         j.builder.db.zdb.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('zdb')))
 
+    @unittest.skip("https://github.com/filebrowser/caddy/issues/32")
     def test002_caddy(self):
         j.builder.web.caddy.build(reset=True)
         j.builder.web.caddy.install()
