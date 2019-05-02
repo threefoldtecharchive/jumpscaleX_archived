@@ -6,24 +6,28 @@ It helps us avoid configuring different aliases for each of our domains.
 
 ## Configurations
 The API need to be configured to work correctly. The followig configurations are available:
-- listening_host: the ip address for listening to incoming connections
-- listening_port: the port to be used for listening to incoming connections
-- relay_host: the host domain/ip address to use for sending the forwarded emails
-- relay_port: the port to use for sending the forwarded emails
-- relay_user: the user name (email address) to authenticate with
-- relay_password: the password to authenticate with
-- relay_ssh: use ssl for communication with the SMTP server
-- forward_config: this is a list of forwarding configurations, it will be mapped to a dictionary (jsx schema does not support dictionaries). The format of each forwarding configuration is: "<destination_domain>|<comma separated list of source domains>" 
+- `listening_host`: the ip address for listening to incoming connections
+- `listening_port`: the port to be used for listening to incoming connections
+- `relay_host`: the host domain/ip address to use for sending the forwarded emails
+- `relay_port`: the port to use for sending the forwarded emails
+- `relay_user`: the user name (email address) to authenticate with
+- `relay_password`: the password to authenticate with
+- `relay_ssh`: use ssl for communication with the SMTP server
+- `forward_config`: this is a list of forwarding configurations, it will be mapped to a dictionary (jsx schema does not support dictionaries). The format of each forwarding configuration is: "<destination_domain>|<comma separated list of source domains>" 
 
 ### Forwarding Configurations
 An example forwarding configurations can be:
+```python
 ["codescalers.com|incubaide.com,threefoldtech.com", "verizon.com|b-virtual.com,amplidata.com"]
+```
 This configurations will be mapped to the following dictionary:
+```python
 {
     "codescalers.com": ["incubaid.com", "threefoldtech.com"],
     "verizon.com": ["b-virtual.com", "amplidata.com"]
 }
-Which means that any emails that are send to <user>@incubaid.com will be forwarded to <user>@codescalers.com
+```
+Which means that any emails that are send to `<user>@incubaid.com` will be forwarded to `<user>@codescalers.com`
 
 
 ## Handling incoming non-configured domain
