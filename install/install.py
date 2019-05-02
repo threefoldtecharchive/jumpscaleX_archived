@@ -256,10 +256,7 @@ def ui():
     if not "incontainer" in args and sshkey2:
         T+= " - sshkey used will be: %s\n"%sshkey2
 
-    if "1" in args and args["codepath"] is None:
-        T+=" - location of code path is: /sandbox/code\n"
-    else:
-        T+=" - location of code path is: %s\n"%IT.MyEnv.config["DIR_CODE"]
+    T+=" - location of code path is: %s\n"%IT.MyEnv.config["DIR_CODE"]
 
     if "w" in args:
         T+=" - will install wiki system at end\n"
