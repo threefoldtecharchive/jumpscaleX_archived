@@ -209,8 +209,7 @@ def ui():
             #is not docker and not pull yet
             if "y" not in args:
                 #not interactive ask
-                if IT.Tools.ask_yes_no("Do you want to pull code changes from git?"):
-                    args["pull"]=True
+                args["pull"] = IT.Tools.ask_yes_no("Do you want to pull code changes from git?")
             else:
                 #default is not pull
                 args["pull"]=False
