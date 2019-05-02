@@ -1842,16 +1842,16 @@ class BaseInstaller():
 
         BaseInstaller.base()
         if MyEnv.platform() == "linux":
-            if sandboxed:
-                raise RuntimeError("not ok yet")
+            if not sandboxed:
                 UbuntuInstaller.do_all()
             else:
+                raise RuntimeError("not ok yet")
                 UbuntuInstaller.base()
         elif "darwin" in MyEnv.platform():
-            if sandboxed:
-                raise RuntimeError("not ok yet")
+            if not sandboxed:
                 OSXInstaller.do_all()
             else:
+                raise RuntimeError("not ok yet")
                 OSXInstaller.base()
         else:
             raise RuntimeError("only OSX and Linux Ubuntu supported.")
