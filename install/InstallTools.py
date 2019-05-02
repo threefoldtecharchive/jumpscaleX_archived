@@ -464,7 +464,6 @@ class Tools:
         returncode = os.spawnlp(os.P_WAIT, args[0], *args)
         cmd=" ".join(args   )
         if returncode == 127:
-            Tools.shell()
             raise RuntimeError('{0}: command not found\n'.format(args[0]))
         if returncode>0 and returncode != 999:
             if die:
@@ -2442,17 +2441,17 @@ class Docker():
 
         if not container_exists:
             cmd="""
-            docker run --name {NAME} \
-            --hostname {NAME} \
-            -d \
+            docker run --name={NAME} --hostname={NAME} -d \
             -p {PORT}:22 {PORTRANGE} \
             --device=/dev/net/tun \
             --cap-add=NET_ADMIN --cap-add=SYS_ADMIN \
             --cap-add=DAC_OVERRIDE --cap-add=DAC_READ_SEARCH \
-            -v {DIR_CODE}:/sandbox/code {IMAGE}
+            -v {DIR_CODE}:/sandbox/code {IMAGE} 
             """
+            #/sbin/my_init
             print(" - Docker machine gets created: ")
             Tools.execute(cmd,args=args,interactive=True)
+            self.dexec('rm -f /root/.BASEINSTALL_OK')
             print(" - Docker machine OK")
             print(" - Start SSH server")
         else:
@@ -2461,6 +2460,7 @@ class Docker():
                 if not name in self.docker_running():
                     print("could not start container:%s"%name)
                     sys.exit(1)
+                self.dexec('rm -f /root/.BASEINSTALL_OK')
 
         installed = False
         try:
@@ -2503,17 +2503,20 @@ class Docker():
         Tools.execute(cmd2,interactive=True,showout=False,replace=False,asfile=True)
 
 
-    def docker_running(self):
+    @staticmethod
+    def docker_running():
         names = Tools.execute("docker ps --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
         names = [i.strip("\"'") for i in names if i.strip()!=""]
         return names
 
-    def docker_names(self):
+    @staticmethod
+    def docker_names():
         names = Tools.execute("docker container ls -a --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
         names = [i.strip("\"'") for i in names if i.strip()!=""]
         return names
 
-    def image_names(self):
+    @staticmethod
+    def image_names():
         names = Tools.execute("docker images --format='{{.Repository}}:{{.Tag}}'",showout=False,replace=False)[1].split("\n")
         names = [i.strip("\"'") for i in names if i.strip()!=""]
         return names
@@ -2534,7 +2537,7 @@ class Docker():
         # args_txt+=" --debug"
 
         dirpath = os.path.dirname(inspect.getfile(Tools))
-        if dirpath.startstwith(MyEnv.config["DIR_CODE"]):
+        if dirpath.startswith(MyEnv.config["DIR_CODE"]):
             cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py "
         else:
             print("copy installer over from where I install from")
@@ -2550,7 +2553,7 @@ class Docker():
         cmd="""
         apt-get autoclean
         apt-get clean
-        apt-ge autoremove
+        apt-get autoremove
         rm -rf /tmp/*
         rm -rf /var/log/*
         find / | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
@@ -2568,10 +2571,9 @@ class Docker():
         #to login & automatically use the shell
         ssh root@localhost -A -p {port} 'source /sandbox/env.sh;kosmos'
 
-        will now login automatically
 
         """
+        args={}
+        args["port"]=self.port
         print(Tools.text_replace(k,args=args))
 
-        cmd = "ssh root@localhost -A -p %s 'source /sandbox/env.sh;kosmos'"%args["port"]
-        Tools.shell()

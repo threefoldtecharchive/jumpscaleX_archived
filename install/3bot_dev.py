@@ -32,13 +32,14 @@ def help():
 
     commands:
         install             : get docker & install 3bot
-        export $file        : export the container
-        import $file        : import the container & start
+        export --file=$file        : export the container
+        import --file=$file        : import the container & start
         stop                : stop the container
         kosmos              : is the kosmos shell (JSX shell)
         bash                : is the bash shell inside the container
 
     e.g. python3 3bot_dev.py install -d -y -c
+    e.g. python3 3bot_dev.py export --file=/tmp/3bot.tar
 
     install options
     ---------------
@@ -88,8 +89,10 @@ IT.MyEnv.init(basedir=None,config={},readonly=True,codepath=args["codepath"])
 
 def install_ui(args):
 
-    if "o" in args:
-        args["image"] = "despiegk/3bot"
+
+    if "s" in args:
+        # args["image"] = "despiegk/3bot"
+        args["image"] = "phusion/baseimage"
 
     if not IT.MyEnv.sshagent_active_check():
         T="""
@@ -108,7 +111,7 @@ def install_ui(args):
         if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
             args["r"]=True
 
-        if args["name"] in docker.docker_names():
+        if args["name"] in IT.Docker.docker_names():
             if "d" not in args:
                 if not "y" in args:
                     if IT.Tools.ask_yes_no("docker:%s exists, ok to remove? Will otherwise keep and install inside."%args["name"]):
@@ -121,12 +124,12 @@ def install_ui(args):
             args["d"]=True
         if ":" not in args["image"]:
             args["image"]="%s:latest" % args["image"]
-        if args["image"] not in docker.image_names():
-            if IT.Tools.exists(args["image"]):
-                IT.Tools.shell()
-            else:
-                print("Cannot continue, image '%s' specified does not exist."%args["image"])
-                sys.exit(1)
+        # if args["image"] not in IT.Docker.image_names():
+        #     if IT.Tools.exists(args["image"]):
+        #         IT.Tools.shell()
+        #     else:
+        #         print("Cannot continue, image '%s' specified does not exist."%args["image"])
+        #         sys.exit(1)
 
     if "pull" not in args:
         if "y" not in args:
@@ -211,18 +214,54 @@ def install_ui(args):
 if "portrange" not in args:
     args["portrange"]=1
 
-if "install" in args:
+if "install" in args or "import" in args:
     args = install_ui(args)
 
 delete = "d" in args
-docker=IT.Docker(name="3bot",delete=delete, portrange=args["portrange"],sshkey=args["sshkey"])
+
+if not "import" in args:
+    docker=IT.Docker(name="3bot",delete=delete, portrange=args["portrange"],sshkey=args["sshkey"],image=args["image"])
 
 if "install" in args:
     docker.jumpscale_install(secret=args["secret"],private_key=args["private_key"])
 
 elif "stop" in args:
-    if args["name"] in docker_running():
+    if args["name"] in docker.docker_running():
         IT.Tools.execute("docker stop %s"% args["name"])
+elif "export" in args:
+    if args["name"] in docker.docker_running():
+        if "file" not in args:
+            print("specify export file with --file $path")
+            sys.exit(1)
+        if not args["file"].endswith(".tar"):
+            print("export file needs to end with .tar")
+            sys.exit(1)
+        print("export docker:%s to %s, will take a while"% (args["name"],args["file"]))
+        IT.Tools.execute("docker export %s -o %s"% (args["name"],args["file"]))
+    else:
+        print("cannot find docker:%s"%args["name"])
+        sys.exit(1)
+elif "import" in args:
+    if "file" not in args:
+        print("specify export file with --file $path")
+        sys.exit(1)
+    if not IT.Tools.exists(args["file"]):
+        print("could not find import file:%s"%args["file"])
+        sys.exit(1)
+    if not args["file"].endswith(".tar"):
+        print("export file needs to end with .tar")
+        sys.exit(1)
+    print("import docker:%s to %s, will take a while"% (args["name"],args["file"]))
+    IT.Tools.execute("docker import %s local/imported"% (args["file"]))
+    docker=IT.Docker(name="3bot",delete=True, portrange=args["portrange"],sshkey=args["sshkey"],image="local/imported")
+elif "kosmos" in args:
+    cmd = "echo\nssh root@localhost -A -p %s 'source /sandbox/env.sh;kosmos'"%docker.port
+    IT.Tools.execute(cmd,interactive=True,die=False,showout=False)
+elif "bash" in args:
+    cmd = "echo\nssh root@localhost -A -p %s 'source /sandbox/env.sh;bash'"%docker.port
+    IT.Tools.execute(cmd,interactive=True,die=False,showout=False)
+
+
 else:
     print (help())
 
