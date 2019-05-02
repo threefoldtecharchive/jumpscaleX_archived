@@ -1364,7 +1364,7 @@ class Tools:
                 rc,stdout,err = Tools.execute(cmd, die=False, args=args, interactive=False)
                 if rc>0:
                     Tools.shell()
-                current_branch = stdout[1].strip()
+                current_branch = stdout.strip()
                 Tools.log("Found branch: %s" % current_branch)
                 return current_branch
 
