@@ -1747,7 +1747,7 @@ class MyEnv():
         only 1 level deep toml format only for int,string,bool
         no multiline
         """
-        if MyEnv.state == None:
+        if MyEnv.state == None or MyEnv.state == {}:
             if Tools.exists(MyEnv.state_file_path):
                 MyEnv.state = Tools.config_load(MyEnv.state_file_path,if_not_exist_create=False)
             elif not MyEnv.readonly:

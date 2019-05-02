@@ -90,7 +90,10 @@ def ui():
     if "h" in args or args=={}:
         help()
 
-    IT.MyEnv.init(basedir=None,config={},readonly=True,codepath=args["codepath"])
+    if "3" in args:
+        IT.MyEnv.init(basedir=None,config={},readonly=True,codepath=args["codepath"])
+    else:
+        IT.MyEnv.init(basedir=None,config={},readonly=False,codepath=args["codepath"])
 
     if "incontainer" not in args:
 
@@ -311,8 +314,8 @@ if "1" in args or "2" in args:
         sandboxed = False
 
     installer = IT.JumpscaleInstaller(branch=args["branch"])
-    installer.install(basedir="/sandbox",config={},sandboxed=False,force=False,
-            secret=args["secret"],private_key_words=args["private_key"],gitpull= "pull" in args)
+    installer.install(basedir="/sandbox",config={},sandboxed=sandboxed,force=False,
+            secret=args["secret"],private_key_words=args["private_key"],gitpull= args["pull"])
 
     # if "w" in args:
     #     if "1" in args:

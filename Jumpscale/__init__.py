@@ -42,7 +42,7 @@ def profileStop(pr):
 spec = util.spec_from_file_location("IT", "/%s/core/InstallTools.py"%os.path.dirname(__file__))
 
 from .core.InstallTools import MyEnv
-from .core.InstallTools import UbuntuInstall
+from .core.InstallTools import BaseInstaller
 from .core.InstallTools import JumpscaleInstaller
 from .core.InstallTools import Tools
 
@@ -199,11 +199,11 @@ rootdir = os.path.dirname(os.path.abspath(__file__))
 
 j.core.myenv = MyEnv
 
-j.core.myenv._init()
+j.core.myenv.init()
 
 
 
-j.core.installer_ubuntu = UbuntuInstall
+j.core.installer_base = BaseInstaller
 j.core.installer_jumpscale = JumpscaleInstaller()
 j.core.tools = Tools
 
