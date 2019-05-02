@@ -63,7 +63,7 @@ def build_image(branch, commit, committer):
     return image_name
 
 def get_state(name):
-    with open('status.log', 'r') as f:
+    with open('{}/status.log'.format(utils.result_path), 'r') as f:
         lines = f.readlines()
     for line in lines:
         line = line.split(':')
