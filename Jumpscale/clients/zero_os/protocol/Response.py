@@ -6,6 +6,8 @@ import sys
 
 from Jumpscale import j
 
+logger = logging.getLogger('zoosprotocol')
+
 
 class JobNotFoundError(Exception):
     pass
@@ -262,7 +264,7 @@ class Response():
                     return r
             except TimeoutError:
                 pass
-            self._client._log_debug('%s still waiting (%ss)', self._id, int(time.time() - start))
+            logger.debug('%s still waiting (%ss)', self._id, int(time.time() - start))
             maxwait -= 10
         raise TimeoutError()
 

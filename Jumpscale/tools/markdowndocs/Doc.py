@@ -13,10 +13,11 @@ class Doc(j.application.JSBaseClass):
     """
     """
 
-    def __init__(self, path, name, docsite):
+    def __init__(self, path, name, docsite, sonic_client=None):
         JSBASE.__init__(self)
         self.path = path
         self.docsite = docsite
+        self.sonic_client = sonic_client
 
         self.cat = ""
         if "/blogs/" in path or "/blog/" in path:
@@ -58,6 +59,28 @@ class Doc(j.application.JSBaseClass):
         # self._links_doc = []
         self._links = []
         self.render_obj = None
+        if self.sonic_client:
+            self.register_sonic()
+
+    def chunks(self, txt, length):
+        for i in range(0,len(txt), length):
+            if i + length > len(txt):
+                yield txt[i:]
+            else:
+                yield txt[i: i+length]
+
+    def register_sonic(self):
+        text = self.markdown_source.replace('\n', ' ').strip()
+        if not text:
+            return
+        if ' ' in self.name:
+            print("file {} can't be indexed it contains space in the file name")
+            return
+        for chunck in self.chunks(text, int(self.sonic_client._client_ingest.bufsize) // 2):
+            try:
+                self.sonic_client.push("docsites", self.docsite.name, self.path_rel, chunck)
+            except Exception as e:
+                print("Couldn't index {}".format(self.name))
 
     def _clean(self, name):
         name = name.replace("/", ".")

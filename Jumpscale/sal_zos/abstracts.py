@@ -274,7 +274,7 @@ class Service:
     name: the name of the service
     """
 
-    def __init__(self, name, node, service_type, ports):
+    def __init__(self, name, node, service_type, ports, autostart=False):
         self.name = name
         self.node = node
         self._type = service_type
@@ -282,6 +282,7 @@ class Service:
         self._container = None
         self._container_name = '{}_{}'.format(self._type, self.name)
         self._ports = ports
+        self._autostart = autostart
 
     def _container_exists(self):
         """
@@ -310,10 +311,12 @@ class Service:
         """
         if not self._container_exists():
             return False
-        try:
-            self.container.client.job.list(self._id)
-        except:
-            return False
+
+        if not self._autostart:
+            try:
+                self.container.client.job.list(self._id)
+            except:
+                return False
 
         for port in self._ports:
             if not self.container.is_port_listening(port, timeout):

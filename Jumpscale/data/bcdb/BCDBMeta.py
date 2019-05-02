@@ -144,7 +144,7 @@ class BCDBMeta(j.application.JSBaseClass):
             else:
                 # for migration meta
                 if schema_existing.url == schema.url:
-                    self.migrate_meta(schema)
+                    self._migrate_meta(schema)
 
         # not known yet in namespace in ZDB
         self._schema_last_id += 1
@@ -163,14 +163,14 @@ class BCDBMeta(j.application.JSBaseClass):
             self.migrate_data(schema)
         return self.schema_get_from_id(s.sid)
 
-    def migrate_meta(self, schema):
+    def _migrate_meta(self, schema):
         """
         migrate meta using new schema 
         WARNING : if you delete any parameter in schema you can't get it again because we migrate it with new schema
         """
         backup_data = self.data.schemas
-        self.reset()
         j.sal.fs.remove(self._meta_local_path)
+        self.reset()
         for schemas in backup_data:
             if schemas.url != schema.url:
                 self._schema_last_id += 1
@@ -182,7 +182,7 @@ class BCDBMeta(j.application.JSBaseClass):
                 self._log_debug("new schema in meta:\n%s" % self.data)
                 self.save()
                 self.url2sid[s.url] = s.sid
-                schema.sid = s.sid
+                schemas.sid = s.sid
 
     def migrate_data(self, schema):
         """
@@ -190,13 +190,11 @@ class BCDBMeta(j.application.JSBaseClass):
         WARNING : if you delete any parameter in schema you can't get it again because we migrate it with new schema
         """
         models = self.bcdb.get_all()
-        self.bcdb.reset()
         for model in models:
-            m = schema.new()
+            m = model.new()
             for prop in schema.properties:
-                prop = getattr(m, "{}".format(prop.name))
-                if getattr(model, "{}".format(prop.name)):
-                    prop = getattr(model, "{}".format(prop.name))
+                if hasattr(model, "{}".format(prop.name)):
+                    setattr(m, prop.name, getattr(model, "{}".format(prop.name)))
             m.save()
 
     def __repr__(self):

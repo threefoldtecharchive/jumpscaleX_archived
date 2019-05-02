@@ -16,6 +16,7 @@ from fcntl import F_GETFL, F_SETFL, fcntl
 from os import O_NONBLOCK, read
 from pathlib import Path
 from subprocess import Popen, check_output
+import inspect
 
 try:
     import traceback
@@ -660,16 +661,9 @@ class Tools:
         else:
             f = None
         if Tools._shell is None:
-            script = """
-            apt-get install -y ipython
-            apt-get install -y python3 python-dev python3-dev build-essential libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev
-            pip3 install ipython
-            apt-get clean && apt-get update && apt-get install -y locales
-            """
-            Tools.execute(script, interactive=False)
+
             try:
                 from IPython.terminal.embed import InteractiveShellEmbed
-
             except Exception as e:
                 Tools._installbase_for_shell()
                 from IPython.terminal.embed import InteractiveShellEmbed
@@ -677,12 +671,14 @@ class Tools:
                 print("\n*** file: %s"%f.filename)
                 print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
 
+
             Tools._shell = InteractiveShellEmbed(banner1= "", exit_msg="")
+            Tools._shell.Completer.use_jedi = False
         return Tools._shell(stack_depth=2)
 
 
     # @staticmethod
-    # def shell2(loc=True,exit=True):
+    # def shell(loc=True,exit=True):
     #     if loc:
     #         import inspect
     #         curframe = inspect.currentframe()
@@ -695,17 +691,11 @@ class Tools:
     #     history_filename="~/.jsx_history"
     #     if not Tools.exists(history_filename):
     #         Tools.file_write(history_filename,"")
+    #     ptconfig = None
     #     if exit:
     #         sys.exit(embed(globals(), locals(),configure=ptconfig,history_filename=history_filename))
     #     else:
     #         embed(globals(), locals(),configure=ptconfig,history_filename=history_filename)
-    #     # try:
-    #     #     from IPython.terminal.embed import InteractiveShellEmbed
-    #     # except:
-    #     #     Tools._installbase()
-    #     # _shell = InteractiveShellEmbed(banner1= "", exit_msg="")
-    #     # return _shell(stack_depth=2)
-
 
 
     @staticmethod
@@ -1685,6 +1675,8 @@ class UbuntuInstall():
                 "ed25519>=1.4",
                 "fakeredis",
                 "future>=0.15.0",
+                "geopy",
+                "geocoder",
                 "gevent >= 1.2.2",
                 "gipc",
                 "GitPython>=2.1.1",
@@ -1719,6 +1711,7 @@ class UbuntuInstall():
                 "redis>=2.10.5",
                 "requests>=2.13.0",
                 "six>=1.10.0",
+                "sendgrid",
                 "toml>=0.9.2",
                 "Unidecode>=0.04.19",
                 "watchdog>=0.8.3",
@@ -1741,6 +1734,7 @@ class UbuntuInstall():
                 "packet-python>=1.37",
                 "uvloop>=0.8.0",
                 "pycountry",
+                "pycountry_convert",
                 "cson>=0.7",
                 "ujson",
                 "Pillow>=4.1.1",
@@ -1935,6 +1929,13 @@ class MyEnv():
         if MyEnv.__init:
             return
 
+        installpath = os.path.dirname(inspect.getfile(os.path))
+        if installpath.find("/_MEI")!=-1 or installpath.endswith("dist/install"):
+            MyEnv.installer = True
+        else:
+            MyEnv.installer = False
+
+
         if install:
             #will make sure we install and manipulate local system
             MyEnv.installer_only=False
@@ -1950,7 +1951,7 @@ class MyEnv():
             return
 
 
-        if not os.path.exists("/sandbox"):
+        if MyEnv.installer==False and not os.path.exists("/sandbox"):
             script = """
             cd /
             sudo mkdir -p /sandbox/cfg
@@ -1969,7 +1970,6 @@ class MyEnv():
         if "DIR_CFG" in os.environ:
             DIR_CFG = os.environ["DIR_CFG"].strip()
         else:
-
             DIR_CFG = "/sandbox/cfg"
 
         MyEnv.config_file_path = os.path.join(DIR_CFG,"jumpscale_config.toml")
@@ -2032,8 +2032,6 @@ class MyEnv():
         installed = Tools.cmd_installed("git") and Tools.cmd_installed("ssh-agent")
         MyEnv.config["SSH_AGENT"]=installed
         MyEnv.config_save()
-
-
 
         MyEnv.__init = True
 

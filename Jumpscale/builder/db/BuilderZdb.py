@@ -49,8 +49,8 @@ class BuilderZdb(j.builder.system._BaseClass):
         return cmds
 
     @builder_method()
-    def sandbox(self):
-        bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
+    def sandbox(self, reset=False, zhub_client=None):
+        bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "bin")
         self.tools.dir_ensure(bin_dest)
         zdb_bin_path = self.tools.joinpaths("{DIR_BIN}", 'zdb')
         self._copy(zdb_bin_path, bin_dest)

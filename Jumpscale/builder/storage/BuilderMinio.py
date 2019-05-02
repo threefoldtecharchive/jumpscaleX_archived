@@ -6,7 +6,6 @@ import textwrap
 builder_method = j.builder.system.builder_method
 
 
-
 class BuilderMinio(BuilderGolangTools):
     NAME = "minio"
 
@@ -15,6 +14,7 @@ class BuilderMinio(BuilderGolangTools):
         self.datadir = ''
 
     def profile_builder_set(self):
+        super().profile_builder_set()
         self.profile.env_set('GO111MODULE', 'on')
 
     @builder_method()
@@ -43,7 +43,8 @@ class BuilderMinio(BuilderGolangTools):
         port = 9000
         access_key = 'admin'
         secret_key = 'adminadmin'
-        cmd = "MINIO_ACCESS_KEY={} MINIO_SECRET_KEY={} minio server --address {}:{} {}".format(access_key, secret_key, address, port, self.datadir)
+        cmd = "MINIO_ACCESS_KEY={} MINIO_SECRET_KEY={} minio server --address {}:{} {}".format(
+            access_key, secret_key, address, port, self.datadir)
         cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
         return cmds
 
