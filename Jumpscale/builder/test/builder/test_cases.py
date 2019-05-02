@@ -96,9 +96,9 @@ class TestCases(BaseTest):
         j.builder.blockchain.bitcoin.build(reset=True)
         j.builder.blockchain.bitcoin.install()
         j.builder.blockchain.bitcoin.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('bitcoin')))
-        j.builder.blockchain.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid('bitcoin')))
+        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('bitcoind')))
+        j.builder.blockchain.bitcoin.stop()
+        self.assertEqual(0, len(j.sal.process.getProcessPid('bitcoind')))
 
     def test012_ethereum(self):
         j.builder.blockchain.ethereum.build(reset=True)

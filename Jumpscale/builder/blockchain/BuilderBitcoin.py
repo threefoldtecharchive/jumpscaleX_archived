@@ -57,7 +57,7 @@ class BuilderBitcoin(j.builder.system._BaseClass):
         ./configure LDFLAGS="-L{DIR_BUILD}/bitcoin/lib/" CPPFLAGS="-I{DIR_BUILD}/bitcoin/include/"
         make
         """
-        self._execute(script)
+        self._execute(script, timeout=1000)
 
     @builder_method()
     def install(self):
