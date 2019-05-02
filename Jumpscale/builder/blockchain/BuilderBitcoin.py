@@ -56,25 +56,31 @@ class BuilderBitcoin(j.builder.system._BaseClass):
         ./autogen.sh
         ./configure LDFLAGS="-L{DIR_BUILD}/bitcoin/lib/" CPPFLAGS="-I{DIR_BUILD}/bitcoin/include/"
         make
-        make install
         """
         self._execute(script)
 
     @builder_method()
     def install(self):
         # bitcoin bins
-        self._copy('{DIR_BUILD}/bitcoin/src/bitcoind', '{DIR_BIN}') 
-        self._copy('{DIR_BUILD}/bitcoin/src/bitcoin-cli', '{DIR_BIN}') 
-        self._copy('{DIR_BUILD}/bitcoin/src/bitcoin-wallet', '{DIR_BIN}')
-        self._copy('{DIR_BUILD}/bitcoin/src/bitcoin-tx', '{DIR_BIN}') 
+        self.tools.dir_ensure('{DIR_BIN}')
+        bin_src_path = self._replace('{DIR_BUILD}/bitcoin/src/')
+        bin_dest_path = self._replace('{DIR_BIN}')
+
+        self.tools.file_copy(bin_src_path + 'bitcoind', bin_dest_path) 
+        self.tools.file_copy(bin_src_path + 'bitcoin-cli', bin_dest_path) 
+        self.tools.file_copy(bin_src_path + 'bitcoin-wallet', bin_dest_path)
 
     @builder_method()
     def sandbox(self, zhub_client=None):
         self.profile_sandbox_select()
-        self._copy('{DIR_BIN}/bitcoind', '{DIR_SANDBOX}') 
-        self._copy('{DIR_BIN}/bitcoin-cli', '{DIR_SANDBOX}') 
-        self._copy('{DIR_BIN}/bitcoin-wallet', '{DIR_SANDBOX}')
-        self._copy('{DIR_BIN}/bitcoin-tx', '{DIR_SANDBOX}') 
+
+        self.tools.dir_ensure('{DIR_SANDBOX}')
+        bin_src_path = self._replace('{DIR_BIN}')
+        bin_dest_path = self._replace('{DIR_SANDBOX}')
+
+        self.tools.file_copy(bin_src_path + 'bitcoind', bin_dest_path) 
+        self.tools.file_copy(bin_src_path + 'bitcoin-cli', bin_dest_path) 
+        self.tools.file_copy(bin_src_path + 'bitcoin-wallet', bin_dest_path)
     
     @property
     def startup_cmds(self):
@@ -91,6 +97,11 @@ class BuilderBitcoin(j.builder.system._BaseClass):
     def clean(self):
         self._remove(self.DIR_BUILD)
         self._remove(self.DIR_SANDBOX)
+
+    @builder_method()
+    def reset(self):
+        super().reset()
+        self.clean()
 
     '''
     testing running daemon
