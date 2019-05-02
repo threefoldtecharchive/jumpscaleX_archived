@@ -462,9 +462,9 @@ class Tools:
         #     args[0] = shutil.which(args[0])
 
         returncode = os.spawnlp(os.P_WAIT, args[0], *args)
-        cmd=" ".join(args   )
+        cmd=" ".join(args)
         if returncode == 127:
-            raise RuntimeError('{0}: command not found\n'.format(args[0]))
+            raise RuntimeError('{}: command not found\n'.format(cmd))
         if returncode>0 and returncode != 999:
             if die:
                 if original_command:
@@ -2203,8 +2203,8 @@ class UbuntuInstaller():
         script="""
         cd /tmp
         apt-get install -y mc wget python3 git tmux python3-distutils python3-psutil
-        apt-get install -y build-essential python3.6-dev
-        pip3 install pycapnp peewee cryptocompare
+        apt-get install -y build-essential 
+        #apt-get install -y python3.6-dev
         apt-get install -y redis-server
 
         """
