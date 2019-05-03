@@ -43,9 +43,10 @@ else:
     pygments_pylexer = False
 
 
+
+
 class BaseInstallerror(Exception):
     pass
-
 
 class InputError(Exception):
     pass
@@ -54,8 +55,8 @@ class InputError(Exception):
     #     self.message = message
 
 
-def my_excepthook(exception_type, exception_obj, tb):
-    Tools.log(msg=exception_obj, tb=tb, level=40)
+def my_excepthook(exception_type,exception_obj,tb):
+    Tools.log(msg=exception_obj,tb=tb,level=40)
     if MyEnv.debug and traceback and pudb:
         # exception_type, exception_obj, tb = sys.exc_info()
         pudb.post_mortem(tb)
@@ -63,9 +64,10 @@ def my_excepthook(exception_type, exception_obj, tb):
     sys.exit(1)
 
 
+import inspect
+
 try:
     import yaml
-
     def serializer(data):
         return yaml.dump(
             data,
@@ -76,7 +78,6 @@ try:
 except:
     try:
         import json
-
         def serializer(data):
             return json.dumps(data, ensure_ascii=False, sort_keys=True, indent=True)
     except:
@@ -92,7 +93,7 @@ except:
 if redis:
     class RedisQueue():
 
-        def __init__(self, redis, key):
+        def __init__(self,redis,key):
             self.__db = redis
             self.key = key
             self.empty = False
@@ -116,7 +117,7 @@ if redis:
             :return:
             '''
             while self.empty == False:
-                if self.get_nowait() == None:
+                if self.get_nowait()==None:
                     self.empty = True
 
         def put(self, item):
@@ -153,8 +154,8 @@ if redis:
         _storedprocedures_to_sha = {}
         _redis_cli_path_ = None
 
-        def __init__(self, *args, **kwargs):
-            redis.Redis.__init__(self, *args, **kwargs)
+        def __init__(self,*args,**kwargs):
+            redis.Redis.__init__(self,*args,**kwargs)
             self._storedprocedures_to_sha = {}
 
         # def dict_get(self, key):
@@ -192,6 +193,8 @@ if redis:
 
             '''
 
+
+
             if "\n" not in path_or_content:
                 f = open(path_or_content, "r")
                 lua = f.read()
@@ -200,7 +203,7 @@ if redis:
                 lua = path_or_content
                 path = ""
 
-            script = self.register_script(lua)
+            script =  self.register_script(lua)
 
             dd = {}
             dd["sha"] = script.sha
@@ -210,8 +213,8 @@ if redis:
 
             data = json.dumps(dd)
 
-            self.hset("storedprocedures", name, data)
-            self.hset("storedprocedures_sha", name, script.sha)
+            self.hset("storedprocedures",name,data)
+            self.hset("storedprocedures_sha",name,script.sha)
 
             self._storedprocedures_to_sha = {}
 
@@ -221,20 +224,20 @@ if redis:
             return script
 
         def storedprocedure_delete(self, name):
-            self.hdel("storedprocedures", name)
-            self.hdel("storedprocedures_sha", name)
+            self.hdel("storedprocedures",name)
+            self.hdel("storedprocedures_sha",name)
             self._storedprocedures_to_sha = {}
 
         @property
         def _redis_cli_path(self):
             if not self.__class__._redis_cli_path_:
                 if Tools.cmd_installed("redis-cli_"):
-                    self.__class__._redis_cli_path_ = "redis-cli_"
+                    self.__class__._redis_cli_path_ =  "redis-cli_"
                 else:
-                    self.__class__._redis_cli_path_ = "redis-cli"
+                    self.__class__._redis_cli_path_ =  "redis-cli"
             return self.__class__._redis_cli_path_
 
-        def redis_cmd_execute(self, command, debug=False, debugsync=False, keys=[], args=[]):
+        def redis_cmd_execute(self,command,debug=False,debugsync=False,keys=[],args=[]):
             """
 
             :param command:
@@ -243,28 +246,28 @@ if redis:
             """
             rediscmd = self._redis_cli_path
             if debug:
-                rediscmd += " --ldb"
+                rediscmd+= " --ldb"
             elif debugsync:
-                rediscmd += " --ldb-sync-mode"
-            rediscmd += " --%s" % command
+                rediscmd+= " --ldb-sync-mode"
+            rediscmd+= " --%s"%command
             for key in keys:
-                rediscmd += " %s" % key
-            if len(args) > 0:
-                rediscmd += " , "
+                rediscmd+= " %s"%key
+            if len(args)>0:
+                rediscmd+= " , "
                 for arg in args:
-                    rediscmd += " %s" % arg
+                    rediscmd+= " %s"%arg
             # print(rediscmd)
-            _, out, _ = Tools.execute(rediscmd, interactive=True)
+            _,out,_ = Tools.execute(rediscmd,interactive=True)
             return out
 
-        def _sp_data(self, name):
+        def _sp_data(self,name):
             if name not in self._storedprocedures_to_sha:
-                data = self.hget("storedprocedures", name)
+                data = self.hget("storedprocedures",name)
                 data2 = json.loads(data)
                 self._storedprocedures_to_sha[name] = data2
             return self._storedprocedures_to_sha[name]
 
-        def storedprocedure_execute(self, name, *args):
+        def storedprocedure_execute(self,name,*args):
             """
 
             :param name:
@@ -273,15 +276,15 @@ if redis:
             """
 
             data = self._sp_data(name)
-            sha = data["sha"]  # .encode()
+            sha = data["sha"]#.encode()
             assert isinstance(sha, (str))
             # assert isinstance(sha, (bytes, bytearray))
             Tools.shell()
-            return self.evalsha(sha, data["nrkeys"], *args)
+            return self.evalsha(sha,data["nrkeys"],*args)
             # self.eval(data["script"],data["nrkeys"],*args)
             # return self.execute_command("EVALSHA",sha,data["nrkeys"],*args)
 
-        def storedprocedure_debug(self, name, *args):
+        def storedprocedure_debug(self,name,*args):
             """
             to see how to use the debugger see https://redis.io/topics/ldb
 
@@ -295,27 +298,26 @@ if redis:
             """
             data = self._sp_data(name)
             path = data["path"]
-            if path == "":
-                from pudb import set_trace
-                set_trace()
+            if path =="":
+                from pudb import set_trace; set_trace()
 
             nrkeys = data['nrkeys']
             args2 = args[nrkeys:]
             keys = args[:nrkeys]
 
-            out = self.redis_cmd_execute("eval %s" % path, debug=True, keys=keys, args=args2)
+            out = self.redis_cmd_execute("eval %s"%path,debug=True,keys=keys,args=args2)
 
             return out
 
 
 class Tools:
 
-    _supported_editors = ["micro", "mcedit", "joe", "vim", "vi"]  # DONT DO AS SET  OR ITS SORTED
+    _supported_editors = ["micro","mcedit","joe","vim","vi"]  #DONT DO AS SET  OR ITS SORTED
     j = None
     _shell = None
 
     @staticmethod
-    def traceback_text_get(tb=None, stdout=False):
+    def traceback_text_get(tb=None,stdout=False):
         """
         format traceback to readable text
         :param tb:
@@ -323,25 +325,25 @@ class Tools:
         """
         if tb is None:
             tb = sys.last_traceback
-        out = ""
+        out=""
         for item in traceback.extract_tb(tb):
-            fname = item.filename
-            if len(fname) > 60:
-                fname = fname[-60:]
-            line = "%-60s : %-4s: %s" % (fname, item.lineno, item.line)
+            fname =  item.filename
+            if len(fname)>60:
+                fname=fname[-60:]
+            line= "%-60s : %-4s: %s"%(fname, item.lineno,item.line)
             if stdout:
-                line2 = "        {GRAY}%-60s :{RESET} %-4s: " % (fname, item.lineno)
-                Tools.pprint(line2, end="", log=False)
+                line2 = "        {GRAY}%-60s :{RESET} %-4s: "%(fname, item.lineno)
+                Tools.pprint(line2,end="",log=False)
                 if pygments_formatter is not False:
-                    print(pygments.highlight(item.line, pygments_pylexer, pygments_formatter).rstrip())
+                    print(pygments.highlight(item.line ,pygments_pylexer, pygments_formatter).rstrip())
                 else:
-                    Tools.pprint(item.line, log=False)
+                    Tools.pprint(item.line,log=False)
 
-            out += "%s\n" % line
+            out+="%s\n"%line
         return out
 
     @staticmethod
-    def log(msg, cat="", level=10, data=None, context=None, _deeper=False, stdout=True, redis=True, tb=None, data_show=True):
+    def log(msg,cat="",level=10,data=None,context=None,_deeper=False,stdout=True,redis=True,tb=None,data_show=True):
         """
 
         :param msg:
@@ -355,12 +357,12 @@ class Tools:
 
         :return:
         """
-        if isinstance(msg, Exception):
+        if isinstance(msg,Exception):
             Tools.pprint("\n\n{BOLD}{RED}EXCEPTION{RESET}\n")
-            msg = "{RED}EXCEPTION: {RESET}%s" % str(msg)
+            msg="{RED}EXCEPTION: {RESET}%s"%str(msg)
             level = 50
             if cat is "":
-                cat = "exception"
+                cat="exception"
         if tb:
             if tb.tb_next is not None:
                 frame_ = tb.tb_next.tb_frame
@@ -368,10 +370,10 @@ class Tools:
                 # extype, value, tb = sys.exc_info()
                 frame_ = tb.tb_frame
             if data is None:
-                data = Tools.traceback_text_get(tb, stdout=True)
+                data = Tools.traceback_text_get(tb,stdout=True)
                 data_show = False
             else:
-                msg += "\n%s" % Tools.traceback_text_get(tb, stdout=True)
+                msg+="\n%s"%Tools.traceback_text_get(tb,stdout=True)
             print()
         else:
             if _deeper:
@@ -381,9 +383,9 @@ class Tools:
 
         fname = frame_.f_code.co_filename.split("/")[-1]
         defname = frame_.f_code.co_name
-        linenr = frame_.f_code.co_firstlineno
+        linenr= frame_.f_code.co_firstlineno
 
-        logdict = {}
+        logdict={}
         logdict["linenr"] = linenr
         logdict["processid"] = MyEnv.appname
         logdict["message"] = msg
@@ -395,17 +397,17 @@ class Tools:
             logdict["context"] = defname
         logdict["cat"] = cat
 
-        if data and isinstance(data, dict):
+        if data and isinstance(data,dict):
             if "password" in data or "secret" in data or "passwd" in data:
-                data["password"] = "***"
+                data["password"]="***"
 
         logdict["data"] = data
 
         if stdout:
-            Tools.log2stdout(logdict, data_show=data_show)
+            Tools.log2stdout(logdict,data_show=data_show)
 
     @staticmethod
-    def redis_client_get(addr='localhost', port=6379, unix_socket_path="/sandbox/var/redis.sock", die=True):
+    def redis_client_get(addr='localhost',port=6379, unix_socket_path="/sandbox/var/redis.sock",die=True):
 
         if not redis:
             if die:
@@ -452,7 +454,7 @@ class Tools:
     #     raise RuntimeError(msg)
 
     @staticmethod
-    def _execute_interactive(cmd=None, args=None, die=True, original_command=None):
+    def _execute_interactive(cmd=None, args=None, die=True,original_command=None):
 
         if args is None:
             args = cmd.split(" ")
@@ -460,17 +462,15 @@ class Tools:
         #     args[0] = shutil.which(args[0])
 
         returncode = os.spawnlp(os.P_WAIT, args[0], *args)
-        cmd = " ".join(args)
+        cmd=" ".join(args)
         if returncode == 127:
             raise RuntimeError('{}: command not found\n'.format(cmd))
-        if returncode > 0 and returncode != 999:
+        if returncode>0 and returncode != 999:
             if die:
                 if original_command:
-                    raise RuntimeError("***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n" %
-                                       (original_command, returncode))
+                    raise RuntimeError("***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n"%(original_command,returncode))
                 else:
-                    raise RuntimeError(
-                        "***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n" % (cmd, returncode))
+                    raise RuntimeError("***ERROR EXECUTE INTERACTIVE:\nCould not execute:%s\nreturncode:%s\n"%(cmd,returncode))
             return returncode
         return returncode
 
@@ -497,25 +497,28 @@ class Tools:
                 return
         raise RuntimeError("cannot edit the file: '{}', non of the supported editors is installed".format(path))
 
+
+
     @staticmethod
-    def file_write(path, content, replace=False, args=None):
+    def file_write(path, content,replace=False,args=None):
         if args is None:
-            args = {}
+            args={}
         dirname = os.path.dirname(path)
-        os.makedirs(dirname, exist_ok=True)
-        p = Path(path)
+        os.makedirs(dirname,exist_ok=True)
+        p=Path(path)
         if replace:
-            content = Tools.text_replace(content, args=args)
+            content = Tools.text_replace(content,args=args)
         p.write_text(content)
 
     @staticmethod
     def file_text_read(path):
         path = Tools.text_replace(path)
-        p = Path(path)
+        p=Path(path)
         try:
             return p.read_text()
         except Exception as e:
             Tools.shell()
+
 
     @staticmethod
     def dir_ensure(path, remove_existing=False):
@@ -536,6 +539,8 @@ class Tools:
         elif os.path.exists(path):
             return
         os.makedirs(path)
+
+
 
     @staticmethod
     def delete(path):
@@ -591,7 +596,7 @@ class Tools:
             if MyEnv.debug:
                 Tools.log('path %s exists' % str(path.encode("utf-8")))
             linkpath = os.readlink(path)
-            if linkpath[0] != "/":
+            if linkpath[0]!="/":
                 linkpath = os.path.join(Tools.path_parent(path), linkpath)
             return Tools.exists(linkpath)
         if found:
@@ -628,6 +633,7 @@ class Tools:
             """
             Tools.execute(script, interactive=True)
 
+
     @staticmethod
     def clear():
         print(chr(27)+'[2j')
@@ -651,12 +657,14 @@ class Tools:
                 Tools._installbase_for_shell()
                 from IPython.terminal.embed import InteractiveShellEmbed
             if f:
-                print("\n*** file: %s" % f.filename)
-                print("*** function: %s [linenr:%s]\n" % (f.function, f.lineno))
+                print("\n*** file: %s"%f.filename)
+                print("*** function: %s [linenr:%s]\n" % (f.function,f.lineno))
 
-            Tools._shell = InteractiveShellEmbed(banner1="", exit_msg="")
+
+            Tools._shell = InteractiveShellEmbed(banner1= "", exit_msg="")
             Tools._shell.Completer.use_jedi = False
         return Tools._shell(stack_depth=2)
+
 
     # @staticmethod
     # def shell(loc=True,exit=True):
@@ -678,8 +686,9 @@ class Tools:
     #     else:
     #         embed(globals(), locals(),configure=ptconfig,history_filename=history_filename)
 
+
     @staticmethod
-    def text_strip(content, ignorecomments=False, args={}, replace=False, executor=None, colors=True):
+    def text_strip(content, ignorecomments=False,args={},replace=False,executor=None,colors=True):
         """
         remove all spaces at beginning & end of line when relevant (this to allow easy definition of scripts)
         args will be substitued to .format(...) string function https://docs.python.org/3/library/string.html#formatspec
@@ -717,16 +726,16 @@ class Tools:
             content = "\n".join([line[minchars:] for line in content.split("\n")])
 
         if replace:
-            content = Tools.text_replace(content=content, args=args, executor=executor, text_strip=False)
+            content = Tools.text_replace(content=content,args=args,executor=executor,text_strip=False)
         else:
             if colors and "{" in content:
-                for key, val in MyEnv.MYCOLORS.items():
-                    content = content.replace("{%s}" % key, val)
+                for key,val in MyEnv.MYCOLORS.items():
+                    content = content.replace("{%s}"%key,val)
 
         return content
 
     @staticmethod
-    def text_replace(content, args=None, executor=None, ignorecomments=False, text_strip=True):
+    def text_replace(content,args=None,executor=None,ignorecomments=False,text_strip=True):
         """
 
         j.core.tools.text_replace
@@ -760,19 +769,19 @@ class Tools:
                 return '{%s}' % key
 
         if args is None:
-            args = {}
+            args={}
 
         if "{" in content:
 
             if args is None:
-                args = {}
+                args={}
 
             if executor:
                 args.update(executor.config)
             else:
-                for key, val in MyEnv.config.items():
+                for key,val in MyEnv.config.items():
                     if key not in args:
-                        args[key] = val
+                        args[key]=val
 
             args.update(MyEnv.MYCOLORS)
 
@@ -780,12 +789,15 @@ class Tools:
             content = content.format_map(replace_args)
 
         if text_strip:
-            content = Tools.text_strip(content, ignorecomments=ignorecomments, replace=False)
+            content = Tools.text_strip(content,ignorecomments=ignorecomments,replace=False)
 
         return content
 
+
+
+
     @staticmethod
-    def log2stdout(logdict, data_show=True):
+    def log2stdout(logdict,data_show=True):
         """
 
         :param logdict:
@@ -803,21 +815,22 @@ class Tools:
         :return:
         """
 
+
         if "epoch" in logdict:
             timetuple = time.localtime(logdict["epoch"])
         else:
             timetuple = time.localtime(time.time())
-        logdict["TIME"] = time.strftime(MyEnv.FORMAT_TIME, timetuple)
+        logdict ["TIME"] = time.strftime(MyEnv.FORMAT_TIME, timetuple)
 
-        if logdict["level"] < 11:
+        if logdict["level"]<11:
             LOGCAT = "DEBUG"
-        elif logdict["level"] == 15:
+        elif logdict["level"]==15:
             LOGCAT = "STDOUT"
-        elif logdict["level"] < 21:
+        elif logdict["level"]<21:
             LOGCAT = "INFO"
-        elif logdict["level"] < 31:
+        elif logdict["level"]<31:
             LOGCAT = "WARNING"
-        elif logdict["level"] < 41:
+        elif logdict["level"]<41:
             LOGCAT = "ERROR"
         else:
             LOGCAT = "CRITICAL"
@@ -826,44 +839,46 @@ class Tools:
 
         logdict.update(MyEnv.MYCOLORS)
 
-        if len(logdict["filepath"]) > 16:
+        if len (logdict["filepath"])> 16:
             logdict["filename"] = logdict["filepath"][len(logdict["filepath"])-18:]
         else:
             logdict["filename"] = logdict["filepath"]
 
-        if len(logdict["context"]) > 35:
+        if len (logdict["context"])> 35:
             logdict["context"] = logdict["context"][len(logdict["context"])-34:]
         if logdict["context"].startswith("_"):
-            logdict["context"] = ""
+            logdict["context"]=""
         elif logdict["context"].startswith(":"):
-            logdict["context"] = ""
+            logdict["context"]=""
+
 
         p = print
         if MyEnv.config.get('log_printer') and MyEnv.config['DEBUG']:
             p = MyEnv.config['log_printer']
 
-        msg = Tools.text_replace(LOGFORMAT, args=logdict)
-        msg = Tools.text_replace(msg, args=logdict)
+        msg=Tools.text_replace(LOGFORMAT,args=logdict)
+        msg=Tools.text_replace(msg,args=logdict)
         p(msg)
 
         if data_show:
-            if logdict["data"] not in ["", None, {}]:
-                if isinstance(logdict["data"], dict):
+            if logdict["data"] not in ["",None,{}]:
+                if isinstance(logdict["data"],dict):
                     try:
                         data = serializer(logdict["data"])
                     except Exception as e:
                         data = logdict["data"]
                 else:
                     data = logdict["data"]
-                data = Tools.text_indent(data, 10, strip=True)
+                data=Tools.text_indent(data,10,strip=True)
                 try:
-                    data = Tools.text_replace(data, text_strip=False)
+                    data=Tools.text_replace(data,text_strip=False)
                 except:
                     pass
                 p(data.rstrip())
 
+
     @staticmethod
-    def pprint(content, ignorecomments=False, text_strip=False, args=None, colors=False, indent=0, end="\n", log=True):
+    def pprint(content, ignorecomments=False, text_strip=False,args=None,colors=False,indent=0,end="\n",log=True):
         """
 
         :param content: what to print
@@ -886,20 +901,21 @@ class Tools:
         """
 
         if args or colors or text_strip:
-            content = Tools.text_replace(content, args=args, text_strip=text_strip,
+            content = Tools.text_replace(content,args=args,text_strip=text_strip,
                                          ignorecomments=ignorecomments)
-        elif content.find("{RESET}") != -1:
-            for key, val in MyEnv.MYCOLORS.items():
-                content = content.replace("{%s}" % key, val)
+        elif content.find("{RESET}")!=-1:
+            for key,val in MyEnv.MYCOLORS.items():
+                content = content.replace("{%s}"%key,val)
 
-        if indent > 0:
+
+        if indent>0:
             content = Tools.text_indent(content)
         if log:
-            Tools.log(content, level=15, stdout=False)
-        print(content, end=end)
+            Tools.log(content,level=15,stdout=False)
+        print(content,end=end)
 
     @staticmethod
-    def text_indent(content, nspaces=4, wrap=180, strip=True, indentchar=" ", args=None):
+    def text_indent(content, nspaces=4, wrap=180, strip=True, indentchar=" ",args=None):
         """Indent a string a given number of spaces.
 
         Parameters
@@ -918,11 +934,11 @@ class Tools:
         """
         if content is None:
             raise RuntimeError("content cannot be None")
-        content = str(content)
+        content=str(content)
         if args is not None:
-            content = Tools.text_replace(content, args=args)
+            content = Tools.text_replace(content,args=args)
         if strip:
-            content = Tools.text_strip(content, replace=False)
+            content = Tools.text_strip(content,replace=False)
         if wrap > 0:
             content = Tools.text_wrap(content, wrap)
 
@@ -942,25 +958,24 @@ class Tools:
 
     @staticmethod
     def _file_path_tmp_get(ext="sh"):
-        ext = ext.strip(".")
+        ext=ext.strip(".")
         return Tools.text_replace("/tmp/jumpscale/scripts/{RANDOM}.{ext}",
-                                  args={"RANDOM": Tools._random(), "ext": ext})
-
+                                  args={"RANDOM":Tools._random(),"ext":ext})
     @staticmethod
     def _random():
         return str(random.getrandbits(16))
 
     @staticmethod
-    def execute(command, showout=True, useShell=True, cwd=None, timeout=800, die=True,
+    def execute(command, showout=True, useShell=True, cwd=None, timeout=800,die=True,
                 async_=False, args=None, env=None,
-                interactive=False, self=None,
-                replace=True, asfile=False, original_command=None, log=False):
+                interactive=False,self=None,
+                replace=True,asfile=False,original_command=None,log=False):
 
         if env is None:
-            env = {}
+            env={}
         if self is None:
             self = MyEnv
-        command = Tools.text_strip(command, args=args, replace=replace)
+        command  = Tools.text_strip(command, args=args, replace=replace)
         if "\n" in command or asfile:
             path = Tools._file_path_tmp_get()
             if MyEnv.debug or log:
@@ -970,53 +985,55 @@ class Tools:
                 command2 = "set -e\n"
             if cwd:
                 command2 += "cd %s\n" % cwd
-            command2 += command
+            command2+=command
             Tools.file_write(path, command2)
             # print(command2)
             command3 = "bash %s" % path
-            res = Tools.execute(command3, showout=showout, useShell=useShell, cwd=cwd,
-                                timeout=timeout, die=die, env=env, self=self, interactive=interactive, asfile=False, original_command=command)
+            res = Tools.execute(command3,showout=showout,useShell=useShell,cwd=cwd,
+                            timeout=timeout,die=die,env=env,self=self,interactive=interactive,asfile=False,original_command=command )
             Tools.delete(path)
             return res
         else:
 
             if interactive:
-                res = Tools._execute_interactive(cmd=command, die=die, original_command=original_command)
+                res = Tools._execute_interactive(cmd=command, die=die,original_command=original_command)
                 if MyEnv.debug or log:
-                    Tools.log("execute interactive:%s" % command)
+                    Tools.log("execute interactive:%s"%command)
                 return res
             else:
                 if MyEnv.debug or log:
-                    Tools.log("execute:%s" % command)
+                    Tools.log("execute:%s"%command)
 
-            os.environ["PYTHONUNBUFFERED"] = "1"  # WHY THIS???
+            os.environ["PYTHONUNBUFFERED"] = "1" #WHY THIS???
+
 
             # if hasattr(subprocess, "_mswindows"):
             #     mswindows = subprocess._mswindows
             # else:
             #     mswindows = subprocess.mswindows
 
-            if env == None or env == {}:
-                env = os.environ
+            if env==None  or env == {}:
+                env=os.environ
 
             if useShell:
                 p = Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                          close_fds=MyEnv._isUnix(),
-                          shell=True, universal_newlines=False, cwd=cwd, bufsize=0, executable='/bin/bash')
+                      close_fds=MyEnv._isUnix(),
+                      shell=True, universal_newlines=False, cwd=cwd, bufsize=0, executable='/bin/bash')
             else:
                 args = command.split(" ")
                 p = Popen(args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                          close_fds=MyEnv._isUnix(),
-                          shell=False, env=env, universal_newlines=False, cwd=cwd, bufsize=0)
+                      close_fds=MyEnv._isUnix(),
+                      shell=False, env=env, universal_newlines=False, cwd=cwd, bufsize=0)
+
 
             # set the O_NONBLOCK flag of p.stdout file descriptor:
-            flags = fcntl(p.stdout, F_GETFL)  # get current p.stdout flags
-            flags = fcntl(p.stderr, F_GETFL)  # get current p.stderr flags
+            flags = fcntl(p.stdout, F_GETFL) # get current p.stdout flags
+            flags = fcntl(p.stderr, F_GETFL) # get current p.stderr flags
             fcntl(p.stdout, F_SETFL, flags | O_NONBLOCK)
             fcntl(p.stderr, F_SETFL, flags | O_NONBLOCK)
 
-            out = ""
-            err = ""
+            out=""
+            err=""
 
             if async_:
                 return p
@@ -1030,7 +1047,7 @@ class Tools:
                         line = stream.read()
                         if not line:
                             break
-                        line = line.decode()  # will be utf8
+                        line=line.decode()#will be utf8
                         # Honour subprocess univeral_newlines
                         if p.universal_newlines:
                             line = p._translate_newlines(line)
@@ -1045,15 +1062,16 @@ class Tools:
                 else:
                     # This is not UNIX, most likely Win32. read() seems to work
                     def readout(stream):
-                        line = stream.read().decode()
+                        line= stream.read().decode()
                         if showout:
                             # Tools.log(line)
-                            Tools.pprint(line, end="")
+                            Tools.pprint(line,end="")
+
 
             if timeout < 0:
                 out, err = p.communicate()
-                out = out.decode()
-                err = err.decode()
+                out=out.decode()
+                err=err.decode()
 
             else:  # timeout set
                 start = time.time()
@@ -1064,13 +1082,13 @@ class Tools:
                 out = readout(p.stdout)
                 err = readout(p.stderr)
                 while p.poll() is None:
-                    # means process is still running
+                    #means process is still running
 
                     time.sleep(0.01)
                     now = time.time()
                     # print("wait")
 
-                    if timeout != 0 and now > end:
+                    if timeout!=0 and now > end:
                         if Tools._isUnix():
                             # Soft and hard kill on Unix
                             try:
@@ -1086,7 +1104,7 @@ class Tools:
                             if p.poll():
                                 p.terminate()
                         if MyEnv.debug or log:
-                            Tools.log("process killed because of timeout", level=30)
+                            Tools.log("process killed because of timeout",level=30)
                         return (-2, out, err)
 
                     # Read out process streams, but don't block
@@ -1095,7 +1113,7 @@ class Tools:
 
             rc = -1 if p.returncode < 0 else p.returncode
 
-            if rc < 0 or rc > 0:
+            if rc<0 or rc>0:
                 if MyEnv.debug or log:
                     Tools.log('system.process.run ended, exitcode was %d' % rc)
             # if out!="":
@@ -1103,19 +1121,19 @@ class Tools:
             # if err!="":
             #     Tools.log('system.process.run stderr:\n%s' % err)
 
-            if die and rc != 0:
-                msg = "\nCould not execute:"
-                if command.find("\n") == -1 and len(command) < 40:
-                    msg += " '%s'" % command
+            if die and rc!=0:
+                msg="\nCould not execute:"
+                if command.find("\n") ==-1 and len(command)<40:
+                    msg+=" '%s'"%command
                 else:
-                    command = "\n".join(command.split(";"))
-                    msg += Tools.text_indent(command).rstrip()+"\n\n"
-                if out.strip() != "":
-                    msg += "stdout:\n"
-                    msg += Tools.text_indent(out).rstrip()+"\n\n"
-                if err.strip() != "":
-                    msg += "stderr:\n"
-                    msg += Tools.text_indent(err).rstrip()+"\n\n"
+                    command="\n".join(command.split(";"))
+                    msg+=Tools.text_indent(command).rstrip()+"\n\n"
+                if out.strip()!="":
+                    msg+="stdout:\n"
+                    msg+=Tools.text_indent(out).rstrip()+"\n\n"
+                if err.strip()!="":
+                    msg+="stderr:\n"
+                    msg+=Tools.text_indent(err).rstrip()+"\n\n"
                 raise RuntimeError(msg)
 
             # close the files (otherwise resources get lost),
@@ -1127,6 +1145,7 @@ class Tools:
             del p
 
             return (rc, out, err)
+
 
     # @staticmethod
     # def run(script,die=True,args={},interactive=True,showout=True):
@@ -1146,19 +1165,19 @@ class Tools:
     #
 
     @staticmethod
-    def ask_choices(msg, choices=[], default=None):
+    def ask_choices(msg,choices=[],default=None):
         msg = Tools.text_strip(msg)
         print(msg)
         if "\n" in msg:
             print()
-        choices = [str(i) for i in choices if i not in [None, "", ","]]
+        choices = [str(i) for i in choices if i not in [None,"",","]]
         choices_txt = ",".join(choices)
-        mychoice = input("make your choice (%s): " % choices_txt)
+        mychoice = input("make your choice (%s): "%choices_txt)
         while mychoice not in choices:
             if mychoice.strip() == "" and default:
                 return default
-            print("ERROR: only choose %s please" % choices_txt)
-            mychoice = input("make your choice (%s): " % choices_txt)
+            print ("ERROR: only choose %s please"%choices_txt)
+            mychoice = input("make your choice (%s): "%choices_txt)
         return mychoice
 
     @staticmethod
@@ -1168,41 +1187,42 @@ class Tools:
         :param msg: the msg to show when asking for y or no
         :return: will return True if yes
         """
-        return Tools.ask_choices(msg, "y,n", default=default) in ["y", ""]
+        return Tools.ask_choices(msg,"y,n",default=default)in ["y",""]
 
     @staticmethod
-    def ask_string(msg, default=None):
+    def ask_string(msg,default=None):
         msg = Tools.text_strip(msg)
         print(msg)
         if "\n" in msg:
             print()
         txt = input()
-        if default and txt.strip() == "":
+        if default and txt.strip()=="":
             txt = default
         return txt
 
     @staticmethod
     def cmd_installed(name):
         if not name in MyEnv._cmd_installed:
-            MyEnv._cmd_installed[name] = shutil.which(name) != None
+            MyEnv._cmd_installed[name] =  shutil.which(name) != None
         return MyEnv._cmd_installed[name]
 
     @staticmethod
     def cmd_args_get():
-        res = {}
+        res={}
         for i in sys.argv[1:]:
             if "=" in i:
-                name, val = i.split("=", 1)
+                name,val=i.split("=",1)
                 name = name.strip("-").strip().strip("-")
                 val = val.strip().strip("'").strip("\"").strip()
-                res[name.lower()] = val
-            elif i.strip() != "":
+                res[name.lower()]=val
+            elif i.strip()!="":
                 name = i.strip("-").strip().strip("-")
-                res[name.lower()] = True
+                res[name.lower()]=True
         return res
 
+
     @staticmethod
-    def _code_location_get(account, repo):
+    def _code_location_get(account,repo):
         """
         accountdir will be created if it does not exist yet
         :param repo:
@@ -1214,22 +1234,23 @@ class Tools:
             dontpull means, we found .dontpull in the repodir, means code is being synced to the repo from remote, should not update
 
         """
-        prefix = "code"
+        prefix="code"
         if "DIR_CODE" in MyEnv.config:
-            accountdir = os.path.join(MyEnv.config["DIR_CODE"], "github", account)
+            accountdir=os.path.join(MyEnv.config["DIR_CODE"],"github",account)
         else:
-            accountdir = os.path.join(MyEnv.config["DIR_BASE"], prefix, "github", account)
-        repodir = os.path.join(accountdir, repo)
-        gitdir = os.path.join(repodir, ".git")
-        dontpullloc = os.path.join(repodir, ".dontpull")
+            accountdir=os.path.join(MyEnv.config["DIR_BASE"],prefix,"github",account)
+        repodir=os.path.join(accountdir,repo)
+        gitdir=os.path.join(repodir,".git")
+        dontpullloc=os.path.join(repodir,".dontpull")
         if os.path.exists(accountdir):
-            if os.listdir(accountdir) == []:
-                shutil.rmtree(accountdir)  # lets remove the dir & return it does not exist
+            if os.listdir(accountdir)==[]:
+                shutil.rmtree(accountdir) #lets remove the dir & return it does not exist
 
         exists = os.path.exists(repodir)
         foundgit = os.path.exists(gitdir)
         dontpull = os.path.exists(dontpullloc)
-        return exists, foundgit, dontpull, accountdir, repodir
+        return exists,foundgit,dontpull,accountdir,repodir
+
 
     @staticmethod
     def code_changed(path):
@@ -1238,7 +1259,7 @@ class Tools:
         :param path:
         :return:
         """
-        S = """
+        S="""
         cd {REPO_DIR}
         git diff --exit-code || exit 1
         git diff --cached --exit-code || exit 1
@@ -1248,32 +1269,32 @@ class Tools:
             exit 0
         fi
         """
-        args = {}
-        args["REPO_DIR"] = path
-        rc, out, err = Tools.execute(S, showout=False, die=False, args=args)
-        return rc > 0
+        args={}
+        args["REPO_DIR"]= path
+        rc,out,err = Tools.execute(S,showout=False,die=False, args=args)
+        return rc>0
 
     @staticmethod
     def code_github_get(repo, account="threefoldtech", branch=["master"], pull=True, reset=False):
-        Tools.log("get code:%s:%s (%s)" % (repo, account, branch))
-        if MyEnv.sshagent_active_check():
+        Tools.log("get code:%s:%s (%s)"%(repo,account,branch))
+        if  MyEnv.sshagent_active_check():
             url = "git@github.com:%s/%s.git"
         else:
             url = "https://github.com/%s/%s.git"
 
         repo_url = url % (account, repo)
-        exists, foundgit, dontpull, ACCOUNT_DIR, REPO_DIR = Tools._code_location_get(account=account, repo=repo)
+        exists,foundgit,dontpull,ACCOUNT_DIR,REPO_DIR=Tools._code_location_get(account=account,repo=repo)
 
         if reset:
             Tools.delete(REPO_DIR)
-            exists, foundgit, dontpull, ACCOUNT_DIR, REPO_DIR = Tools._code_location_get(account=account, repo=repo)
+            exists,foundgit,dontpull,ACCOUNT_DIR,REPO_DIR=Tools._code_location_get(account=account,repo=repo)
 
-        args = {}
-        args["ACCOUNT_DIR"] = ACCOUNT_DIR
-        args["REPO_DIR"] = REPO_DIR
+        args={}
+        args["ACCOUNT_DIR"]= ACCOUNT_DIR
+        args["REPO_DIR"]= REPO_DIR
         args["URL"] = repo_url
         args["NAME"] = repo
-        if isinstance(branch, (list, set)):
+        if isinstance(branch,(list,set)):
             args["BRANCH"] = branch[0]
         else:
             args["BRANCH"] = branch
@@ -1284,48 +1305,48 @@ class Tools:
         git_on_system = Tools.cmd_installed("git")
 
         if git_on_system and MyEnv.config["USEGIT"] and ((exists and foundgit) or not exists):
-            # there is ssh-key loaded
-            # or there is a dir with .git inside and exists
-            # or it does not exist yet
-            # then we need to use git
+            #there is ssh-key loaded
+            #or there is a dir with .git inside and exists
+            #or it does not exist yet
+            #then we need to use git
 
-            C = ""
+            C=""
 
-            if exists == False:
-                C = """
+            if exists==False:
+                C="""
                 set -e
                 mkdir -p {ACCOUNT_DIR}
                 """
-                Tools.log("get code [git] (first time): %s" % repo)
-                Tools.execute(C, args=args, showout=False)
+                Tools.log("get code [git] (first time): %s"%repo)
+                Tools.execute(C, args=args,showout=False)
                 C = """
                 cd {ACCOUNT_DIR}
                 git clone  --depth 1 {URL} -b {BRANCH}
                 cd {NAME}
                 """
                 try:
-                    Tools.execute(C, args=args, showout=False)
-                except Exception as e:
+                    Tools.execute(C, args=args,showout=False)
+                except Exception as e :
                     C = """
                         cd {ACCOUNT_DIR}
                         git clone  --depth 1 {URL}
                         cd {NAME}
                         """
-                    Tools.execute(C, args=args, showout=False)
+                    Tools.execute(C, args=args,showout=False)
 
             else:
                 if pull:
                     if reset:
-                        C = """
+                        C="""
                         set -x
                         cd {REPO_DIR}
                         git checkout . --force
                         git pull
                         """
-                        Tools.log("get code & ignore changes: %s" % repo)
+                        Tools.log("get code & ignore changes: %s"%repo)
                         Tools.execute(C, args=args)
                     elif Tools.code_changed(REPO_DIR):
-                        if Tools.ask_yes_no("\n**: found changes in repo '%s', do you want to commit?" % repo):
+                        if Tools.ask_yes_no("\n**: found changes in repo '%s', do you want to commit?"%repo):
                             if "GITMESSAGE" in os.environ:
                                 args["MESSAGE"] = os.environ["GITMESSAGE"]
                             else:
@@ -1334,7 +1355,7 @@ class Tools:
                         else:
                             print("found changes, do not want to commit")
                             sys.exit(1)
-                        C = """
+                        C="""
                         set -x
                         cd {REPO_DIR}
                         git add . -A
@@ -1342,13 +1363,13 @@ class Tools:
                         git pull
 
                         """
-                        Tools.log("get code & commit [git]: %s" % repo)
+                        Tools.log("get code & commit [git]: %s"%repo)
                         Tools.execute(C, args=args)
 
             def getbranch(args):
                 cmd = "cd {REPO_DIR}; git branch | grep \* | cut -d ' ' -f2"
-                rc, stdout, err = Tools.execute(cmd, die=False, args=args, interactive=False)
-                if rc > 0:
+                rc,stdout,err = Tools.execute(cmd, die=False, args=args, interactive=False)
+                if rc>0:
                     Tools.shell()
                 current_branch = stdout.strip()
                 Tools.log("Found branch: %s" % current_branch)
@@ -1358,7 +1379,7 @@ class Tools:
 
                 current_branch = getbranch(args=args)
 
-                ok = False
+                ok=False
                 for branch_item in branch:
                     if ok:
                         continue
@@ -1366,33 +1387,33 @@ class Tools:
                     branch_item = branch_item.strip()
 
                     if current_branch != branch_item:
-                        script = """
+                        script="""
                         set -ex
                         cd {REPO_DIR}
                         git checkout {BRANCH} -f
                         exit 999
                         """
-                        args["BRANCH"] = branch_item
-                        rc, out, err = Tools.execute(script, die=False, args=args, showout=True, interactive=False)
-                        if rc == 999 or rc == 231:
-                            ok = True
+                        args["BRANCH"]=branch_item
+                        rc,out,err = Tools.execute(script,die=False, args=args,showout=True,interactive=False)
+                        if rc==999 or rc==231:
+                            ok=True
                     else:
                         ok = True
 
                 getbranch(args=args)
 
         else:
-            Tools.log("get code [zip]: %s" % repo)
-            download = False
-            if download == False and (not exists or (not dontpull and pull)):
+            Tools.log("get code [zip]: %s"%repo)
+            download=False
+            if download==False and (not exists or (not dontpull and pull)):
 
                 for branch_item in branch:
                     branch_item = branch_item.strip()
-                    url_http = "https://github.com/%s/%s/archive/%s.zip" % (account, repo, branch_item)
+                    url_http="https://github.com/%s/%s/archive/%s.zip"%(account,repo,branch_item)
 
-                    args = {}
-                    args["ACCOUNT_DIR"] = ACCOUNT_DIR
-                    args["REPO_DIR"] = REPO_DIR
+                    args={}
+                    args["ACCOUNT_DIR"]= ACCOUNT_DIR
+                    args["REPO_DIR"]= REPO_DIR
                     args["URL"] = url_http
                     args["NAME"] = repo
                     args["BRANCH"] = branch_item
@@ -1403,12 +1424,12 @@ class Tools:
                     rm -f download.zip
                     curl -L {URL} > download.zip
                     """
-                    Tools.execute(script, args=args, die=False)
+                    Tools.execute(script,args=args,die=False)
                     statinfo = os.stat('/tmp/jumpscale/download.zip')
                     if statinfo.st_size < 100000:
                         continue
                     else:
-                        script = """
+                        script="""
                         set -ex
                         cd {DIR_TEMP}
                         rm -rf {NAME}-{BRANCH}
@@ -1419,16 +1440,16 @@ class Tools:
                         rm -f download.zip
                         """
                         try:
-                            Tools.execute(script, args=args, die=True)
+                            Tools.execute(script,args=args,die=True)
                         except Exception as e:
                             Tools.shell()
                         download = True
 
-            if not exists and download == False:
+            if not exists and download==False:
                 raise RuntimeError("Could not download some code")
 
     @staticmethod
-    def config_load(path="", if_not_exist_create=False, executor=None, content=""):
+    def config_load(path="",if_not_exist_create=False,executor=None,content=""):
         """
         only 1 level deep toml format only for int,string,bool
         no multiline
@@ -1436,89 +1457,86 @@ class Tools:
         return dict
 
         """
-        res = {}
+        res={}
         if content == "":
             if executor is None:
                 if os.path.exists(path):
-                    t = Tools.file_text_read(path)
+                    t=Tools.file_text_read(path)
                 else:
                     if if_not_exist_create:
-                        Tools.config_save(path, {})
+                        Tools.config_save(path,{})
                     return {}
             else:
                 if executor.exists(path):
-                    t = executor.file_read(path)
+                    t=executor.file_read(path)
                 else:
                     if if_not_exist_create:
-                        Tools.config_save(path, {}, executor=executor)
+                        Tools.config_save(path,{},executor=executor)
                     return {}
         else:
-            t = content
+            t=content
 
         for line in t.split("\n"):
-            if line.strip() == "":
+            if line.strip()=="":
                 continue
             if line.startswith("#"):
                 continue
-            key, val = line.split("=", 1)
+            key,val = line.split("=",1)
             if "#" in val:
-                val = val.split("#", 1)[0]
-            key = key.strip().upper()
-            val = val.strip().strip("'").strip().strip("\"").strip()
-            if str(val).lower() in [0, "false", "n", "no"]:
-                val = False
-            elif str(val).lower() in [1, "true", "y", "yes"]:
-                val = True
-            elif str(val).find("[") != -1:
+                val = val.split("#",1)[0]
+            key=key.strip().upper()
+            val=val.strip().strip("'").strip().strip("\"").strip()
+            if str(val).lower() in [0,"false","n","no"]:
+                val=False
+            elif str(val).lower() in [1,"true","y","yes"]:
+                val=True
+            elif str(val).find("[")!=-1:
                 val2 = str(val).strip("[").strip("]")
-                val = [item.strip().strip("'").strip().strip("\"").strip()
-                       for item in val2.split(",") if item.strip() != ""]
+                val = [item.strip().strip("'").strip().strip("\"").strip() for item in val2.split(",") if item.strip()!=""]
             else:
                 try:
-                    val = int(val)
+                    val=int(val)
                 except:
                     pass
-            res[key] = val
+            res[key]=val
 
         return res
 
     @staticmethod
-    def config_save(path, data, executor=None):
-        out = ""
-        for key, val in data.items():
-            key = key.upper()
-            if isinstance(val, list):
-                val2 = "["
+    def config_save(path,data,executor=None):
+        out=""
+        for key,val in data.items():
+            key=key.upper()
+            if isinstance(val,list):
+                val2="["
                 for item in val:
-                    val2 += "'%s'," % item
+                    val2+="'%s',"%item
                 val2 = val2.rstrip(",")
-                val2 += "]"
+                val2+="]"
                 val = val2
-            elif isinstance(val, str):
-                val = "'%s'" % val
+            elif isinstance(val,str):
+                val="'%s'"%val
 
-            if val == True:
-                val = "true"
-            if val == False:
-                val = "false"
-            out += "%s = %s\n" % (key, val)
+            if val==True:
+                val="true"
+            if val==False:
+                val="false"
+            out+="%s = %s\n"%(key,val)
 
         if executor:
-            executor.file_write(path, out)
+            executor.file_write(path,out)
         else:
-            Tools.file_write(path, out)
+            Tools.file_write(path,out)
 
 
-# DO NOT CHANGE COLOR
-LOGFORMATBASE = '{COLOR}{TIME} {filename:<16}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}'
-
+LOGFORMATBASE = '{COLOR}{TIME} {filename:<16}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}'  #DO NOT CHANGE COLOR
 
 class MyEnv():
 
     _sshagent_active = None
-    readonly = False  # if readonly will not manipulate local filesystem appart from /tmp
-    sandbox_python_active = False  # means we have a sandboxed environment where python3 works in
-    sandbox_lua_active = False  # same for lua
+    readonly = False #if readonly will not manipulate local filesystem appart from /tmp
+    sandbox_python_active = False   #means we have a sandboxed environment where python3 works in
+    sandbox_lua_active = False      #same for lua
     config_changed = False
     _cmd_installed = {}
     state = None
@@ -1529,27 +1547,28 @@ class MyEnv():
 
     FORMAT_TIME = "%a %d %H:%M:%S"
 
-    MYCOLORS = {"RED": "\033[1;31m",
-                "BLUE": "\033[1;34m",
-                "CYAN": "\033[1;36m",
-                "GREEN": "\033[0;32m",
-                "GRAY": "\033[0;37m",
-                "YELLOW": "\033[0;33m",
-                "RESET": "\033[0;0m",
-                "BOLD": "\033[;1m",
-                "REVERSE": "\033[;7m"}
+    MYCOLORS =   { "RED":"\033[1;31m",
+                "BLUE":"\033[1;34m",
+                "CYAN":"\033[1;36m",
+                "GREEN":"\033[0;32m",
+                "GRAY":"\033[0;37m",
+                "YELLOW":"\033[0;33m",
+                "RESET":"\033[0;0m",
+                "BOLD":"\033[;1m",
+                "REVERSE":"\033[;7m"}
 
     LOGFORMAT = {
-        'DEBUG': LOGFORMATBASE.replace("{COLOR}", "{CYAN}"),
+        'DEBUG':LOGFORMATBASE.replace("{COLOR}","{CYAN}"),
         'STDOUT': '{message}',
         # 'INFO': '{BLUE}* {message}{RESET}',
-        'INFO': LOGFORMATBASE.replace("{COLOR}", "{BLUE}"),
-        'WARNING': LOGFORMATBASE.replace("{COLOR}", "{YELLOW}"),
-        'ERROR': LOGFORMATBASE.replace("{COLOR}", "{RED}"),
+        'INFO':LOGFORMATBASE.replace("{COLOR}","{BLUE}"),
+        'WARNING': LOGFORMATBASE.replace("{COLOR}","{YELLOW}"),
+        'ERROR': LOGFORMATBASE.replace("{COLOR}","{RED}"),
         'CRITICAL': '{RED}{TIME} {filename:<16} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}',
     }
 
     db = Tools.redis_client_get(die=False)
+
 
     @staticmethod
     def platform():
@@ -1595,7 +1614,7 @@ class MyEnv():
 
         config["LOGGER_INCLUDE"] = ["*"]
         config["LOGGER_EXCLUDE"] = ["sal.fs"]
-        config["LOGGER_LEVEL"] = 15  # means std out & plus gets logged
+        config["LOGGER_LEVEL"] = 15 #means std out & plus gets logged
         config["LOGGER_CONSOLE"] = True
         config["LOGGER_REDIS"] = False
 
@@ -1607,16 +1626,16 @@ class MyEnv():
         if not "DIR_TEMP" in config:
             config["DIR_TEMP"] = "/tmp/jumpscale"
         if not "DIR_VAR" in config:
-            config["DIR_VAR"] = "%s/var" % config["DIR_BASE"]
+            config["DIR_VAR"] = "%s/var"%config["DIR_BASE"]
         if not "DIR_CODE" in config:
             if MyEnv.readonly:
-                config["DIR_CODE"] = "%s/code" % dir_home
+                config["DIR_CODE"] = "%s/code"%dir_home
             else:
-                config["DIR_CODE"] = "%s/code" % config["DIR_BASE"]
+                config["DIR_CODE"] = "%s/code"%config["DIR_BASE"]
         if not "DIR_BIN" in config:
-            config["DIR_BIN"] = "%s/bin" % config["DIR_BASE"]
+            config["DIR_BIN"] = "%s/bin"%config["DIR_BASE"]
         if not "DIR_APPS" in config:
-            config["DIR_APPS"] = "%s/apps" % config["DIR_BASE"]
+            config["DIR_APPS"] = "%s/apps"%config["DIR_BASE"]
 
         return config
 
@@ -1626,23 +1645,23 @@ class MyEnv():
             raise RuntimeError("myenv should have been inited by system")
 
     @staticmethod
-    def init(basedir=None, config={}, readonly=None, codepath=None, force=False):
+    def init(basedir=None,config={},readonly=None,codepath=None,force=False):
         if MyEnv.__init and not force:
             return
 
         if readonly is not None:
-            MyEnv.readonly = readonly
+            MyEnv.readonly=readonly
 
         if basedir is None:
             if Tools.exists("/sandbox"):
                 basedir = "/sandbox"
             else:
-                # means we did not find a sandbox dir so have to go in readonly mode
-                MyEnv.readonly = True
+                #means we did not find a sandbox dir so have to go in readonly mode
+                MyEnv.readonly=True
 
         installpath = os.path.dirname(inspect.getfile(os.path))
-        # MEI means we are pyexe BaseInstaller
-        if installpath.find("/_MEI") != -1 or installpath.endswith("dist/install"):
+        #MEI means we are pyexe BaseInstaller
+        if installpath.find("/_MEI")!=-1 or installpath.endswith("dist/install"):
             MyEnv.readonly = True
 
         if not "DIR_BASE" in config:
@@ -1650,13 +1669,13 @@ class MyEnv():
         if MyEnv.readonly:
             config["DIR_BASE"] = "/tmp/jumpscale"
         if not "DIR_CFG" in config:
-            config["DIR_CFG"] = "%s/cfg" % config["DIR_BASE"]
+            config["DIR_CFG"] = "%s/cfg"%config["DIR_BASE"]
 
-        MyEnv.config_file_path = os.path.join(config["DIR_CFG"], "jumpscale_config.toml")
-        MyEnv.state_file_path = os.path.join(config["DIR_CFG"], "jumpscale_done.toml")
+        MyEnv.config_file_path = os.path.join(config["DIR_CFG"],"jumpscale_config.toml")
+        MyEnv.state_file_path = os.path.join(config["DIR_CFG"],"jumpscale_done.toml")
 
         if codepath is not None:
-            config["DIR_CODE"] = codepath
+            config["DIR_CODE"]=codepath
 
         if MyEnv.readonly:
             MyEnv.config = MyEnv.config_default_get(config=config)
@@ -1667,17 +1686,17 @@ class MyEnv():
                 MyEnv.config = MyEnv.config_default_get(config=config)
                 MyEnv.config_save()
 
-        MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE", []) if i.strip().strip("'\'") != ""]
-        MyEnv.log_excludes = [i for i in MyEnv.config.get("LOGGER_EXCLUDE", []) if i.strip().strip("'\'") != ""]
-        MyEnv.log_loglevel = MyEnv.config.get("LOGGER_LEVEL", 100)
-        MyEnv.log_console = MyEnv.config.get("LOGGER_CONSOLE", True)
-        MyEnv.log_redis = MyEnv.config.get("LOGGER_REDIS", False)
-        MyEnv.debug = MyEnv.config.get("DEBUG", False)
+        MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE",[]) if i.strip().strip("'\'") != ""]
+        MyEnv.log_excludes = [i for i in MyEnv.config.get("LOGGER_EXCLUDE",[]) if i.strip().strip("'\'") != ""]
+        MyEnv.log_loglevel = MyEnv.config.get("LOGGER_LEVEL",100)
+        MyEnv.log_console = MyEnv.config.get("LOGGER_CONSOLE",True)
+        MyEnv.log_redis = MyEnv.config.get("LOGGER_REDIS",False)
+        MyEnv.debug = MyEnv.config.get("DEBUG",False)
 
-        if os.path.exists(os.path.join(MyEnv.config["DIR_BASE"], "bin", "python3.6")):
-            MyEnv.sandbox_python_active = True
+        if os.path.exists(os.path.join(MyEnv.config["DIR_BASE"],"bin","python3.6")):
+            MyEnv.sandbox_python_active=True
         else:
-            MyEnv.sandbox_python_active = False
+            MyEnv.sandbox_python_active=False
 
         MyEnv._state_load()
 
@@ -1690,7 +1709,7 @@ class MyEnv():
         :return:
         """
         if MyEnv._sshagent_active is None:
-            MyEnv._sshagent_active = len(Tools.execute("ssh-add -L", die=False, showout=False)[1]) > 40
+            MyEnv._sshagent_active = len(Tools.execute("ssh-add -L",die=False,showout=False)[1])>40
         return MyEnv._sshagent_active
 
     @staticmethod
@@ -1702,7 +1721,7 @@ class MyEnv():
         if not MyEnv.sshagent_active_check():
             print("need ssh-agent loaded to be able to find ssh-key to use")
             sys.exit(1)
-        return Tools.execute("ssh-add -L", die=False, showout=False)[1].strip().split(" ")[-2].strip()
+        return Tools.execute("ssh-add -L",die=False,showout=False)[1].strip().split(" ")[-2].strip()
 
     @staticmethod
     def config_edit():
@@ -1727,7 +1746,7 @@ class MyEnv():
     def config_save():
         if MyEnv.readonly:
             return
-        Tools.config_save(MyEnv.config_file_path, MyEnv.config)
+        Tools.config_save(MyEnv.config_file_path,MyEnv.config)
 
     @staticmethod
     def _state_load():
@@ -1736,9 +1755,9 @@ class MyEnv():
         no multiline
         """
         if Tools.exists(MyEnv.state_file_path):
-            MyEnv.state = Tools.config_load(MyEnv.state_file_path, if_not_exist_create=False)
+            MyEnv.state = Tools.config_load(MyEnv.state_file_path,if_not_exist_create=False)
         elif not MyEnv.readonly:
-            MyEnv.state = Tools.config_load(MyEnv.state_file_path, if_not_exist_create=True)
+            MyEnv.state = Tools.config_load(MyEnv.state_file_path,if_not_exist_create=True)
         else:
             MyEnv.state = {}
 
@@ -1746,15 +1765,15 @@ class MyEnv():
     def state_save():
         if MyEnv.readonly:
             return
-        Tools.config_save(MyEnv.state_file_path, MyEnv.state)
+        Tools.config_save(MyEnv.state_file_path,MyEnv.state)
 
     @staticmethod
     def _key_get(key):
-        key = key.split("=", 1)[0]
-        key = key.split(">", 1)[0]
-        key = key.split("<", 1)[0]
-        key = key.split(" ", 1)[0]
-        key = key.upper()
+        key=key.split("=",1)[0]
+        key=key.split(">",1)[0]
+        key=key.split("<",1)[0]
+        key=key.split(" ",1)[0]
+        key=key.upper()
         return key
 
     @staticmethod
@@ -1793,7 +1812,7 @@ class MyEnv():
 class BaseInstaller():
 
     @staticmethod
-    def install(basedir="/sandbox", config={}, sandboxed=False, force=False):
+    def install(basedir="/sandbox",config={},sandboxed=False,force=False):
 
         if not os.path.exists(basedir):
             script = """
@@ -1804,21 +1823,21 @@ class BaseInstaller():
             mkdir -p /usr/local/EGG-INFO
             sudo chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
             """
-            args = {}
+            args={}
             args["DIR_BASE"] = basedir
             args["USERNAME"] = getpass.getuser()
             st = os.stat(MyEnv.config["DIR_HOME"])
             gid = st.st_gid
             args["GROUPNAME"] = grp.getgrgid(gid)[0]
-            Tools.execute(script, interactive=True, args=args)
+            Tools.execute(script,interactive=True,args=args)
 
-        MyEnv.init(basedir=basedir, config=config, readonly=False, force=True)
+        MyEnv.init(basedir=basedir,config=config,readonly=False,force=True)
 
         if force:
             MyEnv.state_delete("install")
 
         if MyEnv.state_get("install"):
-            return  # nothing to do
+            return #nothing to do
 
         BaseInstaller.base()
         if MyEnv.platform() == "linux":
@@ -1837,36 +1856,36 @@ class BaseInstaller():
             raise RuntimeError("only OSX and Linux Ubuntu supported.")
 
         installed = Tools.cmd_installed("git") and Tools.cmd_installed("ssh-agent")
-        MyEnv.config["SSH_AGENT"] = installed
+        MyEnv.config["SSH_AGENT"]=installed
         MyEnv.config_save()
 
-        # BASHPROFILE
+        #BASHPROFILE
         if sandboxed:
-            env_path = "%s/.bash_profile" % MyEnv.config["DIR_HOME"]
+            env_path = "%s/.bash_profile"%MyEnv.config["DIR_HOME"]
             if Tools.exists(env_path):
                 bashprofile = Tools.file_text_read(env_path)
                 cmd = "source /sandbox/env.sh"
-                if bashprofile.find(cmd) != -1:
-                    bashprofile = bashprofile.replace(cmd, "")
-                    Tools.file_write(env_path, bashprofile)
+                if bashprofile.find(cmd)!=-1:
+                    bashprofile = bashprofile.replace(cmd,"")
+                    Tools.file_write(env_path,bashprofile)
         else:
-            # if not sandboxed need to remove old python's from bin dir
+            #if not sandboxed need to remove old python's from bin dir
             Tools.execute("rm -f {DIR_SANDBOX}/bin/pyth*")
-            env_path = "%s/.bash_profile" % MyEnv.config["DIR_HOME"]
+            env_path = "%s/.bash_profile"%MyEnv.config["DIR_HOME"]
             if Tools.exists(env_path):
                 bashprofile = Tools.file_text_read(env_path)
                 cmd = "source /sandbox/env.sh"
-                if bashprofile.find(cmd) == -1:
-                    bashprofile += "\n%s\n" % cmd
-                    Tools.file_write(env_path, bashprofile)
+                if bashprofile.find(cmd)==-1:
+                    bashprofile+="\n%s\n"%cmd
+                    Tools.file_write(env_path,bashprofile)
 
-        print("- get sandbox base from git")
-        Tools.code_github_get(repo="sandbox_base", branch=["master"], pull=False)
-        print("- copy files to sandbox")
-        # will get the sandbox installed
+        print ("- get sandbox base from git")
+        Tools.code_github_get(repo="sandbox_base", branch=["master"],pull=False)
+        print ("- copy files to sandbox")
+        #will get the sandbox installed
         if not sandboxed:
 
-            script = """
+            script="""
             set -e
             cd {DIR_BASE}
             rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/cfg/ {DIR_BASE}/cfg/
@@ -1877,18 +1896,18 @@ class BaseInstaller():
             mkdir -p var
 
             """
-            Tools.execute(script, interactive=True)
+            Tools.execute(script,interactive=True)
 
         else:
 
-            # install the sandbox
+            #install the sandbox
 
-            script = """
+            script="""
             cd {DIR_BASE}
             rsync -ra {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/ {DIR_BASE}/
             mkdir -p root
             """
-            Tools.execute(script, interactive=True)
+            Tools.execute(script,interactive=True)
 
             if MyEnv.platform() == "darwin":
                 reponame = "sandbox_osx"
@@ -1899,25 +1918,25 @@ class BaseInstaller():
 
             Tools.code_github_get(repo=reponame, branch=["master"])
 
-            script = """
+            script="""
             set -ex
             cd {DIR_BASE}
             rsync -ra code/github/threefoldtech/{REPONAME}/base/ .
             mkdir -p root
             mkdir -p var
             """
-            args = {}
-            args["REPONAME"] = reponame
+            args={}
+            args["REPONAME"]=reponame
 
-            Tools.execute(script, interactive=True, args=args)
+            Tools.execute(script,interactive=True,args=args)
 
-            script = """
+            script="""
             set -e
             cd {DIR_BASE}
             source env.sh
             python3 -c 'print("- PYTHON OK, SANDBOX USABLE")'
             """
-            Tools.execute(script, interactive=True)
+            Tools.execute(script,interactive=True)
 
             Tools.log("INSTALL FOR BASE OK")
 
@@ -1929,15 +1948,15 @@ class BaseInstaller():
             return
 
         if not os.path.exists(MyEnv.config["DIR_TEMP"]):
-            os.makedirs(MyEnv.config["DIR_TEMP"], exist_ok=True)
+            os.makedirs(MyEnv.config["DIR_TEMP"],exist_ok=True)
 
-        script = """
+        script="""
 
         mkdir -p {DIR_TEMP}/scripts
         mkdir -p {DIR_VAR}/log
 
         """
-        Tools.execute(script, interactive=True)
+        Tools.execute(script,interactive=True)
         MyEnv.state_set("generic_base")
 
     @staticmethod
@@ -1990,7 +2009,7 @@ class BaseInstaller():
                 "psutil>=5.4.3",
                 "pudb>=2017.1.2",
                 "pyblake2>=0.9.3",
-                # "pycapnp>=0.5.12",
+                "pycapnp>=0.5.12",
                 "PyGithub>=1.34",
                 "pymux>=0.13",
                 "pynacl>=1.2.1",
@@ -2061,11 +2080,10 @@ class BaseInstaller():
     def pips_install():
         for pip in BaseInstaller.pips_list(3):
 
-            if not MyEnv.state_get("pip_%s" % pip):
-                C = "pip3 install --user '%s'" % pip
-                Tools.execute(C, die=True)
-                MyEnv.state_set("pip_%s" % pip)
-
+            if not MyEnv.state_get("pip_%s"%pip):
+                C="pip3 install --user '%s'"%pip
+                Tools.execute(C,die=True)
+                MyEnv.state_set("pip_%s"%pip)
 
 class OSXInstaller():
 
@@ -2079,17 +2097,17 @@ class OSXInstaller():
     def base():
         MyEnv._init()
         if not Tools.cmd_installed("curl") or not Tools.cmd_installed("unzip") or not Tools.cmd_installed("rsync"):
-            script = """
+            script="""
             brew install curl unzip rsync
             """
-            Tools.execute(script, replace=True)
+            Tools.execute(script,replace=True)
         BaseInstaller.pips_install()
 
     @staticmethod
     def brew_uninstall():
         MyEnv._init()
-        cmd = 'sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"'
-        Tools.execute(cmd, interactive=True)
+        cmd='sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"'
+        Tools.execute(cmd,interactive=True)
         toremove = """
         sudo rm -rf /usr/local/.com.apple.installer.keep
         sudo rm -rf /usr/local/include/
@@ -2098,8 +2116,7 @@ class OSXInstaller():
         sudo rm -rf /usr/local/FlashcardService/
         sudo rm -rf /usr/local/texlive/
         """
-        Tools.execute(toremove, interactive=True)
-
+        Tools.execute(toremove,interactive=True)
 
 class UbuntuInstaller():
 
@@ -2129,7 +2146,7 @@ class UbuntuInstaller():
         if MyEnv.state_get("base"):
             return
 
-        script = """
+        script="""
         if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
             echo >> /etc/apt/sources.list
             echo "# Jumpscale Setup" >> /etc/apt/sources.list
@@ -2141,7 +2158,7 @@ class UbuntuInstaller():
         locale-gen --purge en_US.UTF-8
 
         """
-        Tools.execute(script, interactive=True)
+        Tools.execute(script,interactive=True)
         MyEnv.state_set("base")
 
     @staticmethod
@@ -2151,7 +2168,7 @@ class UbuntuInstaller():
 
         Tools.log("installing base system")
 
-        script = """
+        script="""
         apt-get install -y python3-pip locales
         pip3 install ipython
         """
@@ -2162,7 +2179,7 @@ class UbuntuInstaller():
     def docker_install():
         if MyEnv.state_get("ubuntu_docker_install"):
             return
-        script = """
+        script="""
         apt update
         apt upgrade -y
         apt install python3-pip  -y
@@ -2175,6 +2192,7 @@ class UbuntuInstaller():
         Tools.execute(script, interactive=True)
         MyEnv.state_set("ubuntu_docker_install")
 
+
     @staticmethod
     def python_redis_install():
         if MyEnv.state_get("python_redis_install"):
@@ -2182,7 +2200,7 @@ class UbuntuInstaller():
 
         Tools.log("installing jumpscale tools")
 
-        script = """
+        script="""
         cd /tmp
         apt-get install -y mc wget python3 git tmux python3-distutils python3-psutil
         apt-get install -y build-essential
@@ -2192,6 +2210,7 @@ class UbuntuInstaller():
         """
         Tools.execute(script, interactive=True)
         MyEnv.state_set("python_redis_install")
+
 
     @staticmethod
     def apts_list():
@@ -2208,7 +2227,7 @@ class UbuntuInstaller():
         for apt in UbuntuInstaller.apts_list():
             if not MyEnv.state_get('apt_%s' % apt):
                 command = 'apt-get install -y %s' % apt
-                Tools.execute(command, die=True)
+                Tools.execute(command,die=True)
                 MyEnv.state_set('apt_%s' % apt)
 
     # def pip3(self):
@@ -2221,32 +2240,31 @@ class UbuntuInstaller():
     #     """
     #     Tools.execute(script,interactive=True)
 
-
 class JumpscaleInstaller():
 
     def __init__(self, branch=["development"]):
         MyEnv._init()
         self.account = "threefoldtech"
         self.branch = branch
-        self._jumpscale_repos = [("jumpscaleX", "Jumpscale"), ("digitalmeX", "DigitalMe")]
+        self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
-    def install(self, basedir="/sandbox", config={}, sandboxed=False, force=False, secret="1234", private_key_words=None, gitpull=False):
+    def install(self,basedir="/sandbox",config={},sandboxed=False,force=False,secret="1234",private_key_words=None,gitpull=False):
 
         MyEnv.check_platform()
 
-        BaseInstaller.install(basedir=basedir, config=config, sandboxed=sandboxed, force=force)
+        BaseInstaller.install(basedir=basedir,config=config,sandboxed=sandboxed,force=force)
 
         Tools.file_touch(os.path.join(MyEnv.config["DIR_BASE"], "lib/jumpscale/__init__.py"))
 
         if self.branch:
-            # TODO: need to check if ok
-            self.branch = [i.strip() for i in self.branch.split(",") if i.strip() != ""]
+            #TODO: need to check if ok
+            self.branch = [i.strip() for i in self.branch.split(",") if i.strip()!=""]
 
         self.repos_get(pull=gitpull)
         self.repos_link()
         self.cmds_link()
 
-        script = """
+        script="""
         set -e
         cd {DIR_BASE}
         source env.sh
@@ -2258,10 +2276,10 @@ class JumpscaleInstaller():
         """
 
         if private_key_words is None:
-            private_key_words = ""  # will make sure it gets generated
+            private_key_words = "" #will make sure it gets generated
 
         if secret.lower().strip() == "ssh":
-            C = """
+            C="""
             [[instruction]]
             instruction_method = "j.data.nacl.configure"
             name = "default"
@@ -2270,7 +2288,7 @@ class JumpscaleInstaller():
             generate = true
             """
         else:
-            C = """
+            C="""
             [[instruction]]
             instruction_method = "j.data.nacl.configure"
             name = "default"
@@ -2279,48 +2297,51 @@ class JumpscaleInstaller():
             privkey_words = "{WORDS}"
             generate = true
             """
-        kwargs = {}
+        kwargs={}
         kwargs["WORDS"] = private_key_words
         kwargs["SECRET"] = secret
 
-        C = Tools.text_strip(C, args=kwargs, replace=True)
+        C=Tools.text_strip(C,args=kwargs,replace=True)
 
-        Tools.file_write("/tmp/instructions.toml", C)
+        Tools.file_write("/tmp/instructions.toml",C)
         Tools.execute(script)
 
+
     def remove_old_parts(self):
-        tofind = ["DigitalMe", "Jumpscale", "ZeroRobot"]
+        tofind=["DigitalMe","Jumpscale","ZeroRobot"]
         for part in sys.path:
             if Tools.exists(part):
                 for item in os.listdir(part):
                     for item_tofind in tofind:
-                        toremove = os.path.join(part, item)
-                        if item.find(item_tofind) != -1 and toremove.find("sandbox") == -1 and toremove.find("github") == -1:
-                            Tools.log("found old jumpscale item to remove:%s" % toremove)
+                        toremove =  os.path.join(part,item)
+                        if item.find(item_tofind)!=-1  and toremove.find("sandbox")==-1 and toremove.find("github")==-1:
+                            Tools.log("found old jumpscale item to remove:%s"%toremove)
                             Tools.delete(toremove)
-                        if item.find(".pth") != -1:
-                            out = ""
+                        if item.find(".pth")!=-1:
+                            out=""
                             for line in Tools.file_text_read(toremove).split("\n"):
-                                if line.find("threefoldtech") == -1:
-                                    out += "%s\n" % line
+                                if line.find("threefoldtech")==-1:
+                                    out+="%s\n"%line
                             try:
-                                Tools.file_write(toremove, out)
+                                Tools.file_write(toremove,out)
                             except:
                                 pass
                             # Tools.shell()
-        tofind = ["js_", "js9"]
+        tofind=["js_","js9"]
         for part in os.environ["PATH"].split(":"):
             if Tools.exists(part):
                 for item in os.listdir(part):
                     for item_tofind in tofind:
-                        toremove = os.path.join(part, item)
-                        if item.startswith(item_tofind) and toremove.find("sandbox") == -1 and toremove.find("github") == -1:
-                            Tools.log("found old jumpscale item to remove:%s" % toremove)
-                            Tools.delete(toremove)
+                        toremove =  os.path.join(part,item)
+                        if item.startswith(item_tofind) and toremove.find("sandbox")==-1 and toremove.find("github")==-1:
+                                Tools.log("found old jumpscale item to remove:%s"%toremove)
+                                Tools.delete(toremove)
 
-    def repos_get(self, pull=True):
 
-        for sourceName, _ in self._jumpscale_repos:
+
+    def repos_get(self,pull=True):
+
+        for sourceName,_ in self._jumpscale_repos:
             Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
 
     def repos_link(self):
@@ -2329,8 +2350,8 @@ class JumpscaleInstaller():
         :return:
         """
 
-        for item, alias in self._jumpscale_repos:
-            script = """
+        for item,alias in self._jumpscale_repos:
+            script="""
             set -e
             mkdir -p {DIR_BASE}/lib/jumpscale
             cd {DIR_BASE}/lib/jumpscale
@@ -2338,24 +2359,25 @@ class JumpscaleInstaller():
             rm -f {ALIAS}
             ln -s {LOC}/{ALIAS} {ALIAS}
             """
-            exists, _, _, _, loc = Tools._code_location_get(repo=item, account=self.account)
+            exists,_,_,_,loc=Tools._code_location_get(repo=item,account=self.account)
             if not exists:
-                raise RuntimeError("did not find:%s" % loc)
+                raise RuntimeError("did not find:%s"%loc)
+
 
             # destpath = "/sandbox/lib/jumpscale/{ALIAS}"
             # if os.path.exists(destpath):
             #     continue
 
-            args = {"NAME": item, "LOC": loc, "ALIAS": alias}
-            Tools.log(Tools.text_replace("link {LOC}/{ALIAS} to {ALIAS}", args=args))
-            Tools.execute(script, args=args)
+            args={"NAME":item,"LOC":loc,"ALIAS":alias}
+            Tools.log(Tools.text_replace("link {LOC}/{ALIAS} to {ALIAS}",args=args))
+            Tools.execute(script,args=args)
 
     def cmds_link(self):
 
-        _, _, _, _, loc = Tools._code_location_get(repo="jumpscaleX", account=self.account)
+        _,_,_,_,loc=Tools._code_location_get(repo="jumpscaleX",account=self.account)
         for src in os.listdir("%s/cmds" % loc):
-            src2 = os.path.join(loc, "cmds", src)
-            dest = "%s/bin/%s" % (MyEnv.config["DIR_BASE"], src)
+            src2=os.path.join(loc,"cmds",src)
+            dest="%s/bin/%s" % (MyEnv.config["DIR_BASE"], src)
             if not os.path.exists(dest):
                 Tools.execute("ln -s {} {}".format(src2, dest))
                 Tools.execute("chmod 770 {}".format(dest))
@@ -2372,15 +2394,15 @@ class JumpscaleInstaller():
 
 class Docker():
 
-    def __init__(self, name="default", delete=False, portrange=1, image='despiegk/3bot',
-                 sshkey=None, baseinstall=True):
+    def __init__(self,name="default",delete=False,portrange=1,image='despiegk/3bot',
+                sshkey=None,baseinstall=True, cmd=None):
         """
         if you want to start from scratch use: "phusion/baseimage:master"
 
         if codedir not specified will use /sandbox/code if exists otherwise ~/code
         """
-        rc, out, _ = Tools.execute("cat /proc/1/cgroup", die=False, showout=False)
-        if rc == 0 and out.find("/docker/") != -1:
+        rc,out,_=Tools.execute("cat /proc/1/cgroup",die=False,showout=False)
+        if rc==0 and out.find("/docker/")!=-1:
             print("Cannot continue, trying to use docker tools while we are already in a docker")
             sys.exit(1)
 
@@ -2390,7 +2412,7 @@ class Docker():
         if not sshkey:
             sshkey = MyEnv.sshagent_key_get()
 
-        if MyEnv.platform() == "linux" and not Tools.cmd_installed("docker"):
+        if MyEnv.platform()=="linux" and not Tools.cmd_installed("docker"):
             UbuntuInstaller.docker_install()
 
         if not Tools.cmd_installed("docker"):
@@ -2400,25 +2422,25 @@ class Docker():
         container_exists = name in self.docker_names()
 
         if container_exists and delete:
-            Tools.execute("docker rm -f %s" % name)
+            Tools.execute("docker rm -f %s"%name)
             container_exists = False
 
-        a = 8000+int(portrange)*10
-        b = 8004+int(portrange)*10
-        portrange_txt = "%s-%s:8000-8004" % (a, b)
-        portrange_txt += " -p %s:9999/udp" % (a+9)  # udp port for wireguard
+        a=8000+int(portrange)*10
+        b=8004+int(portrange)*10
+        portrange_txt="%s-%s:8000-8004"%(a,b)
+        portrange_txt +=" -p %s:9999/udp"%(a+9)  #udp port for wireguard
 
         port = 9000+int(portrange)*100 + 22
         self.port = port
 
-        args = {}
-        args["NAME"] = name
-        args["PORTRANGE"] = "-p %s" % portrange_txt
+        args={}
+        args["NAME"]=name
+        args["PORTRANGE"] = "-p %s"%portrange_txt
         args["PORT"] = port
         args["IMAGE"] = image
 
         if not container_exists:
-            cmd = """
+            run_cmd="""
             docker run --name={NAME} --hostname={NAME} -d \
             -p {PORT}:22 {PORTRANGE} \
             --device=/dev/net/tun \
@@ -2426,17 +2448,19 @@ class Docker():
             --cap-add=DAC_OVERRIDE --cap-add=DAC_READ_SEARCH \
             -v {DIR_CODE}:/sandbox/code {IMAGE}
             """
-            # /sbin/my_init
+            if cmd:
+                run_cmd = run_cmd.strip() + " %s\n" % cmd
+            #/sbin/my_init
             print(" - Docker machine gets created: ")
-            Tools.execute(cmd, args=args, interactive=True)
+            Tools.execute(run_cmd,args=args,interactive=True)
             self.dexec('rm -f /root/.BASEINSTALL_OK')
             print(" - Docker machine OK")
             print(" - Start SSH server")
         else:
             if name not in self.docker_running():
-                Tools.execute("docker start %s" % name)
+                Tools.execute("docker start %s"% name)
                 if not name in self.docker_running():
-                    print("could not start container:%s" % name)
+                    print("could not start container:%s"%name)
                     sys.exit(1)
                 self.dexec('rm -f /root/.BASEINSTALL_OK')
 
@@ -2448,9 +2472,9 @@ class Docker():
             pass
         if not installed:
             self.dexec('rm -f /root/.BASEINSTALL_OK')
-            SSHKEYS = Tools.execute("ssh-add -L", die=False, showout=False)[1]
-            if SSHKEYS.strip() != "":
-                self.dexec('echo "%s" > /root/.ssh/authorized_keys' % SSHKEYS)
+            SSHKEYS = Tools.execute("ssh-add -L",die=False,showout=False)[1]
+            if SSHKEYS.strip()!="":
+                self.dexec('echo "%s" > /root/.ssh/authorized_keys'%SSHKEYS)
 
             self.dexec("/usr/bin/ssh-keygen -A")
             self.dexec('/etc/init.d/ssh start')
@@ -2463,52 +2487,53 @@ class Docker():
 
             self.dexec('touch /root/.BASEINSTALL_OK')
 
-    def dexec(self, cmd, interactive=False):
-        if "'" in cmd:
-            cmd = cmd.replace("'", "\"")
-        if interactive:
-            cmd2 = "docker exec -ti %s bash -c '%s'" % (self.name, cmd)
-        else:
-            cmd2 = "docker exec -t %s bash -c '%s'" % (self.name, cmd)
-        Tools.execute(cmd2, interactive=interactive, showout=True, replace=False, asfile=True)
 
-    def sshexec(self, cmd):
+    def dexec(self,cmd,interactive=False):
         if "'" in cmd:
-            cmd = cmd.replace("'", "\"")
-        cmd2 = "ssh -oStrictHostKeyChecking=no -t root@localhost -A -p %s '%s'" % (self.port, cmd)
-        Tools.execute(cmd2, interactive=True, showout=False, replace=False, asfile=True)
+            cmd = cmd.replace("'","\"")
+        if interactive:
+            cmd2 = "docker exec -ti %s bash -c '%s'"%(self.name,cmd)
+        else:
+            cmd2 = "docker exec -t %s bash -c '%s'"%(self.name,cmd)
+        Tools.execute( cmd2, interactive=interactive,showout=True,replace=False,asfile=True)
+
+
+    def sshexec(self,cmd):
+        if "'" in cmd:
+            cmd = cmd.replace("'","\"")
+        cmd2 = "ssh -oStrictHostKeyChecking=no -t root@localhost -A -p %s '%s'"%(self.port,cmd)
+        Tools.execute(cmd2,interactive=True,showout=False,replace=False,asfile=True)
+
 
     @staticmethod
     def docker_running():
-        names = Tools.execute("docker ps --format='{{json .Names}}'", showout=False, replace=False)[1].split("\n")
-        names = [i.strip("\"'") for i in names if i.strip() != ""]
+        names = Tools.execute("docker ps --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
+        names = [i.strip("\"'") for i in names if i.strip()!=""]
         return names
 
     @staticmethod
     def docker_names():
-        names = Tools.execute(
-            "docker container ls -a --format='{{json .Names}}'", showout=False, replace=False)[1].split("\n")
-        names = [i.strip("\"'") for i in names if i.strip() != ""]
+        names = Tools.execute("docker container ls -a --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
+        names = [i.strip("\"'") for i in names if i.strip()!=""]
         return names
 
     @staticmethod
     def image_names():
-        names = Tools.execute("docker images --format='{{.Repository}}:{{.Tag}}'",
-                              showout=False, replace=False)[1].split("\n")
-        names = [i.strip("\"'") for i in names if i.strip() != ""]
+        names = Tools.execute("docker images --format='{{.Repository}}:{{.Tag}}'",showout=False,replace=False)[1].split("\n")
+        names = [i.strip("\"'") for i in names if i.strip()!=""]
         return names
 
-    def jumpscale_install(self, secret="1234", private_key="", redo=False, wiki=False):
+    def jumpscale_install(self,secret="1234",private_key="",redo=False,wiki=False):
 
         args_txt = ""
-        args_txt += " --secret='%s'" % secret
+        args_txt+=" --secret='%s'"%secret
         if private_key:
-            args_txt += " --private_key='%s'" % private_key
+            args_txt+=" --private_key='%s'"%private_key
         if redo:
-            args_txt += " -r"
+            args_txt+=" -r"
         if wiki:
-            args_txt += " -w"
-        args_txt += " -y"
+            args_txt+=" -w"
+        args_txt+=" -y"
 
         # args_txt+=" -c"
         # args_txt+=" --debug"
@@ -2518,16 +2543,16 @@ class Docker():
             cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py "
         else:
             print("copy installer over from where I install from")
-            for item in ["install.py", "InstallTools.py"]:
-                src1 = "%s/%s" % (dirpath, item)
-                cmd = "scp -P %s %s root@localhost:/tmp/" % (self.port, src1)
+            for item in ["install.py","InstallTools.py"]:
+                src1 = "%s/%s"%(dirpath,item)
+                cmd = "scp -P %s %s root@localhost:/tmp/" %(self.port,src1)
                 Tools.execute(cmd)
             cmd = "cd /tmp;python3 install.py "
-        cmd += args_txt
+        cmd+= args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec(cmd)
 
-        cmd = """
+        cmd="""
         apt-get autoclean
         apt-get clean
         apt-get autoremove
@@ -2536,6 +2561,7 @@ class Docker():
         find / | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
         """
         self.sshexec(cmd)
+
 
         k = """
 
@@ -2549,6 +2575,7 @@ class Docker():
 
 
         """
-        args = {}
-        args["port"] = self.port
-        print(Tools.text_replace(k, args=args))
+        args={}
+        args["port"]=self.port
+        print(Tools.text_replace(k,args=args))
+

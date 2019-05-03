@@ -1,101 +1,41 @@
-from importlib import util
-import os
-import subprocess
-import sys
+import argparse
 import inspect
+import os
+import shutil
+import sys
+from importlib import util
+from urllib.request import urlopen
 
-BRANCH = "master"
-SANDBOX = "/sandbox"
-
-# get current install.py directory
-rootdir = os.path.dirname(os.path.abspath(__file__))
-
-path = os.path.join(rootdir, "InstallTools.py")
-
-if not os.path.exists(path):
-    cmd = "cd %s;rm -f InstallTools.py;curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/%s/install/InstallTools.py?$RANDOM > InstallTools.py" % (
-        rootdir, BRANCH)
-    subprocess.call(cmd, shell=True)
-
-spec = util.spec_from_file_location("IT", path)
-IT = spec.loader.load_module()
-
-sys.excepthook = IT.my_excepthook
-
-args = {}
+DEFAULT_BRANCH = "master"
+DEFAULT_CODEPATH = "/sandbox"
+CONTAINER_BASE_IMAGE = "phusion/baseimage:master"
+CONTAINER_NAME = '3bot'
 
 
-def help():
-    T = """
-    3bot development environment based on docker
-    --------------------------------------------
+def load_install_tools():
+    # get current install.py directory
+    rootdir = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(rootdir, "InstallTools.py")
 
-    -h = this help
+    if not os.path.exists(path):
+        os.chdir(rootdir)
+        url = "https://raw.githubusercontent.com/threefoldtech/jumpscaleX/%s/install/InstallTools.py" % DEFAULT_BRANCH
+        with urlopen(url) as resp:
+            if resp.status != 200:
+                raise RuntimeError("fail to download InstallTools.py")
+            with open(path, 'w+') as f:
+                f.write(resp.read().decode('utf-8'))
 
-    commands:
-        install             : get docker & install 3bot
-        export --file=$file        : export the container
-        import --file=$file        : import the container & start
-        stop                : stop the container
-        kosmos              : is the kosmos shell (JSX shell)
-        bash                : is the bash shell inside the container
-
-    e.g. python3 3bot_dev.py install -d -y -c
-    e.g. python3 3bot_dev.py export --file=/tmp/3bot.tar
-
-    install options
-    ---------------
-
-    -y = answer yes on every question (for unattended installs)
-    -c = will confirm all filled in questions at the end (useful when using -y)
-    -s = from scratch, means will start from empty ubuntu and re-install everything
-    -r = reinstall, basically means will try to re-do everything without removing the data
-    -d = if set will delete the docker container if it already exists
-
-    --debug will launch the debugger if something goes wrong
-
-    ## encryption
-
-    --secret = std is '1234', if you use 'SSH' then a secret will be derived from the SSH-Agent (only if only 1 ssh key loaded
-    --private_key = std is '' otherwise is 24 words, use '' around the private key
-                if secret specified and private_key not then will ask in -y mode will autogenerate
-
-    ## code related
-
-    --codepath = is where the github code will be checked out, default /sandbox/code if it exists otherwise ~/code
-    --pull = pull code from git, if not specified will only pull if code directory does not exist yet
-    --branch = jumpscale branch: normally 'master' or 'development' for unstable release
-
-    """
-    print(IT.Tools.text_replace(T))
-    sys.exit(0)
+    spec = util.spec_from_file_location("IT", path)
+    IT = spec.loader.load_module()
+    sys.excepthook = IT.my_excepthook
+    return IT
 
 
-args = IT.Tools.cmd_args_get()
-
-if "h" in args or args == {}:
-    help()
-
-if not "codepath" in args:
-    args["codepath"] = None
-
-if not "branch" in args:
-    args["branch"] = BRANCH
-
-if "name" not in args:
-    args["name"] = "3bot"
-
-if "sshkey" not in args:
-    args["sshkey"] = None
-
-if not args.get("image") or 's' in args:
-    args['image'] = "phusion/baseimage"
-
-IT.MyEnv.init(basedir=None, config={}, readonly=True, codepath=args["codepath"])
+IT = load_install_tools()
 
 
 def install_ui(args):
-
     if not IT.MyEnv.sshagent_active_check():
         T = """
         Did not find an SSH key in ssh-agent, is it ok to continue without?
@@ -105,66 +45,40 @@ def install_ui(args):
         if you never used an ssh-agent or github, just say "y"
 
         """
-        if "y" not in args:
+        if args.y is False:
             if not IT.Tools.ask_yes_no("OK to continue?"):
                 sys.exit(1)
 
-    if "y" not in args and "r" not in args:
+    if not args.s and not args.y and not args.r:
         if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
-            args["r"] = True
+            args.r = True
 
-        if args["name"] in IT.Docker.docker_names():
-            if "d" not in args:
-                if not "y" in args:
-                    if IT.Tools.ask_yes_no("docker:%s exists, ok to remove? Will otherwise keep and install inside." % args["name"]):
-                        args["d"] = True
+        if CONTAINER_NAME in IT.Docker.docker_names() and args.d is False and args.y is False:
+            args.d = IT.Tools.ask_yes_no(
+                "docker:%s exists, ok to remove? Will otherwise keep and install inside." % CONTAINER_NAME)
 
-    if "image" in args:
-        if "d" not in args:
-            # because if we specify image we want to delete the running docker
-            args["d"] = True
-        if ":" not in args["image"]:
-            args["image"] = "%s:latest" % args["image"]
-        # if args["image"] not in IT.Docker.image_names():
-        #     if IT.Tools.exists(args["image"]):
-        #         IT.Tools.shell()
-        #     else:
-        #         print("Cannot continue, image '%s' specified does not exist."%args["image"])
-        #         sys.exit(1)
-
-    if "pull" not in args:
-        if "y" not in args:
-            # not interactive ask
-            if IT.Tools.ask_yes_no("Do you want to pull code changes from git?"):
-                args["pull"] = True
+    if args.pull is None:
+        if args.y is False:
+            args.pull = IT.Tools.ask_yes_no("Do you want to pull code changes from git?")
         else:
-            #default is not pull
-            args["pull"] = False
+            args.pull = False  # default is not pull
 
-    if "y" in args:
-
-        if "secret" not in args:
+    if not args.secret:
+        if args.y:
+            args.secret = IT.MyEnv.sshagent_key_get() if IT.MyEnv.sshagent_active_check() else "1234"
+        else:
             if IT.MyEnv.sshagent_active_check():
-                args["secret"] = "SSH"
-            else:
-                args["secret"] = "1234"
-        if "private_key" not in args:
-            args["private_key"] = ""
-    else:
-        if "secret" not in args:
-            if IT.MyEnv.sshagent_active_check():
-                args["secret"] = IT.Tools.ask_string(
+                args.secret = IT.Tools.ask_string(
                     "Optional: provide secret to use for passphrase, if ok to use SSH-Agent just press 'ENTER'", default="SSH")
             else:
-                args["secret"] = IT.Tools.ask_string("please provide secret passphrase for the BCDB.", default="1234")
-        if "private_key" not in args:
-            args["private_key"] = IT.Tools.ask_string(
-                "please provide 24 words of the private key, or just press 'ENTER' for autogeneration.")
+                args.secret = IT.Tools.ask_string("please provide secret passphrase for the BCDB.", default="1234")
 
-    # if "y" not in args and "w" not in args:
-    #     if IT.Tools.ask_yes_no("Do you want to install lua/nginx/openresty & wiki environment?"):
-    #         args["w"]=True
+    if not args.private_key and not args.y:
+        args.private_key = IT.Tools.ask_string(
+            "please provide 24 words of the private key, or just press 'ENTER' for autogeneration.")
 
+
+def install_summary(args):
     T = """
 
     Jumpscale X Installer
@@ -173,99 +87,159 @@ def install_ui(args):
     """
     T = IT.Tools.text_replace(T)
 
-    if IT.MyEnv.sshagent_active_check() and args['secret'] == 'SSH':
-        T += " - sshkey used will be: %s\n" % IT.MyEnv.sshagent_key_get()
+    if IT.MyEnv.sshagent_active_check():
+        T += " - sshkey used will be: %s\n" % args.secret
 
-    T += " - location of code path is: %s\n" % args["codepath"]
-    if "w" in args:
+    T += " - location of code path is: %s\n" % args.code_path
+    if args.pull:
+        T += " - code will be pulled from github\n"
+    if args.wiki:
         T += " - will install wiki system at end\n"
-    if "3" in args:
-        T += " - name of container is: %s\n" % args["name"]
-        if args["container_exists"]:
-            if "d" in args:
-                T += " - will remove the docker, and recreate\n"
-            else:
-                T += " - will keep the docker container and install inside\n"
+    T += " - name of container is: %s\n" % CONTAINER_NAME
+    if CONTAINER_NAME in IT.Docker.docker_names():
+        if "d" in args:
+            T += " - will remove the docker, and recreate\n"
+        else:
+            T += " - will keep the docker container and install inside\n"
 
-        if "image" in args:
-            T += " - will use docker image: '%s'\n" % args["image"]
+    T += " - will use docker image: '%s'\n" % args.image
 
-        portrange = args["portrange"]
+    # portrange = args["portrange"]
 
-        a = 8000+int(portrange)*10
-        b = 8004+int(portrange)*10
-        portrange_txt = "%s-%s:8000-8004" % (a, b)
-        port = 9000+int(portrange)*100 + 22
+    # a = 8000+int(portrange)*10
+    # b = 8004+int(portrange)*10
+    # portrange_txt = "%s-%s:8000-8004" % (a, b)
+    # port = 9000+int(portrange)*100 + 22
 
-        T += " - will map ssh port to: '%s'\n" % port
-        T += " - will map portrange '%s' (8000-8004) always in container.\n" % portrange_txt
+    # T += " - will map ssh port to: '%s'\n" % port
+    # T += " - will map portrange '%s' (8000-8004) always in container.\n" % portrange_txt
 
-    if "debug" in args:
+    if args.debug:
         IT.MyEnv.debug = True
         T += " - runs in debug mode (means will use debugger when error).\n"
 
     T += "\n"
     print(T)
 
-    if "c" in args or "y" not in args:
+    if args.c or not args.y:
         if not IT.Tools.ask_yes_no("Ok to continue?"):
             sys.exit(1)
 
-    return args
+
+def install(args):
+    install_ui(args)
+    install_summary(args)
+
+    docker = IT.Docker(name=CONTAINER_NAME, delete=args.d,
+                       portrange=args.port_range, sshkey=args.secret, image=args.image)
+    docker.jumpscale_install(secret=args.secret, private_key=args.private_key)
 
 
-if "portrange" not in args:
-    args["portrange"] = 1
-
-if "install" in args or "import" in args:
-    args = install_ui(args)
-
-delete = "d" in args
-
-if not "import" in args:
-    docker = IT.Docker(name="3bot", delete=delete,
-                       portrange=args["portrange"], sshkey=args["sshkey"], image=args["image"])
-
-if "install" in args:
-    docker.jumpscale_install(secret=args["secret"], private_key=args["private_key"])
-
-elif "stop" in args:
-    if args["name"] in docker.docker_running():
-        IT.Tools.execute("docker stop %s" % args["name"])
-elif "export" in args:
-    if args["name"] in docker.docker_running():
-        if "file" not in args:
-            print("specify export file with --file $path")
-            sys.exit(1)
-        if not args["file"].endswith(".tar"):
-            print("export file needs to end with .tar")
-            sys.exit(1)
-        print("export docker:%s to %s, will take a while" % (args["name"], args["file"]))
-        IT.Tools.execute("docker export %s -o %s" % (args["name"], args["file"]))
-    else:
-        print("cannot find docker:%s" % args["name"])
+def import_container(args):
+    if not IT.Tools.exists(args.input):
+        print("could not find import file:%s" % args.input)
         sys.exit(1)
-elif "import" in args:
-    if "file" not in args:
-        print("specify export file with --file $path")
-        sys.exit(1)
-    if not IT.Tools.exists(args["file"]):
-        print("could not find import file:%s" % args["file"])
-        sys.exit(1)
-    if not args["file"].endswith(".tar"):
+
+    if not args.input.endswith(".tar"):
         print("export file needs to end with .tar")
         sys.exit(1)
-    print("import docker:%s to %s, will take a while" % (args["name"], args["file"]))
-    IT.Tools.execute("docker import %s local/imported" % (args["file"]))
-    docker = IT.Docker(name="3bot", delete=True,
-                       portrange=args["portrange"], sshkey=args["sshkey"], image="local/imported")
-elif "kosmos" in args:
-    cmd = "echo\nssh root@localhost -A -p %s 'source /sandbox/env.sh;kosmos'" % docker.port
-    IT.Tools.execute(cmd, interactive=True, die=False, showout=False)
-elif "bash" in args:
-    cmd = "echo\nssh root@localhost -A -p %s 'source /sandbox/env.sh;bash'" % docker.port
-    IT.Tools.execute(cmd, interactive=True, die=False, showout=False)
+
+    print("import docker:%s to %s, will take a while" % (CONTAINER_NAME, args.input))
+    IT.Tools.execute("docker import %s local/imported" % (args.input))
+    docker = IT.Docker(name=CONTAINER_NAME, delete=True,
+                       portrange=args.port_range, sshkey=args.secret, image="local/imported", cmd='/sbin/my_init')
 
 
-else:
-    print(help())
+def export_container(args):
+    docker = IT.Docker(name=CONTAINER_NAME, delete=False, portrange=1)
+    if CONTAINER_NAME not in docker.docker_names():
+        print("container does not exists. please install first")
+        sys.exit(1)
+
+    if not args.output.endswith(".tar"):
+        print("export file needs to end with .tar")
+        sys.exit(1)
+
+    print("export docker:%s to %s, will take a while" % (CONTAINER_NAME, args.output))
+    IT.Tools.execute("docker export %s -o %s" % (CONTAINER_NAME, args.output))
+
+
+def stop_container(args):
+    IT.Tools.execute("docker stop %s" % CONTAINER_NAME)
+
+
+def connect(args):
+    docker = IT.Docker(name=CONTAINER_NAME, delete=False, portrange=1)
+    if CONTAINER_NAME not in docker.docker_names():
+        print("container does not exists. please install first")
+        sys.exit(1)
+    os.execv(shutil.which("ssh"), ['ssh', 'root@localhost', '-A', '-p', str(docker.port)])
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="3bot development environment based on docker")
+    parser.add_argument("--debug", help="launch the debugger if something goes wrong")
+    parser.add_argument(
+        '--code-path', default=DEFAULT_CODEPATH, type=str, help="path where the github code will be checked out, default /sandbox/code if it exists otherwise ~/code"
+    )
+    subparsers = parser.add_subparsers()
+
+    docker_parser = argparse.ArgumentParser(add_help=False)
+    docker_parser.add_argument(
+        '-y', help="answer yes on every question (for unattended installs)", action="store_true", default=False)
+    docker_parser.add_argument(
+        '-c', help="will confirm all filled in questions at the end (useful when using -y)", action="store_true", default=False)
+    docker_parser.add_argument(
+        '-s', help="from scratch, means will start from empty ubuntu and re-install everything", action="store_true", default=False)
+    docker_parser.add_argument(
+        '-r', help="reinstall, basically means will try to re-do everything without removing the data", action="store_true", default=False)
+    docker_parser.add_argument(
+        '-d', help="if set will delete the docker container if it already exists", action="store_true", default=False)
+    docker_parser.add_argument(
+        '--wiki', '-w', help='also install the wiki system', action="store_true", default=False
+    )
+    docker_parser.add_argument(
+        '--secret', default=None, type=str, help="if you use 'SSH' then a secret will be derived from the SSH-Agent (only if only 1 ssh key loaded"
+    )
+    docker_parser.add_argument(
+        '--private-key', default="", type=str, help="24 words, use '' around the private key if secret specified and private_key not then will ask in -y mode will autogenerate"
+    )
+    docker_parser.add_argument(
+        '--pull', default=False, action="store_true", help="pull code from git, if not specified will only pull if code directory does not exist yet"
+    )
+    docker_parser.add_argument(
+        '--branch', default=DEFAULT_BRANCH, type=str, help="jumpscale branch. default 'master' or 'development' for unstable release"
+    )
+    docker_parser.add_argument(
+        '--image', default=CONTAINER_BASE_IMAGE, type=str, help="select the container image to use to create the container"
+    )
+    docker_parser.add_argument(
+        '--port-range', default=1, type=int
+    )
+
+    parser_install = subparsers.add_parser(
+        'install', help='create the 3bot container and install jumpcale inside', parents=[docker_parser])
+    parser_install.set_defaults(func=install)
+
+    parser_export = subparsers.add_parser('export', help='export the 3bot container to a tar archive')
+    parser_export.add_argument(
+        "--output", "-o", help='export the container to a file pointed by --output', required=True)
+    parser_export.set_defaults(func=export_container)
+
+    parser_import = subparsers.add_parser(
+        'import', help='re-create a 3bot container from an archive created wit the export command', parents=[docker_parser])
+    parser_import.add_argument(
+        "--input", "-i", help='import a container from the tar pointed by --import', required=True)
+    parser_import.set_defaults(func=import_container)
+
+    parser_stop = subparsers.add_parser('stop', help='stop the 3bot container')
+    parser_stop.set_defaults(func=stop_container)
+
+    parser_connect = subparsers.add_parser('connect', help='ssh into the container', parents=[docker_parser])
+    parser_connect.set_defaults(func=connect)
+
+    args = parser.parse_args()
+
+    IT.MyEnv.init(basedir=None, config={}, readonly=True, codepath=args.code_path)
+
+    args.func(args)
