@@ -92,7 +92,7 @@ class TestCases(BaseTest):
         j.builder.apps.digitalme.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('openresty')))
 
-    def test011_bitcion(self):
+    def test011_bitcoin(self):
         j.builder.blockchain.bitcoin.build(reset=True)
         j.builder.blockchain.bitcoin.install()
         j.builder.blockchain.bitcoin.start()
@@ -107,8 +107,7 @@ class TestCases(BaseTest):
         self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('ethereum')))
         j.builder.blockchain.ethereum.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('ethereum')))
-        
-    
+         
     def test013_etcd(self):
         j.builder.db.etcd.build(reset=True)
         j.builder.db.etcd.install()
