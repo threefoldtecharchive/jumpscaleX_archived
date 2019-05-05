@@ -4,12 +4,14 @@ import unittest
 
 
 class TestCases(BaseTest):
+    @unittest.skip('https://github.com/threefoldtech/jumpscaleX/issues/299')
     def test001_caddy(self):
         j.builder.web.caddy.sandbox(zhub_instance=self.hub_instance, reset=True, create_flist=True)
         self.deploy_flist_container('caddy')
         data = self.cont_client.system("/sandbox/bin/caddy -h")
         self.assertIn("Usage of sandbox/bin/caddy", data.stdout)
 
+    @unittest.skip('https://github.com/threefoldtech/jumpscaleX/issues/299')
     def test002_traefik(self):
         j.builder.web.traefik.sandbox(zhub_instance=self.hub_instance, reset=True, create_flist=True)
         self.deploy_flist_container('traefik')
@@ -37,6 +39,7 @@ class TestCases(BaseTest):
         data = self.cont_client.system("/sandbox/bin/resty -h")
         self.assertIn("Usage: /sandbox/bin/resty", data.stdout)
 
+    @unittest.skip('https://github.com/threefoldtech/jumpscaleX/issues/299')
     def test006_etcd(self):
         j.builder.db.etcd.sandbox(zhub_instance=self.hub_instance, reset=True, create_flist=True)
         self.deploy_flist_container('etcd')

@@ -1,6 +1,7 @@
 from Jumpscale import j
 from Jumpscale.builder.test.flist.base_test import BaseTest
 import unittest
+import time
 
 class TestCases(BaseTest):
     def test001_zbd(self):
@@ -11,6 +12,7 @@ class TestCases(BaseTest):
         j.builder.db.zdb.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('zdb')))
 
+    @unittest.skip("https://github.com/filebrowser/caddy/issues/32")
     def test002_caddy(self):
         j.builder.web.caddy.build(reset=True)
         j.builder.web.caddy.install()
@@ -24,16 +26,18 @@ class TestCases(BaseTest):
         j.builder.web.nginx.install()
         j.builder.web.nginx.start()
         self.assertTrue(len(j.sal.process.getProcessPid('nginx')))
-        j.builder.web.caddy.stop()
+        j.builder.web.nginx.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('nginx')))
 
     def test004_openresty(self):
         j.builder.web.openresty.build(reset=True)
         j.builder.web.openresty.install()
         j.builder.web.openresty.start()
-        self.assertTrue(len(j.sal.process.getProcessPid('lapis')))
+        time.sleep(10)
+        self.assertTrue(len(j.sal.process.getProcessPid('openresty')))
         j.builder.web.openresty.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid('nginx')))
+        time.sleep(10)
+        self.assertEqual(0, len(j.sal.process.getProcessPid('openresty')))
 
     def test005_traefik(self):
         j.builder.web.traefik.build(reset=True)
@@ -92,9 +96,9 @@ class TestCases(BaseTest):
         j.builder.blockchain.bitcoin.build(reset=True)
         j.builder.blockchain.bitcoin.install()
         j.builder.blockchain.bitcoin.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('bitcoin')))
-        j.builder.blockchain.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid('bitcoin')))
+        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('bitcoind')))
+        j.builder.blockchain.bitcoin.stop()
+        self.assertEqual(0, len(j.sal.process.getProcessPid('bitcoind')))
 
     def test012_ethereum(self):
         j.builder.blockchain.ethereum.build(reset=True)
@@ -109,8 +113,10 @@ class TestCases(BaseTest):
         j.builder.db.etcd.build(reset=True)
         j.builder.db.etcd.install()
         j.builder.db.etcd.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('etcd')))
+        time.sleep(10)
+        self.assertTrue(len(j.sal.process.getProcessPid('etcd')))
         j.builder.db.etcd.stop()
+        time.sleep(10)
         self.assertEqual(0, len(j.sal.process.getProcessPid('etcd')))
 
     def test014_capnp(self):

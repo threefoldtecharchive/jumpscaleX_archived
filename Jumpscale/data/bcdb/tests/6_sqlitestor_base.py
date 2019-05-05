@@ -13,7 +13,7 @@ def main(self):
 
     bcdb, _ = self._load_test_model(reset=True, sqlitestor=True)
 
-    mpath = self._dirpath+"/tests/models"
+    mpath = self._dirpath + "/tests/models"
     assert j.sal.fs.exists(mpath)
 
     # make sure we remove the maybe already previously generated model file
@@ -22,7 +22,7 @@ def main(self):
 
     bcdb.models_add(mpath)
 
-    model = bcdb.model_get('jumpscale.bcdb.test.house')
+    model = bcdb.model_get("jumpscale.bcdb.test.house")
     assert model.get_all() == []
 
     assert model.bcdb.zdbclient is None
@@ -50,26 +50,31 @@ def main(self):
 
     model.cache_reset()
     model_obj = model.new()
+    model_obj.name = "TEST"
     model_obj.cost = "12 USD"
     model_obj.save()
     # assert model.obj_cache != {}  # now there needs to be something in WE DONT USE FOR NOW
 
     assert model_obj.id == 2
 
-    model.get(1)._ddict == {'name': '',
-                            'active': False,
-                            'cost': b'\x00\x97\x0b\x00\x00\x00',
-                            'room': [],
-                            'id': 2}
+    model.get(1)._ddict == {
+        "name": "",
+        "active": False,
+        "cost": b"\x00\x97\x0b\x00\x00\x00",
+        "room": [],
+        "id": 2,
+    }
 
-    model.get(2)._ddict == {'name': '',
-                            'active': False,
-                            'cost': b'\x00\x97\x0c\x00\x00\x00',
-                            'room': [],
-                            'id': 2}
+    model.get(2)._ddict == {
+        "name": "",
+        "active": False,
+        "cost": b"\x00\x97\x0c\x00\x00\x00",
+        "room": [],
+        "id": 2,
+    }
 
     # assert model.index.select().first().cost == 11.0  # is always in usd
 
     print("TEST FOR MODELS DONE in SQLITE")
 
-    return ("OK")
+    return "OK"
