@@ -1,5 +1,5 @@
 from Jumpscale import j
-
+import pytest
 
 def main(self):
     """
@@ -7,5 +7,5 @@ def main(self):
 
     kosmos 'j.data.schema.test(name="unittests")' --debug
     """
-    #todo:*1 call the unit tests
-    pass
+    unittests_path = "/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/data/schema/tests/testsuite"
+    assert pytest.main([unittests_path]) == 0
