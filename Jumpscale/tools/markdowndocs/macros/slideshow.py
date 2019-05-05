@@ -19,9 +19,20 @@ class Slide:
         self.order = order
 
 def slideshow(doc, **kwargs):
+    def _content_parse(content):
+        data = dict()
+        for line in content.splitlines():
+            if "=" in line:
+                parts = line.split("=", maxsplit=1)
+                key = parts[0].strip()
+                value = parts[1].strip()
+                data[key] = value
+        return data
+
     slides = SlideShow()
     presentation_guids = {}
-    for key, value in kwargs.items():
+    data = _content_parse(kwargs['content'])
+    for key, value in data.items():
         if key.casefold().startswith("presentation"):
             presentation_guids[key.strip()] = value
 
@@ -54,3 +65,4 @@ def slideshow(doc, **kwargs):
             </section>""".format(image=image_tag, footer=slide.footer)
     output += "\n```"
     return output
+
