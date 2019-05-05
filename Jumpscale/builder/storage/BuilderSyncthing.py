@@ -56,6 +56,11 @@ class BuilderSyncthing(BuilderGolangTools):
         self._remove(self.package_path)
         self._remove(self.DIR_SANDBOX)
 
+    @builder_method()
+    def stop(self):
+        # stop syncthing
+        j.sal.process.killProcessByName(self.NAME)
+
     @property
     def startup_cmds(self):
         cmd = self._replace('{DIR_BIN}/syncthing -home  {DIR_CFG}/syncthing')
