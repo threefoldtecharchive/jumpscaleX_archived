@@ -230,6 +230,12 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         cmds = [j.tools.startupcmd.get('test_openresty', cmd=cmd)]
         return cmds
 
+    @builder_method()
+    def stop(self):
+        # stop openresty
+        j.sal.process.killProcessByName(self.NAME)
+
+
     def test(self, name=""):
         """Run tests under tests directory
 
