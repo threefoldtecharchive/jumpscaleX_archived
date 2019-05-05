@@ -44,7 +44,7 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
         # go to package path and build (for coredns)
         C = """
         cd {}
-        git clone https://github.com/threefoldtech/coredns
+        git clone https://github.com/coredns/coredns.git
         cd coredns
         make
         """.format(self.package_path)
