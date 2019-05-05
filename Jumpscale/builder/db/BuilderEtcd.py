@@ -18,6 +18,7 @@ class BuilderEtcd(BuilderGolangTools):
         super()._init()
 
     def profile_builder_set(self):
+        super().profile_builder_set()
         self.profile.env_set('GO111MODULE', 'on')
 
     @builder_method()

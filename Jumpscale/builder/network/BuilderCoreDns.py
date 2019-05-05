@@ -22,9 +22,9 @@ CONFIGTEMPLATE = """
 class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
     NAME = "coredns"
 
-    def profile_builder_set(self):
-        super().profile_builder_set()
-        self.profile.env_set('GO111MODULE', 'on')
+    def _init(self):
+        super()._init()
+        self.package_path = self.package_path_get(self.NAME)
 
     @builder_method()
     def build(self):
@@ -37,16 +37,17 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
         # install golang
         j.builder.runtimes.golang.install()
         j.builder.db.etcd.install()
+        self.tools.dir_ensure(self.package_path)
 
         # https://github.com/coredns/coredns#compilation-from-source
 
         # go to package path and build (for coredns)
         C = """
-        cd {DIR_BUILD}
+        cd {}
         git clone https://github.com/threefoldtech/coredns
         cd coredns
         make
-        """
+        """.format(self.package_path)
         self._execute(C)
 
     @builder_method()
@@ -56,11 +57,12 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
 
         installs and runs coredns server with redis plugin
         """
-        self._copy('{DIR_BUILD}/coredns', '{DIR_BIN}/coredns')
+        src = self.tools.joinpaths(self.package_path, self.NAME, self.NAME)
+        self._copy(src, '{DIR_BIN}/coredns')
         j.sal.fs.writeFile(filename='/sandbox/cfg/coredns.conf', contents=CONFIGTEMPLATE)
 
     def clean(self):
-        self._remove(self.DIR_BUILD)
+        self._remove(self.package_path)
         self._remove(self.DIR_SANDBOX)
 
     @property
@@ -118,3 +120,8 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
 
         container = zos_client.container.create("test_coredns_builder", flist)
         # TODO: do more tests on the created container
+
+    @builder_method()
+    def reset(self):
+        super().reset()
+        self.clean()
