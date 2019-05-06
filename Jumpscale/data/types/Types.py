@@ -78,7 +78,7 @@ class Types(j.application.JSBaseClass):
         raise RuntimeError("did not detect val for :%s" % val)
 
 
-    def get(self, ttype, default=None):
+    def get(self, ttype, default=None,cache=True):
         """
 
         mytype = j.data.types.get("s") #will return string type (which is a primitive type)  !!!TYPES!!!
@@ -142,7 +142,7 @@ class Types(j.application.JSBaseClass):
                 raise j.exceptions.RuntimeError("did not find type:'%s'" % ttype)
             return self.__dict__[ttype]
 
-        if key in self._types:
+        if cache and key in self._types:
             return self._types[key]
 
         tt = tt_class(default=default)

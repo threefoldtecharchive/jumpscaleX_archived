@@ -53,10 +53,12 @@ def main(self):
 
     assert j.data.schema.url_to_md5["jumpscale.schema.test3.cmd"][-1] == schemasub2._md5
 
-    j.shell()
+    s5 = j.data.schema.get(url="jumpscale.schema.test3.cmd")
+    assert s5._md5 == schemasub._md5
 
     q=schema_object.new()
-    from pudb import set_trace; set_trace()
+    assert q.cmds._child_type_._schema._md5 == schemasub._md5
+    
     qq=q.cmds.new()
 
     #check that the subschema corresponds to the right one

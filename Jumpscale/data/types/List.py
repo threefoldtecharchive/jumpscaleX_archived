@@ -184,7 +184,7 @@ class List(TypeBaseObjFactory):
         if subtype:
             if subtype == "o":
                 #need to take original default, but cannot store in obj, is for list of jsx objects
-                self._SUBTYPE = j.data.types.get(subtype,default = default)
+                self._SUBTYPE = j.data.types.get(subtype,default = default,cache=False)
             else:
                 self._SUBTYPE = j.data.types.get(subtype)
         else:
