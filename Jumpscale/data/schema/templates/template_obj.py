@@ -27,9 +27,9 @@ class ModelOBJ(DataObjBase):
         self._schema_{{prop.name}} = j.data.schema.get(md5="{{prop.jumpscaletype._schema_md5}}")
         if self._cobj_.{{prop.name_camel}}:
             data = self._cobj_.{{prop.name_camel}}
-            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.get(data=data,model=self)
+            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.get(data=data)
         else:
-            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.new(model=self)
+            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.new()
         {% endif %}
         {% endfor %}
 
@@ -110,14 +110,9 @@ class ModelOBJ(DataObjBase):
         {% for prop in obj.properties %}
         #convert jsobjects to data data
         if "{{prop.name}}" in self._changed_items:
-            # {% if prop.jumpscaletype.NAME == "jsobject" %}
-            # data2 = j.data.serializers.jsxdata.dumps(self._changed_items["{{prop.name}}"])
-            # ddict["{{prop.name_camel}}"] = data2
-            # {% else %}
-            from pudb import set_trace; set_trace()
+            # tt =  {{prop.js_typelocation}}
             o =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
             ddict["{{prop.name_camel}}"] = o
-            # {% endif %}
         {% endfor %}
 
 

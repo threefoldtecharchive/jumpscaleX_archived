@@ -17,10 +17,10 @@ class Types(j.application.JSBaseClass):
     __jslocation__ = "j.data.types"
 
     def _init(self):
-
+        #JSConfigObjectFactory
         self._types_list = [List,Dictionary, Guid, Path, Boolean, Integer, Float, String, Bytes, StringMultiLine,
                             IPRange, IPPort, Tel, YAML, JSON, Email, Date, DateTime, Numeric, Percent,
-                            Hash, CapnpBin, JSDataObjectFactory, JSConfigObjectFactory, Url, Enumeration, IPAddress]
+                            Hash, CapnpBin, JSDataObjectFactory, Url, Enumeration, IPAddress]
 
 
         self._TypeBaseObjClass = TypeBaseObjClass

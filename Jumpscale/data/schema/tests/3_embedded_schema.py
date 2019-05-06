@@ -12,6 +12,34 @@ def main(self):
 
         schema = """
             @url = jumpscale.schema.test3.a
+            cmd = (O) !jumpscale.schema.test3.b
+    
+            @url = jumpscale.schema.test3.b
+            name = ""
+            comment = ""
+            schemacode = ""
+            """
+
+        j.data.schema.add(schema)
+        so = j.data.schema.get(url="jumpscale.schema.test3.a")
+        so2 = j.data.schema.get(url="jumpscale.schema.test3.b")
+        o = so.new()
+
+        o.cmd.name = "a"
+
+        assert o.cmd.name == "a"
+        assert o.cmd.comment == ""
+
+        data = o._data
+
+        so3 = j.data.schema.get(url="jumpscale.schema.test3.a",data=data)
+
+        j.shell()
+
+    def onelevellist():
+
+        schema = """
+            @url = jumpscale.schema.test3.a
             cmds = (LO) !jumpscale.schema.test3.b
     
             @url = jumpscale.schema.test3.b
@@ -69,7 +97,11 @@ def main(self):
         assert o.cmds[1].name == "cc"
 
 
+
     onelevel()
+    onelevellist()
+
+
 
     #more deep embedded (2 levels)
     

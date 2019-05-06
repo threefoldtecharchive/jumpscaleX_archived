@@ -6,159 +6,159 @@ from Jumpscale.data.types.PrimitiveTypes import TypeBaseObjFactory,TypeBaseObjCl
 
 from collections.abc import MutableSequence
 
-# class ListObject(TypeBaseObjClass,MutableSequence):
-#
-#     def __init__(self,list_factory_type, values=[], child_type = None):
-#         """
-#
-#         :param child_type: is the JSX basetype which is the child of the list, can be None, will be detected when required then
-#
-#         """
-#         self._list_factory_type = list_factory_type
-#         self._inner_list = values
-#         self._changed = False
-#         self._child_type_ = child_type
-#         self._current = 0
-#
-#     def __len__(self):
-#         """
-#         get length of list
-#         """
-#         return len(self._inner_list)
-#
-#     def __eq__(self, val):
-#         val = self._list_factory_type.clean(val)
-#         return val._inner_list == self._inner_list
-#
-#     def __delitem__(self, index):
-#         """
-#         delete the item using index of collections
-#         """
-#
-#         self._inner_list.__delitem__(index)
-#         self._changed = True
-#
-#     @property
-#     def value(self):
-#         return self._inner_list
-#
-#     @property
-#     def _dictdata(self):
-#         res=[]
-#         for item in self._inner_list:
-#             if isinstance(item, j.data.schema.DataObjBase):
-#                 res.append(item._ddict)
-#             else:
-#                 res.append(item)
-#         return res
-#
-#     def __iter__(self):
-#         self._current = 0
-#         return self
-#
-#     def __next__(self):
-#         if self._current+1 > len(self._inner_list):
-#             raise StopIteration
-#         else:
-#             self._current += 1
-#             return self._inner_list[self._current - 1]
-#
-#     def insert(self,index,value):
-#         self._inner_list.insert(index,self._child_type.clean(value))
-#         self._changed = True
-#
-#
-#     def __setitem__(self, index, value):
-#         """
-#         insert value in specific index in collections
-#         Arguments:
-#             index : location in collections
-#             value : value that add in collections
-#         """
-#         self._inner_list[index]=self._child_type.clean(value)
-#         self._changed = True
-#
-#
-#     def __getitem__(self, index):
-#         """
-#         get item from list using index
-#         """
-#
-#         return self._inner_list.__getitem__(index)
-#
-#     def pylist(self, subobj_format="D"):
-#         """
-#         python clean list
-#
-#         :param subobj_format
-#         +--------------------+--------------------+-----------------------------------------------------------------------------------+
-#         |     value          |     Description    |                example                                                            |
-#         +--------------------+--------------------+-----------------------------------------------------------------------------------+
-#         |       J            |     DDICT_JSON     | ['{\n"valid": false,\n"token_price": "\\u00000\\u0005\\u0000\\u0000\\u0000"\n}']  |
-#         |       D            |     DDICT          | [{'valid': False, 'token_price': b'\x000\x05\x00\x00\x00'}]                       |
-#         |       H            |     DDict_HR       | [{valid': False, 'token_price': '5 EUR'}]                                         |
-#         +--------------------+--------------------+-----------------------------------------------------------------------------------+
-#         """
-#         res=[]
-#         for item in self._inner_list:
-#
-#             if isinstance(item, j.data.schema.DataObjBase):
-#                 if subobj_format == "J":
-#                     res.append(item._ddict_json)
-#                 elif subobj_format == "D":
-#                     res.append(item._ddict)
-#                 elif subobj_format == "H":
-#                     res.append(item._ddict_hr)
-#                 else:
-#                     raise RuntimeError("only support type J,D,H")
-#             else:
-#                 if subobj_format=="H":
-#                     res.append(self._child_type.toHR(item))
-#                 elif subobj_format=="J":
-#                     res.append(self._child_type.toJSON(item))
-#                 elif subobj_format == "D":
-#                     res.append(self._child_type.toData(item))
-#                 else:
-#                     raise RuntimeError("only support type J,D,H")
-#         return res
-#
-#     def new(self, data=None):
-#         """
-#         return new subitem, only relevant when there are pointer_types used
-#         """
-#
-#         data2 = self._child_type.clean(data)
-#         self.append(data2)
-#         self._changed = True
-#         return data2
-#
-#     @property
-#     def _child_type(self):
-#         """
-#         :return: jumpscale type
-#         """
-#         if self._child_type_ is None:
-#             if len(self._inner_list)==0:
-#                 raise RuntimeError("cannot auto detect which type used in the list")
-#             type1 = j.data.types.list.list_check_1type(self._inner_list)
-#             if not type1:
-#                 raise RuntimeError("cannot auto detect which type used in the list, found more than 1 type")
-#             self._child_type_ = j.data.types.type_detect(self._inner_list[0])
-#         return self._child_type_
-#
-#
-#     def __repr__(self):
-#         out = ""
-#         for item in self.pylist(subobj_format="H"):
-#             if isinstance(item,dict):
-#                 out += "%s" % j.core.text.indent(j.data.serializers.toml.dumps(item))
-#             else:
-#                 out += "- %s\n" % item
-#         if out.strip() == "":
-#             return "[]"
-#         return out
-#
-#     __str__ = __repr__
+class ListObject(TypeBaseObjClass,MutableSequence):
+
+    def __init__(self,list_factory_type, values=[], child_type = None):
+        """
+
+        :param child_type: is the JSX basetype which is the child of the list, can be None, will be detected when required then
+
+        """
+        self._list_factory_type = list_factory_type
+        self._inner_list = values
+        self._changed = False
+        self._child_type_ = child_type
+        self._current = 0
+
+    def __len__(self):
+        """
+        get length of list
+        """
+        return len(self._inner_list)
+
+    def __eq__(self, val):
+        val = self._list_factory_type.clean(val)
+        return val._inner_list == self._inner_list
+
+    def __delitem__(self, index):
+        """
+        delete the item using index of collections
+        """
+
+        self._inner_list.__delitem__(index)
+        self._changed = True
+
+    @property
+    def value(self):
+        return self._inner_list
+
+    @property
+    def _dictdata(self):
+        res=[]
+        for item in self._inner_list:
+            if isinstance(item, j.data.schema.DataObjBase):
+                res.append(item._ddict)
+            else:
+                res.append(item)
+        return res
+
+    def __iter__(self):
+        self._current = 0
+        return self
+
+    def __next__(self):
+        if self._current+1 > len(self._inner_list):
+            raise StopIteration
+        else:
+            self._current += 1
+            return self._inner_list[self._current - 1]
+
+    def insert(self,index,value):
+        self._inner_list.insert(index,self._child_type.clean(value))
+        self._changed = True
+
+
+    def __setitem__(self, index, value):
+        """
+        insert value in specific index in collections
+        Arguments:
+            index : location in collections
+            value : value that add in collections
+        """
+        self._inner_list[index]=self._child_type.clean(value)
+        self._changed = True
+
+
+    def __getitem__(self, index):
+        """
+        get item from list using index
+        """
+
+        return self._inner_list.__getitem__(index)
+
+    def pylist(self, subobj_format="D"):
+        """
+        python clean list
+
+        :param subobj_format
+        +--------------------+--------------------+-----------------------------------------------------------------------------------+
+        |     value          |     Description    |                example                                                            |
+        +--------------------+--------------------+-----------------------------------------------------------------------------------+
+        |       J            |     DDICT_JSON     | ['{\n"valid": false,\n"token_price": "\\u00000\\u0005\\u0000\\u0000\\u0000"\n}']  |
+        |       D            |     DDICT          | [{'valid': False, 'token_price': b'\x000\x05\x00\x00\x00'}]                       |
+        |       H            |     DDict_HR       | [{valid': False, 'token_price': '5 EUR'}]                                         |
+        +--------------------+--------------------+-----------------------------------------------------------------------------------+
+        """
+        res=[]
+        for item in self._inner_list:
+
+            if isinstance(item, j.data.schema.DataObjBase):
+                if subobj_format == "J":
+                    res.append(item._ddict_json)
+                elif subobj_format == "D":
+                    res.append(item._ddict)
+                elif subobj_format == "H":
+                    res.append(item._ddict_hr)
+                else:
+                    raise RuntimeError("only support type J,D,H")
+            else:
+                if subobj_format=="H":
+                    res.append(self._child_type.toHR(item))
+                elif subobj_format=="J":
+                    res.append(self._child_type.toJSON(item))
+                elif subobj_format == "D":
+                    res.append(self._child_type.toData(item))
+                else:
+                    raise RuntimeError("only support type J,D,H")
+        return res
+
+    def new(self, data=None):
+        """
+        return new subitem, only relevant when there are pointer_types used
+        """
+
+        data2 = self._child_type.clean(data)
+        self.append(data2)
+        self._changed = True
+        return data2
+
+    @property
+    def _child_type(self):
+        """
+        :return: jumpscale type
+        """
+        if self._child_type_ is None:
+            if len(self._inner_list)==0:
+                raise RuntimeError("cannot auto detect which type used in the list")
+            type1 = j.data.types.list.list_check_1type(self._inner_list)
+            if not type1:
+                raise RuntimeError("cannot auto detect which type used in the list, found more than 1 type")
+            self._child_type_ = j.data.types.type_detect(self._inner_list[0])
+        return self._child_type_
+
+
+    def __repr__(self):
+        out = ""
+        for item in self.pylist(subobj_format="H"):
+            if isinstance(item,dict):
+                out += "%s" % j.core.text.indent(j.data.serializers.toml.dumps(item))
+            else:
+                out += "- %s\n" % item
+        if out.strip() == "":
+            return "[]"
+        return out
+
+    __str__ = __repr__
 
 
 class List(TypeBaseObjFactory):

@@ -45,6 +45,10 @@ class JSDataObjectFactory(TypeBaseObjFactory):
         """
         return self.clean(val)
 
+    def toData(self,val):
+        j.shell()
+        w
+
     def toString(self,val):
         """
         will use json
