@@ -54,6 +54,9 @@ python3 /tmp/install.py -3 -y -d
 
 #use interactive
 python3 /tmp/install.py -3
+
+#will install in docker, delete if exists and starting from already created docker image (is faster)
+python3 /tmp/install.py -3 -y -d --image=hub
 ```
 
 

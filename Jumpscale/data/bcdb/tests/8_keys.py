@@ -12,6 +12,7 @@ def main(self):
     SCHEMA = """
     @url = threefoldtoken.wallet.test
     @name = wallet
+    name* = "wallet"
     jwt = "" (S)                # JWT Token
     addr* = ""                   # Address
     ipaddr* = (ipaddr)           # IP Address
@@ -45,12 +46,14 @@ def main(self):
     assert o4.id == o.id
 
     o = m.new()
+    o.name = "test2"
     o.addr = "something2"
     o.email = "myemail2"
     o.username = "myuser"
     o.save()
 
     o = m.new()
+    o.name = "test3"
     o.addr = "something2"
     o.email = "myemail2"
     o.username = "myuser2"
@@ -76,28 +79,13 @@ def main(self):
             if o.id in data__:
                 raise RuntimeError("the id should not be in the redis index")
 
-    SCHEMA2 = """
-    @url = threefoldtoken.wallet.test
-    @name = wallet
-    jwt = "" (S)                # JWT Token
-    addr* = ""                   # Address
-    ipaddr* = (ipaddr)           # IP Address
-    email* = "" (S)              # Email address    
-    
-    """
-
     m2 = bcdb.model_get_from_schema(SCHEMA)
     assert m2.schema.sid == m.schema.sid
-
-    m3 = bcdb.model_get_from_schema(SCHEMA2)
-
-    assert (
-        m3.schema.sid == m.schema.sid + 1
-    )  # its a new model so the sid should be 1 higher
 
     SCHEMA3 = """
     @url = threefoldtoken.wallet.test2
     @name = wallet
+    name* = "wallet3"
     jwt = "" (S)                # JWT Token
     addr* = "aa"                   # Address
     ipaddr* = "" (ipaddr)           # IP Address
@@ -126,6 +114,7 @@ def main(self):
     o.ipaddr = "192.168.1.1"
     o.email = "ename"
     o.addr = "test"
+    o.name = "test2"
     o.save()
     assert o._model.schema.url == "threefoldtoken.wallet.test2"
 
@@ -136,17 +125,13 @@ def main(self):
         str(redisid)
     )  # check that the raw info is same as the info from function
 
-    assert len(j.clients.credis_core.keys(rkey + b":*")) == 3
+    assert len(j.clients.credis_core.keys(rkey + b":*")) == 4
 
     assert len(m3.get_all()) == 1
 
     assert [i for i in m3.id_iterator] == [
         m3.get_all()[0].id
     ]  # should only be the 1 id in there
-
-    assert len(m.get_all()) == 2
-
-    assert m.get_all()[0]._model.schema.sid == o2._model.schema.sid
 
     assert len(m3.get_by_addr("test")) == 1
 
@@ -179,17 +164,6 @@ def main(self):
     o5 = m4.get_from_keys(addr="test", email="ename", ipaddr="192.168.1.1")[0]
     assert o5.id == myid
 
-    myid = m.get_all()[1].id + 0
-    nr = len(m.get_all())
-    assert nr == 2
-
-    o6 = m.get(myid)
-    assert o6._model.schema.url == "threefoldtoken.wallet.test"
-
-    o6.delete()
-    nr = len(m.get_all())
-    assert nr == 1
-
     bcdb.reset()
 
     assert m3.get_from_keys(addr="test", email="ename", ipaddr="192.168.1.1") == []
@@ -204,4 +178,3 @@ def main(self):
 
     self._log_info("TEST DONE")
     return "OK"
-
