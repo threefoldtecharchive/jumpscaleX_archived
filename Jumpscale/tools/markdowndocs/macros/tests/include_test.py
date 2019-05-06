@@ -52,13 +52,13 @@ def test_include_from_other_repo(doc=test_doc):
     docsite = markdowndocs_client.load(
         "https://github.com/abom/test_custom_md/tree/master", name="newdocsite")
     data = include.include(doc=test_doc, docsite_name="newdocsite", link="test_src.md")
-    assert "[b] (test.md)" in data
-    assert "## head" not in data
+    assert "[b](test.md)" in data
+    assert "!!!dot" not in data
 
 
 def test_include_custom_link(doc=test_doc):
     # test external repo with custom link
     # the same like above, but using custom links format directly (instead of loading by hand)
     data = include.include(doc=test_doc, link="abom:test_custom_md(master):docs/test_src.md")
-    assert "[b] (test.md)" in data
-    assert "## head" not in data
+    assert "[b](test.md)" in data
+    assert "!!!dot" not in data
