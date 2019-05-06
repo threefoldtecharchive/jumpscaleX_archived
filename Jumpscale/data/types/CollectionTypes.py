@@ -9,7 +9,7 @@ import struct
 from .TypeBaseClasses import *
 
 
-class YAML(StringMultiLine):
+class YAML(String):
     '''Generic dictionary type'''
 
     NAME = "yaml"
