@@ -12,11 +12,11 @@ from .TypeBaseClasses import *
 class YAML(StringMultiLine):
     '''Generic dictionary type'''
 
-    NAME =  'yaml'
+    NAME = "yaml"
 
-    def __init__(self,default=None):
+    def __init__(self, default=None):
 
-        self.BASETYPE = 'string'
+        self.BASETYPE = "string"
         self.NOCHECK = True
         if not default:
             default = {}
@@ -24,7 +24,7 @@ class YAML(StringMultiLine):
 
 
     def possible(self, value):
-        '''Check whether provided value is a dict'''
+        """Check whether provided value is a dict"""
         if not isinstance(value, str):
             return False
         try:
@@ -57,10 +57,10 @@ class YAML(StringMultiLine):
 
 class JSON(StringMultiLine):
 
-    NAME =  'json'
+    NAME = "json"
 
-    def __init__(self,default=None):
-        self.BASETYPE = 'string'
+    def __init__(self, default=None):
+        self.BASETYPE = "string"
         self.NOCHECK = True
         if not default:
             default = {}
@@ -96,19 +96,19 @@ class JSON(StringMultiLine):
 
 
 class Dictionary(TypeBaseClass):
-    '''Generic dictionary type'''
+    """Generic dictionary type"""
 
-    NAME =  'dict'
+    NAME = "dict"
 
     def __init__(self, default=None):
 
-        self.BASETYPE = 'dict'
+        self.BASETYPE = "dict"
         if not default:
             default = {}
         self._default = default
 
     def check(self, value):
-        '''Check whether provided value is a dict'''
+        """Check whether provided value is a dict"""
         return isinstance(value, dict)
 
     def fromString(self, s):
@@ -202,8 +202,9 @@ class Hash(TypeBaseClass):
         """
         will do a strip
         """
-        if value is None:
-            return self._default_get()
+        if value is None or value == b"":
+            return self._default
+
         def bytesToInt(val):
             if j.data.types.bytes.check(val):
                 if len(val) is not 4:
