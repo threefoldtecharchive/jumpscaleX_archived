@@ -230,7 +230,7 @@ class List(TypeBaseObjFactory):
     def toData(self,val=None):
         val2 = self.clean(val)
         if self.SUBTYPE.BASETYPE == "OBJ":
-            return [i._data for i in val2]
+            return [j.data.serializers.jsxdata.dumps(i) for i in val2]
         else:
             return val2._inner_list
 

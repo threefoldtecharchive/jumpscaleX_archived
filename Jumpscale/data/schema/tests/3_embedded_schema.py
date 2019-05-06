@@ -69,7 +69,7 @@ def main(self):
         assert o.cmds[1].name == "cc"
 
 
-    # onelevel()
+    onelevel()
 
     #more deep embedded (2 levels)
     
