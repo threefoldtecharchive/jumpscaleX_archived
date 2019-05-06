@@ -6,7 +6,7 @@ export LC_ALL=en_US.UTF-8
 . /sandbox/env.sh
 
 cp /sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/chatflows/bot_init.py /sandbox/code/github/threefoldtech/digitalmeX/DigitalMe/tools/openpublish/base_chatflows/
-cp /sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/actors/userbot/userbot.py /sandbox/code/github/threefoldtech/digitalmeX/DigitalMe/tools/openpublish/base_actors/
+cp /sandbox/code/github/threefoldtech/digitalmeX/packages/init_bot/actors/userbot.py /sandbox/code/github/threefoldtech/digitalmeX/DigitalMe/tools/openpublish/base_actors/
 
 rm -r /sandbox/cfg/nacl/*
 
