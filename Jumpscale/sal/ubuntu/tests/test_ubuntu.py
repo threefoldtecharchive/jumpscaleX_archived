@@ -30,7 +30,7 @@ class Test_Ubuntu(TestCase):
         self.ubuntu.apt_install_check('iputils-ping', 'ping')
 
     def test005_apt_install_version(self):
-        self.ubuntu.apt_install_version('wget', '1.19.4-1ubuntu2.1')
+        self.ubuntu.apt_install_version('wget', '1.19.4-1ubuntu2.2')
         rc, out, err = j.sal.process.execute('wget -V', useShell=True)
         self.assertIn('1.19.4', out)
 
