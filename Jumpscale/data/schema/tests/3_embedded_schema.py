@@ -30,11 +30,23 @@ def main(self):
         assert o.cmd.name == "a"
         assert o.cmd.comment == ""
 
+        data = o.cmd._data
+        subobj = j.data.serializers.jsxdata.loads(data)
+        assert subobj.name == "a"
+
         data = o._data
 
-        so3 = j.data.schema.get(url="jumpscale.schema.test3.a",data=data)
+        md5 = so._md5
 
-        j.shell()
+        o2 = j.data.serializers.jsxdata.loads(data)
+
+        print(o2) #TODO: does not serialize well
+
+        assert o2.cmd.name == "a"
+
+        o3 = so.get(data=data)
+        assert o3.cmd.name == "a"
+
 
     def onelevellist():
 
@@ -97,11 +109,8 @@ def main(self):
         assert o.cmds[1].name == "cc"
 
 
-
     onelevel()
     onelevellist()
-
-
 
     #more deep embedded (2 levels)
     
@@ -125,9 +134,6 @@ def main(self):
     schema_object3 = j.data.schema.get(url="jumpscale.schema.test3.cmdbox")
 
     schema_test = schema_object2.get()
-
-    j.shell()
-    w
 
     for i in range(4):
         schema_object = schema_test.cmds.new()
