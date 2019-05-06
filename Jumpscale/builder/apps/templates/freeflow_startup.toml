@@ -118,15 +118,6 @@ script = """
 /sandbox/bin/php /var/www/html/humhub/protected/yii search/rebuild >/dev/null 2>&1
 """
 
-[startup.login]
-name = "bash"
-after = ["apache"]
-
-[startup.login.args]
-script = """
-cat /sandbox/env.sh >> /root/.bashrc
-"""
-
 [startup.setup]
 name = "bash"
 running_delay = -1
@@ -143,12 +134,6 @@ export LC_ALL=en_US.UTF-8
 export LD_LIBRARY_PATH=\"/sandbox/lib\"
 
 bash /.apache_prepare.sh
-# verify that below files are exist
-#iyo_file=\"/var/www/html/humhub/protected/humhub/modules/user/authclient/IYO.php\"
-#common_file=\"/var/www/html/humhub/protected/config/common.php\"
-#[ -f \"$iyo_file\" ] || wget https://raw.githubusercontent.com/freeflowpages/freeflow-iyo-module/master/IYO.php -O $iyo_file
-#wget https://raw.githubusercontent.com/freeflowpages/freeflow-flist/master/common.php -O $common_file
-
 [ -f /var/www/html/humhub/.htaccess.dist ] && mv /var/www/html/humhub/.htaccess.dist /var/www/html/humhub/.htaccess
 mkdir -p /var/run/apache2 /var/log/apache2 /var/lock/apache2 /var/www/html 
 chown -R www-data:www-data /var/run/apache2 /var/log/apache2 /var/lock/apache2 /var/www/html
