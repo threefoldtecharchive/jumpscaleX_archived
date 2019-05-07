@@ -72,7 +72,7 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
         return cmds
 
     @builder_method()
-    def sandbox(self):
+    def sandbox(self, zhub_client=None, flist_create=False):
         coredns_bin = j.sal.fs.joinPaths('{DIR_BIN}', self.NAME)
         dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'sandbox')
         self.tools.dir_ensure(dir_dest)
@@ -113,10 +113,13 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
     @builder_method()
     def test_zos(self, zos_client="", zhub_client=""):
         self.sandbox(zhub_client=zhub_client, flist_create=True)
-        flist = '/tmp/{}.tar.gz'.format(self.NAME)
-        test_container = zos_client.containers.create(name="test_coredns", flist=flist)
-        test_container.start()
+        flist = "https://hub.grid.tf/{}/coredns.flist".format(zhub_client.name)
+        test_container = zos_client.containers.create(name="test_coredns", flist=flist, ports={1053:1053}, host_network=True)
         client = test_container.client
         assert client.ping()
         assert client.filesystem.list('/sandbox')[0]['name'] == 'coredns'
+        client.system('/sandbox/coredns -dns.port 1053')
+        assert test_container.is_port_listening(1053)
+        for job in client.job.list(): 
+            client.job.kill(job['cmd']['id']) 
         print("TEST OK")
