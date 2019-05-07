@@ -1,6 +1,5 @@
 from Jumpscale import j
 import textwrap
-
 builder_method = j.builder.system.builder_method
 
 
@@ -21,7 +20,8 @@ class BuilderFreeflow(j.builder.system._BaseClass):
                                          "php-ldap",
                                          "php-apcu",
                                          "php-sqlite3",
-                                          "php-imagick"
+                                          "php-imagick",
+                                          "imagemagick"
                                          ])
 
         j.builder.tools.file_download("https://www.humhub.org/en/download/package/humhub-1.3.12.tar.gz","/var/www/html/humhub-1.3.12.tar.gz")
@@ -38,12 +38,6 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         mysql -e "FLUSH PRIVILEGES;"
         """
         j.builder.tools.execute(sql_init_script)
-
-        j.builder.tools.file_download("https://raw.githubusercontent.com/freeflowpages/freeflow-iyo-module/master/IYO.php",
-                                     "/var/www/html/humhub/protected/humhub/modules/user/authclient/IYO.php")
-
-        j.builder.tools.file_download("https://raw.githubusercontent.com/freeflowpages/freeflow-flist/master/common.php",
-                                      "/var/www/html/humhub/protected/config/common.php")
 
         j.sal.fs.chmod("/var/www", 0o775)
 
@@ -91,17 +85,7 @@ class BuilderFreeflow(j.builder.system._BaseClass):
 
         apache_dir = ['/etc/apache2','/usr/lib/apache2','/etc/php','/usr/lib/php','/var/lib/php']
         for dir in apache_dir:
-            if dir in "/etc/apache2":
-                dest_dir = j.sal.fs.joinPaths(dest_path, 'sandbox/etc/apache2')
-            if dir in "/usr/lib/apache2":
-                dest_dir = j.sal.fs.joinPaths(dest_path, 'sandbox/usr/lib/apache2')
-            if dir in "/etc/php":
-                dest_dir = j.sal.fs.joinPaths(dest_path,'sandbox/etc/php')
-            if dir in "/usr/lib/php":
-                dest_dir = j.sal.fs.joinPaths(dest_path,'sandbox/usr/lib/php')
-            if dir in "/var/lib/php":
-                dest_dir = j.sal.fs.joinPaths(dest_path,'sandbox/var/lib/php')
-            # need to add /usr/share/ as has multiple direcotries
+            dest_dir = j.sal.fs.joinPaths(dest_path, 'sandbox',dir)
             j.builder.tools.dir_ensure(dest_dir)
             self.tools.copyTree(dir,dest_dir)
 
