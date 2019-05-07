@@ -667,7 +667,12 @@ class DateTime(Integer):
         if v is None:
             v=0
 
-        if j.data.types.string.check(v):
+        if j.data.types.int.check(v):
+            return v
+        elif j.data.types.int.checkString(v):
+            v = int(v)
+            return v
+        elif j.data.types.string.check(v):
             v=v.replace("'","").replace("\"","").strip()
             if v.strip() in ["0", "",0]:
                 return 0
@@ -689,8 +694,6 @@ class DateTime(Integer):
             hrdatetime = dd + " " + tt
             epoch = int(time.mktime(time.strptime(hrdatetime, fstr)))
             return epoch
-        elif j.data.types.int.check(v):
-            return v
         else:
             raise ValueError("Input needs to be string:%s" % v)
 

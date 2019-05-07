@@ -445,7 +445,6 @@ class SchemaTest(BaseTest):
         self.assertEqual(schema_obj.iprange, iprange)
         self.assertEqual(schema_obj.init_iprange, "127.0.0.1/16")
 
-    @unittest.skip("skipping date for now")
     def test010_validate_date_type(self):
         """
         SCM-010
