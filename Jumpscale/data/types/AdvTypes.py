@@ -163,7 +163,6 @@ class Tel(String):
         if v is None or v =='None':
             return self.default_get()
         v = j.data.types.string.clean(v)
-        v = v.replace(".", "")
         v = v.replace(",", "")
         v = v.replace("-", "")
         v = v.replace("(", "")
