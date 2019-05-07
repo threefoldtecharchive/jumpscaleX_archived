@@ -12,7 +12,6 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         if self._done_check("install") and reset is False:
             return
         #j.builder.db.mariadb.install(start=True)
-        # i remove lamp server as it waste time in testing "lamp-server^"
         j.builder.system.package.install(["lamp-server^",
                                          "php-curl",
                                          "php-gd",
@@ -25,7 +24,7 @@ class BuilderFreeflow(j.builder.system._BaseClass):
                                           "php-imagick"
                                          ])
 
-        #j.builder.tools.file_download("https://www.humhub.org/en/download/package/humhub-1.3.12.tar.gz","/var/www/html/humhub-1.3.12.tar.gz")
+        j.builder.tools.file_download("https://www.humhub.org/en/download/package/humhub-1.3.12.tar.gz","/var/www/html/humhub-1.3.12.tar.gz")
         j.builder.tools.file_expand("/var/www/html/humhub-1.3.12.tar.gz", self.HUMHUB_PATH, removeTopDir=True)
 
 
@@ -38,7 +37,7 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         mysql -e "GRANT ALL ON humhub.* TO 'humhub'@'localhost' IDENTIFIED BY 'Hum_flist_hubB';"
         mysql -e "FLUSH PRIVILEGES;"
         """
-        #j.builder.tools.execute(sql_init_script)
+        j.builder.tools.execute(sql_init_script)
 
         j.builder.tools.file_download("https://raw.githubusercontent.com/freeflowpages/freeflow-iyo-module/master/IYO.php",
                                      "/var/www/html/humhub/protected/humhub/modules/user/authclient/IYO.php")
