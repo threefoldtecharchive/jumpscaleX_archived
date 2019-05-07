@@ -1,7 +1,8 @@
 import os
 import re
 from functools import partial
-from Jumpscale.tools.markdowndocs.Link import CustomLink, GithubLinker
+from Jumpscale import j
+from Jumpscale.tools.markdowndocs.Link import CustomLink, GithubLinker, Link
 
 
 def with_code_block(content, _type=''):
@@ -48,6 +49,60 @@ DOCSTRING_RE = re.compile(r'(?:\'\'\'|\"\"\")([\w\W]*?)(?:\'\'\'|\"\"\")', re.MU
 
 def get_docstrings(content):
     return '\n\n'.join(DOCSTRING_RE.findall(content))
+
+
+def append_docs_to_path(path):
+    if not path.endswith('/docs'):
+        path = j.sal.fs.joinPaths(path, 'docs')
+    return path
+
+
+def get_abs_path(*paths):
+    return j.sal.fs.pathNormalize(j.sal.fs.joinPaths(*paths))
+
+
+def exapnd_doc_path(docs_root_dir, doc_dir, path):
+    if path.startswith('/'):
+        # if it's an absolute path, get full path from docs_root
+        paths = docs_root_dir, path[1:]
+    else:
+        paths = docs_root_dir, doc_dir, path
+    return get_abs_path(*paths)
+
+
+def copy_links(main_doc, included_docs_root, included_doc_path, links):
+    """copy files that are referenced with links inside the included content (like images...)
+
+    :param main_doc: the document where include is called
+    :type main_dic: Doc
+    :param included_docs_root: the root path of all docs where the document content inclucded from
+    :type included_doc_root: str
+    :param included_doc_path: the path of the document the content inclucded from
+    :type included_doc_path: str
+    :param links: a list of tuples with (description, source)
+    :type links: [tuple]
+    """
+    included_docs_root = append_docs_to_path(included_docs_root)
+    main_docs_outpath = main_doc.docsite.outpath
+
+    if j.sal.fs.getFileExtension(included_doc_path):
+        included_doc_dir = j.sal.fs.getDirName(included_doc_path)
+    else:
+        included_doc_dir = included_doc_path
+
+    for _, source in links:
+        if source.lower().strip().startswith('http'):
+            continue
+        # source is either absolute (from docs_root) or relative to doc_path
+        # so we get the real path of such source
+        real_path = exapnd_doc_path(included_docs_root, included_doc_dir, source)
+
+        # the destination is just the output path with the relative directory and the source
+        destination = exapnd_doc_path(main_docs_outpath, main_doc.path_dir_rel, source)
+
+        print(real_path, '->', destination)
+        if not j.sal.fs.exists(destination):
+            j.sal.fs.copyFile(real_path, destination, createDirIfNeeded=True)
 
 
 def process_content(content, marker, doc_only, header_levels_modify, ignore):
@@ -105,7 +160,7 @@ def include(
     else:
         repo = current_docsite.get_real_source(custom_link)
         if not CustomLink(repo).is_url:
-            # bit an external url, use current docsite
+            # not an external url, use current docsite
             docsite = current_docsite
         else:
             # the real source is a url outside this docsite
@@ -117,9 +172,12 @@ def include(
             custom_link.path = new_link.path
 
     try:
-        content = j.sal.fs.readFile(docsite.file_get(custom_link.path))
+        full_path = docsite.file_get(custom_link.path)
+        content = j.sal.fs.readFile(full_path)
     except j.exceptions.BaseJSException:
-        content = docsite.doc_get(custom_link.path).markdown_source
+        included_doc = docsite.doc_get(custom_link.path)
+        content = included_doc.markdown_source
+        full_path = included_doc.path
 
     if not ignore:
         ignore = []
@@ -130,5 +188,9 @@ def include(
         content = process_content(
             content, marker=custom_link.marker, doc_only=doc_only,
             header_levels_modify=header_levels_modify, ignore=ignore)
+
+    if not custom_link.path.lower().strip().endswith('_sidebar.md'):
+        all_links = Link.LINK_MARKDOWN_RE.findall(content)
+        copy_links(doc, docsite.path, full_path, all_links)
 
     return with_code_block(content, _type=codeblock_type)
