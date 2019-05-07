@@ -38,10 +38,10 @@ class BuilderUserBot(j.builder.system._BaseClass):
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=True, merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist"):
-        j.builder.apps.digitalme.sandbox(reset=True)
+        j.builder.apps.digitalme.sandbox(reset=reset)
         j.tools.sandboxer.copyTo(j.builder.apps.digitalme.DIR_SANDBOX, self.DIR_SANDBOX)
 
-        j.builder.db.zdb.sandbox(reset=True)
+        j.builder.db.zdb.sandbox(reset=reset)
         j.tools.sandboxer.copyTo(j.builder.db.zdb.DIR_SANDBOX,  self.DIR_SANDBOX)
 
         file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), 'templates', 'bot_nacl_configure.toml')
