@@ -72,7 +72,7 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
         return cmds
 
     @builder_method()
-    def sandbox(self, zhub_client=None, flist_create=False):
+    def sandbox(self):
         coredns_bin = j.sal.fs.joinPaths('{DIR_BIN}', self.NAME)
         dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'sandbox')
         self.tools.dir_ensure(dir_dest)
@@ -118,4 +118,5 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
         test_container.start()
         client = test_container.client
         assert client.ping()
+        assert client.filesystem.list('/sandbox')[0]['name'] == 'coredns'
         print("TEST OK")
