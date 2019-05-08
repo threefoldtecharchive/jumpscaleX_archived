@@ -64,7 +64,7 @@ class ZDBFactory(j.application.JSBaseClass):
         """
 
 
-        cl = j.clients.zdb.start_test_instance()
+        cl = j.clients.zdb.testdb_server_start_client_get()
 
         self._test_run(name="base")
         self._test_run(name="admin")
