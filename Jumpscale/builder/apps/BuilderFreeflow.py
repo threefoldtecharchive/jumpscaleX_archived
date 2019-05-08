@@ -85,7 +85,8 @@ class BuilderFreeflow(j.builder.system._BaseClass):
 
         apache_dir = ['/etc/apache2','/usr/lib/apache2','/etc/php','/usr/lib/php','/var/lib/php']
         for dir in apache_dir:
-            dest_dir = j.sal.fs.joinPaths(dest_path, 'sandbox',dir)
+            relative_dir = dir.strip("/")
+            dest_dir = j.sal.fs.joinPaths(dest_path, 'sandbox',relative_dir)
             j.builder.tools.dir_ensure(dest_dir)
             self.tools.copyTree(dir,dest_dir,keepsymlinks=True)
 
