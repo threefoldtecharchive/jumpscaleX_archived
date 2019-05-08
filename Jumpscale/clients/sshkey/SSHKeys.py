@@ -48,14 +48,14 @@ class SSHKeys(j.application.JSBaseConfigsClass):
         path = j.core.tools.text_replace("{DIR_HOME}/.ssh/test_key")
 
         sshkey_client = j.clients.sshkey.get(name="test_key", path=path)
+        sshkey_client.generate()
         assert sshkey_client.path == path
         assert sshkey_client.privkey.strip() == j.sal.fs.readFile(path).strip()
         assert sshkey_client.pubkey.strip() == j.sal.fs.readFile('%s.pub' % (path)).strip()
 
-        try:
-            sshkey_client.delete_from_sshdir()
-        except ValueError as e:
-            pass
+        sshkey_client.delete_from_sshdir()
+        assert not j.sal.fs.exists(path=path)
+        assert not j.sal.fs.exists(path=path+".pub")
 
         sshkey_client.write_to_sshdir()
         assert sshkey_client.privkey.strip() == j.sal.fs.readFile(path).strip()
@@ -72,7 +72,6 @@ class SSHKeys(j.application.JSBaseConfigsClass):
 
         assert sshkey_client.is_loaded() == False
         sshkey_client.load()
-        from pudb import set_trace; set_trace()
         assert sshkey_client.is_loaded()
         sshkey_client.unload()
         assert sshkey_client.is_loaded() == False
