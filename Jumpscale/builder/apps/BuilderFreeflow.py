@@ -87,7 +87,7 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         for dir in apache_dir:
             dest_dir = j.sal.fs.joinPaths(dest_path, 'sandbox',dir)
             j.builder.tools.dir_ensure(dest_dir)
-            self.tools.copyTree(dir,dest_dir)
+            self.tools.copyTree(dir,dest_dir,keepsymlinks=True)
 
         copy_php_share_script= """
         mkdir -p /tmp/package/freeflow/sandbox/usr/share/php
@@ -103,11 +103,6 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         startup_dest = j.sal.fs.joinPaths(dest_path, '.startup.toml')
         j.builder.tools.file_ensure(startup_dest)
         j.builder.tools.file_write(startup_dest, startup)
-        env_file = '/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/builder/apps/templates/freeflow_env.sh'
-        env = j.sal.fs.readFile(env_file)
-        env_dest = j.sal.fs.joinPaths(dest_path, 'sandbox/env.sh')
-        j.builder.tools.file_ensure(env_dest)
-        j.builder.tools.file_write(env_dest, env)
         apache_file = '/sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale/builder/apps/templates/freeflow_apache_prepare.sh'
         apache_conf = j.sal.fs.readFile(apache_file)
         apache_conf_dest = j.sal.fs.joinPaths(dest_path, '.apache_prepare.sh')
