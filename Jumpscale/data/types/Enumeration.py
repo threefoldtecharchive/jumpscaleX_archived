@@ -16,10 +16,12 @@ class EnumerationObj(TypeBaseObjClass):
         if isinstance(value, str):
             value_str = value.upper().strip()
             if value_str not in self._typebase.values:
+                self._data = 0
                 raise RuntimeError("could not find enum:'%s' in '%s'" % (value, self.__repr__()))
             value_id = self._typebase.values.index(value_str)+1
         elif isinstance(value, int):
             if value > len(self._typebase.values)+1:
+                self._data = 0
                 raise RuntimeError("could not find enum id:%s in '%s', too high" % (value, self.__repr__()))
             value_id = value
         else:

@@ -46,4 +46,14 @@ class BuilderRedis(j.builder.system._BaseClass):
     def startup_cmds(self):
         cmds = [j.tools.startupcmd.get(name="redis_server", cmd='redis-server')]
         return cmds
+  
+    @builder_method()
+    def sandbox(self, reset=False, zhub_client=None, flist_create=False):
+        bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX))
+        self.tools.dir_ensure(bin_dest)
+        redis_server_bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
+        redis_client_bin_path = self.tools.joinpaths("{DIR_BIN}", "redis-cli")
+        self.tools.file_copy(redis_server_bin_path, bin_dest)
+        self.tools.file_copy(redis_client_bin_path, bin_dest)
+
 
