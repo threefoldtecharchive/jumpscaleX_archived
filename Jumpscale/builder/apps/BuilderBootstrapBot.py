@@ -37,7 +37,7 @@ class BuilderBootstrapBot(j.builder.system._BaseClass):
         j.builder.db.zdb.install()
 
     @builder_method()
-    def sandbox(self, reset=False, zhub_client=None, flist_create=True, merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist"):
+    def sandbox(self, reset=False, zhub_client=None, flist_create=True, merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-3bot_f26.flist"):
         j.builder.apps.digitalme.sandbox(reset=True)
         j.tools.sandboxer.copyTo(j.builder.apps.digitalme.DIR_SANDBOX, self.DIR_SANDBOX)
 
