@@ -75,6 +75,9 @@ class SSHAgent(j.application.JSBaseClass):
 
             if not return_code:
                  return_code, _, _ = j.sal.process.execute("ssh-add", showout=False, die=False, timeout=1)
+            else:
+                if out.find("Error connecting to agent: No such file or directory"):
+                    raise RuntimeError("Error connecting to agent: No such file or directory")
 
             keys = [line.split() for line in out.splitlines() if len(line.split()) == 3]
             self._keys = list(map(lambda key: [key[2], ' '.join(key[0:2])], keys))
@@ -89,6 +92,11 @@ class SSHAgent(j.application.JSBaseClass):
                 j.core.myenv.config_save()
 
             self._inited = True
+        else:
+            return_code, out = get_key_list()
+            if not return_code and out.find("Error connecting to agent: No such file or directory") == -1:
+                self._inited = False
+                self.check()
 
     def reset(self):
         self._default_key = None
@@ -439,6 +447,7 @@ class SSHAgent(j.application.JSBaseClass):
         j.sal.fs.remove(socketpath)
         j.sal.fs.remove(j.sal.fs.joinPaths('/tmp', "ssh-agent-pid"))
         self._available = None
+        self._inited = False
         self._log_debug("ssh-agent killed")
 
     def test(self):
@@ -477,7 +486,7 @@ class SSHAgent(j.application.JSBaseClass):
 
         path="/root/.ssh/test_key_2"
         skey2 = j.clients.sshkey.get(name="test2", path=path)
-        skey2.generate()
+        skey2.generate(reset=True)
         skey2.load()
         assert skey2.is_loaded()
         skey2.unload()
@@ -485,13 +494,11 @@ class SSHAgent(j.application.JSBaseClass):
 
         assert self.available()
         self.kill()
-        assert self.available() is False
-
-        self.sshagent_start()
+        self.start()
         assert self.available()
+
         # Clean up after test
         self.kill()
-        assert self.available() is False
         skey.delete_from_sshdir()
         skey2.delete_from_sshdir()
         skey.delete()
