@@ -295,6 +295,9 @@ class Schema(j.application.JSBaseClass):
         """
         if isinstance(data,bytes):
             return j.data.serializers.jsxdata.loads(data)
+        return self._get(data=data,model=model)
+
+    def _get(self, data=None, model=None):
         obj = self.objclass(schema=self, data=data, model=model)
         return obj
 

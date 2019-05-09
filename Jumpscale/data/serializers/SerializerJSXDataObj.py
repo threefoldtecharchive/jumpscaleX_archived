@@ -17,9 +17,7 @@ class SerializerJSXDataObj(SerializerBase):
         :return:
         """
         assert isinstance(obj,j.data.schema.DataObjBase)
-        version = 1
-        return version.to_bytes(1,'little')+bytes(bytearray.fromhex(obj._schema._md5))+obj._data
-
+        return obj._data
 
 
     def loads(self, data,model=None):
@@ -34,7 +32,7 @@ class SerializerJSXDataObj(SerializerBase):
         data2 = data[17:]
         if md5 in j.data.schema.md5_to_schema:
             schema = j.data.schema.md5_to_schema[md5]
-            obj = schema.get(data2, model=model)
+            obj = schema._get(data2, model=model)
             return obj
         else:
             raise RuntimeError("could not find schema with md5:%s"%md5)

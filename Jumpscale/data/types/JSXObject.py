@@ -45,6 +45,10 @@ class JSDataObjectFactory(TypeBaseObjFactory):
         """
         return self.clean(val)
 
+    def toData(self,val):
+        # return j.data.serializers.jsxdata.dumps(val)
+        return val._data
+
     def toString(self,val):
         """
         will use json

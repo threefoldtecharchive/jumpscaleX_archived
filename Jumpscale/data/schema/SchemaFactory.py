@@ -97,7 +97,19 @@ class SchemaFactory(j.application.JSBaseClass):
             else:
                 raise RuntimeError("need to be text ")
         else:
-            raise RuntimeError("could not find schema '%s'" % url)
+            if url is None:
+                if md5 is None:
+                    raise RuntimeError("cannot have url and md5 None if no schema text specified")
+                else:
+                    raise RuntimeError("could not find schema with md5: '%s'" % md5)
+            elif md5 is None:
+                if url is None:
+                    raise RuntimeError("cannot have url and md5 None if no schema text specified")
+                else:
+                    raise RuntimeError("could not find schema '%s'" % url)
+            else:
+                raise RuntimeError("cannot have url and md5 None if no schema text specified")
+
 
         return schema
 

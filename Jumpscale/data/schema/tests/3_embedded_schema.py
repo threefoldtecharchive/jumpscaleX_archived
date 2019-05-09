@@ -12,6 +12,46 @@ def main(self):
 
         schema = """
             @url = jumpscale.schema.test3.a
+            cmd = (O) !jumpscale.schema.test3.b
+    
+            @url = jumpscale.schema.test3.b
+            name = ""
+            comment = ""
+            schemacode = ""
+            """
+
+        j.data.schema.add(schema)
+        so = j.data.schema.get(url="jumpscale.schema.test3.a")
+        so2 = j.data.schema.get(url="jumpscale.schema.test3.b")
+        o = so.new()
+
+        o.cmd.name = "a"
+
+        assert o.cmd.name == "a"
+        assert o.cmd.comment == ""
+
+        data = o.cmd._data
+        subobj = j.data.serializers.jsxdata.loads(data)
+        assert subobj.name == "a"
+
+        data = o._data
+
+        md5 = so._md5
+
+        o2 = j.data.serializers.jsxdata.loads(data)
+
+        print(o2) #TODO: does not serialize well
+
+        assert o2.cmd.name == "a"
+
+        o3 = so.get(data=data)
+        assert o3.cmd.name == "a"
+
+
+    def onelevellist():
+
+        schema = """
+            @url = jumpscale.schema.test3.a
             cmds = (LO) !jumpscale.schema.test3.b
     
             @url = jumpscale.schema.test3.b
@@ -69,7 +109,8 @@ def main(self):
         assert o.cmds[1].name == "cc"
 
 
-    # onelevel()
+    onelevel()
+    onelevellist()
 
     #more deep embedded (2 levels)
     
@@ -93,9 +134,6 @@ def main(self):
     schema_object3 = j.data.schema.get(url="jumpscale.schema.test3.cmdbox")
 
     schema_test = schema_object2.get()
-
-    j.shell()
-    w
 
     for i in range(4):
         schema_object = schema_test.cmds.new()

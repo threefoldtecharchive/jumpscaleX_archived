@@ -7,7 +7,7 @@ class DataObjBase:
         self.id = None
         self._schema = schema
         self._model = model
-        self._changed_items = []
+        self._changed_items = {}
         self._autosave = False
         self._readonly = False
         self.acl_id = None
@@ -24,7 +24,6 @@ class DataObjBase:
             raise RuntimeError("cannot load from data, obj is readonly.\n%s" % self)
 
         if isinstance(data,bytes):
-            assert self._schema is None
             self._cobj_ = self._capnp_schema.from_bytes_packed(data)
             set_default = False
         else:
@@ -37,6 +36,9 @@ class DataObjBase:
 
         if set_default:
             self._defaults_set()  # only do when new message
+
+        if isinstance(data,bytes):
+            return
 
         if data is not None:
             if isinstance(data,str):
@@ -148,12 +150,18 @@ class DataObjBase:
 
     @property
     def _data(self):
+        self._cobj #leave, is to make sure we have error if something happens
         try:
             self._cobj.clear_write_flag()
-            return self._cobj.to_bytes_packed()
-        except:
+            data =  self._cobj.to_bytes_packed()
+        except Exception as e:
+            #need to catch exception much better (more narrow)
             self._cobj_ = self._cobj.as_builder()
-            return self._cobj_.to_bytes_packed()
+            data = self._cobj_.to_bytes_packed()
+        version = 1
+        data2= version.to_bytes(1,'little')+bytes(bytearray.fromhex(self._schema._md5))+data
+        return data2
+
 
     @property
     def _ddict_hr(self):
