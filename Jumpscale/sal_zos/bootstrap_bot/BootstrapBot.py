@@ -24,7 +24,7 @@ class BootstrapBot(Service):
         super().__init__(name, node, 'bootstrap_bot', [], True)
 
         # @todo change this flist when we have the final userbot flist
-        self.flist = 'https://hub.grid.tf/sboctor/bootstrapbot_merged_tf-autobuilder_threefoldtech-jumpscaleX-3bot_f26.flist'
+        self.flist = 'https://hub.grid.tf/sboctor/bootstrapbot_merged_tf-autobuilder_threefoldtech-jumpscaleX-development.flist'
         self.sendgrid_key = sendgrid_key
         self.lapis_port = lapis_port
 
