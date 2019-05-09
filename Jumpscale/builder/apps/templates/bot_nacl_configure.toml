@@ -4,7 +4,3 @@ name = "default"
 secret = "123"
 generate = true
 sshagent_use = false
-
-[[instruction]]
-instruction_method = "j.tools.tmux.execute"
-cmd = 'source /sandbox/env.sh && kosmos "j.tools.open_publish.default.servers_start()"'
