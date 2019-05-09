@@ -26,7 +26,6 @@ class BuilderBootstrapBot(j.builder.system._BaseClass):
         will build python & openresty & copy all to the right git sandboxes works for Ubuntu only
         :return:
         """
-        j.builder.apps.digitalme.build(reset=reset)
         j.builder.db.zdb.build(reset=reset)
 
     @builder_method()
@@ -38,13 +37,10 @@ class BuilderBootstrapBot(j.builder.system._BaseClass):
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=True, merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist"):
-        j.builder.apps.digitalme.sandbox(reset=True)
-        j.tools.sandboxer.copyTo(j.builder.apps.digitalme.DIR_SANDBOX, self.DIR_SANDBOX)
-
-        j.builder.db.zdb.sandbox(reset=True)
+        j.builder.db.zdb.sandbox(reset=reset)
         j.tools.sandboxer.copyTo(j.builder.db.zdb.DIR_SANDBOX,  self.DIR_SANDBOX)
 
-        file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), 'templates', 'bot_nacl_configure.toml')
+        file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), 'templates', 'bot_configure.toml')
         file_dest = self.tools.joinpaths(self.DIR_SANDBOX, 'bot_configure.toml')
         self._copy(file, file_dest)
 
