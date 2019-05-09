@@ -14,7 +14,8 @@ line = "python3.6 -m pytest -v /sandbox/code/github/threefoldtech/jumpscaleX/Jum
 response = test.run_tests(image_name=image_name, run_cmd=line, repo=repo, commit='')
 test.write_file(text='---> {}'.format(line), file_name=file_name)
 test.write_file(text=response.stdout, file_name=file_name)
+file_link = '{}/{}'.format(utils.serverip, file_name)
 if response.returncode:
-    utils.send_msg('builders tests failed')
+    utils.send_msg('Builders tests failed {}'.format(file_link))
 else:
-    utils.send_msg('builders tests passed')
+    utils.send_msg('Builders tests passed {}'.format(file_link))

@@ -6,40 +6,36 @@ from Jumpscale import j
 from .. import templates
 from ..abstracts import Service
 
-
-GEDIS_PORT = 8888
 LAPIS_PORT = 8080
 
 
-class UserBot(Service):
+class BootstrapBot(Service):
     """
-    UserBot sal for creating a user bot container and managing it
+    BootstrapBot sal for creating a bootstrap bot container and managing it
     """
 
-    def __init__(self, node, name, bootstrap_token, gedis_port=GEDIS_PORT, lapis_port=LAPIS_PORT):
+    def __init__(self, node, name, sendgrid_key, lapis_port=LAPIS_PORT):
         """"
         :param node: sal of the node to deploy userbot on
         :param name: instance name
-        :param bootstrap_token: token used for security when anyone asks for the initialization token
-        :param gedis_port: public port on the node that is forwarded to the gedis server listening port
+        :param sendgrid_key: sendgrid api key
         :param lapis_port: public port on the node that is forwarded to the lapis server listening port
         """
-        super().__init__(name, node, '3bot', [], True)
+        super().__init__(name, node, 'bootstrap_bot', [], True)
 
         # @todo change this flist when we have the final userbot flist
-        self.flist = 'https://hub.grid.tf/sboctor/userbot_merged_tf-autobuilder_threefoldtech-jumpscaleX-development.flist'
-        self.bootstrap_token = bootstrap_token
-        self.gedis_port = gedis_port
+        self.flist = 'https://hub.grid.tf/sboctor/bootstrapbot_merged_tf-autobuilder_threefoldtech-jumpscaleX-development.flist'
+        self.sendgrid_key = sendgrid_key
         self.lapis_port = lapis_port
 
     @property
     def _container_data(self):
         """
-        :return: data used for UserBot container
+        :return: data used for BootstrapBot container
          :rtype: dict
         """
         envs = {
-            'BOOTSTRAP_TOKEN': self.bootstrap_token
+            'SENDGRID_API_KEY': self.sendgrid_key
         }
 
         # select a storage pool where to create subvolume to mount into the container
@@ -66,7 +62,7 @@ class UserBot(Service):
         return {
             'name': self._container_name,
             'flist': self.flist,
-            'ports': {self.gedis_port: GEDIS_PORT, self.lapis_port: LAPIS_PORT},
+            'ports': {self.lapis_port: LAPIS_PORT},
             'nics': [{'type': 'default'}],
             'env': envs,
             'mounts': {fs.path: '/sandbox/var'},
@@ -76,13 +72,13 @@ class UserBot(Service):
 
     def start(self, timeout=15):
         """
-        Start user bot container
-        :param timeout: time in seconds to wait for the user bot to start
+        Start bootstrap bot container
+        :param timeout: time in seconds to wait for the bootstrap bot to start
         """
         if self.is_running():
             return
 
-        j.tools.logger._log_info('start user bot %s' % self.name)
+        j.tools.logger._log_info('start bootstrap bot %s' % self.name)
 
         def test_started():
             self._container = None
