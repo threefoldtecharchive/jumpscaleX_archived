@@ -27,7 +27,7 @@ class UserBot(Service):
         super().__init__(name, node, '3bot', [], True)
 
         # @todo change this flist when we have the final userbot flist
-        self.flist = 'https://hub.grid.tf/sboctor/userbot_merged_tf-autobuilder_threefoldtech-jumpscaleX-development.flist'
+        self.flist = 'https://hub.grid.tf/sboctor/userbot_merged_tf-autobuilder_threefoldtech-jumpscaleX-autostart-development.flist'
         self.bootstrap_token = bootstrap_token
         self.gedis_port = gedis_port
         self.lapis_port = lapis_port
