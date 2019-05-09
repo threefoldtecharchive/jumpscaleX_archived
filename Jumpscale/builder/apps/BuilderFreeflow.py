@@ -19,9 +19,7 @@ class BuilderFreeflow(j.builder.system._BaseClass):
                                          "php-zip",
                                          "php-ldap",
                                          "php-apcu",
-                                         "php-sqlite3",
-                                          "php-imagick",
-                                          "imagemagick"
+                                         "php-sqlite3"
                                          ])
 
         j.builder.tools.file_download("https://www.humhub.org/en/download/package/humhub-1.3.12.tar.gz","/var/www/html/humhub-1.3.12.tar.gz")
@@ -94,7 +92,7 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         mkdir -p /tmp/package/freeflow/sandbox/usr/share/php
         cp -r /usr/share/php7.2-* /tmp/package/freeflow/sandbox/usr/share/php
         cd /usr/lib/x86_64-linux-gnu/
-        cp -p libzip.so.4 libexpat.so libfontconfig.so.1 libfreetype.so.6 libgd.so.3 libjbig.so.0 libjpeg.so.8 libpng16.so.16 libssl.so libtiff.so.5 libwebp.so.6 libX11.so.6 libXau.so.6 libxcb.so.1 libXdmcp.so.6 libXpm.so.4 /tmp/package/freeflow/sandbox/lib
+        cp -p libzip.so.4 libexpat.so* libfontconfig.so.1 libfreetype.so.6 libgd.so.3 libjbig.so.0 libjpeg.so.8 libpng16.so.16 libssl.so* libtiff.so.5 libwebp.so.6 libX11.so.6 libXau.so.6 libxcb.so.1 libXdmcp.so.6 libXpm.so.4 /tmp/package/freeflow/sandbox/lib
         chmod +x -R /tmp/package/freeflow/sandbox/lib
         cd 
         """

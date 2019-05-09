@@ -84,8 +84,8 @@ APACHE_RUN_GROUP="www-data"
 APACHE_RUN_DIR="/var/run/apache2"
 APACHE_RUN_USER="www-data"
 APACHE_PID_FILE="/var/run/apache2/apache2.pid"
-PWD="/sandbox/etc/php/7.2/apache2/conf.d"
-PHP_INI_SCAN_DIR="/sandbox/etc/php/7.2/apache2/conf.d"
+PWD="/sandbox/etc/php/7.2/mods-available"
+PHP_INI_SCAN_DIR="/sandbox/etc/php/7.2/mods-available"
 PHPRC="/sandbox/etc/php/7.2/apache2/php.ini"
 
 [startup.apache.args]
