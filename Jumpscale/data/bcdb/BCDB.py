@@ -218,7 +218,7 @@ class BCDB(j.application.JSBaseClass):
             if model.bcdb != self:
                 raise RuntimeError("bcdb on model needs to be same as myself")
             model.index_rebuild()
-            self.meta.schema_set(model.schema)
+            self.meta._schema_set(model.schema)
 
     # def cache_flush(self):
     #     # put all caches on zero
@@ -294,9 +294,12 @@ class BCDB(j.application.JSBaseClass):
             self._log_debug("model get from schema:%s" % schema.url)
             if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
                 raise RuntimeError( "schema needs to be of type: j.data.schema.SCHEMA_CLASS")
+            schema_text = schema.text
+
 
         if schema._md5 in self._schema_md5_to_model:
             return self._schema_md5_to_model[schema._md5]
+
 
         self._log_info("load model:%s"%schema.url)
 
@@ -431,8 +434,7 @@ class BCDB(j.application.JSBaseClass):
 
         if len(res) == 3:
             schema_id, acl_id, bdata_encrypted = res
-            from pudb import set_trace; set_trace()
-            model = self.meta.model_get_from_id(schema_id, bcdb=self)
+            model = self.model_get_from_sid(schema_id)
         else:
             raise RuntimeError("not supported format")
 

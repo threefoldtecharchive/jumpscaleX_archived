@@ -21,7 +21,7 @@ def main(self):
 
     bcdb.models_add(mpath)
 
-    model = bcdb.model_get('jumpscale.bcdb.test.house')
+    model = bcdb.model_get_from_url('jumpscale.bcdb.test.house')
 
     model_obj = model.new()
     model_obj.cost = "10 USD"

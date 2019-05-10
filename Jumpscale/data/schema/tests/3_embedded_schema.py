@@ -115,16 +115,16 @@ def main(self):
     #more deep embedded (2 levels)
     
     schema = """
-        @url = jumpscale.schema.test3.cmd
-        name = ""
-        comment = ""
-        schemacode = ""
-
-        @url = jumpscale.schema.test3.serverschema
-        cmds = (LO) !jumpscale.schema.test3.cmdbox
-        cmd = (O) !jumpscale.schema.test3.cmd
-
-        @url = jumpscale.schema.test3.cmdbox
+            @url = jumpscale.schema.test3.cmd
+            name = ""
+            comment = ""
+            schemacode = ""
+    
+            @url = jumpscale.schema.test3.serverschema
+            cmds = (LO) !jumpscale.schema.test3.cmdbox
+            cmd = (O) !jumpscale.schema.test3.cmd
+    
+            @url = jumpscale.schema.test3.cmdbox
         cmd = (O) !jumpscale.schema.test3.cmd
         cmd2 = (O) !jumpscale.schema.test3.cmd
         

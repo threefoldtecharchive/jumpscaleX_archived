@@ -182,7 +182,7 @@ class RedisServer(j.application.JSBaseClass):
         if url != "":
             # url_normalized = j.core.text.strip_to_ascii_dense(url).replace(".", "_")
             if url in self.bcdb.models:
-                m = self.bcdb.model_get(url)
+                m = self.bcdb.model_get_from_url(url)
 
         return (cat, url, key, m)
 

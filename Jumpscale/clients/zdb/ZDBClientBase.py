@@ -90,7 +90,7 @@ class ZDBClientBase(j.application.JSBaseClass):
             #copy the old data back
             meta._data=data
             #now make sure its back in the db
-            meta.save()
+            meta._save()
         else:
             self.redis.execute_command("FLUSH")
 

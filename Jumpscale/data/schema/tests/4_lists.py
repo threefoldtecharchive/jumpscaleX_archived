@@ -44,7 +44,6 @@ def main(self):
         
         """
 
-
     schema_object = j.data.schema.get(schema1)
     schema_object2=j.data.schema.get(url="jumpscale.myjobs.job") #now get based on url
     assert schema_object2._md5==schema_object._md5  #check we get the same schema back
@@ -58,7 +57,7 @@ def main(self):
 
     q=schema_object.new()
     assert q.cmds._child_type_._schema._md5 == schemasub._md5
-    
+
     qq=q.cmds.new()
 
     #check that the subschema corresponds to the right one

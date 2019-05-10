@@ -18,6 +18,10 @@ def main(self):
 
     bcdb, _ = self._load_test_model()
 
+    assert len(bcdb.get_all())==0
+    assert len(bcdb.meta.data.schemas) == 4
+
+
     print(bcdb.meta)
 
     schema_text="""
@@ -30,14 +34,15 @@ def main(self):
 
     assert s.properties_unique == []
 
-    bcdb.meta.schema_set(s)
+    bcdb.meta._schema_set(s)
 
-    bcdb.meta.data.schemas[0]
+    assert len(bcdb.meta.data.schemas) == 5 # jumpscale.schema.test.a, despiegk, acl, group, user  #TODO: *1 doesn't do it yet, lets see why not
 
-    assert len(bcdb.meta.sid2schema) is 5
+    assert "jumpscale.schema.test.a" in j.data.schema.url_to_md5
+    assert "jumpscale.bcdb.group" in j.data.schema.url_to_md5
 
-    assert "jumpscale.schema.test.a" in j.data.schema.schemas
-    assert "jumpscale.bcdb.group" in j.data.schema.schemas
+    schema = bcdb.model_get_from_url( "jumpscale.schema.test.a")
+    o = schema.new()
 
 
     cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9901, secret="1234")
@@ -61,10 +66,10 @@ def main(self):
     assert redis.set("",value=data) == b'\x00\x00\x00\x00'
     bcdb.meta.reset()  # make sure we reload from data
 
-    assert "jumpscale.schema.test.a" in j.data.schema.schemas
-    assert "jumpscale.bcdb.group" in j.data.schema.schemas
+    assert "jumpscale.schema.test.a" in j.data.schema.url_to_md5
+    assert "jumpscale.bcdb.group" in j.data.schema.url_to_md5
 
-    s0=j.data.schema.get("jumpscale.schema.test.a"]
+    s0=j.data.schema.get(url="jumpscale.schema.test.a")
     s0_sid = s0.sid+0 #to make sure we have copy
 
 

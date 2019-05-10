@@ -164,7 +164,7 @@ class BCDBFactory(j.application.JSBaseClass):
 
         self._log_debug("bcdb already exists")
 
-        model = bcdb.model_get("despiegk.test")
+        model = bcdb.model_get_from_url("despiegk.test")
 
         return bcdb, model
 
@@ -173,7 +173,7 @@ class BCDBFactory(j.application.JSBaseClass):
         """
         following will run all tests
 
-        js_shell 'j.data.bcdb.test()'
+        kosmos 'j.data.bcdb.test()'
 
 
         """

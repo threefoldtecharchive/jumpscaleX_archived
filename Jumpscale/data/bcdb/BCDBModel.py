@@ -36,7 +36,7 @@ class BCDBModel(j.application.JSBaseClass):
         self.cache_expiration = cache_expiration
 
         self.schema = schema
-        self.schema.sid #just to make sure it has been set  #LEAVE HERE
+        # self.schema.sid #just to make sure it has been set  #LEAVE HERE
 
         self.zdbclient = bcdb.zdbclient
 
@@ -186,8 +186,8 @@ class BCDBModel(j.application.JSBaseClass):
             self.zdbclient.delete(obj_id)
 
     def check(self, obj):
-        if not hasattr(obj, "_JSOBJ"):
-            raise RuntimeError("argument needs to be a bcdb obj")
+        if not isinstance(obj,j.data.schema.DataObjBase):
+            raise RuntimeError("argument needs to be a jsx data obj")
 
     @queue_method
     def set_dynamic(self, data, obj_id=None):

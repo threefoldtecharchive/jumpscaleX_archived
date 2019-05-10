@@ -30,7 +30,7 @@ def main(self):
             model_obj.description = "something"
             model_obj.name = "name%s" % i
             model_obj.email = "info%s@something.com" % i
-            model_obj2 = model.set_dynamic(model_obj)
+            model_obj2 = model._set(model_obj)
 
         model_obj3 = model.get(model_obj2.id)
         assert model_obj3.id == model_obj2.id
@@ -41,7 +41,7 @@ def main(self):
         return db
 
     db = load()
-    db_model = db.model_get(url="despiegk.test")
+    db_model = db.model_get_from_url(url="despiegk.test")
     query = db_model.index.select()
     qres = [(item.name, item.nr) for item in query]
 
@@ -88,7 +88,7 @@ def main(self):
 
     model_obj.token_price = "10 USD"
     assert model_obj.token_price_usd == 10
-    db_model.set_dynamic(model_obj)
+    db_model._set(model_obj)
     model_obj2 = db_model.get(model_obj.id)
     assert model_obj2.token_price_usd == 10
 
