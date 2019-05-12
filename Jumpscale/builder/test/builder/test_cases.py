@@ -152,7 +152,13 @@ class TestCases(BaseTest):
         except:
             self.assertTrue(False)
 
-    #def test018_redis(self):
+    def test018_redis(self):
+        j.builder.db.redis.build(reset=True)
+        j.builder.db.redis.install()
+        j.builder.db.redis.start()
+        self.assertEqual(2, len(j.sal.process.getProcessPid('redis-server')))
+        j.builder.db.redis.stop()
+        self.assertEqual(1, len(j.sal.process.getProcessPid('redis-server')))
 
     def test019_syncthing(self):
         j.builder.storage.syncthing.build(reset=True)
