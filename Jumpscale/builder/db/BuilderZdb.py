@@ -18,6 +18,7 @@ class BuilderZdb(j.builder.system._BaseClass):
         self.tools.dir_ensure(self.DIR_BUILD)
         C = """
         cd {DIR_BUILD}
+        rm -rf 0-db/
         git clone https://github.com/threefoldtech/0-db.git --branch development
         cd {DIR_BUILD}/0-db
         make

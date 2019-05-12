@@ -3,6 +3,7 @@ from Jumpscale.builder.test.flist.base_test import BaseTest
 import unittest
 import time
 
+
 class TestCases(BaseTest):
     def test001_zbd(self):
         j.builder.db.zdb.build(reset=True)
@@ -12,6 +13,7 @@ class TestCases(BaseTest):
         j.builder.db.zdb.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('zdb')))
 
+    @unittest.skip("https://github.com/filebrowser/caddy/issues/32")
     def test002_caddy(self):
         j.builder.web.caddy.build(reset=True)
         j.builder.web.caddy.install()
@@ -91,13 +93,13 @@ class TestCases(BaseTest):
         j.builder.apps.digitalme.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('openresty')))
 
-    def test011_bitcion(self):
+    def test011_bitcoin(self):
         j.builder.blockchain.bitcoin.build(reset=True)
         j.builder.blockchain.bitcoin.install()
         j.builder.blockchain.bitcoin.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('bitcoin')))
-        j.builder.blockchain.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid('bitcoin')))
+        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('bitcoind')))
+        j.builder.blockchain.bitcoin.stop()
+        self.assertEqual(0, len(j.sal.process.getProcessPid('bitcoind')))
 
     def test012_ethereum(self):
         j.builder.blockchain.ethereum.build(reset=True)
@@ -106,8 +108,7 @@ class TestCases(BaseTest):
         self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('ethereum')))
         j.builder.blockchain.ethereum.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('ethereum')))
-        
-    
+
     def test013_etcd(self):
         j.builder.db.etcd.build(reset=True)
         j.builder.db.etcd.install()
@@ -130,9 +131,10 @@ class TestCases(BaseTest):
         j.builder.network.coredns.build(reset=True)
         j.builder.network.coredns.install()
         j.builder.network.coredns.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('coredns')))
+        self.assertTrue(j.sal.process.getProcessPid('coredns'))
         j.builder.network.coredns.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid('coredns')))
+        time.sleep(10)
+        self.assertFalse(j.sal.process.getProcessPid('coredns'))
 
     def test016_zerotier(self):
         j.builder.network.zerotier.build(reset=True)
@@ -141,7 +143,7 @@ class TestCases(BaseTest):
         self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('zerotier')))
         j.builder.network.zerotier.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('zerotier')))
-        
+
     def test017_rust(self):
         j.builder.runtimes.rust.build(reset=True) 
         j.builder.runtimes.rust.install()
@@ -149,17 +151,23 @@ class TestCases(BaseTest):
             j.sal.process.execute('which rustup')        
         except:
             self.assertTrue(False)
-    
-    #def test018_redis(self):
+
+    def test018_redis(self):
+        j.builder.db.redis.build(reset=True)
+        j.builder.db.redis.install()
+        j.builder.db.redis.start()
+        self.assertEqual(2, len(j.sal.process.getProcessPid('redis-server')))
+        j.builder.db.redis.stop()
+        self.assertEqual(1, len(j.sal.process.getProcessPid('redis-server')))
 
     def test019_syncthing(self):
         j.builder.storage.syncthing.build(reset=True)
         j.builder.storage.syncthing.install()
         j.builder.storage.syncthing.start()
+        time.sleep(10)
         self.assertTrue(len(j.sal.process.getProcessPid('syncthing')))
         j.builder.storage.syncthing.stop()
+        time.sleep(10)
         self.assertEqual(0, len(j.sal.process.getProcessPid('syncthing')))
 
     #def test020_caddyfilemanager(self):
-
-    

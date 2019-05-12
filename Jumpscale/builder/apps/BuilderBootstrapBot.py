@@ -2,7 +2,7 @@ from Jumpscale import j
 builder_method = j.builder.system.builder_method
 
 
-class BuilderUserBot(j.builder.system._BaseClass):
+class BuilderBootstrapBot(j.builder.system._BaseClass):
     """
     specs:
 
@@ -12,7 +12,7 @@ class BuilderUserBot(j.builder.system._BaseClass):
         - in self.test_zos() start the created flist & do the network tests for the openresty
 
     """
-    NAME = "userbot"
+    NAME = "bootstrapbot"
 
     @builder_method()
     def _init(self):
@@ -49,7 +49,7 @@ class BuilderUserBot(j.builder.system._BaseClass):
         file_dest = self.tools.joinpaths(self.DIR_SANDBOX, '.startup.toml')
         self._copy(startup_file, file_dest)
 
-        startup_file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), 'templates', 'userbot_startup.sh')
+        startup_file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), 'templates', 'bootstrapbot_startup.sh')
         file_dest = self.tools.joinpaths(self.DIR_SANDBOX, 'bot_startup.sh')
         self._copy(startup_file, file_dest)
 

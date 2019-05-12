@@ -41,9 +41,9 @@ class ZDBFactory(j.application.JSBaseClass):
         klass = _client_map[mode]
         return klass(addr=addr, port=port, secret=secret, nsname=nsname)
 
-    def start_test_instance(self, destroydata=False, admin_secret="123456",namespaces_secret="1234"):
+    def testdb_server_start_client_get(self, reset=False, admin_secret="123456",namespaces_secret="1234"):
         """
-        js_shell 'j.clients.zdb.start_test_instance(destroydata=True)'
+        js_shell 'j.clients.zdb.testdb_server_start_client_get(reset=True)'
 
         will start a ZDB server in tmux (will only start when not there yet or when reset asked for)
         erase all content
@@ -51,7 +51,7 @@ class ZDBFactory(j.application.JSBaseClass):
 
         """
 
-        return j.servers.zdb.start_test_instance(destroydata=destroydata,admin_secret=admin_secret,
+        return j.servers.zdb.start_test_instance(destroydata=reset,admin_secret=admin_secret,
                                  namespaces_secret=namespaces_secret)
 
     def stop_test_instance(self):
@@ -64,7 +64,7 @@ class ZDBFactory(j.application.JSBaseClass):
         """
 
 
-        cl = j.clients.zdb.start_test_instance()
+        cl = j.clients.zdb.testdb_server_start_client_get()
 
         self._test_run(name="base")
         self._test_run(name="admin")

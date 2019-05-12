@@ -9,6 +9,7 @@ class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
         self._freeflow = None
         self._digitalme = None
         self._userbot = None
+        self._bootstrapbot = None
 
     @property
     def gitea(self):
@@ -37,6 +38,17 @@ class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
             from .BuilderUserBot import BuilderUserBot
             self._userbot = BuilderUserBot()
         return self._userbot
+
+    @property
+    def bootstrapbot(self):
+        if self._bootstrapbot is None:
+            from .BuilderBootstrapBot import BuilderBootstrapBot
+            self._bootstrapbot = BuilderBootstrapBot()
+        return self._bootstrapbot
+
+
+
+
 
 
 

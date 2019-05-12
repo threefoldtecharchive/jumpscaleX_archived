@@ -125,4 +125,6 @@ cd /sandbox/code/github/threefoldtech/digitalmeX/packages/notary
 moonc . &&lapis server
 """ > notary_startup.sh
 
+rm -rf /sandbox/var/codegen/
+
 tar -cpzf "/tmp/archives/JSX.tar.gz" --exclude dev --exclude sys --exclude proc  /

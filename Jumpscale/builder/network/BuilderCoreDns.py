@@ -22,9 +22,10 @@ CONFIGTEMPLATE = """
 class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
     NAME = "coredns"
 
-    def profile_builder_set(self):
-        super().profile_builder_set()
-        self.profile.env_set('GO111MODULE', 'on')
+    def _init(self):
+        super()._init()
+        self.package_path = self.package_path_get(self.NAME)
+        self.templates_dir = self.tools.joinpaths(j.sal.fs.getDirName(__file__), 'templates')
 
     @builder_method()
     def build(self):
@@ -37,17 +38,18 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
         # install golang
         j.builder.runtimes.golang.install()
         j.builder.db.etcd.install()
+        self.tools.dir_ensure(self.package_path)
 
         # https://github.com/coredns/coredns#compilation-from-source
 
         # go to package path and build (for coredns)
         C = """
-        cd {DIR_BUILD}
-        git clone https://github.com/threefoldtech/coredns
+        cd {}
+        git clone https://github.com/coredns/coredns.git
         cd coredns
         make
-        """
-        self._execute(C)
+        """.format(self.package_path)
+        self._execute(C, timeout=1000)
 
     @builder_method()
     def install(self):
@@ -56,11 +58,12 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
 
         installs and runs coredns server with redis plugin
         """
-        self._copy('{DIR_BUILD}/coredns', '{DIR_BIN}/coredns')
+        src = self.tools.joinpaths(self.package_path, self.NAME, self.NAME)
+        self._copy(src, '{DIR_BIN}/coredns')
         j.sal.fs.writeFile(filename='/sandbox/cfg/coredns.conf', contents=CONFIGTEMPLATE)
 
     def clean(self):
-        self._remove(self.DIR_BUILD)
+        self._remove(self.package_path)
         self._remove(self.DIR_SANDBOX)
 
     @property
@@ -70,16 +73,26 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
         return cmds
 
     @builder_method()
-    def sandbox(self):
+    def sandbox(self, zhub_client=None, flist_create=False):
+        
+        # copy bins
         coredns_bin = j.sal.fs.joinPaths('{DIR_BIN}', self.NAME)
-        dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'sandbox')
-        self.tools.dir_ensure(dir_dest)
-        self._copy(coredns_bin, dir_dest)
+        bin_dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'sandbox', 'bin')
+        self.tools.dir_ensure(bin_dir_dest)
+        self._copy(coredns_bin, bin_dir_dest)
 
+        # config
+        config_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'sandbox', 'cfg')
+        self._copy('/sandbox/cfg/coredns.conf', config_dest)
+
+        # startup toml
+        startup_file = self.tools.joinpaths(self.templates_dir, 'coredns_startup.toml')
+        self._copy(startup_file, config_dest)
+
+        # add certs 
         dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'etc/ssl/certs/')
         self.tools.dir_ensure(dir_dest)
         self._copy('/etc/ssl/certs', dir_dest)
-        self._copy('/sandbox/cfg/coredns.conf', self.DIR_SANDBOX)
 
     @builder_method()
     def test(self):
@@ -109,12 +122,15 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
         self.clean()
 
     @builder_method()
-    def test_zos(self, zos_client, flist=None, build=False):
-        if build:
-            flist = self.sandbox(flist_create=True)
-
-        if not flist:
-            flist = "TODO: the official flist for coredns"
-
-        container = zos_client.container.create("test_coredns_builder", flist)
-        # TODO: do more tests on the created container
+    def test_zos(self, zos_client="", zhub_client=""):
+        self.sandbox(zhub_client=zhub_client, flist_create=True)
+        flist = "https://hub.grid.tf/{}/coredns.flist".format(zhub_client.username)
+        test_container = zos_client.containers.create(name="test_coredns", flist=flist, ports={1053:1053}, host_network=True)
+        client = test_container.client
+        assert client.ping()
+        assert client.filesystem.list('/sandbox/bin')[0]['name'] == 'coredns'
+        client.system('/sandbox/bin/coredns -dns.port 1053')
+        assert test_container.is_port_listening(1053)
+        for job in client.job.list(): 
+            client.job.kill(job['cmd']['id']) 
+        print("TEST OK")

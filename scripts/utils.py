@@ -5,6 +5,7 @@ import configparser
 import time
 import os
 import re
+import codecs
 ansi_escape = re.compile(r'\x1B\[[0-?]*[ -/]*[@-~]')
 
 
@@ -25,7 +26,7 @@ class Utils:
         self.telegram_cl = j.clients.telegram_bot.get("test")
 
     def execute_cmd(self, cmd):
-        response = run(cmd, shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
+        response = run(cmd, shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE, encoding='utf-8')
         return response
 
     def random_string(self):
@@ -73,7 +74,7 @@ class Utils:
         else:
             append_write = 'w'  # make a new file if not
 
-        with open(file_path, append_write) as f:
+        with codecs.open(file_path, append_write, 'utf-8') as f:
             f.write(text + '\n')
 
     def github_status_send(self, status, link,  repo, commit):
@@ -141,12 +142,12 @@ class Utils:
         """
         file_link = '{}/{}'.format(self.serverip, file_name)
         text = '{}:{}'.format(file_name, status)
-        self.write_file(text=text, file_name='status.log', file_path='.')
+        self.write_file(text=text, file_name='status.log')
         self.github_status_send(status=status, repo=repo, link=file_link, commit=commit)
         if status == 'success':
-            self.send_msg('Tests Passed ' + file_link, repo=repo, branch=branch, commit=commit, committer=committer)
+            self.send_msg('Tests passed ' + file_link, repo=repo, branch=branch, commit=commit, committer=committer)
         elif status == 'failure':
-            self.send_msg('Tests had errors ' + file_link, repo=repo, branch=branch, commit=commit, committer=committer)
+            self.send_msg('Tests failed ' + file_link, repo=repo, branch=branch, commit=commit, committer=committer)
         
     def export_var(self, config):
         """Prepare environment variables from config file.

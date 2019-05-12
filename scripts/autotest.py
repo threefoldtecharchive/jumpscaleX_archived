@@ -22,11 +22,17 @@ class RunTests(Utils):
         docker_cmd = 'docker run --rm -t {} /bin/bash -c'.format(image_name)
         env_cmd = 'export {};'.format(self.exports)
         if image_name == hub_image:
-            commit_cmd = 'cd /sandbox/code/github/{}; git pull; git reset --hard {};'.format(repo, commit)
+            utils = Utils()
+            commit_cmd1 = 'cd /sandbox/code/github/{}; git pull; git reset --hard {};'.format(repo, commit)
+            if repo == utils.repo[0]:
+                commit_cmd2 = 'cd /sandbox/code/github/{}; git pull;'.format(utils.repo[1])
+            else:
+                commit_cmd2 = 'cd /sandbox/code/github/{}; git pull;'.format(utils.repo[0])
+            commit_cmd = ' '.join([commit_cmd1, commit_cmd2])
         else:
             commit_cmd = ""
-        ssh_cmd = 'ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa -q -P ""; eval `ssh-agent`; ssh-add /root/.ssh/id_rsa;'
-        cmd = "{} '{} {} {} {}'".format(docker_cmd, env_cmd, commit_cmd, ssh_cmd, run_cmd)
+        kosmos_cmd = 'source /sandbox/env.sh; kosmos --instruct /sandbox/code/github/threefoldtech/test.toml;'
+        cmd = "{} '{} {} {} {}'".format(docker_cmd, env_cmd, commit_cmd, kosmos_cmd, run_cmd)
         response = self.execute_cmd(cmd)
         return response
 

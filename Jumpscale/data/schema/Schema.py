@@ -160,9 +160,7 @@ class Schema(j.application.JSBaseClass):
                 line_proptype = (
                     line.split("(")[1].split(")")[0].strip().lower()
                 )  # in between the ()
-                self._log_debug(
-                    "line:%s; lineproptype:'%s'" % (line_original, line_proptype)
-                )
+
                 line_wo_proptype = line.split("(")[0].strip()  # before the (
 
                 if pointer_type:
@@ -193,7 +191,6 @@ class Schema(j.application.JSBaseClass):
         nr = 0
         for line in text.split("\n"):
             line = line.strip()
-            self._log_debug("L:%s" % line)
             nr += 1
             if line.strip() == "":
                 continue
