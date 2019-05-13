@@ -17,7 +17,11 @@ class JSMailForwarderBase(j.application.JSBaseConfigClass):
         relay_user = ""
         relay_password = ""
         relay_ssl = (B)
-        forward_config = (LS)
+        forward_config = (LO) !jumpscale.mailforwarder.forward_config.1
+
+        @url = jumpscale.mailforwarder.forward_config.1
+        destination_domain = ""
+        source_domains = (LS)
     """
     
     def _process_forward_config(self):
