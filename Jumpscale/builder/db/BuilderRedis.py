@@ -48,18 +48,10 @@ class BuilderRedis(j.builder.system._BaseClass):
   
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
-        bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox/bin".format(self.DIR_SANDBOX))
-        self.tools.dir_ensure(bin_dest)
-
         bins = ['redis-server', 'redis-cli']
-        for bin in bins:
-            bin_path = self.tools.joinpaths("{DIR_BIN}", bin)
-            self.tools.file_copy(bin_path, bin_dest)
 
-
-        lib_dest = self.tools.joinpaths(self.DIR_SANDBOX, 'sandbox/bin')
+        lib_dest = self.tools.joinpaths(self.DIR_SANDBOX, 'sandbox')
         self.tools.dir_ensure(lib_dest)
         for bin in bins:
-            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
-            j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
-
+            bin_path = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
+            j.tools.sandboxer.sandbox_chroot(bin_path, lib_dest)
