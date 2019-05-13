@@ -24,8 +24,6 @@ class BuilderRedis(j.builder.system._BaseClass):
             cd redis-stable
             make
 
-            rm -f /usr/local/bin/redis-server
-            rm -f /usr/local/bin/redis-cli
             """
             self._execute(C)
 
@@ -39,8 +37,8 @@ class BuilderRedis(j.builder.system._BaseClass):
         :return:
         """
         self.build()
-        j.builder.tools.file_copy('{DIR_TEMP}/build/redis/redis-stable/src/redis-server', '{DIR_BIN}', overwrite=True)
-        j.builder.tools.file_copy('{DIR_TEMP}/build/redis/redis-stable/src/redis-cli', '{DIR_BIN}', overwrite=True)
+        j.builder.tools.file_copy('{DIR_TEMP}/build/redis/redis-stable/src/redis-server', '{DIR_BIN}', overwrite=False)
+        j.builder.tools.file_copy('{DIR_TEMP}/build/redis/redis-stable/src/redis-cli', '{DIR_BIN}', overwrite=False)
         j.builder.tools.dir_remove('{DIR_BASE}/apps/redis')
 
     @property
