@@ -19,10 +19,11 @@ def main(self):
     bcdb, _ = self._load_test_model()
 
     assert len(bcdb.get_all())==0
-    assert len(bcdb.meta.data.schemas) == 4
+    assert len(bcdb.meta.data.schemas) == 6
+    s = bcdb.meta.data.schemas[-1]
+    assert s.url=='despiegk.test'
 
-
-    print(bcdb.meta)
+    m = bcdb.model_get_from_url( "despiegk.test")
 
     schema_text="""
     @url = jumpscale.schema.test.a
@@ -36,7 +37,7 @@ def main(self):
 
     bcdb.meta._schema_set(s)
 
-    assert len(bcdb.meta.data.schemas) == 5 # jumpscale.schema.test.a, despiegk, acl, group, user  #TODO: *1 doesn't do it yet, lets see why not
+    assert len(bcdb.meta.data.schemas) == 7
 
     assert "jumpscale.schema.test.a" in j.data.schema.url_to_md5
     assert "jumpscale.bcdb.group" in j.data.schema.url_to_md5
@@ -77,7 +78,7 @@ def main(self):
 
     assert bcdb.get_all()==[] #just to make sure its empty
 
-    assert len(bcdb.meta.data._ddict["schemas"])==5  #acl, user, group, despiegktest and the 1 new one
+    assert len(bcdb.meta.data._ddict["schemas"])==7
 
     a = model.new()
     a.category = "acat"
@@ -105,7 +106,7 @@ def main(self):
     #lets upgrade schema to float
     s_temp = j.data.schema.get(schema_text)
 
-    assert len(bcdb.meta.data._ddict["schemas"])==5 #should be same because is same schema, should be same md5
+    assert len(bcdb.meta.data._ddict["schemas"])==7 #should be same because is same schema, should be same md5
     assert s_temp._md5 ==s0._md5
 
     schema_text="""
@@ -119,7 +120,7 @@ def main(self):
 
     model2 = bcdb.model_get_from_schema(schema=s2)
 
-    assert len(bcdb.meta.data._ddict["schemas"])==6  #acl, user, group, despiegktest and the 1 new one
+    assert len(bcdb.meta.data._ddict["schemas"])==8  #acl, user, group, despiegktest and the 1 new one
 
     s2_sid = s2.sid+0
 
@@ -153,8 +154,6 @@ def main(self):
     assert a6._model.schema.sid == s2_sid #needs to be the new one, so the object coming back has the schema as originally intended
     assert a6.i == a3.i
 
-
-    j.shell()
 
 
     return("OK")

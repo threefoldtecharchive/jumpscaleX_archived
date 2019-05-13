@@ -145,10 +145,8 @@ class BCDBFactory(j.application.JSBaseClass):
         U = 0.0
         pool_type = "managed,unmanaged" (E)
         """
-
         if self.latest != None:
             self.latest.stop()
-
         if sqlitestor:
             bcdb = j.data.bcdb.new(name="test", zdbclient=None)
             assert j.data.bcdb.latest.zdbclient == None

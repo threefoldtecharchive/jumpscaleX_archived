@@ -204,6 +204,8 @@ class BCDB(j.application.JSBaseClass):
 
         j.sal.fs.remove(self._data_dir)
 
+        self.meta.reset()
+
     def stop(self):
         self._log_info("STOP BCDB")
         if self.dataprocessor_greenlet is not None:
@@ -275,8 +277,34 @@ class BCDB(j.application.JSBaseClass):
         """
         if not isinstance(model, self._BCDBModelClass):
             raise RuntimeError("model needs to be of type:%s" % self._BCDBModelClass)
+
+        self._schema_property_add_if_needed(model.schema)
+
+        model.schema = self.meta._schema_set(model.schema)  #make sure we remember schema
         self._schema_md5_to_model[model.schema._md5] = model
+        assert model.schema.sid != None
+        assert model.schema.sid > 0
+
         return model
+
+    def _schema_property_add_if_needed(self,schema):
+        """
+        recursive walks over schema sub properties, to make sure we remember them all in bcdb
+        :param schema:
+        :return:
+        """
+        for prop in schema.properties:
+            if prop.jumpscaletype.NAME == "list" and isinstance(prop.jumpscaletype.SUBTYPE,j.data.types._jsobject):
+                #now we know that there is a subtype, we need to store it in the bcdb as well
+                s = prop.jumpscaletype.SUBTYPE._schema
+                s = self.meta._schema_set(s)
+                #now see if more subtypes
+                self._schema_property_add_if_needed(s)
+            elif prop.jumpscaletype.NAME == "jsobject":
+                s = prop.jumpscaletype._schema
+                s = self.meta._schema_set(s)
+                #now see if more subtypes
+                self._schema_property_add_if_needed(s)
 
     def model_get_from_schema(self, schema, dest=""):
         """
@@ -303,7 +331,6 @@ class BCDB(j.application.JSBaseClass):
 
         self._log_info("load model:%s"%schema.url)
 
-        schema = self.meta._schema_set(schema)  #make sure we remember schema
 
         tpath = "%s/templates/BCDBModelClass.py" % j.data.bcdb._path
         objForHash = schema_text

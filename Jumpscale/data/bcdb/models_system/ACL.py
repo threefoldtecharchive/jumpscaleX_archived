@@ -79,17 +79,19 @@ class ACL(Index_CLASS,MODEL_CLASS):
 
         if change:
             if self.readonly:
+                j.shell()
                 if acl.id is not None:
                     #means there is a change
                     acl.readonly=False #acl will become a new one, the id is removed
-                    acl.load_from_data(data=rdict, keepid=False, keepacl=False)
+                    acl.id = None
+                    acl._load_from_data(data=rdict)
                     assert acl.id is None
                 else:
                     acl.readonly=False
-                    acl.load_from_data(data=rdict, keepid=True, keepacl=False)
+                    acl._load_from_data(data=rdict, keepid=True, keepacl=False)
             else:
                 acl.readonly=False
-                acl.load_from_data(data=rdict, keepid=True, keepacl=False)
+                acl._load_from_data(data=rdict)
 
             dosave, acl = self._set_pre(acl)
             if dosave:
@@ -158,7 +160,6 @@ class ACL(Index_CLASS,MODEL_CLASS):
         :return:
         """
         acl.key = acl.hash
-
 
         hash=j.data.hash.md5_string(acl._json)
         if acl.hash == hash:

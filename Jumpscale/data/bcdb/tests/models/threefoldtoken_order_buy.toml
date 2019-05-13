@@ -1,7 +1,6 @@
 
 # Buy Order
 @url = threefoldtoken.order.buy
-@name = orderbuy
 comment = ""
 currency_to_buy* = "" (S)    # currency types BTC/ETH/XRP/TFT
 currency_mine = (LS)        # which of my currencies I am selling (can be more than 1)

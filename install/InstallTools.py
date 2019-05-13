@@ -799,7 +799,10 @@ class Tools:
                 args.update(MyEnv.MYCOLORS)
 
                 replace_args = format_dict(args)
-                content = content.format_map(replace_args)
+                try:
+                    content = content.format_map(replace_args)
+                except ValueError as e:
+                    pass #e.g. if { is in but not really to replace
 
 
         if text_strip:

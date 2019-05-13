@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.bcdb.test(name="acls")'
+    kosmos 'j.data.bcdb.test(name="acls")'
 
     test around acls
 
@@ -93,10 +93,6 @@ def main(self):
     zdbclient = zdbclient_admin.namespace_new("test", secret="1234")
     zdbclient.flush()  # empty
     bcdb = j.data.bcdb.new(name="test", zdbclient=zdbclient, reset=True)
-
-    return
-
-    #TODO:#1
 
     do(bcdb)
     bcdb.reset()

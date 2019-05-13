@@ -26,7 +26,7 @@ def main(self):
 
     tt = j.data.types.get("o","despiegk.test")
 
-    assert tt._schema_md5== schema_object._md5
+    assert tt._schema._md5== schema_object._md5
 
     assert tt.BASETYPE == "OBJ"
 

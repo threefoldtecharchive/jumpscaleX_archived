@@ -107,7 +107,7 @@ class DataObjBase:
             if self._readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
             # print (self._model.__class__.__name__)
-            if not self._model.__class__._name=="acl" and self.acl is not None:
+            if not self._model.__class__._name=="acl" and self._acl is not None:
                 if self.acl.id is None:
                     self.acl.save()
                 if self.acl.id != self.acl_id:

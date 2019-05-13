@@ -67,7 +67,7 @@ class BCDBMeta(j.application.JSBaseClass):
 
     def reset(self):
         self._data = None
-        self._schema_last_id = -1
+        self._schema_last_id = 0
         self.data
 
     def _save(self):
