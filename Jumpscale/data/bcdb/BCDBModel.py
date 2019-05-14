@@ -206,7 +206,7 @@ class BCDBModel(j.application.JSBaseClass):
             obj = self.schema.get(data=data)
             if obj_id is None:
                 raise RuntimeError("objid cannot be None")
-        elif getattr(data, "_JSOBJ", None):
+        elif isinstance(data, j.data.schema.DataObjBase):
             obj = data
             if obj_id is None and obj.id is not None:
                 obj_id = obj.id
@@ -352,7 +352,7 @@ class BCDBModel(j.application.JSBaseClass):
                     # need to save the acl
                     obj.acl.save()
                 else:
-                    acl2 = obj.model.bcdb.acl.get(obj.acl.id)
+                    acl2 = obj._model.bcdb.acl.get(obj.acl.id)
                     if acl2 is None:
                         # means is not in db
                         obj.acl.save()

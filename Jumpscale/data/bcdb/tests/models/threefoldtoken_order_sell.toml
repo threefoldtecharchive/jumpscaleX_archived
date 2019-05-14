@@ -1,4 +1,3 @@
-# Sell Order
 @url = threefoldtoken.order.sell
 comment = ""
 currency_to_sell* = "" (S)   # currency types BTC/ETH/XRP/TFT

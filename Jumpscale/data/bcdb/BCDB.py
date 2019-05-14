@@ -284,7 +284,7 @@ class BCDB(j.application.JSBaseClass):
         self._schema_md5_to_model[model.schema._md5] = model
         assert model.schema.sid != None
         assert model.schema.sid > 0
-
+        self.models[model.schema.url] = model
         return model
 
     def _schema_property_add_if_needed(self,schema):
@@ -313,7 +313,6 @@ class BCDB(j.application.JSBaseClass):
         :param overwrite: will overwrite the resulting file even if it already exists
         :return:
         """
-
         if j.data.types.string.check(schema):
             schema_text = schema
             schema = j.data.schema.get(schema_text)
