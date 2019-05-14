@@ -27,8 +27,7 @@ def main(self):
         nrdefault3 = 0 (I)
         """
 
-    schema_object = j.data.schema.get(schema_text=schema)
-
+    schema_object = j.data.schema.get_from_text(schema_text=schema)
 
 
     assert schema_object.url == "despiegk.test"
@@ -95,14 +94,14 @@ def main(self):
         description = ""
         """
 
-    j.data.schema.add(schema_text=schema)
+    j.data.schema.add_from_text(schema_text=schema)
 
-    s=j.data.schema.get(url='despiegk.test2')
+    s=j.data.schema.get_from_url_latest(url='despiegk.test2')
     e = s.properties[0] #is the enumerator
     assert e.js_typelocation != 'j.data.types.enum' #should not the default location
 
-    schema_object1 = j.data.schema.get(url="despiegk.test2")
-    schema_object2 = j.data.schema.get(url="despiegk.test3")
+    schema_object1 = j.data.schema.get_from_url_latest(url="despiegk.test2")
+    schema_object2 = j.data.schema.get_from_url_latest(url="despiegk.test3")
 
     o1 = schema_object1.get()
     o2 = schema_object2.get()
@@ -167,7 +166,7 @@ def main(self):
         int1 =  10 (I)
     """
 
-    o = j.data.schema.get(schema).new()
+    o = j.data.schema.get_from_text(schema).new()
 
     assert o.bool1 == True
     assert o.bool2 == True
@@ -187,18 +186,18 @@ def main(self):
     name = ""
     llist = []    
     """
-    s0=j.data.schema.get(schema)
+    s0=j.data.schema.get_from_text(schema)
     schema = """
     @url = despiegk.doubletest
     name = ""
     llist = ""    
     """
 
-    s1=j.data.schema.get(schema)
+    s1=j.data.schema.get_from_text(schema)
 
     assert s0._md5!=s1._md5
 
-    s2=j.data.schema.get(url="despiegk.doubletest")
+    s2=j.data.schema.get_from_url_latest(url="despiegk.doubletest")
     assert s2._md5==s1._md5
     assert s2._md5!=s0._md5
 

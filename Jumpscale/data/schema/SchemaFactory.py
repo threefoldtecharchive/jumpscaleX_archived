@@ -13,11 +13,7 @@ class SchemaFactory(j.application.JSBaseClass):
 
         self.__code_generation_dir = None
         # self.db = j.clients.redis.core_get()
-        self.url_to_md5 = {}  #list inside the dict because there can be more than 1 schema linked to url
-        self.url_versionless_to_md5 = {} #list inside the dict because there can be more than 1 schema linked to url
-
-        self.md5_to_schema = {}
-
+        self.reset()
         self.DataObjBase = DataObjBase
 
     @property
@@ -37,79 +33,57 @@ class SchemaFactory(j.application.JSBaseClass):
         return self.__code_generation_dir
 
     def reset(self):
-        self.schemas = {}
+        self.url_to_md5 = {}  #list inside the dict because there can be more than 1 schema linked to url
+        self.url_versionless_to_md5 = {} #list inside the dict because there can be more than 1 schema linked to url
+        self.md5_to_schema = {}
 
-    def exists(self, schema_text="", url=None, md5=None):
-        md5,schema = self._get(schema_text=schema_text,url=url,md5=md5)
-        return schema is not None
+    def exists(self,md5=None,url=None):
+        if md5:
+            return md5 in self.md5_to_schema
+        elif url:
+            if not url in self.url_to_md5:
+                return False
+            return len(self.url_to_md5[url])>0
+        return False
 
-    def _get(self,schema_text="", url=None, md5=None):
-
-        if md5 and schema_text:
-            if not md5 == self._md5(schema_text):
-                raise RuntimeError("md5 is not same as md5 of schema_text: %s-%s"%(md5,self._md5(schema_text)))
-
-        if not md5:
-            if schema_text:
-                if schema_text.count("@")>1:
-                    raise RuntimeError("cannot have multiple blocks in the schema text.\n%s"%schema_text)
-                md5 = self._md5(schema_text)
-            elif url is not None:
-                url = self._urlclean(url)
-                if url in self.url_to_md5:
-                    md5 = self.url_to_md5[url][-1]
-                elif url in self.url_versionless_to_md5:
-                    md5 = self.url_versionless_to_md5[url][-1]
-
-        if md5 and md5 in self.md5_to_schema:
-            return md5, self.md5_to_schema[md5]
-
-        return md5, None
-
-
-    def get(self, schema_text="", url=None, md5=None):
+    def get_from_md5(self, md5):
         """
-        get schema from the url or schema_text or md5
+        :param md5: each schema has a unique md5 which is its identification string
+        :return: Schema
+        """
+        assert isinstance(md5,str)
+        md5=md5.lower()
+        if md5 in self.md5_to_schema:
+            return self.md5_to_schema[md5]
+        else:
+            raise  j.exceptions.Input("Could not find schema with md5:%s"%md5)
 
-        only supports 1 block
+    def get_from_url_latest(self, url):
+        """
+        :param url: url is e.g. jumpscale.bcdb.user.1
+        :return: will return the most recent schema, there can be more than 1 schema with same url (changed over time)
+        """
+        assert isinstance(url,str)
+        url = self._urlclean(url)
+        if url in self.url_to_md5:
+            if len(self.url_to_md5[url])>0:
+                md5 = self.url_to_md5[url][-1]
+                return self.md5_to_schema[md5]
+        raise  j.exceptions.Input("Could not find schema with url:%s"%url)
 
-        j.data.schema.get(schema_text="", url=None, md5=None)
-
-        Keyword Arguments:
-            schema_text {str} -- schema file path or shcema string  (default: {""})
-            url {[type]} -- url of your schema e.g. @url = despiegk.test  (default: {None})
-            md5 is the most specific one, if specified will use that one
+    def get_from_text(self, schema_text):
+        """
+        will return the first schema specified if more than 1
 
         Returns:
             Schema
         """
-
-        md5, schema = self._get(schema_text=schema_text,url=url,md5=md5)
-
-        if schema is not None:
-            return schema
-
-        #we don't know the schema yet
-
+        assert isinstance(schema_text,str)
         if schema_text != "":
             if j.data.types.string.check(schema_text):
-                schema = self.add(schema_text=schema_text, url=url, md5=md5)[0]
+                schema = self.add_from_text(schema_text=schema_text)[0]
             else:
-                raise RuntimeError("need to be text ")
-        else:
-            if url is None:
-                if md5 is None:
-                    raise RuntimeError("cannot have url and md5 None if no schema text specified")
-                else:
-                    raise RuntimeError("could not find schema with md5: '%s'" % md5)
-            elif md5 is None:
-                if url is None:
-                    raise RuntimeError("cannot have url and md5 None if no schema text specified")
-                else:
-                    raise RuntimeError("could not find schema '%s'" % url)
-            else:
-                raise RuntimeError("cannot have url and md5 None if no schema text specified")
-
+                raise j.exceptions.Input("Schema needs to be text ")
 
         return schema
 
@@ -121,8 +95,6 @@ class SchemaFactory(j.application.JSBaseClass):
         original_text = text.replace(" ", "").replace("\n", "").strip()
         # print("*****\n%s\n***********\n"%(ascii_text))
         return j.data.hash.md5_string(original_text)
-
-
 
 
     def _urlclean(self,url):
@@ -161,38 +133,23 @@ class SchemaFactory(j.application.JSBaseClass):
         return blocks
 
 
-    def add(self, schema_text, url=None, md5=None):
+    def add_from_text(self, schema_text):
         """
         :param schema_text can be 1 or more schema's in the text
-        when using url or md5 then there can be only 1 schema in the text
-
         """
-
+        assert isinstance(schema_text,str)
+        res=[]
         blocks = self._schema_blocks_get(schema_text)
+        for block in blocks:
+            res.append(self._add_from_text_item(block))
+        return res
 
-        if len(blocks)>1:
-            if url or md5:
-                raise RuntimeError("can only use url or md5 if max 1 schema\n%s"%schema_text)
-            res = []
-            for schema_text in blocks:
-                res.append(self.add(schema_text=schema_text)[0])
-            return res
+    def _add_from_text_item(self, schema_text):
+        md5 = self._md5(schema_text)
+        if md5 in self.md5_to_schema:
+            return self.md5_to_schema[md5]
 
-        else:
-            schema_text = blocks[0]
-
-        md5, schema = self._get(schema_text=schema_text,url=url,md5=md5)
-
-        if schema is not None:
-            return [schema]  #did already exist
-
-        if md5 is None:
-            md5 = self._md5(schema_text)
-
-        s = Schema(text=schema_text, url=url,md5=md5)
-
-        if s._md5 in self.md5_to_schema:
-            raise RuntimeError("should not be there")
+        s = Schema(text=schema_text,md5=md5)
 
         #add md5 to the list if its not there yet
         if not s.url in self.url_to_md5:
@@ -208,7 +165,37 @@ class SchemaFactory(j.application.JSBaseClass):
 
         self.md5_to_schema[s._md5] = s
 
-        return [s]
+        return s
+
+    def add_from_path(self, path=None):
+        """
+        :param path, is path where there are .toml schema's which will be loaded
+
+        """
+
+        res=[]
+        # if j.sal.fs
+        if j.sal.fs.isFile(path):
+            paths = [path]
+        else:
+            paths = j.sal.fs.listFilesInDir(path, recursive=True, filter="*.toml", followSymlinks=True)
+        for schemapath in paths:
+
+            bname = j.sal.fs.getBaseName(schemapath)[:-5]
+            if bname.startswith("_"):
+                continue
+
+            schema_text = j.sal.fs.readFile(schemapath)
+            schemas = j.data.schema.add_from_text(schema_text=schema_text)
+            # toml_path = "%s.toml" % (schema.key)
+            # if j.sal.fs.getBaseName(schemapath) != toml_path:
+            #     toml_path = "%s/%s.toml" % (j.sal.fs.getDirName(schemapath), schema.key)
+            #     j.sal.fs.renameFile(schemapath, toml_path)
+            for schema in schemas:
+                if schema not in res:
+                    res.append(schema)
+        return res
+
 
     def test(self, name=""):
         """

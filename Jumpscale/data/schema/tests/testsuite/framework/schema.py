@@ -8,7 +8,7 @@ class Schema:
             
     @property
     def schema_object(self):
-        self.schema_obj = j.data.schema.get(schema_text=self.schema)
+        self.schema_obj = j.data.schema.get_from_text(schema_text=self.schema)
         return self.schema_obj
    
     def new(self):

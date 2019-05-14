@@ -86,6 +86,9 @@ class Text(object):
         text=unidecode(text) #convert to ascii letters
         # text=self.strip_to_ascii(text) #happens later already
         text=text.lower()
+        text=text.replace("\n","")
+        text=text.replace("\t","")
+        text=text.replace(" ","")
         def replace(char):
             if char in "-/\\= ;!+()":
                 return "_"

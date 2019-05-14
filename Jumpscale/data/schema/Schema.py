@@ -5,26 +5,38 @@ from Jumpscale import j
 import sys
 from Jumpscale import j
 
+class SystemProps():
+    def __str__(self):
+        if len(self.__dict__.items())>0:
+            out = "\n### systemprops:\n\n"
+            for key,item in self.__dict__.items():
+                out += str(key)+ ":"+str(item) + "\n"
+            return out
+        return ""
+
+    __repr__ = __str__
 
 class Schema(j.application.JSBaseClass):
-    def __init__(self, text, url=None,md5=None):
+    def __init__(self, text, md5=None ,url=None):
         j.application.JSBaseClass.__init__(self)
         self.properties = []
         self._systemprops = {}
         self._obj_class = None
         self._capnp = None
         self._index_list = None
+
+        self.systemprops = SystemProps()
+
         self.url = url
 
         if md5:
             self._md5 = md5
+            assert j.data.schema._md5(text) == self._md5
         else:
             self._md5 = j.data.schema._md5(text)
 
         self._schema_from_text(text)
         self.key = j.core.text.strip_to_ascii_dense(self.url).replace(".", "_")
-
-
 
         urls = self.url.split(".")
         if len(urls) > 0:
@@ -101,6 +113,9 @@ class Schema(j.application.JSBaseClass):
 
         self._log_debug("load schema", data=text)
 
+        if text.count("@url")>1:
+            raise j.exceptions.Input("there should only be 1 url in the schema")
+
         self.text = j.core.text.strip(text)
 
         systemprops = {}
@@ -120,11 +135,8 @@ class Schema(j.application.JSBaseClass):
             propname, line = line.split("=", 1)
             propname = propname.strip()
             if ":" in propname:
-                self._error_raise(
-                    "Aliases no longer supported in names, remove  ':' in name '%s'"
-                    % propname,
-                    schema=text,
-                )
+                self._error_raise("Aliases no longer supported in names, remove  ':' in name '%s'"% propname,
+                                  schema=text,)
             line = line.strip()
 
             if "!" in line:
@@ -197,6 +209,8 @@ class Schema(j.application.JSBaseClass):
             if line.strip() == "":
                 continue
             if line.startswith("@"):
+                if "#" in line:
+                    line, _ = line.split("#", 1)
                 systemprop_name = line.split("=")[0].strip()[1:]
                 systemprop_val = line.split("=")[1].strip()
                 systemprops[systemprop_name] = systemprop_val.strip('"').strip("'")
@@ -220,20 +234,19 @@ class Schema(j.application.JSBaseClass):
                 self.properties.append(p)
 
         for key, val in systemprops.items():
-            if key == "url" and self.url:
-                continue  # skip when url given
-            self.__dict__[key] = val
+            if key == "url":
+                if self.url:
+                    assert self.url == val
+                else:
+                    self.url = val
+            else:
+                self.systemprops.__dict__[key] = val
 
         nr = 0
         for s in self.properties:
             s.nr = nr
             self.__dict__["property_%s" % s.name] = s
             nr += 1
-
-        # for s in self.lists:
-        #     s.nr = nr
-        #     self.__dict__["property_%s" % s.name] = s
-        #     nr += 1
 
     @property
     def _capnp_id(self):
@@ -374,6 +387,10 @@ class Schema(j.application.JSBaseClass):
         out = "## SCHEMA: %s\n\n"%self.url
         for item in self.properties:
             out += str(item) + "\n"
+        out+=str(self.systemprops)
         return out
+
+    def __eq__(self, other):
+        return other._md5 == self._md5
 
     __repr__ = __str__

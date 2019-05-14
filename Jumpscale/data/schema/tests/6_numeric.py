@@ -12,7 +12,7 @@ def main(self):
         token_price = "10 USD" (N)
         """
 
-    schema_object = j.data.schema.get(schema_text=schema)
+    schema_object = j.data.schema.get_from_text(schema_text=schema)
 
     assert schema_object.url == "despiegk.test"
     print(schema_object)

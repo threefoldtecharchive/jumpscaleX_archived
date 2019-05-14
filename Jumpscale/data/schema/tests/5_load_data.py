@@ -49,7 +49,7 @@ def main(self):
 
     data = j.data.serializers.toml.loads(toml)
 
-    schema_object = j.data.schema.add(schema_package)[0]
+    schema_object = j.data.schema.add_from_text(schema_package)[0]
     data = schema_object.get(data=data)
 
     self._log_info("TEST DONE LOADDATA")

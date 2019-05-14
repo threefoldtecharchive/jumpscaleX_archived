@@ -1,6 +1,7 @@
 from Jumpscale import j
 
 from .BCDB import BCDB
+from .BCDBModel import BCDBModel
 import os
 import sys
 import redis
@@ -20,6 +21,14 @@ class BCDBFactory(j.application.JSBaseClass):
         self.latest = None
 
         j.clients.redis.core_get()  # just to make sure the redis got started
+
+        j.data.schema.add_from_path("%s/models_system/meta.toml"%self._dirpath)
+
+
+    @property
+    def _BCDBModelClass(self):
+        return BCDBModel
+
 
     def new(self, name, zdbclient=None, reset=False):
 
@@ -157,7 +166,7 @@ class BCDBFactory(j.application.JSBaseClass):
             zdbclient = zdbclient_admin.namespace_new("test", secret="1234")
             bcdb = j.data.bcdb.new(name="test", zdbclient=zdbclient)
 
-        schemaobj = j.data.schema.get(schema)
+        schemaobj = j.data.schema.get_from_text(schema)
         bcdb.model_get_from_schema(schemaobj)
 
         self._log_debug("bcdb already exists")

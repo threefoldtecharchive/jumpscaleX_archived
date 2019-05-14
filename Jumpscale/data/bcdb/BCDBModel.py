@@ -9,7 +9,7 @@ JSBASE = j.application.JSBaseClass
 
 
 class BCDBModel(j.application.JSBaseClass):
-    def __init__(self,bcdb,schema=None,cache_expiration=3600,custom=False,reset=False):
+    def __init__(self,bcdb,schema=None,namespaceid=None, reset=False):
         """
 
         delivers interface how to deal with data in 1 schema
@@ -26,17 +26,19 @@ class BCDBModel(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
+        bcdb,schema,namespaceid,reset = self._init_load(bcdb,schema,namespaceid,reset)
+
         self._kosmosinstance = None
+        self.namespaceid = namespaceid
 
         if bcdb is None:
             raise RuntimeError("bcdb should be set")
 
         self.bcdb = bcdb
         self.__redis_prefix = None
-        self.cache_expiration = cache_expiration
+        # self.cache_expiration = 3600
 
         self.schema = schema
-        # self.schema.sid #just to make sure it has been set  #LEAVE HERE
 
         self.zdbclient = bcdb.zdbclient
 
@@ -53,23 +55,24 @@ class BCDBModel(j.application.JSBaseClass):
 
         self._triggers = []
 
-        self.custom = custom
+        # self.custom = custom
         self._init_()
         if reset:
             self.reset()
 
-    def _init_(self):
 
-        self._data_dir = j.sal.fs.joinPaths(self.bcdb._data_dir, self.key)
-        j.sal.fs.createDir(self._data_dir)
+    def _init_load(self,bcdb,schema,namespaceid,reset):
+        return bcdb,schema,namespaceid,reset
 
-        if self.cache_expiration > 0:
-            self.obj_cache = {}
-        else:
-            self.obj_cache = None
 
+    def _init_idfile(self):
+        """
+        we keep track of id's per namespace and per model, this to allow easy enumeration
+        :return:
+        """
+
+        #next one always happens
         self._ids_file_path = "%s/ids.data" % (self._data_dir)
-
         if not j.sal.fs.exists(self._ids_file_path) or j.sal.fs.fileSize(self._ids_file_path) == 0:
             j.sal.fs.touch(self._ids_file_path)
             self._ids_last = 0
@@ -81,7 +84,46 @@ class BCDBModel(j.application.JSBaseClass):
             f.seek(llen - 4, 0)
             bindata = f.read(4)
             self._ids_last = struct.unpack(b"<I", bindata)[0]
+            f.close()
 
+        if self.namespaceid:
+            self._ids_file_path_ns = "%s/ids_%s.data" % (self._data_dir,self.namespace_name)
+            if not j.sal.fs.exists(self._ids_file_path_ns) or j.sal.fs.fileSize(self._ids_file_path_ns) == 0:
+                j.sal.fs.touch(self._ids_file_path_ns)
+            else:
+                llen = j.sal.fs.fileSize(self._ids_file_path_ns)
+                # make sure the len is multiplication of 4 bytes
+                assert float(llen / 4) == llen / 4
+                f = open(self._ids_file_path_ns, "rb")
+                f.seek(llen - 4, 0)
+                bindata = f.read(4)
+                f.close()
+                assert self._ids_last == struct.unpack(b"<I", bindata)[0]  #needs to be same
+
+    @property
+    def namespace_name(self):
+        if self.namespaceid:
+            return self.namespace.name
+        else:
+            raise RuntimeError("namespace object does not exist yet")
+
+    @property
+    def namespace(self):
+        if self.namespaceid:
+            j.shell()
+
+    def _init_(self):
+
+        self._data_dir = j.sal.fs.joinPaths(self.bcdb._data_dir, self.key)
+        j.sal.fs.createDir(self._data_dir)
+
+        # if self.cache_expiration > 0:
+        #     self.obj_cache = {}
+        # else:
+        #     self.obj_cache = None
+
+
+        self._init_idfile()
         self._init_index()  # goal is to be overruled by users
 
         #DO NOT REBUILD THE INDEX HERE, if the redis is e.g. lost then we need to rebuild all
@@ -410,6 +452,9 @@ class BCDBModel(j.application.JSBaseClass):
                 #this allows us to know which objects are in a specific model namespace, otherwise we cannot iterate
                 bin_id = struct.pack("<I", obj.id)
                 j.sal.fs.writeFile(self._ids_file_path, bin_id, append=True)
+                if self.namespaceid:
+                    j.sal.fs.writeFile(self._ids_file_path_ns, bin_id, append=True)
+
                 self._ids_last = obj.id
 
         self.triggers_call(obj=obj, action="set_post")
@@ -425,8 +470,12 @@ class BCDBModel(j.application.JSBaseClass):
         ```
         :return:
         """
+        if self.namespaceid:
+            path = self._ids_file_path_ns
+        else:
+            path = self._ids_file_path
         # print("idspath:%s"%self._ids_file_path)
-        with open(self._ids_file_path, "rb") as f:
+        with open(path, "rb") as f:
             while True:
                 chunk = f.read(4)
                 if chunk:

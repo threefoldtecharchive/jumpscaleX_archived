@@ -30,10 +30,10 @@ class JSDataObjectFactory(TypeBaseObjFactory):
                 j.shell() #need to find schema based on sid
                 self._schema_md5 = self._default[4:] #md5 is directly given
             else:
-                s = j.data.schema.get(url=self._default)
+                s = j.data.schema.get_from_url_latest(url=self._default)
             self._schema_md5 = s._md5
 
-            self._schema_ = j.data.schema.get(md5=self._schema_md5)
+            self._schema_ = j.data.schema.get_from_md5(md5=self._schema_md5)
         return self._schema_
 
     def python_code_get(self, value):

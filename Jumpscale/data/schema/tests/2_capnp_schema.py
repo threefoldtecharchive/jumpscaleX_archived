@@ -24,8 +24,8 @@ def main(self):
         cost_estimate = 0.0 (N) #this is a comment
         """
 
-    o1_schema = j.data.schema.get(schema0)
-    o2_schema = j.data.schema.get(schema1)
+    o1_schema = j.data.schema.get_from_text(schema0)
+    o2_schema = j.data.schema.get_from_text(schema1)
 
     o1=o1_schema.new()
 

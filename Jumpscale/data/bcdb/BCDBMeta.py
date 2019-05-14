@@ -9,7 +9,7 @@ class BCDBMeta(j.application.JSBaseClass):
         JSBASE.__init__(self)
         self._bcdb = bcdb
         self._meta_local_path = j.sal.fs.joinPaths(self._bcdb._data_dir, "meta.db")
-        self._schema = j.data.schema.add(SCHEMA)[0]
+        self._schema = j.data.schema.get_from_url_latest("jumpscale.schemas.meta.1")
         self.reset()
 
     @property
@@ -47,7 +47,7 @@ class BCDBMeta(j.application.JSBaseClass):
 
                 #make sure we know all schema's
                 if not j.data.schema.exists(md5=s.md5):
-                    j.data.schema.add(schema_text=s.text,md5=s.md5,url=s.url)
+                    j.data.schema.add_from_text(schema_text=s.text)
 
         return self._data
 

@@ -20,9 +20,9 @@ def main(self):
             schemacode = ""
             """
 
-        j.data.schema.add(schema)
-        so = j.data.schema.get(url="jumpscale.schema.test3.a")
-        so2 = j.data.schema.get(url="jumpscale.schema.test3.b")
+        j.data.schema.add_from_text(schema)
+        so = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.a")
+        so2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.b")
         o = so.new()
 
         o.cmd.name = "a"
@@ -60,9 +60,9 @@ def main(self):
             schemacode = ""
             """
 
-        j.data.schema.add(schema)
-        so = j.data.schema.get(url="jumpscale.schema.test3.a")
-        so2 = j.data.schema.get(url="jumpscale.schema.test3.b")
+        j.data.schema.add_from_text(schema)
+        so = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.a")
+        so2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.b")
         o = so.new()
 
         cmd=o.cmds.new()
@@ -129,9 +129,9 @@ def main(self):
         cmd2 = (O) !jumpscale.schema.test3.cmd
         
         """
-    j.data.schema.add(schema) #just add
-    schema_object2 = j.data.schema.get(url="jumpscale.schema.test3.serverschema")
-    schema_object3 = j.data.schema.get(url="jumpscale.schema.test3.cmdbox")
+    j.data.schema.add_from_text(schema) #just add
+    schema_object2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.serverschema")
+    schema_object3 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.cmdbox")
 
     schema_test = schema_object2.get()
 

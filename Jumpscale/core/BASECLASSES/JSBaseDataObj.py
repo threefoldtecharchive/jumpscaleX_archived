@@ -41,7 +41,7 @@ class JSBaseDataObj(JSBase):
     @property
     def _schema(self):
         if self._schema_ is None:
-            self._schema_ = j.data.schema.get(self.__class__._SCHEMATEXT)
+            self._schema_ = j.data.schema.get_from_text(self.__class__._SCHEMATEXT)
         return self._schema_
 
     def _class_init(self):
@@ -83,7 +83,7 @@ class JSBaseDataObj(JSBase):
         :return:
         """
         ddict = self.data._ddict
-        self.data._data_update(data=kwargs)
+        self.data._load_from_data(data=kwargs)
 
     def edit(self):
         """

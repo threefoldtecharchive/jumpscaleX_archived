@@ -22,7 +22,7 @@ def main(self):
         U = 0.0
         """
 
-    schema_object = j.data.schema.get(schema_text=schema)
+    schema_object = j.data.schema.get_from_text(schema_text=schema)
 
     tt = j.data.types.get("o","despiegk.test")
 

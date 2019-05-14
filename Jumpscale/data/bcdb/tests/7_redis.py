@@ -63,7 +63,7 @@ def main(self):
         self._log_debug("there should be 0 objects")
         assert redis_cl.hlen("objects:despiegk.test2") == 0
 
-        schema = j.data.schema.get(schema)
+        schema = j.data.schema.get_from_text(schema)
 
         self._log_debug("add objects")
 

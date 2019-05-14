@@ -64,7 +64,7 @@ enum = "red,green,blue" (E) #first one specified is the default one
 llist = []
 description = ""
 """
-s=j.data.schema.get(schema_text=schema)
+s=j.data.schema.get_from_text(schema_text=schema)
 o=s.new()
 ```
 

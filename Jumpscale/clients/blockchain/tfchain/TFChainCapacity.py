@@ -89,7 +89,7 @@ class TFChainCapacity():
         :rtype: tuple
         """
 
-        reservation = j.data.schema.get(url='tfchain.reservation.s3').new(data={
+        reservation = j.data.schema.get_from_url_latest(url='tfchain.reservation.s3').new(data={
             'size': size,
             'email': email,
             'created': j.data.time.epoch,
@@ -123,7 +123,7 @@ class TFChainCapacity():
         :return: a tuple containing the transaction and the submission status as a boolean
         :rtype: tuple
         """
-        reservation = j.data.schema.get(url='tfchain.reservation.zos_vm').new(data={
+        reservation = j.data.schema.get_from_url_latest(url='tfchain.reservation.zos_vm').new(data={
             'size': size,
             'email': email,
             'created': j.data.time.epoch,
@@ -160,7 +160,7 @@ class TFChainCapacity():
         :return: a tuple containing the transaction and the submission status as a boolean
         :rtype: tuple
         """
-        reservation = j.data.schema.get(url='tfchain.reservation.zdb_namespace').new(data={
+        reservation = j.data.schema.get_from_url_latest(url='tfchain.reservation.zdb_namespace').new(data={
             'type': 'namespace',
             'size': size,
             'email': email,
@@ -198,7 +198,7 @@ class TFChainCapacity():
         :return: a tuple containing the transaction and the submission status as a boolean
         :rtype: tuple
         """
-        reservation = j.data.schema.get(url='tfchain.reservation.reverse_proxy').new(data={
+        reservation = j.data.schema.get_from_url_latest(url='tfchain.reservation.reverse_proxy').new(data={
             'type': 'reverse_proxy',
             'email': email,
             'created': j.data.time.epoch,

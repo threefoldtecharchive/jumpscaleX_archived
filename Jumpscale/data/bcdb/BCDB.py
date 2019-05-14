@@ -48,9 +48,7 @@ class BCDB(j.application.JSBaseClass):
             raise RuntimeError("name needs to be string")
 
 
-
         self.dataprocessor_greenlet = None
-
 
 
         self._init_(reset=reset, stop=False)
@@ -75,7 +73,7 @@ class BCDB(j.application.JSBaseClass):
 
         self.acl = None
         self.user = None
-        self.group = None
+        self.circle = None
 
         self.models = {}
 
@@ -98,11 +96,13 @@ class BCDB(j.application.JSBaseClass):
 
         from .models_system.ACL import ACL
         from .models_system.USER import USER
-        from .models_system.GROUP import GROUP
+        from .models_system.CIRCLE import CIRCLE
+        from .models_system.NAMESPACE import NAMESPACE
 
-        self.acl = self.model_add(ACL())
-        self.user = self.model_add(USER())
-        self.group = self.model_add(GROUP())
+        self.acl = self.model_add(ACL(bcdb=self))
+        self.user = self.model_add(USER(bcdb=self))
+        self.circle = self.model_add(CIRCLE(bcdb=self))
+        self.NAMESPACE = self.model_add(NAMESPACE(bcdb=self))
 
         self._log_info("BCDB INIT DONE:%s" % self.name)
 
@@ -234,12 +234,12 @@ class BCDB(j.application.JSBaseClass):
     def _schema_get_sid(self,sid):
         for s in self.meta.data.schemas:
             if s.sid == sid:
-                return j.data.schema.get(schema_text=s.text, url=s.url,md5=s.md5)
+                return j.data.schema.get_from_text(schema_text=s.text, url=s.url,md5=s.md5)
 
     def _schema_get_md5(self,md5):
         for s in self.meta.data.schemas:
             if s.md5 == md5:
-                return j.data.schema.get(schema_text=s.text, url=s.url,md5=s.md5)
+                return j.data.schema.get_from_text(schema_text=s.text, url=s.url,md5=s.md5)
 
 
     def model_get_from_sid(self, sid):
@@ -266,7 +266,7 @@ class BCDB(j.application.JSBaseClass):
         :param url:
         :return:
         """
-        s = j.data.schema.get(url=url)
+        s = j.data.schema.get_from_url_latest(url=url)
         return self.model_get_from_schema(s)
 
     def model_add(self, model):
@@ -275,7 +275,7 @@ class BCDB(j.application.JSBaseClass):
         :param model: is the model object  : inherits of self.MODEL_CLASS
         :return:
         """
-        if not isinstance(model, self._BCDBModelClass):
+        if not isinstance(model, j.data.bcdb._BCDBModelClass):
             raise RuntimeError("model needs to be of type:%s" % self._BCDBModelClass)
 
         self._schema_property_add_if_needed(model.schema)
@@ -315,7 +315,7 @@ class BCDB(j.application.JSBaseClass):
         """
         if j.data.types.string.check(schema):
             schema_text = schema
-            schema = j.data.schema.get(schema_text)
+            schema = j.data.schema.get_from_text(schema_text)
             self._log_debug("model get from schema:%s, original was text." % schema.url)
         else:
             self._log_debug("model get from schema:%s" % schema.url)
@@ -362,7 +362,7 @@ class BCDB(j.application.JSBaseClass):
             dest = "%s/%s_index.py" % (dir_path, name)
 
         if j.data.types.string.check(schema):
-            schema = j.data.schema.get(schema)
+            schema = j.data.schema.get_from_text(schema)
 
         elif not isinstance(schema, j.data.schema.SCHEMA_CLASS):
             raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
@@ -387,9 +387,6 @@ class BCDB(j.application.JSBaseClass):
 
         return self._index_schema_class_cache[schema.key]
 
-    @property
-    def _BCDBModelClass(self):
-        return BCDBModel
 
     def model_get_from_file(self, path):
         """
@@ -429,7 +426,7 @@ class BCDB(j.application.JSBaseClass):
                 continue
 
             schema_text = j.sal.fs.readFile(schemapath)
-            schema = j.data.schema.get(schema_text)
+            schema = j.data.schema.get_from_text(schema_text)
             toml_path = "%s.toml" % (schema.key)
             if j.sal.fs.getBaseName(schemapath) != toml_path:
                 toml_path = "%s/%s.toml" % (j.sal.fs.getDirName(schemapath), schema.key)

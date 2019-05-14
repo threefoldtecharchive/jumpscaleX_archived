@@ -201,7 +201,7 @@ class RedisServer(j.application.JSBaseClass):
                 return
 
         if cat == "schemas":
-            s = j.data.schema.get(val)
+            s = j.data.schema.get_from_text(val)
             self.bcdb.model_get_from_schema(s)
             response.encode("OK")
             return

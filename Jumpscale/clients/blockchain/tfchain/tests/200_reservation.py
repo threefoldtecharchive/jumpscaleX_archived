@@ -82,7 +82,7 @@ def main(self):
     reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
     reservation = box.decrypt(reservation)
     reservation = j.data.serializers.msgpack.loads(reservation)
-    schema = j.data.schema.get(url='tfchain.reservation.zos_vm')
+    schema = j.data.schema.get_from_url_latest(url='tfchain.reservation.zos_vm')
     o = schema.new(data=reservation)
     assert o.type == 'vm'
     assert o.size == 1
@@ -97,7 +97,7 @@ def main(self):
     reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
     reservation = box.decrypt(reservation)
     reservation = j.data.serializers.msgpack.loads(reservation)
-    schema = j.data.schema.get(url='tfchain.reservation.zos_vm')
+    schema = j.data.schema.get_from_url_latest(url='tfchain.reservation.zos_vm')
     o = schema.new(data=reservation)
     assert o.type == 's3'
     assert o.size == 2
@@ -123,7 +123,7 @@ def main(self):
     reservation = w.capacity._notary_client.get(result.transaction.data.value.decode())
     reservation = box.decrypt(reservation)
     reservation = j.data.serializers.msgpack.loads(reservation)
-    schema = j.data.schema.get(url='tfchain.reservation.zdb_namespace')
+    schema = j.data.schema.get_from_url_latest(url='tfchain.reservation.zdb_namespace')
     o = schema.new(data=reservation)
     assert o.type == 'namespace'
     assert o.size == 2

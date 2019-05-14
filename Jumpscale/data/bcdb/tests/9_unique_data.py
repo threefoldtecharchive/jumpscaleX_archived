@@ -38,7 +38,7 @@ def main(self):
     self.admin_zdb.namespace_new("unique")
     self.zdb = j.clients.zdb.client_get(nsname="unique", port=9901)
     self.bcdb = j.data.bcdb.new("test", zdbclient=self.zdb)
-    schema = j.data.schema.get(scm)
+    schema = j.data.schema.get_from_text(scm)
     self.model = self.bcdb.model_get_from_schema(schema)
     schema_obj = self.model.new()
     name = "s" + str(uuid4()).replace("-", "")[:10]
