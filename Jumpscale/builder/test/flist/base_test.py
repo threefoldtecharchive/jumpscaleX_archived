@@ -20,7 +20,8 @@ class BaseTest(TestCase):
                                                      secret=self.client_secret)
         self.jwt = self.iyo_client.jwt_get().jwt
         self.hub_instance = 'hub_instance_{}'.format(randint(1, 1000))
-        self.zhub = j.clients.zhub.get(name=self.hub_instance, token=self.jwt, username=self.username)
+        self.zhub = j.clients.zhub.get(name=self.hub_instance, token_=self.jwt, username=self.username)
+        self.zhub.authenticate()
         self.zhub.save()
 
         self.node_instance = 'node_instance_{}'.format(randint(1, 1000))
