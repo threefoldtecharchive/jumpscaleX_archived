@@ -24,8 +24,6 @@ class BuilderRedis(j.builder.system._BaseClass):
             cd redis-stable
             make
 
-            rm -f /usr/local/bin/redis-server
-            rm -f /usr/local/bin/redis-cli
             """
             self._execute(C)
 
@@ -39,8 +37,8 @@ class BuilderRedis(j.builder.system._BaseClass):
         :return:
         """
         self.build()
-        j.builder.tools.file_copy('{DIR_TEMP}/build/redis/redis-stable/src/redis-server', '{DIR_BIN}', overwrite=True)
-        j.builder.tools.file_copy('{DIR_TEMP}/build/redis/redis-stable/src/redis-cli', '{DIR_BIN}', overwrite=True)
+        j.builder.tools.file_copy('{DIR_TEMP}/build/redis/redis-stable/src/redis-server', '{DIR_BIN}', overwrite=False)
+        j.builder.tools.file_copy('{DIR_TEMP}/build/redis/redis-stable/src/redis-cli', '{DIR_BIN}', overwrite=False)
         j.builder.tools.dir_remove('{DIR_BASE}/apps/redis')
 
     @property
@@ -50,18 +48,10 @@ class BuilderRedis(j.builder.system._BaseClass):
   
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
-        bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox/bin".format(self.DIR_SANDBOX))
-        self.tools.dir_ensure(bin_dest)
-
         bins = ['redis-server', 'redis-cli']
-        for bin in bins:
-            bin_path = self.tools.joinpaths("{DIR_BIN}", bin)
-            self.tools.file_copy(bin_path, bin_dest)
 
-
-        lib_dest = self.tools.joinpaths(self.DIR_SANDBOX, 'sandbox/bin')
+        lib_dest = self.tools.joinpaths(self.DIR_SANDBOX, 'sandbox')
         self.tools.dir_ensure(lib_dest)
         for bin in bins:
-            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
-            j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
-
+            bin_path = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
+            j.tools.sandboxer.sandbox_chroot(bin_path, lib_dest)

@@ -237,6 +237,7 @@ def setup_docstring_containers(repl):
                     buffer=repl.docstring_buffer,
                     lexer=PygmentsLexer(PythonLexer),
                 ),
+                wrap_lines=True,
                 height=Dimension(max=12)),
             filter=HasDocString(repl) & ShowDocstring(repl) & ~is_done),
     ])
@@ -265,6 +266,7 @@ def setup_logging_containers(repl):
                     focusable=False,
                     preview_search=True
                 ),
+                wrap_lines=True,
                 height=Dimension(max=12)),
             filter=HasLogs(repl) & ~is_done),
     ])
