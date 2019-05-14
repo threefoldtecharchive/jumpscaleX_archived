@@ -171,3 +171,11 @@ class TestCases(BaseTest):
         self.assertEqual(0, len(j.sal.process.getProcessPid('syncthing')))
 
     #def test020_caddyfilemanager(self):
+
+    def test021_freeflow(self):
+        j.builder.apps.freeflow.build(reset=True)
+        j.builder.apps.freeflow.install(reset=True) 
+        j.builder.apps.freeflow.start()
+        self.assertTrue(len(j.sal.process.getProcessPid('apache2')))
+        j.builder.apps.freeflow.stop() 
+        self.assertEqual(0, len(j.sal.process.getProcessPid('apache2')))
