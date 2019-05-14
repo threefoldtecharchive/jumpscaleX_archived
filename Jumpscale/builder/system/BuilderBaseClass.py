@@ -87,7 +87,7 @@ class builder_method(object):
 
 class BuilderBaseClass(BaseClass):
     """
-    doc in /sandbox/code/github/threefoldtech/jumpscaleX/docs/Internals/Builders.md
+    doc in /sandbox/code/github/threefoldtech/jumpscaleX/docs/Internals/builders/Builders.md
     """
 
     def __init__(self):
