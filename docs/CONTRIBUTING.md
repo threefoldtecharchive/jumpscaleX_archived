@@ -1,6 +1,24 @@
+## formatting 
+
+Formatting is done using https://black.readthedocs.io/en/stable/
+
+```
+cd /sandbox/code/github/threefoldtech/jumpscaleX/Jumpscale
+black . -l 120 -t py37
+```
+**ALWAYS USE THE OPTIONS AS PROVIDED HERE**
+
+to intall
+
+```bash
+pip3 install black
+```
+
+make sure to follow instructions on https://black.readthedocs.io/en/stable/editor_integration.html to integrate in your editor.
+
 ## Linting
 - Max-line length = 120
-- pep8
+- as much as possible pep8 compliant as done by black
 
 
 ## naming conventions
@@ -28,5 +46,3 @@ example:
 :rtype: [type]
 """
 ```
-
-(A useful vscode extension lives here: https://github.com/NilsJPWerner/autoDocstring)
