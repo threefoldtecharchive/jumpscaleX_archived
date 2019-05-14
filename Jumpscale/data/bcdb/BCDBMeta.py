@@ -55,7 +55,9 @@ class BCDBMeta(j.application.JSBaseClass):
 
                 if s.sid in self._bcdb._schema_sid_to_md5:
                     if self._bcdb._schema_sid_to_md5[s.sid] != s.md5:
-                        raise RuntimeError("bug: should never happen")
+                        #this will be happen when change in the schema 
+                        self._bcdb._schema_sid_to_md5[s.sid] = s.md5
+                        #raise RuntimeError("bug: should never happen")
                 else:
                     self._bcdb._schema_sid_to_md5[s.sid] = s.md5
 

@@ -21,8 +21,7 @@ def main(self):
         j.sal.fs.remove(item)
 
     bcdb.models_add(mpath)
-
-    model = bcdb.model_get("jumpscale.bcdb.test.house")
+    model = bcdb.model_get_from_url ("jumpscale.bcdb.test.house")
     assert model.get_all() == []
 
     assert model.bcdb.zdbclient is None

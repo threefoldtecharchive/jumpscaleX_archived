@@ -11,7 +11,6 @@ def main(self):
 
     SCHEMA = """
     @url = threefoldtoken.wallet.test
-    @name = wallet
     name* = "wallet"
     jwt = "" (S)                # JWT Token
     addr* = ""                   # Address
@@ -84,7 +83,6 @@ def main(self):
 
     SCHEMA3 = """
     @url = threefoldtoken.wallet.test2
-    @name = wallet
     name* = "wallet3"
     jwt = "" (S)                # JWT Token
     addr* = "aa"                   # Address

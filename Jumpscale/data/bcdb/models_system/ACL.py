@@ -79,18 +79,18 @@ class ACL(Index_CLASS,MODEL_CLASS):
 
         if change:
             if self.readonly:
-                j.shell()
+                #j.shell()
                 if acl.id is not None:
                     #means there is a change
-                    acl.readonly=False #acl will become a new one, the id is removed
+                    acl._readonly=False #acl will become a new one, the id is removed
                     acl.id = None
                     acl._load_from_data(data=rdict)
                     assert acl.id is None
                 else:
-                    acl.readonly=False
-                    acl._load_from_data(data=rdict, keepid=True, keepacl=False)
+                    acl._readonly=False
+                    acl._load_from_data(data=rdict)
             else:
-                acl.readonly=False
+                acl._readonly=False
                 acl._load_from_data(data=rdict)
 
             dosave, acl = self._set_pre(acl)

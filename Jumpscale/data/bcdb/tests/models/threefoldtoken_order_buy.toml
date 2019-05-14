@@ -1,5 +1,3 @@
-
-# Buy Order
 @url = threefoldtoken.order.buy
 comment = ""
 currency_to_buy* = "" (S)    # currency types BTC/ETH/XRP/TFT
