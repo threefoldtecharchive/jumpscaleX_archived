@@ -156,7 +156,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         The addresses owned and used by this wallet.
         """
         # key scan first
-        scanned_new_keys = self._key_scan()
+        _ = self._key_scan()
         # than list all addresses
         return list(self._key_pairs.keys())
 
@@ -182,7 +182,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         The balance "sheet" of the wallet.
         """
         # key scan first
-        scanned_new_keys = self._key_scan()
+        _ = self._key_scan()
 
         # first get chain info
         info = self.client.blockchain_info_get()
