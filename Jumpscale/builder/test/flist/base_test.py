@@ -2,7 +2,7 @@ from Jumpscale import j
 from random import randint
 from unittest import TestCase
 import requests
-from testconfig import config
+from pytest_testconfig import config
 
 
 class BaseTest(TestCase):
@@ -11,7 +11,7 @@ class BaseTest(TestCase):
 
     def setUp(self):
         pass
-        
+
     def tearDown(self):
         pass
 
