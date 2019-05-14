@@ -45,7 +45,7 @@ else:
 
 
 
-class InstallError(Exception):
+class BaseInstallerror(Exception):
     pass
 
 class InputError(Exception):
@@ -66,7 +66,6 @@ def my_excepthook(exception_type,exception_obj,tb):
 
 import inspect
 
-serializer=None
 try:
     import yaml
     def serializer(data):
@@ -77,18 +76,13 @@ try:
             indent=4,
             line_break="\n")
 except:
-    pass
-if not serializer:
     try:
         import json
         def serializer(data):
             return json.dumps(data, ensure_ascii=False, sort_keys=True, indent=True)
     except:
-        pass
-
-if not serializer:
-    def serializer(data):
-        return str(data)
+        def serializer(data):
+            return str(data)
 
 
 try:
@@ -102,6 +96,7 @@ if redis:
         def __init__(self,redis,key):
             self.__db = redis
             self.key = key
+            self.empty = False
 
         def qsize(self):
             '''Return the approximate size of the queue.
@@ -122,7 +117,8 @@ if redis:
             :return:
             '''
             while self.empty == False:
-                self.get_nowait()
+                if self.get_nowait()==None:
+                    self.empty = True
 
         def put(self, item):
             '''Put item into the queue.'''
@@ -162,8 +158,8 @@ if redis:
             redis.Redis.__init__(self,*args,**kwargs)
             self._storedprocedures_to_sha = {}
 
-        def dict_get(self, key):
-            return RedisDict(self, key)
+        # def dict_get(self, key):
+        #     return RedisDict(self, key)
 
         def queue_get(self, key):
             '''get redis queue
@@ -232,12 +228,10 @@ if redis:
             self.hdel("storedprocedures_sha",name)
             self._storedprocedures_to_sha = {}
 
-
         @property
         def _redis_cli_path(self):
             if not self.__class__._redis_cli_path_:
-                from Jumpscale import j
-                if j.core.tools.cmd_installed("redis-cli_"):
+                if Tools.cmd_installed("redis-cli_"):
                     self.__class__._redis_cli_path_ =  "redis-cli_"
                 else:
                     self.__class__._redis_cli_path_ =  "redis-cli"
@@ -250,7 +244,6 @@ if redis:
             :param args:
             :return:
             """
-            from Jumpscale import j
             rediscmd = self._redis_cli_path
             if debug:
                 rediscmd+= " --ldb"
@@ -263,11 +256,9 @@ if redis:
                 rediscmd+= " , "
                 for arg in args:
                     rediscmd+= " %s"%arg
-            print(rediscmd)
-
-            rc,out,err = j.sal.process.execute(rediscmd,interactive=True)
+            # print(rediscmd)
+            _,out,_ = Tools.execute(rediscmd,interactive=True)
             return out
-
 
         def _sp_data(self,name):
             if name not in self._storedprocedures_to_sha:
@@ -288,7 +279,6 @@ if redis:
             sha = data["sha"]#.encode()
             assert isinstance(sha, (str))
             # assert isinstance(sha, (bytes, bytearray))
-            from Jumpscale import j
             Tools.shell()
             return self.evalsha(sha,data["nrkeys"],*args)
             # self.eval(data["script"],data["nrkeys"],*args)
@@ -315,7 +305,7 @@ if redis:
             args2 = args[nrkeys:]
             keys = args[:nrkeys]
 
-            out = self.redis_cmd_execute("eval %s"%path,debug=True,keys=keys,args=args)
+            out = self.redis_cmd_execute("eval %s"%path,debug=True,keys=keys,args=args2)
 
             return out
 
@@ -472,10 +462,9 @@ class Tools:
         #     args[0] = shutil.which(args[0])
 
         returncode = os.spawnlp(os.P_WAIT, args[0], *args)
-        cmd=" ".join(args   )
+        cmd=" ".join(args)
         if returncode == 127:
-            Tools.shell()
-            raise RuntimeError('{0}: command not found\n'.format(args[0]))
+            raise RuntimeError('{}: command not found\n'.format(cmd))
         if returncode>0 and returncode != 999:
             if die:
                 if original_command:
@@ -519,7 +508,7 @@ class Tools:
         p=Path(path)
         if replace:
             content = Tools.text_replace(content,args=args)
-        res=p.write_text(content)
+        p.write_text(content)
 
     @staticmethod
     def file_text_read(path):
@@ -534,7 +523,7 @@ class Tools:
     @staticmethod
     def dir_ensure(path, remove_existing=False):
         """Ensure the existance of a directory on the system, if the
-        Directory does not exist, it will create it.
+        Directory does not exist, it will create
 
         :param path:path of the directory
         :type path: string
@@ -645,7 +634,7 @@ class Tools:
             Tools.execute(script, interactive=True)
 
 
-
+    @staticmethod
     def clear():
         print(chr(27)+'[2j')
         print('\033c')
@@ -784,29 +773,23 @@ class Tools:
 
         if "{" in content:
 
-            if executor is None and args is None:
+            if args is None:
+                args={}
 
-                if text_strip:
-                    content = Tools.text_strip(content=content,colors=True)
-
+            if executor:
+                args.update(executor.config)
             else:
+                for key,val in MyEnv.config.items():
+                    if key not in args:
+                        args[key]=val
 
-                if executor:
-                    args.update(executor.config)
-                else:
-                    args.update(MyEnv.config)
+            args.update(MyEnv.MYCOLORS)
 
-                args.update(MyEnv.MYCOLORS)
-
-                replace_args = format_dict(args)
-                try:
-                    content = content.format_map(replace_args)
-                except ValueError as e:
-                    pass #e.g. if { is in but not really to replace
-
+            replace_args = format_dict(args)
+            content = content.format_map(replace_args)
 
         if text_strip:
-            content = Tools.text_strip(content,ignorecomments=ignorecomments)
+            content = Tools.text_strip(content,ignorecomments=ignorecomments,replace=False)
 
         return content
 
@@ -919,7 +902,7 @@ class Tools:
 
         if args or colors or text_strip:
             content = Tools.text_replace(content,args=args,text_strip=text_strip,
-                                         ignorecomments=ignorecomments,colors=colors)
+                                         ignorecomments=ignorecomments)
         elif content.find("{RESET}")!=-1:
             for key,val in MyEnv.MYCOLORS.items():
                 content = content.replace("{%s}"%key,val)
@@ -1252,10 +1235,13 @@ class Tools:
 
         """
         prefix="code"
-        accountdir=os.path.join(MyEnv.config["DIR_BASE"],prefix,"github",account)
-        repodir=os.path.join(MyEnv.config["DIR_BASE"],prefix,"github",account,repo)
-        gitdir=os.path.join(MyEnv.config["DIR_BASE"],prefix,"github",account,repo,".git")
-        dontpullloc=os.path.join(MyEnv.config["DIR_BASE"],prefix,"github",account,repo,".dontpull")
+        if "DIR_CODE" in MyEnv.config:
+            accountdir=os.path.join(MyEnv.config["DIR_CODE"],"github",account)
+        else:
+            accountdir=os.path.join(MyEnv.config["DIR_BASE"],prefix,"github",account)
+        repodir=os.path.join(accountdir,repo)
+        gitdir=os.path.join(repodir,".git")
+        dontpullloc=os.path.join(repodir,".dontpull")
         if os.path.exists(accountdir):
             if os.listdir(accountdir)==[]:
                 shutil.rmtree(accountdir) #lets remove the dir & return it does not exist
@@ -1289,7 +1275,8 @@ class Tools:
         return rc>0
 
     @staticmethod
-    def code_github_get(repo, account="threefoldtech", branch=["master"], pull=True):
+    def code_github_get(repo, account="threefoldtech", branch=["master"], pull=True, reset=False):
+        Tools.log("get code:%s:%s (%s)"%(repo,account,branch))
         if  MyEnv.sshagent_active_check():
             url = "git@github.com:%s/%s.git"
         else:
@@ -1297,6 +1284,10 @@ class Tools:
 
         repo_url = url % (account, repo)
         exists,foundgit,dontpull,ACCOUNT_DIR,REPO_DIR=Tools._code_location_get(account=account,repo=repo)
+
+        if reset:
+            Tools.delete(REPO_DIR)
+            exists,foundgit,dontpull,ACCOUNT_DIR,REPO_DIR=Tools._code_location_get(account=account,repo=repo)
 
         args={}
         args["ACCOUNT_DIR"]= ACCOUNT_DIR
@@ -1344,40 +1335,43 @@ class Tools:
                     Tools.execute(C, args=args,showout=False)
 
             else:
-                if pull and Tools.code_changed(REPO_DIR):
-                    if Tools.ask_yes_no("\n**: found changes in repo '%s', do you want to commit?"%repo):
-                        if "GITMESSAGE" in os.environ:
-                            args["MESSAGE"] = os.environ["GITMESSAGE"]
+                if pull:
+                    if reset:
+                        C="""
+                        set -x
+                        cd {REPO_DIR}
+                        git checkout . --force
+                        git pull
+                        """
+                        Tools.log("get code & ignore changes: %s"%repo)
+                        Tools.execute(C, args=args)
+                    elif Tools.code_changed(REPO_DIR):
+                        if Tools.ask_yes_no("\n**: found changes in repo '%s', do you want to commit?"%repo):
+                            if "GITMESSAGE" in os.environ:
+                                args["MESSAGE"] = os.environ["GITMESSAGE"]
+                            else:
+                                args["MESSAGE"] = input("\nprovide commit message: ")
+                                assert args["MESSAGE"].strip() != ""
                         else:
-                            args["MESSAGE"] = input("\nprovide commit message: ")
-                            assert args["MESSAGE"].strip() != ""
-                    else:
-                        sys.exit(1)
-                    C="""
-                    set -x
-                    cd {REPO_DIR}
-                    git add . -A
-                    git commit -m "{MESSAGE}"
-                    git pull
+                            print("found changes, do not want to commit")
+                            sys.exit(1)
+                        C="""
+                        set -x
+                        cd {REPO_DIR}
+                        git add . -A
+                        git commit -m "{MESSAGE}"
+                        git pull
 
-                    """
-                    Tools.log("get code & commit [git]: %s"%repo)
-                    Tools.execute(C, args=args)
-                elif pull:
-                    C="""
-                    set -x
-                    cd {REPO_DIR}
-                    git pull
-                    """
-                    Tools.log("pull code [git]: %s"%repo)
-                    Tools.execute(C, args=args)
+                        """
+                        Tools.log("get code & commit [git]: %s"%repo)
+                        Tools.execute(C, args=args)
 
             def getbranch(args):
                 cmd = "cd {REPO_DIR}; git branch | grep \* | cut -d ' ' -f2"
                 rc,stdout,err = Tools.execute(cmd, die=False, args=args, interactive=False)
                 if rc>0:
                     Tools.shell()
-                current_branch = stdout[1].strip()
+                current_branch = stdout.strip()
                 Tools.log("Found branch: %s" % current_branch)
                 return current_branch
 
@@ -1453,7 +1447,6 @@ class Tools:
 
             if not exists and download==False:
                 raise RuntimeError("Could not download some code")
-
 
     @staticmethod
     def config_load(path="",if_not_exist_create=False,executor=None,content=""):
@@ -1536,121 +1529,435 @@ class Tools:
             Tools.file_write(path,out)
 
 
-class OSXInstall():
+LOGFORMATBASE = '{COLOR}{TIME} {filename:<16}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}'  #DO NOT CHANGE COLOR
+
+class MyEnv():
+
+    _sshagent_active = None
+    readonly = False #if readonly will not manipulate local filesystem appart from /tmp
+    sandbox_python_active = False   #means we have a sandboxed environment where python3 works in
+    sandbox_lua_active = False      #same for lua
+    config_changed = False
+    _cmd_installed = {}
+    state = None
+    __init = False
+    debug = False
+
+    appname = "installer"
+
+    FORMAT_TIME = "%a %d %H:%M:%S"
+
+    MYCOLORS =   { "RED":"\033[1;31m",
+                "BLUE":"\033[1;34m",
+                "CYAN":"\033[1;36m",
+                "GREEN":"\033[0;32m",
+                "GRAY":"\033[0;37m",
+                "YELLOW":"\033[0;33m",
+                "RESET":"\033[0;0m",
+                "BOLD":"\033[;1m",
+                "REVERSE":"\033[;7m"}
+
+    LOGFORMAT = {
+        'DEBUG':LOGFORMATBASE.replace("{COLOR}","{CYAN}"),
+        'STDOUT': '{message}',
+        # 'INFO': '{BLUE}* {message}{RESET}',
+        'INFO':LOGFORMATBASE.replace("{COLOR}","{BLUE}"),
+        'WARNING': LOGFORMATBASE.replace("{COLOR}","{YELLOW}"),
+        'ERROR': LOGFORMATBASE.replace("{COLOR}","{RED}"),
+        'CRITICAL': '{RED}{TIME} {filename:<16} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}',
+    }
+
+    db = Tools.redis_client_get(die=False)
+
 
     @staticmethod
-    def do_all():
-        Tools.log("installing OSX version")
-
-        C='''
-        mkdir -p /sandbox
-        '''
-
-        UbuntuInstall.pips_install()
-
-    @staticmethod
-    def brew_uninstall():
-        cmd='sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"'
-        Tools.execute(cmd,interactive=True)
-        toremove = """
-        sudo rm -rf /usr/local/.com.apple.installer.keep
-        sudo rm -rf /usr/local/include/
-        sudo rm -rf /usr/local/etc/
-        sudo rm -rf /usr/local/var/
-        sudo rm -rf /usr/local/FlashcardService/
-        sudo rm -rf /usr/local/texlive/
+    def platform():
         """
-        Tools.execute(toremove,interactive=True)
+        will return one of following strings:
+            linux, darwin
 
-
-class UbuntuInstall():
-
-    @staticmethod
-    def do_all():
-        Tools.log("installing Ubuntu version")
-
-        UbuntuInstall.ensure_version()
-        UbuntuInstall.change_apt_source()
-        UbuntuInstall.ubuntu_base_install()
-        UbuntuInstall.python_redis_install()
-        UbuntuInstall.apts_install()
-        UbuntuInstall.pips_install()
+        """
+        return sys.platform
 
     @staticmethod
-    def ensure_version():
-        if not os.path.exists("/etc/lsb-release"):
-            raise RuntimeError("Your operating system is not supported")
-
-        # with open("/etc/lsb-release", "r") as f:
-        #     if "DISTRIB_CODENAME=bionic" not in f.read() and :
-        #         raise RuntimeError("Your distribution is not supported. Only Ubuntu Bionic is supported.")
-
-        return True
+    def _isUnix():
+        return 'posix' in sys.builtin_module_names
 
     @staticmethod
-    def change_apt_source():
-        if MyEnv.state_exists("change_apt_sources"):
+    def check_platform():
+        """check if current platform is supported (linux or darwin)
+        for linux, the version check is done by `UbuntuInstaller.ensure_version()`
+
+        :raises RuntimeError: in case platform is not supported
+        """
+        platform = MyEnv.platform()
+        if 'linux' in platform:
+            UbuntuInstaller.ensure_version()
+        elif 'darwin' not in platform:
+            raise RuntimeError('Your platform is not supported')
+
+    @staticmethod
+    def config_default_get(config={}):
+
+        if "HOMEDIR" in os.environ:
+            dir_home = os.environ["HOMEDIR"]
+        elif "HOME" in os.environ:
+            dir_home = os.environ["HOME"]
+        else:
+            dir_home = "/root"
+        config["DIR_HOME"] = dir_home
+        config["USEGIT"] = True
+        config["DEBUG"] = False
+
+        config["SSH_AGENT"] = False
+        config["SSH_KEY_DEFAULT"] = ""
+
+        config["LOGGER_INCLUDE"] = ["*"]
+        config["LOGGER_EXCLUDE"] = ["sal.fs"]
+        config["LOGGER_LEVEL"] = 15 #means std out & plus gets logged
+        config["LOGGER_CONSOLE"] = True
+        config["LOGGER_REDIS"] = False
+
+        if MyEnv.readonly:
+            config["DIR_TEMP"] = "/tmp/jumpscale_installer"
+            config["LOGGER_REDIS"] = False
+            config["LOGGER_CONSOLE"] = True
+
+        if not "DIR_TEMP" in config:
+            config["DIR_TEMP"] = "/tmp/jumpscale"
+        if not "DIR_VAR" in config:
+            config["DIR_VAR"] = "%s/var"%config["DIR_BASE"]
+        if not "DIR_CODE" in config:
+            if MyEnv.readonly:
+                config["DIR_CODE"] = "%s/code"%dir_home
+            else:
+                config["DIR_CODE"] = "%s/code"%config["DIR_BASE"]
+        if not "DIR_BIN" in config:
+            config["DIR_BIN"] = "%s/bin"%config["DIR_BASE"]
+        if not "DIR_APPS" in config:
+            config["DIR_APPS"] = "%s/apps"%config["DIR_BASE"]
+
+        return config
+
+    @staticmethod
+    def _init():
+        if not MyEnv.__init:
+            raise RuntimeError("myenv should have been inited by system")
+
+    @staticmethod
+    def init(basedir=None,config={},readonly=None,codepath=None,force=False):
+        if MyEnv.__init and not force:
             return
 
+        if readonly is not None:
+            MyEnv.readonly=readonly
+
+        if basedir is None:
+            if Tools.exists("/sandbox"):
+                basedir = "/sandbox"
+            else:
+                #means we did not find a sandbox dir so have to go in readonly mode
+                MyEnv.readonly=True
+
+        installpath = os.path.dirname(inspect.getfile(os.path))
+        #MEI means we are pyexe BaseInstaller
+        if installpath.find("/_MEI")!=-1 or installpath.endswith("dist/install"):
+            MyEnv.readonly = True
+
+        if not "DIR_BASE" in config:
+            config["DIR_BASE"] = basedir
+        if MyEnv.readonly:
+            config["DIR_BASE"] = "/tmp/jumpscale"
+        if not "DIR_CFG" in config:
+            config["DIR_CFG"] = "%s/cfg"%config["DIR_BASE"]
+
+        MyEnv.config_file_path = os.path.join(config["DIR_CFG"],"jumpscale_config.toml")
+        MyEnv.state_file_path = os.path.join(config["DIR_CFG"],"jumpscale_done.toml")
+
+        if codepath is not None:
+            config["DIR_CODE"]=codepath
+
+        if MyEnv.readonly:
+            MyEnv.config = MyEnv.config_default_get(config=config)
+        else:
+            if os.path.exists(MyEnv.config_file_path):
+                MyEnv._config_load(config=config)
+            else:
+                MyEnv.config = MyEnv.config_default_get(config=config)
+                MyEnv.config_save()
+
+        MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE",[]) if i.strip().strip("'\'") != ""]
+        MyEnv.log_excludes = [i for i in MyEnv.config.get("LOGGER_EXCLUDE",[]) if i.strip().strip("'\'") != ""]
+        MyEnv.log_loglevel = MyEnv.config.get("LOGGER_LEVEL",100)
+        MyEnv.log_console = MyEnv.config.get("LOGGER_CONSOLE",True)
+        MyEnv.log_redis = MyEnv.config.get("LOGGER_REDIS",False)
+        MyEnv.debug = MyEnv.config.get("DEBUG",False)
+
+        if os.path.exists(os.path.join(MyEnv.config["DIR_BASE"],"bin","python3.6")):
+            MyEnv.sandbox_python_active=True
+        else:
+            MyEnv.sandbox_python_active=False
+
+        MyEnv._state_load()
+
+        MyEnv.__init = True
+
+    @staticmethod
+    def sshagent_active_check():
+        """
+        check if the ssh agent is active
+        :return:
+        """
+        if MyEnv._sshagent_active is None:
+            MyEnv._sshagent_active = len(Tools.execute("ssh-add -L",die=False,showout=False)[1])>40
+        return MyEnv._sshagent_active
+
+    @staticmethod
+    def sshagent_key_get():
+        """
+        check if the ssh agent is active
+        :return:
+        """
+        if not MyEnv.sshagent_active_check():
+            print("need ssh-agent loaded to be able to find ssh-key to use")
+            sys.exit(1)
+        return Tools.execute("ssh-add -L",die=False,showout=False)[1].strip().split(" ")[-2].strip()
+
+    @staticmethod
+    def config_edit():
+        """
+        edits the configuration file which is in {DIR_BASE}/cfg/jumpscale_config.toml
+        {DIR_BASE} normally is /sandbox
+        """
+        if MyEnv.readonly:
+            raise RuntimeError("config cannot be saved in BaseInstaller only mode")
+        Tools.file_edit(MyEnv.config_file_path)
+
+    @staticmethod
+    def _config_load(config={}):
+        """
+        loads the configuration file which is in {DIR_BASE}/cfg/jumpscale_config.toml
+        {DIR_BASE} normally is /sandbox
+        """
+        MyEnv.config = Tools.config_load(MyEnv.config_file_path)
+        MyEnv.config.update(config)
+
+    @staticmethod
+    def config_save():
+        if MyEnv.readonly:
+            return
+        Tools.config_save(MyEnv.config_file_path,MyEnv.config)
+
+    @staticmethod
+    def _state_load():
+        """
+        only 1 level deep toml format only for int,string,bool
+        no multiline
+        """
+        if Tools.exists(MyEnv.state_file_path):
+            MyEnv.state = Tools.config_load(MyEnv.state_file_path,if_not_exist_create=False)
+        elif not MyEnv.readonly:
+            MyEnv.state = Tools.config_load(MyEnv.state_file_path,if_not_exist_create=True)
+        else:
+            MyEnv.state = {}
+
+    @staticmethod
+    def state_save():
+        if MyEnv.readonly:
+            return
+        Tools.config_save(MyEnv.state_file_path,MyEnv.state)
+
+    @staticmethod
+    def _key_get(key):
+        key=key.split("=",1)[0]
+        key=key.split(">",1)[0]
+        key=key.split("<",1)[0]
+        key=key.split(" ",1)[0]
+        key=key.upper()
+        return key
+
+    @staticmethod
+    def state_get(key):
+        key = MyEnv._key_get(key)
+        if key in MyEnv.state:
+            return True
+        return False
+
+    @staticmethod
+    def state_set(key):
+        if MyEnv.readonly:
+            return
+        key = MyEnv._key_get(key)
+        MyEnv.state[key] = True
+        MyEnv.state_save()
+
+    @staticmethod
+    def state_delete(key):
+        if MyEnv.readonly:
+            return
+        key = MyEnv._key_get(key)
+        if key in MyEnv.state:
+            MyEnv.state.pop(key)
+            MyEnv.state_save()
+
+    @staticmethod
+    def state_reset():
+        """
+        remove all state
+        """
+        Tools.delete(MyEnv.state_file_path)
+        MyEnv._state_load()
+
+
+class BaseInstaller():
+
+    @staticmethod
+    def install(basedir="/sandbox",config={},sandboxed=False,force=False):
+
+        if not os.path.exists(basedir):
+            script = """
+            set -ex
+            cd /
+            sudo mkdir -p {DIR_BASE}/cfg
+            sudo chown -R {USERNAME}:{GROUPNAME} {DIR_BASE}
+            mkdir -p /usr/local/EGG-INFO
+            sudo chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
+            """
+            args={}
+            args["DIR_BASE"] = basedir
+            args["USERNAME"] = getpass.getuser()
+            st = os.stat(MyEnv.config["DIR_HOME"])
+            gid = st.st_gid
+            args["GROUPNAME"] = grp.getgrgid(gid)[0]
+            Tools.execute(script,interactive=True,args=args)
+
+        MyEnv.init(basedir=basedir,config=config,readonly=False,force=True)
+
+        if force:
+            MyEnv.state_delete("install")
+
+        if MyEnv.state_get("install"):
+            return #nothing to do
+
+        BaseInstaller.base()
+        if MyEnv.platform() == "linux":
+            if not sandboxed:
+                UbuntuInstaller.do_all()
+            else:
+                raise RuntimeError("not ok yet")
+                UbuntuInstaller.base()
+        elif "darwin" in MyEnv.platform():
+            if not sandboxed:
+                OSXInstaller.do_all()
+            else:
+                raise RuntimeError("not ok yet")
+                OSXInstaller.base()
+        else:
+            raise RuntimeError("only OSX and Linux Ubuntu supported.")
+
+        installed = Tools.cmd_installed("git") and Tools.cmd_installed("ssh-agent")
+        MyEnv.config["SSH_AGENT"]=installed
+        MyEnv.config_save()
+
+        #BASHPROFILE
+        if sandboxed:
+            env_path = "%s/.bash_profile"%MyEnv.config["DIR_HOME"]
+            if Tools.exists(env_path):
+                bashprofile = Tools.file_text_read(env_path)
+                cmd = "source /sandbox/env.sh"
+                if bashprofile.find(cmd)!=-1:
+                    bashprofile = bashprofile.replace(cmd,"")
+                    Tools.file_write(env_path,bashprofile)
+        else:
+            #if not sandboxed need to remove old python's from bin dir
+            Tools.execute("rm -f {DIR_SANDBOX}/bin/pyth*")
+            env_path = "%s/.bash_profile"%MyEnv.config["DIR_HOME"]
+            if Tools.exists(env_path):
+                bashprofile = Tools.file_text_read(env_path)
+                cmd = "source /sandbox/env.sh"
+                if bashprofile.find(cmd)==-1:
+                    bashprofile+="\n%s\n"%cmd
+                    Tools.file_write(env_path,bashprofile)
+
+        print ("- get sandbox base from git")
+        Tools.code_github_get(repo="sandbox_base", branch=["master"],pull=False)
+        print ("- copy files to sandbox")
+        #will get the sandbox installed
+        if not sandboxed:
+
+            script="""
+            set -e
+            cd {DIR_BASE}
+            rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/cfg/ {DIR_BASE}/cfg/
+            rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/bin/ {DIR_BASE}/bin/
+            rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/openresty/ {DIR_BASE}/openresty/
+            rsync -rav {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/env.sh {DIR_BASE}/env.sh
+            mkdir -p root
+            mkdir -p var
+
+            """
+            Tools.execute(script,interactive=True)
+
+        else:
+
+            #install the sandbox
+
+            script="""
+            cd {DIR_BASE}
+            rsync -ra {DIR_BASE}/code/github/threefoldtech/sandbox_base/base/ {DIR_BASE}/
+            mkdir -p root
+            """
+            Tools.execute(script,interactive=True)
+
+            if MyEnv.platform() == "darwin":
+                reponame = "sandbox_osx"
+            elif MyEnv.platform() == "linux":
+                reponame = "sandbox_ubuntu"
+            else:
+                raise RuntimeError("cannot install, MyEnv.platform() now found")
+
+            Tools.code_github_get(repo=reponame, branch=["master"])
+
+            script="""
+            set -ex
+            cd {DIR_BASE}
+            rsync -ra code/github/threefoldtech/{REPONAME}/base/ .
+            mkdir -p root
+            mkdir -p var
+            """
+            args={}
+            args["REPONAME"]=reponame
+
+            Tools.execute(script,interactive=True,args=args)
+
+            script="""
+            set -e
+            cd {DIR_BASE}
+            source env.sh
+            python3 -c 'print("- PYTHON OK, SANDBOX USABLE")'
+            """
+            Tools.execute(script,interactive=True)
+
+            Tools.log("INSTALL FOR BASE OK")
+
+        MyEnv.state_set("install")
+
+    @staticmethod
+    def base():
+        if MyEnv.state_get("generic_base"):
+            return
+
+        if not os.path.exists(MyEnv.config["DIR_TEMP"]):
+            os.makedirs(MyEnv.config["DIR_TEMP"],exist_ok=True)
+
         script="""
-        if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
-            echo >> /etc/apt/sources.list
-            echo "# Jumpscale Setup" >> /etc/apt/sources.list
-            echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
-        fi
-        apt-get update
+
+        mkdir -p {DIR_TEMP}/scripts
+        mkdir -p {DIR_VAR}/log
+
         """
         Tools.execute(script,interactive=True)
-        MyEnv.state_set("change_apt_sources")
-
-    @staticmethod
-    def ubuntu_base_install():
-        if MyEnv.state_exists("ubuntu_base_install"):
-            return
-
-        Tools.log("installing base system")
-
-        script="""
-        apt-get install -y python3-pip locales
-        pip3 install ipython
-        """
-        Tools.execute(script, interactive=True)
-        MyEnv.state_set("ubuntu_base_install")
-
-    def docker_install():
-        if MyEnv.state_exists("ubuntu_docker_install"):
-            return
-        script="""
-        apt update
-        apt upgrade -y
-        apt install python3-pip  -y
-        pip3 install pudb
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-        add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
-        apt update
-        sudo apt install docker-ce -y
-        """
-        Tools.execute(script, interactive=True)
-        MyEnv.state_set("ubuntu_docker_install")
-
-
-    @staticmethod
-    def python_redis_install():
-        if MyEnv.state_exists("python_redis_install"):
-            return
-
-        Tools.log("installing jumpscale tools")
-
-        script="""
-        cd /tmp
-        apt-get install -y mc wget python3 git tmux python3-distutils python3-psutil
-        apt-get install -y build-essential python3.6-dev
-        pip3 install pycapnp peewee cryptocompare
-        apt-get install -y redis-server
-
-        """
-        Tools.execute(script, interactive=True)
-        MyEnv.state_set("python_redis_install")
+        MyEnv.state_set("generic_base")
 
     @staticmethod
     def pips_list(level=3):
@@ -1702,7 +2009,7 @@ class UbuntuInstall():
                 "psutil>=5.4.3",
                 "pudb>=2017.1.2",
                 "pyblake2>=0.9.3",
-                # "pycapnp>=0.5.12",
+                "pycapnp>=0.5.12",
                 "PyGithub>=1.34",
                 "pymux>=0.13",
                 "pynacl>=1.2.1",
@@ -1769,13 +2076,141 @@ class UbuntuInstall():
 
         return res
 
+    @staticmethod
     def pips_install():
-        for pip in UbuntuInstall.pips_list(3):
+        for pip in BaseInstaller.pips_list(3):
 
-            if not MyEnv.state_exists("pip_%s"%pip):
+            if not MyEnv.state_get("pip_%s"%pip):
                 C="pip3 install --user '%s'"%pip
                 Tools.execute(C,die=True)
                 MyEnv.state_set("pip_%s"%pip)
+
+class OSXInstaller():
+
+    @staticmethod
+    def do_all():
+        MyEnv._init()
+        Tools.log("installing OSX version")
+        pass
+
+    @staticmethod
+    def base():
+        MyEnv._init()
+        if not Tools.cmd_installed("curl") or not Tools.cmd_installed("unzip") or not Tools.cmd_installed("rsync"):
+            script="""
+            brew install curl unzip rsync
+            """
+            Tools.execute(script,replace=True)
+        BaseInstaller.pips_install()
+
+    @staticmethod
+    def brew_uninstall():
+        MyEnv._init()
+        cmd='sudo ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall)"'
+        Tools.execute(cmd,interactive=True)
+        toremove = """
+        sudo rm -rf /usr/local/.com.apple.installer.keep
+        sudo rm -rf /usr/local/include/
+        sudo rm -rf /usr/local/etc/
+        sudo rm -rf /usr/local/var/
+        sudo rm -rf /usr/local/FlashcardService/
+        sudo rm -rf /usr/local/texlive/
+        """
+        Tools.execute(toremove,interactive=True)
+
+class UbuntuInstaller():
+
+    @staticmethod
+    def do_all():
+        MyEnv._init()
+        Tools.log("installing Ubuntu version")
+
+        UbuntuInstaller.ensure_version()
+        UbuntuInstaller.base()
+        UbuntuInstaller.ubuntu_base_install()
+        UbuntuInstaller.python_redis_install()
+        UbuntuInstaller.apts_install()
+        BaseInstaller.pips_install()
+
+    @staticmethod
+    def ensure_version():
+        MyEnv._init()
+        if not os.path.exists("/etc/lsb-release"):
+            raise RuntimeError("Your operating system is not supported")
+
+        return True
+
+    @staticmethod
+    def base():
+        MyEnv._init()
+        if MyEnv.state_get("base"):
+            return
+
+        script="""
+        if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
+            echo >> /etc/apt/sources.list
+            echo "# Jumpscale Setup" >> /etc/apt/sources.list
+            echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
+        fi
+        apt-get update
+
+        apt-get install -y curl rsync unzip
+        locale-gen --purge en_US.UTF-8
+
+        """
+        Tools.execute(script,interactive=True)
+        MyEnv.state_set("base")
+
+    @staticmethod
+    def ubuntu_base_install():
+        if MyEnv.state_get("ubuntu_base_install"):
+            return
+
+        Tools.log("installing base system")
+
+        script="""
+        apt-get install -y python3-pip locales
+        pip3 install ipython
+        """
+        Tools.execute(script, interactive=True)
+        MyEnv.state_set("ubuntu_base_install")
+
+    @staticmethod
+    def docker_install():
+        if MyEnv.state_get("ubuntu_docker_install"):
+            return
+        script="""
+        apt update
+        apt upgrade -y
+        apt install python3-pip  -y
+        pip3 install pudb
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+        add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu bionic stable"
+        apt update
+        sudo apt install docker-ce -y
+        """
+        Tools.execute(script, interactive=True)
+        MyEnv.state_set("ubuntu_docker_install")
+
+
+    @staticmethod
+    def python_redis_install():
+        if MyEnv.state_get("python_redis_install"):
+            return
+
+        Tools.log("installing jumpscale tools")
+
+        script="""
+        cd /tmp
+        apt-get install -y mc wget python3 git tmux python3-distutils python3-psutil
+        apt-get install -y build-essential
+        #apt-get install -y python3.6-dev
+        apt-get install -y redis-server
+
+        """
+        Tools.execute(script, interactive=True)
+        MyEnv.state_set("python_redis_install")
+
 
     @staticmethod
     def apts_list():
@@ -1787,9 +2222,10 @@ class UbuntuInstall():
             'graphviz',
         ]
 
+    @staticmethod
     def apts_install():
-        for apt in UbuntuInstall.apts_list():
-            if not MyEnv.state_exists('apt_%s' % apt):
+        for apt in UbuntuInstaller.apts_list():
+            if not MyEnv.state_get('apt_%s' % apt):
                 command = 'apt-get install -y %s' % apt
                 Tools.execute(command,die=True)
                 MyEnv.state_set('apt_%s' % apt)
@@ -1804,453 +2240,27 @@ class UbuntuInstall():
     #     """
     #     Tools.execute(script,interactive=True)
 
-LOGFORMATBASE = '{COLOR}{TIME} {filename:<16}{RESET} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}'  #DO NOT CHANGE COLOR
-
-class MyEnv():
-
-    config = {}
-    _sshagent_active = None
-    installer_only = not Tools.exists("/sandbox")  #if /sandbox does not exist then will use as installer only
-    sandbox_python_active = False #WHAT IS THIS?
-    sandbox_lua_active = False
-    config_changed = False
-    _cmd_installed = {}
-    state = None
-    __init = False
-    debug = False
-
-    appname = "installer"
-
-    FORMAT_TIME = "%a %d %H:%M:%S"
-
-    MYCOLORS =   { "RED":"\033[1;31m",
-                "BLUE":"\033[1;34m",
-                "CYAN":"\033[1;36m",
-                "GREEN":"\033[0;32m",
-                "GRAY":"\033[0;37m",
-                "YELLOW":"\033[0;33m",
-                "RESET":"\033[0;0m",
-                "BOLD":"\033[;1m",
-                "REVERSE":"\033[;7m"}
-
-    LOGFORMAT = {
-        'DEBUG':LOGFORMATBASE.replace("{COLOR}","{CYAN}"),
-        'STDOUT': '{message}',
-        # 'INFO': '{BLUE}* {message}{RESET}',
-        'INFO':LOGFORMATBASE.replace("{COLOR}","{BLUE}"),
-        'WARNING': LOGFORMATBASE.replace("{COLOR}","{YELLOW}"),
-        'ERROR': LOGFORMATBASE.replace("{COLOR}","{RED}"),
-        'CRITICAL': '{RED}{TIME} {filename:<16} -{linenr:4d} - {GRAY}{context:<35}{RESET}: {message}',
-    }
-
-    db = Tools.redis_client_get(die=False)
-
-
-    @staticmethod
-    def platform():
-        """
-        will return one of following strings:
-            linux, darwin
-
-        """
-        return sys.platform
-
-    @staticmethod
-    def _isUnix():
-        return 'posix' in sys.builtin_module_names
-
-    @staticmethod
-    def check_platform():
-        """check if current platform is supported (linux or darwin)
-        for linux, the version check is done by `UbuntuInstall.ensure_version()`
-
-        :raises RuntimeError: in case platform is not supported
-        """
-        platform = MyEnv.platform()
-        if 'linux' in platform:
-            UbuntuInstall.ensure_version()
-        elif 'darwin' not in platform:
-            raise RuntimeError('Your platform is not supported')
-
-    @staticmethod
-    def config_default_get():
-        config = {}
-
-        if "HOMEDIR" in os.environ:
-            dir_home = os.environ["HOMEDIR"]
-        elif "HOME" in os.environ:
-            dir_home = os.environ["HOME"]
-        else:
-            dir_home = "/root"
-        config["DIR_HOME"] = dir_home
-        config["USEGIT"] = True
-        config["DEBUG"] = False
-
-        config["SSH_AGENT"] = False
-        config["SSH_KEY_DEFAULT"] = ""
-
-        config["LOGGER_INCLUDE"] = ["*"]
-        config["LOGGER_EXCLUDE"] = ["sal.fs"]
-        config["LOGGER_LEVEL"] = 15 #means std out & plus gets logged
-        config["LOGGER_CONSOLE"] = True
-        config["LOGGER_REDIS"] = False
-
-
-
-        if MyEnv.installer_only:
-            config["DIR_TEMP"] = "/tmp/jumpscale_installer"
-            config["LOGGER_REDIS"] = False
-            config["LOGGER_CONSOLE"] = True
-            return config
-
-        config["DIR_BASE"] = "/sandbox"
-        config["DIR_TEMP"] = "/tmp/jumpscale"
-
-        config["DIR_VAR"] = "/sandbox/var"
-        config["DIR_CODE"] = "/sandbox/code"
-        config["DIR_CFG"] = "/sandbox/cfg"
-        config["DIR_BIN"] = "/sandbox/bin"
-        config["DIR_APPS"] = "/sandbox/apps"
-
-
-        if "INSYSTEM" in os.environ:
-            if str(os.environ["INSYSTEM"]).lower().strip() in ["1","true","yes","y"]:
-                config["INSYSTEM"] = True
-            else:
-                config["INSYSTEM"] = False
-        else:
-            if MyEnv.platform()=="linux":
-                config["INSYSTEM"] = True
-            else:
-                config["INSYSTEM"] = False
-
-        return config
-
-
-    @staticmethod
-    def _init(force=False,install=False):
-        if MyEnv.__init:
-            return
-
-        installpath = os.path.dirname(inspect.getfile(os.path))
-        if installpath.find("/_MEI")!=-1 or installpath.endswith("dist/install"):
-            MyEnv.installer = True
-        else:
-            MyEnv.installer = False
-
-
-        if install:
-            #will make sure we install and manipulate local system
-            MyEnv.installer_only=False
-
-        if MyEnv.installer_only:
-            #means we are not installing in system
-            MyEnv.config = MyEnv.config_default_get()
-            MyEnv.sandbox_python_active=False #because python is not in sandbox because there is no sandbox (-:
-
-            if not Tools.cmd_installed("curl") or not Tools.cmd_installed("unzip") or not Tools.cmd_installed("rsync"):
-                raise RuntimeError("Cannot continue, curl, rsync, unzip needs to be installed")
-
-            return
-
-
-        if MyEnv.installer==False and not os.path.exists("/sandbox"):
-            script = """
-            cd /
-            sudo mkdir -p /sandbox/cfg
-            sudo chown -R {USERNAME}:{GROUPNAME} /sandbox
-            mkdir -p /usr/local/EGG-INFO
-            sudo chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
-            """
-            args={}
-            args["USERNAME"] = getpass.getuser()
-            st = os.stat(MyEnv.config["DIR_HOME"])
-            gid = st.st_gid
-            args["GROUPNAME"] = grp.getgrgid(gid)[0]
-            Tools.execute(script,interactive=True,args=args)
-
-
-        if "DIR_CFG" in os.environ:
-            DIR_CFG = os.environ["DIR_CFG"].strip()
-        else:
-            DIR_CFG = "/sandbox/cfg"
-
-        MyEnv.config_file_path = os.path.join(DIR_CFG,"jumpscale_config.toml")
-        MyEnv.state_file_path = os.path.join(DIR_CFG,"jumpscale_done.toml")
-
-        if os.path.exists(MyEnv.config_file_path):
-            MyEnv.config_load()
-        else:
-            MyEnv.config = MyEnv.config_default_get()
-            MyEnv.config_save()
-
-        if not os.path.exists(MyEnv.config["DIR_TEMP"]):
-            os.makedirs(MyEnv.config["DIR_TEMP"],exist_ok=True)
-
-        if force or not MyEnv.state_exists("myenv_init"):
-            # Tools.log(MyEnv.platform())
-            script = None
-            if MyEnv.platform() == "linux":
-                script="""
-                if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
-                    echo >> /etc/apt/sources.list
-                    echo "# Jumpscale Setup" >> /etc/apt/sources.list
-                    echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
-                fi
-                apt-get update
-
-                apt-get install -y curl rsync unzip
-                locale-gen --purge en_US.UTF-8
-
-                mkdir -p /tmp/jumpscale/scripts
-                mkdir -p /sandbox/var/log
-
-                """
-            elif "darwin" in MyEnv.platform():
-                if not Tools.cmd_installed("curl") or not Tools.cmd_installed("unzip") or not Tools.cmd_installed("rsync"):
-                    script="""
-                    brew install curl unzip rsync
-                    """
-            else:
-                raise RuntimeError("only OSX and Linux Ubuntu supported.")
-            if script:
-                Tools.execute(script,interactive=True)
-
-
-            MyEnv.state_set("myenv_init")
-
-            if os.path.exists(os.path.join(MyEnv.config["DIR_BASE"],"bin","python3.6")):
-                MyEnv.sandbox_python_active=True
-            else:
-                MyEnv.sandbox_python_active=False
-
-
-        MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE",[]) if i.strip().strip("'\'") != ""]
-        MyEnv.log_excludes = [i for i in MyEnv.config.get("LOGGER_EXCLUDE",[]) if i.strip().strip("'\'") != ""]
-        MyEnv.log_loglevel = MyEnv.config.get("LOGGER_LEVEL",100)
-        MyEnv.log_console = MyEnv.config.get("LOGGER_CONSOLE",True)
-        MyEnv.log_redis = MyEnv.config.get("LOGGER_REDIS",False)
-        MyEnv.debug = MyEnv.config.get("DEBUG",False)
-
-        installed = Tools.cmd_installed("git") and Tools.cmd_installed("ssh-agent")
-        MyEnv.config["SSH_AGENT"]=installed
-        MyEnv.config_save()
-
-        MyEnv.__init = True
-
-    @staticmethod
-    def install(force=False):
-
-        MyEnv._init(install=True)
-
-        #DONT USE THE SANDBOX
-        if MyEnv.config["INSYSTEM"]:
-            if MyEnv.platform() == "linux":
-                UbuntuInstall.do_all()
-            else:
-                OSXInstall.do_all()
-            env_path = "%s/.bash_profile"%MyEnv.config["DIR_HOME"]
-            if Tools.exists(env_path):
-                bashprofile = Tools.file_text_read(env_path)
-                cmd = "source /sandbox/env.sh"
-                if bashprofile.find(cmd)==-1:
-                    bashprofile+="\n%s\n"%cmd
-                    Tools.file_write(env_path,bashprofile)
-        else:
-            env_path = "%s/.bash_profile"%MyEnv.config["DIR_HOME"]
-            if Tools.exists(env_path):
-                bashprofile = Tools.file_text_read(env_path)
-                cmd = "source /sandbox/env.sh"
-                if bashprofile.find(cmd)!=-1:
-                    bashprofile = bashprofile.replace(cmd,"")
-                    Tools.file_write(env_path,bashprofile)
-
-        #will get the sandbox installed
-        if force or not MyEnv.state_exists("myenv_install"):
-
-            if MyEnv.config["INSYSTEM"]:
-
-
-
-                Tools.code_github_get(repo="sandbox_base", branch=["master"])
-
-                script="""
-                set -e
-                cd {DIR_BASE}
-                rsync -ra code/github/threefoldtech/sandbox_base/base/ .
-
-                #remove parts we don't use in in system deployment
-                rm -rf {DIR_BASE}/openresty
-                rm -rf {DIR_BASE}/lib/python
-                rm -rf {DIR_BASE}/lib/pythonbin
-                rm -rf {DIR_BASE}/var
-                rm -rf {DIR_BASE}/root
-
-                mkdir -p root
-                mkdir -p var
-
-                """
-                Tools.execute(script,interactive=True)
-
-            else:
-
-                Tools.code_github_get(repo="sandbox_base", branch=["master"])
-
-                script="""
-                cd {DIR_BASE}
-                rsync -ra code/github/threefoldtech/sandbox_base/base/ .
-                mkdir -p root
-                """
-                Tools.execute(script,interactive=True)
-
-                if MyEnv.platform() == "darwin":
-                    reponame = "sandbox_osx"
-                elif MyEnv.platform() == "linux":
-                    reponame = "sandbox_ubuntu"
-                else:
-                    raise RuntimeError("cannot install, MyEnv.platform() now found")
-
-                Tools.code_github_get(repo=reponame, branch=["master"])
-
-                script="""
-                set -ex
-                cd {DIR_BASE}
-                rsync -ra code/github/threefoldtech/{REPONAME}/base/ .
-                mkdir -p root
-                mkdir -p var
-                """
-                args={}
-                args["REPONAME"]=reponame
-
-                Tools.execute(script,interactive=True,args=args)
-
-                script="""
-                set -e
-                cd {DIR_BASE}
-                source env.sh
-                python3 -c 'print("- PYTHON OK, SANDBOX USABLE")'
-                """
-                Tools.execute(script,interactive=True)
-
-            Tools.log("INSTALL FOR BASE OK")
-
-            MyEnv.state_set("myenv_install")
-
-
-
-    @staticmethod
-    def sshagent_active_check():
-        """
-        check if the ssh agent is active
-        :return:
-        """
-        if MyEnv._sshagent_active is None:
-            MyEnv._sshagent_active = len(Tools.execute("ssh-add -L",die=False,showout=False)[1])>40
-        return MyEnv._sshagent_active
-
-    @staticmethod
-    def sshagent_key_get():
-        """
-        check if the ssh agent is active
-        :return:
-        """
-        return Tools.execute("ssh-add -L",die=False,showout=False)[1].strip().split(" ")[-1].strip()
-
-    @staticmethod
-    def config_edit():
-        """
-        edits the configuration file which is in {DIR_BASE}/cfg/jumpscale_config.toml
-        {DIR_BASE} normally is /sandbox
-        """
-        if MyEnv.installer_only:
-            raise RuntimeError("config cannot be saved in installer only mode")
-        Tools.file_edit(MyEnv.config_file_path)
-
-    @staticmethod
-    def config_load():
-        """
-        loads the configuration file which is in {DIR_BASE}/cfg/jumpscale_config.toml
-        {DIR_BASE} normally is /sandbox
-        """
-        if MyEnv.installer_only:
-            raise RuntimeError("config cannot be saved in installer only mode")
-        MyEnv.config = Tools.config_load(MyEnv.config_file_path)
-
-    @staticmethod
-    def config_save():
-        if MyEnv.installer_only:
-            raise RuntimeError("config cannot be saved in installer only mode")
-        Tools.config_save(MyEnv.config_file_path,MyEnv.config)
-
-    @staticmethod
-    def state_load():
-        """
-        only 1 level deep toml format only for int,string,bool
-        no multiline
-        """
-        if MyEnv.installer_only:
-            return
-        MyEnv.state = Tools.config_load(MyEnv.state_file_path,if_not_exist_create=True)
-
-    @staticmethod
-    def state_save():
-        if MyEnv.installer_only:
-            return
-        Tools.config_save(MyEnv.state_file_path,MyEnv.state)
-
-
-    @staticmethod
-    def _key_get(key):
-        key=key.split("=",1)[0]
-        key=key.split(">",1)[0]
-        key=key.split("<",1)[0]
-        key=key.split(" ",1)[0]
-        key=key.upper()
-        return key
-
-    @staticmethod
-    def state_exists(key):
-        if MyEnv.installer_only:
-            return False
-        key = MyEnv._key_get(key)
-        if MyEnv.state is None:
-            MyEnv.state_load()
-        if key in MyEnv.state:
-            return True
-        return False
-
-    @staticmethod
-    def state_set(key,val=True):
-        if MyEnv.installer_only:
-            return
-        key = MyEnv._key_get(key)
-        if MyEnv.state is None:
-            MyEnv.state_load()
-        if key not in MyEnv.state or (key in MyEnv.state and MyEnv.state[key]!=val):
-            MyEnv.state[key] = val
-            MyEnv.state_save()
-
-
-
 class JumpscaleInstaller():
 
     def __init__(self, branch=["development"]):
-
+        MyEnv._init()
         self.account = "threefoldtech"
         self.branch = branch
         self._jumpscale_repos = [("jumpscaleX","Jumpscale"), ("digitalmeX","DigitalMe")]
 
-    def install(self,branch=None,secret="1234",private_key_words=None):
+    def install(self,basedir="/sandbox",config={},sandboxed=False,force=False,secret="1234",private_key_words=None,gitpull=False):
 
-        MyEnv.install()
+        MyEnv.check_platform()
+
+        BaseInstaller.install(basedir=basedir,config=config,sandboxed=sandboxed,force=force)
 
         Tools.file_touch(os.path.join(MyEnv.config["DIR_BASE"], "lib/jumpscale/__init__.py"))
 
-        if branch:
+        if self.branch:
             #TODO: need to check if ok
-            self.branch = [i.strip() for i in branch.split(",") if i.strip()!=""]
+            self.branch = [i.strip() for i in self.branch.split(",") if i.strip()!=""]
 
-        self.repos_get()
+        self.repos_get(pull=gitpull)
         self.repos_link()
         self.cmds_link()
 
@@ -2329,16 +2339,10 @@ class JumpscaleInstaller():
 
 
 
-    def repos_get(self,force=False):
+    def repos_get(self,pull=True):
 
-        for sourceName,destName in self._jumpscale_repos:
-            # if MyEnv.sandbox_python_active:
-            #     pull=True
-            # else:
-            #     pull=False
-            pull=True
+        for sourceName,_ in self._jumpscale_repos:
             Tools.code_github_get(repo=sourceName, account=self.account, branch=self.branch, pull=pull)
-            # MyEnv.state_set("jumpscale_repoget_%s"%sourceName)
 
     def repos_link(self):
         """
@@ -2368,12 +2372,9 @@ class JumpscaleInstaller():
             Tools.log(Tools.text_replace("link {LOC}/{ALIAS} to {ALIAS}",args=args))
             Tools.execute(script,args=args)
 
-
-
-
     def cmds_link(self):
 
-        exists,_,_,_,loc=Tools._code_location_get(repo="jumpscaleX",account=self.account)
+        _,_,_,_,loc=Tools._code_location_get(repo="jumpscaleX",account=self.account)
         for src in os.listdir("%s/cmds" % loc):
             src2=os.path.join(loc,"cmds",src)
             dest="%s/bin/%s" % (MyEnv.config["DIR_BASE"], src)
@@ -2383,11 +2384,6 @@ class JumpscaleInstaller():
         Tools.execute("cd /sandbox;source env.sh;js_init generate")
 
 
-
-
-
-
-
 # try:
 #     from colored_traceback import add_hook
 #     import colored_traceback
@@ -2395,3 +2391,191 @@ class JumpscaleInstaller():
 #     MyEnv._colored_traceback = colored_traceback
 # except ImportError:
 #     MyEnv._colored_traceback = None
+
+class Docker():
+
+    def __init__(self,name="default",delete=False,portrange=1,image='despiegk/3bot',
+                sshkey=None,baseinstall=True, cmd=None):
+        """
+        if you want to start from scratch use: "phusion/baseimage:master"
+
+        if codedir not specified will use /sandbox/code if exists otherwise ~/code
+        """
+        rc,out,_=Tools.execute("cat /proc/1/cgroup",die=False,showout=False)
+        if rc==0 and out.find("/docker/")!=-1:
+            print("Cannot continue, trying to use docker tools while we are already in a docker")
+            sys.exit(1)
+
+        MyEnv._init()
+        self.name = name
+
+        if not sshkey:
+            sshkey = MyEnv.sshagent_key_get()
+
+        if MyEnv.platform()=="linux" and not Tools.cmd_installed("docker"):
+            UbuntuInstaller.docker_install()
+
+        if not Tools.cmd_installed("docker"):
+            print("Could not find Docker installed")
+            sys.exit(1)
+
+        container_exists = name in self.docker_names()
+
+        if container_exists and delete:
+            Tools.execute("docker rm -f %s"%name)
+            container_exists = False
+
+        a=8000+int(portrange)*10
+        b=8004+int(portrange)*10
+        portrange_txt="%s-%s:8000-8004"%(a,b)
+        portrange_txt +=" -p %s:9999/udp"%(a+9)  #udp port for wireguard
+
+        port = 9000+int(portrange)*100 + 22
+        self.port = port
+
+        args={}
+        args["NAME"]=name
+        args["PORTRANGE"] = "-p %s"%portrange_txt
+        args["PORT"] = port
+        args["IMAGE"] = image
+
+        if not container_exists:
+            run_cmd="""
+            docker run --name={NAME} --hostname={NAME} -d \
+            -p {PORT}:22 {PORTRANGE} \
+            --device=/dev/net/tun \
+            --cap-add=NET_ADMIN --cap-add=SYS_ADMIN \
+            --cap-add=DAC_OVERRIDE --cap-add=DAC_READ_SEARCH \
+            -v {DIR_CODE}:/sandbox/code {IMAGE}
+            """
+            if cmd:
+                run_cmd = run_cmd.strip() + " %s\n" % cmd
+            #/sbin/my_init
+            print(" - Docker machine gets created: ")
+            Tools.execute(run_cmd,args=args,interactive=True)
+            self.dexec('rm -f /root/.BASEINSTALL_OK')
+            print(" - Docker machine OK")
+            print(" - Start SSH server")
+        else:
+            if name not in self.docker_running():
+                Tools.execute("docker start %s"% name)
+                if not name in self.docker_running():
+                    print("could not start container:%s"%name)
+                    sys.exit(1)
+                self.dexec('rm -f /root/.BASEINSTALL_OK')
+
+        installed = False
+        try:
+            self.dexec('cat /root/.BASEINSTALL_OK')
+            installed = True
+        except:
+            pass
+        if not installed:
+            self.dexec('rm -f /root/.BASEINSTALL_OK')
+            SSHKEYS = Tools.execute("ssh-add -L",die=False,showout=False)[1]
+            if SSHKEYS.strip()!="":
+                self.dexec('echo "%s" > /root/.ssh/authorized_keys'%SSHKEYS)
+
+            self.dexec("/usr/bin/ssh-keygen -A")
+            self.dexec('/etc/init.d/ssh start')
+            self.dexec('rm -f /etc/service/sshd/down')
+            if baseinstall:
+                print(" - Upgrade ubuntu")
+                self.dexec('apt update; apt upgrade -y; apt install mc git -y')
+
+            Tools.execute("rm -f ~/.ssh/known_hosts")  # dirty hack
+
+            self.dexec('touch /root/.BASEINSTALL_OK')
+
+
+    def dexec(self,cmd,interactive=False):
+        if "'" in cmd:
+            cmd = cmd.replace("'","\"")
+        if interactive:
+            cmd2 = "docker exec -ti %s bash -c '%s'"%(self.name,cmd)
+        else:
+            cmd2 = "docker exec -t %s bash -c '%s'"%(self.name,cmd)
+        Tools.execute( cmd2, interactive=interactive,showout=True,replace=False,asfile=True)
+
+
+    def sshexec(self,cmd):
+        if "'" in cmd:
+            cmd = cmd.replace("'","\"")
+        cmd2 = "ssh -oStrictHostKeyChecking=no -t root@localhost -A -p %s '%s'"%(self.port,cmd)
+        Tools.execute(cmd2,interactive=True,showout=False,replace=False,asfile=True)
+
+
+    @staticmethod
+    def docker_running():
+        names = Tools.execute("docker ps --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
+        names = [i.strip("\"'") for i in names if i.strip()!=""]
+        return names
+
+    @staticmethod
+    def docker_names():
+        names = Tools.execute("docker container ls -a --format='{{json .Names}}'",showout=False,replace=False)[1].split("\n")
+        names = [i.strip("\"'") for i in names if i.strip()!=""]
+        return names
+
+    @staticmethod
+    def image_names():
+        names = Tools.execute("docker images --format='{{.Repository}}:{{.Tag}}'",showout=False,replace=False)[1].split("\n")
+        names = [i.strip("\"'") for i in names if i.strip()!=""]
+        return names
+
+    def jumpscale_install(self,secret="1234",private_key="",redo=False,wiki=False):
+
+        args_txt = ""
+        args_txt+=" --secret='%s'"%secret
+        if private_key:
+            args_txt+=" --private_key='%s'"%private_key
+        if redo:
+            args_txt+=" -r"
+        if wiki:
+            args_txt+=" -w"
+        args_txt+=" -y"
+
+        # args_txt+=" -c"
+        # args_txt+=" --debug"
+
+        dirpath = os.path.dirname(inspect.getfile(Tools))
+        if dirpath.startswith(MyEnv.config["DIR_CODE"]):
+            cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py "
+        else:
+            print("copy installer over from where I install from")
+            for item in ["install.py","InstallTools.py"]:
+                src1 = "%s/%s"%(dirpath,item)
+                cmd = "scp -P %s %s root@localhost:/tmp/" %(self.port,src1)
+                Tools.execute(cmd)
+            cmd = "cd /tmp;python3 install.py "
+        cmd+= args_txt
+        print(" - Installing jumpscaleX ")
+        self.sshexec(cmd)
+
+        cmd="""
+        apt-get autoclean
+        apt-get clean
+        apt-get autoremove
+        rm -rf /tmp/*
+        rm -rf /var/log/*
+        find / | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
+        """
+        self.sshexec(cmd)
+
+
+        k = """
+
+        install succesfull:
+
+        # to login to the docker using ssh use (if std port)
+        ssh root@localhost -A -p {port}
+
+        #to login & automatically use the shell
+        ssh root@localhost -A -p {port} 'source /sandbox/env.sh;kosmos'
+
+
+        """
+        args={}
+        args["port"]=self.port
+        print(Tools.text_replace(k,args=args))
+
