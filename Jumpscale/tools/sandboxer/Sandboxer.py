@@ -220,31 +220,29 @@ class Sandboxer(j.application.JSBaseClass):
     #     cmd = 'cp --parents -v "{}" "{}"'.format(path, dest)
     #     _, out, _ = j.sal.process.execute(cmd, die=False)
     #     return out
-
+    #
     # def sandbox_chroot(self, path, dest=None):
     #     """
+    #     path: binary path
+    #     dest: it should refer to the sandbox dir
     #     js_shell 'j.tools.sandboxer.sandbox_chroot()'
     #     """
     #     if dest is None:
-    #         dest = "%s/bin/" % j.dirs.BASEDIR
+    #         dest = j.dirs.BASEDIR
     #     j.sal.fs.createDir(dest)
+    #     j.sal.fs.createDir(j.sal.fs.joinPaths(dest, 'bin'))
+    #     cmd = 'cp -v "{}" "{}/bin"'.format(path, dest)
+    #     _, out, _ = j.sal.process.execute(cmd, die=False)
     #
     #     if not j.sal.fs.exists(path):
     #         raise RuntimeError('bin path "{}" not found'.format(path))
-    #     self._copy_chroot(path, dest)
     #
-    #     cmd = 'ldd "{}"'.format(path)
+    #     cmd = 'ldd "{}" | egrep -o "/lib.*\.[0-9]" '.format(path)
     #     _, out, _ = j.sal.process.execute(cmd, die=False)
     #     if "not a dynamic executable" in out:
     #         return
     #     for line in out.splitlines():
-    #         dep = line.strip()
-    #         if ' => ' in dep:
-    #             dep = dep.split(" => ")[1].strip()
-    #         if dep.startswith('('):
-    #             continue
-    #         dep = dep.split('(')[0].strip()
-    #         self._copy_chroot(dep, dest)
+    #         self._copy_chroot(line, dest)
     #
     #     if not j.sal.fs.exists(j.sal.fs.joinPaths(dest, 'lib64')):
     #         j.sal.fs.createDir(j.sal.fs.joinPaths(dest, 'lib64'))

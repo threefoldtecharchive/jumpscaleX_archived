@@ -131,10 +131,6 @@ def main(self):
         m3.get_all()[0].id
     ]  # should only be the 1 id in there
 
-    assert len(m.get_all()) == 2
-
-    assert m.get_all()[0]._model.schema.sid == o2._model.schema.sid
-
     assert len(m3.get_by_addr("test")) == 1
 
     assert len(m3.get_from_keys(addr="test", email="ename", ipaddr="192.168.1.1")) == 1
@@ -166,17 +162,6 @@ def main(self):
     o5 = m4.get_from_keys(addr="test", email="ename", ipaddr="192.168.1.1")[0]
     assert o5.id == myid
 
-    myid = m.get_all()[1].id + 0
-    nr = len(m.get_all())
-    assert nr == 2
-
-    o6 = m.get(myid)
-    assert o6._model.schema.url == "threefoldtoken.wallet.test"
-
-    o6.delete()
-    nr = len(m.get_all())
-    assert nr == 1
-
     bcdb.reset()
 
     assert m3.get_from_keys(addr="test", email="ename", ipaddr="192.168.1.1") == []
@@ -191,4 +176,3 @@ def main(self):
 
     self._log_info("TEST DONE")
     return "OK"
-

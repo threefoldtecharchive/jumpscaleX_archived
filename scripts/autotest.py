@@ -22,7 +22,13 @@ class RunTests(Utils):
         docker_cmd = 'docker run --rm -t {} /bin/bash -c'.format(image_name)
         env_cmd = 'export {};'.format(self.exports)
         if image_name == hub_image:
-            commit_cmd = 'cd /sandbox/code/github/{}; git pull; git reset --hard {};'.format(repo, commit)
+            utils = Utils()
+            commit_cmd1 = 'cd /sandbox/code/github/{}; git pull; git reset --hard {};'.format(repo, commit)
+            if repo == utils.repo[0]:
+                commit_cmd2 = 'cd /sandbox/code/github/{}; git pull;'.format(utils.repo[1])
+            else:
+                commit_cmd2 = 'cd /sandbox/code/github/{}; git pull;'.format(utils.repo[0])
+            commit_cmd = ' '.join([commit_cmd1, commit_cmd2])
         else:
             commit_cmd = ""
         kosmos_cmd = 'source /sandbox/env.sh; kosmos --instruct /sandbox/code/github/threefoldtech/test.toml;'

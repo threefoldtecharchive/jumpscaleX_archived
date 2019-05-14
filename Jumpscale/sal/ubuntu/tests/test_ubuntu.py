@@ -36,8 +36,8 @@ class Test_Ubuntu(TestCase):
 
     def test006_deb_install(self):
         j.sal.process.execute(
-            'wget http://security.ubuntu.com/ubuntu/pool/universe/t/tmuxp/python-tmuxp_1.3.1-1_all.deb')
-        self.ubuntu.deb_install(path='python-tmuxp_1.3.1-1_all.deb')
+            'wget http://security.ubuntu.com/ubuntu/pool/universe/t/tmuxp/python-tmuxp_1.5.0a-1_all.deb')
+        self.ubuntu.deb_install(path='python-tmuxp_1.5.0a-1_all.deb')
         rc, out, err = j.sal.process.execute('dpkg -s python-tmuxp | grep Status', die=False)
         self.assertIn('install ok', out)
 

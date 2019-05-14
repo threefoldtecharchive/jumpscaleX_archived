@@ -11,7 +11,6 @@ except BaseException:
     j.sal.process.execute("python3 -m pip install google-api-python-client")
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
-
 from .GDriveFile import *
 
 SCOPES = ['https://www.googleapis.com/auth/drive',
@@ -54,7 +53,7 @@ class GDriveClient(JSConfigClient):
             file.exportPDF(path=destpath)
             return True
 
-        return self._cache.get("exportFile", method=do, expire=300)
+        return self._cache.get("exportFile_{}".format(file_id), method=do, expire=300)
 
     def exportSlides(self, presentation, destpath="/tmp", staticdir=None, size='MEDIUM'):
         def do():
@@ -77,7 +76,7 @@ class GDriveClient(JSConfigClient):
                 j.sal.fs.moveDir(presentation_dir, staticdir)
             return True
 
-        return self._cache.get("exportSlides", method=do, expire=300)
+        return self._cache.get("exportSlides_{}".format(presentation), method=do, expire=300)
 
     def get_presentation_meta(self, meta_file, presentation_id):
         def do():
@@ -87,4 +86,4 @@ class GDriveClient(JSConfigClient):
             presentations_meta = j.data.serializers.json.load(meta_file)
             meta = presentations_meta[presentation_id]
             return meta
-        return self._cache.get("get_presentation_meta", method=do, expire=300)
+        return self._cache.get("get_presentation_meta_{}".format(presentation_id), method=do, expire=300)

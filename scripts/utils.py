@@ -47,7 +47,7 @@ class Utils:
         :type committer: str
         """
         if commit:
-            repo = repo.strip('threefoldtech/')
+            repo = repo[repo.find('/') + 1:]
             msg = '\n'.join([msg, repo, branch, committer, commit])
         for _ in range(0, 5):
             try:    
@@ -145,9 +145,9 @@ class Utils:
         self.write_file(text=text, file_name='status.log')
         self.github_status_send(status=status, repo=repo, link=file_link, commit=commit)
         if status == 'success':
-            self.send_msg('Tests Passed ' + file_link, repo=repo, branch=branch, commit=commit, committer=committer)
+            self.send_msg('Tests passed ' + file_link, repo=repo, branch=branch, commit=commit, committer=committer)
         elif status == 'failure':
-            self.send_msg('Tests had errors ' + file_link, repo=repo, branch=branch, commit=commit, committer=committer)
+            self.send_msg('Tests failed ' + file_link, repo=repo, branch=branch, commit=commit, committer=committer)
         
     def export_var(self, config):
         """Prepare environment variables from config file.

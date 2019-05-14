@@ -1,7 +1,8 @@
 from Jumpscale import j
-from Jumpscale.builder.test.flist.base_test import BaseTest
+from Jumpscale.builder.test.builder.base_test import BaseTest
 import unittest
 import time
+
 
 class TestCases(BaseTest):
     def test001_zbd(self):
@@ -107,7 +108,7 @@ class TestCases(BaseTest):
         self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('ethereum')))
         j.builder.blockchain.ethereum.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('ethereum')))
-         
+
     def test013_etcd(self):
         j.builder.db.etcd.build(reset=True)
         j.builder.db.etcd.install()
@@ -130,9 +131,10 @@ class TestCases(BaseTest):
         j.builder.network.coredns.build(reset=True)
         j.builder.network.coredns.install()
         j.builder.network.coredns.start()
-        self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('coredns')))
+        self.assertTrue(j.sal.process.getProcessPid('coredns'))
         j.builder.network.coredns.stop()
-        self.assertEqual(0, len(j.sal.process.getProcessPid('coredns')))
+        time.sleep(10)
+        self.assertFalse(j.sal.process.getProcessPid('coredns'))
 
     def test016_zerotier(self):
         j.builder.network.zerotier.build(reset=True)
@@ -141,7 +143,7 @@ class TestCases(BaseTest):
         self.assertGreaterEqual(1, len(j.sal.process.getProcessPid('zerotier')))
         j.builder.network.zerotier.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('zerotier')))
-        
+
     def test017_rust(self):
         j.builder.runtimes.rust.build(reset=True) 
         j.builder.runtimes.rust.install()
@@ -149,17 +151,39 @@ class TestCases(BaseTest):
             j.sal.process.execute('which rustup')        
         except:
             self.assertTrue(False)
-    
-    #def test018_redis(self):
+
+    def test018_redis(self):
+        j.builder.db.redis.build(reset=True)
+        j.builder.db.redis.install()
+        j.builder.db.redis.start()
+        self.assertEqual(2, len(j.sal.process.getProcessPid('redis-server')))
+        j.builder.db.redis.stop()
+        self.assertEqual(1, len(j.sal.process.getProcessPid('redis-server')))
 
     def test019_syncthing(self):
         j.builder.storage.syncthing.build(reset=True)
         j.builder.storage.syncthing.install()
         j.builder.storage.syncthing.start()
+        time.sleep(10)
         self.assertTrue(len(j.sal.process.getProcessPid('syncthing')))
         j.builder.storage.syncthing.stop()
+        time.sleep(10)
         self.assertEqual(0, len(j.sal.process.getProcessPid('syncthing')))
 
     #def test020_caddyfilemanager(self):
 
-    
+    def test021_freeflow(self):
+        j.builder.apps.freeflow.build(reset=True)
+        j.builder.apps.freeflow.install(reset=True) 
+        j.builder.apps.freeflow.start()
+        self.assertTrue(len(j.sal.process.getProcessPid('apache2')))
+        j.builder.apps.freeflow.stop() 
+        self.assertEqual(0, len(j.sal.process.getProcessPid('apache2')))
+
+    def test022_cmake(self):
+        j.builder.libs.cmake.build(reset=True)
+        j.builder.libs.cmake.install()
+        try:
+            j.sal.process.execute('which cmake')
+        except:
+            self.assertTrue(False)

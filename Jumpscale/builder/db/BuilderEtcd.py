@@ -2,13 +2,6 @@ from Jumpscale import j
 from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
 
 builder_method = j.builder.system.builder_method
-ETCD_CONFIG = """
-name: "etcd_builder"
-data-dir: "/mnt/data"
-listen-peer-urls: "http://0.0.0.0:2380"
-listen-client-urls: "http://0.0.0.0:2379"
-initial-advertise-peer-urls: "http://'$node_addr':2380"
-"""
 
 
 class BuilderEtcd(BuilderGolangTools):
@@ -18,6 +11,7 @@ class BuilderEtcd(BuilderGolangTools):
         super()._init()
 
     def profile_builder_set(self):
+        super().profile_builder_set()
         self.profile.env_set('GO111MODULE', 'on')
 
     @builder_method()
@@ -35,19 +29,9 @@ class BuilderEtcd(BuilderGolangTools):
         j.builder.tools.file_copy("%s/etcd" % self.DIR_GO_PATH_BIN, "{DIR_BIN}/etcd")
         j.builder.tools.file_copy("%s/etcdctl" % self.DIR_GO_PATH_BIN, "{DIR_BIN}/etcdctl")
 
-        self._write("/sandbox/cfg/etcd.conf", ETCD_CONFIG)
-
     @property
     def startup_cmds(self):
-        cmd = """
-        etcdctl  user add root:root
-        etcdctl  auth enable
-        etcdctl  --user=root:root put "traefik/acme/account" "foo"
-        etcd -conf /sandbox/cfg/etcd.conf
-        """
-        cmds = [j.tools.startupcmd.get(name="etcd", cmd=cmd)]
-
-        return cmds
+        return [j.tools.startupcmd.get(name=self.NAME, cmd=self.NAME)]
 
     def sandbox(self, create_flist=False, zhub_instance=None):
         """Copy built bins to dest_path and create flist if create_flist = True

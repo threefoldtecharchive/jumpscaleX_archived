@@ -26,7 +26,7 @@ class Guid(String):
         self._default = default
     
     def clean(self, value):
-        if value is None:
+        if value is None or value == "":
             return self.default_get()
         if not self.check(value):
             raise ValueError("invalid guid :%s" % value)
@@ -123,7 +123,7 @@ class Url(String):
         self._default = default
 
     def clean(self, value):
-        if value is None or value == 'None':
+        if value is None or value == "None" or value == "":
             return self.default_get()
         if not self.check(value):
             raise ValueError("invalid url :%s" % value)
@@ -163,7 +163,6 @@ class Tel(String):
         if v is None or v =='None':
             return self.default_get()
         v = j.data.types.string.clean(v)
-        v = v.replace(".", "")
         v = v.replace(",", "")
         v = v.replace("-", "")
         v = v.replace("(", "")
@@ -181,32 +180,38 @@ class Tel(String):
 class IPRange(String):
     """
     """
-    NAME =  'iprange'
+
+    NAME = "iprange"
 
     def __init__(self, default=None):
         self.BASETYPE = "string"
-        self._RE = re.compile('[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2}')
+        self._RE = re.compile(
+            "[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2}"
+        )
         self._default = default
 
     def check(self, value):
-        '''
+        """
         Check whether provided value is a valid
-        '''
+        """
         return self._RE.fullmatch(value) is not None
 
     def clean(self, value):
-        if value is None or value == 'None':
+
+        if value is None or value == "None" or value == "":
             return self.default_get()
         if not self.check(value):
             raise ValueError("invalid ip range %s" % value)
         else:
             return value
 
-class IPPort(Integer):
-    '''Generic IP port type'''
-    NAME =  'ipport,tcpport'
 
-    def __init__(self,default=None):
+class IPPort(Integer):
+    """Generic IP port type"""
+
+    NAME = "ipport,tcpport"
+
+    def __init__(self, default=None):
         self.BASETYPE = "int"
         self.NOCHECK = True
         # j.shell()
@@ -217,20 +222,19 @@ class IPPort(Integer):
             self._default = 65535
         return self._default
 
-
     def possible(self, value):
-        '''
+        """
         Check if the value is a valid port
         We just check if the value a single port or a range
         Values must be between 0 and 65535
-        '''
+        """
         try:
             if 0 < int(value) <= 65535:
                 return True
-        except :
+        except:
             pass
         return False
-    
+
     def clean(self, value):
         if not value:
             return self.default_get()
@@ -249,15 +253,13 @@ class IPPort(Integer):
 
 
 class NumericObject(TypeBaseObjClassNumeric):
-
-
     @property
     def _string(self):
         return self._typebase.bytes2str(self._data)
 
     @property
     def _python_code(self):
-        return "'%s'"%self._string
+        return "'%s'" % self._string
 
     @property
     def usd(self):
@@ -268,23 +270,22 @@ class NumericObject(TypeBaseObjClassNumeric):
         return self._typebase.bytes2cur(self._data)
 
     @value.setter
-    def value(self,val):
+    def value(self, val):
         self._data = self._typebase.toData(val)
 
     @property
     def currency_code(self):
-        curcode ,val = self._typebase.bytes2cur(self._data, return_currency_code=True)
+        curcode, val = self._typebase.bytes2cur(self._data, return_currency_code=True)
         return curcode
 
-    def value_currency(self,curcode="usd"):
-        return self._typebase.bytes2cur( self._data, curcode=curcode)
+    def value_currency(self, curcode="usd"):
+        return self._typebase.bytes2cur(self._data, curcode=curcode)
 
     def __str__(self):
         if self._data:
             return "numeric (%s): %s"%(self.value_currency,self._string)
         else:
             return "numeric: NOTSET"
-
 
 
 class Numeric(TypeBaseObjFactory):
@@ -534,7 +535,7 @@ class Numeric(TypeBaseObjFactory):
             return data
         if data is None or data == 'None' or data == b"" or data == "":
             return self.default_get()
-        if isinstance(data,float) or isinstance(data,int):
+        if isinstance(data, float) or isinstance(data, int):
             data = str(data)
         if isinstance(data,str):
             data = self.str2bytes(data)
@@ -665,7 +666,12 @@ class DateTime(Integer):
         if v is None:
             v=0
 
-        if j.data.types.string.check(v):
+        if j.data.types.int.check(v):
+            return v
+        elif j.data.types.int.checkString(v):
+            v = int(v)
+            return v
+        elif j.data.types.string.check(v):
             v=v.replace("'","").replace("\"","").strip()
             if v.strip() in ["0", "",0]:
                 return 0
@@ -687,8 +693,6 @@ class DateTime(Integer):
             hrdatetime = dd + " " + tt
             epoch = int(time.mktime(time.strptime(hrdatetime, fstr)))
             return epoch
-        elif j.data.types.int.check(v):
-            return v
         else:
             raise ValueError("Input needs to be string:%s" % v)
 
@@ -833,4 +837,3 @@ class Duration(String):
 
     def capnp_schema_get(self, name, nr):
         return "%s @%s :UInt32;" % (name, nr)
-

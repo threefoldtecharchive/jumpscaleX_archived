@@ -7,15 +7,10 @@ raise RuntimeError("needs to be part of tests on BCDB not here")
 class Unique(BaseTest):
     def setUp(self):
         super().setUp()
-        j.servers.zdb.start_test_instance()
-        self.admin_zdb = j.clients.zdb.client_admin_get(port=9901)
-        self.admin_zdb.namespace_new("unique")
-        self.zdb = j.clients.zdb.client_get(nsname="unique", port=9901)
-        self.bcdb = j.data.bcdb.new("test", zdbclient=self.zdb)
+        self.bcdb = j.data.bcdb.new("test")
 
     def tearDown(self):
-        self.admin_zdb.namespace_delete("unique")
-        j.servers.zdb.stop()
+        self.bcdb.reset()
         super().tearDown()
 
     def test022_unique_attributes(self):

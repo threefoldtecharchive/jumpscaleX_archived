@@ -39,10 +39,11 @@ def slideshow(doc, **kwargs):
         elif key.casefold().startswith("slide"):
             footer = ""
 
-            if j.data.types.list.check(kwargs[key]) and len(kwargs[key]) > 1:
-                footer = kwargs[key][1]
-                slide_args = kwargs[key][0]
-
+            if j.data.types.list.check(data[key]) and len(data[key]) > 1:
+                footer = data[key][1]
+                slide_args = data[key][0]
+            else:
+                slide_args = data[key]
             slide_num = key.split("_")[1].strip()
             presentation_name = slide_args.split('[')[0]
             slide_name = slide_args.split('[')[1].split(']')[0]
