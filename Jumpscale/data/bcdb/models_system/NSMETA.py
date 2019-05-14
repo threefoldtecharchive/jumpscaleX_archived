@@ -1,17 +1,27 @@
 from Jumpscale import j
 
 
+SCHEMA="""
+@url = jumpscale.bcdb.nsmeta.1
+name* = ""
+schema_md5* = ""        #is the md5 of the schema (acts as id)
+schema_url = ""         #just to make it readable and userfriendly, no indexing required
+groups = (LO) !jumpscale.bcdb.acl.group
+users = (LO) !jumpscale.bcdb.acl.user
+write_once = False (B)  #means in this namespace records can only be written once, no modification possible
+
+
+"""
 
 import types
 # print("***IMPORT ACL****")
 bcdb = j.data.bcdb.latest
 schema = j.data.schema.add(SCHEMA)[0]
 
-Index_CLASS = bcdb._BCDBModelIndexClass_generate(schema,__file__)
 MODEL_CLASS = bcdb._BCDBModelClass
 
 
-class ACL(Index_CLASS,MODEL_CLASS):
+class NSMETA(MODEL_CLASS):
     def __init__(self):
         MODEL_CLASS.__init__(self, bcdb=bcdb,schema=schema,custom=True)
         Index_CLASS.__init__(self)

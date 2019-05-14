@@ -7,9 +7,12 @@ class DataObjBase:
         self.id = None
         self._schema = schema
         self._model = model
+        if model and self._model.readonly:
+            self._readonly = True
+        else:
+            self._readonly = False
         self._changed_items = {}
         self._autosave = False
-        self._readonly = False
         self.acl_id = None
         self._acl = None
         self._load_from_data(data=data)
@@ -19,9 +22,16 @@ class DataObjBase:
         return self._schema._capnp_schema
 
     def _load_from_data(self, data=None):
+        """
 
+        :param data: can be binary (capnp), str=json, or dict
+        :return:
+        """
+
+        if self._model is not None and self._model.readonly:
+            raise RuntimeError("cannot load from data, model stor for obj is readonly.\n%s" % self)
         if self._readonly:
-            raise RuntimeError("cannot load from data, obj is readonly.\n%s" % self)
+            raise RuntimeError("cannot load from data, readonly.\n%s" % self)
 
         if isinstance(data,bytes):
             self._cobj_ = self._capnp_schema.from_bytes_packed(data)
@@ -44,43 +54,25 @@ class DataObjBase:
             if isinstance(data,str):
                 data = j.data.serializers.json.loads(data)
             if isinstance(data, dict):
-                self._data_update(data=data)
+                if data != {}:
+                    if self._model is not None:
+                        data = self._model._dict_process_in(data)
+                    for key, val in data.items():
+                        setattr(self, key, val)
             else:
                 raise j.exceptions.Input("_load_from_data when string needs to be dict or json")
+
 
     def Edit(self):
         e = j.data.dict_editor.get(self._ddict)
         e.edit()
-        self.data_update(e._dict)
+        self._load_from_data(e._dict)
 
     def _view(self):
         e = j.data.dict_editor.get(self._ddict)
         e.view()
 
-    def _data_update(self, data=None):
-        """
-        upload data
-        :param data:
-        :return:
-        """
 
-        if data is None:
-            data = {}
-
-        if self._readonly:
-            raise RuntimeError("cannot load from data, obj is readonly.\n%s" % self)
-
-        if j.data.types.json.check(data):
-            data = j.data.serializers.json.loads(data)
-
-        if not j.data.types.dict.check(data):
-            raise RuntimeError("data needs to be of type dict, now:%s" % data)
-
-        if data != None and data != {}:
-            if self._model is not None:
-                data = self._model._dict_process_in(data)
-            for key, val in data.items():
-                setattr(self, key, val)
 
     @property
     def acl(self):
@@ -104,7 +96,7 @@ class DataObjBase:
 
     def save(self):
         if self._model:
-            if self._readonly:
+            if self._model.readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
             # print (self._model.__class__.__name__)
             if not self._model.__class__._name=="acl" and self._acl is not None:
@@ -136,7 +128,7 @@ class DataObjBase:
 
     def delete(self):
         if self._model:
-            if self._readonly:
+            if self._model.readonly or self._readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
             if not self._model.__class__.__name__ == "ACL":
                 self._model.delete(self)

@@ -9,7 +9,7 @@ JSBASE = j.application.JSBaseClass
 
 
 class BCDBModel(j.application.JSBaseClass):
-    def __init__(self,bcdb,schema=None,url=None,cache_expiration=3600,custom=False,reset=False):
+    def __init__(self,bcdb,schema=None,cache_expiration=3600,custom=False,reset=False):
         """
 
         delivers interface how to deal with data in 1 schema

@@ -3,20 +3,6 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-SCHEMA = """
-
-@url = jumpscale.schemas.meta.1
-schemas = (LO) !jumpscale.schemas.meta.schema.1
-name = "" (S)
-
-@url = jumpscale.schemas.meta.schema.1
-url = ""
-sid = 0  #schema id  
-text = ""
-md5 = ""
-
-"""
-
 
 class BCDBMeta(j.application.JSBaseClass):
     def __init__(self, bcdb):

@@ -3,6 +3,7 @@ import os
 
 JSBASE = j.application.JSBaseClass
 
+#THIS IS THE OBJECT USED TO GENERATE THE INDEX CLASS WITH JINJA2
 
 class IndexField():
 

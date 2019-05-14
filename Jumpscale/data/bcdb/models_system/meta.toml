@@ -1,0 +1,32 @@
+@url = jumpscale.bcdb.user.1
+name* = ""
+dm_id* = ""                             #e.g. kristof.ibiza or kristof.3bot
+email* = ""                             #optional, not required
+pubkey = ""                             #public key of the 3bot
+ipaddr* = ""                            #how to reach the digitalme (3bot)
+
+@url = jumpscale.bcdb.circle.1          #group of users
+name* = ""
+owner_dm_id* = ""
+user_members = (LI)
+circle_members = (LI)
+
+@url = jumpscale.bcdb.acl.1
+groups = (LO) !jumpscale.bcdb.acl.group.1
+users = (LO) !jumpscale.bcdb.acl.user.1
+hash* = ""
+
+@url = jumpscale.bcdb.acl.group.1
+uid= 2147483647 (I)
+rights = ""
+
+@url = jumpscale.bcdb.acl.user.1
+uid= 2147483647 (I)
+rights = ""
+
+@url = jumpscale.bcdb.namespace.1
+name* = ""
+groups = (LO) !jumpscale.bcdb.acl.group.1
+users = (LO) !jumpscale.bcdb.acl.user.1
+write_once = False (B)  #means in this namespace records can only be written once, no modification possible
+

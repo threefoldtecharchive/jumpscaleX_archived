@@ -2,12 +2,7 @@ from Jumpscale import j
 
 
 SCHEMA = """
-@url = jumpscale.bcdb.user
-name* = ""
-dm_id* = ""
-email* = ""  
-pubkey = ""
-ipaddr* = ""
+
 """
 
 
