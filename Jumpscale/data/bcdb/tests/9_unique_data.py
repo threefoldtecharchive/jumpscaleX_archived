@@ -50,53 +50,37 @@ def main(self):
     schema_obj.test = test
     schema_obj.number = number
     schema_obj.save()
-    j.core.tools.log(
-        "Create another object and try to use same name for first one, should fail",
-        level=20,
-    )
+    j.core.tools.log("Create another object and try to use same name for first one, should fail", level=20)
 
     schema_obj2 = self.model.new()
     schema_obj2.name = name
     with test_case.assertRaises(Exception):
         schema_obj2.save()
     schema_obj2.name = "s" + str(uuid4()).replace("-", "")[:10]
-    j.core.tools.log(
-        "On the second object, try to use same test var for first one, should fail",
-        level=20,
-    )
+    j.core.tools.log("On the second object, try to use same test var for first one, should fail", level=20)
 
     schema_obj2.test = test
     with test_case.assertRaises(Exception):
         schema_obj2.save()
     schema_obj2.test = "s" + str(uuid4()).replace("-", "")[:10]
-    j.core.tools.log(
-        "On the second object, try to use same new_name for first one, should success",
-        level=20,
-    )
+    j.core.tools.log("On the second object, try to use same new_name for first one, should success", level=20)
 
     schema_obj2.new_name = new_name
     schema_obj2.save()
-    j.core.tools.log(
-        "On the second object, try to use same number for first one, should fail",
-        level=20,
-    )
+    j.core.tools.log("On the second object, try to use same number for first one, should fail", level=20)
 
     schema_obj2.number = number
     with test_case.assertRaises(Exception):
         schema_obj2.save()
     schema_obj2.number = random.randint(100, 199)
-    j.core.tools.log(
-        "Change name of the first object and try to use the first name again, should success",
-        level=20,
-    )
+    j.core.tools.log("Change name of the first object and try to use the first name again, should success", level=20)
 
     schema_obj.name = "s" + str(uuid4()).replace("-", "")[:10]
     schema_obj.save()
     schema_obj2.name = name
     schema_obj2.save()
     j.core.tools.log(
-        "Change test var of the first object and try to use the first test var again, should success",
-        level=20,
+        "Change test var of the first object and try to use the first test var again, should success", level=20
     )
 
     schema_obj.test = "s" + str(uuid4()).replace("-", "")[:10]
@@ -104,8 +88,7 @@ def main(self):
     schema_obj2.test = test
     schema_obj2.save()
     j.core.tools.log(
-        "Change number of the first object and try to use the first number again, should success",
-        level=20,
+        "Change number of the first object and try to use the first number again, should success", level=20
     )
 
     schema_obj.number = random.randint(200, 299)
@@ -116,8 +99,7 @@ def main(self):
     schema_obj2.delete()
     schema_obj3 = self.model.new()
     j.core.tools.log(
-        "Set the new object's attributes with the same attributes of the second object, should success.",
-        level=20,
+        "Set the new object's attributes with the same attributes of the second object, should success.", level=20
     )
 
     schema_obj3.name = name
@@ -130,4 +112,3 @@ def main(self):
     schema_obj3.save()
     self.admin_zdb.namespace_delete("unique")
     j.servers.zdb.stop()
-

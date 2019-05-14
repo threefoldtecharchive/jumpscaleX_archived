@@ -31,12 +31,12 @@ class BuilderEthereum(BuilderGolangTools):
         Install the binaries of ethereum
         """
         bin_path = self.tools.joinpaths(self.package_path, self.NAME)
-        self.tools.dir_ensure('{DIR_BIN}')
-        self.tools.file_copy(bin_path, self._replace('{DIR_BIN}'))
+        self.tools.dir_ensure("{DIR_BIN}")
+        self.tools.file_copy(bin_path, self._replace("{DIR_BIN}"))
 
     @property
     def startup_cmds(self):
-        cmd = j.tools.startupcmd.get("geth", cmd='geth')
+        cmd = j.tools.startupcmd.get("geth", cmd="geth")
         return [cmd]
 
     @builder_method()
@@ -49,9 +49,7 @@ class BuilderEthereum(BuilderGolangTools):
             :param flist_create: create flist after copying files
             :type flist_create:bool
         """
-        dir_dest = j.sal.fs.joinPaths(
-            "/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX)
-        )
+        dir_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX))
         bin_path = self.tools.joinpaths(self._replace("{DIR_BIN}"), self.NAME)
         bin_dest = self.tools.joinpaths(dir_dest, "bin", self.NAME)
         self.tools.dir_ensure(bin_dest)
@@ -63,9 +61,9 @@ class BuilderEthereum(BuilderGolangTools):
         self.tools.file_copy(bootnode_bin_path, bootnode_bin_dest)
 
     def test(self):
-        '''Tests the builder by performing the following:
+        """Tests the builder by performing the following:
         build(), install(), start()-> geth running, stop()-> geth not running
-        '''
+        """
         if self.running():
             self.stop()
         self.build(reset=True)

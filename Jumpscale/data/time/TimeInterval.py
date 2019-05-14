@@ -6,7 +6,8 @@ import traceback
 LASTTIME = 0
 DELTATIME_INITIALIZED = False
 
-class TimeInterval():
+
+class TimeInterval:
     """ Enumerator for time interval units """
 
     NANOSECONDS = -3
@@ -20,7 +21,8 @@ class TimeInterval():
     MONTHS = 5
     YEARS = 6
 
-    __jslocation__ = 'j.data.timeinterval'
+    __jslocation__ = "j.data.timeinterval"
+
 
 def printdelta():
     """
@@ -38,11 +40,15 @@ def printdelta():
         print("... STARTING TIME MEASUREMENTS")
         LASTTIME = currenttime
         DELTATIME_INITIALIZED = True
-    print((" @ Source file [" +
-           traceback.extract_stack()[-2][0] +
-           "] line [" +
-           str(traceback.extract_stack()[-2][1]) +
-           "]"))
+    print(
+        (
+            " @ Source file ["
+            + traceback.extract_stack()[-2][0]
+            + "] line ["
+            + str(traceback.extract_stack()[-2][1])
+            + "]"
+        )
+    )
 
 
 def getabstime():

@@ -40,9 +40,7 @@ class RedisServer(j.application.JSBaseClass):
                 certfile=self.ssl_cert_path,
             )
         else:
-            self.redis_server = StreamServer(
-                (self.host, self.port), spawn=Pool(), handle=self.handle_redis
-            )
+            self.redis_server = StreamServer((self.host, self.port), spawn=Pool(), handle=self.handle_redis)
 
     def start(self):
         print("RUNNING")
@@ -190,14 +188,10 @@ class RedisServer(j.application.JSBaseClass):
         cat, url, key, model = self._split(key)
         if cat == "objects":
             if url == "":
-                response.error(
-                    "url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new"
-                )
+                response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
                 return
             if key == "":
-                response.error(
-                    "key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)"
-                )
+                response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
                 return
 
         if cat == "schemas":
@@ -211,9 +205,7 @@ class RedisServer(j.application.JSBaseClass):
     def get(self, response, key):
         cat, url, key, model = self._split(key)
         if model is "":
-            raise RuntimeError(
-                "did not find model from key, maybe models not loaded:%s" % key
-            )
+            raise RuntimeError("did not find model from key, maybe models not loaded:%s" % key)
 
         if url == "":
             response.encode("ok")
@@ -286,14 +278,10 @@ class RedisServer(j.application.JSBaseClass):
             response.error("category %s not valid" % cat)
             return
         if url == "":
-            response.error(
-                "url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new"
-            )
+            response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
             return
         if key == "":
-            response.error(
-                "key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)"
-            )
+            response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
             return
         if id == "new":
             o = model.set_dynamic(val)
@@ -306,9 +294,7 @@ class RedisServer(j.application.JSBaseClass):
                 o = model.set_dynamic(val, obj_id=id)
             except Exception as e:
                 if str(e).find("cannot update object") != -1:
-                    response.error(
-                        "cannot update object with id:%s, it does not exist" % id
-                    )
+                    response.error("cannot update object with id:%s, it does not exist" % id)
                     return
                 response.error(str(e))
                 return
@@ -321,14 +307,10 @@ class RedisServer(j.application.JSBaseClass):
             response.error("category %s not valid" % cat)
             return
         if url == "":
-            response.error(
-                "url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new"
-            )
+            response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
             return
         if key == "":
-            response.error(
-                "key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)"
-            )
+            response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
             return
 
         obj = model.get(int(id))
@@ -343,14 +325,10 @@ class RedisServer(j.application.JSBaseClass):
             response.error("category %s not valid" % cat)
             return
         if url == "":
-            response.error(
-                "url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new"
-            )
+            response.error("url needs to be known, otherwise cannot set e.g. objects:despiegk.test:new")
             return
         if key == "":
-            response.error(
-                "key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)"
-            )
+            response.error("key needs to be known, e.g. objects:despiegk.test:new or in stead of new e.g. 101 (id)")
             return
 
         if id == "":

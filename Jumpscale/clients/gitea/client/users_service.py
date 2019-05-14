@@ -7,10 +7,7 @@ from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 
 
-
-
-
-class UsersService():
+class UsersService:
     def __init__(self, client):
         pass
         self.client = client
@@ -29,9 +26,8 @@ class UsersService():
                     resps.append(User(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -61,9 +57,8 @@ class UsersService():
                     resps.append(User(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -85,9 +80,8 @@ class UsersService():
                     resps.append(User(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -109,9 +103,8 @@ class UsersService():
                     resps.append(GPGKey(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -133,9 +126,8 @@ class UsersService():
                     resps.append(PublicKey(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -157,9 +149,8 @@ class UsersService():
                     resps.append(Repository(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -181,9 +172,8 @@ class UsersService():
                     resps.append(Repository(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -205,9 +195,8 @@ class UsersService():
                     resps.append(Repository(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -242,9 +231,8 @@ class UsersService():
             if resp.status_code == 200:
                 return User(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:

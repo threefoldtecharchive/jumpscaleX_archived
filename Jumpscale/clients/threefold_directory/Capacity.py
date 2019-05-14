@@ -36,41 +36,46 @@ class Capacity(object):
 
     def __init__(self, json=None, **kwargs):
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Capacity'
+        class_name = "Capacity"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.farmer_id = client_support.set_property('farmer_id', data, data_types, False, [], False, False, class_name)
+        self.farmer_id = client_support.set_property("farmer_id", data, data_types, False, [], False, False, class_name)
         data_types = [Location]
-        self.location = client_support.set_property('location', data, data_types, False, [], False, False, class_name)
+        self.location = client_support.set_property("location", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.node_id = client_support.set_property('node_id', data, data_types, False, [], False, True, class_name)
+        self.node_id = client_support.set_property("node_id", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
         self.os_version = client_support.set_property(
-            'os_version', data, data_types, False, [], False, True, class_name)
+            "os_version", data, data_types, False, [], False, True, class_name
+        )
         data_types = [ResourceUnits]
         self.reserved_resources = client_support.set_property(
-            'reserved_resources', data, data_types, False, [], False, False, class_name)
+            "reserved_resources", data, data_types, False, [], False, False, class_name
+        )
         data_types = [string_types]
         self.robot_address = client_support.set_property(
-            'robot_address', data, data_types, False, [], False, True, class_name)
+            "robot_address", data, data_types, False, [], False, True, class_name
+        )
         data_types = [ResourceUnits]
         self.total_resources = client_support.set_property(
-            'total_resources', data, data_types, False, [], False, True, class_name)
+            "total_resources", data, data_types, False, [], False, True, class_name
+        )
         data_types = [int]
-        self.uptime = client_support.set_property('uptime', data, data_types, False, [], False, False, class_name)
+        self.uptime = client_support.set_property("uptime", data, data_types, False, [], False, False, class_name)
         data_types = [Timestamp]
-        self.updated = client_support.set_property('updated', data, data_types, False, [], False, False, class_name)
+        self.updated = client_support.set_property("updated", data, data_types, False, [], False, False, class_name)
         # data_types = [datetime]
         # self.updated = client_support.set_property('updated', data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.flags = client_support.set_property('parameters', data, data_types, False, [], True, False, class_name)
+        self.flags = client_support.set_property("parameters", data, data_types, False, [], True, False, class_name)
         data_types = [ResourceUnits]
         self.used_resources = client_support.set_property(
-            'used_resources', data, data_types, False, [], False, False, class_name)
+            "used_resources", data, data_types, False, [], False, False, class_name
+        )
 
     def __str__(self):
         return self.as_json(indent=4)

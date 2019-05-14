@@ -3,7 +3,7 @@ import base64
 import sendgrid
 from sendgrid.helpers.mail import Email, Content, Mail, Personalization, Attachment as SendGridAttachment
 
-Attachment = namedtuple('Attachment', ['originalfilename', 'binarycontent', 'type'])
+Attachment = namedtuple("Attachment", ["originalfilename", "binarycontent", "type"])
 
 
 class SendGridClient(j.application.JSBaseConfigClass):
@@ -24,11 +24,11 @@ class SendGridClient(j.application.JSBaseConfigClass):
     #         j.shell()
     #     return self._api
 
-    def attachment_build(self, filepath,type="application/pdf"):
+    def attachment_build(self, filepath, type="application/pdf"):
         """
         Returns a valid sendgrid attachment from typical attachment object.
         """
-        data = j.sal.fs.readFile(filepath,binary=False)
+        data = j.sal.fs.readFile(filepath, binary=False)
 
         sendgridattachment = SendGridAttachment()
         sendgridattachment.content = data
@@ -38,7 +38,6 @@ class SendGridClient(j.application.JSBaseConfigClass):
         sendgridattachment.content_id = filepath
 
         return sendgridattachment
-
 
     def send(self, sender, subject, message, recipients=None, message_type="text/plain", attachments=None):
         """

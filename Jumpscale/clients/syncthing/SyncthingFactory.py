@@ -1,5 +1,6 @@
 from Jumpscale import j
 from .SyncthingClient import SyncthingClient
+
 JSConfigs = j.application.JSBaseConfigsClass
 
 

@@ -14,6 +14,7 @@ class BuilderDigitalME(j.builder.system._BaseClass):
         - in self.test_zos() start the created flist & do the network tests for the openresty
 
     """
+
     NAME = "digitalme"
 
     @builder_method()
@@ -37,7 +38,7 @@ class BuilderDigitalME(j.builder.system._BaseClass):
         j.builder.runtimes.python.sandbox(reset=reset)
         j.builder.runtimes.lua.sandbox(reset=reset)
         j.tools.sandboxer.copyTo(j.builder.runtimes.python.DIR_SANDBOX, "{}/sandbox".format(self.DIR_SANDBOX))
-        j.tools.sandboxer.copyTo(j.builder.runtimes.lua.DIR_SANDBOX,  self.DIR_SANDBOX)
+        j.tools.sandboxer.copyTo(j.builder.runtimes.lua.DIR_SANDBOX, self.DIR_SANDBOX)
         git_repo_path = "/sandbox/code/github/threefoldtech/digitalmeX"
         j.tools.sandboxer.copyTo(git_repo_path, j.sal.fs.joinPaths(self.DIR_SANDBOX, git_repo_path[1:]))
 
@@ -45,7 +46,6 @@ class BuilderDigitalME(j.builder.system._BaseClass):
     def startup_cmds(self):
         cmd = j.tools.startupcmd.get("openresty", "openresty", cmd_stop="openresty -s stop", path="/sandbox/bin")
         return [cmd]
-
 
     def gslides(self):
         """
@@ -73,5 +73,3 @@ class BuilderDigitalME(j.builder.system._BaseClass):
         container_client = zos_client.cotainer.client(container_id)
         assert container_client.ping()
         # TODO: find a way to check if openresty started on the container
-
-

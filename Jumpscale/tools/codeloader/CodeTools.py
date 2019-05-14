@@ -1,4 +1,3 @@
-
 # from baselib.codeexecutor.CodeExecutor import CodeExecutor
 import inspect
 from Jumpscale import j
@@ -12,6 +11,7 @@ from .ReplaceTool import ReplaceTool
 # ujson.dumps does not support some arguments like separators, indent ...etc
 JSBASE = j.application.JSBaseClass
 
+
 def isPrimAttribute(obj, key):
     if key[-1] == "s":
         funcprop = "new_%s" % key[:-1]
@@ -22,14 +22,12 @@ def isPrimAttribute(obj, key):
 
 
 class Struct(j.application.JSBaseClass):
-
     def __init__(self, **kwargs):
         JSBASE.__init__(self)
         self.__dict__.update(kwargs)
 
 
 class CodeTools(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.tools.code"
         JSBASE.__init__(self)
@@ -150,14 +148,13 @@ class CodeTools(j.application.JSBaseClass):
                             newobj = method()
                             self.dict2object(newobj, valval)
                     else:
-                        for valval, in value:
+                        for (valval,) in value:
                             attr = getattr(obj, key)
                             attr.append(valval)
 
                 elif isinstance(value, dict) and not isinstance(obj.__dict__[objpropname], dict):
                     # is a dict which represents another object
-                    raise j.exceptions.RuntimeError(
-                        "not supported, only 1 level deep objects")
+                    raise j.exceptions.RuntimeError("not supported, only 1 level deep objects")
                 else:
                     obj.__dict__[objpropname] = value
             return obj
@@ -168,8 +165,7 @@ class CodeTools(j.application.JSBaseClass):
         if isinstance(data, dict):
             for key, value in list(data.items()):
                 # is for new obj functionname
-                objpropname = "_P_%s" % key if not key.startswith(
-                    '_P_') else key
+                objpropname = "_P_%s" % key if not key.startswith("_P_") else key
 
                 if isinstance(value, dict) and isinstance(obj.__dict__[objpropname], dict):
                     # is a real dict (not a dict as representation of an object)
@@ -185,7 +181,7 @@ class CodeTools(j.application.JSBaseClass):
                             attr[valkey] = valval
 
                 elif isinstance(value, list):
-                    if key == '_meta':
+                    if key == "_meta":
                         # we do not duplicate meta
                         continue
                     isprimtype, funcprop = isPrimAttribute(obj, key)
@@ -201,8 +197,7 @@ class CodeTools(j.application.JSBaseClass):
 
                 elif isinstance(value, dict) and not isinstance(obj.__dict__[objpropname], dict):
                     # is a dict which represents another object
-                    obj.__dict__[objpropname] = self.dict2JSModelobject(
-                        obj.__dict__[objpropname], value)
+                    obj.__dict__[objpropname] = self.dict2JSModelobject(obj.__dict__[objpropname], value)
                 else:
                     obj.__dict__[objpropname] = value
             return obj
@@ -210,18 +205,18 @@ class CodeTools(j.application.JSBaseClass):
             return data
 
     # def dict2object2(self,d):
-        # if isinstance(d, dict):
-            #n = {}
-            # for item in d:
-            # if isinstance(d[item], dict):
-            #n[item] = dict2obj(d[item])
-            # elif isinstance(d[item], (list, tuple)):
-            #n[item] = [dict2obj(elem) for elem in d[item]]
-            # else:
-            #n[item] = d[item]
-            # return type('obj_from_dict', (object,), n)
-        # else:
-            # return d
+    # if isinstance(d, dict):
+    # n = {}
+    # for item in d:
+    # if isinstance(d[item], dict):
+    # n[item] = dict2obj(d[item])
+    # elif isinstance(d[item], (list, tuple)):
+    # n[item] = [dict2obj(elem) for elem in d[item]]
+    # else:
+    # n[item] = d[item]
+    # return type('obj_from_dict', (object,), n)
+    # else:
+    # return d
 
     def object2dict4index(self, obj):
         """
@@ -244,6 +239,7 @@ class CodeTools(j.application.JSBaseClass):
                 r = r.rstrip(",")
                 return r
             return ""
+
         if isinstance(obj, ClassBase):
             for key, value in list(obj.__dict__.items()):
                 if key[0:3] == "_P_":
@@ -254,7 +250,7 @@ class CodeTools(j.application.JSBaseClass):
                     for key2 in list(value.keys()):
                         r = toStr(value[key2])
                         if r != "":
-                            result["%s.%s" (key, key2)] = r
+                            result["%s.%s"(key, key2)] = r
                 else:
                     r = toStr(value)
                     if r != "":
@@ -282,11 +278,11 @@ class CodeTools(j.application.JSBaseClass):
                     value.append(todict(item, {}, ignoreKeys))
                 return value
             elif isinstance(obj, str):
-                return obj.encode('utf8')
+                return obj.encode("utf8")
             elif isinstance(obj, (int, str, float, bool)) or obj is None:
                 return obj
             elif isinstance(obj, bytes) or obj is None:
-                return obj.decode('utf-8', 'ignore')
+                return obj.decode("utf-8", "ignore")
             elif isinstance(obj, ClassBase):
                 if hasattr(obj, "_obj2dict"):
                     return obj._obj2dict()
@@ -301,12 +297,13 @@ class CodeTools(j.application.JSBaseClass):
                         data[key] = todict(value, {}, ignoreKeys)
                 return data
             else:
-                #from core.Shell import ipshellDebug,ipshell
+                # from core.Shell import ipshellDebug,ipshell
                 # self._log_debug "DEBUG NOW Can only convert object to dict with properties basic types or inherited of ClassBase"
                 # ipshell()
                 if dieOnUnknown:
                     raise j.exceptions.RuntimeError(
-                        "Can only convert object to dict with properties basic types or inherited of ClassBase")
+                        "Can only convert object to dict with properties basic types or inherited of ClassBase"
+                    )
                 try:
                     val = str(value)
                 except BaseException:
@@ -320,8 +317,9 @@ class CodeTools(j.application.JSBaseClass):
         return j.data.serializers.yaml.dumps(self.object2dict(obj))
 
     def object2json(self, obj, pretty=False, skiperrors=False, ignoreKeys=[], ignoreUnderscoreKeys=False):
-        obj = self.object2dict(obj, dieOnUnknown=not skiperrors, ignoreKeys=ignoreKeys,
-                               ignoreUnderscoreKeys=ignoreUnderscoreKeys)
+        obj = self.object2dict(
+            obj, dieOnUnknown=not skiperrors, ignoreKeys=ignoreKeys, ignoreUnderscoreKeys=ignoreUnderscoreKeys
+        )
         if pretty:
             return j.data.serializers.json.dumps(obj, indent=2, sort_keys=True)
         else:
@@ -356,7 +354,6 @@ class CodeTools(j.application.JSBaseClass):
                 content2 += "\n"
             else:
                 if line.find("    ") != 0:
-                    raise j.exceptions.RuntimeError(
-                        "identation error for %s." % content)
+                    raise j.exceptions.RuntimeError("identation error for %s." % content)
                 content2 += "%s\n" % line[4:]
         return content2

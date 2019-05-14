@@ -6,14 +6,8 @@ from .units import GiB, MiB
 
 
 class ReservationParser:
-
     def __init__(self):
-        self._ressources = {
-            'mru': 0.0,
-            'cru': 0.0,
-            'hru': 0.0,
-            'sru': 0.0,
-        }
+        self._ressources = {"mru": 0.0, "cru": 0.0, "hru": 0.0, "sru": 0.0}
 
     def get_report(self, vms, vdisks, gateways):
         for vm in vms:
@@ -32,7 +26,6 @@ class ReservationParser:
 
 
 class Report:
-
     def __init__(self, cru, mru, hru, sru):
         self._cru = round(cru, 2)
         self._mru = round(mru, 2)
@@ -56,12 +49,7 @@ class Report:
         return self._hru
 
     def __repr__(self):
-        return str(dict(
-            cru=self.CRU,
-            mru=self.MRU,
-            hru=self.HRU,
-            sru=self.SRU
-        ))
+        return str(dict(cru=self.CRU, mru=self.MRU, hru=self.HRU, sru=self.SRU))
 
     __str__ = __repr__
 
@@ -77,12 +65,12 @@ def _parser_vm(vm_data):
     :rtype: dict
     """
 
-    for k in ['memory', 'cpu']:
+    for k in ["memory", "cpu"]:
         if k not in vm_data:
             raise ValueError("vm_data doesn't contain %s" % k)
 
-    cpu = int(vm_data['cpu'])
-    memory = int(vm_data['memory'])
+    cpu = int(vm_data["cpu"])
+    memory = int(vm_data["memory"])
 
     if memory < 0:
         raise TypeError("memory cannot be negative")
@@ -90,12 +78,7 @@ def _parser_vm(vm_data):
     if cpu < 0:
         raise TypeError("cpu cannot be negative")
 
-    return {
-        'mru': (memory * MiB) / GiB,
-        'cru': cpu,
-        'hru': 0,
-        'sru': 0,
-    }
+    return {"mru": (memory * MiB) / GiB, "cru": cpu, "hru": 0, "sru": 0}
 
 
 def _parse_vdisk(disk_data):
@@ -111,23 +94,18 @@ def _parse_vdisk(disk_data):
     :rtype: dict
     """
 
-    ressource = {
-        'mru': 0,
-        'cru': 0,
-        'hru': 0,
-        'sru': 0,
-    }
+    ressource = {"mru": 0, "cru": 0, "hru": 0, "sru": 0}
 
-    for k in ['size', 'diskType']:
+    for k in ["size", "diskType"]:
         if k not in disk_data:
             raise ValueError("disk_data doesn't contain %s" % k)
 
-    if disk_data['diskType'] == 'ssd':
-        ressource['sru'] = int(disk_data['size'])
-    elif disk_data['diskType'] == 'hdd':
-        ressource['hru'] = int(disk_data['size'])
+    if disk_data["diskType"] == "ssd":
+        ressource["sru"] = int(disk_data["size"])
+    elif disk_data["diskType"] == "hdd":
+        ressource["hru"] = int(disk_data["size"])
     else:
-        raise ValueError("disk type %s is not valid" % disk_data['diskType'])
+        raise ValueError("disk type %s is not valid" % disk_data["diskType"])
 
     return ressource
 
@@ -140,9 +118,4 @@ def _parse_gateway(gw_data):
     :rtype: [type]
     """
 
-    return {
-        'hru': 0,
-        'sru': 0,
-        "mru": 0.1,
-        "cru": 0.1,
-    }
+    return {"hru": 0, "sru": 0, "mru": 0.1, "cru": 0.1}

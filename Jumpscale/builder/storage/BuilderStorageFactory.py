@@ -1,5 +1,6 @@
 from Jumpscale import j
 
+
 class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
 
     __jslocation__ = "j.builder.storage"
@@ -14,6 +15,7 @@ class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
     def syncthing(self):
         if self._syncthing is None:
             from .BuilderSyncthing import BuilderSyncthing
+
             self._syncthing = BuilderSyncthing()
         return self._syncthing
 
@@ -21,13 +23,15 @@ class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
     def minio(self):
         if self._minio is None:
             from .BuilderMinio import BuilderMinio
+
             self._minio = BuilderMinio()
         return self._minio
-    
+
     @property
     def restic(self):
         if self._restic is None:
             from .BuilderRestic import BuilderRestic
+
             self._restic = BuilderRestic()
         return self._restic
 
@@ -35,5 +39,6 @@ class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
     def s3cality(self):
         if self._s3cality is None:
             from .BuilderS3Scality import BuilderS3Scality
+
             self._s3cality = BuilderS3Scality()
         return self._s3cality

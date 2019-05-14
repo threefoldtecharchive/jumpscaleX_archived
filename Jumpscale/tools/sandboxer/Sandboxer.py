@@ -19,15 +19,42 @@ class Sandboxer(j.application.JSBaseClass):
         self.original_size = 0
         self.new_size = 0
 
-
     def _ldd(self, path, result=dict(), done=list(), exclude_sys_libs=True):
         self._log_debug("find deb:%s" % path)
-        if j.sal.fs.getFileExtension(path) in ["py", "pyc", "cfg", "bak", "txt",
-                                               "png", "gif", "css", "js", "wiki", "spec", "sh", "jar", "xml", "lua"]:
+        if j.sal.fs.getFileExtension(path) in [
+            "py",
+            "pyc",
+            "cfg",
+            "bak",
+            "txt",
+            "png",
+            "gif",
+            "css",
+            "js",
+            "wiki",
+            "spec",
+            "sh",
+            "jar",
+            "xml",
+            "lua",
+        ]:
             return result
         if exclude_sys_libs:
-            exclude = ["libpthread.so", "libltdl.so", "libm.so", "libresolv.so", "libc.so", "libx", "libdl.so"
-                   "libz.so", "libgcc", "librt", "libstdc++", "libapt", "libdbus", "libselinux"]
+            exclude = [
+                "libpthread.so",
+                "libltdl.so",
+                "libm.so",
+                "libresolv.so",
+                "libc.so",
+                "libx",
+                "libdl.so" "libz.so",
+                "libgcc",
+                "librt",
+                "libstdc++",
+                "libapt",
+                "libdbus",
+                "libselinux",
+            ]
         else:
             exclude = []
 
@@ -41,7 +68,7 @@ class Sandboxer(j.application.JSBaseClass):
                 line = line.strip()
                 if line == "":
                     continue
-                if line.find('=>') == -1:
+                if line.find("=>") == -1:
                     continue
 
                 name, lpath = line.split("=>")
@@ -51,7 +78,7 @@ class Sandboxer(j.application.JSBaseClass):
                 lpath = lpath.strip()
                 if lpath == "":
                     continue
-                if lpath.find("not found")!=-1:
+                if lpath.find("not found") != -1:
                     continue
                 if name not in done:
                     excl = False
@@ -78,18 +105,41 @@ class Sandboxer(j.application.JSBaseClass):
         :param done:
         :return:
         """
-        if j.sal.fs.getFileExtension(path) in ["py", "pyc", "cfg", "bak", "txt",
-                                               "png", "gif", "css", "js", "wiki", "spec", "sh", "jar", "xml", "lua"]:
+        if j.sal.fs.getFileExtension(path) in [
+            "py",
+            "pyc",
+            "cfg",
+            "bak",
+            "txt",
+            "png",
+            "gif",
+            "css",
+            "js",
+            "wiki",
+            "spec",
+            "sh",
+            "jar",
+            "xml",
+            "lua",
+        ]:
             return result
 
         def excl(name):
             if not exclude_sys_libs:
                 return False
-            exclude=["libSystem","/System/Library/Frameworks/Core","libiconv.2.dylib","libnetwork.dylib",
-                     "libutil.dylib","libc++.1.dylib","libxml2.2.dylib","binascii"]
+            exclude = [
+                "libSystem",
+                "/System/Library/Frameworks/Core",
+                "libiconv.2.dylib",
+                "libnetwork.dylib",
+                "libutil.dylib",
+                "libc++.1.dylib",
+                "libxml2.2.dylib",
+                "binascii",
+            ]
             for toexeclude in exclude:
                 if name.lower().find(toexeclude.lower()) != -1:
-                    self._log_debug("exclude:%s"%name)
+                    self._log_debug("exclude:%s" % name)
                     return True
             return False
 
@@ -103,31 +153,29 @@ class Sandboxer(j.application.JSBaseClass):
 
             for line in out.split("\n"):
 
-                if len(line)>0 and line[0]!=" " and line[0]!="\t" :
-                    #means is not a dest
+                if len(line) > 0 and line[0] != " " and line[0] != "\t":
+                    # means is not a dest
                     continue
                 line = line.strip()
                 if line == "":
                     continue
-                lpath = line.split("(",1)[0].strip()
+                lpath = line.split("(", 1)[0].strip()
                 if lpath == "":
                     continue
                 if not excl(lpath):
                     self._log_debug(("found:%s" % name))
                     if lpath not in result:
                         if "@" in lpath:
-                            #need to check if @ can be current dir
-                            alt_base=j.sal.fs.getDirName(out.strip().split("\n")[0])
-                            lpath=lpath.replace("@loader_path",alt_base).replace("//","/")
+                            # need to check if @ can be current dir
+                            alt_base = j.sal.fs.getDirName(out.strip().split("\n")[0])
+                            lpath = lpath.replace("@loader_path", alt_base).replace("//", "/")
                         if j.sal.fs.exists(lpath):
-                            x =  j.sal.fs.getBaseName(lpath)
+                            x = j.sal.fs.getBaseName(lpath)
                             if x[0].lower() == x[0]:
                                 result[lpath] = Dep(name, lpath)
                                 result = self._otool(lpath, result=result, done=done)
 
-
             done.append(path)
-
 
         return result
 
@@ -137,12 +185,12 @@ class Sandboxer(j.application.JSBaseClass):
         """
         self._log_info("find deb:%s" % path)
         if j.core.platformtype.myplatform.isMac:
-            result = self._otool(path, result=dict(), done=list(),exclude_sys_libs=exclude_sys_libs)
+            result = self._otool(path, result=dict(), done=list(), exclude_sys_libs=exclude_sys_libs)
         else:
-            result = self._ldd(path, result=dict(), done=list(),exclude_sys_libs=exclude_sys_libs)
+            result = self._ldd(path, result=dict(), done=list(), exclude_sys_libs=exclude_sys_libs)
         return result
 
-    def libs_sandbox(self, path, dest=None, recursive=True,exclude_sys_libs=True):
+    def libs_sandbox(self, path, dest=None, recursive=True, exclude_sys_libs=True):
         """
 
         js_shell 'j.tools.sandboxer.libs_sandbox(".",".",True)'
@@ -153,8 +201,8 @@ class Sandboxer(j.application.JSBaseClass):
 
         if dest is None:
             dest = "{{DIR_BASE}}/bin"
-        dest=j.core.tools.text_replace(dest)
-        path=j.core.tools.text_replace(path)
+        dest = j.core.tools.text_replace(dest)
+        path = j.core.tools.text_replace(path)
 
         self._log_info("lib sandbox:%s" % path)
 
@@ -172,31 +220,29 @@ class Sandboxer(j.application.JSBaseClass):
         else:
             if (j.sal.fs.isFile(path) and j.sal.fs.isExecutable(path)) or j.sal.fs.getFileExtension(path) == "so":
                 result = self._libs_find(path, exclude_sys_libs=exclude_sys_libs)
-                for _,deb in list(result.items()):
+                for _, deb in list(result.items()):
                     deb.copyTo(dest)
 
     def copyTo(self, path, dest, excludeFileRegex=[], excludeDirRegex=[], excludeFiltersExt=["pyc", "bak"]):
 
         self._log_info("SANDBOX COPY: %s to %s" % (path, dest))
 
-        excludeFileRegex = [re.compile(r'%s' % item)
-                            for item in excludeFileRegex]
-        excludeDirRegex = [re.compile(r'%s' % item)
-                           for item in excludeDirRegex]
+        excludeFileRegex = [re.compile(r"%s" % item) for item in excludeFileRegex]
+        excludeDirRegex = [re.compile(r"%s" % item) for item in excludeDirRegex]
         for extregex in excludeFiltersExt:
-            excludeFileRegex.append(re.compile(r'(\.%s)$' % extregex))
+            excludeFileRegex.append(re.compile(r"(\.%s)$" % extregex))
 
         def callbackForMatchDir(path, arg):
             # self._log_debug ("P:%s"%path)
             for item in excludeDirRegex:
-                if(len(re.findall(item, path)) > 0):
+                if len(re.findall(item, path)) > 0:
                     return False
             return True
 
         def callbackForMatchFile(path, arg):
             # self._log_debug ("F:%s"%path)
             for item in excludeFileRegex:
-                if(len(re.findall(item, path)) > 0):
+                if len(re.findall(item, path)) > 0:
                     return False
             return True
 
@@ -213,8 +259,14 @@ class Sandboxer(j.application.JSBaseClass):
             # self._log_debug ("C:%s"%dest2)
             j.sal.fs.copyFile(src, dest2, overwriteFile=True)
 
-        j.sal.fswalker.walkFunctional(path, callbackFunctionFile=callbackFile, callbackFunctionDir=None, arg=(
-            path, dest), callbackForMatchDir=callbackForMatchDir, callbackForMatchFile=callbackForMatchFile)
+        j.sal.fswalker.walkFunctional(
+            path,
+            callbackFunctionFile=callbackFile,
+            callbackFunctionDir=None,
+            arg=(path, dest),
+            callbackForMatchDir=callbackForMatchDir,
+            callbackForMatchFile=callbackForMatchFile,
+        )
 
     # def _copy_chroot(self, path, dest):
     #     cmd = 'cp --parents -v "{}" "{}"'.format(path, dest)
@@ -392,4 +444,3 @@ class Sandboxer(j.application.JSBaseClass):
     #     # copy needed binaries and required libs
     #     j.tools.sandboxer.libs_sandbox(bin_path, dest=LIBSDIR)
     #     j.sal.fs.copyFile(bin_path, BINDIR+'/')
-

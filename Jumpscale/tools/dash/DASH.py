@@ -13,7 +13,6 @@ class DASH(j.application.JSBaseClass):
         JSBASE.__init__(self)
         self._default = None
 
-
     def install(self):
         """
         js_shell 'j.tools.dash.install()'
@@ -31,8 +30,7 @@ class DASH(j.application.JSBaseClass):
         p.runtimes.pip.install("dash,dash-html-components,dash-core-components,dash-table,sd_material_ui")
         cmd = "pip3 install git+https://github.com/rmarren1/dash-ui.git"
 
-
-    def start(self,path,background=False):
+    def start(self, path, background=False):
         """
 
         :param path: to file of dash
@@ -41,11 +39,10 @@ class DASH(j.application.JSBaseClass):
         """
         j.shell()
 
-    def run_example(self,name="graph1"):
+    def run_example(self, name="graph1"):
         """
         js_shell 'j.tools.dash.run_example(name="graph1")'
         :param name:
         :return:
         """
-        self._example_run("tutorials/%s"%name,obj_key="main")
-
+        self._example_run("tutorials/%s" % name, obj_key="main")

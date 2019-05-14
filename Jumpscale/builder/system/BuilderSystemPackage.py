@@ -5,18 +5,19 @@ CMD_APT_GET = "apt-get "
 
 builder_method = j.builder.system.builder_method
 
+
 class BuilderSystemPackage(j.builder.system._BaseClass):
     NAME = "SystemPackage"
-    
+
     @builder_method()
     def _repository_ensure_apt(self, repository):
-        self.ensure('python-software-properties')
+        self.ensure("python-software-properties")
         j.sal.process.execute("add-apt-repository --yes " + repository)
 
     def _apt_wait_free(self):
         timeout = time.time() + 300
         while time.time() < timeout:
-            _, out, _ = self._execute('fuser /var/lib/dpkg/lock', showout=False, die=False)
+            _, out, _ = self._execute("fuser /var/lib/dpkg/lock", showout=False, die=False)
             if out.strip():
                 time.sleep(1)
             else:
@@ -104,7 +105,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
         """
         packages = j.core.text.getList(packages, "str")
 
-        if len(packages)==1:
+        if len(packages) == 1:
 
             package = packages[0]
 
@@ -122,16 +123,25 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
                 # ignore
                 for unsupported in ["libpython3.5-dev", "libffi-dev", "build-essential", "libpq-dev", "libsqlite3-dev"]:
                     if unsupported in package:
-                        package = 'devel'
+                        package = "devel"
 
                 cmd = "pacman -S %s  --noconfirm\n" % package
 
             elif j.core.platformtype.myplatform.isMac:
                 for unsupported in [
-                    "libpython3.4-dev", "python3.4-dev", "libpython3.5-dev", "python3.5-dev", "libffi-dev",
-                        "libssl-dev", "make", "build-essential", "libpq-dev", "libsqlite3-dev"]:
-                    if 'libsnappy-dev' in package or 'libsnappy1v5' in package:
-                        package = 'snappy'
+                    "libpython3.4-dev",
+                    "python3.4-dev",
+                    "libpython3.5-dev",
+                    "python3.5-dev",
+                    "libffi-dev",
+                    "libssl-dev",
+                    "make",
+                    "build-essential",
+                    "libpq-dev",
+                    "libsqlite3-dev",
+                ]:
+                    if "libsnappy-dev" in package or "libsnappy1v5" in package:
+                        package = "snappy"
 
                     if unsupported in package:
                         continue
@@ -171,7 +181,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
         """
         packages = j.core.text.getList(packages, "str")
 
-        if len(packages)==1:
+        if len(packages) == 1:
 
             package = packages[0]
 
@@ -220,18 +230,17 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
                     pass
 
             else:
-                raise j.exceptions.RuntimeError(
-                    "could not package clean:%s, platform not supported" % package)
+                raise j.exceptions.RuntimeError("could not package clean:%s, platform not supported" % package)
 
         else:
             for package in packages:
-                self.clean(package,aggresive=agressive)
+                self.clean(package, aggresive=agressive)
 
     @builder_method()
     def remove(self, package, autoclean=False):
         if j.core.platformtype.myplatform.isUbuntu:
-            self._apt_get('remove ' + package)
+            self._apt_get("remove " + package)
             if autoclean:
                 self._apt_get("autoclean")
         elif j.core.platformtype.myplatform.isMac:
-            j.sal.process.execute("brew remove %s 2>&1 > /dev/null|echo """ % package)
+            j.sal.process.execute("brew remove %s 2>&1 > /dev/null|echo " "" % package)

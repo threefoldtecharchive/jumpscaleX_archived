@@ -5,16 +5,18 @@ from collections import namedtuple
 import sendgrid
 from sendgrid.helpers.mail import Email, Content, Mail, Personalization, Attachment as SendGridAttachment
 
-Attachment = namedtuple('Attachment', ['originalfilename', 'binarycontent', 'type'])
+Attachment = namedtuple("Attachment", ["originalfilename", "binarycontent", "type"])
 JSBASE = j.application.JSBaseClass
 
-class SendGridClient(j.application.JSBaseClass):
 
+class SendGridClient(j.application.JSBaseClass):
     def __init__(self):
         self.__jslocation__ = "j.clients.sendgrid"
         JSBASE.__init__(self)
 
-    def send(self, sender, subject, message, recipients=None, message_type="text/plain", api_key=None, attachments=None):
+    def send(
+        self, sender, subject, message, recipients=None, message_type="text/plain", api_key=None, attachments=None
+    ):
         """
         @param sender:string (the sender of the email)
         @param recipient:list (list of recipients of the email)
@@ -24,7 +26,7 @@ class SendGridClient(j.application.JSBaseClass):
         @param api_key:string (the api key of sendgrid)
         @param attachments:list (list of Attachment tuple)
         """
-        api_key = api_key or os.environ.get('SENDGRID_API_KEY', None)
+        api_key = api_key or os.environ.get("SENDGRID_API_KEY", None)
 
         if recipients is None or recipients == []:
             return
@@ -32,7 +34,7 @@ class SendGridClient(j.application.JSBaseClass):
             attachments = []
 
         if api_key is None:
-            raise RuntimeError('Make sure to export SENDGRID_API_KEY or pass your api key')
+            raise RuntimeError("Make sure to export SENDGRID_API_KEY or pass your api key")
         sg = sendgrid.SendGridAPIClient(apikey=api_key)
         from_email = Email(sender)
         to_email = Email(recipients[0])
@@ -64,14 +66,15 @@ class SendGridClient(j.application.JSBaseClass):
         MESSAGE_TYPE = "text/plain"
         MESSAGE = "and easy to do anywhere, even with Python"
 
-        attachment = Attachment(originalfilename="balance_001.pdf",
-                                binarycontent=b"TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdC4gQ3JhcyBwdW12",
-                                type="application/pdf")
+        attachment = Attachment(
+            originalfilename="balance_001.pdf",
+            binarycontent=b"TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQsIGNvbnNlY3RldHVyIGFkaXBpc2NpbmcgZWxpdC4gQ3JhcyBwdW12",
+            type="application/pdf",
+        )
 
         statCode, body = self.send(SENDER, SUBJECT, MESSAGE, [RECIPENT], MESSAGE_TYPE, attachments=[attachment])
 
         self._log_info(statCode)
-
 
     def build_attachment(self, attachment):
         """
@@ -89,12 +92,10 @@ class SendGridClient(j.application.JSBaseClass):
         ```
         """
         sendgridattachment = SendGridAttachment()
-        sendgridattachment.content = base64.b64encode(
-            attachment.binarycontent).decode()
+        sendgridattachment.content = base64.b64encode(attachment.binarycontent).decode()
         sendgridattachment.type = attachment.type
         sendgridattachment.filename = attachment.originalfilename
         sendgridattachment.disposition = "attachment"
         sendgridattachment.content_id = attachment.originalfilename
 
         return sendgridattachment
-

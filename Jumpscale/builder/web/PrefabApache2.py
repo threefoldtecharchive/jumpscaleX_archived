@@ -2,11 +2,9 @@ from Jumpscale import j
 import textwrap
 
 
-
-
 class BuilderApache2(j.builder.system._BaseClass):
 
-    NAME = 'apachectl'
+    NAME = "apachectl"
 
     def build(self, reset=True):
 
@@ -21,15 +19,18 @@ class BuilderApache2(j.builder.system._BaseClass):
         j.core.tools.dir_ensure("/optvar/build")
 
         # DOWNLOAD LINK
-        DOWNLOADLINK = 'www-eu.apache.org/dist//httpd/httpd-2.4.29.tar.bz2'
-        dest = j.sal.fs.joinPaths("/optvar", 'httpd-2.4.29.tar.bz2')
+        DOWNLOADLINK = "www-eu.apache.org/dist//httpd/httpd-2.4.29.tar.bz2"
+        dest = j.sal.fs.joinPaths("/optvar", "httpd-2.4.29.tar.bz2")
 
         if not j.builder.tools.file_exists(dest):
             j.builder.tools.file_download(DOWNLOADLINK, dest)
 
         # EXTRACT SROURCE CODE
         j.sal.process.execute(
-            "cd /optvar/build && tar xjf {dest} && cp -r /optvar/build/httpd-2.4.29 /optvar/build/httpd".format(**locals()))
+            "cd /optvar/build && tar xjf {dest} && cp -r /optvar/build/httpd-2.4.29 /optvar/build/httpd".format(
+                **locals()
+            )
+        )
         j.core.tools.dir_ensure("{DIR_BASE}/apps/apache2/bin")
         j.core.tools.dir_ensure("{DIR_BASE}/apps/apache2/lib")
 
@@ -49,19 +50,19 @@ class BuilderApache2(j.builder.system._BaseClass):
               --enable-dbd --enable-imagemap --enable-ident --enable-cern-meta \
               --enable-xml2enc && make && make test\
         """
-        buildscript=self.replace(buildscript,args={"httpdir":httpdir})
+        buildscript = self.replace(buildscript, args={"httpdir": httpdir})
 
         j.sal.process.execute(buildscript)
 
         return True
 
     def install(self):
-        httpdir = j.sal.fs.joinPaths("/optvar/build", 'httpd')
+        httpdir = j.sal.fs.joinPaths("/optvar/build", "httpd")
         installscript = """cd {httpdir} &&  make install""".format(httpdir=httpdir)
         j.sal.process.execute(installscript)
 
         # COPY APACHE BINARIES to /opt/jumpscale/bin
-        j.builder.tools.file_copy("{DIR_BASE}/apps/apache2/bin/*", '{DIR_BIN}/')
+        j.builder.tools.file_copy("{DIR_BASE}/apps/apache2/bin/*", "{DIR_BIN}/")
 
     def configure(self):
         conffile = j.core.tools.file_text_read("{DIR_BASE}/apps/apache2/conf/httpd.conf")
@@ -104,7 +105,7 @@ class BuilderApache2(j.builder.system._BaseClass):
         j.core.tools.dir_ensure("%s/apache2/sites-enabled/" % j.dirs.CFGDIR)
         j.core.tools.dir_ensure("{DIR_BASE}/apps/apache2/sites-available")
         j.core.tools.dir_ensure("{DIR_BASE}/apps/apache2/sites-enabled")
-        #self._log_info("Config to be written = ", conffile)
+        # self._log_info("Config to be written = ", conffile)
         j.sal.fs.writeFile("{DIR_BASE}/apps/apache2/conf/httpd.conf", conffile)
 
     def start(self):

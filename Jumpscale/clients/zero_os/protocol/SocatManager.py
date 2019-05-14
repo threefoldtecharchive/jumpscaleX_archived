@@ -4,9 +4,7 @@ from . import typchk
 
 
 class SocatManager:
-    _reserve_chk = typchk.Checker({
-        'number': int,
-    })
+    _reserve_chk = typchk.Checker({"number": int})
 
     def __init__(self, client):
         self._client = client
@@ -15,7 +13,7 @@ class SocatManager:
         """
         List port forwards
         """
-        return self._client.json('socat.list', {})
+        return self._client.json("socat.list", {})
 
     def reserve(self, number=1):
         """
@@ -36,10 +34,8 @@ class SocatManager:
         :param number: number of ports to reserve
         """
 
-        args = {
-            'number': number,
-        }
+        args = {"number": number}
 
         self._reserve_chk.check(args)
 
-        return self._client.json('socat.reserve', args)
+        return self._client.json("socat.reserve", args)

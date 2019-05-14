@@ -50,13 +50,13 @@ class OVCClient(JSConfigBase):
             jwt = self.jwt_.strip()
             jwt = j.clients.itsyouonline.refresh_jwt_token(jwt, validity=3600)
             expires = j.clients.itsyouonline.jwt_expire_timestamp(jwt)
-            if 'refresh_token' not in jose.jwt.get_unverified_claims(jwt) and j.clients.itsyouonline.jwt_is_expired(
-                    expires):
+            if "refresh_token" not in jose.jwt.get_unverified_claims(jwt) and j.clients.itsyouonline.jwt_is_expired(
+                expires
+            ):
                 raise RuntimeError("JWT expired and can't be refreshed, please choose another token.")
         else:
             if j.tools.configmanager.sandbox_check():
-                raise RuntimeError(
-                    "When in a sandbox, jwt is required")
+                raise RuntimeError("When in a sandbox, jwt is required")
             jwt = j.clients.itsyouonline.default.jwt_get(refreshable=True, use_cache=True)
         return jwt
 
@@ -64,12 +64,11 @@ class OVCClient(JSConfigBase):
     def api(self):
         if self._api is None:
 
-            self._api = j.clients.portal.get(data={'ip': self.address,
-                                                   'port': self.port})
+            self._api = j.clients.portal.get(data={"ip": self.address, "port": self.port})
             # patch handle the case where the connection dies because of inactivity
             self.__patch_portal_client(self._api)
             self.__login()
-            self._api.load_swagger(group='cloudapi')
+            self._api.load_swagger(group="cloudapi")
         return self._api
 
     def _config_check(self):
@@ -91,11 +90,11 @@ class OVCClient(JSConfigBase):
 
         if self.address.strip() == "":
             raise RuntimeError(
-                "please specify address to OpenvCloud server (address) e.g. se-gen-1.demo.greenitglobe.com")
+                "please specify address to OpenvCloud server (address) e.g. se-gen-1.demo.greenitglobe.com"
+            )
 
         if not self.jwt_.strip() and j.tools.configmanager.sandbox_check():
-            raise RuntimeError(
-                "When in a sandbox, jwt is required")
+            raise RuntimeError("When in a sandbox, jwt is required")
 
         # if not self.config.data.get("login"):
         #     raise RuntimeError("login cannot be empty")
@@ -107,6 +106,7 @@ class OVCClient(JSConfigBase):
 
         def patch_call(that, *args, **kwargs):
             from clients.portal.PortalClient import ApiError
+
             try:
                 return origcall(that, *args, **kwargs)
             except ApiError as e:
@@ -123,8 +123,8 @@ class OVCClient(JSConfigBase):
         #     j.clients.itsyouonline.reset()
         #     # Regenerate jwt after resetting the expired one
         #     self.config.data = {"jwt_": j.clients.itsyouonline.default.jwt}
-        self.api._session.headers['Authorization'] = 'bearer {}'.format(self.jwt)
-        self._login = '{}@{}'.format(payload['username'], payload['iss'])
+        self.api._session.headers["Authorization"] = "bearer {}".format(self.jwt)
+        self._login = "{}@{}".format(payload["username"], payload["iss"])
 
     @property
     def accounts(self):
@@ -140,9 +140,18 @@ class OVCClient(JSConfigBase):
         """Gets available locations"""
         return self.api.cloudapi.locations.list()
 
-    def account_get(self, name="", create=True,
-                    maxMemoryCapacity=-1, maxVDiskCapacity=-1, maxCPUCapacity=-1, maxNASCapacity=-1,
-                    maxNetworkOptTransfer=-1, maxNetworkPeerTransfer=-1, maxNumPublicIP=-1):
+    def account_get(
+        self,
+        name="",
+        create=True,
+        maxMemoryCapacity=-1,
+        maxVDiskCapacity=-1,
+        maxCPUCapacity=-1,
+        maxNASCapacity=-1,
+        maxNetworkOptTransfer=-1,
+        maxNetworkPeerTransfer=-1,
+        maxNumPublicIP=-1,
+    ):
         """Returns the OpenvCloud account with the given name, and in case it doesn't exist yet the account will be created.
 
         :param name: name of the account to lookup or create if it doesn't exist yet, e.g. "myaccount" if not set will get it from config manager data, defaults to ""
@@ -174,35 +183,39 @@ class OVCClient(JSConfigBase):
         if not name:
             raise RuntimeError("name needs to be specified in account in config or on method.")
         for account in self.accounts:
-            if account.model['name'] == name:
+            if account.model["name"] == name:
                 return account
         else:
             if create is False:
-                raise KeyError("No account with name \"%s\" found" % name)
-            self.api.cloudbroker.account.create(username=self.login,
-                                                name=name,
-                                                maxMemoryCapacity=maxMemoryCapacity,
-                                                maxVDiskCapacity=maxVDiskCapacity,
-                                                maxCPUCapacity=maxCPUCapacity,
-                                                maxNASCapacity=maxNASCapacity,
-                                                maxNetworkOptTransfer=maxNetworkOptTransfer,
-                                                maxNetworkPeerTransfer=maxNetworkPeerTransfer,
-                                                maxNumPublicIP=maxNumPublicIP)
+                raise KeyError('No account with name "%s" found' % name)
+            self.api.cloudbroker.account.create(
+                username=self.login,
+                name=name,
+                maxMemoryCapacity=maxMemoryCapacity,
+                maxVDiskCapacity=maxVDiskCapacity,
+                maxCPUCapacity=maxCPUCapacity,
+                maxNASCapacity=maxNASCapacity,
+                maxNetworkOptTransfer=maxNetworkOptTransfer,
+                maxNetworkPeerTransfer=maxNetworkPeerTransfer,
+                maxNumPublicIP=maxNumPublicIP,
+            )
             return self.account_get(name, False)
 
-    def space_get(self,
-                  accountName="",
-                  spaceName="",
-                  location="",
-                  createSpace=True,
-                  maxMemoryCapacity=-1,
-                  maxVDiskCapacity=-1,
-                  maxCPUCapacity=-1,
-                  maxNASCapacity=-1,
-                  maxNetworkOptTransfer=-1,
-                  maxNetworkPeerTransfer=-1,
-                  maxNumPublicIP=-1,
-                  externalnetworkId=None):
+    def space_get(
+        self,
+        accountName="",
+        spaceName="",
+        location="",
+        createSpace=True,
+        maxMemoryCapacity=-1,
+        maxVDiskCapacity=-1,
+        maxCPUCapacity=-1,
+        maxNASCapacity=-1,
+        maxNetworkOptTransfer=-1,
+        maxNetworkPeerTransfer=-1,
+        maxNumPublicIP=-1,
+        externalnetworkId=None,
+    ):
         """ Returns the OpenvCloud space with the given account_name, space_name, space_location and in case the account doesn't exist yet it will be created.
 
         :param accountName: name of the account to lookup, e.g. "myaccount", defaults to ""
@@ -246,21 +259,21 @@ class OVCClient(JSConfigBase):
 
         account = self.account_get(name=accountName, create=False)
         if account:
-            return account.space_get(name=spaceName,
-                                     create=createSpace,
-                                     location=location,
-                                     maxMemoryCapacity=maxMemoryCapacity,
-                                     maxVDiskCapacity=maxVDiskCapacity,
-                                     maxCPUCapacity=maxCPUCapacity,
-                                     maxNASCapacity=maxNASCapacity,
-                                     maxNetworkOptTransfer=maxNetworkOptTransfer,
-                                     maxNetworkPeerTransfer=maxNetworkPeerTransfer,
-                                     maxNumPublicIP=maxNumPublicIP,
-                                     externalnetworkId=externalnetworkId
-                                     )
+            return account.space_get(
+                name=spaceName,
+                create=createSpace,
+                location=location,
+                maxMemoryCapacity=maxMemoryCapacity,
+                maxVDiskCapacity=maxVDiskCapacity,
+                maxCPUCapacity=maxCPUCapacity,
+                maxNASCapacity=maxNASCapacity,
+                maxNetworkOptTransfer=maxNetworkOptTransfer,
+                maxNetworkPeerTransfer=maxNetworkPeerTransfer,
+                maxNumPublicIP=maxNumPublicIP,
+                externalnetworkId=externalnetworkId,
+            )
         else:
-            raise j.exceptions.RuntimeError(
-                "Could not find account with name %s" % accountName)
+            raise j.exceptions.RuntimeError("Could not find account with name %s" % accountName)
 
     def get_available_images(self, cloudspaceId=None, accountId=None):
         """[summary]

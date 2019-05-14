@@ -8,7 +8,7 @@ def main(self):
     kosmos 'j.data.schema.test(name="load_from_dir")' --debug
     """
     j.data.schema.reset()
-    mpath = self._dirpath+"/tests/schemas_toml"
+    mpath = self._dirpath + "/tests/schemas_toml"
     assert j.sal.fs.exists(mpath)
 
     j.data.schema.add_from_path(mpath)
@@ -23,9 +23,9 @@ def main(self):
 
     assert s.systemprops.importance == "true"
 
-    assert  len(s.systemprops.__dict__.keys()) == 2
+    assert len(s.systemprops.__dict__.keys()) == 2
 
-    r="""
+    r = """
     ## SCHEMA: threefoldtoken.wallet
 
     prop:jwt                       string
@@ -42,14 +42,13 @@ def main(self):
 
     assert j.core.text.strip_to_ascii_dense(r) == j.core.text.strip_to_ascii_dense(str(s))
 
-    s2=j.data.schema.get_from_md5(s._md5)
+    s2 = j.data.schema.get_from_md5(s._md5)
 
-    assert s2==s
+    assert s2 == s
 
     s3 = j.data.schema.get_from_text(s2.text)
-    assert s2==s3
+    assert s2 == s3
 
     assert s2 == j.data.schema.get_from_url_latest(s.url)
 
     self._log_info("load from dir ok")
-

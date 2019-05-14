@@ -10,7 +10,7 @@ def main(self):
     work with toml files and see if models get generated properly
 
     """
-    mpath = self._dirpath+"/tests/models"
+    mpath = self._dirpath + "/tests/models"
     assert j.sal.fs.exists(mpath)
 
     # make sure we remove the maybe already previously generated model file
@@ -21,7 +21,7 @@ def main(self):
 
     bcdb.models_add(mpath)
 
-    model = bcdb.model_get_from_url('jumpscale.bcdb.test.house')
+    model = bcdb.model_get_from_url("jumpscale.bcdb.test.house")
 
     model_obj = model.new()
     model_obj.cost = "10 USD"
@@ -34,8 +34,8 @@ def main(self):
     assert model_obj.cost_usd == 10
 
     # assert model.index.select().first().cost == 10.0  # is always in usd
-    #TODO:*1 need to get the sqlite index to work again
+    # TODO:*1 need to get the sqlite index to work again
 
     print("TEST FOR MODELS DONE, but is still minimal")
 
-    return ("OK")
+    return "OK"

@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 
 from tools.issuemanager.models.IssueModel import IssueModel
@@ -93,45 +92,73 @@ class IssueManager(j.application.JSBaseClass):
         """
         schema = self.getIssueSchema()
         if not kvs:
-            kvs = j.data.kvs.getRedisStore(name=self.store, namespace=self.namespace + ":issue",
-                                              unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
+            kvs = j.data.kvs.getRedisStore(
+                name=self.store, namespace=self.namespace + ":issue", unixsocket="%s/redis.sock" % j.dirs.TMPDIR
+            )
 
         collection = j.data.capnp.getModelCollection(
-            schema, namespace=self.namespace + ":issue", category="issues", modelBaseClass=IssueModel,
-            modelBaseCollectionClass=IssueCollection, db=kvs, indexDb=kvs)
+            schema,
+            namespace=self.namespace + ":issue",
+            category="issues",
+            modelBaseClass=IssueModel,
+            modelBaseCollectionClass=IssueCollection,
+            db=kvs,
+            indexDb=kvs,
+        )
         return collection
 
     def getUserCollectionFromDB(self, kvs=None):
         schema = self.getUserSchema()
         if not kvs:
-            kvs = j.data.kvs.getRedisStore(name=self.store, namespace=self.namespace + ":user",
-                                              unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
+            kvs = j.data.kvs.getRedisStore(
+                name=self.store, namespace=self.namespace + ":user", unixsocket="%s/redis.sock" % j.dirs.TMPDIR
+            )
 
         collection = j.data.capnp.getModelCollection(
-            schema, namespace=self.namespace + ":user", category="user", modelBaseClass=UserModel,
-            modelBaseCollectionClass=UserCollection, db=kvs, indexDb=kvs)
+            schema,
+            namespace=self.namespace + ":user",
+            category="user",
+            modelBaseClass=UserModel,
+            modelBaseCollectionClass=UserCollection,
+            db=kvs,
+            indexDb=kvs,
+        )
         return collection
 
     def getRepoCollectionFromDB(self, kvs=None):
         schema = self.getRepoSchema()
         if not kvs:
-            kvs = j.data.kvs.getRedisStore(name=self.store, namespace=self.namespace + ":repo",
-                                              unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
+            kvs = j.data.kvs.getRedisStore(
+                name=self.store, namespace=self.namespace + ":repo", unixsocket="%s/redis.sock" % j.dirs.TMPDIR
+            )
 
         collection = j.data.capnp.getModelCollection(
-            schema, namespace=self.namespace + ":repo", category="repo", modelBaseClass=RepoModel,
-            modelBaseCollectionClass=RepoCollection, db=kvs, indexDb=kvs)
+            schema,
+            namespace=self.namespace + ":repo",
+            category="repo",
+            modelBaseClass=RepoModel,
+            modelBaseCollectionClass=RepoCollection,
+            db=kvs,
+            indexDb=kvs,
+        )
         return collection
 
     def getOrgCollectionFromDB(self, kvs=None):
         schema = self.getOrgSchema()
         if not kvs:
-            kvs = j.data.kvs.getRedisStore(name=self.store, namespace=self.namespace + ":org",
-                                              unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
+            kvs = j.data.kvs.getRedisStore(
+                name=self.store, namespace=self.namespace + ":org", unixsocket="%s/redis.sock" % j.dirs.TMPDIR
+            )
 
         collection = j.data.capnp.getModelCollection(
-            schema, namespace=self.namespace + ":org", category="orgs", modelBaseClass=OrgModel,
-            modelBaseCollectionClass=OrgCollection, db=kvs, indexDb=kvs)
+            schema,
+            namespace=self.namespace + ":org",
+            category="orgs",
+            modelBaseClass=OrgModel,
+            modelBaseCollectionClass=OrgCollection,
+            db=kvs,
+            indexDb=kvs,
+        )
         return collection
 
     @property

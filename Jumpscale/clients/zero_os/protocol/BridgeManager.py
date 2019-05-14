@@ -6,28 +6,23 @@ from . import typchk
 
 
 class BridgeManager:
-    _bridge_create_chk = typchk.Checker({
-        'name': str,
-        'hwaddr': typchk.Or(str, typchk.IsNone()),
-        'network': {
-            'mode': typchk.Or(typchk.Enum('static', 'dnsmasq'), typchk.IsNone()),
-            'nat': bool,
-            'settings': typchk.Map(str, str),
+    _bridge_create_chk = typchk.Checker(
+        {
+            "name": str,
+            "hwaddr": typchk.Or(str, typchk.IsNone()),
+            "network": {
+                "mode": typchk.Or(typchk.Enum("static", "dnsmasq"), typchk.IsNone()),
+                "nat": bool,
+                "settings": typchk.Map(str, str),
+            },
         }
-    })
+    )
 
-    _bridge_chk = typchk.Checker({
-        'name': str,
-    })
+    _bridge_chk = typchk.Checker({"name": str})
 
-    _nic_add_chk = typchk.Checker({
-        'name': str,
-        'nic': str,
-    })
+    _nic_add_chk = typchk.Checker({"name": str, "nic": str})
 
-    _nic_remove_chk = typchk.Checker({
-        'nic': str,
-    })
+    _nic_remove_chk = typchk.Checker({"nic": str})
 
     def __init__(self, client):
         self._client = client
@@ -54,26 +49,18 @@ class BridgeManager:
                             part of the provided cidr.
                             if nat is true, SNAT rules will be automatically added in the firewall.
         """
-        args = {
-            'name': name,
-            'hwaddr': hwaddr,
-            'network': {
-                'mode': network,
-                'nat': nat,
-                'settings': settings,
-            }
-        }
+        args = {"name": name, "hwaddr": hwaddr, "network": {"mode": network, "nat": nat, "settings": settings}}
 
         self._bridge_create_chk.check(args)
 
-        return self._client.json('bridge.create', args)
+        return self._client.json("bridge.create", args)
 
     def list(self):
         """
         List all available bridges
         :return: list of bridge names
         """
-        return self._client.json('bridge.list', {})
+        return self._client.json("bridge.list", {})
 
     def delete(self, bridge):
         """
@@ -82,13 +69,11 @@ class BridgeManager:
         :param bridge: bridge name
         :return:
         """
-        args = {
-            'name': bridge,
-        }
+        args = {"name": bridge}
 
         self._bridge_chk.check(args)
 
-        return self._client.json('bridge.delete', args)
+        return self._client.json("bridge.delete", args)
 
     def nic_add(self, bridge, nic):
         """
@@ -98,14 +83,11 @@ class BridgeManager:
         :param nic: nic name
         """
 
-        args = {
-            'name': bridge,
-            'nic': nic,
-        }
+        args = {"name": bridge, "nic": nic}
 
         self._nic_add_chk.check(args)
 
-        return self._client.json('bridge.nic-add', args)
+        return self._client.json("bridge.nic-add", args)
 
     def nic_remove(self, nic):
         """
@@ -114,13 +96,11 @@ class BridgeManager:
         :param nic: nic name to detach
         """
 
-        args = {
-            'nic': nic,
-        }
+        args = {"nic": nic}
 
         self._nic_remove_chk.check(args)
 
-        return self._client.json('bridge.nic-remove', args)
+        return self._client.json("bridge.nic-remove", args)
 
     def nic_list(self, bridge):
         """
@@ -129,10 +109,8 @@ class BridgeManager:
         :param bridge: bridge name
         """
 
-        args = {
-            'name': bridge,
-        }
+        args = {"name": bridge}
 
         self._bridge_chk.check(args)
 
-        return self._client.json('bridge.nic-list', args)
+        return self._client.json("bridge.nic-list", args)

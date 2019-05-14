@@ -13,7 +13,7 @@ def GetCapacityHandler(node_id):
         return jsonify(), 404
 
     output = node.to_mongo().to_dict()
-    output['node_id'] = output.pop('_id')
-    output['farmer_id'] = output.pop('farmer')
+    output["node_id"] = output.pop("_id")
+    output["farmer_id"] = output.pop("farmer")
 
-    return jsonify(output), 200, {'Content-type': 'application/json'}
+    return jsonify(output), 200, {"Content-type": "application/json"}

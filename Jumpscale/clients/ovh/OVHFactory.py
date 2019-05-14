@@ -8,14 +8,22 @@ JSConfigBaseFactory = j.application.JSFactoryBaseClass
 class OVHFactory(JSConfigBaseFactory):
     """
     """
+
     __jslocation__ = "j.clients.ovh"
     _CHILDCLASS = OVHClient
 
     def _init(self):
         self.__imports__ = "ovh"
 
-    def get_manual(self, instance, appkey, appsecret, consumerkey="", endpoint='soyoustart-eu',
-                   ipxeBase="https://bootstrap.grid.tf/ipxe/master"):
+    def get_manual(
+        self,
+        instance,
+        appkey,
+        appsecret,
+        consumerkey="",
+        endpoint="soyoustart-eu",
+        ipxeBase="https://bootstrap.grid.tf/ipxe/master",
+    ):
         """
 
         @PARAM instance is the name of this client

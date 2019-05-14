@@ -2,8 +2,8 @@ from Jumpscale import j
 
 from .ExecutorBase import ExecutorBase
 
-class ExecutorSSH(ExecutorBase):
 
+class ExecutorSSH(ExecutorBase):
     def __init__(self, sshclient):
         self.sshclient = sshclient
         self.type = "ssh"
@@ -11,12 +11,11 @@ class ExecutorSSH(ExecutorBase):
         self.__check_base = None
         ExecutorBase.__init__(self)
 
-
     def exists(self, path):
         if path == "/env.sh":
             raise RuntimeError("SS")
 
-        rc, _, _ = self.execute('test -e %s' % path, die=False, showout=False)
+        rc, _, _ = self.execute("test -e %s" % path, die=False, showout=False)
         if rc > 0:
             return False
         else:
@@ -25,66 +24,57 @@ class ExecutorSSH(ExecutorBase):
     @property
     def id(self):
         if self._id is None:
-            uid =  self.state_on_system["uid"]
-            self._id = '%s-%s-%s' % (self.sshclient.addr, self.sshclient.port,uid)
+            uid = self.state_on_system["uid"]
+            self._id = "%s-%s-%s" % (self.sshclient.addr, self.sshclient.port, uid)
         return self._id
 
     def executeRaw(self, cmd, die=True, showout=False):
         return self.sshclient.execute(cmd, die=die, showout=showout)
 
     def execute(
-            self,
-            cmds,
-            die=True,
-            checkok=False,
-            showout=True,
-            timeout=None,
-            env={},
-            asScript=True,
-            sudo=False,
-            shell=False,
-            replace=True):
+        self,
+        cmds,
+        die=True,
+        checkok=False,
+        showout=True,
+        timeout=None,
+        env={},
+        asScript=True,
+        sudo=False,
+        shell=False,
+        replace=True,
+    ):
         """
         return (rc,out,err)
         """
         if replace:
             if env is None:
-                env={}
+                env = {}
             env.update(self.env)
-            assert self.env!={}
-            cmds = self.replace(cmds,args=env)
+            assert self.env != {}
+            cmds = self.replace(cmds, args=env)
 
         # if cmds.find("cat /root/.bash_profile") != -1:
         #     raise RuntimeError("JJ")
         # if cmds.find("test -e /root/.bash_profile") != -1:
         #     raise RuntimeError("JJ")
-        cmds2 = self.commands_transform(
-            cmds, die, checkok=checkok, env=env, sudo=sudo)
+        cmds2 = self.commands_transform(cmds, die, checkok=checkok, env=env, sudo=sudo)
         if cmds.find("\n") != -1 and asScript:
             if showout:
-                self._log_info(
-                    "EXECUTESCRIPT} %s:%s:\n%s" %
-                    (self.sshclient.addr, self.sshclient.port, cmds))
+                self._log_info("EXECUTESCRIPT} %s:%s:\n%s" % (self.sshclient.addr, self.sshclient.port, cmds))
             # sshkey = self.sshclient.key_filename or ""
-            return self._execute_script(
-                content=cmds,
-                showout=showout,
-                die=die,
-                checkok=checkok,
-                sudo=sudo)
+            return self._execute_script(content=cmds, showout=showout, die=die, checkok=checkok, sudo=sudo)
 
         if cmds.strip() == "":
             raise RuntimeError("cmds cannot be empty")
 
         # online command, we use prefab
         if showout:
-            self._log_info("EXECUTE %s:%s: %s" %
-                             (self.sshclient.addr, self.sshclient.port, cmds))
+            self._log_info("EXECUTE %s:%s: %s" % (self.sshclient.addr, self.sshclient.port, cmds))
 
         if sudo:
             cmds2 = self.sudo_cmd(cmds2)
-        rc, out, err = self.sshclient.execute(
-            cmds2, die=die, showout=showout, timeout=timeout)
+        rc, out, err = self.sshclient.execute(cmds2, die=die, showout=showout, timeout=timeout)
 
         if showout:
             self._log_debug("EXECUTE OK")
@@ -94,17 +84,11 @@ class ExecutorSSH(ExecutorBase):
 
         return rc, out, err
 
-    def executeRaw(self,cmds,die=True,showout=True,timeout=120):
+    def executeRaw(self, cmds, die=True, showout=True, timeout=120):
         rc, out, err = self.sshclient.execute(cmds, die=die, showout=showout, timeout=timeout)
         return rc, out, err
 
-    def _execute_script(
-            self,
-            content="",
-            die=True,
-            showout=True,
-            checkok=None,
-            sudo=False):
+    def _execute_script(self, content="", die=True, showout=True, checkok=None, sudo=False):
         """
         @param remote can be ip addr or hostname of remote,
                     if given will execute cmds there
@@ -115,10 +99,8 @@ class ExecutorSSH(ExecutorBase):
 
         if showout:
             self._log_info(
-                "EXECUTESCRIPT {}:{}:\n'''\n{}\n'''\n".format(
-                    self.sshclient.addr,
-                    self.sshclient.port,
-                    content))
+                "EXECUTESCRIPT {}:{}:\n'''\n{}\n'''\n".format(self.sshclient.addr, self.sshclient.port, content)
+            )
 
         if content[-1] != "\n":
             content += "\n"
@@ -127,22 +109,19 @@ class ExecutorSSH(ExecutorBase):
             content = "set -ex\n{}".format(content)
 
         if sudo:
-            login = self.sshclient.config.data['login']
+            login = self.sshclient.config.data["login"]
             path = "/tmp/tmp_prefab_removeme_{}.sh".format(login)
         else:
-            path = "/tmp/prefab_{}.sh".format(
-                j.data.idgenerator.generateRandomInt(1, 100000))
+            path = "/tmp/prefab_{}.sh".format(j.data.idgenerator.generateRandomInt(1, 100000))
 
         j.sal.fs.writeFile(path, content)
 
         # just in case of the same machine.
-        path2 = "/tmp/prefab_{}.sh".format(
-            j.data.idgenerator.generateRandomInt(1, 100000))
+        path2 = "/tmp/prefab_{}.sh".format(j.data.idgenerator.generateRandomInt(1, 100000))
         self.sshclient.copy_file(path, path2)  # is now always on tmp
         if sudo and "LEDE" not in j.core.platformtype.get(self).osname:
-            passwd = self.sshclient.config.data['passwd_']
-            cmd = 'echo \'{}\' | sudo -H -SE -p \'\' bash "{}"'.format(
-                passwd, path2)
+            passwd = self.sshclient.config.data["passwd_"]
+            cmd = "echo '{}' | sudo -H -SE -p '' bash \"{}\"".format(passwd, path2)
         else:
             cmd = "bash {}".format(path2)
         rc, out, err = self.sshclient.execute(cmd, die=die, showout=showout)
@@ -156,9 +135,10 @@ class ExecutorSSH(ExecutorBase):
 
     def _check_base(self):
         if not self.__check_base:
+
             def do():
                 if self.state_exists("check_base") is False:
-                    C="""
+                    C = """
                     if ! grep -Fq "deb http://mirror.unix-solutions.be/ubuntu/ bionic" /etc/apt/sources.list; then
                         echo >> /etc/apt/sources.list
                         echo "# Jumpscale Setup" >> /etc/apt/sources.list
@@ -172,16 +152,23 @@ class ExecutorSSH(ExecutorBase):
                     self.execute(j.core.text.strip(C))
                     self.state_set("check_base")
                 return "OK"
+
             self.cache.get("_check_base", method=do, expire=3600, refresh=False, retry=2, die=True)
 
             self.__check_base = True
 
-    def upload(self, source, dest, dest_prefix="", recursive=True,
-               createdir=True,
-               rsyncdelete=True,
-               ignoredir=None,
-               ignorefiles=None,
-               keepsymlinks=True):
+    def upload(
+        self,
+        source,
+        dest,
+        dest_prefix="",
+        recursive=True,
+        createdir=True,
+        rsyncdelete=True,
+        ignoredir=None,
+        ignorefiles=None,
+        keepsymlinks=True,
+    ):
         """
 
         :param source:
@@ -204,10 +191,10 @@ class ExecutorSSH(ExecutorBase):
         if dest[0] != "/":
             raise j.exceptions.RuntimeError("need / in beginning of dest path")
         if source[-1] != "/":
-            source += ("/")
+            source += "/"
         if dest[-1] != "/":
-            dest += ("/")
-        dest = "%s@%s:%s" % (self.sshclient.login,self.sshclient.addr, dest)
+            dest += "/"
+        dest = "%s@%s:%s" % (self.sshclient.login, self.sshclient.addr, dest)
         j.sal.fs.copyDirTree(
             source,
             dest,
@@ -222,13 +209,11 @@ class ExecutorSSH(ExecutorBase):
             recursive=recursive,
             createdir=createdir,
             rsyncdelete=rsyncdelete,
-            showout=True)
+            showout=True,
+        )
         self._cache.reset()
 
-    def download(self, source, dest, source_prefix="",
-               ignoredir=None,
-               ignorefiles=None,
-               recursive=True):
+    def download(self, source, dest, source_prefix="", ignoredir=None, ignorefiles=None, recursive=True):
         """
 
         :param source:
@@ -245,8 +230,7 @@ class ExecutorSSH(ExecutorBase):
         if source_prefix != "":
             source = j.sal.fs.joinPaths(source_prefix, source)
         if source[0] != "/":
-            raise j.exceptions.RuntimeError(
-                "need / in beginning of source path")
+            raise j.exceptions.RuntimeError("need / in beginning of source path")
         source = "root@%s:%s" % (self.sshclient.addr, source)
         j.sal.fs.copyDirTree(
             source,
@@ -259,10 +243,10 @@ class ExecutorSSH(ExecutorBase):
             rsync=True,
             ssh=True,
             sshport=self.sshclient.port,
-            recursive=recursive)
+            recursive=recursive,
+        )
 
     def __repr__(self):
-        return ("Executor ssh: %s (%s)" %
-                (self.sshclient.addr, self.sshclient.port))
+        return "Executor ssh: %s (%s)" % (self.sshclient.addr, self.sshclient.port)
 
     __str__ = __repr__

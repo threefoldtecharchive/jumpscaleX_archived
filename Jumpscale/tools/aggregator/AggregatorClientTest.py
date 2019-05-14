@@ -21,12 +21,13 @@ class AggregatorClientTest(j.application.JSBaseClass):
         reported_values = list()
         for i, point in enumerate(reported):
             actual = actuals[i]
-            total_rate += actual['rate']
-            t = time.strptime(point['time'], '%Y-%m-%dT%H:%M:%SZ')
-            reported_values.append("%s: %g" % (time.ctime(time.mktime(t)), point['value']))
-            if actual['avg'] != point['value']:
-                errors.append("[%s] Expected value: %g got %g" %
-                              (time.ctime(actual['stamp']), actual['avg'], point['value']))
+            total_rate += actual["rate"]
+            t = time.strptime(point["time"], "%Y-%m-%dT%H:%M:%SZ")
+            reported_values.append("%s: %g" % (time.ctime(time.mktime(t)), point["value"]))
+            if actual["avg"] != point["value"]:
+                errors.append(
+                    "[%s] Expected value: %g got %g" % (time.ctime(actual["stamp"]), actual["avg"], point["value"])
+                )
 
         buffer.write("#" * 20 + "\n")
         buffer.write("Minutes: %d\n" % len(actuals))
@@ -35,7 +36,7 @@ class AggregatorClientTest(j.application.JSBaseClass):
         buffer.write("#" * 20 + "\n")
         buffer.write("Expected values:\n")
         for actual in actuals:
-            buffer.write("%s: %g\n" % (time.ctime(actual['stamp']), actual['avg']))
+            buffer.write("%s: %g\n" % (time.ctime(actual["stamp"]), actual["avg"]))
 
         buffer.write("Reported values:\n")
         for report in reported_values:
@@ -69,7 +70,7 @@ class AggregatorClientTest(j.application.JSBaseClass):
         aggregator.redis.flushall()
         aggregator.redis.flushdb()
         for db in influxdb.get_list_database():
-            if db['name'] == self.TEST_INFLUX_DB:
+            if db["name"] == self.TEST_INFLUX_DB:
                 influxdb.drop_database(self.TEST_INFLUX_DB)
         influxdb.create_database(self.TEST_INFLUX_DB)
 
@@ -108,11 +109,7 @@ class AggregatorClientTest(j.application.JSBaseClass):
             self._log_info("Finished %s points for minute %s", points, minute)
             rate = points / (time.time() - start_time)
             # 4b- Keep track of the actual reported values for comparison later on with the expected values.
-            actuals.append({
-                'rate': rate,
-                'avg': totals / points,
-                'stamp': stamp,
-            })
+            actuals.append({"rate": rate, "avg": totals / points, "stamp": stamp})
 
         # 5- force last push to force flush last minute data
         stamp = now + minutes * 60
@@ -122,8 +119,8 @@ class AggregatorClientTest(j.application.JSBaseClass):
         # 6a- drop the test influx database
         influxdb.drop_database(self.TEST_INFLUX_DB)
         # 6b- Get the redis host and port, so the dumper can simulate `discovering` it on the network
-        redis_host = j.sal.nettools.getHostByName(aggregator.redis.connection_pool.connection_kwargs['host'])
-        port = aggregator.redis.connection_pool.connection_kwargs['port']
+        redis_host = j.sal.nettools.getHostByName(aggregator.redis.connection_pool.connection_kwargs["host"])
+        port = aggregator.redis.connection_pool.connection_kwargs["port"]
 
         # force the dumper to find the test redis instance. By allowing it to only search the given redis host
         # for active redis instances.
@@ -155,10 +152,11 @@ class AggregatorClientTest(j.application.JSBaseClass):
     #
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from AggregatorClient import AggregatorClient
-    redis = j.clients.redis.get('127.0.0.1', 6379)
+
+    redis = j.clients.redis.get("127.0.0.1", 6379)
     influx = j.clients.influxdb.get()
-    aggregator = AggregatorClient(redis, 'mynode')
+    aggregator = AggregatorClient(redis, "mynode")
     tester = AggregatorClientTest()
     tester.statstest(aggregator, influx)

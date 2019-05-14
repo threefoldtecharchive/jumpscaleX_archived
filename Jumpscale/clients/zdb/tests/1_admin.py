@@ -1,5 +1,6 @@
 from Jumpscale import j
 
+
 def main(self):
     """
     to run:
@@ -12,7 +13,7 @@ def main(self):
     c.reset()
 
     c.namespaces_list()
-    assert c.namespaces_list() == ['default']
+    assert c.namespaces_list() == ["default"]
 
     self._log_info("test ok")
 

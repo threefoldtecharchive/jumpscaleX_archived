@@ -1,29 +1,35 @@
-
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
 import re
 import sys
+
 # from JumpscaleAYS.core.types import IPv4Address, IPv4Range
 import textwrap
 import string
 import collections
 import sys
 import os
+
 if j.core.platformtype.myplatform.isWindows:
     import msvcrt
 
     def clear():
-        return os.system('cls')
+        return os.system("cls")
+
+
 else:
+
     def clear():
-        return os.system('clear')
+        return os.system("clear")
 
 
 IPREGEX = "^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
 
 
 import sys
+
 # from io import TextIOWrapper, BytesIO
 # import logging
 #
@@ -37,10 +43,11 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
     self.indent=0 #current indentation of messages send to console
     self.reformat=False #if True will make sure message fits nicely on screen
     """
+
     #!!!CONSOLE!!!
 
     def __init__(self):
-        self.__jslocation__ = "j.tools.console" 
+        self.__jslocation__ = "j.tools.console"
         JSBASE.__init__(self)
         self.width = 230
         self.indent = 0  # current indentation of messages send to console
@@ -54,6 +61,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         if not j.core.platformtype.myplatform.isWindows:
             if j.core.platformtype.myplatform.isUnix:
                 import termios
+
                 fd = sys.stdin.fileno()
 
                 oldterm = termios.tcgetattr(fd)
@@ -100,12 +108,12 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         print("\033[2J\033[;H")
 
     def formatMessage(self, message, prefix="", withStar=False, indent=0, width=0, removeemptylines=True):
-        '''
+        """
         Reformat the message to display to the user and calculate length
         @param withStar means put * in front of message
         @returns: Length of last line and message to display
         @rtype: tuple<number, string>
-        '''
+        """
 
         message = j.core.tools.text_replace(message)
 
@@ -116,17 +124,19 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
             prefix = "%s: " % (prefix)
 
         if withStar:
-            prefix = '%s* %s' % (' ' * indent, prefix)
+            prefix = "%s* %s" % (" " * indent, prefix)
         else:
-            prefix = ' %s%s' % (' ' * indent, prefix)
+            prefix = " %s%s" % (" " * indent, prefix)
 
         if width == 0:
             width = self.width
         maxMessageLength = width - len(prefix)  # - maxLengthStatusType
         if maxMessageLength < 5:
             raise j.exceptions.Input(
-                "Cannot format message for screen, not enough width\nwidht:%s prefixwidth:%s maxlengthstatustype:%s" %
-                (width, len(prefix), maxMessageLength), "console")
+                "Cannot format message for screen, not enough width\nwidht:%s prefixwidth:%s maxlengthstatustype:%s"
+                % (width, len(prefix), maxMessageLength),
+                "console",
+            )
 
         out = []
         for line in message.split("\n"):
@@ -147,12 +157,12 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         return "\n".join(out)
 
     def echo(self, msg, indent=None, withStar=False, prefix="", log=False, lf=True):
-        '''
+        """
         Display some text to the end-user, use this method instead of print
         @param indent std, will use indent from console object (same for all), this param allows to overrule
                 will only work when j.tools.console.reformat==True
 
-        '''
+        """
         msg = str(msg)
         # if lf and msg!="" and msg[-1]!="\n":
         #     msg+="\n"
@@ -217,8 +227,9 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
             try:
                 self.formatMessage(str(dictionary[key]), key, withStar, indent)
             except BaseException:
-                raise j.exceptions.Input("Could not convert item of dictionary %s to string" %
-                                         key, "console.transformDictToMessage")
+                raise j.exceptions.Input(
+                    "Could not convert item of dictionary %s to string" % key, "console.transformDictToMessage"
+                )
 
     def cls(self):
         """
@@ -226,7 +237,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         """
         clear()
 
-    def askString(self, question, defaultparam='', regex=None, retry=-1, validate=None):
+    def askString(self, question, defaultparam="", regex=None, retry=-1, validate=None):
         """Get a string response on a question
 
         @param question: Question to respond to
@@ -241,7 +252,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         if not j.application.interactive:
             raise j.exceptions.Input("Cannot ask a string in a non interactive mode.", "console.askstring")
         if validate and not isinstance(validate, collections.Callable):
-            raise TypeError('The validate argument should be a callable')
+            raise TypeError("The validate argument should be a callable")
         response = ""
         if not defaultparam == "" and defaultparam:
             question += " [%s]" % defaultparam
@@ -260,8 +271,9 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
                 self.echo("Please insert a valid value!")
                 retryCount = retryCount - 1
         raise ValueError(
-            "Console.askString() failed: tried %d times but user didn't fill out a value that matches '%s'." %
-            (retry, regex))
+            "Console.askString() failed: tried %d times but user didn't fill out a value that matches '%s'."
+            % (retry, regex)
+        )
 
     def askPassword(self, question, confirm=True, regex=None, retry=-1, validate=None):
         """Present a password input question to the user
@@ -277,14 +289,16 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         @rtype: string
         """
         if not j.application.interactive:
-            raise j.exceptions.Input("Cannot ask a password in a non interactive mode.",
-                                     "console.askpasswd.noninteractive")
+            raise j.exceptions.Input(
+                "Cannot ask a password in a non interactive mode.", "console.askpasswd.noninteractive"
+            )
         if validate and not isinstance(validate, collections.Callable):
-            raise TypeError('The validate argument should be a callable')
+            raise TypeError("The validate argument should be a callable")
         response = ""
         import getpass
+
         startquestion = question
-        if question.endswith(': '):
+        if question.endswith(": "):
             question = question[:-2]
         question += ": "
         value = None
@@ -307,8 +321,12 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
                 self.echo("Invalid password!")
                 retryCount = retryCount - 1
         raise j.exceptions.Input(
-            ("Console.askPassword() failed: tried %s times but user didn't fill out a value that matches '%s'." %
-             (retry, regex)), "console.askpasswd")
+            (
+                "Console.askPassword() failed: tried %s times but user didn't fill out a value that matches '%s'."
+                % (retry, regex)
+            ),
+            "console.askpasswd",
+        )
 
     def askInteger(self, question, defaultValue=None, minValue=None, maxValue=None, retry=-1, validate=None):
         """Get an integer response on asked question
@@ -325,7 +343,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         if not j.application.interactive:
             raise j.exceptions.Input("Cannot ask an integer in a non interactive mode.")
         if validate and not isinstance(validate, collections.Callable):
-            raise TypeError('The validate argument should be a callable')
+            raise TypeError("The validate argument should be a callable")
         if minValue is None and maxValue is not None:
             question += " (%d-%d)" % (minValue, maxValue)
         elif minValue is not None:
@@ -355,11 +373,12 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
             retryCount = retryCount - 1
 
         raise ValueError(
-            "Console.askInteger() failed: tried %d times but user didn't fill out a value that matches '%s'." %
-            (retry, response))
+            "Console.askInteger() failed: tried %d times but user didn't fill out a value that matches '%s'."
+            % (retry, response)
+        )
 
     def askYesNo(self, message="", default=None):
-        '''Display a yes/no question and loop until a valid answer is entered
+        """Display a yes/no question and loop until a valid answer is entered
 
         @param message: Question message
         @type message: string
@@ -368,10 +387,11 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
 
         @return: Positive or negative answer
         @rtype: bool
-        '''
+        """
         if j.application.interactive is not True:
-            raise j.exceptions.Input("Cannot ask a yes/no question in a non interactive mode.",
-                                     "console.askyesno.notinteractive")
+            raise j.exceptions.Input(
+                "Cannot ask a yes/no question in a non interactive mode.", "console.askyesno.notinteractive"
+            )
 
         prompt = "[y/n]: "
 
@@ -387,10 +407,10 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
             if result == "" and default != None:
                 return default
 
-            if result and result.lower()[0] == 'y':
+            if result and result.lower()[0] == "y":
                 return True
 
-            if result and result.lower()[0] == 'n':
+            if result and result.lower()[0] == "n":
                 return False
 
             self.echo("Illegal value. Press 'y' or 'n'.")
@@ -410,6 +430,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         @return: the input numbers
         @rtype: list<number>
         """
+
         def clean(l):
             try:
                 return [int(i.strip()) for i in l if i.strip() != ""]
@@ -504,7 +525,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
                     """
                     debug = False
                     wildcard, chars = params
-                    #print (char,"","")
+                    # print (char,"","")
                     sys.stdout.write(char)
                     chars = "%s%s" % (chars, char)
                     result = []
@@ -600,8 +621,8 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
             return choicearray[0]
         if not j.application.interactive:
             raise j.exceptions.Input(
-                "Cannot ask a choice in an list of items in a non interactive mode.",
-                "console.askchoice.noninteractive")
+                "Cannot ask a choice in an list of items in a non interactive mode.", "console.askchoice.noninteractive"
+            )
         descr = descr or "\nMake a selection please: "
 
         if sort and isinstance(choicearray, (tuple, list)):
@@ -633,8 +654,10 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
 
     def askChoiceMultiple(self, choicearray, descr=None, sort=True):
         if not j.application.interactive:
-            raise j.exceptions.Input("Cannot ask a choice in an list of items in a non interactive mode.",
-                                     "console.askChoiceMultiple.notinteractive")
+            raise j.exceptions.Input(
+                "Cannot ask a choice in an list of items in a non interactive mode.",
+                "console.askChoiceMultiple.notinteractive",
+            )
         if not choicearray:
             return []
         if len(choicearray) == 1:
@@ -651,10 +674,12 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
             nr = nr + 1
             self.echo("   %s: %s" % (nr, section))
         self.echo("")
-        results = self.askIntegers("   Select Nr, use comma separation if more e.g. \"1,4\", * is all, 0 is None",
-                                   "Invalid choice, please try again",
-                                   min=0,
-                                   max=len(choicearray))
+        results = self.askIntegers(
+            '   Select Nr, use comma separation if more e.g. "1,4", * is all, 0 is None',
+            "Invalid choice, please try again",
+            min=0,
+            max=len(choicearray),
+        )
 
         if results == ["*"]:
             return choicearray
@@ -663,7 +688,7 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         else:
             return [choicearray[i - 1] for i in results]
 
-    def askMultiline(self, question, escapeString='.'):
+    def askMultiline(self, question, escapeString="."):
         """
         Ask the user a question that needs a multi-line answer.
 
@@ -674,19 +699,22 @@ class Console(j.application.JSBaseClass):  #!!!CONSOLE!!!
         @return: string multi-line reply by the user, always ending with a newline
         """
         if not j.application.interactive:
-            raise j.exceptions.Input("Cannot ask a askMultiline in an list of items in a non interactive mode.",
-                                     "console.askChoiceMultiple.askMultiline")
+            raise j.exceptions.Input(
+                "Cannot ask a askMultiline in an list of items in a non interactive mode.",
+                "console.askChoiceMultiple.askMultiline",
+            )
         self.echo("%s:" % question)
         self.echo(
-            "(Enter answer over multiple lines, end by typing '%s' (without the quotes) on an empty line)" %
-            escapeString)
+            "(Enter answer over multiple lines, end by typing '%s' (without the quotes) on an empty line)"
+            % escapeString
+        )
         lines = []
         user_input = input()
         while user_input != escapeString:
             lines.append(user_input)
             user_input = input()
         lines.append("")  # Forces end with newline
-        return '\n'.join(lines)
+        return "\n".join(lines)
 
     def getOutput(self):
         pass  # TODO: Implement this method

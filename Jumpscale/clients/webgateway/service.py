@@ -6,7 +6,6 @@ from clients.coredns.ResourceRecord import RecordType
 
 
 class Service:
-
     def __init__(self, name, public_ips, traefik, coredns):
         self.name = name
         self.public_ips = public_ips

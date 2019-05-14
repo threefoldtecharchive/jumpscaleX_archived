@@ -1,10 +1,10 @@
-
 from Jumpscale import j
 import os
 import sys
 
 from .GiteaClient import GiteaClient
 from pprint import pprint as print
+
 # https://docs.grid.tf/api/swagger example api source
 
 
@@ -71,8 +71,7 @@ class GiteaFactory(JSConfigBase):
             org.repo_new("testrepo")
 
         print(org.repos_list())
-        repo_name = [item for item in org.repos_list(
-            refresh=True).keys()][0]  # first reponame
+        repo_name = [item for item in org.repos_list(refresh=True).keys()][0]  # first reponame
 
         repo = org.repo_get(repo_name)
 

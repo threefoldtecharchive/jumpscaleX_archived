@@ -22,7 +22,6 @@ class SendgridFactory(JSConfigs):
         MESSAGE_TYPE = "text/plain"
         MESSAGE = "and easy to do anywhere, even with Python"
 
-
         statCode, body = self.send(SENDER, SUBJECT, MESSAGE, [RECIPENT], MESSAGE_TYPE, attachments=[])
 
         j.shell()

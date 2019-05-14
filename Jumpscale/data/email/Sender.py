@@ -7,8 +7,8 @@ from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
 
-class Sender(j.application.JSBaseClass):
 
+class Sender(j.application.JSBaseClass):
     def __init__(self, username, password, host, port):
         JSBASE.__init__(self)
         self._host = host
@@ -25,15 +25,15 @@ class Sender(j.application.JSBaseClass):
         finally:
             s.close()
 
-    def send(self, to, from_, subject, content, content_type='plain', img=None):
-        msg_root = MIMEMultipart('related')
+    def send(self, to, from_, subject, content, content_type="plain", img=None):
+        msg_root = MIMEMultipart("related")
         if isinstance(to, str):
-            msg_root['To'] = to
+            msg_root["To"] = to
         else:
-            msg_root['To'] = ', '.join(to)
+            msg_root["To"] = ", ".join(to)
 
-        msg_root['From'] = from_
-        msg_root['Subject'] = subject
+        msg_root["From"] = from_
+        msg_root["Subject"] = subject
         if img:
             content += """
             <p>
@@ -42,9 +42,9 @@ class Sender(j.application.JSBaseClass):
             """
         msg_html = MIMEText(content, content_type)
         if img:
-            msg_img = MIMEImage(img, 'png')
-            msg_img.add_header('Content-ID', '<image1>')
-            msg_img.add_header('Content-Disposition', 'inline', filename="img")
+            msg_img = MIMEImage(img, "png")
+            msg_img.add_header("Content-ID", "<image1>")
+            msg_img.add_header("Content-Disposition", "inline", filename="img")
         msg_root.attach(msg_html)
         if img:
             msg_root.attach(msg_img)

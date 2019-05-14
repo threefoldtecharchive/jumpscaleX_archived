@@ -1,7 +1,6 @@
 from Jumpscale import j
 
-from .TraefikClient import (Backend, BackendServer, Frontend, FrontendRule,
-                            TraefikClient)
+from .TraefikClient import Backend, BackendServer, Frontend, FrontendRule, TraefikClient
 
 JSConfigBaseFactory = j.application.JSBaseConfigsClass
 
@@ -10,8 +9,20 @@ class TraefikFactory(JSConfigBaseFactory):
     __jslocation__ = "j.clients.traefik"
     _CHILDCLASS = TraefikClient
 
-    def get(self, name=None, id=None, die=True, create_new=True, childclass_name=None,host="127.0.0.1", port=2379, user="root", password="root", **kwargs):
-        '''Get Traefik client instance after getting an etcd client instance 
+    def get(
+        self,
+        name=None,
+        id=None,
+        die=True,
+        create_new=True,
+        childclass_name=None,
+        host="127.0.0.1",
+        port=2379,
+        user="root",
+        password="root",
+        **kwargs,
+    ):
+        """Get Traefik client instance after getting an etcd client instance 
             If client found with name in param 'etcd_instance' , the client instance is used. Otherwise a new etcd client instance is created
 
         :param name: traefik client name, defaults to None
@@ -34,38 +45,40 @@ class TraefikFactory(JSConfigBaseFactory):
         :type password: str, optional
         :return: Traefik client
         :rtype: Traefik
-        '''
-        if 'etcd_instance' not in kwargs:
-            raise ValueError('New or existing etcd_instance name required')
-        j.clients.etcd.get(name=kwargs['etcd_instance'], host=host, port=port, user=user, password_=password)
-        return JSConfigBaseFactory.get(self, name=name, id=id, die=die, create_new=create_new, childclass_name=childclass_name,**kwargs)
+        """
+        if "etcd_instance" not in kwargs:
+            raise ValueError("New or existing etcd_instance name required")
+        j.clients.etcd.get(name=kwargs["etcd_instance"], host=host, port=port, user=user, password_=password)
+        return JSConfigBaseFactory.get(
+            self, name=name, id=id, die=die, create_new=create_new, childclass_name=childclass_name, **kwargs
+        )
 
-    def test(self,build=False):
+    def test(self, build=False):
 
         if build:
 
-            #check is ubuntu 1804
-            #build etcd
-            #start etcd
+            # check is ubuntu 1804
+            # build etcd
+            # start etcd
 
             raise RuntimeError("not implemented")
 
-        #make client connection to it
+        # make client connection to it
 
-        cl = self.get(name="traefik_test",etcd_name="traefik_test_etcd", user="root", password="v16ffehxnq")
+        cl = self.get(name="traefik_test", etcd_name="traefik_test_etcd", user="root", password="v16ffehxnq")
 
         # create a proxy object. A proxy has a name and is combination of frontends and backends
-        proxy = cl.proxy_create('myproxy')
+        proxy = cl.proxy_create("myproxy")
 
         # set a backend on your proxy
-        backend = proxy.backend_set(endpoints=['http://192.168.1.5:8080'])
+        backend = proxy.backend_set(endpoints=["http://192.168.1.5:8080"])
         # add another server to your backend
-        server = backend.server_add('http://192.168.1.15:8080')
+        server = backend.server_add("http://192.168.1.15:8080")
         # set the weight for the load balancing on the second backend server
-        server.weight = '20'
+        server.weight = "20"
 
         # set a frontend on your proxy
-        frontend = proxy.frontend_set('my.domain.com')
+        frontend = proxy.frontend_set("my.domain.com")
 
         # write the configuration into etcd
         proxy.deploy()

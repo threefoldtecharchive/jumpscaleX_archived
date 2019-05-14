@@ -40,8 +40,7 @@ class Network(BaseKVMComponent):
         """
         if self._interfaces is None:
             if self.bridge in self.controller.executor.execute("ovs-vsctl list-br"):
-                self._interfaces = self.controller.executor.execute(
-                    "ovs-vsctl list-ports %s" % self.bridge)
+                self._interfaces = self.controller.executor.execute("ovs-vsctl list-ports %s" % self.bridge)
             else:
                 return []
         return self._interfaces
@@ -61,27 +60,22 @@ class Network(BaseKVMComponent):
         return self.nw.isActive() == 1
 
     def create(self, start=True, autostart=True):
-        '''
+        """
         @param start bool: will start the network after creating it
         @param autostart bool: will autostart Network on host boot
         create and start network
-        '''
+        """
         nics = [interface for interface in self.interfaces]
         if self.ovs:
-            self.controller.executor.execute(
-                "ovs-vsctl --may-exist add-br %s" % self.name)
-            self.controller.executor.execute(
-                "ovs-vsctl set Bridge %s stp_enable=true" % self.name)
+            self.controller.executor.execute("ovs-vsctl --may-exist add-br %s" % self.name)
+            self.controller.executor.execute("ovs-vsctl set Bridge %s stp_enable=true" % self.name)
             for nic in nics:
-                self.controller.executor.execute(
-                    "ovs-vsctl --may-exist add-port %s %s" % (self.name, nic))
+                self.controller.executor.execute("ovs-vsctl --may-exist add-port %s %s" % (self.name, nic))
 
         else:
-            self.controller.executor.execute(
-                "ip link add %s type bridge" % self.name)
+            self.controller.executor.execute("ip link add %s type bridge" % self.name)
             for nic in nics:
-                self.controller.executor.execute(
-                    "ip link set %s master %s" % (nic, self.name))
+                self.controller.executor.execute("ip link set %s master %s" % (nic, self.name))
 
         self.controller.connection.networkDefineXML(self.to_xml())
 
@@ -101,8 +95,7 @@ class Network(BaseKVMComponent):
         if self.ovs:
             pass
         else:
-            self.controller.executor.execute(
-                "ip link set %s up" % (self.name))
+            self.controller.executor.execute("ip link set %s up" % (self.name))
 
         if autostart:
             self.nw.setAutostart(1)
@@ -119,11 +112,9 @@ class Network(BaseKVMComponent):
         self.stop()
 
         if self.ovs:
-            self.controller.executor.execute(
-                'ovs-vsctl --if-exists del-br %s' % self.name)
+            self.controller.executor.execute("ovs-vsctl --if-exists del-br %s" % self.name)
         else:
-            self.controller.executor.execute(
-                'ip link delete %s' % self.name)
+            self.controller.executor.execute("ip link delete %s" % self.name)
 
         self.nw.undefine()
 
@@ -135,8 +126,7 @@ class Network(BaseKVMComponent):
         """
         Return libvirt's xml string representation of the Network.
         """
-        networkxml = self.controller.get_template(
-            'network.xml').render(networkname=self.name, bridge=self.bridge)
+        networkxml = self.controller.get_template("network.xml").render(networkname=self.name, bridge=self.bridge)
         return networkxml
 
     @classmethod
@@ -148,10 +138,9 @@ class Network(BaseKVMComponent):
         @param source  str: xml string of machine to be created.
         """
         network = ElementTree.fromstring(source)
-        name = network.findtext('name')
-        bridge = network.findall('bridge')[0].get('name')
-        rc, _, _ = controller.executor.execute(
-            'ovs-vsctl br-exists %s' % name, die=False)
+        name = network.findtext("name")
+        bridge = network.findall("bridge")[0].get("name")
+        rc, _, _ = controller.executor.execute("ovs-vsctl br-exists %s" % name, die=False)
         ovs = rc == 0
         return cls(controller, name, bridge, None, ovs=ovs)
 

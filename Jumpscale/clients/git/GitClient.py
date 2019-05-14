@@ -3,7 +3,6 @@ import git
 import copy
 
 
-
 class GitClient(j.application.JSBaseClass):
     """
     Client of git services, has all git related operations like push, pull, ...
@@ -28,8 +27,8 @@ class GitClient(j.application.JSBaseClass):
         baseDir = baseDir.rstrip("/")
 
         while ".git" not in j.sal.fs.listDirsInDir(
-                baseDir, recursive=False, dirNameOnly=True,
-                findDirectorySymlinks=True):
+            baseDir, recursive=False, dirNameOnly=True, findDirectorySymlinks=True
+        ):
             baseDir = j.sal.fs.getParent(baseDir)
 
             if baseDir == "/":
@@ -38,26 +37,25 @@ class GitClient(j.application.JSBaseClass):
         baseDir = baseDir.rstrip("/")
 
         if baseDir.strip() == "":
-            raise j.exceptions.RuntimeError(
-                "could not find basepath for .git in %s" %
-                baseDir_org)
+            raise j.exceptions.RuntimeError("could not find basepath for .git in %s" % baseDir_org)
         if check_path:
             if baseDir.find("/code/") == -1:
                 raise j.exceptions.Input(
-                    "jumpscale code management always requires path in form of $somewhere/code/$type/$account/$reponame")
+                    "jumpscale code management always requires path in form of $somewhere/code/$type/$account/$reponame"
+                )
 
             base = baseDir.split("/code/", 1)[1]
 
-            if not base.startswith('cockpit'):
+            if not base.startswith("cockpit"):
                 if base.count("/") != 2:
                     raise j.exceptions.Input(
-                        "jumpscale code management always requires path in form of $somewhere/code/$type/$account/$reponame")
+                        "jumpscale code management always requires path in form of $somewhere/code/$type/$account/$reponame"
+                    )
                 self.type, self.account, self.name = base.split("/", 2)
             else:
-                self.type, self.account, self.name = 'github', 'cockpit', 'cockpit'
+                self.type, self.account, self.name = "github", "cockpit", "cockpit"
         else:
-            self.type, self.account, self.name = '', '', j.sal.fs.getBaseName(
-                baseDir)
+            self.type, self.account, self.name = "", "", j.sal.fs.getBaseName(baseDir)
 
         self.BASEDIR = baseDir
 
@@ -74,9 +72,7 @@ class GitClient(j.application.JSBaseClass):
         """
         set the remote url of the repo
         """
-        j.sal.process.executeWithoutPipe(
-            "cd %s;git remote set-url origin '%s'" %
-            (self.BASEDIR, url))
+        j.sal.process.executeWithoutPipe("cd %s;git remote set-url origin '%s'" % (self.BASEDIR, url))
 
     @property
     def remoteUrl(self):
@@ -86,10 +82,10 @@ class GitClient(j.application.JSBaseClass):
         :raises Exception when ther eis no remote configuration for the repo, you will have to use setRemoteURL then
         """
         if len(self.repo.remotes) <= 0:
-            #raise j.exceptions.Input(
+            # raise j.exceptions.Input(
             #    "There is not remote configured for this repository")
             self._log_warning("no remote repo configured (local repo?)")
-            return "" # XXX issue #60?
+            return ""  # XXX issue #60?
         return self.repo.remotes[0].url
 
     @property
@@ -97,15 +93,19 @@ class GitClient(j.application.JSBaseClass):
         """
         get the branch name of the repo
         """
-        return self.repo.git.rev_parse('HEAD', abbrev_ref=True)
+        return self.repo.git.rev_parse("HEAD", abbrev_ref=True)
 
     @property
     def unc(self):
         """
         $gitcategory/$account/$repo/$branch
         """
-        return "%s/%s/%s/%s" % (j.clients.git.rewriteGitRepoUrl(self.remoteUrl)
-                                [1], self.account, self.name, self.branchName)
+        return "%s/%s/%s/%s" % (
+            j.clients.git.rewriteGitRepoUrl(self.remoteUrl)[1],
+            self.account,
+            self.name,
+            self.branchName,
+        )
 
     @property
     def repo(self):
@@ -133,9 +133,9 @@ class GitClient(j.application.JSBaseClass):
         the second parameter will be the name of tag or branch
         """
         try:
-            return 'tag', self.repo.git.describe('--tags', '--exact-match')
+            return "tag", self.repo.git.describe("--tags", "--exact-match")
         except BaseException:
-            return 'branch', self.repo.head.ref.name
+            return "branch", self.repo.head.ref.name
 
     def switchBranch(self, branchName, create=True):  # NOQA
         """
@@ -146,6 +146,7 @@ class GitClient(j.application.JSBaseClass):
         """
         if create:
             import git
+
             try:
                 self.repo.git.branch(branchName)
             except git.GitCommandError:
@@ -179,7 +180,7 @@ class GitClient(j.application.JSBaseClass):
         rc, out, err = j.tools.executorLocal.execute(cmd, die=False)
         for item in out.split("\n"):
             item = item.strip()
-            if item == '':
+            if item == "":
                 continue
             return True
         return False
@@ -212,10 +213,10 @@ class GitClient(j.application.JSBaseClass):
         # Organize files in lists
         for item in out.split("\n"):
             item = item.strip()
-            if item == '':
+            if item == "":
                 continue
             state, _, _file = item.partition(" ")
-            if state == '??':
+            if state == "??":
                 if checkignore(ignore, _file):
                     continue
                 result["N"].append(_file)
@@ -260,7 +261,7 @@ class GitClient(j.application.JSBaseClass):
         """
         checkout to the sent path
         """
-        cmd = 'cd %s;git checkout %s' % (self.BASEDIR, path)
+        cmd = "cd %s;git checkout %s" % (self.BASEDIR, path)
         j.tools.executorLocal.execute(cmd)
 
     def addRemoveFiles(self):
@@ -268,7 +269,7 @@ class GitClient(j.application.JSBaseClass):
         add all untracked files
         """
         # cmd = 'cd %s;git add -A :/' % self.BASEDIR
-        cmd = 'cd %s;git add -A .' % self.BASEDIR
+        cmd = "cd %s;git add -A ." % self.BASEDIR
         j.tools.executorLocal.execute(cmd)
 
     def addFiles(self, files=[]):
@@ -295,8 +296,7 @@ class GitClient(j.application.JSBaseClass):
         :raises Exception when there are files waiting for commit
         """
         if self.checkFilesWaitingForCommit():
-            raise j.exceptions.Input(
-                message="Cannot pull:%s, files waiting to commit" % self)
+            raise j.exceptions.Input(message="Cannot pull:%s, files waiting to commit" % self)
         self.repo.git.pull()
 
     def fetch(self):
@@ -305,7 +305,7 @@ class GitClient(j.application.JSBaseClass):
         """
         self.repo.git.fetch()
 
-    def commit(self, message='?', addremove=True):
+    def commit(self, message="?", addremove=True):
         """
         commit the current repo state, or will return if no files to be committed
 
@@ -326,18 +326,11 @@ class GitClient(j.application.JSBaseClass):
         :param force:(Boolean) if True, will override the remote repo with the state of local repo. BE CAREFUL WHEN USING
         """
         if force:
-            self.repo.git.push('-f')
+            self.repo.git.push("-f")
         else:
             self.repo.git.push()
 
-    def getChangedFiles(
-            self,
-            fromref='',
-            toref='',
-            fromepoch=None,
-            toepoch=None,
-            author=None,
-            paths=[]):
+    def getChangedFiles(self, fromref="", toref="", fromepoch=None, toepoch=None, author=None, paths=[]):
         """
         list all changed files since ref & epoch (use both)
 
@@ -350,54 +343,37 @@ class GitClient(j.application.JSBaseClass):
         @return
         """
         commits = self.getCommitRefs(
-            fromref=fromref,
-            toref=toref,
-            fromepoch=fromepoch,
-            toepoch=toepoch,
-            author=author,
-            paths=paths,
-            files=True)
+            fromref=fromref, toref=toref, fromepoch=fromepoch, toepoch=toepoch, author=author, paths=paths, files=True
+        )
         files = [f for commit in commits for f in commit[3]]
         return list(set(files))
 
-    def getCommitRefs(
-            self,
-            fromref='',
-            toref='',
-            fromepoch=None,
-            toepoch=None,
-            author=None,
-            paths=None,
-            files=False):
+    def getCommitRefs(self, fromref="", toref="", fromepoch=None, toepoch=None, author=None, paths=None, files=False):
         """
         @return [[$epoch, $ref, $author]] if no files (default)
         @return [[$epoch, $ref, $author, $files]] if files
         @param files = True means will list the files
         """
-        kwargs = {'branches': [self.branchName]}
+        kwargs = {"branches": [self.branchName]}
         if fromepoch:
             kwargs["max-age"] = fromepoch
         if toepoch:
-            kwargs['min-age'] = toepoch
+            kwargs["min-age"] = toepoch
         if fromref or toref:
             if fromref and not toref:
-                kwargs['rev'] = '%s' % fromref
+                kwargs["rev"] = "%s" % fromref
             elif fromref and toref:
-                kwargs['rev'] = '%s..%s' % (fromref, toref)
+                kwargs["rev"] = "%s..%s" % (fromref, toref)
         if author:
-            kwargs['author'] = author
+            kwargs["author"] = author
         commits = list()
         for commit in list(self.repo.iter_commits(paths=paths, **kwargs)):
             if files:
                 commits.append(
-                    (commit.authored_date,
-                     commit.hexsha,
-                     commit.author.name,
-                     list(
-                         commit.stats.files.keys())))
+                    (commit.authored_date, commit.hexsha, commit.author.name, list(commit.stats.files.keys()))
+                )
             else:
-                commits.append(
-                    (commit.authored_date, commit.hexsha, commit.author.name))
+                commits.append((commit.authored_date, commit.hexsha, commit.author.name))
         return commits
 
     def getFileChanges(self, path):
@@ -412,13 +388,12 @@ class GitClient(j.application.JSBaseClass):
         for commit, lines in blame:
             for line in lines:
                 diffs[line] = list() if line not in diffs else diffs[line]
-                diffs[line].append(
-                    {'author': commit.author.name, 'commit': commit.hexsha})
+                diffs[line].append({"author": commit.author.name, "commit": commit.hexsha})
 
         return diffs
 
     def patchGitignore(self):
-        gitignore = '''
+        gitignore = """
             # Byte-compiled / optimized / DLL files
             __pycache__/
             *.py[cod]
@@ -464,9 +439,9 @@ class GitClient(j.application.JSBaseClass):
             
             # Sphinx documentation
             docs/_build/
-            '''
-        gitignore=j.core.tools.text_strip(gitignore)
-        ignorefilepath = j.sal.fs.joinPaths(self.BASEDIR, '.gitignore')
+            """
+        gitignore = j.core.tools.text_strip(gitignore)
+        ignorefilepath = j.sal.fs.joinPaths(self.BASEDIR, ".gitignore")
         if not j.sal.fs.exists(ignorefilepath):
             j.sal.fs.writeFile(ignorefilepath, gitignore)
         else:
@@ -480,7 +455,7 @@ class GitClient(j.application.JSBaseClass):
             for line in lines:
                 if line not in lines and line.strip():
                     linesout.append(line)
-            out = '\n'.join(linesout)
+            out = "\n".join(linesout)
             if out.strip() != inn.strip():
                 j.sal.fs.writeFile(ignorefilepath, out)
 
@@ -489,10 +464,10 @@ class GitClient(j.application.JSBaseClass):
         this method get latest tag or branch
         """
         try:
-            cmd = 'cd {path}; git describe --tags'.format(path=self.BASEDIR)
-            return 'tag', j.tools.executorLocal.execute(cmd)[1]
+            cmd = "cd {path}; git describe --tags".format(path=self.BASEDIR)
+            return "tag", j.tools.executorLocal.execute(cmd)[1]
         except BaseException:
-            return 'branch', self.repo.head.ref.name
+            return "branch", self.repo.head.ref.name
 
     def getConfig(self, field):
         """
@@ -522,8 +497,7 @@ class GitClient(j.application.JSBaseClass):
         if not local:
             flags += "--global "
 
-        cmd = "cd %s; git config %s %s %s" % (
-            self.BASEDIR, flags, field, value)
+        cmd = "cd %s; git config %s %s %s" % (self.BASEDIR, flags, field, value)
         j.tools.executorLocal.execute(cmd, die=die)
 
     def unsetConfig(self, field, local=True, die=True):

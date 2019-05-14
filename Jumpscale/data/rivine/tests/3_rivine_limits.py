@@ -2,6 +2,7 @@ from Jumpscale import j
 import pytest
 from Jumpscale.data.rivine.RivineBinaryEncoder import IntegerOutOfRange, SliceLengthOutOfRange
 
+
 def main(self):
     """
     to run:
@@ -40,7 +41,7 @@ def main(self):
         e.add_int16(1 << 16)
     with pytest.raises(IntegerOutOfRange):
         e.add_int8(1 << 8)
-    
+
     # slices have limits too,
     # but should you ever user (1<<29) or more objects,
     # you have other things to worry about

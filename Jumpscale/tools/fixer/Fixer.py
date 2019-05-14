@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 import os
 import fnmatch
@@ -6,11 +5,13 @@ from pathlib import Path
 from Jumpscale.core.generator.JSGenerator import *
 from .FixerReplace import FixerReplacer
 
-#ACTIONS
+# ACTIONS
 ## R = Replace
 ## RI = Replace case insensitive
 
 JSBASE = j.application.JSBaseClass
+
+
 class Fixer(j.application.JSBaseClass):
 
     __jslocation__ = "j.tools.fixer"
@@ -19,8 +20,6 @@ class Fixer(j.application.JSBaseClass):
         JSBASE.__init__(self)
         self.generator = JSGenerator(j)
         self.replacer = FixerReplacer()
-
-
 
     def _find_changes(self):
         """
@@ -31,23 +30,21 @@ class Fixer(j.application.JSBaseClass):
         os.environ["JSRELOAD"] = "1"
         os.environ["JSGENERATE_DEBUG"] = "1"
 
-        def do(jsmodule,classobj,nr,line,args):
+        def do(jsmodule, classobj, nr, line, args):
 
-            changed,line2 = self.line_process(line)
+            changed, line2 = self.line_process(line)
             if changed:
-                jsmodule.line_change_add(nr,line,line2)
+                jsmodule.line_change_add(nr, line, line2)
             return args
 
         args = {}
-        args = self.generator.generate(methods_find=True, action_method = do, action_args=args)
+        args = self.generator.generate(methods_find=True, action_method=do, action_args=args)
 
         self.generator.report()
 
         print(self.generator.md.line_changes)
 
-
-
-    def find_changes(self,path=None, extensions=["py","txt","md"], recursive=True):
+    def find_changes(self, path=None, extensions=["py", "txt", "md"], recursive=True):
         """
         js_shell 'j.tools.fixer.find_changes()'
         :return:
@@ -56,16 +53,13 @@ class Fixer(j.application.JSBaseClass):
         if path is None:
             self._find_changes()
 
-            #important to generate the normal non debug version
+            # important to generate the normal non debug version
             os.environ["JSGENERATE_DEBUG"] = "0"
             self.generator.generate()
         else:
-            self.replacer.dir_process(path=path,extensions=extensions,recursive=recursive,write=False)
+            self.replacer.dir_process(path=path, extensions=extensions, recursive=recursive, write=False)
 
-
-
-
-    def write_changes(self,path=None, extensions=["py","txt","md"], recursive=True):
+    def write_changes(self, path=None, extensions=["py", "txt", "md"], recursive=True):
         """
         js_shell 'j.tools.fixer.write_changes()'
         BE CAREFULL THIS WILL WRITE THE CHANGES AS FOUND IN self.find_changes
@@ -80,14 +74,8 @@ class Fixer(j.application.JSBaseClass):
             os.environ["JSGENERATE_DEBUG"] = "0"
             self.generator.generate()
         else:
-            self.replacer.dir_process(path=path,extensions=extensions,recursive=recursive,write=True)
+            self.replacer.dir_process(path=path, extensions=extensions, recursive=recursive, write=True)
 
-
-
-    def line_process(self,line):
+    def line_process(self, line):
         # self._log_debug("lineprocess:%s"%line)
         return self.replacer.line_process(line)
-
-
-
-

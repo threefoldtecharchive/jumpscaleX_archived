@@ -2,20 +2,21 @@ from Jumpscale import j
 
 from .Base import TransactionBaseClass, TransactionVersion
 
-from ..FulfillmentTypes import FulfillmentBaseClass, FulfillmentSingleSignature 
-from ..ConditionTypes import ConditionBaseClass, ConditionNil 
+from ..FulfillmentTypes import FulfillmentBaseClass, FulfillmentSingleSignature
+from ..ConditionTypes import ConditionBaseClass, ConditionNil
 from ..PrimitiveTypes import BinaryData, Currency
 from ..IO import CoinInput, CoinOutput
 
+
 class TransactionV128(TransactionBaseClass):
-    _SPECIFIER = b'minter defin tx\0'
+    _SPECIFIER = b"minter defin tx\0"
 
     def __init__(self):
         self._mint_fulfillment = None
         self._mint_condition = None
         self._miner_fees = []
         self._data = None
-        self._nonce = BinaryData(j.data.idgenerator.generateXByteID(8), strencoding='base64')
+        self._nonce = BinaryData(j.data.idgenerator.generateXByteID(8), strencoding="base64")
 
         # current mint condition
         self._parent_mint_condition = None
@@ -25,7 +26,7 @@ class TransactionV128(TransactionBaseClass):
     @property
     def version(self):
         return TransactionVersion.MINTER_DEFINITION
-    
+
     @property
     def miner_fees(self):
         """
@@ -33,7 +34,7 @@ class TransactionV128(TransactionBaseClass):
         funded by this Transaction's coin inputs.
         """
         return self._miner_fees
-    
+
     @property
     def data(self):
         """
@@ -41,8 +42,9 @@ class TransactionV128(TransactionBaseClass):
         with a max length of 83 bytes.
         """
         if self._data is None:
-            return BinaryData(strencoding='base64')
+            return BinaryData(strencoding="base64")
         return self._data
+
     @data.setter
     def data(self, value):
         if value is None:
@@ -51,10 +53,12 @@ class TransactionV128(TransactionBaseClass):
         if isinstance(value, BinaryData):
             value = value.value
         elif isinstance(value, str):
-            value = value.encode('utf-8')
+            value = value.encode("utf-8")
         if len(value) > 83:
-            raise ValueError("arbitrary data can have a maximum bytes length of 83, {} exceeds this limit".format(len(value)))
-        self._data = BinaryData(value=value, strencoding='base64')
+            raise ValueError(
+                "arbitrary data can have a maximum bytes length of 83, {} exceeds this limit".format(len(value))
+            )
+        self._data = BinaryData(value=value, strencoding="base64")
 
     @property
     def mint_condition(self):
@@ -64,13 +68,18 @@ class TransactionV128(TransactionBaseClass):
         if self._mint_condition is None:
             return ConditionNil()
         return self._mint_condition
+
     @mint_condition.setter
     def mint_condition(self, value):
         if value is None:
             self._mint_condition = None
             return
         if not isinstance(value, ConditionBaseClass):
-            raise TypeError("MintDefinition (v128) Transaction's mint condition has to be a subtype of ConditionBaseClass, not {}".format(type(value)))
+            raise TypeError(
+                "MintDefinition (v128) Transaction's mint condition has to be a subtype of ConditionBaseClass, not {}".format(
+                    type(value)
+                )
+            )
         self._mint_condition = value
 
     @property
@@ -81,13 +90,18 @@ class TransactionV128(TransactionBaseClass):
         if self._parent_mint_condition is None:
             return ConditionNil()
         return self._parent_mint_condition
+
     @parent_mint_condition.setter
     def parent_mint_condition(self, value):
         if value is None:
             self._parent_mint_condition = None
             return
         if not isinstance(value, ConditionBaseClass):
-            raise TypeError("MintDefinition (v128) Transaction's parent mint condition has to be a subtype of ConditionBaseClass, not {}".format(type(value)))
+            raise TypeError(
+                "MintDefinition (v128) Transaction's parent mint condition has to be a subtype of ConditionBaseClass, not {}".format(
+                    type(value)
+                )
+            )
         self._parent_mint_condition = value
 
     def mint_fulfillment_defined(self):
@@ -101,13 +115,18 @@ class TransactionV128(TransactionBaseClass):
         if self._mint_fulfillment is None:
             return FulfillmentSingleSignature()
         return self._mint_fulfillment
+
     @mint_fulfillment.setter
     def mint_fulfillment(self, value):
         if value is None:
             self._mint_fulfillment = None
             return
         if not isinstance(value, FulfillmentBaseClass):
-            raise TypeError("MintDefinition (v128) Transaction's mint fulfillment has to be a subtype of FulfillmentBaseClass, not {}".format(type(value)))
+            raise TypeError(
+                "MintDefinition (v128) Transaction's mint fulfillment has to be a subtype of FulfillmentBaseClass, not {}".format(
+                    type(value)
+                )
+            )
         self._mint_fulfillment = value
 
     def miner_fee_add(self, value):
@@ -147,35 +166,30 @@ class TransactionV128(TransactionBaseClass):
     def _binary_encode_data(self):
         encoder = j.data.rivine.encoder_sia_get()
         encoder.add_array(self._nonce.value)
-        encoder.add_all(
-            self.mint_fulfillment,
-            self.mint_condition,
-            self.miner_fees,
-            self.data,
-        )
+        encoder.add_all(self.mint_fulfillment, self.mint_condition, self.miner_fees, self.data)
         return encoder.data
 
     def _from_json_data_object(self, data):
-        self._nonce = BinaryData.from_json(data.get('nonce', ''), strencoding='base64')
-        self._mint_condition = j.clients.tfchain.types.conditions.from_json(data.get('mintcondition', {}))
-        self._mint_fulfillment = j.clients.tfchain.types.fulfillments.from_json(data.get('mintfulfillment', {}))
-        self._miner_fees = [Currency.from_json(fee) for fee in data.get('minerfees', []) or []]
-        self._data = BinaryData.from_json(data.get('arbitrarydata', None) or '', strencoding='base64')
+        self._nonce = BinaryData.from_json(data.get("nonce", ""), strencoding="base64")
+        self._mint_condition = j.clients.tfchain.types.conditions.from_json(data.get("mintcondition", {}))
+        self._mint_fulfillment = j.clients.tfchain.types.fulfillments.from_json(data.get("mintfulfillment", {}))
+        self._miner_fees = [Currency.from_json(fee) for fee in data.get("minerfees", []) or []]
+        self._data = BinaryData.from_json(data.get("arbitrarydata", None) or "", strencoding="base64")
 
     def _json_data_object(self):
         return {
-            'nonce': self._nonce.json(),
-            'mintfulfillment': self.mint_fulfillment.json(),
-            'mintcondition': self.mint_condition.json(),
-            'minerfees': [fee.json() for fee in self._miner_fees],
-            'arbitrarydata': self.data.json(),
+            "nonce": self._nonce.json(),
+            "mintfulfillment": self.mint_fulfillment.json(),
+            "mintcondition": self.mint_condition.json(),
+            "minerfees": [fee.json() for fee in self._miner_fees],
+            "arbitrarydata": self.data.json(),
         }
-    
+
     def _extra_signature_requests_new(self):
         if self._parent_mint_condition is None:
-            return [] # nothing to be signed
+            return []  # nothing to be signed
         return self._mint_fulfillment.signature_requests_new(
-            input_hash_func=self.signature_hash_get, # no extra objects are to be included within txn scope
+            input_hash_func=self.signature_hash_get,  # no extra objects are to be included within txn scope
             parent_condition=self._parent_mint_condition,
         )
 
@@ -184,15 +198,16 @@ class TransactionV128(TransactionBaseClass):
             return False
         return self.mint_fulfillment.is_fulfilled(parent_condition=self._parent_mint_condition)
 
+
 class TransactionV129(TransactionBaseClass):
-    _SPECIFIER = b'coin mint tx\0\0\0\0'
+    _SPECIFIER = b"coin mint tx\0\0\0\0"
 
     def __init__(self):
         self._mint_fulfillment = None
         self._coin_outputs = []
         self._miner_fees = []
         self._data = None
-        self._nonce = BinaryData(j.data.idgenerator.generateXByteID(8), strencoding='base64')
+        self._nonce = BinaryData(j.data.idgenerator.generateXByteID(8), strencoding="base64")
 
         # current mint condition
         self._parent_mint_condition = None
@@ -202,7 +217,7 @@ class TransactionV129(TransactionBaseClass):
     @property
     def version(self):
         return TransactionVersion.MINTER_COIN_CREATION
-    
+
     @property
     def miner_fees(self):
         """
@@ -210,7 +225,7 @@ class TransactionV129(TransactionBaseClass):
         funded by this Transaction's coin inputs.
         """
         return self._miner_fees
-    
+
     @property
     def data(self):
         """
@@ -218,8 +233,9 @@ class TransactionV129(TransactionBaseClass):
         with a max length of 83 bytes.
         """
         if self._data is None:
-            return BinaryData(strencoding='base64')
+            return BinaryData(strencoding="base64")
         return self._data
+
     @data.setter
     def data(self, value):
         if value is None:
@@ -228,10 +244,12 @@ class TransactionV129(TransactionBaseClass):
         if isinstance(value, BinaryData):
             value = value.value
         elif isinstance(value, str):
-            value = value.encode('utf-8')
+            value = value.encode("utf-8")
         if len(value) > 83:
-            raise ValueError("arbitrary data can have a maximum bytes length of 83, {} exceeds this limit".format(len(value)))
-        self._data = BinaryData(value=value, strencoding='base64')
+            raise ValueError(
+                "arbitrary data can have a maximum bytes length of 83, {} exceeds this limit".format(len(value))
+            )
+        self._data = BinaryData(value=value, strencoding="base64")
 
     @property
     def coin_outputs(self):
@@ -240,6 +258,7 @@ class TransactionV129(TransactionBaseClass):
         funded by the Transaction's coin inputs.
         """
         return self._coin_outputs
+
     @coin_outputs.setter
     def coin_outputs(self, value):
         self._coin_outputs = []
@@ -267,13 +286,18 @@ class TransactionV129(TransactionBaseClass):
         if self._mint_fulfillment is None:
             return FulfillmentSingleSignature()
         return self._mint_fulfillment
+
     @mint_fulfillment.setter
     def mint_fulfillment(self, value):
         if value is None:
             self._mint_fulfillment = None
             return
         if not isinstance(value, FulfillmentBaseClass):
-            raise TypeError("CoinCreation (v129) Transaction's mint fulfillment has to be a subtype of FulfillmentBaseClass, not {}".format(type(value)))
+            raise TypeError(
+                "CoinCreation (v129) Transaction's mint fulfillment has to be a subtype of FulfillmentBaseClass, not {}".format(
+                    type(value)
+                )
+            )
         self._mint_fulfillment = value
 
     @property
@@ -284,13 +308,18 @@ class TransactionV129(TransactionBaseClass):
         if self._parent_mint_condition is None:
             return ConditionNil()
         return self._parent_mint_condition
+
     @parent_mint_condition.setter
     def parent_mint_condition(self, value):
         if value is None:
             self._parent_mint_condition = None
             return
         if not isinstance(value, ConditionBaseClass):
-            raise TypeError("CoinCreation (v129) Transaction's parent mint condition has to be a subtype of ConditionBaseClass, not {}".format(type(value)))
+            raise TypeError(
+                "CoinCreation (v129) Transaction's parent mint condition has to be a subtype of ConditionBaseClass, not {}".format(
+                    type(value)
+                )
+            )
         self._parent_mint_condition = value
 
     def _signature_hash_input_get(self, *extra_objects):
@@ -327,35 +356,30 @@ class TransactionV129(TransactionBaseClass):
     def _binary_encode_data(self):
         encoder = j.data.rivine.encoder_sia_get()
         encoder.add_array(self._nonce.value)
-        encoder.add_all(
-            self.mint_fulfillment,
-            self.coin_outputs,
-            self.miner_fees,
-            self.data,
-        )
+        encoder.add_all(self.mint_fulfillment, self.coin_outputs, self.miner_fees, self.data)
         return encoder.data
 
     def _from_json_data_object(self, data):
-        self._nonce = BinaryData.from_json(data.get('nonce', ''), strencoding='base64')
-        self._mint_fulfillment = j.clients.tfchain.types.fulfillments.from_json(data.get('mintfulfillment', {}))
-        self._coin_outputs = [CoinOutput.from_json(co) for co in data.get('coinoutputs', []) or []]
-        self._miner_fees = [Currency.from_json(fee) for fee in data.get('minerfees', []) or []]
-        self._data = BinaryData.from_json(data.get('arbitrarydata', None) or '', strencoding='base64')
+        self._nonce = BinaryData.from_json(data.get("nonce", ""), strencoding="base64")
+        self._mint_fulfillment = j.clients.tfchain.types.fulfillments.from_json(data.get("mintfulfillment", {}))
+        self._coin_outputs = [CoinOutput.from_json(co) for co in data.get("coinoutputs", []) or []]
+        self._miner_fees = [Currency.from_json(fee) for fee in data.get("minerfees", []) or []]
+        self._data = BinaryData.from_json(data.get("arbitrarydata", None) or "", strencoding="base64")
 
     def _json_data_object(self):
         return {
-            'nonce': self._nonce.json(),
-            'mintfulfillment': self.mint_fulfillment.json(),
-            'coinoutputs': [co.json() for co in self.coin_outputs],
-            'minerfees': [fee.json() for fee in self.miner_fees],
-            'arbitrarydata': self.data.json(),
+            "nonce": self._nonce.json(),
+            "mintfulfillment": self.mint_fulfillment.json(),
+            "coinoutputs": [co.json() for co in self.coin_outputs],
+            "minerfees": [fee.json() for fee in self.miner_fees],
+            "arbitrarydata": self.data.json(),
         }
-    
+
     def _extra_signature_requests_new(self):
         if self._parent_mint_condition is None:
-            return [] # nothing to be signed
+            return []  # nothing to be signed
         return self._mint_fulfillment.signature_requests_new(
-            input_hash_func=self.signature_hash_get, # no extra objects are to be included within txn scope
+            input_hash_func=self.signature_hash_get,  # no extra objects are to be included within txn scope
             parent_condition=self._parent_mint_condition,
         )
 

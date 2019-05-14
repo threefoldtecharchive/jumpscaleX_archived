@@ -4,31 +4,31 @@ from copy import deepcopy
 
 
 compileconfig = {}
-compileconfig['enable_mbstring'] = True
-compileconfig['enable_zip'] = True
-compileconfig['with_gd'] = True
-compileconfig['with_curl'] = True  # apt-get install libcurl4-openssl-dev libzip-dev
-compileconfig['with_libzip'] = True
-compileconfig['with_zlib'] = True
-compileconfig['with_openssl'] = True
-compileconfig['enable_fpm'] = True
-compileconfig['prefix'] = "{DIR_APPS}/php"
-compileconfig['exec_prefix'] = "{DIR_APPS}/php"
-compileconfig['with_mysqli'] = True
-compileconfig['with_pdo_mysql'] = True
-compileconfig['with_mysql_sock'] = "/var/run/mysqld/mysqld.sock"
+compileconfig["enable_mbstring"] = True
+compileconfig["enable_zip"] = True
+compileconfig["with_gd"] = True
+compileconfig["with_curl"] = True  # apt-get install libcurl4-openssl-dev libzip-dev
+compileconfig["with_libzip"] = True
+compileconfig["with_zlib"] = True
+compileconfig["with_openssl"] = True
+compileconfig["enable_fpm"] = True
+compileconfig["prefix"] = "{DIR_APPS}/php"
+compileconfig["exec_prefix"] = "{DIR_APPS}/php"
+compileconfig["with_mysqli"] = True
+compileconfig["with_pdo_mysql"] = True
+compileconfig["with_mysql_sock"] = "/var/run/mysqld/mysqld.sock"
 
 
 class BuilderPHP(j.builder.system._BaseClass):
 
-    NAME = 'php-fpm'
+    NAME = "php-fpm"
 
     def build(self, install=False, **config):
-        '''
+        """
         js_shell 'j.builder.runtimes.php.build()'
         :param config:
         :return:
-        '''
+        """
         j.tools.bash.get().profile.locale_check()
 
         if j.core.platformtype.myplatform.isUbuntu:
@@ -37,7 +37,7 @@ class BuilderPHP(j.builder.system._BaseClass):
             openssl pkg-config libssl-dev file"
             j.sal.ubuntu.apt_update()
             j.sal.ubuntu.apt_install(pkgs, update_md=False)
-            
+
             C = """
             set -x
             rm -f {DIR_TEMP}/php-7.3.0.tar.bz*
@@ -49,14 +49,16 @@ class BuilderPHP(j.builder.system._BaseClass):
             C = self._replace(C)
             j.sal.process.execute(C)
 
-            compileconfig['with_apxs2'] = self._replace("{DIR_APPS}/apache2/bin/apxs")
+            compileconfig["with_apxs2"] = self._replace("{DIR_APPS}/apache2/bin/apxs")
             buildconfig = deepcopy(compileconfig)
-            buildconfig.update(config)  # should be defaultconfig.update(config) instead of overriding the explicit ones.
+            buildconfig.update(
+                config
+            )  # should be defaultconfig.update(config) instead of overriding the explicit ones.
 
             # check for apxs2 binary if it's valid.
-            apxs = buildconfig['with_apxs2']
+            apxs = buildconfig["with_apxs2"]
             if not j.core.tools.exists(apxs):
-                buildconfig.pop('with_apxs2')
+                buildconfig.pop("with_apxs2")
 
             args_string = ""
             for k, v in buildconfig.items():
@@ -74,8 +76,7 @@ class BuilderPHP(j.builder.system._BaseClass):
             C = self._replace(C)
             j.sal.process.execute(C)
         else:
-            raise j.exceptions.NotImplemented(
-                message="only ubuntu supported for building php")
+            raise j.exceptions.NotImplemented(message="only ubuntu supported for building php")
         if install is True:
             self.install()
         # check if we need an php accelerator: https://en.wikipedia.org/wiki/List_of_PHP_accelerators
@@ -112,9 +113,8 @@ class BuilderPHP(j.builder.system._BaseClass):
         C = self._replace(C)
         j.sal.process.execute(C)
 
-        j.core.tools.dir_ensure(self._replace(
-            "{DIR_APPS}/php/etc/php-fpm.d"))
-        
+        j.core.tools.dir_ensure(self._replace("{DIR_APPS}/php/etc/php-fpm.d"))
+
         fpmdefaultconf = self._replace(fpmdefaultconf)
         fpmwwwconf = self._replace(fpmwwwconf)
         j.sal.fs.writeFile("{DIR_APPS}/php/etc/php-fpm.conf", contents=fpmdefaultconf)
@@ -122,18 +122,20 @@ class BuilderPHP(j.builder.system._BaseClass):
 
         php_tmp_path = self._replace("{DIR_TEMP}/php")
         php_app_path = self._replace("{DIR_APPS}/php")
-        j.sal.fs.copyFile(j.sal.fs.joinPaths(
-            php_tmp_path, 'php.ini-development'),
-            j.sal.fs.joinPaths(php_app_path, 'php.ini'))
-        
-        # It is important that we prevent Nginx from passing requests to the PHP-FPM backend if the file does not exists, 
-        # allowing us to prevent arbitrarily script injection. 
+        j.sal.fs.copyFile(
+            j.sal.fs.joinPaths(php_tmp_path, "php.ini-development"), j.sal.fs.joinPaths(php_app_path, "php.ini")
+        )
+
+        # It is important that we prevent Nginx from passing requests to the PHP-FPM backend if the file does not exists,
+        # allowing us to prevent arbitrarily script injection.
         # We can fix this by setting the cgi.fix_pathinfo directive to 0 within our php.ini file.
         C = """
         sed -i 's/;cgi.fix_pathinfo=1/;cgi.fix_pathinfo=0/g' {php_app_path}/php.ini
-        """.format(php_app_path=php_app_path)
+        """.format(
+            php_app_path=php_app_path
+        )
         j.sal.process.execute(C)
-        
+
         # copy binaries
         C = """
         set +x
@@ -142,7 +144,7 @@ class BuilderPHP(j.builder.system._BaseClass):
         """
         C = self._replace(C)
         j.sal.process.execute(C)
-        
+
         if start:
             self.start()
 
@@ -150,7 +152,6 @@ class BuilderPHP(j.builder.system._BaseClass):
         phpfpmcmd = "%s -F -y {DIR_APPS}/php/etc/php-fpm.conf" % self.NAME  # foreground
         phpfpmcmd = self._replace(phpfpmcmd)
         j.tools.tmux.execute(phpfpmcmd, window=self.NAME, pane=self.NAME, reset=True)
-        
 
     def stop(self):
         j.sal.process.killProcessByName(self.NAME)
@@ -161,4 +162,4 @@ class BuilderPHP(j.builder.system._BaseClass):
         :param name: basename of the file to run, defaults to "".
         :type name: str, optional
         """
-        self._test_run(name=name, obj_key='test_main')
+        self._test_run(name=name, obj_key="test_main")

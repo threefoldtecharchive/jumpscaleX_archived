@@ -1,16 +1,14 @@
 from Jumpscale import j
 
 
-
-
 class BuilderRestic(j.builder.system._BaseClass):
 
-    NAME = 'restic'
+    NAME = "restic"
 
     def _init(self):
         self.BUILDDIR = self._replace("{DIR_VAR}/build/restic")
-        self.DOWNLOAD_DEST = '{}/linux_amd64.bz2'.format(self.BUILDDIR)
-        self.FILE_NAME = '{}/linux_amd64'.format(self.BUILDDIR)
+        self.DOWNLOAD_DEST = "{}/linux_amd64.bz2".format(self.BUILDDIR)
+        self.FILE_NAME = "{}/linux_amd64".format(self.BUILDDIR)
 
     @property
     def CODEDIR(self):
@@ -25,12 +23,15 @@ class BuilderRestic(j.builder.system._BaseClass):
         j.sal.fs.remove(self.CODEDIR)
 
     def quick_install(self, install=True, reset=False):
-        if reset is False and (self.isInstalled() or self._done_get('quick_install')):
+        if reset is False and (self.isInstalled() or self._done_get("quick_install")):
             return
         if not j.builder.tools.file_exists(self.DOWNLOAD_DEST):
-            j.builder.tools.file_download('https://github.com/restic/restic/releases/download/v0.9.0/restic_0.9.0_linux_amd64.bz2', self.DOWNLOAD_DEST)
+            j.builder.tools.file_download(
+                "https://github.com/restic/restic/releases/download/v0.9.0/restic_0.9.0_linux_amd64.bz2",
+                self.DOWNLOAD_DEST,
+            )
         j.builder.tools.file_expand(self.DOWNLOAD_DEST)
-        j.sal.process.execute('chmod +x {}'.format(self.FILE_NAME))
+        j.sal.process.execute("chmod +x {}".format(self.FILE_NAME))
 
         self._done_set("quick_install")
 
@@ -38,7 +39,7 @@ class BuilderRestic(j.builder.system._BaseClass):
             self.install(source=self.FILE_NAME)
 
     def build(self, install=True, reset=False):
-        if reset is False and (self.isInstalled() or self._done_get('build')):
+        if reset is False and (self.isInstalled() or self._done_get("build")):
             return
 
         if reset:
@@ -50,7 +51,7 @@ class BuilderRestic(j.builder.system._BaseClass):
         url = "https://github.com/restic/restic/"
         j.clients.git.pullGitRepo(url, dest=self.CODEDIR, ssh=False, depth=1)
 
-        build_cmd = 'cd {dir}; go run build.go -k -v'.format(dir=self.CODEDIR)
+        build_cmd = "cd {dir}; go run build.go -k -v".format(dir=self.CODEDIR)
         j.sal.process.execute(build_cmd, profile=True)
 
         self._done_set("build")
@@ -67,9 +68,9 @@ class BuilderRestic(j.builder.system._BaseClass):
             return
 
         if source:
-            j.builder.tools.file_copy(self.FILE_NAME, '{DIR_BIN}/restic' )
+            j.builder.tools.file_copy(self.FILE_NAME, "{DIR_BIN}/restic")
         else:
-            j.builder.tools.file_copy(self.CODEDIR + '/restic', '{DIR_BIN}')
+            j.builder.tools.file_copy(self.CODEDIR + "/restic", "{DIR_BIN}")
 
         self._done_set("install")
 
@@ -95,16 +96,13 @@ class ResticRepository:
             self.initRepository()
 
     def _exists(self):
-        rc, _, _ = self._run('{DIR_BIN}/restic snapshots > /dev/null', die=False)
+        rc, _, _ = self._run("{DIR_BIN}/restic snapshots > /dev/null", die=False)
         if rc > 0:
             return False
         return True
 
     def _run(self, cmd, env=None, die=True, showout=True):
-        env_vars = {
-            'RESTIC_REPOSITORY': self.path,
-            'RESTIC_PASSWORD': self.__password
-        }
+        env_vars = {"RESTIC_REPOSITORY": self.path, "RESTIC_PASSWORD": self.__password}
         if self.repo_env:
             env_vars.update(self.repo_env)
         if env:
@@ -115,7 +113,7 @@ class ResticRepository:
         """
         initialize the repository at self.path location
         """
-        cmd = '{DIR_BIN}/restic init'
+        cmd = "{DIR_BIN}/restic init"
         self._run(cmd)
 
     def snapshot(self, path, tag=None):
@@ -123,7 +121,7 @@ class ResticRepository:
         @param path: directory/file to snapshot
         @param tag: tag to add to the snapshot
         """
-        cmd = '{DIR_BIN}/restic backup {} '.format(path)
+        cmd = "{DIR_BIN}/restic backup {} ".format(path)
         if tag:
             cmd += " --tag {}".format(tag)
         self._run(cmd)
@@ -133,7 +131,7 @@ class ResticRepository:
         @param snapshot_id: id of the snapshot to restore
         @param dest: path where to restore the snapshot to
         """
-        cmd = '{DIR_BIN}/restic restore --target {dest} {id} '.format(dest=dest, id=snapshot_id)
+        cmd = "{DIR_BIN}/restic restore --target {dest} {id} ".format(dest=dest, id=snapshot_id)
         self._run(cmd)
 
     def list_snapshots(self):
@@ -146,24 +144,20 @@ class ResticRepository:
           'tags': 'backup1'
         }
         """
-        cmd = '{DIR_BIN}/restic snapshots'
+        cmd = "{DIR_BIN}/restic snapshots"
         _, out, _ = self._run(cmd, showout=False)
 
         snapshots = []
         for line in out.splitlines()[2:-2]:
             ss = list(self._chunk(line))
 
-            snapshot = {
-                'id': ss[0],
-                'date': ' '.join(ss[1:3]),
-                'host': ss[3]
-            }
+            snapshot = {"id": ss[0], "date": " ".join(ss[1:3]), "host": ss[3]}
             if len(ss) == 6:
-                snapshot['tags'] = ss[4]
-                snapshot['directory'] = ss[5]
+                snapshot["tags"] = ss[4]
+                snapshot["directory"] = ss[5]
             else:
-                snapshot['tags'] = ''
-                snapshot['directory'] = ss[4]
+                snapshot["tags"] = ""
+                snapshot["directory"] = ss[4]
             snapshots.append(snapshot)
 
         return snapshots
@@ -172,7 +166,7 @@ class ResticRepository:
         """
         @return: True if integrity is ok else False
         """
-        cmd = '{DIR_BIN}/restic check'
+        cmd = "{DIR_BIN}/restic check"
         rc, _, _ = self._run(cmd)
         if rc != 0:
             return False
@@ -182,12 +176,12 @@ class ResticRepository:
         """
         passe line and yield each word separated by space
         """
-        word = ''
+        word = ""
         for c in line:
-            if c == ' ':
+            if c == " ":
                 if word:
                     yield word
-                    word = ''
+                    word = ""
                 continue
             else:
                 word += c

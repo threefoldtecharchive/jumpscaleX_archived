@@ -102,15 +102,17 @@ class Disk(BaseKVMComponent):
         Export disk object to xml
         """
 
-        disktemplate = self.controller.get_template('disk.xml')
+        disktemplate = self.controller.get_template("disk.xml")
         if self.image_name:
             diskbasevolume = self.controller.executor.prefab.core.joinpaths(
-                self.controller.base_path, "images", '%s' % self.image_name)
+                self.controller.base_path, "images", "%s" % self.image_name
+            )
         else:
-            diskbasevolume = ''
-        diskpath = self.controller.executor.prefab.core.joinpaths(self.pool.poolpath, '%s.qcow2' % self.name)
-        diskxml = disktemplate.render({'diskname': self.name, 'diskpath': diskpath,
-                                       'disksize': self.size, 'diskbasevolume': diskbasevolume})
+            diskbasevolume = ""
+        diskpath = self.controller.executor.prefab.core.joinpaths(self.pool.poolpath, "%s.qcow2" % self.name)
+        diskxml = disktemplate.render(
+            {"diskname": self.name, "diskpath": diskpath, "disksize": self.size, "diskbasevolume": diskbasevolume}
+        )
         return diskxml
 
     @classmethod
@@ -123,15 +125,15 @@ class Disk(BaseKVMComponent):
         """
 
         disk = ElementTree.fromstring(diskxml)
-        name = disk.findtext('name')
-        pool_name = disk.find('source').get('pool')
+        name = disk.findtext("name")
+        pool_name = disk.find("source").get("pool")
         pool = StorageController(controller).get_pool(pool_name)
-        size = disk.findtext('capacity')
-        if disk.find('backingStore') is not None and disk.find('backingStore').find('source') is not None:
-            path = disk.find('backingStore').find('source').get('file')
-            image_name = path.split("/")[-1].split('.')[0]
+        size = disk.findtext("capacity")
+        if disk.find("backingStore") is not None and disk.find("backingStore").find("source") is not None:
+            path = disk.find("backingStore").find("source").get("file")
+            image_name = path.split("/")[-1].split(".")[0]
         else:
-            image_name = ''
+            image_name = ""
         return cls(controller, pool, name, size, image_name)
 
     @classmethod

@@ -4,13 +4,10 @@ import json
 builder_method = j.builder.system.builder_method
 
 
-
 class BuilderZerotier(j.builder.system._BaseClass):
-
     def _init(self):
         self.DIR_BUILD = self._replace("{DIR_VAR}/build/zerotier/")
-        self.CLI = '/sandbox/bin/zerotier-cli'
-
+        self.CLI = "/sandbox/bin/zerotier-cli"
 
     def clean(self):
         super().reset()
@@ -18,12 +15,11 @@ class BuilderZerotier(j.builder.system._BaseClass):
         self._init()
 
     @builder_method()
-    def build(self,reset=False):
+    def build(self, reset=False):
         """
         kosmos 'j.builder.network.zerotier.build()'
         :return: 
         """
-
 
         if j.core.platformtype.myplatform.isMac:
             raise RuntimeError("not supported yet")
@@ -33,10 +29,11 @@ class BuilderZerotier(j.builder.system._BaseClass):
 
         j.builder.system.package.ensure("gcc")
         j.builder.system.package.ensure("g++")
-        j.builder.system.package.ensure('make')
+        j.builder.system.package.ensure("make")
 
         self.DIR_CODEL = j.clients.git.pullGitRepo(
-            "https://github.com/zerotier/ZeroTierOne", reset=reset, depth=1, branch='master')
+            "https://github.com/zerotier/ZeroTierOne", reset=reset, depth=1, branch="master"
+        )
 
         S = """
             cd {DIR_CODEL}
@@ -59,7 +56,6 @@ class BuilderZerotier(j.builder.system._BaseClass):
         # cmd = "cd {code} && DESTDIR={build} make install".format(code=codedir, build=self.DIR_BUILD)
         # j.sal.process.execute(cmd)
 
-
     @builder_method()
     def install(self):
         """
@@ -67,12 +63,11 @@ class BuilderZerotier(j.builder.system._BaseClass):
         :return:
         """
         self.build()
-        self._copy("{DIR_BUILD}/usr/sbin/","/sandbox/bin/")
-
+        self._copy("{DIR_BUILD}/usr/sbin/", "/sandbox/bin/")
 
     @property
     def startup_cmds(self):
-        cmd = j.tools.startupcmd.get("zerotier", "zerotier-one", path="/tmp", timeout=10,ports=[9993])
+        cmd = j.tools.startupcmd.get("zerotier", "zerotier-one", path="/tmp", timeout=10, ports=[9993])
         return [cmd]
 
     @builder_method()
@@ -81,9 +76,7 @@ class BuilderZerotier(j.builder.system._BaseClass):
         """Copy built bins to dest_path and create flist
         """
         self.install()
-        bin_dest = j.sal.fs.joinPaths(
-            "/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX)
-        )
+        bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX))
 
         self.tools.dir_ensure(bin_dest)
         zt_bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)

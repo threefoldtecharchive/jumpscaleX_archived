@@ -5,6 +5,7 @@ import urllib.request
 import urllib.parse
 import urllib.error
 import base64
+
 # import sys
 
 
@@ -13,6 +14,7 @@ import urllib.parse
 import urllib.request
 import urllib.error
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
 
@@ -28,14 +30,13 @@ HTTP_NOT_FOUND = 404
 STATUS_OK = set([HTTP_CREATED, HTTP_OK, HTTP_NO_CONTENT])
 STATUS_AUTH_REQ = set([HTTP_AUTH_REQUIRED, HTTP_FORBIDDEN])
 
-AUTHORIZATION_HEADER = 'Authorization'
+AUTHORIZATION_HEADER = "Authorization"
 
 
 class HTTPError(Exception):
-
     def __init__(self, httperror, url):
-        msg = 'Could not open http connection to url %s' % url
-        data = ''
+        msg = "Could not open http connection to url %s" % url
+        data = ""
         self.status_code = None
         if isinstance(httperror, urllib.error.HTTPError):
             msg = data = httperror.read()
@@ -49,7 +50,6 @@ class HTTPError(Exception):
 
 
 class Connection(JSBASE):
-
     def simpleAuth(self, url, username, password):
         """
         authorize with the given username and password on url
@@ -64,7 +64,7 @@ class Connection(JSBASE):
         :rtype:
         """
         req = urllib.request.Request(url)
-        auth = '%s:%s' % (username, password)
+        auth = "%s:%s" % (username, password)
         base64string = base64.encodebytes(auth.encode())[:-1]
         req.add_header("Authorization", "Basic %s" % base64string)
 
@@ -79,15 +79,14 @@ class Connection(JSBASE):
         @params is parameters as used in get e.g. name="kds",color="red"
         @headers e.g. headers={'content-type':'text/plain'}  (this is the default)
         """
-        response = self._http_request(
-            url, headers=headers, method='GET', **params)  # TODO: P1 fix & check
+        response = self._http_request(url, headers=headers, method="GET", **params)  # TODO: P1 fix & check
         return response
 
     def get_head(self, url):
         """
         get head only, this to make sure you don't have to download everything
         """
-        response = self._http_request(url, method='HEAD')
+        response = self._http_request(url, method="HEAD")
         return response
 
     def ping(self, url):
@@ -113,10 +112,9 @@ class Connection(JSBASE):
         @headers e.g. headers={'content-type':'text/plain'}  (this is the default)
         """
         if headers is None:
-            headers = {'content-type': 'text/plain'}
+            headers = {"content-type": "text/plain"}
 
-        response = self._http_request(
-            url, data=data, headers=headers, method='POST', **params)
+        response = self._http_request(url, data=data, headers=headers, method="POST", **params)
         return response
 
     def put(self, url, data=None, headers=None, **params):
@@ -124,8 +122,7 @@ class Connection(JSBASE):
         @data is the raw data which will be sent
         @headers e.g. headers={'content-type':'text/plain'}  (this is the default)
         """
-        response = self._http_request(
-            url, data=data, headers=headers, method='PUT', **params)
+        response = self._http_request(url, data=data, headers=headers, method="PUT", **params)
         return response
 
     def delete(self, url, data=None, headers=None, **params):
@@ -133,19 +130,18 @@ class Connection(JSBASE):
         @data is the raw data which will be sent
         @headers e.g. headers={'content-type':'text/plain'}  (this is the default)
         """
-        response = self._http_request(
-            url, data=data, headers=headers, method='DELETE', **params)
+        response = self._http_request(url, data=data, headers=headers, method="DELETE", **params)
         return response
 
     def download(self, fileUrl, downloadPath, customHeaders=None, report=False):
-        '''
+        """
         Download a file from server to a local path
 
         @param fileUrl: url of an existing file that has its data available on server (sent earlier)
         @param downloadPath: local directory to download into
         @param customHeaders: allows this method to be used to retrieve edited copies of an image
         @return: True
-        '''
+        """
 
         # # _urlopener    = urllib.request.FancyURLopener()
         # _urlopener=urllib2.urlopen
@@ -160,10 +156,9 @@ class Connection(JSBASE):
 
         scheme, netloc, path, query, fragment = urllib.parse.urlsplit(url)
 
-        with open(downloadPath, 'wb') as f:
+        with open(downloadPath, "wb") as f:
             meta = u.info()
-            meta_func = meta.getheaders if hasattr(
-                meta, 'getheaders') else meta.get_all
+            meta_func = meta.getheaders if hasattr(meta, "getheaders") else meta.get_all
             meta_length = meta_func("Content-Length")
             file_size = None
             if meta_length:
@@ -183,8 +178,7 @@ class Connection(JSBASE):
                 if report:
                     status = "{0:16}".format(file_size_dl)
                     if file_size:
-                        status += "   [{0:6.2f}%]".format(
-                            file_size_dl * 100 / file_size)
+                        status += "   [{0:6.2f}%]".format(file_size_dl * 100 / file_size)
                     status += chr(13)
                     self._log_debug(status)
 
@@ -219,26 +213,25 @@ class Connection(JSBASE):
         :returns the response of calling the http request
         """
         url = self._updateUrlParams(url, **kwargs)
-        data = data or kwargs.get('data', None)
+        data = data or kwargs.get("data", None)
         if data and isinstance(data, (dict, list)):
             data = urllib.parse.urlencode(data)
-            data = data.encode('utf-8')
+            data = data.encode("utf-8")
         request = urllib.request.Request(url, data=data)
         if headers:
             for key, value in list(headers.items()):
                 request.add_header(key, value)
         if not method:
-            method = 'POST' if data else 'GET'
+            method = "POST" if data else "GET"
         request.get_method = lambda: method
         try:
             resp = urllib.request.urlopen(request)
         except Exception as e:
             raise HTTPError(e, url)
 
-        #if resp.code in STATUS_AUTH_REQ: raise AuthorizationError('Not logged in or token expired')
+        # if resp.code in STATUS_AUTH_REQ: raise AuthorizationError('Not logged in or token expired')
         if resp.code not in (STATUS_OK):
-            raise Exception(
-                'unexpected HTTP response status %s: %s' % resp.code, resp)
+            raise Exception("unexpected HTTP response status %s: %s" % resp.code, resp)
         return resp
 
 
@@ -255,6 +248,7 @@ class HttpClient(j.application.JSBaseClass):
     def ping(self, url):
         # Use unverified ssl context for pinging websites
         import ssl
+
         ssl._create_default_https_context = ssl._create_unverified_context
         c = self.getConnection()
         res = c.ping(url)
@@ -286,6 +280,8 @@ class HttpClient(j.application.JSBaseClass):
 
         assert c.ping("https://something/j") == False
 
-        assert c.ping("https://docs.grid.tf/dividi/values/src/branch/master/veda_values.md") == True  # authentication error
+        assert (
+            c.ping("https://docs.grid.tf/dividi/values/src/branch/master/veda_values.md") == True
+        )  # authentication error
 
         # assert c.ping("https://www.linkedin.com/in/babenkonickolay/") == False

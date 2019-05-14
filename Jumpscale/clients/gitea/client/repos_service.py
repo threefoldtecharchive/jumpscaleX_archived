@@ -17,10 +17,7 @@ from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 
 
-
-
-
-class ReposService():
+class ReposService:
     def __init__(self, client):
         pass
         self.client = client
@@ -36,9 +33,8 @@ class ReposService():
             if resp.status_code == 201:
                 return Repository(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -57,9 +53,8 @@ class ReposService():
             if resp.status_code == 200:
                 return SearchResults(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -86,9 +81,8 @@ class ReposService():
             if resp.status_code == 200:
                 return Branch(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -110,9 +104,8 @@ class ReposService():
                     resps.append(Branch(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -121,13 +114,8 @@ class ReposService():
             raise UnmarshallError(resp, e.message)
 
     def repoDeleteCollaborator(
-            self,
-            collaborator,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, collaborator, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Delete a collaborator from a repository
         It is method for DELETE /repos/{owner}/{repo}/collaborators/{collaborator}
@@ -136,13 +124,8 @@ class ReposService():
         return self.client.delete(uri, None, headers, query_params, content_type)
 
     def repoCheckCollaborator(
-            self,
-            collaborator,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, collaborator, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Check if a user is a collaborator of a repository
         It is method for GET /repos/{owner}/{repo}/collaborators/{collaborator}
@@ -151,14 +134,8 @@ class ReposService():
         return self.client.get(uri, None, headers, query_params, content_type)
 
     def repoAddCollaborator(
-            self,
-            data,
-            collaborator,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, collaborator, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Add a collaborator to a repository
         It is method for PUT /repos/{owner}/{repo}/collaborators/{collaborator}
@@ -180,9 +157,8 @@ class ReposService():
                     resps.append(User(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -191,13 +167,8 @@ class ReposService():
             raise UnmarshallError(resp, e.message)
 
     def repoGetCombinedStatusByRef(
-            self,
-            ref,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, ref, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Get a commit's combined status, by branch/tag/commit reference
         It is method for GET /repos/{owner}/{repo}/commits/{ref}/statuses
@@ -208,9 +179,8 @@ class ReposService():
             if resp.status_code == 200:
                 return Status(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -219,13 +189,8 @@ class ReposService():
             raise UnmarshallError(resp, e.message)
 
     def repoGetEditorConfig(
-            self,
-            filepath,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, filepath, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Get the EditorConfig definitions of a file in a repository
         It is method for GET /repos/{owner}/{repo}/editorconfig/{filepath}
@@ -247,9 +212,8 @@ class ReposService():
                     resps.append(Repository(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -268,9 +232,8 @@ class ReposService():
             if resp.status_code == 202:
                 return Repository(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -292,9 +255,8 @@ class ReposService():
                     resps.append(Branch(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -316,9 +278,8 @@ class ReposService():
                     resps.append(Branch(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -340,9 +301,8 @@ class ReposService():
                     resps.append(Branch(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -364,9 +324,8 @@ class ReposService():
                     resps.append(Branch(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -393,9 +352,8 @@ class ReposService():
             if resp.status_code == 200:
                 return Comment(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -417,9 +375,8 @@ class ReposService():
                     resps.append(Comment(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -438,9 +395,8 @@ class ReposService():
             if resp.status_code == 200:
                 return Issue(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -459,9 +415,8 @@ class ReposService():
             if resp.status_code == 201:
                 return Issue(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -470,14 +425,8 @@ class ReposService():
             raise UnmarshallError(resp, e.message)
 
     def issueDeleteCommentDeprecated(
-            self,
-            id,
-            index,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, id, index, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Delete a comment
         It is method for DELETE /repos/{owner}/{repo}/issues/{index}/comments/{id}
@@ -486,15 +435,8 @@ class ReposService():
         return self.client.delete(uri, None, headers, query_params, content_type)
 
     def issueEditCommentDeprecated(
-            self,
-            data,
-            id,
-            index,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, id, index, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Edit a comment
         It is method for PATCH /repos/{owner}/{repo}/issues/{index}/comments/{id}
@@ -505,9 +447,8 @@ class ReposService():
             if resp.status_code == 200:
                 return Comment(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -529,9 +470,8 @@ class ReposService():
                     resps.append(Comment(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -540,14 +480,8 @@ class ReposService():
             raise UnmarshallError(resp, e.message)
 
     def issueCreateComment(
-            self,
-            data,
-            index,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, index, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Add a comment to an issue
         It is method for POST /repos/{owner}/{repo}/issues/{index}/comments
@@ -558,9 +492,8 @@ class ReposService():
             if resp.status_code == 201:
                 return Comment(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -569,14 +502,8 @@ class ReposService():
             raise UnmarshallError(resp, e.message)
 
     def issueRemoveLabel(
-            self,
-            id,
-            index,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, id, index, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Remove a label from an issue
         It is method for DELETE /repos/{owner}/{repo}/issues/{index}/labels/{id}
@@ -606,9 +533,8 @@ class ReposService():
                     resps.append(Label(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -630,9 +556,8 @@ class ReposService():
                     resps.append(Label(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -641,14 +566,8 @@ class ReposService():
             raise UnmarshallError(resp, e.message)
 
     def issueReplaceLabels(
-            self,
-            data,
-            index,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, index, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Replace an issue's labels
         It is method for PUT /repos/{owner}/{repo}/issues/{index}/labels
@@ -662,9 +581,8 @@ class ReposService():
                     resps.append(Label(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -686,9 +604,8 @@ class ReposService():
                     resps.append(TrackedTime(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -707,9 +624,8 @@ class ReposService():
             if resp.status_code == 200:
                 return TrackedTime(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -731,9 +647,8 @@ class ReposService():
                     resps.append(Issue(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -752,9 +667,8 @@ class ReposService():
             if resp.status_code == 201:
                 return Issue(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -781,9 +695,8 @@ class ReposService():
             if resp.status_code == 200:
                 return DeployKey(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -805,9 +718,8 @@ class ReposService():
                     resps.append(DeployKey(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -826,9 +738,8 @@ class ReposService():
             if resp.status_code == 201:
                 return DeployKey(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -855,9 +766,8 @@ class ReposService():
             if resp.status_code == 200:
                 return Label(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -876,9 +786,8 @@ class ReposService():
             if resp.status_code == 200:
                 return Label(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -900,9 +809,8 @@ class ReposService():
                     resps.append(Label(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -921,9 +829,8 @@ class ReposService():
             if resp.status_code == 201:
                 return Label(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -950,9 +857,8 @@ class ReposService():
             if resp.status_code == 200:
                 return Milestone(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -961,14 +867,8 @@ class ReposService():
             raise UnmarshallError(resp, e.message)
 
     def issueEditMilestone(
-            self,
-            data,
-            id,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, id, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Update a milestone
         It is method for PATCH /repos/{owner}/{repo}/milestones/{id}
@@ -979,9 +879,8 @@ class ReposService():
             if resp.status_code == 200:
                 return Milestone(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1003,9 +902,8 @@ class ReposService():
                     resps.append(Milestone(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1024,9 +922,8 @@ class ReposService():
             if resp.status_code == 201:
                 return Milestone(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1043,13 +940,8 @@ class ReposService():
         return self.client.post(uri, data, headers, query_params, content_type)
 
     def repoPullRequestIsMerged(
-            self,
-            index,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, index, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Check if a pull request has been merged
         It is method for GET /repos/{owner}/{repo}/pulls/{index}/merge
@@ -1058,14 +950,8 @@ class ReposService():
         return self.client.get(uri, None, headers, query_params, content_type)
 
     def repoMergePullRequest(
-            self,
-            data,
-            index,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, index, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Merge a pull request
         It is method for POST /repos/{owner}/{repo}/pulls/{index}/merge
@@ -1084,9 +970,8 @@ class ReposService():
             if resp.status_code == 200:
                 return PullRequest(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1095,14 +980,8 @@ class ReposService():
             raise UnmarshallError(resp, e.message)
 
     def repoEditPullRequest(
-            self,
-            data,
-            index,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, index, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Update a pull request
         It is method for PATCH /repos/{owner}/{repo}/pulls/{index}
@@ -1113,9 +992,8 @@ class ReposService():
             if resp.status_code == 201:
                 return PullRequest(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1137,9 +1015,8 @@ class ReposService():
                     resps.append(PullRequest(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1148,13 +1025,8 @@ class ReposService():
             raise UnmarshallError(resp, e.message)
 
     def repoCreatePullRequest(
-            self,
-            data,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Create a pull request
         It is method for POST /repos/{owner}/{repo}/pulls
@@ -1165,9 +1037,8 @@ class ReposService():
             if resp.status_code == 201:
                 return PullRequest(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1202,9 +1073,8 @@ class ReposService():
             if resp.status_code == 200:
                 return Release(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1223,9 +1093,8 @@ class ReposService():
             if resp.status_code == 201:
                 return Release(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1247,9 +1116,8 @@ class ReposService():
                     resps.append(User(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1271,9 +1139,8 @@ class ReposService():
                     resps.append(Status(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1282,14 +1149,8 @@ class ReposService():
             raise UnmarshallError(resp, e.message)
 
     def repoCreateStatus(
-            self,
-            data,
-            sha,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, sha, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Create a commit status
         It is method for POST /repos/{owner}/{repo}/statuses/{sha}
@@ -1303,9 +1164,8 @@ class ReposService():
                     resps.append(Status(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1327,9 +1187,8 @@ class ReposService():
                     resps.append(User(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1338,12 +1197,8 @@ class ReposService():
             raise UnmarshallError(resp, e.message)
 
     def userCurrentDeleteSubscription(
-            self,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Unwatch a repo
         It is method for DELETE /repos/{owner}/{repo}/subscription
@@ -1352,12 +1207,8 @@ class ReposService():
         return self.client.delete(uri, None, headers, query_params, content_type)
 
     def userCurrentCheckSubscription(
-            self,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Check if the current user is watching a repo
         It is method for GET /repos/{owner}/{repo}/subscription
@@ -1368,9 +1219,8 @@ class ReposService():
             if resp.status_code == 200:
                 return WatchInfo(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1379,13 +1229,8 @@ class ReposService():
             raise UnmarshallError(resp, e.message)
 
     def userCurrentPutSubscription(
-            self,
-            data,
-            repo,
-            owner,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, repo, owner, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Watch a repo
         It is method for PUT /repos/{owner}/{repo}/subscription
@@ -1396,9 +1241,8 @@ class ReposService():
             if resp.status_code == 200:
                 return WatchInfo(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1420,9 +1264,8 @@ class ReposService():
                     resps.append(TrackedTime(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1444,9 +1287,8 @@ class ReposService():
                     resps.append(TrackedTime(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -1473,9 +1315,8 @@ class ReposService():
             if resp.status_code == 200:
                 return Repository(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:

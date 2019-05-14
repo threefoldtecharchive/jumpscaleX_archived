@@ -1,6 +1,4 @@
-
-
-'''The ZipFile class provides convenience methods to work with zip archives'''
+"""The ZipFile class provides convenience methods to work with zip archives"""
 
 import sys
 import os.path
@@ -9,14 +7,16 @@ import zipfile
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
+
+
 class ZipFileFactory(j.application.JSBaseClass):
-    READ = 'r'
-    WRITE = 'w'
-    APPEND = 'a'
+    READ = "r"
+    WRITE = "w"
+    APPEND = "a"
 
     def __init__(self):
-        if not hasattr(self, '__jslocation__'):
-            self.__jslocation__ = 'j.tools.zipfile'
+        if not hasattr(self, "__jslocation__"):
+            self.__jslocation__ = "j.tools.zipfile"
         JSBASE.__init__(self)
 
     def get(self, path, mode=READ):
@@ -24,42 +24,39 @@ class ZipFileFactory(j.application.JSBaseClass):
 
 
 class ZipFile(j.application.JSBaseClass):
-    '''Handle zip files'''
+    """Handle zip files"""
 
     def __init__(self, path, mode=ZipFileFactory.READ):
-        '''Create a new ZipFile object
+        """Create a new ZipFile object
 
         @param path: Path to target zip file
         @type path: string
         @prarm mode: Action to perform on the zip file
         @type mode: ZipFileFactory Action
-        '''
+        """
         JSBASE.__init__(self)
 
         if not j.data.types.path.check(path):
-            raise ValueError('Provided string %s is not a valid path' % path)
+            raise ValueError("Provided string %s is not a valid path" % path)
         if mode is ZipFileFactory.READ:
             if not j.sal.fs.isFile(path):
-                raise ValueError(
-                    'Provided path %s is not an existing file' % path)
+                raise ValueError("Provided path %s is not an existing file" % path)
             if not zipfile.is_zipfile(path):
-                raise ValueError(
-                    'Provided path %s is not a valid zip archive' % path)
-            self._zip = zipfile.ZipFile(path, 'r')
+                raise ValueError("Provided path %s is not a valid zip archive" % path)
+            self._zip = zipfile.ZipFile(path, "r")
             # TODO Make this optional?
             result = self._zip.testzip()
             if result is not None:
-                raise j.exceptions.RuntimeError('Trying to open broken zipfile, first broken file is %s' %
-                                                result)
+                raise j.exceptions.RuntimeError("Trying to open broken zipfile, first broken file is %s" % result)
 
         else:
-            raise ValueError('Invalid mode')
+            raise ValueError("Invalid mode")
 
         self.path = path
         self.mode = mode
 
     def extract(self, destination_path, files=None, folder=None):
-        '''Extract all or some files from the archive to destination_path
+        """Extract all or some files from the archive to destination_path
 
         The files argument can be a list of names (relative from the root of
         the archive) to extract. If no file list is provided, all files
@@ -71,9 +68,9 @@ class ZipFile(j.application.JSBaseClass):
         @type files: iterable
         @param folder: Folder to extract
         @type folder: string
-        '''
+        """
         if files and folder:
-            raise ValueError('Only files or folders can be provided, not both')
+            raise ValueError("Only files or folders can be provided, not both")
 
         if not files:
             files = self._zip.namelist()
@@ -82,7 +79,7 @@ class ZipFile(j.application.JSBaseClass):
             files = (f for f in files if os.path.normpath(f).startswith(folder))
 
         # normpath to strip occasional ./ etc
-        for f in (os.path.normpath(_f) for _f in files if not _f.endswith('/')):
+        for f in (os.path.normpath(_f) for _f in files if not _f.endswith("/")):
             dirname = os.path.dirname(f)
             basename = os.path.basename(f)
 
@@ -98,7 +95,7 @@ class ZipFile(j.application.JSBaseClass):
             except KeyError:
                 if not j.core.platformtype.myplatform.isWindows:
                     raise
-                f_ = f.replace('\\', '/')
+                f_ = f.replace("\\", "/")
                 try:
                     self._zip.getinfo(f_)
                 except KeyError:
@@ -108,12 +105,12 @@ class ZipFile(j.application.JSBaseClass):
 
             data = self._zip.read(f)
             # We need binary write
-            self._log_info('Writing file %s' % outfile_path)
-            fd = open(outfile_path, 'wb')
+            self._log_info("Writing file %s" % outfile_path)
+            fd = open(outfile_path, "wb")
             fd.write(data)
             fd.close()
             del data
 
     def close(self):
-        '''Close the backing zip file'''
+        """Close the backing zip file"""
         self._zip.close()

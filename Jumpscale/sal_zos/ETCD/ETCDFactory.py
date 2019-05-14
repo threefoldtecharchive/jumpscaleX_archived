@@ -8,7 +8,18 @@ from .ETCD import ETCD
 class ETCDFactory(JSBASE):
     __jslocation__ = "j.sal_zos.etcd"
 
-    def get(self, node, name, password, data_dir='/mnt/data', zt_identity=None, nics=None, token=None, cluster=None, host_network=False):
+    def get(
+        self,
+        node,
+        name,
+        password,
+        data_dir="/mnt/data",
+        zt_identity=None,
+        nics=None,
+        token=None,
+        cluster=None,
+        host_network=False,
+    ):
         """
         Get sal for etcd management in ZOS
 

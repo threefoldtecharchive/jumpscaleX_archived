@@ -2,19 +2,19 @@ from Jumpscale import j
 
 import time
 import datetime
+
 # import jose.jwt
 # from paramiko.ssh_exception import BadAuthenticationType
 JSBASE = j.application.JSBaseClass
 
 
 class Machine(j.application.JSBaseClass):
-
     def __init__(self, space, machine):
         JSBASE.__init__(self)
 
         self.space = space
         self.client = space.client
-        self.id = machine['id']
+        self.id = machine["id"]
         self._ssh_enabled = None
         self.refresh()
 
@@ -46,7 +46,7 @@ class Machine(j.application.JSBaseClass):
         def do():
             timeout = j.data.time.epoch + 20
             model = self.client.api.cloudapi.machines.get(machineId=self.id)
-            while len(model['interfaces']) == 0 or model['interfaces'][0]['ipAddress'] == 'Undefined':
+            while len(model["interfaces"]) == 0 or model["interfaces"][0]["ipAddress"] == "Undefined":
                 if j.data.time.epoch > timeout:
                     raise j.exceptions.RuntimeError("Could not get IP Address for machine %(name)s" % model)
                 time.sleep(1)
@@ -95,10 +95,9 @@ class Machine(j.application.JSBaseClass):
         :rtype: int
         """
 
-        return self.client.api.cloudapi.machines.clone(machineId=self.id,
-                                                       name=name,
-                                                       cloudspaceId=cloudspaceId,
-                                                       snapshotTimestamp=snapshotTimestamp)
+        return self.client.api.cloudapi.machines.clone(
+            machineId=self.id, name=name, cloudspaceId=cloudspaceId, snapshotTimestamp=snapshotTimestamp
+        )
 
     def snapshot_create(self, name=None):
         """Will create a snapshot of the machine.
@@ -109,8 +108,7 @@ class Machine(j.application.JSBaseClass):
 
         if name is None:
             name = str(datetime.datetime.now())
-        self.client.api.cloudapi.machines.snapshot(
-            machineId=self.id, name=name)
+        self.client.api.cloudapi.machines.snapshot(machineId=self.id, name=name)
 
     @property
     def snapshots(self):
@@ -125,16 +123,14 @@ class Machine(j.application.JSBaseClass):
         Will delete a snapshot of the machine.
         :param epoch: the epoch of the snapshot to be deleted.
         """
-        self.client.api.cloudapi.machines.deleteSnapshot(
-            machineId=self.id, epoch=epoch)
+        self.client.api.cloudapi.machines.deleteSnapshot(machineId=self.id, epoch=epoch)
 
     def snapshot_rollback(self, epoch):
         """
         Will rollback a snapshot of the machine.
         :param epoch: the epoch of the snapshot to be rollbacked.
         """
-        self.client.api.cloudapi.machines.rollbackSnapshot(
-            machineId=self.id, epoch=epoch)
+        self.client.api.cloudapi.machines.rollbackSnapshot(machineId=self.id, epoch=epoch)
 
     def history_get(self, size):
         """get machine history
@@ -148,14 +144,12 @@ class Machine(j.application.JSBaseClass):
         return self.client.api.cloudapi.machines.getHistory(machineId=self.id, size=size)
 
     def externalnetwork_attach(self):
-        self.client.api.cloudapi.machines.attachExternalNetwork(
-            machineId=self.id)
+        self.client.api.cloudapi.machines.attachExternalNetwork(machineId=self.id)
 
     def externalnetwork_detach(self):
-        self.client.api.cloudapi.machines.detachExternalNetwork(
-            machineId=self.id)
+        self.client.api.cloudapi.machines.detachExternalNetwork(machineId=self.id)
 
-    def disk_add(self, name, description, size=10, type='D', ssdSize=0):
+    def disk_add(self, name, description, size=10, type="D", ssdSize=0):
         """attach disk to the machine
 
         :param name: name of the disk
@@ -172,12 +166,9 @@ class Machine(j.application.JSBaseClass):
         :rtype: int
         """
 
-        disk_id = self.client.api.cloudapi.machines.addDisk(machineId=self.id,
-                                                            diskName=name,
-                                                            description=description,
-                                                            size=size,
-                                                            type=type,
-                                                            ssdSize=ssdSize)
+        disk_id = self.client.api.cloudapi.machines.addDisk(
+            machineId=self.id, diskName=name, description=description, size=size, type=type, ssdSize=ssdSize
+        )
         return disk_id
 
     @property
@@ -187,7 +178,7 @@ class Machine(j.application.JSBaseClass):
         : return: list of disks details
         """
         machine_data = self.client.api.cloudapi.machines.get(machineId=self.id)
-        return [disk for disk in machine_data['disks'] if disk['type'] != 'M']
+        return [disk for disk in machine_data["disks"] if disk["type"] != "M"]
 
     def disk_detach(self, disk_id):
         """
@@ -198,26 +189,50 @@ class Machine(j.application.JSBaseClass):
     def disk_attach(self, disk_id):
         """
         Attach disk to the machine
-        """        
+        """
         return self.client.api.cloudapi.machines.attachDisk(machineId=self.id, diskId=disk_id)
 
-    def disk_limit_io(self, disk_id, total_bytes_sec, read_bytes_sec, write_bytes_sec, total_iops_sec,
-                      read_iops_sec, write_iops_sec, total_bytes_sec_max, read_bytes_sec_max,
-                      write_bytes_sec_max, total_iops_sec_max, read_iops_sec_max,
-                      write_iops_sec_max, size_iops_sec, iops=50):
-        self.client.api.cloudapi.disks.limitIO(diskId=disk_id, iops=iops, total_bytes_sec=total_bytes_sec,
-                                               read_bytes_sec=read_bytes_sec,
-                                               write_bytes_sec=write_bytes_sec, total_iops_sec=total_iops_sec,
-                                               read_iops_sec=read_iops_sec, write_iops_sec=write_iops_sec,
-                                               total_bytes_sec_max=total_bytes_sec_max, read_bytes_sec_max=read_bytes_sec_max,
-                                               write_bytes_sec_max=write_bytes_sec_max, total_iops_sec_max=total_iops_sec_max,
-                                               read_iops_sec_max=read_iops_sec_max, write_iops_sec_max=write_iops_sec_max,
-                                               size_iops_sec=size_iops_sec)
+    def disk_limit_io(
+        self,
+        disk_id,
+        total_bytes_sec,
+        read_bytes_sec,
+        write_bytes_sec,
+        total_iops_sec,
+        read_iops_sec,
+        write_iops_sec,
+        total_bytes_sec_max,
+        read_bytes_sec_max,
+        write_bytes_sec_max,
+        total_iops_sec_max,
+        read_iops_sec_max,
+        write_iops_sec_max,
+        size_iops_sec,
+        iops=50,
+    ):
+        self.client.api.cloudapi.disks.limitIO(
+            diskId=disk_id,
+            iops=iops,
+            total_bytes_sec=total_bytes_sec,
+            read_bytes_sec=read_bytes_sec,
+            write_bytes_sec=write_bytes_sec,
+            total_iops_sec=total_iops_sec,
+            read_iops_sec=read_iops_sec,
+            write_iops_sec=write_iops_sec,
+            total_bytes_sec_max=total_bytes_sec_max,
+            read_bytes_sec_max=read_bytes_sec_max,
+            write_bytes_sec_max=write_bytes_sec_max,
+            total_iops_sec_max=total_iops_sec_max,
+            read_iops_sec_max=read_iops_sec_max,
+            write_iops_sec_max=write_iops_sec_max,
+            size_iops_sec=size_iops_sec,
+        )
 
     @property
     def portforwards(self):
         def do():
             return self.client.api.cloudapi.portforwarding.list(cloudspaceId=self.space.id, machineId=self.id)
+
         return self._cache.get("portforwards", do, expire=120)
 
     def portforwards_delete(self):
@@ -226,7 +241,8 @@ class Machine(j.application.JSBaseClass):
         for item in self.portforwards:
             print("portforwards_delete")
             from IPython import embed
-            embed(colors='Linux')
+
+            embed(colors="Linux")
             s
 
     def portforward_exist(self, publicport):
@@ -235,7 +251,7 @@ class Machine(j.application.JSBaseClass):
                 return True
         return False
 
-    def portforward_create(self, publicport, localport, protocol='tcp', overwrite=True):
+    def portforward_create(self, publicport, localport, protocol="tcp", overwrite=True):
         """create portforward exposing specified port of the machine
 
         :param publicport: The exposed public port if none will select first available port in the cloudspace beginning with 2200
@@ -258,16 +274,15 @@ class Machine(j.application.JSBaseClass):
 
         self.space.model  # will make sure space is deployed
         self.model  # will make sure machine is deployed
-        if protocol not in ['tcp', 'udp']:
-            raise j.exceptions.RuntimeError(
-                "Protocol for portforward should be tcp or udp not %s" % protocol)
+        if protocol not in ["tcp", "udp"]:
+            raise j.exceptions.RuntimeError("Protocol for portforward should be tcp or udp not %s" % protocol)
 
         if overwrite and publicport:
             self.portforward_delete(publicport)
 
         # define real publicport, override it by a generated one if needed
         if publicport is None:
-            unavailable_ports = [int(portinfo['publicPort']) for portinfo in self.space.portforwards]
+            unavailable_ports = [int(portinfo["publicPort"]) for portinfo in self.space.portforwards]
             candidate = 2200
 
             while candidate in unavailable_ports:
@@ -280,7 +295,7 @@ class Machine(j.application.JSBaseClass):
                 localPort=localport,
                 machineId=self.id,
                 publicIp=self.ipaddr_public,
-                publicPort=publicport if publicport is not None else candidate
+                publicPort=publicport if publicport is not None else candidate,
             )
 
         except Exception as e:
@@ -289,8 +304,7 @@ class Machine(j.application.JSBaseClass):
             #   let's try again with a new port
             if str(e).startswith("409 Conflict") and publicport is None:
                 return self.portforward_create(None, localport, protocol)
-            raise j.exceptions.RuntimeError(
-                "Error while creating portforwarding: %s" % e)
+            raise j.exceptions.RuntimeError("Error while creating portforwarding: %s" % e)
 
         self._cache.reset()
 
@@ -307,9 +321,9 @@ class Machine(j.application.JSBaseClass):
         if self.portforward_exist(publicport):
             self.client.api.cloudapi.portforwarding.deleteByPort(
                 cloudspaceId=self.space.id,
-                publicIp=self.space.model['publicipaddress'],
+                publicIp=self.space.model["publicipaddress"],
                 publicPort=publicport,
-                proto='tcp'
+                proto="tcp",
             )
         self._cache.reset()
 
@@ -324,7 +338,7 @@ class Machine(j.application.JSBaseClass):
 
     @property
     def ipaddr_priv(self):
-        return self.model['interfaces'][0]['ipAddress']
+        return self.model["interfaces"][0]["ipAddress"]
 
     @property
     def ipaddr_public(self):
@@ -338,8 +352,17 @@ class Machine(j.application.JSBaseClass):
         if self._sshclient is None:
             addr, port = self._ssh_info()
             key = self._ssh_client_key(addr, port, "root")
-            self._sshclient = j.clients.ssh.new(instance=key, addr=addr, port=port, login="root", passwd="",
-                                                keyname=self.sshkeyname, allow_agent=True, timeout=300, addr_priv=self.ipaddr_priv)
+            self._sshclient = j.clients.ssh.new(
+                instance=key,
+                addr=addr,
+                port=port,
+                login="root",
+                passwd="",
+                keyname=self.sshkeyname,
+                allow_agent=True,
+                timeout=300,
+                addr_priv=self.ipaddr_priv,
+            )
         return self._sshclient
 
     @property
@@ -350,19 +373,28 @@ class Machine(j.application.JSBaseClass):
         if self._sshclient_private is None:
             addr, port = self.ipaddr_priv, 22
             key = self._ssh_client_key(addr, port, "root", True)
-            self._sshclient_private = j.clients.ssh.new(instance=key, addr=self.ipaddr_priv, port=22, login="root", passwd="",
-                                                        keyname=self.sshkeyname, allow_agent=True, timeout=300, addr_priv=self.ipaddr_priv)
+            self._sshclient_private = j.clients.ssh.new(
+                instance=key,
+                addr=self.ipaddr_priv,
+                port=22,
+                login="root",
+                passwd="",
+                keyname=self.sshkeyname,
+                allow_agent=True,
+                timeout=300,
+                addr_priv=self.ipaddr_priv,
+            )
         return self._sshclient_private
 
     def _ssh_info(self):
         sp_pfs = self.space.portforwards
-        internal_ip = self.model['interfaces'][0]['ipAddress']  # TODO harden
+        internal_ip = self.model["interfaces"][0]["ipAddress"]  # TODO harden
         port = None
         addr = None
         for pf in sp_pfs:
-            if pf['localIp'] == internal_ip and pf['localPort'] == '22':
-                addr = pf['publicIp']
-                port = pf['publicPort']
+            if pf["localIp"] == internal_ip and pf["localPort"] == "22":
+                addr = pf["publicIp"]
+                port = pf["publicPort"]
 
         # error if port 22 is not found
         if not addr or not port:
@@ -380,7 +412,7 @@ class Machine(j.application.JSBaseClass):
         :type sshkeyname: str
         """
 
-        login = self.model['accounts'][0]['login']
+        login = self.model["accounts"][0]["login"]
         addr, port = self._ssh_info()
         instance = self._ssh_client_key(addr, port, login)
         self._authorize(sshkeyname, instance, addr, port, None)
@@ -391,20 +423,28 @@ class Machine(j.application.JSBaseClass):
         :param sshkeyname: public sshkey string
         :type sshkeyname: str
         """
-        login = self.model['accounts'][0]['login']
+        login = self.model["accounts"][0]["login"]
         addr, port = self.ipaddr_priv, 22
         instance = self._ssh_client_key(addr, port, login, True)
         self._authorize(sshkeyname, instance, addr, port, None)
 
     def _authorize(self, sshkeyname, instance, addr, port, priv_addr):
-        login = self.model['accounts'][0]['login']
-        password = self.model['accounts'][0]['password']
-        
-        sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login=login, passwd=password,
-                                      keyname="", allow_agent=False, timeout=300)
+        login = self.model["accounts"][0]["login"]
+        password = self.model["accounts"][0]["password"]
+
+        sshclient = j.clients.ssh.new(
+            instance=instance,
+            addr=addr,
+            port=port,
+            login=login,
+            passwd=password,
+            keyname="",
+            allow_agent=False,
+            timeout=300,
+        )
         try:
             sshclient.connect()
-            sshclient.ssh_authorize(key=sshkeyname, user='root')
+            sshclient.ssh_authorize(key=sshkeyname, user="root")
         finally:
             sshclient.config.delete()  # remove this temp sshconnection
             sshclient.close()
@@ -412,8 +452,17 @@ class Machine(j.application.JSBaseClass):
             j.clients.sshkey.knownhosts_remove(addr)
 
         instance = self._ssh_client_key(addr, port, "root", priv_addr)
-        self._sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login="root", passwd="",
-                                            keyname=self.sshkeyname, allow_agent=True, timeout=300, addr_priv=self.ipaddr_priv)
+        self._sshclient = j.clients.ssh.new(
+            instance=instance,
+            addr=addr,
+            port=port,
+            login="root",
+            passwd="",
+            keyname=self.sshkeyname,
+            allow_agent=True,
+            timeout=300,
+            addr_priv=self.ipaddr_priv,
+        )
 
         j.tools.executor.reset()
 
@@ -421,13 +470,14 @@ class Machine(j.application.JSBaseClass):
     def ssh_ipaddr_public(self):
         """returns (addr,port)
         """
+
         def do():
             pubip = None
             sshport = None
             for portforward in self.space.portforwards:
-                if portforward['localIp'] == self.ipaddr_priv and int(portforward['localPort']) == 22:
-                    pubip = portforward['publicIp']
-                    sshport = int(portforward['publicPort'])
+                if portforward["localIp"] == self.ipaddr_priv and int(portforward["localPort"]) == 22:
+                    pubip = portforward["publicIp"]
+                    sshport = int(portforward["publicPort"])
                     break
 
             if not pubip:
@@ -517,7 +567,7 @@ class Machine(j.application.JSBaseClass):
     def node_private(self):
         if self.deleted:
             raise RuntimeError("machine deleted")
-        node = j.tools.nodemgr.get(self.name+"_private", create=False)
+        node = j.tools.nodemgr.get(self.name + "_private", create=False)
         return node
 
     def __repr__(self):

@@ -13,7 +13,7 @@ class StorageType(Enum):
     CDROM = "CDROM"
 
 
-class Disks():
+class Disks:
 
     """Subobject to list disks"""
 
@@ -30,10 +30,7 @@ class Disks():
         """
         disks = []
         for disk_info in self.client.disk.list():
-            disks.append(Disk(
-                node=self.node,
-                disk_info=disk_info
-            ))
+            disks.append(Disk(node=self.node, disk_info=disk_info))
         return disks
 
     def get(self, name):
@@ -61,7 +58,7 @@ class Disks():
             for partition in disk.partitions:
                 if partition.devicename == name:
                     return partition
-        raise LookupError('Could not find device with name {}'.format(name))
+        raise LookupError("Could not find device with name {}".format(name))
 
 
 class Disk(Mountable):
@@ -107,39 +104,35 @@ class Disk(Mountable):
         return the type of the disk
         """
         if self._type is None:
-            if self._disk_info['type'] == 'rom':
+            if self._disk_info["type"] == "rom":
                 self._type = StorageType.CDROM
             else:
                 res = self.node.client.disk.seektime(self.devicename)
 
                 # assume that if a disk is more than 7TB it's a SMR disk
-                if res['type'] == 'HDD':
-                    if int(self._disk_info['size']) > (1024 * 1024 * 1024 * 1024 * 7):
+                if res["type"] == "HDD":
+                    if int(self._disk_info["size"]) > (1024 * 1024 * 1024 * 1024 * 7):
                         self._type = StorageType.ARCHIVE
                     else:
                         self._type = StorageType.HDD
-                elif res['type'] in ['SSD', 'SDD']:
-                    if "nvme" in self._disk_info['name']:
+                elif res["type"] in ["SSD", "SDD"]:
+                    if "nvme" in self._disk_info["name"]:
                         self._type = StorageType.NVME
                     else:
                         self._type = StorageType.SSD
         return self._type
 
     def _load(self, disk_info):
-        self.name = disk_info['name']
-        self.size = int(disk_info['size'])
-        self.blocksize = disk_info['blocksize'] if 'blocksize' in disk_info else None
-        if 'table' in disk_info and disk_info['table'] != 'unknown':
-            self.partition_table = disk_info['table']
-        self.mountpoint = disk_info['mountpoint']
-        self.model = disk_info['model']
-        self.transport = disk_info['tran']
-        for partition_info in disk_info.get('children', []) or []:
-            self.partitions.append(
-                Partition(
-                    disk=self,
-                    part_info=partition_info)
-            )
+        self.name = disk_info["name"]
+        self.size = int(disk_info["size"])
+        self.blocksize = disk_info["blocksize"] if "blocksize" in disk_info else None
+        if "table" in disk_info and disk_info["table"] != "unknown":
+            self.partition_table = disk_info["table"]
+        self.mountpoint = disk_info["mountpoint"]
+        self.model = disk_info["model"]
+        self.transport = disk_info["tran"]
+        for partition_info in disk_info.get("children", []) or []:
+            self.partitions.append(Partition(disk=self, part_info=partition_info))
 
     def _populate_filesystems(self):
         """
@@ -151,12 +144,12 @@ class Disk(Mountable):
         disk_devices_names.extend([part.devicename for part in self.partitions])
 
         self._filesystems = []
-        for fs in (self.client.btrfs.list() or []):
-            for device in fs['devices']:
-                if device['path'] in disk_devices_names:
+        for fs in self.client.btrfs.list() or []:
+            for device in fs["devices"]:
+                if device["path"] in disk_devices_names:
                     self._filesystems.append(fs)
 
-    def mktable(self, table_type='gpt', overwrite=False):
+    def mktable(self, table_type="gpt", overwrite=False):
         """
         create a partition table on the disk
         @param table_type: Partition table type as accepted by parted
@@ -165,10 +158,7 @@ class Disk(Mountable):
         if self.partition_table is not None and overwrite is False:
             return
 
-        self.client.disk.mktable(
-            disk=self.name,
-            table_type=table_type
-        )
+        self.client.disk.mktable(disk=self.name, table_type=table_type)
 
     def mkpart(self, start, end, part_type="primary"):
         """
@@ -178,24 +168,17 @@ class Disk(Mountable):
         """
         before = {p.name for p in self.partitions}
 
-        self.client.disk.mkpart(
-            self.name,
-            start=start,
-            end=end,
-            part_type=part_type,
-        )
+        self.client.disk.mkpart(self.name, start=start, end=end, part_type=part_type)
         after = {}
         for disk in self.client.disk.list():
-            if disk['name'] != self.name:
+            if disk["name"] != self.name:
                 continue
-            for part in disk.get('children', []):
-                after[part['name']] = part
+            for part in disk.get("children", []):
+                after[part["name"]] = part
         name = set(after.keys()) - before
 
         part_info = after[list(name)[0]]
-        partition = Partition(
-            disk=self,
-            part_info=part_info)
+        partition = Partition(disk=self, part_info=part_info)
         self.partitions.append(partition)
 
         return partition

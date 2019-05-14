@@ -11,7 +11,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class NetConfigFactory(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.sal.openvswitch"
         self._layout = None
@@ -66,8 +65,9 @@ class NetConfigFactory(j.application.JSBaseClass):
                 if line.find("----") != -1:
                     state = "found"
 
-        j.tools.path.get("/etc/default/lxc-net").write_text("USE_LXC_BRIDGE=\"false\"",
-                                                            append=True)  # TODO: UGLY use editor !!!
+        j.tools.path.get("/etc/default/lxc-net").write_text(
+            'USE_LXC_BRIDGE="false"', append=True
+        )  # TODO: UGLY use editor !!!
 
         # Not used and expensive self.getConfigFromSystem(reload=True)
 
@@ -207,7 +207,7 @@ iface $interface inet static
         ed.setSection(interfacename, C)
         ed.save()
 
-    def setBackplaneNoAddressWithBond(self, bondname, bondinterfaces, backplanename='backplane'):
+    def setBackplaneNoAddressWithBond(self, bondname, bondinterfaces, backplanename="backplane"):
         """
         DANGEROUS, will remove old configuration
         """
@@ -226,12 +226,14 @@ iface $bondname inet manual
  ovs_options bond_mode=balance-tcp lacp=active bond_fake_iface=false other_config:lacp-time=fast bond_updelay=2000 bond_downdelay=400
  $disable_ipv6
 """
-        interfaces = ''
-        disable_ipv6 = ''
+        interfaces = ""
+        disable_ipv6 = ""
         for interface in bondinterfaces:
-            interfaces += '%s ' % interface
-            disable_ipv6 += 'pre-up ip l set %s mtu 2000 \n up sysctl -w net.ipv6.conf.%s.disable_ipv6=1 \n' % (
-                interface, interface)
+            interfaces += "%s " % interface
+            disable_ipv6 += "pre-up ip l set %s mtu 2000 \n up sysctl -w net.ipv6.conf.%s.disable_ipv6=1 \n" % (
+                interface,
+                interface,
+            )
         C = C.replace("$BPNAME", str(backplanename))
         C = C.replace("$bondname", bondname)
         C = C.replace("$MTU", str(self.PHYSMTU))
@@ -278,8 +280,9 @@ iface $iname inet manual
         ed.setSection(backplanename, C)
         ed.save()
 
-    def setBackplaneWithBond(self, bondname, bondinterfaces, backplanename='backplane',
-                             ipaddr="192.168.10.10/24", gw=""):
+    def setBackplaneWithBond(
+        self, bondname, bondinterfaces, backplanename="backplane", ipaddr="192.168.10.10/24", gw=""
+    ):
         """
         DANGEROUS, will remove old configuration
         """
@@ -303,12 +306,14 @@ iface $bondname inet manual
  $disable_ipv6
 """
         n = netaddr.IPNetwork(ipaddr)
-        interfaces = ''
-        disable_ipv6 = ''
+        interfaces = ""
+        disable_ipv6 = ""
         for interface in bondinterfaces:
-            interfaces += '%s ' % interface
-            disable_ipv6 += 'pre-up ip l set %s mtu 2000 \n up sysctl -w net.ipv6.conf.%s.disable_ipv6=1 \n' % (
-                interface, interface)
+            interfaces += "%s " % interface
+            disable_ipv6 += "pre-up ip l set %s mtu 2000 \n up sysctl -w net.ipv6.conf.%s.disable_ipv6=1 \n" % (
+                interface,
+                interface,
+            )
         C = C.replace("$BPNAME", str(backplanename))
         C = C.replace("$bondname", bondname)
         C = C.replace("$ipbase", str(n.ip))
@@ -339,7 +344,7 @@ iface $bondname inet manual
             # self._exec("ifup %s"%backplanename, failOnError=True)
 
         # TODO: need to do more checks here that it came up and retry couple of times if it did not
-        #@ can do this by investigating self.getConfigFromSystem
+        # @ can do this by investigating self.getConfigFromSystem
 
         self._executor.execute("/etc/init.d/openvswitch-switch restart")
 

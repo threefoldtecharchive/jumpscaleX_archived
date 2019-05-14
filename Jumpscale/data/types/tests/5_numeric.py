@@ -44,9 +44,9 @@ def main(self):
     assert n.bytes2str(n.str2bytes("0.001 eur")) == "0.001 EUR"
     assert n.bytes2str(n.str2bytes("-0.1 eur")) == "-0.1 EUR"
 
-    assert n.bytes2str(n.str2bytes("-0.0001"))=="-0.0001"
-    assert n.bytes2cur(n.str2bytes("0.001usd"),"usd") == 0.001
-    assert n.bytes2cur(n.str2bytes("0.001k"),"usd") == 1
+    assert n.bytes2str(n.str2bytes("-0.0001")) == "-0.0001"
+    assert n.bytes2cur(n.str2bytes("0.001usd"), "usd") == 0.001
+    assert n.bytes2cur(n.str2bytes("0.001k"), "usd") == 1
 
     # test that encoding currencies that fit in an int are only
     # 6 bytes (1 for type, 1 for currency code, 4 for int)
@@ -61,10 +61,10 @@ def main(self):
     assert cur.value == 10000
     assert cur._string == "10 k"
 
-    assert cur._data == b'\n\x97\n\x00\x00\x00' #binary storage, is what goes to capnp
+    assert cur._data == b"\n\x97\n\x00\x00\x00"  # binary storage, is what goes to capnp
 
     cur.value = "11k"
-    assert cur.value == 11000  #default is USD
+    assert cur.value == 11000  # default is USD
 
     cur.value = "1"
     assert cur.value == 1
@@ -83,7 +83,6 @@ def main(self):
     res = n.clean("10k") * 2
     assert res.value == 20000
 
-
     self._log_info("TEST NUMERIC DONE")
 
-    return ("OK")
+    return "OK"

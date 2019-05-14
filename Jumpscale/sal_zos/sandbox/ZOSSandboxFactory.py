@@ -1,7 +1,9 @@
 from Jumpscale import j
+
 # import Jumpscale.baselib.remote
 
 JSBASE = j.application.JSBaseClass
+
 
 class ZOSSandboxFactory(JSBASE):
     __jslocation__ = "j.sal_zos.sandbox"
@@ -16,7 +18,4 @@ class ZOSSandboxFactory(JSBASE):
         Returns:
             the sal layer 
         """
-        return (data)
-
-
-
+        return data

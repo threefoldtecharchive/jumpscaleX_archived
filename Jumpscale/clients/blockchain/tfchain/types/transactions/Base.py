@@ -4,10 +4,12 @@ from functools import reduce
 from enum import IntEnum
 from abc import ABC, abstractmethod, abstractclassmethod
 
+
 class TransactionVersion(IntEnum):
     """
     The valid Transaction versions as known by the TFChain network.
     """
+
     LEGACY = 0
     STANDARD = 1
 
@@ -25,6 +27,7 @@ class TransactionVersion(IntEnum):
 
 from ..PrimitiveTypes import Hash
 
+
 class TransactionBaseClass(ABC):
     def __init__(self):
         self._id = None
@@ -37,10 +40,10 @@ class TransactionBaseClass(ABC):
         Create this transaction from a raw JSON Tx
         """
         txn = cls()
-        tv = obj.get('version', -1)
+        tv = obj.get("version", -1)
         if txn.version != tv:
             raise ValueError("transaction is expected to be of version {}, not version {}".format(txn.version, tv))
-        txn._from_json_data_object(obj.get('data', {}))
+        txn._from_json_data_object(obj.get("data", {}))
         return txn
 
     @property
@@ -50,22 +53,26 @@ class TransactionBaseClass(ABC):
         Version of this Transaction.
         """
         pass
-    
+
     @property
     def unconfirmed(self):
         return self._unconfirmed
+
     @unconfirmed.setter
     def unconfirmed(self, value):
         if not isinstance(value, bool):
-            raise TypeError("unconfirmed status of a Transaction is expected to be of type bool, not {}".format(type(bool)))
+            raise TypeError(
+                "unconfirmed status of a Transaction is expected to be of type bool, not {}".format(type(bool))
+            )
         self._unconfirmed = bool(value)
-    
+
     @property
     def id(self):
         """
         ID of this transaction.
         """
         return str(self._id)
+
     @id.setter
     def id(self, id):
         if isinstance(id, Hash):
@@ -81,7 +88,7 @@ class TransactionBaseClass(ABC):
         if not isinstance(other, TransactionBaseClass):
             raise TypeError("other is expected to be subtype of TransactionBaseClass, not {}".format(type(other)))
         return hash(self) == hash(other)
-    
+
     @property
     def height(self):
         """
@@ -89,6 +96,7 @@ class TransactionBaseClass(ABC):
         if not yet part of a block it will be negative (-1 is the default value).
         """
         return self._height
+
     @height.setter
     def height(self, value):
         if not (isinstance(value, int) and not isinstance(value, bool)):
@@ -136,7 +144,7 @@ class TransactionBaseClass(ABC):
         funded by this Transaction's coin inputs.
         """
         return []
-    
+
     @property
     def data(self):
         """
@@ -144,7 +152,7 @@ class TransactionBaseClass(ABC):
         with a max length of 83 bytes.
         """
         return bytes()
-    
+
     @abstractmethod
     def _signature_hash_input_get(self, *extra_objects):
         """
@@ -167,12 +175,12 @@ class TransactionBaseClass(ABC):
     @abstractmethod
     def _json_data_object(self):
         pass
-    
+
     def json(self):
-        obj = {'version': self.version}
+        obj = {"version": self.version}
         data = self._json_data_object()
         if data:
-            obj['data'] = data
+            obj["data"] = data
         return obj
 
     def __str__(self):
@@ -180,15 +188,16 @@ class TransactionBaseClass(ABC):
         if self.id:
             s += " {}".format(self.id)
         return s
+
     __repr__ = __str__
 
     @property
     def _coin_outputid_specifier(self):
-        return b'coin output\0\0\0\0\0'
+        return b"coin output\0\0\0\0\0"
 
     @property
     def _blockstake_outputid_specifier(self):
-        return b'blstake output\0\0'
+        return b"blstake output\0\0"
 
     def coin_outputid_new(self, index):
         """
@@ -269,9 +278,7 @@ class TransactionBaseClass(ABC):
         Returns if the entire transaction is fulfilled,
         meaning it has all the required signatures in all the required places.
         """
-        return reduce(
-            (lambda r, ci: r and ci.is_fulfilled()),
-            self.coin_inputs, self._extra_is_fulfilled())
+        return reduce((lambda r, ci: r and ci.is_fulfilled()), self.coin_inputs, self._extra_is_fulfilled())
 
     def _extra_is_fulfilled(self):
         """
@@ -283,13 +290,14 @@ class TransactionBaseClass(ABC):
         return True
 
 
-class InputSignatureHashFactory():
+class InputSignatureHashFactory:
     """
     Class that can be used by Transaction consumers,
     to generate a factory that can provide the signature_hash_func callback
     used during the creation of signature requests,
     only useful if some extra objects needs to be included that are outside the Txn scope.
     """
+
     def __init__(self, txn, *extra_objects):
         if not isinstance(txn, TransactionBaseClass):
             raise TypeError("txn has an invalid type {}".format(type(txn)))

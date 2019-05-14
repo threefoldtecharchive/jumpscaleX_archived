@@ -9,11 +9,9 @@ class OpenRestyFactory(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
-
         self._cmd = None
 
-
-    def start(self,reset=False):
+    def start(self, reset=False):
         """
         js_shell 'j.servers.openresty.start(reset=True)'
         :return:
@@ -26,10 +24,16 @@ class OpenRestyFactory(j.application.JSBaseClass):
     def cmd(self):
         if self._cmd == None:
             assert j.core.isSandbox
-            self._cmd = j.tools.tmux.cmd_get(name="openresty",window="digitalme",pane="p21",
-                    cmd="openresty",path="/tmp",ports=[8081],
-                    stopcmd="openresty -s stop",
-                    process_strings = ["nginx:"])
+            self._cmd = j.tools.tmux.cmd_get(
+                name="openresty",
+                window="digitalme",
+                pane="p21",
+                cmd="openresty",
+                path="/tmp",
+                ports=[8081],
+                stopcmd="openresty -s stop",
+                process_strings=["nginx:"],
+            )
         return self._cmd
 
     def stop(self):
@@ -43,10 +47,8 @@ class OpenRestyFactory(j.application.JSBaseClass):
         """
         :return:
         """
-        cmd="openresty -s reload"
+        cmd = "openresty -s reload"
         j.sal.process.execute(cmd)
-
-
 
     # def config_set(self,name,configstr):
     #     """

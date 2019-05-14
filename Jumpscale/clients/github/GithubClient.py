@@ -4,6 +4,7 @@ from .User import User
 from .Issue import Issue
 
 import github
+
 NotSet = github.GithubObject.NotSet
 
 JSConfigClient = j.application.JSBaseConfigClass
@@ -26,7 +27,6 @@ class GitHubClient(JSConfigClient):
 
         if not (self.token or (self.login and self.password)):
             raise RuntimeError("Missing Github token or login/password")
-
 
         login_or_token = self.token or self.login
         password = self.password if self.password != "" else None
@@ -98,8 +98,18 @@ class GitHubClient(JSConfigClient):
 
         return self.api.get_user().get_repo(repo_name)
 
-    def repo_create(self, name, description=NotSet, homepage=NotSet, private=NotSet, has_issues=NotSet, has_wiki=NotSet,
-                    has_downloads=NotSet, auto_init=NotSet, gitignore_template=NotSet):
+    def repo_create(
+        self,
+        name,
+        description=NotSet,
+        homepage=NotSet,
+        private=NotSet,
+        has_issues=NotSet,
+        has_wiki=NotSet,
+        has_downloads=NotSet,
+        auto_init=NotSet,
+        gitignore_template=NotSet,
+    ):
         """
         creates a repo
 
@@ -125,8 +135,16 @@ class GitHubClient(JSConfigClient):
         :rtype:   class:'github.Repository.Repository'
         """
         return self.api.get_user().create_repo(
-            name, description=description, homepage=homepage, private=private, has_issues=has_issues, has_wiki=has_wiki,
-            has_downloads=has_downloads, auto_init=auto_init, gitignore_template=gitignore_template)
+            name,
+            description=description,
+            homepage=homepage,
+            private=private,
+            has_issues=has_issues,
+            has_wiki=has_wiki,
+            has_downloads=has_downloads,
+            auto_init=auto_init,
+            gitignore_template=gitignore_template,
+        )
 
     def repo_delete(self, repo):
         """deletes a repo

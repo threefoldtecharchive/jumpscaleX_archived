@@ -10,9 +10,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class JoinOrganizationInvitation( ):
+class JoinOrganizationInvitation:
     """
     auto-generated. don't touch.
     """
@@ -37,34 +35,38 @@ class JoinOrganizationInvitation( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'JoinOrganizationInvitation'
+        class_name = "JoinOrganizationInvitation"
         data = json or kwargs
 
         # set attributes
         data_types = [datetime]
-        self.created = client_support.set_property('created', data, data_types, False, [], False, False, class_name)
+        self.created = client_support.set_property("created", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
         self.emailaddress = client_support.set_property(
-            'emailaddress', data, data_types, False, [], False, True, class_name)
+            "emailaddress", data, data_types, False, [], False, True, class_name
+        )
         data_types = [bool]
         self.isorganization = client_support.set_property(
-            'isorganization', data, data_types, False, [], False, True, class_name)
+            "isorganization", data, data_types, False, [], False, True, class_name
+        )
         data_types = [EnumJoinOrganizationInvitationMethod]
-        self.method = client_support.set_property('method', data, data_types, False, [], False, True, class_name)
+        self.method = client_support.set_property("method", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
         self.organization = client_support.set_property(
-            'organization', data, data_types, False, [], False, True, class_name)
+            "organization", data, data_types, False, [], False, True, class_name
+        )
         data_types = [string_types]
         self.phonenumber = client_support.set_property(
-            'phonenumber', data, data_types, False, [], False, True, class_name)
+            "phonenumber", data, data_types, False, [], False, True, class_name
+        )
         data_types = [EnumJoinOrganizationInvitationRole]
-        self.role = client_support.set_property('role', data, data_types, False, [], False, True, class_name)
+        self.role = client_support.set_property("role", data, data_types, False, [], False, True, class_name)
         data_types = [EnumJoinOrganizationInvitationStatus]
-        self.status = client_support.set_property('status', data, data_types, False, [], False, True, class_name)
+        self.status = client_support.set_property("status", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.user = client_support.set_property('user', data, data_types, False, [], False, True, class_name)
+        self.user = client_support.set_property("user", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

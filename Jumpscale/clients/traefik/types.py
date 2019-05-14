@@ -29,7 +29,9 @@ class Backend:
         self.name = name
         self.servers = servers or []
         if load_balance_method and not isinstance(load_balance_method, LoadBalanceMethod):
-            raise TypeError("load_balance_method should be a LoadBalanceMethod enum not {}".format(type(load_balance_method)))
+            raise TypeError(
+                "load_balance_method should be a LoadBalanceMethod enum not {}".format(type(load_balance_method))
+            )
         self.load_balance_method = load_balance_method
         self.cb_expression = cb_expression  # TODO validate the cb_expression to be a valid one
 

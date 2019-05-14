@@ -2,9 +2,7 @@ from . import typchk
 
 
 class PowerManager:
-    _image_chk = typchk.Checker({
-        'image': str,
-    })
+    _image_chk = typchk.Checker({"image": str})
 
     def __init__(self, client):
         self._client = client
@@ -13,13 +11,13 @@ class PowerManager:
         """
         full reboot of the node
         """
-        self._client.raw('core.reboot', {}, stream=True).stream()
+        self._client.raw("core.reboot", {}, stream=True).stream()
 
     def poweroff(self):
         """
         full power off of the node
         """
-        self._client.raw('core.poweroff', {}, stream=True).stream()
+        self._client.raw("core.poweroff", {}, stream=True).stream()
 
     def update(self, image):
         """
@@ -30,9 +28,7 @@ class PowerManager:
                       example: "zero-os-development.efi"
         """
 
-        args = {
-            'image': image
-        }
+        args = {"image": image}
 
         self._image_chk.check(args)
-        self._client.raw('core.update', args, stream=True).stream()
+        self._client.raw("core.update", args, stream=True).stream()

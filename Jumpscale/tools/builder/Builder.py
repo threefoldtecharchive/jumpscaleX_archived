@@ -6,22 +6,20 @@ JSBASE = j.application.JSBaseClass
 from .ZOS import ZOS
 from .ZOSVB import ZOSVB
 
-class Builder(j.application.JSBaseClass):
 
+class Builder(j.application.JSBaseClass):
     def __init__(self):
         self.__jslocation__ = "j.tools.notapplicableyet"
         JSBASE.__init__(self)
         self._zos_client = None
-        self._clients={}
-        self._containers={}
+        self._clients = {}
+        self._containers = {}
 
-
-
-    def zos_iso_download(self, zerotierinstance="",overwrite=True):
+    def zos_iso_download(self, zerotierinstance="", overwrite=True):
 
         if zerotierinstance:
             ztcl = j.clients.zerotier.get(zerotierinstance)
-            zerotierid = ztcl.config.data['networkid']
+            zerotierid = ztcl.config.data["networkid"]
             download = "https://bootstrap.grid.tf/iso/development/%s/development%20debug" % zerotierid
             dest = "/tmp/zos_%s.iso" % zerotierid
         else:
@@ -49,9 +47,8 @@ class Builder(j.application.JSBaseClass):
         """
         if name is None:
             name = zosclient_instance
-        zosclient=j.clients.zos.get(zosclient_instance)
-        return ZOS(zosclient=zosclient,name=name)
-
+        zosclient = j.clients.zos.get(zosclient_instance)
+        return ZOS(zosclient=zosclient, name=name)
 
     def zos_vb_get(self, name="builder", zerotierinstance="", redis_port=4444, reset=False, memory=4000):
         """
@@ -65,15 +62,15 @@ class Builder(j.application.JSBaseClass):
 
         if vm.exists:
             vm.start()
-            self._log_debug("vm %s started"%name)
+            self._log_debug("vm %s started" % name)
         else:
             self._log_info("will create zero-os:%s on redis port:%s" % (name, redis_port))
-            #VM DOES NOT EXIST, Need to create the redis port should be free
+            # VM DOES NOT EXIST, Need to create the redis port should be free
             if j.sal.nettools.checkListenPort(redis_port):
                 raise RuntimeError("cannot use port:%s is already in use" % redis_port)
             isopath = self.zos_iso_download(zerotierinstance)
             self._log_info("zos vb create:%s (%s)" % (name, redis_port))
-            vm.create(isopath=isopath, reset=reset, redis_port=redis_port,memory=memory)
+            vm.create(isopath=isopath, reset=reset, redis_port=redis_port, memory=memory)
             vm.start()
 
         from time import sleep
@@ -86,7 +83,7 @@ class Builder(j.application.JSBaseClass):
                     self._log_info("VM port answers")
                     break
                 else:
-                    self._log_debug("retry in 2s, redisport:%s"%redis_port)
+                    self._log_debug("retry in 2s, redisport:%s" % redis_port)
                     sleep(2)
                 retries -= 1
             else:
@@ -117,11 +114,13 @@ class Builder(j.application.JSBaseClass):
         self._log_info("check if we can reach zero-os client")
         while retries:
             if zcl.is_running():
-                print("Successfully started ZOS on VirtualBox vm\n"
-                      "with port forwarding {port} -> 6379 in VM\n"
-                      "to get zos client run:\n"
-                      "j.clients.zos.get('{instance}')\n"
-                      "**DONE**".format(instance=name, port=redis_port))
+                print(
+                    "Successfully started ZOS on VirtualBox vm\n"
+                    "with port forwarding {port} -> 6379 in VM\n"
+                    "to get zos client run:\n"
+                    "j.clients.zos.get('{instance}')\n"
+                    "**DONE**".format(instance=name, port=redis_port)
+                )
                 break
             else:
                 self._log_debug("couldn't connect to the created vm will retry in 2s")
@@ -137,7 +136,7 @@ class Builder(j.application.JSBaseClass):
         assert "PONG" in pong
         self._log_info("ping test OK")
 
-        if r.get("zos:active") != b'1':
+        if r.get("zos:active") != b"1":
             # self._log_info("partition first time")
             # zcl.zerodbs.partition_and_mount_disks()
             # r.set("zos:active",1)
@@ -145,8 +144,7 @@ class Builder(j.application.JSBaseClass):
 
         self._log_info("vm ready to be used")
 
-        return ZOSVB(zosclient=zcl,name=name)
-
+        return ZOSVB(zosclient=zcl, name=name)
 
     def zos_vb_delete_all(self):
         """
@@ -155,15 +153,11 @@ class Builder(j.application.JSBaseClass):
         """
         self.vb_client.reset_all()
 
-
-
     def sync(self):
         """
         sync all code to the remote destinations, uses config as set in jumpscale.toml
 
         """
-
-
 
     def monitor(self):
         """
@@ -195,9 +189,9 @@ class Builder(j.application.JSBaseClass):
         """
         # self.zos_vb_delete_all()
         zos = self.zos_vb_get()
-        container = zos.container_get("builder2") #default is the ub1804 flist
+        container = zos.container_get("builder2")  # default is the ub1804 flist
         container.start()
         res = container.container.system("ls /").get()
-        assert "coreX\n" in res.stdout  #is a file on the root
+        assert "coreX\n" in res.stdout  # is a file on the root
 
         # container.build_python_jumpscale()

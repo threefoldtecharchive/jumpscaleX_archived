@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 from .SSHClient import SSHClient
 from .SSHClientParamiko import SSHClientParamiko
@@ -13,7 +12,7 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
     def _init(self):
         self._clients = {}
 
-    def _childclass_selector(self,**kwargs):
+    def _childclass_selector(self, **kwargs):
         """
         gives a creator of a factory the ability to change the type of child to be returned
         :return:
@@ -24,19 +23,17 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
             return SSHClient
 
     def test(self):
-        '''
+        """
         kosmos 'j.clients.ssh.test()'
-        '''
+        """
 
-
-        #TODO:*1 create docker make sure default key is used in the docker
+        # TODO:*1 create docker make sure default key is used in the docker
         # d = j.sal.docker.create(name='test', ports='22:8022', vols='', volsro='', stdout=True, base='phusion/baseimage',
         #                     nameserver=['8.8.8.8'], replace=True, cpu=None, mem=0,
         #                     myinit=True, sharecode=True)
 
-        #TODO: then connect to the just created docker and do some more tests
-        cl = j.clients.ssh.get(name="remote1",addr="188.166.116.127")
-
+        # TODO: then connect to the just created docker and do some more tests
+        cl = j.clients.ssh.get(name="remote1", addr="188.166.116.127")
 
         s = j.clients.ssh.test2
         s.addr = "188.166.116.127"

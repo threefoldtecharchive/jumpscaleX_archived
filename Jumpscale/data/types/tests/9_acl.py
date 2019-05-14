@@ -10,4 +10,4 @@ def main(self):
 
     # self._log_info("TEST DONE ACL")
 
-    return ("OK")
+    return "OK"

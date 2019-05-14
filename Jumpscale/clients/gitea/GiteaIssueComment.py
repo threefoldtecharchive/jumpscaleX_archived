@@ -6,41 +6,35 @@ JSBASE = j.application.JSBaseClass
 
 class GiteaIssueComment(j.application.JSBaseClass):
     def __init__(
-            self,
-            client,
-            repo,
-            issue,
-            user,
-            id=None,
-            body=None,
-            issue_url=None,
-            html_url=None,
-            pull_request_url=None,
-            created_at=None
+        self,
+        client,
+        repo,
+        issue,
+        user,
+        id=None,
+        body=None,
+        issue_url=None,
+        html_url=None,
+        pull_request_url=None,
+        created_at=None,
     ):
         self.client = client
         self.repo = repo
         self.issue = issue
         self.user = user
-        self.created_at=created_at
+        self.created_at = created_at
         self.body = body
         self.issue_url = issue_url
-        self.html_url=html_url
+        self.html_url = html_url
         self.pull_request_url = pull_request_url
-        self.id=id
+        self.id = id
         JSBASE.__init__(self)
 
     @property
     def data(self):
         d = {}
 
-        for attr in [
-            'id',
-            'created_at',
-            'pull_request_url',
-            'html_url',
-            'body',
-        ]:
+        for attr in ["id", "created_at", "pull_request_url", "html_url", "body"]:
             v = getattr(self, attr)
             d[attr] = v
         return d
@@ -52,32 +46,32 @@ class GiteaIssueComment(j.application.JSBaseClass):
         errors = {}
         is_valid = True
 
-        operation = 'create'
+        operation = "create"
 
         if create:
             if self.id:
                 is_valid = False
-                errors['id'] = 'Already existing'
+                errors["id"] = "Already existing"
             else:
                 if not self.body:
                     is_valid = False
-                    errors['body'] = 'Missing'
+                    errors["body"] = "Missing"
 
         elif update:
-            operation = 'update'
+            operation = "update"
             if not self.id:
                 is_valid = False
-                errors['id'] = 'Missing'
+                errors["id"] = "Missing"
         elif delete:
-            operation = 'delete'
+            operation = "delete"
             if not self.id:
                 is_valid = False
-                errors['id'] = 'Missing'
+                errors["id"] = "Missing"
 
         if is_valid:
-            return True, ''
+            return True, ""
 
-        return False, '{0} Error '.format(operation) + json.dumps(errors)
+        return False, "{0} Error ".format(operation) + json.dumps(errors)
 
     def save(self, commit=True):
         is_valid, err = self._validate(create=True)
@@ -86,11 +80,13 @@ class GiteaIssueComment(j.application.JSBaseClass):
             return is_valid, err
 
         try:
-            resp = self.client.api.repos.issueCreateComment(data=self.data, index=str(self.issue.id), repo=self.repo.name, owner=self.user.username)
+            resp = self.client.api.repos.issueCreateComment(
+                data=self.data, index=str(self.issue.id), repo=self.repo.name, owner=self.user.username
+            )
             c = resp.json()
             for k, v in c.items():
                 setattr(self, k, v)
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 
@@ -101,10 +97,10 @@ class GiteaIssueComment(j.application.JSBaseClass):
             return is_valid, err
 
         try:
-            username = self.user['username'] if type(self.user) == dict else self.user.username
-            repo = self.repo['name'] if type(self.repo) == dict else self.repo.name
+            username = self.user["username"] if type(self.user) == dict else self.user.username
+            repo = self.repo["name"] if type(self.repo) == dict else self.repo.name
             resp = self.client.api.repos.issueEditComment(data=self.data, id=str(self.id), repo=repo, owner=username)
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 
@@ -115,10 +111,10 @@ class GiteaIssueComment(j.application.JSBaseClass):
             return is_valid, err
 
         try:
-            username = self.user['username'] if type(self.user) == dict else self.user.username
-            repo = self.repo['name'] if type(self.repo) == dict else self.repo.name
+            username = self.user["username"] if type(self.user) == dict else self.user.username
+            repo = self.repo["name"] if type(self.repo) == dict else self.repo.name
             resp = self.client.api.repos.issueDeleteComment(id=str(self.id), repo=repo, owner=username)
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 

@@ -3,7 +3,6 @@ from Jumpscale import j
 JSBASE = j.application.JSBaseClass
 
 
-
 class BCDBMeta(j.application.JSBaseClass):
     def __init__(self, bcdb):
         JSBASE.__init__(self)
@@ -35,7 +34,7 @@ class BCDBMeta(j.application.JSBaseClass):
                 raise RuntimeError("name given to bcdb does not correspond with name in the metadata stor")
 
             for s in self._data.schemas:
-                #find highest schemaid used
+                # find highest schemaid used
                 if s.sid > self._schema_last_id:
                     self._schema_last_id = s.sid
 
@@ -45,7 +44,7 @@ class BCDBMeta(j.application.JSBaseClass):
                 else:
                     self._bcdb._schema_sid_to_md5[s.sid] = s.md5
 
-                #make sure we know all schema's
+                # make sure we know all schema's
                 if not j.data.schema.exists(md5=s.md5):
                     j.data.schema.add_from_text(schema_text=s.text)
 
@@ -82,10 +81,10 @@ class BCDBMeta(j.application.JSBaseClass):
 
         self._log_debug("schema set in meta:%s" % schema.url)
 
-        #check if the data is already in metadatastor
+        # check if the data is already in metadatastor
         for s in self._data.schemas:
             if s.md5 == schema._md5:
-                #found the schema already in stor, return the schema with sid
+                # found the schema already in stor, return the schema with sid
                 schema.sid = s.sid
                 return schema
 
@@ -100,7 +99,7 @@ class BCDBMeta(j.application.JSBaseClass):
         self._log_debug("new schema in meta:\n%s" % self.data)
         self._save()
 
-        self.reset() #lets make sure all gets loaded again
+        self.reset()  # lets make sure all gets loaded again
 
         schema.sid = s.sid
         return schema

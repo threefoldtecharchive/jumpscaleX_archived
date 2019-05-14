@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 import tools.codetools.PropertyDef as PropertyDef
 
@@ -6,7 +5,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class ClassDef(j.application.JSBaseClass):
-
     def __init__(self, filePath, name="", inheritance="", comments=""):
         JSBASE.__init__(self)
         self.filePath = filePath

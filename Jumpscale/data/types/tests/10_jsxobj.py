@@ -24,9 +24,9 @@ def main(self):
 
     schema_object = j.data.schema.get_from_text(schema_text=schema)
 
-    tt = j.data.types.get("o","despiegk.test")
+    tt = j.data.types.get("o", "despiegk.test")
 
-    assert tt._schema._md5== schema_object._md5
+    assert tt._schema._md5 == schema_object._md5
 
     assert tt.BASETYPE == "OBJ"
 
@@ -35,7 +35,7 @@ def main(self):
     assert o.nr == 4
     assert tt.check(o)
 
-    o2 = tt.clean({"nr":5})
+    o2 = tt.clean({"nr": 5})
     assert o2.nr == 5
 
     o3 = tt.default_get()
@@ -49,8 +49,7 @@ def main(self):
 
     assert o3.description == "test"
 
-
-    tt = j.data.types.get("lo","despiegk.test")
+    tt = j.data.types.get("lo", "despiegk.test")
 
     ll = tt.clean()
 
@@ -63,8 +62,6 @@ def main(self):
 
     print(o)
 
-
-
     self._log_info("TEST DONE JSXOBJ")
 
-    return ("OK")
+    return "OK"

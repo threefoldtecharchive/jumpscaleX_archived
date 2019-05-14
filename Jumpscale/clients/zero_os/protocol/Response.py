@@ -6,7 +6,7 @@ import sys
 
 from Jumpscale import j
 
-logger = logging.getLogger('zoosprotocol')
+logger = logging.getLogger("zoosprotocol")
 
 
 class JobNotFoundError(Exception):
@@ -14,7 +14,6 @@ class JobNotFoundError(Exception):
 
 
 class ResultError(RuntimeError):
-
     def __init__(self, msg, code=0):
         super().__init__(msg)
 
@@ -30,8 +29,7 @@ class ResultError(RuntimeError):
         return self._message
 
 
-class Return():
-
+class Return:
     def __init__(self, payload):
         self._payload = payload
 
@@ -49,7 +47,7 @@ class Return():
         Job ID
         :return: string
         """
-        return self._payload['id']
+        return self._payload["id"]
 
     @property
     def data(self):
@@ -61,28 +59,28 @@ class Return():
         json object, other levels exists for yaml, toml, etc... it really depends on the running job
         return: python primitive (str, number, dict or array)
         """
-        return self._payload['data']
+        return self._payload["data"]
 
     @property
     def level(self):
         """
         Data message level (if any)
         """
-        return self._payload['level']
+        return self._payload["level"]
 
     @property
     def starttime(self):
         """
         Starttime as a timestamp
         """
-        return self._payload['starttime'] / 1000
+        return self._payload["starttime"] / 1000
 
     @property
     def time(self):
         """
         Execution time in millisecond
         """
-        return self._payload['time']
+        return self._payload["time"]
 
     @property
     def state(self):
@@ -90,7 +88,7 @@ class Return():
         Exit state
         :return: str one of [SUCCESS, ERROR, KILLED, TIMEOUT, UNKNOWN_CMD, DUPLICATE_ID]
         """
-        return self._payload['state']
+        return self._payload["state"]
 
     @property
     def stdout(self):
@@ -98,8 +96,8 @@ class Return():
         The job stdout
         :return: string or None
         """
-        streams = self._payload.get('streams', None)
-        return streams[0] if streams is not None and len(streams) >= 1 else ''
+        streams = self._payload.get("streams", None)
+        return streams[0] if streams is not None and len(streams) >= 1 else ""
 
     @property
     def stderr(self):
@@ -107,8 +105,8 @@ class Return():
         The job stderr
         :return: string or None
         """
-        streams = self._payload.get('streams', None)
-        return streams[1] if streams is not None and len(streams) >= 2 else ''
+        streams = self._payload.get("streams", None)
+        return streams[1] if streams is not None and len(streams) >= 2 else ""
 
     @property
     def code(self):
@@ -119,7 +117,7 @@ class Return():
             exit_code = code - 1000
 
         """
-        return self._payload.get('code', 500)
+        return self._payload.get("code", 500)
 
     def __repr__(self):
         return str(self)
@@ -135,15 +133,16 @@ class Return():
         {data}
         """
 
-        return textwrap.dedent(tmpl).format(code=self.code, state=self.state, stdout=self.stdout, stderr=self.stderr, data=self.data)
+        return textwrap.dedent(tmpl).format(
+            code=self.code, state=self.state, stdout=self.stdout, stderr=self.stderr, data=self.data
+        )
 
 
-class Response():
-
+class Response:
     def __init__(self, client, id):
         self._client = client
         self._id = id
-        self._queue = 'result:{}'.format(id)
+        self._queue = "result:{}".format(id)
 
     @property
     def id(self):
@@ -163,7 +162,7 @@ class Response():
         :return: bool
         """
         r = self._client._redis
-        flag = '{}:flag'.format(self._queue)
+        flag = "{}:flag".format(self._queue)
         return bool(r.exists(flag))
 
     @property
@@ -173,7 +172,7 @@ class Response():
         :return:
         """
         r = self._client._redis
-        flag = '{}:flag'.format(self._queue)
+        flag = "{}:flag".format(self._queue)
         if bool(r.exists(flag)):
             ttl = r.ttl(flag)
             return ttl == -1 or ttl is None
@@ -207,9 +206,9 @@ class Response():
             callback = Response.__default
 
         if not callable(callback):
-            raise Exception('callback must be callable')
+            raise Exception("callback must be callable")
 
-        queue = 'stream:%s' % self.id
+        queue = "stream:%s" % self.id
         r = self._client._redis
 
         count = 0
@@ -221,10 +220,10 @@ class Response():
                 continue
             _, body = data
             payload = json.loads(body.decode())
-            message = payload['message']
-            line = message['message']
-            meta = message['meta']
-            callback(meta >> 16, line, meta & 0xff)
+            message = payload["message"]
+            line = message["message"]
+            meta = message["meta"]
+            callback(meta >> 16, line, meta & 0xFF)
             count += 1
 
             if meta & 0x6 != 0:
@@ -264,13 +263,12 @@ class Response():
                     return r
             except TimeoutError:
                 pass
-            logger.debug('%s still waiting (%ss)', self._id, int(time.time() - start))
+            logger.debug("%s still waiting (%ss)", self._id, int(time.time() - start))
             maxwait -= 10
         raise TimeoutError()
 
 
 class JSONResponse(Response):
-
     def __init__(self, response):
         super().__init__(response._client, response.id)
 
@@ -282,9 +280,9 @@ class JSONResponse(Response):
         :return: int
         """
         result = super().get(timeout)
-        if result.state != 'SUCCESS':
+        if result.state != "SUCCESS":
             raise ResultError(result.data, result.code)
         if result.level != 20:
-            raise ResultError('not a json response: %d' % result.level, 406)
+            raise ResultError("not a json response: %d" % result.level, 406)
 
         return json.loads(result.data)

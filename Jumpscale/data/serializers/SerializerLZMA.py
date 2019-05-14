@@ -1,10 +1,9 @@
-
 import pylzma
 from .SerializerBase import SerializerBase
 from Jumpscale import j
 
-class SerializerLZMA(SerializerBase):
 
+class SerializerLZMA(SerializerBase):
     def __init__(self):
         SerializerBase.__init__(self)
 

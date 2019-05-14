@@ -2,11 +2,9 @@ from Jumpscale import j
 
 
 class CIRCLE(j.data.bcdb._BCDBModelClass):
-
-    def _init_load(self,bcdb,schema,namespaceid,reset):
+    def _init_load(self, bcdb, schema, namespaceid, reset):
         schema = j.data.schema.get_from_url_latest("jumpscale.bcdb.circle.1")
-        return bcdb,schema,namespaceid,reset
-
+        return bcdb, schema, namespaceid, reset
 
     def userids_get(self):
         """
@@ -15,7 +13,7 @@ class CIRCLE(j.data.bcdb._BCDBModelClass):
         :return:
         """
         if not id in self._circles:
-            users=[]
+            users = []
             gr = self.model_circle.get(id)
             if gr:
                 for userid in gr.users:
@@ -27,7 +25,5 @@ class CIRCLE(j.data.bcdb._BCDBModelClass):
                         for userid2 in gr2.users:
                             if userid2 not in users:
                                 users.append(userid2)
-            self._circles[id]=users
+            self._circles[id] = users
         return self._circles[id]
-
-

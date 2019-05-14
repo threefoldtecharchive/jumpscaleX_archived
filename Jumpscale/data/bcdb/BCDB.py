@@ -33,7 +33,6 @@ class BCDB(j.application.JSBaseClass):
         self._schema_md5_to_model = {}
         self._schema_sid_to_md5 = {}
 
-
         self.name = name
         self._sqlclient = None
         self._data_dir = j.sal.fs.joinPaths(j.dirs.VARDIR, "bcdb", self.name)
@@ -47,12 +46,9 @@ class BCDB(j.application.JSBaseClass):
         if not j.data.types.string.check(self.name):
             raise RuntimeError("name needs to be string")
 
-
         self.dataprocessor_greenlet = None
 
-
         self._init_(reset=reset, stop=False)
-
 
         j.data.nacl.default
 
@@ -108,9 +104,7 @@ class BCDB(j.application.JSBaseClass):
 
     def redis_server_start(self, port=6380, secret="123456"):
 
-        self.redis_server = RedisServer(
-            bcdb=self, port=port, secret=secret, addr="0.0.0.0"
-        )
+        self.redis_server = RedisServer(bcdb=self, port=port, secret=secret, addr="0.0.0.0")
         self.redis_server.init()
         self.redis_server.start()
 
@@ -231,16 +225,15 @@ class BCDB(j.application.JSBaseClass):
     #             model.obj_cache = None
     #         model._init()
 
-    def _schema_get_sid(self,sid):
+    def _schema_get_sid(self, sid):
         for s in self.meta.data.schemas:
             if s.sid == sid:
-                return j.data.schema.get_from_text(schema_text=s.text, url=s.url,md5=s.md5)
+                return j.data.schema.get_from_text(schema_text=s.text, url=s.url, md5=s.md5)
 
-    def _schema_get_md5(self,md5):
+    def _schema_get_md5(self, md5):
         for s in self.meta.data.schemas:
             if s.md5 == md5:
-                return j.data.schema.get_from_text(schema_text=s.text, url=s.url,md5=s.md5)
-
+                return j.data.schema.get_from_text(schema_text=s.text, url=s.url, md5=s.md5)
 
     def model_get_from_sid(self, sid):
 
@@ -249,14 +242,14 @@ class BCDB(j.application.JSBaseClass):
             if md5 in self._schema_md5_to_model:
                 return self._schema_md5_to_model[md5]
 
-        #we did not find it in memory, lets lookup in metadata
+        # we did not find it in memory, lets lookup in metadata
         if md5:
             s = self._schema_get_md5(md5)
         else:
             s = self._schema_get_sid(sid)
 
         if not s:
-            raise RuntimeError("did not find schema with sid:%s"%sid)
+            raise RuntimeError("did not find schema with sid:%s" % sid)
 
         return self.model_get_from_schema(s)
 
@@ -280,30 +273,30 @@ class BCDB(j.application.JSBaseClass):
 
         self._schema_property_add_if_needed(model.schema)
 
-        model.schema = self.meta._schema_set(model.schema)  #make sure we remember schema
+        model.schema = self.meta._schema_set(model.schema)  # make sure we remember schema
         self._schema_md5_to_model[model.schema._md5] = model
         assert model.schema.sid != None
         assert model.schema.sid > 0
         self.models[model.schema.url] = model
         return model
 
-    def _schema_property_add_if_needed(self,schema):
+    def _schema_property_add_if_needed(self, schema):
         """
         recursive walks over schema sub properties, to make sure we remember them all in bcdb
         :param schema:
         :return:
         """
         for prop in schema.properties:
-            if prop.jumpscaletype.NAME == "list" and isinstance(prop.jumpscaletype.SUBTYPE,j.data.types._jsobject):
-                #now we know that there is a subtype, we need to store it in the bcdb as well
+            if prop.jumpscaletype.NAME == "list" and isinstance(prop.jumpscaletype.SUBTYPE, j.data.types._jsobject):
+                # now we know that there is a subtype, we need to store it in the bcdb as well
                 s = prop.jumpscaletype.SUBTYPE._schema
                 s = self.meta._schema_set(s)
-                #now see if more subtypes
+                # now see if more subtypes
                 self._schema_property_add_if_needed(s)
             elif prop.jumpscaletype.NAME == "jsobject":
                 s = prop.jumpscaletype._schema
                 s = self.meta._schema_set(s)
-                #now see if more subtypes
+                # now see if more subtypes
                 self._schema_property_add_if_needed(s)
 
     def model_get_from_schema(self, schema, dest=""):
@@ -320,16 +313,13 @@ class BCDB(j.application.JSBaseClass):
         else:
             self._log_debug("model get from schema:%s" % schema.url)
             if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
-                raise RuntimeError( "schema needs to be of type: j.data.schema.SCHEMA_CLASS")
+                raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
             schema_text = schema.text
-
 
         if schema._md5 in self._schema_md5_to_model:
             return self._schema_md5_to_model[schema._md5]
 
-
-        self._log_info("load model:%s"%schema.url)
-
+        self._log_info("load model:%s" % schema.url)
 
         tpath = "%s/templates/BCDBModelClass.py" % j.data.bcdb._path
         objForHash = schema_text
@@ -374,19 +364,12 @@ class BCDB(j.application.JSBaseClass):
             imodel.include_schema = True
             tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._path
             myclass = j.tools.jinja2.code_python_render(
-                path=tpath,
-                objForHash=schema._md5,
-                reload=True,
-                dest=dest,
-                schema=schema,
-                bcdb=self,
-                index=imodel,
+                path=tpath, objForHash=schema._md5, reload=True, dest=dest, schema=schema, bcdb=self, index=imodel
             )
 
             self._index_schema_class_cache[schema.key] = myclass
 
         return self._index_schema_class_cache[schema.key]
-
 
     def model_get_from_file(self, path):
         """
@@ -461,7 +444,9 @@ class BCDB(j.application.JSBaseClass):
         else:
             raise RuntimeError("not supported format")
 
-        bdata = j.data.nacl.default.decryptSymmetric(bdata_encrypted) #need to check if this is the right encryption layer
+        bdata = j.data.nacl.default.decryptSymmetric(
+            bdata_encrypted
+        )  # need to check if this is the right encryption layer
 
         if return_as_capnp:
             return bdata
@@ -498,9 +483,7 @@ class BCDB(j.application.JSBaseClass):
         """
         if self.zdbclient:
             db = self.zdbclient
-            for key, data in db.iterate(
-                key_start=key_start, reverse=reverse, keyonly=keyonly
-            ):
+            for key, data in db.iterate(key_start=key_start, reverse=reverse, keyonly=keyonly):
                 if key == 0:  # skip first metadata entry
                     continue
                 if keyonly:

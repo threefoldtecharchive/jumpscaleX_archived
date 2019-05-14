@@ -5,12 +5,12 @@ from ..utils import get_ip_from_nic
 from ..vm.ZOS_VM import ZOS_VM
 import netaddr
 
-BASEMAC = netaddr.EUI('52:54:00:00:00:00')
+BASEMAC = netaddr.EUI("52:54:00:00:00:00")
 BASEMAC.dialect = netaddr.mac_unix_expanded
 
 
 class Users(Collection):
-    def add(self, name, password, sudo=True, shell='/bin/bash', ssh_authorized_keys=None, **kwargs):
+    def add(self, name, password, sudo=True, shell="/bin/bash", ssh_authorized_keys=None, **kwargs):
         """
         Add a user entry in the userdata of the cloudinit
 
@@ -27,16 +27,11 @@ class Users(Collection):
         :param kwargs: Extra settings to configure in userdata of the user
         :type kwargs: dict
         """
-        user = {
-            'name': name,
-            'shell': shell,
-            'lock-passwd': False,
-            'plain_text_passwd': password,
-        }
+        user = {"name": name, "shell": shell, "lock-passwd": False, "plain_text_passwd": password}
         if sudo:
-            user['sudo'] = 'ALL=(ALL) ALL'
+            user["sudo"] = "ALL=(ALL) ALL"
         if ssh_authorized_keys:
-            user['ssh_authorized_keys'] = ssh_authorized_keys
+            user["ssh_authorized_keys"] = ssh_authorized_keys
         user.update(kwargs)
         self._items.append(user)
 
@@ -49,23 +44,18 @@ class CloudInitStruct:
         :param hostname: Hostname to configure on the node
         :type hostname: str
         """
-        self._userdata = {
-            'users': [],
-            'ssh_pwauth': True,
-            'manage_etc_hosts': True,
-            'chpasswd': {'expire': False}
-        }
+        self._userdata = {"users": [], "ssh_pwauth": True, "manage_etc_hosts": True, "chpasswd": {"expire": False}}
         self.users = Users(None)
-        self.metadata = {'local-hostname': hostname}
+        self.metadata = {"local-hostname": hostname}
 
     @property
     def userdata(self):
-        self._userdata['users'] = self.users.list()
+        self._userdata["users"] = self.users.list()
         return self._userdata
 
     @userdata.setter
     def userdata(self, value):
-        users = value.setdefault('users', [])
+        users = value.setdefault("users", [])
         users[:] = self.users.list()
         self._userdata = value
 
@@ -97,7 +87,7 @@ class Hosts(Collection):
     def __init__(self, gateway, network):
         super().__init__(gateway)
         self.network = network
-        self.nameservers = ['8.8.8.8']
+        self.nameservers = ["8.8.8.8"]
         self.pool_start = 10
         self.pool_size = 100
 
@@ -113,25 +103,25 @@ class Hosts(Collection):
         :type macaddress: str
         """
         if not self.network.ip.cidr:
-            raise ValueError('Can not configure hosts if network cidr is not set')
+            raise ValueError("Can not configure hosts if network cidr is not set")
         ipaddress = ipaddress or self.get_free_ip().format()
         if ipaddress not in self.network.ip.cidr:
-            raise ValueError('IPAddresss {} is not in {}'.format(ipaddress, self.network.ip.cidr.cidr))
+            raise ValueError("IPAddresss {} is not in {}".format(ipaddress, self.network.ip.cidr.cidr))
         if ipaddress == str(self.network.ip.cidr.ip):
-            raise ValueError('IPAddresss {} can not be the same as the gateway.'.format(ipaddress))
+            raise ValueError("IPAddresss {} can not be the same as the gateway.".format(ipaddress))
 
         for configuredhost in self:
             if configuredhost.ipaddress == ipaddress:
-                raise ValueError('IPAddress already in use by {}'.format(configuredhost.name))
+                raise ValueError("IPAddress already in use by {}".format(configuredhost.name))
             if macaddress and macaddress == configuredhost.macaddress:
-                raise ValueError('MACAddress already in use by {}'.format(configuredhost.name))
+                raise ValueError("MACAddress already in use by {}".format(configuredhost.name))
 
         macaddress = macaddress or self.get_free_mac()
         if isinstance(host, ZOS_VM):
             super().add(host.name)
             vm = host
             host = Host(vm.name, macaddress, ipaddress)
-            vm.nics.add('nic_{}'.format(self.network.name), self.network.type, self.network.networkid, macaddress)
+            vm.nics.add("nic_{}".format(self.network.name), self.network.type, self.network.networkid, macaddress)
         else:
             super().add(host)
             host = Host(host, macaddress, ipaddress)
@@ -150,7 +140,7 @@ class Hosts(Collection):
 
     def get_free_ip(self):
         if not self.network.ip.cidr:
-            raise RuntimeError('Can not get free IPAddress when cidr is not set')
+            raise RuntimeError("Can not get free IPAddress when cidr is not set")
         poolstart = self.network.ip.cidr.network + self.pool_start
         poolend = poolstart + self.pool_size
         pool = netaddr.IPRange(poolstart, poolend)
@@ -159,7 +149,7 @@ class Hosts(Collection):
         for ip in pool:
             if ip not in usedips:
                 return ip
-        raise RuntimeError('Pool has been exhausted')
+        raise RuntimeError("Pool has been exhausted")
 
 
 class IP:
@@ -186,15 +176,15 @@ class IP:
         elif self.network._parent.is_running():
             routes = self.network._parent.container.client.ip.route.list()
             for route in routes:
-                if route['dev'] == self.network.iface and route['gw']:
-                    return route['gw']
+                if route["dev"] == self.network.iface and route["gw"]:
+                    return route["gw"]
 
     @gateway.setter
     def gateway(self, value):
         if value is None:
             return
         if value not in self.cidr:
-            raise ValueError('Gateway should be port of {}'.format(self.cidr))
+            raise ValueError("Gateway should be port of {}".format(self.cidr))
         self._gateway = value
 
     def _get_ip(self):
@@ -254,7 +244,7 @@ class DefaultIP(IP):
 
     @cidr.setter
     def cidr(self, value):
-        raise RuntimeError('Can not set cidr on default network')
+        raise RuntimeError("Can not set cidr on default network")
 
     def __str__(self):
         return "DefaultIP <{}>".format(self.cidr)
@@ -282,19 +272,19 @@ class Networks(Collection):
         :type networkid: mixed(str, int)
         """
         super().add(name)
-        if len(name) > 15 or name == 'default':
-            raise ValueError('Invalid network name {} should be max 15 chars and not be \'default\''.format(name))
-        if networkid is None and type_ != 'default':
-            raise ValueError('Missing required argument networkid for type {}'.format(type_))
-        if type_ not in ['vxlan', 'zerotier', 'vlan', 'bridge', 'default', 'passthrough']:
-            raise ValueError('Invalid network type: {}'.format(type_))
-        if type_ == 'vxlan':
+        if len(name) > 15 or name == "default":
+            raise ValueError("Invalid network name {} should be max 15 chars and not be 'default'".format(name))
+        if networkid is None and type_ != "default":
+            raise ValueError("Missing required argument networkid for type {}".format(type_))
+        if type_ not in ["vxlan", "zerotier", "vlan", "bridge", "default", "passthrough"]:
+            raise ValueError("Invalid network type: {}".format(type_))
+        if type_ == "vxlan":
             network = VXlanNetwork(name, networkid, self._parent)
-        elif type_ == 'vlan':
+        elif type_ == "vlan":
             network = VlanNetwork(name, networkid, self._parent)
-        elif type_ == 'zerotier':
+        elif type_ == "zerotier":
             network = ZTNetwork(name, networkid, self._parent)
-        elif type_ == 'default':
+        elif type_ == "default":
             self._parent._default_nic = name
             network = DefaultNetwork(name, self._parent)
         else:
@@ -305,7 +295,7 @@ class Networks(Collection):
     def remove(self, item):
         if isinstance(item, (str, int)):
             item = self[item]
-        if isinstance(item, Network) and item.type == 'default':
+        if isinstance(item, Network) and item.type == "default":
             self._parent._default_nic = None
         super().remove(item)
 
@@ -325,16 +315,16 @@ class Networks(Collection):
         if isinstance(network, ZeroTierNetwork):
             name = name or network.name
             if not name:
-                raise ValueError('Need to provide a name for network')
+                raise ValueError("Need to provide a name for network")
             net = ZTNetwork(name, network.id, self._parent)
             net.client = network.client
         elif isinstance(network, ZerotierClient):
             if not name:
-                raise ValueError('Need to provide a name for network')
+                raise ValueError("Need to provide a name for network")
             net = ZTNetwork(name, network, self._parent)
             net.client = network
         else:
-            raise ValueError('Unsupported value password for network')
+            raise ValueError("Unsupported value password for network")
         self._items.append(net)
         return net
 
@@ -377,9 +367,9 @@ class Network(Nic):
     def to_dict(self, forcontainer=False, live=False):
         data = super().to_dict(forcontainer=forcontainer)
         if self.ip.cidr:
-            data['config'] = {'cidr': str(self.ip.cidr), 'gateway': self.ip.gateway}
+            data["config"] = {"cidr": str(self.ip.cidr), "gateway": self.ip.gateway}
         if not forcontainer:
-            data['public'] = self.public
+            data["public"] = self.public
         return data
 
     __repr__ = __str__
@@ -392,7 +382,7 @@ class VlanNetwork(Network):
 
     def __init__(self, name, networkid, gateway):
         self._networkid = None
-        super().__init__(name, networkid, 'vlan', gateway)
+        super().__init__(name, networkid, "vlan", gateway)
 
     @property
     def networkid(self):
@@ -404,9 +394,9 @@ class VlanNetwork(Network):
             if value.isdigit():
                 value = int(value)
             else:
-                raise ValueError('Invalid value for vlantag')
+                raise ValueError("Invalid value for vlantag")
         if not isinstance(value, int) or (value < 0 or value > 4096):
-            raise ValueError('Invalid value for vlantag')
+            raise ValueError("Invalid value for vlantag")
         self._networkid = value
 
     @property
@@ -425,7 +415,7 @@ class VXlanNetwork(Network):
 
     def __init__(self, name, networkid, gateway):
         self._networkid = None
-        super().__init__(name, networkid, 'vxlan', gateway)
+        super().__init__(name, networkid, "vxlan", gateway)
 
     @property
     def networkid(self):
@@ -437,9 +427,9 @@ class VXlanNetwork(Network):
             if value.isdigit():
                 value = int(value)
             else:
-                raise ValueError('Invalid value for vxlan id')
+                raise ValueError("Invalid value for vxlan id")
         if not isinstance(value, int) or value < 0:
-            raise ValueError('Invalid value for vxlan id')
+            raise ValueError("Invalid value for vxlan id")
         self._networkid = value
 
     @property
@@ -471,7 +461,7 @@ class ZTNetwork(ZTNic):
     @networkid.setter
     def networkid(self, value):
         if not isinstance(value, str) or len(value) != 16:
-            raise ValueError('Invalid value for zerotierid')
+            raise ValueError("Invalid value for zerotierid")
         self._networkid = value
 
     @property
@@ -494,9 +484,9 @@ class ZTNetwork(ZTNic):
     def to_dict(self, forcontainer=False, live=False):
         data = super().to_dict(forcontainer=forcontainer)
         if not forcontainer:
-            data['public'] = self.public
+            data["public"] = self.public
         if live and self.ip.cidr:
-            data['config'] = {'cidr': str(self.ip.cidr), 'gateway': self.ip.gateway}
+            data["config"] = {"cidr": str(self.ip.cidr), "gateway": self.ip.gateway}
         return data
 
 
@@ -512,7 +502,7 @@ class DefaultNetwork(Network):
         :param gateway: Gateway instance
         :type gateway: Gateway
         """
-        super().__init__(name, None, 'default', gateway)
+        super().__init__(name, None, "default", gateway)
         self.hosts = Hosts(gateway, self)
         self.ip = DefaultIP(self)
 
@@ -525,14 +515,13 @@ class DefaultNetwork(Network):
         data = Nic.to_dict(self, forcontainer=forcontainer)
         route = self._parent.node.get_gateway_route()
         for nic in self._parent.node.client.info.nic():
-            if nic['name'] == route['dev']:
+            if nic["name"] == route["dev"]:
                 break
         else:
             nic = None
         if nic:
-            cidr = get_ip_from_nic(nic['addrs'])
-            data['config'] = {'cidr': str(cidr), 'gateway': route['gw']}
+            cidr = get_ip_from_nic(nic["addrs"])
+            data["config"] = {"cidr": str(cidr), "gateway": route["gw"]}
         if not forcontainer:
-            data['public'] = self.public
+            data["public"] = self.public
         return data
-

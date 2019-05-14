@@ -24,10 +24,9 @@ class LoggerClient(j.application.JSBaseConfigClass):
     @property
     def _redis_client(self):
         if self._redis_client_ is None:
-            self._redis_client_ = j.clients.redis.get(ipaddr=self.redis_addr,
-                                                      port=self.redis_port,
-                                                      password = self.redis_secret
-                                                      )
+            self._redis_client_ = j.clients.redis.get(
+                ipaddr=self.redis_addr, port=self.redis_port, password=self.redis_secret
+            )
 
         return self._redis_client_
 

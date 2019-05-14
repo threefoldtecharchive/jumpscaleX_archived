@@ -2,8 +2,8 @@ import blosc
 from .SerializerBase import *
 from Jumpscale import j
 
-class SerializerBlosc(SerializerBase):
 
+class SerializerBlosc(SerializerBase):
     def __init__(self):
         SerializerBase.__init__(self)
 

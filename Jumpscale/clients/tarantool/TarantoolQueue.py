@@ -1,6 +1,7 @@
 from Jumpscale import j
 import tarantool
 from .TarantoolDB import TarantoolDB
+
 # import itertools
 
 
@@ -12,8 +13,8 @@ import tarantool
 
 JSBASE = j.application.JSBaseClass
 
-class TarantoolQueue(j.application.JSBaseClass):
 
+class TarantoolQueue(j.application.JSBaseClass):
     def __init__(self, tarantoolclient, name, ttl=0, delay=0):
         """The default connection parameters are: host='localhost', port=9999, db=0"""
         JSBASE.__init__(self)
@@ -73,4 +74,3 @@ class TarantoolQueue(j.application.JSBaseClass):
     def get_nowait(self):
         """Equivalent to get(False)."""
         return self.get(False)
-

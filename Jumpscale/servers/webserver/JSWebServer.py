@@ -1,9 +1,11 @@
 from Jumpscale import j
 from gevent.pywsgi import WSGIServer
+
 # from geventwebsocket.handler import WebSocketHandler
 from flask import Flask
+
 # from flask_login import LoginManager
-from flask import  url_for,redirect
+from flask import url_for, redirect
 from flask_sockets import Sockets
 from importlib import import_module
 from logging import basicConfig, DEBUG, getLogger, StreamHandler
@@ -12,6 +14,7 @@ import os
 
 
 JSBASE = j.application.JSBaseClass
+
 
 class JSWebServer(j.application.JSBaseClass):
     def __init__(self, port=8888):
@@ -22,11 +25,11 @@ class JSWebServer(j.application.JSBaseClass):
         # Set proper instance for j.data.schema
         self.host = "localhost"
         self.port = port
-        self.address = '{}:{}'.format(self.host, self.port)
+        self.address = "{}:{}".format(self.host, self.port)
 
         # self.login_manager = LoginManager()
         self.paths = []
-        self.app = None  #flask app
+        self.app = None  # flask app
         # self.websocket = None
 
         self._inited = False
@@ -34,16 +37,14 @@ class JSWebServer(j.application.JSBaseClass):
         j.servers.web.latest = self
         self.http_server = None
 
-        self.path_blueprints = j.sal.fs.joinPaths(j.dirs.VARDIR,"dm_packages","blueprints")
-
-
+        self.path_blueprints = j.sal.fs.joinPaths(j.dirs.VARDIR, "dm_packages", "blueprints")
 
     def start(self, debug=False):
         self._log_info("start")
         self._init(debug=debug)
 
         self._register_blueprints()
-        self._log_info("%s"%self)
+        self._log_info("%s" % self)
         self._sig_handler.append(gevent.signal(signal.SIGINT, self.stop))
         self.http_server.serve_forever()
 
@@ -56,9 +57,8 @@ class JSWebServer(j.application.JSBaseClass):
         for h in self._sig_handler:
             h.cancel()
 
-        self._log_info('stopping server')
+        self._log_info("stopping server")
         self.server.stop()
-
 
     def _register_blueprints(self):
 
@@ -74,12 +74,11 @@ class JSWebServer(j.application.JSBaseClass):
         for path in paths:
             module_name = j.sal.fs.getBaseName(path)
             j.shell()
-            module = import_module('%s.routes'%module_name)
+            module = import_module("%s.routes" % module_name)
             print("blueprint register:%s" % module_name)
             self.app.register_blueprint(module.blueprint)
             if self.sockets and hasattr(module, "ws_blueprint"):
                 self.sockets.register_blueprint(module.ws_blueprint)
-
 
     # def _configure_logs(self):
     #     # TODO: why can we not use jumpscale logging?
@@ -87,13 +86,15 @@ class JSWebServer(j.application.JSBaseClass):
     #     self._logger = getLogger()
     #     self._log_addHandler(StreamHandler())
 
-    def _init(self, selenium=False, debug=True, websocket_support=False): #TODO: websocket support should be in openresty
+    def _init(
+        self, selenium=False, debug=True, websocket_support=False
+    ):  # TODO: websocket support should be in openresty
 
         if self._inited:
             return
 
         class Config(object):
-            SECRET_KEY = 'js007'
+            SECRET_KEY = "js007"
 
         class ProductionConfig(Config):
             DEBUG = False
@@ -101,18 +102,18 @@ class JSWebServer(j.application.JSBaseClass):
         class DebugConfig(Config):
             DEBUG = True
 
-
         staticpath = j.clients.git.getContentPathFromURLorPath(
-            "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/static")
+            "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/static"
+        )
         app = Flask(__name__, static_folder=staticpath)  # '/base/static'
 
-        C="""
+        C = """
         location /static/ {
             root   {j.dirs.VARDIR}/www;
             index  index.html index.htm;
         }        
         """
-        j.servers.openresty.config_set("static",C)
+        j.servers.openresty.config_set("static", C)
 
         if debug:
             app.config.from_object(DebugConfig)
@@ -128,7 +129,6 @@ class JSWebServer(j.application.JSBaseClass):
         # if selenium:
         #     app.config['LOGIN_DISABLED'] = True
 
-
         # self.db.init_app(app)
         # self.login_manager.init_app(app)
 
@@ -142,17 +142,16 @@ class JSWebServer(j.application.JSBaseClass):
 
         # self.app.add_url_rule("/", "index",redirect_wiki)
 
-        #double with above
+        # double with above
         self.app.debug = True
 
-        self.http_server = WSGIServer((self.host, self.port), self.app)#, handler_class=WebSocketHandler)
+        self.http_server = WSGIServer((self.host, self.port), self.app)  # , handler_class=WebSocketHandler)
         self.app.http_server = self.http_server
         self.app.server = self
-
 
         self._inited = True
 
     def __repr__(self):
-        return '<Flask Server http://%s:%s)' % (self.address, self.port)
+        return "<Flask Server http://%s:%s)" % (self.address, self.port)
 
     __str__ = __repr__

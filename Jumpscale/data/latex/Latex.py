@@ -1,7 +1,9 @@
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 from pylatex import *
 from pylatex.utils import bold
+
 
 class Latex(j.application.JSBaseClass):
     def __init__(self):
@@ -12,7 +14,7 @@ class Latex(j.application.JSBaseClass):
         p = j.tools.prefab.local
         if p.platformtype.isMac:
             self._log_info("will install mactex, is huge, will have to wait long")
-            cmd="brew cask install mactex"
+            cmd = "brew cask install mactex"
             p.core.run(cmd)
         else:
             "latexmk"
@@ -20,9 +22,7 @@ class Latex(j.application.JSBaseClass):
 
         p.runtimes.pip.install("pylatex,numpy")
 
-
-
-    def test(self,install=False):
+    def test(self, install=False):
         """
         js_shell 'j.data.latex.test(install=False)'
 
@@ -41,11 +41,10 @@ class Latex(j.application.JSBaseClass):
 
         p = j.tools.prefab.local
 
-
-
         from pylatex.utils import italic
+
         geometry_options = {"tmargin": "2cm", "lmargin": "1cm", "rmargin": "1cm", "bmargin": "2cm"}
-        doc = Document(geometry_options=geometry_options,fontenc='T1',lmodern=True, textcomp=True )
+        doc = Document(geometry_options=geometry_options, fontenc="T1", lmodern=True, textcomp=True)
 
         header = PageStyle("header")
         # Create left header
@@ -73,48 +72,45 @@ class Latex(j.application.JSBaseClass):
         doc.change_document_style("header")
 
         # Add Heading
-        with doc.create(MiniPage(align='c')):
+        with doc.create(MiniPage(align="c")):
             doc.append(LargeText(bold("Title")))
             doc.append(LineBreak())
             doc.append(MediumText(bold("As at:")))
 
-
-
-        with doc.create(Section('The simple stuff')):
-            doc.append('Some regular text and some ')
-            doc.append(italic('italic text. '))
-            doc.append('\nAlso some crazy characters: $&#{}')
-            with doc.create(Subsection('Math that is incorrect')):
+        with doc.create(Section("The simple stuff")):
+            doc.append("Some regular text and some ")
+            doc.append(italic("italic text. "))
+            doc.append("\nAlso some crazy characters: $&#{}")
+            with doc.create(Subsection("Math that is incorrect")):
                 # j.shell()
-                doc.append(Math(data=['2*3', '=', 9]))
+                doc.append(Math(data=["2*3", "=", 9]))
 
-        with doc.create(Subsection('Table of something')):
-            with doc.create(Tabular('rc|cl')) as table:
+        with doc.create(Subsection("Table of something")):
+            with doc.create(Tabular("rc|cl")) as table:
                 table.add_hline()
                 table.add_row((1, 2, 3, 4))
                 table.add_hline(1, 2)
                 table.add_empty_row()
                 table.add_row((4, 5, 6, 7))
 
-
         url = "https://media.wired.com/photos/598e35994ab8482c0d6946e0/master/w_628,c_limit/phonepicutres-TA.jpg"
-        p.network.tools.download(url, to='/tmp/latex/image.jpg', overwrite=False, retry=3)
+        p.network.tools.download(url, to="/tmp/latex/image.jpg", overwrite=False, retry=3)
 
-        with doc.create(Subsection('An image')):
-            with doc.create(Figure(position='h!')) as kitten_pic:
-                kitten_pic.add_image("/tmp/latex/image.jpg", width='300px')
-                kitten_pic.add_caption('Look it\'s on its back')
+        with doc.create(Subsection("An image")):
+            with doc.create(Figure(position="h!")) as kitten_pic:
+                kitten_pic.add_image("/tmp/latex/image.jpg", width="300px")
+                kitten_pic.add_caption("Look it's on its back")
 
-        markers=[]
+        markers = []
         for i in range(20):
-            marker = Marker("mylabel_%s"%i)
+            marker = Marker("mylabel_%s" % i)
             markers.append(marker)
             label = Label(marker)
 
             with doc.create(Section("this is my section", label=label)):
                 doc.append("Some text.\n")
                 doc.append("This is another paragraph.\n")
-                C="""
+                C = """
                 Sometimes the compiler will not be able to complete the document in one pass. 
                 In this case it will instruct you to “Rerun LaTeX” via the log output
                 In order to deal with this, you need to make sure that latexmk is installed. 
@@ -134,20 +130,15 @@ class Latex(j.application.JSBaseClass):
                 doc.append(j.core.text.strip(C))
                 doc.append("Some text.")
 
-
-        doc.append(Command('newpage'))
+        doc.append(Command("newpage"))
         with doc.create(Section("this is my section 2")):
-            doc.append(Hyperref(markers[0],"mylabel_text"))
+            doc.append(Hyperref(markers[0], "mylabel_text"))
             doc.append(LineBreak())
             doc.append(Ref(markers[0]))
             doc.append(LineBreak())
             doc.append("Some text.")
 
-
         # with doc.create(Section("table of contents")):
-        doc.append(Command('tableofcontents'))
+        doc.append(Command("tableofcontents"))
 
-
-
-
-        doc.generate_pdf('/tmp/latex/full', clean_tex=False)
+        doc.generate_pdf("/tmp/latex/full", clean_tex=False)

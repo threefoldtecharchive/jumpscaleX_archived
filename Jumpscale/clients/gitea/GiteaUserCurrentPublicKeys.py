@@ -5,7 +5,6 @@ from .GiteaPublicKeys import GiteaPublicKeys
 
 
 class GiteaUserCurrentPublicKeys(GiteaPublicKeys):
-
     def new(self):
         return GiteaUserCurrentPublicKey(self.client, self.user)
 

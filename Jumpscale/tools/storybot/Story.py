@@ -2,7 +2,8 @@ from .utils import _find_second, _parse_body, _check_broken_links
 
 from Jumpscale import j
 
-class Story():
+
+class Story:
     """Represents a story
     """
 
@@ -83,9 +84,9 @@ class Story():
         Returns:
             int -- line index of item in body
         """
-        lines = body.splitlines()[start_i: end_i + 1 if end_i != -1 else None]
+        lines = body.splitlines()[start_i : end_i + 1 if end_i != -1 else None]
         for i, line in enumerate(lines, start=start_i):
-            if i > end_i and not end_i < 0 :
+            if i > end_i and not end_i < 0:
                 break
             # check if list item
             if not line.startswith("- ["):
@@ -94,7 +95,7 @@ class Story():
             title_start = _find_second(line, char="[")
             if title_start == -1:
                 self._log_warning("List item is could be wrongly formatted: '%s'" % line)
-            line_title = line[title_start: line.find(":")]
+            line_title = line[title_start : line.find(":")]
             if line_title == self.title:
                 return i
 

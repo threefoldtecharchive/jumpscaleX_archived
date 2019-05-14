@@ -1,4 +1,5 @@
 from Jumpscale import j
+
 # from random import randint
 
 builder_method = j.builder.system.builder_method
@@ -6,6 +7,8 @@ builder_method = j.builder.system.builder_method
 
 class BuilderRedis(j.builder.system._BaseClass):
     NAME = "redis-server"
+
+
 #
 #     @builder_method()
 #     def build(self):

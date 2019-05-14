@@ -33,7 +33,7 @@ class DataObjBase:
         if self._readonly:
             raise RuntimeError("cannot load from data, readonly.\n%s" % self)
 
-        if isinstance(data,bytes):
+        if isinstance(data, bytes):
             self._cobj_ = self._capnp_schema.from_bytes_packed(data)
             set_default = False
         else:
@@ -47,11 +47,11 @@ class DataObjBase:
         if set_default:
             self._defaults_set()  # only do when new message
 
-        if isinstance(data,bytes):
+        if isinstance(data, bytes):
             return
 
         if data is not None:
-            if isinstance(data,str):
+            if isinstance(data, str):
                 data = j.data.serializers.json.loads(data)
             if isinstance(data, dict):
                 if data != {}:
@@ -62,7 +62,6 @@ class DataObjBase:
             else:
                 raise j.exceptions.Input("_load_from_data when string needs to be dict or json")
 
-
     def Edit(self):
         e = j.data.dict_editor.get(self._ddict)
         e.edit()
@@ -72,12 +71,10 @@ class DataObjBase:
         e = j.data.dict_editor.get(self._ddict)
         e.view()
 
-
-
     @property
     def acl(self):
         if self._acl is None:
-            if self.acl_id ==0:
+            if self.acl_id == 0:
                 self._acl = self._model.bcdb.acl.new()
         return self._acl
 
@@ -99,21 +96,20 @@ class DataObjBase:
             if self._model.readonly:
                 raise RuntimeError("object readonly, cannot be saved.\n%s" % self)
             # print (self._model.__class__.__name__)
-            if not self._model.__class__._name=="acl" and self._acl is not None:
+            if not self._model.__class__._name == "acl" and self._acl is not None:
                 if self.acl.id is None:
                     self.acl.save()
                 if self.acl.id != self.acl_id:
-                    self._changed_items["ACL"]=True
-
+                    self._changed_items["ACL"] = True
 
             if self._changed:
 
                 for prop_u in self._model.schema.properties_unique:
-                    #find which properites need to be unique
-                    #unique properties have to be indexed
-                    args_search={prop_u.name:str(getattr(self,prop_u.name))}
+                    # find which properites need to be unique
+                    # unique properties have to be indexed
+                    args_search = {prop_u.name: str(getattr(self, prop_u.name))}
                     r = self._model.get_from_keys(**args_search)
-                    if len(r)>0:
+                    if len(r) > 0:
                         j.shell()
                         w
 
@@ -142,18 +138,17 @@ class DataObjBase:
 
     @property
     def _data(self):
-        self._cobj #leave, is to make sure we have error if something happens
+        self._cobj  # leave, is to make sure we have error if something happens
         try:
             self._cobj.clear_write_flag()
-            data =  self._cobj.to_bytes_packed()
+            data = self._cobj.to_bytes_packed()
         except Exception as e:
-            #need to catch exception much better (more narrow)
+            # need to catch exception much better (more narrow)
             self._cobj_ = self._cobj.as_builder()
             data = self._cobj_.to_bytes_packed()
         version = 1
-        data2= version.to_bytes(1,'little')+bytes(bytearray.fromhex(self._schema._md5))+data
+        data2 = version.to_bytes(1, "little") + bytes(bytearray.fromhex(self._schema._md5)) + data
         return data2
-
 
     @property
     def _ddict_hr(self):

@@ -69,8 +69,7 @@ class RepoMilestone(Base):
 
     @deadline.setter
     def deadline(self, val):
-        due = j.data.time.epoch2pythonDateTime(
-            int(j.data.time.getEpochFuture(val)))
+        due = j.data.time.epoch2pythonDateTime(int(j.data.time.getEpochFuture(val)))
 
         self._ddict["deadline"] = val
         self.api.edit(title=self.title, due_on=due)

@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 from .Sheet import *
 
@@ -6,7 +5,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class Sheets(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.data.worksheets"
         JSBASE.__init__(self)
@@ -19,7 +17,6 @@ class Sheets(j.application.JSBaseClass):
         @param period is M,Q or Y
         """
         return Sheet(name, nrcols=nrcols, headers=headers, period=period)
-        
 
     def sheet_add(self, sheet, category=None):
         self.sheets[sheet.name] = sheet
@@ -54,7 +51,8 @@ class Sheets(j.application.JSBaseClass):
                     for sheet in sheets:
                         if sheet.rows[rowname].cells[x] is None:
                             raise j.exceptions.RuntimeError(
-                                "could not aggregate sheet%s row:%s, found None value" % (sheet.name, rowname))
+                                "could not aggregate sheet%s row:%s, found None value" % (sheet.name, rowname)
+                            )
                         sumvalue += sheet.rows[rowname].cells[x]
                     rowdest.cells[x] = sumvalue
         return sheettotal
@@ -83,11 +81,13 @@ class Sheets(j.application.JSBaseClass):
         @param rows is list of rows to add
         @param newRow is the row where the result will be stored
         """
+
         def sum(values, params):
             total = 0.0
             for value in values:
                 total += value
             return total
+
         rows2 = []
         for row in rows:
             if row is not None:
@@ -101,6 +101,7 @@ class Sheets(j.application.JSBaseClass):
             for value in values:
                 total = total * value
             return total
+
         rows2 = []
         for row in rows:
             if row is not None:
@@ -109,36 +110,61 @@ class Sheets(j.application.JSBaseClass):
         return newRow
 
     def test(self):
-        '''
+        """
         js_shell 'j.data.worksheets.test()'
-        '''
+        """
 
-        s=self.sheet_new("test")
-        r=s.addRow("nrCU",groupname="units")
-        r.setCell(posx=0,value=1,maxvalue=50)
-        r.setCell(posx=10,value=10,maxvalue=50)
-        r.setCell(posx=48,value=40,maxvalue=50)
+        s = self.sheet_new("test")
+        r = s.addRow("nrCU", groupname="units")
+        r.setCell(posx=0, value=1, maxvalue=50)
+        r.setCell(posx=10, value=10, maxvalue=50)
+        r.setCell(posx=48, value=40, maxvalue=50)
         r.interpolate()
 
-        r=s.addRow("nrSU",groupname="units")
-        r.setCell(posx=0,value=1,maxvalue=60)
-        r.setCell(posx=10,value=5,maxvalue=60)
-        r.setCell(posx=48,value=20,maxvalue=60)
+        r = s.addRow("nrSU", groupname="units")
+        r.setCell(posx=0, value=1, maxvalue=60)
+        r.setCell(posx=10, value=5, maxvalue=60)
+        r.setCell(posx=48, value=20, maxvalue=60)
         r.interpolate()
 
-        res=[4.0,8.0,11.0,15.0,19.0,22.0,26.0,29.0,33.0,36.0,40.0,43.0,47.0,50.0,54.0,58.0,60.0,60.0,60.0,60.0,60.0,60.0,60.0,60.0]
-        assert r.aggregate("Q")==res
+        res = [
+            4.0,
+            8.0,
+            11.0,
+            15.0,
+            19.0,
+            22.0,
+            26.0,
+            29.0,
+            33.0,
+            36.0,
+            40.0,
+            43.0,
+            47.0,
+            50.0,
+            54.0,
+            58.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+            60.0,
+        ]
+        assert r.aggregate("Q") == res
 
-        r=s.addRow("unitsTotal",groupname="units")
-        r0=s.sumRows(["nrCU","nrSU"],"unitsTotal")
+        r = s.addRow("unitsTotal", groupname="units")
+        r0 = s.sumRows(["nrCU", "nrSU"], "unitsTotal")
 
-        r1=s.addRow("nrNU",groupname="units")
-        r1.text2row("2:100,5:200", standstill=5, defval=None,round=False, interpolate=True)
+        r1 = s.addRow("nrNU", groupname="units")
+        r1.text2row("2:100,5:200", standstill=5, defval=None, round=False, interpolate=True)
 
-        r2=s.addRow("amount",groupname="price")
+        r2 = s.addRow("amount", groupname="price")
         r2.text2row("0:100mEGP,10:1k EUR", interpolate=True)
 
         # unit tests need to be non-interactive.  if an interactive
         # version is needed, make a test function named _interactive_test
         # which calls the other function
-        #from IPython import embed;embed(colors='Linux')
+        # from IPython import embed;embed(colors='Linux')

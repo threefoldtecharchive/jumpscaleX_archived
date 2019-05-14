@@ -6,8 +6,8 @@ from .GiteaUserCurrentPublicKeys import GiteaUserCurrentPublicKeys
 from .GiteaIssues import GiteaIssues
 from .GiteaGpgKeys import GiteaGpgKeys
 from .GiteaTokens import GiteaTokens
-from .GiteaOrgs import  GiteaOrgs
-from .GiteaRepos import  GiteaRepos
+from .GiteaOrgs import GiteaOrgs
+from .GiteaRepos import GiteaRepos
 from .GiteaPublicKeys import GiteaPublicKeys
 
 JSBASE = j.application.JSBaseClass
@@ -17,30 +17,30 @@ class GiteaUser(j.application.JSBaseClass):
     is_current = False
 
     def __init__(
-            self,
-            client,
-            id=None,
-            username=None,
-            password=None,
-            full_name=None,
-            login_name=None,
-            send_notify=None,
-            source_id=None,
-            email=None,
-            active=None,
-            admin=None,
-            allow_git_hook=False,
-            allow_import_local=False,
-            location=None,
-            max_repo_creation=None,
-            website=None,
-            avatar_url=None
+        self,
+        client,
+        id=None,
+        username=None,
+        password=None,
+        full_name=None,
+        login_name=None,
+        send_notify=None,
+        source_id=None,
+        email=None,
+        active=None,
+        admin=None,
+        allow_git_hook=False,
+        allow_import_local=False,
+        location=None,
+        max_repo_creation=None,
+        website=None,
+        avatar_url=None,
     ):
 
         JSBASE.__init__(self)
         self.client = client
-        self.id=id
-        self.username=username
+        self.id = id
+        self.username = username
         self.password = password
         self.full_name = full_name
         self.login_name = login_name
@@ -80,20 +80,17 @@ class GiteaUser(j.application.JSBaseClass):
             is_member = True
         else:
             try:
-                self.client.api.orgs.orgIsMember(
-                    org=org,
-                    username=self.username
-                )
+                self.client.api.orgs.orgIsMember(org=org, username=self.username)
                 is_member = True
 
             except Exception as e:
                 is_member = False
 
         if is_member:
-            self._log_debug('{0} is member of organization {1}'.format(self.username, org))
+            self._log_debug("{0} is member of organization {1}".format(self.username, org))
             return True
         else:
-            self._log_debug('{0} is not member of organization {1}'.format(self.username, org))
+            self._log_debug("{0} is not member of organization {1}".format(self.username, org))
             return False
 
     @property
@@ -104,22 +101,22 @@ class GiteaUser(j.application.JSBaseClass):
         d = {}
 
         for attr in [
-            'id',
-            'username',
-            'password',
-            'full_name',
-            'login_name',
-            'source_id',
-            'send_notify',
-            'email',
-            'active',
-            'admin',
-            'allow_git_hook',
-            'allow_import_local',
-            'location',
-            'max_repo_creation',
-            'website',
-            'avatar_url'
+            "id",
+            "username",
+            "password",
+            "full_name",
+            "login_name",
+            "source_id",
+            "send_notify",
+            "email",
+            "active",
+            "admin",
+            "allow_git_hook",
+            "allow_import_local",
+            "location",
+            "max_repo_creation",
+            "website",
+            "avatar_url",
         ]:
 
             v = getattr(self, attr)
@@ -133,45 +130,45 @@ class GiteaUser(j.application.JSBaseClass):
         errors = {}
         is_valid = True
 
-        operation = 'create'
+        operation = "create"
         if update:
-            operation = 'update'
+            operation = "update"
         elif delete:
-            operation = 'delete'
+            operation = "delete"
 
         # Create or update
 
         if not self.is_admin:
             is_valid = False
-            errors['permissions'] = 'Admin permissions required'
+            errors["permissions"] = "Admin permissions required"
 
         if update or delete:
             if not self.username:
                 is_valid = False
-                errors['username'] = 'Missing'
+                errors["username"] = "Missing"
 
         elif create:
             if self.id:
-                errors['id'] = 'Already existing'
+                errors["id"] = "Already existing"
                 is_valid = False
             else:
                 if not self.password:
                     is_valid = False
-                    errors['password'] = 'Missing'
+                    errors["password"] = "Missing"
 
                 if not self.username:
                     is_valid = False
-                    errors['username'] = 'Missing'
+                    errors["username"] = "Missing"
 
                 if not self.email:
                     is_valid = False
-                    errors['email'] = 'Missing'
+                    errors["email"] = "Missing"
         else:
-            raise RuntimeError('You must choose operation to validate')
+            raise RuntimeError("You must choose operation to validate")
 
         if is_valid:
-            return True, ''
-        return False, '{0} Error '.format(operation) + json.dumps(errors)
+            return True, ""
+        return False, "{0} Error ".format(operation) + json.dumps(errors)
 
     def save(self, commit=True):
         is_valid, err = self._validate(create=True)
@@ -222,7 +219,7 @@ class GiteaUser(j.application.JSBaseClass):
     def followers(self):
         result = []
         for follower in self.client.api.users.userListFollowers(username=self.username).json():
-            user = self.client.users.new(username=follower['username'])
+            user = self.client.users.new(username=follower["username"])
             for k, v in follower.items():
                 setattr(user, k, v)
             result.append(user)
@@ -232,7 +229,7 @@ class GiteaUser(j.application.JSBaseClass):
     def following(self):
         result = []
         for following in self.client.api.users.userListFollowing(username=self.username).json():
-            user = self.client.users.new(username=following['username'])
+            user = self.client.users.new(username=following["username"])
             for k, v in following.items():
                 setattr(user, k, v)
             result.append(user)
@@ -244,7 +241,7 @@ class GiteaUser(j.application.JSBaseClass):
             return True
         except Exception as e:
             if e.response.status_code != 404:
-                self._log_debug('username does not exist')
+                self._log_debug("username does not exist")
             return False
 
     @property
@@ -276,6 +273,6 @@ class GiteaUser(j.application.JSBaseClass):
         return GiteaIssues(self.client, self)
 
     def __str__(self):
-        return '\n<User>\n%s' % json.dumps(self.data, indent=4)
+        return "\n<User>\n%s" % json.dumps(self.data, indent=4)
 
     __repr__ = __str__

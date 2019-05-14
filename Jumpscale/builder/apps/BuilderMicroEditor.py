@@ -23,8 +23,8 @@ class BuilderMicroEditor(j.builder.system._BaseClass):
             raise RuntimeError("not implemented for other platforms")
 
         dest = j.builder.network.tools.download(
-            url=url, to='{DIR_TEMP}/micro/', overwrite=False, retry=3, expand=True, removeTopDir=True)
-        j.builder.tools.file_move("{DIR_TEMP}/micro/micro",
-                            "/usr/local/bin/micro", recursive=False)
+            url=url, to="{DIR_TEMP}/micro/", overwrite=False, retry=3, expand=True, removeTopDir=True
+        )
+        j.builder.tools.file_move("{DIR_TEMP}/micro/micro", "/usr/local/bin/micro", recursive=False)
 
-        self._done_set('install')
+        self._done_set("install")

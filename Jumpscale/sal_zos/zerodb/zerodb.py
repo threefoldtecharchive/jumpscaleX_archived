@@ -11,11 +11,11 @@ from .namespace import Namespaces
 DEFAULT_PORT = 9900
 PUBLIC_THREEFOLD_NETWORK = "9bee8941b5717835"
 
-GiB = 1024**3
+GiB = 1024 ** 3
 
 
 class Zerodb(Service):
-    def __init__(self, node, name, node_port, path=None, mode='user', sync=False, admin=''):
+    def __init__(self, node, name, node_port, path=None, mode="user", sync=False, admin=""):
         """
         Create zerodb object
 
@@ -38,11 +38,11 @@ class Zerodb(Service):
         :param node_port: the port the zerodb container will forward to. If this port is not free, the deploy will find the next free port.
         :type: int
         """
-        super().__init__(name, node, 'zerodb', [DEFAULT_PORT])
+        super().__init__(name, node, "zerodb", [DEFAULT_PORT])
 
         self.node_port = node_port
         self.zt_identity = None
-        self.flist = 'https://hub.grid.tf/tf-official-apps/threefoldtech-0-db-release-1.0.0.flist'
+        self.flist = "https://hub.grid.tf/tf-official-apps/threefoldtech-0-db-release-1.0.0.flist"
 
         self._mode = mode
         self._sync = sync
@@ -59,15 +59,15 @@ class Zerodb(Service):
 
         self.namespaces = Namespaces(self)
         self.nics = Nics(self)
-        self.nics.add('nat0', 'default')
+        self.nics.add("nat0", "default")
         public_threefold_nic = False
         for nic in self.nics:
             nic_dict = nic.to_dict()
-            if nic_dict['id'] == PUBLIC_THREEFOLD_NETWORK:
+            if nic_dict["id"] == PUBLIC_THREEFOLD_NETWORK:
                 public_threefold_nic = True
                 break
         if not public_threefold_nic:
-            self.nics.add('threefold', 'zerotier', PUBLIC_THREEFOLD_NETWORK)
+            self.nics.add("threefold", "zerotier", PUBLIC_THREEFOLD_NETWORK)
 
         self.__redis = None
 
@@ -84,7 +84,7 @@ class Zerodb(Service):
             port = DEFAULT_PORT
             password = self.admin
 
-            if ip == '127.0.0.1':
+            if ip == "127.0.0.1":
                 ip = self.container.default_ip().ip.format()
             else:
                 # use the connection below if you want to test a dev setup and to execute it from outside the node
@@ -102,10 +102,10 @@ class Zerodb(Service):
         total = 0
         reserved = 0
         devicename = None
-        for device in info['devices']:
-            used += device['used']
-            total += device['size']
-            devicename = device['path']
+        for device in info["devices"]:
+            used += device["used"]
+            total += device["size"]
+            devicename = device["path"]
 
         device = self.node.disks.get_device(devicename)
         devicetype = None
@@ -117,14 +117,14 @@ class Zerodb(Service):
             reserved += namespace.size * GiB
 
         return {
-            'used': used,
-            'reserved': reserved,
-            'total': total,
-            'free': total - reserved,
-            'path': self.path,
-            'mode': self.mode,
-            'sync': self.sync,
-            'type': devicetype
+            "used": used,
+            "reserved": reserved,
+            "total": total,
+            "free": total - reserved,
+            "path": self.path,
+            "mode": self.mode,
+            "sync": self.sync,
+            "type": devicetype,
         }
 
     @property
@@ -136,12 +136,12 @@ class Zerodb(Service):
         self.authorize_zt_nics()
 
         return {
-            'name': self._container_name,
-            'flist': self.flist,
-            'identity': self.zt_identity,
-            'mounts': {self.path: '/zerodb'},
-            'ports': {str(self.node_port): DEFAULT_PORT},
-            'nics': [nic.to_dict(forcontainer=True) for nic in self.nics]
+            "name": self._container_name,
+            "flist": self.flist,
+            "identity": self.zt_identity,
+            "mounts": {self.path: "/zerodb"},
+            "ports": {str(self.node_port): DEFAULT_PORT},
+            "nics": [nic.to_dict(forcontainer=True) for nic in self.nics],
         }
 
     def load_from_reality(self, container=None):
@@ -156,7 +156,7 @@ class Zerodb(Service):
             container = self.node.containers.get(self._container_name)
 
         for k, v in container.mounts.items():
-            if v == '/zerodb':
+            if v == "/zerodb":
                 self.path = k
 
         self.node_port = container.get_forwarded_port(DEFAULT_PORT)
@@ -165,13 +165,13 @@ class Zerodb(Service):
             jobs = self._container.client.job.list(self._id)
             if not jobs:
                 return
-            args = jobs[0]['cmd']['arguments']['args']
+            args = jobs[0]["cmd"]["arguments"]["args"]
             for arg in args:
-                if arg == '--sync':
+                if arg == "--sync":
                     self.sync = True
-                if arg == '--mode':
+                if arg == "--mode":
                     self.mode = args[args.index(arg) + 1]
-                if arg == '--admin':
+                if arg == "--admin":
                     self.admin = args[args.index(arg) + 1]
 
     def from_dict(self, data):
@@ -183,16 +183,17 @@ class Zerodb(Service):
         :type data: dict
         """
         self.nics = Nics(self)
-        self.mode = data.get('mode', 'user')
-        self.admin = data.get('admin', '')
-        self.zt_identity = data.get('ztIdentity')
-        self.sync = data.get('sync', False)
-        self.path = data['path']
-        for namespace in data.get('namespaces', []):
+        self.mode = data.get("mode", "user")
+        self.admin = data.get("admin", "")
+        self.zt_identity = data.get("ztIdentity")
+        self.sync = data.get("sync", False)
+        self.path = data["path"]
+        for namespace in data.get("namespaces", []):
             self.namespaces.add(
-                namespace['name'], namespace.get('size'), namespace.get('password'), namespace.get('public', True))
-        self.add_nics(data.get('nics', []))
-        self.node_port = data.get('nodePort')
+                namespace["name"], namespace.get("size"), namespace.get("password"), namespace.get("public", True)
+            )
+        self.add_nics(data.get("nics", []))
+        self.node_port = data.get("nodePort")
 
     def to_dict(self):
         """
@@ -202,22 +203,24 @@ class Zerodb(Service):
         """
         namespaces = []
         for namespace in self.namespaces:
-            namespaces.append({
-                'name': namespace.name,
-                'size': namespace.size if namespace.size else 0,
-                'password': namespace.password,
-                'public': namespace.public,
-            })
+            namespaces.append(
+                {
+                    "name": namespace.name,
+                    "size": namespace.size if namespace.size else 0,
+                    "password": namespace.password,
+                    "public": namespace.public,
+                }
+            )
 
         return {
-            'mode': self.mode,
-            'sync': self.sync,
-            'admin': self.admin,
-            'ztIdentity': self.zt_identity,
-            'path': self.path,
-            'nics': [nic.to_dict() for nic in self.nics],
-            'namespaces': namespaces,
-            'node_port': self.node_port,
+            "mode": self.mode,
+            "sync": self.sync,
+            "admin": self.admin,
+            "ztIdentity": self.zt_identity,
+            "path": self.path,
+            "nics": [nic.to_dict() for nic in self.nics],
+            "namespaces": namespaces,
+            "node_port": self.node_port,
         }
 
     def to_json(self):
@@ -245,8 +248,8 @@ class Zerodb(Service):
             namespace.deploy(live_namespaces)
 
         for namespace in live_namespaces:
-            if namespace not in self.namespaces and namespace != 'default':
-                self._redis.execute_command('NSDEL', namespace)
+            if namespace not in self.namespaces and namespace != "default":
+                self._redis.execute_command("NSDEL", namespace)
 
     def start(self, timeout=15):
         """
@@ -257,23 +260,25 @@ class Zerodb(Service):
         if self.is_running():
             return
 
-        j.tools.logger._log_info('start zerodb %s' % self.name)
+        j.tools.logger._log_info("start zerodb %s" % self.name)
 
-        cmd = '/bin/zdb \
+        cmd = "/bin/zdb \
             --port {port} \
             --data /zerodb/data \
             --index /zerodb/index \
             --mode {mode} \
-            '.format(port=DEFAULT_PORT, mode=self.mode)
+            ".format(
+            port=DEFAULT_PORT, mode=self.mode
+        )
         if self.sync:
-            cmd += ' --sync'
+            cmd += " --sync"
         if self.admin:
-            cmd += ' --admin {}'.format(self.admin)
+            cmd += " --admin {}".format(self.admin)
 
         # wait for zerodb to start
         self.container.client.system(cmd, id=self._id)
         if not j.tools.timer.execute_until(self.is_running, timeout, 0.5):
-            raise RuntimeError('Failed to start zerodb server: {}'.format(self.name))
+            raise RuntimeError("Failed to start zerodb server: {}".format(self.name))
 
     def _live_namespaces(self):
         """
@@ -282,8 +287,8 @@ class Zerodb(Service):
         :return: a list of namespaces
         :rtype: list of strings
         """
-        result = self._redis.execute_command('NSLIST')
-        return [namespace.decode('utf-8') for namespace in result]
+        result = self._redis.execute_command("NSLIST")
+        return [namespace.decode("utf-8") for namespace in result]
 
     def destroy(self):
         super().destroy()
@@ -296,11 +301,11 @@ class Zerodb(Service):
 
     @property
     def _storage_pool(self):
-        return self.node.storagepools.get(self.path.split('/')[3])
+        return self.node.storagepools.get(self.path.split("/")[3])
 
     @property
     def _filesystem(self):
-        return self._storage_pool.get(self.path.split('/')[-1])
+        return self._storage_pool.get(self.path.split("/")[-1])
 
     @property
     def disk_type(self):
@@ -313,9 +318,9 @@ class Zerodb(Service):
     @path.setter
     def path(self, value):
         if not value:
-            raise ValueError('path can\'t be empty')
+            raise ValueError("path can't be empty")
         if type(value) != str:
-            raise ValueError('path must be a string')
+            raise ValueError("path must be a string")
         self._path = value
 
     @property
@@ -333,7 +338,7 @@ class Zerodb(Service):
     @sync.setter
     def sync(self, value):
         if type(value) != bool:
-            raise ValueError('sync must be a boolen')
+            raise ValueError("sync must be a boolen")
         self._sync = value
 
     @property
@@ -342,8 +347,8 @@ class Zerodb(Service):
 
     @mode.setter
     def mode(self, value):
-        if value not in ['user', 'seq', 'direct']:
-            raise ValueError('mode must be user, seq or direct')
+        if value not in ["user", "seq", "direct"]:
+            raise ValueError("mode must be user, seq or direct")
         self._mode = value
 
     def __str__(self):

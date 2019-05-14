@@ -3,7 +3,7 @@ from io import BytesIO
 from urllib.parse import urlparse
 
 
-class FtpClient():
+class FtpClient:
     def __init__(self, url):
         self.parsed_url = urlparse(url)
 
@@ -16,7 +16,7 @@ class FtpClient():
             if self.parsed_url.path:
                 ftp.cwd(self.parsed_url.path)
             bytes = BytesIO(content)
-            ftp.storbinary('STOR ' + filename, bytes)
+            ftp.storbinary("STOR " + filename, bytes)
 
     def download(self, filename=None):
         filename = filename or self.parsed_url.path
@@ -25,5 +25,5 @@ class FtpClient():
             ftp.connect(self.parsed_url.hostname, port=port)
             ftp.login(user=self.parsed_url.username, passwd=self.parsed_url.password)
             buff = BytesIO()
-            ftp.retrbinary('RETR ' + filename, buff.write)
+            ftp.retrbinary("RETR " + filename, buff.write)
             return buff.getvalue().decode()

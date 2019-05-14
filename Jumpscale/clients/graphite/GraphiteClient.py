@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 
 import socket
@@ -37,7 +36,7 @@ class GraphiteClient(JSConfigClient):
         """
         out = ""
         for line in msg.split("\n"):
-            out += '%s %d\n' % (line, int(time.time()))
+            out += "%s %d\n" % (line, int(time.time()))
         sock = socket.socket()
         sock.connect((self._SERVER, self._CARBON_PORT))
         sock.sendall(out)
@@ -48,11 +47,12 @@ class GraphiteClient(JSConfigClient):
 
     def query(self, query_=None, **kwargs):
         import requests
+
         query = query_.copy() if query_ else dict()
         query.update(kwargs)
-        query['format'] = 'json'
-        if 'from_' in query:
-            query['from'] = query.pop('from_')
+        query["format"] = "json"
+        if "from_" in query:
+            query["from"] = query.pop("from_")
         qs = urllib.parse.urlencode(query)
         url = "%s?%s" % (self._url, qs)
         return requests.get(url).json()

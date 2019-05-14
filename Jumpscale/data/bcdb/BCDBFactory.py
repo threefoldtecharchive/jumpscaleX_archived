@@ -22,17 +22,15 @@ class BCDBFactory(j.application.JSBaseClass):
 
         j.clients.redis.core_get()  # just to make sure the redis got started
 
-        j.data.schema.add_from_path("%s/models_system/meta.toml"%self._dirpath)
-
+        j.data.schema.add_from_path("%s/models_system/meta.toml" % self._dirpath)
 
     @property
     def _BCDBModelClass(self):
         return BCDBModel
 
-
     def new(self, name, zdbclient=None, reset=False):
 
-        if reset==False and name in self.bcdb_instances:
+        if reset == False and name in self.bcdb_instances:
             return self.bcdb_instances[name]
 
         self._log_debug("new bcdb:%s" % name)
@@ -99,9 +97,7 @@ class BCDBFactory(j.application.JSBaseClass):
 
             cmd = "kosmos 'j.data.bcdb.redis_server_start(%s)'" % args
 
-            cmdcmd = j.tools.startupcmd.get(
-                name="bcdbredis_%s" % port, cmd=cmd, ports=[port]
-            )
+            cmdcmd = j.tools.startupcmd.get(name="bcdbredis_%s" % port, cmd=cmd, ports=[port])
 
             cmdcmd.start()
 
@@ -174,7 +170,6 @@ class BCDBFactory(j.application.JSBaseClass):
         model = bcdb.model_get_from_url("despiegk.test")
 
         return bcdb, model
-
 
     def test(self, name=""):
         """

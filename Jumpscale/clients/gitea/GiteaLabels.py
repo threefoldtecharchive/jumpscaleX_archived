@@ -39,7 +39,9 @@ class GiteaLabels(j.application.JSBaseClass):
         if not self.issue:
             items = self.client.api.repos.issueListLabels(repo=self.repo.name, owner=self.user.username).json()
         else:
-            items = self.client.api.repos.issueGetLabels(index=str(self.issue.id), repo=self.repo.name, owner=self.user.username).json()
+            items = self.client.api.repos.issueGetLabels(
+                index=str(self.issue.id), repo=self.repo.name, owner=self.user.username
+            ).json()
         for item in items:
             c = self.new()
             for k, v in item.items():
@@ -49,8 +51,9 @@ class GiteaLabels(j.application.JSBaseClass):
 
     def clear(self):
         if not self.issue:
-            raise Exception('Only supported for issues, not whole repos')
-        self.client.api.repos.issueClearLabels(index=str(self.issue.id), repo=self.repo.name, owner=self.user.username).json()
+            raise Exception("Only supported for issues, not whole repos")
+        self.client.api.repos.issueClearLabels(
+            index=str(self.issue.id), repo=self.repo.name, owner=self.user.username
+        ).json()
 
     __str__ = __repr__ = lambda self: "Gitea Labels Iterator for repo: {0}".format(self.repo.name)
-

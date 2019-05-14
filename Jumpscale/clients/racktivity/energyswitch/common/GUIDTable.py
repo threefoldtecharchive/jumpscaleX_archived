@@ -5,12 +5,10 @@ JSBASE = j.application.JSBaseClass
 
 
 class Value(j.application.JSBaseClass):
-
     def __init__(self, initStr=None, **kwargs):
         JSBASE.__init__(self)
         # Initialize everything with None
-        self.fields = ("type", "size", "length", "unit",
-                       "version", "scale", "min", "max")
+        self.fields = ("type", "size", "length", "unit", "version", "scale", "min", "max")
         for field in self.fields:
             setattr(self, field, None)
 
@@ -872,7 +870,9 @@ func = Functions()
 functions[10035] = func
 func.guid = 10035
 func.name = "PortState"
-func.description = "The state of the port, only used to set the port state, see current port state to get the port state"
+func.description = (
+    "The state of the port, only used to set the port state, see current port state to get the port state"
+)
 func.read = 1
 func.write = 1
 func.valDef = Value()
@@ -1460,7 +1460,9 @@ func = Functions()
 functions[40007] = func
 func.guid = 40007
 func.name = "ModNum"
-func.description = "To retrieve the number of modules connected to the device. The device itself is treated as module 0."
+func.description = (
+    "To retrieve the number of modules connected to the device. The device itself is treated as module 0."
+)
 func.read = 1
 func.write = 0
 func.valDef = Value()
@@ -1690,7 +1692,9 @@ func = Functions()
 functions[60005] = func
 func.guid = 60005
 func.name = "BootPageRange"
-func.description = "To get the number of pages of the application firmware memory. Only pages within this range can be erased."
+func.description = (
+    "To get the number of pages of the application firmware memory. Only pages within this range can be erased."
+)
 func.read = 0
 func.write = 0
 func.valDef = Value()

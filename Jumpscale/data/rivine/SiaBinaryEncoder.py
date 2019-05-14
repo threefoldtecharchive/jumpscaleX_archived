@@ -1,13 +1,16 @@
 from Jumpscale import j
 
+
 class IntegerOutOfRange(Exception):
     """
     IntegerOutOfRange error
     """
 
+
 _INT_UPPERLIMIT = pow(2, 64) - 1
 
 from abc import ABC, abstractmethod
+
 
 class SiaBinaryObjectEncoderBase(ABC):
     @abstractmethod
@@ -19,6 +22,7 @@ class SiaBinaryObjectEncoderBase(ABC):
         encoded according to the siabin encoding specification.
         """
         pass
+
 
 class SiaBinaryEncoder(j.application.JSBaseClass):
     """
@@ -55,7 +59,7 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
             raise IntegerOutOfRange("integer {} is out of lower range of 0".format(value))
         if value > _INT_UPPERLIMIT:
             raise IntegerOutOfRange("integer {} is out of upper range of {}".format(value, _INT_UPPERLIMIT))
-        self._data += value.to_bytes(8, byteorder='little')
+        self._data += value.to_bytes(8, byteorder="little")
 
     def add_array(self, value):
         """
@@ -65,7 +69,7 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
         @param value: the iterateble object to be siabin-encoded as an array
         """
         if isinstance(value, str):
-            self._data += value.encode('utf-8')
+            self._data += value.encode("utf-8")
         elif isinstance(value, (bytes, bytearray)):
             self._data += value
         else:
@@ -77,7 +81,7 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
             except TypeError:
                 raise TypeError("value cannot be encoded as an array")
 
-    def add_slice(self,value):
+    def add_slice(self, value):
         """
         Add an encoded iterateble value as a slice,
         as specified by the siabin encoding specification.
@@ -86,7 +90,7 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
         """
         if isinstance(value, str):
             self.add_int(len(value))
-            self._data += value.encode('utf-8')
+            self._data += value.encode("utf-8")
         elif isinstance(value, (bytes, bytearray)):
             self.add_int(len(value))
             self._data += value
@@ -96,7 +100,7 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
                 length += 1
             self.add_int(length)
             self.add_array(value)
-    
+
     def add_byte(self, value):
         """
         Add an encoded iterateble value as a single byte.
@@ -106,17 +110,17 @@ class SiaBinaryEncoder(j.application.JSBaseClass):
         if isinstance(value, int):
             if value < 0 or value > 255:
                 raise ValueError("byte overflow: invaid value of {}".format(value))
-            self._data += value.to_bytes(1, byteorder='little')
+            self._data += value.to_bytes(1, byteorder="little")
         else:
             if isinstance(value, str):
-                value = value.encode('utf-8')
+                value = value.encode("utf-8")
             elif not isinstance(value, (bytes, bytearray)):
                 raise ValueError("value of type {} cannot be added as a single byte".format(type(value)))
             if len(value) != 1:
                 raise ValueError("a single byte has to be accepted, amount of bytes given: {}".format(len(value)))
             self._data += value
 
-    def add(self,value):
+    def add(self, value):
         """
         add a value as specified by the siabin encoding specification,
         automatically matching the value's type with a matching siabin type.

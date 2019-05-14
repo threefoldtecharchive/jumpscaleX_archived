@@ -9,13 +9,15 @@ from Jumpscale import j
 # logger = logging.getLogger('downloader')
 
 # The ID template for google presentation.
-DOWNLOAD_SLIDE_AS_JPEG_TEMPLATE = "https://docs.google.com/presentation/d/{presentationId}/export/jpeg?id={presentationId}&pageid={pageId}"
+DOWNLOAD_SLIDE_AS_JPEG_TEMPLATE = (
+    "https://docs.google.com/presentation/d/{presentationId}/export/jpeg?id={presentationId}&pageid={pageId}"
+)
 
 
 def download_one(url, destfile):
     r = requests.get(url)
     if r.status_code == 200 and not os.path.exists(destfile):
-        with open(destfile, 'wb') as f:
+        with open(destfile, "wb") as f:
             content = r.content
             f.write(content)
 
@@ -39,7 +41,7 @@ def download_entry(entry, destdir="/tmp"):
     print("Downloading {} to {}".format(url, destfile))
     metapath = destfile + ".meta"
     print("Metapath: ", metapath)
-    with open(metapath, 'w') as f:
+    with open(metapath, "w") as f:
         f.write("".join(slide_meta))
 
     download_one(url, destfile)
@@ -84,10 +86,9 @@ class Downloader:
             raise ValueError("invalid thumbnailsize should be large or medium")
 
     def _get_slides_download_info(self):
-        presentation = self.service.presentations().get(
-            presentationId=self.presentation_id).execute()
-        presentation_title = presentation['title']
-        slides = presentation.get('slides')
+        presentation = self.service.presentations().get(presentationId=self.presentation_id).execute()
+        presentation_title = presentation["title"]
+        slides = presentation.get("slides")
         slides_ids = [slide["objectId"] for slide in slides]
 
         links = []
@@ -96,35 +97,41 @@ class Downloader:
             # slide_index = slide_id.split("_")[2]
             slide = slides[i]
             slide_meta = []
-            notesPage = slide['slideProperties']['notesPage']
+            notesPage = slide["slideProperties"]["notesPage"]
             # speakerNotesObjectId = notesPage['notesProperties']['speakerNotesObjectId'] #i3
 
-            pageElements = notesPage['pageElements']
+            pageElements = notesPage["pageElements"]
             slide_title = None
             for page_element in pageElements:
                 # if page_element['objectId'] == speakerNotesObjectId:
-                shape = page_element['shape']
-                if 'text' in shape and 'textElements' in shape['text']:
-                    for text_element in shape['text']['textElements']:
-                        if 'textRun' in text_element and 'content' in text_element['textRun']:
-                            slide_meta.append(
-                                text_element['textRun']['content'])
+                shape = page_element["shape"]
+                if "text" in shape and "textElements" in shape["text"]:
+                    for text_element in shape["text"]["textElements"]:
+                        if "textRun" in text_element and "content" in text_element["textRun"]:
+                            slide_meta.append(text_element["textRun"]["content"])
                             if not slide_title:
-                                slide_title = self._slide_title_get(text_element['textRun']['content'])
+                                slide_title = self._slide_title_get(text_element["textRun"]["content"])
             pageId = slide_id
             presentationId = self.presentation_id
-            url = self.service.presentations().pages().getThumbnail(presentationId=presentationId, pageObjectId=pageId,
-                                                                    thumbnailProperties_thumbnailSize=self.thumbnailsize).execute()["contentUrl"]
+            url = (
+                self.service.presentations()
+                .pages()
+                .getThumbnail(
+                    presentationId=presentationId,
+                    pageObjectId=pageId,
+                    thumbnailProperties_thumbnailSize=self.thumbnailsize,
+                )
+                .execute()["contentUrl"]
+            )
             image_id = str(i).zfill(zerofills)
-            save_as = "{image_id}_{page_id}.png".format(
-                image_id=image_id, page_id=pageId)
+            save_as = "{image_id}_{page_id}.png".format(image_id=image_id, page_id=pageId)
             links.append((url, save_as, slide_meta, slide_title, presentation_title))
         return links, presentation_title
 
     def _slide_title_get(self, txt):
-        for line in txt.split('\n'):
+        for line in txt.split("\n"):
             if line.casefold().startswith("title"):
-                parts = line.split('=')
+                parts = line.split("=")
                 if len(parts) == 2:
                     return parts[1].strip()
         return None
@@ -134,10 +141,9 @@ class Downloader:
 
         if not background_slide_id:
             raise ValueError("invalid slide link")
-        presentation = self.service.presentations().get(
-            presentationId=presentation_id).execute()
-        presentation_title = presentation['title']
-        slides = presentation.get('slides')
+        presentation = self.service.presentations().get(presentationId=presentation_id).execute()
+        presentation_title = presentation["title"]
+        slides = presentation.get("slides")
         slides_ids = [slide["objectId"] for slide in slides]
 
         links = []
@@ -152,25 +158,31 @@ class Downloader:
             else:
                 slide = slides[i]
                 slide_meta = []
-                notesPage = slide['slideProperties']['notesPage']
+                notesPage = slide["slideProperties"]["notesPage"]
                 # speakerNotesObjectId = notesPage['notesProperties']['speakerNotesObjectId'] #i3
 
-                pageElements = notesPage['pageElements']
+                pageElements = notesPage["pageElements"]
                 for page_element in pageElements:
                     # if page_element['objectId'] == speakerNotesObjectId:
-                    shape = page_element['shape']
-                    if 'text' in shape and 'textElements' in shape['text']:
-                        for text_element in shape['text']['textElements']:
-                            if 'textRun' in text_element and 'content' in text_element['textRun']:
-                                slide_meta.append(
-                                    text_element['textRun']['content'])
+                    shape = page_element["shape"]
+                    if "text" in shape and "textElements" in shape["text"]:
+                        for text_element in shape["text"]["textElements"]:
+                            if "textRun" in text_element and "content" in text_element["textRun"]:
+                                slide_meta.append(text_element["textRun"]["content"])
                 pageId = slide_id
                 presentationId = presentation_id
-                url = self.service.presentations().pages().getThumbnail(presentationId=presentationId, pageObjectId=pageId,
-                                                                        thumbnailProperties_thumbnailSize=self.thumbnailsize).execute()["contentUrl"]
+                url = (
+                    self.service.presentations()
+                    .pages()
+                    .getThumbnail(
+                        presentationId=presentationId,
+                        pageObjectId=pageId,
+                        thumbnailProperties_thumbnailSize=self.thumbnailsize,
+                    )
+                    .execute()["contentUrl"]
+                )
                 image_id = str(i).zfill(zerofills)
-                save_as = "background_{image_id}_{page_id}.png".format(
-                    image_id=image_id, page_id=pageId)
+                save_as = "background_{image_id}_{page_id}.png".format(image_id=image_id, page_id=pageId)
                 save_as_path = os.path.join(destdir, save_as)
                 download_one(url, save_as_path)
                 return save_as_path
@@ -186,14 +198,13 @@ class Downloader:
         parser = ConfigParser()
 
         website_dir = os.path.dirname(destdir)
-        presentations_meta_path = os.path.join(
-            website_dir, "presentations.meta")
+        presentations_meta_path = os.path.join(website_dir, "presentations.meta")
 
         if os.path.exists(presentations_meta_path):
             parser.read(presentations_meta_path)
         if not parser.has_section(self.presentation_id):
             parser.add_section(self.presentation_id)
-        parser.set(self.presentation_id, 'title', title)
+        parser.set(self.presentation_id, "title", title)
         with open(presentations_meta_path, "w") as metafile:
             parser.write(metafile)
 

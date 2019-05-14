@@ -1,10 +1,7 @@
 from Jumpscale import j
 
 
-
-
 class BuilderLibffi(j.builder.system._BaseClass):
-
     def _init(self):
         self.BUILDDIRL = self._replace("{DIR_VAR}/build/libffi")
         self.CODEDIRL = self._replace("{DIR_VAR}/build/code/libffi")
@@ -27,9 +24,9 @@ class BuilderLibffi(j.builder.system._BaseClass):
         j.builder.system.package.mdupdate()
         j.core.tools.dir_ensure(self.BUILDDIRL)
         if not j.core.platformtype.myplatform.isMac:
-            j.builder.system.package.ensure('dh-autoreconf')
+            j.builder.system.package.ensure("dh-autoreconf")
         url = "https://github.com/libffi/libffi.git"
-        j.clients.git.pullGitRepo(url, reset=False,dest=self.CODEDIRL, ssh=False)
+        j.clients.git.pullGitRepo(url, reset=False, dest=self.CODEDIRL, ssh=False)
 
         if not self._done_get("compile") or reset:
             C = """
@@ -44,7 +41,7 @@ class BuilderLibffi(j.builder.system._BaseClass):
             j.sal.fs.writeFile("%s/mycompile_all.sh" % self.CODEDIRL, self._replace(C))
             self._log_info("compile libffi")
             self._log_debug(C)
-            j.sal.process.execute("sh %s/mycompile_all.sh" % self.CODEDIRL)            
+            j.sal.process.execute("sh %s/mycompile_all.sh" % self.CODEDIRL)
             self._done_set("compile")
             self._log_info("BUILD DONE")
         else:

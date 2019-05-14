@@ -9,7 +9,7 @@ JSBASE = j.application.JSBaseClass
 
 
 class BCDBModel(j.application.JSBaseClass):
-    def __init__(self,bcdb,schema=None,namespaceid=None, reset=False):
+    def __init__(self, bcdb, schema=None, namespaceid=None, reset=False):
         """
 
         delivers interface how to deal with data in 1 schema
@@ -26,7 +26,7 @@ class BCDBModel(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
-        bcdb,schema,namespaceid,reset = self._init_load(bcdb,schema,namespaceid,reset)
+        bcdb, schema, namespaceid, reset = self._init_load(bcdb, schema, namespaceid, reset)
 
         self._kosmosinstance = None
         self.namespaceid = namespaceid
@@ -60,10 +60,8 @@ class BCDBModel(j.application.JSBaseClass):
         if reset:
             self.reset()
 
-
-    def _init_load(self,bcdb,schema,namespaceid,reset):
-        return bcdb,schema,namespaceid,reset
-
+    def _init_load(self, bcdb, schema, namespaceid, reset):
+        return bcdb, schema, namespaceid, reset
 
     def _init_idfile(self):
         """
@@ -71,7 +69,7 @@ class BCDBModel(j.application.JSBaseClass):
         :return:
         """
 
-        #next one always happens
+        # next one always happens
         self._ids_file_path = "%s/ids.data" % (self._data_dir)
         if not j.sal.fs.exists(self._ids_file_path) or j.sal.fs.fileSize(self._ids_file_path) == 0:
             j.sal.fs.touch(self._ids_file_path)
@@ -87,7 +85,7 @@ class BCDBModel(j.application.JSBaseClass):
             f.close()
 
         if self.namespaceid:
-            self._ids_file_path_ns = "%s/ids_%s.data" % (self._data_dir,self.namespace_name)
+            self._ids_file_path_ns = "%s/ids_%s.data" % (self._data_dir, self.namespace_name)
             if not j.sal.fs.exists(self._ids_file_path_ns) or j.sal.fs.fileSize(self._ids_file_path_ns) == 0:
                 j.sal.fs.touch(self._ids_file_path_ns)
             else:
@@ -98,7 +96,7 @@ class BCDBModel(j.application.JSBaseClass):
                 f.seek(llen - 4, 0)
                 bindata = f.read(4)
                 f.close()
-                assert self._ids_last == struct.unpack(b"<I", bindata)[0]  #needs to be same
+                assert self._ids_last == struct.unpack(b"<I", bindata)[0]  # needs to be same
 
     @property
     def namespace_name(self):
@@ -122,11 +120,10 @@ class BCDBModel(j.application.JSBaseClass):
         # else:
         #     self.obj_cache = None
 
-
         self._init_idfile()
         self._init_index()  # goal is to be overruled by users
 
-        #DO NOT REBUILD THE INDEX HERE, if the redis is e.g. lost then we need to rebuild all
+        # DO NOT REBUILD THE INDEX HERE, if the redis is e.g. lost then we need to rebuild all
 
     def trigger_add(self, method):
         """
@@ -147,13 +144,7 @@ class BCDBModel(j.application.JSBaseClass):
         model = self
         kosmosinstance = self._kosmosinstance
         for method in self._triggers:
-            method(
-                model,
-                obj,
-                kosmosinstance=kosmosinstance,
-                action=action,
-                propertyname=propertyname,
-            )
+            method(model, obj, kosmosinstance=kosmosinstance, action=action, propertyname=propertyname)
 
     def cache_reset(self):
         self.obj_cache = {}
@@ -228,7 +219,7 @@ class BCDBModel(j.application.JSBaseClass):
             self.zdbclient.delete(obj_id)
 
     def check(self, obj):
-        if not isinstance(obj,j.data.schema.DataObjBase):
+        if not isinstance(obj, j.data.schema.DataObjBase):
             raise RuntimeError("argument needs to be a jsx data obj")
 
     @queue_method
@@ -277,7 +268,7 @@ class BCDBModel(j.application.JSBaseClass):
         if obj_id not in ids:
             ids.append(obj_id)
         data = j.data.serializers.msgpack.dumps(ids)
-        hash = self._index_key_redis_get(key) #this to have a smaller key to store in mem
+        hash = self._index_key_redis_get(key)  # this to have a smaller key to store in mem
         self._log_debug("set key:%s (id:%s)" % (key, obj_id))
         j.clients.credis_core.hset(self._redis_prefix + b":" + hash[0:2], hash[2:], data)
 
@@ -441,7 +432,7 @@ class BCDBModel(j.application.JSBaseClass):
                         self.zdbclient.set(data, key=obj.id)
                     except Exception as e:
                         if str(e).find("only update authorized") != -1:
-                            raise RuntimeError("cannot update object:%s\n with id:%s, does not exist"% (obj, obj.id))
+                            raise RuntimeError("cannot update object:%s\n with id:%s, does not exist" % (obj, obj.id))
                         raise
 
         if index:
@@ -449,7 +440,7 @@ class BCDBModel(j.application.JSBaseClass):
             self.index_keys_set(obj)
 
             if obj.id > self._ids_last:
-                #this allows us to know which objects are in a specific model namespace, otherwise we cannot iterate
+                # this allows us to know which objects are in a specific model namespace, otherwise we cannot iterate
                 bin_id = struct.pack("<I", obj.id)
                 j.sal.fs.writeFile(self._ids_file_path, bin_id, append=True)
                 if self.namespaceid:
@@ -508,7 +499,7 @@ class BCDBModel(j.application.JSBaseClass):
         return ddict
 
     def new(self, data=None):
-        if data and isinstance(data,dict):
+        if data and isinstance(data, dict):
             data = self._dict_process_in(data)
         if data:
             obj = self.schema.get(data=data, model=self)
@@ -608,7 +599,7 @@ class BCDBModel(j.application.JSBaseClass):
                 o = self.get(obj_id)
             except Exception as e:
                 if str(e).find("could not find obj") != -1:
-                    self._log_warning("warning: could not find object with id:%s in %s"% (obj_id, self))
+                    self._log_warning("warning: could not find object with id:%s in %s" % (obj_id, self))
                     continue
                 else:
                     raise e

@@ -8,6 +8,7 @@ class ZeroHubClient(JSConfigClient):
     """
     Provide an easy way to communicate and do some actions on the ZeroHub like uploading or listing flists
     """
+
     _SCHEMATEXT = """
     @url =  jumpscale.zerohub.client
     name* = "" (S)
@@ -74,8 +75,8 @@ class ZeroHubClient(JSConfigClient):
 
         This method requires authentication (see authenticate method)
         """
-        with open(filename, 'rb') as f:
-            value = self.api.flist.flist_meupload_post({'file': f}, content_type='multipart/form-data')
+        with open(filename, "rb") as f:
+            value = self.api.flist.flist_meupload_post({"file": f}, content_type="multipart/form-data")
 
         return value
 
@@ -142,11 +143,12 @@ class ZeroHubClient(JSConfigClient):
         all what people need to do this action should be called from this method
 
         """
-        tarfile = '/tmp/{}.tar.gz'.format(name)
-        j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, path))
+        tarfile = "/tmp/{}.tar.gz".format(name)
+        j.sal.process.execute("tar czf {} -C {} .".format(tarfile, path))
         return self.upload(tarfile)
 
     def exists(self, chunks):
         import ipdb
+
         ipdb.set_trace()
         self.api.exists.exists_post(chunks).json()

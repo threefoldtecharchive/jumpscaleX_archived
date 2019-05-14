@@ -20,6 +20,7 @@ class OVCClientFactory(JSConfigBaseFactory):
         if not filled in will bet done auto
 
     """
+
     __jslocation__ = "j.clients.openvcloud"
     _CHILDCLASS = OVCClient
 

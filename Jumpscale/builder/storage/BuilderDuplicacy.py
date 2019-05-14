@@ -3,7 +3,6 @@ import os
 import textwrap
 
 
-
 class BuilderDuplicacy(j.builder.system._BaseClass):
     NAME = "duplicacy"
 
@@ -18,7 +17,7 @@ class BuilderDuplicacy(j.builder.system._BaseClass):
 
         dup_url = "https://github.com/gilbertchen/duplicacy/releases/download/v2.0.10/duplicacy_linux_x64_2.0.10"
         j.builder.tools.file_download(dup_url, overwrite=True, to="{DIR_TEMP}/duplicacy")
-        self._done_set('build')
+        self._done_set("build")
 
         if install:
             self.install(False)
@@ -32,7 +31,7 @@ class BuilderDuplicacy(j.builder.system._BaseClass):
         if self._done_check("install", reset):
             return
         j.sal.process.execute("cp {DIR_TEMP}/duplicacy {DIR_BIN}/")
-        self._done_set('install')
+        self._done_set("install")
 
         if start:
             self.start()
@@ -43,8 +42,7 @@ class BuilderDuplicacy(j.builder.system._BaseClass):
         """
         pass
 
-
-    def stop(self, name='main'):
+    def stop(self, name="main"):
         """
         Stops duplicacy 
         """
@@ -60,4 +58,3 @@ class BuilderDuplicacy(j.builder.system._BaseClass):
         helper method to clean what this module generates.
         """
         pass
-

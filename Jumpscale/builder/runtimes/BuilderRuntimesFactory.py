@@ -18,6 +18,7 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
     def python(self):
         if self._python is None:
             from .BuilderPython import BuilderPython
+
             self._python = BuilderPython()
         return self._python
 
@@ -25,6 +26,7 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
     def php(self):
         if self._php is None:
             from .BuilderPHP import BuilderPHP
+
             self._php = BuilderPHP()
         return self._php
 
@@ -32,6 +34,7 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
     def lua(self):
         if self._lua is None:
             from .BuilderLua import BuilderLua
+
             self._lua = BuilderLua()
         return self._lua
 
@@ -39,13 +42,15 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
     def golang(self):
         if self._golang is None:
             from .BuilderGolang import BuilderGolang
+
             self._golang = BuilderGolang()
         return self._golang
-    
+
     @property
     def nimlang(self):
         if self._nimlang is None:
             from .BuilderNIM import BuilderNIM
+
             self._nimlang = BuilderNIM()
         return self._nimlang
 
@@ -53,5 +58,6 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
     def rust(self):
         if self._rust is None:
             from .BuilderRust import BuilderRust
+
             self._rust = BuilderRust()
         return self._rust

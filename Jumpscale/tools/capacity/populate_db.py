@@ -11,18 +11,13 @@ for i in range(500):
     cap = Capacity(
         j.data.idgenerator.generateXCharID(12),
         None,
-        Location(
-            random.choice(continents),
-            random.choice(countries),
-            random.choice(cities),
-            0,
-            0),
+        Location(random.choice(continents), random.choice(countries), random.choice(cities), 0, 0),
         random.randint(1, 500),
         random.randint(1, 2000),
         random.randint(1, 90000),
         random.randint(1, 10000),
-        'http://localhost:6600',
-        'heads/v1.2.2 6b693a496de940b26ee1a2356b67f7d65767c13f'
+        "http://localhost:6600",
+        "heads/v1.2.2 6b693a496de940b26ee1a2356b67f7d65767c13f",
     )
     register.nodes.register(cap)
-    print('capacity registed %d' % i)
+    print("capacity registed %d" % i)

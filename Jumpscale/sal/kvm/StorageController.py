@@ -3,7 +3,6 @@ from sal.kvm.BaseKVMComponent import BaseKVMComponent
 
 
 class StorageController(BaseKVMComponent):
-
     def __init__(self, controller):
         self.controller = controller
         BaseKVMComponent.__init__(controller=controller)
@@ -26,7 +25,7 @@ class StorageController(BaseKVMComponent):
         """
 
         self.controller.executor.prefab.core.dir_ensure(pool.poolpath)
-        cmd = 'chattr +C %s ' % pool.poolpath
+        cmd = "chattr +C %s " % pool.poolpath
         self.controller.executor.execute(cmd)
         self.controller.connection.storagePoolCreateXML(pool.to_xml(), 0)
 
@@ -49,10 +48,11 @@ class StorageController(BaseKVMComponent):
             poolpath = self.controller.executor.prefab.core.joinpaths(self.controller.base_path, pool_name)
             if not self.controller.executor.prefab.core.dir_exists(poolpath):
                 self.controller.executor.prefab.core.dir_ensure(poolpath)
-                cmd = 'chattr +C %s ' % poolpath
+                cmd = "chattr +C %s " % poolpath
                 self.controller.executor.execute(cmd)
-            pool = self.controller.get_template('pool.xml').render(
-                pool_name=pool_name, basepath=self.controller.base_path)
+            pool = self.controller.get_template("pool.xml").render(
+                pool_name=pool_name, basepath=self.controller.base_path
+            )
             self._log_debug(pool)
             self.controller.connection.storagePoolCreateXML(pool, 0)
         storagepool = self.controller.connection.storagePoolLookupByName(pool_name)
@@ -63,6 +63,7 @@ class StorageController(BaseKVMComponent):
         List all pools
         """
         from sal.kvm.Pool import Pool
+
         pools = []
         for pool_kvm in self.controller.connection.listAllStoragePools():
             pools.append(Pool.from_xml(controller=self.controller, source=pool_kvm.XMLDesc()))

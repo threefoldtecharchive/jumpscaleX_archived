@@ -11,6 +11,7 @@ class Machine(BaseKVMComponent):
     """
     Wrapper class around libvirt's machine object , to use with jumpscale libs.
     """
+
     STATES = {
         0: "nostate",
         1: "running",
@@ -20,7 +21,7 @@ class Machine(BaseKVMComponent):
         5: "shutoff",
         6: "crashed",
         7: "pmsuspended",
-        8: "last"
+        8: "last",
     }
 
     def __init__(self, controller, name, disks, nics, memory, cpucount, cloud_init=False):
@@ -44,8 +45,7 @@ class Machine(BaseKVMComponent):
         self.cpucount = cpucount
         self.controller = controller
         self.cloud_init = cloud_init
-        self.image_path = "%s/%s_ci.iso" % (self.controller.base_path,
-                                            self.name) if cloud_init else ""
+        self.image_path = "%s/%s_ci.iso" % (self.controller.base_path, self.name) if cloud_init else ""
         self._domain = None
         self._ip = None
         self._executor = None
@@ -86,25 +86,30 @@ class Machine(BaseKVMComponent):
 
             prefab.core.dir_ensure("%s/metadata/%s" % (self.controller.base_path, self.name))
             userdata = "#cloud-config\n"
-            userdata += yaml.dump({'chpasswd': {'expire': False},
-                                   'ssh_pwauth': True,
-                                   'users': [{'lock-passwd': False,
-                                              'name': username,
-                                              'plain_text_passwd': passwd,
-                                              'shell': '/bin/bash',
-                                              'ssh-authorized-keys': sshkeys_to_authorize,
-                                              'sudo': 'ALL=(ALL) NOPASSWD: ALL'}]
-                                   })
+            userdata += yaml.dump(
+                {
+                    "chpasswd": {"expire": False},
+                    "ssh_pwauth": True,
+                    "users": [
+                        {
+                            "lock-passwd": False,
+                            "name": username,
+                            "plain_text_passwd": passwd,
+                            "shell": "/bin/bash",
+                            "ssh-authorized-keys": sshkeys_to_authorize,
+                            "sudo": "ALL=(ALL) NOPASSWD: ALL",
+                        }
+                    ],
+                }
+            )
             metadata = '{"local-hostname":"vm-%s"}' % self.name
             userdata_path = "%s/metadata/%s/user-data" % (self.controller.base_path, self.name)
             metadata_path = "%s/metadata/%s/meta-data" % (self.controller.base_path, self.name)
             prefab.core.file_write(userdata_path, userdata)
             prefab.core.file_write(metadata_path, metadata)
             cmd = "genisoimage -o {base}/{name}_ci.iso -V cidata -r -J {metadata_path} {userdata_path}".format(
-                base=self.controller.base_path,
-                name=self.name,
-                metadata_path=metadata_path,
-                userdata_path=userdata_path)
+                base=self.controller.base_path, name=self.name, metadata_path=metadata_path, userdata_path=userdata_path
+            )
             prefab.core.run(cmd)
             prefab.core.dir_remove("%s/images/%s " % (self.controller.base_path, self.name))
         self.domain = self.controller.connection.defineXML(self.to_xml())
@@ -129,13 +134,17 @@ class Machine(BaseKVMComponent):
         """
         Return libvirt's xml string representation of the machine.
         """
-        machinexml = self.controller.get_template('machine.xml').render({'machinename': self.name,
-                                                                         'memory': self.memory,
-                                                                         'nrcpu': self.cpucount,
-                                                                         'nics': self.nics,
-                                                                         'disks': self.disks,
-                                                                         "cloudinit": self.cloud_init,
-                                                                         "image_path": self.image_path})
+        machinexml = self.controller.get_template("machine.xml").render(
+            {
+                "machinename": self.name,
+                "memory": self.memory,
+                "nrcpu": self.cpucount,
+                "nics": self.nics,
+                "disks": self.disks,
+                "cloudinit": self.cloud_init,
+                "image_path": self.image_path,
+            }
+        )
         return machinexml
 
     @classmethod
@@ -147,20 +156,18 @@ class Machine(BaseKVMComponent):
         @param source  str: xml string of machine to be created.
         """
         machine = ElementTree.fromstring(source)
-        name = machine.findtext('name')
-        memory = int(machine.findtext('memory'))
-        nrcpu = int(machine.findtext('vcpu'))
-        interfaces = list(map(
-            lambda interface: j.sal.kvm.Interface.from_xml(
-                controller, ElementTree.tostring(interface)),
-            machine.find('devices').findall('interface')
-        ))
-        xml_disks = [disk for disk in machine.find('devices').findall(
-            'disk') if disk.get('device') == 'disk']
-        disks = list(map(lambda disk: j.sal.kvm.Disk.from_xml(controller, ElementTree.tostring(disk)),
-                         xml_disks))
-        cloud_init = bool([disk for disk in machine.find(
-            'devices').findall('disk') if disk.get('device') == 'cdrom'])
+        name = machine.findtext("name")
+        memory = int(machine.findtext("memory"))
+        nrcpu = int(machine.findtext("vcpu"))
+        interfaces = list(
+            map(
+                lambda interface: j.sal.kvm.Interface.from_xml(controller, ElementTree.tostring(interface)),
+                machine.find("devices").findall("interface"),
+            )
+        )
+        xml_disks = [disk for disk in machine.find("devices").findall("disk") if disk.get("device") == "disk"]
+        disks = list(map(lambda disk: j.sal.kvm.Disk.from_xml(controller, ElementTree.tostring(disk)), xml_disks))
+        cloud_init = bool([disk for disk in machine.find("devices").findall("disk") if disk.get("device") == "cdrom"])
         return cls(controller, name, disks, interfaces, memory, nrcpu, cloud_init=cloud_init)
 
     @classmethod
@@ -219,12 +226,13 @@ class Machine(BaseKVMComponent):
         port = 22
         if self.cloud_init and not self._executor:
             for i in range(5):
-                rc = self.controller.executor.prefab.core.run('echo | nc %s %s' % (self.ip, port))[0]
+                rc = self.controller.executor.prefab.core.run("echo | nc %s %s" % (self.ip, port))[0]
                 if rc == 0:
                     break
                 sleep(5)
             self._executor = self.controller.executor.jumpto(
-                addr=self.ip, login="cloudscalers", port=port, identityfile="/root/.ssh/libvirt")
+                addr=self.ip, login="cloudscalers", port=port, identityfile="/root/.ssh/libvirt"
+            )
         return self._executor
 
     @property
@@ -308,7 +316,5 @@ class Machine(BaseKVMComponent):
         if libvirt:
             return snaps
         for snap in snaps:
-            snapshots.append(MachineSnapshot(
-                self.controller, self, snap.getName())
-            )
+            snapshots.append(MachineSnapshot(self.controller, self, snap.getName()))
         return snapshots

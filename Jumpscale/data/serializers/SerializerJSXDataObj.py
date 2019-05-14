@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 from .SerializerBase import SerializerBase
 
@@ -16,17 +15,16 @@ class SerializerJSXDataObj(SerializerBase):
         :param obj:
         :return:
         """
-        assert isinstance(obj,j.data.schema.DataObjBase)
+        assert isinstance(obj, j.data.schema.DataObjBase)
         return obj._data
 
-
-    def loads(self, data,model=None):
+    def loads(self, data, model=None):
         """
         j.data.serializers.jsxdata.loads(..
         :param data:
         :return: obj
         """
-        versionnr = int.from_bytes(data[0:1],byteorder='little')
+        versionnr = int.from_bytes(data[0:1], byteorder="little")
         md5bin = data[1:17]
         md5 = md5bin.hex()
         data2 = data[17:]
@@ -35,6 +33,4 @@ class SerializerJSXDataObj(SerializerBase):
             obj = schema._get(data2, model=model)
             return obj
         else:
-            raise RuntimeError("could not find schema with md5:%s"%md5)
-
-
+            raise RuntimeError("could not find schema with md5:%s" % md5)

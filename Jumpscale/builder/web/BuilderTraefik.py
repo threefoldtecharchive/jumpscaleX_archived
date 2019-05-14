@@ -13,7 +13,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         self.go_runtime = j.builder.runtimes.golang
 
     @builder_method()
-    def install(self , reset=True):
+    def install(self, reset=True):
         """
 
         kosmos 'j.builder.web.traefik.install()'
@@ -27,9 +27,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         # only check for linux for now
         arch = self.go_runtime.current_arch
         if j.core.platformtype.myplatform.isLinux:
-            download_url = self.URL.format(
-                version=self.VERSION, platform="linux", arch=arch
-            )
+            download_url = self.URL.format(version=self.VERSION, platform="linux", arch=arch)
         else:
             raise j.exceptions.RuntimeError("platform not supported")
 
@@ -105,9 +103,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         :type zhub_instance:str
         """
         self.install()
-        bin_dest = j.sal.fs.joinPaths(
-            "/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX)
-        )
+        bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX))
         self.tools.dir_ensure(bin_dest)
         traefik_bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
         self.tools.file_copy(traefik_bin_path, bin_dest)

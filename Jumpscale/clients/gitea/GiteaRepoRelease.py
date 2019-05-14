@@ -6,35 +6,34 @@ JSBASE = j.application.JSBaseClass
 
 class GiteaRepoRelease(j.application.JSBaseClass):
     def __init__(
-            self,
-            client,
-            repo,
-            id=None,
-            assets=[],
-            author=None,
-            body=None,
-            created_at=None,
-            draft=None,
-            name=None,
-            prerelease=True,
-            published_at=None,
-            tag_name=None,
-            tarball_url=None,
-            target_commitish=None,
-            url=None,
-            zipball_url=None,
-            user=None,
-
+        self,
+        client,
+        repo,
+        id=None,
+        assets=[],
+        author=None,
+        body=None,
+        created_at=None,
+        draft=None,
+        name=None,
+        prerelease=True,
+        published_at=None,
+        tag_name=None,
+        tarball_url=None,
+        target_commitish=None,
+        url=None,
+        zipball_url=None,
+        user=None,
     ):
         self.client = client
         self.repo = repo
-        self.created_at=created_at
-        self.assets=assets
+        self.created_at = created_at
+        self.assets = assets
         self.author = author
         self.prerelease = prerelease
-        self.draft=draft
+        self.draft = draft
         self.url = url
-        self.id=id
+        self.id = id
         self.body = body
         self.tag_name = tag_name
         self.name = name
@@ -50,26 +49,25 @@ class GiteaRepoRelease(j.application.JSBaseClass):
         d = {}
 
         for attr in [
-            'id',
-            'created_at',
-            'updated_at',
-            'assets',
-            'prerelease',
-            'author',
-            'draft',
-            'url',
-            'body',
-            'tag_name',
-            'name',
-            'published_at',
-            'tarball_url',
-            'target_commitish',
-            'zipball_url',
+            "id",
+            "created_at",
+            "updated_at",
+            "assets",
+            "prerelease",
+            "author",
+            "draft",
+            "url",
+            "body",
+            "tag_name",
+            "name",
+            "published_at",
+            "tarball_url",
+            "target_commitish",
+            "zipball_url",
         ]:
             v = getattr(self, attr)
             d[attr] = v
         return d
-
 
     def __repr__(self):
         return "Release %s" % json.dumps(self.data)
@@ -81,53 +79,53 @@ class GiteaRepoRelease(j.application.JSBaseClass):
         errors = {}
         is_valid = True
 
-        operation = 'create'
+        operation = "create"
 
         if create:
             if self.id:
                 is_valid = False
-                errors['id'] = 'Already existing'
+                errors["id"] = "Already existing"
             else:
                 if not self.type:
                     is_valid = False
-                    errors['type'] = 'Missing'
+                    errors["type"] = "Missing"
 
-                if not self.type in ['gitea', 'gigs', 'slack', 'discord', 'dingtalk']:
+                if not self.type in ["gitea", "gigs", "slack", "discord", "dingtalk"]:
                     is_valid = False
-                    errors['type'] = 'Invalid type only allowed [gitea, gigs, slack, discor, dingtalk]'
+                    errors["type"] = "Invalid type only allowed [gitea, gigs, slack, discor, dingtalk]"
 
                 if not self.url:
                     is_valid = False
-                    errors['url'] = 'Missing'
+                    errors["url"] = "Missing"
 
                 if not self.content_type:
                     is_valid = False
-                    errors['content_type'] = 'Missing'
+                    errors["content_type"] = "Missing"
 
                 if not self.events:
                     is_valid = False
-                    errors['events'] = 'Missing'
+                    errors["events"] = "Missing"
 
                 for event in self.events:
                     if event not in ["create", "push", "pull_request"]:
                         is_valid = False
-                        errors['evetns'] = 'Invalid event only allowed: ["create", "push", "pull_request"]'
+                        errors["evetns"] = 'Invalid event only allowed: ["create", "push", "pull_request"]'
         elif update:
-            operation = 'update'
+            operation = "update"
             if not self.id:
                 is_valid = False
-                errors['id'] = 'Missing'
+                errors["id"] = "Missing"
 
         elif delete:
-            operation = 'delete'
+            operation = "delete"
             if not self.id:
                 is_valid = False
-                errors['id'] = 'Missing'
+                errors["id"] = "Missing"
 
         if is_valid:
-            return True, ''
+            return True, ""
 
-        return False, '{0} Error '.format(operation) + json.dumps(errors)
+        return False, "{0} Error ".format(operation) + json.dumps(errors)
 
     def save(self, commit=True):
         is_valid, err = self._validate(create=True)
@@ -138,13 +136,13 @@ class GiteaRepoRelease(j.application.JSBaseClass):
         try:
             resp = self.client.api.repos.repoCreateHook(data=self.data, repo=self.repo.name, owner=self.user.username)
             org = resp.json()
-            config = org.pop('config')
+            config = org.pop("config")
             for k, v in org.items():
                 setattr(self, k, v)
-            self.url = config['url']
-            self.content_type = config['content_type']
+            self.url = config["url"]
+            self.content_type = config["content_type"]
 
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 
@@ -156,8 +154,10 @@ class GiteaRepoRelease(j.application.JSBaseClass):
 
         try:
 
-            resp = self.client.api.repos.repoEditHook(data=self.data, repo=self.repo.name, owner=self.user.username, id=str(self.id))
-            return True, ''
+            resp = self.client.api.repos.repoEditHook(
+                data=self.data, repo=self.repo.name, owner=self.user.username, id=str(self.id)
+            )
+            return True, ""
         except Exception as e:
             return False, e.response.content
 
@@ -169,9 +169,8 @@ class GiteaRepoRelease(j.application.JSBaseClass):
 
         try:
 
-            resp = self.client.api.repos.repoDeleteHook(repo=self.repo.name, owner=self.user.username,
-                                                      id=str(self.id))
-            return True, ''
+            resp = self.client.api.repos.repoDeleteHook(repo=self.repo.name, owner=self.user.username, id=str(self.id))
+            return True, ""
         except Exception as e:
             return False, e.response.content
 

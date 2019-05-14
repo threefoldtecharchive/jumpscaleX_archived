@@ -2,17 +2,17 @@ from . import mistune
 import copy
 from Jumpscale import j
 from .MarkdownComponents import *
+
 JSBASE = j.application.JSBaseClass
 
 
 class MarkdownDocument(j.application.JSBaseClass):
-
     def __init__(self, content="", path=""):
         JSBASE.__init__(self)
         if path != "":
             content = j.sal.fs.readFile(path)
 
-        self._content = content.rstrip()+"\n"
+        self._content = content.rstrip() + "\n"
 
         self.parts = []
         if self._content:
@@ -84,7 +84,7 @@ class MarkdownDocument(j.application.JSBaseClass):
             state = ""
             return ""
 
-        if not self.content or self.content.strip() == '':
+        if not self.content or self.content.strip() == "":
             return
 
         for line in self.content.split("\n"):
@@ -150,8 +150,7 @@ class MarkdownDocument(j.application.JSBaseClass):
             if state != "TABLE" and linestripped.startswith("|"):
                 state = "TABLE"
                 block = block_add(block)
-                cols = [part.strip()
-                        for part in line.split("|") if part.strip() != ""]
+                cols = [part.strip() for part in line.split("|") if part.strip() != ""]
                 table = MDTable()
                 table.header_add(cols)
                 continue
@@ -159,7 +158,7 @@ class MarkdownDocument(j.application.JSBaseClass):
             if state == "TABLE":
                 if linestripped.startswith("|") and linestripped.endswith("|") and line.find("---") != -1:
                     continue
-                cols = [part.strip() for part in line.strip().strip('|').split("|")]
+                cols = [part.strip() for part in line.strip().strip("|").split("|")]
                 table.row_add(cols)
                 continue
 
@@ -201,7 +200,7 @@ class MarkdownDocument(j.application.JSBaseClass):
         c = block.strip().split("\n")[0].lower()
         if c.startswith("!!!data") and lang in ["toml", "yaml"]:
             # is data
-            block = "\n".join(block.strip().split("\n")[1:])+"\n"
+            block = "\n".join(block.strip().split("\n")[1:]) + "\n"
             if lang == "toml":
                 self.data_add(toml=block)
             elif lang == "yaml":
@@ -210,7 +209,7 @@ class MarkdownDocument(j.application.JSBaseClass):
                 raise RuntimeError("could not add codeblock for %s" % block)
         elif c.startswith("!!!") and lang == "":
             method = block.strip().split("\n")[0][3:].strip()  # remove !!!
-            data = "\n".join(block.strip().split("\n")[1:])+"\n"
+            data = "\n".join(block.strip().split("\n")[1:]) + "\n"
             if "(" in method:
                 data2 = data
             else:
@@ -220,7 +219,7 @@ class MarkdownDocument(j.application.JSBaseClass):
                     try:
                         data2 = j.data.serializers.toml.loads(data)
                     except RuntimeError:
-                        data2 = {'content': data}
+                        data2 = {"content": data}
                 else:
                     data2 = {}
             self.macro_add(method=method, data=data2)
@@ -249,7 +248,7 @@ class MarkdownDocument(j.application.JSBaseClass):
     def __repr__(self):
         out = ""
         for part in self.parts:
-            part0 = str(part).rstrip("\n")+"\n\n"
+            part0 = str(part).rstrip("\n") + "\n\n"
             out += part0
         return out
 
@@ -343,7 +342,8 @@ class MarkdownDocument(j.application.JSBaseClass):
             else:
                 print("htmlpage_get")
                 from IPython import embed
-                embed(colors='Linux')
+
+                embed(colors="Linux")
                 s
 
         return htmlpage
@@ -364,7 +364,7 @@ class MarkdownDocument(j.application.JSBaseClass):
 
     #     self._content = "\n".join(out)
 
-        # def dataobj_get(self, ttype, guid):
+    # def dataobj_get(self, ttype, guid):
     #     """
     #     ttype is name for the block
     #     guid is unique id, can be name or guid or int(id)

@@ -9,7 +9,11 @@ from oauth2client import file, client, tools
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
 from Jumpscale.tools.googleslides.slides2html.google_links_utils import get_slide_id, get_presentation_id, link_info
-from Jumpscale.tools.googleslides.slides2html.image_utils import images_to_transparent_background, set_background_for_images, resize_images
+from Jumpscale.tools.googleslides.slides2html.image_utils import (
+    images_to_transparent_background,
+    set_background_for_images,
+    resize_images,
+)
 from Jumpscale.tools.googleslides.slides2html.generator import Generator
 from Jumpscale.tools.googleslides.slides2html.downloader import Downloader
 from Jumpscale.tools.googleslides.slides2html.revealjstemplate import BASIC_TEMPLATE
@@ -18,13 +22,11 @@ from Jumpscale.tools.googleslides.slides2html.revealjstemplate import BASIC_TEMP
 def dir_images_as_htmltags(directory):
 
     images = []
-    files = [x for x in os.listdir(directory) if x.endswith(
-        "png") and "_" in x and "background_" not in x]
+    files = [x for x in os.listdir(directory) if x.endswith("png") and "_" in x and "background_" not in x]
     files.sort(key=lambda k: int(k.split("_")[0]))
     for p in files:
         dirbasename = os.path.basename(directory)
-        images.append(
-            '<img src="./{dirbasename}/{p}" alt="{p}" />'.format(dirbasename=dirbasename, p=p))
+        images.append('<img src="./{dirbasename}/{p}" alt="{p}" />'.format(dirbasename=dirbasename, p=p))
     return images
 
 
@@ -38,10 +40,9 @@ def get_slides_info(directory):
 
     parser.read(main_meta_path)
     presentation_id = os.path.basename(directory)
-    presentation_title = parser.get(presentation_id, 'title')
+    presentation_title = parser.get(presentation_id, "title")
 
-    files = [x for x in os.listdir(
-        directory) if x.endswith(".png") and "_" in x and "background" not in x]
+    files = [x for x in os.listdir(directory) if x.endswith(".png") and "_" in x and "background" not in x]
     files.sort(key=lambda k: int(k.split("_")[0]))
     for p in files:
         dirbasename = os.path.basename(directory)
@@ -50,12 +51,10 @@ def get_slides_info(directory):
         if os.path.exists(metapath):
             with open(metapath, "r") as mp:
                 meta_content = mp.read()
-                meta = re.findall(r'(https?://\S+)', meta_content)
+                meta = re.findall(r"(https?://\S+)", meta_content)
         print("extracted meta :", meta)
-        image = '<img src="./{dirbasename}/{p}" alt="{p}" />'.format(
-            dirbasename=dirbasename, p=p)
-        slides_infos.append(
-            {'slide_image': image, 'slide_meta': meta, 'title': presentation_title})
+        image = '<img src="./{dirbasename}/{p}" alt="{p}" />'.format(dirbasename=dirbasename, p=p)
+        slides_infos.append({"slide_image": image, "slide_meta": meta, "title": presentation_title})
 
     return slides_infos
 
@@ -75,11 +74,12 @@ class Tool:
 
         """
         self.presentation_id = presentation_id
-        SCOPES = ['https://www.googleapis.com/auth/drive']
+        SCOPES = ["https://www.googleapis.com/auth/drive"]
 
         if not os.path.exists(credfile):
             raise RuntimeError(
-                "please provide valid credentials.json file. https://console.developers.google.com/apis/credentials")
+                "please provide valid credentials.json file. https://console.developers.google.com/apis/credentials"
+            )
 
         self.credfile = os.path.expanduser(credfile)
         print("credfile: ", self.credfile)
@@ -88,15 +88,14 @@ class Tool:
         service = None
         if serviceaccount:
             if os.path.exists(self.credfile):
-                credentials = service_account.Credentials.from_service_account_file(
-                    self.credfile, scopes=SCOPES)
+                credentials = service_account.Credentials.from_service_account_file(self.credfile, scopes=SCOPES)
             elif credjson:
                 credentials = service_account.Credentials.from_service_account_info(
-                    **json.loads(credjson), scopes=SCOPES)
+                    **json.loads(credjson), scopes=SCOPES
+                )
             else:
-                raise RuntimeError(
-                    "invalid credential file or credential json.")
-            service = build('slides', 'v1', credentials=credentials)
+                raise RuntimeError("invalid credential file or credential json.")
+            service = build("slides", "v1", credentials=credentials)
         else:
             userdir = os.path.expanduser("~")
             tokenjson = os.path.join(userdir, ".token.json")
@@ -107,7 +106,7 @@ class Tool:
                 flow = client.flow_from_clientsecrets(self.credfile, SCOPES)
                 credentials = tools.run_flow(flow, store)
 
-            service = build('slides', 'v1', http=credentials.authorize(Http()))
+            service = build("slides", "v1", http=credentials.authorize(Http()))
 
         self.downloader = Downloader(presentation_id, service)
         self.generator = Generator(presentation_id)
@@ -123,8 +122,7 @@ class Tool:
         """
         self.downloader.download(destdir)
         slides_infos = get_slides_info(destdir)
-        html = self.generator.generate_html(
-            slides_infos, revealjs_template=template)
+        html = self.generator.generate_html(slides_infos, revealjs_template=template)
         if not entryfile:
             entryfile = self.presentation_id
 
@@ -145,9 +143,24 @@ class Tool:
 @click.option("--imagesize", help="image size (MEDIUM, LARGE)", default="medium", required=False)
 @click.option("--credfile", help="credentials file path", default="credentials.json", required=False)
 @click.option("--themefile", help="use your own reveal.js theme", default="", required=False)
-@click.option("--serviceaccount", help="use service account instead of normal oauth flow", default=False, is_flag=True, required=False)
+@click.option(
+    "--serviceaccount",
+    help="use service account instead of normal oauth flow",
+    default=False,
+    is_flag=True,
+    required=False,
+)
 @click.option("--background", help="background image to be used for all of the slides", required=False)
-def cli(website, id, indexfile="", imagesize="medium", credfile="credentials.json", themefile="", serviceaccount=False, background=None):
+def cli(
+    website,
+    id,
+    indexfile="",
+    imagesize="medium",
+    credfile="credentials.json",
+    themefile="",
+    serviceaccount=False,
+    background=None,
+):
     presentation_id = id
     try:
         presentation_id, slide_id = link_info(id)
@@ -157,8 +170,7 @@ def cli(website, id, indexfile="", imagesize="medium", credfile="credentials.jso
     if imagesize not in ["MEDIUM", "LARGE"]:
         raise ValueError("Invalid image size should be MEDIUM or LARGE")
     if not indexfile:
-        indexfilepath = os.path.join(
-            website, "{}.html".format(presentation_id))
+        indexfilepath = os.path.join(website, "{}.html".format(presentation_id))
     else:
         indexfilepath = os.path.join(website, "{}.html".format(indexfile))
 
@@ -200,11 +212,12 @@ class Tool:
 
         """
         self.presentation_id = presentation_id
-        SCOPES = ['https://www.googleapis.com/auth/drive']
+        SCOPES = ["https://www.googleapis.com/auth/drive"]
 
         if not os.path.exists(credfile):
             raise RuntimeError(
-                "please provide valid credentials.json file. https://console.developers.google.com/apis/credentials")
+                "please provide valid credentials.json file. https://console.developers.google.com/apis/credentials"
+            )
 
         self.credfile = os.path.expanduser(credfile)
         print("credfile: ", self.credfile)
@@ -212,9 +225,8 @@ class Tool:
         credentials = None
         service = None
         if serviceaccount:
-            credentials = service_account.Credentials.from_service_account_file(
-                self.credfile, scopes=SCOPES)
-            service = build('slides', 'v1', credentials=credentials)
+            credentials = service_account.Credentials.from_service_account_file(self.credfile, scopes=SCOPES)
+            service = build("slides", "v1", credentials=credentials)
         else:
             userdir = os.path.expanduser("~")
             tokenjson = os.path.join(userdir, ".token.json")
@@ -225,7 +237,7 @@ class Tool:
                 flow = client.flow_from_clientsecrets(self.credfile, SCOPES)
                 credentials = tools.run_flow(flow, store)
 
-            service = build('slides', 'v1', http=credentials.authorize(Http()))
+            service = build("slides", "v1", http=credentials.authorize(Http()))
 
         self.downloader = Downloader(presentation_id, service)
         self.generator = Generator(presentation_id)
@@ -241,8 +253,7 @@ class Tool:
         """
         self.downloader.download(destdir)
         slides_infos = get_slides_info(destdir)
-        html = self.generator.generate_html(
-            slides_infos, revealjs_template=template)
+        html = self.generator.generate_html(slides_infos, revealjs_template=template)
         if not entryfile:
             entryfile = self.presentation_id
 
@@ -263,10 +274,26 @@ class Tool:
 @click.option("--imagesize", help="image size (MEDIUM, LARGE)", default="medium", required=False)
 @click.option("--credfile", help="credentials file path", default="credentials.json", required=False)
 @click.option("--themefile", help="use your own reveal.js theme", default="", required=False)
-@click.option("--serviceaccount", help="use service account instead of normal oauth flow", default=False, is_flag=True, required=False)
+@click.option(
+    "--serviceaccount",
+    help="use service account instead of normal oauth flow",
+    default=False,
+    is_flag=True,
+    required=False,
+)
 @click.option("--background", help="background image to be used for all of the slides", required=False)
 @click.option("--resize", help="resize image of (width,height)", required=False)
-def cli(website, id, indexfile="", imagesize="medium", credfile="credentials.json", themefile="", serviceaccount=False, background=None, resize=None):
+def cli(
+    website,
+    id,
+    indexfile="",
+    imagesize="medium",
+    credfile="credentials.json",
+    themefile="",
+    serviceaccount=False,
+    background=None,
+    resize=None,
+):
     presentation_id = id
     try:
         presentation_id, slide_id = link_info(id)
@@ -278,15 +305,12 @@ def cli(website, id, indexfile="", imagesize="medium", credfile="credentials.jso
 
     if resize and "," in resize:
         try:
-            newwidth, newheight = map(
-                lambda x: int(x.strip()), resize.split(","))
+            newwidth, newheight = map(lambda x: int(x.strip()), resize.split(","))
         except:
-            raise ValueError(
-                "invalid size for --resize {}: should be 'width,height' ".format(resize))
+            raise ValueError("invalid size for --resize {}: should be 'width,height' ".format(resize))
 
     if not indexfile:
-        indexfilepath = os.path.join(
-            website, "{}.html".format(presentation_id))
+        indexfilepath = os.path.join(website, "{}.html".format(presentation_id))
     else:
         indexfilepath = os.path.join(website, "{}.html".format(indexfile))
 

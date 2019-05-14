@@ -1,15 +1,15 @@
 import sys
 from Jumpscale import j
 from collections import OrderedDict
+
 # import capnp
 
 from .ModelBaseCollection import ModelBaseCollection
 from .ModelBaseData import ModelBaseData
-from .ModelBase import  ModelBase
+from .ModelBase import ModelBase
+
 
 class Tools(j.application.JSBaseClass):
-
-
     def listInDictCreation(self, listInDict, name, manipulateDef=None):
         """
         check name exist in the dict
@@ -20,17 +20,13 @@ class Tools(j.application.JSBaseClass):
         if name in listInDict:
             if j.data.types.list.check(listInDict[name]):
                 if manipulateDef is None:
-                    listInDict[name] = [str(item).strip()
-                                        for item in listInDict[name]]
+                    listInDict[name] = [str(item).strip() for item in listInDict[name]]
                 else:
-                    listInDict[name] = [
-                        manipulateDef(item) for item in listInDict[name]]
+                    listInDict[name] = [manipulateDef(item) for item in listInDict[name]]
             else:
                 if manipulateDef is None:
                     if "," in str(listInDict[name]):
-                        listInDict[name] = [item.strip()
-                                            for item in listInDict[name].split(",")
-                                            if item.strip() != ""]
+                        listInDict[name] = [item.strip() for item in listInDict[name].split(",") if item.strip() != ""]
                     else:
                         listInDict[name] = [str(listInDict[name])]
                 else:
@@ -62,14 +58,15 @@ class Capnp(j.application.JSBaseClass):
         return ModelBaseCollection
 
     def getModelCollection(
-            self,
-            schema,
-            category,
-            namespace=None,
-            modelBaseClass=None,
-            modelBaseCollectionClass=None,
-            db=None,
-            indexDb=None):
+        self,
+        schema,
+        category,
+        namespace=None,
+        modelBaseClass=None,
+        modelBaseCollectionClass=None,
+        db=None,
+        indexDb=None,
+    ):
         """
         @param schema is capnp_schema
 
@@ -101,16 +98,11 @@ class Capnp(j.application.JSBaseClass):
             modelBaseCollectionClass = ModelBaseCollection
 
         return modelBaseCollectionClass(
-            schema=schema,
-            category=category,
-            namespace=namespace,
-            db=db,
-            indexDb=indexDb,
-            modelBaseClass=modelBaseClass)
+            schema=schema, category=category, namespace=namespace, db=db, indexDb=indexDb, modelBaseClass=modelBaseClass
+        )
 
     def getId(self, schemaInText):
-        id = [item for item in schemaInText.split(
-            "\n") if item.strip() != ""][0][3:-1]
+        id = [item for item in schemaInText.split("\n") if item.strip() != ""][0][3:-1]
         return id
 
     def removeFromCache(self, schemaId):
@@ -125,33 +117,34 @@ class Capnp(j.application.JSBaseClass):
 
     def _getSchemas(self, schemaInText):
         import capnp
+
         schemaInText = j.core.text.strip(schemaInText)
         schemaInText = schemaInText.strip() + "\n"
         schemaId = self.getId(schemaInText)
         if schemaId not in self._schema_cache:
             nameOnFS = "schema_%s.capnp" % (schemaId)
             path = j.sal.fs.joinPaths(self._capnpVarDir, nameOnFS)
-            j.sal.fs.writeFile(
-                filename=path,
-                contents=schemaInText,
-                append=False)
+            j.sal.fs.writeFile(filename=path, contents=schemaInText, append=False)
             parser = capnp.SchemaParser()
             try:
                 schema = parser.load(path)
             except Exception as e:
                 msg = str(e)
-                raise RuntimeError("%s\n\nERROR:Could not parse capnp schema:\n%s"%(schemaInText,msg))
+                raise RuntimeError("%s\n\nERROR:Could not parse capnp schema:\n%s" % (schemaInText, msg))
             self._schema_cache[schemaId] = schema
         return self._schema_cache[schemaId]
 
     def getSchemaFromText(self, schemaInText, name="Schema"):
         if not schemaInText.strip():
-            schemaInText = """
+            schemaInText = (
+                """
             @%s;
             struct Schema {
 
             }
-            """ % j.data.idgenerator.generateCapnpID()
+            """
+                % j.data.idgenerator.generateCapnpID()
+            )
 
         schemas = self._getSchemas(schemaInText)
         schema = eval("schemas.%s" % name)
@@ -199,7 +192,7 @@ class Capnp(j.application.JSBaseClass):
 
         schema = self.getSchemaFromText(schemaInText, name=name)
 
-        if binaryData is not None and binaryData != b'':
+        if binaryData is not None and binaryData != b"":
             obj = schema.from_bytes_packed(binaryData).as_builder()
         else:
             try:
@@ -209,10 +202,7 @@ class Capnp(j.application.JSBaseClass):
                 if str(e).find("has no such member") != -1:
                     msg = "cannot create data for schema from "
                     msg += "arguments, property missing\n"
-                    msg += "arguments:\n%s\n" % j.data.serializers.json.dumps(
-                        args,
-                        sort_keys=True,
-                        indent=True)
+                    msg += "arguments:\n%s\n" % j.data.serializers.json.dumps(args, sort_keys=True, indent=True)
                     msg += "schema:\n%s" % schemaInText
                     ee = str(e).split("stack:")[0]
                     ee = ee.split("failed:")[1]
@@ -222,10 +212,7 @@ class Capnp(j.application.JSBaseClass):
                 if str(e).find("Value type mismatch") != -1:
                     msg = "cannot create data for schema from "
                     msg += "arguments, value type mismatch.\n"
-                    msg += "arguments:\n%s\n" % j.data.serializers.json.dumps(
-                        args,
-                        sort_keys=True,
-                        indent=True)
+                    msg += "arguments:\n%s\n" % j.data.serializers.json.dumps(args, sort_keys=True, indent=True)
                     msg += "schema:\n%s" % schemaInText
                     ee = str(e).split("stack:")[0]
                     ee = ee.split("failed:")[1]
@@ -237,11 +224,12 @@ class Capnp(j.application.JSBaseClass):
         return obj
 
     def test(self):
-        '''
+        """
         js_shell 'j.data.capnp.test()'
-        '''
+        """
         import time
-        capnpschema = '''
+
+        capnpschema = """
         @0x9fc1ac9f09464fc9;
 
         struct Issue {
@@ -259,7 +247,7 @@ class Capnp(j.application.JSBaseClass):
           descr @2 :Text;
 
         }
-        '''
+        """
 
         # dummy test, not used later
         obj = self.getObj(capnpschema, name="Issue")
@@ -271,8 +259,7 @@ class Capnp(j.application.JSBaseClass):
         # mydb = j.data.kvs.getRedisStore(name="mymemdb")
         mydb = None  # is memory
 
-        collection = self.getModelCollection(
-            schema, category="test", modelBaseClass=None, db=mydb)
+        collection = self.getModelCollection(schema, category="test", modelBaseClass=None, db=mydb)
         start = time.time()
         self._log_debug("start populate 100.000 records")
         collection.logger.disabled = True
@@ -292,11 +279,11 @@ class Capnp(j.application.JSBaseClass):
 
         # tests need to be non-interactive.  use a different function name
         # (e.g. noninteractive_test or just _test())
-        #from IPython import embed
-        #embed(colors='Linux')
+        # from IPython import embed
+        # embed(colors='Linux')
 
     def testWithRedis(self):
-        capnpschema = '''
+        capnpschema = """
         @0x93c1ac9f09464fc9;
         struct Issue {
           state @0 :State;
@@ -321,27 +308,18 @@ class Capnp(j.application.JSBaseClass):
               text @1: Text;
           }
         }
-        '''
+        """
         # mydb = j.data.kvs.getRedisStore("test")
-        mydb = j.data.kvs.getRedisStore(
-            name="test",
-            unixsocket="%s/redis.sock" %
-            j.dirs.TMPDIR)
+        mydb = j.data.kvs.getRedisStore(name="test", unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
         schema = self.getSchemaFromText(capnpschema, name="Issue")
-        collection = self.getModelCollection(
-            schema,
-            category="test",
-            modelBaseClass=None,
-            db=mydb,
-            indexDb=mydb)
+        collection = self.getModelCollection(schema, category="test", modelBaseClass=None, db=mydb, indexDb=mydb)
         for i in range(100):
             obj = collection.new()
             obj.dbobj.name = "test%s" % i
             obj.save()
             self._log_debug(collection.list())
 
-        subobj = collection.list_olist_constructor(
-            state="new", text="something")
+        subobj = collection.list_olist_constructor(state="new", text="something")
         obj.addSubItem("olist", subobj)
 
         subobj = collection.list_tlist_constructor("sometext")
@@ -361,8 +339,7 @@ class Capnp(j.application.JSBaseClass):
     def getJSON(self, obj):
         configdata2 = obj.to_dict()
         ddict2 = OrderedDict(configdata2)
-        return j.data.serializers.json.dumps(
-            ddict2, sort_keys=True, indent=True)
+        return j.data.serializers.json.dumps(ddict2, sort_keys=True, indent=True)
 
     def getBinaryData(self, obj):
         return obj.to_bytes_packed()

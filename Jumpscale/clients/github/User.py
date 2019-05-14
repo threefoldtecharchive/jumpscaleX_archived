@@ -5,7 +5,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class User(Base):
-
     def __init__(self, client, githubObj=None):
         Base.__init__(self)
         self._ddict = {}

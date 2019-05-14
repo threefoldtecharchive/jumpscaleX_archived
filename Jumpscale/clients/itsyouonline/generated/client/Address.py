@@ -7,9 +7,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class Address( ):
+class Address:
     """
     auto-generated. don't touch.
     """
@@ -32,27 +30,28 @@ class Address( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Address'
+        class_name = "Address"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.city = client_support.set_property('city', data, data_types, False, [], False, True, class_name)
+        self.city = client_support.set_property("city", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.country = client_support.set_property('country', data, data_types, False, [], False, True, class_name)
+        self.country = client_support.set_property("country", data, data_types, False, [], False, True, class_name)
         data_types = [Label]
-        self.label = client_support.set_property('label', data, data_types, False, [], False, True, class_name)
+        self.label = client_support.set_property("label", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.nr = client_support.set_property('nr', data, data_types, False, [], False, True, class_name)
+        self.nr = client_support.set_property("nr", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.other = client_support.set_property('other', data, data_types, False, [], False, False, class_name)
+        self.other = client_support.set_property("other", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
         self.postalcode = client_support.set_property(
-            'postalcode', data, data_types, False, [], False, True, class_name)
+            "postalcode", data, data_types, False, [], False, True, class_name
+        )
         data_types = [string_types]
-        self.street = client_support.set_property('street', data, data_types, False, [], False, True, class_name)
+        self.street = client_support.set_property("street", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

@@ -1,11 +1,12 @@
-
 from Jumpscale import j
 
 
 builder_method = j.builder.system.builder_method
 
+
 class BuilderNIM(j.builder.system._BaseClass):
-    NAME ="nim"
+    NAME = "nim"
+
     def _init(self):
 
         self.DIR_BUILD = self._replace("{DIR_VAR}/build/nimlang")
@@ -19,10 +20,10 @@ class BuilderNIM(j.builder.system._BaseClass):
         """
         self.profile_sandbox_select()
         download_url = "https://nim-lang.org/download/nim-0.19.4.tar.xz"
-        
+
         self.tools.file_download(download_url, overwrite=False, to=self.DIR_BUILD, expand=True, removeTopDir=True)
-        
-        C="""
+
+        C = """
         cd {DIR_BUILD}
         sh build.sh
         bin/nim c koch
@@ -44,13 +45,13 @@ class BuilderNIM(j.builder.system._BaseClass):
     def sandbox(self):
         bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
         self.tools.dir_ensure(bin_dest)
-        self._copy('{DIR_BUILD}/bin/', bin_dest)
-        
+        self._copy("{DIR_BUILD}/bin/", bin_dest)
+
     @builder_method()
     def test(self):
         self.install()
 
-        rc,_,_ =self._execute("nim --v | grep Version")
+        rc, _, _ = self._execute("nim --v | grep Version")
         if rc:
             print("TEST Failed")
             return

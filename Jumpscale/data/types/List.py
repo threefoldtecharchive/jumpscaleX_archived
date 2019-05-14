@@ -1,14 +1,14 @@
-'''Definition of several collection types (list, dict, set,...)'''
+"""Definition of several collection types (list, dict, set,...)"""
 
 from Jumpscale import j
-from Jumpscale.data.types.PrimitiveTypes import TypeBaseObjFactory,TypeBaseObjClass
+from Jumpscale.data.types.PrimitiveTypes import TypeBaseObjFactory, TypeBaseObjClass
 
 
 from collections.abc import MutableSequence
 
-class ListObject(TypeBaseObjClass,MutableSequence):
 
-    def __init__(self,list_factory_type, values=[], child_type = None):
+class ListObject(TypeBaseObjClass, MutableSequence):
+    def __init__(self, list_factory_type, values=[], child_type=None):
         """
 
         :param child_type: is the JSX basetype which is the child of the list, can be None, will be detected when required then
@@ -44,7 +44,7 @@ class ListObject(TypeBaseObjClass,MutableSequence):
 
     @property
     def _dictdata(self):
-        res=[]
+        res = []
         for item in self._inner_list:
             if isinstance(item, j.data.schema.DataObjBase):
                 res.append(item._ddict)
@@ -57,16 +57,15 @@ class ListObject(TypeBaseObjClass,MutableSequence):
         return self
 
     def __next__(self):
-        if self._current+1 > len(self._inner_list):
+        if self._current + 1 > len(self._inner_list):
             raise StopIteration
         else:
             self._current += 1
             return self._inner_list[self._current - 1]
 
-    def insert(self,index,value):
-        self._inner_list.insert(index,self._child_type.clean(value))
+    def insert(self, index, value):
+        self._inner_list.insert(index, self._child_type.clean(value))
         self._changed = True
-
 
     def __setitem__(self, index, value):
         """
@@ -75,9 +74,8 @@ class ListObject(TypeBaseObjClass,MutableSequence):
             index : location in collections
             value : value that add in collections
         """
-        self._inner_list[index]=self._child_type.clean(value)
+        self._inner_list[index] = self._child_type.clean(value)
         self._changed = True
-
 
     def __getitem__(self, index):
         """
@@ -99,7 +97,7 @@ class ListObject(TypeBaseObjClass,MutableSequence):
         |       H            |     DDict_HR       | [{valid': False, 'token_price': '5 EUR'}]                                         |
         +--------------------+--------------------+-----------------------------------------------------------------------------------+
         """
-        res=[]
+        res = []
         for item in self._inner_list:
 
             if isinstance(item, j.data.schema.DataObjBase):
@@ -112,9 +110,9 @@ class ListObject(TypeBaseObjClass,MutableSequence):
                 else:
                     raise RuntimeError("only support type J,D,H")
             else:
-                if subobj_format=="H":
+                if subobj_format == "H":
                     res.append(self._child_type.toHR(item))
-                elif subobj_format=="J":
+                elif subobj_format == "J":
                     res.append(self._child_type.toJSON(item))
                 elif subobj_format == "D":
                     res.append(self._child_type.toData(item))
@@ -138,7 +136,7 @@ class ListObject(TypeBaseObjClass,MutableSequence):
         :return: jumpscale type
         """
         if self._child_type_ is None:
-            if len(self._inner_list)==0:
+            if len(self._inner_list) == 0:
                 raise RuntimeError("cannot auto detect which type used in the list")
             type1 = j.data.types.list.list_check_1type(self._inner_list)
             if not type1:
@@ -146,11 +144,10 @@ class ListObject(TypeBaseObjClass,MutableSequence):
             self._child_type_ = j.data.types.type_detect(self._inner_list[0])
         return self._child_type_
 
-
     def __repr__(self):
         out = ""
         for item in self.pylist(subobj_format="H"):
-            if isinstance(item,dict):
+            if isinstance(item, dict):
                 out += "%s" % j.core.text.indent(j.data.serializers.toml.dumps(item))
             else:
                 out += "- %s\n" % item
@@ -164,13 +161,13 @@ class ListObject(TypeBaseObjClass,MutableSequence):
 class List(TypeBaseObjFactory):
 
     CUSTOM = True
-    NAME =  'list,l'
+    NAME = "list,l"
 
-    def __init__(self,default=None):
+    def __init__(self, default=None):
 
         self.BASETYPE = "list"
 
-        if isinstance(default,dict): #means we have 2 levels to process
+        if isinstance(default, dict):  # means we have 2 levels to process
             subtype = default["subtype"]
             default = default["default"]
         else:
@@ -183,8 +180,8 @@ class List(TypeBaseObjFactory):
 
         if subtype:
             if subtype == "o":
-                #need to take original default, but cannot store in obj, is for list of jsx objects
-                self._SUBTYPE = j.data.types.get(subtype,default = default,cache=False)
+                # need to take original default, but cannot store in obj, is for list of jsx objects
+                self._SUBTYPE = j.data.types.get(subtype, default=default, cache=False)
             else:
                 self._SUBTYPE = j.data.types.get(subtype)
         else:
@@ -193,11 +190,10 @@ class List(TypeBaseObjFactory):
         if not isinstance(self._default, list) and not isinstance(self._default, set):
             self._default = self.clean(self._default)
 
-
     @property
     def SUBTYPE(self):
         if not self._SUBTYPE:
-            if len(self._default)==0:
+            if len(self._default) == 0:
                 self._SUBTYPE = j.data.types.string
             else:
                 if not self.list_check_1type(self._default):
@@ -205,10 +201,9 @@ class List(TypeBaseObjFactory):
                 self._SUBTYPE = j.data.types.type_detect(self._default[0])
         return self._SUBTYPE
 
-
     def check(self, value):
-        '''Check whether provided value is a list'''
-        return isinstance(value, (list, tuple, set)) or isinstance(value,ListObject)
+        """Check whether provided value is a list"""
+        return isinstance(value, (list, tuple, set)) or isinstance(value, ListObject)
 
     def list_check_1type(self, llist, die=True):
         if len(llist) == 0:
@@ -223,11 +218,11 @@ class List(TypeBaseObjFactory):
                     return False
         return True
 
-    def toHR(self,val):
+    def toHR(self, val):
         val2 = self.clean(val)
         return val2.pylist(subobj_format="H")
 
-    def toData(self,val=None):
+    def toData(self, val=None):
         val2 = self.clean(val)
         if self.SUBTYPE.BASETYPE == "OBJ":
             return [j.data.serializers.jsxdata.dumps(i) for i in val2]
@@ -235,7 +230,7 @@ class List(TypeBaseObjFactory):
             return val2._inner_list
 
     def clean(self, val=None, toml=False, sort=False, unique=True, ttype=None):
-        if isinstance(val,ListObject):
+        if isinstance(val, ListObject):
             return val
         if val is None:
             val = self._default
@@ -243,23 +238,23 @@ class List(TypeBaseObjFactory):
             ttype = self.SUBTYPE
 
         if j.data.types.string.check(val):
-            if val.strip("'\" []") in [None,""]:
-                return ListObject(self,[],ttype)
-            val = [i.strip('[').strip(']') for i in val.split(",")]
+            if val.strip("'\" []") in [None, ""]:
+                return ListObject(self, [], ttype)
+            val = [i.strip("[").strip("]") for i in val.split(",")]
 
-        if val.__class__.__name__ in ['_DynamicListBuilder','_DynamicListReader']:
-             val = [i for i in val] #get binary data
+        if val.__class__.__name__ in ["_DynamicListBuilder", "_DynamicListReader"]:
+            val = [i for i in val]  # get binary data
 
         if not self.check(val):
             # j.shell()
             raise j.exceptions.Input("need list or set as input for clean on list")
 
         if len(val) == 0:
-            return ListObject(self,[],ttype)
+            return ListObject(self, [], ttype)
 
         res = []
         for item in val:
-            if isinstance(item,str):
+            if isinstance(item, str):
                 item = item.strip().strip("'").strip('"')
             if toml:
                 item = ttype.toml_string_get(item)
@@ -274,7 +269,7 @@ class List(TypeBaseObjFactory):
         if sort:
             res.sort()
 
-        res = ListObject(self,res,ttype)
+        res = ListObject(self, res, ttype)
 
         return res
 
@@ -367,13 +362,12 @@ class List(TypeBaseObjFactory):
             capnptype = "Data"
         return "%s @%s :List(%s);" % (name, nr, capnptype)
 
-
     def __str__(self):
-        out="LIST TYPE:"
+        out = "LIST TYPE:"
         if self._default != []:
-            out+=" - defaults: %s"%self.default_get()._inner_list
+            out += " - defaults: %s" % self.default_get()._inner_list
         if self.SUBTYPE:
-            out+=" - subtype: %s"%self.SUBTYPE.NAME
+            out += " - subtype: %s" % self.SUBTYPE.NAME
         return out
 
     __repr__ = __str__

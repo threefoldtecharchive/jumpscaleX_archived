@@ -14,19 +14,19 @@ class GiteTeamMembers(j.application.JSBaseClass):
     def add(self, username):
         try:
             resp = self.client.api.teams.orgAddTeamMember(username=username, id=str(self.team.id))
-            return True, ''
+            return True, ""
         except Exception as e:
             if e.response.status_code == 404:
-                return False, 'Not found'
+                return False, "Not found"
             return False, e.response.content
 
     def remove(self, username):
         try:
             resp = self.client.api.teams.orgDeleteTeamMember(username=username, id=str(self.team.id))
-            return True, ''
+            return True, ""
         except Exception as e:
             if e.response.status_code == 404:
-                return False, 'Not found'
+                return False, "Not found"
             return False, e.response.content
 
     def __next__(self):
@@ -48,4 +48,3 @@ class GiteTeamMembers(j.application.JSBaseClass):
         return self
 
     __str__ = __repr__ = lambda self: "Gitea Members Iterator for team: {0}".format(self.team.id)
-

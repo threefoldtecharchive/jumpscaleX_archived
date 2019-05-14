@@ -77,7 +77,7 @@ class OrgCollection(ModelBaseCollection):
         """
 
         if "gitHostRefs" in args:
-            args["gitHostRefs"] = ["%s_%s_%s" % (item["name"], item["id"], item['url']) for item in args["gitHostRefs"]]
+            args["gitHostRefs"] = ["%s_%s_%s" % (item["name"], item["id"], item["url"]) for item in args["gitHostRefs"]]
 
         args = self._arraysFromArgsToString(["members", "owners", "repos", "gitHostRefs"], args)
 
@@ -93,11 +93,8 @@ class OrgCollection(ModelBaseCollection):
 
     def getFromGitHostID(self, git_host_name, git_host_id, git_host_url, createNew=True):
         return j.clients.gogs._getFromGitHostID(
-            self,
-            git_host_name=git_host_name,
-            git_host_id=git_host_id,
-            git_host_url=git_host_url,
-            createNew=createNew)
+            self, git_host_name=git_host_name, git_host_id=git_host_id, git_host_url=git_host_url, createNew=createNew
+        )
 
     def list(self, **kwargs):
         """
@@ -115,15 +112,15 @@ class OrgCollection(ModelBaseCollection):
             for key, val in kwargs.items():
                 if not hasattr(self.index, key):
                     raise RuntimeError('%s model has no field "%s"' % (self.index._meta.name, key))
-                field = (getattr(self.index, key))
+                field = getattr(self.index, key)
                 clauses.append(field.contains(val))
 
             res = [
-                item.key for item in self.index.select().where(
-                    peewee.reduce(
-                        operator.and_,
-                        clauses)).order_by(
-                    self.index.modTime.desc())]
+                item.key
+                for item in self.index.select()
+                .where(peewee.reduce(operator.and_, clauses))
+                .order_by(self.index.modTime.desc())
+            ]
         else:
             res = [item.key for item in self.index.select().order_by(self.index.modTime.desc())]
 

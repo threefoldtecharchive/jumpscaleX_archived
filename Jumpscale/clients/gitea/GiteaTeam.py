@@ -7,34 +7,22 @@ JSBASE = j.application.JSBaseClass
 
 from .GiteaTeamMembers import GiteTeamMembers
 
+
 class GiteaTeam(j.application.JSBaseClass):
-    def __init__(
-            self,
-            client,
-            organization,
-            id=None,
-            description=None,
-            name=None,
-            permission=None
-    ):
+    def __init__(self, client, organization, id=None, description=None, name=None, permission=None):
         self.client = client
         self.organization = organization
-        self.description=description
+        self.description = description
         self.name = name
         self.permission = permission
-        self.id=id
+        self.id = id
         JSBASE.__init__(self)
 
     @property
     def data(self):
         d = {}
 
-        for attr in [
-            'id',
-            'description',
-            'name',
-            'permission',
-        ]:
+        for attr in ["id", "description", "name", "permission"]:
             v = getattr(self, attr)
             d[attr] = v
         return d
@@ -46,50 +34,49 @@ class GiteaTeam(j.application.JSBaseClass):
         errors = {}
         is_valid = True
 
-        operation = 'create'
+        operation = "create"
 
         if create:
             if self.id:
                 is_valid = False
-                errors['id'] = 'Already existing'
+                errors["id"] = "Already existing"
             else:
                 if not self.name:
                     is_valid = False
-                    errors['name'] = 'Missing'
+                    errors["name"] = "Missing"
 
             if not self.permission:
                 is_valid = False
-                errors['permission'] = 'Missing'
+                errors["permission"] = "Missing"
 
-            elif not self.permission in ['owner', 'admin', 'read', 'write']:
+            elif not self.permission in ["owner", "admin", "read", "write"]:
                 is_valid = False
-                errors['permission'] = "Only allowed [owner, admin, read, write]"
-
+                errors["permission"] = "Only allowed [owner, admin, read, write]"
 
         elif update:
-            operation = 'update'
+            operation = "update"
             if not self.id:
                 is_valid = False
-                errors['id'] = 'Missing'
+                errors["id"] = "Missing"
 
             if not self.permission:
                 is_valid = False
-                errors['permission'] = 'Missing'
+                errors["permission"] = "Missing"
 
-            elif not self.permission in ['owner', 'admin', 'read', 'write']:
+            elif not self.permission in ["owner", "admin", "read", "write"]:
                 is_valid = False
-                errors['permission'] = "Only allowed [owner, admin, read, write]"
+                errors["permission"] = "Only allowed [owner, admin, read, write]"
 
         elif delete:
-            operation = 'delete'
+            operation = "delete"
             if not self.id:
                 is_valid = False
-                errors['id'] = 'Missing'
+                errors["id"] = "Missing"
 
         if is_valid:
-            return True, ''
+            return True, ""
 
-        return False, '{0} Error '.format(operation) + json.dumps(errors)
+        return False, "{0} Error ".format(operation) + json.dumps(errors)
 
     def save(self, commit=True):
         is_valid, err = self._validate(create=True)
@@ -101,7 +88,7 @@ class GiteaTeam(j.application.JSBaseClass):
             team = self.client.api.orgs.orgCreateTeam(data=self.data, org=self.organization.username).json()
             for k, v in team.items():
                 setattr(self, k, v)
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 
@@ -112,7 +99,7 @@ class GiteaTeam(j.application.JSBaseClass):
             return is_valid, err
         try:
             resp = self.client.api.teams.orgEditTeam(data=self.data, id=str(self.id))
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 
@@ -124,7 +111,7 @@ class GiteaTeam(j.application.JSBaseClass):
 
         try:
             resp = self.client.api.teams.orgDeleteTeam(id=str(self.id))
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 

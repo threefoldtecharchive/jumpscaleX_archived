@@ -46,23 +46,25 @@ class TextCharEditor(j.application.JSBaseClass):
             pass
         for match in result.matches:
             start = match.start
-            textToInvestigate = string.join([char[0] for char in self.chars[match.start:]], "")
+            textToInvestigate = string.join([char[0] for char in self.chars[match.start :]], "")
             result2 = j.data.regex.getRegexMatches(stoppattern, textToInvestigate)
             if len(result2.matches) == 0:
                 raise j.exceptions.RuntimeError("could not find stoppattern %s" % stoppattern)
             end = result2.matches[0].end
             skip = False
-            for pos in range(match.start, match.start +
-                             end):  # scan first time if somewhere there is already a char part of a block
+            for pos in range(
+                match.start, match.start + end
+            ):  # scan first time if somewhere there is already a char part of a block
                 if self.chars[pos][1] != "":
                     skip = True
-                    #self._log_debug("Could not match the pattern because as part of result there was already another block found, posstart:%s posstop%s" % (match.start,match.start+end-1),5)
+                    # self._log_debug("Could not match the pattern because as part of result there was already another block found, posstart:%s posstop%s" % (match.start,match.start+end-1),5)
             blocknr = self._getNextBlockNr(blockname)
             if skip is False:
                 for pos in range(match.start, match.start + end):
                     self.chars[pos][1] = blockname
                     self.chars[pos][2] = blocknr
-#            ipshell()
+
+    #            ipshell()
 
     def matchBlocksDelimiter(self, startpattern, blockname, delimiteropen="{", delimiterclose="}"):
         """
@@ -162,7 +164,7 @@ class TextCharEditor(j.application.JSBaseClass):
         if blocknr is None and blockname == "":
             blocknr = 0
         if blocknr is not None and blockname == "":
-            raise j.exceptions.RuntimeError("Cannot have a blockname != \"\" with blocknr>0")
+            raise j.exceptions.RuntimeError('Cannot have a blockname != "" with blocknr>0')
         if len(text) == 0:
             raise j.exceptions.RuntimeError("Cannot insert empty block of text.")
         counter = start
@@ -181,14 +183,14 @@ class TextCharEditor(j.application.JSBaseClass):
         self.deleteBlock(blockname, blocknr)
         self.insertBlock(pos, text, blockname, blocknr)
 
-#    def replace1Block(self,blockname,text):
-#        """
-#        set block based on startline with new content
-#        """
-#        pos=self.getBlockPosition(blockname)
-#        blocknr=self.chars[pos][2]
-#        self.delete1Block(blockname)
-#        self.insertBlock(pos,text,blockname,blocknr)
+    #    def replace1Block(self,blockname,text):
+    #        """
+    #        set block based on startline with new content
+    #        """
+    #        pos=self.getBlockPosition(blockname)
+    #        blocknr=self.chars[pos][2]
+    #        self.delete1Block(blockname)
+    #        self.insertBlock(pos,text,blockname,blocknr)
 
     def getBlockPosition(self, blockname, blocknr=None):
         for charnr in range(len(self.chars)):
@@ -198,10 +200,10 @@ class TextCharEditor(j.application.JSBaseClass):
         raise j.exceptions.RuntimeError("Could not find block with name %s and blocknr %s" % (blockname, blocknr))
 
     # def __repr__(self):
-        # return self.__str__()
+    # return self.__str__()
 
     # def __str__(self):
-        # return ""
+    # return ""
 
     def printtext(self):
         """
@@ -211,7 +213,7 @@ class TextCharEditor(j.application.JSBaseClass):
         line = ""
         for pos in range(len(self.chars)):
             linepositions.append(pos)
-            line += (self.chars[pos][0])
+            line += self.chars[pos][0]
             if self.chars[pos][0] == "\n":
                 self._log_debug(line)
                 # print blocknames

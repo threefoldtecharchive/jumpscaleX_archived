@@ -9,6 +9,7 @@ JSConfigs = j.application.JSBaseConfigsClass
 class HubDirectFactory(JSConfigs):
     """
     """
+
     __jslocation__ = "j.clients.zhubdirect"
     _CHILDCLASS = HubDirectClient
 

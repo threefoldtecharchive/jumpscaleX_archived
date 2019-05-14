@@ -8,11 +8,11 @@ class DNSMasq(JSBASE):
         JSBASE.__init__(self)
         self._configdir = j.tools.path.get(path)
         j.sal.fs.createDir(self._configdir)
-        self._hosts = self._configdir.joinpath('hosts')
-        self._configfile = self._configdir.joinpath('dnsmasq.conf')
-        self._leasesfile = self._configdir.joinpath('dnsmasq.leases')
+        self._hosts = self._configdir.joinpath("hosts")
+        self._configfile = self._configdir.joinpath("dnsmasq.conf")
+        self._leasesfile = self._configdir.joinpath("dnsmasq.leases")
 
-    def install(self, start=True, device='eth0', rangefrom='', rangeto='', deviceonly=True):
+    def install(self, start=True, device="eth0", rangefrom="", rangeto="", deviceonly=True):
         """Install Dnsmasq.
 
         :param start: start dnsqmasq, defaults to True
@@ -26,22 +26,22 @@ class DNSMasq(JSBASE):
         :param deviceonly: listen to requests only from this device, defaults to True
         :type deviceonly: bool, optional
         """
-        if not j.sal.process.checkInstalled('dnsmasq'):
-            j.sal.ubuntu.apt_install('dnsmasq')
-        cmd = j.tools.bash.get().cmd_path_get('dnsmasq')
+        if not j.sal.process.checkInstalled("dnsmasq"):
+            j.sal.ubuntu.apt_install("dnsmasq")
+        cmd = j.tools.bash.get().cmd_path_get("dnsmasq")
         j.sal.process.killProcessByName(cmd)
 
         self.config(device=device, rangefrom=rangefrom, rangeto=rangeto, deviceonly=deviceonly)
         if start:
-            j.tools.tmux.execute('%s -d --conf-file=%s' % (cmd, self._configfile), window='main', pane='dnsmasq')
+            j.tools.tmux.execute("%s -d --conf-file=%s" % (cmd, self._configfile), window="main", pane="dnsmasq")
 
     def restart(self):
         """
         Restarts Dnsmasq.
         """
-        cmd = j.tools.bash.get().cmd_path_get('dnsmasq')
+        cmd = j.tools.bash.get().cmd_path_get("dnsmasq")
         j.sal.process.killProcessByName(cmd)
-        j.tools.tmux.execute('%s -d --conf-file=%s' % (cmd, self._configfile), window='main', pane='dnsmasq')
+        j.tools.tmux.execute("%s -d --conf-file=%s" % (cmd, self._configfile), window="main", pane="dnsmasq")
 
     def _file_check(self, filename):
         """Check if a file exists, and create it if it doesn't exist
@@ -66,11 +66,11 @@ class DNSMasq(JSBASE):
         """
         self._file_check(self._hosts)
         te = j.tools.code.text_editor_get(self._hosts)
-        contents = '%s' % macaddress
+        contents = "%s" % macaddress
         if name:
-            contents += ',%s' % name
-        contents += ',%s\n' % ipaddress
-        te.appendReplaceLine('.*%s.*' % macaddress, contents)
+            contents += ",%s" % name
+        contents += ",%s\n" % ipaddress
+        te.appendReplaceLine(".*%s.*" % macaddress, contents)
         te.save()
         self.restart()
 
@@ -83,11 +83,11 @@ class DNSMasq(JSBASE):
         """
         self._file_check(self._hosts)
         te = j.tools.code.text_editor_get(self._hosts)
-        te.deleteLines('.*%s.*' % macaddress)
+        te.deleteLines(".*%s.*" % macaddress)
         te.save()
         self.restart()
 
-    def config(self, device='eth0', rangefrom='', rangeto='', deviceonly=True):
+    def config(self, device="eth0", rangefrom="", rangeto="", deviceonly=True):
         """Configure dnsmasq
         if rangefrom & rangeto not specified then will serve full local range minus bottomn 10 & top 10 addr
 
@@ -100,7 +100,7 @@ class DNSMasq(JSBASE):
         :param deviceonly: listen to requests only from this device, defaults to True
         :type deviceonly: bool, optional
         """
-        if rangefrom == '' or rangeto == '':
+        if rangefrom == "" or rangeto == "":
             rangefrom, rangeto = j.sal.nettools.netrange_get(device)
 
         config = """
@@ -765,17 +765,18 @@ class DNSMasq(JSBASE):
 
         """
         if deviceonly:
-            config = config.replace('#interface=', 'interface=%s' % device)
+            config = config.replace("#interface=", "interface=%s" % device)
         config = j.core.tools.text_replace(
-            config, {'range': '%s,%s' % (rangefrom, rangeto), 'lease_file': self._leasesfile})
-        j.sal.fs.createDir('/etc/dnsmasq.d/')
+            config, {"range": "%s,%s" % (rangefrom, rangeto), "lease_file": self._leasesfile}
+        )
+        j.sal.fs.createDir("/etc/dnsmasq.d/")
         j.sal.fs.createDir(self._configdir)
         j.tools.bash.get().executor.file_write(self._configfile, config)
 
-    def _test(self, name=''):
+    def _test(self, name=""):
         """Run tests under tests
 
         :param name: basename of the file to run, defaults to "".
         :type name: str, optional
         """
-        self._test_run(name=name, obj_key='test_main')
+        self._test_run(name=name, obj_key="test_main")

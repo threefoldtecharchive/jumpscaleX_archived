@@ -1,5 +1,6 @@
 import ipaddress
 
+
 class OutOfIPs(Exception):
     pass
 
@@ -17,6 +18,7 @@ def _as_ip4(ipaddr):
     if isinstance(ipaddr, str):
         _ip = ipaddress.IPv4Address(ipaddr)
     return _ip
+
 
 class IPPool:
     def __init__(self, id="", name="", network_address="", registered_ips=None):
@@ -39,7 +41,6 @@ class IPPool:
         self._reserved = []
         self.registered_ips = registered_ips or list(self._network.hosts())
 
-        
     @property
     def registered_ips(self):
         """
@@ -54,7 +55,6 @@ class IPPool:
     @registered_ips.setter
     def registered_ips(self, registered_ips):
         self._ips = [self._validate_ip(ip) for ip in registered_ips]
-
 
     def _validate_ip(self, ipaddr):
         """[Checks if ipv4 address string is a valid IP and within the network.]
@@ -72,9 +72,9 @@ class IPPool:
         _ip = _as_ip4(ipaddr)
         if _ip not in self._network:
             raise ValueError("{} not in network {}".format(ipaddr, self._network))
-        
+
         return _ip
-    
+
     def _validate_reservable_ip(self, ipaddr):
         """[Checks if IP ipaddr is reservable or not]
         
@@ -89,10 +89,14 @@ class IPPool:
         """
         _ip = self._validate_ip(ipaddr)
         if _ip.is_loopback or _ip == self._network.network_address or _ip == self._network.broadcast_address:
-            raise ValueError("{} can't be loopback or network_address {} or broadcast_address {}".format(_ip, self._network.network_address, self._network.broadcast_address))
+            raise ValueError(
+                "{} can't be loopback or network_address {} or broadcast_address {}".format(
+                    _ip, self._network.network_address, self._network.broadcast_address
+                )
+            )
 
         return _ip
-    
+
     @property
     def subnetmask(self):
         """[Returns subnet mask of the network]
@@ -110,7 +114,7 @@ class IPPool:
             [ List[ipaddress.IPv4Address] ] -- [List of all IPs in the network]
         """
         return self._ips
-    
+
     hosts = ips
 
     @property
@@ -121,7 +125,7 @@ class IPPool:
             [ List[ipaddress.IPv4Addresses] ] -- [List of all available IPs in the network]
         """
         return list(set(self._ips) - set(self._reserved))
-    
+
     available_hosts = available_ips
 
     @property
@@ -132,6 +136,7 @@ class IPPool:
             [ List[ipaddress.IPv4Addresses] ] -- [List of all reserved IPs in the network]
         """
         return self._reserved
+
     reserved_hosts = reserved_ips
 
     def reserve_ip(self, ipaddr):
@@ -200,16 +205,17 @@ class IPPool:
 
     hosts = ips
 
+
 class IPPoolsManager:
-    def __init__(self, pools=None): 
+    def __init__(self, pools=None):
         """[IPPoolManager manages getting/releasing free IPs]
         
         Arguments:
             pools {[List[IPPool]]} -- []
         """
-        self._pools_dict = {p.id:p for p in pools}
+        self._pools_dict = {p.id: p for p in pools}
         self._reserved_ips = {}
-    
+
     @property
     def pools_ids(self):
         return list(self._pools_dict.keys())
@@ -247,7 +253,6 @@ class IPPoolsManager:
                 return (pool_id, ip)
         else:
             raise OutOfIPs("No IPs available on all pools.")
-
 
     def is_reserved_ip(self, ipaddr):
         """[Check if IP is reserved already]
@@ -288,8 +293,7 @@ class IPPoolsManager:
         if pool is None:
             raise ValueError("No pool registered with id: {}".format(pool_id))
         _ip = _as_ip4(ipaddr)
-        pool.release_ip(ipaddr) 
-
+        pool.release_ip(ipaddr)
 
     @property
     def available_ips(self):

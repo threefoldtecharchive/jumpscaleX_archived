@@ -5,19 +5,21 @@ from Jumpscale import j
 import sys
 from Jumpscale import j
 
-class SystemProps():
+
+class SystemProps:
     def __str__(self):
-        if len(self.__dict__.items())>0:
+        if len(self.__dict__.items()) > 0:
             out = "\n### systemprops:\n\n"
-            for key,item in self.__dict__.items():
-                out += str(key)+ ":"+str(item) + "\n"
+            for key, item in self.__dict__.items():
+                out += str(key) + ":" + str(item) + "\n"
             return out
         return ""
 
     __repr__ = __str__
 
+
 class Schema(j.application.JSBaseClass):
-    def __init__(self, text, md5=None ,url=None):
+    def __init__(self, text, md5=None, url=None):
         j.application.JSBaseClass.__init__(self)
         self.properties = []
         self._systemprops = {}
@@ -47,10 +49,7 @@ class Schema(j.application.JSBaseClass):
                 # will remove the version from the url
                 self.url_noversion = ".".join(self.url.split(".")[:-1])
                 if self.url_noversion in j.data.schema.schemas_versionless:
-                    if (
-                        j.data.schema.schemas_versionless[self.url_noversion].version
-                        < self.version + 1
-                    ):
+                    if j.data.schema.schemas_versionless[self.url_noversion].version < self.version + 1:
                         # version itself can be replaced as well, there could be an update
                         j.data.schema.schemas_versionless[self.url_noversion] = self
                 else:
@@ -59,7 +58,6 @@ class Schema(j.application.JSBaseClass):
                 self.version = None
                 self.url_noversion = None
             urls = ".".join(urls)
-
 
     @property
     def _path(self):
@@ -113,7 +111,7 @@ class Schema(j.application.JSBaseClass):
 
         self._log_debug("load schema", data=text)
 
-        if text.count("@url")>1:
+        if text.count("@url") > 1:
             raise j.exceptions.Input("there should only be 1 url in the schema")
 
         self.text = j.core.text.strip(text)
@@ -135,8 +133,9 @@ class Schema(j.application.JSBaseClass):
             propname, line = line.split("=", 1)
             propname = propname.strip()
             if ":" in propname:
-                self._error_raise("Aliases no longer supported in names, remove  ':' in name '%s'"% propname,
-                                  schema=text,)
+                self._error_raise(
+                    "Aliases no longer supported in names, remove  ':' in name '%s'" % propname, schema=text
+                )
             line = line.strip()
 
             if "!" in line:
@@ -165,14 +164,14 @@ class Schema(j.application.JSBaseClass):
             if name.startswith("&"):
                 name = name[1:]
                 p.unique = True
-                #everything which is unique also needs to be indexed
+                # everything which is unique also needs to be indexed
                 p.index_key = True
 
             if name in ["id"]:
-                self._error_raise("do not use 'id' in your schema, is reserved for system.",schema=text)
+                self._error_raise("do not use 'id' in your schema, is reserved for system.", schema=text)
 
             if "(" in line:
-                line_proptype = (line.split("(")[1].split(")")[0].strip().lower())  # in between the ()
+                line_proptype = line.split("(")[1].split(")")[0].strip().lower()  # in between the ()
                 self._log_debug("line:%s; lineproptype:'%s'" % (line_original, line_proptype))
                 line_wo_proptype = line.split("(")[0].strip()  # before the (
 
@@ -219,8 +218,7 @@ class Schema(j.application.JSBaseClass):
                 continue
             if "=" not in line:
                 raise j.exceptions.Input(
-                    "did not find =, need to be there to define field, line=%s\ntext:%s"
-                    % (line, text)
+                    "did not find =, need to be there to define field, line=%s\ntext:%s" % (line, text)
                 )
 
             p = process(line)
@@ -264,9 +262,7 @@ class Schema(j.application.JSBaseClass):
     def _capnp_schema_text(self):
         tpath = "%s/templates/schema.capnp" % self._path
         # j.shell()
-        _capnp_schema_text = j.tools.jinja2.template_render(
-            path=tpath, reload=False, obj=self, objForHash=self._md5
-        )
+        _capnp_schema_text = j.tools.jinja2.template_render(path=tpath, reload=False, obj=self, objForHash=self._md5)
         return _capnp_schema_text
 
     @property
@@ -277,24 +273,18 @@ class Schema(j.application.JSBaseClass):
                 raise RuntimeError("md5 cannot be None")
 
             for prop in self.properties:
-                self._log_debug(
-                    "prop for obj gen: %s:%s" % (prop, prop.js_typelocation)
-                )
+                self._log_debug("prop for obj gen: %s:%s" % (prop, prop.js_typelocation))
 
             tpath = "%s/templates/template_obj.py" % self._path
 
-            #lets do some tests to see if it will render well, jinja doesn't show errors propertly
+            # lets do some tests to see if it will render well, jinja doesn't show errors propertly
             for prop in self.properties:
                 prop.capnp_schema
                 prop.default_as_python_code
                 prop.js_typelocation
 
             self._obj_class = j.tools.jinja2.code_python_render(
-                name="schema_%s" % self.key,
-                obj_key="ModelOBJ",
-                path=tpath,
-                obj=self,
-                objForHash=self._md5,
+                name="schema_%s" % self.key, obj_key="ModelOBJ", path=tpath, obj=self, objForHash=self._md5
             )
 
         return self._obj_class
@@ -306,9 +296,9 @@ class Schema(j.application.JSBaseClass):
         :param model: will make sure we save in the model
         :return:
         """
-        if isinstance(data,bytes):
+        if isinstance(data, bytes):
             return j.data.serializers.jsxdata.loads(data)
-        return self._get(data=data,model=model)
+        return self._get(data=data, model=model)
 
     def _get(self, data=None, model=None):
         obj = self.objclass(schema=self, data=data, model=model)
@@ -318,7 +308,7 @@ class Schema(j.application.JSBaseClass):
         """
         data is dict or None
         """
-        if isinstance(data,bytes):
+        if isinstance(data, bytes):
             raise RuntimeError("when creating new obj from schema cannot give bytes as starting point, dict ok")
         r = self.get(data=data, model=model)
         if model is not None:
@@ -382,12 +372,11 @@ class Schema(j.application.JSBaseClass):
         res = [item.name for item in self.properties]
         return res
 
-
     def __str__(self):
-        out = "## SCHEMA: %s\n\n"%self.url
+        out = "## SCHEMA: %s\n\n" % self.url
         for item in self.properties:
             out += str(item) + "\n"
-        out+=str(self.systemprops)
+        out += str(self.systemprops)
         return out
 
     def __eq__(self, other):

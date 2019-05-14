@@ -1,5 +1,6 @@
 from Jumpscale import j
 
+
 def main(self):
     """
     to run:
@@ -17,12 +18,12 @@ def main(self):
     # array are like slices, but have no length prefix,
     # therefore this is only useful if there is a fixed amount of elements,
     # known by all parties
-    e.add_array([False,True,True])
+    e.add_array([False, True, True])
 
     # a single byte can be added as well
     e.add_byte(6)
-    e.add_byte('4')
-    e.add_byte(b'2')
+    e.add_byte("4")
+    e.add_byte(b"2")
 
     # the result is a single bytearray
-    assert e.data == b'\x00\x01\x01\x0642'
+    assert e.data == b"\x00\x01\x01\x0642"

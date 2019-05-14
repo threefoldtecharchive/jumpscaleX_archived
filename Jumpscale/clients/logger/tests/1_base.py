@@ -8,5 +8,3 @@ def main(self):
     js_shell 'j.tools.logger.test(name="base")'
     """
     j.shell()
-
-

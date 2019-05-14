@@ -8,7 +8,6 @@ from .Machine import Machine
 
 
 class Space(Authorizables):
-
     def __init__(self, account, model):
         Authorizables.__init__(self)
 
@@ -37,35 +36,31 @@ class Space(Authorizables):
         :type vlan: int
         """
 
-        self.client.api.cloudbroker.iaas.addExternalNetwork(cloudspaceId=self.id,
-                                                            name=name,
-                                                            subnet=subnet,
-                                                            getway=gateway,
-                                                            startip=startip,
-                                                            endip=endip,
-                                                            gid=gid,
-                                                            vlan=vlan)
+        self.client.api.cloudbroker.iaas.addExternalNetwork(
+            cloudspaceId=self.id,
+            name=name,
+            subnet=subnet,
+            getway=gateway,
+            startip=startip,
+            endip=endip,
+            gid=gid,
+            vlan=vlan,
+        )
         self.refresh()
 
     def save(self):
         """Update space on env with current space object data"""
-        self.client.api.cloudapi.cloudspaces.update(cloudspaceId=self.model['id'],
-                                                    name=self.model['name'],
-                                                    maxMemoryCapacity=self.model.get(
-                                                        'maxMemoryCapacity'),
-                                                    maxVDiskCapacity=self.model.get(
-                                                        'maxVDiskCapacity'),
-                                                    maxCPUCapacity=self.model.get(
-                                                        'maxCPUCapacity'),
-                                                    maxNASCapacity=self.model.get(
-                                                        'maxNASCapacity'),
-                                                    maxNetworkOptTransfer=self.model.get(
-                                                        'maxNetworkOptTransfer'),
-                                                    maxNetworkPeerTransfer=self.model.get(
-                                                        'maxNetworkPeerTransfer'),
-                                                    maxNumPublicIP=self.model.get(
-                                                        'maxNumPublicIP')
-                                                    )
+        self.client.api.cloudapi.cloudspaces.update(
+            cloudspaceId=self.model["id"],
+            name=self.model["name"],
+            maxMemoryCapacity=self.model.get("maxMemoryCapacity"),
+            maxVDiskCapacity=self.model.get("maxVDiskCapacity"),
+            maxCPUCapacity=self.model.get("maxCPUCapacity"),
+            maxNASCapacity=self.model.get("maxNASCapacity"),
+            maxNetworkOptTransfer=self.model.get("maxNetworkOptTransfer"),
+            maxNetworkPeerTransfer=self.model.get("maxNetworkPeerTransfer"),
+            maxNumPublicIP=self.model.get("maxNumPublicIP"),
+        )
         self.refresh()
 
     @property
@@ -73,17 +68,13 @@ class Space(Authorizables):
 
         timeout = j.data.time.epoch + 100
 
-        while self._model["status"] == 'DEPLOYING' and j.data.time.epoch < timeout:
-            self._log_debug(
-                "Cloudspace is still deploying, checking again in a second"
-            )
+        while self._model["status"] == "DEPLOYING" and j.data.time.epoch < timeout:
+            self._log_debug("Cloudspace is still deploying, checking again in a second")
             time.sleep(1)
             self.refresh()
 
-        while not self._model['publicipaddress'] and j.data.time.epoch < timeout:
-            self._log_debug(
-                "Cloudspace is still deploying, waiting for pub ip addr."
-            )
+        while not self._model["publicipaddress"] and j.data.time.epoch < timeout:
+            self._log_debug("Cloudspace is still deploying, waiting for pub ip addr.")
             time.sleep(1)
             self.refresh()
 
@@ -94,27 +85,24 @@ class Space(Authorizables):
 
     @property
     def ipaddr_pub(self):
-        return self.model['publicipaddress']
+        return self.model["publicipaddress"]
 
     @property
     def machines(self):
         ovc_machines = self.client.api.cloudapi.machines.list(cloudspaceId=self.id)
         machines = dict()
         for machine in ovc_machines:
-            machines[machine['name']] = Machine(self, machine)
+            machines[machine["name"]] = Machine(self, machine)
         return machines
 
     def _addUser(self, username, right):
-        self.client.api.cloudapi.cloudspaces.addUser(
-            cloudspaceId=self.id, userId=username, accesstype=right)
+        self.client.api.cloudapi.cloudspaces.addUser(cloudspaceId=self.id, userId=username, accesstype=right)
 
     def _deleteUser(self, username):
-        self.client.api.cloudapi.cloudspaces.deleteUser(
-            cloudspaceId=self.id, userId=username, recursivedelete=True)
+        self.client.api.cloudapi.cloudspaces.deleteUser(cloudspaceId=self.id, userId=username, recursivedelete=True)
 
     def _updateUser(self, username, right):
-        self.client.api.cloudapi.cloudspaces.updateUser(
-            cloudspaceId=self.id, userId=username, accesstype=right)
+        self.client.api.cloudapi.cloudspaces.updateUser(cloudspaceId=self.id, userId=username, accesstype=right)
 
     def enable(self, reason):
         """Will enable the cloud space.
@@ -123,8 +111,7 @@ class Space(Authorizables):
         :type reason: str
         """
 
-        self.client.api.cloudapi.cloudspaces.enable(
-            cloudspaceId=self.id, reason=reason)
+        self.client.api.cloudapi.cloudspaces.enable(cloudspaceId=self.id, reason=reason)
 
     def disable(self, reason):
         """Will disable the cloud space.
@@ -132,34 +119,34 @@ class Space(Authorizables):
         :param reason: The reason why the cloud space should be disabled.
         :type reason: str
         """
-        self.client.api.cloudapi.cloudspaces.disable(
-            cloudspaceId=self.id, reason=reason)
+        self.client.api.cloudapi.cloudspaces.disable(cloudspaceId=self.id, reason=reason)
 
     def refresh(self):
         self._cache.reset()
         cloudspaces = self.client.api.cloudapi.cloudspaces.list()
         for cloudspace in cloudspaces:
-            if cloudspace['id'] == self.id:
+            if cloudspace["id"] == self.id:
                 self._model = cloudspace
                 break
         else:
             raise j.exceptions.RuntimeError("Cloud space has been deleted")
 
     def machine_get(
-            self,
-            name,
-            create=False,
-            sshkeyname="",
-            memsize=2,
-            vcpus=1,
-            disksize=10,
-            datadisks=[],
-            image="Ubuntu 16.04 x64",
-            sizeId=None,
-            stackId=None,
-            reset=False,
-            managed_private=False,
-            authorize_ssh=True):
+        self,
+        name,
+        create=False,
+        sshkeyname="",
+        memsize=2,
+        vcpus=1,
+        disksize=10,
+        datadisks=[],
+        image="Ubuntu 16.04 x64",
+        sizeId=None,
+        stackId=None,
+        reset=False,
+        managed_private=False,
+        authorize_ssh=True,
+    ):
         """
         Returns the virtual machine with given name, and in case it doesn't exist yet creates the machine if the create argument is set to True.
 
@@ -187,18 +174,19 @@ class Space(Authorizables):
 
         if name not in self.machines:
             if create is True:
-                machine = self.machine_create(name=name,
-                                              sshkeyname=sshkeyname,
-                                              memsize=memsize,
-                                              vcpus=vcpus,
-                                              disksize=disksize,
-                                              datadisks=datadisks,
-                                              image=image,
-                                              sizeId=sizeId,
-                                              stackId=stackId,
-                                              managed_private=managed_private,
-                                              authorize_ssh=authorize_ssh
-                                              )
+                machine = self.machine_create(
+                    name=name,
+                    sshkeyname=sshkeyname,
+                    memsize=memsize,
+                    vcpus=vcpus,
+                    disksize=disksize,
+                    datadisks=datadisks,
+                    image=image,
+                    sizeId=sizeId,
+                    stackId=stackId,
+                    managed_private=managed_private,
+                    authorize_ssh=authorize_ssh,
+                )
             else:
                 raise RuntimeError("Cannot find machine:%s" % name)
 
@@ -208,13 +196,19 @@ class Space(Authorizables):
             if not managed_private:
                 self._node_set(machine.name, machine.sshclient)
             else:
-                self._node_set(machine.name+'_private', machine.sshclient_private)
+                self._node_set(machine.name + "_private", machine.sshclient_private)
 
         return machine
 
     def _node_set(self, name, sshclient):
-        j.tools.nodemgr.set(name, sshclient=sshclient.instance, selected=False,
-                            cat="openvcloud", clienttype="j.clients.openvcloud", description="deployment in openvcloud")
+        j.tools.nodemgr.set(
+            name,
+            sshclient=sshclient.instance,
+            selected=False,
+            cat="openvcloud",
+            clienttype="j.clients.openvcloud",
+            description="deployment in openvcloud",
+        )
 
     def machines_delete(self):
         """
@@ -239,7 +233,7 @@ class Space(Authorizables):
         description="",
         managed_private=False,
         authorize_ssh=True,
-        userdata = ""
+        userdata="",
     ):
         """
         Creates a new virtual machine.
@@ -265,24 +259,24 @@ class Space(Authorizables):
             - RuntimeError if machine name contains spaces
             - RuntimeError if machine name contains underscores
         """
-        self._log_debug("Create machine:%s:%s:%s" %
-                          (name, image, sshkeyname))
-        if ' ' in name:
-            raise RuntimeError('Name cannot contain spaces')
-        if '_' in name:
-            raise RuntimeError('Name cannot contain underscores (_)')
+        self._log_debug("Create machine:%s:%s:%s" % (name, image, sshkeyname))
+        if " " in name:
+            raise RuntimeError("Name cannot contain spaces")
+        if "_" in name:
+            raise RuntimeError("Name cannot contain underscores (_)")
 
         imageId = self.image_find_id(image)
         if sizeId is None:
             sizeId = self.size_find_id(memsize, vcpus)
 
-        self._log_info("Cloud space ID:%s name:%s size:%s image:%s disksize:%s" %
-                         (self.id, name, sizeId, imageId, disksize))
+        self._log_info(
+            "Cloud space ID:%s name:%s size:%s image:%s disksize:%s" % (self.id, name, sizeId, imageId, disksize)
+        )
 
         if authorize_ssh:
             if not sshkeyname:
                 # if sshkey is not provided, use sshkey configured in the config manager
-                sshkeyname=j.tools.configmanager.keyname
+                sshkeyname = j.tools.configmanager.keyname
 
             if "sshkeyname:" not in description:
                 description += "\nsshkeyname: %s" % sshkeyname
@@ -299,17 +293,20 @@ class Space(Authorizables):
                     datadisks=datadisks,
                     stackid=stackId,
                     description=description,
-                    userdata=userdata)
+                    userdata=userdata,
+                )
 
             else:
-                self.client.api.cloudapi.machines.create(cloudspaceId=self.id,
-                                                        name=name,
-                                                        sizeId=sizeId,
-                                                        imageId=imageId,
-                                                        disksize=disksize,
-                                                        datadisks=datadisks,
-                                                        description=description,
-                                                        userdata=userdata)
+                self.client.api.cloudapi.machines.create(
+                    cloudspaceId=self.id,
+                    name=name,
+                    sizeId=sizeId,
+                    imageId=imageId,
+                    disksize=disksize,
+                    datadisks=datadisks,
+                    description=description,
+                    userdata=userdata,
+                )
             self._log_info("machine created.")
         except Exception as err:
             if err.response.status_code == 409:
@@ -323,7 +320,7 @@ class Space(Authorizables):
         if authorize_ssh:
             # check if ssh port already exposed
             for portforward in machine.portforwards:
-                if portforward['localPort'] == '22':
+                if portforward["localPort"] == "22":
                     break
             else:
                 machine.portforward_create(None, 22)
@@ -331,7 +328,7 @@ class Space(Authorizables):
             if managed_private:
                 machine.authorizeSSH_private(sshkeyname=sshkeyname)
                 machine.prefab_private.core.hostname = name  # make sure hostname is set
-                self._node_set(machine.name + '_private', machine.sshclient_private)
+                self._node_set(machine.name + "_private", machine.sshclient_private)
             else:
                 machine.authorizeSSH(sshkeyname=sshkeyname)
                 machine.prefab.core.hostname = name  # make sure hostname is set
@@ -353,7 +350,7 @@ class Space(Authorizables):
         stackId=None,
         description="",
         timeout=300,
-        branch='master',
+        branch="master",
         dev_mode=False,
     ):
         """
@@ -388,9 +385,13 @@ class Space(Authorizables):
         """
 
         # url of the (ipxe)[http://ipxe.org/scripting/] script.
-        ipxe = 'https://bootstrap.grid.tf/ipxe/{branch}/{zerotier_id}/organisation={organization}%20{dev_mode}'.format(
-             branch=branch, zerotier_id=zerotier_id, organization=organization, dev_mode='development' if dev_mode else '')
-        userdata = 'ipxe: %s' % ipxe
+        ipxe = "https://bootstrap.grid.tf/ipxe/{branch}/{zerotier_id}/organisation={organization}%20{dev_mode}".format(
+            branch=branch,
+            zerotier_id=zerotier_id,
+            organization=organization,
+            dev_mode="development" if dev_mode else "",
+        )
+        userdata = "ipxe: %s" % ipxe
 
         machine = self.machine_create(
             name=name,
@@ -401,7 +402,8 @@ class Space(Authorizables):
             memsize=memsize,
             stackId=stackId,
             userdata=userdata,
-            authorize_ssh=False)
+            authorize_ssh=False,
+        )
 
         # get ZeroTier client, fail if client was not yet configured
         zerotier = j.clients.zerotier.get(zerotier_client, create=False)
@@ -413,26 +415,25 @@ class Space(Authorizables):
             network = zerotier.network_get(network_id=zerotier_id)
             members = network.members_list()
             for member in members:
-                if not member.data['config']['authorized'] and member.data['physicalAddress'] == machine.ipaddr_public:
+                if not member.data["config"]["authorized"] and member.data["physicalAddress"] == machine.ipaddr_public:
                     candidates.append(member)
             if candidates:
                 break
         else:
-            raise TimeoutError('Authorization request to ZeroTier network %s was not received' % zerotier_id)
+            raise TimeoutError("Authorization request to ZeroTier network %s was not received" % zerotier_id)
 
         # We can only identify VMs having the same physical IP address
         # if requests arrive one by one.
         # Ensure only one unauthorized member from required IP address
         if len(candidates) != 1:
-            raise RuntimeError('Found %s candidates, expected exactly one' % len(candidates))
+            raise RuntimeError("Found %s candidates, expected exactly one" % len(candidates))
 
         candidate = candidates[0]
 
         # accept VM to the ZeroTier network
         candidate.authorize()
 
-        return  {'openvcloud': machine,
-                 'zerotier': candidate}
+        return {"openvcloud": machine, "zerotier": candidate}
 
     @property
     def portforwards(self):
@@ -440,7 +441,7 @@ class Space(Authorizables):
 
     def portforward_exists(self, publicIp, publicport, protocol):
         for pf in self.portforwards:
-            if pf['publicIp'] == publicIp and int(pf['publicPort']) == int(publicport) and pf['protocol'] == protocol:
+            if pf["publicIp"] == publicIp and int(pf["publicPort"]) == int(publicport) and pf["protocol"] == protocol:
                 return True
         return False
 
@@ -452,12 +453,11 @@ class Space(Authorizables):
         sizes.sort(key=lambda size: size[0], reverse=True)
         for size, sizeinfo in sizes:
             if memory > size / 1.1:
-                if vcpus and vcpus != sizeinfo['vcpus']:
+                if vcpus and vcpus != sizeinfo["vcpus"]:
                     continue
-                return sizeinfo['id']
+                return sizeinfo["id"]
 
-        raise j.exceptions.RuntimeError(
-            "did not find memory size:%s, or found with different vcpus" % memory)
+        raise j.exceptions.RuntimeError("did not find memory size:%s, or found with different vcpus" % memory)
 
     @property
     def sizes(self):
@@ -471,8 +471,7 @@ class Space(Authorizables):
             if imageNameFound.find(name) != -1:
                 return image["id"]
         images = [item["name"].lower() for item in self.images]
-        raise j.exceptions.RuntimeError(
-            "did not find image:%s\nPossible Images:\n%s\n" % (name, images))
+        raise j.exceptions.RuntimeError("did not find image:%s\nPossible Images:\n%s\n" % (name, images))
 
     @property
     def images(self):

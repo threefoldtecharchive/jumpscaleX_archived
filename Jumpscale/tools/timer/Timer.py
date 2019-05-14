@@ -1,6 +1,8 @@
 import time
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
+
 
 class TIMER(j.application.JSBaseClass):
     def __init__(self):
@@ -30,7 +32,7 @@ class TIMER(j.application.JSBaseClass):
         return False
 
     @staticmethod
-    def start(cat="",memory=False):
+    def start(cat="", memory=False):
         """
 
         :param cat: name for your measurment
@@ -56,7 +58,7 @@ class TIMER(j.application.JSBaseClass):
             if TIMER.duration > 0:
                 TIMER.performance = float(nritems) / float(TIMER.duration)
             if TIMER._memory:
-                TIMER.memory_used = TIMER._memory_stop  - TIMER._memory
+                TIMER.memory_used = TIMER._memory_stop - TIMER._memory
                 TIMER.memory_peritem = float((TIMER._memory_stop * 1000 - TIMER._memory * 1000)) / float(nritems)
         if log:
             TIMER.result()
@@ -72,17 +74,16 @@ class TIMER(j.application.JSBaseClass):
         TIMER.memory_used = 0.0
         TIMER.memory_peritem = 0.0
 
-
     @staticmethod
     def result():
-        if TIMER._cat !="":
-            print("\nDURATION FOR:%s"%TIMER._cat)
+        if TIMER._cat != "":
+            print("\nDURATION FOR:%s" % TIMER._cat)
         print(("duration:%s" % TIMER.duration))
         print(("nritems:%s" % TIMER.nritems))
         print(("performance:%s/sec" % int(TIMER.performance)))
         if TIMER._memory:
-            print("memory used: %s"%TIMER.memory_used)
-            print("memory per item (bytes): %s"%TIMER.memory_peritem)
+            print("memory used: %s" % TIMER.memory_used)
+            print("memory per item (bytes): %s" % TIMER.memory_peritem)
 
     def test(self):
         """

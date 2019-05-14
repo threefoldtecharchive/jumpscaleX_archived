@@ -1,13 +1,13 @@
-
 from Jumpscale import j
+
 # from pprint import pprint as print
 
 from .IndexFile import IndexFile
+
 JSBASE = j.application.JSBaseClass
 
 
 class IndexDB(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.data.indexfile"
         self.basepath = "%s/indexfile/" % (j.dirs.VARDIR)
@@ -30,22 +30,24 @@ class IndexDB(j.application.JSBaseClass):
             data = str(i) * index.nrbytes
             index.set(i, data)
 
-        assert index.count==10
+        assert index.count == 10
 
-        assert index.list(0,0) == {0: b'0000'}
-        assert index.list(0,1) == {0: b'0000', 1: b'1111'}
-        assert index.list(1,1) == {1: b'1111'}
+        assert index.list(0, 0) == {0: b"0000"}
+        assert index.list(0, 1) == {0: b"0000", 1: b"1111"}
+        assert index.list(1, 1) == {1: b"1111"}
 
-        assert index.list() == {0: b'0000',
-                1: b'1111',
-                2: b'2222',
-                3: b'3333',
-                4: b'4444',
-                5: b'5555',
-                6: b'6666',
-                7: b'7777',
-                8: b'8888',
-                9: b'9999'}
+        assert index.list() == {
+            0: b"0000",
+            1: b"1111",
+            2: b"2222",
+            3: b"3333",
+            4: b"4444",
+            5: b"5555",
+            6: b"6666",
+            7: b"7777",
+            8: b"8888",
+            9: b"9999",
+        }
 
         try:
             index.set(11, b"data too long")
@@ -65,6 +67,7 @@ class IndexDB(j.application.JSBaseClass):
 
         def walk(pos, data, result):
             actual.append(data)
+
         index.iterate(walk, None, None)
         expected = []
         for i in range(10):
@@ -78,9 +81,10 @@ class IndexDB(j.application.JSBaseClass):
 
         def walk(pos, data, result):
             actual.append(data)
+
         index.iterate(walk, 4, 9)
         expected = []
-        for i in range(4, 9+1):
+        for i in range(4, 9 + 1):
             expected.append((str(i) * index.nrbytes).encode())
         print("expected:", expected)
         print("actual:  ", actual)

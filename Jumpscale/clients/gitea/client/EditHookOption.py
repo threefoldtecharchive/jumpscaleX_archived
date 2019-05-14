@@ -9,8 +9,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class EditHookOption(object):
     """
     auto-generated. don't touch.
@@ -30,18 +28,18 @@ class EditHookOption(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'EditHookOption'
+        class_name = "EditHookOption"
         data = json or kwargs
 
         # set attributes
         data_types = [bool]
-        self.active = client_support.set_property('active', data, data_types, False, [], False, False, class_name)
+        self.active = client_support.set_property("active", data, data_types, False, [], False, False, class_name)
         data_types = [EditHookOptionconfig]
-        self.config = client_support.set_property('config', data, data_types, False, [], False, False, class_name)
+        self.config = client_support.set_property("config", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.events = client_support.set_property('events', data, data_types, False, [], True, False, class_name)
+        self.events = client_support.set_property("events", data, data_types, False, [], True, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

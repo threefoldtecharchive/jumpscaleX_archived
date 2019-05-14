@@ -20,7 +20,6 @@ def main(self):
 
     schema_test.token_price = "10 USD"
 
-
     usd2usd = schema_test.token_price.usd  # convert USD-to-USD... same value
     assert usd2usd == 10
     inr = schema_test.token_price.value_currency("inr")
@@ -41,7 +40,5 @@ def main(self):
     eur2usd = schema_test.token_price.usd
     assert eur2usd * cureur == 10
 
-
     schema_test.token_price = "10 EUR"
     assert schema_test.token_price.currency_code == "eur"
-

@@ -1,6 +1,7 @@
 import sys
 import os
 import platform
+
 # import re
 
 
@@ -20,8 +21,7 @@ import platform
 
 
 class PlatformTypes(object):
-
-    def __init__(self,j):
+    def __init__(self, j):
         self._j = j
         self._myplatform = None
         self._platformParents = {}
@@ -97,8 +97,7 @@ class PlatformTypes(object):
 
 
 class PlatformType(object):
-
-    def __init__(self, j,name="", executor=None):
+    def __init__(self, j, name="", executor=None):
         # print("INIT PLATFORMTYPE:%s" % executor)
         self._j = j
         self.myplatform = name
@@ -118,8 +117,7 @@ class PlatformType(object):
     def platformtypes(self):
         if self._platformtypes is None:
             platformtypes = self._j.core.platformtype.getParents(self.myplatform)
-            self._platformtypes = [
-                item for item in platformtypes if item != ""]
+            self._platformtypes = [item for item in platformtypes if item != ""]
         return self._platformtypes
 
     @property
@@ -131,7 +129,7 @@ class PlatformType(object):
             self._hostname = unn.nodename
             distro_info = platform.linux_distribution()
 
-            if 'Ubuntu' in distro_info:
+            if "Ubuntu" in distro_info:
                 self._osversion = distro_info[1]
             # elif 'ubuntu' in os_type:
             #     # version = self.executor.execute('lsb_release -r')[1]
@@ -148,8 +146,7 @@ class PlatformType(object):
         else:
             uname = self.executor.state_on_system["uname"]
             if uname.find("warning: setlocale") != -1:
-                raise RuntimeError(
-                    "run js_shell 'j.tools.bash.get().profile.locale_check()'")
+                raise RuntimeError("run js_shell 'j.tools.bash.get().profile.locale_check()'")
             uname = uname.split("\n")[0]
             uname = uname.split(" ")
             _tmp, self._hostname, _osversion, self._cpu, self._platform = uname
@@ -188,9 +185,11 @@ class PlatformType(object):
             # print("####OSVERSION")
             # TELL KRISTOF YOU GOT HERE
             rc, lsbcontent, err = self.executor.execute(
-                "cat /etc/*-release", replaceArgs=False, showout=False, die=False)
+                "cat /etc/*-release", replaceArgs=False, showout=False, die=False
+            )
             if rc == 0:
                 import re
+
                 try:
                     expr = re.findall(r"DISTRIB_ID=(\w+)", lsbcontent)
                     self._osname = expr[0].lower()
@@ -224,8 +223,7 @@ class PlatformType(object):
         then return True
         """
         tocheck = self.platformtypes
-        matches = [item.strip().lower()
-                   for item in match.split(",") if item.strip() != ""]
+        matches = [item.strip().lower() for item in match.split(",") if item.strip() != ""]
         for match in matches:
             if match in tocheck:
                 return True
@@ -246,8 +244,8 @@ class PlatformType(object):
     def dieIfNotPlatform(self, platform):
         if not self.has_parent(platform):
             raise self._j.exceptions.RuntimeError(
-                "Can not continue, supported platform is %s, " +
-                "this platform is %s" % (platform, self.myplatform))
+                "Can not continue, supported platform is %s, " + "this platform is %s" % (platform, self.myplatform)
+            )
 
     @property
     def isUbuntu(self):
@@ -263,28 +261,28 @@ class PlatformType(object):
 
     @property
     def isUnix(self):
-        '''Checks whether the platform is Unix-based'''
+        """Checks whether the platform is Unix-based"""
         return self.has_parent("unix")
 
     @property
     def isWindows(self):
-        '''Checks whether the platform is Windows-based'''
+        """Checks whether the platform is Windows-based"""
         return self.has_parent("win")
 
     @property
     def isLinux(self):
-        '''Checks whether the platform is Linux-based'''
+        """Checks whether the platform is Linux-based"""
         return self.has_parent("linux")
 
     @property
     def isXen(self):
-        '''Checks whether Xen support is enabled'''
-        return self._j.sal.process.checkProcessRunning('xen') == 0
+        """Checks whether Xen support is enabled"""
+        return self._j.sal.process.checkProcessRunning("xen") == 0
 
     @property
     def isVirtualBox(self):
-        '''Check whether the system supports VirtualBox'''
-        return self.executor.state_on_system.get('vboxdrv', False)
+        """Check whether the system supports VirtualBox"""
+        return self.executor.state_on_system.get("vboxdrv", False)
 
     # @property
     # def isHyperV(self):

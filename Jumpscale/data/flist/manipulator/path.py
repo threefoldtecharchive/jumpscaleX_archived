@@ -8,21 +8,18 @@ import g8storclient
 from Jumpscale import j
 
 
-
-
 class Path:
-
     def __init__(self, obj, parent, flist):
         self._obj = obj
         self._parent = parent
         self._flist = flist
 
     def __repr__(self):
-        if hasattr(self._obj, 'contents'):
-            ttype = 'dir'
+        if hasattr(self._obj, "contents"):
+            ttype = "dir"
         else:
             ttype = str(self._obj.attributes.which())
-        return '%s(%s)' % (ttype, self.name)
+        return "%s(%s)" % (ttype, self.name)
 
     @property
     def abspath(self):
@@ -32,7 +29,7 @@ class Path:
         if self._parent is None:
             return self._flist.rootpath
 
-        if self._parent.abspath == '':
+        if self._parent.abspath == "":
             raise RuntimeError("a file should always have a parent location")
 
         return os.path.join(self._parent.abspath, self.name)
@@ -56,8 +53,8 @@ class Path:
         """
         see os.path.basename()
         """
-        parent = getattr(self._obj, 'parent', None)
-        if parent == '':  # root directory
+        parent = getattr(self._obj, "parent", None)
+        if parent == "":  # root directory
             return self._flist.rootpath
 
         # case for file,link,specials
@@ -94,7 +91,7 @@ class Path:
         """
         copy a file from the local filesystem into the flist
         """
-        self._log_debug('copy file from %s to %s', src, os.path.join(self.abspath, os.path.basename(src)))
+        self._log_debug("copy file from %s to %s", src, os.path.join(self.abspath, os.path.basename(src)))
         return self._add_file(src)
 
     def copytree(self, src):
@@ -120,12 +117,12 @@ class Path:
             for name in filenames:
                 flit_dir.copy(os.path.join(dirpath, name))
 
-    def mkdir(self, name, mode='511'):
+    def mkdir(self, name, mode="511"):
         """
         create a new directory
         """
         dir = self._add_dir(name)
-        self._log_debug('create directory at %s', dir.abspath)
+        self._log_debug("create directory at %s", dir.abspath)
         return dir
 
     def files(self, pattern=None):
@@ -136,7 +133,7 @@ class Path:
 
         With the optional pattern argument, this only lists directories whose names match the given pattern. For example, d.dirs('build-*').
         """
-        return self._filter_content('file')
+        return self._filter_content("file")
 
     def dirs(self, pattern=None):
         """
@@ -146,7 +143,7 @@ class Path:
 
         With the optional pattern argument, this only lists directories whose names match the given pattern. For example, d.dirs('build-*').
         """
-        return self._filter_content('dir', pattern)
+        return self._filter_content("dir", pattern)
 
     def links(self, pattern=None):
         """
@@ -156,7 +153,7 @@ class Path:
 
         With the optional pattern argument, this only lists directories whose names match the given pattern. For example, d.dirs('build-*').
         """
-        return self._filter_content('link', pattern)
+        return self._filter_content("link", pattern)
 
     def specials(self, pattern=None):
         """
@@ -166,7 +163,7 @@ class Path:
 
         With the optional pattern argument, this only lists directories whose names match the given pattern. For example, d.dirs('build-*').
         """
-        return self._filter_content('special', pattern)
+        return self._filter_content("special", pattern)
 
     def glob(self, pattern):
         """
@@ -234,10 +231,10 @@ class Path:
         raise NotImplementedError()
 
     def _filter_content(self, ttype, pattern=None):
-        if not hasattr(self._obj, 'contents'):
+        if not hasattr(self._obj, "contents"):
             return []
 
-        if ttype not in ('file', 'dir', 'link', 'special'):
+        if ttype not in ("file", "dir", "link", "special"):
             raise ValueError("type should be one of 'file','dir', 'link','special'")
         out = []
 
@@ -246,7 +243,7 @@ class Path:
                 continue
             if pattern and not fnmatch.fnmatch(x.name, pattern):
                 continue
-            if ttype == 'dir':
+            if ttype == "dir":
                 x = self._flist.dirCollection.get(x.attributes.dir.key).dbobj
 
             out.append(Path(obj=x, parent=self, flist=self._flist))
@@ -274,7 +271,7 @@ class Path:
         new_inode.aclkey = self._obj.aclkey
         new_inode.modificationTime = j.data.time.epoch
         new_inode.creationTime = new_inode.modificationTime
-        new_inode.attributes.dir = new_inode.attributes.init('dir')
+        new_inode.attributes.dir = new_inode.attributes.init("dir")
         new_inode.attributes.dir.key = dir_sub_key
 
         self._obj.modificationTime = now
@@ -301,10 +298,10 @@ class Path:
 
         if S_ISLNK(src_stat.st_mode):
             # Checking absolute path, relative may fail
-            new_inode.attributes.link = new_inode.attributes.init('link')
+            new_inode.attributes.link = new_inode.attributes.init("link")
             new_inode.attributes.link.target = os.readlink(src)
         elif S_ISREG(src_stat.st_mode):
-            new_inode.attributes.file = new_inode.attributes.init('file')
+            new_inode.attributes.file = new_inode.attributes.init("file")
             new_inode.attributes.file.blockSize = 128  # FIXME ?
             fullpath = os.path.abspath(src)
             self._log_debug("[+] populating: %s" % fullpath)
@@ -314,7 +311,7 @@ class Path:
                 return
 
             for index, value in enumerate(hashs):
-                hashs[index].pop('data', None)
+                hashs[index].pop("data", None)
 
             new_inode.attributes.file.blocks = hashs
             # keep the path of the added file, so we can upload the content of the file on the backend
@@ -322,7 +319,7 @@ class Path:
             self._flist._added_files.add(src)
         else:
             # special file
-            new_inode.attributes.special = new_inode.attributes.init('special')
+            new_inode.attributes.special = new_inode.attributes.init("special")
             if S_ISSOCK(src_stat.st_mode):
                 new_inode.attributes.special.type = "socket"
             elif S_ISBLK(src_stat.st_mode):
@@ -335,7 +332,7 @@ class Path:
                 new_inode.attributes.special.type = "unknown"
 
             if S_ISBLK(src_stat.st_mode) or S_ISCHR(src_stat.st_mode):
-                id = '%d,%d' % (os.major(src_stat.st_rdev), os.minor(src_stat.st_rdev))
+                id = "%d,%d" % (os.major(src_stat.st_rdev), os.minor(src_stat.st_rdev))
                 new_inode.attributes.special.data = id
 
         # set ACI on new inode
@@ -365,7 +362,7 @@ class Path:
 
     def _new_inode(self):
         prev_content = [x.copy() for x in self._obj.contents]
-        contents = self._obj.init('contents', len(self._obj.contents) + 1)
+        contents = self._obj.init("contents", len(self._obj.contents) + 1)
 
         for i, x in enumerate(prev_content):
             # copy old content over

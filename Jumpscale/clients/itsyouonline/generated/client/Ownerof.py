@@ -6,9 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class Ownerof( ):
+class Ownerof:
     """
     auto-generated. don't touch.
     """
@@ -25,15 +23,16 @@ class Ownerof( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Ownerof'
+        class_name = "Ownerof"
         data = json or kwargs
 
         # set attributes
         data_types = [EmailAddress]
         self.emailaddresses = client_support.set_property(
-            'emailaddresses', data, data_types, False, [], True, True, class_name)
+            "emailaddresses", data, data_types, False, [], True, True, class_name
+        )
 
     def __str__(self):
         return self.as_json(indent=4)

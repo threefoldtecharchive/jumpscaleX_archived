@@ -15,7 +15,7 @@ class VirtualboxClient(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
 
-        self.vms={}
+        self.vms = {}
         self.disks = {}
 
     def _cmd(self, cmd):
@@ -36,7 +36,7 @@ class VirtualboxClient(j.application.JSBaseClass):
                 continue
             pre, post = l.split("{", 1)
             guid = post.split("}", 1)[0]
-            name = pre.strip().strip("\"").strip()
+            name = pre.strip().strip('"').strip()
             result[name.lower().strip()] = guid.strip()
         return result
 
@@ -64,7 +64,6 @@ class VirtualboxClient(j.application.JSBaseClass):
         """
         out = self._cmd("list hdds -l")
 
-
         return self._parse(out, identifier="UUID:")
 
     def hostonlyifs_list(self):
@@ -81,6 +80,7 @@ class VirtualboxClient(j.application.JSBaseClass):
         for vm in self.vms_get():
             vm.stop()
             from time import sleep
+
             sleep(5)
             vm.delete()
         for disk in self.vdisks_get():

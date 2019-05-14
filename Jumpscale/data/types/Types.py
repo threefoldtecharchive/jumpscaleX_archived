@@ -1,4 +1,4 @@
-'''Definition of several primitive type properties (integer, string,...)'''
+"""Definition of several primitive type properties (integer, string,...)"""
 from Jumpscale import j
 from .AdvTypes import *
 from .CollectionTypes import *
@@ -11,17 +11,40 @@ from .List import *
 import copy
 
 
-
 class Types(j.application.JSBaseClass):
 
     __jslocation__ = "j.data.types"
 
     def _init(self):
-        #JSConfigObjectFactory
-        self._types_list = [List,Dictionary, Guid, Path, Boolean, Integer, Float, String, Bytes, StringMultiLine,
-                            IPRange, IPPort, Tel, YAML, JSON, Email, Date, DateTime, Numeric, Percent,
-                            Hash, CapnpBin, JSDataObjectFactory, Url, Enumeration, IPAddress]
-
+        # JSConfigObjectFactory
+        self._types_list = [
+            List,
+            Dictionary,
+            Guid,
+            Path,
+            Boolean,
+            Integer,
+            Float,
+            String,
+            Bytes,
+            StringMultiLine,
+            IPRange,
+            IPPort,
+            Tel,
+            YAML,
+            JSON,
+            Email,
+            Date,
+            DateTime,
+            Numeric,
+            Percent,
+            Hash,
+            CapnpBin,
+            JSDataObjectFactory,
+            Url,
+            Enumeration,
+            IPAddress,
+        ]
 
         self._TypeBaseObjClass = TypeBaseObjClass
 
@@ -32,7 +55,7 @@ class Types(j.application.JSBaseClass):
             name = typeclass.NAME.strip().strip("_").lower()
             if "," in name:
                 aliases = [name.strip() for name in name.split(",")]
-                name=aliases[0]
+                name = aliases[0]
                 aliases.pop(aliases.index(name))
             else:
                 aliases = None
@@ -40,9 +63,9 @@ class Types(j.application.JSBaseClass):
 
             o = self.__attach(name, typeclass)
             if name in self._type_check_list:
-                raise RuntimeError("there is duplicate type:%s"%name)
-            if not hasattr(o,"NOCHECK") or o.NOCHECK is False:
-                if not hasattr(typeclass,"CUSTOM") or typeclass.CUSTOM is False:
+                raise RuntimeError("there is duplicate type:%s" % name)
+            if not hasattr(o, "NOCHECK") or o.NOCHECK is False:
+                if not hasattr(typeclass, "CUSTOM") or typeclass.CUSTOM is False:
                     self._type_check_list.append(name)
             if aliases:
                 for alias in aliases:
@@ -52,17 +75,15 @@ class Types(j.application.JSBaseClass):
 
         self.list = List()
 
-
     def __attach(self, name, typeclass):
         name = name.strip().lower()
         name2 = "_%s" % name
         typeclass.NAME = name
         self.__dict__[name2] = typeclass  # attach class
 
-
-        if not hasattr(typeclass,"CUSTOM") or typeclass.CUSTOM is False:
+        if not hasattr(typeclass, "CUSTOM") or typeclass.CUSTOM is False:
             o = typeclass()
-            o._jsx_location = "j.data.types.%s"%name
+            o._jsx_location = "j.data.types.%s" % name
             self.__dict__[name] = o
 
             return o
@@ -77,8 +98,7 @@ class Types(j.application.JSBaseClass):
                 return ttype
         raise RuntimeError("did not detect val for :%s" % val)
 
-
-    def get(self, ttype, default=None,cache=True):
+    def get(self, ttype, default=None, cache=True):
         """
 
         mytype = j.data.types.get("s") #will return string type (which is a primitive type)  !!!TYPES!!!
@@ -120,23 +140,23 @@ class Types(j.application.JSBaseClass):
 
         ttype = ttype.lower().strip()
 
-        if ttype!="list" and ttype.startswith("l"):
-            default = {"default":default,"subtype":ttype[1:]}
+        if ttype != "list" and ttype.startswith("l"):
+            default = {"default": default, "subtype": ttype[1:]}
             ttype = "list"
 
-        #check if there is an alias
+        # check if there is an alias
         if ttype in self._aliases:
             ttype = self._aliases[ttype]
 
         klasstype = "_%s" % ttype
         if klasstype not in self.__dict__:
-            raise RuntimeError("did not find type class:%s"%klasstype)
-        tt_class = self.__dict__[klasstype]  #is the class
+            raise RuntimeError("did not find type class:%s" % klasstype)
+        tt_class = self.__dict__[klasstype]  # is the class
 
         if default:
             # key0=default_copy.replace(" ","").replace(",","_").replace("[","").replace("]","").replace("\"","")
             key0 = j.data.hash.md5_string(str(default))
-            key="%s_%s"%(tt_class.NAME,key0)
+            key = "%s_%s" % (tt_class.NAME, key0)
         else:
             if ttype not in self.__dict__:
                 raise j.exceptions.RuntimeError("did not find type:'%s'" % ttype)
@@ -146,7 +166,7 @@ class Types(j.application.JSBaseClass):
             return self._types[key]
 
         tt = tt_class(default=default)
-        tt._jsx_location = "j.data.types._types['%s']"%key
+        tt._jsx_location = "j.data.types._types['%s']" % key
 
         # #not sure this is the right way (despiegk)
         # if ttype.startswith("l"):
@@ -156,8 +176,6 @@ class Types(j.application.JSBaseClass):
         self._types[key] = tt
 
         return self._types[key]
-
-
 
     def test(self, name=""):
         """
@@ -196,7 +214,7 @@ class Types(j.application.JSBaseClass):
                     if val not in res:
                         res.append(val)
         elif j.data.types.bool.check(default):
-            if str(val).lower() in ['true', "1", "y", "yes"]:
+            if str(val).lower() in ["true", "1", "y", "yes"]:
                 res = True
             else:
                 res = False

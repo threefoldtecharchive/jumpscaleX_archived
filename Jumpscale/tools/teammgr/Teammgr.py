@@ -75,16 +75,13 @@ class Person(j.application.JSBaseClass):
             return
         # make sure we have an unprocessed.jpg
         images = j.sal.fs.listFilesInDir(self.path, filter="*.jpg")
-        unprocessed_images = [
-            item for item in images if j.sal.fs.getBaseName(item) == "unprocessed.jpg"]
+        unprocessed_images = [item for item in images if j.sal.fs.getBaseName(item) == "unprocessed.jpg"]
         if images and not unprocessed_images:
             # did not have an unprocessed one need to copy to unprocessed name
             image = images[0]
-            j.sal.fs.renameFile(image, "%s/unprocessed.jpg" %
-                                (j.sal.fs.getDirName(image)))
+            j.sal.fs.renameFile(image, "%s/unprocessed.jpg" % (j.sal.fs.getDirName(image)))
         elif not unprocessed_images:
-            self.add_to_do(
-                self.path, "did not find unprocessed picture, please add")
+            self.add_to_do(self.path, "did not find unprocessed picture, please add")
 
     def readme_fix(self):
         if self.link:
@@ -99,7 +96,8 @@ class Person(j.application.JSBaseClass):
         self._log_debug("readmefix")
 
         from IPython import embed
-        embed(colors='Linux')
+
+        embed(colors="Linux")
 
         C = """
         # Homepage for $name
@@ -145,6 +143,7 @@ class Person(j.application.JSBaseClass):
             newdest = j.sal.fs.getDirName(path).rstrip("/") + "/" + bn
             newdest = newdest.replace("//", "/")
             return newdest, bn
+
         newdest, bn = process(self.path)
         if bn != bn_org:
 
@@ -195,16 +194,17 @@ class Person(j.application.JSBaseClass):
                 try:
                     tomlupdate = j.data.serializers.toml.load(toml_path)
                 except Exception:
-                    self.department.add_to_do(
-                        self.path, "toml file is corrupt:%s" % toml_path)
+                    self.department.add_to_do(self.path, "toml file is corrupt:%s" % toml_path)
                     return newtoml
 
-                newtoml, errors = j.data.serializers.toml.merge(newtoml, tomlupdate, keys_replace={
-                                                               'name': 'first_name'}, add_non_exist=False, die=False, errors=[])
+                newtoml, errors = j.data.serializers.toml.merge(
+                    newtoml, tomlupdate, keys_replace={"name": "first_name"}, add_non_exist=False, die=False, errors=[]
+                )
 
                 for error in errors:
                     self.department.add_to_do(
-                        self.path, "could not find key:'%s', value to add was: '%s' in template" % (error[0], error[1]))
+                        self.path, "could not find key:'%s', value to add was: '%s' in template" % (error[0], error[1])
+                    )
 
             return newtoml
 
@@ -212,8 +212,7 @@ class Person(j.application.JSBaseClass):
         j.sal.fs.remove("%s/fixed.yaml" % self.path)
         j.sal.fs.remove("%s/fixed.toml" % self.path)
 
-        new_toml = j.data.serializers.toml.loads(
-            TEMPLATE_PERSON_TOML)  # load the template
+        new_toml = j.data.serializers.toml.loads(TEMPLATE_PERSON_TOML)  # load the template
 
         new_toml = process(new_toml, "fixed_donotchange")
         new_toml = process(new_toml, "profile")
@@ -223,16 +222,27 @@ class Person(j.application.JSBaseClass):
         if self.department.name not in new_toml["departments"]:
             new_toml["departments"].append(self.department.name)
 
-        for item in ["login", "first_name", "last_name", "description_public_formal", "description_public_friendly",
-                     "pub_ssh_key", "telegram", "reports_into", "locations", "departments", "title", "mobile", "email"]:
+        for item in [
+            "login",
+            "first_name",
+            "last_name",
+            "description_public_formal",
+            "description_public_friendly",
+            "pub_ssh_key",
+            "telegram",
+            "reports_into",
+            "locations",
+            "departments",
+            "title",
+            "mobile",
+            "email",
+        ]:
             if not new_toml[item]:
-                self.department.add_to_do(
-                    self.path, "empty value for:%s" % item)
+                self.department.add_to_do(self.path, "empty value for:%s" % item)
 
         # make lower case
         for key in ["locations", "companies", "departments"]:
-            new_toml[key] = [toml_item.lower().strip()
-                             for toml_item in new_toml[key]]
+            new_toml[key] = [toml_item.lower().strip() for toml_item in new_toml[key]]
 
         for key in ["login", "first_name", "last_name", "telegram", "skype"]:
             new_toml[key] = new_toml[key].lower().strip()
@@ -336,15 +346,13 @@ class Teammgr(j.application.JSBaseClass):
                 break
             path0 = j.sal.fs.getParent(path0).rstrip().rstrip("/").rstrip()
         if not found:
-            raise RuntimeError(
-                "could not find /team in one of the parent dir's (or this dir):'%s'" % path)
+            raise RuntimeError("could not find /team in one of the parent dir's (or this dir):'%s'" % path)
 
         self.path = "%s/team" % path0
 
         for department_path in j.sal.fs.listDirsInDir(self.path, recursive=False):
             department_name = j.sal.fs.getBaseName(department_path)
-            department_obj = self._add_department(
-                department_path, department_name)
+            department_obj = self._add_department(department_path, department_name)
 
             self.errors_write(self.path)
 
@@ -359,8 +367,7 @@ class Teammgr(j.application.JSBaseClass):
                 j.sal.fs.writeFile(path1, department.todo_md)
 
     def test(self):
-        path = j.clients.git.pullGitRepo(
-            "ssh://git@docs.grid.tf:10022/gig/data_team.git")
+        path = j.clients.git.pullGitRepo("ssh://git@docs.grid.tf:10022/gig/data_team.git")
         self.load(path=path + "/team")
 
 

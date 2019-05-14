@@ -1,4 +1,3 @@
-
 from .Session import Session
 from Jumpscale import j
 import libtmux as tmuxp
@@ -9,7 +8,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class Tmux(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.tools.tmux"
         JSBASE.__init__(self)
@@ -36,23 +34,22 @@ class Tmux(j.application.JSBaseClass):
     def _find_procs_by_name(self, name, startswith_is_ok=True):
         "Return a list of processes matching 'name'."
         ls = []
-        for p in psutil.process_iter(attrs=['name']):
+        for p in psutil.process_iter(attrs=["name"]):
             # print(p.info['name'])
-            if p.info['name'] is None:
+            if p.info["name"] is None:
                 if p.status() == "zombie":
                     j.sal.process.kill(p.pid)
                     continue
             if startswith_is_ok:
-                if p.info['name'].startswith(name):
+                if p.info["name"].startswith(name):
                     ls.append(p)
             else:
-                if p.info['name'] == name:
+                if p.info["name"] == name:
                     ls.append(p)
         return ls
 
     @property
     def server(self):
-
         def start():
             cmd = "/sandbox/bin/js_mux start"
             j.sal.process.execute(cmd, die=True)
@@ -90,7 +87,10 @@ class Tmux(j.application.JSBaseClass):
         """
         js_shell 'j.tools.tmux.kill()'
         """
-        if len(j.sal.process.getPidsByFilter("tmux")) == 1 and len(j.sal.process.getPidsByFilter("tmux -f /sandbox/cfg/.tmux.conf")) == 1:
+        if (
+            len(j.sal.process.getPidsByFilter("tmux")) == 1
+            and len(j.sal.process.getPidsByFilter("tmux -f /sandbox/cfg/.tmux.conf")) == 1
+        ):
             # means is only our tmux running so can stop cleanly
             self.session.kill()
         # kill remaining processes
@@ -111,9 +111,19 @@ class Tmux(j.application.JSBaseClass):
         p.execute(cmd)
         return p
 
-    def cmd_get(self,name,window_name=None,pane_name="main",
-                cmd="",path=None,timeout=30,
-                env={},ports=[],cmd_stop=None,process_strings=[]):
+    def cmd_get(
+        self,
+        name,
+        window_name=None,
+        pane_name="main",
+        cmd="",
+        path=None,
+        timeout=30,
+        env={},
+        ports=[],
+        cmd_stop=None,
+        process_strings=[],
+    ):
         """
 
         example
@@ -146,13 +156,20 @@ class Tmux(j.application.JSBaseClass):
 
         pane = window.pane_get(pane_name)
 
-        startup_cmd = j.tools.startupcmd.get(name=name, cmd=cmd, path=path, timeout=timeout,
-                                            env=env,ports=ports,cmd_stop=cmd_stop,process_strings=process_strings)
+        startup_cmd = j.tools.startupcmd.get(
+            name=name,
+            cmd=cmd,
+            path=path,
+            timeout=timeout,
+            env=env,
+            ports=ports,
+            cmd_stop=cmd_stop,
+            process_strings=process_strings,
+        )
 
         startup_cmd._pane_ = pane
 
         return startup_cmd
-
 
     def panes_2x2_get(self, window_name="multi", reset=True):
         """
@@ -244,7 +261,7 @@ class Tmux(j.application.JSBaseClass):
 
         p = self.execute("ls /", "multi", "p22")
 
-        assert p.process_obj.name()=="bash"
+        assert p.process_obj.name() == "bash"
 
         time.sleep(2)
         p.process_obj_child
@@ -265,12 +282,11 @@ class Tmux(j.application.JSBaseClass):
 
         assert p.process_obj_child.name() == "htop"
 
-        assert p.process_obj.name()=="bash"
+        assert p.process_obj.name() == "bash"
 
-        assert p.process_obj_child.name()=="htop"
+        assert p.process_obj_child.name() == "htop"
 
-
-        p = self.execute("find /tmp","test","test")
+        p = self.execute("find /tmp", "test", "test")
 
         res = p.out_get()
         p = self.pane_get("test2", "test2", reset=True)

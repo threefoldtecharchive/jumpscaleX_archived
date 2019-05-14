@@ -3,34 +3,24 @@ from Jumpscale import j
 from . import typchk
 
 
-class BtrfsManager():
-    _create_chk = typchk.Checker({
-        'label': str,
-        'metadata': typchk.Enum("raid0", "raid1", "raid5", "raid6", "raid10", "dup", "single", ""),
-        'data': typchk.Enum("raid0", "raid1", "raid5", "raid6", "raid10", "dup", "single", ""),
-        'devices': typchk.Length([str], 1),
-        'overwrite': bool,
-    })
+class BtrfsManager:
+    _create_chk = typchk.Checker(
+        {
+            "label": str,
+            "metadata": typchk.Enum("raid0", "raid1", "raid5", "raid6", "raid10", "dup", "single", ""),
+            "data": typchk.Enum("raid0", "raid1", "raid5", "raid6", "raid10", "dup", "single", ""),
+            "devices": typchk.Length([str], 1),
+            "overwrite": bool,
+        }
+    )
 
-    _device_chk = typchk.Checker({
-        'mountpoint': str,
-        'devices': typchk.Length((str,), 1),
-    })
+    _device_chk = typchk.Checker({"mountpoint": str, "devices": typchk.Length((str,), 1)})
 
-    _subvol_chk = typchk.Checker({
-        'path': str,
-    })
+    _subvol_chk = typchk.Checker({"path": str})
 
-    _subvol_quota_chk = typchk.Checker({
-        'path': str,
-        'limit': str,
-    })
+    _subvol_quota_chk = typchk.Checker({"path": str, "limit": str})
 
-    _subvol_snapshot_chk = typchk.Checker({
-        'source': str,
-        'destination': str,
-        'read_only': bool,
-    })
+    _subvol_snapshot_chk = typchk.Checker({"source": str, "destination": str, "read_only": bool})
 
     def __init__(self, client):
         self._client = client
@@ -39,13 +29,13 @@ class BtrfsManager():
         """
         List all btrfs filesystem
         """
-        return self._client.json('btrfs.list', {})
+        return self._client.json("btrfs.list", {})
 
     def info(self, mountpoint):
         """
         Get btrfs fs info
         """
-        return self._client.json('btrfs.info', {'mountpoint': mountpoint})
+        return self._client.json("btrfs.info", {"mountpoint": mountpoint})
 
     def create(self, label, devices, metadata_profile="", data_profile="", overwrite=False):
         """
@@ -57,15 +47,15 @@ class BtrfsManager():
         :overwrite: force creation of the filesystem. Overwrite any existing filesystem
         """
         args = {
-            'label': label,
-            'metadata': metadata_profile,
-            'data': data_profile,
-            'devices': devices,
-            'overwrite': overwrite
+            "label": label,
+            "metadata": metadata_profile,
+            "data": data_profile,
+            "devices": devices,
+            "overwrite": overwrite,
         }
 
         self._create_chk.check(args)
-        self._client.sync('btrfs.create', args)
+        self._client.sync("btrfs.create", args)
 
     def device_add(self, mountpoint, *device):
         """
@@ -78,12 +68,9 @@ class BtrfsManager():
         if len(device) == 0:
             return
 
-        args = {
-            'mountpoint': mountpoint,
-            'devices': device,
-        }
+        args = {"mountpoint": mountpoint, "devices": device}
         self._device_chk.check(args)
-        self._client.sync('btrfs.device_add', args)
+        self._client.sync("btrfs.device_add", args)
 
     def device_remove(self, mountpoint, *device):
         """
@@ -96,45 +83,36 @@ class BtrfsManager():
         if len(device) == 0:
             return
 
-        args = {
-            'mountpoint': mountpoint,
-            'devices': device,
-        }
+        args = {"mountpoint": mountpoint, "devices": device}
 
         self._device_chk.check(args)
-        self._client.sync('btrfs.device_remove', args)
+        self._client.sync("btrfs.device_remove", args)
 
     def subvol_create(self, path):
         """
         Create a btrfs subvolume in the specified path
         :param path: path to create
         """
-        args = {
-            'path': path
-        }
+        args = {"path": path}
         self._subvol_chk.check(args)
-        self._client.sync('btrfs.subvol_create', args)
+        self._client.sync("btrfs.subvol_create", args)
 
     def subvol_list(self, path):
         """
         List a btrfs subvolume in the specified path
         :param path: path to be listed
         """
-        return self._client.json('btrfs.subvol_list', {
-            'path': path
-        })
+        return self._client.json("btrfs.subvol_list", {"path": path})
 
     def subvol_delete(self, path):
         """
         Delete a btrfs subvolume in the specified path
         :param path: path to delete
         """
-        args = {
-            'path': path
-        }
+        args = {"path": path}
 
         self._subvol_chk.check(args)
-        self._client.sync('btrfs.subvol_delete', args)
+        self._client.sync("btrfs.subvol_delete", args)
 
     def subvol_quota(self, path, limit):
         """
@@ -142,13 +120,10 @@ class BtrfsManager():
         :param path:  path to apply the quota for (it has to be the path of the subvol)
         :param limit: the limit to Apply
         """
-        args = {
-            'path': path,
-            'limit': limit,
-        }
+        args = {"path": path, "limit": limit}
 
         self._subvol_quota_chk.check(args)
-        self._client.sync('btrfs.subvol_quota', args)
+        self._client.sync("btrfs.subvol_quota", args)
 
     def subvol_snapshot(self, source, destination, read_only=False):
         """
@@ -160,11 +135,7 @@ class BtrfsManager():
         :return:
         """
 
-        args = {
-            "source": source,
-            "destination": destination,
-            "read_only": read_only,
-        }
+        args = {"source": source, "destination": destination, "read_only": read_only}
 
         self._subvol_snapshot_chk.check(args)
-        self._client.sync('btrfs.subvol_snapshot', args)
+        self._client.sync("btrfs.subvol_snapshot", args)

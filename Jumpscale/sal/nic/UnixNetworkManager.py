@@ -1,4 +1,5 @@
 from Jumpscale import j
+
 #
 import re
 import netaddr
@@ -7,6 +8,7 @@ import netaddr
 #     pass
 JSBASE = j.application.JSBaseClass
 
+
 class NetworkingError(Exception, JSBASE):
     def __init__(self, msg=""):
         JSBASE.__init__(self)
@@ -14,7 +16,6 @@ class NetworkingError(Exception, JSBASE):
 
 
 class UnixNetworkManager(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.sal.nic"
         JSBASE.__init__(self)
@@ -26,8 +27,8 @@ class UnixNetworkManager(j.application.JSBaseClass):
             raise NetworkingError("NIC doesn't exist")
 
     def configSet(self):
-        contentConfig = 'source /etc/network/interfaces.d/*\n'
-        j.tools.path.get('/etc/network/interfaces').write_text(contentConfig)
+        contentConfig = "source /etc/network/interfaces.d/*\n"
+        j.tools.path.get("/etc/network/interfaces").write_text(contentConfig)
 
     def ipGet(self, device):
         """
@@ -42,44 +43,44 @@ class UnixNetworkManager(j.application.JSBaseClass):
         ip = str(ipmask.ip)
         return (ip, netmask)
 
-    def ipSet(self, device, ip=None, netmask=None, gw=None, inet='dhcp', commit=False):
+    def ipSet(self, device, ip=None, netmask=None, gw=None, inet="dhcp", commit=False):
         """
         Return all interfaces that has this ifname
         """
         self._nicExists(device)
 
-        if inet not in ['static', 'dhcp']:
-            raise ValueError('Invalid inet .. use either dhcp or static')
+        if inet not in ["static", "dhcp"]:
+            raise ValueError("Invalid inet .. use either dhcp or static")
 
-        if inet == 'static' and (not ip or not netmask):
-            raise ValueError('ip, and netmask, are required in static inet.')
+        if inet == "static" and (not ip or not netmask):
+            raise ValueError("ip, and netmask, are required in static inet.")
 
-        file = j.tools.path.get('/etc/network/interfaces.d/%s' % device)
-        content = 'auto %s\n' % device
+        file = j.tools.path.get("/etc/network/interfaces.d/%s" % device)
+        content = "auto %s\n" % device
 
-        if inet == 'dhcp':
-            content += 'iface %s inet dhcp\n' % device
+        if inet == "dhcp":
+            content += "iface %s inet dhcp\n" % device
         else:
-            content += 'iface %s inet static\naddress %s\nnetmask %s\n' % (device, ip, netmask)
+            content += "iface %s inet static\naddress %s\nnetmask %s\n" % (device, ip, netmask)
             if gw:
-                content += 'gateway %s\n' % gw
+                content += "gateway %s\n" % gw
 
         file.write_text(content)
 
         if commit:
             self.commit(device)
         else:
-            self._log_info('Do NOT FORGET TO COMMIT')
+            self._log_info("Do NOT FORGET TO COMMIT")
 
     def ipReset(self, device, commit=False):
         self._nicExists(device)
-        file = j.tools.path.get('/etc/network/interfaces.d/%s' % device)
-        file.write_text('')
+        file = j.tools.path.get("/etc/network/interfaces.d/%s" % device)
+        file.write_text("")
 
         if commit:
             self.commit()
         else:
-            self._log_info('Do NOT FORGET TO COMMIT')
+            self._log_info("Do NOT FORGET TO COMMIT")
 
     @property
     def nics(self):
@@ -87,17 +88,17 @@ class UnixNetworkManager(j.application.JSBaseClass):
             _, ifaces, _ = self._executor.execute("""ifconfig -a | sed 's/[ \t].*//;/^$/d'""")
             self._nics = [iface for iface in ifaces.splitlines() if iface]
 
-        self._nics = [nic.replace(':', '') for nic in self._nics]
+        self._nics = [nic.replace(":", "") for nic in self._nics]
         return self._nics
 
     def commit(self, device=None):
-        #- make sure loopback exist
+        # - make sure loopback exist
         self.configSet()
-        content = 'auto lo\niface lo inet loopback\n'
-        j.tools.path.get('/etc/network/interfaces.d/lo').write_text(content)
+        content = "auto lo\niface lo inet loopback\n"
+        j.tools.path.get("/etc/network/interfaces.d/lo").write_text(content)
         if device:
-            self._log_info('Restarting interface %s' % device)
+            self._log_info("Restarting interface %s" % device)
             (ip, _) = self.ipGet(device)
-            self._executor.execute('ip a del %s dev %s'% (ip, device))
-        self._executor.execute('systemctl restart networking')
-        self._log_info('DONE')
+            self._executor.execute("ip a del %s dev %s" % (ip, device))
+        self._executor.execute("systemctl restart networking")
+        self._log_info("DONE")

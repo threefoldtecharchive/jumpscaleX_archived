@@ -2,8 +2,9 @@ from Jumpscale import j
 import copy
 
 JSBASE = j.application.JSBaseClass
-class SerializerDict(j.application.JSBaseClass):
 
+
+class SerializerDict(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
 
@@ -19,16 +20,17 @@ class SerializerDict(j.application.JSBaseClass):
         return res
 
     def set_value(
-            self,
-            dictsource,
-            key,
-            val,
-            add_non_exist=False,
-            die=True,
-            errors=[],
-            listunique=False,
-            listsort=True,
-            liststrip=True):
+        self,
+        dictsource,
+        key,
+        val,
+        add_non_exist=False,
+        die=True,
+        errors=[],
+        listunique=False,
+        listsort=True,
+        liststrip=True,
+    ):
         """
         start from a dict template (we only go 1 level deep)
 
@@ -45,8 +47,7 @@ class SerializerDict(j.application.JSBaseClass):
                 return dictsource, errors
             else:
                 if die:
-                    raise j.exceptions.Input(
-                        "dictsource does not have key:%s, can insert value" % key)
+                    raise j.exceptions.Input("dictsource does not have key:%s, can insert value" % key)
                 else:
                     errors.append((key, val))
                     return dictsource, errors
@@ -55,21 +56,19 @@ class SerializerDict(j.application.JSBaseClass):
             # check is list & set the types accordingly
             if j.data.types.string.check(val):
                 if "," in val:
-                    val = [item.replace("'", "").strip()
-                           for item in val.split(",")]
+                    val = [item.replace("'", "").strip() for item in val.split(",")]
                 else:
                     val = [val]
             elif j.data.types.int.check(val) or j.data.types.float.check(val):
                 val = [val]
 
             if listunique:
-                dictsource[key] = self._unique_list(
-                    val, sort=listsort, strip=liststrip)
+                dictsource[key] = self._unique_list(val, sort=listsort, strip=liststrip)
             else:
                 dictsource[key] = val
 
         elif j.data.types.bool.check(dictsource[key]):
-            if str(val).lower() in ['true', "1", "y", "yes"]:
+            if str(val).lower() in ["true", "1", "y", "yes"]:
                 val = True
             else:
                 val = False
@@ -80,22 +79,33 @@ class SerializerDict(j.application.JSBaseClass):
             try:
                 dictsource[key] = int(val)
             except ValueError:
-                raise ValueError("Expected value of \"{}\" should be of type int or a string of int.".format(key))
+                raise ValueError('Expected value of "{}" should be of type int or a string of int.'.format(key))
         elif j.data.types.float.check(dictsource[key]):
             try:
                 dictsource[key] = float(val)
             except ValueError:
-                raise ValueError("Expected value of \"{}\" should be of type float or a string of float.".format(key))
+                raise ValueError('Expected value of "{}" should be of type float or a string of float.'.format(key))
         elif j.data.types.string.check(dictsource[key]):
             if not j.data.types.string.check(val):
-                raise ValueError("Expected value of \"{}\" should be of type string.".format(key))
+                raise ValueError('Expected value of "{}" should be of type string.'.format(key))
             dictsource[key] = j.core.text.strip(str(val))
         else:
             raise ValueError("could not find type of:%s" % dictsource[key])
 
         return dictsource, errors
 
-    def merge(self, dictsource={}, dictupdate={}, keys_replace={}, add_non_exist=False, die=True, errors=[], listunique=False, listsort=True, liststrip=True):
+    def merge(
+        self,
+        dictsource={},
+        dictupdate={},
+        keys_replace={},
+        add_non_exist=False,
+        die=True,
+        errors=[],
+        listunique=False,
+        listsort=True,
+        liststrip=True,
+    ):
         """
         the values of the dictupdate will be applied on dictsource (can be a template)
 
@@ -108,8 +118,7 @@ class SerializerDict(j.application.JSBaseClass):
 
         """
         if not j.data.types.dict.check(dictsource) or not j.data.types.dict.check(dictupdate):
-            raise j.exceptions.Input(
-                "dictsource and dictupdate need to be dicts")
+            raise j.exceptions.Input("dictsource and dictupdate need to be dicts")
 
         keys = [item for item in dictupdate.keys()]
         keys.sort()
@@ -120,6 +129,15 @@ class SerializerDict(j.application.JSBaseClass):
             val = dictupdate[key]
             if key in keys_replace.keys():
                 key = keys_replace[key]
-            dictsource, errors = self.set_value(dictsource, key, val, add_non_exist=add_non_exist, die=die,
-                                                errors=errors, listunique=listunique, listsort=listsort, liststrip=liststrip)
+            dictsource, errors = self.set_value(
+                dictsource,
+                key,
+                val,
+                add_non_exist=add_non_exist,
+                die=die,
+                errors=errors,
+                listunique=listunique,
+                listsort=listsort,
+                liststrip=liststrip,
+            )
         return dictsource, errors

@@ -1,5 +1,6 @@
 from .EmailClient import EmailClient
 from Jumpscale import j
+
 JSConfigs = j.application.JSBaseConfigsClass
 
 

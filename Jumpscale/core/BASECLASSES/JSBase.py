@@ -1,13 +1,14 @@
 from Jumpscale import j
 import os
+
 # import copy
 # import sys
 import inspect
 import types
 
-class JSBase:
 
-    def __init__(self, parent=None, topclass=True,**kwargs):
+class JSBase:
+    def __init__(self, parent=None, topclass=True, **kwargs):
         """
         :param parent: parent is object calling us
         :param topclass: if True means no-one inherits from us
@@ -34,34 +35,33 @@ class JSBase:
             self.__class__._test_runs = {}
             self.__class__._test_runs_error = {}
 
-            if not hasattr(self.__class__,"_name"):
+            if not hasattr(self.__class__, "_name"):
                 self.__class__._name = j.core.text.strip_to_ascii_dense(str(self.__class__)).split(".")[-1].lower()
             # short location name:
-            if '__jslocation__' in self.__dict__:
+            if "__jslocation__" in self.__dict__:
                 self.__class__._location = self.__jslocation__
-            elif '__jslocation__' in self.__class__.__dict__:
+            elif "__jslocation__" in self.__class__.__dict__:
                 self.__class__._location = self.__class__.__jslocation__
-            elif '__jscorelocation__' in self.__dict__:
+            elif "__jscorelocation__" in self.__dict__:
                 self.__class__._location = self.__jslocation__
             else:
                 self.__class__._location = None
                 parent = self._parent
                 while parent is not None:
-                    if hasattr(parent,"__jslocation__"):
+                    if hasattr(parent, "__jslocation__"):
                         self.__class__._location = parent.__jslocation__
                         break
                     parent = parent._parent
                 if self.__class__._location is None:
                     self.__class__._location = self.__class__._name
 
-            #walk to all parents, let them know that there are child classes
+            # walk to all parents, let them know that there are child classes
             self.__class__._class_children = []
             parent = self._parent
             while parent is not None:
                 if parent.__class__ not in parent._class_children:
                     parent._class_children.append(parent.__class__)
                 parent = parent._parent
-
 
             self.__class__._methods_ = []
             self.__class__._properties_ = []
@@ -74,9 +74,9 @@ class JSBase:
 
             self.__class__._class_init_done = True
 
-            self._key = "%s:%s" % (self.__class__._location,self.__class__._name)
+            self._key = "%s:%s" % (self.__class__._location, self.__class__._name)
 
-            #lets make sure the initial loglevel gets set
+            # lets make sure the initial loglevel gets set
             self._logger_set(children=False, parents=False)
 
     def _logging_enable_check(self):
@@ -92,22 +92,23 @@ class JSBase:
         :return: True if logging is enabled
         :rtype: bool
         """
-        if j.core.myenv.config.get("DEBUG",False):
+        if j.core.myenv.config.get("DEBUG", False):
             return True
         self._key = self._key.lower()
+
         def check(checkitems):
             for finditem in checkitems:
                 finditem = finditem.strip().lower()
-                if finditem=="*":
+                if finditem == "*":
                     return True
-                if finditem=="":
+                if finditem == "":
                     continue
                 if "*" in finditem:
-                    if finditem[-1]=="*":
-                        #means at end
+                    if finditem[-1] == "*":
+                        # means at end
                         if self._key.startswith(finditem[:-1]):
                             return True
-                    elif finditem[0]=="*":
+                    elif finditem[0] == "*":
                         if self._key.endswith(finditem[1:]):
                             return True
                     else:
@@ -121,8 +122,7 @@ class JSBase:
             return True
         return False
 
-
-    def _logger_set(self,minlevel=None, children=True, parents=True):
+    def _logger_set(self, minlevel=None, children=True, parents=True):
         """
 
         :param min_level if not set then will use the LOGGER_LEVEL from /sandbox/cfg/jumpscale_config.toml
@@ -147,11 +147,11 @@ class JSBase:
         :return:
         """
         if minlevel is not None or self._logging_enable_check():
-            #if minlevel specified we overrule anything
+            # if minlevel specified we overrule anything
 
             # print ("%s:loginit"%self.__class__._name)
             if minlevel is None:
-                minlevel = int(j.core.myenv.config.get("LOGGER_LEVEL",15))
+                minlevel = int(j.core.myenv.config.get("LOGGER_LEVEL", 15))
 
             if minlevel is not None or not self._logging_enable_check():
 
@@ -169,21 +169,19 @@ class JSBase:
                         # print("%s:minlevel:%s"%(kl,minlevel))
                         kl._logger_min_level = minlevel
 
-
-
-
     def _init(self):
         pass
 
-
-    def _init2(self,**kwargs):
+    def _init2(self, **kwargs):
         """
         meant to be used by developers of the base classes
         :return:
         """
         self._obj_cache_reset()
-        self._key = "%s:%s" % (self.__class__._location,self.__class__._name) #needs to be done 2, first in class init
-
+        self._key = "%s:%s" % (
+            self.__class__._location,
+            self.__class__._name,
+        )  # needs to be done 2, first in class init
 
     def _obj_cache_reset(self):
         """
@@ -203,7 +201,6 @@ class JSBase:
         if self.__class__._dirpath_ == "":
             self.__class__._dirpath_ = os.path.dirname(inspect.getfile(self.__class__))
         return self.__class__._dirpath_
-
 
     @property
     def _objid(self):
@@ -234,7 +231,6 @@ class JSBase:
 
     def _logger_enable(self):
         self._logger_set(0)
-
 
     @property
     def _cache(self):
@@ -273,23 +269,29 @@ class JSBase:
         # else:
         #     print("not inspect:%s"%self.__class__)
 
-    def _properties(self,prefix=""):
+    def _properties(self, prefix=""):
         self._inspect()
 
-        if prefix=="_":
-            return [item for item in self.__class__._properties_ if
-                    (item.startswith("_") and not item.startswith("__") and not item.endswith("_"))]
-        if prefix=="":
+        if prefix == "_":
+            return [
+                item
+                for item in self.__class__._properties_
+                if (item.startswith("_") and not item.startswith("__") and not item.endswith("_"))
+            ]
+        if prefix == "":
             return [item for item in self.__class__._properties_ if not item.startswith("_")]
         else:
             return [item for item in self.__class__._properties_ if item.startswith(prefix)]
 
-    def _methods(self,prefix=""):
+    def _methods(self, prefix=""):
         self._inspect()
-        if prefix=="_":
-            return [item for item in self.__class__._methods_ if
-                    (item.startswith("_") and not item.startswith("__") and not item.endswith("_"))]
-        if prefix=="":
+        if prefix == "_":
+            return [
+                item
+                for item in self.__class__._methods_
+                if (item.startswith("_") and not item.startswith("__") and not item.endswith("_"))
+            ]
+        if prefix == "":
             return [item for item in self.__class__._methods_ if not item.startswith("_")]
         else:
             return [item for item in self.__class__._methods_ if item.startswith(prefix)]
@@ -312,25 +314,25 @@ class JSBase:
 
     ################
 
-    def _print(self,msg,cat=""):
-        self._log(msg,cat=cat,level=15)
+    def _print(self, msg, cat=""):
+        self._log(msg, cat=cat, level=15)
 
-    def _log_debug(self,msg,cat="",data=None,context=None,_levelup=1):
-        self._log(msg,cat=cat,level=10,data=data,context=context,_levelup=_levelup)
+    def _log_debug(self, msg, cat="", data=None, context=None, _levelup=1):
+        self._log(msg, cat=cat, level=10, data=data, context=context, _levelup=_levelup)
 
-    def _log_info(self,msg,cat="",data=None,context=None,_levelup=1):
-        self._log(msg,cat=cat,level=20,data=data,context=context,_levelup=_levelup)
+    def _log_info(self, msg, cat="", data=None, context=None, _levelup=1):
+        self._log(msg, cat=cat, level=20, data=data, context=context, _levelup=_levelup)
 
-    def _log_warning(self,msg,cat="",data=None,context=None,_levelup=1):
-        self._log(msg,cat=cat,level=30,data=data,context=context,_levelup=_levelup)
+    def _log_warning(self, msg, cat="", data=None, context=None, _levelup=1):
+        self._log(msg, cat=cat, level=30, data=data, context=context, _levelup=_levelup)
 
-    def _log_error(self,msg,cat="",data=None,context=None,_levelup=1):
-        self._log(msg,cat=cat,level=40,data=data,context=context,_levelup=_levelup)
+    def _log_error(self, msg, cat="", data=None, context=None, _levelup=1):
+        self._log(msg, cat=cat, level=40, data=data, context=context, _levelup=_levelup)
 
-    def _log_critical(self,msg,cat="",data=None,context=None,_levelup=1):
-        self._log(msg,cat=cat,level=50,data=data,context=context,_levelup=_levelup)
+    def _log_critical(self, msg, cat="", data=None, context=None, _levelup=1):
+        self._log(msg, cat=cat, level=50, data=data, context=context, _levelup=_levelup)
 
-    def _log(self,msg,cat="",level=10,data=None,context=None,_levelup=1):
+    def _log(self, msg, cat="", level=10, data=None, context=None, _levelup=1):
         """
 
         :param msg: what you want to log
@@ -350,18 +352,18 @@ class JSBase:
         - DEBUG 	10
 
         """
-        if j.application.debug or self.__class__._logger_min_level-1 < level:
-            #now we will log
+        if j.application.debug or self.__class__._logger_min_level - 1 < level:
+            # now we will log
 
             frame_ = inspect.currentframe().f_back
             levelup = 0
-            while frame_ and levelup<_levelup:
+            while frame_ and levelup < _levelup:
                 frame_ = frame_.f_back
-                levelup+=1
+                levelup += 1
 
             fname = frame_.f_code.co_filename.split("/")[-1]
             defname = frame_.f_code.co_name
-            linenr= frame_.f_lineno
+            linenr = frame_.f_lineno
 
             # while obj is None and frame_:
             #     locals_ = frame_.f_locals
@@ -379,7 +381,7 @@ class JSBase:
             # if context=="":
             #     context = defname
 
-            logdict={}
+            logdict = {}
             logdict["linenr"] = linenr
             logdict["processid"] = j.application.appname
             logdict["message"] = msg
@@ -391,13 +393,15 @@ class JSBase:
                 try:
                     logdict["context"] = self._key
                 except Exception as e:
-                    from pudb import set_trace; set_trace()
+                    from pudb import set_trace
+
+                    set_trace()
                     logdict["context"] = ""
-                    pass #TODO:*1 is not good
+                    pass  # TODO:*1 is not good
             logdict["cat"] = cat
 
             logdict["data"] = data
-            if data and isinstance(data,dict):
+            if data and isinstance(data, dict):
                 # shallow copy the data to avoid changing the original data
                 hidden_data = data.copy()
                 if "password" in data or "secret" in data or "passwd" in data:
@@ -475,10 +479,8 @@ class JSBase:
 
     def __test_run(self, name=None, obj_key="main", die=True, **kwargs):
 
-
-        if name == '':
+        if name == "":
             name = None
-
 
         if name is not None:
             self._log_info("##: TEST RUN: %s" % name.upper())
@@ -501,15 +503,19 @@ class JSBase:
                         bname2 = bname
                     if bname2.endswith(".py"):
                         bname2 = bname2[:-3]
-                    if bname2.strip().lower()==name:
+                    if bname2.strip().lower() == name:
                         self.__test_run(name=bname, obj_key=obj_key, **kwargs)
                         return
-                return self._test_error(name, RuntimeError("Could not find, test:%s in %s/tests/" % (name, self._dirpath)))
+                return self._test_error(
+                    name, RuntimeError("Could not find, test:%s in %s/tests/" % (name, self._dirpath))
+                )
 
             self._log_debug("##: path: %s\n\n" % tpath)
         else:
-            items = [j.sal.fs.getBaseName(item) for item in
-                     j.sal.fs.listFilesInDir("%s/tests" % self._dirpath, recursive=False, filter="*.py")]
+            items = [
+                j.sal.fs.getBaseName(item)
+                for item in j.sal.fs.listFilesInDir("%s/tests" % self._dirpath, recursive=False, filter="*.py")
+            ]
             items.sort()
             for name in items:
                 self.__test_run(name=name, obj_key=obj_key, **kwargs)
@@ -533,37 +539,36 @@ class JSBase:
             self.__class__._test_runs[name] = res
         return res
 
-
     def __str__(self):
 
+        out = "## {GRAY}%s {RED}%s{BLUE} %s{RESET}\n\n" % (
+            self.__objcat_name,
+            self.__class__._location,
+            self.__class__.__name__,
+        )
 
-        out = "## {GRAY}%s {RED}%s{BLUE} %s{RESET}\n\n"%(self.__objcat_name,self.__class__._location,self.__class__.__name__)
-
-        def add(name,color,items,out):
-            if len(items)>0:
-                out+="{%s}### %s:\n"%(color,name)
-                if len(items)<20:
+        def add(name, color, items, out):
+            if len(items) > 0:
+                out += "{%s}### %s:\n" % (color, name)
+                if len(items) < 20:
                     for item in items:
-                        out+=" - %s\n"%item
+                        out += " - %s\n" % item
                 else:
-                    out+=" - ...\n"
-            out+="\n"
+                    out += " - ...\n"
+            out += "\n"
             return out
 
-        out = add("children","GREEN",self._properties_children(),out)
-        out = add("data","YELLOW",self._properties_model(),out)
-        out = add("methods","BLUE",self._methods(),out)
-        out = add("properties","GRAY",self._properties(),out)
+        out = add("children", "GREEN", self._properties_children(), out)
+        out = add("data", "YELLOW", self._properties_model(), out)
+        out = add("methods", "BLUE", self._methods(), out)
+        out = add("properties", "GRAY", self._properties(), out)
 
-        out+="{RESET}"
-
+        out += "{RESET}"
 
         out = j.core.tools.text_replace(out)
         print(out)
 
-        #TODO: *1 dirty hack, the ansi codes are not printed, need to check why
+        # TODO: *1 dirty hack, the ansi codes are not printed, need to check why
         return ""
-
-
 
     __repr__ = __str__

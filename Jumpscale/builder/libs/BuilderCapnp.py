@@ -4,6 +4,7 @@ JSBASE = j.builder.system._BaseClass
 
 builder_method = j.builder.system.builder_method
 
+
 class BuilderCapnp(JSBASE):
     NAME = "capnp"
 
@@ -20,12 +21,20 @@ class BuilderCapnp(JSBASE):
         # self.prefab.system.package.mdupdate()
         j.builder.buildenv.install()
         if self.tools.isUbuntu:
-            j.builder.system.package.ensure('g++')
+            j.builder.system.package.ensure("g++")
 
         # url = "https://capnproto.org/capnproto-c++-0.6.1.tar.gz"
         url = "https://capnproto.org/capnproto-c++-0.7.0.tar.gz"
-        self.tools.file_download(url, to="{}/capnproto".format(self.DIR_BUILD), overwrite=False, retry=3,
-                                       expand=True, minsizekb=900, removeTopDir=True, deletedest=True)
+        self.tools.file_download(
+            url,
+            to="{}/capnproto".format(self.DIR_BUILD),
+            overwrite=False,
+            retry=3,
+            expand=True,
+            minsizekb=900,
+            removeTopDir=True,
+            deletedest=True,
+        )
 
         self.profile_builder_select()
 
@@ -37,7 +46,6 @@ class BuilderCapnp(JSBASE):
         """
         self._execute(script)
 
-
     @builder_method()
     def install(self):
         """
@@ -46,8 +54,8 @@ class BuilderCapnp(JSBASE):
         kosmos 'j.builder.libs.capnp.install()'
         """
         if self.tools.isUbuntu:
-            j.builder.system.package.ensure('g++')
-        j.builder.runtimes.python.pip_package_install(['cython', 'setuptools', 'pycapnp'])
+            j.builder.system.package.ensure("g++")
+        j.builder.runtimes.python.pip_package_install(["cython", "setuptools", "pycapnp"])
 
     def test(self):
         """

@@ -9,8 +9,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class PRBranchInfo(object):
     """
     auto-generated. don't touch.
@@ -32,22 +30,22 @@ class PRBranchInfo(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'PRBranchInfo'
+        class_name = "PRBranchInfo"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.label = client_support.set_property('label', data, data_types, False, [], False, False, class_name)
+        self.label = client_support.set_property("label", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.ref = client_support.set_property('ref', data, data_types, False, [], False, False, class_name)
+        self.ref = client_support.set_property("ref", data, data_types, False, [], False, False, class_name)
         data_types = [Repository]
-        self.repo = client_support.set_property('repo', data, data_types, False, [], False, False, class_name)
+        self.repo = client_support.set_property("repo", data, data_types, False, [], False, False, class_name)
         data_types = [int]
-        self.repo_id = client_support.set_property('repo_id', data, data_types, False, [], False, False, class_name)
+        self.repo_id = client_support.set_property("repo_id", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.sha = client_support.set_property('sha', data, data_types, False, [], False, False, class_name)
+        self.sha = client_support.set_property("sha", data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

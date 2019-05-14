@@ -8,11 +8,8 @@ Monitors if threads has high number of threads per hyperthread
 
 class Threads(HealthCheckRun):
     def __init__(self, node):
-        resource = '/nodes/{}'.format(node.name)
-        super().__init__(id="threads",
-                         name="Node thread per hyperthread",
-                         category="System Load",
-                         resource=resource)
+        resource = "/nodes/{}".format(node.name)
+        super().__init__(id="threads", name="Node thread per hyperthread", category="System Load", resource=resource)
         self.node = node
 
     def run(self):
@@ -22,11 +19,7 @@ class Threads(HealthCheckRun):
         thread_info = thread_info.get("machine.process.threads", {})
         message = {}
         if not thread_info:
-            message = {
-                "status": "WARNING",
-                "id": "THREADS",
-                "text": "Number of threads is not available",
-            }
+            message = {"status": "WARNING", "id": "THREADS", "text": "Number of threads is not available"}
             self.add_message(**message)
             return
 
@@ -43,4 +36,3 @@ class Threads(HealthCheckRun):
             message["text"] = "Average threads per hyperthread is normal"
 
         self.add_message(**message)
-

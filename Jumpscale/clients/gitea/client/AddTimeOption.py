@@ -7,9 +7,6 @@ Auto-generated class for AddTimeOption
 from . import client_support
 
 
-
-
-
 class AddTimeOption(object):
     """
     auto-generated. don't touch.
@@ -27,14 +24,14 @@ class AddTimeOption(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'AddTimeOption'
+        class_name = "AddTimeOption"
         data = json or kwargs
 
         # set attributes
         data_types = [int]
-        self.time = client_support.set_property('time', data, data_types, False, [], False, True, class_name)
+        self.time = client_support.set_property("time", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

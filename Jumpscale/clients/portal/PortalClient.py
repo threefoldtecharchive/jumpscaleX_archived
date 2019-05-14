@@ -7,18 +7,17 @@ JSConfigBase = j.application.JSBaseConfigClass
 
 
 class ApiError(Exception):
-
     def __init__(self, response):
         message = None
-        msg = '%s %s' % (response.status_code, response.reason)
+        msg = "%s %s" % (response.status_code, response.reason)
         try:
             message = response.json()
         except BaseException:
             pass
         if isinstance(message, (str, bytes)):
-            msg += '\n%s' % message
-        elif isinstance(message, dict) and 'errormessage' in message:
-            msg += '\n%s' % message['errormessage']
+            msg += "\n%s" % message
+        elif isinstance(message, dict) and "errormessage" in message:
+            msg += "\n%s" % message["errormessage"]
 
         super(ApiError, self).__init__(msg)
         self._response = response
@@ -28,12 +27,11 @@ class ApiError(Exception):
         return self._response
 
 
-class BaseResource():
-
+class BaseResource:
     def __init__(self, session, url):
         self._session = session
         self._url = url
-        self._method = 'POST'
+        self._method = "POST"
 
     def __getattr__(self, item):
         url = os.path.join(self._url, item)
@@ -42,15 +40,12 @@ class BaseResource():
         return resource
 
     def __call__(self, **kwargs):
-        response = self._session.request(
-            self._method, self._url, kwargs, timeout=300)
+        response = self._session.request(self._method, self._url, kwargs, timeout=300)
 
         if not response.ok:
             raise ApiError(response)
 
-        if response.headers.get(
-            'content-type',
-                'text/html') == 'application/json':
+        if response.headers.get("content-type", "text/html") == "application/json":
             return response.json()
 
         return response.content
@@ -61,7 +56,7 @@ class Resource(BaseResource):
         session = requests.Session()
 
         scheme = "http" if port != 443 else "https"
-        url = "%s://%s:%s/%s" % (scheme, ip, port, path.lstrip('/'))
+        url = "%s://%s:%s/%s" % (scheme, ip, port, path.lstrip("/"))
 
         super(Resource, self).__init__(session, url)
 
@@ -72,21 +67,23 @@ class Resource(BaseResource):
         else:
             swagger = self.system.markdowndocs.prepareCatalog(group=group)
 
-        for methodpath, methodspec in swagger['paths'].items():
+        for methodpath, methodspec in swagger["paths"].items():
             api = self
-            for path in methodpath.split('/')[1:]:
+            for path in methodpath.split("/")[1:]:
                 api = getattr(api, path)
-            method = 'post'
-            if 'post' not in methodspec and methodspec:
+            method = "post"
+            if "post" not in methodspec and methodspec:
                 method = list(methodspec.keys())[0]
             api._method = method
-            docstring = methodspec[method]['description']
-            for param in methodspec[method].get('parameters', list()):
-                param['type'] = param['type'] if 'type' in param else str(
-                    param.get('$ref', 'unknown'))
-                docstring += """
+            docstring = methodspec[method]["description"]
+            for param in methodspec[method].get("parameters", list()):
+                param["type"] = param["type"] if "type" in param else str(param.get("$ref", "unknown"))
+                docstring += (
+                    """
                 :param %(name)s: %(description)s required %(required)s
-                :type %(name)s: %(type)s""" % param
+                :type %(name)s: %(type)s"""
+                    % param
+                )
             api.__doc__ = docstring
         return swagger
 

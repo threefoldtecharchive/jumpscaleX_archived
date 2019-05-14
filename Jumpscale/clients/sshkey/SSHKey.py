@@ -14,8 +14,7 @@ class SSHKey(j.application.JSBaseConfigClass):
         path = "" (S) #path of the private key
         """
 
-
-    def _init2(self,**kwargs):
+    def _init2(self, **kwargs):
 
         self._connected = None
 
@@ -24,26 +23,25 @@ class SSHKey(j.application.JSBaseConfigClass):
 
         self.autosave = True  # means every write will be saved (is optional to set)
 
-        if self.path!="" and j.sal.fs.exists(self.path):
+        if self.path != "" and j.sal.fs.exists(self.path):
             if not self.privkey:
                 self.privkey = j.sal.fs.readFile(self.path)
 
             if not self.pubkey and self.privkey:
-                path = '%s.pub' % (self.path)
+                path = "%s.pub" % (self.path)
                 if not j.sal.fs.exists(path):
                     cmd = 'ssh-keygen -f {} -N "{}"'.format(self.path, self.passphrase)
                     j.sal.process.execute(cmd)
                 self.pubkey = j.sal.fs.readFile(path)
                 self.save()
 
-
     def generate(self, reset=False):
-        '''
+        """
         Generate ssh key
 
         :param reset: if True, then delete old ssh key from dir, defaults to False
         :type reset: bool, optional
-        '''
+        """
         self._log_debug("generate ssh key")
 
         if self.path == "":
@@ -57,8 +55,8 @@ class SSHKey(j.application.JSBaseConfigClass):
 
         if reset:
             self.delete_from_sshdir()
-            self.pubkey=""
-            self.privkey=""
+            self.pubkey = ""
+            self.privkey = ""
 
         else:
             if not j.sal.fs.exists(self.path):
@@ -75,7 +73,6 @@ class SSHKey(j.application.JSBaseConfigClass):
             j.sal.process.execute(cmd, timeout=10)
             self._init2()
 
-
     def delete(self):
         """
         will delete from from config
@@ -89,17 +86,15 @@ class SSHKey(j.application.JSBaseConfigClass):
         j.sal.fs.remove("%s" % self.path)
 
     def write_to_sshdir(self):
-        '''
+        """
         Write to ssh dir the private and public key
-        '''
+        """
         j.sal.fs.writeFile(self.path, self.privkey)
         j.sal.fs.writeFile(self.path + ".pub", self.pubkey)
 
-
-
     def sign_ssh_data(self, data):
         return self.agent.sign_ssh_data(data)
-        #TODO: does not work, property needs to be implemented
+        # TODO: does not work, property needs to be implemented
 
     def load(self, duration=3600 * 24):
         """

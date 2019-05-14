@@ -24,14 +24,20 @@ def generate_rfc3339(d, local_tz=True):
         pass
 
     if not isinstance(d, datetime.date):
-        raise TypeError('Not timestamp or date object. Got %r.' % type(d))
+        raise TypeError("Not timestamp or date object. Got %r." % type(d))
 
     if not isinstance(d, datetime.datetime):
         d = datetime.datetime(*d.timetuple()[:3])
 
-    return ('%04d-%02d-%02dT%02d:%02d:%02d%s' %
-            (d.year, d.month, d.day, d.hour, d.minute, d.second,
-             _generate_timezone(d, local_tz)))
+    return "%04d-%02d-%02dT%02d:%02d:%02d%s" % (
+        d.year,
+        d.month,
+        d.day,
+        d.hour,
+        d.minute,
+        d.second,
+        _generate_timezone(d, local_tz),
+    )
 
 
 def _calculate_offset(date, local_tz):
@@ -79,6 +85,6 @@ def _generate_timezone(date, local_tz):
     minute = abs(offset) % 3600 // 60
 
     if offset < 0:
-        return '%c%02d:%02d' % ("-", hour, minute)
+        return "%c%02d:%02d" % ("-", hour, minute)
     else:
-        return '%c%02d:%02d' % ("+", hour, minute)
+        return "%c%02d:%02d" % ("+", hour, minute)

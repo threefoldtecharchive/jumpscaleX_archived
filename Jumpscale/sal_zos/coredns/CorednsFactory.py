@@ -7,7 +7,9 @@ JSBASE = j.application.JSBaseClass
 class CorednsFactory(JSBASE):
     __jslocation__ = "j.sal_zos.coredns"
 
-    def get(self, name, node, etcd_endpoint, etcd_password, zt_identity=None, nics=None, backplane='backplane', domain=None):
+    def get(
+        self, name, node, etcd_endpoint, etcd_password, zt_identity=None, nics=None, backplane="backplane", domain=None
+    ):
         """
         Get sal for coredns
         Returns:

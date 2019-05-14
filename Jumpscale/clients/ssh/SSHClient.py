@@ -5,13 +5,11 @@ from .SSHClientBase import SSHClientBase
 
 
 class SSHClient(SSHClientBase):
-
-
     def _init(self):
         SSHClientBase._init(self)
         self._logger_prefix = "ssh client: %s:%s(%s)" % (self.addr_variable, self.port, self.login)
 
-    def _init2(self,**kwargs):
+    def _init2(self, **kwargs):
         if self.passwd == "" and self.sshkey_name == "":
             if j.clients.sshagent.key_default_or_none:
                 self.sshkey_name = j.clients.sshagent.key_default_or_none.name
@@ -26,9 +24,18 @@ class SSHClient(SSHClientBase):
                 passwd = self.sshkey_obj.passphrase
 
             from pssh.clients import SSHClient as PSSHClient
+
             PSSHClient = functools.partial(PSSHClient, retry_delay=1)
-            self._client_ = PSSHClient(self.addr_variable,user=self.login,password=passwd,port=self.port,
-                                       pkey=pkey,num_retries=self.timeout / 6,allow_agent=self.allow_agent,timeout=5)
+            self._client_ = PSSHClient(
+                self.addr_variable,
+                user=self.login,
+                password=passwd,
+                port=self.port,
+                pkey=pkey,
+                num_retries=self.timeout / 6,
+                allow_agent=self.allow_agent,
+                timeout=5,
+            )
 
         return self._client_
 
@@ -40,7 +47,7 @@ class SSHClient(SSHClientBase):
         def _consume_stream(stream, printer, buf=None):
             buffer = buf or io.StringIO()
             for line in stream:
-                buffer.write(line + '\n')
+                buffer.write(line + "\n")
                 if showout:
                     printer(line)
             return buffer
@@ -62,7 +69,6 @@ class SSHClient(SSHClientBase):
             raise j.exceptions.RuntimeError("Cannot execute (ssh):\n%s\noutput:\n%serrors:\n%s" % (cmd, output, error))
 
         return rc, output, error
-
 
     # def connectViaProxy(self, host, username, port, identityfile, proxycommand=None):
     #     # TODO: Fix this
@@ -109,6 +115,3 @@ class SSHClient(SSHClientBase):
 
     def copy_file(self, local_file, remote_file, recurse=False):
         return self._client.copy_file(local_file, remote_file, recurse=recurse, sftp=self.sftp)
-
-
-

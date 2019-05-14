@@ -6,9 +6,7 @@ from . import client_support
 from Jumpscale import j
 
 
-
-
-class Label(str, ):
+class Label(str):
     """
     auto-generated. don't touch.
     """
@@ -27,9 +25,9 @@ class Label(str, ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Label'
+        class_name = "Label"
         data = json or kwargs
 
         # set attributes

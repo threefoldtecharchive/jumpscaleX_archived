@@ -8,7 +8,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class Factory(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.tools.capacity"
         JSBASE.__init__(self)

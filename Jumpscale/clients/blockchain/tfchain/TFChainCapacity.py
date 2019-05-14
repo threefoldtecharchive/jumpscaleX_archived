@@ -5,7 +5,7 @@ import decimal
 from . import schemas
 
 
-class TFChainCapacity():
+class TFChainCapacity:
     """
     TFChainReservation contains all TF grid reservation logic.
     """
@@ -23,7 +23,7 @@ class TFChainCapacity():
         """
 
         if self._notary_client_ is None:
-            c = j.clients.gedis.new('tfnotary', host='notary.grid.tf', port=5000)
+            c = j.clients.gedis.new("tfnotary", host="notary.grid.tf", port=5000)
             self._notary_client_ = c.actors.notary_actor
         return self._notary_client_
 
@@ -46,7 +46,8 @@ class TFChainCapacity():
                 return nacl.signing.SigningKey(keypair.private_key.to_seed())
 
         raise KeyError(
-            "could not found the private used to create the threebot %s. Please generate more addresses" % threebot_id)
+            "could not found the private used to create the threebot %s. Please generate more addresses" % threebot_id
+        )
 
     @property
     def _grid_broker_pub_key(self):
@@ -55,12 +56,10 @@ class TFChainCapacity():
         """
 
         if self._grid_broker_pub_key_ is None:
-            record = self._wallet.client.threebot.record_get('development.broker')
+            record = self._wallet.client.threebot.record_get("development.broker")
             encoded_key = record.public_key.hash
             self._grid_broker_addr = record.public_key.unlockhash
-            vk = nacl.signing.VerifyKey(
-                str(encoded_key),
-                encoder=nacl.encoding.HexEncoder)
+            vk = nacl.signing.VerifyKey(str(encoded_key), encoder=nacl.encoding.HexEncoder)
             self._grid_broker_pub_key_ = vk.to_curve25519_public_key()
         return self._grid_broker_pub_key_
 
@@ -89,13 +88,9 @@ class TFChainCapacity():
         :rtype: tuple
         """
 
-        reservation = j.data.schema.get_from_url_latest(url='tfchain.reservation.s3').new(data={
-            'size': size,
-            'email': email,
-            'created': j.data.time.epoch,
-            'type': 's3',
-            'location': location,
-        })
+        reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.s3").new(
+            data={"size": size, "email": email, "created": j.data.time.epoch, "type": "s3", "location": location}
+        )
         _validate_reservation_s3(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
@@ -123,19 +118,15 @@ class TFChainCapacity():
         :return: a tuple containing the transaction and the submission status as a boolean
         :rtype: tuple
         """
-        reservation = j.data.schema.get_from_url_latest(url='tfchain.reservation.zos_vm').new(data={
-            'size': size,
-            'email': email,
-            'created': j.data.time.epoch,
-            'type': 'vm',
-            'location': location,
-        })
+        reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.zos_vm").new(
+            data={"size": size, "email": email, "created": j.data.time.epoch, "type": "vm", "location": location}
+        )
         _validate_reservation_vm(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
-    def reserve_zdb_namespace(self, email, threebot_id, location, size=1,
-                              disk_type='ssd', mode='seq', password=None,
-                              source=None, refund=None):
+    def reserve_zdb_namespace(
+        self, email, threebot_id, location, size=1, disk_type="ssd", mode="seq", password=None, source=None, refund=None
+    ):
         """
         reserve an 0-DB namespace
 
@@ -160,21 +151,22 @@ class TFChainCapacity():
         :return: a tuple containing the transaction and the submission status as a boolean
         :rtype: tuple
         """
-        reservation = j.data.schema.get_from_url_latest(url='tfchain.reservation.zdb_namespace').new(data={
-            'type': 'namespace',
-            'size': size,
-            'email': email,
-            'created': j.data.time.epoch,
-            'location': location,
-            'disk_type': disk_type,
-            'mode': mode,
-            'password': password,
-        })
+        reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.zdb_namespace").new(
+            data={
+                "type": "namespace",
+                "size": size,
+                "email": email,
+                "created": j.data.time.epoch,
+                "location": location,
+                "disk_type": disk_type,
+                "mode": mode,
+                "password": password,
+            }
+        )
         _validate_reservation_namespace(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
-    def reserve_reverse_proxy(self, email, threebot_id, domain, backend_urls,
-                              source=None, refund=None):
+    def reserve_reverse_proxy(self, email, threebot_id, domain, backend_urls, source=None, refund=None):
         """
         reserve a HTTP reverse proxy
 
@@ -198,14 +190,16 @@ class TFChainCapacity():
         :return: a tuple containing the transaction and the submission status as a boolean
         :rtype: tuple
         """
-        reservation = j.data.schema.get_from_url_latest(url='tfchain.reservation.reverse_proxy').new(data={
-            'type': 'reverse_proxy',
-            'email': email,
-            'created': j.data.time.epoch,
-            # 'location': location,
-            'domain': domain,
-            'backend_urls': backend_urls,
-        })
+        reservation = j.data.schema.get_from_url_latest(url="tfchain.reservation.reverse_proxy").new(
+            data={
+                "type": "reverse_proxy",
+                "email": email,
+                "created": j.data.time.epoch,
+                # 'location': location,
+                "domain": domain,
+                "backend_urls": backend_urls,
+            }
+        )
         _validate_reverse_proxy(reservation)
         return self._process_reservation(reservation, threebot_id, source=source, refund=refund)
 
@@ -229,51 +223,47 @@ class TFChainCapacity():
         encrypted = bytes(box.encrypt(b))
         signature = sk.sign(encrypted, nacl.encoding.RawEncoder)
         response = self._notary_client.register(threebot_id, signature.message, signature.signature)
-        return self._wallet.coins_send(self._grid_broker_addr,
-                                       amount,
-                                       data=response.hash,
-                                       source=source,
-                                       refund=refund)
+        return self._wallet.coins_send(self._grid_broker_addr, amount, data=response.hash, source=source, refund=refund)
 
 
 def _validate_reservation_base(reservation):
-    for field in ['email']:
+    for field in ["email"]:
         if not getattr(reservation, field):
             raise ValueError("field '%s' cannot be empty" % field)
 
 
 def _validate_reservation_s3(reservation):
-    for field in ['size']:
+    for field in ["size"]:
         if not getattr(reservation, field):
             raise ValueError("field '%s' cannot be empty" % field)
 
     if reservation.size < 0 or reservation.size > 2:
-        raise ValueError('reservation size can only be 1 or 2')
+        raise ValueError("reservation size can only be 1 or 2")
 
     if not _validate_location(reservation.location):
         raise ValueError("location '%s' is not valid" % reservation.location)
 
 
 def _validate_reservation_vm(reservation):
-    for field in ['size']:
+    for field in ["size"]:
         if not getattr(reservation, field):
             raise ValueError("field '%s' cannot be empty" % field)
 
     if reservation.size < 0 or reservation.size > 2:
-        raise ValueError('reservation size can only be 1 or 2')
+        raise ValueError("reservation size can only be 1 or 2")
 
     if not _validate_location(reservation.location):
         raise ValueError("location '%s' is not valid" % reservation.location)
 
 
 def _validate_reservation_namespace(reservation):
-    for field in ['size']:
+    for field in ["size"]:
         if not getattr(reservation, field):
             raise ValueError("field '%s' cannot be empty" % field)
 
-    if not reservation.mode or reservation.mode not in ['seq', 'user', 'direct']:
+    if not reservation.mode or reservation.mode not in ["seq", "user", "direct"]:
         raise ValueError("mode can only be 'seq', 'user' or 'direct'")
-    if not reservation.disk_type or reservation.disk_type not in ['hdd', 'ssd']:
+    if not reservation.disk_type or reservation.disk_type not in ["hdd", "ssd"]:
         raise ValueError("disk_type can only be 'ssd' or 'hdd'")
 
     if not _validate_location(reservation.location):
@@ -281,7 +271,7 @@ def _validate_reservation_namespace(reservation):
 
 
 def _validate_reverse_proxy(reservation):
-    for field in ['domain', 'backend_urls']:
+    for field in ["domain", "backend_urls"]:
         if not getattr(reservation, field):
             raise ValueError("field '%s' cannot be empty" % field)
 
@@ -298,13 +288,13 @@ def _signing_key_to_private_key(sk):
 
 def reservation_amount(reservation):
     # https://github.com/threefoldfoundation/info_grid/tree/development/docs/capacity_reservation#amount-of-tft-for-each-type-of-reservation
-    if reservation.type == 's3':
+    if reservation.type == "s3":
         return s3_price(reservation.size)
-    elif reservation.type == 'vm':
+    elif reservation.type == "vm":
         return vm_price(reservation.size)
-    elif reservation.type == 'namespace':
+    elif reservation.type == "namespace":
         return namespace_price(reservation.size)
-    elif reservation.type == 'reverse_proxy':
+    elif reservation.type == "reverse_proxy":
         return proxy_price()
     else:
         raise ValueError("unsupported reservation type")
@@ -312,24 +302,24 @@ def reservation_amount(reservation):
 
 def s3_price(size):
     if size == 1:
-        return decimal.Decimal('41.65')
+        return decimal.Decimal("41.65")
     elif size == 2:
-        return decimal.Decimal('83.3')
+        return decimal.Decimal("83.3")
     else:
         raise ValueError("size for s3 can only be 1 or 2")
 
 
 def vm_price(size):
     if size == 1:
-        return decimal.Decimal('41.65')
+        return decimal.Decimal("41.65")
     elif size == 2:
-        return decimal.Decimal('83.3')
+        return decimal.Decimal("83.3")
     else:
         raise ValueError("size for vm can only be 1 or 2")
 
 
 def namespace_price(size):
-    return size * decimal.Decimal('83.3')
+    return size * decimal.Decimal("83.3")
 
 
 def proxy_price():

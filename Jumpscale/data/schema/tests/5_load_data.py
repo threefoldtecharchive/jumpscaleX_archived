@@ -54,4 +54,4 @@ def main(self):
 
     self._log_info("TEST DONE LOADDATA")
 
-    return ("OK")
+    return "OK"

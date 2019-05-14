@@ -4,23 +4,23 @@ builder_method = j.builder.system.builder_method
 
 
 class BuilderGolangTools(j.builder.system._BaseClass):
-    NAME = 'golangtools'
+    NAME = "golangtools"
 
     def _init(self):
-        self.base_dir = self._replace('{DIR_BASE}')
+        self.base_dir = self._replace("{DIR_BASE}")
 
         self.env = self.bash.profile
-        self.DIR_GO_ROOT = self.tools.joinpaths(self.base_dir, 'go')
-        self.DIR_GO_PATH = self.tools.joinpaths(self.base_dir, 'go_proj')
-        self.DIR_GO_ROOT_BIN = self.tools.joinpaths(self.DIR_GO_ROOT, 'bin')
-        self.DIR_GO_PATH_BIN = self.tools.joinpaths(self.DIR_GO_PATH, 'bin')
+        self.DIR_GO_ROOT = self.tools.joinpaths(self.base_dir, "go")
+        self.DIR_GO_PATH = self.tools.joinpaths(self.base_dir, "go_proj")
+        self.DIR_GO_ROOT_BIN = self.tools.joinpaths(self.DIR_GO_ROOT, "bin")
+        self.DIR_GO_PATH_BIN = self.tools.joinpaths(self.DIR_GO_PATH, "bin")
 
     def update_profile_paths(self, profile=None):
         if not profile:
             profile = self.bash.profile
 
-        profile.env_set('GOROOT', self.DIR_GO_ROOT)
-        profile.env_set('GOPATH', self.DIR_GO_PATH)
+        profile.env_set("GOROOT", self.DIR_GO_ROOT)
+        profile.env_set("GOPATH", self.DIR_GO_PATH)
 
         # remove old parts of profile
         # and add them to PATH (without existence check)
@@ -42,16 +42,16 @@ class BuilderGolangTools(j.builder.system._BaseClass):
         """
         self.bindata()
 
-        C = '''
+        C = """
         go get -u github.com/tools/godep
         go get -u github.com/jteeuwen/go-bindata/...
         go get -u github.com/Jumpscale/go-raml
         set -ex
         cd {DIR_GO_PATH}/src/github.com/Jumpscale/go-raml
         sh build.sh
-        '''
+        """
         self._execute(C)
-        self._done_set('goraml')
+        self._done_set("goraml")
 
     @builder_method()
     def bindata(self):
@@ -61,22 +61,21 @@ class BuilderGolangTools(j.builder.system._BaseClass):
         :type reset: bool, optional
         """
 
-        C = '''
+        C = """
         set -ex
         go get -u github.com/jteeuwen/go-bindata/...
         cd {DIR_GO_PATH}/src/github.com/jteeuwen/go-bindata/go-bindata
         go build
         go install
-        '''
+        """
         self._execute(C)
 
     @builder_method()
     def glide(self):
         """install glide"""
-        self.tools.file_download(
-            'https://glide.sh/get', '{DIR_TEMP}/installglide.sh', minsizekb=4)
-        self._execute('. {DIR_TEMP}/installglide.sh')
-        self._done_set('glide')
+        self.tools.file_download("https://glide.sh/get", "{DIR_TEMP}/installglide.sh", minsizekb=4)
+        self._execute(". {DIR_TEMP}/installglide.sh")
+        self._done_set("glide")
 
     def get(self, url, install=True, update=False, die=True, verbose=False):
         """go get a package
@@ -90,16 +89,16 @@ class BuilderGolangTools(j.builder.system._BaseClass):
         :param die: raise a RuntimeError if failed, defaults to True
         :type die: bool, optional
         """
-        flags = ''
+        flags = ""
         if not install:
-            flags = ' -d'
+            flags = " -d"
         if update:
-            flags += ' -u'
+            flags += " -u"
         if verbose:
-            flags += ' -v'
-        self._execute('go get %s %s' % (flags, url), timeout=10000, die=die)
+            flags += " -v"
+        self._execute("go get %s %s" % (flags, url), timeout=10000, die=die)
 
-    def package_path_get(self, name, host='github.com', go_path=None):
+    def package_path_get(self, name, host="github.com", go_path=None):
         """A helper method to get a package path installed by `get`
         Will use this builder's default go path if go_path is not provided
 
@@ -115,7 +114,7 @@ class BuilderGolangTools(j.builder.system._BaseClass):
         """
         if not go_path:
             go_path = self.DIR_GO_PATH
-        return self.tools.joinpaths(go_path, 'src', host, name)
+        return self.tools.joinpaths(go_path, "src", host, name)
 
     def godep(self, url, branch=None, depth=1):
         """install a package using godep
@@ -127,31 +126,28 @@ class BuilderGolangTools(j.builder.system._BaseClass):
         :param depth: depth to pull with, defaults to 1
         :type depth: int, optional
         """
-        pullurl = "git@%s.git" % url.replace('/', ':', 1)
+        pullurl = "git@%s.git" % url.replace("/", ":", 1)
 
         dest = j.clients.git.pullGitRepo(
-            pullurl,
-            branch=branch,
-            depth=depth,
-            dest='%s/src/%s' % (self.DIR_GO_PATH, url),
-            ssh=False)
-        self._execute('cd %s && godep restore' % dest)
+            pullurl, branch=branch, depth=depth, dest="%s/src/%s" % (self.DIR_GO_PATH, url), ssh=False
+        )
+        self._execute("cd %s && godep restore" % dest)
 
 
 class BuilderGolang(BuilderGolangTools):
 
-    NAME = 'go'
-    STABLE_VERSION = '1.12.1'
-    DOWNLOAD_URL = 'https://dl.google.com/go/go{version}.{platform}-{arch}.tar.gz'
+    NAME = "go"
+    STABLE_VERSION = "1.12.1"
+    DOWNLOAD_URL = "https://dl.google.com/go/go{version}.{platform}-{arch}.tar.gz"
 
     def _init(self):
-        self.base_dir = self._replace('{DIR_BASE}')
+        self.base_dir = self._replace("{DIR_BASE}")
 
         self.env = self.bash.profile
-        self.DIR_GO_ROOT = self.tools.joinpaths(self.base_dir, 'go')
-        self.DIR_GO_PATH = self.tools.joinpaths(self.base_dir, 'go_proj')
-        self.DIR_GO_ROOT_BIN = self.tools.joinpaths(self.DIR_GO_ROOT, 'bin')
-        self.DIR_GO_PATH_BIN = self.tools.joinpaths(self.DIR_GO_PATH, 'bin')
+        self.DIR_GO_ROOT = self.tools.joinpaths(self.base_dir, "go")
+        self.DIR_GO_PATH = self.tools.joinpaths(self.base_dir, "go_proj")
+        self.DIR_GO_ROOT_BIN = self.tools.joinpaths(self.DIR_GO_ROOT, "bin")
+        self.DIR_GO_PATH_BIN = self.tools.joinpaths(self.DIR_GO_PATH, "bin")
 
     @property
     def version(self):
@@ -161,10 +157,10 @@ class BuilderGolang(BuilderGolangTools):
         :return: go version e.g. 1.11.4
         :rtype: str
         """
-        rc, out, err = self._execute('go version', die=False, showout=False)
+        rc, out, err = self._execute("go version", die=False, showout=False)
         if rc:
-            raise j.exceptions.RuntimeError('go is not instlled\n%s' % err)
-        return j.data.regex.findOne(r'go\d+.\d+.\d+', out)[2:]
+            raise j.exceptions.RuntimeError("go is not instlled\n%s" % err)
+        return j.data.regex.findOne(r"go\d+.\d+.\d+", out)[2:]
 
     @property
     def is_installed(self):
@@ -187,8 +183,8 @@ class BuilderGolang(BuilderGolangTools):
         :rtype: str
         """
         if j.core.platformtype.myplatform.is32bit:
-            return '386'
-        return 'amd64'
+            return "386"
+        return "amd64"
 
     @builder_method()
     def install(self):
@@ -199,13 +195,15 @@ class BuilderGolang(BuilderGolangTools):
         """
         # only check for linux for now
         if j.core.platformtype.myplatform.isLinux:
-            download_url = self.DOWNLOAD_URL.format(version=self.STABLE_VERSION,
-                                                    platform='linux', arch=self.current_arch)
+            download_url = self.DOWNLOAD_URL.format(
+                version=self.STABLE_VERSION, platform="linux", arch=self.current_arch
+            )
         elif j.core.platformtype.myplatform.isMac:
-            download_url = self.DOWNLOAD_URL.format(version=self.STABLE_VERSION,
-                                                    platform='darwin', arch=self.current_arch)
+            download_url = self.DOWNLOAD_URL.format(
+                version=self.STABLE_VERSION, platform="darwin", arch=self.current_arch
+            )
         else:
-            raise j.exceptions.RuntimeError('platform not supported')
+            raise j.exceptions.RuntimeError("platform not supported")
 
         self._remove("{DIR_GO_PATH}")
         self._remove("{DIR_GO_ROOT}")
@@ -215,8 +213,8 @@ class BuilderGolang(BuilderGolangTools):
         self.update_profile_paths()
 
         self.tools.file_download(
-            download_url, self.DIR_GO_ROOT, overwrite=False, retry=3,
-            timeout=0, expand=True, removeTopDir=True)
+            download_url, self.DIR_GO_ROOT, overwrite=False, retry=3, timeout=0, expand=True, removeTopDir=True
+        )
 
         self.get("github.com/tools/godep")
         self._done_set("install")
@@ -232,6 +230,6 @@ class BuilderGolang(BuilderGolangTools):
         assert j.builder.runtimes.golang.is_installed
 
         # test go get
-        j.builder.runtimes.golang.get('github.com/containous/go-bindata')
-        package_path = j.builder.runtimes.golang.package_path_get('containous/go-bindata')
-        j.builder.runtimes.golang.execute('cd %s && go install' % package_path)
+        j.builder.runtimes.golang.get("github.com/containous/go-bindata")
+        package_path = j.builder.runtimes.golang.package_path_get("containous/go-bindata")
+        j.builder.runtimes.golang.execute("cd %s && go install" % package_path)

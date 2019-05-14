@@ -1,4 +1,5 @@
 from Jumpscale import j
+
 builder_method = j.builder.system.builder_method
 
 
@@ -12,6 +13,7 @@ class BuilderBootstrapBot(j.builder.system._BaseClass):
         - in self.test_zos() start the created flist & do the network tests for the openresty
 
     """
+
     NAME = "bootstrapbot"
 
     @builder_method()
@@ -36,21 +38,24 @@ class BuilderBootstrapBot(j.builder.system._BaseClass):
         j.builder.db.zdb.install()
 
     @builder_method()
-    def sandbox(self, reset=False, zhub_client=None, flist_create=True, merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist"):
+    def sandbox(
+        self,
+        reset=False,
+        zhub_client=None,
+        flist_create=True,
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+    ):
         j.builder.db.zdb.sandbox(reset=reset)
-        j.tools.sandboxer.copyTo(j.builder.db.zdb.DIR_SANDBOX,  self.DIR_SANDBOX)
+        j.tools.sandboxer.copyTo(j.builder.db.zdb.DIR_SANDBOX, self.DIR_SANDBOX)
 
-        file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), 'templates', 'bot_configure.toml')
-        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, 'bot_configure.toml')
+        file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "bot_configure.toml")
+        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, "bot_configure.toml")
         self._copy(file, file_dest)
 
-
-        startup_file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), 'templates', 'bot_startup.toml')
-        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, '.startup.toml')
+        startup_file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "bot_startup.toml")
+        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, ".startup.toml")
         self._copy(startup_file, file_dest)
 
-        startup_file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), 'templates', 'bootstrapbot_startup.sh')
-        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, 'bot_startup.sh')
+        startup_file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "bootstrapbot_startup.sh")
+        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, "bot_startup.sh")
         self._copy(startup_file, file_dest)
-
-

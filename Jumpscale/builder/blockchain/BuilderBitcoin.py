@@ -2,6 +2,7 @@ from Jumpscale import j
 
 builder_method = j.builder.system.builder_method
 
+
 class BuilderBitcoin(j.builder.system._BaseClass):
     NAME = "bitcoind"
 
@@ -10,29 +11,45 @@ class BuilderBitcoin(j.builder.system._BaseClass):
         self.tools.dir_ensure(self.DIR_BUILD)
 
     @builder_method()
-    def build(self): 
+    def build(self):
 
         j.builder.buildenv.install()
         self.profile_builder_select()
 
         # dependancies
         if self.tools.isUbuntu:
-            j.builder.system.package.ensure('g++')
+            j.builder.system.package.ensure("g++")
             self.system.package.mdupdate()
-            self.system.package.install([
-                "build-essential", "libtool", "autotools-dev", "pkg-config",
-                "libboost-all-dev", "libqt5gui5", "libqt5core5a", "libqt5dbus5",
-                "qttools5-dev", "qttools5-dev-tools", "libprotobuf-dev", "protobuf-compiler",
-                "libqrencode-dev", "autoconf", "openssl", "libssl-dev", "libevent-dev", 
-                "libminiupnpc-dev", "bsdmainutils"
-            ])
+            self.system.package.install(
+                [
+                    "build-essential",
+                    "libtool",
+                    "autotools-dev",
+                    "pkg-config",
+                    "libboost-all-dev",
+                    "libqt5gui5",
+                    "libqt5core5a",
+                    "libqt5dbus5",
+                    "qttools5-dev",
+                    "qttools5-dev-tools",
+                    "libprotobuf-dev",
+                    "protobuf-compiler",
+                    "libqrencode-dev",
+                    "autoconf",
+                    "openssl",
+                    "libssl-dev",
+                    "libevent-dev",
+                    "libminiupnpc-dev",
+                    "bsdmainutils",
+                ]
+            )
 
-        '''
+        """
         ' splitting build into 3 steps:
         ' - clone bitcoin source code -v 0.18
         ' - build & link berkly db libs with source code to activate wallet
         ' - executing installation scripts
-        '''
+        """
         clone_bitcoin_script = """
                     cd {DIR_BUILD}
                     git clone https://github.com/bitcoin/bitcoin.git --branch 0.18
@@ -62,30 +79,30 @@ class BuilderBitcoin(j.builder.system._BaseClass):
     @builder_method()
     def install(self):
         # bitcoin bins
-        self.tools.dir_ensure('{DIR_BIN}')
-        bin_src_path = self._replace('{DIR_BUILD}/bitcoin/src/')
-        bin_dest_path = self._replace('{DIR_BIN}')
+        self.tools.dir_ensure("{DIR_BIN}")
+        bin_src_path = self._replace("{DIR_BUILD}/bitcoin/src/")
+        bin_dest_path = self._replace("{DIR_BIN}")
 
-        self.tools.file_copy(bin_src_path + 'bitcoind', bin_dest_path) 
-        self.tools.file_copy(bin_src_path + 'bitcoin-cli', bin_dest_path) 
-        self.tools.file_copy(bin_src_path + 'bitcoin-wallet', bin_dest_path)
+        self.tools.file_copy(bin_src_path + "bitcoind", bin_dest_path)
+        self.tools.file_copy(bin_src_path + "bitcoin-cli", bin_dest_path)
+        self.tools.file_copy(bin_src_path + "bitcoin-wallet", bin_dest_path)
 
     @builder_method()
     def sandbox(self, zhub_client=None):
         self.profile_sandbox_select()
 
-        self.tools.dir_ensure('{DIR_SANDBOX}')
-        bin_src_path = self._replace('{DIR_BIN}')
-        bin_dest_path = self._replace('{DIR_SANDBOX}')
+        self.tools.dir_ensure("{DIR_SANDBOX}")
+        bin_src_path = self._replace("{DIR_BIN}")
+        bin_dest_path = self._replace("{DIR_SANDBOX}")
 
-        self.tools.file_copy(bin_src_path + 'bitcoind', bin_dest_path) 
-        self.tools.file_copy(bin_src_path + 'bitcoin-cli', bin_dest_path) 
-        self.tools.file_copy(bin_src_path + 'bitcoin-wallet', bin_dest_path)
-    
+        self.tools.file_copy(bin_src_path + "bitcoind", bin_dest_path)
+        self.tools.file_copy(bin_src_path + "bitcoin-cli", bin_dest_path)
+        self.tools.file_copy(bin_src_path + "bitcoin-wallet", bin_dest_path)
+
     @property
     def startup_cmds(self):
         # bitcoin daemon
-        cmd = j.tools.startupcmd.get(self.NAME, cmd='bitcoind')
+        cmd = j.tools.startupcmd.get(self.NAME, cmd="bitcoind")
         return [cmd]
 
     @builder_method()
@@ -103,18 +120,18 @@ class BuilderBitcoin(j.builder.system._BaseClass):
         super().reset()
         self.clean()
 
-    '''
+    """
     testing running daemon
     add tests to bitcoin
-    ''' 
+    """
+
     @builder_method()
     def test(self):
-        
+
         if self.running():
             self.stop()
 
         self.start()
         assert self.running()
 
-                    
-        self._log_info("TEST SUCCESS: Bitcoin daemon is running")  
+        self._log_info("TEST SUCCESS: Bitcoin daemon is running")

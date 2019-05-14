@@ -2,13 +2,9 @@ from . import typchk
 from Jumpscale import j
 
 
-
 class WebManager:
 
-    _download_chk = typchk.Checker({
-        'url': str,
-        'destination': str
-    })
+    _download_chk = typchk.Checker({"url": str, "destination": str})
 
     def __init__(self, client):
         self._client = client
@@ -19,7 +15,7 @@ class WebManager:
 
         parent directory of destination MUST exists for this method to work
         """
-        args = {'url': url, 'destination': destination}
+        args = {"url": url, "destination": destination}
         self._download_chk.check(args)
 
-        return self._client.raw('web.download', args)
+        return self._client.raw("web.download", args)

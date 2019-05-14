@@ -11,10 +11,20 @@ from .models import db
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
-configure(app, settings.IYO_CLIENTID, settings.IYO_SECRET, settings.IYO_CALLBACK, '/callback', None, True, True, 'organization')
+configure(
+    app,
+    settings.IYO_CLIENTID,
+    settings.IYO_SECRET,
+    settings.IYO_CALLBACK,
+    "/callback",
+    None,
+    True,
+    True,
+    "organization",
+)
 
 # connect to mongodb
-j.clients.mongoengine.get('capacity', interactive=False)
+j.clients.mongoengine.get("capacity", interactive=False)
 
 db.init_app(app)
 
@@ -38,9 +48,9 @@ def uptime(seconds):
     sec = delta.seconds % 60
 
     if delta.days > 0:
-        return '%d days, %02d:%02d:%02d' % (delta.days, hrs, min, sec)
+        return "%d days, %02d:%02d:%02d" % (delta.days, hrs, min, sec)
 
-    return '%02d:%02d:%02d' % (hrs, min, sec)
+    return "%02d:%02d:%02d" % (hrs, min, sec)
 
 
 @app.template_filter()
@@ -54,15 +64,15 @@ def deltatime_color(time):
     :rtype: str
     """
     if not time:
-        return 'danger'
+        return "danger"
 
     delta = (datetime.datetime.now() - time).total_seconds()
     if delta <= 600:  # 10 minutes or less
-        return 'success'
+        return "success"
     if 600 < delta and delta < 900:  # between 10 and 15 minutes
-        return 'warning'
+        return "warning"
     if delta > 900:  # plus de 15 minutes
-        return 'danger'
+        return "danger"
 
 
 @app.template_filter()
@@ -76,15 +86,15 @@ def node_status(time):
     :rtype: str
     """
     if not time:
-        return 'down'
+        return "down"
 
     delta = (datetime.datetime.now() - time).total_seconds()
     if delta <= 600:  # 10 minutes or less
-        return 'up'
+        return "up"
     if 600 < delta and delta < 900:  # between 10 and 15 minutes
-        return 'likely down'
+        return "likely down"
     if delta > 900:  # plus de 15 minutes
-        return 'down'
+        return "down"
 
 
 @app.errorhandler(500)

@@ -1,4 +1,3 @@
-
 from __future__ import with_statement
 import os
 
@@ -15,11 +14,10 @@ class BuilderTools(j.builder.system._BaseClass):
 
     def _init(self):
 
-        self._cd = '/tmp'
+        self._cd = "/tmp"
 
-    def _replace(self,txt):
+    def _replace(self, txt):
         return j.core.tools.text_replace(txt)
-
 
     def shell_safe(self, path):
         SHELL_ESCAPE = " '\";`|"
@@ -47,8 +45,7 @@ class BuilderTools(j.builder.system._BaseClass):
         """
         old = "127.0.0.1 localhost"
         new = old + " " + self.system_uuid()
-        self.file_update(
-            '/etc/hosts', lambda x: text_replace_line(x, old, new)[0])
+        self.file_update("/etc/hosts", lambda x: text_replace_line(x, old, new)[0])
 
     @property
     def system_uuid(self):
@@ -76,9 +73,19 @@ class BuilderTools(j.builder.system._BaseClass):
     #
     # =============================================================================
 
-    def copyTree(self, source, dest, keepsymlinks=False, deletefirst=False,
-                 overwriteFiles=True, ignoredir=None, ignorefiles=None,
-                 recursive=True, rsyncdelete=False, createdir=False):
+    def copyTree(
+        self,
+        source,
+        dest,
+        keepsymlinks=False,
+        deletefirst=False,
+        overwriteFiles=True,
+        ignoredir=None,
+        ignorefiles=None,
+        recursive=True,
+        rsyncdelete=False,
+        createdir=False,
+    ):
         """
         std excludes are done like "__pycache__" no matter what you specify
         Recursively copy an entire directory tree rooted at src.
@@ -95,9 +102,18 @@ class BuilderTools(j.builder.system._BaseClass):
         source = self._replace(source)
         dest = self._replace(dest)
 
-        return j.sal.fs.copyDirTree(src=source, dst=dest, keepsymlinks=keepsymlinks, deletefirst=deletefirst,
-                                    overwriteFiles=overwriteFiles, ignoredir=ignoredir, ignorefiles=ignorefiles,
-                                    recursive=recursive, rsyncdelete=rsyncdelete, createdir=createdir)
+        return j.sal.fs.copyDirTree(
+            src=source,
+            dst=dest,
+            keepsymlinks=keepsymlinks,
+            deletefirst=deletefirst,
+            overwriteFiles=overwriteFiles,
+            ignoredir=ignoredir,
+            ignorefiles=ignorefiles,
+            recursive=recursive,
+            rsyncdelete=rsyncdelete,
+            createdir=createdir,
+        )
 
     def file_backup(self, location, suffix=".orig", once=False):
         """Backups the file at the given location in the same directory, appending
@@ -108,10 +124,7 @@ class BuilderTools(j.builder.system._BaseClass):
         if once and self.file_exists(backup_location):
             return False
         else:
-            return self.execute("cp -a {0} {1}".format(
-                location,
-                self.shell_safe(backup_location)
-            ))[1]
+            return self.execute("cp -a {0} {1}".format(location, self.shell_safe(backup_location)))[1]
 
     def file_get_tmp_path(self, basepath=""):
         basepath = self._replace(basepath)
@@ -123,8 +136,21 @@ class BuilderTools(j.builder.system._BaseClass):
         return x
 
     def file_download(
-            self,url,to="",overwrite=True,retry=3,timeout=0,login="",passwd="",minspeed=0,
-            multithread=False,expand=False,minsizekb=40,removeTopDir=False,deletedest=False):
+        self,
+        url,
+        to="",
+        overwrite=True,
+        retry=3,
+        timeout=0,
+        login="",
+        passwd="",
+        minspeed=0,
+        multithread=False,
+        expand=False,
+        minsizekb=40,
+        removeTopDir=False,
+        deletedest=False,
+    ):
         """
         download from url
         @return path of downloaded file
@@ -174,7 +200,13 @@ class BuilderTools(j.builder.system._BaseClass):
                     user = ""
 
                 cmd = "curl -L '%s' -o '%s' %s %s --connect-timeout 30 --retry %s --retry-max-time %s" % (
-                    url, to, user, minsp, retry, timeout)
+                    url,
+                    to,
+                    user,
+                    minsp,
+                    retry,
+                    timeout,
+                )
                 if self.file_exists(to):
                     cmd += " -C -"
                 self._log_info(cmd)
@@ -183,15 +215,21 @@ class BuilderTools(j.builder.system._BaseClass):
                 if rc == 33:  # resume is not support try again withouth resume
                     j.sal.fs.remove(to)
                     cmd = "curl -L '%s' -o '%s' %s %s --connect-timeout 5 --retry %s --retry-max-time %s" % (
-                        url, to, user, minsp, retry, timeout)
+                        url,
+                        to,
+                        user,
+                        minsp,
+                        retry,
+                        timeout,
+                    )
                     rc, out, err = self.execute(cmd, die=False, timeout=timeout)
                 fsize = self.file_size(to)
                 if minsizekb != 0 and fsize < minsizekb:
                     raise j.exceptions.RuntimeError(
-                        "Could not download:{}.\nFile size too small after download {}kb.\n".format(url, fsize))
+                        "Could not download:{}.\nFile size too small after download {}kb.\n".format(url, fsize)
+                    )
                 if rc > 0:
-                    raise j.exceptions.RuntimeError(
-                        "Could not download:{}.\nErrorcode: {}.\n".format(url, rc))
+                    raise j.exceptions.RuntimeError("Could not download:{}.\nErrorcode: {}.\n".format(url, rc))
                 else:
                     self.touch("%s.downloadok" % to)
             else:
@@ -233,9 +271,9 @@ class BuilderTools(j.builder.system._BaseClass):
             cmd = "tar -C %s -xzf %s" % (destination, path)
         elif path.endswith(".xz"):
             if self.isMac:
-                j.builder.system.package.ensure('xz')
+                j.builder.system.package.ensure("xz")
             else:
-                j.builder.system.package.ensure('xz-utils')
+                j.builder.system.package.ensure("xz-utils")
             cmd = "tar -C %s -xf %s" % (destination, path)
         elif path.endswith("tar.bz2"):
             #  cmd = "cd %s;bzip2 -d %s | tar xvf -" % (j.sal.fs.getDirName(path), path)
@@ -244,11 +282,9 @@ class BuilderTools(j.builder.system._BaseClass):
         elif path.endswith(".bz2"):
             cmd = "cd %s;bzip2 -d %s" % (j.sal.fs.getDirName(path), path)
         elif path.endswith(".zip"):
-            cmd = "cd %s;rm -rf %s;mkdir -p %s;cd %s;unzip %s" % (
-                j.sal.fs.getDirName(path), base, base, base, path)
+            cmd = "cd %s;rm -rf %s;mkdir -p %s;cd %s;unzip %s" % (j.sal.fs.getDirName(path), base, base, base, path)
         else:
-            raise j.exceptions.RuntimeError(
-                "file_expand format not supported yet for %s" % path)
+            raise j.exceptions.RuntimeError("file_expand format not supported yet for %s" % path)
 
         # print(cmd)
         self.execute(cmd)
@@ -270,12 +306,12 @@ class BuilderTools(j.builder.system._BaseClass):
     def file_read(self, location, default=None):
         location = self._replace(location)
         import base64
+
         """Reads the *remote* file at the given location, if default is not `None`,
         default will be returned if the file does not exist."""
         location = self._replace(location)
         if default is None:
-            assert self.file_exists(
-                location), "prefab.file_read: file does not exists {0}".format(location)
+            assert self.file_exists(location), "prefab.file_read: file does not exists {0}".format(location)
         elif not self.file_exists(location):
             return default
         return j.sal.fs.readFile(location)
@@ -334,13 +370,11 @@ class BuilderTools(j.builder.system._BaseClass):
         location = location.replace("//", "/")
         if self.file_exists(location):
             if self.isMac:
-                fs_check = self.execute('stat -f %s %s' %
-                                    ('"%a %u %g"', location), showout=False)[1]
+                fs_check = self.execute("stat -f %s %s" % ('"%a %u %g"', location), showout=False)[1]
             else:
-                fs_check = self.execute('stat %s %s' % (
-                    location, '--format="%a %U %G"'), showout=False)[1]
-            (mode, owner, group) = fs_check.split(' ')
-            return {'mode': mode, 'owner': owner, 'group': group}
+                fs_check = self.execute("stat %s %s" % (location, '--format="%a %U %G"'), showout=False)[1]
+            (mode, owner, group) = fs_check.split(" ")
+            return {"mode": mode, "owner": owner, "group": group}
         else:
             return None
 
@@ -376,7 +410,7 @@ class BuilderTools(j.builder.system._BaseClass):
             self.file_write(hostfile, val)
         self.execute("hostname %s" % val)
         self._hostname = val
-        self.ns.hostfile_set(val, '127.0.0.1')
+        self.ns.hostfile_set(val, "127.0.0.1")
 
     @property
     def ns(self):
@@ -395,6 +429,7 @@ class BuilderTools(j.builder.system._BaseClass):
             else:
                 hostfile = "/etc/hosts"
             return self.file_read(hostfile)
+
         return self._cache.get("hostfile", get)
 
     @hostfile.setter
@@ -407,8 +442,19 @@ class BuilderTools(j.builder.system._BaseClass):
             self.file_write(hostfile, val)
         self._cache.reset()
 
-    def file_write(self, location, content, mode=None, owner=None, group=None, check=False,
-                   strip=True, showout=True, append=False, sudo=False):
+    def file_write(
+        self,
+        location,
+        content,
+        mode=None,
+        owner=None,
+        group=None,
+        check=False,
+        strip=True,
+        showout=True,
+        append=False,
+        sudo=False,
+    ):
         """
         :param location: location to write to
         :type location: string
@@ -482,8 +528,7 @@ class BuilderTools(j.builder.system._BaseClass):
         source = self._replace(source)
         destination = self._replace(destination)
         if self.file_exists(destination) and (not self.file_is_link(destination)):
-            raise Exception(
-                "Destination already exists and is not a link: %s" % (destination))
+            raise Exception("Destination already exists and is not a link: %s" % (destination))
         self.file_attribs(destination, mode, owner, group)
 
     def replace(self, text, args={}):
@@ -525,14 +570,16 @@ class BuilderTools(j.builder.system._BaseClass):
 
     def getNetworkInfoGenerator(self):
         from Jumpscale.tools.nettools.NetTools import parseBlock, IPBLOCKS, IPMAC, IPIP, IPNAME
+
         exitcode, output, err = self.execute("ip a", showout=False)
         for m in IPBLOCKS.finditer(output):
-            block = m.group('block')
+            block = m.group("block")
             yield parseBlock(block)
 
     @property
     def networking_info(self):
         from Jumpscale.tools.nettools.NetTools import getNetworkInfo
+
         if not self._networking_info:
             all_info = list()
             for device in getNetworkInfo():
@@ -556,7 +603,7 @@ class BuilderTools(j.builder.system._BaseClass):
         :return: the path after removing the /
         :rtype: str
         """
-        return path[1:] if path.startswith('/') else path
+        return path[1:] if path.startswith("/") else path
 
     def dir_attribs(self, location, mode=None, owner=None, group=None, recursive=False, showout=False):
         """Updates the mode / owner / group for the given remote directory."""
@@ -566,14 +613,11 @@ class BuilderTools(j.builder.system._BaseClass):
             self._log_debug('set dir attributes:%s"%location')
         recursive = recursive and "-R " or ""
         if mode:
-            self.execute('chmod %s %s %s' %
-                     (recursive, mode, location), showout=False)
+            self.execute("chmod %s %s %s" % (recursive, mode, location), showout=False)
         if owner:
-            self.execute('chown %s %s %s' %
-                     (recursive, owner, location), showout=False)
+            self.execute("chown %s %s %s" % (recursive, owner, location), showout=False)
         if group:
-            self.execute('chgrp %s %s %s' %
-                     (recursive, group, location), showout=False)
+            self.execute("chgrp %s %s %s" % (recursive, group, location), showout=False)
 
     def dir_exists(self, location):
         """
@@ -600,8 +644,17 @@ class BuilderTools(j.builder.system._BaseClass):
         self.tools.dir_ensure(location)
         self.file_attribs(location, mode, owner, group)
 
-    def find(self, path, recursive=True, pattern="", findstatement="", type="", contentsearch="",
-             executable=False, extendinfo=False):
+    def find(
+        self,
+        path,
+        recursive=True,
+        pattern="",
+        findstatement="",
+        type="",
+        contentsearch="",
+        executable=False,
+        extendinfo=False,
+    ):
         """
 
         @param findstatement can be used if you want to use your own find arguments
@@ -688,8 +741,9 @@ class BuilderTools(j.builder.system._BaseClass):
     # CORE
     # -----------------------------------------------------------------------------
 
-    def execute(self, cmd, die=True,  showout=True, profile=True, replace=True,
-            shell=False, env=None, timeout=600, args={}):
+    def execute(
+        self, cmd, die=True, showout=True, profile=True, replace=True, shell=False, env=None, timeout=600, args={}
+    ):
         """
         @param profile, execute the bash profile first
         """
@@ -698,10 +752,19 @@ class BuilderTools(j.builder.system._BaseClass):
             raise RuntimeError("cmd cannot be empty")
 
         if profile:
-            cmd="%s\n%s"%(j.builder.system.bash.profile,cmd)
+            cmd = "%s\n%s" % (j.builder.system.bash.profile, cmd)
 
-        rc, out, err = j.sal.process.execute(cmd, cwd=None, timeout=timeout, die=die,env=env,
-                                             args=args, interactive=False, replace=replace, showout=showout)
+        rc, out, err = j.sal.process.execute(
+            cmd,
+            cwd=None,
+            timeout=timeout,
+            die=die,
+            env=env,
+            args=args,
+            interactive=False,
+            replace=replace,
+            showout=showout,
+        )
         return rc, out, err
 
     def cd(self, path):
@@ -739,8 +802,7 @@ class BuilderTools(j.builder.system._BaseClass):
     def command_check(self, command):
         """Tests if the given command is available on the system."""
         command = self._replace(command)
-        rc, out, err = self.execute("which '%s'" % command,
-                                die=False, showout=False, profile=True)
+        rc, out, err = self.execute("which '%s'" % command, die=False, showout=False, profile=True)
         return rc == 0
 
     def command_location(self, command):
@@ -748,14 +810,12 @@ class BuilderTools(j.builder.system._BaseClass):
         return location of cmd
         """
         command = self._replace(command)
-        rc, out, err = self.execute("which '%s'" % command,
-                                die=False, showout=False, profile=True)
+        rc, out, err = self.execute("which '%s'" % command, die=False, showout=False, profile=True)
         if rc > 0:
             raise RuntimeError("command '%s' does not exist, cannot find" % command)
         return out.strip()
 
-
-    #USE:j.builder.system.package.ensure
+    # USE:j.builder.system.package.ensure
 
     # def command_ensure(self, command, package=None):
     #     """Ensures that the given command is present, if not installs the

@@ -40,13 +40,12 @@ def main(self):
 
         o2 = j.data.serializers.jsxdata.loads(data)
 
-        print(o2) #TODO: does not serialize well
+        print(o2)  # TODO: does not serialize well
 
         assert o2.cmd.name == "a"
 
         o3 = so.get(data=data)
         assert o3.cmd.name == "a"
-
 
     def onelevellist():
 
@@ -65,55 +64,53 @@ def main(self):
         so2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.b")
         o = so.new()
 
-        cmd=o.cmds.new()
+        cmd = o.cmds.new()
         cmd.name = "a"
 
         assert o.cmds[0].name == "a"
 
-        assert o.cmds[0]._ddict == {'name': 'a', 'comment': '', 'schemacode': ''}
+        assert o.cmds[0]._ddict == {"name": "a", "comment": "", "schemacode": ""}
 
-        assert len(o.cmds)==1
+        assert len(o.cmds) == 1
 
         data = o._data
 
-        #to make sure after serialization is still ok
+        # to make sure after serialization is still ok
         assert o.cmds[0].name == "a"
 
-        assert o.cmds[0]._ddict == {'name': 'a', 'comment': '', 'schemacode': ''}
+        assert o.cmds[0]._ddict == {"name": "a", "comment": "", "schemacode": ""}
 
-        assert len(o.cmds)==1
+        assert len(o.cmds) == 1
 
         o2 = so.get(data=data)
 
         assert o2.cmds[0].name == "a"
 
-        assert o2.cmds[0]._ddict == {'name': 'a', 'comment': '', 'schemacode': ''}
+        assert o2.cmds[0]._ddict == {"name": "a", "comment": "", "schemacode": ""}
 
-        assert len(o2.cmds)==1
+        assert len(o2.cmds) == 1
 
         o3 = so.get(data=o._ddict)
 
-
         assert o3.cmds[0].name == "a"
 
-        assert o3.cmds[0]._ddict == {'name': 'a', 'comment': '', 'schemacode': ''}
+        assert o3.cmds[0]._ddict == {"name": "a", "comment": "", "schemacode": ""}
 
-        assert len(o3.cmds)==1
+        assert len(o3.cmds) == 1
 
         print(o)
 
-        cmd=o.cmds.new()
+        cmd = o.cmds.new()
         cmd.name = "cc"
 
-        assert len(o.cmds)==2
+        assert len(o.cmds) == 2
         assert o.cmds[1].name == "cc"
-
 
     onelevel()
     onelevellist()
 
-    #more deep embedded (2 levels)
-    
+    # more deep embedded (2 levels)
+
     schema = """
             @url = jumpscale.schema.test3.cmd
             name = ""
@@ -129,7 +126,7 @@ def main(self):
         cmd2 = (O) !jumpscale.schema.test3.cmd
         
         """
-    j.data.schema.add_from_text(schema) #just add
+    j.data.schema.add_from_text(schema)  # just add
     schema_object2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.serverschema")
     schema_object3 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.cmdbox")
 
@@ -161,4 +158,4 @@ def main(self):
 
     self._log_info("TEST DONE SCHEMA EMBED")
 
-    return ("OK")
+    return "OK"
