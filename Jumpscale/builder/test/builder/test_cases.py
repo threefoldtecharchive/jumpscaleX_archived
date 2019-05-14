@@ -179,3 +179,11 @@ class TestCases(BaseTest):
         self.assertTrue(len(j.sal.process.getProcessPid('apache2')))
         j.builder.apps.freeflow.stop() 
         self.assertEqual(0, len(j.sal.process.getProcessPid('apache2')))
+
+    def test022_cmake(self):
+        j.builder.libs.cmake.build(reset=True)
+        j.builder.libs.cmake.install()
+        try:
+            j.sal.process.execute('which cmake')
+        except:
+            self.assertTrue(False)
