@@ -16,6 +16,10 @@ pip3 install black
 
 make sure to follow instructions on https://black.readthedocs.io/en/stable/editor_integration.html to integrate in your editor.
 
+![](images/black_editor.png)
+
+do not forget to add the options in your editor
+
 ## Linting
 - Max-line length = 120
 - as much as possible pep8 compliant as done by black
