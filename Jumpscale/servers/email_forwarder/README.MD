@@ -13,21 +13,14 @@ The API need to be configured to work correctly. The followig configurations are
 - `relay_user`: the user name (email address) to authenticate with
 - `relay_password`: the password to authenticate with
 - `relay_ssh`: use ssl for communication with the SMTP server
-- `forward_config`: this is a list of forwarding configurations, it will be mapped to a dictionary (jsx schema does not support dictionaries). The format of each forwarding configuration is: "<destination_domain>|<comma separated list of source domains>" 
+- `forward_config`: this is a list of forwarding configurations
 
 ### Forwarding Configurations
-An example forwarding configurations can be:
+Forwarding configurations can be added by using the `add_forward_config` function:
 ```python
-["codescalers.com|incubaide.com,threefoldtech.com", "verizon.com|b-virtual.com,amplidata.com"]
+mf = j.servers.mail_forwarder.get(....)
+mf.add_forward_config("codescalers.com", ["incubaide.com", "threefoldtech.com"])
 ```
-This configurations will be mapped to the following dictionary:
-```python
-{
-    "codescalers.com": ["incubaid.com", "threefoldtech.com"],
-    "verizon.com": ["b-virtual.com", "amplidata.com"]
-}
-```
-Which means that any emails that are send to `<user>@incubaid.com` will be forwarded to `<user>@codescalers.com`
 
 
 ## Handling incoming non-configured domain

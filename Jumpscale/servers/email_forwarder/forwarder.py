@@ -3,10 +3,7 @@ Mail forwarder is Email server which accepts all our configured domains (wildcar
 """
 from .gsmtpd.server import SMTPServer
 import smtplib
-import logging
 
-
-logger = logging.getLogger(__name__)
 
 
 class MailForwarder(SMTPServer):
@@ -28,7 +25,7 @@ class MailForwarder(SMTPServer):
     authentication parameters.
     """
 
-    def __init__(self, addr_host, addr_port, forwarding_config, relay_config):
+    def __init__(self, addr_host, addr_port, forwarding_config, relay_config, logger):
         """Initializes a new mail forwarder
         :param addr_host: The host address for running an SMTP server
         :type addr_host: str
@@ -48,6 +45,8 @@ class MailForwarder(SMTPServer):
             "password": <>,
             "ssl": True/False
         }
+        :param logger: Logger object
+        :type logger: object
         """
         self._addr_host = addr_host
         self._addr_port = addr_port
@@ -55,7 +54,17 @@ class MailForwarder(SMTPServer):
         self._inverted_config = self._invert_config()
         self._relay_config = relay_config
         self._clients = {}
+        self._logger = logger
         super(MailForwarder, self).__init__((self._addr_host, self._addr_port))
+
+    
+    def add_forward_config(self, destination_domain, source_domains):
+        """Adds a new forward configuration
+        """
+        self._forwarding_config.update({destination_domain: source_domains})
+        self._inverted_config = self._invert_config()
+
+
         
     
     def process_message(self, peer, mailfrom, rcpttos, data, **kwargs):
@@ -78,12 +87,12 @@ class MailForwarder(SMTPServer):
         :type data: str
         """
         rcpttos = self._process_addresses(rcpttos)
-        logger.debug("MSG received! and will be send to {}".format(rcpttos))
+        self._logger.debug("MSG received! and will be send to {}".format(rcpttos))
         if rcpttos:
             try:
                 self._deliver(mailfrom, rcpttos, data)
             except Exception as e:
-                logger.error("Failed to forward email. Error: {}".format(
+                self._logger.error("Failed to forward email. Error: {}".format(
                     str(e)
                 ))
                 raise
@@ -99,7 +108,7 @@ class MailForwarder(SMTPServer):
             cl.sendemail(mailfrom, rcpttos, data)
             cl.close()
         except Exception as e:
-            logger.error("Errors while sending email to via {}. Error: {}".format(
+            self._logger.error("Errors while sending email to via {}. Error: {}".format(
                 self._relay_config["host"],
                 str(e)
             ))
@@ -114,7 +123,7 @@ class MailForwarder(SMTPServer):
                 # TODO: check for forwarding cycles
                 result.append("{}@{}".format(name, self._inverted_config[domain]))
             else:
-                logger.warn("Address {} does not match any of the configured doamins".format(address))
+                self._logger.warn("Address {} does not match any of the configured doamins".format(address))
         return result
     
     def _invert_config(self):
@@ -122,7 +131,7 @@ class MailForwarder(SMTPServer):
         for k, v in self._forwarding_config.items():
             for domain in v:
                 if domain in result:
-                    logger.warn("Domain {} already configured".format(domain))
+                    self._logger.warn("Domain {} already configured".format(domain))
                     continue
                 result[domain] = k
         return result

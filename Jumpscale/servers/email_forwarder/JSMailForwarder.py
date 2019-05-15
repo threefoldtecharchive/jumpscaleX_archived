@@ -23,28 +23,20 @@ class JSMailForwarderBase(j.application.JSBaseConfigClass):
         destination_domain = ""
         source_domains = (LS)
     """
-    
-    def _process_forward_config(self):
-        """Since the jsx sechema does not support dictionaries, we represent the forward_config
-        which initially should be represented as a dict in the form of:
-        {
-            <destination_domain> : [<source_domain1>, <source_domain2>, ...]
-        }
-        The above dict will be represented as:
-        ["<destination_domain>|<source_domain1>,<source_domain2>", ...]
 
-        and the purpose of this function is to convert from the jsx schema LS format to the dictionary format
+
+    def add_forward_config(self, destination_domain, source_domains):
+        """Adds a new forward configurations
         """
-        self._forward_config = {}
-        for item in self.forward_config:
-            mapping_items = item.split("|")
-            if len(mapping_items) > 1:
-                self._forward_config[mapping_items[0]] = map(lambda item: item.strip(), mapping_items[1].split(','))
-            else:
-                self._log_warning("forward_config is not correctly configured.")
+        model = j.data.schema.get(url = "jumpscale.mailforwarder.forward_config.1").new()
+        model.destination_domain = destination_domain
+        model.source_domains = source_domains
+        self.forward_config.append(model)
+        self._forwarder.add_forward_config(destination_domain, source_domains)
+        
 
     def _init(self):
-        self._process_forward_config()
+        self._forward_config = {}
         relay_config = {
             "host": self.relay_host,
             "port": self.relay_port,
@@ -52,16 +44,26 @@ class JSMailForwarderBase(j.application.JSBaseConfigClass):
             "password": self.relay_password,
             "ssl": self.relay_ssl
         }
+        for item in self.forward_config:
+            self._forward_config[item.destination_domain] = item.source_domains
+        logger = LoggerAdaptor(self)
         self._forwarder = MailForwarder(self.listening_host,
                                         self.listening_port,
                                         self._forward_config,
-                                        relay_config)
+                                        relay_config,
+                                        logger)
     
     def start(self):
         """Starts a forwarder server
         """
         self._forwarder.run()
+    
 
+class JSMailForwarderFactory(j.application.JSBaseConfigsClass):
+    """Factory class
+    """
+    __jslocation__ = "j.servers.mail_forwarder"
+    _CHILDCLASS = JSMailForwarderBase
 
     def test(self, gdomain_user, gdomain_password):
         mf = j.servers.mail_forwarder.get(name = "test",
@@ -71,13 +73,21 @@ class JSMailForwarderBase(j.application.JSBaseConfigClass):
                                           relay_port=587,
                                           relay_user=gdomain_user,
                                           relay_password=gdomain_password,
-                                          relay_ssl=True,
-                                          forward_config=["codescalers.com|incubaide.com,threefoldtech.com"])
+                                          relay_ssl=True)
+        mf.add_forward_config("codescalers.com", ["incubaide.com", "threefoldtech.com"])
         mf.start()
-    
 
-class JSMailForwarderFactory(j.application.JSBaseConfigsClass):
-    """Factory class
-    """
-    __jslocation__ = "j.servers.mail_forwarder"
-    _CHILDCLASS = JSMailForwarderBase
+
+class LoggerAdaptor:
+
+    def __init__(self, js_obj):
+        self._js_obj = js_obj
+    def info(self, msg):
+        self._js_obj._log_info(msg)
+    def error(self, msg):
+        self._js_obj._log_error(msg)
+    def warn(self, msg):
+        self._js_obj._log_warning(msg)
+    def debug(self, msg):
+        self._js_obj._log_debug(msg)
+
