@@ -10,22 +10,7 @@ def main(self):
 
     kosmos 'j.data.bcdb.test(name="redis")'
 
-    use a bcdb which is using sqlite
-
-    REQUIREMENTS:
-
-    ```
-    apt-get install python3.6-dev
-    mkdir -p /root/opt/bin
-    kosmos 'j.servers.zdb.build()'
-    pip3 install pycapnp peewee cryptocompare
-
-    ```
-
-
     """
-
-    # TODO: need to use prefab to check the prerequisites are installed if not DO
 
     def do(zdb=False):
 
@@ -95,7 +80,6 @@ def main(self):
 
         self._log_debug("validate added objects")
         # there should be 10 items now there
-        j.shell()
         assert redis_cl.hlen("objects:despiegk.test2") == 10
         assert redis_cl.hdel("objects:despiegk.test2", 5) == 1
         assert redis_cl.hlen("objects:despiegk.test2") == 9
@@ -152,7 +136,7 @@ def main(self):
         # SQLITE BACKEND
         self.redis_server_start(port=6380, background=True, zdbclient_addr=None)
         do()
-        # restart redis lets see if schema's are there autoloaded
+        # restart redis server lets see if schema's are there autoloaded
         self.redis_server_start(port=6380, background=True, zdbclient_addr=None)
         check_after_restart()
 
@@ -162,10 +146,10 @@ def main(self):
         c.reset()  # removes the namespace from zdb, all is gone, need to create again
         c.namespace_new("test", secret="1234")
         self.redis_server_start(port=6380, background=True)
+        do()
 
     sqlite_test()
-    zdb_test()
-    do()
+    # zdb_test()
     self._log_debug("TEST OK")
 
     return "OK"
