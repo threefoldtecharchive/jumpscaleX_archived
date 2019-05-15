@@ -21,8 +21,17 @@ class DataObjBase:
     def _capnp_schema(self):
         return self._schema._capnp_schema
 
+    def _data_update(self, data):
+        if not isinstance(data, dict):
+            raise RuntimeError("need to be dict")
+        if self._model is not None:
+            data = self._model._dict_process_in(data)
+        for key, val in data.items():
+            setattr(self, key, val)
+
     def _load_from_data(self, data=None):
         """
+        THIS ERASUSES EXISTING DATA !!!
 
         :param data: can be binary (capnp), str=json, or dict
         :return:
@@ -55,10 +64,7 @@ class DataObjBase:
                 data = j.data.serializers.json.loads(data)
             if isinstance(data, dict):
                 if data != {}:
-                    if self._model is not None:
-                        data = self._model._dict_process_in(data)
-                    for key, val in data.items():
-                        setattr(self, key, val)
+                    self._data_update(data)
             else:
                 raise j.exceptions.Input("_load_from_data when string needs to be dict or json")
 

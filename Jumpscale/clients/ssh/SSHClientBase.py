@@ -108,7 +108,7 @@ class SSHClientBase(j.application.JSBaseConfigClass):
         :return:
         """
         if self._syncer is None:
-            self._syncer = j.tools.syncer.get(name=self.name, ssh_client=self)
+            self._syncer = j.tools.syncer.get(name=self.name, ssh_client_name=self.name)
         return self._syncer
 
     @property

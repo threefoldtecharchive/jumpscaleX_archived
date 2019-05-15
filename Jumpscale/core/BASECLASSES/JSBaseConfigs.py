@@ -49,15 +49,11 @@ class JSBaseConfigs(JSBase):
         :param childclass_name, if different typen of childclass, specify its name
         :return: the service
         """
-        kl = self._childclass_selector(**kwargs)
         data = self._model.new(data=kwargs)
-        for model in self._model.get_all():
-            if model.name == name:
-                raise RuntimeError("can't create , this name already exist")
         data.name = name
-        self._children[name] = kl(parent=self, data=data, **kwargs)
-        self._children[name]._isnew = True
-        return self._children[name]
+        r = self._childclass_create(name=name, data=data, kwargs=kwargs)
+        r._isnew = True
+        return r
 
     def get(self, name="main", id=None, die=True, create_new=True, **kwargs):
         """
@@ -70,6 +66,7 @@ class JSBaseConfigs(JSBase):
         :return: the service
         """
         self._log_debug("get child:'%s' with id:%s from '%s'" % (name, id, self._name), data=kwargs)
+
         if name is not None and name in self._children:
             return self._children[name]
         new = False
@@ -81,9 +78,7 @@ class JSBaseConfigs(JSBase):
 
             if len(res) < 1:
                 if create_new:
-                    new = True
-                    kwargs["name"] = name
-                    data = self._model.new(data=kwargs)
+                    return self.new(name=name, **kwargs)
                 else:
                     if not die:
                         return
@@ -104,13 +99,9 @@ class JSBaseConfigs(JSBase):
                 raise RuntimeError("kwargs need to be specified is name is not.")
             res = self.findData(**kwargs)
             if len(res) < 1:
-                if create_new:
-                    data = self._model.new(data=kwargs)
-                    new = True
-                else:
-                    return self._error_input_raise(
-                        "Did not find instances for :%s, search criteria:\n%s" % (self.__class__._location, kwargs)
-                    )
+                return self._error_input_raise(
+                    "Did not find instances for :%s, search criteria:\n%s" % (self.__class__._location, kwargs)
+                )
 
             elif len(res) > 1:
                 return self._error_input_raise(
@@ -119,12 +110,14 @@ class JSBaseConfigs(JSBase):
             else:
                 data = res[0]
 
-        kl = self._childclass_selector(**kwargs)
+        return self._childclass_create(name=name, data=data, kwargs=kwargs)
 
+    def _childclass_create(self, name, data, kwargs):
+        if name not in kwargs:
+            kl = self._childclass_selector(name=name, **kwargs)
+        else:
+            kl = self._childclass_selector(**kwargs)
         self._children[name] = kl(data=data, parent=self, **kwargs)
-        if new:
-            self._children[name]._isnew = True
-
         return self._children[name]
 
     def reset(self):

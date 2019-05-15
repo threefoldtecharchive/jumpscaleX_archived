@@ -62,13 +62,13 @@ class JSBaseDataObj(JSBase):
         # always needs to be last
         JSBase._init2(self, **kwargs)
 
-    def _obj_cache_reset(self):
-        """
-        puts the object back to its basic state
-        :return:
-        """
-        JSBase._obj_cache_reset(self)
-        self.__dict__["_data"] = None
+    # def _obj_cache_reset(self):
+    #     """
+    #     puts the object back to its basic state
+    #     :return:
+    #     """
+    #     JSBase._obj_cache_reset(self)
+    #     self.__dict__["_data"] = None
 
     @property
     def _id(self):
@@ -82,7 +82,7 @@ class JSBaseDataObj(JSBase):
         :return:
         """
         ddict = self.data._ddict
-        self.data._load_from_data(data=kwargs)
+        self.data._data_update(data=kwargs)
 
     def edit(self):
         """
