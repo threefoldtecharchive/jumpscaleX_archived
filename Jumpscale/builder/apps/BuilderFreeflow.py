@@ -3,7 +3,7 @@ import textwrap
 builder_method = j.builder.system.builder_method
 
 
-class BuilderFreeflow(j.builder.system._Class):
+class BuilderFreeflow(j.builder.system._BaseClass):
     NAME = "freeflow"
     @builder_method()
     def install(self, reset =False):
