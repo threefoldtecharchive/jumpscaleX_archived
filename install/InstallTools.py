@@ -1638,6 +1638,9 @@ class MyEnv:
     @staticmethod
     def config_default_get(config={}):
 
+        if "DIR_BASE" not in config:
+            config["DIR_BASE"] = "/sandbox"
+
         if "HOMEDIR" in os.environ:
             dir_home = os.environ["HOMEDIR"]
         elif "HOME" in os.environ:
