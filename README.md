@@ -84,4 +84,6 @@ def test_main(self)
 
 
 ## Collaboration Conventions
-[check conventions](docs/CONTRIBUTING.md)
+[check python conventions](docs/CONTRIBUTING.md)
+
+[check git flow (commit, versioning and branching)](docs/git_flow.md)
