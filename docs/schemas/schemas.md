@@ -1,13 +1,13 @@
 # What is JumpScale Schema
 
 According to wikipedia *"The word schema comes from the Greek word σχήμα (skhēma), which means shape, or more generally,
- plan"*.  
+ plan"*.
 In databases "Schema" is some files or some structured code describing the tables and it's fields and data types of each
- field.  
+ field.
 
-JumpScale Schema is a way to define an efficient but yet powerful schemas for your data, Taking advantage of 
-[capnp's]('https://capnproto.org/language.html') high performance and readability of 
-[TOML Lang]("https://github.com/toml-lang/toml") combining it with complex data types to achieve both 
+JumpScale Schema is a way to define an efficient but yet powerful schemas for your data, Taking advantage of
+[capnp's]('https://capnproto.org/language.html') high performance and readability of
+[TOML Lang]("https://github.com/toml-lang/toml") combining it with complex data types to achieve both
 usability and high performance.
 
 # What do you need to know to define a new schema
@@ -20,7 +20,7 @@ The very first part of the schema is the url
 
 > **its good practice to put an version nr at the end of the url**
 
-you can define the schema url like that.  
+you can define the schema url like that.
 ```toml
 @url = schema.test.1
 ```
@@ -32,9 +32,9 @@ for the internals of types see [basetypes/readme.md]
 
 ## collection types
 
-- L 
+- L
 - e.g. ```LI``` is list of integer
-- e.g. ```LS``` is list of string 
+- e.g. ```LS``` is list of string
 
 ## collection of other objects
 
@@ -68,11 +68,11 @@ schema = """
     """
 s=j.data.schema.get(schema_text=schema)
 o=s.new()
-assert o.enum == "RED" 
+assert o.enum == "RED"
 o.enum = 3
 assert o.enum == 'RED'  #is always sorted on alfabet
 
-``` 
+```
 
 ### defaults
 
@@ -82,12 +82,12 @@ assert o.enum == 'RED'  #is always sorted on alfabet
     - if type not specified the schemas will try to guess the type e.g. Int, String, ...
 
 
-# How to use schema 
+# How to use schema
 
 ```python
 schema = """
         @url = despiegk.test
-        llist2 = "" (LS) #L means = list, S=String        
+        llist2 = "" (LS) #L means = list, S=String
         nr = 4
         date_start = 0 (D)
         description = ""
@@ -101,7 +101,7 @@ schema = """
 
 ```python
 @url = despiegk.test.1
-llist2 = "" (LS) #L means = list, S=String        
+llist2 = "" (LS) #L means = list, S=String
 nr = 4
 date_start = 0 (D)
 description = ""
@@ -115,35 +115,9 @@ U = 0.0
 pool_type = "managed,unmanaged" (E)
 ```
 
-## how to get a new schema
+## how to get/add a new schema
 
-```python
-def get(self, schema_text="", url=None, die=True):
-    """
-    get schema from the url or schema_text
-
-    Keyword Arguments:
-        schema_text {str} -- schema file path or shcema string  (default: {""})
-        url {[type]} -- url of your schema e.g. @url = despiegk.test  (default: {None})
-        
-    if die False and schema is not found e.g. based on url, then will return None
-
-    Returns:
-        Schema
-    """
-    ...
-
-SCHEMA="""
-@url =  jumpscale.digitalme.package.1
-name = "UNKNOWN" (S)           #official name of the package, there can be no overlap (can be dot notation)
-abool = true (B)
-"""
-
-s=j.data.schema.get(SCHEMA)
-
-#if the schema already exists then can do
-s=j.data.schema.get(url="jumpscale.digitalme.package.1") #will die if not exists
-```
+see [schemas_get_add](schemas_get_add.md)
 
 ## how to get a new object (add data using schema)
 
