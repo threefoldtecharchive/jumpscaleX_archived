@@ -11,8 +11,9 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         if self._done_check("install") and reset is False:
             return
         #j.builder.db.mariadb.install(start=True)
-        j.builder.system.package.install(["lamp-server^",
-                                         "php-curl",
+        j.builder.system.package.install(["lamp-server^"])
+        j.builder.system.package._apt_wait_free()
+        j.builder.system.package.install(["php-curl",
                                          "php-gd",
                                          "php-mbstring",
                                          "php-intl",
@@ -21,13 +22,8 @@ class BuilderFreeflow(j.builder.system._BaseClass):
                                          "php-apcu",
                                          "php-sqlite3"
                                          ])
-
         j.builder.tools.file_download("https://www.humhub.org/en/download/package/humhub-1.3.12.tar.gz","/var/www/html/humhub-1.3.12.tar.gz")
         j.builder.tools.file_expand("/var/www/html/humhub-1.3.12.tar.gz", self.HUMHUB_PATH, removeTopDir=True)
-
-
-
-
 
         sql_init_script = """
         /etc/init.d/mysql start
@@ -111,3 +107,18 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         if create_flist:
             #import ipdb; ipdb.set_trace()
             print(self._flist_create(zhub_client))
+    @property
+    def startup_cmds(self):
+        start_script = """
+        if [ ! -f /etc/apache2/conf-available/fqdn.conf ]; then
+        echo "ServerName localhost"  > /etc/apache2/conf-available/fqdn.conf
+        a2enconf fqdn
+        fi
+        """
+        j.builder.tools.execute(start_script)
+        sql = j.tools.startupcmd.get("mysql-server", "mysqld", path="/usr/sbin")
+        apache2 = j.tools.startupcmd.get("apache2-server", "apachectl -DFOREGROUND",cmd_stop='apachectl stop',path="/usr/sbin")
+        return [sql,apache2]
+    def test(self):
+        self.stop()
+        self.start()

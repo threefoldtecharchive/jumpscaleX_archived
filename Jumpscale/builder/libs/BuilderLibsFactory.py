@@ -8,10 +8,8 @@ class BuilderLibsFactory(j.builder.system._BaseFactoryClass):
 
         from .BuilderOpenSSL import BuilderOpenSSL
         from .BuilderCapnp import BuilderCapnp
+        from .BuilderCmake import BuilderCmake
         self.openssl = BuilderOpenSSL()
         self.capnp = BuilderCapnp()
+        self.cmake = BuilderCmake()
         #TODO:*1
-
-
-
-

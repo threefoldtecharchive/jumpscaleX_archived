@@ -47,7 +47,7 @@ class Utils:
         :type committer: str
         """
         if commit:
-            repo = repo.strip('threefoldtech/')
+            repo = repo[repo.find('/') + 1:]
             msg = '\n'.join([msg, repo, branch, committer, commit])
         for _ in range(0, 5):
             try:    
