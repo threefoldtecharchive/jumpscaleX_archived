@@ -95,6 +95,7 @@ def main(self):
 
         self._log_debug("validate added objects")
         # there should be 10 items now there
+        j.shell()
         assert redis_cl.hlen("objects:despiegk.test2") == 10
         assert redis_cl.hdel("objects:despiegk.test2", 5) == 1
         assert redis_cl.hlen("objects:despiegk.test2") == 9

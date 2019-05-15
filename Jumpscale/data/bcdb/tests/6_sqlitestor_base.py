@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.bcdb.test(name="sqlitestor_base")'
+    kosmos 'j.data.bcdb.test(name="sqlitestor_base")'
 
     use a bcdb which is using sqlite
 

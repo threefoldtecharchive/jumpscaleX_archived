@@ -18,7 +18,7 @@ make sure to follow instructions on https://black.readthedocs.io/en/stable/edito
 
 ![](images/black_editor.png)
 
-do not forget to add the options in your editor
+do not forget to add the options '-l 120 -t py37' in your editor
 
 ## Linting
 - Max-line length = 120
@@ -50,3 +50,18 @@ example:
 :rtype: [type]
 """
 ```
+
+## projects
+
+### Columns
+
+make sure following columns are available
+
+![](images/project_kanban.png)
+
+need to use
+
+![](images/kanban_templates.png)
+
+choose the automated kanban
+

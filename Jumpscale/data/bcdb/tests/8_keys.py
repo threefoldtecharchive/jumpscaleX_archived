@@ -4,7 +4,6 @@ from Jumpscale import j
 def main(self):
     """
     to run:
-
     kosmos 'j.data.bcdb.test(name="keys")'
 
     """
@@ -70,6 +69,9 @@ def main(self):
     o_check = m.get_all()[-1]
     assert o_check.id == o.id
     rkey = bcdb._hset_index_key_get(schema=m.schema)
+    from pudb import set_trace
+
+    set_trace()
     o.delete()
     for key in j.clients.credis_core.keys(rkey + b":*"):
         for key2 in j.clients.credis_core.hkeys(key):
