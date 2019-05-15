@@ -107,7 +107,7 @@ class DataObjBase:
                 for prop_u in self._model.schema.properties_unique:
                     # find which properties need to be unique
                     # unique properties have to be indexed
-                    args_search = {prop_u.name: str(getattr(self, prop_u.name))}
+                    args_search = {prop_u.name: getattr(self, prop_u.name)}
                     r = self._model.get_from_keys(**args_search)
                     msg = "could not save, was not unique.\n%s.\nfound:\n%s" % (args_search, r)
                     if len(r) > 1:

@@ -63,35 +63,58 @@ def main(self):
     with test_case.assertRaises(Exception):
         schema_obj2.save()
     schema_obj2.test = "s" + str(uuid4()).replace("-", "")[:10]
-    j.core.tools.log("On the second object, try to use same new_name for first one, should success", level=20)
 
+    j.core.tools.log("On the second object, try to use same new_name for first one, should success", level=20)
     schema_obj2.new_name = new_name
     schema_obj2.save()
-    j.core.tools.log("On the second object, try to use same number for first one, should fail", level=20)
 
+    j.core.tools.log("On the second object, try to use same number for first one, should fail", level=20)
     schema_obj2.number = number
+    # check that in DB only 1 matches from the past
+    r4 = self.model.get_from_keys(number=number)
+    print(r4)
+    assert r4[0].id == schema_obj.id
+    assert r4[0].id != schema_obj2.id
+    assert len(r4) == 1  # there should be one in DB and index should return 1
     with test_case.assertRaises(Exception):
         schema_obj2.save()
     schema_obj2.number = random.randint(100, 199)
-
     schema_obj.number = random.randint(200, 299)
     schema_obj.save()
     schema_obj2.number = number
+    args_search = {"number": schema_obj2.number}
+    r = self.model.get_from_keys(**args_search)
+    assert len(r) == 0
     schema_obj2.save()
+
     j.core.tools.log("Delete the second object and create new one.", level=20)
+    name = schema_obj2.name + ""
+    test = schema_obj2.test + ""
+    number = schema_obj2.number + 0
+    args_search = {"number": number}
+    r = self.model.get_from_keys(**args_search)
+    assert len(r) == 1
     schema_obj2.delete()
-    schema_obj3 = self.model.new()
+    # lets now check that the index has been cleaned
+    args_search = {"number": number}
+    r = self.model.get_from_keys(**args_search)
+    assert len(r) == 0
+    args_search = {"name": name}
+    r = self.model.get_from_keys(**args_search)
+    assert len(r) == 0
+    args_search = {"test": test}
+    r = schema_obj2._model.get_from_keys(**args_search)
+    assert len(r) == 0
+
+    schema_obj2.save()
+
     j.core.tools.log(
         "Set the new object's attributes with the same attributes of the second object, should success.", level=20
     )
-
+    schema_obj3 = self.model.new()
+    assert schema_obj3.id == None
     schema_obj3.name = name
     schema_obj3.save()
-    schema_obj3.test = test
-    schema_obj3.save()
-    schema_obj3.new_name = new_name
-    schema_obj3.save()
-    schema_obj3.number = number
-    schema_obj3.save()
+
     self.admin_zdb.namespace_delete("unique")
     j.servers.zdb.stop()

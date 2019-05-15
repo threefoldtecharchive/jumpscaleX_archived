@@ -55,6 +55,8 @@ class BCDBModel(j.application.JSBaseClass):
 
         self._triggers = []
 
+        # self._md5_check_debug = {}  # is a debug test for hash collissions
+
         # self.custom = custom
         self._init_()
         if reset:
@@ -287,7 +289,7 @@ class BCDBModel(j.application.JSBaseClass):
             data = j.data.serializers.msgpack.dumps(ids)
             hash = self._index_key_redis_get(key)
             self._log_debug("set key:%s (id:%s)" % (key, obj_id))
-            j.clients.credis_core.hdel(self._redis_prefix + b":" + hash[0:2], hash[2:], data)
+            j.clients.credis_core.hset(self._redis_prefix + b":" + hash[0:2], hash[2:], data)
 
     def _index_keys_destroy(self):
         for key in j.clients.credis_core.keys(self._redis_prefix + b"*"):
@@ -325,6 +327,13 @@ class BCDBModel(j.application.JSBaseClass):
                 ids = [x for x in ids if x in ids_prev]
             ids_prev = ids
 
+        def check2(obj, args):
+            dd = obj._ddict
+            for propname, val in args.items():
+                if dd[propname] != val:
+                    return False
+            return True
+
         res = []
         for id_ in ids:
             res2 = self.get(id_, die=None)
@@ -332,11 +341,12 @@ class BCDBModel(j.application.JSBaseClass):
                 if delete_if_not_found:
                     for key, val in args.items():
                         self._index_key_delete(key, val, id_)
-                else:
-                    raise RuntimeError(
-                        "backend data store out of sync with key index in redis (redis has it, backend not)"
-                    )
-            res.append(res2)
+            else:
+                # we now need to check if there was no false positive
+                if check2(res2, args):
+                    res.append(res2)
+                # else:
+                #     self._log_warning("index system produced false positive")
 
         return res
 
@@ -361,9 +371,13 @@ class BCDBModel(j.application.JSBaseClass):
         :return:
         """
         # schema id needs to be in to make sure its different key per schema
-        key2 = j.core.text.strip_to_ascii_dense(key) + str(self.schema.sid)
+        # key2 = j.core.text.strip_to_ascii_dense(key) + str(self.schema._md5)
+        key2 = key + str(self.schema._md5)
         # can do 900k per second
         hash = blake2b(str(key2).encode(), digest_size=10).digest()
+        # if hash in self._md5_check_debug and self._md5_check_debug[hash] != key2:
+        #     # hash collission
+        #     j.shell()
         return hash
 
     @queue_method_results
