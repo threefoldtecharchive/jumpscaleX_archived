@@ -168,7 +168,7 @@ class MarkDownDocs(j.application.JSBaseClass):
     def load(self, path="", name="", sonic_client=None):
         self.macros_load()
         if path.startswith("http"):
-            path = j.clients.git.getContentPathFromURLorPath(path, pull=True)
+            path = j.clients.git.getContentPathFromURLorPath(path)
         ds = DocSite(path=path, name=name, sonic_client=sonic_client or self._sonic_client)
         self.docsites[ds.name] = ds
         return self.docsites[ds.name]
