@@ -3,7 +3,7 @@ import textwrap
 builder_method = j.builder.system.builder_method
 
 
-class BuilderFreeflow(j.builder.system._BaseClass):
+class BuilderFreeflow(j.builder.system._Class):
     NAME = "freeflow"
     @builder_method()
     def install(self, reset =False):
@@ -11,8 +11,9 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         if self._done_check("install") and reset is False:
             return
         #j.builder.db.mariadb.install(start=True)
-        j.builder.system.package.install(["lamp-server^",
-                                         "php-curl",
+        j.builder.system.package.install(["lamp-server^"])
+        j.builder.system.package._apt_wait_free()
+        j.builder.system.package.install(["php-curl",
                                          "php-gd",
                                          "php-mbstring",
                                          "php-intl",
@@ -21,13 +22,8 @@ class BuilderFreeflow(j.builder.system._BaseClass):
                                          "php-apcu",
                                          "php-sqlite3"
                                          ])
-
         j.builder.tools.file_download("https://www.humhub.org/en/download/package/humhub-1.3.12.tar.gz","/var/www/html/humhub-1.3.12.tar.gz")
         j.builder.tools.file_expand("/var/www/html/humhub-1.3.12.tar.gz", self.HUMHUB_PATH, removeTopDir=True)
-
-
-
-
 
         sql_init_script = """
         /etc/init.d/mysql start
@@ -123,6 +119,6 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         sql = j.tools.startupcmd.get("mysql-server", "mysqld", path="/usr/sbin")
         apache2 = j.tools.startupcmd.get("apache2-server", "apachectl -DFOREGROUND",cmd_stop='apachectl stop',path="/usr/sbin")
         return [sql,apache2]
-    def test(self, zos_client=None):
+    def test(self):
         self.stop()
         self.start()
