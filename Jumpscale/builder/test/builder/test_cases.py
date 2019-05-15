@@ -30,17 +30,7 @@ class TestCases(BaseTest):
         j.builder.web.nginx.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('nginx')))
 
-    def test004_openresty(self):
-        j.builder.web.openresty.build(reset=True)
-        j.builder.web.openresty.install()
-        j.builder.web.openresty.start()
-        time.sleep(10)
-        self.assertTrue(len(j.sal.process.getProcessPid('openresty')))
-        j.builder.web.openresty.stop()
-        time.sleep(10)
-        self.assertEqual(0, len(j.sal.process.getProcessPid('openresty')))
-
-    def test005_traefik(self):
+    def test004_traefik(self):
         j.builder.web.traefik.build(reset=True)
         j.builder.web.traefik.install()
         j.builder.web.traefik.start()
@@ -48,7 +38,7 @@ class TestCases(BaseTest):
         j.builder.web.traefik.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('traefik')))
 
-    def test006_minio(self):
+    def test005_minio(self):
         j.builder.storage.minio.build(reset=True)
         j.builder.storage.minio.install()
         j.builder.storage.minio.start()
@@ -56,18 +46,25 @@ class TestCases(BaseTest):
         j.builder.storage.minio.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('minio')))
 
-    def test007_golang(self):
+    def test006_golang(self):
         j.builder.runtimes.golang.build(reset=True)
         j.builder.runtimes.golang.install()
         self.assertTrue(j.builder.runtimes.golang.is_installed)
 
-    def test008_lua(self):
+    def test007_lua(self):
         j.builder.runtimes.lua.build(reset=True)
         j.builder.runtimes.lua.install()
         try:
             j.sal.process.execute('which lua')
         except:
             self.assertTrue(False)
+        j.builder.web.openresty.start()
+        time.sleep(10)
+        self.assertTrue(len(j.sal.process.getProcessPid('openresty')))
+        j.builder.web.openresty.stop()
+        time.sleep(10)
+        self.assertEqual(0, len(j.sal.process.getProcessPid('openresty')))
+
 
     def test008_nimlang(self):
         j.builder.runtimes.nimlang.build(reset=True)
@@ -145,10 +142,10 @@ class TestCases(BaseTest):
         self.assertEqual(0, len(j.sal.process.getProcessPid('zerotier')))
 
     def test017_rust(self):
-        j.builder.runtimes.rust.build(reset=True) 
+        j.builder.runtimes.rust.build(reset=True)
         j.builder.runtimes.rust.install()
         try:
-            j.sal.process.execute('which rustup')        
+            j.sal.process.execute('which rustup')
         except:
             self.assertTrue(False)
 
@@ -174,10 +171,10 @@ class TestCases(BaseTest):
 
     def test021_freeflow(self):
         j.builder.apps.freeflow.build(reset=True)
-        j.builder.apps.freeflow.install(reset=True) 
+        j.builder.apps.freeflow.install(reset=True)
         j.builder.apps.freeflow.start()
         self.assertTrue(len(j.sal.process.getProcessPid('apache2')))
-        j.builder.apps.freeflow.stop() 
+        j.builder.apps.freeflow.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid('apache2')))
 
     def test022_cmake(self):
