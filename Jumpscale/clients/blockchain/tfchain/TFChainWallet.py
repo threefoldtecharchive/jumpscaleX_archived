@@ -156,7 +156,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         The addresses owned and used by this wallet.
         """
         # key scan first
-        scanned_new_keys = self._key_scan()
+        _ = self._key_scan()
         # than list all addresses
         return list(self._key_pairs.keys())
 
@@ -182,7 +182,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         The balance "sheet" of the wallet.
         """
         # key scan first
-        scanned_new_keys = self._key_scan()
+        _ = self._key_scan()
 
         # first get chain info
         info = self.client.blockchain_info_get()
@@ -414,6 +414,15 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             # and return the created/submitted transaction for optional user consumption
 
         return TransactionSendResult(txn, submit)
+
+    def coin_transaction_builder_new(self):
+        """
+        Create a transaction builder that can be used to
+        add multiple outputs, in a chained manner, and send them all at once.
+
+        ERC20 coin outputs are not supported in the Coin Transaction Builder.
+        """
+        return CoinTransactionBuilder(self)
 
     def transaction_sign(self, txn, submit=True):
         """
@@ -2381,3 +2390,109 @@ class WalletsBalance(WalletBalance):
                     return outputs, collected
         # we return whatever we have collected, no matter if it is sufficient
         return outputs, collected
+
+class CoinTransactionBuilder():
+    def __init__(self, wallet):
+        self._txn = j.clients.tfchain.types.transactions.new()
+        self._wallet = wallet
+
+    def output_add(self, recipient, amount, lock=None):
+        """
+        Add an output to the transaction, returning the transaction
+        itself to allow for chaining.
+
+        The recipient is one of:
+            - None: recipient is the Free-For-All wallet
+            - str (or unlockhash): recipient is a personal wallet
+            - list: recipient is a MultiSig wallet where all owners (specified as a list of addresses) have to sign
+            - tuple (addresses, sigcount): recipient is a sigcount-of-addresscount MultiSig wallet
+            - an ERC20 address (str/ERC20Address), amount will be send to this ERC20 address
+
+        The amount can be a str or an int:
+            - when it is an int, you are defining the amount in the smallest unit (that is 1 == 0.000000001 TFT)
+            - when defining as a str you can use the following space-stripped and case-insentive formats:
+                - '123456789': same as when defining the amount as an int
+                - '123.456': define the amount in TFT (that is '123.456' == 123.456 TFT == 123456000000)
+                - '123456 TFT': define the amount in TFT (that is '123456 TFT' == 123456 TFT == 123456000000000)
+                - '123.456 TFT': define the amount in TFT (that is '123.456 TFT' == 123.456 TFT == 123456000000)
+
+        @param recipient: see explanation above
+        @param amount: int or str that defines the amount of TFT to set, see explanation above
+        @param lock: optional lock that can be used to lock the sent amount to a specific time or block height, see explation above
+        """
+        if self._txn is None:
+            raise RuntimeError("coin transaction builder is already consumed")
+
+        amount = Currency(value=amount)
+        if amount <= 0:
+            raise ValueError("no amount is defined to be sent")
+        recipient = j.clients.tfchain.types.conditions.from_recipient(recipient, lock=lock)
+        self._txn.coin_output_add(value=amount, condition=recipient)
+        return self
+
+    def send(self, source=None, refund=None, data=None):
+        txn = self._txn
+        self._txn = None
+
+        # fund amount
+        amount = sum([co.value for co in txn.coin_outputs])
+        balance = self._wallet.balance
+        miner_fee = self._wallet.client.minimum_miner_fee
+        inputs, remainder, suggested_refund = balance.fund(amount+miner_fee, source=source)
+
+        # define the refund condition
+        if refund is None: # automatically choose a refund condition if none is given
+            if suggested_refund is None:
+                refund = j.clients.tfchain.types.conditions.unlockhash_new(unlockhash=self._wallet.address)
+            else:
+                refund = suggested_refund
+        else:
+            # use the given refund condition (defined as a recipient)
+            refund = j.clients.tfchain.types.conditions.from_recipient(refund)
+
+        # add refund coin output if needed
+        if remainder > 0:
+            txn.coin_output_add(value=remainder, condition=refund)
+        # add the miner fee
+        txn.miner_fee_add(miner_fee)
+
+        # add the coin inputs
+        txn.coin_inputs = inputs
+
+        # if there is data to be added, add it as well
+        if data:
+            txn.data = data
+
+        # generate the signature requests
+        sig_requests = txn.signature_requests_new()
+        if len(sig_requests) == 0:
+            raise Exception("BUG: sig requests should not be empty at this point, please fix or report as an issue")
+
+        # fulfill the signature requests that we can fulfill
+        for request in sig_requests:
+            try:
+                key_pair = self._wallet.key_pair_get(request.wallet_address)
+                input_hash = request.input_hash_new(public_key=key_pair.public_key)
+                signature = key_pair.sign(input_hash)
+                request.signature_fulfill(public_key=key_pair.public_key, signature=signature)
+            except KeyError:
+                pass # this is acceptable due to how we directly try the key_pair_get method
+
+        # txn should be fulfilled now
+        submit = txn.is_fulfilled()
+        if submit:
+            # submit the transaction
+            txn.id = self._wallet._transaction_put(transaction=txn)
+
+            # update balance
+            for ci in txn.coin_inputs:
+                balance.output_add(ci.parent_output, confirmed=False, spent=True)
+            addresses = self._wallet.addresses + balance.addresses_multisig
+            for idx, co in enumerate(txn.coin_outputs):
+                if str(co.condition.unlockhash) in addresses:
+                    # add the id to the coin_output, so we can track it has been spent
+                    co.id = txn.coin_outputid_new(idx)
+                    balance.output_add(co, confirmed=False, spent=False)
+            # and return the created/submitted transaction for optional user consumption
+
+        return TransactionSendResult(txn, submit)

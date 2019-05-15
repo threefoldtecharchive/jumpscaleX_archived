@@ -1,5 +1,5 @@
 from Jumpscale import j
-from Jumpscale.builder.test.flist.base_test import BaseTest
+from Jumpscale.builder.test.builder.base_test import BaseTest
 import unittest
 import time
 
@@ -171,3 +171,19 @@ class TestCases(BaseTest):
         self.assertEqual(0, len(j.sal.process.getProcessPid('syncthing')))
 
     #def test020_caddyfilemanager(self):
+
+    def test021_freeflow(self):
+        j.builder.apps.freeflow.build(reset=True)
+        j.builder.apps.freeflow.install(reset=True) 
+        j.builder.apps.freeflow.start()
+        self.assertTrue(len(j.sal.process.getProcessPid('apache2')))
+        j.builder.apps.freeflow.stop() 
+        self.assertEqual(0, len(j.sal.process.getProcessPid('apache2')))
+
+    def test022_cmake(self):
+        j.builder.libs.cmake.build(reset=True)
+        j.builder.libs.cmake.install()
+        try:
+            j.sal.process.execute('which cmake')
+        except:
+            self.assertTrue(False)

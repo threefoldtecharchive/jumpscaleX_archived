@@ -111,3 +111,18 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         if create_flist:
             #import ipdb; ipdb.set_trace()
             print(self._flist_create(zhub_client))
+    @property
+    def startup_cmds(self):
+        start_script = """
+        if [ ! -f /etc/apache2/conf-available/fqdn.conf ]; then
+        echo "ServerName localhost"  > /etc/apache2/conf-available/fqdn.conf
+        a2enconf fqdn
+        fi
+        """
+        j.builder.tools.execute(start_script)
+        sql = j.tools.startupcmd.get("mysql-server", "mysqld", path="/usr/sbin")
+        apache2 = j.tools.startupcmd.get("apache2-server", "apachectl -DFOREGROUND",cmd_stop='apachectl stop',path="/usr/sbin")
+        return [sql,apache2]
+    def test(self, zos_client=None):
+        self.stop()
+        self.start()
