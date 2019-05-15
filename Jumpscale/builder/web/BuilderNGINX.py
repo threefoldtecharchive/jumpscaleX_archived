@@ -218,7 +218,7 @@ class BuilderNGINX(j.builder.system._BaseClass):
         self._log_info("Nginx test successfull")
 
     @builder_method()
-    def sandbox(self,zhub_client=None,flist_create=True):
+    def sandbox(self, reset=False, zhub_client=None, flist_create=True, merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist"):
         '''Copy built bins and config files to sandbox specific directory and create flist and upload it to the hub if flist_create is True
             :param zhub_client: hub instance to upload flist to
             :type zhub_client:str
@@ -230,8 +230,15 @@ class BuilderNGINX(j.builder.system._BaseClass):
         )
         self.tools.dir_ensure(dir_dest)
         bin_path = self.tools.joinpaths(self._replace("{DIR_BIN}"), self.NAME)
-        bin_dest = self.tools.joinpaths(dir_dest , "bin" , self.NAME)
+        bin_dest = self.tools.joinpaths(dir_dest, "bin", self.NAME)
         self.tools.file_copy(bin_path, bin_dest)
 
         self.tools.file_copy(self._replace('{DIR_BUILD}/conf/fastcgi.conf'), "{}/cfg/fastcgi.conf".format(dir_dest))
         self.tools.file_copy(self._replace('{DIR_BUILD}/conf/nginx.conf'), "{}/cfg/nginx.conf".format(dir_dest))
+
+        bins = [self.NAME]
+        lib_dest = self.tools.joinpaths(self.DIR_SANDBOX, 'sandbox/lib')
+        self.tools.dir_ensure(lib_dest)
+        for bin in bins:
+            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
+            j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
