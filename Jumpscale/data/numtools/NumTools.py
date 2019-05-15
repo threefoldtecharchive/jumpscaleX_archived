@@ -272,7 +272,7 @@ class NumTools(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.tools.numtools.test()'
+        kosmos 'j.tools.numtools.test()'
         """
         assert self.text2val("10k") == 10000.0
 

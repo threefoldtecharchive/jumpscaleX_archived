@@ -159,7 +159,7 @@ class RedisFactory(j.application.JSBaseClass):
     def core_get(self, reset=False, tcp=True):
         """
 
-        js_shell 'j.clients.redis.core_get(reset=False)'
+        kosmos 'j.clients.redis.core_get(reset=False)'
 
         will try to create redis connection to {DIR_TEMP}/redis.sock or /sandbox/var/redis.sock  if sandbox
         if that doesn't work then will look for std redis port
@@ -245,7 +245,7 @@ class RedisFactory(j.application.JSBaseClass):
     def _core_start(self, tcp=True, timeout=20, reset=False):
 
         """
-        js_shell "j.clients.redis.core_get(reset=True)"
+        kosmos "j.clients.redis.core_get(reset=True)"
 
         installs and starts a redis instance in separate ProcessLookupError
         when not in sandbox:
@@ -316,7 +316,7 @@ class RedisFactory(j.application.JSBaseClass):
     def test(self, name=""):
         """
         it's run all tests
-        js_shell 'j.clients.redis.test()'
+        kosmos 'j.clients.redis.test()'
 
         """
         self._test_run(name=name)

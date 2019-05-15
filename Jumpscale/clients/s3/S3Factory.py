@@ -22,7 +22,7 @@ class S3Factory(JSConfigBase):
     def test(self):
         """
         do:
-        js_shell 'j.clients.s3.test()'
+        kosmos 'j.clients.s3.test()'
         """
 
         client = self.get(name="test")

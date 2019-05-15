@@ -11,7 +11,7 @@ class ErrBotFactory(j.application.JSBaseClass):
 
     def start(self, reset=False):
         """
-        js_shell 'j.servers.errbot.start(reset=True)'
+        kosmos 'j.servers.errbot.start(reset=True)'
         :return:
         """
         # if reset:

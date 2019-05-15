@@ -5,6 +5,6 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.tools.logger.test(name="base")'
+    kosmos 'j.tools.logger.test(name="base")'
     """
     j.shell()

@@ -67,7 +67,7 @@ class GridCapacityFactory(JSConfigs):
 
     def resource_units(self, reload=False):
         """
-        js_shell "print(j.clients.threefold_directory.resource_units())"
+        kosmos "print(j.clients.threefold_directory.resource_units())"
         """
         if reload:
             self._cache.reset()

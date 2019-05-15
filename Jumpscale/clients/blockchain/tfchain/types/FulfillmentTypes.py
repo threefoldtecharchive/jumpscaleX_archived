@@ -201,7 +201,7 @@ class FulfillmentFactory(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.clients.tfchain.types.fulfillments.test()'
+        kosmos 'j.clients.tfchain.types.fulfillments.test()'
         """
 
         # some util test methods

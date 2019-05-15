@@ -13,7 +13,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.clients.tfchain.test(name="minter_condition_set")'
+    kosmos 'j.clients.tfchain.test(name="minter_condition_set")'
     """
 
     # create a tfchain client for devnet

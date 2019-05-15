@@ -35,7 +35,7 @@ class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
         # TODO:*2
 
     def load(self, reset=False):
-        """ js_shell 'j.clients.currencylayer.load()'
+        """ kosmos 'j.clients.currencylayer.load()'
         """
         if reset:
             self._cache.reset()
@@ -81,7 +81,7 @@ class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
         """
         e.g. AED = 3,672 means 3,6... times AED=1 USD
 
-        js_shell 'j.clients.currencylayer.cur2usd_print()'
+        kosmos 'j.clients.currencylayer.cur2usd_print()'
         """
         if self._data_cur == {}:
             self.load()
@@ -131,19 +131,19 @@ class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
 
     def id2cur_print(self):
         """
-        js_shell 'j.clients.currencylayer.id2cur_print()'
+        kosmos 'j.clients.currencylayer.id2cur_print()'
         """
         pprint(self.id2cur)
 
     def cur2id_print(self):
         """
-        js_shell 'j.clients.currencylayer.cur2id_print()'
+        kosmos 'j.clients.currencylayer.cur2id_print()'
         """
         pprint(self.cur2id)
 
     def test(self):
         """
-        js_shell 'j.clients.currencylayer.test()'
+        kosmos 'j.clients.currencylayer.test()'
         """
         r = j.clients.currencylayer._Find()
         j.shell()

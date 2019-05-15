@@ -24,7 +24,7 @@ class Latex(j.application.JSBaseClass):
 
     def test(self, install=False):
         """
-        js_shell 'j.data.latex.test(install=False)'
+        kosmos 'j.data.latex.test(install=False)'
 
         make sure you do
         ```

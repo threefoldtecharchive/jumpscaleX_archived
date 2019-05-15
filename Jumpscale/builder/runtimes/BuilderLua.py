@@ -10,7 +10,7 @@ class BuilderLua(j.builder.system._BaseClass):
     @builder_method()
     def build(self):
         """
-        js_shell 'j.builder.runtimes.lua.build()'
+        kosmos 'j.builder.runtimes.lua.build()'
         :param install:
         :return:
         """
@@ -52,7 +52,7 @@ class BuilderLua(j.builder.system._BaseClass):
 
     def lua_rocks_install(self):
         """
-        js_shell 'j.builder.runtimes.lua.lua_rocks_install()'
+        kosmos 'j.builder.runtimes.lua.lua_rocks_install()'
         :param install:
         :return:
         """
@@ -150,7 +150,7 @@ class BuilderLua(j.builder.system._BaseClass):
     @builder_method()
     def clean(self):
         """
-        js_shell 'j.builder.runtimes.lua.cleanup()'
+        kosmos 'j.builder.runtimes.lua.cleanup()'
         :param install:
         :return:
         """
@@ -179,7 +179,7 @@ class BuilderLua(j.builder.system._BaseClass):
     def install(self):
         """
         will build & install in sandbox
-        js_shell 'j.builder.runtimes.lua.install()'
+        kosmos 'j.builder.runtimes.lua.install()'
         :return:
         """
         src = "/sandbox/code/github/threefoldtech/sandbox_base/base/bin"
@@ -237,7 +237,7 @@ class BuilderLua(j.builder.system._BaseClass):
 
     def copy_to_github(self):
         """
-        js_shell 'j.builder.runtimes.lua.copy_to_github()'
+        kosmos 'j.builder.runtimes.lua.copy_to_github()'
         :return:
         """
         # assert self.executor.type=="local"

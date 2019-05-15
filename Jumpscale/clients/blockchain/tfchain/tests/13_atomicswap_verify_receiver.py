@@ -9,7 +9,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.clients.tfchain.test(name="atomicswap_verify_receiver")'
+    kosmos 'j.clients.tfchain.test(name="atomicswap_verify_receiver")'
     """
 
     # create a tfchain client for devnet

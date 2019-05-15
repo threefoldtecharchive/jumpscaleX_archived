@@ -9,7 +9,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.clients.tfchain.test(name="threebot_record_new")'
+    kosmos 'j.clients.tfchain.test(name="threebot_record_new")'
     """
 
     # create a tfchain client for devnet

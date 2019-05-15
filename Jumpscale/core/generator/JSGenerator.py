@@ -115,7 +115,7 @@ class JSGenerator:
 
     def report(self):
         """
-        js_shell "j.core.jsgenerator.report()"
+        kosmos "j.core.jsgenerator.report()"
         write reports to /tmp/jumpscale/code_report.md
         :return:
         """

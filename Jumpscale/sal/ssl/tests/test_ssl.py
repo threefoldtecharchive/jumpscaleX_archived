@@ -46,7 +46,7 @@ def certificate_signing_request_create():
 
 def test_main(self=None):
     """ to run:
-     js_shell 'j.sal.ssl._test(name="ssl")'
+     kosmos 'j.sal.ssl._test(name="ssl")'
 
     """
     ca_generate()

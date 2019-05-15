@@ -7,7 +7,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.rivine.test(name="rivine_limits")'
+    kosmos 'j.data.rivine.test(name="rivine_limits")'
     """
     e = j.data.rivine.encoder_rivine_get()
 

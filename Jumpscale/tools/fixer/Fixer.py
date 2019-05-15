@@ -23,7 +23,7 @@ class Fixer(j.application.JSBaseClass):
 
     def _find_changes(self):
         """
-        js_shell 'j.tools.fixer.find_changes()'
+        kosmos 'j.tools.fixer.find_changes()'
         :return:
         """
 
@@ -46,7 +46,7 @@ class Fixer(j.application.JSBaseClass):
 
     def find_changes(self, path=None, extensions=["py", "txt", "md"], recursive=True):
         """
-        js_shell 'j.tools.fixer.find_changes()'
+        kosmos 'j.tools.fixer.find_changes()'
         :return:
         """
 
@@ -61,7 +61,7 @@ class Fixer(j.application.JSBaseClass):
 
     def write_changes(self, path=None, extensions=["py", "txt", "md"], recursive=True):
         """
-        js_shell 'j.tools.fixer.write_changes()'
+        kosmos 'j.tools.fixer.write_changes()'
         BE CAREFULL THIS WILL WRITE THE CHANGES AS FOUND IN self.find_changes
         """
         if path is None:

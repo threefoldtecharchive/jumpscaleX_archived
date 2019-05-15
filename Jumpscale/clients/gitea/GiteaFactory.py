@@ -49,7 +49,7 @@ class GiteaFactory(JSConfigBase):
 
     def test(self):
         """
-        js_shell 'j.clients.gitea.test()'
+        kosmos 'j.clients.gitea.test()'
         """
         # self.generate()
         cl = self.get()

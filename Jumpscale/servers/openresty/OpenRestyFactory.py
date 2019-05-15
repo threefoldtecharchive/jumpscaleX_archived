@@ -13,7 +13,7 @@ class OpenRestyFactory(j.application.JSBaseClass):
 
     def start(self, reset=False):
         """
-        js_shell 'j.servers.openresty.start(reset=True)'
+        kosmos 'j.servers.openresty.start(reset=True)'
         :return:
         """
         if reset:
@@ -38,7 +38,7 @@ class OpenRestyFactory(j.application.JSBaseClass):
 
     def stop(self):
         """
-        js_shell 'j.servers.openresty.stop()'
+        kosmos 'j.servers.openresty.stop()'
         :return:
         """
         self.cmd.stop()
@@ -84,7 +84,7 @@ class OpenRestyFactory(j.application.JSBaseClass):
     #
     # def install(self):
     #     """
-    #     js_shell 'j.servers.openresty.install()'
+    #     kosmos 'j.servers.openresty.install()'
     #
     #     """
     #     p = j.tools.prefab.local

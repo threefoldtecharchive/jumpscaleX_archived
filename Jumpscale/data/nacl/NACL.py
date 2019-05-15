@@ -72,7 +72,7 @@ class NACL(j.application.JSBaseClass):
     def words(self):
         """
         e.g.
-        js_shell 'print(j.data.nacl.default.words)'
+        kosmos 'print(j.data.nacl.default.words)'
         """
         assert self.privkey is not None
         privkey = self.privkey.encode()

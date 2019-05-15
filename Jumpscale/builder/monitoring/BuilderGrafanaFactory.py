@@ -38,7 +38,7 @@ class BuilderGrafanaFactory(j.builder.system._BaseFactoryClass):
     def test(self):
         """
 
-        js_shell 'j.builder._template.test()'
+        kosmos 'j.builder._template.test()'
 
         :return:
         """

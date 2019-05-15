@@ -15,7 +15,7 @@ class BuilderNIM(j.builder.system._BaseClass):
     def build(self):
 
         """
-        js_shell 'j.builder.runtimes.nim.build()'
+        kosmos 'j.builder.runtimes.nim.build()'
         :return:
         """
         self.profile_sandbox_select()

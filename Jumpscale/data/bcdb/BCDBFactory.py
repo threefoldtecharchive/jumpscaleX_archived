@@ -75,9 +75,9 @@ class BCDBFactory(j.application.JSBaseClass):
 
         trick: use RDM to investigate (Redis Desktop Manager) to investigate DB.
 
-        js_shell "j.data.bcdb.redis_server_start(background=True)"
+        kosmos "j.data.bcdb.redis_server_start(background=True)"
 
-        js_shell "j.data.bcdb.redis_server_start(background=False,zdbclient_addr=None)"
+        kosmos "j.data.bcdb.redis_server_start(background=False,zdbclient_addr=None)"
 
 
         :return:

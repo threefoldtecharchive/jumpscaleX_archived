@@ -179,7 +179,7 @@ class Types(j.application.JSBaseClass):
 
     def test(self, name=""):
         """
-        js_shell 'j.data.types.test()'
+        kosmos 'j.data.types.test()'
 
         if want run specific test ( write the name of test ) e.g. j.data.schema.test(name="base")
         """

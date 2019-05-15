@@ -319,7 +319,7 @@ class MarkDownDocs(j.application.JSBaseClass):
 
     def test(self, watch=False):
         """
-        js_shell 'j.tools.markdowndocs.test()'
+        kosmos 'j.tools.markdowndocs.test()'
         """
         url = "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/docsites_examples/test/"
         ds = self.load(url, name="test")

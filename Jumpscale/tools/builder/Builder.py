@@ -52,7 +52,7 @@ class Builder(j.application.JSBaseClass):
 
     def zos_vb_get(self, name="builder", zerotierinstance="", redis_port=4444, reset=False, memory=4000):
         """
-        js_shell 'j.tools.builder.zos_vb_create(reset=False)'
+        kosmos 'j.tools.builder.zos_vb_create(reset=False)'
         """
         vm = self.vb_client.vm_get(name)
         self._log_debug(vm)
@@ -148,7 +148,7 @@ class Builder(j.application.JSBaseClass):
 
     def zos_vb_delete_all(self):
         """
-        js_shell 'j.tools.builder.zos_vb_delete_all()'
+        kosmos 'j.tools.builder.zos_vb_delete_all()'
 
         """
         self.vb_client.reset_all()
@@ -163,7 +163,7 @@ class Builder(j.application.JSBaseClass):
         """
         look for changes in directories which are being pushed & if found push to remote nodes
 
-        js_shell 'j.tools.develop.monitor()'
+        kosmos 'j.tools.develop.monitor()'
 
         """
 
@@ -185,7 +185,7 @@ class Builder(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.tools.builder.test()'
+        kosmos 'j.tools.builder.test()'
         """
         # self.zos_vb_delete_all()
         zos = self.zos_vb_get()

@@ -12,7 +12,7 @@ class Rexplorer(j.application.JSBaseClass):
         """
         use prefab to install rexplorer & get it started
 
-        js_shell 'j.tools.rexplorer.install()'
+        kosmos 'j.tools.rexplorer.install()'
         :return:
         """
         p = j.tools.prefab.local
@@ -23,7 +23,7 @@ class Rexplorer(j.application.JSBaseClass):
         """
         starts rexplorer in tmux
         result goes to redis
-        js_shell 'j.tools.rexplorer.start()'
+        kosmos 'j.tools.rexplorer.start()'
         :return:
         """
         cmd = "cd /tmp;rexplorer -f 'threefold:*'"

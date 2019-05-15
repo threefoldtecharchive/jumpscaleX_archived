@@ -11,7 +11,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.clients.tfchain.test(name="atomicswap_initiate")'
+    kosmos 'j.clients.tfchain.test(name="atomicswap_initiate")'
     """
 
     # create a tfchain client for devnet

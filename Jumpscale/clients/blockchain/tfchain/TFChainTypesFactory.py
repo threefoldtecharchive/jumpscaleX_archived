@@ -104,7 +104,7 @@ class TFChainTypesFactory(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.clients.tfchain.types.test()'
+        kosmos 'j.clients.tfchain.types.test()'
         """
 
         # currency values can be created from both

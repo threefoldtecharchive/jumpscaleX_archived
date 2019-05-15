@@ -117,7 +117,7 @@ class ConditionFactory(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.clients.tfchain.types.conditions.test()'
+        kosmos 'j.clients.tfchain.types.conditions.test()'
         """
 
         # some util test methods

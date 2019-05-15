@@ -30,7 +30,7 @@ class ReportlabFactory(j.application.JSBaseClass):
 
     def test(self, install=False):
         """
-        js_shell 'j.tools.reportlab.test(install=False)'
+        kosmos 'j.tools.reportlab.test(install=False)'
 
         :return:
         """

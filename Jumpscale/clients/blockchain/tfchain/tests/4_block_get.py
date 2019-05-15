@@ -7,7 +7,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.clients.tfchain.test(name="block_get")'
+    kosmos 'j.clients.tfchain.test(name="block_get")'
     """
 
     # create a tfchain client for devnet

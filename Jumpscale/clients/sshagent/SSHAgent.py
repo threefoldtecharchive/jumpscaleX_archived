@@ -113,7 +113,7 @@ class SSHAgent(j.application.JSBaseClass):
 
     def keys_list(self, key_included=False):
         """
-        js_shell 'print(j.clients.sshkey.keys_list())'
+        kosmos 'print(j.clients.sshkey.keys_list())'
         list ssh keys from the agent
 
         :param key_included: defaults to False
@@ -251,7 +251,7 @@ class SSHAgent(j.application.JSBaseClass):
 
     def profile_js_configure(self):
         """
-        js_shell 'j.clients.sshkey.profile_js_configure()'
+        kosmos 'j.clients.sshkey.profile_js_configure()'
         """
 
         bashprofile_path = os.path.expanduser("~/.profile_js")

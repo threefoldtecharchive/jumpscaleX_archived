@@ -19,7 +19,7 @@ class LegalContractsFactory(j.application.JSBaseClass):
 
     def test(self, install=False):
         """
-        js_shell 'j.tools.legal_contracts.test(install=False)'
+        kosmos 'j.tools.legal_contracts.test(install=False)'
 
         :return:
         """

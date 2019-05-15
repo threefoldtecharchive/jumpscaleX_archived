@@ -43,7 +43,7 @@ class EncryptionFactory(j.application.JSBaseClass):
 
         strength = 128, 160, 192, 224, 256
 
-        js_shell 'print(j.data.encryption.mnemonic_generate())'
+        kosmos 'print(j.data.encryption.mnemonic_generate())'
 
         """
         return self.mnemonic.generate(strength=strength)
@@ -76,7 +76,7 @@ class EncryptionFactory(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.data.encryption.test()'
+        kosmos 'j.data.encryption.test()'
         """
         words = "sound key uncover anger liberty coffee now huge catalog bread link grit"
         secret = j.data.encryption.mnemonic_to_seed(words, "1234")

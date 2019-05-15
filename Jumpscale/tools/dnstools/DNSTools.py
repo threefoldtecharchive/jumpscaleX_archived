@@ -43,7 +43,7 @@ class DNSTools(j.application.JSBaseClass):
 
     def test(self, start=False):
         """
-        js_shell 'j.tools.dnstools.test()'
+        kosmos 'j.tools.dnstools.test()'
         """
 
         answer = self.default.resolver.query("www.yelp.com", "A")

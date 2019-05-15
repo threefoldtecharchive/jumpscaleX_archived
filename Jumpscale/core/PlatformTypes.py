@@ -146,7 +146,7 @@ class PlatformType(object):
         else:
             uname = self.executor.state_on_system["uname"]
             if uname.find("warning: setlocale") != -1:
-                raise RuntimeError("run js_shell 'j.tools.bash.get().profile.locale_check()'")
+                raise RuntimeError("run kosmos 'j.tools.bash.get().profile.locale_check()'")
             uname = uname.split("\n")[0]
             uname = uname.split(" ")
             _tmp, self._hostname, _osversion, self._cpu, self._platform = uname

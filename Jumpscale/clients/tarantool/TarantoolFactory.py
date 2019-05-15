@@ -11,10 +11,10 @@ class TarantoolFactory(JSConfigBaseFactory):
 
     """
     #server_start
-    js_shell 'j.clients.tarantool.server_start()'
+    kosmos 'j.clients.tarantool.server_start()'
 
     #start test
-    js_shell 'j.clients.tarantool.test()'
+    kosmos 'j.clients.tarantool.test()'
 
     """
 

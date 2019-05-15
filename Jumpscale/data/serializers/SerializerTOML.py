@@ -176,7 +176,7 @@ class SerializerTOML(SerializerBase):
 
     def test(self):
         """
-        js_shell 'j.data.serializers.toml.test()'
+        kosmos 'j.data.serializers.toml.test()'
         """
 
         ddict = self.loads(testtoml)

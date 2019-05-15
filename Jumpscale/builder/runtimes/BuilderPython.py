@@ -253,7 +253,7 @@ class BuilderPython(j.builder.system._BaseClass):
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
         """
-        js_shell 'j.builder.runtimes.python.sandbox()'
+        kosmos 'j.builder.runtimes.python.sandbox()'
         :return:
         """
         path = self._replace("{DIR_SANDBOX}/bin/")
@@ -264,7 +264,7 @@ class BuilderPython(j.builder.system._BaseClass):
     def _copy2sandbox_github(self):
         """
 
-        js_shell 'j.builder.runtimes.python.copy2sandbox_github(reset=False)'
+        kosmos 'j.builder.runtimes.python.copy2sandbox_github(reset=False)'
 
 
         builds python and returns the build dir
@@ -407,7 +407,7 @@ class BuilderPython(j.builder.system._BaseClass):
 
     def copy2git(self):
         """
-        js_shell 'j.builder.runtimes.python.copy2git()'
+        kosmos 'j.builder.runtimes.python.copy2git()'
         :return:
         """
 
@@ -482,7 +482,7 @@ class BuilderPython(j.builder.system._BaseClass):
 
     def test(self, build=False):
         """
-        js_shell 'j.builder.runtimes.python.test(build=True)'
+        kosmos 'j.builder.runtimes.python.test(build=True)'
         """
         self.profile_builder_select()
         assert self._execute("{DIR_BUILD}/bin/python3 -c \"print('python')\"")[1] == "python\n"

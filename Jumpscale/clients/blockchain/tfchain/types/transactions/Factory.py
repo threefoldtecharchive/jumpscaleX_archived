@@ -118,7 +118,7 @@ class TransactionFactory(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.clients.tfchain.types.transactions.test()'
+        kosmos 'j.clients.tfchain.types.transactions.test()'
         """
         # v1 Transactions are supported
         v1_txn_json = {

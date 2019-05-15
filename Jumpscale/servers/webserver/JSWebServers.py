@@ -19,7 +19,7 @@ class JSWebServers(JSConfigBase):
 
     def install(self):
         """
-        js_shell 'j.servers.web.install()'
+        kosmos 'j.servers.web.install()'
 
         """
         pips = """
@@ -69,7 +69,7 @@ class JSWebServers(JSConfigBase):
         """
         following will run all tests
 
-        js_shell 'j.servers.web.test()'
+        kosmos 'j.servers.web.test()'
 
         """
 

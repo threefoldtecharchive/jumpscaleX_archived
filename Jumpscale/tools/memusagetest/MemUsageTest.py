@@ -31,7 +31,7 @@ class MemUsageTest(j.application.JSBaseClass):
     def test_redis_lua_perf(self):
 
         """
-        js_shell 'j.tools.memusagetest.test_redis_lua_perf()'
+        kosmos 'j.tools.memusagetest.test_redis_lua_perf()'
 
         FOR RDM:
         socat -v tcp-l:6379,reuseaddr,fork unix:/sandbox/var/redis.sock
@@ -194,7 +194,7 @@ class MemUsageTest(j.application.JSBaseClass):
 
     def test_unidecode(self):
         """
-        js_shell 'j.tools.memusagetest.test_unidecode()'
+        kosmos 'j.tools.memusagetest.test_unidecode()'
         """
 
         j.tools.timer.start("memusage")
@@ -214,7 +214,7 @@ class MemUsageTest(j.application.JSBaseClass):
     def test_redis_kvs(self):
 
         """
-        js_shell 'j.tools.memusagetest.test_redis_kvs()'
+        kosmos 'j.tools.memusagetest.test_redis_kvs()'
         """
 
         memusage_start = j.application.getMemoryUsage()
@@ -269,7 +269,7 @@ class MemUsageTest(j.application.JSBaseClass):
 
     def test_formatter(self):
         """
-        js_shell 'j.tools.memusagetest.test_formatter()'
+        kosmos 'j.tools.memusagetest.test_formatter()'
         """
 
         from string import Formatter
@@ -296,7 +296,7 @@ class MemUsageTest(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.tools.memusagetest.test()'
+        kosmos 'j.tools.memusagetest.test()'
         """
 
         memusage_start = j.application.getMemoryUsage()

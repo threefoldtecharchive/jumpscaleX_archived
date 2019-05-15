@@ -9,7 +9,7 @@ def test_main(self=None):
     """
     to run:
 
-    js_shell 'j.sal.hostfile._test(name="hostfile")'
+    kosmos 'j.sal.hostfile._test(name="hostfile")'
 
     """
     try:

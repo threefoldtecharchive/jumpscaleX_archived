@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.servers.jsrun.test(name="base")'
+    kosmos 'j.servers.jsrun.test(name="base")'
 
     """
 

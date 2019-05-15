@@ -67,7 +67,7 @@ def main(self=None):
     """
     to run:
 
-    js_shell 'j.sal.nfs._test(name="nfs")'
+    kosmos 'j.sal.nfs._test(name="nfs")'
 
     """
     test_add_remove_paths()

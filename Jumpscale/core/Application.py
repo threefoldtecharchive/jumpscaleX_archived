@@ -408,7 +408,7 @@ class Application(object):
 
     # def _test_gc(self):
     #     """
-    #     js_shell 'j.application._test_gc()'
+    #     kosmos 'j.application._test_gc()'
     #     :return:
     #     """
     #     j=self._j

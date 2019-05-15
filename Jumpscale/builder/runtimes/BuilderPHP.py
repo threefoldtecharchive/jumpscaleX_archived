@@ -25,7 +25,7 @@ class BuilderPHP(j.builder.system._BaseClass):
 
     def build(self, install=False, **config):
         """
-        js_shell 'j.builder.runtimes.php.build()'
+        kosmos 'j.builder.runtimes.php.build()'
         :param config:
         :return:
         """

@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.schema.test(name="storedprocedure")'
+    kosmos 'j.data.schema.test(name="storedprocedure")'
     """
 
     lua_test_file_path = "%s/tests/test.lua" % self._dirpath

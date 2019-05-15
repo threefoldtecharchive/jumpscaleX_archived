@@ -225,7 +225,7 @@ class Capnp(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.data.capnp.test()'
+        kosmos 'j.data.capnp.test()'
         """
         import time
 

@@ -29,7 +29,7 @@ class BuilderRust(j.builder.system._BaseClass):
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
         """
-        js_shell 'j.builder.runtimes.rust.sandbox()'
+        kosmos 'j.builder.runtimes.rust.sandbox()'
         :return:
         """
         dest_path = self.DIR_SANDBOX

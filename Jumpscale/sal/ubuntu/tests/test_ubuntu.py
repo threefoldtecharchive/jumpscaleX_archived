@@ -81,7 +81,7 @@ class Test_Ubuntu(TestCase):
 def main(self=None):
     """
     to run:
-    js_shell 'j.sal.ubuntu._test(name="ubuntu")'
+    kosmos 'j.sal.ubuntu._test(name="ubuntu")'
     """
     test_ubuntu = Test_Ubuntu()
     test_ubuntu.setUp()

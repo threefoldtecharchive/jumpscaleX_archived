@@ -85,7 +85,7 @@ class Cache(object):
 
     def test(self):
         """
-        js_shell 'j.core.cache.test()'
+        kosmos 'j.core.cache.test()'
         """
 
         # make sure its redis
@@ -97,7 +97,7 @@ class Cache(object):
         print("CACHE ALL TESTS DONE")
 
     def test_without_redis(self):
-        """ js_shell 'j.core.cache.test_without_redis()'
+        """ kosmos 'j.core.cache.test_without_redis()'
 
             NOTE: this test actually stops the redis server
             (and restarts it afterwards).  be careful!

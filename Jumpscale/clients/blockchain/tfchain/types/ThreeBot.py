@@ -35,7 +35,7 @@ class ThreeBotTypesFactory(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.clients.tfchain.types.threebot.test()'
+        kosmos 'j.clients.tfchain.types.threebot.test()'
         """
         import pytest
 

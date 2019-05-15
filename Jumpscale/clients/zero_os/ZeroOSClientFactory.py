@@ -183,7 +183,7 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
 
     def test(self):
         """
-        js_shell 'j.clients.zos.test()'
+        kosmos 'j.clients.zos.test()'
         :return:
         """
 

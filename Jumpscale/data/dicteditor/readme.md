@@ -9,7 +9,7 @@ Is also part of each jsconfig class (which has data inside).
 
 def test(self):
     """
-    js_shell 'j.data.dict_editor.test()'
+    kosmos 'j.data.dict_editor.test()'
     :return:
     """
     import copy

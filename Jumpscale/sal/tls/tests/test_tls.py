@@ -43,7 +43,7 @@ def test_main(self=None):
     """
     to run:
 
-    js_shell 'j.sal.tls._test(name="tls")'
+    kosmos 'j.sal.tls._test(name="tls")'
 
     """
     subprocess.run("curl https://pkg.cfssl.org/R1.2/cfssl_linux-amd64 -o /usr/local/bin/cfssl", shell=True, check=True)

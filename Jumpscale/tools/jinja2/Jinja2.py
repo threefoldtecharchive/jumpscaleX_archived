@@ -17,7 +17,7 @@ class Jinja2(j.application.JSBaseClass):
 
     def reset(self, destroyall=True):
         """
-        js_shell 'j.tools.jinja2.reset()'
+        kosmos 'j.tools.jinja2.reset()'
 
         :param destroyall: all templates will be removed from disk
         :return:
@@ -255,7 +255,7 @@ class Jinja2(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.tools.jinja2.test()'
+        kosmos 'j.tools.jinja2.test()'
         """
         raise RuntimeError("need to go to jumpscaleX something, also tests are really not tests, need to be better")
 
@@ -270,7 +270,7 @@ class Jinja2(j.application.JSBaseClass):
 
     def test_performance(self):
         """
-        js_shell 'j.tools.jinja2.test_performance()'
+        kosmos 'j.tools.jinja2.test_performance()'
         """
         path = j.sal.fs.getDirName(os.path.abspath(__file__)) + "/test_class.py"
         j.tools.timer.start("jinja_code")

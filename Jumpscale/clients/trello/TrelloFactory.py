@@ -13,7 +13,7 @@ class Trello(JSConfigs):
 
     def test(self):
         """
-        js_shell 'j.clients.trello.test()'
+        kosmos 'j.clients.trello.test()'
 
         to configure:
         js_config configure -l j.clients.trello

@@ -328,7 +328,7 @@ class Teammgr(j.application.JSBaseClass):
 
         to call:
 
-        js_shell 'j.tools.team_manager.do()'
+        kosmos 'j.tools.team_manager.do()'
 
         """
         if path == "":

@@ -44,7 +44,7 @@ def test_main(self=None):
     """
     to run:
 
-    js_shell 'j.builders.runtime.php._test(name="php_in_nginx")'
+    kosmos 'j.builders.runtime.php._test(name="php_in_nginx")'
 
     """
     # check if nginx is installed, if not then install it

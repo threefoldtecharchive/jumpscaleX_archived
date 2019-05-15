@@ -15,7 +15,7 @@ class DASH(j.application.JSBaseClass):
 
     def install(self):
         """
-        js_shell 'j.tools.dash.install()'
+        kosmos 'j.tools.dash.install()'
         :return:
         """
         p = j.tools.prefab.local
@@ -41,7 +41,7 @@ class DASH(j.application.JSBaseClass):
 
     def run_example(self, name="graph1"):
         """
-        js_shell 'j.tools.dash.run_example(name="graph1")'
+        kosmos 'j.tools.dash.run_example(name="graph1")'
         :param name:
         :return:
         """

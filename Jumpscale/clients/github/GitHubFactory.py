@@ -21,7 +21,7 @@ class GitHubFactory(JSConfigs):
     def test(self):
         """
 
-        js_shell 'j.clients.github.test()'
+        kosmos 'j.clients.github.test()'
 
         """
 

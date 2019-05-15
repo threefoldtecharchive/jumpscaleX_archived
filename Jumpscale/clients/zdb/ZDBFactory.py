@@ -42,7 +42,7 @@ class ZDBFactory(j.application.JSBaseClass):
 
     def testdb_server_start_client_get(self, reset=False, admin_secret="123456", namespaces_secret="1234"):
         """
-        js_shell 'j.clients.zdb.testdb_server_start_client_get(reset=True)'
+        kosmos 'j.clients.zdb.testdb_server_start_client_get(reset=True)'
 
         will start a ZDB server in tmux (will only start when not there yet or when reset asked for)
         erase all content
@@ -59,7 +59,7 @@ class ZDBFactory(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.clients.zdb.test()'
+        kosmos 'j.clients.zdb.test()'
 
         """
 

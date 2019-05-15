@@ -67,7 +67,7 @@ class BuilderARDB(j.builder.system._BaseClass):
 
     def build(self, reset=False, storageEngine="forestdb"):
         """
-        js_shell 'j.builder.db.ardb.build()'
+        kosmos 'j.builder.db.ardb.build()'
 
         @param storageEngine rocksdb or forestdb
         """

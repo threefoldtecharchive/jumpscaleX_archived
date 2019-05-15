@@ -273,7 +273,7 @@ class HttpClient(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.clients.http.test()'
+        kosmos 'j.clients.http.test()'
         """
         c = self.getConnection()
         assert c.ping("https://github.com/Jumpscale") == True

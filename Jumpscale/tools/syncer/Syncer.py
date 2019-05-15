@@ -121,7 +121,7 @@ class Syncer(j.application.JSBaseConfigClass):
 
         paths is [path1, path2,...] or [["/src",'/dest'],["/src2",'/dest2']]
 
-        js_shell 'j.tools.develop.monitor()'
+        kosmos 'j.tools.develop.monitor()'
 
         """
 

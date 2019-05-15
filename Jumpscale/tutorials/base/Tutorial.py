@@ -13,7 +13,7 @@ class Tutorial(j.application.JSBaseClass):
 
     def cache(self):
         """
-        js_shell 'j.tutorials.base.cache()'
+        kosmos 'j.tutorials.base.cache()'
 
         video link:
         https://drive.google.com/open?id=17psosz8ZArs2JwvCIoYA_r06122SpOE-
@@ -26,7 +26,7 @@ class Tutorial(j.application.JSBaseClass):
 
     def baseclass(self):
         """
-        js_shell 'j.tutorials.base.baseclass()'
+        kosmos 'j.tutorials.base.baseclass()'
 
         video link:
 

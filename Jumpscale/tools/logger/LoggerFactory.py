@@ -71,6 +71,6 @@ class LoggerFactory(j.application.JSBaseClass):
 
     def test(self, name="base"):
         """
-        js_shell 'j.tools.logger.test()'
+        kosmos 'j.tools.logger.test()'
         """
         self._test_run(name=name)

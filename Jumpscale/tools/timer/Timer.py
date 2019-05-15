@@ -87,7 +87,7 @@ class TIMER(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.tools.timer.test()'
+        kosmos 'j.tools.timer.test()'
         """
 
         j.tools.timer.start("something")

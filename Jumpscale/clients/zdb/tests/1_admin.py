@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.clients.zdb.test(name="admin",start=True)'
+    kosmos 'j.clients.zdb.test(name="admin",start=True)'
 
     """
 

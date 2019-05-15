@@ -9,7 +9,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.clients.tfchain.test(name="erc20_coins_send")'
+    kosmos 'j.clients.tfchain.test(name="erc20_coins_send")'
     """
 
     # create a tfchain client for devnet

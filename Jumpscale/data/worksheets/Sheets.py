@@ -111,7 +111,7 @@ class Sheets(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.data.worksheets.test()'
+        kosmos 'j.data.worksheets.test()'
         """
 
         s = self.sheet_new("test")

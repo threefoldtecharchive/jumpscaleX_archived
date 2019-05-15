@@ -92,7 +92,7 @@ class HTMLFactory(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.data.html.test()'
+        kosmos 'j.data.html.test()'
         """
 
         p = j.data.html.page_get()

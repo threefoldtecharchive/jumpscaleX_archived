@@ -36,7 +36,7 @@ class DocsFactory(j.application.JSFactoryBaseClass):
 
     def test(self):
         """
-        js_shell 'j.data.docs.test()'
+        kosmos 'j.data.docs.test()'
         :return:
         """
 

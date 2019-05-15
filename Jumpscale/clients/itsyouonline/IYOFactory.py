@@ -56,7 +56,7 @@ class IYOFactory(j.application.JSBaseConfigsClass):
     def test(self):
         """
         do:
-        js_shell 'j.clients.itsyouonline.test()'
+        kosmos 'j.clients.itsyouonline.test()'
         """
 
         client = j.clients.itsyouonline.get(name="test")

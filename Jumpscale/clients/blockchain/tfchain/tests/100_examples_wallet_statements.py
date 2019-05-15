@@ -7,7 +7,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.clients.tfchain.test(name="examples_wallet_statements")'
+    kosmos 'j.clients.tfchain.test(name="examples_wallet_statements")'
     """
 
     # create a tfchain client for devnet

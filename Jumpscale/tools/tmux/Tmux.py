@@ -85,7 +85,7 @@ class Tmux(j.application.JSBaseClass):
 
     def kill(self):
         """
-        js_shell 'j.tools.tmux.kill()'
+        kosmos 'j.tools.tmux.kill()'
         """
         if (
             len(j.sal.process.getPidsByFilter("tmux")) == 1
@@ -217,7 +217,7 @@ class Tmux(j.application.JSBaseClass):
     def window_multi_get(self, window_name="multi", reset=False):
         """
 
-        js_shell 'j.tools.tmux.window_multi_get()'
+        kosmos 'j.tools.tmux.window_multi_get()'
 
         :param window_name:
         :param reset:
@@ -295,7 +295,7 @@ class Tmux(j.application.JSBaseClass):
 
     def test_multi(self):
         """
-        js_shell 'j.tools.tmux.test_multi()'
+        kosmos 'j.tools.tmux.test_multi()'
 
         :return:
         """

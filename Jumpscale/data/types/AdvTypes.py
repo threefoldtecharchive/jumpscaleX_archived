@@ -710,7 +710,7 @@ class DateTime(Integer):
 
     def test(self):
         """
-        js_shell 'j.data.types.datetime.test()'
+        kosmos 'j.data.types.datetime.test()'
         """
 
 

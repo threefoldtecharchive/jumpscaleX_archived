@@ -21,7 +21,7 @@ class IndexDB(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.data.indexfile.test()'
+        kosmos 'j.data.indexfile.test()'
 
         """
         # test set

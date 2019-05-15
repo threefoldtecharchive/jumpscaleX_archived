@@ -37,7 +37,7 @@ class RivineDataFactory(j.application.JSBaseClass):
 
     def test(self, name=""):
         """
-        js_shell 'j.data.rivine.test()'
+        kosmos 'j.data.rivine.test()'
         :return:
         """
         self._test_run(name=name)

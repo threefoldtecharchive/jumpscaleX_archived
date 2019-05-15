@@ -193,7 +193,7 @@ class Sandboxer(j.application.JSBaseClass):
     def libs_sandbox(self, path, dest=None, recursive=True, exclude_sys_libs=True):
         """
 
-        js_shell 'j.tools.sandboxer.libs_sandbox(".",".",True)'
+        kosmos 'j.tools.sandboxer.libs_sandbox(".",".",True)'
 
         find binaries on path and look for supporting libs, copy the libs to dest
         default dest = '%s/bin/'%j.dirs.JSBASEDIR
@@ -277,7 +277,7 @@ class Sandboxer(j.application.JSBaseClass):
     #     """
     #     path: binary path
     #     dest: it should refer to the sandbox dir
-    #     js_shell 'j.tools.sandboxer.sandbox_chroot()'
+    #     kosmos 'j.tools.sandboxer.sandbox_chroot()'
     #     """
     #     if dest is None:
     #         dest = j.dirs.BASEDIR
@@ -413,7 +413,7 @@ class Sandboxer(j.application.JSBaseClass):
     #         prefab.core.dir_ensure(j.sal.fs.joinPaths(sandbox_dir, directory))
 
     #     # copy needed binaries and required libs
-    #     prefab.core.execute_bash("""js_shell 'j.tools.sandboxer.libs_sandbox("{}", dest="{}")'""".format(bin_path, LIBSDIR))
+    #     prefab.core.execute_bash("""kosmos 'j.tools.sandboxer.libs_sandbox("{}", dest="{}")'""".format(bin_path, LIBSDIR))
 
     #     prefab.core.file_copy(bin_path, BINDIR+'/')
 

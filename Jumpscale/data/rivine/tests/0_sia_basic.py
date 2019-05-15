@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.rivine.test(name="sia_basic")'
+    kosmos 'j.data.rivine.test(name="sia_basic")'
     """
     e = j.data.rivine.encoder_sia_get()
 

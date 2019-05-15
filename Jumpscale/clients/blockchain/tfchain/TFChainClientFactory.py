@@ -38,7 +38,7 @@ class TFChainClientFactory(j.application.JSBaseConfigsClass):
 
     def test(self, name=""):
         """
-        js_shell 'j.clients.tfchain.test()'
+        kosmos 'j.clients.tfchain.test()'
         :return:
         """
         self._test_run(name=name)

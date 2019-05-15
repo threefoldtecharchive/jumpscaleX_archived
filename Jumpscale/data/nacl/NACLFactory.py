@@ -65,7 +65,7 @@ class NACLFactory(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.data.nacl.test()'
+        kosmos 'j.data.nacl.test()'
         """
 
         cl = self.default  # get's the default location & generate's keys
@@ -119,7 +119,7 @@ class NACLFactory(j.application.JSBaseClass):
 
     def test_perf(self):
         """
-        js_shell 'j.data.nacl.test_perf()'
+        kosmos 'j.data.nacl.test_perf()'
         """
 
         cl = self.default  # get's the default location & generate's keys

@@ -112,7 +112,7 @@ class FormattersFactory(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.tools.formatters.test()'
+        kosmos 'j.tools.formatters.test()'
         :return:
         """
 

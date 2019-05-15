@@ -161,7 +161,7 @@ class AlertHandler(j.application.JSBaseClass):
 
     def test(self, delete=True):
         """
-        js_shell 'j.tools.alerthandler.test()'
+        kosmos 'j.tools.alerthandler.test()'
         :return:
         """
 

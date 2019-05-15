@@ -15,7 +15,7 @@ class JSRun(j.application.JSBaseClass):
 
     def install(self):
         """
-        js_shell 'j.servers.jsrun.install()'
+        kosmos 'j.servers.jsrun.install()'
 
         """
         if self._installed:
@@ -68,7 +68,7 @@ class JSRun(j.application.JSBaseClass):
         """
         following will run all tests
 
-        js_shell 'j.servers.web.test()'
+        kosmos 'j.servers.web.test()'
 
         """
 

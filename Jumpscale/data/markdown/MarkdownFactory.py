@@ -42,7 +42,7 @@ class MarkdownFactory(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.data.markdown.test()'
+        kosmos 'j.data.markdown.test()'
         """
         from .tests.test1 import test
 

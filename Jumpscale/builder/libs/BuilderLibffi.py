@@ -13,7 +13,7 @@ class BuilderLibffi(j.builder.system._BaseClass):
 
     def build(self, reset=False):
         """
-        js_shell 'j.builder.libs.libffi.build(reset=True)'
+        kosmos 'j.builder.libs.libffi.build(reset=True)'
         """
         if reset:
             self.reset()

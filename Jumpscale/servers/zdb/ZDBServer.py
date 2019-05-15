@@ -39,7 +39,7 @@ class ZDBServer(j.application.JSBaseClass):
         start zdb in tmux using this directory (use prefab)
         will only start when the server is not life yet
 
-        js_shell 'j.servers.zdb.start()'
+        kosmos 'j.servers.zdb.start()'
 
         """
 
@@ -126,7 +126,7 @@ class ZDBServer(j.application.JSBaseClass):
     def start_test_instance(self, destroydata=True, namespaces=[], admin_secret="123456", namespaces_secret="1234"):
         """
 
-        js_shell 'j.servers.zdb.start_test_instance(reset=True)'
+        kosmos 'j.servers.zdb.start_test_instance(reset=True)'
 
         start a test instance with self.adminsecret 123456
         will use port 9901

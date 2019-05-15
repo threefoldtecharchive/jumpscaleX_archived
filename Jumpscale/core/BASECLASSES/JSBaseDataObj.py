@@ -19,7 +19,7 @@ class JSBaseDataObj(JSBase):
         self._isnew = False
 
         if data:
-            if not hasattr(data, "_JSOBJ"):
+            if not isinstance(data, j.data.schema.DataObjBase):
                 raise RuntimeError("data should be a jsobj")
             self.data = data
         else:

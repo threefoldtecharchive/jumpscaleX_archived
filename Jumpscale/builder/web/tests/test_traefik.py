@@ -7,7 +7,7 @@ def test_main(self=None):
     """test traefik installation
 
     to run:
-    js_shell 'j.builder.web.traefik._test(name="traefik")'
+    kosmos 'j.builder.web.traefik._test(name="traefik")'
     """
 
     if not j.sal.process.checkInstalled(j.builder.web.traefik.NAME):
