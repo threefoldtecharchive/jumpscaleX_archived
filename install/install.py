@@ -91,7 +91,7 @@ def help():
     ## docker related
 
     --name = name of docker, only relevant when docker option used
-    -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install    
+    -d = if set will delete e.g. container if it exists (d=delete), otherwise will just use it if container install
     --portrange = 1 is the default
                   1 means 8100-8199 on host gets mapped to 8000-8099 in docker
                   2 means 8200-8299 on host gets mapped to 8000-8099 in docker
@@ -390,7 +390,6 @@ if "1" in args or "2" in args:
 
             #in system need to install the lua env
             IT.Tools.execute("source /sandbox/env.sh;kosmos 'j.builder.runtimes.lua.install(reset=True)'", showout=False)
-        IT.Tools.execute("source /sandbox/env.sh;js_shell 'j.tools.markdowndocs.test()'", showout=False)
         print("Jumpscale X installed successfully")
 
 elif "3" in args:
@@ -472,7 +471,7 @@ elif "3" in args:
     # check if already code exists and checkout the argument branch
     if os.path.exists("{}/github/threefoldtech/jumpscaleX".format(args["codepath"])):
         if getbranch() != args["branch"]:
-            print("found JS on machine, Checking out branch {}...".format(args["branch"])) 
+            print("found JS on machine, Checking out branch {}...".format(args["branch"]))
             IT.Tools.execute("""cd {}/github/threefoldtech/jumpscaleX
                         git remote set-branches origin '*'
                         git fetch -v

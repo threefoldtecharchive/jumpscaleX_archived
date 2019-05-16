@@ -32,12 +32,12 @@ class BuilderPython(j.builder.system._BaseClass):
         rm -rf {DIR_CODE_L}/cpython
         """
         self._execute(C)
-    
+
     @builder_method()
     def reset(self):
         super().reset()
         self.clean()
-        
+
     @builder_method()
     def build(self, tag="v3.6.7"): # default "v3.6.7" else may cause locals problem
         """
@@ -54,16 +54,19 @@ class BuilderPython(j.builder.system._BaseClass):
         """
         self.profile_home_select()
 
+        if self.tools.dir_exists(self._replace("{DIR_CODE_L}/cpython")):
+            current_tag = self._execute("""
+                    cd {}/cpython
+                    git tag
+                    """.format(self.DIR_CODE_L))[1]
+            if current_tag.replace('\n', '') != tag:
+                self._execute("rm -r {}/cpython".format(self.DIR_CODE_L))
+
         if not self.tools.dir_exists(self._replace("{DIR_CODE_L}/cpython")):
             self._execute("""
-            cd {DIR_CODE_L}
-            git clone https://github.com/python/cpython
-            """)
-        # checkout the selected tag version
-        self._execute("""
-        cd {}/cpython
-        git checkout tags/{}
-        """.format(self.DIR_CODE_L, tag))
+            cd {}
+            git clone --depth 1 --branch {} https://github.com/python/cpython
+            """.format(self.DIR_CODE_L, tag))
 
         if j.core.platformtype.myplatform.isMac:
             # clue to get it finally working was in
@@ -190,7 +193,7 @@ class BuilderPython(j.builder.system._BaseClass):
         self.profile.env_set("LDFLAGS","-L'%s'"%self.profile.env_get("LIBRARY_PATH"))
 
 
-        
+
 
     @builder_method()
     def _pip_install(self):
@@ -387,13 +390,13 @@ class BuilderPython(j.builder.system._BaseClass):
             C = """
             mv {DIR_SANDBOX}/lib/python/_sysconfigdata_m_darwin_darwin.py {DIR_SANDBOX}/lib/pythonbin/_sysconfigdata_m_darwin_darwin.py
             rm -rf {DIR_SANDBOX}/lib/python/config-3.6m-darwin
-    
+
             """
         else:
             C = """
             mv {DIR_SANDBOX}/lib/python/_sysconfigdata_m_linux_x86_64-linux-gnu.py {DIR_SANDBOX}/lib/pythonbin/_sysconfigdata_m_linux_x86_64-linux-gnu.py
             rm -rf {DIR_SANDBOX}/lib/python/config-3.6m-x86_64-linux-gnu
-    
+
             """
 
         C = j.core.tools.text_replace(C, args=self.__dict__)
