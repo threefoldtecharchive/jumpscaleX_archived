@@ -229,15 +229,20 @@ class BCDB(j.application.JSBaseClass):
     def _schema_get_sid(self, sid):
         for s in self.meta.data.schemas:
             if s.sid == sid:
-                return j.data.schema.get_from_text(schema_text=s.text, url=s.url, md5=s.md5)
+                s2 = j.data.schema.get_from_text(schema_text=s.text)
+                assert s2.url == s.url
+                assert s2._md5 == s.md5
+                return s2
 
     def _schema_get_md5(self, md5):
         for s in self.meta.data.schemas:
             if s.md5 == md5:
-                return j.data.schema.get_from_text(schema_text=s.text, url=s.url, md5=s.md5)
+                s2 = j.data.schema.get_from_text(schema_text=s.text)
+                assert s2._md5 == s.md5
+                return s2
 
     def model_get_from_sid(self, sid):
-
+        md5 = None
         if sid in self._schema_sid_to_md5:
             md5 = self._schema_sid_to_md5[sid]
             if md5 in self._schema_md5_to_model:

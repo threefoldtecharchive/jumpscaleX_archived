@@ -72,7 +72,7 @@ class SchemaFactory(j.application.JSBaseClass):
                 return self.md5_to_schema[md5]
         raise j.exceptions.Input("Could not find schema with url:%s" % url)
 
-    def get_from_text(self, schema_text):
+    def get_from_text(self, schema_text, url=None):
         """
         will return the first schema specified if more than 1
 
@@ -82,7 +82,7 @@ class SchemaFactory(j.application.JSBaseClass):
         assert isinstance(schema_text, str)
         if schema_text != "":
             if j.data.types.string.check(schema_text):
-                schema = self.add_from_text(schema_text=schema_text)[0]
+                schema = self.add_from_text(schema_text=schema_text, url=url)[0]
             else:
                 raise j.exceptions.Input("Schema needs to be text ")
 
@@ -131,23 +131,25 @@ class SchemaFactory(j.application.JSBaseClass):
 
         return blocks
 
-    def add_from_text(self, schema_text):
+    def add_from_text(self, schema_text, url=None):
         """
         :param schema_text can be 1 or more schema's in the text
         """
         assert isinstance(schema_text, str)
         res = []
         blocks = self._schema_blocks_get(schema_text)
+        if len(blocks) > 1 and url:
+            raise j.exceptions.Input("cannot support add from text with url if more than 1 block")
         for block in blocks:
-            res.append(self._add_from_text_item(block))
+            res.append(self._add_from_text_item(block, url=url))
         return res
 
-    def _add_from_text_item(self, schema_text):
+    def _add_from_text_item(self, schema_text, url=None):
         md5 = self._md5(schema_text)
         if md5 in self.md5_to_schema:
             return self.md5_to_schema[md5]
 
-        s = Schema(text=schema_text, md5=md5)
+        s = Schema(text=schema_text, md5=md5, url=url)
 
         # add md5 to the list if its not there yet
         if not s.url in self.url_to_md5:

@@ -135,15 +135,23 @@ class StartupCMD(j.application.JSBaseDataObjClass):
         else:
             return False
 
-    def start(self, reset=False, checkrunning=True):
+    def start(self, reset=False, checkrunning=True, foreground=False):
+        """
+
+        :param reset:
+        :param checkrunning:
+        :param foreground: means will not do in e.g. tmux
+        :return:
+        """
         self._log_debug("start:%s" % self.name)
-        if reset:
-            self.stop()
-            self._pane.kill()
-        else:
-            if self.running:
-                self._log_info("no need to start was already started:%s" % self.name)
-                return
+        if foreground is False:
+            if reset:
+                self.stop()
+                self._pane.kill()
+            else:
+                if self.running:
+                    self._log_info("no need to start was already started:%s" % self.name)
+                    return
 
         self._pid = None
 
@@ -195,17 +203,27 @@ class StartupCMD(j.application.JSBaseDataObjClass):
         j.sal.fs.writeFile(tpath, C3 + "\n\n")
         j.sal.fs.chmod(tpath, 0o770)
 
-        if "__" in self._pane.name:
-            self._pane.kill()
-
-        if self.interpreter == "bash":
-            self._pane.execute("source %s" % tpath)
-        else:
-            if self.debug:
-                self._pane.execute("kosmos %s --debug" % tpath)
+        if foreground:
+            if self.interpreter == "bash":
+                j.sal.process.executeWithoutPipe("source %s" % tpath)
             else:
-                self._pane.execute("kosmos %s" % tpath)
+                if self.debug:
+                    j.sal.process.executeWithoutPipe("kosmos %s --debug" % tpath)
+                else:
+                    j.sal.process.executeWithoutPipe("kosmos %s" % tpath)
+        else:
 
-        if checkrunning:
-            running = self.wait_running()
-            assert running
+            if "__" in self._pane.name:
+                self._pane.kill()
+
+            if self.interpreter == "bash":
+                self._pane.execute("source %s" % tpath)
+            else:
+                if self.debug:
+                    self._pane.execute("kosmos %s --debug" % tpath)
+                else:
+                    self._pane.execute("kosmos %s" % tpath)
+
+            if checkrunning:
+                running = self.wait_running()
+                assert running
