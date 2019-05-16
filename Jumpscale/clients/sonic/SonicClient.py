@@ -3,6 +3,7 @@ from Jumpscale import j
 
 JSConfigClient = j.application.JSBaseConfigClass
 
+
 class SonicClient(JSConfigClient):
     """
     Sonic server client
@@ -29,6 +30,7 @@ class SonicClient(JSConfigClient):
 
 
     """
+
     _SCHEMATEXT = """
         @url =  jumpscale.sonic.client
         name* = "" (S)
@@ -36,6 +38,7 @@ class SonicClient(JSConfigClient):
         port = 1491 (I)
         password = "" (S)
         """
+
     def _init(self):
         self._cached_client_search = None
         self._cached_client_ingest = None
@@ -76,4 +79,3 @@ class SonicClient(JSConfigClient):
             self._cached_client_ingest = IngestClient(host=self.host, port=self.port, password=self.password)
             self._cached_client_ingest.connect()
         return self._cached_client_ingest
-    

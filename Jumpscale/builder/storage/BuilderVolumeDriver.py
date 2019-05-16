@@ -2,9 +2,6 @@ from Jumpscale import j
 from time import sleep
 
 
-
-
-
 class BuilderVolumeDriver(j.builder.system._BaseClass):
     NAME = "volumedriver"
 
@@ -15,10 +12,10 @@ class BuilderVolumeDriver(j.builder.system._BaseClass):
         self._build()
 
     def _install_deps(self):
-        j.sal.fs.writeFile('/etc/apt/sources.list.d/ovsaptrepo.list',
-                                     'deb http://apt.openvstorage.org unstable main')
+        j.sal.fs.writeFile("/etc/apt/sources.list.d/ovsaptrepo.list", "deb http://apt.openvstorage.org unstable main")
         j.sal.process.execute(
-            'echo "deb http://us.archive.ubuntu.com/ubuntu xenial main universe" >> /etc/apt/sources.list')
+            'echo "deb http://us.archive.ubuntu.com/ubuntu xenial main universe" >> /etc/apt/sources.list'
+        )
         j.builder.system.package.mdupdate()
         j.builder.system.package.upgrade(distupgrade=True)
 
@@ -45,25 +42,23 @@ class BuilderVolumeDriver(j.builder.system._BaseClass):
         """
         j.builder.system.package.ensure(apt_deps, allow_unauthenticated=True)
 
-    def _build(self, version='6.0.0'):
-        workspace = j.core.tools.text_replace("{DIR_TEMP}/volumedriver-workspace")
+    def _build(self, version="6.0.0"):
+        workspace = self._replace("{DIR_TEMP}/volumedriver-workspace")
         j.core.tools.dir_ensure(workspace)
 
-        str_repl = {
-            'workspace': workspace,
-            'version': version,
-        }
+        str_repl = {"workspace": workspace, "version": version}
 
-        str_repl['volumedriver'] = j.clients.git.pullGitRepo(
-            'https://github.com/openvstorage/volumedriver', depth=None)
-        str_repl['buildtools'] = j.clients.git.pullGitRepo(
-            'https://github.com/openvstorage/volumedriver-buildtools', depth=None)
-        j.sal.process.execute('cd %(volumedriver)s;git checkout tags/%(version)s' % str_repl)
+        str_repl["volumedriver"] = j.clients.git.pullGitRepo("https://github.com/openvstorage/volumedriver", depth=None)
+        str_repl["buildtools"] = j.clients.git.pullGitRepo(
+            "https://github.com/openvstorage/volumedriver-buildtools", depth=None
+        )
+        j.sal.process.execute("cd %(volumedriver)s;git checkout tags/%(version)s" % str_repl)
 
-        j.builder.tools.file_link(str_repl['buildtools'], j.sal.fs.joinPaths(workspace, 'volumedriver-buildtools'))
-        j.builder.tools.file_link(str_repl['volumedriver'], j.sal.fs.joinPaths(workspace, 'volumedriver'))
+        j.builder.tools.file_link(str_repl["buildtools"], j.sal.fs.joinPaths(workspace, "volumedriver-buildtools"))
+        j.builder.tools.file_link(str_repl["volumedriver"], j.sal.fs.joinPaths(workspace, "volumedriver"))
 
-        build_script = """
+        build_script = (
+            """
         export WORKSPACE=%(workspace)s
         export RUN_TESTS=no
 
@@ -73,7 +68,9 @@ class BuilderVolumeDriver(j.builder.system._BaseClass):
 
         cd ${WORKSPACE}
         ./volumedriver/src/buildscripts/jenkins-release-dev.sh ${WORKSPACE}/volumedriver
-        """ % str_repl
+        """
+            % str_repl
+        )
 
         j.sal.process.execute(build_script)
-        j.builder.tools.file_copy('{DIR_TEMP}/volumedriver-workspace/volumedriver/build/bin/*', '{DIR_BIN}')
+        j.builder.tools.file_copy("{DIR_TEMP}/volumedriver-workspace/volumedriver/build/bin/*", "{DIR_BIN}")

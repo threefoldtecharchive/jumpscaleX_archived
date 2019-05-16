@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 import os
 import time
@@ -6,10 +5,7 @@ import time
 import socket
 
 
-
-
 class BuilderSSHReflector(j.builder.system._BaseClass):
-
     def __init__(self, executor, prefab):
         self.executor = executor
         self.prefab = prefab
@@ -30,13 +26,23 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
         j.sal.process.execute("killall dropbear", die=False)
 
         passwd = j.data.idgenerator.generateGUID()
-        j.builder.user.ensure("sshreflector", passwd=passwd, home="/home/sshreflector",
-                                uid=None, gid=None, shell=None, fullname=None, encrypted_passwd=True, group=None)
+        j.builder.user.ensure(
+            "sshreflector",
+            passwd=passwd,
+            home="/home/sshreflector",
+            uid=None,
+            gid=None,
+            shell=None,
+            fullname=None,
+            encrypted_passwd=True,
+            group=None,
+        )
 
-        j.sal.process.execute('ufw allow %s' % port, die=False)
+        j.sal.process.execute("ufw allow %s" % port, die=False)
 
-        j.core.tools.dir_ensure("/home/sshreflector/.ssh", recursive=True, mode=None,
-                                    owner="sshreflector", group="sshreflector")
+        j.core.tools.dir_ensure(
+            "/home/sshreflector/.ssh", recursive=True, mode=None, owner="sshreflector", group="sshreflector"
+        )
 
         lpath = os.environ["HOME"] + "/.ssh/reflector"
         path = "/home/sshreflector/.ssh/reflector"
@@ -50,7 +56,7 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
             if reset or not j.builder.tools.file_exists(path) or not j.builder.tools.file_exists(path + ".pub"):
                 j.builder.tools.file_unlink(path)
                 j.builder.tools.file_unlink(path + ".pub")
-                #-N is passphrase
+                # -N is passphrase
                 j.sal.process.execute("ssh-keygen -q -t rsa -b 4096 -f %s -N '' " % path)
             ftp.get(path, lpath)
             ftp.get(path + ".pub", lpath + ".pub")
@@ -126,7 +132,7 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
             j.sal.process.execute("chmod 0600 /root/.ssh/reflector")
             j.sal.process.execute("chmod 0600 /root/.ssh/reflector.pub")
 
-            if(remotetools.executor.addr.find(".") != -1):
+            if remotetools.executor.addr.find(".") != -1:
                 # is real ipaddress, will put in hostfile as reflector
                 addr = remotetools.executor.addr
             else:
@@ -146,8 +152,9 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
 
             if remotetools.file_exists("/home/sshreflector/reflectorclients") is False:
                 self._log_info("reflectorclientsfile does not exist")
-                remotetools.file_write("/home/sshreflector/reflectorclients", "%s:%s\n" %
-                                             (j.builder.platformtype.hostname, 9800))
+                remotetools.file_write(
+                    "/home/sshreflector/reflectorclients", "%s:%s\n" % (j.builder.platformtype.hostname, 9800)
+                )
                 newport = 9800
                 out2 = remotetools.file_read("/home/sshreflector/reflectorclients")
             else:
@@ -177,16 +184,19 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
 
             self._log_info("check ssh connection to reflector")
             j.sal.process.execute(
-                "ssh -i /root/.ssh/reflector -o StrictHostKeyChecking=no sshreflector@%s -p %s 'ls /'" %
-                (rname, reflport))
+                "ssh -i /root/.ssh/reflector -o StrictHostKeyChecking=no sshreflector@%s -p %s 'ls /'"
+                % (rname, reflport)
+            )
             self._log_info("OK")
 
             _, cpath, _ = j.sal.process.execute("which autossh")
-            cmd = "%s -M 0 -N -o ExitOnForwardFailure=yes -o \"ServerAliveInterval 60\" -o \"ServerAliveCountMax 3\" -R %s:localhost:22 sshreflector@%s -p %s -i /root/.ssh/reflector" % (
-                cpath, newport, rname, reflport)
+            cmd = (
+                '%s -M 0 -N -o ExitOnForwardFailure=yes -o "ServerAliveInterval 60" -o "ServerAliveCountMax 3" -R %s:localhost:22 sshreflector@%s -p %s -i /root/.ssh/reflector'
+                % (cpath, newport, rname, reflport)
+            )
 
             pm = j.builder.system.processmanager.get()
-            pm.ensure("autossh_%s" % rname_short, cmd, descr='')
+            pm.ensure("autossh_%s" % rname_short, cmd, descr="")
 
             self._log_info("On %s:%s remote SSH port:%s" % (remotetools.executor.addr, port, newport))
 
@@ -228,8 +238,10 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
             # cmd="ssh sshreflector@%s -o StrictHostKeyChecking=no -p 9222 -i %s -L %s:localhost:%s"%(addr,keypath,port,port)
             # j.builder.tmux.executeInScreen("ssh",name,cmd)
 
-            cmd = "autossh -M 0 -N -f -o ExitOnForwardFailure=yes -o \"ServerAliveInterval 60\" -o \"ServerAliveCountMax 3\" -L %s:localhost:%s sshreflector@%s -p 9222 -i %s" % (
-                port, port, addr, keypath)
+            cmd = (
+                'autossh -M 0 -N -f -o ExitOnForwardFailure=yes -o "ServerAliveInterval 60" -o "ServerAliveCountMax 3" -L %s:localhost:%s sshreflector@%s -p 9222 -i %s'
+                % (port, port, addr, keypath)
+            )
             j.sal.process.execute(cmd)
 
         self._log_info("\n\n\n")
@@ -237,7 +249,6 @@ class BuilderSSHReflector(j.builder.system._BaseClass):
         self._log_info(out)
 
     def __str__(self):
-        return "prefab.reflector:%s:%s" % (getattr(self.executor, 'addr', 'local'),
-                                           getattr(self.executor, 'port', ''))
+        return "prefab.reflector:%s:%s" % (getattr(self.executor, "addr", "local"), getattr(self.executor, "port", ""))
 
     __repr__ = __str__

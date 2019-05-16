@@ -21,12 +21,12 @@ from ..primitives.Primitives import Primitives
 from ..hypervisor.Hypervisor import Hypervisor
 from ..utils import get_ip_from_nic, get_zt_ip
 
-Mount = namedtuple('Mount', ['device', 'mountpoint', 'fstype', 'options'])
+Mount = namedtuple("Mount", ["device", "mountpoint", "fstype", "options"])
 
 
 SUPPORT_NETWORK = "172.29.0.0/16"
 
-ZOS_CACHE = 'zos-cache'
+ZOS_CACHE = "zos-cache"
 
 
 class Node:
@@ -60,16 +60,16 @@ class Node:
             macgwdev, _ = self.get_nic_hwaddr_and_ip(nics)
             if not macgwdev:
                 raise AttributeError("name not found for node {}".format(self))
-            self._name = macgwdev.replace(":", '')
+            self._name = macgwdev.replace(":", "")
         return self._name
 
     @property
     def kernel_args(self):
-        args = self.download_content('/proc/cmdline').split()
+        args = self.download_content("/proc/cmdline").split()
         result = dict()
         for arg in args:
-            split = arg.split('=')
-            value = split[1] if len(split) > 1 else ''
+            split = arg.split("=")
+            value = split[1] if len(split) > 1 else ""
             result[split[0]] = value
         return result
 
@@ -79,15 +79,15 @@ class Node:
         Full line commands can be send to the shell (not tabcomplete or fancyness though)
         """
         fifofile = "/tmp/{}".format(uuid.uuid4())
-        self.client.system('mkfifo {}'.format(fifofile))
-        proc = self.client.bash('ash < {}'.format(fifofile), stream=True)
+        self.client.system("mkfifo {}".format(fifofile))
+        proc = self.client.bash("ash < {}".format(fifofile), stream=True)
         reader = threading.Thread(target=proc.stream)
         reader.start()
 
-        writer = self.client.filesystem.open(fifofile, 'w')
+        writer = self.client.filesystem.open(fifofile, "w")
         while True:
             try:
-                cmd = input('# ').encode('utf-8')
+                cmd = input("# ").encode("utf-8")
             except EOFError:
                 break
             if cmd:
@@ -101,8 +101,8 @@ class Node:
         if not self._storage_addr:
             nic_data = self.client.info.nic()
             for nic in nic_data:
-                if nic['name'] == 'backplane':
-                    self._storage_addr = get_ip_from_nic(nic['addrs'])
+                if nic["name"] == "backplane":
+                    self._storage_addr = get_ip_from_nic(nic["addrs"])
                     return self._storage_addr
             self._storage_addr = self.public_addr
         return self._storage_addr
@@ -127,23 +127,23 @@ class Node:
         ip = get_zt_ip(nics, True, SUPPORT_NETWORK)
         if ip:
             return ip
-        raise LookupError('their is no support zerotier interface (support_address)')
+        raise LookupError("their is no support zerotier interface (support_address)")
 
     @property
     def management_address(self):
         return self.public_addr
 
     def generate_zerotier_identity(self):
-        return self.client.system('zerotier-idtool generate').get().stdout.strip()
+        return self.client.system("zerotier-idtool generate").get().stdout.strip()
 
     def get_gateway_route(self):
         for route in self.client.ip.route.list():
-            if route['gw'] and not route['dst']:
+            if route["gw"] and not route["dst"]:
                 return route
-        raise LookupError('Could not find route with default gw')
+        raise LookupError("Could not find route with default gw")
 
     def get_gateway_nic(self):
-        return self.get_gateway_route()['dev']
+        return self.get_gateway_route()["dev"]
 
     def get_nic_hwaddr_and_ip(self, nics=None, name=None):
         if nics is None:
@@ -151,14 +151,15 @@ class Node:
         if not name:
             name = self.get_gateway_nic()
         for nic in nics:
-            if nic['name'] == name:
-                return nic['hardwareaddr'], get_ip_from_nic(nic['addrs'])
-        return '', ''
+            if nic["name"] == name:
+                return nic["hardwareaddr"], get_ip_from_nic(nic["addrs"])
+        return "", ""
 
     def get_nic_by_ip(self, addr):
         try:
-            res = next(nic for nic in self.client.info.nic() if any(
-                addr == a['addr'].split('/')[0] for a in nic['addrs']))
+            res = next(
+                nic for nic in self.client.info.nic() if any(addr == a["addr"].split("/")[0] for a in nic["addrs"])
+            )
             return res
         except StopIteration:
             return None
@@ -172,11 +173,11 @@ class Node:
         eligible = {t: [] for t in priorities}
         # Pick up the first ssd
         usedisks = []
-        for pool in (self.client.btrfs.list() or []):
-            for device in pool['devices']:
-                usedisks.append(device['path'])
+        for pool in self.client.btrfs.list() or []:
+            for device in pool["devices"]:
+                usedisks.append(device["path"])
         for disk in disks[::-1]:
-            if disk.devicename in usedisks or len(disk.partitions) > 0 or disk.transport == 'usb':
+            if disk.devicename in usedisks or len(disk.partitions) > 0 or disk.transport == "usb":
                 continue
             if disk.type in priorities:
                 eligible[disk.type].append(disk)
@@ -219,24 +220,24 @@ class Node:
                 if storagepool.exists(name):
                     storagepool.get(name).delete()
                 fs = storagepool.create(name)
-                self.client.disk.mount(storagepool.devicename, path, ['subvol={}'.format(fs.subvolume)])
+                self.client.disk.mount(storagepool.devicename, path, ["subvol={}".format(fs.subvolume)])
 
-        create_cache_dir('/var/cache/containers', 'containercache')
-        create_cache_dir('/var/cache/vm', 'vmcache')
+        create_cache_dir("/var/cache/containers", "containercache")
+        create_cache_dir("/var/cache/vm", "vmcache")
 
-        logpath = '/var/log'
+        logpath = "/var/log"
         if logpath not in mountedpaths:
             # logs is empty filesystem which we create a snapshot on to store logs of current boot
-            snapname = '{:%Y-%m-%d-%H-%M}'.format(datetime.now())
-            fs = storagepool.get('logs')
+            snapname = "{:%Y-%m-%d-%H-%M}".format(datetime.now())
+            fs = storagepool.get("logs")
             snapshot = fs.create(snapname)
-            self.client.bash('mkdir /tmp/log && mv /var/log/* /tmp/log/')
-            self.client.disk.mount(storagepool.devicename, logpath, ['subvol={}'.format(snapshot.subvolume)])
-            self.client.bash('mv /tmp/log/* /var/log/').get()
+            self.client.bash("mkdir /tmp/log && mv /var/log/* /tmp/log/")
+            self.client.disk.mount(storagepool.devicename, logpath, ["subvol={}".format(snapshot.subvolume)])
+            self.client.bash("mv /tmp/log/* /var/log/").get()
             self.client.log_manager.reopen()
             # startup syslogd and klogd
-            self.client.system('syslogd -n -O /var/log/messages')
-            self.client.system('klogd -n')
+            self.client.system("syslogd -n -O /var/log/messages")
+            self.client.system("klogd -n")
 
     def freeports(self, nrports=1):
         """
@@ -263,13 +264,13 @@ class Node:
                 break
         return zeroos_cache_sp
 
-    def is_configured(self, name='zos-cache'):
+    def is_configured(self, name="zos-cache"):
         zeroos_cache_sp = self.find_persistance(name)
         if zeroos_cache_sp is None:
             return False
         return bool(zeroos_cache_sp.mountpoint)
 
-    def ensure_persistance(self, name='zos-cache'):
+    def ensure_persistance(self, name="zos-cache"):
         """
         look for a disk not used,
         create a partition and mount it to be used as cache for the g8ufs
@@ -287,12 +288,13 @@ class Node:
         if zeroos_cache_sp is None:
             disk = self._eligible_zeroos_cache_disk(disks)
             zeroos_cache_sp = self.storagepools.create(
-                name, device=disk.devicename, metadata_profile='single', data_profile='single', overwrite=True)
+                name, device=disk.devicename, metadata_profile="single", data_profile="single", overwrite=True
+            )
         zeroos_cache_sp.mount()
         try:
-            zeroos_cache_sp.get('logs')
+            zeroos_cache_sp.get("logs")
         except ValueError:
-            zeroos_cache_sp.create('logs')
+            zeroos_cache_sp.create("logs")
 
         # mount the storage pool
         self._mount_zeroos_cache(zeroos_cache_sp)
@@ -305,36 +307,42 @@ class Node:
 
     def upload_content(self, remote, content):
         if isinstance(content, str):
-            content = content.encode('utf8')
+            content = content.encode("utf8")
         bytes = BytesIO(content)
         self.client.filesystem.upload(remote, bytes)
 
     def wipedisks(self):
-        j.tools.logger._log_debug('Wiping node {hostname}'.format(**self.client.info.os()))
+        j.tools.logger._log_debug("Wiping node {hostname}".format(**self.client.info.os()))
 
         jobs = []
         # for disk in self.client.disk.list():
         for disk in self.disks.list():
             if disk.type == StorageType.CDROM:
-                j.tools.logger._log_debug('   * Not wiping cdrom {kname} {model}'.format(**disk._disk_info))
+                j.tools.logger._log_debug("   * Not wiping cdrom {kname} {model}".format(**disk._disk_info))
                 continue
 
-            if disk.transport == 'usb':
-                j.tools.logger._log_debug('   * Not wiping usb {kname} {model}'.format(**disk._disk_info))
+            if disk.transport == "usb":
+                j.tools.logger._log_debug("   * Not wiping usb {kname} {model}".format(**disk._disk_info))
                 continue
 
             if not disk.mountpoint:
                 for part in disk.partitions:
                     if part.mountpoint:
-                        j.tools.logger._log_debug('   * Not wiping {device} because {part} is mounted at {mountpoint}'
-                                     .format(device=disk.devicename, part=part.devicename,  mountpoint=part.mountpoint))
+                        j.tools.logger._log_debug(
+                            "   * Not wiping {device} because {part} is mounted at {mountpoint}".format(
+                                device=disk.devicename, part=part.devicename, mountpoint=part.mountpoint
+                            )
+                        )
                         break
                 else:
-                    j.tools.logger._log_debug('   * Wiping disk {kname}'.format(**disk._disk_info))
-                    jobs.append(self.client.system('dd if=/dev/zero of={} bs=1M count=50'.format(disk.devicename)))
+                    j.tools.logger._log_debug("   * Wiping disk {kname}".format(**disk._disk_info))
+                    jobs.append(self.client.system("dd if=/dev/zero of={} bs=1M count=50".format(disk.devicename)))
             else:
                 j.tools.logger._log_debug(
-                    '   * Not wiping {device} mounted at {mountpoint}'.format(device=disk.devicename, mountpoint=disk.mountpoint))
+                    "   * Not wiping {device} mounted at {mountpoint}".format(
+                        device=disk.devicename, mountpoint=disk.mountpoint
+                    )
+                )
 
         # wait for wiping to complete
         for job in jobs:
@@ -343,10 +351,7 @@ class Node:
     def list_mounts(self):
         allmounts = []
         for mount in self.client.info.disk():
-            allmounts.append(Mount(mount['device'],
-                                   mount['mountpoint'],
-                                   mount['fstype'],
-                                   mount['opts']))
+            allmounts.append(Mount(mount["device"], mount["mountpoint"], mount["fstype"], mount["opts"]))
         return allmounts
 
     def get_mount_path(self, path):
@@ -382,18 +387,15 @@ class Node:
         return state
 
     def uptime(self):
-        response = self.client.system('cat /proc/uptime').get()
-        output = response.stdout.split(' ')
+        response = self.client.system("cat /proc/uptime").get()
+        output = response.stdout.split(" ")
         return float(output[0])
 
     def reboot(self):
-        self.client.raw('core.reboot', {})
+        self.client.raw("core.reboot", {})
 
     def __str__(self):
-        return "Node <{host}:{port}>".format(
-            host=self.addr,
-            port=self.port,
-        )
+        return "Node <{host}:{port}>".format(host=self.addr, port=self.port)
 
     def __repr__(self):
         return str(self)

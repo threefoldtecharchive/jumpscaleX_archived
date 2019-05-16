@@ -8,9 +8,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class DigitalAssetAddress( ):
+class DigitalAssetAddress:
     """
     auto-generated. don't touch.
     """
@@ -31,24 +29,26 @@ class DigitalAssetAddress( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'DigitalAssetAddress'
+        class_name = "DigitalAssetAddress"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.address = client_support.set_property('address', data, data_types, False, [], False, True, class_name)
+        self.address = client_support.set_property("address", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
         self.currencysymbol = client_support.set_property(
-            'currencysymbol', data, data_types, False, [], False, True, class_name)
+            "currencysymbol", data, data_types, False, [], False, True, class_name
+        )
         data_types = [datetime]
-        self.expire = client_support.set_property('expire', data, data_types, False, [], False, True, class_name)
+        self.expire = client_support.set_property("expire", data, data_types, False, [], False, True, class_name)
         data_types = [Label]
-        self.label = client_support.set_property('label', data, data_types, False, [], False, True, class_name)
+        self.label = client_support.set_property("label", data, data_types, False, [], False, True, class_name)
         data_types = [bool]
         self.noexpiration = client_support.set_property(
-            'noexpiration', data, data_types, False, [], False, False, class_name)
+            "noexpiration", data, data_types, False, [], False, False, class_name
+        )
 
     def __str__(self):
         return self.as_json(indent=4)

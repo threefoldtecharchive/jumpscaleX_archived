@@ -4,6 +4,7 @@ from Jumpscale.core.errorhandler.JSExceptions import JSExceptions
 
 try:
     import colored_traceback
+
     colored_traceback.add_hook(always=True)
 except ImportError:
     pass
@@ -11,6 +12,7 @@ except ImportError:
 try:
     import pygments.lexers
     from pygments.formatters import get_formatter_by_name
+
     pygmentsObj = True
 except BaseException:
     pygmentsObj = False
@@ -18,9 +20,9 @@ except BaseException:
 import traceback
 import pudb
 
-class ErrorHandler():
 
-    def __init__(self,j):
+class ErrorHandler:
+    def __init__(self, j):
         self.__jscorelocation__ = "j.tools.errorhandler"
         # JSBASE.__init__(self)
         self._j = j
@@ -68,7 +70,7 @@ class ErrorHandler():
             sys.exit(1)
             return
 
-        self._j.core.tools.log(msg=err,tb=tb,level=40)
+        self._j.core.tools.log(msg=err, tb=tb, level=40)
         if die:
             if self._j.core.myenv.debug:
                 pudb.post_mortem(tb)
@@ -101,8 +103,22 @@ class ErrorHandler():
         try:
             k = "%s" % k
             v = "%s" % v
-            if k in ["re", "q", "jumpscale", "pprint", "qexec", "jshell", "Shell",
-                     "__doc__", "__file__", "__name__", "__package__", "i", "main", "page"]:
+            if k in [
+                "re",
+                "q",
+                "jumpscale",
+                "pprint",
+                "qexec",
+                "jshell",
+                "Shell",
+                "__doc__",
+                "__file__",
+                "__name__",
+                "__package__",
+                "i",
+                "main",
+                "page",
+            ]:
                 return False
             if v.find("<module") != -1:
                 return False
@@ -140,7 +156,7 @@ class ErrorHandler():
 
     def _trace_print(self, tb_text):
         if pygmentsObj:
-            #style=pygments.styles.get_style_by_name("vim")
+            # style=pygments.styles.get_style_by_name("vim")
             formatter = pygments.formatters.Terminal256Formatter()
             lexer = pygments.lexers.get_lexer_by_name("pytb", stripall=True)  # pytb
             tb_colored = pygments.highlight(tb_text, lexer, formatter)
@@ -168,11 +184,10 @@ class ErrorHandler():
 
             editor = None
             if self._j.core.platformtype.myplatform.isLinux:
-                #j.tools.console.echo("THIS ONLY WORKS WHEN GEDIT IS INSTALLED")
+                # j.tools.console.echo("THIS ONLY WORKS WHEN GEDIT IS INSTALLED")
                 editor = findEditorLinux()
             elif self._j.core.platformtype.myplatform.isWindows:
-                editorPath = self._j.sal.fs.joinPaths(
-                    self._j.dirs.JSBASEDIR, "apps", "wscite", "scite.exe")
+                editorPath = self._j.sal.fs.joinPaths(self._j.dirs.JSBASEDIR, "apps", "wscite", "scite.exe")
                 if self._j.sal.fs.exists(editorPath):
                     editor = editorPath
             tracefile = errorConditionObject.log2filesystem()
@@ -182,15 +197,17 @@ class ErrorHandler():
                 if tb is None:
                     try:
                         res = self._j.tools.console.askString(
-                            "\nAn error has occurred. Do you want do you want to do? (s=stop, c=continue, t=getTrace)")
-                    except BaseException:                        # print "ERROR IN ASKSTRING TO SEE IF WE HAVE TO USE
+                            "\nAn error has occurred. Do you want do you want to do? (s=stop, c=continue, t=getTrace)"
+                        )
+                    except BaseException:  # print "ERROR IN ASKSTRING TO SEE IF WE HAVE TO USE
                         # EDITOR"
                         res = "s"
                 else:
                     try:
                         res = self._j.tools.console.askString(
-                            "\nAn error has occurred. Do you want do you want to do? (s=stop, c=continue, t=getTrace, d=debug)")
-                    except BaseException:                        # print "ERROR IN ASKSTRING TO SEE IF WE HAVE TO USE
+                            "\nAn error has occurred. Do you want do you want to do? (s=stop, c=continue, t=getTrace, d=debug)"
+                        )
+                    except BaseException:  # print "ERROR IN ASKSTRING TO SEE IF WE HAVE TO USE
                         # EDITOR"
                         res = "s"
                 if res == "t":
@@ -199,15 +216,14 @@ class ErrorHandler():
                     if editor == "less":
                         self._j.sal.process.executeWithoutPipe(cmd, die=False)
                     else:
-                        result, out, err = self._j.sal.process.execute(
-                            cmd, die=False, showout=False)
+                        result, out, err = self._j.sal.process.execute(cmd, die=False, showout=False)
 
                 if res == "c":
                     return
                 elif res == "d":
-                    self._j.tools.console.echo(
-                        "Starting pdb, exit by entering the command 'q'")
+                    self._j.tools.console.echo("Starting pdb, exit by entering the command 'q'")
                     import pdb
+
                     pdb.post_mortem(tb)
                 elif res == "s":
                     # print errorConditionObject
@@ -215,13 +231,14 @@ class ErrorHandler():
             else:
                 # print errorConditionObject
                 res = self._j.tools.console.askString(
-                    "\nAn error has occurred. Do you want do you want to do? (s=stop, c=continue, d=debug)")
+                    "\nAn error has occurred. Do you want do you want to do? (s=stop, c=continue, d=debug)"
+                )
                 if res == "c":
                     return
                 elif res == "d":
-                    self._j.tools.console.echo(
-                        "Starting pdb, exit by entering the command 'q'")
+                    self._j.tools.console.echo("Starting pdb, exit by entering the command 'q'")
                     import pdb
+
                     pdb.post_mortem()
                 elif res == "s":
                     # print eobject
@@ -231,5 +248,5 @@ class ErrorHandler():
             # print "ERROR"
             # tracefile=eobject.log2filesystem()
             # print errorConditionObject
-            #j.tools.console.echo( "Tracefile in %s" % tracefile)
+            # j.tools.console.echo( "Tracefile in %s" % tracefile)
             self._j.application.stop(1)

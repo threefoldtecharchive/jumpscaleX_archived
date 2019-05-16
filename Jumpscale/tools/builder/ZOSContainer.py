@@ -291,7 +291,7 @@ class ZOSContainer(j.application.JSBaseConfigClass):
             #TODO: *1 do some tests, did python really build well
             self.done_set("python_build")
 
-        cmd = "js_shell 'j.tools.sandboxer.python.do(build=False)'"  #building did already happen
+        cmd = "kosmos 'j.tools.sandboxer.python.do(build=False)'"  #building did already happen
         j.sal.process.execute(cmd)
 
         #TODO:*1 add some checks in there to make sure the building happened ok

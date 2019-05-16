@@ -8,6 +8,7 @@ from .ZeroOSClient import ZeroOSClient
 class ZeroOSFactory(j.application.JSBaseConfigsClass):
     """
     """
+
     _CHILDCLASS = ZeroOSClient
     __jslocation__ = "j.clients.zos"
 
@@ -38,7 +39,7 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
         self._log_debug("booting server {} to zero-os".format(OVHHostName))
         task = cl.zero_os_boot(target=OVHHostName, zerotierNetworkID=zerotierNetworkID)
         self._log_debug("waiting for {} to reboote".format(OVHHostName))
-        cl.server_wait_reboot(OVHHostName, task['taskId'])
+        cl.server_wait_reboot(OVHHostName, task["taskId"])
         ip_pub = cl.server_detail_get(OVHHostName)["ip"]
         self._log_info("ip addr is:%s" % ip_pub)
 
@@ -57,13 +58,22 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
                 self._log_error("please authorize the server with the public ip %s in the zerotier network" % ip_pub)
                 time.sleep(1)
 
-        self._log_debug("server found: %s" % member['id'])
+        self._log_debug("server found: %s" % member["id"])
         self._log_debug("zerotier IP: %s" % ipaddr_priv)
 
         return ip_pub, ipaddr_priv
 
-    def zero_node_packetnet_install(self, packetnetClient, zerotierClient, project_name,
-                                    plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.grid.tf/ipxe/master'):
+    def zero_node_packetnet_install(
+        self,
+        packetnetClient,
+        zerotierClient,
+        project_name,
+        plan_type,
+        location,
+        server_name,
+        zerotierNetworkID,
+        ipxe_base="https://bootstrap.grid.tf/ipxe/master",
+    ):
         """
         packetnetClient = j.clients.packetnet.get('TOKEN')
         zerotierClient = j.clients.zerotier.get(instance='main', data={'token': 'TOKEN'})
@@ -75,11 +85,9 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
         ipxe_base: change this to the version you want, use master branch by default
         """
 
-        valid_plan_types = ("Type 0", "Type 1", "Type 2",
-                            "Type 2A", "Type 3", "Type S")  # FIXME
+        valid_plan_types = ("Type 0", "Type 1", "Type 2", "Type 2A", "Type 3", "Type S")  # FIXME
         if plan_type not in valid_plan_types:
-            j.exceptions.Input("bad plan type %s. Valid plan type are %s" % (
-                plan_type, ','.join(valid_plan_types)))
+            j.exceptions.Input("bad plan type %s. Valid plan type are %s" % (plan_type, ",".join(valid_plan_types)))
 
         if zerotierNetworkID:
             ipxe_url = "%s/%s" % (ipxe_base, zerotierNetworkID)
@@ -91,17 +99,26 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
         # find project id
         project_ids = [project.id for project in packetnetClient.projects if project.name == project_name]
         if not project_ids:
-            raise j.exceptions.NotFound(
-                'No projects found with name %s' % project_name)
+            raise j.exceptions.NotFound("No projects found with name %s" % project_name)
         project_id = project_ids[0]
         packetnetClient.project_id = project_id
 
-        packetnetClient.startDevice(hostname=server_name, plan=plan_type, facility=location, os='ubuntu_17_04',
-                                    ipxeUrl=ipxe_url, wait=True, remove=False)
+        packetnetClient.startDevice(
+            hostname=server_name,
+            plan=plan_type,
+            facility=location,
+            os="ubuntu_17_04",
+            ipxeUrl=ipxe_url,
+            wait=True,
+            remove=False,
+        )
 
         device = packetnetClient.getDevice(server_name)
-        ip_pub = [netinfo['address']
-                  for netinfo in device.ip_addresses if netinfo['public'] and netinfo['address_family'] == 4]
+        ip_pub = [
+            netinfo["address"]
+            for netinfo in device.ip_addresses
+            if netinfo["public"] and netinfo["address_family"] == 4
+        ]
 
         while True:
             try:
@@ -123,8 +140,16 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
 
         return ip_pub, ipaddr_priv
 
-    def get_from_itsyouonline(self, name="default", iyo_instance="default",
-                              iyo_organization=None, host="localhost", port=6379, reset=False, save=True):
+    def get_from_itsyouonline(
+        self,
+        name="default",
+        iyo_instance="default",
+        iyo_organization=None,
+        host="localhost",
+        port=6379,
+        reset=False,
+        save=True,
+    ):
         """
 
         :param name: name for this instance
@@ -143,8 +168,9 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
         jwt_name = j.core.text.strip_to_ascii_dense("zos_%s" % iyo_organization)
 
         iyo = j.clients.itsyouonline.get(name=iyo_instance)
-        jwt = iyo.jwt_get(name=jwt_name, scope="user:memberof:%s" % iyo_organization,
-                          reset=reset)  # there should be enough protection in here to refresh
+        jwt = iyo.jwt_get(
+            name=jwt_name, scope="user:memberof:%s" % iyo_organization, reset=reset
+        )  # there should be enough protection in here to refresh
 
         # print(jwt)
 
@@ -157,12 +183,13 @@ class ZeroOSFactory(j.application.JSBaseConfigsClass):
 
     def test(self):
         """
-        js_shell 'j.clients.zos.test()'
+        kosmos 'j.clients.zos.test()'
         :return:
         """
 
         cl = j.clients.zos.get_from_itsyouonline(
-            name="default", host="10.102.90.219", port=6379, iyo_organization="tf-production", reset=True)
+            name="default", host="10.102.90.219", port=6379, iyo_organization="tf-production", reset=True
+        )
 
         print(cl)
 

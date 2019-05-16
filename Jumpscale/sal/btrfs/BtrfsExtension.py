@@ -19,7 +19,6 @@ class BtfsExtensionFactory(j.application.JSBaseClass):
 
 
 class BtrfsExtension(j.application.JSBaseClass):
-
     def __init__(self, executor):
         self.__conspattern = re.compile("^(?P<key>[^:]+): total=(?P<total>[^,]+), used=(?P<used>.+)$", re.MULTILINE)
         self.__listpattern = re.compile("^ID (?P<id>\d+).+?path (?P<name>.+)$", re.MULTILINE)
@@ -75,7 +74,7 @@ class BtrfsExtension(j.application.JSBaseClass):
         Create a subvolume in path
         """
         if not self.subvolumeExists(path):
-            self.__btrfs("subvolume", 'create', path)
+            self.__btrfs("subvolume", "create", path)
 
     def subvolumeDelete(self, path):
         """
@@ -89,13 +88,15 @@ class BtrfsExtension(j.application.JSBaseClass):
             return False
 
         rc, res, err = self._executor.prefab.core.run(
-            "btrfs subvolume list %s" % path, checkok=False, die=False, showout=False)
+            "btrfs subvolume list %s" % path, checkok=False, die=False, showout=False
+        )
 
         if rc > 0:
             if res.find("can't access") != -1:
                 if self._executor.prefab.core.dir_exists(path):
                     raise j.exceptions.RuntimeError(
-                        "Path %s exists put is not btrfs subvolume, cannot continue." % path)
+                        "Path %s exists put is not btrfs subvolume, cannot continue." % path
+                    )
                 else:
                     return False
             else:
@@ -165,7 +166,8 @@ class BtrfsExtension(j.application.JSBaseClass):
                 level=1,
                 source="",
                 tags="",
-                msgpub="")
+                msgpub="",
+            )
 
         # TODO: need to remove potential partitons, make sure they are erased,
         # TODO: for each disk found which has a partition (/), all remaining
@@ -188,7 +190,8 @@ class BtrfsExtension(j.application.JSBaseClass):
                     level=1,
                     source="",
                     tags="",
-                    msgpub="")
+                    msgpub="",
+                )
             cmd = "mkfs.btrfs -f %s" % disksLine
         elif len(res) == 2:
             cmd = "mkfs.btrfs -f -m raid1 -d raid1 %s" % disksLine
@@ -212,13 +215,13 @@ class BtrfsExtension(j.application.JSBaseClass):
         """
         Add a device to a filesystem.
         """
-        self.__btrfs("device", 'add', dev, path)
+        self.__btrfs("device", "add", dev, path)
 
     def deviceDelete(self, dev, path):
         """
         Remove a device from a filesystem.
         """
-        self.__btrfs("device", 'delete', dev, path)
+        self.__btrfs("device", "delete", dev, path)
 
     def getSpaceUsage(self, path="/storage"):
         """
@@ -229,10 +232,12 @@ class BtrfsExtension(j.application.JSBaseClass):
         result = {}
         for m in self.__conspattern.finditer(out):
             cons = m.groupdict()
-            key = cons['key'].lower()
+            key = cons["key"].lower()
             key = key.replace(", ", "-")
-            values = {'total': j.data_units.bytes.toSize(value=int(cons['total']), output='M'),
-                      'used': j.data_units.bytes.toSize(value=int(cons['used']), output='M')}
+            values = {
+                "total": j.data_units.bytes.toSize(value=int(cons["total"]), output="M"),
+                "used": j.data_units.bytes.toSize(value=int(cons["used"]), output="M"),
+            }
             result[key] = values
 
         return result
@@ -243,10 +248,10 @@ class BtrfsExtension(j.application.JSBaseClass):
         @return free space
         """
         if not j.data.types.bool.check(percent):
-            raise j.exceptions.Input('percent argument should be a boolean')
+            raise j.exceptions.Input("percent argument should be a boolean")
 
         res = self.getSpaceUsage(path)
-        free = res['data-single']['total'] - res['data-single']['used']
+        free = res["data-single"]["total"] - res["data-single"]["used"]
         if percent:
             return "%.2f" % ((free / res["data-single"]["total"]) * 100)
         return free

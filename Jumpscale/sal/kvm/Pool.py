@@ -6,7 +6,6 @@ from sal.kvm.Disk import Disk
 
 
 class Pool(BaseKVMComponent):
-
     def __init__(self, controller, name):
         BaseKVMComponent.__init__(controller=controller)
         self.controller = controller
@@ -34,7 +33,7 @@ class Pool(BaseKVMComponent):
         """
 
         self.controller.executor.prefab.core.dir_ensure(self.poolpath)
-        cmd = 'chattr +C %s ' % self.poolpath
+        cmd = "chattr +C %s " % self.poolpath
         self.controller.executor.execute(cmd)
         self.controller.connection.storagePoolCreateXML(self.to_xml(), 0)
 
@@ -75,8 +74,7 @@ class Pool(BaseKVMComponent):
         Export the pool to xml
         """
 
-        pool = self.controller.get_template('pool.xml').render(
-            pool_name=self.name, basepath=self.controller.base_path)
+        pool = self.controller.get_template("pool.xml").render(pool_name=self.name, basepath=self.controller.base_path)
         return pool
 
     @classmethod
@@ -88,8 +86,8 @@ class Pool(BaseKVMComponent):
         @param source  str: xml string of pool to be created
         """
         root = ElementTree.fromstring(source)
-        name = root.findtext('name')
-        path = root.find('target').findtext('path')
+        name = root.findtext("name")
+        path = root.find("target").findtext("path")
         pool = cls(controller, name)
         pool.poolpath = path
         return pool

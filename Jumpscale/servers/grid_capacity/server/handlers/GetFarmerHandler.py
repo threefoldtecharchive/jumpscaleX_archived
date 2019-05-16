@@ -10,4 +10,4 @@ def GetFarmerHandler(iyo_organization):
     except FarmerNotFoundError:
         return jsonify(), 404
 
-    return farmer.to_json(use_db_field=False), 200, {'Content-type': 'application/json'}
+    return farmer.to_json(use_db_field=False), 200, {"Content-type": "application/json"}

@@ -8,7 +8,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class GiteaUserCurrentGpgKeys(GiteaGpgKeys):
-
     def new(self):
         return GiteaUserCurrentGpgKey(self.client, self.user)
 

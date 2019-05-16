@@ -37,7 +37,7 @@ Some tools available in jumpscale
   * Local Executor (for local execution)
   * Docker Executor (for executing on dockers)
 
-* [Builders](docs/Internals/Builders.md)
+* [Builders](docs/Internals/builders/Builders.md)
   Builder tools is a set of tools to perform the common tasks in your builder (e.g read a file , write to a file, execute bash commands and many other handy methods that you will probably need in your builder) \
   To create a builder see [documentation](docs/howto/Create\ a\ new\ Builder.md)
 

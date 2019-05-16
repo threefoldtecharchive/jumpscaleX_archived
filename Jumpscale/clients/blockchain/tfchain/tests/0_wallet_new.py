@@ -2,6 +2,7 @@ from Jumpscale import j
 
 from Jumpscale.clients.blockchain.tfchain.stub.ExplorerClientStub import TFChainExplorerGetClientStub
 
+
 def main(self):
     """
     to run:
@@ -22,7 +23,7 @@ def main(self):
     c._explorer_get = explorer_client.explorer_get
 
     # create a new devnet wallet
-    w = c.wallets.mywallet # is the implicit form of `c.wallets.new("mywallet")`
+    w = c.wallets.mywallet  # is the implicit form of `c.wallets.new("mywallet")`
 
     # a tfchain (JS) wallet uses the underlying tfchain client for all its
     # interaction with the tfchain network
@@ -40,11 +41,11 @@ def main(self):
     assert w.key_count == 1
 
     # generating a new address is easy as well
-    assert len(w.address_new()) == 78 # all addresses have a fixed length of 78
+    assert len(w.address_new()) == 78  # all addresses have a fixed length of 78
     assert w.key_count == 2
     assert w.addresses[0] != w.addresses[1]
     for address in w.addresses:
-        assert address[:2] == '01' # all wallet addresses start with the `01` prefix
+        assert address[:2] == "01"  # all wallet addresses start with the `01` prefix
 
     # the private public key pair, for a given unlock hash, is available as well,
     # but is meant for dev purposes, not for an end-user

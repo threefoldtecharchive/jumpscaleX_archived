@@ -49,8 +49,7 @@ def test_include_headers_modify(doc=test_doc):
 
 def test_include_from_other_repo(doc=test_doc):
     markdowndocs_client = j.tools.markdowndocs
-    docsite = markdowndocs_client.load(
-        "https://github.com/abom/test_custom_md/tree/master", name="newdocsite")
+    docsite = markdowndocs_client.load("https://github.com/abom/test_custom_md/tree/master", name="newdocsite")
     data = include.include(doc=test_doc, docsite_name="newdocsite", link="test_src.md")
     assert "[b](test.md)" in data
     assert "!!!dot" not in data

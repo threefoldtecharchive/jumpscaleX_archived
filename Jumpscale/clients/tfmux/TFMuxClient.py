@@ -4,6 +4,7 @@ import time
 
 JSConfigBase = j.application.JSBaseClass
 
+
 class TFMuxClient(JSConfigBase):
     _SCHEMATEXT = ""
 
@@ -20,13 +21,13 @@ class TFMuxClient(JSConfigBase):
 
     def process_clean(self):
         r = requests.get(self.endpoint("/process/clean")).json()
-        return (r["status"] == "success")
+        return r["status"] == "success"
 
     def process_start(self, args):
         if type(args) is not list:
             args = [args]
 
-        params = {'arg[]': args}
+        params = {"arg[]": args}
         r = requests.get(self.endpoint("/process/start"), params=params).json()
         return r
 
@@ -37,4 +38,3 @@ class TFMuxClient(JSConfigBase):
     def process_stop(self, id):
         r = requests.get(self.endpoint("/process/stop"), params={"id": id})
         return r.json()
-

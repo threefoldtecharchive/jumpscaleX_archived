@@ -26,20 +26,20 @@ class See(object):
 
     def __init__(self, json=None, **kwargs):
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'See'
+        class_name = "See"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.globalid = client_support.set_property('globalid', data, data_types, False, [], False, True, class_name)
+        self.globalid = client_support.set_property("globalid", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.uniqueid = client_support.set_property('uniqueid', data, data_types, False, [], False, True, class_name)
+        self.uniqueid = client_support.set_property("uniqueid", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.username = client_support.set_property('username', data, data_types, False, [], False, True, class_name)
+        self.username = client_support.set_property("username", data, data_types, False, [], False, True, class_name)
         data_types = [SeeVersion]
-        self.versions = client_support.set_property('versions', data, data_types, False, [], True, True, class_name)
+        self.versions = client_support.set_property("versions", data, data_types, False, [], True, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

@@ -1,4 +1,5 @@
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
 from .ExecutorBase import *
@@ -13,15 +14,7 @@ class ExecutorSerial(ExecutorBase):
     Please note that default mode attempt to recognize a device with cisco like commands.
     """
 
-    def __init__(
-            self,
-            device,
-            baudrate=9600,
-            type="serial",
-            parity="N",
-            stopbits=1,
-            bytesize=8,
-            timeout=1):
+    def __init__(self, device, baudrate=9600, type="serial", parity="N", stopbits=1, bytesize=8, timeout=1):
         ExecutorBase.__init__(self, checkok=False)
         self.device = device
         self.baudrate = baudrate
@@ -45,7 +38,7 @@ class ExecutorSerial(ExecutorBase):
             parity=self.parity,
             stopbits=self.stopbits,
             bytesize=self.bytesize,
-            timeout=self.timeout
+            timeout=self.timeout,
         )
 
         return True
@@ -53,17 +46,10 @@ class ExecutorSerial(ExecutorBase):
     @property
     def id(self):
         if self._id is None:
-            self._id = 'serial.%s' % (self.device)
+            self._id = "serial.%s" % (self.device)
         return self._id
 
-    def execute(
-            self,
-            cmds,
-            die=True,
-            checkok=None,
-            showout=True,
-            timeout=0,
-            env={}):
+    def execute(self, cmds, die=True, checkok=None, showout=True, timeout=0, env={}):
         self._log_debug("Serial command: %s" % cmds)
 
         if not cmds.endswith("\n"):
@@ -74,37 +60,26 @@ class ExecutorSerial(ExecutorBase):
         return 0, "", ""
 
     def send(self, data):
-        self.console.write(data.encode('utf-8'))
+        self.console.write(data.encode("utf-8"))
 
     def fetch(self):
         input = self.console.read_all()
-        return input.decode('utf-8')
+        return input.decode("utf-8")
 
     def enter(self, command):
         self.send(command)
         self.send("\n")
 
-    def _execute_script(
-            self,
-            content="",
-            die=True,
-            showout=True,
-            checkok=None):
+    def _execute_script(self, content="", die=True, showout=True, checkok=None):
         raise NotImplementedError()
 
-    def upload(
-            self,
-            source,
-            dest,
-            dest_prefix="",
-            recursive=True,
-            createdir=True):
+    def upload(self, source, dest, dest_prefix="", recursive=True, createdir=True):
         raise NotImplementedError()
 
     def download(self, source, dest, source_prefix="", recursive=True):
         raise NotImplementedError()
 
     def __repr__(self):
-        return ("Executor serial: %s" % (self.device))
+        return "Executor serial: %s" % (self.device)
 
     __str__ = __repr__

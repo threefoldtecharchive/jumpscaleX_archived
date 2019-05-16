@@ -4,20 +4,13 @@ from . import typchk
 from Jumpscale import j
 
 
+class JobManager:
+    _job_chk = typchk.Checker({"id": typchk.Or(str, typchk.IsNone())})
 
+    _kill_chk = typchk.Checker({"id": str, "signal": int})
 
-class JobManager():
-    _job_chk = typchk.Checker({
-        'id': typchk.Or(str, typchk.IsNone()),
-    })
-
-    _kill_chk = typchk.Checker({
-        'id': str,
-        'signal': int,
-    })
     def __init__(self, client):
         self._client = client
-
 
     def list(self, id=None):
         """
@@ -25,9 +18,9 @@ class JobManager():
 
         :param id: optional ID for the job to list
         """
-        args = {'id': id}
+        args = {"id": id}
         self._job_chk.check(args)
-        return self._client.json('job.list', args)
+        return self._client.json("job.list", args)
 
     def kill(self, id, signal=signal.SIGTERM):
         """
@@ -37,12 +30,9 @@ class JobManager():
 
         :param id: job id to kill
         """
-        args = {
-            'id': id,
-            'signal': int(signal),
-        }
+        args = {"id": id, "signal": int(signal)}
         self._kill_chk.check(args)
-        return self._client.json('job.kill', args)
+        return self._client.json("job.kill", args)
 
     def unschedule(self, id):
         """
@@ -53,8 +43,6 @@ class JobManager():
 
         :param id: job id
         """
-        args = {
-            'id': id,
-        }
+        args = {"id": id}
         self._job_chk.check(args)
-        return self._client.json('job.unschedule', args)
+        return self._client.json("job.unschedule", args)

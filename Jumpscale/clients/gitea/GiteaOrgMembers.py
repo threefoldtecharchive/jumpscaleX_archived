@@ -22,10 +22,10 @@ class GiteaOrgMembers(j.application.JSBaseClass):
     def unregister(self, username):
         try:
             resp = self.client.api.orgs.orgDeleteMember(org=self.organization.username, username=username)
-            return True, ''
+            return True, ""
         except Exception as e:
             if e.response.status_code == 404:
-                return False, 'Not found'
+                return False, "Not found"
             return False, e.response.content
 
     def is_member(self, username):
@@ -96,4 +96,3 @@ class GiteaOrgMembers(j.application.JSBaseClass):
         return self
 
     __str__ = __repr__ = lambda self: "Gitea Members Iterator for organization: {0}".format(self.organization.username)
-

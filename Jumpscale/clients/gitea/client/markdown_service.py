@@ -3,7 +3,7 @@ from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 
 
-class MarkdownService():
+class MarkdownService:
     def __init__(self, client):
         pass
         self.client = client

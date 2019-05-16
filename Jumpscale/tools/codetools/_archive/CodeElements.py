@@ -1,4 +1,3 @@
-
 from PropertyDef import PropertyDef
 from MethodDef import MethodDef
 from ClassDef import ClassDef
@@ -8,7 +7,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class CodeElements(j.application.JSBaseClass):
-
     def __init__(self, filepath=""):
         JSBASE.__init__(self)
         self.body = ""

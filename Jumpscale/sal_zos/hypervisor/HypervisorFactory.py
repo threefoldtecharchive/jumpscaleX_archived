@@ -15,4 +15,3 @@ class HypervisorFactory(JSBASE):
             the sal layer 
         """
         return Hypervisor(node)
-

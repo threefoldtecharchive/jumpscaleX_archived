@@ -4,10 +4,7 @@ from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 
 
-
-
-
-class RepositoriesService():
+class RepositoriesService:
     def __init__(self, client):
         pass
         self.client = client
@@ -23,9 +20,8 @@ class RepositoriesService():
             if resp.status_code == 200:
                 return Repository(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:

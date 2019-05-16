@@ -41,11 +41,12 @@ def object_to_dict(obj, found=None, path="", notfollow=[], depth=0, maxdepth=1, 
             related_obj = getattr(obj, name)
             if related_obj is not None:
                 if relation.uselist:
-                    out[name] = [object_to_dict(
-                        child, found, path, notfollow, depth, maxdepth, subprimkeyonly) for child in related_obj]
+                    out[name] = [
+                        object_to_dict(child, found, path, notfollow, depth, maxdepth, subprimkeyonly)
+                        for child in related_obj
+                    ]
                 else:
-                    out[name] = object_to_dict(
-                        related_obj, found, path, notfollow, depth, maxdepth, subprimkeyonly)
+                    out[name] = object_to_dict(related_obj, found, path, notfollow, depth, maxdepth, subprimkeyonly)
     return out
 
 
@@ -72,8 +73,7 @@ class Base(Base0):
         return object_to_dict(self, maxdepth=1, notfollow="/sync")
 
     def _tomlpath(self, sqlalchemy):
-        path = "%s/%s/%s.toml" % (sqlalchemy.tomlpath,
-                                  self.__tablename__, self.id.lower())
+        path = "%s/%s/%s.toml" % (sqlalchemy.tomlpath, self.__tablename__, self.id.lower())
         return path
 
     def __repr__(self):
@@ -95,7 +95,7 @@ class SQLAlchemy(JSConfigClient):
     def _init(self):
 
         if self.sqlitepath != "":
-            self.connectionstring = 'sqlite:///%s' % self.sqlitepath
+            self.connectionstring = "sqlite:///%s" % self.sqlitepath
         else:
             self.connectionstring = self.connectionstring
 
@@ -106,33 +106,31 @@ class SQLAlchemy(JSConfigClient):
         self._initsql()
 
     def _initsql(self):
-        '''Initialize SQL
-        '''
+        """Initialize SQL
+        """
 
         if self.engine is None:
             if self.sqlitepath != "":
                 if not j.sal.fs.exists(path=self.sqlitepath):
                     self.engine = self.resetDB()
                 else:
-                    self.engine = create_engine(
-                        self.connectionstring, echo=False)
+                    self.engine = create_engine(self.connectionstring, echo=False)
             self._Session = sessionmaker(bind=self.engine)
             self.session = self._Session()
-            listen(Base, 'before_insert', self.data2toml, propagate=True)
-            listen(Base, 'before_update', self.data2toml, propagate=True)
-            listen(Base, 'after_delete', self.removetoml, propagate=True)
+            listen(Base, "before_insert", self.data2toml, propagate=True)
+            listen(Base, "before_update", self.data2toml, propagate=True)
+            listen(Base, "after_delete", self.removetoml, propagate=True)
 
     def resetDB(self):
-        '''Create and return a new Engine
+        """Create and return a new Engine
         
         :return: engine
         :rtype: Object
-        '''
+        """
 
         if self.sqlitepath != "":
             j.sal.fs.remove(self.sqlitepath)
-            engine = create_engine('sqlite:///%s' %
-                                   self.sqlitepath, echo=False)
+            engine = create_engine("sqlite:///%s" % self.sqlitepath, echo=False)
             Base.metadata.create_all(engine)
             self.engine = None
             return engine
@@ -148,6 +146,5 @@ class SQLAlchemy(JSConfigClient):
     def removetoml(self, mapper, connection, target):
         if target._totoml and self.tomlpath != "":
             path = target._tomlpath(self)
-            path = "%s/%s/%s.toml" % (self.tomlpath,
-                                      target.__tablename__, target.id.lower())
+            path = "%s/%s/%s.toml" % (self.tomlpath, target.__tablename__, target.id.lower())
             j.sal.fs.remove(path)

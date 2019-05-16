@@ -1,3 +1,3 @@
 import collections
 
-APIResponse = collections.namedtuple('APIResponse', 'data response')
+APIResponse = collections.namedtuple("APIResponse", "data response")

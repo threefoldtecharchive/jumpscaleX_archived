@@ -1,8 +1,6 @@
 from Jumpscale import j
 
 
-
-
 class BuilderRipple(j.builder.system._BaseClass):
     NAME = "rippled"
 
@@ -12,12 +10,12 @@ class BuilderRipple(j.builder.system._BaseClass):
             reset {bool} -- reset the build process (default: {False})
         """
 
-        if self._done_get('build') and reset is False:
+        if self._done_get("build") and reset is False:
             return
-        
+
         # rfer to: https://ripple.com/build/rippled-setup/#installing-rippled
-    
-        j.builder.system.package.ensure(['yum-utils', 'alien'])
+
+        j.builder.system.package.ensure(["yum-utils", "alien"])
         cmds = """
         rpm -Uvh https://mirrors.ripple.com/ripple-repo-el7.rpm
         yumdownloader --enablerepo=ripple-stable --releasever=el7 rippled
@@ -27,10 +25,10 @@ class BuilderRipple(j.builder.system._BaseClass):
         """
         j.sal.process.execute(cmds)
 
-        self._done_set('build')
+        self._done_set("build")
 
     def install(self, reset=False):
-        if self._done_get('install') and reset is False:
+        if self._done_get("install") and reset is False:
             return
 
         cmds = """
@@ -38,4 +36,4 @@ class BuilderRipple(j.builder.system._BaseClass):
         """
         j.sal.process.execute(cmds)
 
-        self._done_set('install')
+        self._done_set("install")

@@ -9,39 +9,35 @@ class ErrBotFactory(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
-
-
-
-    def start(self,reset=False):
+    def start(self, reset=False):
         """
-        js_shell 'j.servers.errbot.start(reset=True)'
+        kosmos 'j.servers.errbot.start(reset=True)'
         :return:
         """
         # if reset:
         #     self.cmd.stop()
 
-
         import logging
+
         logger = logging.Logger("installer")
 
         import sys
-        sys.path.append("~/opt/var/build/python3/lib/python3.6/site-packages")
 
+        sys.path.append("~/opt/var/build/python3/lib/python3.6/site-packages")
 
         import errbot
         from importlib import util
-        path="%s/config.py"%self._dirpath
+
+        path = "%s/config.py" % self._dirpath
         spec = util.spec_from_file_location("IT", path)
         config = spec.loader.load_module()
 
         from errbot import BotPlugin, botcmd
 
-
         class MyPlugin(BotPlugin):
-
             def activate(self):
                 super().activate()  # <-- needs to be *before* get_plugin
-                self.other = self.get_plugin('OtherPlugin1')
+                self.other = self.get_plugin("OtherPlugin1")
 
             @botcmd
             def hello(self, msg, args):

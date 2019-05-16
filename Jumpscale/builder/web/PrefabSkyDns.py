@@ -17,7 +17,7 @@ class BuilderSkyDns(j.builder.system._BaseClass):
         download , install, move files to appropriate places, and create relavent configs
         """
         j.builder.tools.file_copy(j.builder.tools.joinpaths('{DIR_BASE}/go', 'bin', 'skydns'), '{DIR_BIN}')
-        #j.builder.sandbox.path_add(j.core.tools.text_replace("{DIR_BIN}"))
+        #j.builder.sandbox.path_add(self._replace("{DIR_BIN}"))
 
         if start:
             self.start()

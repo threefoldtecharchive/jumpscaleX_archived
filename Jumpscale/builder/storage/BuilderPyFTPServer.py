@@ -1,11 +1,7 @@
 from Jumpscale import j
 
 
-
-
-
 class BuilderPyFTPServer(j.builder.system._BaseClass):
-
     def install(self, root="/storage/ftpserver", config="", port=2121, reset=False):
         """
         example config
@@ -43,13 +39,13 @@ class BuilderPyFTPServer(j.builder.system._BaseClass):
         "M" = change mode/permission (SITE CHMOD command)
         ```
         """
-        if not reset and self._done_get('install'):
+        if not reset and self._done_get("install"):
             return
 
         j.builder.system.python_pip.install("pyftpdlib")
         self.configure(root=root, config=config, port=port)
 
-        self._done_set('install')
+        self._done_set("install")
 
         self.start()
 
@@ -58,7 +54,7 @@ class BuilderPyFTPServer(j.builder.system._BaseClass):
         see install docstring for config example
         """
         if j.builder.platformtype.isLinux:
-           j.builder.system.package.ensure('btrfs-tools')
+            j.builder.system.package.ensure("btrfs-tools")
         elif j.builder.platformtype.isOSX():
             # TODO install btrfs for mac
             pass
@@ -84,8 +80,12 @@ class BuilderPyFTPServer(j.builder.system._BaseClass):
                             secret, rights = obj2
                         else:
                             raise j.exceptions.Input("wrong format in ftp config:%s, for user:%s" % (config, user))
-                        authorizer += "    authorizer.add_user('%s', '%s', '%s', perm='%s')\n" % (user,
-                                                                                                  secret, j.sal.fs.joinPaths(root, key), rights)
+                        authorizer += "    authorizer.add_user('%s', '%s', '%s', perm='%s')\n" % (
+                            user,
+                            secret,
+                            j.sal.fs.joinPaths(root, key),
+                            rights,
+                        )
 
         C = """
         from pyftpdlib.authorizers import DummyAuthorizer
@@ -140,4 +140,4 @@ class BuilderPyFTPServer(j.builder.system._BaseClass):
 
     def stop(self):
         pm = j.builder.system.processmanager.get()
-        pm.stop('pyftpserver')
+        pm.stop("pyftpserver")

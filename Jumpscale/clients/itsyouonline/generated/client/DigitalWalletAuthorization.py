@@ -7,9 +7,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class DigitalWalletAuthorization( ):
+class DigitalWalletAuthorization:
     """
     auto-generated. don't touch.
     """
@@ -28,19 +26,20 @@ class DigitalWalletAuthorization( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'DigitalWalletAuthorization'
+        class_name = "DigitalWalletAuthorization"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.currency = client_support.set_property('currency', data, data_types, False, [], False, True, class_name)
+        self.currency = client_support.set_property("currency", data, data_types, False, [], False, True, class_name)
         data_types = [Label]
-        self.reallabel = client_support.set_property('reallabel', data, data_types, False, [], False, True, class_name)
+        self.reallabel = client_support.set_property("reallabel", data, data_types, False, [], False, True, class_name)
         data_types = [Label]
         self.requestedlabel = client_support.set_property(
-            'requestedlabel', data, data_types, False, [], False, True, class_name)
+            "requestedlabel", data, data_types, False, [], False, True, class_name
+        )
 
     def __str__(self):
         return self.as_json(indent=4)

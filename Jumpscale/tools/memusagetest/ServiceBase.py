@@ -8,18 +8,18 @@ import inspect
 
 JSBASE = j.application.JSBaseClass
 
-class ServiceBase(j.application.JSBaseClass):
 
+class ServiceBase(j.application.JSBaseClass):
 
     _MODEL = None
 
     @staticmethod
-    def _input_error_exit(msg,category=""):
+    def _input_error_exit(msg, category=""):
         """
         is just a test method with content inside
         """
 
-        def sss(id=None,name=None,asker_dmid=None):
+        def sss(id=None, name=None, asker_dmid=None):
 
             JSBASE.__init__(self)
 
@@ -27,7 +27,6 @@ class ServiceBase(j.application.JSBaseClass):
                 self.__class__._MODEL = "just something"
 
             self._state = None
-
 
         def data(self):
 
@@ -43,9 +42,7 @@ class ServiceBase(j.application.JSBaseClass):
         self.id = id
         self._running = None
 
-
-
-    def __init__(self,id=None,name=None,asker_dmid=None):
+    def __init__(self, id=None, name=None, asker_dmid=None):
 
         pass
 
@@ -67,7 +64,6 @@ class ServiceBase(j.application.JSBaseClass):
             # self.id = id
             j.shell()
 
-
     @property
     def state(self):
 
@@ -75,7 +71,6 @@ class ServiceBase(j.application.JSBaseClass):
             if self.id is None:
                 self._input_error_exit("id should not be None")
             j.shell()
-
 
     def service_unmanage(self):
 
@@ -97,46 +92,43 @@ class ServiceBase(j.application.JSBaseClass):
                 j.shell()
                 w
                 mname = method[0]
-                print("iterate over method:%s"%mname)
+                print("iterate over method:%s" % mname)
 
                 if mname.startswith("monitor"):
                     if mname in ["monitor_running"]:
                         continue
-                    print("found monitor: %s"%mname)
-                    method = getattr(self,mname)
+                    print("found monitor: %s" % mname)
+                    method = getattr(self, mname)
                     self.monitors[mname[8:]] = spawn(method)
                 else:
                     if mname.startswith("action_"):
-                        self._stateobj_get(mname) #make sure the action object exists
-
-
+                        self._stateobj_get(mname)  # make sure the action object exists
 
     def _main(self):
-        self._log_info("%s:mainloop started"%self)
-        #make sure communication is only 1 way
-        #TODO: put metadata
+        self._log_info("%s:mainloop started" % self)
+        # make sure communication is only 1 way
+        # TODO: put metadata
         while True:
-            action,data=self.q_in.get()
-            self._log_info("%s:action:%s:%s"%(self,action,data))
-            method = getattr(self,action)
+            action, data = self.q_in.get()
+            self._log_info("%s:action:%s:%s" % (self, action, data))
+            method = getattr(self, action)
             res = method(data)
-            print("main res:%s"%res)
-            self.q_out.put([0,res])
+            print("main res:%s" % res)
+            self.q_out.put([0, res])
 
-    def _stateobj_get(self,name):
+    def _stateobj_get(self, name):
         for item in self.data.stateobj.actions:
-            if item.name==name:
+            if item.name == name:
                 return item
         a = self.data.stateobj.actions.new()
         a.name = name
 
-
-    def _coordinator_action_ask(self,name):
-        arg=None
-        cmd = [name,arg]
+    def _coordinator_action_ask(self, name):
+        arg = None
+        cmd = [name, arg]
         self.q_in.put(cmd)
-        rc,res = self.q_out.get()
-        return rc,res
+        rc, res = self.q_out.get()
+        return rc, res
 
     @property
     def _name(self):

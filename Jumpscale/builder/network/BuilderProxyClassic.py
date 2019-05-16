@@ -1,11 +1,8 @@
-
 from Jumpscale import j
 import os
 import time
 
 import socket
-
-
 
 
 class BuilderProxyClassic(j.builder.system._BaseClass):
@@ -343,8 +340,8 @@ class BuilderProxyClassic(j.builder.system._BaseClass):
         self._log_info("to see status: point webbrowser to")
         self._log_info("http://%s:%s/polipo/status?" % (j.builder.tools.executor.addr, port))
         self._log_info(
-            "configure your webproxy client to use %s on tcp port %s" %
-            (j.builder.tools.executor.addr, port))
+            "configure your webproxy client to use %s on tcp port %s" % (j.builder.tools.executor.addr, port)
+        )
 
         self.removeFromSystemD(force=False)
 
@@ -360,6 +357,6 @@ class BuilderProxyClassic(j.builder.system._BaseClass):
             raise RuntimeError("not implemented yet")
 
     def __str__(self):
-        return "prefab.proxy:%s:%s" % (getattr(self.executor, 'addr', 'local'), getattr(self.executor, 'port', ''))
+        return "prefab.proxy:%s:%s" % (getattr(self.executor, "addr", "local"), getattr(self.executor, "port", ""))
 
     __repr__ = __str__

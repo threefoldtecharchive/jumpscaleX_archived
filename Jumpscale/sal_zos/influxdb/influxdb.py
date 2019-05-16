@@ -6,9 +6,7 @@ from .. import templates
 from Jumpscale import j
 
 
-
-
-class InfluxDB():
+class InfluxDB:
     def __init__(self, container, ip, port, rpcport):
 
         self.container = container
@@ -25,19 +23,18 @@ class InfluxDB():
         return self._client
 
     def apply_config(self):
-        influx_conf = templates.render('influxdb.conf', ip=self.ip, port=self.port,
-                                       rpcport=self.rpcport)
-        self.container.upload_content('/etc/influxdb/influxdb.conf', influx_conf)
+        influx_conf = templates.render("influxdb.conf", ip=self.ip, port=self.port, rpcport=self.rpcport)
+        self.container.upload_content("/etc/influxdb/influxdb.conf", influx_conf)
 
     def is_running(self):
         for process in self.container.client.process.list():
-            if 'influxd' in process['cmdline']:
+            if "influxd" in process["cmdline"]:
                 try:
                     self.list_databases()
                 except:
-                    return False, process['pid']
+                    return False, process["pid"]
                 else:
-                    return True, process['pid']
+                    return True, process["pid"]
         return False, None
 
     def stop(self, timeout=30):
@@ -54,7 +51,7 @@ class InfluxDB():
             is_running, _ = self.is_running()
 
         if is_running:
-            raise RuntimeError('Failed to stop influxd.')
+            raise RuntimeError("Failed to stop influxd.")
 
         if self.container.node.client.nft.rule_exists(self.port):
             self.container.node.client.nft.drop_port(self.port)
@@ -69,7 +66,7 @@ class InfluxDB():
         if not self.container.node.client.nft.rule_exists(self.port):
             self.container.node.client.nft.open_port(self.port)
 
-        self.container.client.system('influxd')
+        self.container.client.system("influxd")
         time.sleep(1)
 
         start = time.time()
@@ -82,7 +79,7 @@ class InfluxDB():
         if not is_running:
             if self.container.node.client.nft.rule_exists(self.port):
                 self.container.node.client.nft.drop_port(self.port)
-            raise RuntimeError('Failed to start influxd.')
+            raise RuntimeError("Failed to start influxd.")
 
     def list_databases(self):
         return self.client.get_list_database()
@@ -94,4 +91,3 @@ class InfluxDB():
     def drop_databases(self, databases):
         for database in databases:
             self.client.drop_database(database)
-

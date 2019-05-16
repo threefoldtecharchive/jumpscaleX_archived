@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 
 from data.capnp.ModelBase import ModelBase
@@ -16,10 +15,10 @@ class DirModel(ModelBase):
         return not self.fileGet(name) is None
 
     def fileSpecialExists(self, name):
-        return not self.get(name, 'special') is None
+        return not self.get(name, "special") is None
 
     def linkExists(self, name):
-        return not self.get(name, 'link') is None
+        return not self.get(name, "link") is None
 
     def get(self, name, type_):
         """
@@ -34,15 +33,14 @@ class DirModel(ModelBase):
         return None
 
     def fileGet(self, name):
-        return self.get(name=name, type_='file')
-
+        return self.get(name=name, type_="file")
 
     def fileReplace(self, file_obj, create=True):
         """
         Replace a file object in the directory with the provided file
         """
         changed = False
-        attrs = ('name', 'size', 'aclkey', 'modificationTime', 'creationTime')
+        attrs = ("name", "size", "aclkey", "modificationTime", "creationTime")
         current_file = self.fileGet(file_obj.name)
         if current_file is not None:
             if current_file.modificationTime < file_obj.modificationTime:
@@ -53,7 +51,7 @@ class DirModel(ModelBase):
             if create:
                 changed = True
                 # add new file inode in the current directory
-                self.addSubItem('contents', file_obj)
+                self.addSubItem("contents", file_obj)
         if changed:
             self.reSerialize()
             self.save()

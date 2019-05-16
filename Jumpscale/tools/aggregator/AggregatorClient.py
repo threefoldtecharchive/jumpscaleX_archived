@@ -5,15 +5,15 @@ import collections
 import hashlib
 
 
-Stats = collections.namedtuple('Stats', 'h_nr m_nr h_avg m_epoch m_total h_total m_avg m_last epoch ' +
-                               'm_max val h_max key tags h_epoch')
+Stats = collections.namedtuple(
+    "Stats", "h_nr m_nr h_avg m_epoch m_total h_total m_avg m_last epoch " + "m_max val h_max key tags h_epoch"
+)
 
-Log = collections.namedtuple('Log', 'level message node epoch tags')
+Log = collections.namedtuple("Log", "level message node epoch tags")
 JSBASE = j.application.JSBaseClass
 
 
 class AggregatorClient(j.application.JSBaseClass):
-
     def __init__(self, redis, nodename):
         self.redis = redis
         self._sha = dict()
@@ -54,19 +54,29 @@ class AggregatorClient(j.application.JSBaseClass):
         """
         if timestamp is None:
             timestamp = int(time.time())  # seconds
-        res = self.redis.evalsha(self._sha["stat"], 1, key, value,
-                                 str(timestamp), type, tags, self.nodename)
+        res = self.redis.evalsha(self._sha["stat"], 1, key, value, str(timestamp), type, tags, self.nodename)
 
         return res
 
-    def log(self, message, tags='', level=5, timestamp=None):
+    def log(self, message, tags="", level=5, timestamp=None):
         if timestamp is None:
             timestamp = int(time.time() * 1000)  # in millisecond
 
         self.redis.evalsha(self._sha["logs"], 1, self.nodename, message, tags, str(level), str(timestamp))
 
-    def errorcondition(self, message, messagepub="", level=5, type="UNKNOWN", tags="",
-                       code="", funcname="", funcfilepath="", backtrace="", timestamp=None):
+    def errorcondition(
+        self,
+        message,
+        messagepub="",
+        level=5,
+        type="UNKNOWN",
+        tags="",
+        code="",
+        funcname="",
+        funcfilepath="",
+        backtrace="",
+        timestamp=None,
+    ):
         """
         @param type: "BUG", "PERF", "OPS", "UNKNOWN"), default="UNKNOWN"
 
@@ -101,7 +111,7 @@ class AggregatorClient(j.application.JSBaseClass):
             timestamp = int(time.time() * 1000)
 
         md5 = hashlib.md5()
-        #key = md5(message + messagepub + code + funcname + funcfilepath)
+        # key = md5(message + messagepub + code + funcname + funcfilepath)
         for p in (message, messagepub, code, funcname, funcfilepath):
             md5.update(p.encode())
 
@@ -119,7 +129,8 @@ class AggregatorClient(j.application.JSBaseClass):
             funcname,
             funcfilepath,
             backtrace,
-            str(timestamp))
+            str(timestamp),
+        )
 
     def statGet(self, key):
         """
@@ -137,7 +148,7 @@ class AggregatorClient(j.application.JSBaseClass):
         iterator to go over stat objects
         """
         cursor = 0
-        match = 'stats:%s:*' % self.nodename
+        match = "stats:%s:*" % self.nodename
         while True:
             cursor, keys = self.redis.scan(cursor, match)
             for key in keys:
@@ -150,7 +161,7 @@ class AggregatorClient(j.application.JSBaseClass):
         """
         POPs oldest log object from queue & return as dict
         """
-        data = self.redis.lpop('queues:logs')
+        data = self.redis.lpop("queues:logs")
         if data is None:
             return None
 
@@ -161,7 +172,7 @@ class AggregatorClient(j.application.JSBaseClass):
         """
         Iterates over log objects (oldest first). Doesn't pop from the list
         """
-        logs = self.redis.lrange('queues:logs', 0, 5000)
+        logs = self.redis.lrange("queues:logs", 0, 5000)
         for log in logs:
             yield Log(**j.data.serializers.json.loads(log))
 
@@ -173,9 +184,9 @@ class AggregatorClient(j.application.JSBaseClass):
         """
         if not key:
             if removeFromQueue:
-                key = self.redis.lpop('queues:eco')
+                key = self.redis.lpop("queues:eco")
             else:
-                key = self.redis.lindex('queues:eco', 0)
+                key = self.redis.lindex("queues:eco", 0)
 
         if isinstance(key, bytes):
             key = key.decode()
@@ -195,7 +206,7 @@ class AggregatorClient(j.application.JSBaseClass):
         """
         iterator (and POPs) to go over errorcondition objects (oldest first)
         """
-        ecos = self.redis.lrange('queues:eco', 0, 1000)
+        ecos = self.redis.lrange("queues:eco", 0, 1000)
         for eco in ecos:
             yield self.ecoGet(eco, removeFromQueue=False)
 
@@ -234,9 +245,9 @@ class AggregatorClient(j.application.JSBaseClass):
 
         if not key:
             if removeFromQueue:
-                key = self.redis.lpop('queues:reality')
+                key = self.redis.lpop("queues:reality")
             else:
-                key = self.redis.lindex('queues:reality', 0)
+                key = self.redis.lindex("queues:reality", 0)
 
         if isinstance(key, bytes):
             key = key.decode()
@@ -256,7 +267,7 @@ class AggregatorClient(j.application.JSBaseClass):
         """
         iterator to go over reality objects (oldest first)
         """
-        realities = self.redis.lrange('queues:reality', 0, 1000)
+        realities = self.redis.lrange("queues:reality", 0, 1000)
         for reality in realities:
             self._log_debug(reality)
             yield self.realityGet(reality, removeFromQueue=False)

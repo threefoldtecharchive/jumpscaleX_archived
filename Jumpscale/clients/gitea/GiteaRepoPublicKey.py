@@ -5,39 +5,21 @@ JSBASE = j.application.JSBaseClass
 
 
 class GiteaRepoPublicKey(j.application.JSBaseClass):
-
-    def __init__(
-            self,
-            user,
-            repo,
-            id=None,
-            key=None,
-            title=None,
-            created_at=None,
-            fingerprint=None,
-            url=None
-    ):
+    def __init__(self, user, repo, id=None, key=None, title=None, created_at=None, fingerprint=None, url=None):
         JSBASE.__init__(self)
         self.user = user
         self.id = id
         self.key = key
         self.title = title
         self.created_at = created_at
-        self.fingerprint=fingerprint
+        self.fingerprint = fingerprint
         self.url = url
         self.repo = repo
 
     @property
     def data(self):
         d = {}
-        for attr in [
-            'id',
-            'key',
-            'title',
-            'created_at',
-            'fingerprint',
-            'url'
-        ]:
+        for attr in ["id", "key", "title", "created_at", "fingerprint", "url"]:
             v = getattr(self, attr)
             if v:
                 d[attr] = v
@@ -50,36 +32,36 @@ class GiteaRepoPublicKey(j.application.JSBaseClass):
         errors = {}
         is_valid = True
 
-        operation = 'create'
+        operation = "create"
 
         if create:
 
             if self.id:
                 is_valid = False
-                errors['id'] = 'Already existing'
+                errors["id"] = "Already existing"
             else:
                 if not self.user.username:
                     is_valid = False
-                    errors['user'] = {'username': 'Missing'}
+                    errors["user"] = {"username": "Missing"}
 
                 if not self.key:
                     is_valid = False
-                    errors['key'] = 'Missing'
+                    errors["key"] = "Missing"
 
                 if not self.title:
                     is_valid = False
-                    errors['title'] = 'Missing'
+                    errors["title"] = "Missing"
 
         elif delete:
-            operation = 'delete'
+            operation = "delete"
             if not self.id:
                 is_valid = False
-                errors['id'] = 'Missing'
+                errors["id"] = "Missing"
 
         if is_valid:
-            return True, ''
+            return True, ""
 
-        return False, '{0} Error '.format(operation) + json.dumps(errors)
+        return False, "{0} Error ".format(operation) + json.dumps(errors)
 
     def save(self, commit=True):
         """
@@ -95,7 +77,7 @@ class GiteaRepoPublicKey(j.application.JSBaseClass):
             pubkey = resp.json()
             for k, v in pubkey.items():
                 setattr(self, k, v)
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 
@@ -106,7 +88,7 @@ class GiteaRepoPublicKey(j.application.JSBaseClass):
             return is_valid, err
         try:
             self.user.client.api.repos.repoDeleteKey(owner=self.user.username, id=str(self.id), repo=self.repo.name)
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 

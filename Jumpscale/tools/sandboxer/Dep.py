@@ -1,8 +1,9 @@
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
-class Dep(j.application.JSBaseClass):
 
+class Dep(j.application.JSBaseClass):
     def __init__(self, name, path):
         JSBASE.__init__(self)
         self.name = name

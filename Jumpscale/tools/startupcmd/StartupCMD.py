@@ -28,8 +28,7 @@ class StartupCMD(j.application.JSBaseDataObjClass):
     @property
     def _pane(self):
         if self._pane_ is None:
-            self._pane_ = j.tools.tmux.pane_get(
-                window=self.name, pane="main", reset=False)
+            self._pane_ = j.tools.tmux.pane_get(window=self.name, pane="main", reset=False)
         return self._pane_
 
     @property
@@ -51,20 +50,19 @@ class StartupCMD(j.application.JSBaseDataObjClass):
         return child
 
     def save(self):
-        tpath = self._cmd_path+".toml"
+        tpath = self._cmd_path + ".toml"
         # means we need to serialize & save
         j.data.serializers.toml.dump(tpath, self._ddict)
 
     def load(self):
-        tpath = self._cmd_path+".toml"
+        tpath = self._cmd_path + ".toml"
         if j.sal.fs.exists(tpath):
             self.__dict__.update(j.data.serializers.toml.load(tpath))
 
     def stop(self):
         self._log_warning("stop:\n%s" % self.name)
         if self.cmd_stop:
-            cmd = j.tools.jinja2.template_render(
-                text=self.cmd_stop, args=self.data._ddict)
+            cmd = j.tools.jinja2.template_render(text=self.cmd_stop, args=self.data._ddict)
             self._log_warning("stopcmd:%s" % cmd)
             rc, out, err = j.sal.process.execute(cmd, die=False)
             time.sleep(0.2)
@@ -94,7 +92,7 @@ class StartupCMD(j.application.JSBaseDataObjClass):
 
     def wait_stopped(self, die=True, timeout=5):
         self._log_debug("wait_stopped:%s" % self.name)
-        end = j.data.time.epoch+timeout
+        end = j.data.time.epoch + timeout
         while j.data.time.epoch < end:
             nr = 0
             for port in self.ports:
@@ -111,7 +109,7 @@ class StartupCMD(j.application.JSBaseDataObjClass):
     def wait_running(self, die=True, timeout=10):
         if timeout is None:
             timeout = self.timeout
-        end = j.data.time.epoch+timeout
+        end = j.data.time.epoch + timeout
         if self.ports == []:
             time.sleep(1)  # need this one or it doesn't check if it failed
         self._log_debug("wait to run:%s (timeout:%s)" % (self.name, timeout))
@@ -119,7 +117,7 @@ class StartupCMD(j.application.JSBaseDataObjClass):
             time.sleep(1)
             if self.ports == []:
                 if self.process:
-                    if self.process.status().casefold() in ['running', 'sleeping', 'idle']:
+                    if self.process.status().casefold() in ["running", "sleeping", "idle"]:
                         self._log_info("IS RUNNING %s" % self.name)
                         return True
                 elif self.daemon == False:
@@ -137,16 +135,23 @@ class StartupCMD(j.application.JSBaseDataObjClass):
         else:
             return False
 
-    def start(self, reset=False, checkrunning=True):
+    def start(self, reset=False, checkrunning=True, foreground=False):
+        """
+
+        :param reset:
+        :param checkrunning:
+        :param foreground: means will not do in e.g. tmux
+        :return:
+        """
         self._log_debug("start:%s" % self.name)
-        if reset:
-            self.stop()
-            self._pane.kill()
-        else:
-            if self.running:
-                self._log_info(
-                    "no need to start was already started:%s" % self.name)
-                return
+        if foreground is False:
+            if reset:
+                self.stop()
+                self._pane.kill()
+            else:
+                if self.running:
+                    self._log_info("no need to start was already started:%s" % self.name)
+                    return
 
         self._pid = None
 
@@ -177,8 +182,9 @@ class StartupCMD(j.application.JSBaseDataObjClass):
             """
 
         C2 = j.core.text.strip(C)
-        C3 = j.tools.jinja2.template_render(text=C2, args=self.env, cmdpath=self.path,
-                                            cmd=self.cmd_start, name=self.name)
+        C3 = j.tools.jinja2.template_render(
+            text=C2, args=self.env, cmdpath=self.path, cmd=self.cmd_start, name=self.name
+        )
 
         # NEED TO BE CAREFUL< THINGS WILL FAIL IF WE ENABLE AGAIN
         # if self.interpreter == "bash":
@@ -188,26 +194,36 @@ class StartupCMD(j.application.JSBaseDataObjClass):
         self._log_debug("\n%s" % C3)
 
         if self.interpreter == "bash":
-            tpath = self._cmd_path+".sh"
+            tpath = self._cmd_path + ".sh"
         elif self.interpreter == "jumpscale":
-            tpath = self._cmd_path+".py"
+            tpath = self._cmd_path + ".py"
         else:
             raise RuntimeError("only jumpscale or bash supported")
 
-        j.sal.fs.writeFile(tpath, C3+"\n\n")
+        j.sal.fs.writeFile(tpath, C3 + "\n\n")
         j.sal.fs.chmod(tpath, 0o770)
 
-        if "__" in self._pane.name:
-            self._pane.kill()
-
-        if self.interpreter == "bash":
-            self._pane.execute("source %s" % tpath)
-        else:
-            if self.debug:
-                self._pane.execute("kosmos %s --debug" % tpath)
+        if foreground:
+            if self.interpreter == "bash":
+                j.sal.process.executeWithoutPipe("source %s" % tpath)
             else:
-                self._pane.execute("kosmos %s" % tpath)
+                if self.debug:
+                    j.sal.process.executeWithoutPipe("kosmos %s --debug" % tpath)
+                else:
+                    j.sal.process.executeWithoutPipe("kosmos %s" % tpath)
+        else:
 
-        if checkrunning:
-            running = self.wait_running()
-            assert running
+            if "__" in self._pane.name:
+                self._pane.kill()
+
+            if self.interpreter == "bash":
+                self._pane.execute("source %s" % tpath)
+            else:
+                if self.debug:
+                    self._pane.execute("kosmos %s --debug" % tpath)
+                else:
+                    self._pane.execute("kosmos %s" % tpath)
+
+            if checkrunning:
+                running = self.wait_running()
+                assert running

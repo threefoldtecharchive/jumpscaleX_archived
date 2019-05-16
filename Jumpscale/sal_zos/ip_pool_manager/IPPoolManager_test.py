@@ -20,17 +20,16 @@ def test_as_ip4_of_invalid_str_raises():
 
 
 class TestIPPool(TestCase):
-
     def setUp(self):
         # For this pool 192.168.20.0 the available hosts IPs should be
         # ['192.168.20.1','192.168.20.2', '192.168.20.3', '192.168.20.4','192.168.20.5','192.168.20.6']
         # hosts are the full range - 192.168.20.3
-        self._HOSTS = ['192.168.20.1', '192.168.20.2', '192.168.20.3', '192.168.20.5', '192.168.20.6']
+        self._HOSTS = ["192.168.20.1", "192.168.20.2", "192.168.20.3", "192.168.20.5", "192.168.20.6"]
         self.p = IPPool(id="pool_1", name="poolname", network_address="192.168.20.0/29", registered_ips=self._HOSTS)
-        self.pool_full_range_hosts = IPPool(id="pool_2", name="pool2name",network_address="192.168.20.0/29")
+        self.pool_full_range_hosts = IPPool(id="pool_2", name="pool2name", network_address="192.168.20.0/29")
 
     def test_subnetmask(self):
-        assert str(self.p.subnetmask) == '255.255.255.248'
+        assert str(self.p.subnetmask) == "255.255.255.248"
 
     def test_len_ips_equals_len_hosts(self):
         assert len(self.p.ips) == len(self.p.hosts)
@@ -51,7 +50,7 @@ class TestIPPool(TestCase):
 
     def test_pool_gets_network_range_if_no_registered_ips(self):
         assert len(self.pool_full_range_hosts.available_ips) == len(self._HOSTS) + 1
-    
+
     def test_pool_doesnt_get_network_range_if_registered_ips(self):
         assert len(self.p.available_ips) == len(self._HOSTS)
 
@@ -106,12 +105,12 @@ class TestIPPool(TestCase):
 
     def test_cant_reserve_more_than_allowed_hosts(self):
         with pytest.raises(OutOfIPs):
-            for i in range(len(self._HOSTS)+1):
+            for i in range(len(self._HOSTS) + 1):
                 ip = self.p.get_first_free_ip()
                 self.p.reserve_ip(ip)
 
-class TestIPPoolManager(TestCase):
 
+class TestIPPoolManager(TestCase):
     def setUp(self):
         self.p1 = IPPool(id="pool_1", name="devnet", network_address="192.168.20.0/29")
         self.p2 = IPPool(id="pool_2", name="opsnet", network_address="192.128.23.0/30")
@@ -152,7 +151,8 @@ class TestIPPoolManager(TestCase):
         pool_id1, ip1 = self.mgr.get_any_free_ip()
         pool_id2, ip2 = self.mgr.get_any_free_ip()
         assert len(self.mgr.ips) > len(self.mgr.available_ips) and (
-            len(self.mgr.ips) - len(self.mgr.available_ips) == 2)
+            len(self.mgr.ips) - len(self.mgr.available_ips) == 2
+        )
         assert len(self.mgr.ips) == len(self.mgr.available_ips) + len(self.mgr.reserved_ips)
 
     def test_releasing_two_ips_increases_available_ips(self):
@@ -160,7 +160,8 @@ class TestIPPoolManager(TestCase):
         pool_id1, ip1 = self.mgr.get_any_free_ip()
         pool_id2, ip2 = self.mgr.get_any_free_ip()
         assert len(self.mgr.ips) > len(self.mgr.available_ips) and (
-            len(self.mgr.ips) - len(self.mgr.available_ips) == 2)
+            len(self.mgr.ips) - len(self.mgr.available_ips) == 2
+        )
         assert len(self.mgr.ips) == len(self.mgr.available_ips) + len(self.mgr.reserved_ips)
 
         self.mgr.release_ip(pool_id1, ip1)
@@ -172,4 +173,3 @@ class TestIPPoolManager(TestCase):
         with pytest.raises(OutOfIPs):
             for i in range(9):
                 pool_id, ip = self.mgr.get_any_free_ip()
-

@@ -5,10 +5,12 @@ import sys
 from getpass import getpass
 
 from peewee import *
+
 # from peewee import print_
 from peewee import __version__ as peewee_version
 from playhouse.reflection import *
 from Jumpscale import j
+
 # TODO: *2 cannot execute, times out on gogs db, should try again
 
 TEMPLATE = """from peewee import *%s
@@ -24,29 +26,20 @@ class BaseModel(Model):
 """
 
 DATABASE_ALIASES = {
-    MySQLDatabase: ['mysql', 'mysqldb'],
-    PostgresqlDatabase: ['postgres', 'postgresql'],
-    SqliteDatabase: ['sqlite', 'sqlite3'],
+    MySQLDatabase: ["mysql", "mysqldb"],
+    PostgresqlDatabase: ["postgres", "postgresql"],
+    SqliteDatabase: ["sqlite", "sqlite3"],
 }
 
-DATABASE_MAP = dict((value, key)
-                    for key in DATABASE_ALIASES
-                    for value in DATABASE_ALIASES[key])
+DATABASE_MAP = dict((value, key) for key in DATABASE_ALIASES for value in DATABASE_ALIASES[key])
 
 JSBASE = j.application.JSBaseClass
 
 
 class Pwiz(j.application.JSBaseClass):
-
     def __init__(
-            self,
-            host="127.0.0.1",
-            port=5432,
-            user="postgres",
-            passwd="",
-            dbtype="postgres",
-            dbname="x",
-            schema=None):
+        self, host="127.0.0.1", port=5432, user="postgres", passwd="", dbtype="postgres", dbname="x", schema=None
+    ):
         """
         @param type is mysql,postgres,sqlite
         """
@@ -64,18 +57,17 @@ class Pwiz(j.application.JSBaseClass):
     def introspector(self):
         if self._introspector is None:
             if self.dbtype not in DATABASE_MAP:
-                err('Unrecognized database, must be one of: %s' %
-                    ', '.join(DATABASE_MAP.keys()))
+                err("Unrecognized database, must be one of: %s" % ", ".join(DATABASE_MAP.keys()))
                 sys.exit(1)
             DatabaseClass = DATABASE_MAP[self.dbtype]
             if self.dbtype == "postgres":
                 kwargs = {}
-                kwargs['host'] = self.host
-                kwargs['port'] = self.port
-                kwargs['user'] = self.user
+                kwargs["host"] = self.host
+                kwargs["port"] = self.port
+                kwargs["user"] = self.user
                 if self.schema is not None:
-                    kwargs['schema'] = self.schema
-                kwargs['password'] = self.schema
+                    kwargs["schema"] = self.schema
+                kwargs["password"] = self.schema
                 db = DatabaseClass(self.dbname, **kwargs)
             else:
                 raise RuntimeError("not implemented")
@@ -91,7 +83,8 @@ class Pwiz(j.application.JSBaseClass):
             self.introspector.get_additional_imports(),
             self.introspector.get_database_class().__name__,
             self.introspector.get_database_name(),
-            repr(self.introspector.get_database_kwargs()))
+            repr(self.introspector.get_database_kwargs()),
+        )
 
         self._log_debug("INTROSPECTION DONE")
 
@@ -114,16 +107,19 @@ class Pwiz(j.application.JSBaseClass):
             #         if dest != table:
             #             out += _process_table(out, dest, accum + [table])
 
-            out += 'class %s(BaseModel):\n' % database.model_names[table]
+            out += "class %s(BaseModel):\n" % database.model_names[table]
             columns = database.columns[table].items()
             columns = sorted(columns)
             primary_keys = database.primary_keys[table]
             for name, column in columns:
-                skip = all([
-                    name in primary_keys,
-                    name == 'id',
-                    len(primary_keys) == 1,
-                    column.field_class in self.introspector.pk_classes])
+                skip = all(
+                    [
+                        name in primary_keys,
+                        name == "id",
+                        len(primary_keys) == 1,
+                        column.field_class in self.introspector.pk_classes,
+                    ]
+                )
                 if skip:
                     continue
                 if column.primary_key and len(primary_keys) > 1:
@@ -131,30 +127,25 @@ class Pwiz(j.application.JSBaseClass):
                     # mark the columns as being primary keys.
                     column.primary_key = False
 
-                out += '    %s\n' % column.get_field()
+                out += "    %s\n" % column.get_field()
 
-            out += '\n'
-            out += '    class Meta:\n'
-            out += '        db_table = \'%s\'\n' % table
+            out += "\n"
+            out += "    class Meta:\n"
+            out += "        db_table = '%s'\n" % table
             multi_column_indexes = database.multi_column_indexes(table)
             if multi_column_indexes:
-                out += '        indexes = (\n'
+                out += "        indexes = (\n"
                 for fields, unique in sorted(multi_column_indexes):
-                    out += '            ((%s), %s),\n' % (
-                        ', '.join("'%s'" % field for field in fields),
-                        unique,
-                    )
-                out += '        )\n'
+                    out += "            ((%s), %s),\n" % (", ".join("'%s'" % field for field in fields), unique)
+                out += "        )\n"
 
             if self.introspector.schema:
-                out += '        schema = \'%s\'\n' % self.introspector.schema
+                out += "        schema = '%s'\n" % self.introspector.schema
             if len(primary_keys) > 1:
-                pk_field_names = sorted([
-                    field.name for col, field in columns
-                    if col in primary_keys])
-                pk_list = ', '.join("'%s'" % pk for pk in pk_field_names)
-                out += '        primary_key = CompositeKey(%s)\n' % pk_list
-            out += '\n'
+                pk_field_names = sorted([field.name for col, field in columns if col in primary_keys])
+                pk_list = ", ".join("'%s'" % pk for pk in pk_field_names)
+                out += "        primary_key = CompositeKey(%s)\n" % pk_list
+            out += "\n"
 
             self._log_info("OK")
             return out
@@ -163,6 +154,7 @@ class Pwiz(j.application.JSBaseClass):
         for table in sorted(database.model_names.keys()):
             if table not in seen:
                 from pudb import set_trace
+
                 set_trace()
                 out += _process_table(out, table)
                 seen.add(table)

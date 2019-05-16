@@ -8,9 +8,9 @@ def main(self):
     kosmos 'j.data.types.test(name="duration")' --debug
     """
 
-    return ("OK")
+    return "OK"
 
-    #TODO:*1
+    # TODO:*1
 
     self = j.data.types.get("duration")
 
@@ -45,7 +45,6 @@ def main(self):
     self.clean(None) == 0
     self.clean(23) == 23
 
-
     self._log_info("TEST DONE DURATION")
 
-    return ("OK")
+    return "OK"

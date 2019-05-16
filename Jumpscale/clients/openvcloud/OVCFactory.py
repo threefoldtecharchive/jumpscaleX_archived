@@ -20,6 +20,7 @@ class OVCClientFactory(JSConfigBaseFactory):
         if not filled in will bet done auto
 
     """
+
     __jslocation__ = "j.clients.openvcloud"
     _CHILDCLASS = OVCClient
 
@@ -46,7 +47,7 @@ class OVCClientFactory(JSConfigBaseFactory):
 
     def test(self):
         """
-        js_shell 'j.clients.openvcloud.test()'
+        kosmos 'j.clients.openvcloud.test()'
         """
 
         cl = j.clients.openvcloud.getFromParams("be-gen-1.demo.greenitglobe.com")

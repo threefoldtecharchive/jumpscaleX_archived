@@ -1,24 +1,20 @@
 from Jumpscale import j
 
 
-
 class TestClass(j.application.JSBaseClass):
-
     def _init(self):
-        self._log_log("a message",level=20)
+        self._log_log("a message", level=20)
 
     @property
     def _logger(self):
         if self._logger_ is None:
             # print("LOGGER ATTACH: %s"%self._location)
-            self._logger_ = j.tools.logger._LoggerInstance(self,j.tools.logger.me)
+            self._logger_ = j.tools.logger._LoggerInstance(self, j.tools.logger.me)
         return self._logger_
 
-
-    def test_basic_log(self,nr):
+    def test_basic_log(self, nr):
         for i in range(nr):
-            self._log_log("a message",level=20)
-
+            self._log_log("a message", level=20)
 
         j.shell()
 
@@ -32,17 +28,17 @@ def main(self):
 
     j.tools.logger.me.redis = False
 
-    #make sure its warm
-    e=TestClass()
+    # make sure its warm
+    e = TestClass()
     e._init()
 
     def base1():
 
         ddict = {}
-        nr=10000
-        j.tools.timer.start("basic test for %s classes creation with logger",memory=True)
+        nr = 10000
+        j.tools.timer.start("basic test for %s classes creation with logger", memory=True)
         for i in range(nr):
-            ddict[str(i)]=TestClass()
+            ddict[str(i)] = TestClass()
             ddict[str(i)]._init()
         j.tools.timer.stop(nr)
 
@@ -50,10 +46,10 @@ def main(self):
 
     def base2():
 
-        nr=100000
-        j.tools.timer.start("basic test for logging without stdout/redis",memory=True)
+        nr = 100000
+        j.tools.timer.start("basic test for logging without stdout/redis", memory=True)
         for i in range(nr):
-            e._logger.log("a message",level=20)
+            e._logger.log("a message", level=20)
         j.tools.timer.stop(nr)
 
     base2()
@@ -64,14 +60,12 @@ def main(self):
 
     def base3():
 
-        nr=10000
-        j.tools.timer.start("basic test for logging with stdout/redis",memory=True)
+        nr = 10000
+        j.tools.timer.start("basic test for logging with stdout/redis", memory=True)
         for i in range(nr):
-            e._logger.log("a message",level=20)
+            e._logger.log("a message", level=20)
         j.tools.timer.stop(nr)
 
-        #RESULTIS WE CAN +- do +10k logs per sec to redis (this can be improved over local socket for sure)
+        # RESULTIS WE CAN +- do +10k logs per sec to redis (this can be improved over local socket for sure)
 
     base3()
-
-

@@ -1,21 +1,19 @@
 from Jumpscale import j
 
 
-
-
 class BuilderNodeJS(j.builder.system._BaseClass):
-    NAME = 'nodejs'
+    NAME = "nodejs"
 
     def _init(self):
         self._bowerDir = ""
 
     @property
     def npm(self):
-        return j.core.tools.text_replace('{DIR_BASE}/node/bin/npm')
+        return self._replace("{DIR_BASE}/node/bin/npm")
 
     @property
     def NODE_PATH(self):
-        return j.core.tools.text_replace('{DIR_BASE}/node/lib/node_modules')
+        return self._replace("{DIR_BASE}/node/lib/node_modules")
 
     def bowerInstall(self, name):
         """
@@ -24,18 +22,16 @@ class BuilderNodeJS(j.builder.system._BaseClass):
         if self._bowerDir == "":
             self.install()
             j.core.tools.dir_ensure("{DIR_TEMP}/bower")
-            self._bowerDir = j.core.tools.text_replace("{DIR_TEMP}/bower")
+            self._bowerDir = self._replace("{DIR_TEMP}/bower")
         if j.data.types.list.check(name):
             for item in name:
                 self.bowerInstall(item)
         else:
             self._log_info("bower install %s" % name)
-            j.sal.process.execute(
-                "cd %s;bower --allow-root install  %s" % (self._bowerDir, name), profile=True)
+            j.sal.process.execute("cd %s;bower --allow-root install  %s" % (self._bowerDir, name), profile=True)
 
     def isInstalled(self):
-        rc, out, err = j.sal.process.execute(
-            "npm version", die=False, showout=False)
+        rc, out, err = j.sal.process.execute("npm version", die=False, showout=False)
         if rc > 0:
             return False
         installedDict = j.data.serializers.yaml.loads(out)
@@ -60,9 +56,10 @@ class BuilderNodeJS(j.builder.system._BaseClass):
             return
         if j.core.platformtype.myplatform.isUbuntu:
 
-            url = 'https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2'
+            url = "https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2"
             cdest = j.builder.tools.file_download(
-                url, expand=True, overwrite=False, to="{DIR_TEMP}/phantomjs", removeTopDir=True, deletedest=True)
+                url, expand=True, overwrite=False, to="{DIR_TEMP}/phantomjs", removeTopDir=True, deletedest=True
+            )
 
             j.builder.tools.execute("mv %s/bin/phantomjs /opt/bin/phantomjs" % cdest)
             j.builder.tools.execute("rm -rf %s" % cdest)
@@ -127,21 +124,18 @@ class BuilderNodeJS(j.builder.system._BaseClass):
         # version = "7.7.1"
         version = "8.4.0"
 
-        if reset is False and j.builder.tools.file_exists('{DIR_BIN}/npm'):
+        if reset is False and j.builder.tools.file_exists("{DIR_BIN}/npm"):
             return
 
         if j.core.platformtype.myplatform.isMac:
-            url = 'https://nodejs.org/dist/v%s/node-v%s-darwin-x64.tar.gz' % (
-                version, version)
+            url = "https://nodejs.org/dist/v%s/node-v%s-darwin-x64.tar.gz" % (version, version)
         elif j.core.platformtype.myplatform.isUbuntu:
-            url = 'https://nodejs.org/dist/v%s/node-v%s-linux-x64.tar.gz' % (
-                version, version)
+            url = "https://nodejs.org/dist/v%s/node-v%s-linux-x64.tar.gz" % (version, version)
 
         else:
             raise j.exceptions.Input(message="only support ubuntu & mac")
 
-        cdest = j.builder.tools.file_download(
-            url, expand=True, overwrite=False, to="{DIR_TEMP}/node")
+        cdest = j.builder.tools.file_download(url, expand=True, overwrite=False, to="{DIR_TEMP}/node")
 
         j.builder.tools.execute("rm -rf {DIR_BASE}/node;mv %s {DIR_BASE}/node" % (cdest))
 
@@ -149,26 +143,20 @@ class BuilderNodeJS(j.builder.system._BaseClass):
         #     j.builder.tools.execute('mv {DIR_BASE}/node/%s/* {DIR_BASE}/node' %
         #                   j.sal.fs.getBaseName(url.strip('.tar.gz')))
 
-
         rc, out, err = j.sal.process.execute("npm -v", profile=True)
-        if out != '5.3.0':  # 4.1.2
+        if out != "5.3.0":  # 4.1.2
             # needs to be this version because is part of the package which was downloaded
             # j.sal.process.execute("npm install npm@4.1.2 -g", profile=True)
             raise RuntimeError("npm version error")
 
-        rc, initmodulepath, err = j.sal.process.execute(
-            "npm config get init-module", profile=True)
+        rc, initmodulepath, err = j.sal.process.execute("npm config get init-module", profile=True)
         j.builder.tools.file_unlink(initmodulepath)
         j.sal.process.execute("npm config set global true -g", profile=True)
-        j.sal.process.execute(j.core.tools.text_replace(
-            "npm config set init-module {DIR_BASE}/node/.npm-init.js -g"), profile=True)
-        j.sal.process.execute(j.core.tools.text_replace(
-            "npm config set init-cache {DIR_BASE}/node/.npm -g"), profile=True)
+        j.sal.process.execute(self._replace("npm config set init-module {DIR_BASE}/node/.npm-init.js -g"), profile=True)
+        j.sal.process.execute(self._replace("npm config set init-cache {DIR_BASE}/node/.npm -g"), profile=True)
         j.sal.process.execute("npm config set global true ", profile=True)
-        j.sal.process.execute(j.core.tools.text_replace(
-            "npm config set init-module {DIR_BASE}/node/.npm-init.js "), profile=True)
-        j.sal.process.execute(j.core.tools.text_replace(
-            "npm config set init-cache {DIR_BASE}/node/.npm "), profile=True)
+        j.sal.process.execute(self._replace("npm config set init-module {DIR_BASE}/node/.npm-init.js "), profile=True)
+        j.sal.process.execute(self._replace("npm config set init-cache {DIR_BASE}/node/.npm "), profile=True)
         j.sal.process.execute("npm install -g bower", profile=True, shell=True)
 
         # j.sal.process.execute("npm install npm@latest -g", profile=True)

@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 from .Row import *
 
@@ -6,7 +5,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class Sheet(j.application.JSBaseClass):
-
     def __init__(self, name, nrcols=72, headers=[], period="M"):
         """
         @param period is M,Q or Y
@@ -28,12 +26,12 @@ class Sheet(j.application.JSBaseClass):
         self.rowNames = []
 
     # def _obj2dict(self):
-        # ddict={}
-        # ddict["name"]=self.name
-        # ddict["headers"]=self.headers
-        # ddict["nrcols"]=self.nrcols
-        #ddict["rows"]=[item.obj2dict() for item in self.rows]
-        # return ddict
+    # ddict={}
+    # ddict["name"]=self.name
+    # ddict["headers"]=self.headers
+    # ddict["nrcols"]=self.nrcols
+    # ddict["rows"]=[item.obj2dict() for item in self.rows]
+    # return ddict
 
     def _dict2obj(self, dict):
         self.name = dict["name"]
@@ -46,18 +44,19 @@ class Sheet(j.application.JSBaseClass):
             self.rows[row.name] = row
 
     def addRow(
-            self,
-            name,
-            ttype="float",
-            aggregate="T",
-            description="",
-            groupname="",
-            groupdescr="",
-            nrcols=None,
-            format="",
-            values=[],
-            defval=None,
-            nrfloat=None):
+        self,
+        name,
+        ttype="float",
+        aggregate="T",
+        description="",
+        groupname="",
+        groupdescr="",
+        nrcols=None,
+        format="",
+        values=[],
+        defval=None,
+        nrfloat=None,
+    ):
         """
         @param ttype int,perc,float,empty,str
         @param aggregate= T,A,MIN,MAX
@@ -69,8 +68,18 @@ class Sheet(j.application.JSBaseClass):
             nrcols = self.nrcols
         if ttype == "float" and nrfloat is None:
             nrfloat = 2
-        row = Row(name, ttype, nrcols, aggregate, description=description, groupname=groupname,
-                  groupdescr=groupdescr, format=format, defval=defval, nrfloat=nrfloat)
+        row = Row(
+            name,
+            ttype,
+            nrcols,
+            aggregate,
+            description=description,
+            groupname=groupname,
+            groupdescr=groupdescr,
+            format=format,
+            defval=defval,
+            nrfloat=nrfloat,
+        )
         self.rows[name] = row
         self.rowNames.append(name)
         if values != []:
@@ -80,32 +89,32 @@ class Sheet(j.application.JSBaseClass):
 
     # def renting(self,row,interest,nrmonths):
     # DOES NOT WORK, JUST COPY PASTE TO START DOING IT
-        #"""
-        #@param row is the row in which we need to fill in
-        #@param start value to start with at month 0 (is first month)
-        #@param churn 2 means 2% churn
-        #@param delay is different beween selling & being active
-        #"""
-        # print "churn:%s" % churn
-        # if churn=="1000%":
-        # row.setDefaultValue(0.0)
-        # return row
-        # delay=int(round(delay,0))
-        # for delaynr in range(0,delay):
-        # row.cells[delaynr]=start
-        # for colid in range(0,int(self.nrcols)):
-        # nractive=float(start)
-        # if (colid-int(nrmonths))<0:
-        # start2=0
-        # else:
-        # start2=colid-int(nrmonths)
-        # for monthprevid in range(start2,colid+1):
-        # nractive+=float(self.cells[monthprevid])*((1-float(churn)/12)**(colid-monthprevid))
-        # if colid+delay<row.nrcols:
-        # row.cells[colid+delay]=nractive
+    # """
+    # @param row is the row in which we need to fill in
+    # @param start value to start with at month 0 (is first month)
+    # @param churn 2 means 2% churn
+    # @param delay is different beween selling & being active
+    # """
+    # print "churn:%s" % churn
+    # if churn=="1000%":
+    # row.setDefaultValue(0.0)
+    # return row
+    # delay=int(round(delay,0))
+    # for delaynr in range(0,delay):
+    # row.cells[delaynr]=start
+    # for colid in range(0,int(self.nrcols)):
+    # nractive=float(start)
+    # if (colid-int(nrmonths))<0:
+    # start2=0
+    # else:
+    # start2=colid-int(nrmonths)
+    # for monthprevid in range(start2,colid+1):
+    # nractive+=float(self.cells[monthprevid])*((1-float(churn)/12)**(colid-monthprevid))
+    # if colid+delay<row.nrcols:
+    # row.cells[colid+delay]=nractive
 
-        # row.round()
-        # return row
+    # row.round()
+    # return row
 
     def aggregate(self, rownames=[], period="Y"):
         """
@@ -178,7 +187,8 @@ class Sheet(j.application.JSBaseClass):
                 roworg.groupdescr,
                 lenx,
                 roworg.format,
-                nrfloat=roworg.nrfloat)
+                nrfloat=roworg.nrfloat,
+            )
             if roworg.ttype == "float":
                 rownew.ttype = "int"
                 rownew.nrfloat = 0
@@ -217,32 +227,32 @@ class Sheet(j.application.JSBaseClass):
         return row
 
     # def delay(self,rowName,delay=0,defValue=0.0,copy2otherRowName=None):
-        # delay=int(delay)
-        #out=[0.0 for item in range(self.nrcols)]
-        # nrmax=self.nrcols
-        # for i in range(delay):
-        # out[i]=defValue
-        # i=delay
-        # row=self.getRow(rowName)
-        # for cell in row.cells:
-        # if i<nrmax:
-        # out[i]=cell
-        # else:
-        # break
-        # i+=1
-        # i=0
-        # if copy2otherRowName is not None:
-        # check if row already exists
-        # if not self.rows.has_key(copy2otherRowName):
-        # self.addRow(copy2otherRowName,"float")
-        # dest=copy2otherRowName
-        # else:
-        # dest=rowName
+    # delay=int(delay)
+    # out=[0.0 for item in range(self.nrcols)]
+    # nrmax=self.nrcols
+    # for i in range(delay):
+    # out[i]=defValue
+    # i=delay
+    # row=self.getRow(rowName)
+    # for cell in row.cells:
+    # if i<nrmax:
+    # out[i]=cell
+    # else:
+    # break
+    # i+=1
+    # i=0
+    # if copy2otherRowName is not None:
+    # check if row already exists
+    # if not self.rows.has_key(copy2otherRowName):
+    # self.addRow(copy2otherRowName,"float")
+    # dest=copy2otherRowName
+    # else:
+    # dest=rowName
 
-        # for month in range(self.nrcols):
-        # self.setCell(dest,month,out[month])
+    # for month in range(self.nrcols):
+    # self.setCell(dest,month,out[month])
 
-        # return self.rows[dest]
+    # return self.rows[dest]
 
     def accumulate(self, rowNameInput, rowNameDest):
         """
@@ -371,6 +381,7 @@ class Sheet(j.application.JSBaseClass):
             for value in values:
                 total += value
             return total
+
         newRow = self.applyFunctionOnValuesFromRows(rownames, summ, newRow)
         return newRow
 
@@ -399,5 +410,3 @@ class Sheet(j.application.JSBaseClass):
         return result
 
     __repr__ = __str__
-
-

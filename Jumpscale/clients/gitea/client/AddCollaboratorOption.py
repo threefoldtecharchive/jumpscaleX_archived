@@ -8,7 +8,6 @@ from six import string_types
 from . import client_support
 
 
-
 class AddCollaboratorOption(object):
     """
     auto-generated. don't touch.
@@ -26,15 +25,16 @@ class AddCollaboratorOption(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'AddCollaboratorOption'
+        class_name = "AddCollaboratorOption"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
         self.permission = client_support.set_property(
-            'permission', data, data_types, False, [], False, False, class_name)
+            "permission", data, data_types, False, [], False, False, class_name
+        )
 
     def __str__(self):
         return self.as_json(indent=4)

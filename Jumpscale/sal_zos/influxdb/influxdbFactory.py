@@ -1,9 +1,11 @@
 from Jumpscale import j
+
 # import Jumpscale.baselib.remote
 
 JSBASE = j.application.JSBaseClass
 
 from .influxdb import InfluxDB
+
 
 class InfluxDBFactory(JSBASE):
     __jslocation__ = "j.sal_zos.influx"
@@ -19,6 +21,3 @@ class InfluxDBFactory(JSBASE):
             the sal layer 
         """
         return InfluxDB(container, ip, port, rpcport)
-
-
-

@@ -10,10 +10,7 @@ import tarfile
 import base64
 
 
-
-
 class FlistManipulatorFactory:
-
     def create(self, path):
         """
         create an empty flist and save it at `path`
@@ -24,15 +21,15 @@ class FlistManipulatorFactory:
         if os.path.exists(path):
             raise j.exceptions.Input("path %s already exists" % path)
 
-        kvs = j.data.kvs.getRocksDBStore('flist', namespace=None, dbpath=path)
-        flist = j.tools.flist.getFlist(rootpath='/', kvs=kvs)
+        kvs = j.data.kvs.getRocksDBStore("flist", namespace=None, dbpath=path)
+        flist = j.tools.flist.getFlist(rootpath="/", kvs=kvs)
 
         _, key = flist.path2key(flist.rootpath)
         if not flist.dirCollection.exists(key):
             root_dir = flist.dirCollection.new()
             root_dir.dbobj.creationTime = j.data.time.epoch
             root_dir.dbobj.creationTime = root_dir.dbobj.creationTime
-            root_dir.dbobj.name = '/'
+            root_dir.dbobj.name = "/"
             root_dir.key = key
             root_dir.save()
         else:
@@ -45,8 +42,8 @@ class FlistManipulatorFactory:
         """
         load an existing flist from path
         """
-        kvs = j.data.kvs.getRocksDBStore('flist', namespace=None, dbpath=path)
-        flist = j.tools.flist.getFlist(rootpath='/', kvs=kvs)
+        kvs = j.data.kvs.getRocksDBStore("flist", namespace=None, dbpath=path)
+        flist = j.tools.flist.getFlist(rootpath="/", kvs=kvs)
         _, key = flist.path2key(flist.rootpath)
         root_dir = flist.dirCollection.get(key)
 
@@ -55,7 +52,6 @@ class FlistManipulatorFactory:
 
 
 class Manipulator:
-
     def __init__(self, root, kvs, output_path):
         # keep a set of all the files added to the existing flist
         # so we can upload them to a backend after we're done manipulating the flist
@@ -87,10 +83,10 @@ class Manipulator:
         return dir
 
     def export(self):
-        output = self.output_path+'.tgz'
+        output = self.output_path + ".tgz"
         self._log_info("export the flist at %s", output)
 
-        with tarfile.open(output, 'w:gz') as tar:
+        with tarfile.open(output, "w:gz") as tar:
             tar.add(self.output_path)
 
         return output
@@ -107,7 +103,7 @@ class Manipulator:
 
         for path in self.root._flist._added_files:
             if not os.path.exists(path):
-                raise RuntimeError('file not found %s' % path)
+                raise RuntimeError("file not found %s" % path)
 
             self._log_debug("hash %s", path)
             hashs = g8storclient.encrypt(path)
@@ -116,9 +112,9 @@ class Manipulator:
                 return
 
             for hash in hashs:
-                if not backend.exists(hash['hash']):
+                if not backend.exists(hash["hash"]):
                     self._log_debug("upload %s", path)
-                    backend.set(hash['hash'], hash['data'])
+                    backend.set(hash["hash"], hash["data"])
 
         return self.export()
 
@@ -134,7 +130,7 @@ class Manipulator:
         for path in self.root._flist._added_files:
             data = g8storclient.encrypt(path) or []
             for item in data:
-                hash_data[item['hash']] = item['data']
+                hash_data[item["hash"]] = item["data"]
             # keys.extend([x['hash'] for x in data])
 
         res = directclient.exists(list(hash_data.keys()))

@@ -1,5 +1,7 @@
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
+
 
 class LegalContractsFactory(j.application.JSBaseClass):
     def __init__(self):
@@ -10,15 +12,14 @@ class LegalContractsFactory(j.application.JSBaseClass):
         # p = j.tools.prefab.local
         j.tools.reportlab.install()
 
-    def doc_get(self,path):
+    def doc_get(self, path):
         from .LegalDoc import LegalDoc
+
         return LegalDoc(path)
 
-
-
-    def test(self,install=False):
+    def test(self, install=False):
         """
-        js_shell 'j.tools.legal_contracts.test(install=False)'
+        kosmos 'j.tools.legal_contracts.test(install=False)'
 
         :return:
         """
@@ -29,21 +30,18 @@ class LegalContractsFactory(j.application.JSBaseClass):
         j.sal.fs.createDir(testdir)
 
         path = j.clients.git.getContentPathFromURLorPath(
-                                "https://github.com/threefoldfoundation/info_legal/tree/master/HR/dutch")
+            "https://github.com/threefoldfoundation/info_legal/tree/master/HR/dutch"
+        )
         logo_path = j.clients.git.getContentPathFromURLorPath(
-                "https://github.com/threefoldfoundation/info_legal/tree/master/images/threefold_logo.png")
+            "https://github.com/threefoldfoundation/info_legal/tree/master/images/threefold_logo.png"
+        )
 
-        doc = self.doc_get("%s/test_legal.pdf"%testdir)
-
+        doc = self.doc_get("%s/test_legal.pdf" % testdir)
 
         j.shell()
         w
 
-
         p = j.tools.prefab.local
         url = "https://media.wired.com/photos/598e35994ab8482c0d6946e0/master/w_628,c_limit/phonepicutres-TA.jpg"
 
-
         j.shell()
-
-

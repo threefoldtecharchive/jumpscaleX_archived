@@ -6,7 +6,8 @@ from .ConditionTypes import UnlockHash, UnlockHashType
 
 from enum import IntEnum
 
-_SIG_Ed25519 = 'ed25519'
+_SIG_Ed25519 = "ed25519"
+
 
 class PublicKeySpecifier(IntEnum):
     NIL = 0
@@ -50,17 +51,18 @@ class PublicKey(BaseDataTypeClass):
             return cls()
         if not isinstance(obj, str):
             raise TypeError("expected JSON-encoded PublicKey to be a string, not {}".format(type(obj)))
-        parts = obj.split(sep=':', maxsplit=2)
+        parts = obj.split(sep=":", maxsplit=2)
         if len(parts) != 2:
             raise ValueError("invalid JSON-encoded PublicKey: {}".format(obj))
         pk = cls()
         pk._specifier = PublicKeySpecifier.from_json(parts[0])
         pk._hash = Hash.from_json(parts[1])
         return pk
-    
+
     @property
     def specifier(self):
         return self._specifier
+
     @specifier.setter
     def specifier(self, value):
         if value == None:
@@ -74,6 +76,7 @@ class PublicKey(BaseDataTypeClass):
         if self._hash is None:
             return Hash()
         return self._hash
+
     @hash.setter
     def hash(self, value):
         if value is None:
@@ -84,10 +87,10 @@ class PublicKey(BaseDataTypeClass):
             self._hash = Hash(value=value)
 
     def __str__(self):
-        return str(self.specifier) + ':' + str(self.hash)
-    
+        return str(self.specifier) + ":" + str(self.hash)
+
     __repr__ = __str__
-    
+
     json = __str__
 
     @property
@@ -107,8 +110,8 @@ class PublicKey(BaseDataTypeClass):
     @staticmethod
     def _pad_specifier(specifier):
         _SPECIFIER_SIZE = 16
-        value = specifier.encode('utf-8')
-        return value + b'\0'*(_SPECIFIER_SIZE-len(value))
+        value = specifier.encode("utf-8")
+        return value + b"\0" * (_SPECIFIER_SIZE - len(value))
 
     def sia_binary_encode(self, encoder):
         """
@@ -116,7 +119,7 @@ class PublicKey(BaseDataTypeClass):
         """
         encoder.add_array(PublicKey._pad_specifier(str(self.specifier)))
         encoder.add_slice(self.hash.value)
-    
+
     def rivine_binary_encode(self, encoder):
         """
         Encode this binary data according to the Rivine Binary Encoding format.

@@ -5,17 +5,7 @@ JSBASE = j.application.JSBaseClass
 
 
 class GiteaLabel(j.application.JSBaseClass):
-
-    def __init__(
-            self,
-            client,
-            repo,
-            user,
-            id=None,
-            color=None,
-            name=0,
-            url=None,
-    ):
+    def __init__(self, client, repo, user, id=None, color=None, name=0, url=None):
         JSBASE.__init__(self)
         self.client = client
         self.repo = repo
@@ -28,12 +18,7 @@ class GiteaLabel(j.application.JSBaseClass):
     @property
     def data(self):
         d = {}
-        for attr in [
-            'id',
-            'name',
-            'color',
-            'url'
-        ]:
+        for attr in ["id", "name", "color", "url"]:
             v = getattr(self, attr)
             d[attr] = v
         return d
@@ -45,35 +30,35 @@ class GiteaLabel(j.application.JSBaseClass):
         errors = {}
         is_valid = True
 
-        operation = 'create'
+        operation = "create"
 
         if create:
             if self.id:
                 is_valid = False
-                errors['id'] = 'Already existing'
+                errors["id"] = "Already existing"
             else:
                 if not self.name:
                     is_valid = False
-                    errors['name'] = 'Missing'
+                    errors["name"] = "Missing"
                 if not self.color:
                     is_valid = False
-                    errors['color'] = 'Missing'
+                    errors["color"] = "Missing"
 
         elif update:
-            operation = 'update'
+            operation = "update"
             if not self.id:
                 is_valid = False
-                errors['id'] = 'Missing'
+                errors["id"] = "Missing"
         elif delete:
-            operation = 'delete'
+            operation = "delete"
             if not self.id:
                 is_valid = False
-                errors['id'] = 'Missing'
+                errors["id"] = "Missing"
 
         if is_valid:
-            return True, ''
+            return True, ""
 
-        return False, '{0} Error '.format(operation) + json.dumps(errors)
+        return False, "{0} Error ".format(operation) + json.dumps(errors)
 
     def save(self, commit=True):
         is_valid, err = self._validate(create=True)
@@ -87,7 +72,7 @@ class GiteaLabel(j.application.JSBaseClass):
             c = resp.json()
             for k, v in c.items():
                 setattr(self, k, v)
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 
@@ -98,10 +83,10 @@ class GiteaLabel(j.application.JSBaseClass):
             return is_valid, err
 
         try:
-            username = self.user['username'] if type(self.user) == dict else self.user.username
-            repo = self.repo['name'] if type(self.repo) == dict else self.repo.name
+            username = self.user["username"] if type(self.user) == dict else self.user.username
+            repo = self.repo["name"] if type(self.repo) == dict else self.repo.name
             resp = self.client.api.repos.issueEditLabel(data=self.data, id=str(self.id), repo=repo, owner=username)
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 
@@ -112,10 +97,10 @@ class GiteaLabel(j.application.JSBaseClass):
             return is_valid, err
 
         try:
-            username = self.user['username'] if type(self.user) == dict else self.user.username
-            repo = self.repo['name'] if type(self.repo) == dict else self.repo.name
+            username = self.user["username"] if type(self.user) == dict else self.user.username
+            repo = self.repo["name"] if type(self.repo) == dict else self.repo.name
             resp = self.client.api.repos.issueDeleteLabel(id=str(self.id), repo=repo, owner=username)
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 

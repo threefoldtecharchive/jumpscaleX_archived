@@ -8,6 +8,7 @@ class RegexTemplates_FindLines(j.application.JSBaseClass):
     """
     regexexamples which find lines
     """
+
     # TODO: for all methods do input checking  (id:20)
     def __init__(self):
         JSBASE.__init__(self)
@@ -23,13 +24,11 @@ class RegexTemplates_FindLines(j.application.JSBaseClass):
 
 
 class Empty(j.application.JSBaseClass):
-
     def __init__(self):
         JSBASE.__init__(self)
 
 
 class RegexMatches(j.application.JSBaseClass):
-
     def __init__(self):
         JSBASE.__init__(self)
         self.matches = []
@@ -54,7 +53,6 @@ class RegexMatches(j.application.JSBaseClass):
 
 
 class RegexMatch(j.application.JSBaseClass):
-
     def __init__(self):
         self.start = 0
         self.end = 0
@@ -85,9 +83,7 @@ class RegexTools(j.application.JSBaseClass):
             return result
         else:
             if dieIfNotFound:
-                raise j.exceptions.RuntimeError(
-                    "Could not find %s in htmldoc %s" %
-                    (tofind, path))
+                raise j.exceptions.RuntimeError("Could not find %s in htmldoc %s" % (tofind, path))
             else:
                 return ""
 
@@ -100,9 +96,7 @@ class RegexTools(j.application.JSBaseClass):
             return ""
         subject = subject.split(found)[1]  # remove tofind pre part
         # now we need to die because first element found
-        found = self.findHtmlElement(
-            subject, "/%s" %
-            tofind, path, dieIfNotFound=True)
+        found = self.findHtmlElement(subject, "/%s" % tofind, path, dieIfNotFound=True)
         result, post = subject.split(found)  # look for end
         return result
 
@@ -112,9 +106,9 @@ class RegexTools(j.application.JSBaseClass):
         """
         if pattern == "" or text == "":
             raise j.exceptions.RuntimeError(
-                "Cannot do .codetools.regex.match when "
-                "pattern or text parameter is empty")
-        #self._log_debug("Regextools: pattern:%s in text:%s" % (pattern,text),5)
+                "Cannot do .codetools.regex.match when " "pattern or text parameter is empty"
+            )
+        # self._log_debug("Regextools: pattern:%s in text:%s" % (pattern,text),5)
         # print "Regextools: pattern:%s in text:%s" % (pattern,text)
         pattern = self._patternFix(pattern)
         result = re.findall(pattern, text)
@@ -123,17 +117,16 @@ class RegexTools(j.application.JSBaseClass):
         else:
             return False
 
-    def matchContent( self, path, contentRegexIncludes=[],
-                      contentRegexExcludes=[]):
+    def matchContent(self, path, contentRegexIncludes=[], contentRegexExcludes=[]):
         content = j.sal.fs.readFile(path)
-        return self.matchMultiple( patterns=contentRegexIncludes,
-                                text=content) and \
-               not self.matchMultiple( patterns=contentRegexExcludes,
-                                            text=content)
+        return self.matchMultiple(patterns=contentRegexIncludes, text=content) and not self.matchMultiple(
+            patterns=contentRegexExcludes, text=content
+        )
 
     def matchPath(path, regexIncludes=[], regexExcludes=[]):
-        return self.matchMultiple( patterns=regexIncludes, text=path) and \
-                not self.matchMultiple( patterns=regexExcludes, text=path)
+        return self.matchMultiple(patterns=regexIncludes, text=path) and not self.matchMultiple(
+            patterns=regexExcludes, text=path
+        )
 
     def matchMultiple(self, patterns, text):
         """
@@ -141,14 +134,11 @@ class RegexTools(j.application.JSBaseClass):
         if patterns=[] then will return False
         """
         if patterns == "":
-            raise j.exceptions.RuntimeError(
-                "Cannot do .codetools.regex.matchMultiple when "
-                "pattern is empty")
+            raise j.exceptions.RuntimeError("Cannot do .codetools.regex.matchMultiple when " "pattern is empty")
         if text == "":
             return False
-        if type(patterns).__name__ != 'list':
-            raise j.exceptions.RuntimeError(
-                "patterns has to be of type list []")
+        if type(patterns).__name__ != "list":
+            raise j.exceptions.RuntimeError("patterns has to be of type list []")
         if patterns == []:
             return False
 
@@ -180,17 +170,17 @@ class RegexTools(j.application.JSBaseClass):
         """
         if not regexFind or not regexFindsubsetToReplace or not text:
             raise j.exceptions.RuntimeError(
-                "Cannot do .codetools.regex.replace when "
-                "any of the four variables is empty.")
+                "Cannot do .codetools.regex.replace when " "any of the four variables is empty."
+            )
         if regexFind.find(regexFindsubsetToReplace) == -1:
             raise j.exceptions.RuntimeError(
-                'regexFindsubsetToReplace must be part or '
+                "regexFindsubsetToReplace must be part or "
                 'all of regexFind "ex: regexFind="Some example text", '
-                'regexFindsubsetToReplace="example"')
+                'regexFindsubsetToReplace="example"'
+            )
         matches = self.findAll(regexFind, text)
         if matches:
-            finalReplaceWith = re.sub(
-                regexFindsubsetToReplace, replaceWith, matches[0])
+            finalReplaceWith = re.sub(regexFindsubsetToReplace, replaceWith, matches[0])
             text = re.sub(self._patternFix(regexFind), finalReplaceWith, text)
 
         return text
@@ -203,8 +193,8 @@ class RegexTools(j.application.JSBaseClass):
         """
         if not pattern or not text:
             raise j.exceptions.RuntimeError(
-                "Cannot do .codetools.regex.findOne when "
-                "pattern or text parameter is empty")
+                "Cannot do .codetools.regex.findOne when " "pattern or text parameter is empty"
+            )
         pattern = self._patternFix(pattern)
         result = re.finditer(pattern, text, flags)
         finalResult = list()
@@ -212,9 +202,7 @@ class RegexTools(j.application.JSBaseClass):
             finalResult.append(item.group())
 
         if len(finalResult) > 1:
-            raise j.exceptions.RuntimeError(
-                "found more than 1 result of regex %s in text %s" %
-                (pattern, text))
+            raise j.exceptions.RuntimeError("found more than 1 result of regex %s in text %s" % (pattern, text))
         if len(finalResult) == 1:
             return finalResult[0]
         return ""
@@ -226,8 +214,8 @@ class RegexTools(j.application.JSBaseClass):
         """
         if pattern == "" or text == "":
             raise j.exceptions.RuntimeError(
-                "Cannot do .codetools.regex.findAll when "
-                "pattern or text parameter is empty")
+                "Cannot do .codetools.regex.findAll when " "pattern or text parameter is empty"
+            )
         pattern = self._patternFix(pattern)
         results = re.finditer(pattern, text, flags)
         matches = list()
@@ -242,8 +230,8 @@ class RegexTools(j.application.JSBaseClass):
         """
         if pattern == "" or text == "":
             raise j.exceptions.RuntimeError(
-                "Cannot do j.data.regex.getRegexMatches when "
-                "pattern or text parameter is empty")
+                "Cannot do j.data.regex.getRegexMatches when " "pattern or text parameter is empty"
+            )
         pattern = self._patternFix(pattern)
         rm = RegexMatches()
         for match in re.finditer(pattern, text, flags):
@@ -258,8 +246,8 @@ class RegexTools(j.application.JSBaseClass):
         """
         if pattern == "" or text == "":
             raise j.exceptions.RuntimeError(
-                "Cannot do j.data.regex.getRegexMatches when "
-                "pattern or text parameter is empty")
+                "Cannot do j.data.regex.getRegexMatches when " "pattern or text parameter is empty"
+            )
         pattern = self._patternFix(pattern)
 
         for match in re.finditer(pattern, text, flags):
@@ -283,8 +271,8 @@ class RegexTools(j.application.JSBaseClass):
         """
         if pattern == "" or text == "":
             raise j.exceptions.RuntimeError(
-                "Cannot do j.data.regex.getRegexMatches when "
-                "pattern or text parameter is empty")
+                "Cannot do j.data.regex.getRegexMatches when " "pattern or text parameter is empty"
+            )
         pattern = self._patternFix(pattern)
         match = re.match(pattern, text, flags)
         if match:
@@ -302,8 +290,8 @@ class RegexTools(j.application.JSBaseClass):
         """
         if pattern == "" or text == "":
             raise j.exceptions.RuntimeError(
-                "Cannot do j.data.regex.removeLines when "
-                "pattern or text parameter is empty")
+                "Cannot do j.data.regex.removeLines when " "pattern or text parameter is empty"
+            )
         pattern = self._patternFix(pattern)
         return self.processLines(text, excludes=[pattern])
 
@@ -320,16 +308,11 @@ class RegexTools(j.application.JSBaseClass):
         lines = text.split("\n")
         out = ""
         for line in lines:
-            if self.matchMultiple(
-                    includes,
-                    line) and not self.matchMultiple(
-                    excludes,
-                    line):
+            if self.matchMultiple(includes, line) and not self.matchMultiple(excludes, line):
                 out = "%s%s\n" % (out, line)
         return out
 
-    def replaceLines( self, replaceFunction, arg, text,
-            includes="", excludes=""):
+    def replaceLines(self, replaceFunction, arg, text, includes="", excludes=""):
         """ includes happens first (includes of regexes eg @process.*
             matches full line starting with @process)
             excludes last
@@ -346,11 +329,7 @@ class RegexTools(j.application.JSBaseClass):
         lines = text.split("\n")
         out = ""
         for line in lines:
-            if self.matchMultiple(
-                    includes,
-                    line) and not self.matchMultiple(
-                    excludes,
-                    line):
+            if self.matchMultiple(includes, line) and not self.matchMultiple(excludes, line):
                 line = replaceFunction(arg, line)
             out = "%s%s\n" % (out, line)
         if out[-2:] == "\n\n":
@@ -363,9 +342,7 @@ class RegexTools(j.application.JSBaseClass):
             @param text, we are looking into
         """
 
-        return self.processLines(
-            text, includes=[
-                self._patternFix(regex)], excludes="")
+        return self.processLines(text, includes=[self._patternFix(regex)], excludes="")
 
     def getINIAlikeVariableFromText(self, variableName, text, isArray=False):
         """ e.g. in text
@@ -391,32 +368,43 @@ class RegexTools(j.application.JSBaseClass):
                 return val
         return ""
 
-    def extractFirstFoundBlock( self, text, blockStartPatterns,
-                                blockStartPatternsNegative=[],
-                                blockStopPatterns=[],
-                                blockStopPatternsNegative=[],
-                                linesIncludePatterns=[".*"],
-                                linesExcludePatterns=[],
-                                includeMatchingLine=True):
-        result = self.extractBlocks( text, blockStartPatterns,
-                                    blockStartPatternsNegative,
-                                    blockStopPatterns,
-                                    blockStopPatternsNegative,
-                                    linesIncludePatterns,
-                                    linesExcludePatterns,
-                                    includeMatchingLine)
+    def extractFirstFoundBlock(
+        self,
+        text,
+        blockStartPatterns,
+        blockStartPatternsNegative=[],
+        blockStopPatterns=[],
+        blockStopPatternsNegative=[],
+        linesIncludePatterns=[".*"],
+        linesExcludePatterns=[],
+        includeMatchingLine=True,
+    ):
+        result = self.extractBlocks(
+            text,
+            blockStartPatterns,
+            blockStartPatternsNegative,
+            blockStopPatterns,
+            blockStopPatternsNegative,
+            linesIncludePatterns,
+            linesExcludePatterns,
+            includeMatchingLine,
+        )
         if len(result) > 0:
             return result[0]
         else:
             return ""
 
-    def extractBlocks( self, text, blockStartPatterns=['.*'],
-            blockStartPatternsNegative=[],
-            blockStopPatterns=[],
-            blockStopPatternsNegative=[],
-            linesIncludePatterns=[".*"],
-            linesExcludePatterns=[],
-            includeMatchingLine=True):
+    def extractBlocks(
+        self,
+        text,
+        blockStartPatterns=[".*"],
+        blockStartPatternsNegative=[],
+        blockStopPatterns=[],
+        blockStopPatternsNegative=[],
+        linesIncludePatterns=[".*"],
+        linesExcludePatterns=[],
+        includeMatchingLine=True,
+    ):
         """ look for blocks starting with line which matches one of patterns
             in blockStartPatterns and not matching one of patterns in
             blockStartPatternsNegative
@@ -429,17 +417,20 @@ class RegexTools(j.application.JSBaseClass):
             of line with space behind
         """
         # check types of input
-        if not isinstance(blockStartPatterns, list) or \
-           not isinstance(blockStartPatternsNegative, list) or \
-           not isinstance(blockStopPatterns, list) or \
-           not isinstance(blockStopPatternsNegative, list) or \
-           not isinstance(linesIncludePatterns, list) or \
-           not isinstance(linesExcludePatterns, list):
+        if (
+            not isinstance(blockStartPatterns, list)
+            or not isinstance(blockStartPatternsNegative, list)
+            or not isinstance(blockStopPatterns, list)
+            or not isinstance(blockStopPatternsNegative, list)
+            or not isinstance(linesIncludePatterns, list)
+            or not isinstance(linesExcludePatterns, list)
+        ):
             raise j.exceptions.RuntimeError(
                 "Blockstartpatterns, blockStartPatternsNegative,"
                 "blockStopPatterns, blockStopPatternsNegative,"
                 "linesIncludePatterns, linesExcludePatterns "
-                "all have to be of type list")
+                "all have to be of type list"
+            )
 
         state = "scan"
         lines = text.split("\n")
@@ -453,24 +444,20 @@ class RegexTools(j.application.JSBaseClass):
             # XXX this code is an absolute mess.  completely unreadable.
             # break it down into separate statements (that fit onto 80 chars)
             # and add unit tests
-            addLine = ( self.matchMultiple( linesIncludePatterns, line) and \
-                        not self.matchMultiple( linesExcludePatterns, line)) \
-                        or emptyLine
+            addLine = (
+                self.matchMultiple(linesIncludePatterns, line) and not self.matchMultiple(linesExcludePatterns, line)
+            ) or emptyLine
             if state == "foundblock" and (
-                t == len(lines) -
-                1 or (
-                    self.matchMultiple(
-                        blockStopPatterns,
-                        line) or (
-                        self.matchMultiple(
-                    blockStartPatterns,
-                    line) and not self.matchMultiple(
-                        blockStartPatternsNegative,
-                        line)) or (
-                            len(blockStopPatternsNegative) > 0 and
-                            not self.matchMultiple(
-                                blockStopPatternsNegative,
-                                line)))):
+                t == len(lines) - 1
+                or (
+                    self.matchMultiple(blockStopPatterns, line)
+                    or (
+                        self.matchMultiple(blockStartPatterns, line)
+                        and not self.matchMultiple(blockStartPatternsNegative, line)
+                    )
+                    or (len(blockStopPatternsNegative) > 0 and not self.matchMultiple(blockStopPatternsNegative, line))
+                )
+            ):
 
                 # new potential block found or end of file
                 result.append(block)  # add to results line
@@ -495,9 +482,11 @@ class RegexTools(j.application.JSBaseClass):
                 if addLine:
                     block = "%s%s\n" % (block, line)
 
-            if state == "scan" and self.matchMultiple(
-                    blockStartPatterns, line) and not self.matchMultiple(
-                    blockStartPatternsNegative, line):
+            if (
+                state == "scan"
+                and self.matchMultiple(blockStartPatterns, line)
+                and not self.matchMultiple(blockStartPatternsNegative, line)
+            ):
                 # found beginning of block
                 state = "foundblock"
                 blockstartline = t
@@ -509,10 +498,9 @@ class RegexTools(j.application.JSBaseClass):
         return result
 
     def test(self):
-        #content = j.sal.fs.readFile("examplecontent1.txt")
-        #print(self.getClassName("class iets(test):"))
-        content="class iets(test):"
+        # content = j.sal.fs.readFile("examplecontent1.txt")
+        # print(self.getClassName("class iets(test):"))
+        content = "class iets(test):"
         # find all occurences of class and find positions
-        regexmatches = self.getRegexMatches(
-            r"(?m)(?<=^class )[ A-Za-z0-9_\-]*\b", content)
+        regexmatches = self.getRegexMatches(r"(?m)(?<=^class )[ A-Za-z0-9_\-]*\b", content)
         return regexmatches

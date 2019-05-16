@@ -1,9 +1,11 @@
 from Jumpscale import j
+
 # import Jumpscale.baselib.remote
 
 JSBASE = j.application.JSBaseClass
 
 from .FtpClient import FtpClient
+
 
 class FtpFactory(JSBASE):
     __jslocation__ = "j.sal_zos.ftpclient"
@@ -19,6 +21,3 @@ class FtpFactory(JSBASE):
             the sal layer 
         """
         return FtpClient(url)
-
-
-

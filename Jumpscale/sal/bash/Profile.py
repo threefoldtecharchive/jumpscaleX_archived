@@ -6,8 +6,8 @@ import locale
 
 
 class Profile(j.application.JSBaseClass):
-    _env_pattern = re.compile(r'([A-Za-z0-9_]+)=(.*)\n', re.MULTILINE)
-    _include_pattern = re.compile(r'(source|\.) (.*)$', re.MULTILINE)
+    _env_pattern = re.compile(r"([A-Za-z0-9_]+)=(.*)\n", re.MULTILINE)
+    _include_pattern = re.compile(r"(source|\.) (.*)$", re.MULTILINE)
 
     def __init__(self, bash, profile_path=None):
         """
@@ -60,7 +60,7 @@ class Profile(j.application.JSBaseClass):
 
         # to let bash evaluate the profile source, we source the profile
         # then get the current environment variables using printenv
-        _, current_env, _ = self.executor.execute('source %s && printenv' % self.profile_path)
+        _, current_env, _ = self.executor.execute("source %s && printenv" % self.profile_path)
 
         # get a set of profile variables and current environment variables
         content = self.executor.file_read(self.profile_path)
@@ -122,17 +122,19 @@ class Profile(j.application.JSBaseClass):
         :param quote: means will put '' around env parts if space in the item
         :return:
         """
-        value = j.data.types.string.clean(value).strip().strip("'").strip("\"").strip()
+        value = j.data.types.string.clean(value).strip().strip("'").strip('"').strip()
         sep = ":"
         if key in self._env:
-            line = self._env[key].strip().strip("'").strip("\"").strip()
+            line = self._env[key].strip().strip("'").strip('"').strip()
             if sep is ";" and ":" in line:
-                raise j.exceptions.Input("cannot have 2 separators, should be : or ;, %s in %s" %
-                                         (line, self.profile_path))
+                raise j.exceptions.Input(
+                    "cannot have 2 separators, should be : or ;, %s in %s" % (line, self.profile_path)
+                )
             elif sep is ":" and ";" in line:
-                raise j.exceptions.Input("cannot have 2 separators, should be : or ;, %s in %s" %
-                                         (line, self.profile_path))
-            items0 = [i.strip().strip("'").strip("\"").strip() for i in line.split(sep)]
+                raise j.exceptions.Input(
+                    "cannot have 2 separators, should be : or ;, %s in %s" % (line, self.profile_path)
+                )
+            items0 = [i.strip().strip("'").strip('"').strip() for i in line.split(sep)]
             items = []
             for i in items0:
                 if i not in items:
@@ -186,12 +188,12 @@ class Profile(j.application.JSBaseClass):
         :param value:
         :return:
         """
-        value = j.data.types.string.clean(value).strip().strip("'").strip("\"").strip()
+        value = j.data.types.string.clean(value).strip().strip("'").strip('"').strip()
         sep = ":"
         value = value.strip()
         if key in self._env:
-            line = self._env[key].strip().strip("'").strip("\"").strip()
-            items = [i.strip().strip("'").strip("\"").strip() for i in line.split(sep)]
+            line = self._env[key].strip().strip("'").strip('"').strip()
+            items = [i.strip().strip("'").strip('"').strip() for i in line.split(sep)]
             if value in items:
                 items.pop(items.index(value))
                 self.env_set(key, sep.join(items).strip(sep))
@@ -241,19 +243,17 @@ class Profile(j.application.JSBaseClass):
             return out.split("\n")
 
     def locale_check(self):
-        '''
+        """
         return true of locale is properly set
-        '''
+        """
         if j.core.platformtype.myplatform.isMac:
-            a = self.bash.env.get('LC_ALL') == 'en_US.UTF-8'
-            b = self.bash.env.get('LANG') == 'en_US.UTF-8'
+            a = self.bash.env.get("LC_ALL") == "en_US.UTF-8"
+            b = self.bash.env.get("LANG") == "en_US.UTF-8"
         else:
-            a = self.bash.env.get('LC_ALL') == 'C.UTF-8'
-            b = self.bash.env.get('LANG') == 'C.UTF-8'
+            a = self.bash.env.get("LC_ALL") == "C.UTF-8"
+            b = self.bash.env.get("LANG") == "C.UTF-8"
         if (a and b) != True:
-            self._log_debug(
-                "WARNING: locale has been fixed, please do: "
-                "`source ~/.profile_js`")
+            self._log_debug("WARNING: locale has been fixed, please do: " "`source ~/.profile_js`")
             self.locale_fix()
             self._save()
 
@@ -268,20 +268,19 @@ class Profile(j.application.JSBaseClass):
             self.env_set("LC_ALL", "C.UTF-8")
             self.env_set("LANG", "C.UTF-8")
             return
-        raise j.exceptions.Input(
-            "Cannot find C.UTF-8, cannot fix locale's")
+        raise j.exceptions.Input("Cannot find C.UTF-8, cannot fix locale's")
 
     def __str__(self):
 
         content = StringIO()
-        content.write('# environment variables\n')
+        content.write("# environment variables\n")
         for key, value in self._env.items():
-            content.write('export %s=%s\n' % (key, value))
+            content.write("export %s=%s\n" % (key, value))
 
-        content.write('# includes\n')
+        content.write("# includes\n")
         for path in self._includes:
             if self.executor.exists(path):
-                content.write('source %s\n' % path)
+                content.write("source %s\n" % path)
 
         return content.getvalue()
 

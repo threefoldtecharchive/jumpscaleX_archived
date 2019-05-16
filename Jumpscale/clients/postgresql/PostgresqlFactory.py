@@ -1,6 +1,7 @@
 from Jumpscale import j
 import psycopg2
 from .PostgresqlClient import PostgresClient
+
 # import calendar
 # from htmllib import HTMLParser
 # from formatter import AbstractFormatter, DumbWriter
@@ -14,6 +15,7 @@ JSConfigs = j.application.JSBaseConfigsClass
 class PostgresqlFactory(JSConfigs):
     """
     """
+
     __jslocation__ = "j.clients.postgres"
     _CHILDCLASS = PostgresClient
 
@@ -21,7 +23,7 @@ class PostgresqlFactory(JSConfigs):
         self.__imports__ = "sqlalchemy"
 
     def db_create(self, db, ipaddr="localhost", port=5432, login="postgres", passwd="rooter"):
-        '''Create new database
+        """Create new database
         :param db: db name to be created
         :type db: str
         :param ipaddr: ip address,  defaults to "localhost"
@@ -33,9 +35,10 @@ class PostgresqlFactory(JSConfigs):
         :param passwd: password associated with login, defaults to "rooter"
         :type passwd: str
         :raises j.exceptions.RuntimeError: Exception if db already exists
-        '''
-        client = psycopg2.connect("dbname='%s' user='%s' host='%s' password='%s' port='%s'" % (
-            "template1", login, ipaddr, passwd, port))
+        """
+        client = psycopg2.connect(
+            "dbname='%s' user='%s' host='%s' password='%s' port='%s'" % ("template1", login, ipaddr, passwd, port)
+        )
         cursor = client.cursor()
         client.set_isolation_level(0)
         try:
@@ -48,7 +51,7 @@ class PostgresqlFactory(JSConfigs):
         client.set_isolation_level(1)
 
     def db_drop(self, db, ipaddr="localhost", port=5432, login="postgres", passwd="rooter"):
-        '''Drop a database
+        """Drop a database
         :param db: db name to be dropped
         :type db: str
         :param ipaddr: ip address, defaults to "localhost"
@@ -59,7 +62,7 @@ class PostgresqlFactory(JSConfigs):
         :type login: str, optional
         :param passwd: password associated with login, defaults to "rooter"
         :type passwd: str, optional
-        '''
+        """
         args = {}
         args["db"] = db
         args["port"] = port
@@ -67,6 +70,5 @@ class PostgresqlFactory(JSConfigs):
         args["passwd"] = passwd
         args["ipaddr"] = ipaddr
         args["dbname"] = db
-        cmd = "cd /opt/postgresql/bin;./dropdb -U %(login)s -h %(ipaddr)s -p %(port)s %(dbname)s" % (
-            args)
+        cmd = "cd /opt/postgresql/bin;./dropdb -U %(login)s -h %(ipaddr)s -p %(port)s %(dbname)s" % (args)
         j.sal.process.execute(cmd, showout=False, die=False)

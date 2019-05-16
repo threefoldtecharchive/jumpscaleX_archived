@@ -2,12 +2,13 @@ from Jumpscale import j
 import subprocess
 
 
-OP_ADD = '+'
-OP_DEL = '-'
-OP_ERS = '--'
+OP_ADD = "+"
+OP_DEL = "-"
+OP_ERS = "--"
+
 
 class SSHD:
-    
+
     __jslocation__ = "j.sal.sshd"
 
     def __init__(self):
@@ -16,11 +17,11 @@ class SSHD:
 
     @property
     def ssh_root_path(self):
-        return j.tools.path.get(j.dirs.HOMEDIR).joinpath('.ssh')
+        return j.tools.path.get(j.dirs.HOMEDIR).joinpath(".ssh")
 
     @property
     def ssh_authorized_keys_path(self):
-        return j.tools.path.get(self.ssh_root_path).joinpath('authorized_keys')
+        return j.tools.path.get(self.ssh_root_path).joinpath("authorized_keys")
 
     @property
     def keys(self):
@@ -35,7 +36,7 @@ class SSHD:
         return self._keys
 
     def executer(self, cmd):
-        cmd = cmd.split(' ')
+        cmd = cmd.split(" ")
         subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     def key_add(self, key):
@@ -69,7 +70,7 @@ class SSHD:
                 keys.add(key)
             elif op == OP_DEL:
                 keys.discard(key)
-            self.ssh_authorized_keys_path.write_text('\n'.join(keys))
+            self.ssh_authorized_keys_path.write_text("\n".join(keys))
         self._keys = None
 
     def disable_none_key_access(self):
@@ -80,7 +81,6 @@ class SSHD:
         'note': this is not a smart way to do this: there could be
         entries "PasswordAuthentication yes" already in the file
         """
-        pth = j.tools.path.get('/etc/ssh/sshd_config')
-        pth.write_text('PasswordAuthentication no', append=True)
-        self.executer('service ssh restart')
-
+        pth = j.tools.path.get("/etc/ssh/sshd_config")
+        pth.write_text("PasswordAuthentication no", append=True)
+        self.executer("service ssh restart")

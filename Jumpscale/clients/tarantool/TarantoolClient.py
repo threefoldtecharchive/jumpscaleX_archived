@@ -7,7 +7,7 @@ from .TarantoolQueue import TarantoolQueue
 JSBASE = j.application.JSBaseConfigClass
 
 
-class Models():
+class Models:
     pass
 
 
@@ -50,11 +50,9 @@ class TarantoolClient(JSBASE):
         @param opstype in integer the type of operation - "read" = 1, or "write" = 2, or "execute" = 4, or a combination such as "read,write,execute".
         """
         if objname == "":
-            C = "box.schema.user.grant('%s',%s,'%s')" % (
-                user, operation, objtype)
+            C = "box.schema.user.grant('%s',%s,'%s')" % (user, operation, objtype)
         else:
-            C = "box.schema.user.grant('%s',%s,'%s','%s')" % (
-                user, operation, objtype, objname)
+            C = "box.schema.user.grant('%s',%s,'%s','%s')" % (user, operation, objtype, objname)
 
         self.db.eval(C)
 
@@ -71,10 +69,7 @@ class TarantoolClient(JSBASE):
 
     @property
     def _template_dir(self):
-        return j.sal.fs.joinPaths(
-            j.sal.fs.getParent(__file__),
-            'templates'
-        )
+        return j.sal.fs.joinPaths(j.sal.fs.getParent(__file__), "templates")
 
     def _pyModelFix(self, path, name, dbtype, login, passwd):
         """
@@ -84,8 +79,7 @@ class TarantoolClient(JSBASE):
 
         lcontent = ""
 
-        template_path = j.sal.fs.joinPaths(self._template_dir,
-                                           'python', 'model.py.template')
+        template_path = j.sal.fs.joinPaths(self._template_dir, "python", "model.py.template")
         template = j.sal.fs.readFile(template_path)
         lcontent += j.core.text.strip(template)
 
@@ -116,14 +110,14 @@ class TarantoolClient(JSBASE):
         lcontent = j.sal.fs.readFile(path)
         name_upper = name[0].upper() + name[1:]
         function_names = []
-        for template_path in j.sal.fs.listFilesInDir(self._template_dir + '/lua', filter='model_*.lua'):
+        for template_path in j.sal.fs.listFilesInDir(self._template_dir + "/lua", filter="model_*.lua"):
             # strip model_ and .lua out of the template path
-            method = j.sal.fs.getBaseName(template_path)[len('model_'):-4]
+            method = j.sal.fs.getBaseName(template_path)[len("model_") : -4]
             function_names.append(method)
-            template_name = 'model_{}.lua'.format(method)
+            template_name = "model_{}.lua".format(method)
 
             if lcontent.find("local function {}".format(method)) == -1:
-                template_path = j.sal.fs.joinPaths(self._template_dir, 'lua', template_name)
+                template_path = j.sal.fs.joinPaths(self._template_dir, "lua", template_name)
                 template = j.sal.fs.readFile(template_path)
                 lcontent += "\n\n" + j.core.text.strip(template)
 
@@ -136,11 +130,11 @@ class TarantoolClient(JSBASE):
 
         # FIXME: this is ugly
         if lcontent.find("return %s" % name) == -1:
-            lcontent += '\n%s = {\n' % name
+            lcontent += "\n%s = {\n" % name
             for function_name in function_names:
                 lcontent += "\t%s = %s,\n" % (function_name, function_name)
-            lcontent += '}\n'
-            lcontent += 'return %s' % name
+            lcontent += "}\n"
+            lcontent += "return %s" % name
 
         j.sal.fs.writeFile(path, lcontent)
 
@@ -161,7 +155,7 @@ class TarantoolClient(JSBASE):
             sys.path.append(path)
 
         for name in j.sal.fs.listDirsInDir(path, False, True):
-            if name == '__pycache__':
+            if name == "__pycache__":
                 continue
             name_upper = name[0].upper() + name[1:]
             cpath = j.sal.fs.joinPaths(path, name, "model.capnp")
@@ -174,7 +168,7 @@ class TarantoolClient(JSBASE):
                 j.sal.fs.remove(res)
 
             if not j.sal.fs.exists(lpath):
-                template_path = j.sal.fs.joinPaths(self._template_dir, 'lua', "space_create.lua")
+                template_path = j.sal.fs.joinPaths(self._template_dir, "lua", "space_create.lua")
                 template = j.sal.fs.readFile(template_path)
                 j.sal.fs.writeFile(lpath, j.core.text.strip(template))
 

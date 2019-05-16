@@ -9,8 +9,20 @@ class CoreDnsFactory(JSConfigs):
     __jslocation__ = "j.sal.coredns"
     _CHILDCLASS = CoreDnsClient
 
-    def get(self, name=None, id=None, die=True, create_new=True, childclass_name=None, host="127.0.0.1", port=2379, user="root", password="root", **kwargs):
-        '''Get Coredns client instance after getting an etcd client instance 
+    def get(
+        self,
+        name=None,
+        id=None,
+        die=True,
+        create_new=True,
+        childclass_name=None,
+        host="127.0.0.1",
+        port=2379,
+        user="root",
+        password="root",
+        **kwargs,
+    ):
+        """Get Coredns client instance after getting an etcd client instance 
             If client found with name in param 'etcd_instance' , the client instance is used. Otherwise a new etcd client instance is created
 
         :param name: coredns client name, defaults to None
@@ -33,25 +45,27 @@ class CoreDnsFactory(JSConfigs):
         :type password: str, optional
         :return: CoreDns client
         :rtype: CoreDns
-        '''
-        if 'etcd_instance' not in kwargs:
-            raise ValueError('New or existing etcd_instance name required')
-        j.clients.etcd.get(name=kwargs['etcd_instance'], host=host, port=port, user=user, password_=password)
-        return JSConfigFactory.get(self, name=name, id=id, die=die, create_new=create_new, childclass_name=childclass_name,**kwargs)
+        """
+        if "etcd_instance" not in kwargs:
+            raise ValueError("New or existing etcd_instance name required")
+        j.clients.etcd.get(name=kwargs["etcd_instance"], host=host, port=port, user=user, password_=password)
+        return JSConfigFactory.get(
+            self, name=name, id=id, die=die, create_new=create_new, childclass_name=childclass_name, **kwargs
+        )
 
     def test(self):
         # create etcd client
         cl = j.sal.coredns.get(name="main", host="127.0.0.1", password="1234")
         # create zones
-        zone1 = cl.zone_create('test.example.com', '10.144.13.199', record_type='A')
-        zone2 = cl.zone_create('example.com', '2003::8:1', record_type='AAAA')
+        zone1 = cl.zone_create("test.example.com", "10.144.13.199", record_type="A")
+        zone2 = cl.zone_create("example.com", "2003::8:1", record_type="AAAA")
         # add records in etcd
         cl.deploy()
         # create zones
-        zone2 = cl.zone_create('test.example.com', '10.144.13.198', record_type='A')
-        zone3 = cl.zone_create('example.com', '2003::8:2', record_type='AAAA')
-        zone4 = cl.zone_create('test2.example.com', '10.144.13.198', record_type='A')
-        zone5 = cl.zone_create('example2.com', '2003::8:2', record_type='AAAA')
+        zone2 = cl.zone_create("test.example.com", "10.144.13.198", record_type="A")
+        zone3 = cl.zone_create("example.com", "2003::8:2", record_type="AAAA")
+        zone4 = cl.zone_create("test2.example.com", "10.144.13.198", record_type="A")
+        zone5 = cl.zone_create("example2.com", "2003::8:2", record_type="AAAA")
         # add records in etcd
         cl.deploy()
         # get records from etcd

@@ -2,8 +2,8 @@ from .AggregatorClient import AggregatorClient
 from .AggregatorClientTest import AggregatorClientTest
 
 from Jumpscale import j
-JSBASE = j.application.JSBaseClass
 
+JSBASE = j.application.JSBaseClass
 
 
 class Aggregator(j.application.JSBaseClass):

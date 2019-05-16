@@ -107,8 +107,8 @@ def value2bin(data, val_def):
     if data is None:
         raise ValueError("Invalid data")
     # valdef represent the return of a get call, setting will be differeot for NumberWithTs types
-#    if val_def.type.endswith("NUMBER_WITH_TS"):
-#        val_def.size = 2
+    #    if val_def.type.endswith("NUMBER_WITH_TS"):
+    #        val_def.size = 2
     if val_def.type in ("TYPE_UNSIGNED_NUMBER", "TYPE_TIMESTAMP", "TYPE_COMMAND", "TYPE_EVENTFLAGS"):
         number = float2int_ensure_precision(data, val_def.scale)
         return int2bin(number, val_def.size, False)
@@ -139,7 +139,7 @@ def value2bin(data, val_def):
     elif val_def.type == "TYPE_VERSION":
         parts = str(data).split(".")
         major = parts[0]
-        minor = parts[1] if len(parts) == 2 else '0'
+        minor = parts[1] if len(parts) == 2 else "0"
         out = int2bin(int(major), 1, False)
         out += int2bin(int(minor), 1, False)
         return out
@@ -174,7 +174,7 @@ def bin2bool(data):
 def bin2string(data):
     """Convert a byte-string to a unicode string."""
 
-    idx = data.find(b'\x00')
+    idx = data.find(b"\x00")
     if idx != -1:
         data = data[:idx]
     return data.decode("utf-8")
@@ -196,7 +196,7 @@ def bin2macaddress(data):
     chunks = list()
     for i in range(len(mac)):
         if i % 2 == 0:
-            chunks.append(mac[i:i + 2])
+            chunks.append(mac[i : i + 2])
 
     result = b":".join(chunks)
     return result.decode()
@@ -245,7 +245,7 @@ def bin2sint(data):
         negative = True
     for idx, byte in enumerate(arr):
         if negative:
-            byte = byte ^ 0xff
+            byte = byte ^ 0xFF
         number += byte * (256 ** idx)
     if negative:
         number = (number + 1) * -1
@@ -265,7 +265,7 @@ def number2bin(number, size):
     newval = ""
     for i in range(len(strval)):
         if i % 2 == 0:
-            newval = strval[i:i + 2] + newval
+            newval = strval[i : i + 2] + newval
     return binascii.a2b_hex(newval)
 
 
@@ -290,8 +290,8 @@ def slice_string(data, length=None):
     i = 0
     result = []
     datalen = len(data)
-    while (i * length < datalen):
-        item = data[i * length: (i + 1) * length]
+    while i * length < datalen:
+        item = data[i * length : (i + 1) * length]
         result.append(item)
         i += 1
     return result
@@ -315,10 +315,10 @@ def pointer2values(data, params_info):
         "TYPE_RAW": "size",
         "TYPE_POINTER": 2,
         "TYPE_ENUM": "size",
-        "TYPE_COMMAND": "size"
+        "TYPE_COMMAND": "size",
     }
     # Get the error code
-    #errorCode = bin2int(data[0])
+    # errorCode = bin2int(data[0])
     # if errorCode:
     #    return errorCode,None
     # Initialize variables
@@ -334,10 +334,10 @@ def pointer2values(data, params_info):
             if isinstance(size, str):
                 size = getattr(val_def, size)
 
-            ports = slice_string(data[i:i + (size * count)], size)
+            ports = slice_string(data[i : i + (size * count)], size)
             for j in range(0, count):
                 ports[j] = bin2value(ports[j], val_def, False)[1]
-            i += (size * count)
+            i += size * count
             port_count = len(ports)
             if port_count == 0:
                 raise Exception("zero ports, xml error?")

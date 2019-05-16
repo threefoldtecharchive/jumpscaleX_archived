@@ -4,21 +4,22 @@ from Jumpscale import j
 from io import StringIO
 
 
-CONFIG_FILE = '/etc/rsyncd.conf'
+CONFIG_FILE = "/etc/rsyncd.conf"
 
 # EXPORT_OPT_REGEXT = re.compile('^(?:([\w/]+)|"([\w\s/]+)")\s+(.+)$')
 # CLIENT_OPT_REGEXT = re.compile('\s*([^\(]+)\(([^\)]+)\)')
 
 JSBASE = j.application.JSBaseClass
-class RsyncError(Exception, JSBASE):
 
+
+class RsyncError(Exception, JSBASE):
     def __init__(self):
         JSBASE.__init__(self)
 
     pass
 
-class RsyncModule(j.application.JSBaseClass):
 
+class RsyncModule(j.application.JSBaseClass):
     def __init__(self, name=None):
         JSBASE.__init__(self)
         self.name = name
@@ -29,15 +30,15 @@ class RsyncModule(j.application.JSBaseClass):
 
     def get(self, key, value):
         if key not in self.params:
-            raise RsyncError('not parameter %s in modules %s' % (key, self.name))
+            raise RsyncError("not parameter %s in modules %s" % (key, self.name))
 
         return self.params[key]
 
     def __str__(self):
         buf = StringIO()
-        buf.write('[%s]\n' % self.name)
+        buf.write("[%s]\n" % self.name)
         for k, v in self.params.items():
-            buf.write('\t%s = %s\n' % (k, v))
+            buf.write("\t%s = %s\n" % (k, v))
 
         return buf.getvalue()
 
@@ -46,7 +47,6 @@ class RsyncModule(j.application.JSBaseClass):
 
 
 class Rsync(j.application.JSBaseClass):
-
     def __init__(self):
         JSBASE.__init__(self)
         self._local = j.tools.executorLocal
@@ -63,29 +63,29 @@ class Rsync(j.application.JSBaseClass):
             lineparts = []
             for linepart in content.split(os.linesep):
                 linepart = linepart.strip()
-                if linepart == '' or linepart.startswith('#'):
+                if linepart == "" or linepart.startswith("#"):
                     continue
 
                 lineparts.append(linepart)
 
-                if linepart.endswith('\\'):
+                if linepart.endswith("\\"):
                     lineparts.append(linepart)
                     continue
 
-                line = ' '.join(lineparts)
+                line = " ".join(lineparts)
                 lineparts = []
 
-                if line.startswith('['):
+                if line.startswith("["):
                     # begining of a module
-                    end = line.find(']')
+                    end = line.find("]")
                     name = line[1:end]
                     modules[name] = RsyncModule(name)
                     currentModule = name
                     continue
-                elif line.find('=') != -1:
-                    i = line.find('=')
+                elif line.find("=") != -1:
+                    i = line.find("=")
                     key = line[:i].strip()
-                    value = line[i + 1:].strip()
+                    value = line[i + 1 :].strip()
                     if currentModule is None:
                         # global param
                         globalParams[key] = value
@@ -100,11 +100,11 @@ class Rsync(j.application.JSBaseClass):
 
     def start(self):
         """start rsync daemon"""
-        self._local.execute('rsync --daemon --config=%s' % CONFIG_FILE)
+        self._local.execute("rsync --daemon --config=%s" % CONFIG_FILE)
 
     def stop(self):
         """stop rsync daemon"""
-        self._local.execute('pkill rsync')
+        self._local.execute("pkill rsync")
 
     def restart(self):
         """restart rsync daemon"""
@@ -176,13 +176,13 @@ class Rsync(j.application.JSBaseClass):
 
         buf = StringIO()
         for k, v in self._globalParams.items():
-            buf.write('%s = %s\n' % (k, v))
+            buf.write("%s = %s\n" % (k, v))
 
-        buf.write('\n')
+        buf.write("\n")
 
         for m in list(self._modules.values()):
             buf.write(str(m))
-            buf.write('\n')
+            buf.write("\n")
 
         return buf.getvalue()
 
@@ -191,7 +191,6 @@ class Rsync(j.application.JSBaseClass):
 
 
 class RsyncFactory(j.application.JSBaseClass):
-
     def __init__(self):
         JSBASE.__init__(self)
 

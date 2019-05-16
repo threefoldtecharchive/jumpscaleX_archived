@@ -13,7 +13,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         self.go_runtime = j.builder.runtimes.golang
 
     @builder_method()
-    def install(self , reset=True):
+    def install(self, reset=True):
         """
 
         kosmos 'j.builder.web.traefik.install()'
@@ -27,9 +27,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         # only check for linux for now
         arch = self.go_runtime.current_arch
         if j.core.platformtype.myplatform.isLinux:
-            download_url = self.URL.format(
-                version=self.VERSION, platform="linux", arch=arch
-            )
+            download_url = self.URL.format(version=self.VERSION, platform="linux", arch=arch)
         else:
             raise j.exceptions.RuntimeError("platform not supported")
 

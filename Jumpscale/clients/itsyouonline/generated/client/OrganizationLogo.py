@@ -6,9 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class OrganizationLogo( ):
+class OrganizationLogo:
     """
     auto-generated. don't touch.
     """
@@ -25,14 +23,14 @@ class OrganizationLogo( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'OrganizationLogo'
+        class_name = "OrganizationLogo"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.logo = client_support.set_property('logo', data, data_types, False, [], False, True, class_name)
+        self.logo = client_support.set_property("logo", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

@@ -23,11 +23,11 @@ class GiteaRepoHooks(j.application.JSBaseClass):
         o = self.new()
         if fetch:
             resp = self.client.api.repos.repoGetHook(repo=self.repo.name, id=str(id), owner=self.user.username).json()
-            config = resp.pop('config')
+            config = resp.pop("config")
             for k, v in resp.items():
                 setattr(o, k, v)
-            o.url = config['url']
-            o.content_type = config['content_type']
+            o.url = config["url"]
+            o.content_type = config["content_type"]
         return o
 
     def __next__(self):
@@ -35,11 +35,11 @@ class GiteaRepoHooks(j.application.JSBaseClass):
             item = self._items[self.position]
             self.position += 1
             hook = GiteaRepoHook(client=self.client, repo=self.repo, user=self.user)
-            config = item.pop('config')
+            config = item.pop("config")
             for k, v in item.items():
                 setattr(hook, k, v)
-            hook.url = config['url']
-            hook.content_type = config['content_type']
+            hook.url = config["url"]
+            hook.content_type = config["content_type"]
             return hook
         else:
             self.position = 0
@@ -50,4 +50,3 @@ class GiteaRepoHooks(j.application.JSBaseClass):
         return self
 
     __str__ = __repr__ = lambda self: "Gitea Hooks Iterator for Repo: {0}".format(self.repo.name)
-

@@ -3,6 +3,7 @@ from Jumpscale.builder.runtimes.BuilderGolang import BuilderGolangTools
 
 import os
 import textwrap
+
 builder_method = j.builder.system.builder_method
 
 
@@ -11,11 +12,11 @@ class BuilderMinio(BuilderGolangTools):
 
     def _init(self):
         super()._init()
-        self.datadir = ''
+        self.datadir = ""
 
     def profile_builder_set(self):
         super().profile_builder_set()
-        self.profile.env_set('GO111MODULE', 'on')
+        self.profile.env_set("GO111MODULE", "on")
 
     @builder_method()
     def build(self):
@@ -23,14 +24,14 @@ class BuilderMinio(BuilderGolangTools):
         Builds minio
         """
         j.builder.runtimes.golang.install()
-        self.get('github.com/minio/minio')
+        self.get("github.com/minio/minio")
 
     @builder_method()
     def install(self):
         """
         Installs minio
         """
-        self._copy('{}/bin/minio'.format(self.DIR_GO_PATH), '{DIR_BIN}')
+        self._copy("{}/bin/minio".format(self.DIR_GO_PATH), "{DIR_BIN}")
 
     @property
     def startup_cmds(self):
@@ -38,20 +39,21 @@ class BuilderMinio(BuilderGolangTools):
         Starts minio.
         """
         self.datadir = self.DIR_BUILD
-        address = '0.0.0.0'
+        address = "0.0.0.0"
         self.tools.dir_ensure(self.datadir)
         port = 9000
-        access_key = 'admin'
-        secret_key = 'adminadmin'
+        access_key = "admin"
+        secret_key = "adminadmin"
         cmd = "MINIO_ACCESS_KEY={} MINIO_SECRET_KEY={} minio server --address {}:{} {}".format(
-            access_key, secret_key, address, port, self.datadir)
+            access_key, secret_key, address, port, self.datadir
+        )
         cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
         return cmds
 
     @builder_method()
     def clean(self):
         self._remove(self.DIR_SANDBOX)
-        self._remove('{}/bin/minio'.format(j.builder.runtimes.golang.DIR_GO_PATH))
+        self._remove("{}/bin/minio".format(j.builder.runtimes.golang.DIR_GO_PATH))
 
     @builder_method()
     def sandbox(self):
@@ -70,7 +72,7 @@ class BuilderMinio(BuilderGolangTools):
         assert pid is not []
         self.stop()
 
-        print('TEST OK')
+        print("TEST OK")
 
     @builder_method()
     def uninstall(self):

@@ -9,9 +9,6 @@ from six import string_types
 from . import client_support
 
 
-
-
-
 class Branch(object):
     """
     auto-generated. don't touch.
@@ -30,16 +27,16 @@ class Branch(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Branch'
+        class_name = "Branch"
         data = json or kwargs
 
         # set attributes
         data_types = [PayloadCommit]
-        self.commit = client_support.set_property('commit', data, data_types, False, [], False, False, class_name)
+        self.commit = client_support.set_property("commit", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.name = client_support.set_property('name', data, data_types, False, [], False, False, class_name)
+        self.name = client_support.set_property("name", data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

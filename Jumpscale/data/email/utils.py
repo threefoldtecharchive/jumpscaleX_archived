@@ -1,7 +1,7 @@
 from json import load
 from Jumpscale import j
 
-EMAILS_DIR = j.sal.fs.joinPaths(j.dirs.VARDIR, 'email')
+EMAILS_DIR = j.sal.fs.joinPaths(j.dirs.VARDIR, "email")
 
 
 def get_msg_path(key):

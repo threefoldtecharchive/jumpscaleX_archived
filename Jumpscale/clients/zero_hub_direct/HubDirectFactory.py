@@ -9,6 +9,7 @@ JSConfigs = j.application.JSBaseConfigsClass
 class HubDirectFactory(JSConfigs):
     """
     """
+
     __jslocation__ = "j.clients.zhubdirect"
     _CHILDCLASS = HubDirectClient
 
@@ -19,7 +20,7 @@ class HubDirectFactory(JSConfigs):
         """
         generate the client out of the raml specs
 
-        js_shell 'j.clients.zhubdirect.generate()'
+        kosmos 'j.clients.zhubdirect.generate()'
 
         """
         path = j.sal.fs.getDirName(os.path.abspath(__file__)).rstrip("/")

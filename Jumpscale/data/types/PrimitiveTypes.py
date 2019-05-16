@@ -7,14 +7,14 @@ from .TypeBaseClasses import *
 
 class String(TypeBaseClass):
 
-    '''
+    """
     Generic string type
     stored in capnp as string
-    '''
+    """
 
-    NAME =  'string,str,s'
+    NAME = "string,str,s"
 
-    def __init__(self,default=None):
+    def __init__(self, default=None):
         self.BASETYPE = "string"
         if not default:
             default = ""
@@ -30,7 +30,7 @@ class String(TypeBaseClass):
         return self.clean(v)
 
     def check(self, value):
-        '''Check whether provided value is a string'''
+        """Check whether provided value is a string"""
         return isinstance(value, str)
 
     def clean(self, value):
@@ -39,19 +39,19 @@ class String(TypeBaseClass):
         """
         if value is None:
             return self.default_get()
-        if isinstance(value,bytes):
+        if isinstance(value, bytes):
             value = value.decode()
         try:
             value = str(value)
         except Exception as e:
             raise j.exceptions.input("cannot convert to string")
 
-        value=value.strip()
-        if len(value)>1:
-            if value[0]=="'" and value[-1]=="'":
+        value = value.strip()
+        if len(value) > 1:
+            if value[0] == "'" and value[-1] == "'":
                 value = value.strip("'")
-            if value[0]=="\"" and value[-1]=="\"":
-                value = value.strip("\"")
+            if value[0] == '"' and value[-1] == '"':
+                value = value.strip('"')
 
         return value
 
@@ -60,16 +60,16 @@ class String(TypeBaseClass):
 
 
 class StringMultiLine(String):
-    NAME =  'multiline'
+    NAME = "multiline"
 
-    def __init__(self,default=None):
-        self.BASETYPE = 'string'
+    def __init__(self, default=None):
+        self.BASETYPE = "string"
         if not default:
             default = ""
         self._default = default
 
     def check(self, value):
-        '''Check whether provided value is a string and has \n inside'''
+        """Check whether provided value is a string and has \n inside"""
         return isinstance(value, str) and ("\\n" in value or "\n" in value)
 
     def clean(self, value):
@@ -118,13 +118,14 @@ class StringMultiLine(String):
 
 
 class Bytes(TypeBaseClass):
-    '''
+    """
     Generic array of bytes type
     stored as bytes directly, no conversion
-    '''
-    NAME =  'bytes,bin,binary'
+    """
 
-    def __init__(self,default=None):
+    NAME = "bytes,bin,binary"
+
+    def __init__(self, default=None):
         self.BASETYPE = "bytes"
         if not default:
             default = ""
@@ -135,7 +136,7 @@ class Bytes(TypeBaseClass):
         """
         if isinstance(s, str):
             try:
-                s=base64.b64decode(s) #could be rather dangerous
+                s = base64.b64decode(s)  # could be rather dangerous
                 return s
             except:
                 pass
@@ -155,7 +156,7 @@ class Bytes(TypeBaseClass):
         return self.toString(v)
 
     def check(self, value):
-        '''Check whether provided value is a array of bytes'''
+        """Check whether provided value is a array of bytes"""
         return isinstance(value, bytes)
 
     def clean(self, value):
@@ -190,10 +191,11 @@ class Bytes(TypeBaseClass):
 
 class Boolean(TypeBaseClass):
 
-    '''Generic boolean type'''
-    NAME =  'bool,boolean,b'
+    """Generic boolean type"""
 
-    def __init__(self,default=None):
+    NAME = "bool,boolean,b"
+
+    def __init__(self, default=None):
         self.BASETYPE = "bool"
         if not default:
             default = False
@@ -206,7 +208,7 @@ class Boolean(TypeBaseClass):
         return self.clean(v)
 
     def check(self, value):
-        '''Check whether provided value is a boolean'''
+        """Check whether provided value is a boolean"""
         return value is True or value is False
 
     def toJSON(self, v):
@@ -224,7 +226,7 @@ class Boolean(TypeBaseClass):
             return self.default_get()
         if isinstance(value, str):
             value = j.data.types.string.clean(value).lower().strip()
-            return value in ["true", "yes", "y","1"]
+            return value in ["true", "yes", "y", "1"]
         return value in [1, True]
 
     def python_code_get(self, value):
@@ -261,10 +263,11 @@ class Boolean(TypeBaseClass):
 
 class Integer(TypeBaseClass):
 
-    '''Generic integer type'''
-    NAME =  'int,integer,i'
+    """Generic integer type"""
 
-    def __init__(self,default=None):
+    NAME = "int,integer,i"
+
+    def __init__(self, default=None):
         self.BASETYPE = "int"
         if not default:
             default = 2147483647
@@ -274,17 +277,16 @@ class Integer(TypeBaseClass):
         return s.isdigit()
 
     def check(self, value):
-        '''Check whether provided value is an integer'''
+        """Check whether provided value is an integer"""
         return isinstance(value, int)
 
     def toHR(self, v):
         if int(v) == 2147483647:
             return "-"  # means not set yet
-        return '{:,}'.format(self.clean(v))
+        return "{:,}".format(self.clean(v))
 
     def fromString(self, s):
         return self.clean(s)
-
 
     def toJSON(self, v):
         return self.clean(v)
@@ -324,10 +326,11 @@ class Integer(TypeBaseClass):
 
 class Float(TypeBaseClass):
 
-    '''Generic float type'''
-    NAME =  'float,f'
+    """Generic float type"""
 
-    def __init__(self,default=None):
+    NAME = "float,f"
+
+    def __init__(self, default=None):
         self.BASETYPE = "float"
         if not default:
             default = 0.0
@@ -341,7 +344,7 @@ class Float(TypeBaseClass):
             return False
 
     def check(self, value):
-        '''Check whether provided value is a float'''
+        """Check whether provided value is a float"""
         return isinstance(value, float)
 
     def toHR(self, v):
@@ -384,19 +387,20 @@ class Float(TypeBaseClass):
 
 class Percent(Float):
 
-    '''
+    """
     stored as float, 0-1
     can input as string xx%
     when int: is native format is 0-1 in float
     when float is e.g. 0.5 which would be 0.5% #be carefull
 
 
-    '''
-    NAME =  'percent,perc,p'
+    """
 
-    def __init__(self,default=None):
+    NAME = "percent,perc,p"
 
-        self.BASETYPE = 'float'
+    def __init__(self, default=None):
+
+        self.BASETYPE = "float"
         self.NOCHECK = True
         if not default:
             default = 0.0
@@ -409,10 +413,10 @@ class Percent(Float):
         if value is None:
             return self.default_get()
         if isinstance(value, str):
-            value = value.strip().strip("\"").strip("'").strip()
+            value = value.strip().strip('"').strip("'").strip()
             if "%" in value:
                 value = value.replace("%", "")
-                value = float(value)/100
+                value = float(value) / 100
             else:
                 value = float(value)
         elif isinstance(value, int) or isinstance(value, float):
@@ -434,15 +438,16 @@ class Percent(Float):
 
 
 class CapnpBin(Bytes):
-    '''
+    """
     #TODO
     is capnp object in binary format
-    '''
-    NAME =  'capnpbin,cbin'
+    """
 
-    def __init__(self,default=None):
+    NAME = "capnpbin,cbin"
 
-        self.BASETYPE = 'bytes'
+    def __init__(self, default=None):
+
+        self.BASETYPE = "bytes"
         self.NOCHECK = True
         if not default:
             default = b""
@@ -464,5 +469,3 @@ class CapnpBin(Bytes):
 
     def toml_string_get(self, value, key):
         raise NotImplemented()
-
-

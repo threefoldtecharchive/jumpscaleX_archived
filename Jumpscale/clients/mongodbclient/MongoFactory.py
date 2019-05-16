@@ -1,5 +1,6 @@
 from Jumpscale import j
 from .MongoDBClient import MongoDBClient
+
 JSConfigs = j.application.JSBaseConfigsClass
 
 

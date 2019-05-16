@@ -8,15 +8,22 @@ from .. import templates
 logging.basicConfig(level=logging.INFO)
 
 
-
 class TfChainDaemon:
     """
     TfChain Daemon
     """
 
-    def __init__(self, name, container, data_dir='/mnt/data', rpc_addr='localhost:23112', api_addr='localhost:23110', network='standard'):
+    def __init__(
+        self,
+        name,
+        container,
+        data_dir="/mnt/data",
+        rpc_addr="localhost:23112",
+        api_addr="localhost:23110",
+        network="standard",
+    ):
         self.name = name
-        self.id = 'tfchaind.{}'.format(self.name)
+        self.id = "tfchaind.{}".format(self.name)
         self.container = container
         self.data_dir = data_dir
         self.rpc_addr = rpc_addr
@@ -31,15 +38,14 @@ class TfChainDaemon:
         if self.is_running():
             return
 
-        cmd_line = '/bin/tfchaind \
+        cmd_line = "/bin/tfchaind \
             --rpc-addr {rpc_addr} \
             --api-addr {api_addr} \
             --persistent-directory {data_dir} \
             --network {network} \
-            '.format(rpc_addr=self.rpc_addr,
-                     api_addr=self.api_addr,
-                     data_dir=self.data_dir,
-                     network=self.network)
+            ".format(
+            rpc_addr=self.rpc_addr, api_addr=self.api_addr, data_dir=self.data_dir, network=self.network
+        )
 
         cmd = self.container.client.system(cmd_line, id=self.id)
 
@@ -47,8 +53,7 @@ class TfChainDaemon:
         while not self.container.is_port_listening(port, timeout):
             if not self.is_running():
                 result = cmd.get()
-                raise RuntimeError("Could not start tfchaind.\nstdout: %s\nstderr: %s" % (
-                    result.stdout, result.stderr))
+                raise RuntimeError("Could not start tfchaind.\nstdout: %s\nstderr: %s" % (result.stdout, result.stderr))
 
     def stop(self, timeout=30):
         """
@@ -58,19 +63,18 @@ class TfChainDaemon:
         if not self.is_running():
             return
 
-        logger.debug('stop %s', self)
+        logger.debug("stop %s", self)
         self.container.stop_job(self.id, signal=signal.SIGINT, timeout=timeout)
 
     def is_running(self):
         return self.container.is_job_running(self.id)
 
 
-
 class TfChainBridged:
     def __init__(self, name, container, rpc_addr, network, eth_port, account_json, account_password):
         self.name = name
-        self.id = 'bridged.{}'.format(self.name) 
-        self.bridged_ps_id = 'bridged.{}'.format(self.name)
+        self.id = "bridged.{}".format(self.name)
+        self.bridged_ps_id = "bridged.{}".format(self.name)
         self.container = container
         self.rpc_addr = rpc_addr
         self.network = network
@@ -86,17 +90,19 @@ class TfChainBridged:
         if self.is_running():
             return
 
-        cmd_line = '/bin/bridged \
+        cmd_line = "/bin/bridged \
             --rpc-addr {rpc_addr} \
             --network {network} \
             --ethport {eth_port} \
             --account-json {account_json} \
             --account-password {account_password} \
-            '.format(rpc_addr=self.rpc_addr,
-                     eth_network=self.network,
-                     eth_port=self.eth_port,
-                     account_json=self.account_json,
-                     account_password=self.account_password)
+            ".format(
+            rpc_addr=self.rpc_addr,
+            eth_network=self.network,
+            eth_port=self.eth_port,
+            account_json=self.account_json,
+            account_password=self.account_password,
+        )
 
         cmd = self.container.client.system(cmd_line, id=self.id)
 
@@ -104,8 +110,7 @@ class TfChainBridged:
         while not self.container.is_port_listening(port, timeout):
             if not self.is_running():
                 result = cmd.get()
-                raise RuntimeError("Could not start bridged.\nstdout: %s\nstderr: %s" % (
-                    result.stdout, result.stderr))
+                raise RuntimeError("Could not start bridged.\nstdout: %s\nstderr: %s" % (result.stdout, result.stderr))
 
     def stop(self, timeout=30):
         """
@@ -115,7 +120,7 @@ class TfChainBridged:
         if not self.is_running():
             return
 
-        logger.debug('stop %s', self)
+        logger.debug("stop %s", self)
         self.container.stop_job(self.id, signal=signal.SIGINT, timeout=timeout)
 
     def is_running(self):
@@ -127,11 +132,20 @@ class TfChainExplorer:
     TfChain Explorer Daemon
     """
 
-    def __init__(self, name, container, domain, data_dir='/mnt/data', rpc_addr='localhost:23112', api_addr='localhost:23110', network='standard'):
+    def __init__(
+        self,
+        name,
+        container,
+        domain,
+        data_dir="/mnt/data",
+        rpc_addr="localhost:23112",
+        api_addr="localhost:23110",
+        network="standard",
+    ):
         self.name = name
         self.domain = domain
-        self.tf_ps_id = 'tfchaind.{}'.format(self.name)
-        self.caddy_ps_id = 'caddy.{}'.format(self.name)
+        self.tf_ps_id = "tfchaind.{}".format(self.name)
+        self.caddy_ps_id = "caddy.{}".format(self.name)
         self.container = container
         self.data_dir = data_dir
         self.rpc_addr = rpc_addr
@@ -154,16 +168,15 @@ class TfChainExplorer:
         if self.is_running():
             return
 
-        cmd_line = '/bin/tfchaind \
+        cmd_line = "/bin/tfchaind \
             --rpc-addr {rpc_addr} \
             --api-addr {api_addr} \
             --persistent-directory {data_dir} \
             --modules gcte \
             --network {network} \
-            '.format(rpc_addr=self.rpc_addr,
-                     api_addr=self.api_addr,
-                     data_dir=self.data_dir,
-                     network=self.network)
+            ".format(
+            rpc_addr=self.rpc_addr, api_addr=self.api_addr, data_dir=self.data_dir, network=self.network
+        )
 
         cmd = self.container.client.system(cmd_line, id=self.tf_ps_id)
 
@@ -181,12 +194,12 @@ class TfChainExplorer:
         if self.is_running():
             return
 
-        j.tools.logger._log_info('Creating caddy config for %s' % self.name)
-        config_location = '/mnt/explorer/explorer/caddy/Caddyfile'
-        config = templates.render('tf_explorer_caddy.conf', domain=self.domain)
+        j.tools.logger._log_info("Creating caddy config for %s" % self.name)
+        config_location = "/mnt/explorer/explorer/caddy/Caddyfile"
+        config = templates.render("tf_explorer_caddy.conf", domain=self.domain)
         self.container.upload_content(config_location, config)
 
-        cmd_line = '/mnt/explorer/bin/caddy -conf %s' % config_location
+        cmd_line = "/mnt/explorer/bin/caddy -conf %s" % config_location
         cmd = self.container.client.system(cmd_line, id=self.caddy_ps_id)
 
         port = 443
@@ -207,14 +220,14 @@ class TfChainExplorer:
         if not self._is_tf_running():
             return
 
-        j.tools.logger._log_debug('stop tf daemon %s', self)
+        j.tools.logger._log_debug("stop tf daemon %s", self)
         self.container.stop_job(self.tf_ps_id, signal=signal.SIGINT, timeout=timeout)
 
     def _stop_caddy_daemon(self, timeout=30):
         if not self._is_caddy_running():
             return
 
-        j.tools.logger._log_debug('stop caddy %s', self)
+        j.tools.logger._log_debug("stop caddy %s", self)
         self.container.stop_job(self.caddy_ps_id, signal=signal.SIGINT, timeout=timeout)
 
     def is_running(self):
@@ -232,24 +245,25 @@ class TfChainExplorer:
     def gateway_stat(self):
         return gateway_stat(self.container, self.api_addr)
 
+
 class RivineCurl:
     def __init__(self, addr):
         self.addr = addr
         self.agent = "Rivine-Agent"
-        self.headers = {"User-Agent": self.agent} 
+        self.headers = {"User-Agent": self.agent}
 
     def get(self, endpoint, params=None):
         url = "{}/{}".format(self.addr, endpoint)
         try:
             r = requests.get(url, params=params, headers=self.headers)
-            r.raise_for_status()            
+            r.raise_for_status()
             return r
         except requests.exceptions.HTTPError as err:
             raise RuntimeError(err)
 
     def post(self, endpoint, params=None, data=None):
         payload = data
-        
+
         url = "{}/{}".format(self.addr, endpoint)
         try:
             r = requests.post(url, params=params, headers=self.headers, data=payload)
@@ -258,12 +272,13 @@ class RivineCurl:
         except requests.exceptions.HTTPError as err:
             raise RuntimeError(err)
 
+
 class TfChainClient:
     """
     TfChain Client
     """
 
-    def __init__(self, name, container, wallet_passphrase, addr='http://localhost:23110'):
+    def __init__(self, name, container, wallet_passphrase, addr="http://localhost:23110"):
         self.name = name
         self.container = container
         self.addr = addr
@@ -284,21 +299,21 @@ class TfChainClient:
         """ Create a new wallet address """
         r = self._curl.get("wallet/address")
         res = r.json()
-        return res['address']
-        
+        return res["address"]
+
     @property
     def wallet_addresses(self):
         """ Get all wallet addresses """
         r = self._curl.get("wallet/addresses")
         res = r.json()
-        self._wallet_addresses = res['addresses']
+        self._wallet_addresses = res["addresses"]
         return self._wallet_addresses
 
     def wallet_init(self):
         """ Initialize wallet """
         r = self._curl.post("wallet/init", data={"passphrase": self._wallet_password})
         res = r.json()
-        self._recovery_seed = res['primaryseed']
+        self._recovery_seed = res["primaryseed"]
 
     def wallet_unlock(self):
         """ Unlock wallet """
@@ -314,15 +329,15 @@ class TfChainClient:
         """
         return self._get_wallet_info()
 
-    def discover_local_peers(self, link=None, port='23112'):
+    def discover_local_peers(self, link=None, port="23112"):
         """ List local peers in subnet @addr with open port @port
 
             @link: network interface name
             @port: port for scanning
         """
         ipn = self.container.default_ip(link)
-        subnet = "%s/%s"%(ipn.network, ipn.prefixlen)
-        cmd = 'nmap {} -p {}'.format(subnet, port)
+        subnet = "%s/%s" % (ipn.network, ipn.prefixlen)
+        cmd = "nmap {} -p {}".format(subnet, port)
 
         scan = self.container.client.system(cmd, stdin=self.wallet_password)
         while True:
@@ -331,28 +346,28 @@ class TfChainClient:
                 break
             except TimeoutError:
                 continue
-        
+
         error_check(result, "Could not list peers")
 
-        ips = re.findall(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', result.stdout)
+        ips = re.findall(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}", result.stdout)
         states = re.findall("tcp \w+", result.stdout)
         all_peers = dict(zip(ips, states))
         active_peers = []
         for ip in all_peers:
             # get peers with open port, exclude own address
-            if all_peers[ip] == 'tcp open' and ip != str(ipn.ip):
+            if all_peers[ip] == "tcp open" and ip != str(ipn.ip):
                 active_peers.append("{}:{}".format(ip, port))
 
         return active_peers
 
-    def add_peer(self, addr, port='23112'):
+    def add_peer(self, addr, port="23112"):
         r = self._curl.post("gateway/connect/{}:{}".format(addr, port))
-  
+
     def _get_wallet_info(self):
         """ Get wallet info """
         r = self._curl.get("wallet")
         return r.json()
-  
+
     def wallet_status(self, wallet_info=None):
         """
         Returns the wallet status [locked/unlocked]
@@ -366,7 +381,6 @@ class TfChainClient:
         wallet_info = wallet_info or self._get_wallet_info()
         return "unlocked" if wallet_info["unlocked"] else "locked"
 
-
     def get_report(self):
         """ Get wallet report """
 
@@ -376,20 +390,19 @@ class TfChainClient:
         result["wallet_status"] = wallet_status
 
         if wallet_status == "unlocked":
-            result["active_blockstakes"] = int(wallet_info['blockstakebalance'])
-            result["confirmed_balance"] = int(wallet_info['confirmedcoinbalance'])
+            result["active_blockstakes"] = int(wallet_info["blockstakebalance"])
+            result["confirmed_balance"] = int(wallet_info["confirmedcoinbalance"])
             result["address"] = "not supported by tfchaind yet"
         else:
             result["active_blockstakes"] = -1
             result["confirmed_balance"] = -1
             result["address"] = "not supported by tfchaind yet"
-            
+
         consensus = self.consensus_stat()
         result["block_height"] = consensus["height"]
         gateways = self.gateway_stat()
         result["connected_peers"] = len(gateways["peers"])
         return result
-
 
     def consensus_stat(self):
         """ Get consensus info """
@@ -401,16 +414,17 @@ class TfChainClient:
         r = self._curl.get("gateway")
         return r.json()
 
-def error_check(result, message='', parse=False):
+
+def error_check(result, message="", parse=False):
     """ Raise error on errorred curl call
     
         @result: object returned by curl
         @message: arbitrary error message
         @parse: when set to True tries to parse result.stdout as json
     """
-    if result.state != 'SUCCESS':
+    if result.state != "SUCCESS":
         # check if curl was executed correctly
-        err = '{}: {} \n {}'.format(message, result.stderr, result.data)
+        err = "{}: {} \n {}".format(message, result.stderr, result.data)
         raise RuntimeError(err)
 
     if not parse:
@@ -420,12 +434,11 @@ def error_check(result, message='', parse=False):
     if result.stdout:
         try:
             # extract error message if result.stdout is in json format
-            stdout_error = json.loads(result.stdout).get('message')
+            stdout_error = json.loads(result.stdout).get("message")
         except json.JSONDecodeError:
             stdout_error = 'failed parsing JSON: "%s"' % result.stdout
 
         if stdout_error:
             # check tfclient error
-            err = '{}: {}'.format(message, stdout_error)
+            err = "{}: {}".format(message, stdout_error)
             raise RuntimeError(err)
-

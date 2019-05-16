@@ -4,11 +4,10 @@ from .JSBase import JSBase
 
 
 class JSFactoryBase(JSBase):
-
-    def __init__(self,parent=None, topclass=True,**kwargs):
+    def __init__(self, parent=None, topclass=True, **kwargs):
         self._factories = {}
 
-        JSBase.__init__(self,parent=parent, topclass=False)
+        JSBase.__init__(self, parent=parent, topclass=False)
 
         for kl in self.__class__._CHILDCLASSES:
             obj = kl(parent=self)
@@ -34,7 +33,7 @@ class JSFactoryBase(JSBase):
             if not hasattr(self.__class__, "_CHILDCLASSES"):
                 raise RuntimeError("need _CHILDCLASSES as class property for:%s" % self)
 
-            #always needs to be in this order at end
+            # always needs to be in this order at end
             JSBase._class_init(self)
             self.__class__.__objcat_name = "factory"
 

@@ -6,9 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class FacebookAccount( ):
+class FacebookAccount:
     """
     auto-generated. don't touch.
     """
@@ -28,20 +26,20 @@ class FacebookAccount( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'FacebookAccount'
+        class_name = "FacebookAccount"
         data = json or kwargs
 
         # set attributes
         data_types = [int]
-        self.id = client_support.set_property('id', data, data_types, False, [], False, True, class_name)
+        self.id = client_support.set_property("id", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.link = client_support.set_property('link', data, data_types, False, [], False, True, class_name)
+        self.link = client_support.set_property("link", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.name = client_support.set_property('name', data, data_types, False, [], False, True, class_name)
+        self.name = client_support.set_property("name", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.picture = client_support.set_property('picture', data, data_types, False, [], False, True, class_name)
+        self.picture = client_support.set_property("picture", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

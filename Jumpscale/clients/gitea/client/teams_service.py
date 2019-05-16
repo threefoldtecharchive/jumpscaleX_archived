@@ -6,10 +6,7 @@ from .unhandled_api_error import UnhandledAPIError
 from .unmarshall_error import UnmarshallError
 
 
-
-
-
-class TeamsService():
+class TeamsService:
     def __init__(self, client):
         pass
         self.client = client
@@ -44,9 +41,8 @@ class TeamsService():
                     resps.append(User(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -84,9 +80,8 @@ class TeamsService():
                     resps.append(Repository(elem))
                 return resps, resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -113,9 +108,8 @@ class TeamsService():
             if resp.status_code == 200:
                 return Team(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -134,9 +128,8 @@ class TeamsService():
             if resp.status_code == 200:
                 return Team(resp.json()), resp
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:

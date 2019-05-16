@@ -8,8 +8,8 @@ from ..ZDBClientBase import ZDBClientBase
 
 MODE = "seq"
 
-class ZDBClientSeqMode(ZDBClientBase):
 
+class ZDBClientSeqMode(ZDBClientBase):
     def _key_encode(self, key):
         if key is None:
             key = ""

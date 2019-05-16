@@ -16,7 +16,6 @@ _record2_re = _re.compile("\\t(.+):$")
 
 
 class CapacityParser:
-
     def disk_info_from_smartctl(self, smartctl_data, disk_size, disk_type):
         """
         Parses smartctl output of a disk to disk_info
@@ -30,8 +29,8 @@ class CapacityParser:
         """
 
         disk_info = _parse_smarctl(smartctl_data)
-        disk_info['size'] = disk_size
-        disk_info['type'] = disk_type
+        disk_info["size"] = disk_size
+        disk_info["type"] = disk_type
 
         return disk_info
 
@@ -58,7 +57,7 @@ class CapacityParser:
         return Report(total_mem, hw_info, disk_info, indent=indent)
 
 
-class Report():
+class Report:
     """
         Report takes in hardware information and parses it into a report.
     """
@@ -85,10 +84,10 @@ class Report():
         """
         unit = 0
         for cpu in self.processor:
-            if cpu['thread_nr']:
-                unit += int(cpu['thread_nr'])
-            elif cpu['core_nr']:
-                unit += int(cpu['core_nr'])
+            if cpu["thread_nr"]:
+                unit += int(cpu["thread_nr"])
+            elif cpu["core_nr"]:
+                unit += int(cpu["core_nr"])
             else:
                 # when no thread_nr or core_nr is available we assume it's a single core/thread processor
                 unit += 1
@@ -96,16 +95,16 @@ class Report():
 
     @property
     def location(self):
-        resp = requests.get('http://geoip.nekudo.com/api/en/full')
+        resp = requests.get("http://geoip.nekudo.com/api/en/full")
         location = None
         if resp.status_code == 200:
             data = resp.json()
             location = dict(
-                continent=data.get('continent', {}).get('names', {}).get('en', 'Unknown'),
-                country=data.get('country', {}).get('names', {}).get('en', 'Unknown'),
-                city=data.get('city', {}).get('names', {}).get('en', 'Unknown'),
-                longitude=data.get('location', {}).get('longitude', 0),
-                latitude=data.get('location', {}).get('latitude', 0)
+                continent=data.get("continent", {}).get("names", {}).get("en", "Unknown"),
+                country=data.get("country", {}).get("names", {}).get("en", "Unknown"),
+                city=data.get("city", {}).get("names", {}).get("en", "Unknown"),
+                longitude=data.get("location", {}).get("longitude", 0),
+                latitude=data.get("location", {}).get("latitude", 0),
             )
         return location
 
@@ -114,7 +113,7 @@ class Report():
         """
         return the number of memory units in GiB
         """
-        size = (self._total_mem / GiB)
+        size = self._total_mem / GiB
         return round(size, 2)
 
     @property
@@ -125,8 +124,8 @@ class Report():
         """
         unit = 0
         for disk in self.disk:
-            if disk['type'] in [StorageType.HDD.name, StorageType.ARCHIVE.name]:
-                unit += int(disk['size']) / GiB
+            if disk["type"] in [StorageType.HDD.name, StorageType.ARCHIVE.name]:
+                unit += int(disk["size"]) / GiB
         return round(unit, 2)
 
     @property
@@ -137,17 +136,15 @@ class Report():
         """
         unit = 0
         for disk in self.disk:
-            if disk['type'] in [StorageType.SSD.name, StorageType.NVME.name]:
-                unit += int(disk['size']) / GiB
+            if disk["type"] in [StorageType.SSD.name, StorageType.NVME.name]:
+                unit += int(disk["size"]) / GiB
         return round(unit, 2)
 
     def __repr__(self):
-        return json.dumps({
-            "processor": self.processor,
-            "memory": self.memory,
-            "motherboard": self.motherboard,
-            "disk": self.disk,
-        }, indent=self.indent)
+        return json.dumps(
+            {"processor": self.processor, "memory": self.memory, "motherboard": self.motherboard, "disk": self.disk},
+            indent=self.indent,
+        )
 
     def __str__(self):
         return repr(self)
@@ -156,15 +153,15 @@ class Report():
 def _cpu_info(data):
     result = []
     for entry in data.values():
-        if entry['DMIType'] == 4:
+        if entry["DMIType"] == 4:
             info = {
-                'speed': entry.get('Current Speed'),
-                'core_nr': entry.get('Core Enabled'),
-                'thread_nr': entry.get('Thread Count'),
-                'serial': entry.get('Serial Number'),
-                'manufacturer': entry.get('Manufacturer'),
-                'version': entry.get('Version'),
-                'id': entry.get('ID')
+                "speed": entry.get("Current Speed"),
+                "core_nr": entry.get("Core Enabled"),
+                "thread_nr": entry.get("Thread Count"),
+                "serial": entry.get("Serial Number"),
+                "manufacturer": entry.get("Manufacturer"),
+                "version": entry.get("Version"),
+                "id": entry.get("ID"),
             }
             result.append(info)
     return result
@@ -173,14 +170,14 @@ def _cpu_info(data):
 def _memory_info(data):
     result = []
     for entry in data.values():
-        if entry['DMIType'] == 17:
+        if entry["DMIType"] == 17:
             info = {
-                'speed': entry.get('Speed'),
-                'size': entry.get('Size'),
-                'width': entry.get('Total Width'),
-                'serial': entry.get('Serial Number'),
-                'manufacturer': entry.get('Manufacturer'),
-                'asset_tag': entry.get('Asset Tag'),
+                "speed": entry.get("Speed"),
+                "size": entry.get("Size"),
+                "width": entry.get("Total Width"),
+                "serial": entry.get("Serial Number"),
+                "manufacturer": entry.get("Manufacturer"),
+                "asset_tag": entry.get("Asset Tag"),
             }
             result.append(info)
     return result
@@ -189,13 +186,13 @@ def _memory_info(data):
 def _mobo_info(data):
     result = []
     for entry in data.values():
-        if entry['DMIType'] == 2:
+        if entry["DMIType"] == 2:
             info = {
-                'name': entry.get('Produce Name'),
-                'version': entry.get('Version'),
-                'serial': entry.get('Serial Number'),
-                'manufacturer': entry.get('Manufacturer'),
-                'asset_tag': entry.get('Asset Tag'),
+                "name": entry.get("Produce Name"),
+                "version": entry.get("Version"),
+                "serial": entry.get("Serial Number"),
+                "manufacturer": entry.get("Manufacturer"),
+                "asset_tag": entry.get("Asset Tag"),
             }
             result.append(info)
     return result
@@ -205,17 +202,17 @@ def _disks_info(data):
     result = []
     for device_name, entry in data.items():
         info = {
-            'name': device_name,
-            'model': entry.get("Device Model"),
-            'firmware_version': entry.get("Firmware Version"),
-            'form_factor': entry.get('Firmware Version'),
-            'device_id': entry.get('LU WWN Device Id'),
-            'rotation_state': entry.get('Rotation Rate'),
-            'serial': entry.get('Serial Number'),
-            'user_capacity': entry.get('User Capacity'),
-            'sector_size': entry.get('Sector Sizes'),
-            'size': entry.get('size'),
-            'type': entry.get('type'),
+            "name": device_name,
+            "model": entry.get("Device Model"),
+            "firmware_version": entry.get("Firmware Version"),
+            "form_factor": entry.get("Firmware Version"),
+            "device_id": entry.get("LU WWN Device Id"),
+            "rotation_state": entry.get("Rotation Rate"),
+            "serial": entry.get("Serial Number"),
+            "user_capacity": entry.get("User Capacity"),
+            "sector_size": entry.get("Sector Sizes"),
+            "size": entry.get("size"),
+            "type": entry.get("type"),
         }
         result.append(info)
     return result
@@ -224,7 +221,7 @@ def _disks_info(data):
 def _parse_dmi(data):
     output_data = {}
     #  Each record is separated by double newlines
-    split_output = data.split('\n\n')
+    split_output = data.split("\n\n")
 
     for record in split_output:
         record_element = record.splitlines()

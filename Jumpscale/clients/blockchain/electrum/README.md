@@ -26,7 +26,7 @@ from electrum.mnemonic import Mnemonic
 SEED = Mnemonic('n').make_seed(num_bits=256)
 ```
 
-To create a client instance you can run the following commands in a js_shell shell
+To create a client instance you can run the following commands in a kosmos shell
 ```python
 ELECTRUM_DIR = '/opt/var/data/electrum'
 RPC_USER = 'user'

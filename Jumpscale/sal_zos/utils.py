@@ -3,6 +3,7 @@ import netaddr
 
 def authorize_zerotiers(identify, nics):
     from Jumpscale.sal_zos.abstracts import ZTNic
+
     for nic in nics:
         if isinstance(nic, ZTNic):
             nic.authorize(identify)
@@ -10,12 +11,12 @@ def authorize_zerotiers(identify, nics):
 
 def get_ip_from_nic(addrs):
     for ip in addrs:
-        network = netaddr.IPNetwork(ip['addr'])
+        network = netaddr.IPNetwork(ip["addr"])
         if network.version == 4:
             return network.ip.format()
 
 
-def get_zt_ip(nics, network=False, network_range=''):
+def get_zt_ip(nics, network=False, network_range=""):
     """[summary]
     Returns zerotier ip from a list of nics
     :param nics: a list of nic dicts
@@ -28,15 +29,15 @@ def get_zt_ip(nics, network=False, network_range=''):
     :rtype: [type]
     """
     if network and not network_range:
-        raise RuntimeError('Invalid network range')
+        raise RuntimeError("Invalid network range")
 
     for nic in nics:
-        if nic['name'].startswith('zt'):
-            ipAdress = get_ip_from_nic(nic['addrs'])
+        if nic["name"].startswith("zt"):
+            ipAdress = get_ip_from_nic(nic["addrs"])
             if not ipAdress:
                 continue
             ip = netaddr.IPAddress(ipAdress)
-            ip_network = netaddr.IPNetwork(network_range) if network_range else ''
+            ip_network = netaddr.IPNetwork(network_range) if network_range else ""
             if network and network_range and ip not in ip_network:
                 # required network range is not satisfied
                 continue

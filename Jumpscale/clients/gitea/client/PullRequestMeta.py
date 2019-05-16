@@ -8,8 +8,6 @@ from datetime import datetime
 from . import client_support
 
 
-
-
 class PullRequestMeta(object):
     """
     auto-generated. don't touch.
@@ -28,16 +26,16 @@ class PullRequestMeta(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'PullRequestMeta'
+        class_name = "PullRequestMeta"
         data = json or kwargs
 
         # set attributes
         data_types = [bool]
-        self.merged = client_support.set_property('merged', data, data_types, False, [], False, False, class_name)
+        self.merged = client_support.set_property("merged", data, data_types, False, [], False, False, class_name)
         data_types = [datetime]
-        self.merged_at = client_support.set_property('merged_at', data, data_types, False, [], False, False, class_name)
+        self.merged_at = client_support.set_property("merged_at", data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

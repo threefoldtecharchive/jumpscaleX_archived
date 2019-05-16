@@ -14,6 +14,3 @@ class BaseTest(TestCase):
 
     def tearDown(self):
         pass
-
-
-

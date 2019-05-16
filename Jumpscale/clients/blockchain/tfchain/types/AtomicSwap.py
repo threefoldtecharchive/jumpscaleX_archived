@@ -11,7 +11,8 @@ from datetime import datetime
 from .IO import CoinOutput
 from .ConditionTypes import ConditionAtomicSwap, AtomicSwapSecret, AtomicSwapSecretHash
 
-class AtomicSwapContract():
+
+class AtomicSwapContract:
     def __init__(self, coinoutput, unspent=True, current_timestamp=None):
         """
         Creates a ReadOnly AtomicSwap contract for consumption purposes.
@@ -19,7 +20,11 @@ class AtomicSwapContract():
         if not isinstance(coinoutput, CoinOutput):
             raise TypeError("expected coin output to be a CoinOutput, not to be of type {}".format(type(coinoutput)))
         if not isinstance(coinoutput.condition, ConditionAtomicSwap):
-            raise TypeError("expected an atomic swap condition for the CoinOutput, not a condition of type {}".format(type(coinoutput.condition)))
+            raise TypeError(
+                "expected an atomic swap condition for the CoinOutput, not a condition of type {}".format(
+                    type(coinoutput.condition)
+                )
+            )
         self._id = coinoutput.id
         self._condition = coinoutput.condition
         self._value = coinoutput.value
@@ -37,21 +42,23 @@ class AtomicSwapContract():
     def __eq__(self, other):
         if not isinstance(other, AtomicSwapContract):
             raise TypeError("other is expected to ben AtomicSwapContract as well")
-        return self.unspent == other.unspent and \
-            (self.outputid == other.outputid) and \
-                self.amount == other.amount and \
-                    self.unspent == other.unspent and \
-                        (self.condition.json() == other.condition.json())
-       
+        return (
+            self.unspent == other.unspent
+            and (self.outputid == other.outputid)
+            and self.amount == other.amount
+            and self.unspent == other.unspent
+            and (self.condition.json() == other.condition.json())
+        )
+
     def __ne__(self, other):
         return not (self == other)
 
-    @property 
+    @property
     def outputid(self):
         """
         The identifier of the (coin) output to which this Atomic Swap contract is attached.
         """
-        return self._id  
+        return self._id
 
     @property
     def sender(self):
@@ -59,14 +66,16 @@ class AtomicSwapContract():
         The address of the wallet that can refund this Atomic Swap contract's value,
         given the contract has been unlocked and is available for refunds.
         """
-        return self._condition.sender  
+        return self._condition.sender
+
     @property
     def receiver(self):
         """
         The address of the wallet that can redeem this Atomic Swap contract's value,
         given they know the secret that matches this contract's secret hash.
         """
-        return self._condition.receiver   
+        return self._condition.receiver
+
     @property
     def secret_hash(self):
         """
@@ -103,7 +112,7 @@ class AtomicSwapContract():
         Returns the Atomic Swap Condition that drives this AtomicSwapContract.
         """
         return self._condition
-    
+
     @property
     def coin_output(self):
         """
@@ -128,15 +137,24 @@ class AtomicSwapContract():
             if self._current_timestamp >= self.refund_timestamp:
                 status_desc = "Refund is available since {}.".format(refund_time)
             else:
-                duration = j.data.types.duration.toString(self.refund_timestamp-self._current_timestamp)
+                duration = j.data.types.duration.toString(self.refund_timestamp - self._current_timestamp)
                 status_desc = "Refund available at {} (in: {}).".format(refund_time, duration)
         else:
             status_desc = "Spent and no longer available."
-        return j.core.text.strip("""
+        return j.core.text.strip(
+            """
         Atomic Swap Contract {}:
         {}
         Value: {}
         Sender: {}
         Receiver: {}
         Secret Hash: {}
-        """.format(str(self.outputid), status_desc, self.amount.str(with_unit=True), str(self.sender), str(self.receiver), str(self.secret_hash)))
+        """.format(
+                str(self.outputid),
+                status_desc,
+                self.amount.str(with_unit=True),
+                str(self.sender),
+                str(self.receiver),
+                str(self.secret_hash),
+            )
+        )

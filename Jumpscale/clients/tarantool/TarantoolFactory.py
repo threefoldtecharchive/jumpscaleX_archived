@@ -11,12 +11,13 @@ class TarantoolFactory(JSConfigBaseFactory):
 
     """
     #server_start
-    js_shell 'j.clients.tarantool.server_start()'
+    kosmos 'j.clients.tarantool.server_start()'
 
     #start test
-    js_shell 'j.clients.tarantool.test()'
+    kosmos 'j.clients.tarantool.test()'
 
     """
+
     __jslocation__ = "j.clients.tarantool"
     _CHILDCLASS = TarantoolClient
 
@@ -91,8 +92,8 @@ class TarantoolFactory(JSConfigBaseFactory):
         return TarantoolDB(name=name, path=path, adminsecret=adminsecret, port=port)
 
     def server_start(
-            self, name="main", path="$DATADIR/tarantool/$NAME", adminsecret="admin007", port=3301,
-            configTemplatePath=None):
+        self, name="main", path="$DATADIR/tarantool/$NAME", adminsecret="admin007", port=3301, configTemplatePath=None
+    ):
         db = self.server_get(name=name, path=path, adminsecret=adminsecret, port=port)
         db.configTemplatePath = configTemplatePath
         db.start()
@@ -146,7 +147,7 @@ class TarantoolFactory(JSConfigBaseFactory):
 
         user = cl.models.UserCollection.new()
         user.dbobj.name = "zaibon"
-        user.dbobj.description = 'this is a description'
+        user.dbobj.description = "this is a description"
         user.dbobj.region = 10
         user.dbobj.epoch = j.data.time.getTimeEpoch()
         user.save()
@@ -164,7 +165,7 @@ class TarantoolFactory(JSConfigBaseFactory):
             bytestr = j.data.hash.hex2bin(j.data.hash.sha512_string("%s" % i))
             md5hex = j.data.hash.md5_string(bytestr)
             md5hex2 = tt.call("binarytest", (bytestr))[0][0]
-            assert(md5hex == md5hex2)
+            assert md5hex == md5hex2
         self._log_debug(2)
 
         C = """

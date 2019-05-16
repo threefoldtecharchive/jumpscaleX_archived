@@ -1,0 +1,50 @@
+#only user itself can change = is the only owner
+#no acl, only owner used
+@url = jumpscale.bcdb.user.1
+@acl = false
+name* = ""
+dm_id* = ""                             #e.g. kristof.ibiza or kristof.3bot
+email* = ""                             #optional, not required
+pubkey = ""                             #public key of the 3bot
+ipaddr* = ""                            #how to reach the digitalme (3bot)
+
+@url = jumpscale.bcdb.circle.1          #circle of users
+name* = ""
+user_members = (LI)
+circle_members = (LI)
+
+#no acl, only owner used
+@url = jumpscale.bcdb.acl.1
+@acl = false
+name* = ""                                      #give a unique name to an acl, needs to be unique
+description = ""                                #can be set by an owner, is to make it easy to understand
+circles = (LO) !jumpscale.bcdb.acl.circle.1
+users = (LO) !jumpscale.bcdb.acl.user.1
+hash* = ""
+
+@url = jumpscale.bcdb.acl.circle.1
+uid= 2147483647 (I)
+rights = ""
+
+@url = jumpscale.bcdb.acl.user.1
+@sub = true
+uid= 2147483647 (I)
+rights = ""
+
+@url = jumpscale.bcdb.namespace.1
+@sub = true
+name* = ""                              #chosen name needs to be unique
+write_once = False (B)  #means in this namespace records can only be written once, no modification possible
+
+#acl's and users are std property the records being inserted in the BCDB
+
+
+@url = jumpscale.schemas.meta.1
+schemas = (LO) !jumpscale.schemas.meta.schema.1
+name = "" (S)
+
+@url = jumpscale.schemas.meta.schema.1
+url = ""
+sid = 0  #schema id
+text = ""
+md5 = ""

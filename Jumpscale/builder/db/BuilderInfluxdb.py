@@ -38,7 +38,7 @@ class BuilderInfluxdb(j.builder.system._BaseClass):
             j.sal.process.execute(C, profile=True)
         else:
             raise RuntimeError("cannot install, unsuported platform")
-        #j.builder.sandbox.profileJS.path_add(j.core.tools.text_replace("{DIR_BIN}"))
+        #j.builder.sandbox.profileJS.path_add(self._replace("{DIR_BIN}"))
         #j.builder.sandbox.profileJS.save()
         binPath = #j.builder.sandbox.cmd_path_get('influxd')
         j.core.tools.dir_ensure("{DIR_VAR}/data/influxdb")
@@ -48,13 +48,13 @@ class BuilderInfluxdb(j.builder.system._BaseClass):
         content = j.core.tools.file_text_read(
             '{DIR_VAR}/templates/cfg/influxdb/influxdb.conf')
         cfg = j.data.serializers.toml.loads(content)
-        cfg['meta']['dir'] = j.core.tools.text_replace("{DIR_VAR}/data/influxdb/meta")
-        cfg['data']['dir'] = j.core.tools.text_replace("{DIR_VAR}/data/influxdb/data")
-        cfg['data']['wal-dir'] = j.core.tools.text_replace("{DIR_VAR}/data/influxdb/wal")
+        cfg['meta']['dir'] = self._replace("{DIR_VAR}/data/influxdb/meta")
+        cfg['data']['dir'] = self._replace("{DIR_VAR}/data/influxdb/data")
+        cfg['data']['wal-dir'] = self._replace("{DIR_VAR}/data/influxdb/wal")
         j.core.tools.dir_ensure('$CFGDIR/influxdb')
         j.sal.fs.writeFile('$CFGDIR/influxdb/influxdb.conf', j.data.serializers.toml.dumps(cfg))
         cmd = "%s -config $CFGDIR/influxdb/influxdb.conf" % (binPath)
-        cmd = j.core.tools.text_replace(cmd)
+        cmd = self._replace(cmd)
         j.sal.fs.writeFile("{DIR_BIN}/start_influxdb.sh", cmd, mode=0o777)
 
         if start:

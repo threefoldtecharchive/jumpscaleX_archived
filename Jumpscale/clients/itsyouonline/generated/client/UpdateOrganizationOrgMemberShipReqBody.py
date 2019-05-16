@@ -6,9 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class UpdateOrganizationOrgMemberShipReqBody( ):
+class UpdateOrganizationOrgMemberShipReqBody:
     """
     auto-generated. don't touch.
     """
@@ -26,16 +24,16 @@ class UpdateOrganizationOrgMemberShipReqBody( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'UpdateOrganizationOrgMemberShipReqBody'
+        class_name = "UpdateOrganizationOrgMemberShipReqBody"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.org = client_support.set_property('org', data, data_types, False, [], False, True, class_name)
+        self.org = client_support.set_property("org", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.role = client_support.set_property('role', data, data_types, False, [], False, True, class_name)
+        self.role = client_support.set_property("role", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

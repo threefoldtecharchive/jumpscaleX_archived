@@ -6,7 +6,7 @@ performance is quite good:
 we did some optimizations where we use hashing to make sure we don't lod templates if not needed
 
 ```python
-~: js_shell 'j.tools.jinja2.test_performance()'
+~: kosmos 'j.tools.jinja2.test_performance()'
 
 DURATION FOR:jinja_code
 duration:0.13833117485046387

@@ -10,12 +10,12 @@ class BuilderLua(j.builder.system._BaseClass):
     @builder_method()
     def build(self):
         """
-        js_shell 'j.builder.runtimes.lua.build()'
+        kosmos 'j.builder.runtimes.lua.build()'
         :param install:
         :return:
         """
         if j.core.platformtype.myplatform.isUbuntu:
-            j.builder.system.package.install(['libsqlite3-dev'])
+            j.builder.system.package.install(["libsqlite3-dev"])
 
         j.builder.web.openresty.build(reset=True)
         j.builder.libs.openssl.build(reset=True)
@@ -23,8 +23,9 @@ class BuilderLua(j.builder.system._BaseClass):
         url = "https://luarocks.org/releases/luarocks-3.0.4.tar.gz"
         dest = self._replace("{DIR_BUILD}/luarocks")
         self.tools.dir_ensure(dest)
-        self.tools.file_download(url, to=dest, overwrite=False, retry=3,
-                                 expand=True, minsizekb=100, removeTopDir=True, deletedest=True)
+        self.tools.file_download(
+            url, to=dest, overwrite=False, retry=3, expand=True, minsizekb=100, removeTopDir=True, deletedest=True
+        )
         C = """
         cd {DIR_BUILD}/luarocks
         ./configure --prefix=/sandbox/openresty/luarocks --with-lua=/sandbox/openresty/luajit
@@ -51,7 +52,7 @@ class BuilderLua(j.builder.system._BaseClass):
 
     def lua_rocks_install(self):
         """
-        js_shell 'j.builder.runtimes.lua.lua_rocks_install()'
+        kosmos 'j.builder.runtimes.lua.lua_rocks_install()'
         :param install:
         :return:
         """
@@ -149,7 +150,7 @@ class BuilderLua(j.builder.system._BaseClass):
     @builder_method()
     def clean(self):
         """
-        js_shell 'j.builder.runtimes.lua.cleanup()'
+        kosmos 'j.builder.runtimes.lua.cleanup()'
         :param install:
         :return:
         """
@@ -178,7 +179,7 @@ class BuilderLua(j.builder.system._BaseClass):
     def install(self):
         """
         will build & install in sandbox
-        js_shell 'j.builder.runtimes.lua.install()'
+        kosmos 'j.builder.runtimes.lua.install()'
         :return:
         """
         src = "/sandbox/code/github/threefoldtech/sandbox_base/base/bin"
@@ -207,7 +208,7 @@ class BuilderLua(j.builder.system._BaseClass):
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None):
-        '''Copy built bins to dest_path and create flist if create_flist = True
+        """Copy built bins to dest_path and create flist if create_flist = True
 
         :param dest_path: destination path to copy files into
         :type dest_path: str
@@ -217,18 +218,18 @@ class BuilderLua(j.builder.system._BaseClass):
         :type create_flist:bool
         :param zhub_client: hub instance to upload flist tos
         :type zhub_client:str
-        '''
+        """
         dest_path = self.DIR_SANDBOX
         j.builder.web.openresty.sandbox(reset=reset)
 
-        bins = ['lua', '_lapis.lua', '_moonc.lua', '_moon.lua', '_moonrocks.lua']
+        bins = ["lua", "_lapis.lua", "_moonc.lua", "_moon.lua", "_moonrocks.lua"]
         for bin_name in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
             dir_dest = self.tools.joinpaths(dest_path, j.core.dirs.BINDIR[1:])
             self.tools.dir_ensure(dir_dest)
             self._copy(dir_src, dir_dest)
 
-        lib_dest = self.tools.joinpaths(dest_path, 'sandbox/lib')
+        lib_dest = self.tools.joinpaths(dest_path, "sandbox/lib")
         self.tools.dir_ensure(lib_dest)
         for bin in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
@@ -236,7 +237,7 @@ class BuilderLua(j.builder.system._BaseClass):
 
     def copy_to_github(self):
         """
-        js_shell 'j.builder.runtimes.lua.copy_to_github()'
+        kosmos 'j.builder.runtimes.lua.copy_to_github()'
         :return:
         """
         # assert self.executor.type=="local"
@@ -244,15 +245,18 @@ class BuilderLua(j.builder.system._BaseClass):
 
         if j.core.platformtype.myplatform.isUbuntu:
             destbin = "%s/base/openresty/lualib" % j.clients.git.getContentPathFromURLorPath(
-                "git@github.com:threefoldtech/sandbox_ubuntu.git")
+                "git@github.com:threefoldtech/sandbox_ubuntu.git"
+            )
         elif j.core.platformtype.myplatform.isMac:
             destbin = "%s/base/openresty/lualib" % j.clients.git.getContentPathFromURLorPath(
-                "git@github.com:threefoldtech/sandbox_osx.git")
+                "git@github.com:threefoldtech/sandbox_osx.git"
+            )
         else:
             raise RuntimeError("only ubuntu & osx support")
 
         dest = "%s/base/openresty/lualib" % j.clients.git.getContentPathFromURLorPath(
-            "git@github.com:threefoldtech/sandbox_base.git")
+            "git@github.com:threefoldtech/sandbox_base.git"
+        )
 
         for item in j.sal.fs.listFilesInDir(path, recursive=True):
             rdest = j.sal.fs.pathRemoveDirPart(item, path)

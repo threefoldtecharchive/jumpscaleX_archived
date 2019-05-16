@@ -5,7 +5,6 @@ JSBASE = j.application.JSBaseClass
 from .VirtualboxDisk import VirtualboxDisk
 
 
-
 class VirtualboxVM(j.application.JSBaseClass):
     def __init__(self, name):
         JSBASE.__init__(self)
@@ -13,17 +12,16 @@ class VirtualboxVM(j.application.JSBaseClass):
         self.name = name
         self._guid = ""
 
-
     def _cmd(self, cmd):
         cmd = "VBoxManage %s" % cmd
         self._log_debug("vb cmd:%s" % cmd)
-        rc, out, err = j.sal.process.execute(cmd,showout=False)
+        rc, out, err = j.sal.process.execute(cmd, showout=False)
         return out
 
     def _cmd2(self, cmd):
         cmd = "VBoxManage modifyvm %s %s" % (self.name, cmd)
         self._log_debug("vb2 cmd:%s" % cmd)
-        rc, out, err = j.sal.process.execute(cmd,showout=False)
+        rc, out, err = j.sal.process.execute(cmd, showout=False)
         return out
 
     def delete(self):
@@ -32,6 +30,7 @@ class VirtualboxVM(j.application.JSBaseClass):
         if self.is_running:
             self.stop()
             from time import sleep
+
             sleep(5)
         while self.name in self.client.vms_list():
             self._cmd("unregistervm %s --delete" % self.name)
@@ -46,7 +45,7 @@ class VirtualboxVM(j.application.JSBaseClass):
     @property
     def exists(self):
         cmd = "VBoxManage list vms"
-        rc,out,err = j.sal.process.execute(cmd,showout=False)
+        rc, out, err = j.sal.process.execute(cmd, showout=False)
         return self.name in out
 
     @property
@@ -56,8 +55,9 @@ class VirtualboxVM(j.application.JSBaseClass):
     @property
     def guid(self):
         print("guid")
-        from IPython import embed;
-        embed(colors='Linux')
+        from IPython import embed
+
+        embed(colors="Linux")
 
     @property
     def disks(self):
@@ -74,12 +74,11 @@ class VirtualboxVM(j.application.JSBaseClass):
         self._log_debug("disk create done")
         return d
 
-
     def hostnet(self, interface="vboxnet0"):
         # VBoxManage hostonlyif create
         if not j.sal.nettools.isNicConnected(interface):
-        # rc, out, err = j.sal.process.execute("ip l sh dev %s" % interface)
-        # if rc > 0:
+            # rc, out, err = j.sal.process.execute("ip l sh dev %s" % interface)
+            # if rc > 0:
             self._cmd("hostonlyif create")
 
     def create(self, reset=True, isopath="", datadisksize=10000, memory=2000, redis_port=4444):
@@ -88,7 +87,7 @@ class VirtualboxVM(j.application.JSBaseClass):
 
         self.hostnet("vboxnet0")
 
-        cmd = "createvm --name %s  --ostype \"Linux_64\" --register" % (self.name)
+        cmd = 'createvm --name %s  --ostype "Linux_64" --register' % (self.name)
         self._cmd(cmd)
         self._cmd2("--memory=%s " % (memory))
         self._cmd2("--ioapic on")
@@ -102,17 +101,21 @@ class VirtualboxVM(j.application.JSBaseClass):
 
         if datadisksize > 0:
             disk = self.disk_create(size=datadisksize, reset=reset)
-            cmd = "storagectl %s --name \"SATA Controller\" --add sata  --controller IntelAHCI" % self.name
+            cmd = 'storagectl %s --name "SATA Controller" --add sata  --controller IntelAHCI' % self.name
             self._cmd(cmd)
             cmd = "storageattach %s --storagectl \"SATA Controller\" --port 0 --device 0 --type hdd --medium '%s'" % (
-            self.name, disk.path)
+                self.name,
+                disk.path,
+            )
             self._cmd(cmd)
 
         if isopath:
-            cmd = "storagectl %s --name \"IDE Controller\" --add ide" % self.name
+            cmd = 'storagectl %s --name "IDE Controller" --add ide' % self.name
             self._cmd(cmd)
-            cmd = "storageattach %s --storagectl \"IDE Controller\" --port 0 --device 0 --type dvddrive --medium %s" % (
-            self.name, isopath)
+            cmd = 'storageattach %s --storagectl "IDE Controller" --port 0 --device 0 --type dvddrive --medium %s' % (
+                self.name,
+                isopath,
+            )
             self._cmd(cmd)
         self._log_debug("create done")
 
@@ -135,31 +138,31 @@ class VirtualboxVM(j.application.JSBaseClass):
     def info(self):
         if not self.exists:
             return {}
-        out = self._cmd("showvminfo %s"%self.name)
-        tocheck={}
-        tocheck["memory size"]="mem"
+        out = self._cmd("showvminfo %s" % self.name)
+        tocheck = {}
+        tocheck["memory size"] = "mem"
         tocheck["Number of CPUs"] = "nr_cpu"
         tocheck["State"] = "state"
-        res={}
+        res = {}
         for line in out.split("\n"):
-            if line.strip()=="":
+            if line.strip() == "":
                 continue
-            line2=line.lower().strip()
-            for key,alias in tocheck.items():
+            line2 = line.lower().strip()
+            for key, alias in tocheck.items():
                 if line.startswith(key):
-                    res[alias]=line2.split(":",1)[1].strip()
+                    res[alias] = line2.split(":", 1)[1].strip()
         if "running" in res["state"]:
-            res["state"]="running"
+            res["state"] = "running"
         else:
             res["state"] = "down"
-        res["nr_cpu"]=int(res["nr_cpu"])
+        res["nr_cpu"] = int(res["nr_cpu"])
         return res
 
     @property
     def is_running(self):
         if "state" not in self.info:
             return False
-        return self.info["state"]=="running"
+        return self.info["state"] == "running"
 
     def stop(self):
         if self.is_running:

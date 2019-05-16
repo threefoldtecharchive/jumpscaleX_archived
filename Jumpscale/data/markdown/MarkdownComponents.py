@@ -4,7 +4,8 @@ import re
 from itertools import takewhile
 
 
-def getindentlevel(l): return len(list(takewhile(lambda c: c.isspace(), l)))
+def getindentlevel(l):
+    return len(list(takewhile(lambda c: c.isspace(), l)))
 
 
 def lines2list(lines):
@@ -29,8 +30,7 @@ def lines2list(lines):
     return res
 
 
-class MDBase():
-
+class MDBase:
     @property
     def markdown(self):
         return str(self.text)
@@ -60,7 +60,6 @@ class MDList(MDBase):
 
 
 class MDTable(MDBase):
-
     def __init__(self):
         self.header = []
         self.rows = []
@@ -114,7 +113,8 @@ class MDTable(MDBase):
 
         if len(cols) != len(self.header):
             raise j.exceptions.Input(
-                "cols need to be same size as header.\n %s vs %s\nline:%s\n" % (len(cols), len(self.header), cols))
+                "cols need to be same size as header.\n %s vs %s\nline:%s\n" % (len(cols), len(self.header), cols)
+            )
 
         for nr in range(len(cols)):
             if cols[nr] is None or str(cols[nr]).strip() == "":
@@ -143,6 +143,7 @@ class MDTable(MDBase):
                             m[i] = 3
                 except:
                     import ipdb
+
                     ipdb.set_trace()
         return m
 
@@ -156,9 +157,10 @@ class MDTable(MDBase):
             if l < 4:
                 l = 4
             text = str(text)
-            while(len(text) < l):
+            while len(text) < l:
                 text += add
             return text
+
         pre = ""
         m = self._findSizes()
 
@@ -194,7 +196,6 @@ class MDTable(MDBase):
 
 
 class MDHeader(MDBase):
-
     def __init__(self, level, title):
         self.level = level
         self.title = title
@@ -210,6 +211,7 @@ class MDHeader(MDBase):
     @property
     def text(self):
         return self.markdown
+
 
 # class MDListItem(MDBase):
 
@@ -229,7 +231,6 @@ class MDHeader(MDBase):
 
 
 class MDComment(MDBase):
-
     def __init__(self, text):
         self.text = text
         self.type = "comment"
@@ -239,7 +240,6 @@ class MDComment(MDBase):
 
 
 class MDComment1Line(MDBase):
-
     def __init__(self, text):
         self.text = text
         self.type = "comment1line"
@@ -261,8 +261,8 @@ class MDComment1Line(MDBase):
 
 #     return re.sub(markup_regex, r'<a href="\2">\1</a>', text)
 
-class MDBlock(MDBase):
 
+class MDBlock(MDBase):
     def __init__(self, text):
         self.text = text
         self.type = "block"
@@ -283,14 +283,12 @@ class MDBlock(MDBase):
 
 
 class MDCodeMacroDataBase(MDBase):
-
     @property
     def html(self):
         return "<code>\n\n%s\n</code>\n\n" % self.text
 
 
 class MDCode(MDCodeMacroDataBase):
-
     def __init__(self, text, lang):
         self.text = text
         self.type = "code"
@@ -306,7 +304,6 @@ class MDCode(MDCodeMacroDataBase):
 
 
 class MDMacro(MDCodeMacroDataBase):
-
     def __init__(self, data=None, method=""):
         if data is None:
             data = {}
@@ -341,7 +338,6 @@ class MDMacro(MDCodeMacroDataBase):
 
 
 class MDData(MDCodeMacroDataBase):
-
     def __init__(self, ddict={}, toml="", yaml=""):
 
         self.type = "data"
@@ -395,7 +391,6 @@ class MDData(MDCodeMacroDataBase):
 
 
 class MDImage(MDCodeMacroDataBase):
-
     def __init__(self, name, path):
         self.path = path
         self.name = name

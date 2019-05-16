@@ -5,9 +5,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class ValidityTime( ):
+class ValidityTime:
     """
     auto-generated. don't touch.
     """
@@ -23,9 +21,9 @@ class ValidityTime( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'ValidityTime'
+        class_name = "ValidityTime"
         data = json or kwargs
 
         # set attributes

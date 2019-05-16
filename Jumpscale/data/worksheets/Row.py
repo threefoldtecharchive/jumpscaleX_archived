@@ -1,12 +1,22 @@
-
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
 
 class Row(j.application.JSBaseClass):
-
-    def __init__(self, name="", ttype="float", nrcols=72, aggregate="T", description="", groupname="", groupdescr="",
-                 format="", defval="default", nrfloat=None):
+    def __init__(
+        self,
+        name="",
+        ttype="float",
+        nrcols=72,
+        aggregate="T",
+        description="",
+        groupname="",
+        groupdescr="",
+        format="",
+        defval="default",
+        nrfloat=None,
+    ):
         """
         @param ttype int,perc,float,empty,str,unknown
         @param aggregate= T,MIN,MAX,LAST,FIRST,AVG
@@ -86,8 +96,9 @@ class Row(j.application.JSBaseClass):
             for m in months:
                 val = self.cells[m]
                 if val is None:
-                    raise j.exceptions.RuntimeError("Cannot aggregrate row %s from group %s,\n%s" %
-                                                    (self.name, self.groupname, self.cells))
+                    raise j.exceptions.RuntimeError(
+                        "Cannot aggregrate row %s from group %s,\n%s" % (self.name, self.groupname, self.cells)
+                    )
                 if self.aggregateAction == "T" or self.aggregateAction == "AVG":
                     result += val
                 if self.aggregateAction == "MIN":
@@ -100,7 +111,7 @@ class Row(j.application.JSBaseClass):
                 result = result / len(months)
             return result
 
-        #monthAttributes=[item.name for item in self.months[1].JSModel_MODEL_INFO.attributes]
+        # monthAttributes=[item.name for item in self.months[1].JSModel_MODEL_INFO.attributes]
         if period == "Y":
             result = [0.0 for item in range(6)]
             for year in range(1, 7):
@@ -128,7 +139,7 @@ class Row(j.application.JSBaseClass):
             start = 0
         if stop is None:
             stop = len(self.cells) - 1
-        tointerpolate = self.cells[start:stop + 1]
+        tointerpolate = self.cells[start : stop + 1]
         try:
             interpolated = j.tools.numtools.interpolateList(tointerpolate, floatnr=self.nrfloat)
         except Exception as e:
@@ -152,8 +163,9 @@ class Row(j.application.JSBaseClass):
         variation = int(float(variation) * 100.0)
         roundd = self.ttype in ["perc", "int"]
         for x in range(start, stop + 1):
-            self.cells[x] = self.cells[x] - variation / 200 + \
-                float(j.data.idgenerator.generateRandomInt(1, variation)) / 100
+            self.cells[x] = (
+                self.cells[x] - variation / 200 + float(j.data.idgenerator.generateRandomInt(1, variation)) / 100
+            )
             if roundd:
                 self.cells[x] = int(self.cells[x])
 
@@ -341,24 +353,26 @@ class Row(j.application.JSBaseClass):
         e.g. data="2:100,5:200"
 
         """
+
         def custom2rowvalues(data):
             if str(data).find(",") == -1 and str(data).find(":") == -1:
-                raise RuntimeError("not properly formatted needs to be 5:1,10:2")                
+                raise RuntimeError("not properly formatted needs to be 5:1,10:2")
             data = data.replace("'", "").strip()
             splitted = data.split(",")
             for item in splitted:
                 if len(item.split(":")) != 2:
                     raise j.exceptions.RuntimeError(
-                        "text2row input not properly formatted: %s, subpart: %s" % (data, item))
+                        "text2row input not properly formatted: %s, subpart: %s" % (data, item)
+                    )
                 pos, value = item.split(":")
-                pos=int(pos)
+                pos = int(pos)
                 try:
                     value = j.tools.numtools.text2val(value)
                 except Exception as e:
-                    out="error: %s \n" % e
-                    out+="error in parsing input data for %s\n" % value
-                    out+="error in element %s\n" % data
-                    out+="row:%s\n" % self.name
+                    out = "error: %s \n" % e
+                    out += "error in parsing input data for %s\n" % value
+                    out += "error in element %s\n" % data
+                    out += "row:%s\n" % self.name
                     raise RuntimeError(out)
                 self.cells[pos] = value
 
@@ -385,8 +399,8 @@ class Row(j.application.JSBaseClass):
 
         self.setDefaultValue()
 
-        if self.ttype=="int":
-            self.round(0,0)
+        if self.ttype == "int":
+            self.round(0, 0)
 
         if round:
             self._cumul = 0.0
@@ -499,4 +513,3 @@ class Row(j.application.JSBaseClass):
         self.nrcols = dict["nrcols"]
         self.nrfloat = dict["nrfloat"]
         return self
-

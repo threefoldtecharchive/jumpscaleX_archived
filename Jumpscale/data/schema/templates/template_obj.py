@@ -1,6 +1,6 @@
 from Jumpscale import j
 from Jumpscale.data.schema.DataObjBase import DataObjBase
-
+from capnp import KjException
 
 class ModelOBJ(DataObjBase):
 
@@ -18,16 +18,16 @@ class ModelOBJ(DataObjBase):
 
     def _reset(self):
         """
-        reset all values to their default
         :return:
         """
         self._changed_items = {}
         #PROP
         {% for prop in obj.properties %}
         {% if prop.jumpscaletype.NAME == "jsobject" %}
-        self._schema_{{prop.name}} = j.data.schema.get(url="{{prop.jumpscaletype._schema_url}}")
+        self._schema_{{prop.name}} = j.data.schema.get_from_md5(md5="{{prop.jumpscaletype._schema_md5}}")
         if self._cobj_.{{prop.name_camel}}:
-            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.get(capnpbin=self._cobj_.{{prop.name_camel}})
+            data = self._cobj_.{{prop.name_camel}}
+            self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.get(data=data)
         else:
             self._changed_items["{{prop.name}}"] = self._schema_{{prop.name}}.new()
         {% endif %}
@@ -108,21 +108,19 @@ class ModelOBJ(DataObjBase):
         ddict = self._cobj_.to_dict()
 
         {% for prop in obj.properties %}
-        #convert jsobjects to capnpbin data
+        #convert jsobjects to data data
         if "{{prop.name}}" in self._changed_items:
-            {% if prop.jumpscaletype.NAME == "jsobject" %}
-            ddict["{{prop.name_camel}}"] = self._changed_items["{{prop.name}}"]._data
-            {% else %}
-            o =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
-            ddict["{{prop.name_camel}}"] = o
-            {% endif %}
+            tt =  {{prop.js_typelocation}}
+            data =  {{prop.js_typelocation}}.toData(self._changed_items["{{prop.name}}"])
+            ddict["{{prop.name_camel}}"] = data
         {% endfor %}
 
 
         try:
             self._cobj_ = self._capnp_schema.new_message(**ddict)
-        except Exception as e:
+        except KjException as e:
             msg="\nERROR: could not create capnp message\n"
+            j.shell()
             try:
                 msg+=j.core.text.indent(j.data.serializers.json.dumps(ddict,sort_keys=True,indent=True),4)+"\n"
             except:
@@ -140,12 +138,16 @@ class ModelOBJ(DataObjBase):
     @property
     def _ddict(self):
         d={}
+
         {% for prop in obj.properties %}
-        {% if prop.jumpscaletype.NAME == "jsobject" %} #NEED TO CHECK : #TODO: despiegk
+        # prop.name: {{prop.name}}
+        # prop.jumpscaletype.NAME: {{prop.jumpscaletype.NAME}}
+        # prop.jumpscaletype.BASETYPE: {{prop.jumpscaletype.BASETYPE}}
+        {% endfor %}
+
+        {% for prop in obj.properties %}
+        {% if prop.jumpscaletype.NAME == "jsobject" %}
         d["{{prop.name}}"] = self.{{prop.name}}._ddict
-        {% elif prop.jumpscaletype.BASETYPE == "OBJ" %}
-        d["{{prop.name}}"] = self.{{prop.name}}._dictdata
-        j.shell()
         {% else %}
         if isinstance(self.{{prop.name}},j.data.types._TypeBaseObjClass):
             d["{{prop.name}}"] = self.{{prop.name}}._dictdata

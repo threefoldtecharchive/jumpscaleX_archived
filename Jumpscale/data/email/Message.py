@@ -3,8 +3,8 @@ from .utils import get_msg_path
 
 JSBASE = j.application.JSBaseClass
 
-class attrdict(dict):
 
+class attrdict(dict):
     def __getattr__(self, k):
         return self[k]
 

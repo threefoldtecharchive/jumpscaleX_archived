@@ -1,4 +1,3 @@
-
 import jose.jwt
 from Jumpscale import j
 
@@ -18,7 +17,7 @@ def validate_farmer_id(farmer_id):
     # refresh jwt is needed otherwise return original
     jwt = j.clients.itsyouonline.refresh_jwt_token(farmer_id)
     token = jose.jwt.decode(jwt, IYO_PUBLIC_KEY)
-    iyo_organization = token['scope'][0].replace('user:memberof:', '')
+    iyo_organization = token["scope"][0].replace("user:memberof:", "")
     farmers = Farmer.objects(iyo_organization=iyo_organization)
     if not farmers:
         return FarmerInvalid()

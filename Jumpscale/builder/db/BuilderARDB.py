@@ -10,10 +10,10 @@ class BuilderARDB(j.builder.system._BaseClass):
         self._init()
 
     def _init(self):
-        self.BUILDDIRFDB = j.core.tools.text_replace("{DIR_VAR}/build/forestdb/")
-        self.CODEDIRFDB = j.core.tools.text_replace("{DIR_CODE}/github/couchbase/forestdb")
-        self.CODEDIRARDB = j.core.tools.text_replace("{DIR_CODE}/github/yinqiwen/ardb")
-        self.BUILDDIRARDB = j.core.tools.text_replace("{DIR_VAR}/build/ardb/")
+        self.BUILDDIRFDB = self._replace("{DIR_VAR}/build/forestdb/")
+        self.CODEDIRFDB = self._replace("{DIR_CODE}/github/couchbase/forestdb")
+        self.CODEDIRARDB = self._replace("{DIR_CODE}/github/yinqiwen/ardb")
+        self.BUILDDIRARDB = self._replace("{DIR_VAR}/build/ardb/")
 
     def build(self, destpath="", reset=False):
         """
@@ -62,12 +62,12 @@ class BuilderARDB(j.builder.system._BaseClass):
             cp forestdb_hexamine* {DIR_VAR}/build/FDB/
             cp libforestdb* {DIR_VAR}/build/FDB/
             """
-        j.sal.process.execute(j.core.tools.text_replace(C))
+        j.sal.process.execute(self._replace(C))
         self._done_set("buildforestdb")
 
     def build(self, reset=False, storageEngine="forestdb"):
         """
-        js_shell 'j.builder.db.ardb.build()'
+        kosmos 'j.builder.db.ardb.build()'
 
         @param storageEngine rocksdb or forestdb
         """
@@ -112,7 +112,7 @@ class BuilderARDB(j.builder.system._BaseClass):
             cp ardb.conf {DIR_VAR}/build/ARDB/
             """
         C = C.replace("$storageEngine", storageEngine)
-        j.sal.process.execute(j.core.tools.text_replace(C))
+        j.sal.process.execute(self._replace(C))
 
         self._done_set("buildardb")
 
@@ -132,7 +132,7 @@ class BuilderARDB(j.builder.system._BaseClass):
         #j.builder.sandbox.profile_default.path_add('{DIR_BIN}')
 
         if datadir is None or datadir == '':
-            datadir = j.core.tools.text_replace("{DIR_VAR}/data/ardb/{}".format(name))
+            datadir = self._replace("{DIR_VAR}/data/ardb/{}".format(name))
         j.core.tools.dir_ensure(datadir)
 
         # config = config.replace("redis-compatible-mode     no", "redis-compatible-mode     yes")

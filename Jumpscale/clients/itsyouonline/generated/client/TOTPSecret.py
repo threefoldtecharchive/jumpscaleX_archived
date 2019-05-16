@@ -6,8 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-class TOTPSecret( ):
+class TOTPSecret:
     """
     auto-generated. don't touch.
     """
@@ -26,17 +25,18 @@ class TOTPSecret( ):
         pass
 
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'TOTPSecret'
+        class_name = "TOTPSecret"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.totpcode = client_support.set_property('totpcode', data, data_types, False, [], False, True, class_name)
+        self.totpcode = client_support.set_property("totpcode", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
         self.totpsecret = client_support.set_property(
-            'totpsecret', data, data_types, False, [], False, True, class_name)
+            "totpsecret", data, data_types, False, [], False, True, class_name
+        )
 
     def __str__(self):
         return self.as_json(indent=4)

@@ -15,6 +15,7 @@ class TFChainClientFactory(j.application.JSBaseConfigsClass):
     """
     Factory class to get a tfchain client object
     """
+
     __jslocation__ = "j.clients.tfchain"
     _CHILDCLASS = TFChainClient
 
@@ -35,9 +36,9 @@ class TFChainClientFactory(j.application.JSBaseConfigsClass):
     def errors(self):
         return self._error_types
 
-    def test(self, name=''):
+    def test(self, name=""):
         """
-        js_shell 'j.clients.tfchain.test()'
+        kosmos 'j.clients.tfchain.test()'
         :return:
         """
         self._test_run(name=name)

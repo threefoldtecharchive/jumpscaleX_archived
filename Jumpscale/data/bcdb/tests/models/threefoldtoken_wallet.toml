@@ -1,7 +1,4 @@
-
-# Wallet
 @url = threefoldtoken.wallet
-@name = wallet
 jwt = "" (S)                # JWT Token
 addr* = ""                   # Address
 ipaddr = (ipaddr)           # IP Address

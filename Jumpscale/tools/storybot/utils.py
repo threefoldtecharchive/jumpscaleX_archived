@@ -3,7 +3,6 @@ import requests
 from Jumpscale import j
 
 
-
 def _parse_body(body, item):
     """Parses story or task item into the provided body
     
@@ -23,13 +22,13 @@ def _parse_body(body, item):
         self._log_debug("list not found, adding one")
         if not body.endswith("\n\n") and not body.endswith("\r\n"):
             body += "\n"
-        body +="\n## %s\n\n%s" % (item.LIST_TITLE, item.md_item)
+        body += "\n## %s\n\n%s" % (item.LIST_TITLE, item.md_item)
 
     elif end_list == -1:
         item_i = item.index_in_body(body, start_i=start_list, end_i=end_list)
-        if item_i != -1 :
+        if item_i != -1:
             self._log_debug("Item already in list at index %s" % str(item_i))
-            body = _update_done_item(body,item_i, item.done_char)
+            body = _update_done_item(body, item_i, item.done_char)
         else:
             if not body.endswith("\n"):
                 body += "\n"
@@ -38,7 +37,7 @@ def _parse_body(body, item):
 
     else:
         item_i = item.index_in_body(body, start_i=start_list, end_i=end_list)
-        if item_i != -1 :
+        if item_i != -1:
             self._log_debug("Item already in list")
             body = _update_done_item(body, item_i, item.done_char)
         else:
@@ -48,6 +47,7 @@ def _parse_body(body, item):
             body = "\n".join(lines)
 
     return body
+
 
 def _get_indexes_list(body, title="Stories"):
     """Get the start and end index of the storylist in a body
@@ -77,7 +77,7 @@ def _get_indexes_list(body, title="Stories"):
 
         if title_line != -1:
             continue
-        
+
         # find start of list
         if line.strip() == "" and start_index == -1:
             continue
@@ -96,6 +96,7 @@ def _get_indexes_list(body, title="Stories"):
     if title_line != -1 and start_index == -1:
         start_index = title_line
     return start_index, end_index
+
 
 def _update_done_item(body, index, done_char):
     """Checks if done character at body line index (that should be a task/story list item) corresponds to the one provided.
@@ -124,6 +125,7 @@ def _update_done_item(body, index, done_char):
 
     return body
 
+
 def _index_story(stories, title):
     """Returns index of title in story list
     returns -1 if not found
@@ -136,6 +138,7 @@ def _index_story(stories, title):
         if story == title:
             return i
     return -1
+
 
 def _repoowner_reponame(repo_str, username):
     """Returns a repo owner and repo name from a repo string (owner username(or org)/repo name)
@@ -159,9 +162,12 @@ def _repoowner_reponame(repo_str, username):
         user = split[0]
         repo = split[1]
     else:
-        raise ValueError("Repo %s is made of %s parts, only 1 and 2 part repo names are supported" % (repo, str(len(repo))))
+        raise ValueError(
+            "Repo %s is made of %s parts, only 1 and 2 part repo names are supported" % (repo, str(len(repo)))
+        )
 
     return user, repo
+
 
 def _find_second(str, char="["):
     """Returns index of second occurrence of char in line
@@ -176,7 +182,8 @@ def _find_second(str, char="["):
         int -- index of second occurrence
     """
     start = str.find(char)
-    return str.find(char, start +1) + 1
+    return str.find(char, start + 1) + 1
+
 
 def _check_url(url):
     """Checks if a url is alive
@@ -188,9 +195,10 @@ def _check_url(url):
         bool -- True if url exists
     """
     r = requests.head(url)
-    # If repo is private, it will return 401 for issue links, 
+    # If repo is private, it will return 401 for issue links,
     # we can't fully check if the issue exists or not then though.
     return r.status_code == 200 or r.status_code == 401
+
 
 def _check_broken_links(body, title, iss_url):
     """Loops the list between provided indexes and checks if the list items have valid links.
@@ -211,7 +219,7 @@ def _check_broken_links(body, title, iss_url):
     if start_i == -1:
         return body
     body_lines = body.splitlines()
-    list_lines = body_lines[start_i: end_i + 1 if end_i != -1 else None]
+    list_lines = body_lines[start_i : end_i + 1 if end_i != -1 else None]
     for i, line in enumerate(list_lines, start=start_i):
         # There could still be empty lines in the list
         if line == "":
@@ -222,7 +230,7 @@ def _check_broken_links(body, title, iss_url):
 
         # get url
         try:
-            url = line[line.index("(") + 1:line.index(")")]
+            url = line[line.index("(") + 1 : line.index(")")]
         except ValueError:
             raise RuntimeError("List item does not contain an url: '%s'\n At: %s" % (line, iss_url))
 
@@ -235,6 +243,7 @@ def _check_broken_links(body, title, iss_url):
         body_lines[i] = line
 
     return "\n".join(body_lines)
+
 
 def _extend_stories(story_list_1, story_list_2):
     """Uniquely extends a list of Stories with another list of Stories

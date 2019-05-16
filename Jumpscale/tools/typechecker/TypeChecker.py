@@ -50,9 +50,9 @@ class Tracker(Exception, JSBASE):
     def __str__(self):
         u = "/".join(self._base)
         if self._reason is not None:
-            u = '[{}] at -> {}'.format(self._reason, u)
+            u = "[{}] at -> {}".format(self._reason, u)
         for branch in self.branches:
-            u += '\n  -> {}'.format(branch)
+            u += "\n  -> {}".format(branch)
 
         return u
 
@@ -84,7 +84,7 @@ class Or(Option):
                 return
             except Tracker as tx:
                 t.branch(tx)
-        raise t.reason('all branches failed')
+        raise t.reason("all branches failed")
 
 
 class IsNone(Option):
@@ -93,7 +93,7 @@ class IsNone(Option):
 
     def check(self, object, t):
         if object is not None:
-            raise t.reason('is not none')
+            raise t.reason("is not none")
 
 
 class Missing(Option):
@@ -102,7 +102,7 @@ class Missing(Option):
 
     def check(self, object, t):
         if object != missing:
-            raise t.reason('is not missing')
+            raise t.reason("is not missing")
 
 
 class Any(Option):
@@ -125,9 +125,9 @@ class Length(Option):
     def check(self, object, t):
         self._checker.check(object, t)
         if self._min is not None and len(object) < self._min:
-            raise t.reason('invalid length, expecting more than or equal {} got {}'.format(self._min, len(object)))
+            raise t.reason("invalid length, expecting more than or equal {} got {}".format(self._min, len(object)))
         if self._max is not None and len(object) > self._max:
-            raise t.reason('invalid length, expecting less than or equal {} got {}'.format(self._max, len(object)))
+            raise t.reason("invalid length, expecting less than or equal {} got {}".format(self._max, len(object)))
 
 
 class Map(Option):
@@ -138,11 +138,11 @@ class Map(Option):
 
     def check(self, object, t):
         if not isinstance(object, dict):
-            raise t.reason('expecting a dict, got {}'.format(type(object)))
+            raise t.reason("expecting a dict, got {}".format(type(object)))
         for k, v in object.items():
             tx = t.push(k)
             self._key.check(k, tx)
-            tv = t.push('{}[value]'.format(k))
+            tv = t.push("{}[value]".format(k))
             self._value.check(v, tv)
 
 
@@ -153,7 +153,7 @@ class Enum(Option):
 
     def check(self, object, t):
         if not isinstance(object, str):
-            raise t.reason('expecting string, got {}'.format(type(object)))
+            raise t.reason("expecting string, got {}".format(type(object)))
         if object not in self._valid:
             raise t.reason('value "{}" not in enum'.format(object))
 
@@ -167,8 +167,7 @@ class TypeCheckerFactory(j.application.JSBaseClass):
         self.__jslocation__ = "j.tools.typechecker"
         JSBASE.__init__(self)
 
-
-    def get(self,typedef):
+    def get(self, typedef):
         """
         c = j.tools.typechecker.get(<type-def>)
 
@@ -216,6 +215,7 @@ class TypeCheckerFactory(j.application.JSBaseClass):
         """
         return TypeChecker(typedef)
 
+
 class TypeChecker(j.application.JSBaseClass):
     def __init__(self, typedef):
         self._typ = typedef
@@ -223,12 +223,12 @@ class TypeChecker(j.application.JSBaseClass):
 
     def check(self, object, tracker=None):
         if tracker is None:
-            tracker = Tracker([]).push('/')
+            tracker = Tracker([]).push("/")
         return self._check(self._typ, object, tracker)
 
     def _check_list(self, typ, obj_list, t):
         for i, elem in enumerate(obj_list):
-            tx = t.push('[{}]'.format(i))
+            tx = t.push("[{}]".format(i))
             self._check(typ, elem, tx)
 
     def _check_dict(self, typ, obj_dict, t):
@@ -259,15 +259,15 @@ class TypeChecker(j.application.JSBaseClass):
         atyp = type(object)
         if isinstance(typ, list):
             if atyp != list:
-                raise t.reason('expecting a list')
+                raise t.reason("expecting a list")
             self._check_list(typ[0], object, t)
         elif isinstance(typ, tuple):
             if atyp != tuple:
-                raise t.reason('expecting a tuple')
+                raise t.reason("expecting a tuple")
             self._check_list(typ[0], object, t)
         elif isinstance(typ, dict):
             if atyp != dict:
-                raise t.reason('expecting a dict')
+                raise t.reason("expecting a dict")
             self._check_dict(typ, object, t)
         elif atyp != typ:
-            raise t.reason('invalid type, expecting {}'.format(typ))
+            raise t.reason("invalid type, expecting {}".format(typ))

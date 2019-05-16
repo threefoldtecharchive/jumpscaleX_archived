@@ -4,6 +4,7 @@ from Jumpscale.core.InstallTools import Tools
 import os
 import sys
 
+
 class SSHAgent(j.application.JSBaseClass):
 
     __jslocation__ = "j.clients.sshagent"
@@ -16,13 +17,11 @@ class SSHAgent(j.application.JSBaseClass):
     def ssh_socket_path(self):
 
         if "SSH_AUTH_SOCK" in os.environ:
-            return(os.environ["SSH_AUTH_SOCK"])
+            return os.environ["SSH_AUTH_SOCK"]
 
         socketpath = Tools.text_replace("{DIR_VAR}/sshagent_socket")
-        os.environ['SSH_AUTH_SOCK'] = socketpath
+        os.environ["SSH_AUTH_SOCK"] = socketpath
         return socketpath
-
-
 
     def default_key_select(self):
         """
@@ -34,27 +33,25 @@ class SSHAgent(j.application.JSBaseClass):
         :return:
         """
         self.check()
-        if len(self.key_names)==1:
-            j.tools.console.askYesNo("Ok to use key: '%s' as your default key?"%self.key_names[0])
+        if len(self.key_names) == 1:
+            j.tools.console.askYesNo("Ok to use key: '%s' as your default key?" % self.key_names[0])
             name = self.key_names[0]
-        elif len(self.key_names)==0:
+        elif len(self.key_names) == 0:
             print("Cannot find a possible ssh-key, please load your possible keys in your ssh-agent")
             sys.exit(1)
         else:
-            name = j.tools.console.askChoice("Which is your default sshkey to use",self.key_names)
+            name = j.tools.console.askChoice("Which is your default sshkey to use", self.key_names)
 
         j.core.myenv.config["SSH_KEY_DEFAULT"] = name
 
         self.reset()
 
-
     def check(self):
-
         def get_key_list():
             return_code, out, err = j.sal.process.execute("ssh-add -L", showout=False, die=False, timeout=1)
             if return_code:
                 if return_code == 1 and out.find("The agent has no identities") != -1:
-                    return 0,""
+                    return 0, ""
                 else:
                     # Remove old socket if can't connect
                     if j.sal.fs.exists(self.ssh_socket_path):
@@ -70,24 +67,24 @@ class SSHAgent(j.application.JSBaseClass):
             return_code, out = get_key_list()
             if return_code:
                 self._start()
-            #only try once
+            # only try once
             return_code, out = get_key_list()
 
             if not return_code:
-                 return_code, _, _ = j.sal.process.execute("ssh-add", showout=False, die=False, timeout=1)
+                return_code, _, _ = j.sal.process.execute("ssh-add", showout=False, die=False, timeout=1)
             else:
                 if out.find("Error connecting to agent: No such file or directory"):
                     raise RuntimeError("Error connecting to agent: No such file or directory")
 
             keys = [line.split() for line in out.splitlines() if len(line.split()) == 3]
-            self._keys = list(map(lambda key: [key[2], ' '.join(key[0:2])], keys))
-            #get key_names loaded
+            self._keys = list(map(lambda key: [key[2], " ".join(key[0:2])], keys))
+            # get key_names loaded
             key_names = [j.sal.fs.getBaseName(i[0]) for i in self._keys]
 
             if "SSH_KEY_DEFAULT" not in j.core.myenv.config:
                 j.core.myenv.config["SSH_KEY_DEFAULT"] = ""
 
-            if j.core.myenv.config["SSH_KEY_DEFAULT"] == "" and len(key_names)==1:
+            if j.core.myenv.config["SSH_KEY_DEFAULT"] == "" and len(key_names) == 1:
                 j.core.myenv.config["SSH_KEY_DEFAULT"] = key_names[0]
                 j.core.myenv.config_save()
 
@@ -101,23 +98,22 @@ class SSHAgent(j.application.JSBaseClass):
     def reset(self):
         self._default_key = None
         self._inited = False
-        self._available=None
+        self._available = None
         self._keys = []
         self.check()
-        
-        
+
     def available(self):
-        '''
+        """
         Check if agent available
         :return: True if agent is available, False otherwise
         :rtype: bool
-        '''
+        """
         self.check()
         return self._available
 
     def keys_list(self, key_included=False):
-        '''
-        js_shell 'print(j.clients.sshkey.keys_list())'
+        """
+        kosmos 'print(j.clients.sshkey.keys_list())'
         list ssh keys from the agent
 
         :param key_included: defaults to False
@@ -125,14 +121,13 @@ class SSHAgent(j.application.JSBaseClass):
         :raises RuntimeError: Error during listing of keys
         :return: list of paths
         :rtype: list
-        '''
+        """
 
         self.check()
         if key_included:
             return self._keys
         else:
             return [i[0] for i in self._keys]
-
 
     @property
     def key_names(self):
@@ -145,7 +140,7 @@ class SSHAgent(j.application.JSBaseClass):
 
     @property
     def key_default_or_none(self):
-        '''
+        """
         see if we can find the default sshkey using sshagent
 
         j.clients.sshagent.key_default_or_none
@@ -154,7 +149,7 @@ class SSHAgent(j.application.JSBaseClass):
         :raises RuntimeError: more than one sshkey is found in sshagent
         :return: j.clients.sshkey.new() ...
         :rtype: sshkey object or None
-        '''
+        """
         if not self._default_key:
             self.check()
 
@@ -166,17 +161,17 @@ class SSHAgent(j.application.JSBaseClass):
                     if j.application.interactive:
                         self.default_key_select()
                     else:
-                        raise RuntimeError("default sshkey not specified in j.core.myenv.config[\"SSH_KEY_DEFAULT\"]")
+                        raise RuntimeError('default sshkey not specified in j.core.myenv.config["SSH_KEY_DEFAULT"]')
                 else:
                     raise RuntimeError("bug")
 
-            for path,key in self.keys_list(True):
+            for path, key in self.keys_list(True):
                 name = j.sal.fs.getBaseName(path).lower()
                 if name == j.core.myenv.config["SSH_KEY_DEFAULT"]:
                     if j.sal.fs.exists(path):
-                        self._default_key = j.clients.sshkey.get(name=name,pubkey=key)
+                        self._default_key = j.clients.sshkey.get(name=name, pubkey=key)
                     else:
-                        self._default_key = j.clients.sshkey.get(name=name,pubkey=key,path=path)
+                        self._default_key = j.clients.sshkey.get(name=name, pubkey=key, path=path)
 
                     return self._default_key
             return None
@@ -184,7 +179,7 @@ class SSHAgent(j.application.JSBaseClass):
 
     @property
     def key_default(self):
-        '''
+        """
         see if we can find the default sshkey using sshagent
 
         j.clients.sshagent.key_default
@@ -193,18 +188,17 @@ class SSHAgent(j.application.JSBaseClass):
         :raises RuntimeError: more than one sshkey is found in sshagent
         :return: j.clients.sshkey.new() ...
         :rtype: sshkey object or error
-        '''
+        """
 
         r = self.key_default_or_none
         if r is None:
             raise RuntimeError("Could not define key_default")
         return r
 
-
         return self._default_key
 
-    def key_load(self,path="",passphrase="", duration=3600 * 24):
-        '''
+    def key_load(self, path="", passphrase="", duration=3600 * 24):
+        """
         load the key on path
 
         :param path: path for ssh-key
@@ -216,7 +210,7 @@ class SSHAgent(j.application.JSBaseClass):
         :raises RuntimeError: Path to load sshkey on couldn't be found
         :return: sshAgent instance
         :rtype: SSHAgent
-        '''
+        """
         if not j.sal.fs.exists(path):
             raise RuntimeError("Cannot find path:%sfor sshkey (private key)" % path)
 
@@ -239,7 +233,9 @@ class SSHAgent(j.application.JSBaseClass):
                 chmod a+x ap-cat.sh
                 export DISPLAY=1
                 echo {passphrase} | SSH_ASKPASS=./ap-cat.sh ssh-add -t {duration} {path}
-                """.format(path=path0, passphrase=passphrase, duration=duration)
+                """.format(
+                path=path0, passphrase=passphrase, duration=duration
+            )
             try:
                 j.sal.process.execute(C, showout=False)
             finally:
@@ -251,17 +247,16 @@ class SSHAgent(j.application.JSBaseClass):
 
         self._sshagent = None  # to make sure it gets loaded again
 
-
         return self
 
     def profile_js_configure(self):
-        '''
-        js_shell 'j.clients.sshkey.profile_js_configure()'
-        '''
+        """
+        kosmos 'j.clients.sshkey.profile_js_configure()'
+        """
 
         bashprofile_path = os.path.expanduser("~/.profile_js")
         if not j.sal.fs.exists(bashprofile_path):
-            j.sal.process.execute('touch %s' % bashprofile_path)
+            j.sal.process.execute("touch %s" % bashprofile_path)
 
         content = j.sal.fs.readFile(bashprofile_path)
         out = ""
@@ -278,9 +273,8 @@ class SSHAgent(j.application.JSBaseClass):
         out = out.replace("\n\n\n", "\n\n")
         j.sal.fs.writeFile(bashprofile_path, out)
 
-
     def key_path_get(self, keyname="", die=True):
-        '''
+        """
         Returns Path of public key that is loaded in the agent
 
         :param keyname: name of key loaded to agent to get its path, if empty will check if there is 1 loaded, defaults to ""
@@ -290,18 +284,16 @@ class SSHAgent(j.application.JSBaseClass):
         :raises RuntimeError: Key not found with given keyname
         :return: path of public key
         :rtype: str
-        '''
+        """
         keyname = j.sal.fs.getBaseName(keyname)
         for item in self.keys_list():
             if item.endswith(keyname):
                 return item
         if die:
-            raise RuntimeError(
-                "Did not find key with name:%s, check its loaded in ssh-agent with ssh-add -l" %
-                keyname)
+            raise RuntimeError("Did not find key with name:%s, check its loaded in ssh-agent with ssh-add -l" % keyname)
 
     def key_pub_get(self, keyname, die=True):
-        '''
+        """
         Returns Content of public key that is loaded in the agent
 
         :param keyname: name of key loaded to agent to get content from
@@ -311,23 +303,21 @@ class SSHAgent(j.application.JSBaseClass):
         :raises RuntimeError: Key not found with given keyname
         :return: Content of public key
         :rtype: str
-        '''
+        """
         keyname = j.sal.fs.getBaseName(keyname)
         for name, pubkey in self.keys_list(True):
             if name.endswith(keyname):
                 return pubkey
         if die:
-            raise RuntimeError(
-                "Did not find key with name:%s, check its loaded in ssh-agent with ssh-add -l" %
-                keyname)
-
+            raise RuntimeError("Did not find key with name:%s, check its loaded in ssh-agent with ssh-add -l" % keyname)
 
     def _paramiko_keys_get(self):
         import paramiko.agent
+
         a = paramiko.agent.Agent()
         return [key for key in a.get_keys()]
 
-    def sign(self,data,hash=True):
+    def sign(self, data, hash=True):
         """
         will sign the data with the ssh-agent loaded
         :param data: the data to sign
@@ -339,6 +329,7 @@ class SSHAgent(j.application.JSBaseClass):
         self.check()
         assert self.available_1key_check() == True
         import hashlib
+
         data_sha1 = hashlib.sha1(data).digest()
         key = self._paramiko_keys_get()[0]
         res = key.sign_ssh_data(data_sha1)
@@ -350,7 +341,7 @@ class SSHAgent(j.application.JSBaseClass):
             return res
 
     def start(self):
-        '''
+        """
 
         kosmos 'j.clients.sshagent.start()'
 
@@ -359,28 +350,25 @@ class SSHAgent(j.application.JSBaseClass):
         :raises RuntimeError: Couldn't start ssh-agent
         :raises RuntimeError: ssh-agent was not started while there was no error
         :raises RuntimeError: Could not find pid items in ssh-add -l
-        '''
+        """
 
         # ssh agent should be loaded because ssh-agent socket has been
         # found
         self.check()
 
-
     def _start(self):
-        '''
+        """
 
         start ssh-agent, kills other agents if more than one are found
 
         :raises RuntimeError: Couldn't start ssh-agent
         :raises RuntimeError: ssh-agent was not started while there was no error
         :raises RuntimeError: Could not find pid items in ssh-add -l
-        '''
-
-
+        """
 
         socketpath = self.ssh_socket_path
 
-        ssh_agents = j.sal.process.getPidsByFilter('ssh-agent')
+        ssh_agents = j.sal.process.getPidsByFilter("ssh-agent")
         for pid in ssh_agents:
             p = j.sal.process.getProcessObject(pid)
             if socketpath not in p.cmdline():
@@ -390,22 +378,16 @@ class SSHAgent(j.application.JSBaseClass):
             j.sal.fs.createDir(j.sal.fs.getParent(socketpath))
             # ssh-agent not loaded
             self._log_info("load ssh agent")
-            rc, out, err = j.sal.process.execute("ssh-agent -a %s" % socketpath,
-                                                 die=False,
-                                                 showout=False,
-                                                 timeout=20)
+            rc, out, err = j.sal.process.execute("ssh-agent -a %s" % socketpath, die=False, showout=False, timeout=20)
             if rc > 0:
-                raise RuntimeError(
-                    "Could not start ssh-agent, \nstdout:%s\nstderr:%s\n" % (out, err))
+                raise RuntimeError("Could not start ssh-agent, \nstdout:%s\nstderr:%s\n" % (out, err))
             else:
                 if not j.sal.fs.exists(socketpath):
-                    err_msg = "Serious bug, ssh-agent not started while there was no error, "\
-                              "should never get here"
+                    err_msg = "Serious bug, ssh-agent not started while there was no error, " "should never get here"
                     raise RuntimeError(err_msg)
 
                 # get pid from out of ssh-agent being started
-                piditems = [item for item in out.split(
-                    "\n") if item.find("pid") != -1]
+                piditems = [item for item in out.split("\n") if item.find("pid") != -1]
 
                 # print(piditems)
                 if len(piditems) < 1:
@@ -423,7 +405,6 @@ class SSHAgent(j.application.JSBaseClass):
                 self._available = None
             return
 
-
         j.clients.sshkey._sshagent = None
 
     def available_1key_check(self):
@@ -433,19 +414,19 @@ class SSHAgent(j.application.JSBaseClass):
         """
         if not self.available():
             return False
-        return len(self.keys_list())==1
+        return len(self.keys_list()) == 1
 
     def kill(self, socketpath=None):
-        '''
+        """
         Kill all agents if more than one is found
 
         :param socketpath: socketpath, defaults to None
         :type socketpath: str, optional
-        '''
+        """
         j.sal.process.killall("ssh-agent")
         socketpath = self.ssh_socket_path if not socketpath else socketpath
         j.sal.fs.remove(socketpath)
-        j.sal.fs.remove(j.sal.fs.joinPaths('/tmp', "ssh-agent-pid"))
+        j.sal.fs.remove(j.sal.fs.joinPaths("/tmp", "ssh-agent-pid"))
         self._available = None
         self._inited = False
         self._log_debug("ssh-agent killed")
@@ -466,11 +447,11 @@ class SSHAgent(j.application.JSBaseClass):
         # lets generate an sshkey with a passphrase
         passphrase = "12345"
         path = "/root/.ssh/test_key"
-        skey = j.clients.sshkey.get(name="test", path=path,passphrase=passphrase)
+        skey = j.clients.sshkey.get(name="test", path=path, passphrase=passphrase)
         skey.save()
 
         # this will reload the key from the db
-        skey_loaded =  j.clients.sshkey.get(name="test")
+        skey_loaded = j.clients.sshkey.get(name="test")
 
         assert skey_loaded.data._ddict == skey.data._ddict
 
@@ -484,7 +465,7 @@ class SSHAgent(j.application.JSBaseClass):
             skey.unload()
             assert skey.is_loaded() is False
 
-        path="/root/.ssh/test_key_2"
+        path = "/root/.ssh/test_key_2"
         skey2 = j.clients.sshkey.get(name="test2", path=path)
         skey2.generate(reset=True)
         skey2.load()

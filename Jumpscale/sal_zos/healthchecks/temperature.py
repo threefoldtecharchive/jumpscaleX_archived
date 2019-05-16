@@ -13,8 +13,8 @@ class Temperature(IPMIHealthCheck):
 
     def __init__(self, node):
         self.node = node
-        resource = '/nodes/{}'.format(node.name)
-        super().__init__('temperature', 'Node Temperature Check', 'Hardware', resource)
+        resource = "/nodes/{}".format(node.name)
+        super().__init__("temperature", "Node Temperature Check", "Hardware", resource)
 
     def run(self, container):
         out = self.execute_ipmi(container, "ipmitool sdr type 'Temp'")
@@ -35,19 +35,19 @@ class Temperature(IPMIHealthCheck):
                             continue
 
                         if sensorstatus != "ok" and "no reading" not in message.lower():
-                            self.add_message(**self.get_message(sensor=id_, status='WARNING', message=message))
+                            self.add_message(**self.get_message(sensor=id_, status="WARNING", message=message))
                             continue
                         temperature = int(message.split(" ", 1)[0])
-                        self.add_message(**self.get_message(sensor=id_, status=sensorstatus, message=message, temperature=temperature))
+                        self.add_message(
+                            **self.get_message(
+                                sensor=id_, status=sensorstatus, message=message, temperature=temperature
+                            )
+                        )
         else:
             self.add_message(**self.get_message(status="SKIPPED", message="NO temp information available"))
 
-    def get_message(self, sensor="", status='OK', message='', temperature=0):
-        result = {
-            "status": status.upper(),
-            "text": "%s: %s" % (sensor, message),
-            "id": sensor,
-        }
+    def get_message(self, sensor="", status="OK", message="", temperature=0):
+        result = {"status": status.upper(), "text": "%s: %s" % (sensor, message), "id": sensor}
         if status != "OK":
             return result
 
@@ -56,4 +56,3 @@ class Temperature(IPMIHealthCheck):
         elif temperature >= self.ERROR_TRIPPOINT:
             result["status"] = "ERROR"
         return result
-

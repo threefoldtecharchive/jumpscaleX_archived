@@ -26,8 +26,8 @@ class Partition(Mountable):
 
     @property
     def filesystem(self):
-        for fs in (self.client.btrfs.list() or []):
-            if fs['uuid'] == self.fs_uuid:
+        for fs in self.client.btrfs.list() or []:
+            if fs["uuid"] == self.fs_uuid:
                 return fs
 
     @property
@@ -35,16 +35,15 @@ class Partition(Mountable):
         return "/dev/{}".format(self.name)
 
     def _load(self, part_info):
-        self.name = part_info['name']
-        self.size = int(part_info['size'])
+        self.name = part_info["name"]
+        self.size = int(part_info["size"])
         self.blocksize = self.disk.blocksize
-        self.mountpoint = part_info['mountpoint']
-        self.uuid = part_info['partuuid']
-        self.fs_uuid = part_info['uuid']
+        self.mountpoint = part_info["mountpoint"]
+        self.uuid = part_info["partuuid"]
+        self.fs_uuid = part_info["uuid"]
 
     def __str__(self):
         return "Partition <{}>".format(self.name)
 
     def __repr__(self):
         return str(self)
-

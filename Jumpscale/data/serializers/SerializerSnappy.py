@@ -1,5 +1,3 @@
-
-
 from .SerializerBase import SerializerBase
 import snappy
 from Jumpscale import j

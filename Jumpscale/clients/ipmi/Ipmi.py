@@ -23,22 +23,20 @@ class Ipmi(JSConfigBase):
     def power_on(self):
         """ Power on ipmi host
         """
-        j.tools.executorLocal.execute("ipmitool -H {host} -U {user} -P {password} -p {port} chassis power on".format(
-            host=self.bmc,
-            user=self.user,
-            password=self.password_,
-            port=self.port,
-        ))
+        j.tools.executorLocal.execute(
+            "ipmitool -H {host} -U {user} -P {password} -p {port} chassis power on".format(
+                host=self.bmc, user=self.user, password=self.password_, port=self.port
+            )
+        )
 
     def power_off(self):
         """ Power off ipmi host
         """
-        j.tools.executorLocal.execute("ipmitool -H {host} -U {user} -P {password} -p {port} chassis power off".format(
-            host=self.bmc,
-            user=self.user,
-            password=self.password_,
-            port=self.port,
-        ))
+        j.tools.executorLocal.execute(
+            "ipmitool -H {host} -U {user} -P {password} -p {port} chassis power off".format(
+                host=self.bmc, user=self.user, password=self.password_, port=self.port
+            )
+        )
 
     def power_status(self):
         """ Returns power status of ipmi host
@@ -48,10 +46,9 @@ class Ipmi(JSConfigBase):
         """
         _, out, _ = j.tools.executorLocal.execute(
             "ipmitool -H {host} -U {user} -P {password} -p {port} chassis power status".format(
-                host=self.bmc,
-                user=self.user,
-                password=self.password_,
-                port=self.port,))
+                host=self.bmc, user=self.user, password=self.password_, port=self.port
+            )
+        )
 
         if out.lower().strip() == "chassis power is on":
             return "on"
@@ -69,9 +66,8 @@ class Ipmi(JSConfigBase):
             self.power_on()
             return
 
-        j.tools.executorLocal.execute("ipmitool -H {host} -U {user} -P {password} -p {port} chassis power cycle".format(
-            host=self.bmc,
-            user=self.user,
-            password=self.password_,
-            port=self.port,
-        ))
+        j.tools.executorLocal.execute(
+            "ipmitool -H {host} -U {user} -P {password} -p {port} chassis power cycle".format(
+                host=self.bmc, user=self.user, password=self.password_, port=self.port
+            )
+        )

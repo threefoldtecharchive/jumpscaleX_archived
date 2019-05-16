@@ -665,7 +665,7 @@ on how to assemble your own statements for a wallet using the TFChain Wallet Cli
 The example is simple and prints the statements directly to the STDOUT as follows:
 
 ```
-$ js_shell 'j.clients.tfchain.test(name="examples_wallet_statements")'
+$ kosmos 'j.clients.tfchain.test(name="examples_wallet_statements")'
 unconfirmed  Tx: 573290763024ae0a5e981412598a3d41bc02f8da628fa1e1adfe07d98818c689 |                          |         + 10 TFT         |
         > to: 0125c0156f6c1c0bc43c7d38e17f8948300564bef63caac05c08b0fd68996e494704bbbe0268cb
         > from: 01f0f397fd6b7b51b46ddd2ffda1e2240e639b19b47d27a4adc2bed78da0fc3d97c1fe7b972d1e

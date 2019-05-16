@@ -3,6 +3,7 @@ from influxdb import client as influxdb
 import requests
 from requests.auth import HTTPBasicAuth
 from .InfluxdbClient import InfluxClient
+
 JSConfigs = j.application.JSBaseConfigsClass
 
 
@@ -10,10 +11,11 @@ class InfluxdbFactory(JSConfigs):
 
     """
     """
+
     __jslocation__ = "j.clients.influxdb"
     _CHILDCLASS = InfluxClient
 
-    def postraw(self, data, host='localhost', port=8086, username='root', password='root', database="main"):
+    def postraw(self, data, host="localhost", port=8086, username="root", password="root", database="main"):
         """
         format in is
         '''
@@ -23,15 +25,15 @@ class InfluxdbFactory(JSConfigs):
         :raises j.exceptions.RuntimeError: Failing to send data to influxdb
 
         """
-        url = 'http://%s:%s/write?db=%s&precision=s' % (host, port, database)
-        r = requests.post(
-            url, data=data, auth=HTTPBasicAuth(username, password))
+        url = "http://%s:%s/write?db=%s&precision=s" % (host, port, database)
+        r = requests.post(url, data=data, auth=HTTPBasicAuth(username, password))
         if r.content != "":
             raise j.exceptions.RuntimeError(
-                "Could not send data to influxdb.\n%s\n############\n%s" % (data, r.content))
+                "Could not send data to influxdb.\n%s\n############\n%s" % (data, r.content)
+            )
 
     def install(self):
         pass
         # dont use prefab (can copy code from there for sure)
-        #check is ubuntu
+        # check is ubuntu
         # deploy influxdb

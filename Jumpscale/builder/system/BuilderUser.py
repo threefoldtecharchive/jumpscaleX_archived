@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 
 try:
@@ -15,7 +14,6 @@ def shell_safe(path):
 
 
 class BuilderUser(j.builder.system._BaseClass):
-
     def passwd(self, name, passwd, encrypted_passwd=False):
         """Sets the given user password."""
         self._log_info("set user:%s passwd for %s" % (name, self))
@@ -30,11 +28,23 @@ class BuilderUser(j.builder.system._BaseClass):
             # TODO: Make sure this openssl command works everywhere, maybe we should use a text_base64_decode?
             # j.builder.tools.sudo("echo %s | openssl base64 -A -d | chpasswd" % (shell_safe(encoded_password)))
             # j.builder.tools.sudo("echo %s | openssl base64 -A -d | chpasswd" % (encoded_password))
-            j.sal.process.execute("echo \"%s:%s\" | chpasswd" % (name, passwd))
-        #executor = j.tools.executor.getSSHBased(self.executor.addr, self.executor.port, name, passwd, checkok=True)
+            j.sal.process.execute('echo "%s:%s" | chpasswd' % (name, passwd))
+        # executor = j.tools.executor.getSSHBased(self.executor.addr, self.executor.port, name, passwd, checkok=True)
 
-    def create(self, name, passwd=None, home=None, uid=None, gid=None, shell=None,
-               uid_min=None, uid_max=None, encrypted_passwd=True, fullname=None, createhome=True):
+    def create(
+        self,
+        name,
+        passwd=None,
+        home=None,
+        uid=None,
+        gid=None,
+        shell=None,
+        uid_min=None,
+        uid_max=None,
+        encrypted_passwd=True,
+        fullname=None,
+        createhome=True,
+    ):
         """Creates the user with the given name, optionally giving a
         specific password/home/uid/gid/shell."""
 
@@ -88,20 +98,32 @@ class BuilderUser(j.builder.system._BaseClass):
         s = None
         if d:
             d = d.split(":")
-            assert len(d) >= 7, "passwd entry returned by getent is expected to have at least 7 fields, got %s in: %s" % (
-                len(d), ":".join(d))
+            assert len(d) >= 7, (
+                "passwd entry returned by getent is expected to have at least 7 fields, got %s in: %s"
+                % (len(d), ":".join(d))
+            )
             results = dict(name=d[0], uid=d[2], gid=d[3], fullname=d[4], home=d[5], shell=d[6])
             if need_passwd:
-                s = j.builder.tools.sudo("getent shadow | egrep '^%s:' | awk -F':' '{print $2}'" % (results['name']))
+                s = j.builder.tools.sudo("getent shadow | egrep '^%s:' | awk -F':' '{print $2}'" % (results["name"]))
                 if s:
-                    results['passwd'] = s
+                    results["passwd"] = s
         if results:
             return results
         else:
             return None
 
-    def ensure(self, name, passwd=None, home=None, uid=None, gid=None,
-               shell=None, fullname=None, encrypted_passwd=True, group=None):
+    def ensure(
+        self,
+        name,
+        passwd=None,
+        home=None,
+        uid=None,
+        gid=None,
+        shell=None,
+        fullname=None,
+        encrypted_passwd=True,
+        group=None,
+    ):
         """Ensures that the given users exists, optionally updating their
         passwd/home/uid/gid/shell."""
         d = self.check(name)

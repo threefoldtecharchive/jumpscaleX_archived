@@ -1,10 +1,11 @@
 from Jumpscale import j
 
+
 def main(self):
     """
     to run:
 
-    js_shell 'j.clients.zdb.test(name="admin",start=True)'
+    kosmos 'j.clients.zdb.test(name="admin",start=True)'
 
     """
 
@@ -12,7 +13,7 @@ def main(self):
     c.reset()
 
     c.namespaces_list()
-    assert c.namespaces_list() == ['default']
+    assert c.namespaces_list() == ["default"]
 
     self._log_info("test ok")
 

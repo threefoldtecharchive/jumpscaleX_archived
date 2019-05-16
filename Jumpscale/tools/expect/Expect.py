@@ -1,4 +1,3 @@
-
 import os
 import subprocess
 import errno
@@ -42,17 +41,16 @@ JSBASE = j.application.JSBaseClass
 
 
 class Popen(subprocess.Popen, JSBASE):
-
     def __init__(self):
         JSBASE.__init__(self)
 
     def recv(self, maxsize=None):
-        return self._recv('stdout', maxsize)
+        return self._recv("stdout", maxsize)
 
     def recv_err(self, maxsize=None):
-        return self._recv('stderr', maxsize)
+        return self._recv("stderr", maxsize)
 
-    def send_recv(self, input='', maxsize=None):
+    def send_recv(self, input="", maxsize=None):
         return self.send(input), self.recv(maxsize), self.recv_err(maxsize)
 
     def get_conn_maxsize(self, which, maxsize):
@@ -67,6 +65,7 @@ class Popen(subprocess.Popen, JSBASE):
         setattr(self, which, None)
 
     if j.core.platformtype.myplatform.isWindows:
+
         def send(self, input):
             if not self.stdin:
                 return None
@@ -75,11 +74,11 @@ class Popen(subprocess.Popen, JSBASE):
                 (errCode, written) = WriteFile(x, input)
             except ValueError:
                 self._log_debug("close stdin")
-                return self._close('stdin')
+                return self._close("stdin")
             except (subprocess.pywintypes.error, Exception) as why:
                 if why[0] in (109, errno.ESHUTDOWN):
                     self._log_debug("close stdin")
-                    return self._close('stdin')
+                    return self._close("stdin")
                 raise
             return written
 
@@ -107,6 +106,7 @@ class Popen(subprocess.Popen, JSBASE):
             return read
 
     else:
+
         def send(self, input):
             if not self.stdin:
                 return None
@@ -119,7 +119,7 @@ class Popen(subprocess.Popen, JSBASE):
             except OSError as why:
                 if why[0] == errno.EPIPE:  # broken pipe
                     self._log_error("close stdin")
-                    return self._close('stdin')
+                    return self._close("stdin")
                 raise
 
             return written
@@ -135,7 +135,7 @@ class Popen(subprocess.Popen, JSBASE):
 
             try:
                 if not select.select([conn], [], [], 0)[0]:
-                    return ''
+                    return ""
 
                 r = conn.read(maxsize)
                 if not r:
@@ -150,22 +150,21 @@ class Popen(subprocess.Popen, JSBASE):
 
 
 class ExpectTool(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.tools.expect"
         JSBASE.__init__(self)
 
     @staticmethod
     def new(cmd=None):
-        '''Create a new Expect session
+        """Create a new Expect session
 
         @param cmd: Command to execute
         @type cmd: string
 
         @returns: Expect session
         @rtype cmdline.Expect.Expect
-        '''
-        return Expect(cmd=cmd or '')
+        """
+        return Expect(cmd=cmd or "")
 
 
 class Expect(j.application.JSBaseClass):
@@ -187,13 +186,13 @@ class Expect(j.application.JSBaseClass):
 
         if not cmd:
             if cmd == "" and j.core.platformtype.myplatform.isWindows:
-                cmd = 'cmd'
+                cmd = "cmd"
             if cmd == "" and not j.core.platformtype.myplatform.isWindows:
-                cmd = 'sh'
+                cmd = "sh"
                 self._pxssh = pxssh.pxssh()
             self._p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
 
-        elif cmd and cmd != 'ssh' and not j.core.platformtype.myplatform.isWindows:
+        elif cmd and cmd != "ssh" and not j.core.platformtype.myplatform.isWindows:
             self.pexpect = pexpect.spawn(cmd)
             if cmd == "sh":
                 self.expect("#")
@@ -279,7 +278,8 @@ class Expect(j.application.JSBaseClass):
                 result = self.expect("password:", timeout=timeout / 2)
             else:
                 raise j.exceptions.RuntimeError(
-                    "Could not login with std passwd nor with seedpasswd, did not get passwd str")
+                    "Could not login with std passwd nor with seedpasswd, did not get passwd str"
+                )
 
         if result != "E":
             # we saw passwd
@@ -353,7 +353,7 @@ class Expect(j.application.JSBaseClass):
     def logout(self):
         """This sends exit. If there are stopped jobs then this sends exit twice.
         """
-        self.send('logout')
+        self.send("logout")
 
     def receive(self):
         """
@@ -382,8 +382,7 @@ class Expect(j.application.JSBaseClass):
 
             return str(self._pxssh).before, ""
 
-        o.errorhandler.raiseBug(
-            message="should never come here, unsupported platform", category="expect.receive")
+        o.errorhandler.raiseBug(message="should never come here, unsupported platform", category="expect.receive")
 
     def receivePrint(self):
         """
@@ -430,7 +429,7 @@ class Expect(j.application.JSBaseClass):
         """
         out = self._ignoreLinesBasedOnFilter(self._lastOutput)
         error = self._lastError
-        if(error != ""):
+        if error != "":
             j.tools.console.echo("%s/nerror:%s" % (out, error))
         else:
             j.tools.console.echo(out)
@@ -631,7 +630,7 @@ class Expect(j.application.JSBaseClass):
         cleanstr = ""
         for line in lines:
             linenr = linenr + 1
-            if(linenr != 1):
+            if linenr != 1:
                 cleanstr = cleanstr + line + "\n"
         return cleanstr
 
@@ -669,7 +668,7 @@ class Expect(j.application.JSBaseClass):
         tokens = self._waitTokens
         tokennr = 0
         for token in tokens:
-            #self._log_debug("checktoken %s : %s" % (token,text))
+            # self._log_debug("checktoken %s : %s" % (token,text))
             tokennr = tokennr + 1
             token = token.lower()
             if text.find(token) != -1:
@@ -705,7 +704,7 @@ class Expect(j.application.JSBaseClass):
         done = False  # status param
         tokenfound = 0
         self._timeout = False
-        while(timeout is False and done is False):
+        while timeout is False and done is False:
             returnpart, err = self.receive()
             self._log_debug(returnpart)
             tokenfound = self._checkForTokens(returnpart)
@@ -714,7 +713,7 @@ class Expect(j.application.JSBaseClass):
             r = r + returnpart
             curtime = j.data.time.getTimeEpoch()
             self._log_debug("TimeoutCheck on waitreceive: %s %s %s" % (curtime, starttime, timeoutval), 8)
-            if(curtime - starttime > timeoutval):
+            if curtime - starttime > timeoutval:
                 self._log_debug("WARNING: execute %s timed out (timeout was %s)" % (self._lastsend, timeoutval), 6)
                 timeout = True
             if tokenfound > 0:
@@ -747,13 +746,13 @@ class Expect(j.application.JSBaseClass):
         @return 'E' when error
 
         """
-        self._log_debug('Expect %s ' % outputToExpect, 7)
+        self._log_debug("Expect %s " % outputToExpect, 7)
 
         try:
             result = self.pexpect.expect(outputToExpect, timeout=timeout)
             return result
         except BaseException:
-            msg = 'Failed to expect \"%s\", found \"%s\" instead' % (outputToExpect, self.receive())
+            msg = 'Failed to expect "%s", found "%s" instead' % (outputToExpect, self.receive())
             # print msg
             self._log_debug(msg, 7)
         return "E"

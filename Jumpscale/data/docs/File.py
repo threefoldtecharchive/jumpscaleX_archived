@@ -1,11 +1,10 @@
-
 from Jumpscale import j
+
 
 class File(j.application.JSBaseConfigClass):
     """
     eg. a picture, html doc, ...
     """
-
 
     _SCHEMATEXT = """
         @url = jumpscale.docs.docsite.1

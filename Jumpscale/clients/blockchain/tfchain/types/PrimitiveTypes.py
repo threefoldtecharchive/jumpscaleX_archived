@@ -4,6 +4,7 @@ from enum import IntEnum
 
 from .BaseDataType import BaseDataTypeClass
 
+
 class BinaryData(BaseDataTypeClass):
     """
     BinaryData is the data type used for any binary data used in tfchain.
@@ -13,15 +14,15 @@ class BinaryData(BaseDataTypeClass):
         # define string encoding
         if strencoding is not None and not isinstance(strencoding, str):
             raise TypeError("strencoding should be None or a str, not be of type {}".format(strencoding))
-        if strencoding is None or strencoding.lower().strip() == 'hex':
+        if strencoding is None or strencoding.lower().strip() == "hex":
             self._from_str = lambda s: bytearray.fromhex(s)
             self._to_str = lambda value: value.hex()
-        elif strencoding.lower().strip() == 'base64':
+        elif strencoding.lower().strip() == "base64":
             self._from_str = lambda s: bytearray(j.data.serializers.base64.decode(s))
             self._to_str = lambda value: j.data.serializers.base64.dumps(value)
-        elif strencoding.lower().strip() == 'hexprefix':
+        elif strencoding.lower().strip() == "hexprefix":
             self._from_str = lambda s: bytearray.fromhex(s[2:] if (s.startswith("0x") or s.startswith("0X")) else s)
-            self._to_str = lambda value: '0x' + value.hex()
+            self._to_str = lambda value: "0x" + value.hex()
         else:
             raise TypeError("{} is not a valid string encoding".format(strencoding))
         self._strencoding = strencoding
@@ -35,7 +36,7 @@ class BinaryData(BaseDataTypeClass):
         if fixed_size != 0:
             self._fixed_size = fixed_size
         else:
-            self._fixed_size = None # for now use no fixed size
+            self._fixed_size = None  # for now use no fixed size
 
         # define the value (finally)
         self._value = None
@@ -43,19 +44,20 @@ class BinaryData(BaseDataTypeClass):
 
         if fixed_size == 0:
             # define the fixed size now, if the fixed_size was 0
-            self._fixed_size = len(self.value) # based on the binary length of the value
+            self._fixed_size = len(self.value)  # based on the binary length of the value
 
     @classmethod
     def from_json(cls, obj, fixed_size=None, strencoding=None):
         if obj is not None and not isinstance(obj, str):
             raise TypeError("binary data is expected to be an encoded string when part of a JSON object")
-        if obj == '':
+        if obj == "":
             obj = None
         return cls(value=obj, fixed_size=fixed_size, strencoding=strencoding)
 
     @property
     def value(self):
         return self._value
+
     @value.setter
     def value(self, value):
         # normalize the value
@@ -68,31 +70,36 @@ class BinaryData(BaseDataTypeClass):
         elif isinstance(value, bytes):
             value = bytearray(value)
         elif not isinstance(value, bytearray):
-            raise TypeError("binary data can only be set to a BinaryData, str, bytes or bytearray, not {}".format(type(value)))
+            raise TypeError(
+                "binary data can only be set to a BinaryData, str, bytes or bytearray, not {}".format(type(value))
+            )
         # if fixed size, check this now
         lvalue = len(value)
         if self._fixed_size is not None and lvalue != 0 and lvalue != self._fixed_size:
             raise ValueError(
                 "binary data was expected to be of fixed size {}, length {} is not allowed".format(
-                    self._fixed_size, len(value)))
+                    self._fixed_size, len(value)
+                )
+            )
         # all good, assign the bytearray value
         self._value = value
 
     def __len__(self):
         return len(self.value)
-    
+
     def __str__(self):
         return self._to_str(self._value)
-    
+
     def __repr__(self):
         return self.__str__()
-    
+
     def json(self):
         return self.__str__()
 
     def __eq__(self, other):
         other = self._op_other_as_binary_data(other)
         return self.value == other.value
+
     def __ne__(self, other):
         other = self._op_other_as_binary_data(other)
         return self.value != other.value
@@ -105,11 +112,15 @@ class BinaryData(BaseDataTypeClass):
         if self._fixed_size != other._fixed_size:
             raise TypeError(
                 "Cannot compare binary data with different fixed size: self({}) != other({})".format(
-                    self._fixed_size, other._fixed_size))
+                    self._fixed_size, other._fixed_size
+                )
+            )
         if self._strencoding != other._strencoding:
             raise TypeError(
                 "Cannot compare binary data with different strencoding: self({}) != other({})".format(
-                    self._strencoding, other._strencoding))
+                    self._strencoding, other._strencoding
+                )
+            )
         return other
 
     def __hash__(self):
@@ -124,7 +135,7 @@ class BinaryData(BaseDataTypeClass):
             encoder.add_slice(self._value)
         else:
             encoder.add_array(self._value)
-    
+
     def rivine_binary_encode(self, encoder):
         """
         Encode this binary data according to the Rivine Binary Encoding format.
@@ -135,36 +146,43 @@ class BinaryData(BaseDataTypeClass):
         else:
             encoder.add_array(self._value)
 
+
 class Hash(BinaryData):
     SIZE = 32
 
     """
     TFChain Hash Object, a special type of BinaryData
     """
+
     def __init__(self, value=None):
-        super().__init__(value, fixed_size=Hash.SIZE, strencoding='hex')
+        super().__init__(value, fixed_size=Hash.SIZE, strencoding="hex")
 
     @classmethod
     def from_json(cls, obj):
         if obj is not None and not isinstance(obj, str):
-            raise TypeError("hash is expected to be an encoded string when part of a JSON object, not {}".format(type(obj)))
-        if obj == '':
+            raise TypeError(
+                "hash is expected to be an encoded string when part of a JSON object, not {}".format(type(obj))
+            )
+        if obj == "":
             obj = None
         return cls(value=obj)
 
     def __str__(self):
         s = super().__str__()
         if not s:
-            return '0'*(Hash.SIZE*2)
+            return "0" * (Hash.SIZE * 2)
         return s
+
 
 from math import floor
 from decimal import Decimal
+
 
 class Currency(BaseDataTypeClass):
     """
     TFChain Currency Object.
     """
+
     def __init__(self, value=None):
         self._value = None
         self.value = value
@@ -172,18 +190,21 @@ class Currency(BaseDataTypeClass):
     @classmethod
     def from_json(cls, obj):
         if obj is not None and not isinstance(obj, str):
-            raise TypeError("currency is expected to be a string when part of a JSON object, not type {}".format(type(obj)))
-        if obj == '':
+            raise TypeError(
+                "currency is expected to be a string when part of a JSON object, not type {}".format(type(obj))
+            )
+        if obj == "":
             obj = None
         c = cls()
-        c.value = Decimal(obj) * Decimal('0.000000001')
+        c.value = Decimal(obj) * Decimal("0.000000001")
         return c
-    
+
     @property
     def value(self):
         if self._value is None:
             return Decimal()
         return self._value
+
     @value.setter
     def value(self, value):
         if value is None:
@@ -195,7 +216,7 @@ class Currency(BaseDataTypeClass):
         if isinstance(value, (int, str, Decimal)):
             if isinstance(value, str):
                 value = value.upper().strip()
-                if len(value) >= 4 and value[-3:] == 'TFT':
+                if len(value) >= 4 and value[-3:] == "TFT":
                     value = value[:-3].rstrip()
             d = Decimal(value)
             sign, _, exp = d.as_tuple()
@@ -212,7 +233,9 @@ class Currency(BaseDataTypeClass):
         other = Currency._op_other_as_currency(other)
         value = self.value + other.value
         return Currency(value=value)
+
     __radd__ = __add__
+
     def __iadd__(self, other):
         other = Currency._op_other_as_currency(other)
         self.value += other.value
@@ -223,7 +246,9 @@ class Currency(BaseDataTypeClass):
         other = Currency._op_other_as_currency(other)
         value = self.value * other.value
         return Currency(value=value)
+
     __rmul__ = __mul__
+
     def __imul__(self, other):
         other = Currency._op_other_as_currency(other)
         self.value *= other.value
@@ -234,7 +259,9 @@ class Currency(BaseDataTypeClass):
         other = Currency._op_other_as_currency(other)
         value = self.value - other.value
         return Currency(value=value)
+
     __rsub__ = __sub__
+
     def __isub__(self, other):
         other = Currency._op_other_as_currency(other)
         self.value -= other.value
@@ -244,18 +271,23 @@ class Currency(BaseDataTypeClass):
     def __lt__(self, other):
         other = Currency._op_other_as_currency(other)
         return self.value < other.value
+
     def __le__(self, other):
         other = Currency._op_other_as_currency(other)
         return self.value <= other.value
+
     def __eq__(self, other):
         other = Currency._op_other_as_currency(other)
         return self.value == other.value
+
     def __ne__(self, other):
         other = Currency._op_other_as_currency(other)
         return self.value != other.value
+
     def __gt__(self, other):
         other = Currency._op_other_as_currency(other)
         return self.value > other.value
+
     def __ge__(self, other):
         other = Currency._op_other_as_currency(other)
         return self.value >= other.value
@@ -287,17 +319,17 @@ class Currency(BaseDataTypeClass):
         """
         s = "{:.9f}".format(self.value)
         s = s.rstrip("0 ")
-        if s[-1] == '.':
+        if s[-1] == ".":
             s = s[:-1]
         if len(s) == 0:
             s = "0"
         if with_unit:
             s += " TFT"
         return s
-    
+
     def __repr__(self):
         return self.str(with_unit=True)
-    
+
     def json(self):
         return str(int(self))
 
@@ -310,7 +342,7 @@ class Currency(BaseDataTypeClass):
         if rem:
             nbytes += 1
         encoder.add_int(nbytes)
-        encoder.add_array(value.to_bytes(nbytes, byteorder='big'))
+        encoder.add_array(value.to_bytes(nbytes, byteorder="big"))
 
     def rivine_binary_encode(self, encoder):
         """
@@ -320,13 +352,14 @@ class Currency(BaseDataTypeClass):
         nbytes, rem = divmod(value.bit_length(), 8)
         if rem:
             nbytes += 1
-        encoder.add_slice(value.to_bytes(nbytes, byteorder='big'))
+        encoder.add_slice(value.to_bytes(nbytes, byteorder="big"))
 
 
 class Blockstake(BaseDataTypeClass):
     """
     TFChain Blockstake Object.
     """
+
     def __init__(self, value=0):
         self._value = 0
         self.value = value
@@ -334,14 +367,17 @@ class Blockstake(BaseDataTypeClass):
     @classmethod
     def from_json(cls, obj):
         if obj is not None and not isinstance(obj, str):
-            raise TypeError("block stake is expected to be a string when part of a JSON object, not type {}".format(type(obj)))
-        if obj == '':
+            raise TypeError(
+                "block stake is expected to be a string when part of a JSON object, not type {}".format(type(obj))
+            )
+        if obj == "":
             obj = None
         return cls(value=obj)
-    
+
     @property
     def value(self):
         return self._value
+
     @value.setter
     def value(self, value):
         if value is None:
@@ -355,19 +391,20 @@ class Blockstake(BaseDataTypeClass):
         elif not isinstance(value, int):
             # float values are not allowed as our precision is high enough that
             # rounding errors can occur
-            raise TypeError('block stake can only be set to a str or int value, not type {}'.format(type(value)))
+            raise TypeError("block stake can only be set to a str or int value, not type {}".format(type(value)))
         else:
             value = int(value)
         if value < 0:
-            raise TypeError('block stake cannot have a negative value')
+            raise TypeError("block stake cannot have a negative value")
         self._value = value
 
     # allow our block stake to be turned into an int
     def __int__(self):
         return self.value
-    
+
     def __str__(self):
         return str(self._value)
+
     __repr__ = __str__
     json = __str__
 
@@ -379,8 +416,8 @@ class Blockstake(BaseDataTypeClass):
         if rem:
             nbytes += 1
         encoder.add_int(nbytes)
-        encoder.add_array(self._value.to_bytes(nbytes, byteorder='big'))
-    
+        encoder.add_array(self._value.to_bytes(nbytes, byteorder="big"))
+
     def rivine_binary_encode(self, encoder):
         """
         Encode this block stake (==Currency) according to the Rivine Binary Encoding format.
@@ -388,4 +425,4 @@ class Blockstake(BaseDataTypeClass):
         nbytes, rem = divmod(self._value.bit_length(), 8)
         if rem:
             nbytes += 1
-        encoder.add_slice(self._value.to_bytes(nbytes, byteorder='big'))
+        encoder.add_slice(self._value.to_bytes(nbytes, byteorder="big"))

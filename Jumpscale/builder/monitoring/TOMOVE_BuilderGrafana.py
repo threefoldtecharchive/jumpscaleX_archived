@@ -1,11 +1,9 @@
 from Jumpscale import j
 
 
-
-
 class BuilderGrafana(j.builder.system._BaseClass):
 
-    NAME = 'grafana-server'
+    NAME = "grafana-server"
 
     def build(self, reset=False):
 
@@ -24,8 +22,8 @@ class BuilderGrafana(j.builder.system._BaseClass):
         else:
             raise RuntimeError("platform not supported")
 
-    def install(self, start=False, influx_addr='127.0.0.1', influx_port=8086, port=3000):
-        j.core.tools.dir_ensure('{DIR_BIN}')
+    def install(self, start=False, influx_addr="127.0.0.1", influx_port=8086, port=3000):
+        j.core.tools.dir_ensure("{DIR_BIN}")
         j.builder.tools.file_copy("/usr/sbin/grafana*", dest="{DIR_BIN}")
 
         j.core.tools.dir_ensure("{DIR_BASE}/apps/grafana")
@@ -34,34 +32,36 @@ class BuilderGrafana(j.builder.system._BaseClass):
         if j.builder.tools.file_exists("/usr/share/grafana/conf/defaults.ini"):
             cfg = j.core.tools.file_text_read("/usr/share/grafana/conf/defaults.ini")
         else:
-            cfg = j.core.tools.file_text_read('{DIR_TEMP}/cfg/grafana/conf/defaults.ini')
-        j.sal.fs.writeFile('{DIR_BASE}/cfg/grafana/grafana.ini', cfg)
+            cfg = j.core.tools.file_text_read("{DIR_TEMP}/cfg/grafana/conf/defaults.ini")
+        j.sal.fs.writeFile("{DIR_BASE}/cfg/grafana/grafana.ini", cfg)
 
         if start:
             self.start(influx_addr, influx_port, port)
 
-    def start(self, influx_addr='127.0.0.1', influx_port=8086, port=3000):
+    def start(self, influx_addr="127.0.0.1", influx_port=8086, port=3000):
 
         cmd = "{DIR_BIN}/grafana-server --config={DIR_BASE}/cfg/grafana/grafana.ini\n"
-        cmd = j.core.tools.text_replace(cmd)
+        cmd = self._replace(cmd)
         j.sal.fs.writeFile("/opt/jumpscale/bin/start_grafana.sh", cmd, 777, replaceArgs=True)
         j.builder.system.process.kill("grafana-server")
         pm = j.builder.system.processmanager.get()
-        pm.ensure("grafana-server", cmd=cmd, env={}, path='{DIR_BASE}/apps/grafana')
+        pm.ensure("grafana-server", cmd=cmd, env={}, path="{DIR_BASE}/apps/grafana")
         grafanaclient = j.clients.grafana.get(
-            url='http://%s:%d' % (j.builder.tools.executor.addr, port), username='admin', password='admin')
+            url="http://%s:%d" % (j.builder.tools.executor.addr, port), username="admin", password="admin"
+        )
         data = {
-            'type': 'influxdb',
-            'access': 'proxy',
-            'database': 'statistics',
-            'name': 'influxdb_main',
-            'url': 'http://%s:%u' % (influx_addr, influx_port),
-            'user': 'admin',
-            'password': 'passwd',
-            'default': True,
+            "type": "influxdb",
+            "access": "proxy",
+            "database": "statistics",
+            "name": "influxdb_main",
+            "url": "http://%s:%u" % (influx_addr, influx_port),
+            "user": "admin",
+            "password": "passwd",
+            "default": True,
         }
         import time
         import requests
+
         now = time.time()
         while time.time() - now < 10:
             try:

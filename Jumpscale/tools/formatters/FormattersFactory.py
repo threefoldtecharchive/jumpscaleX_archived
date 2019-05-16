@@ -1,14 +1,14 @@
 from Jumpscale import j
 import pygments
 
-class Lexers():
 
+class Lexers:
     def __init__(self):
         self._lexers = {}
 
     @property
     def _items(self):
-        res =  [item.lower().replace("lexer","") for item in pygments.lexers.__all__ if item[0].upper()==item[0]]
+        res = [item.lower().replace("lexer", "") for item in pygments.lexers.__all__ if item[0].upper() == item[0]]
         # res.append("toml")
         return res
 
@@ -17,8 +17,8 @@ class Lexers():
             return self.__dict__[key]
         return self.get(key)
 
-    def get(self,key):
-        key2 = key.lower().replace("lexer","")
+    def get(self, key):
+        key2 = key.lower().replace("lexer", "")
         if key2 not in self._lexers:
 
             # if key=="toml":
@@ -40,35 +40,36 @@ class Lexers():
 
     def __setattr__(self, key, value):
         if key.startswith("_"):
-            self.__dict__[key]=value
+            self.__dict__[key] = value
             return
         raise RuntimeError("readonly")
 
     def __str__(self):
-        out = j.core.tools.text_replace("{RED}Pygment Lexers:\n\n",colors=True)
+        out = j.core.tools.text_replace("{RED}Pygment Lexers:\n\n", colors=True)
         for item in self._items:
-            out+=j.core.tools.text_replace("{RED}-{RESET} %s\n"%item,colors=True)
+            out += j.core.tools.text_replace("{RED}-{RESET} %s\n" % item, colors=True)
         return out
+
     __repr__ = __str__
 
 
-class Formatters():
-    
+class Formatters:
     def __init__(self):
         self._formatters = {}
-    
 
     @property
     def _items(self):
-        return [item.lower().replace("formatter","") for item in pygments.formatters.__all__ if item[0].upper()==item[0]]
+        return [
+            item.lower().replace("formatter", "") for item in pygments.formatters.__all__ if item[0].upper() == item[0]
+        ]
 
     def __getattr__(self, key):
         if key.startswith("_"):
             return self.__dict__[key]
         return self.get(key)
 
-    def get(self,key):
-        key2 = key.lower().replace("formatter","")
+    def get(self, key):
+        key2 = key.lower().replace("formatter", "")
         if key2 not in self._formatters:
             self._formatters[key2] = pygments.formatters.get_formatter_by_name(key2)
         return self._formatters[key2]
@@ -78,18 +79,17 @@ class Formatters():
 
     def __setattr__(self, key, value):
         if key.startswith("_"):
-            self.__dict__[key]=value
+            self.__dict__[key] = value
             return
         raise RuntimeError("readonly")
 
     def __str__(self):
-        out = j.core.tools.text_replace("{RED}Pygment Formatters:\n\n",colors=True)
+        out = j.core.tools.text_replace("{RED}Pygment Formatters:\n\n", colors=True)
         for item in self._items:
-            out+=j.core.tools.text_replace("{RED}-{RESET} %s\n"%item,colors=True)
+            out += j.core.tools.text_replace("{RED}-{RESET} %s\n" % item, colors=True)
         return out
 
     __repr__ = __str__
-
 
 
 class FormattersFactory(j.application.JSBaseClass):
@@ -102,22 +102,17 @@ class FormattersFactory(j.application.JSBaseClass):
         self.lexers = Lexers()
         self.formatters = Formatters()
 
+    def print_python(self, text, formatter="terminal"):
+        C = j.core.tools.text_replace(text)
+        print(pygments.highlight(C, self.lexers.get("python"), self.formatters.get(formatter)))
 
-    def print_python(self,text,formatter="terminal"):
-        C=j.core.tools.text_replace(text)
-        print(pygments.highlight(C,self.lexers.get("python"), self.formatters.get(formatter)))
-
-    def print_toml(self,text,formatter="terminal"):
-        C=j.core.tools.text_replace(text)
-        print(pygments.highlight(C,self.lexers.get("toml"), self.formatters.get(formatter)))
-
-
-
-
+    def print_toml(self, text, formatter="terminal"):
+        C = j.core.tools.text_replace(text)
+        print(pygments.highlight(C, self.lexers.get("toml"), self.formatters.get(formatter)))
 
     def test(self):
         """
-        js_shell 'j.tools.formatters.test()'
+        kosmos 'j.tools.formatters.test()'
         :return:
         """
 
@@ -125,7 +120,7 @@ class FormattersFactory(j.application.JSBaseClass):
         j.tools.formatters.lexers.python3
         j.tools.formatters.formatters.terminal
 
-        C="""
+        C = """
         def _init(self):
             self.lexers = Lexers()
             self.formatters = Formatters()
@@ -142,7 +137,7 @@ class FormattersFactory(j.application.JSBaseClass):
 
         print("####TOML EXAMPLE####")
 
-        C="""
+        C = """
         
         title = "TOML Example"
 
@@ -161,4 +156,3 @@ class FormattersFactory(j.application.JSBaseClass):
         """
 
         j.tools.formatters.print_toml(C)
-

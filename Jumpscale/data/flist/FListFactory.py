@@ -19,13 +19,11 @@ from .models import DirModel
 from .models import DirCollection
 from .models import ACIModel
 from .models import ACICollection
+
 # from .FuseExample import FuseExample # test also disabled (see below)
 
 
-
-
 class FListFactory:
-
     def __init__(self):
         self.__jslocation__ = "j.tools.flist"
         self.__imports__ = "brotli,pycapnp"
@@ -44,20 +42,16 @@ class FListFactory:
         # now default is mem, if we want redis as default store uncomment next,
         # but leave for now, think mem here ok
         if kvs is None:
-            kvs = j.data.kvs.getRedisStore(
-                name="flist",
-                namespace=name,
-                unixsocket="%s/redis.sock" %
-                j.dirs.TMPDIR)
+            kvs = j.data.kvs.getRedisStore(name="flist", namespace=name, unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
 
         collection = j.data.capnp.getModelCollection(
             schema.Dir,
-            category="flist_%s" %
-            name,
+            category="flist_%s" % name,
             modelBaseClass=DirModel,
             modelBaseCollectionClass=DirCollection,
             db=kvs,
-            indexDb=kvs)
+            indexDb=kvs,
+        )
         return collection
 
     def getACICollectionFromDB(self, name="test", kvs=None):
@@ -68,18 +62,16 @@ class FListFactory:
         schema = self.getCapnpSchema()
 
         if kvs is None:
-            kvs = j.data.kvs.getRedisStore(
-                name="flist",
-                namespace=name,
-                unixsocket="%s/redis.sock" %
-                j.dirs.TMPDIR)
+            kvs = j.data.kvs.getRedisStore(name="flist", namespace=name, unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
 
-        collection = j.data.capnp.getModelCollection(schema.ACI,
-                                                     category="ACI_%s" % name,
-                                                     modelBaseClass=ACIModel.ACIModel,
-                                                     modelBaseCollectionClass=ACICollection.ACICollection,
-                                                     db=kvs,
-                                                     indexDb=kvs)
+        collection = j.data.capnp.getModelCollection(
+            schema.ACI,
+            category="ACI_%s" % name,
+            modelBaseClass=ACIModel.ACIModel,
+            modelBaseCollectionClass=ACICollection.ACICollection,
+            db=kvs,
+            indexDb=kvs,
+        )
         return collection
 
     def getUserGroupCollectionFromDB(self, name="usergroup", kvs=None):
@@ -89,20 +81,16 @@ class FListFactory:
         schema = self.getCapnpSchema()
 
         if kvs is None:
-            kvs = j.data.kvs.getRedisStore(
-                name="flist",
-                namespace=name,
-                unixsocket="%s/redis.sock" %
-                j.dirs.TMPDIR)
+            kvs = j.data.kvs.getRedisStore(name="flist", namespace=name, unixsocket="%s/redis.sock" % j.dirs.TMPDIR)
 
         collection = j.data.capnp.getModelCollection(
             schema.UserGroup,
-            category="ug_%s" %
-            name,
+            category="ug_%s" % name,
             modelBaseClass=ACIModel.ACIModel,
             modelBaseCollectionClass=ACICollection.ACICollection,
             db=kvs,
-            indexDb=kvs)
+            indexDb=kvs,
+        )
         return collection
 
     def getFlist(self, rootpath="/", namespace="", kvs=None):
@@ -110,17 +98,16 @@ class FListFactory:
         @param namespace, this normally is some name you cannot guess, important otherwise no security
         Return a Flist object
         """
-        dirCollection = self.getDirCollectionFromDB(
-            name="%s:dir" % namespace, kvs=kvs)
-        aciCollection = self.getACICollectionFromDB(
-            name="%s:aci" % namespace, kvs=kvs)
-        userGroupCollection = self.getUserGroupCollectionFromDB(
-            name="%s:users" % namespace, kvs=kvs)
-        return FList(rootpath=rootpath,
-                     namespace=namespace,
-                     dirCollection=dirCollection,
-                     aciCollection=aciCollection,
-                     userGroupCollection=userGroupCollection)
+        dirCollection = self.getDirCollectionFromDB(name="%s:dir" % namespace, kvs=kvs)
+        aciCollection = self.getACICollectionFromDB(name="%s:aci" % namespace, kvs=kvs)
+        userGroupCollection = self.getUserGroupCollectionFromDB(name="%s:users" % namespace, kvs=kvs)
+        return FList(
+            rootpath=rootpath,
+            namespace=namespace,
+            dirCollection=dirCollection,
+            aciCollection=aciCollection,
+            userGroupCollection=userGroupCollection,
+        )
 
     def getFlistMetadata(self, rootpath="/", namespace="main", kvs=None):
         """
@@ -145,26 +132,22 @@ class FListFactory:
         """ DISABLED as FuseExample has been commented out
         """
         return
-        TEST_DIR = tempfile.mkdtemp() # use a temporary directory...
+        TEST_DIR = tempfile.mkdtemp()  # use a temporary directory...
         FuseExample(TEST_DIR)
-        shutil.rmtree(TEST_DIR) # ... and delete it afterwards
+        shutil.rmtree(TEST_DIR)  # ... and delete it afterwards
 
     def test(self):
 
-        testDir = tempfile.mkdtemp() # use a temporary directory...
+        testDir = tempfile.mkdtemp()  # use a temporary directory...
         flist = self.getFlist(rootpath=testDir)
         flist.add(testDir)
 
         def pprint(path, ddir, name):
             self._log_debug(path)
 
-        flist.walk(
-            fileFunction=pprint,
-            dirFunction=pprint,
-            specialFunction=pprint,
-            linkFunction=pprint)
+        flist.walk(fileFunction=pprint, dirFunction=pprint, specialFunction=pprint, linkFunction=pprint)
 
-        shutil.rmtree(testDir) # ... and delete it afterwards
+        shutil.rmtree(testDir)  # ... and delete it afterwards
 
     def destroy(self, rootpath="/", namespace="main", kvs=None):
         fl = self.getFlist(rootpath, namespace, kvs)
@@ -178,14 +161,14 @@ class FListArchiver:
 
     def __init__(self, ipfs_cfgdir=None):
         cl = j.tools.prefab.local
-        self._ipfs = cl.core.command_location('ipfs')
+        self._ipfs = cl.core.command_location("ipfs")
         if not ipfs_cfgdir:
-            self._env = 'IPFS_PATH=%s' % cl.core.replace('{DIR_BASE}/cfg/ipfs/main')
+            self._env = "IPFS_PATH=%s" % cl.core.replace("{DIR_BASE}/cfg/ipfs/main")
         else:
-            self._env = 'IPFS_PATH=%s' % ipfs_cfgdir
+            self._env = "IPFS_PATH=%s" % ipfs_cfgdir
 
     def _compress(self, source, destination):
-        with open(source, 'rb') as content_file:
+        with open(source, "rb") as content_file:
             content = content_file.read()
 
         compressed = brotli.compress(content, quality=6)

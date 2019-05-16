@@ -1,154 +1,118 @@
 from . import typchk
 
 
-class KvmManager():
+class KvmManager:
     _iotune_dict = {
-        'totalbytessecset': typchk.Or(bool, typchk.Missing()),
-        'totalbytessec': typchk.Or(int, typchk.Missing()),
-        'readbytessecset': typchk.Or(bool, typchk.Missing()),
-        'readbytessec': typchk.Or(int, typchk.Missing()),
-        'writebytessecset': typchk.Or(bool, typchk.Missing()),
-        'writebytessec': typchk.Or(int, typchk.Missing()),
-        'totaliopssecset': typchk.Or(bool, typchk.Missing()),
-        'totaliopssec': typchk.Or(int, typchk.Missing()),
-        'readiopssecset': typchk.Or(bool, typchk.Missing()),
-        'readiopssec': typchk.Or(int, typchk.Missing()),
-        'writeiopssecset': typchk.Or(bool, typchk.Missing()),
-        'writeiopssec': typchk.Or(int, typchk.Missing()),
-        'totalbytessecmaxset': typchk.Or(bool, typchk.Missing()),
-        'totalbytessecmax': typchk.Or(int, typchk.Missing()),
-        'readbytessecmaxset': typchk.Or(bool, typchk.Missing()),
-        'readbytessecmax': typchk.Or(int, typchk.Missing()),
-        'writebytessecmaxset': typchk.Or(bool, typchk.Missing()),
-        'writebytessecmax': typchk.Or(int, typchk.Missing()),
-        'totaliopssecmaxset': typchk.Or(bool, typchk.Missing()),
-        'totaliopssecmax': typchk.Or(int, typchk.Missing()),
-        'readiopssecmaxset': typchk.Or(bool, typchk.Missing()),
-        'readiopssecmax': typchk.Or(int, typchk.Missing()),
-        'writeiopssecmaxset': typchk.Or(bool, typchk.Missing()),
-        'writeiopssecmax': typchk.Or(int, typchk.Missing()),
-        'totalbytessecmaxlengthset': typchk.Or(bool, typchk.Missing()),
-        'totalbytessecmaxlength': typchk.Or(int, typchk.Missing()),
-        'readbytessecmaxlengthset': typchk.Or(bool, typchk.Missing()),
-        'readbytessecmaxlength': typchk.Or(int, typchk.Missing()),
-        'writebytessecmaxlengthset': typchk.Or(bool, typchk.Missing()),
-        'writebytessecmaxlength': typchk.Or(int, typchk.Missing()),
-        'totaliopssecmaxlengthset': typchk.Or(bool, typchk.Missing()),
-        'totaliopssecmaxlength': typchk.Or(int, typchk.Missing()),
-        'readiopssecmaxlengthset': typchk.Or(bool, typchk.Missing()),
-        'readiopssecmaxlength': typchk.Or(int, typchk.Missing()),
-        'writeiopssecmaxlengthset': typchk.Or(bool, typchk.Missing()),
-        'writeiopssecmaxlength': typchk.Or(int, typchk.Missing()),
-        'sizeiopssecset': typchk.Or(bool, typchk.Missing()),
-        'sizeiopssec': typchk.Or(int, typchk.Missing()),
-        'groupnameset': typchk.Or(bool, typchk.Missing()),
-        'groupname': typchk.Or(str, typchk.Missing()),
+        "totalbytessecset": typchk.Or(bool, typchk.Missing()),
+        "totalbytessec": typchk.Or(int, typchk.Missing()),
+        "readbytessecset": typchk.Or(bool, typchk.Missing()),
+        "readbytessec": typchk.Or(int, typchk.Missing()),
+        "writebytessecset": typchk.Or(bool, typchk.Missing()),
+        "writebytessec": typchk.Or(int, typchk.Missing()),
+        "totaliopssecset": typchk.Or(bool, typchk.Missing()),
+        "totaliopssec": typchk.Or(int, typchk.Missing()),
+        "readiopssecset": typchk.Or(bool, typchk.Missing()),
+        "readiopssec": typchk.Or(int, typchk.Missing()),
+        "writeiopssecset": typchk.Or(bool, typchk.Missing()),
+        "writeiopssec": typchk.Or(int, typchk.Missing()),
+        "totalbytessecmaxset": typchk.Or(bool, typchk.Missing()),
+        "totalbytessecmax": typchk.Or(int, typchk.Missing()),
+        "readbytessecmaxset": typchk.Or(bool, typchk.Missing()),
+        "readbytessecmax": typchk.Or(int, typchk.Missing()),
+        "writebytessecmaxset": typchk.Or(bool, typchk.Missing()),
+        "writebytessecmax": typchk.Or(int, typchk.Missing()),
+        "totaliopssecmaxset": typchk.Or(bool, typchk.Missing()),
+        "totaliopssecmax": typchk.Or(int, typchk.Missing()),
+        "readiopssecmaxset": typchk.Or(bool, typchk.Missing()),
+        "readiopssecmax": typchk.Or(int, typchk.Missing()),
+        "writeiopssecmaxset": typchk.Or(bool, typchk.Missing()),
+        "writeiopssecmax": typchk.Or(int, typchk.Missing()),
+        "totalbytessecmaxlengthset": typchk.Or(bool, typchk.Missing()),
+        "totalbytessecmaxlength": typchk.Or(int, typchk.Missing()),
+        "readbytessecmaxlengthset": typchk.Or(bool, typchk.Missing()),
+        "readbytessecmaxlength": typchk.Or(int, typchk.Missing()),
+        "writebytessecmaxlengthset": typchk.Or(bool, typchk.Missing()),
+        "writebytessecmaxlength": typchk.Or(int, typchk.Missing()),
+        "totaliopssecmaxlengthset": typchk.Or(bool, typchk.Missing()),
+        "totaliopssecmaxlength": typchk.Or(int, typchk.Missing()),
+        "readiopssecmaxlengthset": typchk.Or(bool, typchk.Missing()),
+        "readiopssecmaxlength": typchk.Or(int, typchk.Missing()),
+        "writeiopssecmaxlengthset": typchk.Or(bool, typchk.Missing()),
+        "writeiopssecmaxlength": typchk.Or(int, typchk.Missing()),
+        "sizeiopssecset": typchk.Or(bool, typchk.Missing()),
+        "sizeiopssec": typchk.Or(int, typchk.Missing()),
+        "groupnameset": typchk.Or(bool, typchk.Missing()),
+        "groupname": typchk.Or(str, typchk.Missing()),
     }
     _media_dict = {
-        'type': typchk.Or(
-            typchk.Enum('disk', 'cdrom'),
-            typchk.Missing()
-        ),
-        'url': str,
-        'iotune': typchk.Or(
-            _iotune_dict,
-            typchk.Missing()
-        )
+        "type": typchk.Or(typchk.Enum("disk", "cdrom"), typchk.Missing()),
+        "url": str,
+        "iotune": typchk.Or(_iotune_dict, typchk.Missing()),
     }
-    _create_chk = typchk.Checker({
-        'name': str,
-        'media': typchk.Or([_media_dict], typchk.IsNone()),
-        'flist': typchk.Or(str, typchk.IsNone()),
-        'cmdline': typchk.Or(str, typchk.IsNone()),
-        'share_cache': bool,
-        'kvm': bool,
-        'cpu': int,
-        'memory': int,
-        'nics': [{
-            'type': typchk.Enum('default', 'bridge', 'vxlan', 'vlan'),
-            'id': typchk.Or(str, typchk.Missing()),
-            'hwaddr': typchk.Or(str, typchk.Missing()),
-        }],
-        'port': typchk.Or(
-            typchk.Map(int, int),
-            typchk.IsNone()
-        ),
-        'mount': typchk.Or(
-            [{'source': str, 'target': str, 'readonly': typchk.Or(bool, typchk.Missing())}],
-            typchk.IsNone(),
-        ),
-        'tags': typchk.Or(
-            typchk.IsNone(),
-            [str],
-        ),
-        'config': typchk.Or(
-            typchk.IsNone(),
-            typchk.Map(str, str)
-        ),
-        'storage': typchk.Or(str, typchk.IsNone())
-    })
+    _create_chk = typchk.Checker(
+        {
+            "name": str,
+            "media": typchk.Or([_media_dict], typchk.IsNone()),
+            "flist": typchk.Or(str, typchk.IsNone()),
+            "cmdline": typchk.Or(str, typchk.IsNone()),
+            "share_cache": bool,
+            "kvm": bool,
+            "cpu": int,
+            "memory": int,
+            "nics": [
+                {
+                    "type": typchk.Enum("default", "bridge", "vxlan", "vlan"),
+                    "id": typchk.Or(str, typchk.Missing()),
+                    "hwaddr": typchk.Or(str, typchk.Missing()),
+                }
+            ],
+            "port": typchk.Or(typchk.Map(int, int), typchk.IsNone()),
+            "mount": typchk.Or(
+                [{"source": str, "target": str, "readonly": typchk.Or(bool, typchk.Missing())}], typchk.IsNone()
+            ),
+            "tags": typchk.Or(typchk.IsNone(), [str]),
+            "config": typchk.Or(typchk.IsNone(), typchk.Map(str, str)),
+            "storage": typchk.Or(str, typchk.IsNone()),
+        }
+    )
 
-    _migrate_network_chk = typchk.Checker({
-        'nics': [{
-            'type': typchk.Enum('default', 'bridge', 'vxlan', 'vlan'),
-            'id': typchk.Or(str, typchk.Missing()),
-            'hwaddr': typchk.Or(str, typchk.Missing()),
-        }],
-        'port': typchk.Or(
-            typchk.Map(int, int),
-            typchk.Map(str, int),
-            typchk.IsNone()
-        ),
-        'uuid': str
-    })
+    _migrate_network_chk = typchk.Checker(
+        {
+            "nics": [
+                {
+                    "type": typchk.Enum("default", "bridge", "vxlan", "vlan"),
+                    "id": typchk.Or(str, typchk.Missing()),
+                    "hwaddr": typchk.Or(str, typchk.Missing()),
+                }
+            ],
+            "port": typchk.Or(typchk.Map(int, int), typchk.Map(str, int), typchk.IsNone()),
+            "uuid": str,
+        }
+    )
 
-    _domain_action_chk = typchk.Checker({
-        'uuid': str,
-    })
+    _domain_action_chk = typchk.Checker({"uuid": str})
 
-    _domain_get_chk = typchk.Checker({
-        'name': str,
-        'uuid': str,
-    })
+    _domain_get_chk = typchk.Checker({"name": str, "uuid": str})
 
-    _man_disk_action_chk = typchk.Checker({
-        'uuid': str,
-        'media': _media_dict,
-    })
+    _man_disk_action_chk = typchk.Checker({"uuid": str, "media": _media_dict})
 
-    _man_nic_action_chk = typchk.Checker({
-        'uuid': str,
-        'type': typchk.Enum('default', 'bridge', 'vxlan', 'vlan'),
-        'id': typchk.Or(str, typchk.IsNone()),
-        'hwaddr': typchk.Or(str, typchk.IsNone()),
-    })
+    _man_nic_action_chk = typchk.Checker(
+        {
+            "uuid": str,
+            "type": typchk.Enum("default", "bridge", "vxlan", "vlan"),
+            "id": typchk.Or(str, typchk.IsNone()),
+            "hwaddr": typchk.Or(str, typchk.IsNone()),
+        }
+    )
 
-    _migrate_action_chk = typchk.Checker({
-        'uuid': str,
-        'desturi': str,
-    })
+    _migrate_action_chk = typchk.Checker({"uuid": str, "desturi": str})
 
-    _limit_disk_io_dict = {
-        'uuid': str,
-        'media': _media_dict,
-    }
-    _create_image_chk = typchk.Checker({
-        'file_name': str,
-        'format': str,
-        'size': str,
-    })
+    _limit_disk_io_dict = {"uuid": str, "media": _media_dict}
+    _create_image_chk = typchk.Checker({"file_name": str, "format": str, "size": str})
 
-    _convert_image_chk = typchk.Checker({
-        'output_file': str,
-        'input_file': str,
-        'output_format': str,
-    })
+    _convert_image_chk = typchk.Checker({"output_file": str, "input_file": str, "output_format": str})
 
-    _portforward_chk = typchk.Checker({
-        'uuid': str,
-        'host_port': str,
-        'container_port': int,
-    })
+    _portforward_chk = typchk.Checker({"uuid": str, "host_port": str, "container_port": int})
 
     _limit_disk_io_dict.update(_iotune_dict)
 
@@ -157,9 +121,23 @@ class KvmManager():
     def __init__(self, client):
         self._client = client
 
-    def create(self, name, media=None, flist=None, cpu=2, memory=512,
-               nics=None, port=None, mount=None, tags=None, config=None, storage=None,
-               cmdline=None, share_cache=False, kvm=False):
+    def create(
+        self,
+        name,
+        media=None,
+        flist=None,
+        cpu=2,
+        memory=512,
+        nics=None,
+        port=None,
+        mount=None,
+        tags=None,
+        config=None,
+        storage=None,
+        cmdline=None,
+        share_cache=False,
+        kvm=False,
+    ):
         """
         :param name: Name of the kvm domain
         :param media: (optional) array of media objects to attach to the machine, where the first object is the boot device
@@ -210,28 +188,28 @@ class KvmManager():
             nics = []
 
         args = {
-            'name': name,
-            'media': media,
-            'cpu': cpu,
-            'flist': flist,
-            'cmdline': cmdline,
-            'memory': memory,
-            'nics': nics,
-            'port': port,
-            'mount': mount,
-            'tags': tags,
-            'config': config,
-            'storage': storage,
-            'share_cache': share_cache,
-            'kvm': kvm,
+            "name": name,
+            "media": media,
+            "cpu": cpu,
+            "flist": flist,
+            "cmdline": cmdline,
+            "memory": memory,
+            "nics": nics,
+            "port": port,
+            "mount": mount,
+            "tags": tags,
+            "config": config,
+            "storage": storage,
+            "share_cache": share_cache,
+            "kvm": kvm,
         }
 
         self._create_chk.check(args)
 
         if media is None and flist is None:
-            raise ValueError('need at least one boot media via media or an flist')
+            raise ValueError("need at least one boot media via media or an flist")
 
-        return self._client.json('kvm.create', args, tags=tags)
+        return self._client.json("kvm.create", args, tags=tags)
 
     def prepare_migration_target(self, uuid, nics=None, port=None, tags=None):
         """
@@ -253,14 +231,10 @@ class KvmManager():
         if nics is None:
             nics = []
 
-        args = {
-            'nics': nics,
-            'port': port,
-            'uuid': uuid
-        }
+        args = {"nics": nics, "port": port, "uuid": uuid}
         self._migrate_network_chk.check(args)
 
-        self._client.sync('kvm.prepare_migration_target', args, tags=tags)
+        self._client.sync("kvm.prepare_migration_target", args, tags=tags)
 
     def destroy(self, uuid):
         """
@@ -268,12 +242,10 @@ class KvmManager():
         :param uuid: uuid of the kvm container (same as the used in create)
         :return:
         """
-        args = {
-            'uuid': uuid,
-        }
+        args = {"uuid": uuid}
         self._domain_action_chk.check(args)
 
-        self._client.sync('kvm.destroy', args)
+        self._client.sync("kvm.destroy", args)
 
     def shutdown(self, uuid):
         """
@@ -281,12 +253,10 @@ class KvmManager():
         :param uuid: uuid of the kvm container (same as the used in create)
         :return:
         """
-        args = {
-            'uuid': uuid,
-        }
+        args = {"uuid": uuid}
         self._domain_action_chk.check(args)
 
-        self._client.sync('kvm.shutdown', args)
+        self._client.sync("kvm.shutdown", args)
 
     def reboot(self, uuid):
         """
@@ -294,12 +264,10 @@ class KvmManager():
         :param uuid: uuid of the kvm container (same as the used in create)
         :return:
         """
-        args = {
-            'uuid': uuid,
-        }
+        args = {"uuid": uuid}
         self._domain_action_chk.check(args)
 
-        self._client.sync('kvm.reboot', args)
+        self._client.sync("kvm.reboot", args)
 
     def reset(self, uuid):
         """
@@ -307,12 +275,10 @@ class KvmManager():
         :param uuid: uuid of the kvm container (same as the used in create)
         :return:
         """
-        args = {
-            'uuid': uuid,
-        }
+        args = {"uuid": uuid}
         self._domain_action_chk.check(args)
 
-        self._client.sync('kvm.reset', args)
+        self._client.sync("kvm.reset", args)
 
     def pause(self, uuid):
         """
@@ -320,12 +286,10 @@ class KvmManager():
         :param uuid: uuid of the kvm container (same as the used in create)
         :return:
         """
-        args = {
-            'uuid': uuid,
-        }
+        args = {"uuid": uuid}
         self._domain_action_chk.check(args)
 
-        self._client.sync('kvm.pause', args)
+        self._client.sync("kvm.pause", args)
 
     def resume(self, uuid):
         """
@@ -333,12 +297,10 @@ class KvmManager():
         :param uuid: uuid of the kvm container (same as the used in create)
         :return:
         """
-        args = {
-            'uuid': uuid,
-        }
+        args = {"uuid": uuid}
         self._domain_action_chk.check(args)
 
-        self._client.sync('kvm.resume', args)
+        self._client.sync("kvm.resume", args)
 
     def info(self, uuid):
         """
@@ -346,12 +308,10 @@ class KvmManager():
         :param uuid: uuid of the kvm container (same as the used in create)
         :return:
         """
-        args = {
-            'uuid': uuid,
-        }
+        args = {"uuid": uuid}
         self._domain_action_chk.check(args)
 
-        return self._client.json('kvm.info', args)
+        return self._client.json("kvm.info", args)
 
     def infops(self, uuid):
         """
@@ -359,12 +319,10 @@ class KvmManager():
         :param uuid: uuid of the kvm container (same as the used in create)
         :return:
         """
-        args = {
-            'uuid': uuid,
-        }
+        args = {"uuid": uuid}
         self._domain_action_chk.check(args)
 
-        return self._client.json('kvm.infops', args)
+        return self._client.json("kvm.infops", args)
 
     def attach_disk(self, uuid, media):
         """
@@ -375,13 +333,10 @@ class KvmManager():
                       examples: {'url': 'nbd+unix:///test?socket=/tmp/ndb.socket'}, {'type': 'cdrom': '/somefile.iso'}
         :return:
         """
-        args = {
-            'uuid': uuid,
-            'media': media,
-        }
+        args = {"uuid": uuid, "media": media}
         self._man_disk_action_chk.check(args)
 
-        self._client.sync('kvm.attach_disk', args)
+        self._client.sync("kvm.attach_disk", args)
 
     def detach_disk(self, uuid, media):
         """
@@ -392,13 +347,10 @@ class KvmManager():
                       examples: {'url': 'nbd+unix:///test?socket=/tmp/ndb.socket'}, {'type': 'cdrom': '/somefile.iso'}
         :return:
         """
-        args = {
-            'uuid': uuid,
-            'media': media,
-        }
+        args = {"uuid": uuid, "media": media}
         self._man_disk_action_chk.check(args)
 
-        self._client.sync('kvm.detach_disk', args)
+        self._client.sync("kvm.detach_disk", args)
 
     def add_nic(self, uuid, type, id=None, hwaddr=None):
         """
@@ -409,15 +361,10 @@ class KvmManager():
          param hwaddr: the hardware address of the nic
         :return:
         """
-        args = {
-            'uuid': uuid,
-            'type': type,
-            'id': id,
-            'hwaddr': hwaddr,
-        }
+        args = {"uuid": uuid, "type": type, "id": id, "hwaddr": hwaddr}
         self._man_nic_action_chk.check(args)
 
-        return self._client.json('kvm.add_nic', args)
+        return self._client.json("kvm.add_nic", args)
 
     def remove_nic(self, uuid, type, id=None, hwaddr=None):
         """
@@ -428,24 +375,56 @@ class KvmManager():
          param hwaddr: the hardware address of the nic
         :return:
         """
-        args = {
-            'uuid': uuid,
-            'type': type,
-            'id': id,
-            'hwaddr': hwaddr,
-        }
+        args = {"uuid": uuid, "type": type, "id": id, "hwaddr": hwaddr}
         self._man_nic_action_chk.check(args)
 
-        return self._client.json('kvm.remove_nic', args)
+        return self._client.json("kvm.remove_nic", args)
 
-    def limit_disk_io(self, uuid, media, totalbytessecset=False, totalbytessec=0, readbytessecset=False, readbytessec=0, writebytessecset=False,
-                      writebytessec=0, totaliopssecset=False, totaliopssec=0, readiopssecset=False, readiopssec=0, writeiopssecset=False, writeiopssec=0,
-                      totalbytessecmaxset=False, totalbytessecmax=0, readbytessecmaxset=False, readbytessecmax=0, writebytessecmaxset=False, writebytessecmax=0,
-                      totaliopssecmaxset=False, totaliopssecmax=0, readiopssecmaxset=False, readiopssecmax=0, writeiopssecmaxset=False, writeiopssecmax=0,
-                      totalbytessecmaxlengthset=False, totalbytessecmaxlength=0, readbytessecmaxlengthset=False, readbytessecmaxlength=0,
-                      writebytessecmaxlengthset=False, writebytessecmaxlength=0, totaliopssecmaxlengthset=False, totaliopssecmaxlength=0,
-                      readiopssecmaxlengthset=False, readiopssecmaxlength=0, writeiopssecmaxlengthset=False, writeiopssecmaxlength=0, sizeiopssecset=False,
-                      sizeiopssec=0, groupnameset=False, groupname=''):
+    def limit_disk_io(
+        self,
+        uuid,
+        media,
+        totalbytessecset=False,
+        totalbytessec=0,
+        readbytessecset=False,
+        readbytessec=0,
+        writebytessecset=False,
+        writebytessec=0,
+        totaliopssecset=False,
+        totaliopssec=0,
+        readiopssecset=False,
+        readiopssec=0,
+        writeiopssecset=False,
+        writeiopssec=0,
+        totalbytessecmaxset=False,
+        totalbytessecmax=0,
+        readbytessecmaxset=False,
+        readbytessecmax=0,
+        writebytessecmaxset=False,
+        writebytessecmax=0,
+        totaliopssecmaxset=False,
+        totaliopssecmax=0,
+        readiopssecmaxset=False,
+        readiopssecmax=0,
+        writeiopssecmaxset=False,
+        writeiopssecmax=0,
+        totalbytessecmaxlengthset=False,
+        totalbytessecmaxlength=0,
+        readbytessecmaxlengthset=False,
+        readbytessecmaxlength=0,
+        writebytessecmaxlengthset=False,
+        writebytessecmaxlength=0,
+        totaliopssecmaxlengthset=False,
+        totaliopssecmaxlength=0,
+        readiopssecmaxlengthset=False,
+        readiopssecmaxlength=0,
+        writeiopssecmaxlengthset=False,
+        writeiopssecmaxlength=0,
+        sizeiopssecset=False,
+        sizeiopssec=0,
+        groupnameset=False,
+        groupname="",
+    ):
         """
         Remove a nic from a machine
         :param uuid: uuid of the kvm container (same as the used in create)
@@ -453,52 +432,52 @@ class KvmManager():
         :return:
         """
         args = {
-            'uuid': uuid,
-            'media': media,
-            'totalbytessecset': totalbytessecset,
-            'totalbytessec': totalbytessec,
-            'readbytessecset': readbytessecset,
-            'readbytessec': readbytessec,
-            'writebytessecset': writebytessecset,
-            'writebytessec': writebytessec,
-            'totaliopssecset': totaliopssecset,
-            'totaliopssec': totaliopssec,
-            'readiopssecset': readiopssecset,
-            'readiopssec': readiopssec,
-            'writeiopssecset': writeiopssecset,
-            'writeiopssec': writeiopssec,
-            'totalbytessecmaxset': totalbytessecmaxset,
-            'totalbytessecmax': totalbytessecmax,
-            'readbytessecmaxset': readbytessecmaxset,
-            'readbytessecmax': readbytessecmax,
-            'writebytessecmaxset': writebytessecmaxset,
-            'writebytessecmax': writebytessecmax,
-            'totaliopssecmaxset': totaliopssecmaxset,
-            'totaliopssecmax': totaliopssecmax,
-            'readiopssecmaxset': readiopssecmaxset,
-            'readiopssecmax': readiopssecmax,
-            'writeiopssecmaxset': writeiopssecmaxset,
-            'writeiopssecmax': writeiopssecmax,
-            'totalbytessecmaxlengthset': totalbytessecmaxlengthset,
-            'totalbytessecmaxlength': totalbytessecmaxlength,
-            'readbytessecmaxlengthset': readbytessecmaxlengthset,
-            'readbytessecmaxlength': readbytessecmaxlength,
-            'writebytessecmaxlengthset': writebytessecmaxlengthset,
-            'writebytessecmaxlength': writebytessecmaxlength,
-            'totaliopssecmaxlengthset': totaliopssecmaxlengthset,
-            'totaliopssecmaxlength': totaliopssecmaxlength,
-            'readiopssecmaxlengthset': readiopssecmaxlengthset,
-            'readiopssecmaxlength': readiopssecmaxlength,
-            'writeiopssecmaxlengthset': writeiopssecmaxlengthset,
-            'writeiopssecmaxlength': writeiopssecmaxlength,
-            'sizeiopssecset': sizeiopssecset,
-            'sizeiopssec': sizeiopssec,
-            'groupnameset': groupnameset,
-            'groupname': groupname,
+            "uuid": uuid,
+            "media": media,
+            "totalbytessecset": totalbytessecset,
+            "totalbytessec": totalbytessec,
+            "readbytessecset": readbytessecset,
+            "readbytessec": readbytessec,
+            "writebytessecset": writebytessecset,
+            "writebytessec": writebytessec,
+            "totaliopssecset": totaliopssecset,
+            "totaliopssec": totaliopssec,
+            "readiopssecset": readiopssecset,
+            "readiopssec": readiopssec,
+            "writeiopssecset": writeiopssecset,
+            "writeiopssec": writeiopssec,
+            "totalbytessecmaxset": totalbytessecmaxset,
+            "totalbytessecmax": totalbytessecmax,
+            "readbytessecmaxset": readbytessecmaxset,
+            "readbytessecmax": readbytessecmax,
+            "writebytessecmaxset": writebytessecmaxset,
+            "writebytessecmax": writebytessecmax,
+            "totaliopssecmaxset": totaliopssecmaxset,
+            "totaliopssecmax": totaliopssecmax,
+            "readiopssecmaxset": readiopssecmaxset,
+            "readiopssecmax": readiopssecmax,
+            "writeiopssecmaxset": writeiopssecmaxset,
+            "writeiopssecmax": writeiopssecmax,
+            "totalbytessecmaxlengthset": totalbytessecmaxlengthset,
+            "totalbytessecmaxlength": totalbytessecmaxlength,
+            "readbytessecmaxlengthset": readbytessecmaxlengthset,
+            "readbytessecmaxlength": readbytessecmaxlength,
+            "writebytessecmaxlengthset": writebytessecmaxlengthset,
+            "writebytessecmaxlength": writebytessecmaxlength,
+            "totaliopssecmaxlengthset": totaliopssecmaxlengthset,
+            "totaliopssecmaxlength": totaliopssecmaxlength,
+            "readiopssecmaxlengthset": readiopssecmaxlengthset,
+            "readiopssecmaxlength": readiopssecmaxlength,
+            "writeiopssecmaxlengthset": writeiopssecmaxlengthset,
+            "writeiopssecmaxlength": writeiopssecmaxlength,
+            "sizeiopssecset": sizeiopssecset,
+            "sizeiopssec": sizeiopssec,
+            "groupnameset": groupnameset,
+            "groupname": groupname,
         }
         self._limit_disk_io_action_chk.check(args)
 
-        self._client.sync('kvm.limit_disk_io', args)
+        self._client.sync("kvm.limit_disk_io", args)
 
     def migrate(self, uuid, desturi):
         """
@@ -507,13 +486,10 @@ class KvmManager():
         :param desturi: the uri of the destination node
         :return:
         """
-        args = {
-            'uuid': uuid,
-            'desturi': desturi,
-        }
+        args = {"uuid": uuid, "desturi": desturi}
         self._migrate_action_chk.check(args)
 
-        self._client.sync('kvm.migrate', args)
+        self._client.sync("kvm.migrate", args)
 
     def list(self):
         """
@@ -521,9 +497,9 @@ class KvmManager():
 
         :return:
         """
-        return self._client.json('kvm.list', {})
+        return self._client.json("kvm.list", {})
 
-    def create_image(self, file_name, size, format='qcow2'):
+    def create_image(self, file_name, size, format="qcow2"):
         """
         Create disk image
         :param file_name: disk image file name
@@ -533,13 +509,9 @@ class KvmManager():
                 supported. 'b' is ignored.
         :param format: disk image format
         """
-        args = {
-            'file_name': file_name,
-            'size': size,
-            'format': format,
-        }
+        args = {"file_name": file_name, "size": size, "format": format}
         self._create_image_chk.check(args)
-        return self._client.sync('kvm.create-image', args)
+        return self._client.sync("kvm.create-image", args)
 
     def convert_image(self, input_file, output_file, output_format):
         """
@@ -549,28 +521,21 @@ class KvmManager():
         :param output_format: outpput image format
         :return:
         """
-        args = {
-            'input_file': input_file,
-            'output_file': output_file,
-            'output_format': output_format,
-        }
+        args = {"input_file": input_file, "output_file": output_file, "output_format": output_format}
         self._convert_image_chk.check(args)
-        return self._client.sync('kvm.convert-image', args)
+        return self._client.sync("kvm.convert-image", args)
 
-    def get(self, name='', uuid=''):
+    def get(self, name="", uuid=""):
         """
         Get kvm domain by name or uuid
         :param name: name of the kvm container
         :param uuid: uuid of the kvm container
         :return:
         """
-        args = {
-            'name': name,
-            'uuid': uuid
-        }
+        args = {"name": name, "uuid": uuid}
         self._domain_get_chk.check(args)
 
-        return self._client.json('kvm.get', args)
+        return self._client.json("kvm.get", args)
 
     def add_portfoward(self, uuid, host_port, container_port):
         """
@@ -584,14 +549,10 @@ class KvmManager():
         if isinstance(host_port, int):
             host_port = str(host_port)
 
-        args = {
-            'uuid': uuid,
-            'host_port': host_port,
-            'container_port': container_port,
-        }
+        args = {"uuid": uuid, "host_port": host_port, "container_port": container_port}
         self._portforward_chk.check(args)
 
-        return self._client.json('kvm.portforward-add', args)
+        return self._client.json("kvm.portforward-add", args)
 
     def remove_portfoward(self, uuid, host_port, container_port):
         """
@@ -601,11 +562,7 @@ class KvmManager():
         :param machine_port: port on container forwarded to
         :return:
         """
-        args = {
-            'uuid': uuid,
-            'host_port': host_port,
-            'container_port': container_port,
-        }
+        args = {"uuid": uuid, "host_port": host_port, "container_port": container_port}
         self._portforward_chk.check(args)
 
-        return self._client.json('kvm.portforward-remove', args)
+        return self._client.json("kvm.portforward-remove", args)

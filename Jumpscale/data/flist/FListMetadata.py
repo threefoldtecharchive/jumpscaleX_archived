@@ -7,6 +7,7 @@ import time
 import stat
 import pwd
 import grp
+
 JSBASE = j.application.JSBaseClass
 
 
@@ -14,12 +15,8 @@ class FListMetadata(j.application.JSBaseClass):
     """Metadata layer on top of flist that enables flist manipulation"""
 
     def __init__(
-            self,
-            namespace="main",
-            rootpath="/",
-            dirCollection=None,
-            aciCollection=None,
-            userGroupCollection=None):
+        self, namespace="main", rootpath="/", dirCollection=None, aciCollection=None, userGroupCollection=None
+    ):
         JSBASE.__init__(self)
         self.namespace = namespace
         self.dirCollection = dirCollection
@@ -36,8 +33,7 @@ class FListMetadata(j.application.JSBaseClass):
         if dirObj.dbobj.state != "":
             raise RuntimeError("%s: No such file or directory" % ppath)
 
-        if fType == "D" and dirObj.dbobj.location == ppath[len(
-                self.rootpath):].strip("/"):
+        if fType == "D" and dirObj.dbobj.location == ppath[len(self.rootpath) :].strip("/"):
             return dirObj.dbobj.to_dict()
         else:
             file_name = j.sal.fs.getBaseName(ppath)
@@ -57,8 +53,7 @@ class FListMetadata(j.application.JSBaseClass):
         ppath = j.sal.fs.joinPaths(parent_path, name)
         dirRelPath, dirKey = self._path2key(ppath)
         if self.dirCollection.exists(dirKey):
-            raise RuntimeError(
-                "cannot create directory '%s': File exists" % ppath)
+            raise RuntimeError("cannot create directory '%s': File exists" % ppath)
         dirObj = self.dirCollection.get(dirKey, autoCreate=True)
 
         _, dirKeyParent = self._path2key(parent_path)
@@ -115,7 +110,7 @@ class FListMetadata(j.application.JSBaseClass):
         if parent_path == j.sal.fs.getDirName(ppath):
             raise RuntimeError("Cannot link to file to itself")
 
-        relpath = ppath[len(self.rootpath):].strip("/")
+        relpath = ppath[len(self.rootpath) :].strip("/")
         for link in parentObj.dbobj.links:
             if link.target == relpath:
                 raise j.exceptions.Input(message="Link already exists")
@@ -124,7 +119,7 @@ class FListMetadata(j.application.JSBaseClass):
             "name": j.sal.fs.getBaseName(ppath),
             "creationTime": calendar.timegm(time.gmtime()),
             "modificationTime": calendar.timegm(time.gmtime()),
-            "target": relpath
+            "target": relpath,
         }
         self._addObj(parentObj, linkDict, "L")
         parentObj.save()
@@ -202,13 +197,8 @@ class FListMetadata(j.application.JSBaseClass):
 
         if fType == "D":
             dbobj = dirObj.dbobj
-            if len(
-                dbobj.dirs) != 0 and len(
-                dbobj.files) != 0 and len(
-                dbobj.links) != 0 and len(
-                    dbobj.specials) != 0:
-                raise RuntimeError(
-                    "failed to remove '%s': Directory not empty" % ppath)
+            if len(dbobj.dirs) != 0 and len(dbobj.files) != 0 and len(dbobj.links) != 0 and len(dbobj.specials) != 0:
+                raise RuntimeError("failed to remove '%s': Directory not empty" % ppath)
             dirObj.dbobj.state = "Deleted"
         else:
             _, entityList = self._getPropertyList(dirObj.dbobj, fType)
@@ -263,8 +253,8 @@ class FListMetadata(j.application.JSBaseClass):
         if oldFtype == "D":
             if "{}/".format(old_path) in new_parent_path:
                 raise RuntimeError(
-                    "Cannot move '{}' to a subdirectory of itself, '{}'".format(
-                        old_path, new_parent_path))
+                    "Cannot move '{}' to a subdirectory of itself, '{}'".format(old_path, new_parent_path)
+                )
 
             if oldDirObj.dbobj.state != "":
                 raise RuntimeError("%s: No such file or directory" % old_path)
@@ -272,26 +262,18 @@ class FListMetadata(j.application.JSBaseClass):
             _, parentDir = self._search_db(j.sal.fs.getDirName(old_path))
             self._move_dir(parentDir, newParentDirObj, oldDirObj, fname=fname)
         else:
-            self._move_file(
-                oldDirObj,
-                newParentDirObj,
-                oldFName,
-                fname,
-                oldFtype)
+            self._move_file(oldDirObj, newParentDirObj, oldFName, fname, oldFtype)
 
     def _move_dir(self, parentDir, newParentDirObj, dirObj, fname):
         if parentDir.key != newParentDirObj.key:
             dirProps = self._removeObj(parentDir, dirObj.dbobj.name, "D")
             dirProps["name"] = fname
             self._addObj(newParentDirObj, dirProps, "D")
-            dirObj.dbobj.location = os.path.join(
-                newParentDirObj.dbobj.location, fname)
+            dirObj.dbobj.location = os.path.join(newParentDirObj.dbobj.location, fname)
             dirObj.dbobj.name = fname
             dirObj.dbobj.parent = newParentDirObj.key
 
-            _, dirKey = self._path2key(
-                os.path.join(
-                    self.rootpath, newParentDirObj.dbobj.location, fname))
+            _, dirKey = self._path2key(os.path.join(self.rootpath, newParentDirObj.dbobj.location, fname))
             ddir = self.dirCollection.get(dirKey, autoCreate=True)
             ddir.dbobj = dirObj.dbobj
             ddir.save()
@@ -300,13 +282,10 @@ class FListMetadata(j.application.JSBaseClass):
             for dir in parentDir.dbobj.dirs:
                 if dir.name != dirObj.dbobj.name:
                     dir.name = fname
-            dirObj.dbobj.location = os.path.join(
-                newParentDirObj.dbobj.location, fname)
+            dirObj.dbobj.location = os.path.join(newParentDirObj.dbobj.location, fname)
             dirObj.dbobj.name = fname
             # Save new dir object
-            _, dirKey = self._path2key(
-                self.rootpath, os.path.join(
-                    newParentDirObj.dbobj.location, fname))
+            _, dirKey = self._path2key(self.rootpath, os.path.join(newParentDirObj.dbobj.location, fname))
             ddir = self.dirCollection.get(dirKey, autoCreate=True)
             ddir.dbobj = dirObj.dbobj
             ddir.save()
@@ -339,8 +318,7 @@ class FListMetadata(j.application.JSBaseClass):
                 newFiles.append(file.to_dict())
 
         if poppedFile == {}:
-            raise RuntimeError(
-                "cannot remove '%s': No such file or directory" % dirObj.dbobj.location)
+            raise RuntimeError("cannot remove '%s': No such file or directory" % dirObj.dbobj.location)
 
         newlist = dirObj.dbobj.init(pName, len(newFiles))
         for i, item in enumerate(newFiles):
@@ -374,7 +352,7 @@ class FListMetadata(j.application.JSBaseClass):
         absolutePath = self._get_absolute_path(ppath)
         try:
             return "D", self._get_dir_from_db(absolutePath)
-        except BaseException:            # Means that ppath is a file or doesn't exist
+        except BaseException:  # Means that ppath is a file or doesn't exist
             baseName = j.sal.fs.getBaseName(absolutePath)
             parent_dir = j.sal.fs.getDirName(absolutePath)
             parent_dir_obj = self._get_dir_from_db(parent_dir)
@@ -410,9 +388,8 @@ class FListMetadata(j.application.JSBaseClass):
         @param fpath is full path
         """
         if not fpath.startswith(self.rootpath):
-            raise j.exceptions.Input(
-                message="fpath:%s needs to start with rootpath:%s" % (fpath, self.rootpath))
-        relPath = fpath[len(self.rootpath):].strip("/")
+            raise j.exceptions.Input(message="fpath:%s needs to start with rootpath:%s" % (fpath, self.rootpath))
+        relPath = fpath[len(self.rootpath) :].strip("/")
         toHash = self.namespace + relPath
         self._log_debug("> %s" % toHash)
         bl = pyblake2.blake2b(toHash.encode(), 32)
@@ -428,7 +405,8 @@ class FListMetadata(j.application.JSBaseClass):
             stat.S_IFBLK,
             stat.S_IFIFO,
             stat.S_IFLNK,
-            stat.S_IFSOCK]
+            stat.S_IFSOCK,
+        ]
         if fileType not in valid_types:
             raise RuntimeError("Invalid file type.")
 

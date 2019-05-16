@@ -3,9 +3,9 @@ from Jumpscale import j
 
 
 class MongoDumper(Dumper.BaseDumper):
-    QUEUE = 'queues:reality'
+    QUEUE = "queues:reality"
 
-    def __init__(self, cidr='127.0.0.1', ports=[7777]):
+    def __init__(self, cidr="127.0.0.1", ports=[7777]):
         super(MongoDumper, self).__init__(cidr, ports=[ports])
 
     def dump(self, redis):
@@ -20,9 +20,9 @@ class MongoDumper(Dumper.BaseDumper):
 
             obj = j.data.serializers.json.loads(data)
 
-            ns, _, objtype = obj['modeltype'].rpartition('.')
-            if ns == '':
-                ns = 'system'
+            ns, _, objtype = obj["modeltype"].rpartition(".")
+            if ns == "":
+                ns = "system"
             if not hasattr(j.data.models, ns):
                 raise Exception('Unknown namespace "%s"' % ns)
             space = getattr(j.data.models, ns)
@@ -31,5 +31,5 @@ class MongoDumper(Dumper.BaseDumper):
                 raise Exception('Unknown model "%s"' % objtype)
             model = getattr(space, objtype)
 
-            instance = model.from_json(obj['json'])
+            instance = model.from_json(obj["json"])
             instance.save()

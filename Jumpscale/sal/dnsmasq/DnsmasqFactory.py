@@ -11,7 +11,7 @@ class DnsmasqFactory(JSBASE):
         self.__jslocation__ = "j.sal.dnsmasq"
         JSBASE.__init__(self)
 
-    def get(self, path='/etc/dnsmasq'):
+    def get(self, path="/etc/dnsmasq"):
         """Get an instance of the Dnsmasq class
         :param path: path of the dnsmasq configuration directory, defaults to /etcd/dnsmasq/
         :type path: string, optional

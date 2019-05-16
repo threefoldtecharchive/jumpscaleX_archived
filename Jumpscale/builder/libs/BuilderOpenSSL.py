@@ -22,7 +22,7 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
     @builder_method()
     def build(self, reset=False):
         """
-        js_shell 'j.builder.libs..openssl.build()'
+        kosmos 'j.builder.libs..openssl.build()'
         """
         if not self.tools.exists(self.DIR_BUILD):
             C = """
@@ -48,7 +48,7 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
 
     def test(self, build=False):
         """
-        js_shell 'j.builder.buildenv(build=True)'
+        kosmos 'j.builder.buildenv(build=True)'
         """
         if build:
             self.build()

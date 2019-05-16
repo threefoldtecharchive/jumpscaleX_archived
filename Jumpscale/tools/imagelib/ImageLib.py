@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 
 from PIL import Image
@@ -7,7 +6,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class ImageLib(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.tools.imagelib"
         self.__imports__ = "Pillow"
@@ -25,7 +23,7 @@ class ImageLib(j.application.JSBaseClass):
         return Image.open(path)
 
     def resize(self, path, pathnew, width=1024, overwrite=True):
-        #"c:\\qb6\\apps\\appserver6Base\\system\\GalleriaTest\\DSC01227.JPG"
+        # "c:\\qb6\\apps\\appserver6Base\\system\\GalleriaTest\\DSC01227.JPG"
 
         im = self.imageObjectGet(path)
         xnew = width
@@ -40,16 +38,14 @@ class ImageLib(j.application.JSBaseClass):
         """
         is a shortcut to resize to widht 1024 typical ok for web usage
         """
-        pathnew = j.sal.fs.joinPaths(j.sal.fs.getDirName(
-            path), "1024", j.sal.fs.getBaseName(path))
+        pathnew = j.sal.fs.joinPaths(j.sal.fs.getDirName(path), "1024", j.sal.fs.getBaseName(path))
         return self.resize(path, pathnew, width=1024)
 
     def resize2subdir1600x(self, path, overwrite=True):
         """
         is a shortcut to resize to widht 1600 typical ok for high quality web usage
         """
-        pathnew = j.sal.fs.joinPaths(j.sal.fs.getDirName(
-            path), "1600", j.sal.fs.getBaseName(path))
+        pathnew = j.sal.fs.joinPaths(j.sal.fs.getDirName(path), "1600", j.sal.fs.getBaseName(path))
         return self.resize(path, pathnew, width=1600)
 
     def resizeFullDir2subdir1024(self, path):

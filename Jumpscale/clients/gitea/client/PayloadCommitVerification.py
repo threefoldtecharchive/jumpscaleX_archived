@@ -8,8 +8,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class PayloadCommitVerification(object):
     """
     auto-generated. don't touch.
@@ -30,20 +28,20 @@ class PayloadCommitVerification(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'PayloadCommitVerification'
+        class_name = "PayloadCommitVerification"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.payload = client_support.set_property('payload', data, data_types, False, [], False, False, class_name)
+        self.payload = client_support.set_property("payload", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.reason = client_support.set_property('reason', data, data_types, False, [], False, False, class_name)
+        self.reason = client_support.set_property("reason", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.signature = client_support.set_property('signature', data, data_types, False, [], False, False, class_name)
+        self.signature = client_support.set_property("signature", data, data_types, False, [], False, False, class_name)
         data_types = [bool]
-        self.verified = client_support.set_property('verified', data, data_types, False, [], False, False, class_name)
+        self.verified = client_support.set_property("verified", data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

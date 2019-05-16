@@ -13,8 +13,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class Issue(object):
     """
     auto-generated. don't touch.
@@ -45,43 +43,46 @@ class Issue(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Issue'
+        class_name = "Issue"
         data = json or kwargs
 
         # set attributes
         data_types = [User]
-        self.assignee = client_support.set_property('assignee', data, data_types, False, [], False, False, class_name)
+        self.assignee = client_support.set_property("assignee", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.body = client_support.set_property('body', data, data_types, False, [], False, False, class_name)
+        self.body = client_support.set_property("body", data, data_types, False, [], False, False, class_name)
         data_types = [int]
-        self.comments = client_support.set_property('comments', data, data_types, False, [], False, False, class_name)
+        self.comments = client_support.set_property("comments", data, data_types, False, [], False, False, class_name)
         data_types = [datetime]
         self.created_at = client_support.set_property(
-            'created_at', data, data_types, False, [], False, False, class_name)
+            "created_at", data, data_types, False, [], False, False, class_name
+        )
         data_types = [int]
-        self.id = client_support.set_property('id', data, data_types, False, [], False, False, class_name)
+        self.id = client_support.set_property("id", data, data_types, False, [], False, False, class_name)
         data_types = [Label]
-        self.labels = client_support.set_property('labels', data, data_types, False, [], True, False, class_name)
+        self.labels = client_support.set_property("labels", data, data_types, False, [], True, False, class_name)
         data_types = [Milestone]
-        self.milestone = client_support.set_property('milestone', data, data_types, False, [], False, False, class_name)
+        self.milestone = client_support.set_property("milestone", data, data_types, False, [], False, False, class_name)
         data_types = [int]
-        self.number = client_support.set_property('number', data, data_types, False, [], False, False, class_name)
+        self.number = client_support.set_property("number", data, data_types, False, [], False, False, class_name)
         data_types = [PullRequestMeta]
         self.pull_request = client_support.set_property(
-            'pull_request', data, data_types, False, [], False, False, class_name)
+            "pull_request", data, data_types, False, [], False, False, class_name
+        )
         data_types = [string_types]
-        self.state = client_support.set_property('state', data, data_types, False, [], False, False, class_name)
+        self.state = client_support.set_property("state", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.title = client_support.set_property('title', data, data_types, False, [], False, False, class_name)
+        self.title = client_support.set_property("title", data, data_types, False, [], False, False, class_name)
         data_types = [datetime]
         self.updated_at = client_support.set_property(
-            'updated_at', data, data_types, False, [], False, False, class_name)
+            "updated_at", data, data_types, False, [], False, False, class_name
+        )
         data_types = [string_types]
-        self.url = client_support.set_property('url', data, data_types, False, [], False, False, class_name)
+        self.url = client_support.set_property("url", data, data_types, False, [], False, False, class_name)
         data_types = [User]
-        self.user = client_support.set_property('user', data, data_types, False, [], False, False, class_name)
+        self.user = client_support.set_property("user", data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

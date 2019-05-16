@@ -1,11 +1,11 @@
 from .StartupCMD import StartupCMD
 from Jumpscale import j
 import time
+
 JSBASE = j.application.JSBaseClass
 
 
 class StartupCMDFactory(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.tools.startupcmd"
         JSBASE.__init__(self)
@@ -17,13 +17,31 @@ class StartupCMDFactory(j.application.JSBaseClass):
 
         self.StartupCMDClass = StartupCMD
 
-    def get(self, name, cmd,cmd_stop="", path="/tmp", timeout=30,
-            env={},ports=[],process_strings=[],
-            interpreter="bash",daemon=True):
-        return self.StartupCMDClass(cmd_start=cmd, path=path, name=name, timeout=timeout,
-                                    cmd_stop=cmd_stop,env=env,
-                                    ports=ports,process_strings=process_strings,
-                                    interpreter=interpreter,daemon=daemon)
+    def get(
+        self,
+        name,
+        cmd,
+        cmd_stop="",
+        path="/tmp",
+        timeout=30,
+        env={},
+        ports=[],
+        process_strings=[],
+        interpreter="bash",
+        daemon=True,
+    ):
+        return self.StartupCMDClass(
+            cmd_start=cmd,
+            path=path,
+            name=name,
+            timeout=timeout,
+            cmd_stop=cmd_stop,
+            env=env,
+            ports=ports,
+            process_strings=process_strings,
+            interpreter=interpreter,
+            daemon=daemon,
+        )
 
     def test(self):
         """
@@ -58,8 +76,9 @@ class StartupCMDFactory(j.application.JSBaseClass):
         startup_cmd.stop()
         assert startup_cmd.running is False
 
-        cmd = self.get("test",cmd="j.tools.console.echo('1')\nj.tools.console.echo('2')",
-                       interpreter="jumpscale",daemon=False)
+        cmd = self.get(
+            "test", cmd="j.tools.console.echo('1')\nj.tools.console.echo('2')", interpreter="jumpscale", daemon=False
+        )
         cmd.start(reset=True)
 
         # time.sleep(2)
@@ -67,5 +86,3 @@ class StartupCMDFactory(j.application.JSBaseClass):
         # out=cmd._pane.out_get()
         #
         # assert out.find("\n1\n2\n") != -1  #needs to be there
-
-

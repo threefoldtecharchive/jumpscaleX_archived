@@ -2,20 +2,17 @@ from os import path
 from Jumpscale import j
 
 
-
-
 class BuilderPEP8(j.builder.system._BaseClass):
-
     def prepare(self, repo_path=None):
         """ Install pre-commit hook to run autopep8 """
-        j.builder.system.python_pip.install('autopep8')
+        j.builder.system.python_pip.install("autopep8")
 
         # Get git repos paths
         if repo_path is None:
             repos = (repo.BASEDIR for repo in j.clients.git.find(returnGitClient=True))
         else:
             repos = [repo_path]
-        paths = (path.join(repo, '.git/hooks/pre-commit') for repo in repos)
+        paths = (path.join(repo, ".git/hooks/pre-commit") for repo in repos)
 
         hook_cmd = """
         #!/bin/sh
@@ -34,7 +31,7 @@ class BuilderPEP8(j.builder.system._BaseClass):
         @param repo_path: path of desired repo to autopep8, if None will find all recognized repos to jumpscale
         @param commit: commit with pep8 as the commit message
         """
-        j.builder.system.python_pip.install('autopep8')
+        j.builder.system.python_pip.install("autopep8")
 
         # Get git repos paths
         if repo_path is None:
@@ -65,7 +62,7 @@ class BuilderPEP8(j.builder.system._BaseClass):
         cmd = ""
         if commit is True:
             cmd = pep8_cmd + commit_cmd
-            cmd += rebase_cmd if rebase else ''
+            cmd += rebase_cmd if rebase else ""
         else:
             cmd = pep8_cmd
 

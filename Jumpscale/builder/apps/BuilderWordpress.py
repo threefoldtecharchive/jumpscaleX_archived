@@ -21,7 +21,8 @@ class BuilderWordpress(j.builder.system._BaseClass):
             return
         # 1- install php
         j.builder.system.package.ensure(
-            "php7.0-fpm, php7.0-mysql, php7.0-curl, php7.0-gd, php7.0-mbstring, php7.0-mcrypt, php7.0-xml, php7.0-xmlrpc")
+            "php7.0-fpm, php7.0-mysql, php7.0-curl, php7.0-gd, php7.0-mbstring, php7.0-mcrypt, php7.0-xml, php7.0-xmlrpc"
+        )
 
         # 2- install mysql
         j.builder.db.mariadb.install(start=True)
@@ -29,19 +30,33 @@ class BuilderWordpress(j.builder.system._BaseClass):
         # 3- install caddy
         j.builder.web.caddy.install(plugins=["iyo"])
 
-        #4- nstall wp-cli
+        # 4- nstall wp-cli
         url = "https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar"
         cli_path = "/usr/local/bin/wp"
-        cli_path = j.core.tools.text_replace(cli_path)
+        cli_path = self._replace(cli_path)
         j.builder.tools.file_download(url=url, to=cli_path, overwrite=True, retry=3, timeout=0, removeTopDir=False)
 
-        j.builder.executor.execute('chmod +x %s' % cli_path)
+        j.builder.executor.execute("chmod +x %s" % cli_path)
         if not j.builder.system.user.check(self.user):
             j.builder.system.user.create(self.user)
         self._done_set("build")
 
-    def install(self, path, url, title, admin_user, admin_password, admin_email, 
-                db_name='wordpress', db_user='wordpress', db_password='wordpress', port=8090, plugins=None, theme=None, reset=False):
+    def install(
+        self,
+        path,
+        url,
+        title,
+        admin_user,
+        admin_password,
+        admin_email,
+        db_name="wordpress",
+        db_user="wordpress",
+        db_password="wordpress",
+        port=8090,
+        plugins=None,
+        theme=None,
+        reset=False,
+    ):
         """install 
 
         @param path: a path to setup wordpress to, Note that all content in this path will be deleted
@@ -61,12 +76,14 @@ class BuilderWordpress(j.builder.system._BaseClass):
         if self._done_check("install", reset):
             return
         self.build(reset=reset)
-        
-        # create a database 
-        j.builder.db.mariadb.sql_execute(None, "CREATE DATABASE IF NOT EXISTS %s DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" % db_name)
+
+        # create a database
+        j.builder.db.mariadb.sql_execute(
+            None, "CREATE DATABASE IF NOT EXISTS %s DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" % db_name
+        )
         # create a new super user for this database
         j.builder.db.mariadb.admin_create(db_user, db_password)
-        
+
         j.core.tools.dir_ensure(path)
         j.sal.process.execute("chown {0}:{0} {1}".format(self.user, path))
 
@@ -77,8 +94,10 @@ class BuilderWordpress(j.builder.system._BaseClass):
         	root {}
            	fastcgi / /var/run/php/php7.0-fpm.sock php
         }}
-        """.format(port, path)
-        j.builder.web.caddy.add_website("wordpress",cfg)
+        """.format(
+            port, path
+        )
+        j.builder.web.caddy.add_website("wordpress", cfg)
 
         j.builder.executor.execute("rm -rf {}/*".format(path))
         # download wordpress
@@ -87,15 +106,24 @@ class BuilderWordpress(j.builder.system._BaseClass):
         # configure wordpress
         configure_command = """
         sudo -u {user} -i -- wp --path={path} config create --dbname={db_name} --dbuser='{db_user}' --dbpass='{db_password}' 
-        """.format(user=self.user, db_name=db_name, db_user=db_user, db_password=db_password, path=path)
+        """.format(
+            user=self.user, db_name=db_name, db_user=db_user, db_password=db_password, path=path
+        )
         j.builder.executor.execute(configure_command)
 
         # install wordpress
         install_command = """
         sudo -u {user} -i -- wp  --path={path} core install --url='{url}' --title='{title}' --admin_user='{admin_user}' --admin_password='{admin_password}' --admin_email='{admin_email}'
-        """.format(user=self.user, url=url, title=title, admin_user=admin_user, 
-                   admin_password=admin_password, admin_email=admin_email, path=path)
-        j.builder.executor.execute(install_command) 
+        """.format(
+            user=self.user,
+            url=url,
+            title=title,
+            admin_user=admin_user,
+            admin_password=admin_password,
+            admin_email=admin_email,
+            path=path,
+        )
+        j.builder.executor.execute(install_command)
 
         # install themes
         self.install_theme(path, theme)
@@ -104,39 +132,42 @@ class BuilderWordpress(j.builder.system._BaseClass):
         self.install_plugins(path, plugins, True)
 
         # allow plugins upload from ui without ftp and increase allowed file size
-        configs = {
-            'FS_METHOD': 'direct',
-            'WP_MEMORY_LIMIT': '256M'
-        }
+        configs = {"FS_METHOD": "direct", "WP_MEMORY_LIMIT": "256M"}
         self.add_config(path, configs)
 
         # allow file uploads
         cmd = """
         sudo chown -R www-data:www-data {path}/wp-content
-        """.format(path=path)
+        """.format(
+            path=path
+        )
         j.builder.executor.execute(cmd)
-        
+
         self._done_set("install")
 
     def install_theme(self, path, theme):
         if theme:
             themes_command = """
             sudo -u {} -i -- wp --path={} theme install {} --activate
-            """.format(self.user, path, theme)
+            """.format(
+                self.user, path, theme
+            )
             j.sal.process.execute(themes_command, die=False)
 
     def install_plugins(self, path, plugins, activate=False):
         if not plugins:
             plugins = []
-        
+
         activate_cmd = ""
         if activate:
-            activate_cmd ="--activate"
+            activate_cmd = "--activate"
 
         for plugin in plugins:
             plugins_command = """
             sudo -u {} -i -- wp --path={} plugin install {} {}
-            """.format(self.user, path, plugin, activate_cmd)
+            """.format(
+                self.user, path, plugin, activate_cmd
+            )
             j.sal.process.execute(plugins_command, die=False)
 
     def add_config(self, path, config):
@@ -148,11 +179,12 @@ class BuilderWordpress(j.builder.system._BaseClass):
         for item in config.items():
             command = """
             sudo -u {} -i -- wp --path={} config set {} {} --type="constant"
-            """.format(self.user, path, item[0], item[1])
+            """.format(
+                self.user, path, item[0], item[1]
+            )
             j.sal.process.execute(command)
 
-
-    def download_backup(self, path, cfg_path='/opt/cfg', dbname='wordpress'):
+    def download_backup(self, path, cfg_path="/opt/cfg", dbname="wordpress"):
         """download a full packup for a wordpress website including
         1- databse dump
         2- wp files
@@ -162,7 +194,7 @@ class BuilderWordpress(j.builder.system._BaseClass):
             path {STRING} -- wordpress installation path
             dbname {STRING} -- databse name
         """
-        
+
         backup_path = "/tmp/backup_{}".format(str(time.time()))
         j.core.tools.dir_ensure(backup_path)
         # export database
@@ -175,12 +207,12 @@ class BuilderWordpress(j.builder.system._BaseClass):
         j.builder.tools.copyTree(cfg_path, backup_path + cfg_path)
 
         backup_tar_name = "/tmp/backup_{}.tar.gz".format(str(time.time()))
-        
-        rc, _, _ = j.sal.process.execute('tar -czvf {} {}'.format(backup_tar_name, backup_path))
+
+        rc, _, _ = j.sal.process.execute("tar -czvf {} {}".format(backup_tar_name, backup_path))
         if rc == 0:
-            self._log_info('Backup done successfuly')
+            self._log_info("Backup done successfuly")
         else:
-            self._log_info('an error happened while compressing your backup')
-        
+            self._log_info("an error happened while compressing your backup")
+
         # clean up
         j.builder.tools.dir_remove(backup_path)

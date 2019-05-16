@@ -1,5 +1,6 @@
 from Jumpscale import j
 from .SQLAlchemy import Base, SQLAlchemy
+
 JSConfigs = j.application.JSBaseConfigsClass
 
 
@@ -32,5 +33,6 @@ class SQLAlchemyFactory(JSConfigs):
         value = value.lower().strip()
         if value.find("@") == -1:
             raise j.exceptions.Input(
-                "Property error, email not formatted well, needs @.Val:%s\nObj:\n%s" % (value, target))
+                "Property error, email not formatted well, needs @.Val:%s\nObj:\n%s" % (value, target)
+            )
         return value

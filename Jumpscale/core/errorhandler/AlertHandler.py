@@ -1,5 +1,6 @@
 from Jumpscale import j
 import copy
+
 JSBASE = j.application.jsbase_get_class()
 
 SCHEMA_ALERT = """
@@ -17,7 +18,6 @@ count = 0
 
 
 class AlertHandler(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jscorelocation__ = "j.tools.alerthandler"
         JSBASE.__init__(self)
@@ -47,7 +47,7 @@ class AlertHandler(j.application.JSBaseClass):
             e.level = error.level
             e.trace = error.trace
         else:
-            args=[str(item) for item in error.args]
+            args = [str(item) for item in error.args]
             e.message = "\n".join(args)
             name = str(error.__class__).split("'")[1].strip()
             e.cat = "python.%s" % name
@@ -70,7 +70,7 @@ class AlertHandler(j.application.JSBaseClass):
 
     def set(self, key, err):
         if self.serialize_json:
-            self.db.set(key, err._json, ex=24*3600)  # expires in 24h
+            self.db.set(key, err._json, ex=24 * 3600)  # expires in 24h
         else:
             self.db.set(key, err._data, ex=24 * 3600)  # expires in 24h
 
@@ -87,7 +87,7 @@ class AlertHandler(j.application.JSBaseClass):
                 res2 = j.data.serializers.json.loads(res)
                 e = self.schema_alert.get(data=res2)
             else:
-                e = self.schema_alert.get(capnpbin=res)
+                e = self.schema_alert.get(data=res)
             return e
 
     def delete(self, key):
@@ -112,6 +112,7 @@ class AlertHandler(j.application.JSBaseClass):
     def reset(self):
         def delete(key, err, args):
             self.db.delete(key)
+
         args = self.walk(delete, args={"res": []})
         return args
 
@@ -119,9 +120,11 @@ class AlertHandler(j.application.JSBaseClass):
         """
         :return: list([key,err])
         """
+
         def llist(key, err, args):
             args["res"].append([key, err])
             return args
+
         args = self.walk(llist, args={"res": []})
         return args["res"]
 
@@ -158,7 +161,7 @@ class AlertHandler(j.application.JSBaseClass):
 
     def test(self, delete=True):
         """
-        js_shell 'j.tools.alerthandler.test()'
+        kosmos 'j.tools.alerthandler.test()'
         :return:
         """
 
@@ -169,11 +172,13 @@ class AlertHandler(j.application.JSBaseClass):
 
         for i in range(10):
             try:
-                2/0
+                2 / 0
             except Exception as e:
                 j.errorhandler.try_except_error_process(e, die=False)  # if you want to continue
 
-        error = j.exceptions.HaltException("halt test")  # this test will not have nice stacktrace because is not really an exception
+        error = j.exceptions.HaltException(
+            "halt test"
+        )  # this test will not have nice stacktrace because is not really an exception
 
         j.errorhandler.try_except_error_process(error, die=False)
 

@@ -6,7 +6,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class TemplateEngine(j.application.JSBaseClass):
-
     def __init__(self):
         self.replaceDict = {}  # dict(string,string)
         JSBASE.__init__(self)
@@ -15,10 +14,12 @@ class TemplateEngine(j.application.JSBaseClass):
     def add(self, search, replace, variants=False):
         if not j.data.types.string.check(search):
             raise j.exceptions.RuntimeError(
-                "only strings can be searched for when using template engine, param search is not a string")
+                "only strings can be searched for when using template engine, param search is not a string"
+            )
         if not j.data.types.string.check(replace):
             raise j.exceptions.RuntimeError(
-                "can only replace with strings when using template engine, param replace is not a string")
+                "can only replace with strings when using template engine, param replace is not a string"
+            )
         self.replaceDict[search] = replace
         if variants:
             self.replaceDict[search + "s"] = self.makePlural(replace)
@@ -39,7 +40,7 @@ class TemplateEngine(j.application.JSBaseClass):
         for search in list(self.replaceDict.keys()):
             replace = self.replaceDict[search]
             body = body.replace("{" + search + "}", replace)
-            body = body.replace("{:urlencode:" + search + "}", urllib_parse.quote(replace, ''))
+            body = body.replace("{:urlencode:" + search + "}", urllib_parse.quote(replace, ""))
         return body
 
     def replace(self, body, replaceCount=3):
@@ -67,7 +68,7 @@ class TemplateEngine(j.application.JSBaseClass):
         self.replaceDict = {}
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     te = TemplateEngine()
     te.add("login", "kristof")
     te.add("passwd", "root")

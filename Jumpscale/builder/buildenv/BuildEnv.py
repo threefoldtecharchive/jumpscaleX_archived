@@ -52,7 +52,7 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
         install all components required for building (compiling)
 
         to use e.g.
-            js_shell 'j.builder.buildenv.development()'
+            kosmos 'j.builder.buildenv.development()'
 
         """
 

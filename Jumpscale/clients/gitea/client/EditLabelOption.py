@@ -8,8 +8,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class EditLabelOption(object):
     """
     auto-generated. don't touch.
@@ -28,16 +26,16 @@ class EditLabelOption(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'EditLabelOption'
+        class_name = "EditLabelOption"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.color = client_support.set_property('color', data, data_types, False, [], False, False, class_name)
+        self.color = client_support.set_property("color", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.name = client_support.set_property('name', data, data_types, False, [], False, False, class_name)
+        self.name = client_support.set_property("name", data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

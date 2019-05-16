@@ -5,54 +5,53 @@ from clients.racktivity.energyswitch.modelfactory.models.common.BaseModule impor
 
 
 class Model(BaseModule):
-
     def __init__(self, parent):
         super(Model, self).__init__(parent)
 
         self._pointerGuids = []
 
-        self._guidTable.update({
-            # GeneralModuleStatus
-            1: Value(u"type='TYPE_UNSIGNED_NUMBER'\nsize=1\nlength=1\nunit=''\nscale=0"),
-            # SpecificModuleStatus
-            2: Value(u"type='TYPE_UNSIGNED_NUMBER'\nsize=2\nlength=2\nunit=''\nscale=0"),
-            # CurrentTime
-            3: Value(u"type='TYPE_TIMESTAMP'\nsize=4\nlength=4\nunit='UNIX'\nscale=0"),
-            # TimeOnline
-            24: Value(u"type='TYPE_UNSIGNED_NUMBER'\nsize=4\nlength=4\nunit='s'\nscale=0"),
-            # LogMeInfo
-            31: Value(u"type='TYPE_UNSIGNED_NUMBER'\nsize=1\nlength=1\nunit=''\nscale=0"),
-            # Status
-            1000: Value(u"type='TYPE_UNSIGNED_NUMBER'\nsize=2\nlength=2\nunit=''\nscale=0"),
-            # ModuleName
-            10001: Value(u"type='TYPE_STRING'\nsize=32\nlength=32\nunit=''\nscale=0"),
-            # FirmwareVersion
-            10002: Value(u"type='TYPE_VERSION'\nsize=4\nlength=4\nunit=''\nscale=0"),
-            # HardwareVersion
-            10003: Value(u"type='TYPE_VERSION'\nsize=4\nlength=4\nunit=''\nscale=0"),
-            # FirmwareID
-            10004: Value(u"type='TYPE_STRING'\nsize=8\nlength=8\nunit=''\nscale=0"),
-            # HardwareID
-            10005: Value(u"type='TYPE_STRING'\nsize=8\nlength=8\nunit=''\nscale=0"),
-            # ModInfo
-            40008: Value(u"type='TYPE_STRING'\nsize=26\nlength=26\nunit=''\nscale=0"),
-        })
+        self._guidTable.update(
+            {
+                # GeneralModuleStatus
+                1: Value("type='TYPE_UNSIGNED_NUMBER'\nsize=1\nlength=1\nunit=''\nscale=0"),
+                # SpecificModuleStatus
+                2: Value("type='TYPE_UNSIGNED_NUMBER'\nsize=2\nlength=2\nunit=''\nscale=0"),
+                # CurrentTime
+                3: Value("type='TYPE_TIMESTAMP'\nsize=4\nlength=4\nunit='UNIX'\nscale=0"),
+                # TimeOnline
+                24: Value("type='TYPE_UNSIGNED_NUMBER'\nsize=4\nlength=4\nunit='s'\nscale=0"),
+                # LogMeInfo
+                31: Value("type='TYPE_UNSIGNED_NUMBER'\nsize=1\nlength=1\nunit=''\nscale=0"),
+                # Status
+                1000: Value("type='TYPE_UNSIGNED_NUMBER'\nsize=2\nlength=2\nunit=''\nscale=0"),
+                # ModuleName
+                10001: Value("type='TYPE_STRING'\nsize=32\nlength=32\nunit=''\nscale=0"),
+                # FirmwareVersion
+                10002: Value("type='TYPE_VERSION'\nsize=4\nlength=4\nunit=''\nscale=0"),
+                # HardwareVersion
+                10003: Value("type='TYPE_VERSION'\nsize=4\nlength=4\nunit=''\nscale=0"),
+                # FirmwareID
+                10004: Value("type='TYPE_STRING'\nsize=8\nlength=8\nunit=''\nscale=0"),
+                # HardwareID
+                10005: Value("type='TYPE_STRING'\nsize=8\nlength=8\nunit=''\nscale=0"),
+                # ModInfo
+                40008: Value("type='TYPE_STRING'\nsize=26\nlength=26\nunit=''\nscale=0"),
+            }
+        )
 
     def getModuleName(self, moduleID):
         guid = 10001
         portnumber = 0
         length = 1
         valDef = self._guidTable[guid]
-        data = self._parent.client.getAttribute(
-            moduleID, guid, portnumber, length)
+        data = self._parent.client.getAttribute(moduleID, guid, portnumber, length)
         return self._parent.getObjectFromData(data, valDef, count=length)
 
     def setModuleName(self, moduleID, value):
         guid = 10001
         portnumber = 0
         valDef = self._guidTable[guid]
-        data = self._parent.client.setAttribute(
-            moduleID, guid, convert.value2bin(value, valDef), portnumber)
+        data = self._parent.client.setAttribute(moduleID, guid, convert.value2bin(value, valDef), portnumber)
         return self._parent.getObjectFromData(data, valDef, setter=True)
 
     # Attribute 'FirmwareVersion' GUID  10002 Data type TYPE_VERSION
@@ -62,8 +61,7 @@ class Model(BaseModule):
         portnumber = 0
         length = 1
         valDef = self._guidTable[guid]
-        data = self._parent.client.getAttribute(
-            moduleID, guid, portnumber, length)
+        data = self._parent.client.getAttribute(moduleID, guid, portnumber, length)
         return self._parent.getObjectFromData(data, valDef, count=length)
 
     # Attribute 'FirmwareVersion' GUID  10002 Data type TYPE_VERSION_FULL
@@ -74,9 +72,8 @@ class Model(BaseModule):
         portnumber = 0
         length = 1
         valDef = copy(self._guidTable[guid])
-        valDef.type = 'TYPE_VERSION_FULL'
-        data = self._parent.client.getAttribute(
-            moduleID, guid, portnumber, length)
+        valDef.type = "TYPE_VERSION_FULL"
+        data = self._parent.client.getAttribute(moduleID, guid, portnumber, length)
         return self._parent.getObjectFromData(data, valDef, count=length)
 
     # Attribute 'HardwareVersion' GUID  10003 Data type TYPE_VERSION
@@ -86,8 +83,7 @@ class Model(BaseModule):
         portnumber = 0
         length = 1
         valDef = self._guidTable[guid]
-        data = self._parent.client.getAttribute(
-            moduleID, guid, portnumber, length)
+        data = self._parent.client.getAttribute(moduleID, guid, portnumber, length)
         return self._parent.getObjectFromData(data, valDef, count=length)
 
     # Attribute 'HardwareVersion' GUID  10003 Data type TYPE_VERSION_FULL
@@ -98,9 +94,8 @@ class Model(BaseModule):
         portnumber = 0
         length = 1
         valDef = copy(self._guidTable[guid])
-        valDef.type = 'TYPE_VERSION_FULL'
-        data = self._parent.client.getAttribute(
-            moduleID, guid, portnumber, length)
+        valDef.type = "TYPE_VERSION_FULL"
+        data = self._parent.client.getAttribute(moduleID, guid, portnumber, length)
         return self._parent.getObjectFromData(data, valDef, count=length)
 
     # Attribute 'FirmwareID' GUID  10004 Data type TYPE_STRING
@@ -110,8 +105,7 @@ class Model(BaseModule):
         portnumber = 0
         length = 1
         valDef = self._guidTable[guid]
-        data = self._parent.client.getAttribute(
-            moduleID, guid, portnumber, length)
+        data = self._parent.client.getAttribute(moduleID, guid, portnumber, length)
         return self._parent.getObjectFromData(data, valDef, count=length)
 
     # Attribute 'HardwareID' GUID  10005 Data type TYPE_STRING
@@ -121,8 +115,7 @@ class Model(BaseModule):
         portnumber = 0
         length = 1
         valDef = self._guidTable[guid]
-        data = self._parent.client.getAttribute(
-            moduleID, guid, portnumber, length)
+        data = self._parent.client.getAttribute(moduleID, guid, portnumber, length)
         return self._parent.getObjectFromData(data, valDef, count=length)
 
     # Attribute 'ModInfo' GUID  40008 Data type TYPE_COMMAND
@@ -131,8 +124,7 @@ class Model(BaseModule):
         portnumber = 0
         length = 1
         valDef = self._guidTable[guid]
-        data = self._parent.client.getAttribute(
-            moduleID, guid, portnumber, length)
+        data = self._parent.client.getAttribute(moduleID, guid, portnumber, length)
         return self._parent.getObjectFromData(data, valDef, count=length)
 
     def getPowerPointer(self, moduleID):

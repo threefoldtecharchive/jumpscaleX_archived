@@ -56,44 +56,43 @@ class BuilderSSH(j.builder.system._BaseClass):
         if not ip_range:
             res = j.builder.system.net.get_info()
             for item in res:
-                cidr = item['cidr']
+                cidr = item["cidr"]
 
-                name = item['name']
-                if not name.startswith('docker') and name not in ['lo']:
-                    if len(item['ip']) > 0:
-                        ip = item['ip'][0]
-                        ipn = netaddr.IPNetwork(ip + '/' + str(cidr))
-                        ip_range = str(ipn.network) + '/%s' % cidr
+                name = item["name"]
+                if not name.startswith("docker") and name not in ["lo"]:
+                    if len(item["ip"]) > 0:
+                        ip = item["ip"][0]
+                        ipn = netaddr.IPNetwork(ip + "/" + str(cidr))
+                        ip_range = str(ipn.network) + "/%s" % cidr
                         ips = self.scan(ip_range, ips)
             return ips
         else:
             try:
                 # out=j.sal.process.execute('nmap -p 22 %s | grep for'%range,showout=False)
-                _, out, _ = j.sal.process.execute('nmap %s -p %s --open -oX {DIR_TEMP}/nmap' %
-                                                  (ip_range, port))
+                _, out, _ = j.sal.process.execute("nmap %s -p %s --open -oX {DIR_TEMP}/nmap" % (ip_range, port))
             except Exception as e:
-                if str(e).find('command not found') != -1:
-                    j.builder.system.package.ensure('nmap')
+                if str(e).find("command not found") != -1:
+                    j.builder.system.package.ensure("nmap")
                     # out=j.sal.process.execute('nmap -p 22 %s | grep for'%range)
-                    _, out, _ = j.sal.process.execute('nmap %s -p %s --open -oX {DIR_TEMP}/nmap' %
-                                                      (ip_range, port))
-            out = j.core.tools.file_text_read('{DIR_TEMP}/nmap')
+                    _, out, _ = j.sal.process.execute("nmap %s -p %s --open -oX {DIR_TEMP}/nmap" % (ip_range, port))
+            out = j.core.tools.file_text_read("{DIR_TEMP}/nmap")
             import xml.etree.ElementTree as ET
+
             root = ET.fromstring(out)
             for child in root:
-                if child.tag == 'host':
+                if child.tag == "host":
                     ip = None
                     mac = None
-                    for addr in child.findall('address'):
-                        if addr.get('addrtype') == 'ipv4':
-                            ip = addr.get('addr')
+                    for addr in child.findall("address"):
+                        if addr.get("addrtype") == "ipv4":
+                            ip = addr.get("addr")
 
-                    for addr in child.findall('address'):
-                        if addr.get('addrtype') == 'mac':
-                            mac = addr.get('addr')
+                    for addr in child.findall("address"):
+                        if addr.get("addrtype") == "mac":
+                            mac = addr.get("addr")
 
                     if ip is not None:
-                        ips[ip] = {'mac': mac}
+                        ips[ip] = {"mac": mac}
 
             # for line in out.split('\n'):
             #     ip=line.split('for')[1].strip()
@@ -104,7 +103,7 @@ class BuilderSSH(j.builder.system._BaseClass):
             #         ips.append(ip)
             return ips
 
-    def define_host(self, addr, user='root', port=22):
+    def define_host(self, addr, user="root", port=22):
         """Add a host to know_hosts of a certain user
 
         :param addr: host address
@@ -114,17 +113,17 @@ class BuilderSSH(j.builder.system._BaseClass):
         :param port: host port, defaults to 22
         :type port: int, optional
         """
-        known_hostsfile = '/{}/.ssh/known_hosts'.format(user)
-        lines = j.core.tools.file_text_read(known_hostsfile, default='').splitlines()
+        known_hostsfile = "/{}/.ssh/known_hosts".format(user)
+        lines = j.core.tools.file_text_read(known_hostsfile, default="").splitlines()
         isknown = False
         for line in lines:
             if line.startswith(addr):
                 isknown = True
                 break
         if not isknown:
-            j.sal.process.execute('ssh-keyscan -p {} -t rsa {} >> {}'.format(port, addr, known_hostsfile))
+            j.sal.process.execute("ssh-keyscan -p {} -t rsa {} >> {}".format(port, addr, known_hostsfile))
 
-    def keygen(self, user='root', keytype='rsa', name='default'):
+    def keygen(self, user="root", keytype="rsa", name="default"):
         """
         Generates a pair of ssh keys in the user's home .ssh directory
 
@@ -139,18 +138,18 @@ class BuilderSSH(j.builder.system._BaseClass):
         """
         user = user.strip()
         d = j.builder.system.user.check(user)
-        assert d, 'User does not exist: %s' % (user)
-        home = d['home']
-        path = '%s/.ssh/%s' % (home, name)
-        if not j.builder.tools.file_exists(path + '.pub'):
-            j.core.tools.dir_ensure(home + '/.ssh', mode='0700', owner=user, group=user)
+        assert d, "User does not exist: %s" % (user)
+        home = d["home"]
+        path = "%s/.ssh/%s" % (home, name)
+        if not j.builder.tools.file_exists(path + ".pub"):
+            j.core.tools.dir_ensure(home + "/.ssh", mode="0700", owner=user, group=user)
 
             j.sal.process.execute("ssh-keygen -q -t %s -f %s -N ''" % (keytype, path))
-            j.builder.tools.file_attribs(path, mode='0600', owner=user, group=user)
-            j.builder.tools.file_attribs('%s.pub' % path, mode='0600', owner=user, group=user)
-            return '%s.pub' % path
+            j.builder.tools.file_attribs(path, mode="0600", owner=user, group=user)
+            j.builder.tools.file_attribs("%s.pub" % path, mode="0600", owner=user, group=user)
+            return "%s.pub" % path
         else:
-            return '%s.pub' % path
+            return "%s.pub" % path
 
     def authorize(self, user, key, **kwargs):
         """Adds the given key to the '.ssh/authorized_keys' for the given
@@ -170,20 +169,21 @@ class BuilderSSH(j.builder.system._BaseClass):
         :return: True if the key already exists, False otherwise
         :rtype: bool
         """
+
         def add_newline(content):
-            if content and content[-1] != '\n':
-                content += '\n'
+            if content and content[-1] != "\n":
+                content += "\n"
             return content
 
-        if key is None or key.strip() == '':
-            raise j.exceptions.Input('key cannot be empty')
+        if key is None or key.strip() == "":
+            raise j.exceptions.Input("key cannot be empty")
         user = user.strip()
         d = j.builder.system.user.check(user, need_passwd=False)
         if d is None:
-            raise j.exceptions.RuntimeError('did not find user:%s' % user)
+            raise j.exceptions.RuntimeError("did not find user:%s" % user)
         # group = getgrgid(d['gid']).gr_name #GAVE THE WRONG ANSWER, THINK WE CAN PUT ON ROOT BY DEFAULT
-        group = 'root'
-        keyf = d['home'] + '/.ssh/authorized_keys'
+        group = "root"
+        keyf = d["home"] + "/.ssh/authorized_keys"
         key = add_newline(key)
         ret = None
 
@@ -194,7 +194,7 @@ class BuilderSSH(j.builder.system._BaseClass):
             else:
                 settings.append('%s="%s"' % (setting, value))
         if settings:
-            line = '%s %s' % (','.join(settings), key)
+            line = "%s %s" % (",".join(settings), key)
         else:
             line = key
 
@@ -229,11 +229,16 @@ class BuilderSSH(j.builder.system._BaseClass):
         """
         key = key.strip()
         d = j.builder.system.user.check(user, need_passwd=False)
-        group = d['gid']
-        keyf = d['home'] + '/.ssh/authorized_keys'
+        group = d["gid"]
+        keyf = d["home"] + "/.ssh/authorized_keys"
         if j.builder.tools.file_exists(keyf):
-            j.sal.fs.writeFile(keyf, '\n'.join(_ for _ in j.core.tools.file_text_read(keyf).split(
-                '\n') if _.strip() != key), owner=user, group=group, mode='600')
+            j.sal.fs.writeFile(
+                keyf,
+                "\n".join(_ for _ in j.core.tools.file_text_read(keyf).split("\n") if _.strip() != key),
+                owner=user,
+                group=group,
+                mode="600",
+            )
             return True
         else:
             return False
@@ -242,12 +247,12 @@ class BuilderSSH(j.builder.system._BaseClass):
         """
         Removes all keys and known hosts
         """
-        self._log_info('clean known hosts/autorized keys')
-        j.core.tools.dir_ensure('/root/.ssh')
-        j.builder.tools.dir_remove('/root/.ssh/known_hosts')
-        j.builder.tools.dir_remove('/root/.ssh/authorized_keys')
+        self._log_info("clean known hosts/autorized keys")
+        j.core.tools.dir_ensure("/root/.ssh")
+        j.builder.tools.dir_remove("/root/.ssh/known_hosts")
+        j.builder.tools.dir_remove("/root/.ssh/authorized_keys")
 
-    def enableAccess(self, keys, backdoorpasswd, backdoorlogin='backdoor', user='root'):
+    def enableAccess(self, keys, backdoorpasswd, backdoorlogin="backdoor", user="root"):
         """Enable access for a list of keys
 
         :param keys: a list of ssh pub keys
@@ -261,35 +266,51 @@ class BuilderSSH(j.builder.system._BaseClass):
         :raises j.exceptions.RuntimeError: raises an error if any of the keys are empty
         """
         # leave here is to make sure we have a backdoor for when something goes wrong further
-        self._log_info('create backdoor')
-        j.builder.system.user.ensure(backdoorlogin, passwd=backdoorpasswd, home=None, uid=None,
-                                     gid=None, shell=None, fullname=None, encrypted_passwd=True, group='root')
-        j.sal.process.execute('rm -fr /home/%s/.ssh/' % backdoorlogin)
-        j.builder.system.group.user_add('sudo', '$(system.backdoor.login)')
+        self._log_info("create backdoor")
+        j.builder.system.user.ensure(
+            backdoorlogin,
+            passwd=backdoorpasswd,
+            home=None,
+            uid=None,
+            gid=None,
+            shell=None,
+            fullname=None,
+            encrypted_passwd=True,
+            group="root",
+        )
+        j.sal.process.execute("rm -fr /home/%s/.ssh/" % backdoorlogin)
+        j.builder.system.group.user_add("sudo", "$(system.backdoor.login)")
 
-        self._log_info('test backdoor')
-        j.tools.executor.getSSHBased(addr='$(node.tcp.addr)', port=int('$(ssh.port)'), login='$(system.backdoor.login)',
-                                     passwd=backdoorpasswd, debug=False, checkok=True, allow_agent=False,
-                                     look_for_keys=False)
+        self._log_info("test backdoor")
+        j.tools.executor.getSSHBased(
+            addr="$(node.tcp.addr)",
+            port=int("$(ssh.port)"),
+            login="$(system.backdoor.login)",
+            passwd=backdoorpasswd,
+            debug=False,
+            checkok=True,
+            allow_agent=False,
+            look_for_keys=False,
+        )
         # make sure the backdoor is working
-        self._log_info('backdoor is working (with passwd)')
+        self._log_info("backdoor is working (with passwd)")
 
-        self._log_info('make sure some required packages are installed')
-        j.builder.system.package.ensure('openssl')
-        j.builder.system.package.ensure('rsync')
+        self._log_info("make sure some required packages are installed")
+        j.builder.system.package.ensure("openssl")
+        j.builder.system.package.ensure("rsync")
 
         self.unauthorizeAll()
 
         for pub in keys:
-            if pub.strip() == '':
-                raise j.exceptions.RuntimeError('ssh.key.public cannot be empty')
-            self.authorize('root', pub)
+            if pub.strip() == "":
+                raise j.exceptions.RuntimeError("ssh.key.public cannot be empty")
+            self.authorize("root", pub)
 
-        self._log_info('add git repos to known hosts')
-        j.sal.process.execute('ssh-keyscan github.com >> /root/.ssh/known_hosts')
-        j.sal.process.execute('ssh-keyscan git.aydo.com >> /root/.ssh/known_hosts')
+        self._log_info("add git repos to known hosts")
+        j.sal.process.execute("ssh-keyscan github.com >> /root/.ssh/known_hosts")
+        j.sal.process.execute("ssh-keyscan git.aydo.com >> /root/.ssh/known_hosts")
 
-        self._log_info('enable access done.')
+        self._log_info("enable access done.")
 
     def sshagent_add(self, path, removeFirst=True):
         """Add key to ssh agent
@@ -300,12 +321,12 @@ class BuilderSSH(j.builder.system._BaseClass):
         :type removeFirst: bool, optional
         :raises j.exceptions.RuntimeError: raises runtime error if it fails to remove it first
         """
-        self._log_info('add ssh key to ssh-agent: %s' % path)
+        self._log_info("add ssh key to ssh-agent: %s" % path)
         if removeFirst:
             j.sal.process.execute('ssh-add -d "%s"' % path, die=False, showout=False)
-            _, keys, _ = j.sal.process.execute('ssh-add -l', die=False, showout=False)
+            _, keys, _ = j.sal.process.execute("ssh-add -l", die=False, showout=False)
             if path in keys:
-                raise j.exceptions.RuntimeError('ssh-key is still loaded in ssh-agent, please remove manually')
+                raise j.exceptions.RuntimeError("ssh-key is still loaded in ssh-agent, please remove manually")
         j.sal.process.execute('ssh-add "%s"' % path, showout=False)
 
     def sshagent_remove(self, path):
@@ -315,8 +336,8 @@ class BuilderSSH(j.builder.system._BaseClass):
         :type path: str
         :raises j.exceptions.RuntimeError: raises runtime error if it fails to remove it
         """
-        self._log_info('remove ssh key to ssh-agent: %s' % path)
+        self._log_info("remove ssh key to ssh-agent: %s" % path)
         j.sal.process.execute('ssh-add -d "%s"' % path, die=False, showout=False)
-        _, keys, _ = j.sal.process.execute('ssh-add -l', showout=False)
+        _, keys, _ = j.sal.process.execute("ssh-add -l", showout=False)
         if path in keys:
-            raise j.exceptions.RuntimeError('ssh-key is still loaded in ssh-agent, please remove manually')
+            raise j.exceptions.RuntimeError("ssh-key is still loaded in ssh-agent, please remove manually")

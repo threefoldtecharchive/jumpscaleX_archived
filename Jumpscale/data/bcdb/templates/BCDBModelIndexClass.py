@@ -77,7 +77,7 @@ class {{BASENAME}}:
 
     {%- for property_name in index.fields_key %}
     def get_by_{{property_name}}(self,{{property_name}}):
-        return self.get_from_keys({{property_name}}={{property_name}})
+        return self.get_from_keys({{property_name}}=str({{property_name}}))
     {%- endfor %}
 
     {%- endif %}

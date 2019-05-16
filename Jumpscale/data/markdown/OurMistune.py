@@ -6,6 +6,7 @@ from pygments import highlight
 from pygments.lexers import get_lexer_by_name
 from pygments.formatters import HtmlFormatter
 
+
 class MDRenderer(Renderer):
     """
     markdown renderer
@@ -25,7 +26,7 @@ class MDRenderer(Renderer):
         represent the document (which can then be reprocessed later into a
         separate format like docx or pdf).
         """
-        return ''
+        return ""
 
     def block_code(self, code, lang=None):
         """Rendering block level code. .
@@ -61,10 +62,9 @@ class MDRenderer(Renderer):
 
         :param html: text content of the html snippet.
         """
-        if self.options.get('skip_style') and \
-           html.lower().startswith('<style'):
-            return ''
-        if self.options.get('escape'):
+        if self.options.get("skip_style") and html.lower().startswith("<style"):
+            return ""
+        if self.options.get("escape"):
             return escape(html)
         return html
 
@@ -83,9 +83,9 @@ class MDRenderer(Renderer):
 
     def hrule(self):
         """Rendering method for ``<hr>`` tag."""
-        if self.options.get('use_xhtml'):
-            return '<hr />\n'
-        return '<hr>\n'
+        if self.options.get("use_xhtml"):
+            return "<hr />\n"
+        return "<hr>\n"
 
     def list(self, body, ordered=True):
         """
@@ -96,11 +96,11 @@ class MDRenderer(Renderer):
 
     def list_item(self, text):
         """Rendering list item snippet. Like ``<li>``."""
-        return '<li>%s</li>\n' % text
+        return "<li>%s</li>\n" % text
 
     def paragraph(self, text):
         """Rendering paragraph tags. Like ``<p>``."""
-        return '<p>%s</p>\n' % text.strip(' ')
+        return "<p>%s</p>\n" % text.strip(" ")
 
     def table(self, header, body):
         """Rendering table element. Wrap header and body in it.
@@ -108,17 +108,14 @@ class MDRenderer(Renderer):
         :param header: header part of the table.
         :param body: body part of the table.
         """
-        return (
-            '<table>\n<thead>%s</thead>\n'
-            '<tbody>\n%s</tbody>\n</table>\n'
-        ) % (header, body)
+        return ("<table>\n<thead>%s</thead>\n" "<tbody>\n%s</tbody>\n</table>\n") % (header, body)
 
     def table_row(self, content):
         """Rendering a table row. Like ``<tr>``.
 
         :param content: content of current table row.
         """
-        return '<tr>\n%s</tr>\n' % content
+        return "<tr>\n%s</tr>\n" % content
 
     def table_cell(self, content, **flags):
         """Rendering a table cell. Like ``<th>`` ``<td>``.
@@ -127,30 +124,28 @@ class MDRenderer(Renderer):
         :param header: whether this is header or not.
         :param align: align of current table cell.
         """
-        if flags['header']:
-            tag = 'th'
+        if flags["header"]:
+            tag = "th"
         else:
-            tag = 'td'
-        align = flags['align']
+            tag = "td"
+        align = flags["align"]
         if not align:
-            return '<%s>%s</%s>\n' % (tag, content, tag)
-        return '<%s style="text-align:%s">%s</%s>\n' % (
-            tag, align, content, tag
-        )
+            return "<%s>%s</%s>\n" % (tag, content, tag)
+        return '<%s style="text-align:%s">%s</%s>\n' % (tag, align, content, tag)
 
     def double_emphasis(self, text):
         """Rendering **strong** text.
 
         :param text: text content for emphasis.
         """
-        return '<strong>%s</strong>' % text
+        return "<strong>%s</strong>" % text
 
     def emphasis(self, text):
         """Rendering *emphasis* text.
 
         :param text: text content for emphasis.
         """
-        return '<em>%s</em>' % text
+        return "<em>%s</em>" % text
 
     def codespan(self, text):
         """Rendering inline `code` text.
@@ -158,20 +153,20 @@ class MDRenderer(Renderer):
         :param text: text content for inline code.
         """
         text = escape(text.rstrip(), smart_amp=False)
-        return '<code>%s</code>' % text
+        return "<code>%s</code>" % text
 
     def linebreak(self):
         """Rendering line break like ``<br>``."""
-        if self.options.get('use_xhtml'):
-            return '<br />\n'
-        return '<br>\n'
+        if self.options.get("use_xhtml"):
+            return "<br />\n"
+        return "<br>\n"
 
     def strikethrough(self, text):
         """Rendering ~~strikethrough~~ text.
 
         :param text: text content for strikethrough.
         """
-        return '<del>%s</del>' % text
+        return "<del>%s</del>" % text
 
     def text(self, text):
         """Rendering unformatted text.
@@ -188,7 +183,7 @@ class MDRenderer(Renderer):
         """
         text = link = escape(link)
         if is_email:
-            link = 'mailto:%s' % link
+            link = "mailto:%s" % link
         return '<a href="%s">%s</a>' % (link, text)
 
     def link(self, link, title, text):
@@ -218,22 +213,22 @@ class MDRenderer(Renderer):
             html = '<img src="%s" alt="%s" title="%s"' % (src, text, title)
         else:
             html = '<img src="%s" alt="%s"' % (src, text)
-        if self.options.get('use_xhtml'):
-            return '%s />' % html
-        return '%s>' % html
+        if self.options.get("use_xhtml"):
+            return "%s />" % html
+        return "%s>" % html
 
     def inline_html(self, html):
         """Rendering span level pure html content.
 
         :param html: text content of the html snippet.
         """
-        if self.options.get('escape'):
+        if self.options.get("escape"):
             return escape(html)
         return html
 
     def newline(self):
         """Rendering newline element."""
-        return ''
+        return ""
 
     def footnote_ref(self, key, index):
         """Rendering the ref anchor of a footnote.
@@ -241,10 +236,11 @@ class MDRenderer(Renderer):
         :param key: identity key for the footnote.
         :param index: the index count of current footnote.
         """
-        html = (
-            '<sup class="footnote-ref" id="fnref-%s">'
-            '<a href="#fn-%s" rel="footnote">%d</a></sup>'
-        ) % (escape(key), escape(key), index)
+        html = ('<sup class="footnote-ref" id="fnref-%s">' '<a href="#fn-%s" rel="footnote">%d</a></sup>') % (
+            escape(key),
+            escape(key),
+            index,
+        )
         return html
 
     def footnote_item(self, key, text):
@@ -253,14 +249,12 @@ class MDRenderer(Renderer):
         :param key: identity key for the footnote.
         :param text: text content of the footnote.
         """
-        back = (
-            '<a href="#fnref-%s" rev="footnote">&#8617;</a>'
-        ) % escape(key)
+        back = ('<a href="#fnref-%s" rev="footnote">&#8617;</a>') % escape(key)
         text = text.rstrip()
-        if text.endswith('</p>'):
-            text = re.sub(r'<\/p>$', r'%s</p>' % back, text)
+        if text.endswith("</p>"):
+            text = re.sub(r"<\/p>$", r"%s</p>" % back, text)
         else:
-            text = '%s<p>%s</p>' % (text, back)
+            text = "%s<p>%s</p>" % (text, back)
         html = '<li id="fn-%s">%s</li>\n' % (escape(key), text)
         return html
 

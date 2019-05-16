@@ -93,8 +93,8 @@ class MethodDoc(j.application.JSBaseClass):
         param_s = ""
         if len(self.params) > 0:
             param_s = ", ".join(
-                [str(arg.name) + "=" + str(arg.defaultvalue)
-                 if arg.defaultvalue else arg.name for arg in self.params])
+                [str(arg.name) + "=" + str(arg.defaultvalue) if arg.defaultvalue else arg.name for arg in self.params]
+            )
             param_s = "*%s*" % param_s
         out += "#### %s(%s) \n\n" % (self.name, param_s)
 
@@ -108,7 +108,6 @@ class MethodDoc(j.application.JSBaseClass):
 
 
 class ClassDoc(j.application.JSBaseClass):
-
     def __init__(self, classobj, location):
         JSBASE.__init__(self)
         self.location = location
@@ -131,8 +130,7 @@ class ClassDoc(j.application.JSBaseClass):
         try:
             source = inspect.getsource(method)
         except BaseException:
-            self.errors += '#### Error trying to add %s source in %s.\n' % (
-                name, self.location)
+            self.errors += "#### Error trying to add %s source in %s.\n" % (name, self.location)
 
         self._log_debug("ADD METHOD:%s %s" % (self.path, name))
         md = MethodDoc(method, name, self)
@@ -143,9 +141,7 @@ class ClassDoc(j.application.JSBaseClass):
         return self.location.replace(".", "_")
 
     def write(self, dest):
-        dest2 = j.sal.fs.joinPaths(
-            dest, self.location.split(".")[1], "%s.md" %
-            self.undersore_location())
+        dest2 = j.sal.fs.joinPaths(dest, self.location.split(".")[1], "%s.md" % self.undersore_location())
         destdir = j.sal.fs.getDirName(dest2)
         j.sal.fs.createDir(destdir)
         content = str(self)
@@ -199,8 +195,7 @@ class ObjectInspector(j.application.JSBaseClass):
     def __init__(self):
         self.__jslocation__ = "j.tools.objectinspector"
         JSBASE.__init__(self)
-        self.apiFileLocation = j.sal.fs.joinPaths(
-            j.dirs.CFGDIR, "codecompletionapi", "api")
+        self.apiFileLocation = j.sal.fs.joinPaths(j.dirs.CFGDIR, "codecompletionapi", "api")
         # j.sal.fs.createDir(j.sal.fs.joinPaths(j.dirs.JSCFGDIR, "codecompletionapi"))
         self.classDocs = {}
         self.visited = []
@@ -210,15 +205,9 @@ class ObjectInspector(j.application.JSBaseClass):
         # jstree['j.sal']={'unix': unixobject, 'fs': fsobject}
         self.jstree = OrderedDict()
 
-    def importAllLibs(
-            self,
-            ignore=[],
-            base="%s/lib/Jumpscale/" %
-            j.dirs.BASEDIR):
+    def importAllLibs(self, ignore=[], base="%s/lib/Jumpscale/" % j.dirs.BASEDIR):
         self.base = os.path.normpath(base)
-        towalk = j.sal.fs.listDirsInDir(
-            base, recursive=False, dirNameOnly=True,
-            findDirectorySymlinks=True)
+        towalk = j.sal.fs.listDirsInDir(base, recursive=False, dirNameOnly=True, findDirectorySymlinks=True)
         errors = "### errors while trying to import libraries\n\n"
         for item in towalk:
 
@@ -241,11 +230,7 @@ class ObjectInspector(j.application.JSBaseClass):
         errormsg = errormsg.strip("*")
         errormsg = errormsg.strip()
         errormsg = "* %s\n" % errormsg
-        j.sal.fs.writeFile(
-            filename="%s/errors.md" %
-            self.dest,
-            contents=errormsg,
-            append=True)
+        j.sal.fs.writeFile(filename="%s/errors.md" % self.dest, contents=errormsg, append=True)
 
     def generateDocs(self, dest, ignore=[], objpath="j"):
         """
@@ -260,14 +245,14 @@ class ObjectInspector(j.application.JSBaseClass):
         j.sal.fs.writeFile("%s/errors.md" % dest, "")
         j.sal.fs.createDir(self.dest)
         self.errors = self.importAllLibs(ignore=ignore)
-        #self.errors = ''
+        # self.errors = ''
         objectLocationPath = objpath
 
         # extract the object name (j.sal.unix ) -> unix to make a stub out of
         # it.
-        objname = ''
-        filepath = ''
-        if '.' in objpath:
+        objname = ""
+        filepath = ""
+        if "." in objpath:
             objname = objpath.split(".")[-1]
         else:
             objname = objpath
@@ -287,13 +272,10 @@ class ObjectInspector(j.application.JSBaseClass):
 
         # add the root object to the tree (self.jstree) as its first element
         # (order maintained by ordereddict/pickle)
-        self.jstree[objectLocationPath] = attrib(
-            objname, "class", 'emptydocs', objectLocationPath)
+        self.jstree[objectLocationPath] = attrib(objname, "class", "emptydocs", objectLocationPath)
         self.inspect(objectLocationPath)
         j.sal.fs.createDir(dest)
-        j.sal.fs.writeFile(
-            filename="%s/errors.md" %
-            dest, contents=self.errors, append=True)
+        j.sal.fs.writeFile(filename="%s/errors.md" % dest, contents=self.errors, append=True)
         self.writeDocs(dest)
 
     def _processMethod(self, name, method, path, classobj):
@@ -312,12 +294,7 @@ class ObjectInspector(j.application.JSBaseClass):
             self.classDocs[path] = ClassDoc(classobj, path)
         obj = self.classDocs[path]
 
-    def inspect(
-            self,
-            objectLocationPath="j",
-            recursive=True,
-            parent=None,
-            obj=None):
+    def inspect(self, objectLocationPath="j", recursive=True, parent=None, obj=None):
         """
         walk over objects in memory and create code completion api in jumpscale cfgDir under codecompletionapi
         @param object is start object
@@ -353,11 +330,7 @@ class ObjectInspector(j.application.JSBaseClass):
             return
         attrs = dir(obj)
 
-        ignore = [
-            "constructor_args",
-            "NOTHING",
-            "template_class",
-            "redirect_cache"]
+        ignore = ["constructor_args", "NOTHING", "template_class", "redirect_cache"]
 
         def check(item):
             if item == "_getFactoryEnabledClasses":
@@ -376,8 +349,7 @@ class ObjectInspector(j.application.JSBaseClass):
 
         for objattributename in attrs:
             filepath = None
-            objectLocationPath2 = "%s.%s" % (
-                objectLocationPath, objattributename)
+            objectLocationPath2 = "%s.%s" % (objectLocationPath, objattributename)
             try:
                 objattribute = eval("obj.%s" % objattributename)
             except Exception as e:
@@ -387,11 +359,8 @@ class ObjectInspector(j.application.JSBaseClass):
             if objattributename.upper() == objattributename:
                 # is special type or constant
                 self._log_debug("special type: %s" % objectLocationPath2)
-                j.sal.fs.writeFile(
-                    self.apiFileLocation, "%s?7\n" %
-                    objectLocationPath2, True)
-                self.jstree[objectLocationPath2] = attrib(
-                    objattributename, "const", '', objectLocationPath2, filepath)
+                j.sal.fs.writeFile(self.apiFileLocation, "%s?7\n" % objectLocationPath2, True)
+                self.jstree[objectLocationPath2] = attrib(objattributename, "const", "", objectLocationPath2, filepath)
 
             elif objattributename == "_getFactoryEnabledClasses":
                 try:
@@ -401,17 +370,18 @@ class ObjectInspector(j.application.JSBaseClass):
                         else:
                             objectLocationPath2 = objectLocationPath + "." + name
                         self._processClass(name, objectLocationPath2, obj)
-                        if not isinstance(
-                                objattribute, (str, bool, int, float, dict, list, tuple)):
-                            self.inspect(
-                                objectLocationPath=objectLocationPath2,
-                                recursive=True, parent=obj, obj=obj2)
+                        if not isinstance(objattribute, (str, bool, int, float, dict, list, tuple)):
+                            self.inspect(objectLocationPath=objectLocationPath2, recursive=True, parent=obj, obj=obj2)
 
                 except Exception as e:
-                    self._log_error(
-                        "the _getFactoryEnabledClasses gives error")
+                    self._log_error("the _getFactoryEnabledClasses gives error")
                     import ipdb
-            elif inspect.isfunction(objattribute) or inspect.ismethod(objattribute) or inspect.isbuiltin(objattribute) or inspect.isgenerator(objattribute):
+            elif (
+                inspect.isfunction(objattribute)
+                or inspect.ismethod(objattribute)
+                or inspect.isbuiltin(objattribute)
+                or inspect.isgenerator(objattribute)
+            ):
                 # isinstance(objattribute, (types.BuiltinMethodType,
                 # types.BuiltinFunctionType, types.MethodType,
                 # types.FunctionType)):
@@ -426,48 +396,35 @@ class ObjectInspector(j.application.JSBaseClass):
                 except Exception as e:
                     self._log_error(str(e))
 
-                source, params = self._processMethod(
-                    objattributename, objattribute, objectLocationPath2, obj)
+                source, params = self._processMethod(objattributename, objattribute, objectLocationPath2, obj)
                 self._log_debug("instancemethod: %s" % objectLocationPath2)
-                j.sal.fs.writeFile(
-                    self.apiFileLocation, "%s?4(%s)\n" %
-                    (objectLocationPath2, params), True)
+                j.sal.fs.writeFile(self.apiFileLocation, "%s?4(%s)\n" % (objectLocationPath2, params), True)
                 self.jstree[objectLocationPath2] = attrib(
-                    objattributename, "method", objattribute.__doc__,
-                    objectLocationPath2, filepath, methodargs)
+                    objattributename, "method", objattribute.__doc__, objectLocationPath2, filepath, methodargs
+                )
 
             elif isinstance(objattribute, (str, bool, int, float, list, tuple, dict, property)) or objattribute is None:
                 self._log_debug("property: %s" % objectLocationPath2)
-                j.sal.fs.writeFile(
-                    self.apiFileLocation, "%s?8\n" %
-                    objectLocationPath2, True)
+                j.sal.fs.writeFile(self.apiFileLocation, "%s?8\n" % objectLocationPath2, True)
                 self.jstree[objectLocationPath2] = attrib(
-                    objattributename, "property", objattribute.__doc__, objectLocationPath2)
+                    objattributename, "property", objattribute.__doc__, objectLocationPath2
+                )
 
             elif isinstance(objattribute.__class__, type):
-                j.sal.fs.writeFile(
-                    self.apiFileLocation, "%s?8\n" %
-                    objectLocationPath2, True)
-                self._log_debug(
-                    "class or instance: %s" %
-                    objectLocationPath2)
+                j.sal.fs.writeFile(self.apiFileLocation, "%s?8\n" % objectLocationPath2, True)
+                self._log_debug("class or instance: %s" % objectLocationPath2)
                 try:
                     filepath = inspect.getfile(objattribute.__class__)
                 except BaseException:
                     pass
                 self.jstree[objectLocationPath2] = attrib(
-                    objattributename, "class", objattribute.__doc__,
-                    objectLocationPath2, filepath)
+                    objattributename, "class", objattribute.__doc__, objectLocationPath2, filepath
+                )
                 try:
-                    if not isinstance(
-                        objattribute,
-                        (str,
-                         bool,
-                         int,
-                         float,
-                         dict,
-                         list,
-                         tuple)) or objattribute is not None:
+                    if (
+                        not isinstance(objattribute, (str, bool, int, float, dict, list, tuple))
+                        or objattribute is not None
+                    ):
                         self.inspect(objectLocationPath2, parent=objattribute)
                 except Exception as e:
                     self._log_error(str(e))
@@ -502,11 +459,10 @@ class ObjectInspector(j.application.JSBaseClass):
                 keylink = keylink + ".md"
                 summarytxt += "    * [%s](%s)\n" % (key2, keylink)
 
-        j.sal.fs.writeFile(
-            filename="%s/SUMMARY.md" %
-            (self.dest), contents=summarytxt)
+        j.sal.fs.writeFile(filename="%s/SUMMARY.md" % (self.dest), contents=summarytxt)
 
-        with open("%s/out.pickled" % self.dest, 'wb') as f:
+        with open("%s/out.pickled" % self.dest, "wb") as f:
             import pickle
+
             pickle.dump(self.jstree, f)
-            #json.dump(self.jstree,  f, indent=4, sort_keys=True)
+            # json.dump(self.jstree,  f, indent=4, sort_keys=True)

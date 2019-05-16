@@ -7,7 +7,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class GiteaRepos(j.application.JSBaseClass):
-
     def __init__(self, client, user):
         JSBASE.__init__(self)
         self.user = user
@@ -29,7 +28,7 @@ class GiteaRepos(j.application.JSBaseClass):
                     setattr(r, k, v)
             except Exception as e:
                 if e.response.status_code == 404:
-                    self._log_error('repo does not exist')
+                    self._log_error("repo does not exist")
                 else:
                     self._log_error(e.response.content)
                 return
@@ -63,14 +62,14 @@ class GiteaRepos(j.application.JSBaseClass):
             items = self.user.client.api.users.userListStarred(username=self.user.username).json()
 
         for item in items:
-            if item['owner']['username'] == self.client.users.current.username:
+            if item["owner"]["username"] == self.client.users.current.username:
                 repo = self.new()
             else:
                 repo = self.new(owner=False)
                 u = self.client.users.new()
-                for k, v in item['owner'].items():
+                for k, v in item["owner"].items():
                     setattr(u, k, v)
-                repo.user  = u
+                repo.user = u
 
             for k, v in item.items():
                 setattr(repo, k, v)
@@ -87,12 +86,12 @@ class GiteaRepos(j.application.JSBaseClass):
             items = self.user.client.api.users.userListSubscriptions(username=self.user.username).json()
 
         for item in items:
-            if item['owner']['username'] == self.client.users.current.username:
+            if item["owner"]["username"] == self.client.users.current.username:
                 repo = self.new()
             else:
                 repo = self.new(owner=False)
                 u = self.client.users.new()
-                for k, v in item['owner'].items():
+                for k, v in item["owner"].items():
                     setattr(u, k, v)
                 repo.user = u
             for k, v in item.items():
@@ -100,30 +99,21 @@ class GiteaRepos(j.application.JSBaseClass):
             result.append(repo)
         return result
 
-    def migrate(
-            self,
-            auth_username,
-            auth_password,
-            clone_addr,
-            repo_name,
-            description='',
-            mirror=True,
-            private=True
-    ):
+    def migrate(self, auth_username, auth_password, clone_addr, repo_name, description="", mirror=True, private=True):
         try:
             # user is not fetched
             if not self.user.id:
                 self.user = self.client.users.get(username=self.user.username, fetch=True)
 
             d = {
-                'auth_username': auth_username,
-                'auth_password': auth_password,
-                'clone_addr': clone_addr,
-                'description': description,
-                'mirror': mirror,
-                'repo_name': repo_name,
-                'uid': self.user.id,
-                'private': private
+                "auth_username": auth_username,
+                "auth_password": auth_password,
+                "clone_addr": clone_addr,
+                "description": description,
+                "mirror": mirror,
+                "repo_name": repo_name,
+                "uid": self.user.id,
+                "private": private,
             }
 
             r = self.user.client.api.repos.repoMigrate(d).json()
@@ -134,13 +124,7 @@ class GiteaRepos(j.application.JSBaseClass):
         except Exception as e:
             self._log_debug(e.response.content)
 
-    def search(
-            self,
-            query,
-            mode,
-            page_number=1,
-            page_size=150,
-    ):
+    def search(self, query, mode, page_number=1, page_size=150):
 
         return self.client.repos.search(query, mode, self.user.id, page_number, page_size, exclusive=True)
 
@@ -149,12 +133,12 @@ class GiteaRepos(j.application.JSBaseClass):
         if self.position < len(self._items):
             item = self._items[self.position]
             self.position += 1
-            if item['owner']['username'] == self.client.users.current.username:
+            if item["owner"]["username"] == self.client.users.current.username:
                 repo = self.new()
             else:
                 repo = self.new(owner=False)
                 u = self.client.users.new()
-                for k, v in item['owner'].items():
+                for k, v in item["owner"].items():
                     setattr(u, k, v)
                 repo.user = u
             for k, v in item.items():
@@ -172,7 +156,7 @@ class GiteaRepos(j.application.JSBaseClass):
 
         return self
 
-    def __repr__ (self):
+    def __repr__(self):
         return "<Repos Iterator for user: {0}>".format(self.user.username)
 
     __str__ = __repr__

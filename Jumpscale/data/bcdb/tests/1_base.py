@@ -30,7 +30,7 @@ def main(self):
             model_obj.description = "something"
             model_obj.name = "name%s" % i
             model_obj.email = "info%s@something.com" % i
-            model_obj2 = model.set_dynamic(model_obj)
+            model_obj2 = model._set(model_obj)
 
         model_obj3 = model.get(model_obj2.id)
         assert model_obj3.id == model_obj2.id
@@ -41,26 +41,26 @@ def main(self):
         return db
 
     db = load()
-    db_model = db.model_get(url="despiegk.test")
+    db_model = db.model_get_from_url(url="despiegk.test")
     query = db_model.index.select()
     qres = [(item.name, item.nr) for item in query]
 
-    assert qres == [('name0', 0),
-                    ('name1', 1),
-                    ('name2', 2),
-                    ('name3', 3),
-                    ('name4', 4),
-                    ('name5', 5),
-                    ('name6', 6),
-                    ('name7', 7),
-                    ('name8', 8),
-                    ('name9', 9)]
+    assert qres == [
+        ("name0", 0),
+        ("name1", 1),
+        ("name2", 2),
+        ("name3", 3),
+        ("name4", 4),
+        ("name5", 5),
+        ("name6", 6),
+        ("name7", 7),
+        ("name8", 8),
+        ("name9", 9),
+    ]
 
-    assert db_model.index.select().where(
-        db_model.index.nr == 5)[0].name == "name5"
+    assert db_model.index.select().where(db_model.index.nr == 5)[0].name == "name5"
 
-    query = db_model.index.select().where(
-        db_model.index.nr > 5)  # should return 4 records
+    query = db_model.index.select().where(db_model.index.nr > 5)  # should return 4 records
     qres = [(item.name, item.nr) for item in query]
 
     assert len(qres) == 4
@@ -81,19 +81,17 @@ def main(self):
 
     assert model_obj._changed_items == {}
     model_obj.name = "name3"
-    assert model_obj._changed_items == {
-        'name': 'name3'}  # now it really changed
+    assert model_obj._changed_items == {"name": "name3"}  # now it really changed
 
     assert model_obj._ddict["name"] == "name3"
 
     model_obj.token_price = "10 USD"
     assert model_obj.token_price_usd == 10
-    db_model.set_dynamic(model_obj)
+    db_model._set(model_obj)
     model_obj2 = db_model.get(model_obj.id)
     assert model_obj2.token_price_usd == 10
 
-    assert db_model.index.select().where(
-        db_model.index.id == model_obj.id).first().token_price == 10
+    assert db_model.index.select().where(db_model.index.id == model_obj.id).first().token_price == 10
 
     def do(id, obj, result):
         result[obj.nr] = obj.name
@@ -104,16 +102,18 @@ def main(self):
         result[obj.nr] = obj.name
 
     print(result)
-    assert result == {0: 'name0',
-                      1: 'name1',
-                      2: 'name3',
-                      3: 'name3',
-                      4: 'name4',
-                      5: 'name5',
-                      6: 'name6',
-                      7: 'name7',
-                      8: 'name8',
-                      9: 'name9'}
+    assert result == {
+        0: "name0",
+        1: "name1",
+        2: "name3",
+        3: "name3",
+        4: "name4",
+        5: "name5",
+        6: "name6",
+        7: "name7",
+        8: "name8",
+        9: "name9",
+    }
 
     result = {}
     # for obj in db_model.find(key='nr', key_start=7, reverse=False):
@@ -123,4 +123,4 @@ def main(self):
 
     self._log_info("TEST DONE")
 
-    return ("OK")
+    return "OK"

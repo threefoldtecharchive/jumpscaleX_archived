@@ -6,9 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class DnsAddress( ):
+class DnsAddress:
     """
     auto-generated. don't touch.
     """
@@ -25,14 +23,14 @@ class DnsAddress( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'DnsAddress'
+        class_name = "DnsAddress"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.name = client_support.set_property('name', data, data_types, False, [], False, True, class_name)
+        self.name = client_support.set_property("name", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

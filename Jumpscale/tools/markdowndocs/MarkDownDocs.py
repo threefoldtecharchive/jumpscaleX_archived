@@ -37,7 +37,7 @@ class Watcher:
 
 class PausingObserver(Observer):
     def dispatch_events(self, *args, **kwargs):
-        if not getattr(self, '_is_paused', False):
+        if not getattr(self, "_is_paused", False):
             super(PausingObserver, self).dispatch_events(*args, **kwargs)
 
     def pause(self):
@@ -50,7 +50,6 @@ class PausingObserver(Observer):
 
 
 class DocsiteChangeHandler(FileSystemEventHandler):
-
     def __init__(self, watcher):
         FileSystemEventHandler.__init__(self)
         self.watcher = watcher
@@ -70,7 +69,7 @@ class DocsiteChangeHandler(FileSystemEventHandler):
             return
         docsite = self.get_docsite_from_path(event.src_path)
         file_dir = event.src_path.split(docsite.path)[1]
-        if file_dir.startswith('/'):
+        if file_dir.startswith("/"):
             file_dir = file_dir[1:]
         file_dir = file_dir.lower()
         file_dir = j.sal.fs.joinPaths(docsite.outpath, file_dir)
@@ -95,10 +94,8 @@ class MarkDownDocs(j.application.JSBaseClass):
         self.__imports__ = "toml"
         self._macroPathsDone = []
         self._initOK = False
-        self._macroCodepath = j.sal.fs.joinPaths(
-            j.dirs.VARDIR, "markdowndocs_internal", "macros.py")
-        j.sal.fs.createDir(j.sal.fs.joinPaths(
-            j.dirs.VARDIR, "markdowndocs_internal"))
+        self._macroCodepath = j.sal.fs.joinPaths(j.dirs.VARDIR, "markdowndocs_internal", "macros.py")
+        j.sal.fs.createDir(j.sal.fs.joinPaths(j.dirs.VARDIR, "markdowndocs_internal"))
 
         self.docsites = {}  # location in the outpath per site
         self.outpath = j.sal.fs.joinPaths(j.dirs.VARDIR, "markdowndocs")
@@ -145,7 +142,9 @@ class MarkDownDocs(j.application.JSBaseClass):
     #         self.macros_load("https://github.com/Jumpscale/markdowndocs/tree/master/macros")
     #         self._initOK = True
 
-    def macros_load(self, pathOrUrl="https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/tools/markdowndocs/macros"):
+    def macros_load(
+        self, pathOrUrl="https://github.com/threefoldtech/jumpscaleX/tree/master/Jumpscale/tools/markdowndocs/macros"
+    ):
         """
         @param pathOrUrl can be existing path or url
         """
@@ -161,7 +160,8 @@ class MarkDownDocs(j.application.JSBaseClass):
             for path0 in j.sal.fs.listFilesInDir(path, recursive=False, filter="*.py", followSymlinks=True):
                 name = j.sal.fs.getBaseName(path0)[:-3]  # find name, remove .py
                 self._macros[name] = j.tools.jinja2.code_python_render(
-                    obj_key=name, path=path0, reload=False, objForHash=name)
+                    obj_key=name, path=path0, reload=False, objForHash=name
+                )
         # else:
         #     self._log_debug("macros not loaded, already there")
 
@@ -185,6 +185,7 @@ class MarkDownDocs(j.application.JSBaseClass):
         key = "%s_%s" % (namespace, name)
 
         import pudb
+
         pudb.set_trace()
 
         # we need the cache for performance reasons
@@ -192,7 +193,7 @@ class MarkDownDocs(j.application.JSBaseClass):
 
             # make sure we have the most dense ascii name for search
             ext = j.sal.fs.getFileExtension(name).lower()
-            name = name[:-(len(ext)+1)]  # name without extension
+            name = name[: -(len(ext) + 1)]  # name without extension
             name = j.core.text.strip_to_ascii_dense(name)
 
             namespace = j.core.text.strip_to_ascii_dense(namespace)
@@ -213,7 +214,8 @@ class MarkDownDocs(j.application.JSBaseClass):
             if (first and len(res) == 0) or not len(res) == 1:
                 if die:
                     raise j.exceptions.Input(
-                        message="Cannot find item with name:%s in namespace:'%s'" % (name, namespace))
+                        message="Cannot find item with name:%s in namespace:'%s'" % (name, namespace)
+                    )
                 else:
                     self._pointer_cache[key] = None
             else:
@@ -235,7 +237,7 @@ class MarkDownDocs(j.application.JSBaseClass):
             else:
                 find_method = ds.file_get
 
-            res0 = find_method(name=name+"."+ext, die=False)
+            res0 = find_method(name=name + "." + ext, die=False)
 
             if res0 is not None:
                 # we have a match, lets add to results
@@ -263,13 +265,14 @@ class MarkDownDocs(j.application.JSBaseClass):
         else:
             return None
 
-    def webserver(self, watch=True, branch='master', sonic_server=None):
+    def webserver(self, watch=True, branch="master", sonic_server=None):
         url = "https://github.com/threefoldfoundation/lapis-wiki"
         server_path = j.clients.git.getContentPathFromURLorPath(url)
         url = "https://github.com/threefoldtech/jumpscale_weblibs"
         weblibs_path = j.clients.git.getContentPathFromURLorPath(url)
-        j.sal.fs.symlink("{}/static".format(weblibs_path), "{}/static/weblibs".format(server_path),
-                         overwriteTarget=False)
+        j.sal.fs.symlink(
+            "{}/static".format(weblibs_path), "{}/static/weblibs".format(server_path), overwriteTarget=False
+        )
         cmd = "cd {0} && moonc . && lapis server".format(server_path)
         j.tools.tmux.execute(cmd, reset=False)
 
@@ -289,7 +292,7 @@ class MarkDownDocs(j.application.JSBaseClass):
             self.load_wikis(branch=branch)
             gevent.sleep(300)
 
-    def load_wikis(self, branch='master'):
+    def load_wikis(self, branch="master"):
         url = "https://github.com/threefoldfoundation/info_tokens/tree/%s/docs" % branch
         tf_tokens = self.load(url, name="tokens")
         tf_tokens.write()
@@ -316,22 +319,22 @@ class MarkDownDocs(j.application.JSBaseClass):
 
     def test(self, watch=False):
         """
-        js_shell 'j.tools.markdowndocs.test()'
+        kosmos 'j.tools.markdowndocs.test()'
         """
         url = "https://github.com/threefoldtech/jumpscale_weblibs/tree/master/docsites_examples/test/"
         ds = self.load(url, name="test")
 
         doc = ds.doc_get("links")
 
-        assert doc.data == {'color': 'green', 'importance': 'high', 'somelist': ['a', 'b', 'c']}
+        assert doc.data == {"color": "green", "importance": "high", "somelist": ["a", "b", "c"]}
 
         print(doc.images)
 
         for link in doc.links:
             print(link)
 
-        assert str(doc.link_get(cat="image", nr=0)) == 'link:image:unsplash.jpeg'
-        assert str(doc.link_get(cat="link", nr=0)) == 'link:link:https://unsplash.com/'
+        assert str(doc.link_get(cat="image", nr=0)) == "link:image:unsplash.jpeg"
+        assert str(doc.link_get(cat="link", nr=0)) == "link:link:https://unsplash.com/"
 
         doci = ds.doc_get("include_test")
 
@@ -349,10 +352,12 @@ class MarkDownDocs(j.application.JSBaseClass):
 
         doc = ds.doc_get("has_data")  # combines data from subdirs as well as data from doc itself
 
-        assert doc.data == {'color': 'blue',
-                            'colors': ['blue', 'red'],
-                            'importance': 'somewhat',
-                            'somelist': ['a', 'b', 'c']}
+        assert doc.data == {
+            "color": "blue",
+            "colors": ["blue", "red"],
+            "importance": "somewhat",
+            "somelist": ["a", "b", "c"],
+        }
 
         print("test of docsite done")
 

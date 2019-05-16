@@ -26,28 +26,31 @@ class PacketNet(JSConfigBase):
 
     @property
     def client(self):
-        '''If client not set, a new client is created
+        """If client not set, a new client is created
         
         :raises RuntimeError: Auth token not configured
         :return: client
         :rtype: 
-        '''
+        """
 
         if not self._client:
             if not self.auth_token_:
                 raise RuntimeError(
-                    "please configure your auth_token, do: 'js_config configure -l j.clients.packetnet -i {}'".format(self.name))
+                    "please configure your auth_token, do: 'js_config configure -l j.clients.packetnet -i {}'".format(
+                        self.name
+                    )
+                )
             self._client = packet.Manager(auth_token=self.auth_token_)
         return self._client
 
     @property
     def projectid(self):
-        '''
+        """
         :raises RuntimeError: Project with projectname not found
         :raises RuntimeError: More than one project found
         :return: project id
         :rtype: str
-        '''
+        """
 
         if self._projectid is None:
             if self.projectname is not "":
@@ -55,8 +58,7 @@ class PacketNet(JSConfigBase):
                     if item.name == self.projectname:
                         self._projectid = item.id
                         return self._projectid
-                raise RuntimeError(
-                    "did not find project with name:%s" % self.projectname)
+                raise RuntimeError("did not find project with name:%s" % self.projectname)
             else:
                 res = [item[0] for key, item in self.getProjects().items()]
                 if len(res) == 1:
@@ -67,10 +69,10 @@ class PacketNet(JSConfigBase):
 
     @property
     def plans(self):
-        '''
+        """
         :return: plans
         :rtype: list
-        '''
+        """
 
         if self._plans is None:
             self._plans = self.client.list_plans()
@@ -79,10 +81,10 @@ class PacketNet(JSConfigBase):
 
     @property
     def facilities(self):
-        '''
+        """
         :return: facilities
         :rtype: list
-        '''
+        """
 
         if self._facilities is None:
             self._facilities = self.client.list_facilities()
@@ -91,10 +93,10 @@ class PacketNet(JSConfigBase):
 
     @property
     def operatingsystems(self):
-        '''
+        """
         :return: operatin systems
         :rtype: list
-        '''
+        """
 
         if self._oses is None:
             self._oses = self.client.list_operating_systems()
@@ -103,10 +105,10 @@ class PacketNet(JSConfigBase):
 
     @property
     def projects(self):
-        '''
+        """
         :return: projects
         :rtype: list
-        '''
+        """
 
         if self._projects is None:
             self._projects = self.client.list_projects()
@@ -115,10 +117,10 @@ class PacketNet(JSConfigBase):
 
     @property
     def devices(self):
-        '''
+        """
         :return: devices
         :rtype: list
-        '''
+        """
 
         if self._devices is None:
             self._devices = self.client.list_devices(self.projectid)
@@ -126,11 +128,11 @@ class PacketNet(JSConfigBase):
         return self._devices
 
     def getPlans(self):
-        '''List all services plans available to provision device on
+        """List all services plans available to provision device on
 
         :return: plans
         :rtype: dict
-        '''
+        """
 
         res = {}
         for plan in self.plans:
@@ -138,34 +140,33 @@ class PacketNet(JSConfigBase):
         return res
 
     def getFacilities(self):
-        '''List all datacenters/facilities for the given project
+        """List all datacenters/facilities for the given project
 
         :return: facilities and their locations
         :rtype: dict
-        '''
+        """
         res = {}
         for item in self.facilities:
             res[item.code] = item.name
         return res
 
     def getOperatingSystems(self):
-        '''List available operating systems
+        """List available operating systems
 
         :return: operating systems
         :rtype: dict
-        '''
+        """
         res = {}
         for item in self.operatingsystems:
-            res[item.slug] = (item.name, item.distro,
-                              item.version, item.provisionable_on)
+            res[item.slug] = (item.name, item.distro, item.version, item.provisionable_on)
         return res
 
     def getProjects(self):
-        '''List projects
+        """List projects
         
         :return: projects
         :rtype: dict
-        '''
+        """
 
         res = {}
         for item in self.projects:
@@ -173,11 +174,11 @@ class PacketNet(JSConfigBase):
         return res
 
     def getDevices(self):
-        '''List devices for project
+        """List devices for project
         
         :return: devices
         :rtype: dict
-        '''
+        """
 
         res = {}
         for item in self.devices:
@@ -185,7 +186,7 @@ class PacketNet(JSConfigBase):
         return res
 
     def getDevice(self, name, id=None, die=False):
-        '''Get specific device
+        """Get specific device
         
         :param name: device name
         :type name: str
@@ -196,7 +197,7 @@ class PacketNet(JSConfigBase):
         :raises RuntimeError: Device not found
         :return: device
         :rtype: dict
-        '''
+        """
 
         if id is None:
             if name in [item for item in self.getDevices()]:
@@ -209,11 +210,11 @@ class PacketNet(JSConfigBase):
         raise RuntimeError("could not find device:%s" % name)
 
     def removeDevice(self, name):
-        '''Remove a specific device
+        """Remove a specific device
         
         :param name: device name
         :type name: str
-        '''
+        """
 
         res = self.getDevice(name)
         if res is not None:
@@ -222,9 +223,18 @@ class PacketNet(JSConfigBase):
             res.delete()
         j.tools.nodemgr.delete(instance=name)
 
-    def startDevice(self, hostname="removeMe", plan='baremetal_0', facility='ams1', os='ubuntu_17_04',
-                    ipxeUrl=None, wait=True, remove=False, sshkey=""):
-        '''
+    def startDevice(
+        self,
+        hostname="removeMe",
+        plan="baremetal_0",
+        facility="ams1",
+        os="ubuntu_17_04",
+        ipxeUrl=None,
+        wait=True,
+        remove=False,
+        sshkey="",
+    ):
+        """
         will delete if it exists when remove=True, otherwise will check if it exists, if yes will return device object
         if not will create
         example ipxeUrl = https://bootstrap.grid.tf/ipxe/zero-os-master-generic
@@ -247,20 +257,39 @@ class PacketNet(JSConfigBase):
         :type sshkey: str, optional
         :return: device object if created
         :rtype: Object
-        '''
+        """
 
         self._log_info("start device:%s plan:%s os:%s facility:%s wait:%s" % (hostname, plan, os, facility, wait))
         if ipxeUrl is None:
             zerotierId = ""
         else:
-            zerotierId = ipxeUrl.split('/')[-1]
+            zerotierId = ipxeUrl.split("/")[-1]
         return self._startDevice(
-            hostname=hostname, plan=plan, facility=facility, os=os, wait=wait, remove=remove, ipxeUrl=ipxeUrl,
-            zerotierId=zerotierId, always_pxe=False, sshkey=sshkey)
+            hostname=hostname,
+            plan=plan,
+            facility=facility,
+            os=os,
+            wait=wait,
+            remove=remove,
+            ipxeUrl=ipxeUrl,
+            zerotierId=zerotierId,
+            always_pxe=False,
+            sshkey=sshkey,
+        )
 
-    def startZeroOS(self, hostname="removeMe", plan='baremetal_0', facility='ams1', zerotierId="",
-                    zerotierAPI="", wait=True, remove=False, params=None, branch='master'):
-        '''
+    def startZeroOS(
+        self,
+        hostname="removeMe",
+        plan="baremetal_0",
+        facility="ams1",
+        zerotierId="",
+        zerotierAPI="",
+        wait=True,
+        remove=False,
+        params=None,
+        branch="master",
+    ):
+        """
         return (zero-os-client,pubIpAddress,zerotierIpAddress)
 
         :param hostname: defaults to "removeMe"
@@ -285,7 +314,7 @@ class PacketNet(JSConfigBase):
         :raises RuntimeError: zerotierAPI not specified
         :return: zero-os-client, pubIpAddress, zerotierIpAddress
         :rtype: ,str,str
-        '''
+        """
         self._log_info(
             "start device:%s plan:%s facility:%s zerotierId:%s wait:%s" % (hostname, plan, facility, zerotierId, wait)
         )
@@ -296,20 +325,32 @@ class PacketNet(JSConfigBase):
         ipxeUrl = "http://unsecure.bootstrap.grid.tf/ipxe/{}/{}".format(branch, zerotierId)
 
         if params is not None:
-            pstring = '%20'.join(params)
-            ipxeUrl = ipxeUrl + '/' + pstring
+            pstring = "%20".join(params)
+            ipxeUrl = ipxeUrl + "/" + pstring
 
-        node = self._startDevice(hostname=hostname, plan=plan, facility=facility, os="",
-                                 wait=wait, remove=remove, ipxeUrl=ipxeUrl, zerotierId=zerotierId, always_pxe=True)
+        node = self._startDevice(
+            hostname=hostname,
+            plan=plan,
+            facility=facility,
+            os="",
+            wait=wait,
+            remove=remove,
+            ipxeUrl=ipxeUrl,
+            zerotierId=zerotierId,
+            always_pxe=True,
+        )
 
         # data = {'token_': zerotierAPI, 'networkID_': zerotierId}
-        data = {'token_': zerotierAPI}
+        data = {"token_": zerotierAPI}
         zerotierClient = j.clients.zerotier.get(self.instance, data=data)
 
         public_ip = node.addr
         if not public_ip:
-            ipaddr = [netinfo['address']
-                      for netinfo in node.pubconfig['netinfo'] if netinfo['public'] and netinfo['address_family'] == 4]
+            ipaddr = [
+                netinfo["address"]
+                for netinfo in node.pubconfig["netinfo"]
+                if netinfo["public"] and netinfo["address_family"] == 4
+            ]
             public_ip = ipaddr[0]
 
         while True:
@@ -325,76 +366,86 @@ class PacketNet(JSConfigBase):
                 time.sleep(5)
 
         self._log_info("[+] zerotier IP: %s" % ipaddr_priv)
-        data = {'host': ipaddr_priv, 'timeout': 10, 'port': 6379, 'password_': '', 'db': 0, 'ssl': True}
+        data = {"host": ipaddr_priv, "timeout": 10, "port": 6379, "password_": "", "db": 0, "ssl": True}
         zosclient = j.clients.zero_os.get(ipaddr_priv, data=data)
         return zosclient, node, ipaddr_priv
 
-  # TODO: IS THIS STILL RELEVANT?
+    # TODO: IS THIS STILL RELEVANT?
 
-  # def zero_node_packetnet_install(self, packetnetClient, zerotierClient, project_name,
-  #                                   plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.grid.tf/ipxe/master'):
-  #       """
-  #       packetnetClient = j.clients.packetnet.get('TOKEN')
-  #       zerotierClient = j.clients.zerotier.get(instance='main', data={'token': 'TOKEN'})
-  #       project_name = packet.net project
-  #       plan_type: one of "Type 0", "Type 1", "Type 2" ,"Type 2A", "Type 3", "Type S"
-  #       location: one of "Amsterdam", "Tokyo", "Synnuvale", "Parsippany"
-  #       server_name: name of the server that is going to be created
-  #       zerotierNetworkID: zertotier network id
-  #       ipxe_base: change this to the version you want, use master branch by default
-  #       """
-  #
-  #       valid_plan_types = ("Type 0", "Type 1", "Type 2",
-  #                           "Type 2A", "Type 3", "Type S")  # FIXME
-  #       if plan_type not in valid_plan_types:
-  #           j.exceptions.Input("bad plan type %s. Valid plan type are %s" % (
-  #               plan_type, ','.join(valid_plan_types)))
-  #
-  #       if zerotierNetworkID:
-  #           ipxe_url = "%s/%s" % (ipxe_base, zerotierNetworkID)
-  #       else:
-  #           ipxe_url = None
-  #
-  #       hostname = server_name
-  #
-  #       # find project id
-  #       project_ids = [project.id for project in packetnetClient.projects if project.name == project_name]
-  #       if not project_ids:
-  #           raise j.exceptions.NotFound(
-  #               'No projects found with name %s' % project_name)
-  #       project_id = project_ids[0]
-  #       packetnetClient.project_id = project_id
-  #
-  #       packetnetClient.startDevice(hostname=server_name, plan=plan_type, facility=location, os='ubuntu_17_04',
-  #                                   ipxeUrl=ipxe_url, wait=True, remove=False)
-  #
-  #       device = packetnetClient.getDevice(server_name)
-  #       ip_pub = [netinfo['address'] for netinfo in device.ip_addresses if netinfo['public'] and netinfo['address_family'] == 4]
-  #
-  #       while True:
-  #           try:
-  #               network = zerotierClient.get_network(network_id=zerotierNetworkID)
-  #               member = network.member_get(public_ip=ip_pub[0])
-  #               ipaddr_priv = member.private_ip
-  #               break
-  #           except RuntimeError as e:
-  #               # case where we don't find the member in zerotier
-  #               self._log_error(e)
-  #               time.sleep(1)
-  #           except IndexError as e:
-  #               # case were we the member doesn't have a private ip
-  #               self._log_error("please authorize the server with the public ip %s in the zerotier network" % ip_pub[0])
-  #               time.sleep(1)
-  #
-  #       self._log_debug("server found: %s" % device.id)
-  #       self._log_debug("zerotier IP: %s" % ipaddr_priv)
-  #
-  #       return ip_pub, ipaddr_priv
-  #
+    # def zero_node_packetnet_install(self, packetnetClient, zerotierClient, project_name,
+    #                                   plan_type, location, server_name, zerotierNetworkID, ipxe_base='https://bootstrap.grid.tf/ipxe/master'):
+    #       """
+    #       packetnetClient = j.clients.packetnet.get('TOKEN')
+    #       zerotierClient = j.clients.zerotier.get(instance='main', data={'token': 'TOKEN'})
+    #       project_name = packet.net project
+    #       plan_type: one of "Type 0", "Type 1", "Type 2" ,"Type 2A", "Type 3", "Type S"
+    #       location: one of "Amsterdam", "Tokyo", "Synnuvale", "Parsippany"
+    #       server_name: name of the server that is going to be created
+    #       zerotierNetworkID: zertotier network id
+    #       ipxe_base: change this to the version you want, use master branch by default
+    #       """
+    #
+    #       valid_plan_types = ("Type 0", "Type 1", "Type 2",
+    #                           "Type 2A", "Type 3", "Type S")  # FIXME
+    #       if plan_type not in valid_plan_types:
+    #           j.exceptions.Input("bad plan type %s. Valid plan type are %s" % (
+    #               plan_type, ','.join(valid_plan_types)))
+    #
+    #       if zerotierNetworkID:
+    #           ipxe_url = "%s/%s" % (ipxe_base, zerotierNetworkID)
+    #       else:
+    #           ipxe_url = None
+    #
+    #       hostname = server_name
+    #
+    #       # find project id
+    #       project_ids = [project.id for project in packetnetClient.projects if project.name == project_name]
+    #       if not project_ids:
+    #           raise j.exceptions.NotFound(
+    #               'No projects found with name %s' % project_name)
+    #       project_id = project_ids[0]
+    #       packetnetClient.project_id = project_id
+    #
+    #       packetnetClient.startDevice(hostname=server_name, plan=plan_type, facility=location, os='ubuntu_17_04',
+    #                                   ipxeUrl=ipxe_url, wait=True, remove=False)
+    #
+    #       device = packetnetClient.getDevice(server_name)
+    #       ip_pub = [netinfo['address'] for netinfo in device.ip_addresses if netinfo['public'] and netinfo['address_family'] == 4]
+    #
+    #       while True:
+    #           try:
+    #               network = zerotierClient.get_network(network_id=zerotierNetworkID)
+    #               member = network.member_get(public_ip=ip_pub[0])
+    #               ipaddr_priv = member.private_ip
+    #               break
+    #           except RuntimeError as e:
+    #               # case where we don't find the member in zerotier
+    #               self._log_error(e)
+    #               time.sleep(1)
+    #           except IndexError as e:
+    #               # case were we the member doesn't have a private ip
+    #               self._log_error("please authorize the server with the public ip %s in the zerotier network" % ip_pub[0])
+    #               time.sleep(1)
+    #
+    #       self._log_debug("server found: %s" % device.id)
+    #       self._log_debug("zerotier IP: %s" % ipaddr_priv)
+    #
+    #       return ip_pub, ipaddr_priv
+    #
 
-    def _startDevice(self, hostname="removeMe", plan='baremetal_0', facility='ams1',
-                     os='ubuntu_17_04', wait=True, remove=True, ipxeUrl=None, zerotierId="", always_pxe=False,
-                     sshkey=""):
+    def _startDevice(
+        self,
+        hostname="removeMe",
+        plan="baremetal_0",
+        facility="ams1",
+        os="ubuntu_17_04",
+        wait=True,
+        remove=True,
+        ipxeUrl=None,
+        zerotierId="",
+        always_pxe=False,
+        sshkey="",
+    ):
         """
         will delete if it exists when remove=True, otherwise will check if it exists, if yes will return device object
         if not will create
@@ -415,13 +466,15 @@ class PacketNet(JSConfigBase):
             if sshkey:
                 self.addSSHKey(sshkey, hostname)
 
-            device = self.client.create_device(project_id=self.projectid,
-                                               hostname=hostname,
-                                               plan=plan,
-                                               facility=facility,
-                                               operating_system=os,
-                                               ipxe_script_url=ipxeUrl,
-                                               always_pxe=False)
+            device = self.client.create_device(
+                project_id=self.projectid,
+                hostname=hostname,
+                plan=plan,
+                facility=facility,
+                operating_system=os,
+                ipxe_script_url=ipxeUrl,
+                always_pxe=False,
+            )
             self._devices = None
 
         res = device.update()
@@ -430,8 +483,11 @@ class PacketNet(JSConfigBase):
             time.sleep(1)
             self._log_debug(res["state"])
 
-        ipaddr = [netinfo['address']
-                  for netinfo in res["ip_addresses"] if netinfo['public'] and netinfo['address_family'] == 4]
+        ipaddr = [
+            netinfo["address"]
+            for netinfo in res["ip_addresses"]
+            if netinfo["public"] and netinfo["address_family"] == 4
+        ]
 
         ipaddr = ipaddr[0]
 
@@ -445,8 +501,9 @@ class PacketNet(JSConfigBase):
                 sshclient = j.clients.ssh.new(instance=hostname, addr=ipaddr)
             else:
                 self.addSSHKey(sshkey, hostname)
-                sshclient = j.clients.ssh.get(instance=sshkey.instance,
-                                              data={'addr': ipaddr, 'login': 'root', 'sshkey': sshkey.instance})
+                sshclient = j.clients.ssh.get(
+                    instance=sshkey.instance, data={"addr": ipaddr, "login": "root", "sshkey": sshkey.instance}
+                )
             sshclient.connect()
             sshinstance = sshclient.instance
 
@@ -458,12 +515,14 @@ class PacketNet(JSConfigBase):
         conf["project_id"] = self.projectid
         conf["os"] = os
         conf["ipxeUrl"] = ipxeUrl
-        node = j.tools.nodemgr.set(name=hostname,
-                                   sshclient=sshinstance,
-                                   cat='packet',
-                                   description='',
-                                   selected=True,
-                                   clienttype="j.clients.packetnet")
+        node = j.tools.nodemgr.set(
+            name=hostname,
+            sshclient=sshinstance,
+            cat="packet",
+            description="",
+            selected=True,
+            clienttype="j.clients.packetnet",
+        )
 
         j.tools.executor.reset()
 

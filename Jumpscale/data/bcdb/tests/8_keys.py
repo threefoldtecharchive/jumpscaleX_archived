@@ -4,14 +4,12 @@ from Jumpscale import j
 def main(self):
     """
     to run:
-
     kosmos 'j.data.bcdb.test(name="keys")'
 
     """
 
     SCHEMA = """
     @url = threefoldtoken.wallet.test
-    @name = wallet
     name* = "wallet"
     jwt = "" (S)                # JWT Token
     addr* = ""                   # Address
@@ -84,7 +82,6 @@ def main(self):
 
     SCHEMA3 = """
     @url = threefoldtoken.wallet.test2
-    @name = wallet
     name* = "wallet3"
     jwt = "" (S)                # JWT Token
     addr* = "aa"                   # Address
@@ -121,17 +118,13 @@ def main(self):
     data = bcdb._hset_index_key_get(schema=m3.schema, returndata=True)
     redisid = data[bcdb.name][m3.schema.url]
     rkey = bcdb._hset_index_key_get(schema=m3.schema)
-    assert rkey.decode().endswith(
-        str(redisid)
-    )  # check that the raw info is same as the info from function
+    assert rkey.decode().endswith(str(redisid))  # check that the raw info is same as the info from function
 
     assert len(j.clients.credis_core.keys(rkey + b":*")) == 4
 
     assert len(m3.get_all()) == 1
 
-    assert [i for i in m3.id_iterator] == [
-        m3.get_all()[0].id
-    ]  # should only be the 1 id in there
+    assert [i for i in m3.id_iterator] == [m3.get_all()[0].id]  # should only be the 1 id in there
 
     assert len(m3.get_by_addr("test")) == 1
 

@@ -40,7 +40,7 @@ class CodeLoader(j.application.JSBaseClass):
         if md5 is None:
             md5 = j.data.hash.md5_string(text)
         if dest is None:
-            dest = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", md5+".py")
+            dest = j.sal.fs.joinPaths(j.dirs.VARDIR, "codegen", md5 + ".py")
 
         if reload or not j.sal.fs.exists(dest):
             j.sal.fs.writeFile(dest, text)

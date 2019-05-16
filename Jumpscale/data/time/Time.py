@@ -4,14 +4,15 @@ from .TimeInterval import TimeInterval
 from Jumpscale import j
 import struct
 
-TIMES = {'s': 1,
-         'm': 60,
-         'h': 3600,
-         'd': 3600 * 24,
-         'w': 3600 * 24 * 7,
-         'M': int(3600 * 24 * 365 / 12),
-         'Y': 3600 * 24 * 365,
-         }
+TIMES = {
+    "s": 1,
+    "m": 60,
+    "h": 3600,
+    "d": 3600 * 24,
+    "w": 3600 * 24 * 7,
+    "M": int(3600 * 24 * 365 / 12),
+    "Y": 3600 * 24 * 365,
+}
 
 
 class Time_(object):
@@ -34,9 +35,9 @@ class Time_(object):
         return int(time.time())
 
     def getTimeEpoch(self):
-        '''
+        """
         Get epoch timestamp (number of seconds passed since January 1, 1970)
-        '''
+        """
         timestamp = int(time.time())
         return timestamp
 
@@ -44,8 +45,8 @@ class Time_(object):
         """
         j.data.time.getSecondsInHR(365)
         """
-        minute = 60.
-        hour = 3600.
+        minute = 60.0
+        hour = 3600.0
         day = hour * 24
         week = day * 7
         if seconds < minute:
@@ -60,18 +61,18 @@ class Time_(object):
             return "%s weeks" % round((seconds / week), 1)
 
     def getTimeEpochBin(self):
-        '''
+        """
         Get epoch timestamp (number of seconds passed since January 1, 1970) in binary format of 4 bytes
-        '''
+        """
         return struct.pack("<I", self.getTimeEpoch())
 
     def getLocalTimeHR(self):
-        '''
+        """
         Get the current local date and time in a human-readable form
 
         j.data.time.getLocalTimeHR()
-        '''
-        #timestamp = time.asctime(time.localtime(time.time()))
+        """
+        # timestamp = time.asctime(time.localtime(time.time()))
         timestr = self.formatTime(self.getTimeEpoch())
         return timestr
 
@@ -79,8 +80,8 @@ class Time_(object):
         # TODO: check if correct implementation
         return time.strftime("%d_%b_%Y_%H_%M_%S", time.gmtime())
 
-    def formatTime(self, epoch, formatstr='%Y/%m/%d %H:%M:%S', local=True):
-        '''
+    def formatTime(self, epoch, formatstr="%Y/%m/%d %H:%M:%S", local=True):
+        """
         Returns a formatted time string representing the current time
 
         See http://docs.python.org/lib/module-time.html#l2h-2826 for an
@@ -91,7 +92,7 @@ class Time_(object):
 
         @returns: Formatted current time
         @rtype: string
-        '''
+        """
         epoch = float(epoch)
         if local:
             timetuple = time.localtime(epoch)
@@ -101,22 +102,20 @@ class Time_(object):
         return timestr
 
     def epoch2HRDate(self, epoch, local=True):
-        return self.formatTime(epoch, '%Y/%m/%d', local)
+        return self.formatTime(epoch, "%Y/%m/%d", local)
 
     def epoch2HRDateTime(self, epoch, local=True):
-        return self.formatTime(epoch, '%Y/%m/%d %H:%M:%S', local)
+        return self.formatTime(epoch, "%Y/%m/%d %H:%M:%S", local)
 
     def pythonDateTime2HRDateTime(self, pythonDateTime, local=True):
         if not isinstance(pythonDateTime, datetime.datetime):
-            raise j.exceptions.Input(
-                "needs to be python date.time obj:%s" % pythonDateTime)
+            raise j.exceptions.Input("needs to be python date.time obj:%s" % pythonDateTime)
         epoch = pythonDateTime.timestamp()
         return self.epoch2HRDateTime(epoch)
 
     def pythonDateTime2Epoch(self, pythonDateTime, local=True):
         if not isinstance(pythonDateTime, datetime.datetime):
-            raise j.exceptions.Input(
-                "needs to be python date.time obj:%s" % pythonDateTime)
+            raise j.exceptions.Input("needs to be python date.time obj:%s" % pythonDateTime)
 
         epoch = pythonDateTime.timestamp()
         return epoch
@@ -132,7 +131,7 @@ class Time_(object):
         return datetime.date.fromtimestamp(epoch)
 
     def epoch2HRTime(self, epoch, local=True):
-        return self.formatTime(epoch, '%H:%M:%S', local)
+        return self.formatTime(epoch, "%H:%M:%S", local)
 
     def getMinuteId(self, epoch=None):
         """
@@ -141,8 +140,7 @@ class Time_(object):
         if epoch is None:
             epoch = time.time()
         if epoch < 1262318400.0:
-            raise j.exceptions.RuntimeError(
-                "epoch cannot be smaller than 1262318400, given epoch:%s" % epoch)
+            raise j.exceptions.RuntimeError("epoch cannot be smaller than 1262318400, given epoch:%s" % epoch)
 
         return int((epoch - 1262318400.0) / 60.0)
 
@@ -178,9 +176,8 @@ class Time_(object):
         unit = txt[-1]
         if txt[-1] not in list(TIMES.keys()):
             raise j.exceptions.RuntimeError(
-                "Cannot find time, needs to be in format have time indicator %s " %
-                list(
-                    TIMES.keys()))
+                "Cannot find time, needs to be in format have time indicator %s " % list(TIMES.keys())
+            )
         value = float(txt[:-1])
         return int(value * TIMES[unit])
 
@@ -212,8 +209,8 @@ class Time_(object):
             return time.mktime(time.strptime(datestr, "%Y/%m/%d"))
         except BaseException:
             raise ValueError(
-                "Date needs to be formatted as \" 1988/06/16\", also check if date is valid, now format = %s" %
-                datestr)
+                'Date needs to be formatted as " 1988/06/16", also check if date is valid, now format = %s' % datestr
+            )
 
     def HRDateTime2epoch(self, hrdatetime):
         """
@@ -224,15 +221,12 @@ class Time_(object):
             return 0
         try:
             hrdatetime = hrdatetime.strip()
-            return int(
-                time.mktime(
-                    time.strptime(
-                        hrdatetime,
-                        "%Y/%m/%d %H:%M:%S")))
+            return int(time.mktime(time.strptime(hrdatetime, "%Y/%m/%d %H:%M:%S")))
         except BaseException:
             raise ValueError(
-                "Date needs to be formatted as Needs to be formatted as 16/06/1988 %H:%M:%S, also check if date is valid, now format = %s" %
-                hrdatetime)
+                "Date needs to be formatted as Needs to be formatted as 16/06/1988 %H:%M:%S, also check if date is valid, now format = %s"
+                % hrdatetime
+            )
 
     def any2epoch(self, val, in_list=False):
         """
@@ -264,7 +258,8 @@ class Time_(object):
             return self.pythonDateTime2Epoch(val)
         if not in_list:
             raise j.exceptions.Input(
-                "Could not define format of time value, needs to be int, human readable time, list or python datetime obj.")
+                "Could not define format of time value, needs to be int, human readable time, list or python datetime obj."
+            )
         else:
             return 0
 

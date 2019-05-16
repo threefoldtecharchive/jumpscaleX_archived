@@ -1,5 +1,5 @@
-
 from Jumpscale import j
+
 
 class LoggerFactory(j.application.JSBaseClass):
 
@@ -7,29 +7,28 @@ class LoggerFactory(j.application.JSBaseClass):
     # _CHILDCLASS = LoggerBase
     # _LoggerInstance = LoggerInstance
 
-
     @property
     def debug(self):
         return j.core.myenv.config["DEBUG"]
 
     @debug.setter
-    def debug(self,value):
+    def debug(self, value):
         assert j.data.types.bool.check(value)
         config = {}
-        config["DEBUG"]=value
+        config["DEBUG"] = value
         self.config = config
 
     @property
     def config(self):
 
-        res={}
+        res = {}
         for name in j.core.myenv.config.keys():
-            if name.startswith("LOGGER") or name=="DEBUG":
-                res[name]=j.core.myenv.config[name]
+            if name.startswith("LOGGER") or name == "DEBUG":
+                res[name] = j.core.myenv.config[name]
         return res
 
     @config.setter
-    def config(self,value):
+    def config(self, value):
         """
 
         default :
@@ -48,13 +47,13 @@ class LoggerFactory(j.application.JSBaseClass):
         :return:
         """
         assert j.data.types.dict.check(value)
-        changed=False
+        changed = False
         for name in j.core.myenv.config.keys():
-            if name.startswith("LOGGER") or name=="DEBUG":
+            if name.startswith("LOGGER") or name == "DEBUG":
                 if name in value:
                     if j.core.myenv.config[name] != value[name]:
-                        changed=True
-                        self._log_debug("changed in config: %s:%s"%(name,value[name]))
+                        changed = True
+                        self._log_debug("changed in config: %s:%s" % (name, value[name]))
                         j.core.myenv.config[name] = value[name]
         if changed:
             j.core.myenv.config_save()
@@ -70,9 +69,8 @@ class LoggerFactory(j.application.JSBaseClass):
             obj._logger_set(children=True)
             # self._print(obj._key)
 
-
-    def test(self,name="base"):
-        '''
-        js_shell 'j.tools.logger.test()'
-        '''
+    def test(self, name="base"):
+        """
+        kosmos 'j.tools.logger.test()'
+        """
         self._test_run(name=name)

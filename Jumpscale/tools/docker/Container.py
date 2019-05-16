@@ -21,9 +21,9 @@ class Container(j.application.JSBaseClass):
         self.client = client
         JSBASE.__init__(self)
 
-        self.obj=obj
-        self.name = obj['Names'][0]
-        self.id = obj['Id']
+        self.obj = obj
+        self.name = obj["Names"][0]
+        self.id = obj["Id"]
 
         self._ssh_port = None
         self._sshclient = None
@@ -43,7 +43,9 @@ class Container(j.application.JSBaseClass):
     @property
     def sshclient(self):
         if self._sshclient is None:
-            sshclient = j.clients.ssh.new(addr=self.host, port=self.ssh_port, login="root", passwd="gig1234", timeout=10, allow_agent=True)
+            sshclient = j.clients.ssh.new(
+                addr=self.host, port=self.ssh_port, login="root", passwd="gig1234", timeout=10, allow_agent=True
+            )
             self._sshclient = sshclient
         return self._sshclient
 
@@ -55,10 +57,10 @@ class Container(j.application.JSBaseClass):
 
     @property
     def mounts(self):
-        res=[]
-        mountinfo=self.info["Mounts"]
+        res = []
+        mountinfo = self.info["Mounts"]
         for item in mountinfo:
-            res.append((item["Source"],item["Destination"]))
+            res.append((item["Source"], item["Destination"]))
         return res
 
     @property
@@ -93,13 +95,13 @@ class Container(j.application.JSBaseClass):
         """
         Check conainter is running.
         """
-        return self.info["State"] == 'running'
+        return self.info["State"] == "running"
 
     def ip_get(self):
         """
         Return ip of docker on hostmachine.
         """
-        return self.info['NetworkSettings']['Networks']['bridge']['IPAddress']
+        return self.info["NetworkSettings"]["Networks"]["bridge"]["IPAddress"]
 
     def public_port_get(self, private_port):
         """
@@ -111,42 +113,49 @@ class Container(j.application.JSBaseClass):
         """
 
         if self.is_running() is False:
-            raise j.exceptions.RuntimeError(
-                "docker %s is not running cannot get pub port." % self)
+            raise j.exceptions.RuntimeError("docker %s is not running cannot get pub port." % self)
 
         if not self.info["Ports"] is None:
-            for port in self.info['Ports']:
-                if port['PrivatePort'] == private_port:
-                    return port['PublicPort']
+            for port in self.info["Ports"]:
+                if port["PrivatePort"] == private_port:
+                    return port["PublicPort"]
 
         raise j.exceptions.Input("cannot find publicport for ssh?")
-
 
     def ssh_authorize(self, sshkeyname, password):
         home = j.builder.bash.home
         user_info = [j.builder.system.user.check(user) for user in j.builder.system.user.list()]
-        users = [i['name'] for i in user_info if i['home'] == home]
-        user = users[0] if users else 'root'
-        addr = self.info['Ports'][0]['IP']
-        port = self.info['Ports'][0]['PublicPort']
+        users = [i["name"] for i in user_info if i["home"] == home]
+        user = users[0] if users else "root"
+        addr = self.info["Ports"][0]["IP"]
+        port = self.info["Ports"][0]["PublicPort"]
         if not sshkeyname:
             sshkeyname = j.tools.configmanager.keyname
-        instance = addr.replace(".", "-") + "-%s" % port + "-%s" % self.name 
+        instance = addr.replace(".", "-") + "-%s" % port + "-%s" % self.name
 
-        sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login=user, passwd=password,
-                                       timeout=300)
+        sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login=user, passwd=password, timeout=300)
         sshclient.connect()
-        sshclient.ssh_authorize(key=j.tools.configmanager.keyname, user='root')
+        sshclient.ssh_authorize(key=j.tools.configmanager.keyname, user="root")
         sshclient.config.delete()  # remove this temp sshconnection
         sshclient.close()
 
         # remove bad key from local known hosts file
         j.clients.sshkey.knownhosts_remove(addr)
         instance = addr.replace(".", "-") + "-%s" % port + "-%s" % self.name
-        self._sshclient = j.clients.ssh.new(instance=instance, addr=addr, port=port, login="root", passwd="",
-                                            keyname=j.tools.configmanager.keyname, allow_agent=True, timeout=300, addr_priv=addr)
+        self._sshclient = j.clients.ssh.new(
+            instance=instance,
+            addr=addr,
+            port=port,
+            login="root",
+            passwd="",
+            keyname=j.tools.configmanager.keyname,
+            allow_agent=True,
+            timeout=300,
+            addr_priv=addr,
+        )
 
         j.tools.executor.reset()
+
     def destroy(self):
         """
         Stop and remove container.
@@ -200,8 +209,6 @@ class Container(j.application.JSBaseClass):
 
         if push:
             j.sal.docker.push(imagename)
-
-
 
     def __str__(self):
         return "docker:%s" % self.name

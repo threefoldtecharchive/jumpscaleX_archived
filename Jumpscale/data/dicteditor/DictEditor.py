@@ -63,7 +63,7 @@ class DictEditorFactory(j.application.JSFactoryBaseClass):
 
     def test(self):
         """
-        js_shell 'j.data.dict_editor.test()'
+        kosmos 'j.data.dict_editor.test()'
         :return:
         """
         import copy
@@ -89,7 +89,7 @@ class DictEditorFactory(j.application.JSFactoryBaseClass):
         llist = []
         description = ""
         """
-        s=j.data.schema.get(schema_text=schema)
+        s=j.data.schema.get_from_text(schema_text=schema)
         o=s.new()
 
 

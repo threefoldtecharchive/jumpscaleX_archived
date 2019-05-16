@@ -6,8 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-class TwoFAMethods( ):
+class TwoFAMethods:
     """
     auto-generated. don't touch.
     """
@@ -25,16 +24,16 @@ class TwoFAMethods( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'TwoFAMethods'
+        class_name = "TwoFAMethods"
         data = json or kwargs
 
         # set attributes
         data_types = [Phonenumber]
-        self.sms = client_support.set_property('sms', data, data_types, False, [], True, True, class_name)
+        self.sms = client_support.set_property("sms", data, data_types, False, [], True, True, class_name)
         data_types = [bool]
-        self.totp = client_support.set_property('totp', data, data_types, False, [], False, True, class_name)
+        self.totp = client_support.set_property("totp", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

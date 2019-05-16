@@ -14,18 +14,11 @@ DEFAULT_TIMEOUT = 10  # seconds
 
 class BaseClient:
 
-    _system_chk = typchk.Checker({
-        'name': str,
-        'args': [str],
-        'dir': str,
-        'stdin': str,
-        'env': typchk.Or(typchk.Map(str, str), typchk.IsNone()),
-    })
+    _system_chk = typchk.Checker(
+        {"name": str, "args": [str], "dir": str, "stdin": str, "env": typchk.Or(typchk.Map(str, str), typchk.IsNone())}
+    )
 
-    _bash_chk = typchk.Checker({
-        'stdin': str,
-        'script': str,
-    })
+    _bash_chk = typchk.Checker({"stdin": str, "script": str})
 
     def __init__(self, timeout=None, **kwargs):
         self.timeout = DEFAULT_TIMEOUT if timeout is None else timeout
@@ -75,7 +68,9 @@ class BaseClient:
         """
         return self._ip
 
-    def raw(self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None, recurring_period=None):
+    def raw(
+        self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None, recurring_period=None
+    ):
         """
         Implements the low level command call, this needs to build the command structure
         and push it on the correct queue.
@@ -106,10 +101,10 @@ class BaseClient:
         response = self.raw(command, arguments, tags=tags, id=id)
 
         result = response.get()
-        if result.state != 'SUCCESS':
+        if result.state != "SUCCESS":
             if not result.code:
                 result._code = 500
-            raise ResultError(msg='%s' % result.data, code=result.code)
+            raise ResultError(msg="%s" % result.data, code=result.code)
 
         return result
 
@@ -121,7 +116,7 @@ class BaseClient:
         """
         result = self.sync(command, arguments, tags=tags, id=id)
         if result.level != 20:
-            raise RuntimeError('invalid result level, expecting json(20) got (%d)' % result.level)
+            raise RuntimeError("invalid result level, expecting json(20) got (%d)" % result.level)
 
         return json.loads(result.data)
 
@@ -131,11 +126,21 @@ class BaseClient:
         or not responsive.
         :return:
         """
-        return self.json('core.ping', {})
+        return self.json("core.ping", {})
 
     def system(
-            self, command, dir='', stdin='', env=None, queue=None, max_time=None, stream=False, tags=None, id=None,
-            recurring_period=None):
+        self,
+        command,
+        dir="",
+        stdin="",
+        env=None,
+        queue=None,
+        max_time=None,
+        stream=False,
+        tags=None,
+        id=None,
+        recurring_period=None,
+    ):
         """
         Execute a command
 
@@ -148,23 +153,27 @@ class BaseClient:
         """
         parts = shlex.split(command)
         if len(parts) == 0:
-            raise ValueError('invalid command')
+            raise ValueError("invalid command")
 
-        args = {
-            'name': parts[0],
-            'args': parts[1:],
-            'dir': dir,
-            'stdin': stdin,
-            'env': env,
-        }
+        args = {"name": parts[0], "args": parts[1:], "dir": dir, "stdin": stdin, "env": env}
 
         self._system_chk.check(args)
-        response = self.raw(command='core.system', arguments=args, queue=queue, max_time=max_time,
-                            stream=stream, tags=tags, id=id, recurring_period=recurring_period)
+        response = self.raw(
+            command="core.system",
+            arguments=args,
+            queue=queue,
+            max_time=max_time,
+            stream=stream,
+            tags=tags,
+            id=id,
+            recurring_period=recurring_period,
+        )
 
         return response
 
-    def bash(self, script, stdin='', queue=None, max_time=None, stream=False, tags=None, id=None, recurring_period=None):
+    def bash(
+        self, script, stdin="", queue=None, max_time=None, stream=False, tags=None, id=None, recurring_period=None
+    ):
         """
         Execute a bash script, or run a process inside a bash shell.
 
@@ -173,13 +182,18 @@ class BaseClient:
         :param id: job id. Auto generated if not defined.
         :return:
         """
-        args = {
-            'script': script,
-            'stdin': stdin,
-        }
+        args = {"script": script, "stdin": stdin}
         self._bash_chk.check(args)
-        response = self.raw(command='bash', arguments=args, queue=queue, max_time=max_time,
-                            stream=stream, tags=tags, id=id, recurring_period=recurring_period)
+        response = self.raw(
+            command="bash",
+            arguments=args,
+            queue=queue,
+            max_time=max_time,
+            stream=stream,
+            tags=tags,
+            id=id,
+            recurring_period=recurring_period,
+        )
 
         return response
 
@@ -220,4 +234,4 @@ class BaseClient:
         :param id: the subscriber ID (optional)
         :return: the subscribe Job object
         """
-        return self.raw('core.subscribe', {'id': job}, stream=True, id=id)
+        return self.raw("core.subscribe", {"id": job}, stream=True, id=id)

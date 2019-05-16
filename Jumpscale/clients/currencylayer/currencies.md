@@ -8,7 +8,7 @@ when using the tool it will ask you to configure the client
 
 do
 ```python
-js_shell 'j.clients.currencylayer.cur2usd_print()'
+kosmos 'j.clients.currencylayer.cur2usd_print()'
 ```
 
 should see something like
@@ -78,8 +78,8 @@ be careful because this uses currencies as stored in jumpscale so will not be up
  to see
 
 ```bash
-js_shell 'j.clients.currencylayer.id2cur_print()'
-js_shell 'j.clients.currencylayer.cur2id_print()'
+kosmos 'j.clients.currencylayer.id2cur_print()'
+kosmos 'j.clients.currencylayer.cur2id_print()'
 ```
 
 

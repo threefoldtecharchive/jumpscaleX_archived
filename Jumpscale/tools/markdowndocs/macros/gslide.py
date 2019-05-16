@@ -14,9 +14,14 @@ def gslide(doc, **kwargs):
 
     output = "```gslide\n"
     for pres in presentations:
-        if ("width" and "height")in kwargs:
-            j.tools.googleslides.export(pres, credfile=CRED_FILE_PATH, serviceaccount=True,
-                                        websitedir=EXPORT_TMP_DIR, resize=(int(kwargs["width"]), int(kwargs["height"])))
+        if ("width" and "height") in kwargs:
+            j.tools.googleslides.export(
+                pres,
+                credfile=CRED_FILE_PATH,
+                serviceaccount=True,
+                websitedir=EXPORT_TMP_DIR,
+                resize=(int(kwargs["width"]), int(kwargs["height"])),
+            )
         else:
             j.tools.googleslides.export(pres, credfile=CRED_FILE_PATH, serviceaccount=True, websitedir=EXPORT_TMP_DIR)
         pres_id = get_presentation_id(pres)
@@ -26,20 +31,26 @@ def gslide(doc, **kwargs):
             j.sal.fs.remove(dest)
         j.sal.fs.moveDir(source, dest)
 
-        files = [j.sal.fs.getBaseName(x) for x in j.sal.fs.listFilesInDir(dest)
-                 if x.endswith("png") and "_" in x and "background_" not in x]
+        files = [
+            j.sal.fs.getBaseName(x)
+            for x in j.sal.fs.listFilesInDir(dest)
+            if x.endswith("png") and "_" in x and "background_" not in x
+        ]
 
         files.sort(key=lambda k: int(k.split("_")[0]))
         for p in files:
             dirbasename = j.sal.fs.getBaseName(dest)
             image_tag = '<img src="./{docsite_name}/{dirbasename}/{p}" alt="{p}" />'.format(
-                docsite_name=doc.docsite.name, dirbasename=dirbasename, p=p)
+                docsite_name=doc.docsite.name, dirbasename=dirbasename, p=p
+            )
             output += """
             <section>
                <div class="slide-image">
                    {image}
                    
                </div>
-            </section>""".format(image=image_tag)
+            </section>""".format(
+                image=image_tag
+            )
     output += "\n```"
     return output

@@ -12,7 +12,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
     @builder_method()
     def build(self, reset=False):
         """
-        js_shell 'j.builder.web.openresty.build()'
+        kosmos 'j.builder.web.openresty.build()'
         :return:
         """
         if j.core.platformtype.myplatform.isUbuntu:

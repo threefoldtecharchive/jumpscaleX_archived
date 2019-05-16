@@ -22,10 +22,10 @@ class BuilderGitea(j.builder.system._BaseClass):
         """
 
         # set needed paths
-        self.GITEAPATH = j.core.tools.text_replace('{}/src/code.gitea.io/gitea'.format(self.GOPATH))
-        self.CUSTOM_PATH = j.core.tools.text_replace('%s/custom' % self.GITEAPATH)
+        self.GITEAPATH = self._replace('{}/src/code.gitea.io/gitea'.format(self.GOPATH))
+        self.CUSTOM_PATH = self._replace('%s/custom' % self.GITEAPATH)
         self.CODEDIR = self.GITEAPATH
-        self.INIPATH = j.core.tools.text_replace('%s/conf/app.ini' % self.CUSTOM_PATH)
+        self.INIPATH = self._replace('%s/conf/app.ini' % self.CUSTOM_PATH)
         if self._done_check('build', reset):
             return
 

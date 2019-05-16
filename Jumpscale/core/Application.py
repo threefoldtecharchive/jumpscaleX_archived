@@ -1,4 +1,5 @@
 import os
+
 # import sys
 import atexit
 import struct
@@ -15,21 +16,21 @@ import gc
 import sys
 import types
 import time
-class JSGroup():
+
+
+class JSGroup:
     pass
 
 
-
 class Application(object):
-
-    def __init__(self,j):
+    def __init__(self, j):
 
         self._j = j
 
         self._calledexit = False
 
         self.state = "UNKNOWN"
-        self.appname = 'UNKNOWN'
+        self.appname = "UNKNOWN"
 
         self.logger = None
 
@@ -48,7 +49,6 @@ class Application(object):
 
         self.appname = "unknown"
 
-
         self.JSBaseDataObjClass = JSBaseDataObj
 
     @property
@@ -56,20 +56,19 @@ class Application(object):
         return self._j.core.myenv.appname
 
     @appname.setter
-    def appname(self,val):
+    def appname(self, val):
         self._j.core.myenv.appname = val
-
 
     @property
     def bcdb_system(self):
         if self._bcdb_system is None:
-            bcdb =  self._j.data.bcdb.get("system",die=False)
+            bcdb = self._j.data.bcdb.get("system", die=False)
             if bcdb is None:
-                bcdb = self._j.data.bcdb.new("system",None)
+                bcdb = self._j.data.bcdb.new("system", None)
             self._bcdb_system = bcdb
         return self._bcdb_system
 
-    def bcdb_system_configure(self,addr, port, namespace,secret):
+    def bcdb_system_configure(self, addr, port, namespace, secret):
         """
         will remember that this becdb is being used
         will remember in redis (encrypted)
@@ -101,19 +100,17 @@ class Application(object):
             return True
         return False
 
-    def error_init(self,cat,obj,error,die=True):
+    def error_init(self, cat, obj, error, die=True):
 
-
-        print("ERROR: %s:%s"%(cat,obj))
-        print (error)
+        print("ERROR: %s:%s" % (cat, obj))
+        print(error)
         trace = self._trace_get(ttype=None, err=error)
-        self.errors_init.append((cat,obj,error,trace))
+        self.errors_init.append((cat, obj, error, trace))
         if not self._check_debug():
-                msg = "%s:%s:%s"%(cat,obj,error)
-                # self.report_errors()
-                raise RuntimeError(msg)
-        return "%s:%s:%s"%(cat,obj,error)
-
+            msg = "%s:%s:%s" % (cat, obj, error)
+            # self.report_errors()
+            raise RuntimeError(msg)
+        return "%s:%s:%s" % (cat, obj, error)
 
     @property
     def JSBaseClass(self):
@@ -137,9 +134,6 @@ class Application(object):
         """
         return JSFactoryBase
 
-
-
-
     @property
     def JSBaseConfigClass(self):
         """
@@ -162,8 +156,6 @@ class Application(object):
         """
         return JSBaseConfigParent
 
-
-
     @property
     def JSBaseConfigsClass(self):
         """
@@ -174,9 +166,6 @@ class Application(object):
 
         """
         return JSBaseConfigs
-
-
-
 
     def reset(self):
         """
@@ -202,10 +191,10 @@ class Application(object):
         if self.debug is True:
             self._log_debug(msg)
             from IPython import embed
+
             embed()
         else:
-            raise self._j.exceptions.RuntimeError(
-                "Can't break into jsshell in production mode.")
+            raise self._j.exceptions.RuntimeError("Can't break into jsshell in production mode.")
 
     def init(self):
         pass
@@ -217,12 +206,12 @@ class Application(object):
         return self._systempid
 
     def start(self, name=None):
-        '''Start the application
+        """Start the application
 
         You can only stop the application with return code 0 by calling
         self._j.application.stop(). Don't call sys.exit yourself, don't try to run
         to end-of-script, I will find you anyway!
-        '''
+        """
         if name:
             self.appname = name
 
@@ -230,8 +219,7 @@ class Application(object):
             self.appname = os.environ["JSPROCNAME"]
 
         if self.state == "RUNNING":
-            raise self._j.exceptions.RuntimeError(
-                "Application %s already started" % self.appname)
+            raise self._j.exceptions.RuntimeError("Application %s already started" % self.appname)
 
         # Register exit handler for sys.exit and for script termination
         atexit.register(self._exithandler)
@@ -241,11 +229,11 @@ class Application(object):
         # self._log_info("***Application started***: %s" % self.appname)
 
     def stop(self, exitcode=0, stop=True):
-        '''Stop the application cleanly using a given exitcode
+        """Stop the application cleanly using a given exitcode
 
         @param exitcode: Exit code to use
         @type exitcode: number
-        '''
+        """
         import sys
 
         # TODO: should we check the status (e.g. if application wasnt started,
@@ -283,6 +271,7 @@ class Application(object):
 
         # self._self._log_debug("UNCLEAN EXIT OF APPLICATION, SHOULD HAVE USED self._j.application.stop()", 4)
         import sys
+
         if not self._calledexit:
             self.stop(stop=False)
 
@@ -323,6 +312,7 @@ class Application(object):
 
     def getProcessObject(self):
         return self._j.sal.process.getMyProcessObject()
+
     #
     # def reload(self):
     #     # from importlib import reload
@@ -355,17 +345,15 @@ class Application(object):
     #         # exec("del %s"%key)
     #         # sys.modules.pop(key)
 
-
-
-    def _iterate_rootobj(self,obj=None):
+    def _iterate_rootobj(self, obj=None):
         if obj is None:
-            for key,item in self._j.__dict__.items():
+            for key, item in self._j.__dict__.items():
                 if key.startswith("_"):
                     continue
-                if key in ["exceptions","core","dirs","application","data_units","errorhandler"]:
+                if key in ["exceptions", "core", "dirs", "application", "data_units", "errorhandler"]:
                     continue
                 # self._j.core.tools.log("iterate jumpscale factory:%s"%key)
-                for key2,item2 in item.__dict__.items():
+                for key2, item2 in item.__dict__.items():
                     # self._j.core.tools.log("iterate rootobj:%s"%key2)
                     if item2 is not None:
                         # self._j.core.tools.log("yield obj:%s"%item2._key)
@@ -394,22 +382,21 @@ class Application(object):
     #
     #     return done
 
-
-
     def _setWriteExitcodeOnExit(self, value):
         if not self._j.data.types.bool.check(value):
             raise TypeError
         self._writeExitcodeOnExit = value
 
     def _getWriteExitcodeOnExit(self):
-        if not hasattr(self, '_writeExitcodeOnExit'):
+        if not hasattr(self, "_writeExitcodeOnExit"):
             return False
         return self._writeExitcodeOnExit
 
     writeExitcodeOnExit = property(
         fset=_setWriteExitcodeOnExit,
         fget=_getWriteExitcodeOnExit,
-        doc="Gets / sets if the exitcode has to be persisted on disk")
+        doc="Gets / sets if the exitcode has to be persisted on disk",
+    )
 
     def _gc_count(self):
         return len(gc.get_objects())
@@ -421,7 +408,7 @@ class Application(object):
 
     # def _test_gc(self):
     #     """
-    #     js_shell 'j.application._test_gc()'
+    #     kosmos 'j.application._test_gc()'
     #     :return:
     #     """
     #     j=self._j

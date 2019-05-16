@@ -16,24 +16,26 @@ class ContainerClient(BaseClient):
             self._client = client
 
         def info(self):
-            return self._client.json('corex.zerotier.info', {'container': self._container})
+            return self._client.json("corex.zerotier.info", {"container": self._container})
 
         def list(self):
-            return self._client.json('corex.zerotier.list', {'container': self._container})
+            return self._client.json("corex.zerotier.list", {"container": self._container})
 
-    _raw_chk = typchk.Checker({
-        'container': int,
-        'command': {
-            'command': str,
-            'arguments': typchk.Any(),
-            'queue': typchk.Or(str, typchk.IsNone()),
-            'max_time': typchk.Or(int, typchk.IsNone()),
-            'stream': bool,
-            'tags': typchk.Or([str], typchk.IsNone()),
-            'id': typchk.Or(str, typchk.IsNone()),
-            'recurring_period': typchk.Or(int, typchk.IsNone()),
+    _raw_chk = typchk.Checker(
+        {
+            "container": int,
+            "command": {
+                "command": str,
+                "arguments": typchk.Any(),
+                "queue": typchk.Or(str, typchk.IsNone()),
+                "max_time": typchk.Or(int, typchk.IsNone()),
+                "stream": bool,
+                "tags": typchk.Or([str], typchk.IsNone()),
+                "id": typchk.Or(str, typchk.IsNone()),
+                "recurring_period": typchk.Or(int, typchk.IsNone()),
+            },
         }
-    })
+    )
 
     def __init__(self, client, container):
         super().__init__(client.timeout)
@@ -61,7 +63,9 @@ class ContainerClient(BaseClient):
     def flist(self):
         return self._flist
 
-    def raw(self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None, recurring_period=None):
+    def raw(
+        self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None, recurring_period=None
+    ):
         """
         Implements the low level command call, this needs to build the command structure
         and push it on the correct queue.
@@ -79,106 +83,79 @@ class ContainerClient(BaseClient):
         :return: Response object
         """
         args = {
-            'container': self._container,
-            'command': {
-                'command': command,
-                'arguments': arguments,
-                'queue': queue,
-                'max_time': max_time,
-                'stream': stream,
-                'tags': tags,
-                'id': id,
-                'recurring_period': recurring_period,
+            "container": self._container,
+            "command": {
+                "command": command,
+                "arguments": arguments,
+                "queue": queue,
+                "max_time": max_time,
+                "stream": stream,
+                "tags": tags,
+                "id": id,
+                "recurring_period": recurring_period,
             },
         }
 
         # check input
         self._raw_chk.check(args)
 
-        response = self._client.raw('corex.dispatch', args)
+        response = self._client.raw("corex.dispatch", args)
 
         result = response.get()
-        if result.state != 'SUCCESS':
-            raise RuntimeError('failed to dispatch command to container: %s' % result.data)
+        if result.state != "SUCCESS":
+            raise RuntimeError("failed to dispatch command to container: %s" % result.data)
 
         cmd_id = json.loads(result.data)
         return self._client.response_for(cmd_id)
 
 
-class ContainerManager():
+class ContainerManager:
     _nic = {
-        'type': typchk.Enum('default', 'bridge', 'zerotier', 'vlan', 'vxlan', 'macvlan', 'passthrough'),
-        'id': typchk.Or(str, typchk.Missing()),
-        'name': typchk.Or(str, typchk.Missing()),
-        'hwaddr': typchk.Or(str, typchk.Missing()),
-        'config': typchk.Or(
+        "type": typchk.Enum("default", "bridge", "zerotier", "vlan", "vxlan", "macvlan", "passthrough"),
+        "id": typchk.Or(str, typchk.Missing()),
+        "name": typchk.Or(str, typchk.Missing()),
+        "hwaddr": typchk.Or(str, typchk.Missing()),
+        "config": typchk.Or(
             typchk.Missing(),
             {
-                'dhcp': typchk.Or(bool, typchk.IsNone(), typchk.Missing()),
-                'cidr': typchk.Or(str, typchk.IsNone(), typchk.Missing()),
-                'gateway': typchk.Or(str, typchk.IsNone(), typchk.Missing()),
-                'dns': typchk.Or([str], typchk.IsNone(), typchk.Missing()),
-            }
+                "dhcp": typchk.Or(bool, typchk.IsNone(), typchk.Missing()),
+                "cidr": typchk.Or(str, typchk.IsNone(), typchk.Missing()),
+                "gateway": typchk.Or(str, typchk.IsNone(), typchk.Missing()),
+                "dns": typchk.Or([str], typchk.IsNone(), typchk.Missing()),
+            },
         ),
-        'monitor': typchk.Or(bool, typchk.Missing()),
+        "monitor": typchk.Or(bool, typchk.Missing()),
     }
 
-    _create_chk = typchk.Checker({
-        'root': str,
-        'mount': typchk.Or(
-            typchk.Map(str, str),
-            typchk.IsNone()
-        ),
-        'host_network': bool,
-        'nics': [_nic],
-        'port': typchk.Or(
-            typchk.Map(int, int),
-            typchk.Map(str, int),
-            typchk.IsNone()
-        ),
-        'privileged': bool,
-        'hostname': typchk.Or(
-            str,
-            typchk.IsNone()
-        ),
-        'config': typchk.Or(
-            typchk.IsNone(),
-            typchk.Map(str, str)
-        ),
-        'storage': typchk.Or(str, typchk.IsNone()),
-        'name': typchk.Or(str, typchk.IsNone()),
-        'identity': typchk.Or(str, typchk.IsNone()),
-        'env': typchk.Or(typchk.IsNone(), typchk.Map(str, str)),
-        'cgroups': typchk.Or(
-            typchk.IsNone(),
-            [typchk.Length((str,), 2, 2)],  # array of (str, str) tuples i.e [(subsyste, name), ...]
-        )
-    })
-
-    _layer_chk = typchk.Checker({
-        'container': int,
-        'flist': str,
-    })
-
-    _client_chk = typchk.Checker(
-        typchk.Or(int, str)
+    _create_chk = typchk.Checker(
+        {
+            "root": str,
+            "mount": typchk.Or(typchk.Map(str, str), typchk.IsNone()),
+            "host_network": bool,
+            "nics": [_nic],
+            "port": typchk.Or(typchk.Map(int, int), typchk.Map(str, int), typchk.IsNone()),
+            "privileged": bool,
+            "hostname": typchk.Or(str, typchk.IsNone()),
+            "config": typchk.Or(typchk.IsNone(), typchk.Map(str, str)),
+            "storage": typchk.Or(str, typchk.IsNone()),
+            "name": typchk.Or(str, typchk.IsNone()),
+            "identity": typchk.Or(str, typchk.IsNone()),
+            "env": typchk.Or(typchk.IsNone(), typchk.Map(str, str)),
+            "cgroups": typchk.Or(
+                typchk.IsNone(), [typchk.Length((str,), 2, 2)]  # array of (str, str) tuples i.e [(subsyste, name), ...]
+            ),
+        }
     )
 
-    _nic_add = typchk.Checker({
-        'container': int,
-        'nic': _nic,
-    })
+    _layer_chk = typchk.Checker({"container": int, "flist": str})
 
-    _nic_remove = typchk.Checker({
-        'container': int,
-        'index': int,
-    })
+    _client_chk = typchk.Checker(typchk.Or(int, str))
 
-    _portforward_chk = typchk.Checker({
-        'container': int,
-        'host_port': str,
-        'container_port': int,
-    })
+    _nic_add = typchk.Checker({"container": int, "nic": _nic})
+
+    _nic_remove = typchk.Checker({"container": int, "index": int})
+
+    _portforward_chk = typchk.Checker({"container": int, "host_port": str, "container_port": int})
 
     DefaultNetworking = object()
 
@@ -186,9 +163,21 @@ class ContainerManager():
         self._client = client
 
     def create(
-        self, root_url, mount=None, host_network=False, nics=DefaultNetworking, port=None,
-        hostname=None, privileged=False, storage=None, name=None, tags=None, identity=None, env=None,
-        cgroups=None, config=None
+        self,
+        root_url,
+        mount=None,
+        host_network=False,
+        nics=DefaultNetworking,
+        port=None,
+        hostname=None,
+        privileged=False,
+        storage=None,
+        name=None,
+        tags=None,
+        identity=None,
+        env=None,
+        cgroups=None,
+        config=None,
     ):
         """
         Creater a new container with the given root flist, mount points and
@@ -243,32 +232,32 @@ class ContainerManager():
         """
 
         if nics == self.DefaultNetworking:
-            nics = [{'type': 'default'}]
+            nics = [{"type": "default"}]
         elif nics is None:
             nics = []
 
         config = config or {}
 
         args = {
-            'root': root_url,
-            'mount': mount,
-            'host_network': host_network,
-            'nics': nics,
-            'port': port,
-            'hostname': hostname,
-            'privileged': privileged,
-            'storage': storage,
-            'name': name,
-            'identity': identity,
-            'env': env,
-            'cgroups': cgroups,
-            'config': config,
+            "root": root_url,
+            "mount": mount,
+            "host_network": host_network,
+            "nics": nics,
+            "port": port,
+            "hostname": hostname,
+            "privileged": privileged,
+            "storage": storage,
+            "name": name,
+            "identity": identity,
+            "env": env,
+            "cgroups": cgroups,
+            "config": config,
         }
 
         # validate input
         self._create_chk.check(args)
 
-        response = self._client.raw('corex.create', args, tags=tags)
+        response = self._client.raw("corex.create", args, tags=tags)
 
         return JSONResponse(response)
 
@@ -280,29 +269,24 @@ class ContainerManager():
         The layer can be called multiple times, each call will only replace the last layer
         with the passed flist
         """
-        args = {
-            'container': container,
-            'flist': flist,
-        }
+        args = {"container": container, "flist": flist}
 
         self._layer_chk.check(args)
-        return self._client.json('corex.flist-layer', args)
+        return self._client.json("corex.flist-layer", args)
 
     def list(self):
         """
         List running containers
         :return: a dict with {container_id: <container info object>}
         """
-        return self._client.json('corex.list', {})
+        return self._client.json("corex.list", {})
 
     def get(self, name):
         """
         Get a container with the given name
         """
-        args = {
-            'query': name,
-        }
-        return self._client.json('corex.get', args)
+        args = {"query": name}
+        return self._client.json("corex.get", args)
 
     def find(self, *tags):
         """
@@ -311,7 +295,7 @@ class ContainerManager():
         :return:
         """
         tags = list(map(str, tags))
-        return self._client.json('corex.find', {'tags': tags})
+        return self._client.json("corex.find", {"tags": tags})
 
     def terminate(self, container):
         """
@@ -321,14 +305,12 @@ class ContainerManager():
         :return:
         """
         self._client_chk.check(container)
-        args = {
-            'container': int(container),
-        }
-        response = self._client.raw('corex.terminate', args)
+        args = {"container": int(container)}
+        response = self._client.raw("corex.terminate", args)
 
         result = response.get()
-        if result.state != 'SUCCESS':
-            raise RuntimeError('failed to terminate container: %s' % result.data)
+        if result.state != "SUCCESS":
+            raise RuntimeError("failed to terminate container: %s" % result.data)
 
     def nic_add(self, container, nic):
         """
@@ -355,13 +337,10 @@ class ContainerManager():
                      }
         :return:
         """
-        args = {
-            'container': container,
-            'nic': nic
-        }
+        args = {"container": container, "nic": nic}
         self._nic_add.check(args)
 
-        return self._client.json('corex.nic-add', args)
+        return self._client.json("corex.nic-add", args)
 
     def nic_remove(self, container, index):
         """
@@ -374,13 +353,10 @@ class ContainerManager():
         :param index: index of the nic as returned in the container object info (as shown by container.list())
         :return:
         """
-        args = {
-            'container': container,
-            'index': index
-        }
+        args = {"container": container, "index": index}
         self._nic_remove.check(args)
 
-        return self._client.json('corex.nic-remove', args)
+        return self._client.json("corex.nic-remove", args)
 
     def client(self, container):
         """
@@ -407,12 +383,9 @@ class ContainerManager():
         :return: Json response to the backup job (do .get() to get the snapshot ID
         """
 
-        args = {
-            'container': container,
-            'url': url,
-        }
+        args = {"container": container, "url": url}
 
-        return JSONResponse(self._client.raw('corex.backup', args))
+        return JSONResponse(self._client.raw("corex.backup", args))
 
     def restore(self, url, tags=None):
         """
@@ -429,11 +402,9 @@ class ContainerManager():
         :param tags: this will always override the original container tags (even if not set)
         :return:
         """
-        args = {
-            'url': url,
-        }
+        args = {"url": url}
 
-        return JSONResponse(self._client.raw('corex.restore', args, tags=tags))
+        return JSONResponse(self._client.raw("corex.restore", args, tags=tags))
 
     def add_portforward(self, container, host_port, container_port):
         """
@@ -447,14 +418,10 @@ class ContainerManager():
         if isinstance(host_port, int):
             host_port = str(host_port)
 
-        args = {
-            'container': container,
-            'host_port': host_port,
-            'container_port': container_port,
-        }
+        args = {"container": container, "host_port": host_port, "container_port": container_port}
         self._portforward_chk.check(args)
 
-        return self._client.json('corex.portforward-add', args)
+        return self._client.json("corex.portforward-add", args)
 
     def remove_portforward(self, container, host_port, container_port):
         """
@@ -467,11 +434,7 @@ class ContainerManager():
         if isinstance(host_port, int):
             host_port = str(host_port)
 
-        args = {
-            'container': container,
-            'host_port': host_port,
-            'container_port': container_port,
-        }
+        args = {"container": container, "host_port": host_port, "container_port": container_port}
         self._portforward_chk.check(args)
 
-        return self._client.json('corex.portforward-remove', args)
+        return self._client.json("corex.portforward-remove", args)

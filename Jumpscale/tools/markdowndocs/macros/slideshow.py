@@ -1,5 +1,6 @@
 from Jumpscale import j
 
+
 class SlideShow:
     def __init__(self):
         self.slides = []
@@ -18,6 +19,7 @@ class Slide:
         self.footer = footer
         self.order = order
 
+
 def slideshow(doc, **kwargs):
     def _content_parse(content):
         data = dict()
@@ -31,7 +33,7 @@ def slideshow(doc, **kwargs):
 
     slides = SlideShow()
     presentation_guids = {}
-    data = _content_parse(kwargs['content'])
+    data = _content_parse(kwargs["content"])
     for key, value in data.items():
         if key.casefold().startswith("presentation"):
             presentation_guids[key.strip()] = value
@@ -45,16 +47,17 @@ def slideshow(doc, **kwargs):
             else:
                 slide_args = data[key]
             slide_num = key.split("_")[1].strip()
-            presentation_name = slide_args.split('[')[0]
-            slide_name = slide_args.split('[')[1].split(']')[0]
-            if slide_name.startswith('id'):
+            presentation_name = slide_args.split("[")[0]
+            slide_name = slide_args.split("[")[1].split("]")[0]
+            if slide_name.startswith("id"):
                 slide_name = slide_name[3:]
             slides.slide_add(slide_name, presentation_guids[presentation_name], footer, slide_num)
 
     output = "```slideshow\n"
     for slide in slides.slides_get():
         image_tag = '<img src="/gdrive/slide/{presentation_guid}/{slide_name}" alt="{slide_name}" />'.format(
-            presentation_guid=slide.presentation_guid, slide_name=slide.name)
+            presentation_guid=slide.presentation_guid, slide_name=slide.name
+        )
         output += """
             <section>
                <div class="slide-image">
@@ -63,7 +66,8 @@ def slideshow(doc, **kwargs):
                    {footer}
                    </div>
                </div>
-            </section>""".format(image=image_tag, footer=slide.footer)
+            </section>""".format(
+            image=image_tag, footer=slide.footer
+        )
     output += "\n```"
     return output
-

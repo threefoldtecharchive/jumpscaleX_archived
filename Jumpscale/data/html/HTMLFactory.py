@@ -8,8 +8,8 @@ from .HTMLPage import HTMLPage
 from .HTMLWebParts import HTMLWebParts
 from html2text import HTML2Text
 
-class HTMLFactory(j.application.JSBaseClass):
 
+class HTMLFactory(j.application.JSBaseClass):
     def __init__(self):
         self.__jslocation__ = "j.data.html"
         JSBASE.__init__(self)
@@ -19,7 +19,7 @@ class HTMLFactory(j.application.JSBaseClass):
     def html2text(self, html):
         """
         """
-        html = str(html, errors='ignore')
+        html = str(html, errors="ignore")
         encoding = "utf-8"
         html = html.decode(encoding)
         h = HTML2Text()
@@ -40,10 +40,9 @@ class HTMLFactory(j.application.JSBaseClass):
         # h.escape_snob = options.escape_snob
 
         text = h.handle(html)
-        text.encode('utf-8')
+        text.encode("utf-8")
 
         return text
-
 
     def page_get(self):
         """
@@ -52,7 +51,7 @@ class HTMLFactory(j.application.JSBaseClass):
         """
         return HTMLPage()
 
-    def webparts_enable(self,url=""):
+    def webparts_enable(self, url=""):
         """
         will load webparts from https://github.com/threefoldtech/jumpscale_weblibs/tree/master/webparts if not url defined
 
@@ -66,18 +65,18 @@ class HTMLFactory(j.application.JSBaseClass):
         path = j.clients.git.getContentPathFromURLorPath(url)
         if path not in sys.path:
             sys.path.append(path)
-        for webpart_name in  j.sal.fs.listDirsInDir(path,False,True):
-            self._log_info("found webpart:%s"%webpart_name)
-            path2="%s/%s/add.py"%(path,webpart_name)
+        for webpart_name in j.sal.fs.listDirsInDir(path, False, True):
+            self._log_info("found webpart:%s" % webpart_name)
+            path2 = "%s/%s/add.py" % (path, webpart_name)
             if not j.sal.fs.exists(path2):
-                raise RuntimeError("cannot find webpart:%s"%path2)
-            module = import_module("%s.add"%webpart_name)
-            self.webparts.modules[webpart_name]=module
-            for key,item in module.__dict__.items():
+                raise RuntimeError("cannot find webpart:%s" % path2)
+            module = import_module("%s.add" % webpart_name)
+            self.webparts.modules[webpart_name] = module
+            for key, item in module.__dict__.items():
                 if isfunction(item):
                     if (key.find("_add") is not -1 or key is "add") and not key.startswith("_"):
-                        self.webparts.__dict__["%s_%s"%(webpart_name,key)]=item
-            
+                        self.webparts.__dict__["%s_%s" % (webpart_name, key)] = item
+
         if j.servers.web.latest is not None:
             j.servers.web.latest.webparts = self.webparts
 
@@ -89,17 +88,17 @@ class HTMLFactory(j.application.JSBaseClass):
     #     for module_name in apps:
     #         module = import_module('blueprints.{}.routes'.format(module_name))
     #         print("blueprint register:%s"%module_name)
-    #         app.register_blueprint(module.blueprint)        
+    #         app.register_blueprint(module.blueprint)
 
     def test(self):
         """
-        js_shell 'j.data.html.test()'
+        kosmos 'j.data.html.test()'
         """
 
         p = j.data.html.page_get()
         p.header_add("this is my heading")
 
-        list=["aa","bb","cc"]
+        list = ["aa", "bb", "cc"]
         p.list_add(list)
 
         p.newline_add()
@@ -113,5 +112,3 @@ class HTMLFactory(j.application.JSBaseClass):
         # p.listitem_add("something 7", level=1)
 
         print(p)
-
-

@@ -3,6 +3,7 @@ from Jumpscale import j
 import re, ipaddress
 from enum import IntEnum
 
+
 class ThreeBotTypesFactory(j.application.JSBaseClass):
     """
     ThreeBotTypes Factory class
@@ -32,32 +33,42 @@ class ThreeBotTypesFactory(j.application.JSBaseClass):
         """
         return BotName.from_json(obj)
 
-
     def test(self):
         """
-        js_shell 'j.clients.tfchain.types.threebot.test()'
+        kosmos 'j.clients.tfchain.types.threebot.test()'
         """
         import pytest
 
         # 3Bot network addresses...
         # > nil address
-        str(self.network_address_new()) == ''
+        str(self.network_address_new()) == ""
         # > hostname
-        str(self.network_address_new('hello.threefold.io')) == 'hello.threefold.io'
-        str(self.network_address_new('hello.threefold.io',  network_type=NetworkAddress.Type.HOSTNAME)) == 'hello.threefold.io'
+        str(self.network_address_new("hello.threefold.io")) == "hello.threefold.io"
+        str(
+            self.network_address_new("hello.threefold.io", network_type=NetworkAddress.Type.HOSTNAME)
+        ) == "hello.threefold.io"
         # > IPv4 address
-        str(self.network_address_new('83.200.201.201')) == '83.200.201.201'
-        str(self.network_address_new('83.200.201.201', network_type=NetworkAddress.Type.IPV4)) == '83.200.201.201'
+        str(self.network_address_new("83.200.201.201")) == "83.200.201.201"
+        str(self.network_address_new("83.200.201.201", network_type=NetworkAddress.Type.IPV4)) == "83.200.201.201"
         # > IPv6 address
-        str(self.network_address_new('2001:db8:85a3::8a2e:370:7334')) == '2001:db8:85a3::8a2e:370:7334'
-        str(self.network_address_new('2001:db8:85a3::8a2e:370:7334', network_type=NetworkAddress.Type.IPV6)) == '2001:db8:85a3::8a2e:370:7334'
+        str(self.network_address_new("2001:db8:85a3::8a2e:370:7334")) == "2001:db8:85a3::8a2e:370:7334"
+        str(
+            self.network_address_new("2001:db8:85a3::8a2e:370:7334", network_type=NetworkAddress.Type.IPV6)
+        ) == "2001:db8:85a3::8a2e:370:7334"
         # > JSON (hostname, IPv4, IPv6)
-        self.network_address_from_json('hello.threefold.io').json() == 'hello.threefold.io'
-        self.network_address_from_json('83.200.201.201').json() == '83.200.201.201'
-        self.network_address_from_json('2001:db8:85a3::8a2e:370:7334').json() == '2001:db8:85a3::8a2e:370:7334'
+        self.network_address_from_json("hello.threefold.io").json() == "hello.threefold.io"
+        self.network_address_from_json("83.200.201.201").json() == "83.200.201.201"
+        self.network_address_from_json("2001:db8:85a3::8a2e:370:7334").json() == "2001:db8:85a3::8a2e:370:7334"
 
         # 3Bot names...
-        for name in ["aaaaa", "aaaaa.bbbbb", "aaaaa.aaaaa", "aaaaa.bbbbb.ccccc.ddddd.eeeee.fffff.ggggg.hhhhhh.jjjjj.kkkkkkkk", "threefold.token", "trading.botzone"]:
+        for name in [
+            "aaaaa",
+            "aaaaa.bbbbb",
+            "aaaaa.aaaaa",
+            "aaaaa.bbbbb.ccccc.ddddd.eeeee.fffff.ggggg.hhhhhh.jjjjj.kkkkkkkk",
+            "threefold.token",
+            "trading.botzone",
+        ]:
             output = str(self.bot_name_new(value=name))
             if output != name:
                 raise ValueError("str: {} != {}".format(output, name))
@@ -73,13 +84,16 @@ class ThreeBotTypesFactory(j.application.JSBaseClass):
 
 from .BaseDataType import BaseDataTypeClass
 
+
 class NetworkAddress(BaseDataTypeClass):
     class Type(IntEnum):
         HOSTNAME = 0
         IPV4 = 1
         IPV6 = 2
 
-    HOSTNAME_REGEXP = re.compile(r'^(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\.([a-zA-Z]{2,6}|[a-zA-Z0-9-]{2,30}\.[a-zA-Z]{2,3})$')
+    HOSTNAME_REGEXP = re.compile(
+        r"^(([a-zA-Z]{1})|([a-zA-Z]{1}[a-zA-Z]{1})|([a-zA-Z]{1}[0-9]{1})|([0-9]{1}[a-zA-Z]{1})|([a-zA-Z0-9][a-zA-Z0-9-_]{1,61}[a-zA-Z0-9]))\.([a-zA-Z]{2,6}|[a-zA-Z0-9-]{2,30}\.[a-zA-Z]{2,3})$"
+    )
     HOSTNAME_LENGTH_MAX = 63
 
     def __init__(self, address=None, network_type=None):
@@ -100,8 +114,12 @@ class NetworkAddress(BaseDataTypeClass):
     @classmethod
     def from_json(cls, obj):
         if obj is not None and not isinstance(obj, str):
-            raise TypeError("network address is expected to be an encoded string when part of a JSON object, not {}".format(type(obj)))
-        if obj == '':
+            raise TypeError(
+                "network address is expected to be an encoded string when part of a JSON object, not {}".format(
+                    type(obj)
+                )
+            )
+        if obj == "":
             obj = None
         return cls(address=obj)
 
@@ -111,7 +129,7 @@ class NetworkAddress(BaseDataTypeClass):
         The NetworkAddress as a string value.
         """
         if self._type == NetworkAddress.Type.HOSTNAME:
-            return self._address.decode('utf-8')
+            return self._address.decode("utf-8")
         return str(ipaddress.ip_address(self._address))
 
     @value.setter
@@ -126,8 +144,10 @@ class NetworkAddress(BaseDataTypeClass):
         elif isinstance(value, str) and NetworkAddress.HOSTNAME_REGEXP.match(value):
             addr = bytearray()
             if len(value) > NetworkAddress.HOSTNAME_LENGTH_MAX:
-                raise ValueError("the length of a hostname can maximum be {} bytes long".format(NetworkAddress.HOSTNAME_LENGTH_MAX))
-            addr.extend(value.encode('utf-8'))
+                raise ValueError(
+                    "the length of a hostname can maximum be {} bytes long".format(NetworkAddress.HOSTNAME_LENGTH_MAX)
+                )
+            addr.extend(value.encode("utf-8"))
             self._type = NetworkAddress.Type.HOSTNAME
             self._address = addr
         elif isinstance(value, (str, int)):
@@ -137,7 +157,7 @@ class NetworkAddress(BaseDataTypeClass):
                 self._type = NetworkAddress.Type.IPV4
                 self._address = na.packed
             elif isinstance(na, ipaddress.IPv6Address):
-                if na.packed[:12] == b'\0\0\0\0\0\0\0\0\0\0\xff\xff': # IPv6 prefix for IPv4 addresses
+                if na.packed[:12] == b"\0\0\0\0\0\0\0\0\0\0\xff\xff":  # IPv6 prefix for IPv4 addresses
                     self._type = NetworkAddress.Type.IPV4
                     self._address = na.packed[12:]
                 else:
@@ -151,9 +171,10 @@ class NetworkAddress(BaseDataTypeClass):
             self._type = value._type
         else:
             raise TypeError("network address cannot be assigned a value of type {}".format(type(value)))
-    
+
     def __str__(self):
         return self.value
+
     def __repr__(self):
         return self.value
 
@@ -176,12 +197,14 @@ class NetworkAddress(BaseDataTypeClass):
         of which in the two least significant bits are used for the type and the other 6 used for the length 'n'.
         The next 'n' bytes are used for the actual address data in raw binary format.
         """
-        encoder.add_int8(self._type|(len(self._address)<<2))
+        encoder.add_int8(self._type | (len(self._address) << 2))
         encoder.add_array(self._address)
 
 
 class BotName(BaseDataTypeClass):
-    REGEXP = re.compile(r'^[A-Za-z]{1}[A-Za-z\-0-9]{3,61}[A-Za-z0-9]{1}(\.[A-Za-z]{1}[A-Za-z\-0-9]{3,55}[A-Za-z0-9]{1})*$')
+    REGEXP = re.compile(
+        r"^[A-Za-z]{1}[A-Za-z\-0-9]{3,61}[A-Za-z0-9]{1}(\.[A-Za-z]{1}[A-Za-z\-0-9]{3,55}[A-Za-z0-9]{1})*$"
+    )
     LENGTH_MAX = 63
 
     def __init__(self, value=None):
@@ -195,7 +218,7 @@ class BotName(BaseDataTypeClass):
     def from_json(cls, obj):
         if obj is not None and not isinstance(obj, str):
             raise TypeError("bot name is expected to be an encoded string when part of a JSON object")
-        if obj == '':
+        if obj == "":
             obj = None
         return cls(value=obj)
 
@@ -205,7 +228,7 @@ class BotName(BaseDataTypeClass):
         The internal bot name value (a string).
         """
         if self._value is None:
-            return ''
+            return ""
         return self._value
 
     @value.setter
@@ -225,9 +248,10 @@ class BotName(BaseDataTypeClass):
             self._value = value._value.copy()
         else:
             raise TypeError("bot name cannot be assigned a value of type {}".format(type(value)))
-    
+
     def __str__(self):
         return self.value
+
     def __repr__(self):
         return self.value
 

@@ -10,8 +10,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class Status(object):
     """
     auto-generated. don't touch.
@@ -37,34 +35,38 @@ class Status(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Status'
+        class_name = "Status"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.context = client_support.set_property('context', data, data_types, False, [], False, False, class_name)
+        self.context = client_support.set_property("context", data, data_types, False, [], False, False, class_name)
         data_types = [datetime]
         self.created_at = client_support.set_property(
-            'created_at', data, data_types, False, [], False, False, class_name)
+            "created_at", data, data_types, False, [], False, False, class_name
+        )
         data_types = [User]
-        self.creator = client_support.set_property('creator', data, data_types, False, [], False, False, class_name)
+        self.creator = client_support.set_property("creator", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
         self.description = client_support.set_property(
-            'description', data, data_types, False, [], False, False, class_name)
+            "description", data, data_types, False, [], False, False, class_name
+        )
         data_types = [int]
-        self.id = client_support.set_property('id', data, data_types, False, [], False, False, class_name)
+        self.id = client_support.set_property("id", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.status = client_support.set_property('status', data, data_types, False, [], False, False, class_name)
+        self.status = client_support.set_property("status", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
         self.target_url = client_support.set_property(
-            'target_url', data, data_types, False, [], False, False, class_name)
+            "target_url", data, data_types, False, [], False, False, class_name
+        )
         data_types = [datetime]
         self.updated_at = client_support.set_property(
-            'updated_at', data, data_types, False, [], False, False, class_name)
+            "updated_at", data, data_types, False, [], False, False, class_name
+        )
         data_types = [string_types]
-        self.url = client_support.set_property('url', data, data_types, False, [], False, False, class_name)
+        self.url = client_support.set_property("url", data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

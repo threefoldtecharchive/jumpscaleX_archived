@@ -16,9 +16,7 @@ class EtcdFactory(JSConfigs):
         :return:
         """
 
-        #check is ubuntu 1804
-        #build etcd
-        #start etcd
-        #make client connection to it
-
-
+        # check is ubuntu 1804
+        # build etcd
+        # start etcd
+        # make client connection to it

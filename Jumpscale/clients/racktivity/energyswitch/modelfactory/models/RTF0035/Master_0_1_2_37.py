@@ -5,17 +5,18 @@ from clients.racktivity.energyswitch.modelfactory.models.RTF0035.Master_0_1_2_21
 
 
 class Model(Master):
-
     def __init__(self, parent):
         super(Model, self).__init__(parent)
-        self._guidTable.update({
-            # TransducerSelection
-            10189: Value(u"type='TYPE_UNSIGNED_NUMBER'\nsize=2\nlength=2\nunit=''\nscale=0"),
-            # GenericTransducerParameters
-            10190: Value(u"type='TYPE_SIGNED_NUMBER'\nsize=4\nlength=4\nunit='mA/V'\nscale=0"),
-            # RezeroTransducer
-            40050: Value(u"type='TYPE_COMMAND'\nsize=1\nlength=1\nunit=''\nscale=0"),
-        })
+        self._guidTable.update(
+            {
+                # TransducerSelection
+                10189: Value("type='TYPE_UNSIGNED_NUMBER'\nsize=2\nlength=2\nunit=''\nscale=0"),
+                # GenericTransducerParameters
+                10190: Value("type='TYPE_SIGNED_NUMBER'\nsize=4\nlength=4\nunit='mA/V'\nscale=0"),
+                # RezeroTransducer
+                40050: Value("type='TYPE_COMMAND'\nsize=1\nlength=1\nunit=''\nscale=0"),
+            }
+        )
 
         self._pointerGuids = [
             (1, 1),
@@ -46,48 +47,43 @@ class Model(Master):
             (5028, 2),
             (5029, 2),
             (5030, 2),
-            (5031, 2)
+            (5031, 2),
         ]
 
     def getTransducerSelection(self, portnumber):
-        moduleID = 'M1'
+        moduleID = "M1"
         guid = 10189
         length = 1
         valDef = self._guidTable[guid]
-        data = self._parent.client.getAttribute(
-            moduleID, guid, portnumber, length)
+        data = self._parent.client.getAttribute(moduleID, guid, portnumber, length)
         return self._parent.getObjectFromData(data, valDef, count=length)
 
     def setTransducerSelection(self, value, portnumber):
         guid = 10189
-        moduleID = 'M1'
+        moduleID = "M1"
         valDef = self._guidTable[guid]
-        data = self._parent.client.setAttribute(
-            moduleID, guid, convert.value2bin(value, valDef), portnumber)
+        data = self._parent.client.setAttribute(moduleID, guid, convert.value2bin(value, valDef), portnumber)
         return self._parent.getObjectFromData(data, valDef, setter=True)
 
     def getGenericTransducerParameters(self, portnumber):
-        moduleID = 'M1'
+        moduleID = "M1"
         guid = 10190
         length = 1
         valDef = self._guidTable[guid]
-        data = self._parent.client.getAttribute(
-            moduleID, guid, portnumber, length)
+        data = self._parent.client.getAttribute(moduleID, guid, portnumber, length)
         return self._parent.getObjectFromData(data, valDef, count=length)
 
     def setGenericTransducerParameters(self, value, portnumber):
         guid = 10190
-        moduleID = 'M1'
+        moduleID = "M1"
         valDef = self._guidTable[guid]
-        data = self._parent.client.setAttribute(
-            moduleID, guid, convert.value2bin(value, valDef), portnumber)
+        data = self._parent.client.setAttribute(moduleID, guid, convert.value2bin(value, valDef), portnumber)
         return self._parent.getObjectFromData(data, valDef, setter=True)
 
     def rezeroTransducer(self, portnumber):
         guid = 40050
-        moduleID = 'M1'
+        moduleID = "M1"
         value = 1
         valDef = self._guidTable[guid]
-        data = self._parent.client.setAttribute(
-            moduleID, guid, convert.value2bin(value, valDef), portnumber)
+        data = self._parent.client.setAttribute(moduleID, guid, convert.value2bin(value, valDef), portnumber)
         return self._parent.getObjectFromData(data, valDef, setter=True)

@@ -7,8 +7,7 @@ class CloudMachine(Machine):
     Wrapper class around our machine object , to use with jumpscale libs.
     """
 
-    def __init__(self, controller, name, os, disks, nics, memory,
-                 cpucount, poolname='vms', cloud_init=False):
+    def __init__(self, controller, name, os, disks, nics, memory, cpucount, poolname="vms", cloud_init=False):
         """
         Machine object instance.
 
@@ -25,8 +24,9 @@ class CloudMachine(Machine):
         """
         self.pool = j.sal.kvm.Pool(controller, poolname)
         self.os = os
-        new_nics = list(map(lambda x: j.sal.kvm.Interface(
-            controller, j.sal.kvm.Network(controller, x, x, []), x), nics))
+        new_nics = list(
+            map(lambda x: j.sal.kvm.Interface(controller, j.sal.kvm.Network(controller, x, x, []), x), nics)
+        )
         if disks:
             new_disks = [j.sal.kvm.Disk(controller, self.pool, "%s-base.qcow2" % name, disks[0], os)]
             for i, disk in enumerate(disks[1:]):
@@ -46,9 +46,17 @@ class CloudMachine(Machine):
         """
         # TODO fix
         m = Machine.from_xml(controller, xml)
-        return cls(m.controller, m.name, m.disks and m.disks[0].image_name,
-                   list(map(lambda disk: disk.size, m.disks)), list(map(lambda nic: nic.name, m.nics)),
-                   m.memory, m.cpucount, m.disks and m.disks[0].pool.name, cloud_init=m.cloud_init)
+        return cls(
+            m.controller,
+            m.name,
+            m.disks and m.disks[0].image_name,
+            list(map(lambda disk: disk.size, m.disks)),
+            list(map(lambda nic: nic.name, m.nics)),
+            m.memory,
+            m.cpucount,
+            m.disks and m.disks[0].pool.name,
+            cloud_init=m.cloud_init,
+        )
 
     def create(self, username="root", passwd="gig1234", sshkey=None):
         """
