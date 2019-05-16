@@ -116,6 +116,7 @@ class NACLFactory(j.application.JSBaseClass):
         assert b == b"something"
 
         self._log_info("TEST OK")
+        print("TEST OK")
 
     def test_perf(self):
         """

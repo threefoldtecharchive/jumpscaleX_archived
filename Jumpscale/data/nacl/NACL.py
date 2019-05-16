@@ -264,7 +264,7 @@ class NACL(j.application.JSBaseClass):
     @property
     def signingkey(self):
         if self._signingkey == "":
-            encrypted_key = self.file_read_hex(self.path_signaturekey)
+            encrypted_key = self._file_read_hex(self._path_privatekey)
             key = self.decryptSymmetric(encrypted_key)
             self._signingkey = nacl.signing.SigningKey(key)
         return self._signingkey
