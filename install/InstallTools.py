@@ -2619,9 +2619,8 @@ class Docker:
         # to login to the docker using ssh use (if std port)
         ssh root@localhost -A -p {port}
 
-        #to login & automatically use the shell
-        ssh root@localhost -A -p {port} 'source /sandbox/env.sh;kosmos'
-
+        # to start using the kosmos shell when you're using the 3bot_devel tools do: 
+        python3 3bot_dev.py connect
 
         """
         args = {}

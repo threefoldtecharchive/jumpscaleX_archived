@@ -262,7 +262,7 @@ if __name__ == "__main__":
 
     parser_export = subparsers.add_parser("export", help="export the 3bot container to a tar archive")
     parser_export.add_argument(
-        "--output", "-o", help="export the container to a file pointed by --output", required=True
+        "--output", "-o", help="export the container to a file pointed by --output", default="/tmp/3bot.tar"
     )
     parser_export.set_defaults(func=export_container)
 
@@ -272,7 +272,7 @@ if __name__ == "__main__":
         parents=[docker_parser],
     )
     parser_import.add_argument(
-        "--input", "-i", help="import a container from the tar pointed by --import", required=True
+        "--input", "-i", help="import a container from the tar pointed by --import", default="/tmp/3bot.tar"
     )
     parser_import.set_defaults(func=import_container)
 

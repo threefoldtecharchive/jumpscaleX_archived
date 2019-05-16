@@ -40,14 +40,20 @@ TODO:*1 link to more information to explain people how to create a key & load it
 if you're a developer: you should add your ssh key in your github account 
 
 
-## install the 3bot development env
+## install the 3bot development envjs_
 
 ```python
 cd /tmp
-python3 3bot_dev.py install -s -d -y
+#next options will answer yes on all defaults, start froms scratch (takes longer), delete container if it already exists
+python3 3bot_dev.py install -s -d -y -c
 ```
-
 to see more options do ```3bot_dev.py install -h```
+
+## to connect to the 3bot
+
+```python
+python3 3bot_dev.py connect
+```
 
 ## explore the other options
 
