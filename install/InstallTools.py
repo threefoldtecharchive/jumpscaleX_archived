@@ -2588,16 +2588,16 @@ class Docker:
         # args_txt+=" -c"
         # args_txt+=" --debug"
 
-        dirpath = os.path.dirname(inspect.getfile(Tools))
-        if dirpath.startswith(MyEnv.config["DIR_CODE"]):
-            cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py "
-        else:
+        """ dirpath = os.path.dirname(inspect.getfile(Tools))
+        if dirpath.startswith(MyEnv.config["DIR_CODE"]): """
+        cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py "
+        """ else:
             print("copy installer over from where I install from")
             for item in ["install.py", "InstallTools.py"]:
                 src1 = "%s/%s" % (dirpath, item)
                 cmd = "scp -P %s %s root@localhost:/tmp/" % (self.port, src1)
                 Tools.execute(cmd)
-            cmd = "cd /tmp;python3 install.py "
+            cmd = "cd /tmp;python3 install.py " """
         cmd += args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec(cmd)

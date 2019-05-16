@@ -5,14 +5,14 @@ import shutil
 import sys
 from importlib import util
 from urllib.request import urlopen
-
+import InstallTools as IT
 DEFAULT_BRANCH = "master"
 CONTAINER_BASE_IMAGE = "phusion/baseimage:master"
 # CONTAINER_BASE_IMAGE = "despiegk/3bot:latest"
 CONTAINER_NAME = "3bot"
 
 
-def load_install_tools():
+""" def load_install_tools():
     # get current install.py directory
     rootdir = os.path.dirname(os.path.abspath(__file__))
     path = os.path.join(rootdir, "InstallTools.py")
@@ -32,7 +32,7 @@ def load_install_tools():
     return IT
 
 
-IT = load_install_tools()
+IT = load_install_tools() """
 
 
 def install_ui(args):
