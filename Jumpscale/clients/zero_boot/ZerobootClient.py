@@ -10,30 +10,32 @@ JSConfigClient = j.application.JSBaseConfigClass
 
 
 def apply_changes(sshclient, network=False):
-    sshclient.execute('uci commit')
+    sshclient.execute("uci commit")
     if network:
         try:
-            sshclient.execute('/etc/init.d/network restart && sleep 3 && /etc/init.d/zerotier restart',
-                              timeout=12)  # added sleep to prevent race condition
+            sshclient.execute(
+                "/etc/init.d/network restart && sleep 3 && /etc/init.d/zerotier restart", timeout=12
+            )  # added sleep to prevent race condition
         except j.exceptions.SSHTimeout:
             pass
-        code, _, _ = j.sal.process.execute('ping -c 2 {}'.format(sshclient.addr), die=False)
+        code, _, _ = j.sal.process.execute("ping -c 2 {}".format(sshclient.addr), die=False)
         timeout_limit = time.time() + 70
         while time.time() < timeout_limit:
             if code == 0:
                 break
             time.sleep(5)
-            code, _, _ = j.sal.process.execute('ping -c 2 {}'.format(sshclient.addr), die=False)
+            code, _, _ = j.sal.process.execute("ping -c 2 {}".format(sshclient.addr), die=False)
         else:
-            raise j.exceptions.RuntimeError('Lost connection to the router')
+            raise j.exceptions.RuntimeError("Lost connection to the router")
     else:
-        sshclient.execute('/etc/init.d/dnsmasq restart')
+        sshclient.execute("/etc/init.d/dnsmasq restart")
 
 
 class zero_bootClient(JSConfigClient):
     """zero_boot client
     using racktivity
     """
+
     _SCHEMATEXT = """
     @url =jumpscale.zeroboot.client
     name* = "" (S)
@@ -50,7 +52,7 @@ class zero_bootClient(JSConfigClient):
             ztier = j.clients.zerotier.get(name=zerotier_instance)
             network = self.networks.get()
             cidr = str(netaddr.IPNetwork(network.subnet).cidr)
-            route = {'target': cidr, 'via': self.sshclient.addr}
+            route = {"target": cidr, "via": self.sshclient.addr}
             znetwork = ztier.network_get(self.network_id)
             znetwork.add_route(route)
 
@@ -117,8 +119,8 @@ class Network:
         if not out or not "=" in out:
             return None
         out = out.strip()
-        out = out.split('=')[1]
-        return out.strip("\'")
+        out = out.split("=")[1]
+        return out.strip("'")
 
     def configure_lease_time(self, leasetime):
         """configure expiration time for all the network's leases
@@ -126,8 +128,9 @@ class Network:
         :param leasetime: follows the format h for hours m for minutes ex: 5m
         :type leasetime: str
         """
-        self.sshclient.execute("uci set dhcp.{name}.leasetime='{leasetime}'".format(
-            name=self.networkname, leasetime=leasetime))
+        self.sshclient.execute(
+            "uci set dhcp.{name}.leasetime='{leasetime}'".format(name=self.networkname, leasetime=leasetime)
+        )
         apply_changes(self.sshclient)
         self.leasetime = leasetime
 
@@ -140,8 +143,9 @@ class Network:
         """
         net = netaddr.IPNetwork(subnet)
         self.sshclient.execute("uci set network.{name}.ipaddr='{ip}'".format(name=self.networkname, ip=str(net.ip)))
-        self.sshclient.execute("uci set network.{name}.netmask='{mask}'".format(
-            name=self.networkname, mask=str(net.netmask)))
+        self.sshclient.execute(
+            "uci set network.{name}.netmask='{mask}'".format(name=self.networkname, mask=str(net.netmask))
+        )
         apply_changes(self.sshclient, network=True)
         self.subnet = subnet
         for host in self.hosts.list():
@@ -160,23 +164,21 @@ class Networks:
         self._populate()
 
     def _populate(self):
-        _, output, _ = self.sshclient.execute('uci show network')
+        _, output, _ = self.sshclient.execute("uci show network")
         output = output.splitlines()
         data = dict()
         for line in output:
-            key, value = line.split('=')
+            key, value = line.split("=")
             data[key] = value
 
         for key, value in data.items():
-            if key.endswith('.ipaddr'):
+            if key.endswith(".ipaddr"):
                 ip = value.strip()
-                ip = ip.strip("\'")
-                netmask = data[key.replace('.ipaddr', '.netmask')].strip()
-                netmask = netmask.strip("\'")
+                ip = ip.strip("'")
+                netmask = data[key.replace(".ipaddr", ".netmask")].strip()
+                netmask = netmask.strip("'")
 
-                subnet = str(
-                    netaddr.IPNetwork("{ip}/{net}".format(ip=ip, net=netmask))
-                )
+                subnet = str(netaddr.IPNetwork("{ip}/{net}".format(ip=ip, net=netmask)))
                 networkname = self._get_networkname(key)
                 self._networks[subnet] = Network(subnet, self.sshclient, networkname=networkname)
 
@@ -192,14 +194,16 @@ class Networks:
         start_key = "network."
 
         if not keyname.endswith(end_key):
-            raise ValueError("keyname did not end with {search_key}, get {value}".format(
-                search_key=end_key, value=keyname))
+            raise ValueError(
+                "keyname did not end with {search_key}, get {value}".format(search_key=end_key, value=keyname)
+            )
 
         if not keyname.startswith(start_key):
-            raise ValueError("keyname did not start with {search_key}, get {value}".format(
-                search_key=start_key, value=keyname))
+            raise ValueError(
+                "keyname did not start with {search_key}, get {value}".format(search_key=start_key, value=keyname)
+            )
 
-        return keyname[len(start_key):-len(end_key)]
+        return keyname[len(start_key) : -len(end_key)]
 
     def add(self, subnet, list_of_dns):
         raise NotImplementedError()
@@ -222,7 +226,7 @@ class Networks:
         :rtype: object
         """
         if not ip:
-            ip = self.list()[0].split('/')[0]
+            ip = self.list()[0].split("/")[0]
         for subnet in self._networks:
             if netaddr.IPAddress(ip) in netaddr.IPNetwork(subnet):
                 return self._networks[subnet]
@@ -244,7 +248,7 @@ class Host:
         self.sshclient = sshclient
         self.index = index
 
-    def configure_ipxe_boot(self, lkrn_url, tftp_root='/opt/storage'):
+    def configure_ipxe_boot(self, lkrn_url, tftp_root="/opt/storage"):
         """[summary]
 
         :param lkrn_url: url that points to a LKRN file to boot from that includes boot parameters. E.g.: https://bootstrap.grid.tf/krn/master/0/
@@ -255,23 +259,19 @@ class Host:
         # url parse boot parameters
         lkrn_url = lkrn_url.replace(" ", "%20")
 
-        lkrn_hash = hashlib.md5(lkrn_url.encode('utf8')).hexdigest()
-        file_name = '01-{}'.format(str(netaddr.EUI(self.mac)).lower())
+        lkrn_hash = hashlib.md5(lkrn_url.encode("utf8")).hexdigest()
+        file_name = "01-{}".format(str(netaddr.EUI(self.mac)).lower())
         executor = j.tools.executor.ssh_get(self.sshclient)
-        pxe_config_root = '{root}/pxelinux.cfg'.format(root=tftp_root)
-        pxe_config_file = '{root}/{file}'.format(root=pxe_config_root, file=file_name)
-        lkrn_file = '{root}/{file}'.format(root=pxe_config_root, file=lkrn_hash + ".lkrn")
+        pxe_config_root = "{root}/pxelinux.cfg".format(root=tftp_root)
+        pxe_config_file = "{root}/{file}".format(root=pxe_config_root, file=file_name)
+        lkrn_file = "{root}/{file}".format(root=pxe_config_root, file=lkrn_hash + ".lkrn")
         if not self.sshclient.prefab.core.exists(lkrn_file):
             # download lkrn file
             executor.execute("mkdir -p {root}".format(root=pxe_config_root))
             executor.execute("wget -O {target} {source}".format(target=lkrn_file, source=lkrn_url))
         pxe_config_data = (
-            "default 1\n"
-            "timeout 100\n"
-            "prompt 1\n"
-            "ipappend 2\n\n"
-            "label 1\n"
-            "\tKERNEL {}\n".format(lkrn_file))
+            "default 1\n" "timeout 100\n" "prompt 1\n" "ipappend 2\n\n" "label 1\n" "\tKERNEL {}\n".format(lkrn_file)
+        )
 
         executor.file_write(pxe_config_file, pxe_config_data)
 
@@ -279,14 +279,14 @@ class Host:
         self.sshclient.execute("uci set dhcp.@host[{idx}].{opt}='{val}'".format(idx=self.index, opt=option, val=value))
 
     def _register(self):
-        self.sshclient.execute('uci add dhcp host')
-        self._hostname_set('ip', self.address)
-        self._hostname_set('mac', self.mac)
-        self._hostname_set('name', self.hostname)
+        self.sshclient.execute("uci add dhcp host")
+        self._hostname_set("ip", self.address)
+        self._hostname_set("mac", self.mac)
+        self._hostname_set("name", self.hostname)
         apply_changes(self.sshclient)
 
     def _unregister(self):
-        self.sshclient.execute('uci delete dhcp.@host[{}]'.format(self.index))
+        self.sshclient.execute("uci delete dhcp.@host[{}]".format(self.index))
         apply_changes(self.sshclient)
 
 
@@ -303,7 +303,7 @@ class Hosts:
     def _hosts_chunks(self, l, n):
         """Yield successive n-sized chunks from l."""
         for i in range(0, len(l), n):
-            yield l[i:i + n]
+            yield l[i : i + n]
 
     def _populate(self):
         """
@@ -316,7 +316,7 @@ class Hosts:
         ('1', 'name', "'myhost'")]
         """
 
-        _, out, _ = self.sshclient.execute('uci show dhcp')
+        _, out, _ = self.sshclient.execute("uci show dhcp")
         hosts_data = re.findall("dhcp.@host\[(\d+)\]\.(ip|mac|name)=(.+)", out)
         if hosts_data:
             self._last_index = int(hosts_data[-1][0])
@@ -324,17 +324,17 @@ class Hosts:
             for host_data in self._hosts_chunks(hosts_data, 3):
                 index = host_data[0][0]
                 for data in host_data:
-                    if 'mac' in data:
-                        host_data_json['mac'] = data[2].replace("'", "")
-                    elif 'name' in data:
-                        host_data_json['hostname'] = data[2].replace("'", "")
-                    elif 'ip' in data:
-                        host_data_json['address'] = data[2].replace("'", "")
+                    if "mac" in data:
+                        host_data_json["mac"] = data[2].replace("'", "")
+                    elif "name" in data:
+                        host_data_json["hostname"] = data[2].replace("'", "")
+                    elif "ip" in data:
+                        host_data_json["address"] = data[2].replace("'", "")
 
-                if netaddr.IPAddress(host_data_json['address']) in netaddr.IPNetwork(self.subnet):
-                    host_data_json['sshclient'] = self.sshclient
-                    host_data_json['index'] = index
-                    self._hosts[host_data_json['hostname']] = Host(**host_data_json)
+                if netaddr.IPAddress(host_data_json["address"]) in netaddr.IPNetwork(self.subnet):
+                    host_data_json["sshclient"] = self.sshclient
+                    host_data_json["index"] = index
+                    self._hosts[host_data_json["hostname"]] = Host(**host_data_json)
         else:
             self._last_index = -1
 
@@ -361,12 +361,16 @@ class Hosts:
         for host in self._hosts.values():
             if host.mac == mac or host.address == address:
                 raise RuntimeError(
-                    "Host with specified mac: {mac} and/or address: {addr} already registered".format(mac=mac, addr=address))
+                    "Host with specified mac: {mac} and/or address: {addr} already registered".format(
+                        mac=mac, addr=address
+                    )
+                )
         self._last_index += 1
         host = Host(mac, address, hostname, self.sshclient, self._last_index)
         self.sshclient.execute("uci set dhcp.{name}.dynamicdhcp='0'".format(name=self.networkname))
-        self.sshclient.execute("uci set dhcp.{name}.leasetime='{leasetime}'".format(
-            name=self.networkname, leasetime=self.leasetime))
+        self.sshclient.execute(
+            "uci set dhcp.{name}.leasetime='{leasetime}'".format(name=self.networkname, leasetime=self.leasetime)
+        )
         host._register()
         self._hosts[hostname] = host
         return host

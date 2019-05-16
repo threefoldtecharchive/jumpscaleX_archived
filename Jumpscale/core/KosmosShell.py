@@ -17,10 +17,10 @@ from ptpython.utils import get_jedi_script_from_document
 from pygments.lexers import PythonLexer
 
 
-HIDDEN_PREFIXES = ('_', '__')
+HIDDEN_PREFIXES = ("_", "__")
 
 
-class KosmosShellConfig():
+class KosmosShellConfig:
     pass
 
 
@@ -92,9 +92,9 @@ def sort_members_key(name):
     :return: the order of sorting
     :rtype: int
     """
-    if name.startswith('__'):
+    if name.startswith("__"):
         return 3
-    elif name.startswith('_'):
+    elif name.startswith("_"):
         return 2
     elif name.isupper():
         return 1
@@ -102,7 +102,7 @@ def sort_members_key(name):
         return 0
 
 
-def filter_completions_on_prefix(completions, prefix=''):
+def filter_completions_on_prefix(completions, prefix=""):
     for completion in completions:
         text = completion.text
         if prefix not in HIDDEN_PREFIXES and text.startswith(HIDDEN_PREFIXES):
@@ -113,16 +113,16 @@ def filter_completions_on_prefix(completions, prefix=''):
 def get_current_line(document):
     tbc = document.current_line_before_cursor
     if tbc:
-        line = tbc.split('.')
-        parent, member = '.'.join(line[:-1]), line[-1]
-        if member.startswith('__'):  # then we want to show private methods
-            prefix = '__'
-        elif member.startswith('_'):  # then we want to show private methods
-            prefix = '_'
+        line = tbc.split(".")
+        parent, member = ".".join(line[:-1]), line[-1]
+        if member.startswith("__"):  # then we want to show private methods
+            prefix = "__"
+        elif member.startswith("_"):  # then we want to show private methods
+            prefix = "_"
         else:
-            prefix = ''
+            prefix = ""
         return parent, member, prefix
-    raise ValueError('nothing is written')
+    raise ValueError("nothing is written")
 
 
 def get_completions(self, document, complete_event):
@@ -137,10 +137,10 @@ def get_completions(self, document, complete_event):
             if not name:
                 continue
             if name.startswith(member):
-                completion = name[len(member):]
-                yield Completion(completion, 0,
-                                 display=name, style='bg:%s fg:ansiblack' % color,
-                                 selected_style='bg:ansidarkgray')
+                completion = name[len(member) :]
+                yield Completion(
+                    completion, 0, display=name, style="bg:%s fg:ansiblack" % color, selected_style="bg:ansidarkgray"
+                )
 
     try:
         parent, member, prefix = get_current_line(document)
@@ -149,15 +149,15 @@ def get_completions(self, document, complete_event):
 
     obj = get_object(parent, self.get_locals(), self.get_globals())
     if obj:
-        if hasattr(obj.__class__, '_methods_'):
-            yield from colored_completions(obj._properties_children(), 'ansigreen')
-            yield from colored_completions(obj._properties_model(), 'ansiyellow')
-            yield from colored_completions(obj._methods(prefix=prefix), 'ansiblue')
-            yield from colored_completions(obj._properties(prefix=prefix), 'ansigray')
+        if hasattr(obj.__class__, "_methods_"):
+            yield from colored_completions(obj._properties_children(), "ansigreen")
+            yield from colored_completions(obj._properties_model(), "ansiyellow")
+            yield from colored_completions(obj._methods(prefix=prefix), "ansiblue")
+            yield from colored_completions(obj._properties(prefix=prefix), "ansigray")
         else:
             # try dir()
             members = sorted(dir(obj), key=sort_members_key)
-            yield from colored_completions(members, 'ansigray')
+            yield from colored_completions(members, "ansigray")
 
 
 def get_doc_string(tbc):
@@ -166,7 +166,7 @@ def get_doc_string(tbc):
     if not obj:
         return
 
-    signature = ''
+    signature = ""
     try:
         signature = inspect.signature(obj)
         signature = obj.__name__ + str(signature)
@@ -175,19 +175,18 @@ def get_doc_string(tbc):
         # a built-in functions or not a module/class/function...
         pass
 
-    doc = inspect.getdoc(obj) or ''
+    doc = inspect.getdoc(obj) or ""
     if not signature:
         return doc
-    return '\n\n'.join([signature, doc])
+    return "\n\n".join([signature, doc])
 
 
 class LogPane:
-    Buffer = Buffer(name='logging')
+    Buffer = Buffer(name="logging")
     Show = True
 
 
 class HasDocString(PythonInputFilter):
-
     def __call__(self):
         return len(self.python_input.docstring_buffer.text) > 0
 
@@ -201,15 +200,13 @@ class FormatANSIText(Processor):
 
 
 class HasLogs(PythonInputFilter):
-
     def __call__(self):
         j = KosmosShellConfig.j
-        debug = j.core.myenv.config.get('DEBUG', False)
+        debug = j.core.myenv.config.get("DEBUG", False)
         return len(LogPane.Buffer.text) > 0 and LogPane.Show and debug
 
 
 class IsInsideString(PythonInputFilter):
-
     def __call__(self):
         text = self.python_input.default_buffer.document.text_before_cursor
         grammer = self.python_input._completer._path_completer_grammar
@@ -224,22 +221,21 @@ def get_ptpython_parent_container(repl):
 def setup_docstring_containers(repl):
     parent_container = get_ptpython_parent_container(repl)
     # the same as ptpython containers, but without signature checking
-    parent_container.children.extend([
-        ConditionalContainer(
-            content=Window(
-                height=Dimension.exact(1),
-                char='\u2500',
-                style='class:separator'),
-            filter=HasDocString(repl) & ShowDocstring(repl) & ~is_done),
-        ConditionalContainer(
-            content=Window(
-                BufferControl(
-                    buffer=repl.docstring_buffer,
-                    lexer=PygmentsLexer(PythonLexer),
+    parent_container.children.extend(
+        [
+            ConditionalContainer(
+                content=Window(height=Dimension.exact(1), char="\u2500", style="class:separator"),
+                filter=HasDocString(repl) & ShowDocstring(repl) & ~is_done,
+            ),
+            ConditionalContainer(
+                content=Window(
+                    BufferControl(buffer=repl.docstring_buffer, lexer=PygmentsLexer(PythonLexer)),
+                    height=Dimension(max=12),
                 ),
-                height=Dimension(max=12)),
-            filter=HasDocString(repl) & ShowDocstring(repl) & ~is_done),
-    ])
+                filter=HasDocString(repl) & ShowDocstring(repl) & ~is_done,
+            ),
+        ]
+    )
 
 
 def add_logs_to_pane(msg):
@@ -250,24 +246,26 @@ def add_logs_to_pane(msg):
 
 def setup_logging_containers(repl):
     parent_container = get_ptpython_parent_container(repl)
-    parent_container.children.extend([
-        ConditionalContainer(
-            content=Window(
-                height=Dimension.exact(1),
-                char='\u2500',
-                style='class:separator'),
-            filter=HasLogs(repl) & ~is_done),
-        ConditionalContainer(
-            content=Window(
-                BufferControl(
-                    buffer=LogPane.Buffer,
-                    input_processors=[FormatANSIText(), HighlightIncrementalSearchProcessor()],
-                    focusable=False,
-                    preview_search=True
+    parent_container.children.extend(
+        [
+            ConditionalContainer(
+                content=Window(height=Dimension.exact(1), char="\u2500", style="class:separator"),
+                filter=HasLogs(repl) & ~is_done,
+            ),
+            ConditionalContainer(
+                content=Window(
+                    BufferControl(
+                        buffer=LogPane.Buffer,
+                        input_processors=[FormatANSIText(), HighlightIncrementalSearchProcessor()],
+                        focusable=False,
+                        preview_search=True,
+                    ),
+                    height=Dimension(max=12),
                 ),
-                height=Dimension(max=12)),
-            filter=HasLogs(repl) & ~is_done),
-    ])
+                filter=HasLogs(repl) & ~is_done,
+            ),
+        ]
+    )
 
 
 def ptconfig(repl):
@@ -309,7 +307,7 @@ def ptconfig(repl):
     repl.paste_mode = False
 
     # Use the classic prompt. (Display '>>>' instead of 'In [1]'.)
-    repl.prompt_style = 'classic'  # 'classic' or 'ipython'
+    repl.prompt_style = "classic"  # 'classic' or 'ipython'
 
     # Don't insert a blank line after the output.
     repl.insert_blank_line_after_output = False
@@ -342,10 +340,10 @@ def ptconfig(repl):
     # repl.enable_input_validation = True
 
     # Use this colorscheme for the code.
-    repl.use_code_colorscheme('perldoc')
+    repl.use_code_colorscheme("perldoc")
 
     # Set color depth (keep in mind that not all terminals support true color).
-    repl.color_depth = 'DEPTH_24_BIT'  # True color.
+    repl.color_depth = "DEPTH_24_BIT"  # True color.
 
     repl.enable_syntax_highlighting = True
 
@@ -356,28 +354,24 @@ def ptconfig(repl):
     @repl.add_key_binding(Keys.ControlB)
     def _debug_event(event):
         ' Pressing Control-B will insert "pdb.set_trace()" '
-        event.cli.current_buffer.insert_text('\nimport pdb; pdb.set_trace()\n')
+        event.cli.current_buffer.insert_text("\nimport pdb; pdb.set_trace()\n")
 
     # Custom key binding for some simple autocorrection while typing.
 
-    corrections = {
-        'impotr': 'import',
-        'pritn': 'print',
-        'pr': 'print(',
-    }
+    corrections = {"impotr": "import", "pritn": "print", "pr": "print("}
 
-    @repl.add_key_binding(' ')
+    @repl.add_key_binding(" ")
     def _(event):
-        ' When a space is pressed. Check & correct word before cursor. '
+        " When a space is pressed. Check & correct word before cursor. "
         b = event.cli.current_buffer
         w = b.document.get_word_before_cursor()
         if w is not None:
             if w in corrections:
                 b.delete_before_cursor(count=len(w))
                 b.insert_text(corrections[w])
-        b.insert_text(' ')
+        b.insert_text(" ")
 
-    @repl.add_key_binding('?', filter=~IsInsideString(repl))
+    @repl.add_key_binding("?", filter=~IsInsideString(repl))
     def _docevent(event):
         j = KosmosShellConfig.j
         b = event.cli.current_buffer
@@ -389,7 +383,8 @@ def ptconfig(repl):
             repl.docstring_buffer.reset()
 
     sidebar_visible = Condition(lambda: repl.show_sidebar)
-    @repl.add_key_binding('c-p', filter=~sidebar_visible)
+
+    @repl.add_key_binding("c-p", filter=~sidebar_visible)
     def _logevent(event):
         LogPane.Show = not LogPane.Show
 
@@ -399,16 +394,16 @@ def ptconfig(repl):
         """
 
         def in_prompt(self):
-            return [('class:prompt', 'JSX> ')]
+            return [("class:prompt", "JSX> ")]
 
         def in2_prompt(self, width):
-            return [('class:prompt.dots', '...')]
+            return [("class:prompt.dots", "...")]
 
         def out_prompt(self):
             return []
 
-    repl.all_prompt_styles['custom'] = CustomPrompt()
-    repl.prompt_style = 'custom'
+    repl.all_prompt_styles["custom"] = CustomPrompt()
+    repl.prompt_style = "custom"
 
     old_get_completions = repl._completer.__class__.get_completions
 
@@ -425,7 +420,7 @@ def ptconfig(repl):
 
     repl._completer.__class__.get_completions = custom_get_completions
 
-    j.core.myenv.config['log_printer'] = add_logs_to_pane
+    j.core.myenv.config["log_printer"] = add_logs_to_pane
 
     parent_container = get_ptpython_parent_container(repl)
     # remove ptpython docstring containers, we have ours now

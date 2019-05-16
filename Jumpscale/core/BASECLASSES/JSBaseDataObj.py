@@ -4,7 +4,6 @@ import types
 
 
 class JSBaseDataObj(JSBase):
-
     def __init__(self, data=None, parent=None, topclass=True, **kwargs):
         """
         :param kwargs: will be updated in the self.data object
@@ -100,8 +99,9 @@ class JSBaseDataObj(JSBase):
         j.core.tools.file_edit(path)
         data_out = j.sal.fs.readFile(path)
         if data_in != data_out:
-            self._log_debug("'%s' instance '%s' has been edited (changed)" %
-                            (self._parent.__jslocation__, self.data.name))
+            self._log_debug(
+                "'%s' instance '%s' has been edited (changed)" % (self._parent.__jslocation__, self.data.name)
+            )
             data2 = j.data.serializers.toml.loads(data_out)
             self.data.data_update(data2)
         j.sal.fs.remove(path)

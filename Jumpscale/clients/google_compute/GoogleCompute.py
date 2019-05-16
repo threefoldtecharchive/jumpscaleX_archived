@@ -26,7 +26,7 @@ class GoogleCompute(JSBASE):
         self.zone = zone
         self.projectName = projectName
         self.credentials = GoogleCredentials.get_application_default()
-        self.service = discovery.build('compute', 'v1', credentials=self.credentials)
+        self.service = discovery.build("compute", "v1", credentials=self.credentials)
 
     @property
     def project(self):
@@ -37,14 +37,13 @@ class GoogleCompute(JSBASE):
         return self._instances
 
     def instances_list(self):
-        request = self.service.instances().list(
-            project=self.projectName, zone=self.zone)
+        request = self.service.instances().list(project=self.projectName, zone=self.zone)
         res = []
         while request is not None:
             response = request.execute()
             if not "items" in response:
                 return []
-            for instance in response['items']:
+            for instance in response["items"]:
                 # pprint(instance)
                 res.append(instance)
             request = self.service.instances().list_next(previous_request=request, previous_response=response)
@@ -60,7 +59,7 @@ class GoogleCompute(JSBASE):
             response = request.execute()
             if not "items" in response:
                 return []
-            for image in response['items']:
+            for image in response["items"]:
                 res.append(image)
                 pprint(image)
             request = self.service.images().list_next(previous_request=request, previous_response=response)
@@ -73,9 +72,8 @@ class GoogleCompute(JSBASE):
         if "ubuntu" not in self._images:
             res = []
             for family in ["ubuntu-1604-lts", "ubuntu-1704"]:
-                image_response = self.service.images().getFromFamily(
-                    project='ubuntu-os-cloud', family=family).execute()
-                res.append(image_response['selfLink'])
+                image_response = self.service.images().getFromFamily(project="ubuntu-os-cloud", family=family).execute()
+                res.append(image_response["selfLink"])
                 self._images["ubuntu"] = res
         return self._images["ubuntu"]
 
@@ -85,7 +83,15 @@ class GoogleCompute(JSBASE):
                 return item
         raise RuntimeError("did not find image: %s" % name)
 
-    def instance_create(self, name="builder", machineType="n1-standard-1", osType="ubuntu-1604", startupScript="", storageBucket="", sshkeyname=''):
+    def instance_create(
+        self,
+        name="builder",
+        machineType="n1-standard-1",
+        osType="ubuntu-1604",
+        startupScript="",
+        storageBucket="",
+        sshkeyname="",
+    ):
         """
         @param sshkeyname is your name for your ssh key, if not specified will use your preferred key from j.core.myenv.config["ssh"]["sshkeyname"]
         """
@@ -93,61 +99,47 @@ class GoogleCompute(JSBASE):
         # Configure the machine
         machine_type = "zones/%s/machineTypes/%s" % (self.zone, machineType)
         config = {
-            'name': name,
-            'machineType': machine_type,
-
+            "name": name,
+            "machineType": machine_type,
             # Specify the boot disk and the image to use as a source.
-            'disks': [
-                {
-                    'boot': True,
-                    'autoDelete': True,
-                    'initializeParams': {
-                        'sourceImage': source_disk_image,
-                    }
-                }
-            ],
-
+            "disks": [{"boot": True, "autoDelete": True, "initializeParams": {"sourceImage": source_disk_image}}],
             # Specify a network interface with NAT to access the public
             # internet.
-            'networkInterfaces': [{
-                'network': 'global/networks/default',
-                'accessConfigs': [
-                    {'type': 'ONE_TO_ONE_NAT', 'name': 'External NAT'}
-                ]
-            }],
-
+            "networkInterfaces": [
+                {
+                    "network": "global/networks/default",
+                    "accessConfigs": [{"type": "ONE_TO_ONE_NAT", "name": "External NAT"}],
+                }
+            ],
             # Allow the instance to access cloud storage and logging.
-            'serviceAccounts': [{
-                'email': 'default',
-                'scopes': [
-                    'https://www.googleapis.com/auth/devstorage.read_write',
-                    'https://www.googleapis.com/auth/logging.write'
-                ]
-            }],
-
+            "serviceAccounts": [
+                {
+                    "email": "default",
+                    "scopes": [
+                        "https://www.googleapis.com/auth/devstorage.read_write",
+                        "https://www.googleapis.com/auth/logging.write",
+                    ],
+                }
+            ],
             # Metadata is readable from the instance and allows you to
             # pass configuration from deployment scripts to instances.
-            'metadata': {
-                'items': [{
-                    'key': 'ssh-keys',
-                    'value': sshkeys
-                },
+            "metadata": {
+                "items": [
+                    {"key": "ssh-keys", "value": sshkeys},
                     {
-                    # Startup script is automatically executed by the
-                    # instance upon startup.
-                    'key': 'startup-script',
-                    'value': startupScript
-                }, {
-                    'key': 'bucket',
-                    'value': storageBucket
-                }]
-            }
+                        # Startup script is automatically executed by the
+                        # instance upon startup.
+                        "key": "startup-script",
+                        "value": startupScript,
+                    },
+                    {"key": "bucket", "value": storageBucket},
+                ]
+            },
         }
 
         self._log_debug(config)
 
-        res = self.service.instances().insert(project=self.projectName,
-                                              zone=self.zone, body=config).execute()
+        res = self.service.instances().insert(project=self.projectName, zone=self.zone, body=config).execute()
         return res
 
     def add_sshkey(self, machinename, username, keyname):
@@ -165,41 +157,37 @@ class GoogleCompute(JSBASE):
         key = j.sal.fs.readFile(keypath + ".pub")
 
         # get old instance metadata
-        request = self.service.instances().get(
-            zone=self.zone, project=self.projectName, instance=instance)
+        request = self.service.instances().get(zone=self.zone, project=self.projectName, instance=instance)
         res = request.execute()
-        metadata = res.get('metadata', {})
+        metadata = res.get("metadata", {})
         # add the key
-        items = metadata.get('items', [])
+        items = metadata.get("items", [])
         for item in items:
-            if item['key'] == 'ssh-keys':
-                item['value'] = '{} \n{}:{}'.format(
-                    item['value'], username, key)
+            if item["key"] == "ssh-keys":
+                item["value"] = "{} \n{}:{}".format(item["value"], username, key)
                 break
             else:
-                items.append(
-                    {'key': 'ssh-keys', 'value': '{}:{}'.format(username, key)})
+                items.append({"key": "ssh-keys", "value": "{}:{}".format(username, key)})
         # Set instance metadata
         metadata["items"] = items
         request = self.service.instances().setMetadata(
-            zone=self.zone, project=self.projectName, instance=instance, body=metadata)
+            zone=self.zone, project=self.projectName, instance=instance, body=metadata
+        )
         request.execute()
 
         # TODO:*1 we need to check for duplicates
 
     def machinetypes_list(self):
-        request = self.service.machineTypes().list(
-            project=self.projectName, zone=self.zone)
+        request = self.service.machineTypes().list(project=self.projectName, zone=self.zone)
         res = []
         while request is not None:
             response = request.execute()
             if not "items" in response:
                 return []
-            for instance in response['items']:
+            for instance in response["items"]:
                 # pprint(instance)
                 res.append(instance)
-            request = self.service.instances().list_next(
-                previous_request=request, previous_response=response)
+            request = self.service.instances().list_next(previous_request=request, previous_response=response)
         return res
 
     @property

@@ -7,9 +7,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class Authorization( ):
+class Authorization:
     """
     auto-generated. don't touch.
     """
@@ -35,37 +33,42 @@ class Authorization( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Authorization'
+        class_name = "Authorization"
         data = json or kwargs
 
         # set attributes
         data_types = [AuthorizationMap]
-        self.addresses = client_support.set_property('addresses', data, data_types, False, [], True, False, class_name)
+        self.addresses = client_support.set_property("addresses", data, data_types, False, [], True, False, class_name)
         data_types = [AuthorizationMap]
         self.bankaccounts = client_support.set_property(
-            'bankaccounts', data, data_types, False, [], True, False, class_name)
+            "bankaccounts", data, data_types, False, [], True, False, class_name
+        )
         data_types = [AuthorizationMap]
         self.emailaddresses = client_support.set_property(
-            'emailaddresses', data, data_types, False, [], True, False, class_name)
+            "emailaddresses", data, data_types, False, [], True, False, class_name
+        )
         data_types = [bool]
-        self.facebook = client_support.set_property('facebook', data, data_types, False, [], False, False, class_name)
+        self.facebook = client_support.set_property("facebook", data, data_types, False, [], False, False, class_name)
         data_types = [bool]
-        self.github = client_support.set_property('github', data, data_types, False, [], False, False, class_name)
+        self.github = client_support.set_property("github", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.grantedTo = client_support.set_property('grantedTo', data, data_types, False, [], False, True, class_name)
+        self.grantedTo = client_support.set_property("grantedTo", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
         self.organizations = client_support.set_property(
-            'organizations', data, data_types, False, [], True, True, class_name)
+            "organizations", data, data_types, False, [], True, True, class_name
+        )
         data_types = [AuthorizationMap]
         self.phonenumbers = client_support.set_property(
-            'phonenumbers', data, data_types, False, [], True, False, class_name)
+            "phonenumbers", data, data_types, False, [], True, False, class_name
+        )
         data_types = [AuthorizationMap]
         self.publicKeys = client_support.set_property(
-            'publicKeys', data, data_types, False, [], True, False, class_name)
+            "publicKeys", data, data_types, False, [], True, False, class_name
+        )
         data_types = [string_types]
-        self.username = client_support.set_property('username', data, data_types, False, [], False, True, class_name)
+        self.username = client_support.set_property("username", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

@@ -8,7 +8,7 @@ class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
     get key from https://currencylayer.com/quickstart
     """
 
-    __jslocation__ = 'j.clients.currencylayer'
+    __jslocation__ = "j.clients.currencylayer"
 
     _SCHEMATEXT = """
     @url = jumpscale.currencylayer.client
@@ -41,8 +41,7 @@ class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
             self._cache.reset()
 
         def get():
-            if not self.fake and \
-                    j.sal.nettools.tcpPortConnectionTest("currencylayer.com", 443):
+            if not self.fake and j.sal.nettools.tcpPortConnectionTest("currencylayer.com", 443):
                 key = self.api_key_
                 if key.strip():
                     url = "http://apilayer.net/api/live?access_key=%s" % key
@@ -53,23 +52,21 @@ class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
                     data = r[0].decode()
                     data = j.data.serializers.json.loads(data)["quotes"]
 
-                    data['USDETH'] = 1/cc.get_price('ETH', 'USD')['ETH']['USD']
-                    data['USDXRP'] = cc.get_price('USD', 'XRP')['USD']['XRP']
-                    data['USDBTC'] = 1/cc.get_price('BTC', 'USD')['BTC']['USD']
+                    data["USDETH"] = 1 / cc.get_price("ETH", "USD")["ETH"]["USD"]
+                    data["USDXRP"] = cc.get_price("USD", "XRP")["USD"]["XRP"]
+                    data["USDBTC"] = 1 / cc.get_price("BTC", "USD")["BTC"]["USD"]
 
                     self._log_error("fetch currency from internet")
                     return data
                 elif not self.fallback:
-                    raise RuntimeError("api key for currency layer "
-                                       "needs to be specified")
+                    raise RuntimeError("api key for currency layer " "needs to be specified")
                 else:
-                    self._log_warning("currencylayer api_key not set, "
-                                         "use fake local data.")
+                    self._log_warning("currencylayer api_key not set, " "use fake local data.")
 
             if self.fake or self.fallback:
-                self._log_warning("cannot reach: currencylayer.com, "
-                                     "use fake local data.")
+                self._log_warning("cannot reach: currencylayer.com, " "use fake local data.")
                 from .currencies import currencies
+
                 return currencies
             raise RuntimeError("could not data from currencylayers")
 
@@ -108,6 +105,7 @@ class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
         #     return res
         if self._id2cur == {}:
             from .currencies_id import currencies_id
+
             self._id2cur = currencies_id
         return self._id2cur
 
@@ -150,7 +148,7 @@ class CurrencyLayerSingleton(j.application.JSBaseConfigClass):
         r = j.clients.currencylayer._Find()
         j.shell()
         self._log_info(self.cur2usd)
-        assert 'aed' in self.cur2usd
+        assert "aed" in self.cur2usd
 
 
 class CurrencyLayerFactory(j.application.JSBaseConfigsClass):

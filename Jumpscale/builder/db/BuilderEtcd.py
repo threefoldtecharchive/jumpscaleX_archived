@@ -65,9 +65,7 @@ class BuilderEtcd(BuilderGolangTools):
         :type zhub_instance:str
         """
         self.install()
-        bin_dest = j.sal.fs.joinPaths(
-            "/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX)
-        )
+        bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX))
         self.tools.dir_ensure(bin_dest)
         etcd_bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
         etcdctl_bin_path = self.tools.joinpaths("{DIR_BIN}", "etcdctl")
@@ -125,28 +123,18 @@ class BuilderEtcd(BuilderGolangTools):
         tarfile = "/tmp/etcd-3.3.4.tar.gz"
         bin_dir = j.sal.fs.joinPaths(build_dir, "bin")
         j.core.tools.dir_ensure(bin_dir)
-        j.builder.tools.file_copy(
-            j.sal.fs.joinPaths(j.core.dirs.BINDIR, "etcd"), bin_dir
-        )
-        j.builder.tools.file_copy(
-            j.sal.fs.joinPaths(j.core.dirs.BINDIR, "etcdctl"), bin_dir
-        )
+        j.builder.tools.file_copy(j.sal.fs.joinPaths(j.core.dirs.BINDIR, "etcd"), bin_dir)
+        j.builder.tools.file_copy(j.sal.fs.joinPaths(j.core.dirs.BINDIR, "etcdctl"), bin_dir)
 
         j.sal.process.execute("tar czf {} -C {} .".format(tarfile, build_dir))
 
         if hub_instance:
             if not j.clients.zerohub.exists(hub_instance):
-                raise j.exceptions.Input(
-                    "hub instance %s does not exists, can't upload to the hub"
-                    % hub_instance
-                )
+                raise j.exceptions.Input("hub instance %s does not exists, can't upload to the hub" % hub_instance)
             hub = j.clients.zerohub.get(hub_instance)
             hub.authentificate()
             self._log_info("uploading flist to the hub")
             hub.upload(tarfile)
-            self._log_info(
-                "uploaded at https://hub.grid.tech/%s/etcd-3.3.4.flist",
-                hub.config.data["username"],
-            )
+            self._log_info("uploaded at https://hub.grid.tech/%s/etcd-3.3.4.flist", hub.config.data["username"])
 
         return tarfile

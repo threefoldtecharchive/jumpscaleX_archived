@@ -4,10 +4,7 @@ from . import typchk
 
 
 class AggregatorManager:
-    _query_chk = typchk.Checker({
-        'key': typchk.Or(str, typchk.IsNone()),
-        'tags': typchk.Map(str, str),
-    })
+    _query_chk = typchk.Checker({"key": typchk.Or(str, typchk.IsNone()), "tags": typchk.Map(str, str)})
 
     def __init__(self, client):
         self._client = client
@@ -34,13 +31,10 @@ class AggregatorManager:
         @QUESTION what do we monitor?
 
         """
-        args = {
-            'key': key,
-            'tags': tags,
-        }
+        args = {"key": key, "tags": tags}
         self._query_chk.check(args)
 
-        return self._client.json('aggregator.query', args)
+        return self._client.json("aggregator.query", args)
 
     def keys(self):
         """
@@ -48,6 +42,6 @@ class AggregatorManager:
         """
         keys = list(self.query().keys())
         for i, _ in enumerate(keys):
-            keys[i] = keys[i].split('/')[0]
+            keys[i] = keys[i].split("/")[0]
         keys.sort()
         return keys

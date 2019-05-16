@@ -4,21 +4,13 @@ from . import typchk
 from Jumpscale import j
 
 
+class ProcessManager:
+    _process_chk = typchk.Checker({"pid": typchk.Or(int, typchk.IsNone())})
 
-
-class ProcessManager():
-    _process_chk = typchk.Checker({
-        'pid': typchk.Or(int, typchk.IsNone()),
-    })
-
-    _kill_chk = typchk.Checker({
-        'pid': int,
-        'signal': int,
-    })
+    _kill_chk = typchk.Checker({"pid": int, "signal": int})
 
     def __init__(self, client):
         self._client = client
-
 
     def list(self, id=None):
         """
@@ -26,9 +18,9 @@ class ProcessManager():
 
         :param id: optional PID for the process to list
         """
-        args = {'pid': id}
+        args = {"pid": id}
         self._process_chk.check(args)
-        return self._client.json('process.list', args)
+        return self._client.json("process.list", args)
 
     def kill(self, pid, signal=signal.SIGTERM):
         """
@@ -38,9 +30,6 @@ class ProcessManager():
 
         :param pid: PID to kill
         """
-        args = {
-            'pid': pid,
-            'signal': int(signal),
-        }
+        args = {"pid": pid, "signal": int(signal)}
         self._kill_chk.check(args)
-        return self._client.json('process.kill', args)
+        return self._client.json("process.kill", args)

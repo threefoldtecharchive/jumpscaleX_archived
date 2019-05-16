@@ -1,5 +1,5 @@
-
 from Jumpscale import j
+
 # import gevent
 
 
@@ -14,6 +14,7 @@ class RedisCoreClient_old(j.application.JSBaseClass):
         try:
             self._credis = True
             from credis import Connection
+
             self._client = Connection(path="/sandbox/var/redis.sock")
             self._client.connect()
         except Exception as e:
@@ -21,7 +22,7 @@ class RedisCoreClient_old(j.application.JSBaseClass):
             self._client = j.clients.redis.core_get()
 
         if self._credis:
-            assert self.execute("PING") == b'PONG'
+            assert self.execute("PING") == b"PONG"
         else:
             assert self.execute("PING")
 

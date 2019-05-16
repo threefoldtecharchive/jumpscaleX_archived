@@ -1,7 +1,6 @@
 from urllib.parse import urlparse
 
-from .types import (Backend, BackendServer, Frontend, FrontendRule,
-                    LoadBalanceMethod, RoutingKind)
+from .types import Backend, BackendServer, Frontend, FrontendRule, LoadBalanceMethod, RoutingKind
 
 
 def backend_write(client, backend):
@@ -47,29 +46,29 @@ def backend_load(client, name):
     backend = Backend(name)
     server_names = set()
 
-    load_balancer, _ = client.api.get('/traefik/backends/{}/loadBalancer/method'.format(name))
+    load_balancer, _ = client.api.get("/traefik/backends/{}/loadBalancer/method".format(name))
     if load_balancer:
         backend.load_balance_method = LoadBalanceMethod[load_balancer.decode()]
 
-    cb_expression, _ = client.api.get('/traefik/backends/{}/circuitBreaker'.format(name))
+    cb_expression, _ = client.api.get("/traefik/backends/{}/circuitBreaker".format(name))
     if cb_expression:
         backend.cb_expression = cb_expression.decode()
 
-    servers_info = client.api.get_prefix('/traefik/backends/{}/servers'.format(name))
+    servers_info = client.api.get_prefix("/traefik/backends/{}/servers".format(name))
     for server, meta in servers_info:
-        server_name = meta.key.decode().split('/')[5]
+        server_name = meta.key.decode().split("/")[5]
         if server_name in server_names:
             continue
 
         server_names.add(server_name)
 
-        url, _ = client.api.get('/traefik/backends/{}/servers/{}/url'.format(name, server_name))
+        url, _ = client.api.get("/traefik/backends/{}/servers/{}/url".format(name, server_name))
         if not url:
             continue
 
         server = BackendServer(url)
 
-        weight, _ = client.api.get('/traefik/backends/{}/servers/{}/weight'.format(name, server_name))
+        weight, _ = client.api.get("/traefik/backends/{}/servers/{}/weight".format(name, server_name))
         if weight:
             server.weight = weight.decode()
         backend.servers.append(server)
@@ -79,14 +78,14 @@ def backend_load(client, name):
 def frontend_load(client, name):
     frontend = Frontend(name)
 
-    backend, _ = client.api.get('/traefik/frontends/{}/backend'.format(name))
+    backend, _ = client.api.get("/traefik/frontends/{}/backend".format(name))
     if backend:
         frontend.backend_name = backend.decode()
 
-    routes = client.api.get_prefix('/traefik/frontends/{}/routes'.format(name))
+    routes = client.api.get_prefix("/traefik/frontends/{}/routes".format(name))
     for value, meta in routes:
-        rule_name = meta.key.decode().split('/')[5]
-        rule, _ = client.api.get('/traefik/frontends/{}/routes/{}/rule'.format(name, rule_name))
+        rule_name = meta.key.decode().split("/")[5]
+        rule, _ = client.api.get("/traefik/frontends/{}/routes/{}/rule".format(name, rule_name))
         if rule:
             kind, value = rule.decode().split(":", 1)
             frontend.rules.append(FrontendRule(value, RoutingKind[kind]))
@@ -100,13 +99,13 @@ def proxy_list(client):
     """
     backend_names = set()
     frontend_names = set()
-    for _, meta in client.api.get_prefix('/traefik/backends'):
-        ss = meta.key.decode().split('/')
+    for _, meta in client.api.get_prefix("/traefik/backends"):
+        ss = meta.key.decode().split("/")
         name = ss[3]
         backend_names.add(name)
 
-    for _, meta in client.api.get_prefix('/traefik/frontends'):
-        ss = meta.key.decode().split('/')
+    for _, meta in client.api.get_prefix("/traefik/frontends"):
+        ss = meta.key.decode().split("/")
         name = ss[3]
         frontend_names.add(name)
 
@@ -117,14 +116,14 @@ def load(client):
     backends = {}
     frontends = {}
 
-    for _, meta in client.api.get_prefix('/traefik/backends'):
-        ss = meta.key.decode().split('/')
+    for _, meta in client.api.get_prefix("/traefik/backends"):
+        ss = meta.key.decode().split("/")
         name = ss[3]
         if name not in backends:
             backends[name] = backend_load(client, name)
 
-    for _, meta in client.api.get_prefix('/traefik/frontends'):
-        ss = meta.key.decode().split('/')
+    for _, meta in client.api.get_prefix("/traefik/frontends"):
+        ss = meta.key.decode().split("/")
         name = ss[3]
         if name not in frontends:
             frontends[name] = frontend_load(client, name)

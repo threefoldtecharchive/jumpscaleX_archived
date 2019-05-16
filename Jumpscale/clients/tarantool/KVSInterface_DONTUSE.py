@@ -1,7 +1,9 @@
 import base64
 
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
+
 
 class KVSTarantool(j.application.JSBaseClass):
     """
@@ -19,26 +21,23 @@ class KVSTarantool(j.application.JSBaseClass):
         return "model_%s.%s" % (self.space, method)
 
     def _call(self, method, *args):
-        return self._db.call(
-            self._build_call(method),
-            (*args)
-        )
+        return self._db.call(self._build_call(method), (*args))
 
     def set(self, key, value):
         # taarantool doesn't support binary value, this is not true (despiegk)
         if isinstance(value, bytes):
             value = base64.b64encode(value)
-        self._call('set', (key, value))
+        self._call("set", (key, value))
 
     def index(self, index):
         pass
 
     def list(self):
-        resp = self._call('list')
+        resp = self._call("list")
         return resp.data[0]
 
     def get(self, key):
-        resp = self._call('get', key)
+        resp = self._call("get", key)
         if len(resp.data) <= 1 and len(resp.data[0]) > 2:
             raise KeyError("value for %s not found" % key)
         # taarantool doesn't support binary value
@@ -48,14 +47,14 @@ class KVSTarantool(j.application.JSBaseClass):
         return value
 
     def exists(self, key):
-        resp = self._call('exists', key)
+        resp = self._call("exists", key)
         return resp.data[0][0]
 
     def delete(self, key):
-        self._call('delete', key)
+        self._call("delete", key)
 
     def find(self, query):
-        return self._call('find', query)
+        return self._call("find", query)
 
     def destroy(self):
-        self._call('destroy')
+        self._call("destroy")

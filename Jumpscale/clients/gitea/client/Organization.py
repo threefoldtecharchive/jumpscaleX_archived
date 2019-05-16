@@ -8,8 +8,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class Organization(object):
     """
     auto-generated. don't touch.
@@ -33,28 +31,30 @@ class Organization(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Organization'
+        class_name = "Organization"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
         self.avatar_url = client_support.set_property(
-            'avatar_url', data, data_types, False, [], False, False, class_name)
+            "avatar_url", data, data_types, False, [], False, False, class_name
+        )
         data_types = [string_types]
         self.description = client_support.set_property(
-            'description', data, data_types, False, [], False, False, class_name)
+            "description", data, data_types, False, [], False, False, class_name
+        )
         data_types = [string_types]
-        self.full_name = client_support.set_property('full_name', data, data_types, False, [], False, False, class_name)
+        self.full_name = client_support.set_property("full_name", data, data_types, False, [], False, False, class_name)
         data_types = [int]
-        self.id = client_support.set_property('id', data, data_types, False, [], False, False, class_name)
+        self.id = client_support.set_property("id", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.location = client_support.set_property('location', data, data_types, False, [], False, False, class_name)
+        self.location = client_support.set_property("location", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.username = client_support.set_property('username', data, data_types, False, [], False, False, class_name)
+        self.username = client_support.set_property("username", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.website = client_support.set_property('website', data, data_types, False, [], False, False, class_name)
+        self.website = client_support.set_property("website", data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

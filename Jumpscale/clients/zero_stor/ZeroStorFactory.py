@@ -5,7 +5,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class ZeroStorFactory(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.clients.zstor"
         self.__imports__ = "requests"

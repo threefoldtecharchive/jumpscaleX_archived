@@ -24,7 +24,7 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
 
     def profile_builder_set(self):
         super().profile_builder_set()
-        self.profile.env_set('GO111MODULE', 'on')
+        self.profile.env_set("GO111MODULE", "on")
 
     @builder_method()
     def build(self):
@@ -56,8 +56,8 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
 
         installs and runs coredns server with redis plugin
         """
-        self._copy('{DIR_BUILD}/coredns', '{DIR_BIN}/coredns')
-        j.sal.fs.writeFile(filename='/sandbox/cfg/coredns.conf', contents=CONFIGTEMPLATE)
+        self._copy("{DIR_BUILD}/coredns", "{DIR_BIN}/coredns")
+        j.sal.fs.writeFile(filename="/sandbox/cfg/coredns.conf", contents=CONFIGTEMPLATE)
 
     def clean(self):
         self._remove(self.DIR_BUILD)
@@ -66,20 +66,20 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
     @property
     def startup_cmds(self):
         cmd = "/sandbox/bin/coredns -conf /sandbox/cfg/coredns.conf"
-        cmds = [j.tools.startupcmd.get(name='coredns', cmd=cmd)]
+        cmds = [j.tools.startupcmd.get(name="coredns", cmd=cmd)]
         return cmds
 
     @builder_method()
     def sandbox(self):
-        coredns_bin = j.sal.fs.joinPaths('{DIR_BIN}', self.NAME)
-        dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'sandbox')
+        coredns_bin = j.sal.fs.joinPaths("{DIR_BIN}", self.NAME)
+        dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox")
         self.tools.dir_ensure(dir_dest)
         self._copy(coredns_bin, dir_dest)
 
-        dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'etc/ssl/certs/')
+        dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "etc/ssl/certs/")
         self.tools.dir_ensure(dir_dest)
-        self._copy('/etc/ssl/certs', dir_dest)
-        self._copy('/sandbox/cfg/coredns.conf', self.DIR_SANDBOX)
+        self._copy("/etc/ssl/certs", dir_dest)
+        self._copy("/sandbox/cfg/coredns.conf", self.DIR_SANDBOX)
 
     @builder_method()
     def test(self):
@@ -88,14 +88,14 @@ class BuilderCoreDns(BuilderGolangTools, j.builder.system._BaseClass):
 
         j.servers.etcd.start()
         self.start()
-        j.clients.etcd.get('test_coredns')
-        client = j.clients.coredns.get(name='test_builder', etcd_instance='test_coredns')
+        j.clients.etcd.get("test_coredns")
+        client = j.clients.coredns.get(name="test_builder", etcd_instance="test_coredns")
         client.zone_create("example.com", "0.0.0.0")
         client.deploy()
         self.stop()
         j.servers.etcd.stop()
 
-        print('TEST OK')
+        print("TEST OK")
 
     @builder_method()
     def uninstall(self):

@@ -6,7 +6,6 @@ BaseClass = j.application.JSBaseClass
 
 
 class builder_method(object):
-
     def __init__(self, **kwargs_):
         if "log" in kwargs_:
             self.log = j.data.types.bool.clean(kwargs_["log"])
@@ -18,7 +17,6 @@ class builder_method(object):
             self.done_check = True
 
     def __call__(self, func):
-
         def wrapper_action(*args, **kwargs):
             builder = args[0]
             args = args[1:]
@@ -33,7 +31,7 @@ class builder_method(object):
             else:
                 reset = False
 
-            done_key = name+"_"+j.data.hash.md5_string(str(args)+str(kwargs))
+            done_key = name + "_" + j.data.hash.md5_string(str(args) + str(kwargs))
 
             if reset:
                 builder._done_reset()
@@ -67,7 +65,7 @@ class builder_method(object):
                 res = func(builder, *args, **kwargs)
 
                 if name == "sandbox" and kwargs.get("flist_create", False):
-                    res = builder._flist_create(kwargs['zhub_client'], kwargs.get('merge_base_flist'))
+                    res = builder._flist_create(kwargs["zhub_client"], kwargs.get("merge_base_flist"))
 
                 if self.done_check:
                     builder._done_set(done_key)
@@ -147,9 +145,9 @@ class BuilderBaseClass(BaseClass):
 
     def _profile_builder_set(self):
         def _build_flags(env_name, delimiter):
-            flags = self.profile.env_get(env_name).split(':')
-            flags = ['-{}{}'.format(delimiter, flag) for flag in flags]
-            return '"{}"'.format(' '.join(flags))
+            flags = self.profile.env_get(env_name).split(":")
+            flags = ["-{}{}".format(delimiter, flag) for flag in flags]
+            return '"{}"'.format(" ".join(flags))
 
         self._remove("{DIR_BUILD}/env.sh")
         self._bash = j.tools.bash.get(self._replace("{DIR_BUILD}"))
@@ -162,18 +160,18 @@ class BuilderBaseClass(BaseClass):
         self.profile.env_set_part("LIBRARY_PATH", "/usr/local/lib")
         self.profile.env_set_part("LIBRARY_PATH", "/lib")
         self.profile.env_set_part("LIBRARY_PATH", "/lib/x86_64-linux-gnu")
-        library_path = os.environ.get('LIBRARY_PATH') or ''
+        library_path = os.environ.get("LIBRARY_PATH") or ""
         self.profile.env_set_part("LIBRARY_PATH", library_path, end=True)
 
         self.profile.env_set("LD_LIBRARY_PATH", self.profile.env_get("LIBRARY_PATH"))  # makes copy
 
-        lds = _build_flags('LIBRARY_PATH', 'L')
+        lds = _build_flags("LIBRARY_PATH", "L")
         self.profile.env_set("LDFLAGS", lds)
 
         self.profile.env_set_part("CPPPATH", "/usr/include")
         self.profile.env_set("CPPPATH", self.profile.env_get("CPPPATH"))
 
-        cps = _build_flags('CPPPATH', 'I')
+        cps = _build_flags("CPPPATH", "I")
         self.profile.env_set("CPPFLAGS", cps)
 
         self.profile.env_set("PS1", "PYTHONBUILDENV: ")
@@ -243,8 +241,7 @@ class BuilderBaseClass(BaseClass):
             raise RuntimeError("replace was not complete, still { inside, '%s'" % res)
         return res
 
-    def _execute(self, cmd, die=True, args={}, timeout=600,
-                 replace=True, showout=True, interactive=False):
+    def _execute(self, cmd, die=True, args={}, timeout=600, replace=True, showout=True, interactive=False):
         """
 
         :param cmd:
@@ -273,8 +270,16 @@ class BuilderBaseClass(BaseClass):
 
         j.sal.fs.writeFile(path, contents=cmd)
 
-        return j.sal.process.execute("bash %s" % path, cwd=None, timeout=timeout, die=die,
-                                     args=args, interactive=interactive, replace=False, showout=showout)
+        return j.sal.process.execute(
+            "bash %s" % path,
+            cwd=None,
+            timeout=timeout,
+            die=die,
+            args=args,
+            interactive=interactive,
+            replace=False,
+            showout=showout,
+        )
 
     def _copy(self, src, dst, deletefirst=False, ignoredir=None, ignorefiles=None, deleteafter=False, keepsymlink=True):
         """
@@ -290,9 +295,18 @@ class BuilderBaseClass(BaseClass):
         src = self._replace(src)
         dst = self._replace(dst)
         if j.builder.tools.file_is_dir:
-            j.builder.tools.copyTree(src, dst, keepsymlinks=keepsymlink, deletefirst=deletefirst, overwriteFiles=True,
-                                     ignoredir=ignoredir, ignorefiles=ignorefiles, recursive=True, rsyncdelete=deleteafter,
-                                     createdir=True)
+            j.builder.tools.copyTree(
+                src,
+                dst,
+                keepsymlinks=keepsymlink,
+                deletefirst=deletefirst,
+                overwriteFiles=True,
+                ignoredir=ignoredir,
+                ignorefiles=ignorefiles,
+                recursive=True,
+                rsyncdelete=deleteafter,
+                createdir=True,
+            )
         else:
             j.builder.tools.file_copy(src, dst, recursive=False, overwrite=True)
 
@@ -307,7 +321,7 @@ class BuilderBaseClass(BaseClass):
         txt = self._replace(txt)
         j.sal.fs.writeFile(path, txt)
 
-    def _read(self,location):
+    def _read(self, location):
         """
         will use the replace function on location then read a file from the given location
         :param location: location to read file from
@@ -365,9 +379,9 @@ class BuilderBaseClass(BaseClass):
 
     @builder_method()
     def sandbox(self, zhub_client):
-        '''
+        """
         when zhub_client None will look for j.clients.get("test"), if not exist will die
-        '''
+        """
         return
 
     @property
@@ -389,8 +403,7 @@ class BuilderBaseClass(BaseClass):
         return True
 
     @builder_method()
-    def _flist_create(self, zhub_client,
-                merge_base_flist=""):
+    def _flist_create(self, zhub_client, merge_base_flist=""):
         """
         build a flist for the builder and upload the created flist to the hub
 
@@ -402,16 +415,16 @@ class BuilderBaseClass(BaseClass):
         :return: the flist url
         """
         if j.core.platformtype.myplatform.isLinux:
-            ld_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'lib64/')
+            ld_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "lib64/")
             j.builder.tools.dir_ensure(ld_dest)
-            self._copy('/lib64/ld-linux-x86-64.so.2', ld_dest)
+            self._copy("/lib64/ld-linux-x86-64.so.2", ld_dest)
 
         self._log_info("uploading flist to the hub")
         flist_url = zhub_client.sandbox_upload(self.NAME, self.DIR_SANDBOX)
         if merge_base_flist:
             self._log_info("merging the produced flist with {}".format(merge_base_flist))
 
-            target = "{}_merged_{}".format(self.NAME, merge_base_flist.replace('/', '_').replace('.flist', ''))
+            target = "{}_merged_{}".format(self.NAME, merge_base_flist.replace("/", "_").replace(".flist", ""))
             flist_name = "{username}/{flist_name}.flist".format(username=zhub_client.username, flist_name=self.NAME)
             flist_url = zhub_client.merge(target, [flist_name, merge_base_flist])
 
@@ -419,8 +432,8 @@ class BuilderBaseClass(BaseClass):
 
     @builder_method()
     def _tarfile_create(self):
-        tarfile = '/tmp/{}.tar.gz'.format(self.NAME)
-        j.sal.process.execute('tar czf {} -C {} .'.format(tarfile, self.DIR_SANDBOX))
+        tarfile = "/tmp/{}.tar.gz".format(self.NAME)
+        j.sal.process.execute("tar czf {} -C {} .".format(tarfile, self.DIR_SANDBOX))
         return tarfile
 
     def clean(self):

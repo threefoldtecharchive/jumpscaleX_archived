@@ -1,4 +1,3 @@
-
 import base64
 
 NOTHING = base64
@@ -22,10 +21,10 @@ STRINGIFY_MAXLISTSTRING = 20
 def stringify(value):
     """Turns the given value in a user-friendly string that can be displayed"""
     if isinstance(value, (str, bytes)) and len(value) > STRINGIFY_MAXSTRING:
-        return '{0}...'.format(value[0:STRINGIFY_MAXSTRING])
+        return "{0}...".format(value[0:STRINGIFY_MAXSTRING])
 
     if isinstance(value, (list, tuple)) and len(value) > 10:
-        return '[{0},...]'.format(', '.join([stringify(_) for _ in value[0:STRINGIFY_MAXLISTSTRING]]))
+        return "[{0},...]".format(", ".join([stringify(_) for _ in value[0:STRINGIFY_MAXLISTSTRING]]))
     return str(value)
 
 
@@ -111,11 +110,10 @@ def text_ensure_line(text, *lines):
     the end of it."""
     eol = text_detect_eol(text)
     res = list(text.split(eol))
-    if res[0] == '' and len(res) == 1:
+    if res[0] == "" and len(res) == 1:
         res = list()
     for line in lines:
-        assert line.find(eol) == - \
-            1, "No EOL allowed in lines parameter: " + repr(line)
+        assert line.find(eol) == -1, "No EOL allowed in lines parameter: " + repr(line)
         found = False
         for l in res:
             if l == line:
@@ -148,6 +146,7 @@ def text_strip_margin(text, margin="|"):
             _, line = l
             res.append(line)
     return eol.join(res)
+
 
 # def text_template(text, variables):
 #     """Substitutes '${PLACEHOLDER}'s within the text with the

@@ -1,11 +1,12 @@
 from Jumpscale import j
+
 # from .Capacity import Capacity
 JSBaseClass = j.application.JSBaseClass
 
 
 class Ubuntu(JSBaseClass):
     def __init__(self):
-        self.__jslocation__ = 'j.sal.ubuntu'
+        self.__jslocation__ = "j.sal.ubuntu"
         JSBaseClass.__init__(self)
         self._aptupdated = False
         self._checked = False
@@ -20,9 +21,9 @@ class Ubuntu(JSBaseClass):
         :return: uptime value
         :rtype: float
         """
-        with open('/proc/uptime') as f:
+        with open("/proc/uptime") as f:
             data = f.read()
-            uptime, _ = data.split(' ')
+            uptime, _ = data.split(" ")
             return float(uptime)
 
     def apt_init(self):
@@ -35,13 +36,13 @@ class Ubuntu(JSBaseClass):
             # we dont wont jshell to break, self.check will take of this
             return
         apt.apt_pkg.init()
-        if hasattr(apt.apt_pkg, 'Config'):
+        if hasattr(apt.apt_pkg, "Config"):
             cfg = apt.apt_pkg.Config
         else:
             cfg = apt.apt_pkg.Configuration
         try:
-            cfg.set('APT::Install-Recommends', '0')
-            cfg.set('APT::Install-Suggests', '0')
+            cfg.set("APT::Install-Recommends", "0")
+            cfg.set("APT::Install-Suggests", "0")
         except BaseException:
             pass
         self._cache_ubuntu = apt.Cache()
@@ -58,13 +59,13 @@ class Ubuntu(JSBaseClass):
         if not self._checked:
             osname = j.core.platformtype.myplatform.osname
             osversion = j.core.platformtype.myplatform.osversion
-            if osname not in ('ubuntu', 'linuxmint'):
-                raise j.exceptions.RuntimeError('Only Ubuntu/Mint supported')
+            if osname not in ("ubuntu", "linuxmint"):
+                raise j.exceptions.RuntimeError("Only Ubuntu/Mint supported")
             # safe cast to the release to a number
             else:
                 release = float(osversion)
                 if release < 14:
-                    raise j.exceptions.RuntimeError('Only ubuntu version 14+ supported')
+                    raise j.exceptions.RuntimeError("Only ubuntu version 14+ supported")
                 self._checked = True
 
         return self._checked
@@ -75,12 +76,12 @@ class Ubuntu(JSBaseClass):
         :return: ['DISTRIB_ID', 'DISTRIB_RELEASE', 'DISTRIB_CODENAME', 'DISTRIB_DESCRIPTION=']
         :rtype: list
         """
-        with open('/etc/lsb-release') as f:
+        with open("/etc/lsb-release") as f:
             data = f.read()
 
         result = []
-        for line in data.split('\n')[:-1]:
-            result.append(line.split('=')[1])
+        for line in data.split("\n")[:-1]:
+            result.append(line.split("=")[1])
 
         return result
 
@@ -94,14 +95,15 @@ class Ubuntu(JSBaseClass):
         :raise: j.exceptions.RuntimeError: Could not install package
         """
         self.check()
-        rc, out, err = j.sal.process.execute('which %s' % cmd_name, useShell=True, die=False)
+        rc, out, err = j.sal.process.execute("which %s" % cmd_name, useShell=True, die=False)
         if rc != 0:
             self.apt_install(package_name)
 
-        rc, out, err = j.sal.process.execute('which %s' % cmd_name, useShell=True)
+        rc, out, err = j.sal.process.execute("which %s" % cmd_name, useShell=True)
         if rc != 0:
             raise j.exceptions.RuntimeError(
-                'Could not install package %s and check for command %s.' % (package_name, cmd_name))
+                "Could not install package %s and check for command %s." % (package_name, cmd_name)
+            )
 
     def apt_install(self, package_name):
         """install a specific ubuntu package.
@@ -110,7 +112,7 @@ class Ubuntu(JSBaseClass):
         :type package_name: str
         """
         self.apt_update()
-        cmd = 'apt-get install %s --force-yes -y' % package_name
+        cmd = "apt-get install %s --force-yes -y" % package_name
         j.sal.process.execute(cmd)
 
     def apt_install_version(self, package_name, version):
@@ -123,7 +125,7 @@ class Ubuntu(JSBaseClass):
         :type version: str
         """
         self.apt_update()
-        cmd = 'apt-get install %s=%s --force-yes -y' % (package_name, version)
+        cmd = "apt-get install %s=%s --force-yes -y" % (package_name, version)
         j.sal.process.execute(cmd)
 
     def deb_install(self, path, install_deps=True):
@@ -138,6 +140,7 @@ class Ubuntu(JSBaseClass):
         if self._cache_ubuntu is None:
             self.apt_init()
         import apt.debfile
+
         deb = apt.debfile.DebPackage(path, cache=self._cache_ubuntu)
         if install_deps:
             deb.check()
@@ -154,12 +157,12 @@ class Ubuntu(JSBaseClass):
         :type remove_downloaded: bool
         """
         j.sal.fs.changeDir(j.dirs.TMPDIR)  # will go to tmp
-        path = j.sal.nettools.download(url, '')
+        path = j.sal.nettools.download(url, "")
         self.deb_install(path)
         if remove_downloaded:
             j.tools.path.get(path).rmtree_p()
 
-    def pkg_list(self, pkg_name, regex=''):
+    def pkg_list(self, pkg_name, regex=""):
         """list files of dpkg. if regex used only output the ones who are matching regex
 
         :param pkg_name: debian package name
@@ -169,8 +172,8 @@ class Ubuntu(JSBaseClass):
         :return: List files owned by package
         :rtype: list
         """
-        rc, out, err = j.sal.process.execute('dpkg -L %s' % pkg_name, useShell=True, die=False)
-        if regex != '':
+        rc, out, err = j.sal.process.execute("dpkg -L %s" % pkg_name, useShell=True, die=False)
+        if regex != "":
             return j.data.regex.findAll(regex, out)
         else:
             return out.split("\n")[:-1]
@@ -181,7 +184,7 @@ class Ubuntu(JSBaseClass):
         :param package_name: package name to be removed
         :type package_name: str
         """
-        self._log_info('ubuntu remove package:%s' % package_name)
+        self._log_info("ubuntu remove package:%s" % package_name)
         self.check()
         if self._cache_ubuntu is None:
             self.apt_init()
@@ -193,7 +196,7 @@ class Ubuntu(JSBaseClass):
         self._cache_ubuntu.commit()
         self._cache_ubuntu.clear()
 
-    def service_install(self, service_name, daemon_path, args='', respawn=True, pwd=None, env=None, reload=True):
+    def service_install(self, service_name, daemon_path, args="", respawn=True, pwd=None, env=None, reload=True):
         """Install an ubuntu service.
 
         :param service_name: ubuntu service name
@@ -217,19 +220,19 @@ start on runlevel [2345]
 stop on runlevel [016]
 """
         if respawn:
-            cmd += 'respawn\n'
+            cmd += "respawn\n"
         if pwd:
-            cmd += 'chdir %s\n' % pwd
+            cmd += "chdir %s\n" % pwd
         if env is not None:
             for key, value in list(env.items()):
-                cmd += 'env %s=%s\n' % (key, value)
-        cmd += 'exec %s %s\n' % (daemon_path, args)
+                cmd += "env %s=%s\n" % (key, value)
+        cmd += "exec %s %s\n" % (daemon_path, args)
 
         cmd = j.dirs.replace_txt_dir_vars(cmd)
 
-        j.tools.path.get('/etc/init/%s.conf' % service_name).write_text(cmd)
+        j.tools.path.get("/etc/init/%s.conf" % service_name).write_text(cmd)
         if reload:
-            j.sal.process.execute('initctl reload-configuration', useShell=True)
+            j.sal.process.execute("initctl reload-configuration", useShell=True)
 
     def service_uninstall(self, service_name):
         """remove an ubuntu service.
@@ -238,7 +241,7 @@ stop on runlevel [016]
         :type service_name: str
         """
         self.service_stop(service_name)
-        j.tools.path.get('/etc/init/%s.conf' % service_name).remove_p()
+        j.tools.path.get("/etc/init/%s.conf" % service_name).remove_p()
 
     def service_start(self, service_name):
         """start an ubuntu service.
@@ -248,9 +251,9 @@ stop on runlevel [016]
         :return: start service output
         :rtype: bool
         """
-        self._log_debug('start service on ubuntu for:%s' % service_name)
+        self._log_debug("start service on ubuntu for:%s" % service_name)
         if not self.service_status(service_name):
-            cmd = 'service %s start' % service_name
+            cmd = "service %s start" % service_name
             return j.sal.process.execute(cmd, useShell=True)
 
     def service_stop(self, service_name):
@@ -261,7 +264,7 @@ stop on runlevel [016]
         :return: start service output
         :rtype: bool
         """
-        cmd = 'service %s stop' % service_name
+        cmd = "service %s stop" % service_name
         return j.sal.process.execute(cmd, useShell=True)
 
     def service_restart(self, service_name):
@@ -272,7 +275,7 @@ stop on runlevel [016]
         :return: start service output
         :rtype: bool
         """
-        return j.sal.process.execute('service %s restart' % service_name)
+        return j.sal.process.execute("service %s restart" % service_name)
 
     def service_status(self, service_name):
         """check service status.
@@ -282,10 +285,10 @@ stop on runlevel [016]
         :return: True if service is running
         :rtype: bool
         """
-        exitcode, output, error = j.sal.process.execute('service %s status' % service_name, die=False)
-        if '%s is running' % service_name in output:
+        exitcode, output, error = j.sal.process.execute("service %s status" % service_name, die=False)
+        if "%s is running" % service_name in output:
             return True
-        elif '%s is not running' % service_name in output:
+        elif "%s is not running" % service_name in output:
             return False
 
     def service_disable_start_boot(self, service_name):
@@ -294,7 +297,7 @@ stop on runlevel [016]
         :param service_name: ubuntu service name
         :type service_name: str
         """
-        j.sal.process.execute('update-rc.d -f %s remove' % service_name)
+        j.sal.process.execute("update-rc.d -f %s remove" % service_name)
 
     def service_enable_start_boot(self, service_name):
         """it makes links named /etc/rcrunlevel.d/[SK]NNname that point to the script /etc/init.d/name.
@@ -302,7 +305,7 @@ stop on runlevel [016]
         :param service_name: ubuntu service name
         :type service_name: str
         """
-        j.sal.process.execute('update-rc.d -f %s defaults' % service_name)
+        j.sal.process.execute("update-rc.d -f %s defaults" % service_name)
 
     def apt_update(self):
         """it is used to resynchronize the package index files from their sources
@@ -314,7 +317,7 @@ stop on runlevel [016]
         if self._cache_ubuntu:
             self._cache_ubuntu.update()
         else:
-            j.sal.process.execute('apt-get update', False)
+            j.sal.process.execute("apt-get update", False)
 
     def apt_upgrade(self):
         """upgrade is used to install the newest versions of all packages currently installed on the system.
@@ -358,12 +361,12 @@ stop on runlevel [016]
         :return: list of package names
         :rtype: list
         """
-        package_name = package_name.lower().strip().replace('_', '').replace('_', '')
+        package_name = package_name.lower().strip().replace("_", "").replace("_", "")
         if self._cache_ubuntu is None:
             self.apt_init()
         result = []
         for item in self._cache_ubuntu.keys():
-            if item.replace('_', '').replace('_', '').lower().find(package_name) != -1:
+            if item.replace("_", "").replace("_", "").lower().find(package_name) != -1:
                 result.append(item)
         return result
 
@@ -385,6 +388,7 @@ stop on runlevel [016]
         :rtype: list
         """
         from aptsources import sourceslist
+
         return sourceslist.SourcesList()
 
     def apt_sources_uri_add(self, url):
@@ -393,10 +397,10 @@ stop on runlevel [016]
         :param url: source url
         :type: str
         """
-        url = url.replace(';', ':')
-        name = url.replace('\\', '/').replace('http://', '').replace('https://', '').split('/')[0]
-        path = j.tools.path.get('/etc/apt/sources.list.d/%s.list' % name)
-        path.write_text('deb %s\n' % url)
+        url = url.replace(";", ":")
+        name = url.replace("\\", "/").replace("http://", "").replace("https://", "").split("/")[0]
+        path = j.tools.path.get("/etc/apt/sources.list.d/%s.list" % name)
+        path.write_text("deb %s\n" % url)
 
     def whoami(self):
         """get the user name associated with the current effective user ID.
@@ -404,7 +408,7 @@ stop on runlevel [016]
         :return: the user name associated with the current effective user ID.
         :rtype: str
         """
-        rc, out, err = j.sal.process.execute('whoami', useShell=True)
+        rc, out, err = j.sal.process.execute("whoami", useShell=True)
         return out.strip()
 
     def checkroot(self):
@@ -412,10 +416,10 @@ stop on runlevel [016]
 
         :raise j.exceptions.Input: only support root
         """
-        if self.whoami() != 'root':
-            raise j.exceptions.Input('only support root')
+        if self.whoami() != "root":
+            raise j.exceptions.Input("only support root")
 
-    def sshkey_generate(self, passphrase='', ssh_type='rsa', overwrite=False, path='/root/.ssh/id_rsa'):
+    def sshkey_generate(self, passphrase="", ssh_type="rsa", overwrite=False, path="/root/.ssh/id_rsa"):
         """generate a new ssh key.
 
         :param passphrase: ssh key passphrase
@@ -431,15 +435,15 @@ stop on runlevel [016]
         if overwrite and path.exists():
             path.rmtree_p()
         if not path.exists():
-            if ssh_type not in ['rsa', 'dsa']:
+            if ssh_type not in ["rsa", "dsa"]:
                 raise j.exceptions.Input("only support rsa or dsa for now")
             cmd = "ssh-keygen -t %s -b 4096 -P '%s' -f %s" % (ssh_type, passphrase, path)
             j.sal.process.execute(cmd)
 
-    def _test(self, name=''):
+    def _test(self, name=""):
         """Run tests under tests
 
         :param name: basename of the file to run, defaults to "".
         :type name: str, optional
         """
-        self._test_run(name=name, obj_key='main')
+        self._test_run(name=name, obj_key="main")

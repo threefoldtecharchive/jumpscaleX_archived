@@ -15,6 +15,7 @@ class BuilderUserBot(j.builder.system._BaseClass):
         - in self.test_zos() start the created flist & do the network tests for the openresty
 
     """
+
     NAME = "userbot"
 
     @builder_method()
@@ -40,19 +41,23 @@ class BuilderUserBot(j.builder.system._BaseClass):
         j.builder.db.zdb.install()
 
     @builder_method()
-    def sandbox(self, reset=False, zhub_client=None, flist_create=True, merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist "):
+    def sandbox(
+        self,
+        reset=False,
+        zhub_client=None,
+        flist_create=True,
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist ",
+    ):
         j.builder.apps.digitalme.sandbox(reset=True)
         j.tools.sandboxer.copyTo(j.builder.apps.digitalme.DIR_SANDBOX, self.DIR_SANDBOX)
 
         j.builder.db.zdb.sandbox(reset=True)
-        j.tools.sandboxer.copyTo(j.builder.db.zdb.DIR_SANDBOX,  self.DIR_SANDBOX)
+        j.tools.sandboxer.copyTo(j.builder.db.zdb.DIR_SANDBOX, self.DIR_SANDBOX)
 
-        startup_file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), 'templates', 'bot_startup.toml')
-        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, '.startup.toml')
+        startup_file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "bot_startup.toml")
+        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, ".startup.toml")
         self._copy(startup_file, file_dest)
 
-        startup_file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), 'templates', 'userbot_startup.sh')
-        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, 'bot_startup.sh')
+        startup_file = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates", "userbot_startup.sh")
+        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, "bot_startup.sh")
         self._copy(startup_file, file_dest)
-
-

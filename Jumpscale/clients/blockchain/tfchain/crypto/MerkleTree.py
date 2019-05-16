@@ -17,10 +17,10 @@ class Tree:
 	// 0. If there is another subtree of the same height, both can be removed,
 	// combined, and then inserted as a subtree of height n + 1.
     """
+
     def __init__(self, hash_func):
         self.head = None
         self.hash_func = hash_func
-
 
     def push(self, data):
         """
@@ -47,7 +47,6 @@ class Tree:
             # // compare the new subTree to the next subTree.
             self.head = join_subtree(self.hash_func, self.head.next, self.head)
 
-
     def root(self):
         """
         // Root returns the Merkle root of the data that has been pushed.
@@ -70,6 +69,7 @@ class SubTree:
     // of the Tree. 'sum' is the Merkle root of the subTree. If 'next' is not nil,
     // it will be a tree with a higher height.
     """
+
     def __init__(self, next, height):
         self.next = next
         self.height = height
@@ -83,7 +83,7 @@ def sum_(hash_func, data):
     if data is None:
         return None
     result = hash_func(data)
-    if hasattr(result, 'digest'):
+    if hasattr(result, "digest"):
         result = result.digest()
     # print("Data is: {} Result is: {}".format(data.hex(), result.hex()))
     return result
@@ -99,6 +99,7 @@ def leaf_sum(hash_func, data):
     data_ = bytearray([0])
     data_.extend(data)
     return sum_(hash_func, data_)
+
 
 def node_sum(hash_func, a, b):
     """
@@ -118,12 +119,12 @@ def join_subtree(hash_func, a, b):
     // joinSubTrees combines two equal sized subTrees into a larger subTree.
     """
     # print('Calling joinSubtree')
-    stree = SubTree(next = a.next, height=a.height+1)
+    stree = SubTree(next=a.next, height=a.height + 1)
     stree.sum = node_sum(hash_func, a.sum, b.sum)
     return stree
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from Jumpscale import j
 
     tree = Tree(hash_func=lambda o: bytes.fromhex(j.data.hash.blake2_string(o)))
@@ -133,5 +134,5 @@ if __name__ == '__main__':
     tree.push(bytearray([4]))
     tree.push(bytearray([5]))
     root = tree.root().hex()
-    assert root == '0002789a97a9feee38af3709f06377ef0ad7d91407cbcad1ccb8605556b6578e'
-    print('Root is {}'.format(root))
+    assert root == "0002789a97a9feee38af3709f06377ef0ad7d91407cbcad1ccb8605556b6578e"
+    print("Root is {}".format(root))

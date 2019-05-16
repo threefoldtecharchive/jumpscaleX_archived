@@ -2,10 +2,8 @@ import os
 from Jumpscale import j
 
 
-
-
 class BuilderRedis(j.builder.system._BaseClass):
-    NAME = 'redis-server'
+    NAME = "redis-server"
 
     def reset(self):
         app.reset(self)
@@ -19,8 +17,7 @@ class BuilderRedis(j.builder.system._BaseClass):
 
         """Building and installing redis"""
         if reset is False and self.isInstalled():
-            self._log_info(
-                'Redis is already installed, pass reset=True to reinstall.')
+            self._log_info("Redis is already installed, pass reset=True to reinstall.")
             return
 
         if j.core.platformtype.myplatform.isUbuntu:
@@ -66,30 +63,43 @@ class BuilderRedis(j.builder.system._BaseClass):
             self.start()
 
     def isInstalled(self):
-        return j.builder.tools.command_check('redis-server') and j.builder.tools.command_check('redis-cli')
+        return j.builder.tools.command_check("redis-server") and j.builder.tools.command_check("redis-cli")
 
     def install(self, reset=False):
         return self.build(reset=reset)
 
-    def start(self, name="main", ip="localhost", port=6379, max_ram="50mb", append_only=True,
-              snapshot=False, slave=(), is_master=False, password=None, unixsocket=None):
+    def start(
+        self,
+        name="main",
+        ip="localhost",
+        port=6379,
+        max_ram="50mb",
+        append_only=True,
+        snapshot=False,
+        slave=(),
+        is_master=False,
+        password=None,
+        unixsocket=None,
+    ):
         if unixsocket is not None:
             redis_socket = j.sal.fs.getParent(unixsocket)
             j.core.tools.dir_ensure(redis_socket)
 
-        self.configure_instance(name,
-                                ip,
-                                port,
-                                max_ram=max_ram,
-                                append_only=append_only,
-                                snapshot=snapshot,
-                                slave=slave,
-                                is_master=is_master,
-                                password=password,
-                                unixsocket=unixsocket)
+        self.configure_instance(
+            name,
+            ip,
+            port,
+            max_ram=max_ram,
+            append_only=append_only,
+            snapshot=snapshot,
+            slave=slave,
+            is_master=is_master,
+            password=password,
+            unixsocket=unixsocket,
+        )
         # return if redis is already running
-        if self.is_running(ip_address=ip, port=port, path='{DIR_BIN}', password=password, unixsocket=unixsocket):
-            self._log_info('Redis is already running!')
+        if self.is_running(ip_address=ip, port=port, path="{DIR_BIN}", password=password, unixsocket=unixsocket):
+            self._log_info("Redis is already running!")
             return
 
         _, c_path = self._get_paths(name)
@@ -97,36 +107,33 @@ class BuilderRedis(j.builder.system._BaseClass):
         cmd = "{DIR_BIN}/redis-server %s" % c_path
         cmd = j.core.tools.text_replace(cmd)
         pm = j.builder.system.processmanager.get()
-        pm.ensure(name="redis_%s" % name, cmd=cmd,
-                  env={}, path='{DIR_BIN}', autostart=True)
+        pm.ensure(name="redis_%s" % name, cmd=cmd, env={}, path="{DIR_BIN}", autostart=True)
 
         # Checking if redis is started correctly with port specified
-        if not self.is_running(ip_address=ip, port=port, path='{DIR_BIN}', unixsocket=unixsocket, password=password):
-            raise j.exceptions.RuntimeError(
-                'Redis is failed to start correctly')
+        if not self.is_running(ip_address=ip, port=port, path="{DIR_BIN}", unixsocket=unixsocket, password=password):
+            raise j.exceptions.RuntimeError("Redis is failed to start correctly")
 
-    def stop(self, name='main'):
+    def stop(self, name="main"):
         pm = j.builder.system.processmanager.get()
         pm.stop(name="redis_%s" % name)
 
-    def is_running(self, ip_address='localhost', port=6379, path='{DIR_BIN}', password=None, unixsocket=None):
-        if ip_address != '' and port != 0:
-            ping_cmd = '%s/redis-cli -h %s -p %s ' % (path, ip_address, port)
+    def is_running(self, ip_address="localhost", port=6379, path="{DIR_BIN}", password=None, unixsocket=None):
+        if ip_address != "" and port != 0:
+            ping_cmd = "%s/redis-cli -h %s -p %s " % (path, ip_address, port)
         elif unixsocket is not None:
-            ping_cmd = '%s/redis-cli -s %s ' % (path, unixsocket)
+            ping_cmd = "%s/redis-cli -s %s " % (path, unixsocket)
         else:
             raise j.exceptions.RuntimeError("can't connect to redis")
 
         ping_cmd = j.core.tools.text_replace(ping_cmd)
         if password is not None and password.strip():
-            ping_cmd += ' -a %s ' % password
-        ping_cmd += ' ping'
+            ping_cmd += " -a %s " % password
+        ping_cmd += " ping"
         rc, out, err = j.sal.process.execute(ping_cmd, die=False)
-        return not rc and out == 'PONG'
+        return not rc and out == "PONG"
 
     def _get_paths(self, name):
-        d_path = j.sal.fs.joinPaths(
-            j.builder.tools.dir_paths["VARDIR"], 'redis', name)
+        d_path = j.sal.fs.joinPaths(j.builder.tools.dir_paths["VARDIR"], "redis", name)
         c_path = j.sal.fs.joinPaths(d_path, "redis.conf")
         return d_path, c_path
 
@@ -135,9 +142,20 @@ class BuilderRedis(j.builder.system._BaseClass):
         j.builder.tools.dir_remove(d_path)
         j.core.tools.dir_ensure(d_path)
 
-    def configure_instance(self, name, ip="localhost", port=6379, max_ram="1048576", append_only=True,
-                           snapshot=False, slave=(), is_master=False, password=None, unixsocket=False):
-        cmd = 'sysctl vm.overcommit_memory=1'
+    def configure_instance(
+        self,
+        name,
+        ip="localhost",
+        port=6379,
+        max_ram="1048576",
+        append_only=True,
+        snapshot=False,
+        slave=(),
+        is_master=False,
+        password=None,
+        unixsocket=False,
+    ):
+        cmd = "sysctl vm.overcommit_memory=1"
         j.sal.process.execute(cmd, die=False, showout=False)
 
         self.empty_instance(name)
@@ -1198,27 +1216,23 @@ class BuilderRedis(j.builder.system._BaseClass):
         aof-rewrite-incremental-fsync yes
         """
 
-        if unixsocket is not None and unixsocket != '':
-            config = config.replace(
-                "# unixsocket /tmp/redis.sock", "unixsocket %s" % unixsocket)
-            config = config.replace(
-                "# unixsocketperm 700", "unixsocketperm 770")
+        if unixsocket is not None and unixsocket != "":
+            config = config.replace("# unixsocket /tmp/redis.sock", "unixsocket %s" % unixsocket)
+            config = config.replace("# unixsocketperm 700", "unixsocketperm 770")
 
         config = config.replace("$name", name)
         config = config.replace("$maxram", str(max_ram))
         config = config.replace("$port", str(port))
-        config = config.replace(
-            "{DIR_VAR}", j.builder.tools.dir_paths["VARDIR"])
+        config = config.replace("{DIR_VAR}", j.builder.tools.dir_paths["VARDIR"])
 
-        base_dir = j.builder.tools.replace(
-            '{DIR_VAR}/data/redis/redis_%s' % name)
+        base_dir = j.builder.tools.replace("{DIR_VAR}/data/redis/redis_%s" % name)
         j.core.tools.dir_ensure(base_dir)
         config = config.replace("$dir", base_dir)
 
-        if ip is None or ip == '':
+        if ip is None or ip == "":
             config = config.replace("$bind", "# bind")
         else:
-            config = config.replace("$bind", 'bind %s' % ip)
+            config = config.replace("$bind", "bind %s" % ip)
 
         if is_master:
             slave = False
@@ -1247,8 +1261,7 @@ class BuilderRedis(j.builder.system._BaseClass):
             config = config.replace("$password", "")
 
         if is_master:
-            config = config.replace(
-                "#appendfsync always", "appendfsync always")
+            config = config.replace("#appendfsync always", "appendfsync always")
 
         d_path, c_path = self._get_paths(name)
         db_path = j.sal.fs.joinPaths(d_path, "db")

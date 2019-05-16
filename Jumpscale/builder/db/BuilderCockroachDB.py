@@ -1,12 +1,13 @@
 from Jumpscale import j
+
 builder_method = j.builder.system.builder_method
 
 
 class BuilderCockroachDB(j.builder.system._BaseClass):
-    NAME = 'cockroach'
+    NAME = "cockroach"
 
     def _init(self):
-        self.DIR_BUILD = self._replace('{DIR_TEMP}/cockroachdb')
+        self.DIR_BUILD = self._replace("{DIR_TEMP}/cockroachdb")
 
     @builder_method()
     def build(self):
@@ -14,32 +15,32 @@ class BuilderCockroachDB(j.builder.system._BaseClass):
         Builds cockroachdb
         """
         self.tools.dir_ensure(self.DIR_BUILD)
-        url = 'https://binaries.cockroachdb.com/cockroach-latest.linux-amd64.tgz'
-        dest = '{}/cockroach-latest.linux-amd64.tgz'.format(self.DIR_BUILD)
+        url = "https://binaries.cockroachdb.com/cockroach-latest.linux-amd64.tgz"
+        dest = "{}/cockroach-latest.linux-amd64.tgz".format(self.DIR_BUILD)
 
         self.tools.file_download(url, to=dest, overwrite=False, expand=True)
-        tarpaths = self.tools.find('{DIR_TEMP}', recursive=False, pattern='*cockroach*.tgz', type='f')
+        tarpaths = self.tools.find("{DIR_TEMP}", recursive=False, pattern="*cockroach*.tgz", type="f")
         if len(tarpaths) == 0:
-            raise j.exceptions.Input(message='could not download:%s, did not find in %s' % (url, self.DIR_BUILD))
+            raise j.exceptions.Input(message="could not download:%s, did not find in %s" % (url, self.DIR_BUILD))
 
-        for file in self.tools.find(self.DIR_BUILD, type='f'):
-            self._copy(file, '{DIR_BIN}')
+        for file in self.tools.find(self.DIR_BUILD, type="f"):
+            self._copy(file, "{DIR_BIN}")
 
     @builder_method()
     def install(self):
         """
         Installs cockroach
         """
-        for file in self.tools.find(self.DIR_BUILD, type='f'):
-            self._copy(file, '{DIR_BIN}')
+        for file in self.tools.find(self.DIR_BUILD, type="f"):
+            self._copy(file, "{DIR_BIN}")
 
     @property
     def startup_cmds(self):
-        host = 'localhost'
+        host = "localhost"
         port = 26257
         http_port = 8581
 
-        cmd = '/sandbox/bin/cockroach start --host={} --insecure --port={} --http-port={}'.format(host, port, http_port)
+        cmd = "/sandbox/bin/cockroach start --host={} --insecure --port={} --http-port={}".format(host, port, http_port)
         cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
         return cmds
 
@@ -65,7 +66,7 @@ class BuilderCockroachDB(j.builder.system._BaseClass):
         assert pid is not []
         self.stop()
 
-        print('TEST OK')
+        print("TEST OK")
 
     @builder_method()
     def uninstall(self):

@@ -17,18 +17,22 @@ class WebGateway(JSConfigBase):
     def _init(self):
 
         self.etcd = j.clients.etcd.get(self.etcd_instance)
-        self.traefik = j.clients.traefik.get(self.name,
-                                             host=self.etcd.host,
-                                             port=self.etcd.port,
-                                             user=self.etcd.user,
-                                             password=self.etcd.password_,
-                                             etcd_instance=self.etcd_instance)
-        self.coredns = j.clients.coredns.get(self.name,
-                                             host=self.etcd.host,
-                                             port=self.etcd.port,
-                                             user=self.etcd.user,
-                                             password=self.etcd.password_,
-                                             etcd_instance=self.etcd_instance)
+        self.traefik = j.clients.traefik.get(
+            self.name,
+            host=self.etcd.host,
+            port=self.etcd.port,
+            user=self.etcd.user,
+            password=self.etcd.password_,
+            etcd_instance=self.etcd_instance,
+        )
+        self.coredns = j.clients.coredns.get(
+            self.name,
+            host=self.etcd.host,
+            port=self.etcd.port,
+            user=self.etcd.user,
+            password=self.etcd.password_,
+            etcd_instance=self.etcd_instance,
+        )
         self.public_ips = self.public_ips or []
         self._services = None
 
@@ -79,7 +83,8 @@ class WebGateway(JSConfigBase):
         """
         if name in [s.name for s in self.services]:
             raise ServiceExistError(
-                "a service with name %s already exist. maybe you are looking for `service_get(%s)`" % (name, name))
+                "a service with name %s already exist. maybe you are looking for `service_get(%s)`" % (name, name)
+            )
 
         service = Service(name, self.public_ips, self.traefik, self.coredns)
         self.services.append(service)

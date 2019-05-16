@@ -6,47 +6,46 @@ JSBASE = j.application.JSBaseClass
 
 class GiteaRepoPullRequest(j.application.JSBaseClass):
     def __init__(
-            self,
-            client,
-            repo,
-            id=None,
-            assignee=None,
-            assignees=[],
-            base=None,
-            body=None,
-            closed_at=None,
-            comments=0,
-            created_at=None,
-            diff_url=None,
-            due_date=None,
-            head=None,
-            html_url=None,
-            labels=[],
-            merge_base=None,
-            merge_commit_sha=None,
-            mergeable=False,
-            merged=False,
-            merged_at=None,
-            merged_by=None,
-            milestone=None,
-            number=0,
-            patch_url=None,
-            state=None,
-            title=None,
-            updated_at=None,
-            url=None,
-            user=None,
-
+        self,
+        client,
+        repo,
+        id=None,
+        assignee=None,
+        assignees=[],
+        base=None,
+        body=None,
+        closed_at=None,
+        comments=0,
+        created_at=None,
+        diff_url=None,
+        due_date=None,
+        head=None,
+        html_url=None,
+        labels=[],
+        merge_base=None,
+        merge_commit_sha=None,
+        mergeable=False,
+        merged=False,
+        merged_at=None,
+        merged_by=None,
+        milestone=None,
+        number=0,
+        patch_url=None,
+        state=None,
+        title=None,
+        updated_at=None,
+        url=None,
+        user=None,
     ):
         self.client = client
         self.repo = repo
-        self.created_at=created_at
-        self.updated_at=updated_at
+        self.created_at = created_at
+        self.updated_at = updated_at
         self.assignee = assignee
         self.assignees = assignees
-        self.base=base
+        self.base = base
         self.url = url
-        self.id=id
+        self.id = id
         self.body = body
         self.closed_at = closed_at
         self.comments = comments
@@ -74,37 +73,36 @@ class GiteaRepoPullRequest(j.application.JSBaseClass):
         d = {}
 
         for attr in [
-            'id',
-            'created_at',
-            'updated_at',
-            'comments',
-            'diff_url',
-            'due_date',
-            'head',
-            'html_url',
-            'labels',
-            'merge_base',
-            'merge_commit_sha',
-            'mergeable',
-            'merged',
-            'merged_at',
-            'merged_by',
-            'milestone',
-            'number',
-            'patch_url',
-            'state',
-            'title',
-            'closed_at',
-            'assignees',
-            'assignee',
-            'base',
-            'body',
-            'url'
+            "id",
+            "created_at",
+            "updated_at",
+            "comments",
+            "diff_url",
+            "due_date",
+            "head",
+            "html_url",
+            "labels",
+            "merge_base",
+            "merge_commit_sha",
+            "mergeable",
+            "merged",
+            "merged_at",
+            "merged_by",
+            "milestone",
+            "number",
+            "patch_url",
+            "state",
+            "title",
+            "closed_at",
+            "assignees",
+            "assignee",
+            "base",
+            "body",
+            "url",
         ]:
             v = getattr(self, attr)
             d[attr] = v
         return d
-
 
     def __repr__(self):
         return "PR %s" % json.dumps(self.data)
@@ -115,7 +113,6 @@ class GiteaRepoPullRequest(j.application.JSBaseClass):
             return True
         except:
             return False
-
 
     def is_merged(self):
         resp = self.client.api.repos.repoPullRequestIsMerged(str(self.id), self.repo.name, self.user.username)

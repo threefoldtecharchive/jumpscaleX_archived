@@ -30,29 +30,19 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         # startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'freeflow_startup.toml')
         # self.startup = j.sal.fs.readFile(startup_file)
 
-
-    def build(self, reset =False):
+    def build(self, reset=False):
 
         if self._done_check("build") and reset is False:
             return
         j.builder.db.mariadb.install(start=True)
-        j.builder.system.package.install(["apache2",
-                                         "php-curl",
-                                         "php-gd",
-                                         "php-mbstring",
-                                         "php-intl",
-                                         "php-zip",
-                                         "php-ldap",
-                                         "php-apcu"
-                                         ])
+        j.builder.system.package.install(
+            ["apache2", "php-curl", "php-gd", "php-mbstring", "php-intl", "php-zip", "php-ldap", "php-apcu"]
+        )
 
-        j.builder.tools.file_download("https://www.humhub.org/en/download/package/humhub-1.3.7.tar.gz",
-                                      "/var/www/html/humhub-1.3.7.tar.gz")
+        j.builder.tools.file_download(
+            "https://www.humhub.org/en/download/package/humhub-1.3.7.tar.gz", "/var/www/html/humhub-1.3.7.tar.gz"
+        )
         j.builder.tools.file_expand("/var/www/html/humhub-1.3.7.tar.gz", self.HUMHUB_PATH, removeTopDir=True)
-
-
-
-
 
         sql_init_script = """
         mysql -e "CREATE DATABASE humhub CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
@@ -61,11 +51,15 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         """
         j.builder.tools.execute(sql_init_script)
 
-        j.builder.tools.file_download("https://raw.githubusercontent.com/freeflowpages/freeflow-iyo-module/master/IYO.php",
-                                      "/var/www/html/humhub/protected/humhub/modules/user/authclient/IYO.php")
+        j.builder.tools.file_download(
+            "https://raw.githubusercontent.com/freeflowpages/freeflow-iyo-module/master/IYO.php",
+            "/var/www/html/humhub/protected/humhub/modules/user/authclient/IYO.php",
+        )
 
-        j.builder.tools.file_download("https://raw.githubusercontent.com/freeflowpages/freeflow-flist/master/common.php",
-                                      "/var/www/html/humhub/protected/config/common.php")
+        j.builder.tools.file_download(
+            "https://raw.githubusercontent.com/freeflowpages/freeflow-flist/master/common.php",
+            "/var/www/html/humhub/protected/config/common.php",
+        )
 
         j.sal.fs.chmod("/var/www", 0o775)
 
@@ -135,9 +129,8 @@ chown -R mysql /var/run/mysqld/
 \"""
         """
 
-
-    def sandbox(self, dest_path='/tmp/builder/humhub',create_flist=True, zhub_instance=None, reset=False):
-        '''Copy built bins to dest_path and create flist if create_flist = True
+    def sandbox(self, dest_path="/tmp/builder/humhub", create_flist=True, zhub_instance=None, reset=False):
+        """Copy built bins to dest_path and create flist if create_flist = True
 
         :param dest_path: destination path to copy files into
         :type dest_path: str
@@ -149,45 +142,43 @@ chown -R mysql /var/run/mysqld/
         :type create_flist:bool
         :param zhub_instance: hub instance to upload flist to
         :type zhub_instance:str
-        '''
-        
-        if self._done_check('sandbox') and reset is False:
+        """
+
+        if self._done_check("sandbox") and reset is False:
             return
-        self.build(reset = reset)
+        self.build(reset=reset)
         dirs = {
             "/var/www/html/humhub": "/var/www/html/humhub",
             "/var/lib/mysql/": "/var/lib/mysql/",
             "/var/log/mysql/": "/var/log/mysql/",
             "/var/run/mysqld/": "/var/run/mysqld/",
-            "/etc/apache2": "/etc/apache2"
-
+            "/etc/apache2": "/etc/apache2",
         }
         self.dirs.update(j.builder.db.mariadb.dirs)
-        bins = ['/usr/bin/mysql','/usr/sbin/apache2']
+        bins = ["/usr/bin/mysql", "/usr/sbin/apache2"]
         self.bins.extend(j.builder.db.mariadb.bins)
         for bin_name in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
             dir_dest = j.sal.fs.joinPaths(dest_path, j.core.dirs.BINDIR)
             j.builder.tools.dir_ensure(dir_dest)
             j.sal.fs.copyFile(dir_src, dir_dest)
-        
-        
+
         for dir_dest in dirs:
             dir_dest = j.sal.fs.joinPaths(dest_path, self.tools.path_relative(dir_dest))
             j.builder.tools.dir_ensure(dir_dest)
-        
-        lib_dest = j.sal.fs.joinPaths(dest_path, 'sandbox/lib')
+
+        lib_dest = j.sal.fs.joinPaths(dest_path, "sandbox/lib")
         j.builder.tools.dir_ensure(lib_dest)
         for bin in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
             j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
 
-        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), 'templates', 'freeflow_startup.toml')
+        startup_file = j.sal.fs.joinPaths(j.sal.fs.getDirName(__file__), "templates", "freeflow_startup.toml")
         startup = j.sal.fs.readFile(startup_file)
-        file_dest = j.sal.fs.joinPaths(dest_path, '.startup.toml')
+        file_dest = j.sal.fs.joinPaths(dest_path, ".startup.toml")
         j.builder.tools.file_ensure(file_dest)
         j.builder.tools.file_write(file_dest, startup)
-        
-        self._done_set('sandbox')
+
+        self._done_set("sandbox")
         if create_flist:
             print(self.flist_create(sandbox_dir=dest_path, hub_instance=zhub_instance))

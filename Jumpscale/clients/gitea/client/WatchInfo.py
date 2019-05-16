@@ -9,8 +9,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class WatchInfo(object):
     """
     auto-generated. don't touch.
@@ -33,27 +31,30 @@ class WatchInfo(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'WatchInfo'
+        class_name = "WatchInfo"
         data = json or kwargs
 
         # set attributes
         data_types = [datetime]
         self.created_at = client_support.set_property(
-            'created_at', data, data_types, False, [], False, False, class_name)
+            "created_at", data, data_types, False, [], False, False, class_name
+        )
         data_types = [bool]
-        self.ignored = client_support.set_property('ignored', data, data_types, False, [], False, False, class_name)
+        self.ignored = client_support.set_property("ignored", data, data_types, False, [], False, False, class_name)
         data_types = [dict]
-        self.reason = client_support.set_property('reason', data, data_types, False, [], False, False, class_name)
+        self.reason = client_support.set_property("reason", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
         self.repository_url = client_support.set_property(
-            'repository_url', data, data_types, False, [], False, False, class_name)
+            "repository_url", data, data_types, False, [], False, False, class_name
+        )
         data_types = [bool]
         self.subscribed = client_support.set_property(
-            'subscribed', data, data_types, False, [], False, False, class_name)
+            "subscribed", data, data_types, False, [], False, False, class_name
+        )
         data_types = [string_types]
-        self.url = client_support.set_property('url', data, data_types, False, [], False, False, class_name)
+        self.url = client_support.set_property("url", data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

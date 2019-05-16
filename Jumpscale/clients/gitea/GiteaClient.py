@@ -30,7 +30,7 @@ class GiteaClient(JSConfigBase):
 
         base_uri = self.url
         if "/api" not in base_uri:
-            self.url= "%s/api/v1" %base_uri
+            self.url = "%s/api/v1" % base_uri
             self.save()
             self.data.autosave = True
 
@@ -45,7 +45,8 @@ class GiteaClient(JSConfigBase):
         if not self._api:
             self._api = HTTPClient(base_uri=self.url)
             self._api.security_schemes.passthrough_client_token.set_authorization_header(
-                'token {}'.format(self.gitea_token_))
+                "token {}".format(self.gitea_token_)
+            )
         return self._api
 
     def orgs_currentuser_list(self, refresh=False):
@@ -56,11 +57,13 @@ class GiteaClient(JSConfigBase):
         :return: key-value of org name and id
         :rtype: dict
         """
+
         def do():
             res = {}
             for item in self.api.user.orgListCurrentUserOrgs()[0]:
                 res[item.username] = item.id
             return res
+
         return self._cache.get("orgs", method=do, refresh=refresh, expire=60)
 
     def org_get(self, name):

@@ -2,34 +2,33 @@ import os.path
 from Jumpscale import j
 
 
-
 _NBDSERVER_CONFIG_FILE = "{DIR_BASE}/config/nbdserver/config.yaml"
 _DEFAULT_LOCAL_CONFIG_FILE = "./config.yaml"
 
+
 class BuilderZDisk(j.builder.system._BaseClass):
-    '''
+    """
     Manages 0-Disk over prefab
-    '''
+    """
 
     NAME = "0-disk"
 
     def build(self, branch="master", reset=False):
-        '''
+        """
         Download and builds 0-disk on the prefab machine
         :param reset: reinstalls if reset is True
         :return:
-        '''
+        """
         if self.is_installed() and not reset:
             self._log_info("0-Disk was already installed, pass reset=True to reinstall.")
             return
-        
+
         # install dependencies
         j.builder.system.package.ensure("git")
         j.builder.runtimes.golang.install()
 
         # install 0-Disk
-        install_path =  j.sal.fs.joinPaths(j.builder.runtimes.golang.GOPATH,\
-        "src", "github.com", "zero-os")
+        install_path = j.sal.fs.joinPaths(j.builder.runtimes.golang.GOPATH, "src", "github.com", "zero-os")
         j.core.tools.dir_ensure(install_path)
         cmd = """
         cd {0}
@@ -40,32 +39,46 @@ class BuilderZDisk(j.builder.system._BaseClass):
         make
 
         cp -a bin/. {DIR_BIN}
-        """.format(install_path, branch)
+        """.format(
+            install_path, branch
+        )
 
         cmd = j.core.tools.text_replace(cmd)
 
         j.sal.process.execute(cmd)
 
     def install(self, branch="master", reset=False):
-        '''
+        """
         Installs 0-disk
         Alias for build
         :param reset: reinstall if reset is True
         :return:
-        '''
+        """
         return self.build(branch=branch, reset=reset)
 
     def is_installed(self):
-        '''Returns True if 0-Disk is installed'''
+        """Returns True if 0-Disk is installed"""
 
-        return j.builder.tools.command_check('nbdserver')\
-            and j.builder.tools.command_check('tlogserver')\
-            and j.builder.tools.command_check('zeroctl')
+        return (
+            j.builder.tools.command_check("nbdserver")
+            and j.builder.tools.command_check("tlogserver")
+            and j.builder.tools.command_check("zeroctl")
+        )
 
-    def start_nbdserver(self, address=None, config_file=None, config_cluster=None,\
-    id=None, lbacachelimit=None, logfile=None, profile_address=None, protocol=None,\
-    tlog_priv_key=None, tlsonly="false"):
-        '''
+    def start_nbdserver(
+        self,
+        address=None,
+        config_file=None,
+        config_cluster=None,
+        id=None,
+        lbacachelimit=None,
+        logfile=None,
+        profile_address=None,
+        protocol=None,
+        tlog_priv_key=None,
+        tlsonly="false",
+    ):
+        """
         Starts the 0-disk\'s nbdserver
         Check the 0-Disk documentation for details of the flags
         (https://github.com/zero-os/0-Disk/blob/master/docs/nbd/using.md)
@@ -74,7 +87,7 @@ class BuilderZDisk(j.builder.system._BaseClass):
         With config_file the config file will be uploaded to the nbd's machine
         With config_cluster the etcd clusted used for config can be passed
         Only one of these parameters can be set
-        '''
+        """
         if config_file is not None and config_cluster is not None:
             raise ValueError("Both config_file and config_file parameters were provided")
 
@@ -115,20 +128,20 @@ class BuilderZDisk(j.builder.system._BaseClass):
             cmd += " --tlog-priv-key {}".format(tlog_priv_key)
         if tlsonly is not None:
             cmd += " --tlsonly {}".format(tlsonly)
-        
+
         cmd = j.core.tools.text_replace(cmd)
 
         j.sal.process.execute(cmd)
 
     def start_tlogserver(self, config):
-        '''Starts the 0-disk\'s tlogserver'''
+        """Starts the 0-disk\'s tlogserver"""
         raise NotImplementedError
 
     def stop_nbdserver(self):
-        '''Stops the 0-disk\'s nbdserver'''
+        """Stops the 0-disk\'s nbdserver"""
         pm = j.builder.system.processmanager.get()
         pm.stop("nbdserver")
 
     def stop_tlogserver(self):
-        '''Stops the 0-disk\'s tlogserver'''
+        """Stops the 0-disk\'s tlogserver"""
         raise NotImplementedError

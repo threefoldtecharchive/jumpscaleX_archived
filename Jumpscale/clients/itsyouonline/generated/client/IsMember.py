@@ -6,9 +6,7 @@ from . import client_support
 from Jumpscale import j
 
 
-
-
-class IsMember( ):
+class IsMember:
     """
     auto-generated. don't touch.
     """
@@ -25,14 +23,14 @@ class IsMember( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'IsMember'
+        class_name = "IsMember"
         data = json or kwargs
 
         # set attributes
         data_types = [bool]
-        self.IsMember = client_support.set_property('IsMember', data, data_types, False, [], False, True, class_name)
+        self.IsMember = client_support.set_property("IsMember", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

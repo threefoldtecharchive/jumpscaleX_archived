@@ -14,13 +14,12 @@ class FreeFlowClient(JSConfigClient):
         api_key = "" (S)
     """
 
-
     def test(self):
-        return 'PONG'
+        return "PONG"
 
     @property
     def request(self):
-        if not hasattr(self, '_request'):
+        if not hasattr(self, "_request"):
             self._request = Request(self.base_url, self.api_key)
         return self._request
 

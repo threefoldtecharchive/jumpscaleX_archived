@@ -7,9 +7,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class Organization( ):
+class Organization:
     """
     auto-generated. don't touch.
     """
@@ -35,34 +33,36 @@ class Organization( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Organization'
+        class_name = "Organization"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.dns = client_support.set_property('dns', data, data_types, False, [], True, True, class_name)
+        self.dns = client_support.set_property("dns", data, data_types, False, [], True, True, class_name)
         data_types = [string_types]
-        self.globalid = client_support.set_property('globalid', data, data_types, False, [], False, True, class_name)
+        self.globalid = client_support.set_property("globalid", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.includes = client_support.set_property('includes', data, data_types, False, [], True, False, class_name)
+        self.includes = client_support.set_property("includes", data, data_types, False, [], True, False, class_name)
         data_types = [string_types]
         self.includesuborgsof = client_support.set_property(
-            'includesuborgsof', data, data_types, False, [], True, True, class_name)
+            "includesuborgsof", data, data_types, False, [], True, True, class_name
+        )
         data_types = [string_types]
-        self.members = client_support.set_property('members', data, data_types, False, [], True, True, class_name)
+        self.members = client_support.set_property("members", data, data_types, False, [], True, True, class_name)
         data_types = [string_types]
-        self.orgmembers = client_support.set_property('orgmembers', data, data_types, False, [], True, True, class_name)
+        self.orgmembers = client_support.set_property("orgmembers", data, data_types, False, [], True, True, class_name)
         data_types = [string_types]
-        self.orgowners = client_support.set_property('orgowners', data, data_types, False, [], True, True, class_name)
+        self.orgowners = client_support.set_property("orgowners", data, data_types, False, [], True, True, class_name)
         data_types = [string_types]
-        self.owners = client_support.set_property('owners', data, data_types, False, [], True, True, class_name)
+        self.owners = client_support.set_property("owners", data, data_types, False, [], True, True, class_name)
         data_types = [string_types]
-        self.publicKeys = client_support.set_property('publicKeys', data, data_types, False, [], True, True, class_name)
+        self.publicKeys = client_support.set_property("publicKeys", data, data_types, False, [], True, True, class_name)
         data_types = [RequiredScope]
         self.requiredscopes = client_support.set_property(
-            'requiredscopes', data, data_types, False, [], True, True, class_name)
+            "requiredscopes", data, data_types, False, [], True, True, class_name
+        )
 
     def __str__(self):
         return self.as_json(indent=4)

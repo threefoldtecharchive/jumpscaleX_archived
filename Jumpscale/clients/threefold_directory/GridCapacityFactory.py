@@ -41,12 +41,14 @@ class GridCapacityFactory(JSConfigs):
     def _capacity(self):
         def do():
             return [item for item in self.client.ListCapacity()[0]]
+
         return self._cache.get("_capacity", method=do, expire=600)
 
     @property
     def _farmers(self):
         def do():
             return [item for item in self.client.ListFarmers()[0]]
+
         return self._cache.get("_farmers", method=do, expire=600)
 
     @property
@@ -71,17 +73,12 @@ class GridCapacityFactory(JSConfigs):
             self._cache.reset()
         nodes = self._capacity
 
-        resource_units = {
-            'cru': 0,
-            'mru': 0,
-            'hru': 0,
-            'sru': 0,
-        }
+        resource_units = {"cru": 0, "mru": 0, "hru": 0, "sru": 0}
 
         for node in nodes:
-            resource_units['cru'] += node.total_resources.cru
-            resource_units['mru'] += node.total_resources.mru
-            resource_units['hru'] += node.total_resources.hru
-            resource_units['sru'] += node.total_resources.sru
+            resource_units["cru"] += node.total_resources.cru
+            resource_units["mru"] += node.total_resources.mru
+            resource_units["hru"] += node.total_resources.hru
+            resource_units["sru"] += node.total_resources.sru
 
-        return(resource_units)
+        return resource_units

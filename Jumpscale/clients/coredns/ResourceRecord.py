@@ -10,10 +10,7 @@ class RecordType(Enum):
 
 
 class ResourceRecord:
-
-    def __init__(self, domain, rrdata, record_type=RecordType.A, ttl=300,
-                 priority=None, port=None  # SRV
-                 ):
+    def __init__(self, domain, rrdata, record_type=RecordType.A, ttl=300, priority=None, port=None):  # SRV
         """ DNS Resource Record.
 
             domain    : Record Name.  Corresponds to first field in
@@ -32,11 +29,11 @@ class ResourceRecord:
         """
 
         if rrdata is None:
-            rrdata = ''
+            rrdata = ""
 
         self.type = record_type
-        if self.type == 'CNAME':
-            self.cname, rrdata = rrdata.split(' ')
+        if self.type == "CNAME":
+            self.cname, rrdata = rrdata.split(" ")
         self.domain = domain
         self.port = port
         self.priority = priority
@@ -49,16 +46,16 @@ class ResourceRecord:
         """
         reconstructs CoreDNS/etcd-style JSON data format
         """
-        res = {'ttl': self.ttl}
-        rdatafield = 'host'  # covers SRV, A, AAAA and CNAME
+        res = {"ttl": self.ttl}
+        rdatafield = "host"  # covers SRV, A, AAAA and CNAME
         if self.type == RecordType.TXT:
-            rdatafield = 'text'
+            rdatafield = "text"
         elif self.type == RecordType.SRV:
-            res['priority'] = self.priority
-            res['port'] = self.port
-        elif self.type == 'CNAME':
-            res['cname'] = self._rrdata
-            res['host'] = self.cname
+            res["priority"] = self.priority
+            res["port"] = self.port
+        elif self.type == "CNAME":
+            res["cname"] = self._rrdata
+            res["host"] = self.cname
         res[rdatafield] = self._rrdata
         return json.dumps(res)
 
@@ -66,22 +63,21 @@ class ResourceRecord:
         """
         return the key used to store this entry in etcd
         """
-        domain_parts = self.domain.split('.')
+        domain_parts = self.domain.split(".")
         # The key for coredns should start with path(/hosts) and the domain reversed
         # i.e. test.com => /hosts/com/test
         key = "/hosts/{}".format("/".join(domain_parts[::-1]))
         return key
 
     def __str__(self):
-        if self.type == 'TXT':
+        if self.type == "TXT":
             rrdata = '"%s"' % self._rrdata
         else:
             rrdata = self._rrdata
-        extra = 'IN\t%s' % self.type
-        if self.type == 'SRV':
-            extra += '\t%d %d %d' % (self.priority, self.weight, self.port)
-        return "%s\t%d\t%s\t%s" % \
-            (self.domain, self.ttl, extra, rrdata)
+        extra = "IN\t%s" % self.type
+        if self.type == "SRV":
+            extra += "\t%d %d %d" % (self.priority, self.weight, self.port)
+        return "%s\t%d\t%s\t%s" % (self.domain, self.ttl, extra, rrdata)
 
     def __repr__(self):
         return "'%s'" % str(self)

@@ -1,6 +1,5 @@
 import json
-from ipaddress import (AddressValueError, IPv4Address, IPv6Address,
-                       NetmaskValueError)
+from ipaddress import AddressValueError, IPv4Address, IPv6Address, NetmaskValueError
 from urllib.parse import urlparse
 
 from Jumpscale import j
@@ -8,6 +7,7 @@ from Jumpscale import j
 from .ResourceRecord import RecordType, ResourceRecord
 
 JSConfigBase = j.application.JSBaseConfigClass
+
 
 class CoreDnsClient(JSConfigBase):
     _SCHEMATEXT = """
@@ -70,7 +70,7 @@ class CoreDnsClient(JSConfigBase):
         for zones in per_domain.values():
             if len(zones) > 1:
                 for i, zone in enumerate(zones):
-                    zone.domain = 'x%d.%s' % (i, zone.domain)
+                    zone.domain = "x%d.%s" % (i, zone.domain)
 
         for zones in per_domain.values():
             for zone in zones:
@@ -93,10 +93,10 @@ def _load(client):
         client : ETCD client
     """
     zones = []
-    for value, metadata in client.api.get_prefix('/hosts'):
-        ss = metadata.key.decode().split('/')
+    for value, metadata in client.api.get_prefix("/hosts"):
+        ss = metadata.key.decode().split("/")
 
-        domain = '.'.join(reversed(ss[2:]))
+        domain = ".".join(reversed(ss[2:]))
         value = json.loads(value.decode())
 
         type_of_record, rrdata = _get_type_and_rdata(value)
@@ -120,21 +120,21 @@ def _get_type_and_rdata(record):
     Returns: type and data of type
     """
     if "text" in record:
-        return 'TXT', record['text']
+        return "TXT", record["text"]
     elif "port" in record:
-        return 'SRV', record['host']
+        return "SRV", record["host"]
     elif "cname" in record:
-        return 'CNAME', record['cname']
+        return "CNAME", record["cname"]
     elif "host" in record:
-        rrdata = record['host']
+        rrdata = record["host"]
         try:
             IPv6Address(rrdata)
-            rtype = 'AAAA'
+            rtype = "AAAA"
             return rtype, rrdata
         except (AddressValueError, NetmaskValueError):
             try:
                 IPv4Address(rrdata)
-                rtype = 'A'
+                rtype = "A"
                 return rtype, rrdata
             except (AddressValueError, NetmaskValueError):
                 pass
@@ -142,10 +142,10 @@ def _get_type_and_rdata(record):
 
 
 def _sanitize_domain(domain):
-    if domain[0] != 'x':
+    if domain[0] != "x":
         return domain
 
-    prefix, rest = domain.split('.', 1)
+    prefix, rest = domain.split(".", 1)
     try:
         int(prefix[1:])
         return rest

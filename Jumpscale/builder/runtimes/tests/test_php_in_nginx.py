@@ -7,7 +7,8 @@ from Jumpscale import j
 
 
 def get_test_nginx_site(www_path="/var/www/html"):
-    return """\
+    return (
+        """\
     server {
         listen 80 default_server;
         listen [::]:80 default_server;
@@ -33,7 +34,9 @@ def get_test_nginx_site(www_path="/var/www/html"):
             fastcgi_param   SCRIPT_NAME        $fastcgi_script_name;
         }
     }
-    """ % www_path
+    """
+        % www_path
+    )
 
 
 @pytest.mark.integration
@@ -51,23 +54,18 @@ def test_main(self=None):
     if not j.sal.process.checkInstalled(j.builder.runtimes.php.NAME):
         j.builder.runtimes.php.build(install=True)
     try:
-        www_path = j.core.tools.text_replace(
-            "{DIR_TEMP}/www/html"
-        )
+        www_path = j.core.tools.text_replace("{DIR_TEMP}/www/html")
         j.core.tools.dir_ensure(www_path)
         default_enabled_sites_conf = get_test_nginx_site(www_path)
-        default_site_path = j.core.tools.text_replace(
-            "{DIR_APPS}/nginx/conf/sites-enabled/default")
+        default_site_path = j.core.tools.text_replace("{DIR_APPS}/nginx/conf/sites-enabled/default")
         default_site_backup_path = j.core.tools.text_replace("{DIR_TEMP}/default_nginx_site.bak")
         j.sal.fs.moveFile(default_site_path, default_site_backup_path)
         j.sal.fs.writeFile(default_site_path, contents=default_enabled_sites_conf)
-        j.sal.fs.writeFile(j.sal.fs.joinPaths(www_path, 'index.php'),
-                           contents="<?php phpinfo(); ?>"
-        )
+        j.sal.fs.writeFile(j.sal.fs.joinPaths(www_path, "index.php"), contents="<?php phpinfo(); ?>")
         j.builder.runtimes.php.start()
         j.builder.web.nginx.stop()
         j.builder.web.nginx.start()
-        
+
         # wait until port is ready
         time.sleep(30)
 

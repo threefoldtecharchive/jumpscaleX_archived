@@ -4,6 +4,7 @@ from .Base import replacelabels
 import copy
 import base64
 import threading
+
 # import collections
 import urllib
 from .Milestone import RepoMilestone
@@ -14,12 +15,10 @@ JSBASE = j.application.JSBaseClass
 
 
 class GithubRepo(j.application.JSBaseClass):
-    TYPES = ["story", "ticket", "task", "bug",
-             "feature", "question", "monitor", "unknown"]
+    TYPES = ["story", "ticket", "task", "bug", "feature", "question", "monitor", "unknown"]
     PRIORITIES = ["critical", "urgent", "normal", "minor"]
 
-    STATES = ["new", "accepted", "question",
-              "inprogress", "verification", "closed"]
+    STATES = ["new", "accepted", "question", "inprogress", "verification", "closed"]
 
     def __init__(self, client, fullname):
         JSBASE.__init__(self)
@@ -74,13 +73,13 @@ class GithubRepo(j.application.JSBaseClass):
     def stories(self):
         # walk overall issues find the stories (based on type)
         # only for home type repo, otherwise return []
-        return self.issues_by_type('story')
+        return self.issues_by_type("story")
 
     @property
     def tasks(self):
         # walk overall issues find the stories (based on type)
         # only for home type repo, otherwise return []
-        return self.issues_by_type('task')
+        return self.issues_by_type("task")
 
     def labelsSet(self, labels2set, ignoreDelete=["p_"], delete=True):
         """
@@ -89,9 +88,7 @@ class GithubRepo(j.application.JSBaseClass):
 
         for item in labels2set:
             if not j.data.types.string.check(item):
-                raise j.exceptions.Input(
-                    "Labels to set need to be in string format, found:%s" %
-                    labels2set)
+                raise j.exceptions.Input("Labels to set need to be in string format, found:%s" % labels2set)
 
         # walk over github existing labels
         labelstowalk = copy.copy(self.labels)
@@ -104,13 +101,14 @@ class GithubRepo(j.application.JSBaseClass):
                     if nameNew not in self.labelnames:
                         color = self.getColor(name)
                         self._log_info(
-                            "change label in repo: %s oldlabel:'%s' to:'%s' color:%s" %
-                            (self.fullname, item.name, nameNew, color))
+                            "change label in repo: %s oldlabel:'%s' to:'%s' color:%s"
+                            % (self.fullname, item.name, nameNew, color)
+                        )
                         item.edit(nameNew, color)
                         self._labels = None
                 else:
                     # no replacement
-                    name = 'type_unknown'
+                    name = "type_unknown"
                     color = self.getColor(name)
                     try:
                         item.edit(name, color)
@@ -123,9 +121,7 @@ class GithubRepo(j.application.JSBaseClass):
             if name not in self.labelnames:
                 # does not exist yet in repo
                 color = self.getColor(name)
-                self._log_info(
-                    "create label: %s %s %s" %
-                    (self.fullname, name, color))
+                self._log_info("create label: %s %s %s" % (self.fullname, name, color))
                 self.api.create_label(name, color)
                 self._labels = None
 
@@ -135,8 +131,7 @@ class GithubRepo(j.application.JSBaseClass):
             labelstowalk = copy.copy(self.labels)
             for item in labelstowalk:
                 if item.name not in labels2set:
-                    self._log_info("delete label: %s %s" %
-                                     (self.fullname, item.name))
+                    self._log_info("delete label: %s %s" % (self.fullname, item.name))
                     ignoreDeleteDo = False
                     for filteritem in ignoreDelete:
                         if item.name.startswith(filteritem):
@@ -149,14 +144,10 @@ class GithubRepo(j.application.JSBaseClass):
         labelstowalk = copy.copy(self.labels)
         for item in labelstowalk:
             # we recognise the label
-            self._log_info(
-                "check color of repo:%s labelname:'%s'" %
-                (self.fullname, item.name))
+            self._log_info("check color of repo:%s labelname:'%s'" % (self.fullname, item.name))
             color = self.getColor(item.name)
             if item.color != color:
-                self._log_info(
-                    "change label color for repo %s %s" %
-                    (item.name, color))
+                self._log_info("change label color for repo %s %s" % (item.name, color))
                 item.edit(item.name, color)
                 self._labels = None
 
@@ -186,8 +177,7 @@ class GithubRepo(j.application.JSBaseClass):
             return issue
 
         if die:
-            raise j.exceptions.Input(
-                "cannot find issue:%s in repo:%s" % (issueNumber, self))
+            raise j.exceptions.Input("cannot find issue:%s in repo:%s" % (issueNumber, self))
         else:
             i = Issue(self)
             i._ddict["number"] = issueNumber
@@ -270,8 +260,7 @@ class GithubRepo(j.application.JSBaseClass):
     @property
     def milestones(self):
         if self._milestones is None:
-            self._milestones = [RepoMilestone(self, x)
-                                for x in self.api.get_milestones()]
+            self._milestones = [RepoMilestone(self, x) for x in self.api.get_milestones()]
 
         return self._milestones
 
@@ -291,14 +280,12 @@ class GithubRepo(j.application.JSBaseClass):
             if name == item.name.strip() or name == item.title.strip():
                 return item
         if die:
-            raise j.exceptions.Input(
-                "Could not find milestone with name:%s" % name)
+            raise j.exceptions.Input("Could not find milestone with name:%s" % name)
         else:
             return None
 
     def createMilestone(self, name, title, description="", deadline="", owner=""):
-        self._log_debug(
-            'Attempt to create milestone "%s" [%s] deadline %s' % (name, title, deadline))
+        self._log_debug('Attempt to create milestone "%s" [%s] deadline %s' % (name, title, deadline))
 
         def getBody(descr, name, owner):
             out = "%s\n\n" % descr
@@ -321,13 +308,11 @@ class GithubRepo(j.application.JSBaseClass):
             if ms.body.strip() != tocheck.strip():
                 ms.body = tocheck
         else:
-            due = j.data.time.epoch2pythonDateTime(
-                int(j.data.time.getEpochFuture(deadline)))
+            due = j.data.time.epoch2pythonDateTime(int(j.data.time.getEpochFuture(deadline)))
             self._log_info("Create milestone on %s: %s" % (self, title))
             body = getBody(description.strip(), name, owner)
             # workaround for https://github.com/PyGithub/PyGithub/issues/396
-            milestone = self.api.create_milestone(
-                title=title, description=body)
+            milestone = self.api.create_milestone(title=title, description=body)
             milestone.edit(title=title, due_on=due)
 
             self._milestones.append(RepoMilestone(self, milestone))
@@ -341,14 +326,13 @@ class GithubRepo(j.application.JSBaseClass):
             ms.api.delete()
             self._milestones = []
         except Input:
-            self._log_info(
-                "Milestone '%s' doesn't exist. no need to delete" % name)
+            self._log_info("Milestone '%s' doesn't exist. no need to delete" % name)
 
     def _labelSubset(self, cat):
         res = []
         for item in self.labels:
             if item.startswith(cat):
-                item = item[len(cat):].strip("_")
+                item = item[len(cat) :].strip("_")
                 res.append(item)
         res.sort()
         return res
@@ -374,26 +358,26 @@ class GithubRepo(j.application.JSBaseClass):
         #  'state_new':"1d76db"}
 
         if name.startswith("state"):
-            return("c2e0c6")  # light green
+            return "c2e0c6"  # light green
 
         if name.startswith("process"):
-            return("d4c5f9")  # light purple
+            return "d4c5f9"  # light purple
 
         if name.startswith("type"):
-            return("fef2c0")  # light yellow
+            return "fef2c0"  # light yellow
 
         if name in ("priority_critical", "task_no_estimation"):
-            return("b60205")  # red
+            return "b60205"  # red
 
         if name.startswith("priority_urgent"):
-            return("d93f0b")
+            return "d93f0b"
 
         if name.startswith("priority"):
-            return("f9d0c4")  # roze
+            return "f9d0c4"  # roze
 
         return "ffffff"
 
-    def set_file(self, path, content, message='update file'):
+    def set_file(self, path, content, message="update file"):
         """
         Creates or updates the file content at path with given content
         :param path: file path `README.md`
@@ -403,33 +387,26 @@ class GithubRepo(j.application.JSBaseClass):
         bytes = content.encode()
         encoded = base64.encodebytes(bytes)
 
-        params = {
-            'message': message,
-            'content': encoded.decode(),
-        }
+        params = {"message": message, "content": encoded.decode()}
 
         path = urllib.parse.quote(path)
         try:
             obj = self.api.get_contents(path)
-            params['sha'] = obj.sha
+            params["sha"] = obj.sha
             if base64.decodebytes(obj.content.encode()) == bytes:
                 return
         except UnknownObjectException:
             pass
 
         self._log_debug('Updating file "%s"' % path)
-        self.api._requester.requestJsonAndCheck(
-            'PUT',
-            self.api.url + '/contents/' + path,
-            input=params,
-        )
+        self.api._requester.requestJsonAndCheck("PUT", self.api.url + "/contents/" + path, input=params)
 
     @property
     def issues(self):
         with self._lock:
             if self._issues is None:
                 issues = []
-                for item in self.api.get_issues(state='all'):
+                for item in self.api.get_issues(state="all"):
                     issues.append(Issue(self, githubObj=item))
 
                 self._issues = issues

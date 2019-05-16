@@ -3,5 +3,5 @@ class Sal(object):
 
         An API for accessing the LOCAL system.
     """
-    __jslocation__ = 'j.sal'
 
+    __jslocation__ = "j.sal"

@@ -7,9 +7,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class Signature( ):
+class Signature:
     """
     auto-generated. don't touch.
     """
@@ -29,20 +27,20 @@ class Signature( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Signature'
+        class_name = "Signature"
         data = json or kwargs
 
         # set attributes
         data_types = [datetime]
-        self.date = client_support.set_property('date', data, data_types, False, [], False, True, class_name)
+        self.date = client_support.set_property("date", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.publicKey = client_support.set_property('publicKey', data, data_types, False, [], False, True, class_name)
+        self.publicKey = client_support.set_property("publicKey", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.signature = client_support.set_property('signature', data, data_types, False, [], False, True, class_name)
+        self.signature = client_support.set_property("signature", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.signedBy = client_support.set_property('signedBy', data, data_types, False, [], False, True, class_name)
+        self.signedBy = client_support.set_property("signedBy", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

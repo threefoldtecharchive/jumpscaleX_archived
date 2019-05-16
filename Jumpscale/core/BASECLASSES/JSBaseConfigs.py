@@ -4,7 +4,6 @@ from .JSBase import JSBase
 
 
 class JSBaseConfigs(JSBase):
-
     def __init__(self, parent=None, topclass=True, **kwargs):
         self._children = {}
 
@@ -53,7 +52,7 @@ class JSBaseConfigs(JSBase):
         kl = self._childclass_selector(**kwargs)
         data = self._model.new(data=kwargs)
         for model in self._model.get_all():
-            if(model.name == name):
+            if model.name == name:
                 raise RuntimeError("can't create , this name already exist")
         data.name = name
         self._children[name] = kl(parent=self, data=data, **kwargs)
@@ -89,17 +88,19 @@ class JSBaseConfigs(JSBase):
                     if not die:
                         return
                     return self._error_input_raise(
-                        "Did not find instance for:%s, name searched for:%s" % (self.__class__._location, name))
+                        "Did not find instance for:%s, name searched for:%s" % (self.__class__._location, name)
+                    )
 
             elif len(res) > 1:
                 return self._error_input_raise(
-                    "Found more than 1 service for :%s, name searched for:%s" % (self.__class__._location, name))
+                    "Found more than 1 service for :%s, name searched for:%s" % (self.__class__._location, name)
+                )
             else:
                 data = res[0]
                 if kwargs:
                     data._data_update(data=kwargs)
         else:
-            if kwargs=={}:
+            if kwargs == {}:
                 raise RuntimeError("kwargs need to be specified is name is not.")
             res = self.findData(**kwargs)
             if len(res) < 1:
@@ -108,11 +109,13 @@ class JSBaseConfigs(JSBase):
                     new = True
                 else:
                     return self._error_input_raise(
-                        "Did not find instances for :%s, search criteria:\n%s" % (self.__class__._location, kwargs))
+                        "Did not find instances for :%s, search criteria:\n%s" % (self.__class__._location, kwargs)
+                    )
 
             elif len(res) > 1:
                 return self._error_input_raise(
-                    "Found more than 1 service for :%s, search criteria:\n%s" % (self.__class__._location, kwargs))
+                    "Found more than 1 service for :%s, search criteria:\n%s" % (self.__class__._location, kwargs)
+                )
             else:
                 data = res[0]
 
@@ -159,14 +162,16 @@ class JSBaseConfigs(JSBase):
         if len(kwargs) > 0:
             propnames = [i for i in kwargs.keys()]
             propnames_keys_in_schema = [
-                item.name for item in self._model.schema.properties_index_keys if item.name in propnames]
+                item.name for item in self._model.schema.properties_index_keys if item.name in propnames
+            ]
             if len(propnames_keys_in_schema) > 0:
                 # we can try to find this config
                 return self._model.get_from_keys(**kwargs)
             else:
                 raise RuntimeError(
-                    "cannot find obj with kwargs:\n%s\n in %s\nbecause kwargs do not match, is there * in schema" %
-                    (kwargs, self))
+                    "cannot find obj with kwargs:\n%s\n in %s\nbecause kwargs do not match, is there * in schema"
+                    % (kwargs, self)
+                )
             return []
         else:
             return self._model.get_all()
@@ -213,8 +218,6 @@ class JSBaseConfigs(JSBase):
         if r is None:
             r = self.new(name=name)
         return r
-
-
 
     def __setattr__(self, key, value):
         self.__dict__[key] = value

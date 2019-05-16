@@ -1,10 +1,7 @@
-
-
 from Jumpscale import j
 
 from .BuilderBaseClass import *
 from .BuilderBaseFactoryClass import BuilderBaseFactoryClass
-
 
 
 class BuilderSystemPackage(j.application.JSBaseClass):
@@ -42,14 +39,15 @@ class BuilderSystemPackage(j.application.JSBaseClass):
     def package(self):
         if self._package is None:
             from .BuilderSystemPackage import BuilderSystemPackage
+
             self._package = BuilderSystemPackage()
         return self._package
-
 
     @property
     def python_pip(self):
         if self._python_pip is None:
             from .BuilderSystemPIP import BuilderSystemPIP
+
             self._python_pip = BuilderSystemPIP()
         return self._python_pip
 
@@ -57,6 +55,7 @@ class BuilderSystemPackage(j.application.JSBaseClass):
     def ns(self):
         if self._ns is None:
             from .BuilderNS import BuilderNS
+
             self._ns = BuilderNS()
         return self._ns
 
@@ -64,14 +63,15 @@ class BuilderSystemPackage(j.application.JSBaseClass):
     def net(self):
         if self._net is None:
             from .BuilderNet import BuilderNet
+
             self._net = BuilderNet()
         return self._net
-
 
     @property
     def ssh(self):
         if self._ssh is None:
             from .BuilderSSH import BuilderSSH
+
             self._ssh = BuilderSSH()
         return self._ssh
 
@@ -79,5 +79,6 @@ class BuilderSystemPackage(j.application.JSBaseClass):
     def user(self):
         if self._user is None:
             from .BuilderUser import BuilderUser
+
             self._user = BuilderUser()
         return self._user

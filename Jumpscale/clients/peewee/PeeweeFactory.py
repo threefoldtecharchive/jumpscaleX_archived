@@ -7,6 +7,7 @@ import importlib
 class PeeweeFactory(j.application.JSBaseClass):
     """
     """
+
     __jslocation__ = "j.clients.peewee"
     _CHILDCLASS = PeeweeClient
 
@@ -14,8 +15,17 @@ class PeeweeFactory(j.application.JSBaseClass):
         self.__imports__ = "peewee"
         self.clients = {}
 
-        from .peewee import PrimaryKeyField, BlobField, Model, BooleanField, TextField, CharField, IntegerField,\
-            SqliteDatabase, FloatField
+        from .peewee import (
+            PrimaryKeyField,
+            BlobField,
+            Model,
+            BooleanField,
+            TextField,
+            CharField,
+            IntegerField,
+            SqliteDatabase,
+            FloatField,
+        )
 
         self.PrimaryKeyField = PrimaryKeyField
         self.BlobField = BlobField
@@ -45,7 +55,7 @@ class PeeweeFactory(j.application.JSBaseClass):
     #     raise RuntimeError("stop debug here")
 
     def resetCache(self):
-        '''Remove peewee keys and items from db
-        '''
+        """Remove peewee keys and items from db
+        """
         for item in j.core.db.keys("peewee.*"):
             j.core.db.delete(item)

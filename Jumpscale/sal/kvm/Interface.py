@@ -16,11 +16,8 @@ class Interface(BaseKVMComponent):
         """
         Generate mac address.
         """
-        mac = [0x00, 0x16, 0x3e,
-               random.randint(0x00, 0x7f),
-               random.randint(0x00, 0xff),
-               random.randint(0x00, 0xff)]
-        return ':'.join(map(lambda x: '%02x' % x, mac))
+        mac = [0x00, 0x16, 0x3E, random.randint(0x00, 0x7F), random.randint(0x00, 0xFF), random.randint(0x00, 0xFF)]
+        return ":".join(map(lambda x: "%02x" % x, mac))
 
     def __init__(self, controller, bridge, name=None, mac=None, interface_rate=None, burst=None):
         """
@@ -77,7 +74,7 @@ class Interface(BaseKVMComponent):
         Delete interface and port related to certain machine.
         """
         if self.ovs:
-            return self.controller.executor.execute('ovs-vsctl del-port %s %s' % (self.bridge.name, self.name))
+            return self.controller.executor.execute("ovs-vsctl del-port %s %s" % (self.bridge.name, self.name))
         else:
             raise NotImplementedError("delete on non ovs network is not supported")
 
@@ -88,13 +85,14 @@ class Interface(BaseKVMComponent):
         """
         Return libvirt's xml string representation of the interface.
         """
-        Interfacexml = self.controller.get_template('interface.xml').render(
+        Interfacexml = self.controller.get_template("interface.xml").render(
             macaddress=self.mac,
             bridge=self.bridge.name,
             qos=self.qos,
             rate=self.interface_rate,
             burst=self.burst,
-            name=self.name)
+            name=self.name,
+        )
         return Interfacexml
 
     @classmethod
@@ -106,21 +104,20 @@ class Interface(BaseKVMComponent):
         @param xml str: xml string of machine to be created.
         """
         interface = ElementTree.fromstring(xml)
-        if interface.find('virtualport') is None:
+        if interface.find("virtualport") is None:
             name = None
         else:
-            name = interface.find('virtualport').find(
-                'parameters').get('profileid')
+            name = interface.find("virtualport").find("parameters").get("profileid")
 
-        bridge_name = interface.find('source').get('bridge')
+        bridge_name = interface.find("source").get("bridge")
         bridge = j.sal.kvm.Network(controller, bridge_name)
-        bandwidth = interface.findall('bandwidth')
+        bandwidth = interface.findall("bandwidth")
         if bandwidth:
-            interface_rate = bandwidth[0].find('inbound').get('average')
-            burst = bandwidth[0].find('inbound').get('burst')
+            interface_rate = bandwidth[0].find("inbound").get("average")
+            burst = bandwidth[0].find("inbound").get("burst")
         else:
             interface_rate = burst = None
-        mac = interface.find('mac').get('address')
+        mac = interface.find("mac").get("address")
         return cls(controller=controller, bridge=bridge, name=name, mac=mac, interface_rate=interface_rate, burst=burst)
 
     @classmethod
@@ -134,8 +131,9 @@ class Interface(BaseKVMComponent):
             bridge_name = self.bridge.name
             mac = self.mac
             rc, ip, err = self.controller.executor.prefab.core.run(
-                "nmap -n -sn $(ip r | grep %s | grep -v default | awk '{print $1}') | grep -iB 2 '%s' | head -n 1 | awk '{print $NF}'" %
-                (bridge_name, mac))
+                "nmap -n -sn $(ip r | grep %s | grep -v default | awk '{print $1}') | grep -iB 2 '%s' | head -n 1 | awk '{print $NF}'"
+                % (bridge_name, mac)
+            )
             ip_pat = re.compile(r"\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}")
             m = ip_pat.search(ip)
             if m:
@@ -153,11 +151,11 @@ class Interface(BaseKVMComponent):
         # TODO: *1 spec what is relevant for a vnic from QOS perspective, what can we do
         # goal is we can do this at runtime
         if self.ovs:
-            self.controller.executor.execute(
-                'ovs-vsctl set interface %s ingress_policing_rate=%d' % (self.name, qos))
+            self.controller.executor.execute("ovs-vsctl set interface %s ingress_policing_rate=%d" % (self.name, qos))
             if not burst:
                 burst = int(qos * 0.1)
             self.controller.executor.execute(
-                'ovs-vsctl set interface %s ingress_policing_burst=%d' % (self.name, burst))
+                "ovs-vsctl set interface %s ingress_policing_burst=%d" % (self.name, burst)
+            )
         else:
-            raise NotImplementedError('qos for std bridge not implemeted')
+            raise NotImplementedError("qos for std bridge not implemeted")

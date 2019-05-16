@@ -8,8 +8,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class EditReleaseOption(object):
     """
     auto-generated. don't touch.
@@ -32,26 +30,28 @@ class EditReleaseOption(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'EditReleaseOption'
+        class_name = "EditReleaseOption"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.body = client_support.set_property('body', data, data_types, False, [], False, False, class_name)
+        self.body = client_support.set_property("body", data, data_types, False, [], False, False, class_name)
         data_types = [bool]
-        self.draft = client_support.set_property('draft', data, data_types, False, [], False, False, class_name)
+        self.draft = client_support.set_property("draft", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.name = client_support.set_property('name', data, data_types, False, [], False, False, class_name)
+        self.name = client_support.set_property("name", data, data_types, False, [], False, False, class_name)
         data_types = [bool]
         self.prerelease = client_support.set_property(
-            'prerelease', data, data_types, False, [], False, False, class_name)
+            "prerelease", data, data_types, False, [], False, False, class_name
+        )
         data_types = [string_types]
-        self.tag_name = client_support.set_property('tag_name', data, data_types, False, [], False, False, class_name)
+        self.tag_name = client_support.set_property("tag_name", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
         self.target_commitish = client_support.set_property(
-            'target_commitish', data, data_types, False, [], False, False, class_name)
+            "target_commitish", data, data_types, False, [], False, False, class_name
+        )
 
     def __str__(self):
         return self.as_json(indent=4)

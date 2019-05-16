@@ -12,12 +12,12 @@ Override from https://github.com/enthought/Python-2.7.3/blob/master/Lib/ConfigPa
 
 class SambaConfigParser(configparser.ConfigParser, JSBASE):
     OPTCRE_SMB = re.compile(
-        r'(?P<option>[^=\s][^=]*)'          # very permissive!
-        r'\s*(?P<vi>[=])\s*'                 # any number of space/tab,
+        r"(?P<option>[^=\s][^=]*)"  # very permissive!
+        r"\s*(?P<vi>[=])\s*"  # any number of space/tab,
         # followed by separator
         # (either =), followed
         # by any # space/tab
-        r'(?P<value>.*)$'                     # everything up to eol
+        r"(?P<value>.*)$"  # everything up to eol
     )
 
     def __init__(self):
@@ -36,19 +36,19 @@ class SambaConfigParser(configparser.ConfigParser, JSBASE):
         leading whitespace.  Blank lines, lines beginning with a '#',
         and just about everything else are ignored.
         """
-        cursect = None                        # None, or a dictionary
+        cursect = None  # None, or a dictionary
         optname = None
         lineno = 0
-        e = None                              # None, or an exception
+        e = None  # None, or an exception
         while True:
             line = fp.readline()
             if not line:
                 break
             lineno = lineno + 1
             # comment or blank line?
-            if line.strip() == '' or line[0] in '#;':
+            if line.strip() == "" or line[0] in "#;":
                 continue
-            if line.split(None, 1)[0].lower() == 'rem' and line[0] in "rR":
+            if line.split(None, 1)[0].lower() == "rem" and line[0] in "rR":
                 # no leading whitespace
                 continue
             # continuation line?
@@ -61,14 +61,14 @@ class SambaConfigParser(configparser.ConfigParser, JSBASE):
                 # is it a section header?
                 mo = self.SECTCRE.match(line)
                 if mo:
-                    sectname = mo.group('header')
+                    sectname = mo.group("header")
                     if sectname in self._sections:
                         cursect = self._sections[sectname]
                     elif sectname == DEFAULTSECT:
                         cursect = self._defaults
                     else:
                         cursect = self._dict()
-                        cursect['__name__'] = sectname
+                        cursect["__name__"] = sectname
                         self._sections[sectname] = cursect
                     # So sections can't start with a continuation line
                     optname = None
@@ -79,21 +79,21 @@ class SambaConfigParser(configparser.ConfigParser, JSBASE):
                 else:
                     mo = self._optcre.match(line)
                     if mo:
-                        optname, vi, optval = mo.group('option', 'vi', 'value')
+                        optname, vi, optval = mo.group("option", "vi", "value")
                         optname = self.optionxform(optname.rstrip())
                         # This check is fine because the OPTCRE cannot
                         # match if it would set optval to None
                         if optval is not None:
-                            if vi in ('=') and ';' in optval:
+                            if vi in ("=") and ";" in optval:
                                 # ';' is a comment delimiter only if it follows
                                 # a spacing character
-                                pos = optval.find(';')
+                                pos = optval.find(";")
                                 if pos != -1 and optval[pos - 1].isspace():
                                     optval = optval[:pos]
                             optval = optval.strip()
                             # allow empty values
                             if optval == '""':
-                                optval = ''
+                                optval = ""
                             cursect[optname] = [optval]
                         else:
                             # valueless option handling
@@ -116,7 +116,7 @@ class SambaConfigParser(configparser.ConfigParser, JSBASE):
         for options in all_sections:
             for name, val in list(options.items()):
                 if isinstance(val, list):
-                    options[name] = '\n'.join(val)
+                    options[name] = "\n".join(val)
 
     def write(self, fp):
         # write with tab for options
@@ -124,7 +124,7 @@ class SambaConfigParser(configparser.ConfigParser, JSBASE):
         if self._defaults:
             fp.write("[%s]\n" % DEFAULTSECT)
             for (key, value) in list(self._defaults.items()):
-                fp.write("%s = %s\n" % (key, str(value).replace('\n', '\n\t')))
+                fp.write("%s = %s\n" % (key, str(value).replace("\n", "\n\t")))
             fp.write("\n")
 
         for section in self._sections:
@@ -133,6 +133,6 @@ class SambaConfigParser(configparser.ConfigParser, JSBASE):
                 if key == "__name__":
                     continue
                 if (value is not None) or (self._optcre == self.OPTCRE):
-                    key = " = ".join((key, str(value).replace('\n', '\n\t')))
+                    key = " = ".join((key, str(value).replace("\n", "\n\t")))
                 fp.write("\t%s\n" % (key))
             fp.write("\n")

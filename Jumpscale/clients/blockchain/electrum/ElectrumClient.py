@@ -37,7 +37,6 @@ class ElectrumClient(JSConfigBase):
         self._wallet = None
         self._atomicswap = None
 
-
     @property
     def wallet(self):
         # access atomicswap to make sure the wallet is loaded
@@ -46,10 +45,9 @@ class ElectrumClient(JSConfigBase):
         if self._wallet is None:
             config_data = {}
             for key, value in self.config.data.items():
-                config_data[key.strip('_')] = value
+                config_data[key.strip("_")] = value
             self._wallet = ElectrumWallet(name=self.instance, config=config_data)
         return self._wallet
-
 
     @property
     def atomicswap(self):
@@ -57,11 +55,13 @@ class ElectrumClient(JSConfigBase):
         Atomicswap support for BTC electrum
         """
         if self._atomicswap is None:
-            self._atomicswap = ElectrumAtomicswap(wallet_name=self.instance,
-                                                  data_dir=self.config.data['electrum_path'],
-                                                  rpcuser=self.config.data['rpc_user'],
-                                                  rpcpass=self.config.data['rpc_pass_'],
-                                                  rpchost=self.config.data['server'].split(':')[0],
-                                                  rpcport=self.config.data['server'].split(':')[1],
-                                                  testnet=self.config.data['testnet'])
+            self._atomicswap = ElectrumAtomicswap(
+                wallet_name=self.instance,
+                data_dir=self.config.data["electrum_path"],
+                rpcuser=self.config.data["rpc_user"],
+                rpcpass=self.config.data["rpc_pass_"],
+                rpchost=self.config.data["server"].split(":")[0],
+                rpcport=self.config.data["server"].split(":")[1],
+                testnet=self.config.data["testnet"],
+            )
         return self._atomicswap

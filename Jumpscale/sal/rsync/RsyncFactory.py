@@ -3,6 +3,8 @@ from Jumpscale import j
 from .Rsync import *
 
 JSBASE = j.application.JSBaseClass
+
+
 class RsyncFactory(j.application.JSBaseClass):
     """
     """
@@ -19,5 +21,6 @@ class RsyncFactory(j.application.JSBaseClass):
 
     def getClientSecret(self, addr="localhost", port=873, secret=""):
         return RsyncClientSecret(addr, port, secret)
+
 
 # TODO: *2 there seems to be overlap here, multiple files not on right location

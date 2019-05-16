@@ -8,7 +8,6 @@ class Hash:
 
 
 class NotaryClientStub:
-
     def __init__(self, tfclient):
         self._tfclient = tfclient
         self._store = {}
@@ -23,11 +22,11 @@ class NotaryClientStub:
             raise TypeError("threebot_id cannot be negative")
 
         buff = BytesIO()
-        bi = threebot_id.to_bytes(64, byteorder='big')
+        bi = threebot_id.to_bytes(64, byteorder="big")
         buff.write(bi)
 
         if isinstance(reservation, str):
-            reservation = reservation.encode('utf-8')
+            reservation = reservation.encode("utf-8")
         buff.write(reservation)
         h = j.data.hash.blake2_string(buff.getvalue(), 32)
 

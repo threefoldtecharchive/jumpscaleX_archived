@@ -2,16 +2,13 @@ from Jumpscale import j
 from Jumpscale.sal_zos.utils import authorize_zerotiers
 
 
-
-
-
-class Mountable():
+class Mountable:
     """
     Abstract implementation for devices that are mountable.
     Device should have attributes devicename and mountpoint
     """
 
-    def mount(self, target, options=['defaults']):
+    def mount(self, target, options=["defaults"]):
         """
         @param target: Mount point
         @param options: Optional mount options
@@ -19,13 +16,9 @@ class Mountable():
         if self.mountpoint == target:
             return
 
-        self.client.bash('mkdir -p {}'.format(target))
+        self.client.bash("mkdir -p {}".format(target))
 
-        self.client.disk.mount(
-            source=self.devicename,
-            target=target,
-            options=options,
-        )
+        self.client.disk.mount(source=self.devicename, target=target, options=options)
 
         self.mountpoint = target
 
@@ -35,9 +28,7 @@ class Mountable():
         """
         _mount = self.mountpoint
         if _mount:
-            self.client.disk.umount(
-                source=_mount,
-            )
+            self.client.disk.umount(source=_mount)
             self.client.bash("rm -rf %s" % _mount).get()
         self.mountpoint = None
 
@@ -57,7 +48,7 @@ class Collection:
         for item in self._items:
             if item.name == name:
                 return item
-        raise KeyError('Name {} does not exists'.format(name))
+        raise KeyError("Name {} does not exists".format(name))
 
     def __contains__(self, name):
         try:
@@ -68,7 +59,7 @@ class Collection:
 
     def add(self, name, *args, **kwargs):
         if name in self:
-            raise ValueError('Element with name {} already exists'.format(name))
+            raise ValueError("Element with name {} already exists".format(name))
 
     def remove(self, item):
         """
@@ -112,20 +103,16 @@ class Nic:
 
     @type.setter
     def type(self, value):
-        if value not in ['vxlan', 'vlan', 'bridge', 'default', 'zerotier', 'passthrough']:
-            raise ValueError('Invalid nic type {}'.format(value))
+        if value not in ["vxlan", "vlan", "bridge", "default", "zerotier", "passthrough"]:
+            raise ValueError("Invalid nic type {}".format(value))
         self._type = value
 
     def to_dict(self, forvm=False, forcontainer=False):
-        nicinfo = {
-            'id': str(self.networkid),
-            'type': self.type,
-            'name': self.name
-        }
+        nicinfo = {"id": str(self.networkid), "type": self.type, "name": self.name}
         if forvm:
-            nicinfo.pop('name')
+            nicinfo.pop("name")
         if self.hwaddr:
-            nicinfo['hwaddr'] = self.hwaddr
+            nicinfo["hwaddr"] = self.hwaddr
         return nicinfo
 
     __repr__ = __str__
@@ -133,7 +120,7 @@ class Nic:
 
 class ZTNic(Nic):
     def __init__(self, name, networkid, hwaddr, parent):
-        super().__init__(name, 'zerotier', networkid, hwaddr, parent)
+        super().__init__(name, "zerotier", networkid, hwaddr, parent)
         self._client = None
         self._client_name = None
 
@@ -176,9 +163,9 @@ class ZTNic(Nic):
     @property
     def iface(self):
         for network in self._parent.container.client.zerotier.list():
-            if network['nwid'] == self.networkid:
-                return network['portDeviceName']
-        raise RuntimeError('Could not find devicename')
+            if network["nwid"] == self.networkid:
+                return network["portDeviceName"]
+        raise RuntimeError("Could not find devicename")
 
     def to_dict(self, forvm=False, forcontainer=False):
         data = super().to_dict(forvm, forcontainer)
@@ -186,9 +173,9 @@ class ZTNic(Nic):
             return data
 
         if self.client:
-            data['ztClient'] = self.client.config.instance
+            data["ztClient"] = self.client.config.instance
         elif self._client_name:
-            data['ztClient'] = self._client_name
+            data["ztClient"] = self._client_name
         return data
 
 
@@ -205,11 +192,11 @@ class Nics(Collection):
         :param hwaddr: str
         """
         super().add(name)
-        if len(name) > 15 or name == 'default':
-            raise ValueError('Invalid network name {} should be max 15 chars and not be \'default\''.format(name))
-        if networkid is None and type_ != 'default':
-            raise ValueError('Missing required argument networkid for type {}'.format(type_))
-        if type_ == 'zerotier':
+        if len(name) > 15 or name == "default":
+            raise ValueError("Invalid network name {} should be max 15 chars and not be 'default'".format(name))
+        if networkid is None and type_ != "default":
+            raise ValueError("Missing required argument networkid for type {}".format(type_))
+        if type_ == "zerotier":
             nic = ZTNic(name, networkid, hwaddr, self._parent)
         else:
             nic = Nic(name, type_, networkid, hwaddr, self._parent)
@@ -235,7 +222,7 @@ class Nics(Collection):
         for nic in self:
             if nic.networkid == str(networkid) and nic.type == type_:
                 return nic
-        raise LookupError('No nic found with type id combination {}:{}'.format(type_, networkid))
+        raise LookupError("No nic found with type id combination {}:{}".format(type_, networkid))
 
 
 class DynamicCollection:
@@ -247,7 +234,7 @@ class DynamicCollection:
         for item in self.list():
             if item.name == name:
                 return item
-        raise KeyError('Name {} does not exists'.format(name))
+        raise KeyError("Name {} does not exists".format(name))
 
     def __contains__(self, name):
         try:
@@ -278,9 +265,9 @@ class Service:
         self.name = name
         self.node = node
         self._type = service_type
-        self._id = '{}.{}'.format(self._type, self.name)
+        self._id = "{}.{}".format(self._type, self.name)
         self._container = None
-        self._container_name = '{}_{}'.format(self._type, self.name)
+        self._container_name = "{}_{}".format(self._type, self.name)
         self._ports = ports
         self._autostart = autostart
 
@@ -334,7 +321,7 @@ class Service:
             self.container.client.job.unschedule(self._id)
             self.container.client.job.kill(self._id)
             if not j.tools.timer.execute_until(lambda: not self.is_running(), timeout, 0.5):
-                j.tools.logger._log_warning('Failed to gracefully stop {} server: {}'.format(self._type, self.name))
+                j.tools.logger._log_warning("Failed to gracefully stop {} server: {}".format(self._type, self.name))
 
         self.container.stop()
         self._container = None
@@ -356,15 +343,16 @@ class Service:
     def add_nics(self, nics):
         if nics:
             for nic in nics:
-                nicobj = self.nics.add(nic['name'], nic['type'], nic['id'], nic.get('hwaddr'))
-                if nicobj.type == 'zerotier':
-                    nicobj.client_name = nic.get('ztClient')
-        if 'nat0' not in self.nics:
-            self.nics.add('nat0', 'default')
+                nicobj = self.nics.add(nic["name"], nic["type"], nic["id"], nic.get("hwaddr"))
+                if nicobj.type == "zerotier":
+                    nicobj.client_name = nic.get("ztClient")
+        if "nat0" not in self.nics:
+            self.nics.add("nat0", "default")
 
     def authorize_zt_nics(self):
         if not self.zt_identity:
-            self.zt_identity = self.node.client.system('zerotier-idtool generate').get().stdout.strip()
-        zt_public = self.node.client.system(
-            'zerotier-idtool getpublic {}'.format(self.zt_identity)).get().stdout.strip()
+            self.zt_identity = self.node.client.system("zerotier-idtool generate").get().stdout.strip()
+        zt_public = (
+            self.node.client.system("zerotier-idtool getpublic {}".format(self.zt_identity)).get().stdout.strip()
+        )
         authorize_zerotiers(zt_public, self.nics)

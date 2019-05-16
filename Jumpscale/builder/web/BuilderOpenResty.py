@@ -7,7 +7,7 @@ builder_method = j.builder.system.builder_method
 
 
 class BuilderOpenResty(j.builder.system._BaseClass):
-    NAME = 'openresty'
+    NAME = "openresty"
 
     @builder_method()
     def build(self, reset=False):
@@ -17,12 +17,13 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         """
         if j.core.platformtype.myplatform.isUbuntu:
             j.builder.system.package.mdupdate()
-            j.builder.system.package.ensure('build-essential libpcre3-dev libssl-dev zlib1g-dev')
-            url = 'https://openresty.org/download/openresty-1.13.6.2.tar.gz'
+            j.builder.system.package.ensure("build-essential libpcre3-dev libssl-dev zlib1g-dev")
+            url = "https://openresty.org/download/openresty-1.13.6.2.tar.gz"
 
-            dest = self._replace('{DIR_BUILD}/openresty')
-            self.tools.file_download(url, to=dest, overwrite=False, retry=3,
-                                     expand=True, minsizekb=1000, removeTopDir=True, deletedest=True)
+            dest = self._replace("{DIR_BUILD}/openresty")
+            self.tools.file_download(
+                url, to=dest, overwrite=False, retry=3, expand=True, minsizekb=1000, removeTopDir=True, deletedest=True
+            )
             C = """
             cd {DIR_BUILD}/openresty
             mkdir -p /sandbox/var/pid
@@ -54,8 +55,9 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             url = "https://openresty.org/download/openresty-1.13.6.2.tar.gz"
             dest = self.DIR_BUILD
             self.tools.dir_ensure(dest)
-            self.tools.file_download(url, to=dest, overwrite=False, retry=3,
-                                     expand=True, minsizekb=1000, removeTopDir=True, deletedest=True)
+            self.tools.file_download(
+                url, to=dest, overwrite=False, retry=3, expand=True, minsizekb=1000, removeTopDir=True, deletedest=True
+            )
             C = """
             cd {DIR_BUILD}
             mkdir -p /sandbox/var/pid
@@ -82,7 +84,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
 
     @builder_method()
     def sandbox(self, zhub_client=None, reset=False):
-        '''Copy built bins to dest_path and create flist if create_flist = True
+        """Copy built bins to dest_path and create flist if create_flist = True
 
         :param dest_path: destination path to copy files into
         :type dest_path: str
@@ -94,23 +96,23 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         :type create_flist:bool
         :param zhub_instance: hub instance to upload flist to
         :type zhub_instance:str
-        '''
+        """
 
-        bins = ['openresty', 'lua', 'resty', 'restydoc', 'restydoc-index', 'lapis', 'moon', 'moonc']
+        bins = ["openresty", "lua", "resty", "restydoc", "restydoc-index", "lapis", "moon", "moonc"]
         dirs = {
-            self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/openresty.cfg'): 'sandbox/cfg/',
-            self.tools.joinpaths(j.core.dirs.BASEDIR, 'cfg/mime.types'): 'sandbox/cfg/',
-            self.tools.joinpaths(j.core.dirs.BASEDIR, 'openresty/'): 'sandbox/openresty/',
-            '/lib/x86_64-linux-gnu/libnss_files.so.2': 'sandbox/lib/'
+            self.tools.joinpaths(j.core.dirs.BASEDIR, "cfg/openresty.cfg"): "sandbox/cfg/",
+            self.tools.joinpaths(j.core.dirs.BASEDIR, "cfg/mime.types"): "sandbox/cfg/",
+            self.tools.joinpaths(j.core.dirs.BASEDIR, "openresty/"): "sandbox/openresty/",
+            "/lib/x86_64-linux-gnu/libnss_files.so.2": "sandbox/lib/",
         }
-        new_dirs = ['sandbox/var/pid/', 'sandbox/var/log/']
+        new_dirs = ["sandbox/var/pid/", "sandbox/var/log/"]
         root_files = {
-            'etc/passwd': 'nobody:x:65534:65534:nobody:/:/sandbox/bin/openresty',
-            'etc/group': 'nogroup:x:65534:'
+            "etc/passwd": "nobody:x:65534:65534:nobody:/:/sandbox/bin/openresty",
+            "etc/group": "nogroup:x:65534:",
         }
-        lua_files = j.sal.fs.listFilesInDir(self.tools.joinpaths(j.core.dirs.BASEDIR, 'bin/'), filter='*.lua')
+        lua_files = j.sal.fs.listFilesInDir(self.tools.joinpaths(j.core.dirs.BASEDIR, "bin/"), filter="*.lua")
         for file in lua_files:
-            dirs[file] = 'sandbox/bin/'
+            dirs[file] = "sandbox/bin/"
 
         for bin_name in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
@@ -118,7 +120,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             self.tools.dir_ensure(dir_dest)
             self._copy(dir_src, dir_dest)
 
-        lib_dest = self.tools.joinpaths(self.DIR_SANDBOX, 'sandbox/lib')
+        lib_dest = self.tools.joinpaths(self.DIR_SANDBOX, "sandbox/lib")
         self.tools.dir_ensure(lib_dest)
         for bin in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
@@ -141,8 +143,8 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             self.tools.file_write(file_dest, content)
 
         cur_dir = j.sal.fs.getDirName(__file__)
-        startup_file = self.tools.joinpaths(cur_dir, 'templates', 'openresty_startup.toml')
-        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, '.startup.toml')
+        startup_file = self.tools.joinpaths(cur_dir, "templates", "openresty_startup.toml")
+        file_dest = self.tools.joinpaths(self.DIR_SANDBOX, ".startup.toml")
         self._copy(startup_file, file_dest)
 
     @builder_method()
@@ -218,7 +220,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
 
     @property
     def startup_cmds(self):
-        test_dir = j.core.tools.text_replace('{DIR_TEMP}/lapis_test')
+        test_dir = j.core.tools.text_replace("{DIR_TEMP}/lapis_test")
         if self.tools.exists(test_dir):
             self.tools.dir_remove(test_dir)
         self.tools.dir_ensure(test_dir)
@@ -226,8 +228,10 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             cd {dir}
             lapis --lua new
             lapis server
-        """.format(dir=test_dir)
-        cmds = [j.tools.startupcmd.get('test_openresty', cmd=cmd)]
+        """.format(
+            dir=test_dir
+        )
+        cmds = [j.tools.startupcmd.get("test_openresty", cmd=cmd)]
         return cmds
 
     def test(self, name=""):

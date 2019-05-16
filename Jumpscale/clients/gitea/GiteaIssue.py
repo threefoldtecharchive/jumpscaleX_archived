@@ -8,24 +8,23 @@ JSBASE = j.application.JSBaseClass
 
 
 class GiteaIssue(j.application.JSBaseClass):
-
     def __init__(
-            self,
-            client,
-            user,
-            repo,
-            id=None,
-            assignee=None,
-            assignees=[],
-            body=None,
-            closed=False,
-            due_date=None,
-            labels = [],
-            milestone=0,
-            title=None,
-            state=None,
-            updated_at=None,
-            url = None,
+        self,
+        client,
+        user,
+        repo,
+        id=None,
+        assignee=None,
+        assignees=[],
+        body=None,
+        closed=False,
+        due_date=None,
+        labels=[],
+        milestone=0,
+        title=None,
+        state=None,
+        updated_at=None,
+        url=None,
     ):
         JSBASE.__init__(self)
         self.client = client
@@ -35,7 +34,7 @@ class GiteaIssue(j.application.JSBaseClass):
         self.assignee = assignee
         self.assignees = assignees
         self.body = body
-        self.closed=closed
+        self.closed = closed
         self.due_date = due_date
         self.labels = labels
         self.milestone = milestone
@@ -48,17 +47,17 @@ class GiteaIssue(j.application.JSBaseClass):
     def data(self):
         d = {}
         for attr in [
-            'id',
-            'assignee',
-            'assignees',
-            'body',
-            'due_date',
-            'labels',
-            'milestone',
-            'title',
-            'state',
-            'url',
-            'updated_at'
+            "id",
+            "assignee",
+            "assignees",
+            "body",
+            "due_date",
+            "labels",
+            "milestone",
+            "title",
+            "state",
+            "url",
+            "updated_at",
         ]:
             v = getattr(self, attr)
             d[attr] = v
@@ -71,36 +70,36 @@ class GiteaIssue(j.application.JSBaseClass):
         errors = {}
         is_valid = True
 
-        operation = 'create'
+        operation = "create"
 
         if create:
 
             if self.id:
                 is_valid = False
-                errors['id'] = 'Already existing'
+                errors["id"] = "Already existing"
             else:
                 if not self.body:
                     is_valid = False
-                    errors['body'] = 'Missing'
+                    errors["body"] = "Missing"
 
                 if not self.title:
                     is_valid = False
-                    errors['title'] = 'Missing'
+                    errors["title"] = "Missing"
 
                 if not self.repo:
                     is_valid = False
-                    errors['repo'] = 'Missing'
+                    errors["repo"] = "Missing"
 
         elif update:
-            operation = 'update'
+            operation = "update"
             if not self.id:
                 is_valid = False
-                errors['id'] = 'Missing'
+                errors["id"] = "Missing"
 
         if is_valid:
-            return True, ''
+            return True, ""
 
-        return False, '{0} Error '.format(operation) + json.dumps(errors)
+        return False, "{0} Error ".format(operation) + json.dumps(errors)
 
     def save(self, commit=True):
         """
@@ -120,7 +119,7 @@ class GiteaIssue(j.application.JSBaseClass):
             # coming response ID is global issue id
             self.id = self.number
 
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 
@@ -135,25 +134,24 @@ class GiteaIssue(j.application.JSBaseClass):
 
         repo = None
         if type(self.repo) == dict:
-            repo = self.repo['name']
+            repo = self.repo["name"]
         else:
             repo = self.repo.name
 
         username = None
         if type(self.user) == dict:
-            username = self.user['username']
+            username = self.user["username"]
         else:
             username = self.user.username
 
         try:
             resp = self.client.api.repos.issueEditIssue(self.data, str(self.id), repo, username)
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 
     @property
     def issue_comments(self):
         return GiteaIssueComments(self.client, self.repo, self, self.user)
-
 
     __str__ = __repr__ = lambda self: json.dumps(self.data)

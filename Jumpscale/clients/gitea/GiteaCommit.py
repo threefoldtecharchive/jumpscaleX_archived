@@ -5,19 +5,19 @@ JSBASE = j.application.JSBaseClass
 
 class GiteaCommit(j.application.JSBaseClass):
     def __init__(
-            self,
-            client,
-            repo,
-            user,
-            context=None,
-            created_at=None,
-            creator=None,
-            description=None,
-            id=None,
-            status=None,
-            target_url=None,
-            updated_at=None,
-            url=None
+        self,
+        client,
+        repo,
+        user,
+        context=None,
+        created_at=None,
+        creator=None,
+        description=None,
+        id=None,
+        status=None,
+        target_url=None,
+        updated_at=None,
+        url=None,
     ):
         self.user = user
         self.client = client
@@ -32,4 +32,4 @@ class GiteaCommit(j.application.JSBaseClass):
         self.uodated_at = updated_at
         self.url = url
 
-    __str__ = __repr__ = lambda self: 'Commit Object %s for repo %s' % (self.id, self.repo.name)
+    __str__ = __repr__ = lambda self: "Commit Object %s for repo %s" % (self.id, self.repo.name)

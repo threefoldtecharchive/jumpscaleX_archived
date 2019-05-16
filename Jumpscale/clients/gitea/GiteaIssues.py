@@ -8,7 +8,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class GiteaIssues(j.application.JSBaseClass):
-
     def __init__(self, user, repo=None):
         JSBASE.__init__(self)
         self.user = user
@@ -23,6 +22,7 @@ class GiteaIssues(j.application.JSBaseClass):
     def get(self, id, fetch=False):
         from .GiteaUser import GiteaUser
         from .GiteaRepo import GiteaRepo
+
         issue = self.new()
         if fetch:
             resp = self.user.client.api.repos.issueGetIssue(str(id), self.repo.name, self.user.username).json()
@@ -30,14 +30,14 @@ class GiteaIssues(j.application.JSBaseClass):
                 setattr(issue, k, v)
             issue.id = issue.number
 
-        if hasattr(issue, 'user') and type(issue.user) == dict:
-            u  = GiteaUser(self.user.client)
+        if hasattr(issue, "user") and type(issue.user) == dict:
+            u = GiteaUser(self.user.client)
             for k, v in issue.user.items():
                 setattr(u, k, v)
             issue.user = u
 
-        if hasattr(issue, 'repo') and type(issue.repo) == dict:
-            r  = GiteaRepo(self.user.client)
+        if hasattr(issue, "repo") and type(issue.repo) == dict:
+            r = GiteaRepo(self.user.client)
             for k, v in issue.repo.items():
                 setattr(r, k, v)
             issue.repo = r
@@ -46,7 +46,7 @@ class GiteaIssues(j.application.JSBaseClass):
     def tracked_times(self):
         result = []
         if not self.user.is_current:
-            raise Exception('You can not use this API call in behalf of another user')
+            raise Exception("You can not use this API call in behalf of another user")
         resp = self.user.client.api.user.userCurrentTrackedTimes().json()
         for item in resp:
             t = GiteaIssueTime(self.user)
@@ -57,10 +57,10 @@ class GiteaIssues(j.application.JSBaseClass):
 
     def list(self, page=1, state=None):
         if state is None:
-            state = 'open'
+            state = "open"
 
-        if state not in ['open', 'closed', 'all']:
-            raise Exception('Invalid state. only allowed [closed, open, all]')
+        if state not in ["open", "closed", "all"]:
+            raise Exception("Invalid state. only allowed [closed, open, all]")
         result = []
         resp = self.user.client.api.repos.issueListIssues(self.repo.name, self.user.username, page, state).json()
         for item in resp:
@@ -91,9 +91,9 @@ class GiteaIssues(j.application.JSBaseClass):
         return self
 
     def __str__(self):
-        for_ = 'user', self.user.username
+        for_ = "user", self.user.username
         if self.repo:
-            for_ = 'repo', self.repo.name
+            for_ = "repo", self.repo.name
 
         return "Issues for {0}: {1}".format(for_[0], for_[1])
 

@@ -7,7 +7,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class GiteaRepoPublicKeys(j.application.JSBaseClass):
-
     def __init__(self, user, repo):
         JSBASE.__init__(self)
         self.user = user

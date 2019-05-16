@@ -1,4 +1,3 @@
-
 import time
 import os
 
@@ -7,6 +6,7 @@ from redis._compat import nativestr
 from Jumpscale import j
 
 from core.InstallTools import Redis
+
 
 class RedisFactory(j.application.JSBaseClass):
 
@@ -21,31 +21,31 @@ class RedisFactory(j.application.JSBaseClass):
         #
 
     def _cache_clear(self):
-        '''
+        """
         clear the cache formed by the functions get() and getQueue()
 
-        '''
+        """
         self._redis = {}
         self._redisq = {}
         self._config = {}
 
-
     def get(
-            self,
-            ipaddr="localhost",
-            port=6379,
-            password="",
-            fromcache=True,
-            unixsocket=None,
-            ardb_patch=False,
-            set_patch=False,
-            ssl=False,
-            ssl_certfile=None,
-            ssl_keyfile=None,
-            timeout=10,
-            ping=True,
-            die=True,
-            **args):
+        self,
+        ipaddr="localhost",
+        port=6379,
+        password="",
+        fromcache=True,
+        unixsocket=None,
+        ardb_patch=False,
+        set_patch=False,
+        ssl=False,
+        ssl_certfile=None,
+        ssl_keyfile=None,
+        timeout=10,
+        ping=True,
+        die=True,
+        **args,
+    ):
         """
 
         get an instance of redis client, store it in cache so we could easily retrieve it later
@@ -87,17 +87,28 @@ class RedisFactory(j.application.JSBaseClass):
         if key not in self._redis or not fromcache:
             if ipaddr and port:
                 self._log_debug("REDIS:%s:%s" % (ipaddr, port))
-                self._redis[key] = Redis(ipaddr, port, password=password, ssl=ssl, ssl_certfile=ssl_certfile,
-                                         ssl_keyfile=ssl_keyfile,unix_socket_path=unixsocket,
-                                         # socket_timeout=timeout,
-                                         **args)
+                self._redis[key] = Redis(
+                    ipaddr,
+                    port,
+                    password=password,
+                    ssl=ssl,
+                    ssl_certfile=ssl_certfile,
+                    ssl_keyfile=ssl_keyfile,
+                    unix_socket_path=unixsocket,
+                    # socket_timeout=timeout,
+                    **args,
+                )
             else:
                 self._log_debug("REDIS:%s" % unixsocket)
-                self._redis[key] = Redis(unix_socket_path=unixsocket,
-                                         # socket_timeout=timeout,
-                                         password=password,
-                                         ssl=ssl, ssl_certfile=ssl_certfile,
-                                         ssl_keyfile=ssl_keyfile, **args)
+                self._redis[key] = Redis(
+                    unix_socket_path=unixsocket,
+                    # socket_timeout=timeout,
+                    password=password,
+                    ssl=ssl,
+                    ssl_certfile=ssl_certfile,
+                    ssl_keyfile=ssl_keyfile,
+                    **args,
+                )
 
         if ardb_patch:
             self._ardb_patch(self._redis[key])
@@ -120,11 +131,11 @@ class RedisFactory(j.application.JSBaseClass):
         return self._redis[key]
 
     def _ardb_patch(self, client):
-        client.response_callbacks['HDEL'] = lambda r: r and nativestr(r) == 'OK'
+        client.response_callbacks["HDEL"] = lambda r: r and nativestr(r) == "OK"
 
     def _set_patch(self, client):
-        client.response_callbacks['SET'] = lambda r: r
-        client.response_callbacks['DEL'] = lambda r: r
+        client.response_callbacks["SET"] = lambda r: r
+        client.response_callbacks["DEL"] = lambda r: r
 
     def queue_get(self, key, redisclient=None, fromcache=True):
 
@@ -144,7 +155,6 @@ class RedisFactory(j.application.JSBaseClass):
         if fromcache == False or key not in self._redisq:
             self._redisq[key] = redisclient.queue_get(key)
         return self._redisq[key]
-
 
     def core_get(self, reset=False, tcp=True):
         """
@@ -192,13 +202,13 @@ class RedisFactory(j.application.JSBaseClass):
         return j.core._db
 
     def core_stop(self):
-        '''
+        """
         kill core redis
 
         :raises RuntimeError: redis wouldn't be stopped
         :return: True if redis is not running
         :rtype: bool
-        '''
+        """
         j.core._db = None
         j.sal.process.execute("redis-cli -s %s shutdown" % self.unix_socket_path, die=False, showout=False)
         j.sal.process.execute("redis-cli shutdown", die=False, showout=False)
@@ -210,16 +220,15 @@ class RedisFactory(j.application.JSBaseClass):
                 raise RuntimeError("could not stop redis")
             time.sleep(0.05)
 
+    def core_running(self, tcp=True):
 
-    def core_running(self,tcp=True):
-
-        '''
+        """
         Get status of redis whether it is currently running or not
 
         :raises e: did not answer
         :return: True if redis is running, False if redis is not running
         :rtype: bool
-        '''
+        """
 
         try:
             r = self.get(unixsocket=self.unix_socket_path)
@@ -232,7 +241,6 @@ class RedisFactory(j.application.JSBaseClass):
             return r.ping()
 
         return False
-
 
     def _core_start(self, tcp=True, timeout=20, reset=False):
 
@@ -268,8 +276,7 @@ class RedisFactory(j.application.JSBaseClass):
                     j.sal.process.execute("brew install redis;brew link redis")
                     if not j.sal.process.checkInstalled("redis-server"):
                         raise RuntimeError("Cannot find redis-server even after install")
-                j.sal.process.execute("redis-cli -s %s/redis.sock shutdown" %
-                                      j.dirs.TMPDIR, die=False, showout=False)
+                j.sal.process.execute("redis-cli -s %s/redis.sock shutdown" % j.dirs.TMPDIR, die=False, showout=False)
                 j.sal.process.execute("redis-cli shutdown", die=False, showout=False)
             elif j.core.platformtype.myplatform.isLinux:
                 if j.core.platformtype.myplatform.isAlpine:
@@ -288,11 +295,11 @@ class RedisFactory(j.application.JSBaseClass):
         if reset:
             self.core_stop()
 
-
-
-        cmd = "mkdir -p /sandbox/var;redis-server --unixsocket /sandbox/var/redis.sock " \
-              "--port 6379 " \
-              "--maxmemory 100000000 --daemonize yes"
+        cmd = (
+            "mkdir -p /sandbox/var;redis-server --unixsocket /sandbox/var/redis.sock "
+            "--port 6379 "
+            "--maxmemory 100000000 --daemonize yes"
+        )
 
         self._log_info(cmd)
         j.sal.process.execute(cmd)

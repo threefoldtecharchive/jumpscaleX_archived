@@ -6,6 +6,7 @@ import requests
 import time
 import random
 from Jumpscale import j
+
 JSConfigClient = j.application.JSBaseConfigClass
 
 
@@ -42,7 +43,7 @@ class OauthClient(JSConfigClient):
         if self._client:
             return self._client
 
-        if self.client_instance in ('itsyouonline', 'itsyou.online'):
+        if self.client_instance in ("itsyouonline", "itsyou.online"):
             self._client = ItsYouOnline(
                 self.addr,
                 self.accesstokenaddr,
@@ -52,7 +53,8 @@ class OauthClient(JSConfigClient):
                 self.redirect_url,
                 self.user_info_url,
                 self.logout_url,
-                self.instance)
+                self.instance,
+            )
         else:
             self._client = OauthInstance(
                 self.addr,
@@ -63,7 +65,8 @@ class OauthClient(JSConfigClient):
                 self.redirect_url,
                 self.user_info_url,
                 self.logout_url,
-                self.instance)
+                self.instance,
+            )
 
         return self._client
 
@@ -74,29 +77,18 @@ class AuthError(Exception):
 
 
 class UserInfo(object):
-
     def _init(self, username, emailaddress, groups):
         self.username = username
         self.emailaddress = emailaddress
         self.groups = groups
 
 
-class OauthInstance():
-
+class OauthInstance:
     def __init__(
-            self,
-            addr,
-            accesstokenaddr,
-            client_id,
-            secret,
-            scope,
-            redirect_url,
-            user_info_url,
-            logout_url,
-            instance):
+        self, addr, accesstokenaddr, client_id, secret, scope, redirect_url, user_info_url, logout_url, instance
+    ):
         if not addr:
-            raise RuntimeError(
-                "Failed to get oauth instance, no address provided")
+            raise RuntimeError("Failed to get oauth instance, no address provided")
         else:
             self.addr = addr
             self.client_id = client_id
@@ -106,72 +98,56 @@ class OauthInstance():
             self.secret = secret
             self.user_info_url = user_info_url
             self.logout_url = logout_url
-        self.state = ''.join(random.choice(
-            string.ascii_uppercase + string.digits) for _ in range(30))
+        self.state = "".join(random.choice(string.ascii_uppercase + string.digits) for _ in range(30))
 
     @property
     def url(self):
         params = {
-            'client_id': self.client_id,
-            'redirect_uri': self.redirect_url,
-            'state': self.state,
-            'response_type': 'code'}
+            "client_id": self.client_id,
+            "redirect_uri": self.redirect_url,
+            "state": self.state,
+            "response_type": "code",
+        }
         if self.scope:
-            params.update({'scope': self.scope})
-        return '%s?%s' % (self.addr, urllib.parse.urlencode(params))
+            params.update({"scope": self.scope})
+        return "%s?%s" % (self.addr, urllib.parse.urlencode(params))
 
     def getAccessToken(self, code, state):
         payload = {
-            'code': code,
-            'client_id': self.client_id,
-            'client_secret': self.secret,
-            'redirect_uri': self.redirect_url,
-            'grant_type': 'authorization_code',
-            'state': state}
-        result = requests.post(self.accesstokenaddress, data=payload, headers={
-            'Accept': 'application/json'})
+            "code": code,
+            "client_id": self.client_id,
+            "client_secret": self.secret,
+            "redirect_uri": self.redirect_url,
+            "grant_type": "authorization_code",
+            "state": state,
+        }
+        result = requests.post(self.accesstokenaddress, data=payload, headers={"Accept": "application/json"})
 
-        if not result.ok or 'error' in result.json():
-            msg = result.json()['error']
+        if not result.ok or "error" in result.json():
+            msg = result.json()["error"]
             self._log_error(msg)
             raise AuthError(msg)
         return result.json()
 
     def getUserInfo(self, accesstoken):
-        params = {'access_token': accesstoken['access_token']}
+        params = {"access_token": accesstoken["access_token"]}
         userinforesp = requests.get(self.user_info_url, params=params)
         if not userinforesp.ok:
-            msg = 'Failed to get user details'
+            msg = "Failed to get user details"
             self._log_error(msg)
             raise AuthError(msg)
 
         userinfo = userinforesp.json()
-        return UserInfo(userinfo['login'], userinfo['email'], ['user'])
+        return UserInfo(userinfo["login"], userinfo["email"], ["user"])
 
 
 class ItsYouOnline(OauthInstance):
     def __init__(
-            self,
-            addr,
-            accesstokenaddr,
-            client_id,
-            secret,
-            scope,
-            redirect_url,
-            user_info_url,
-            logout_url,
-            instance):
+        self, addr, accesstokenaddr, client_id, secret, scope, redirect_url, user_info_url, logout_url, instance
+    ):
         OauthInstance.__init__(
-            self,
-            addr,
-            accesstokenaddr,
-            client_id,
-            secret,
-            scope,
-            redirect_url,
-            user_info_url,
-            logout_url,
-            instance)
+            self, addr, accesstokenaddr, client_id, secret, scope, redirect_url, user_info_url, logout_url, instance
+        )
 
     def getAccessToken(self):
         return j.clients.itsyouonline.jwt_get(self.client_id, self.secret)
@@ -179,32 +155,29 @@ class ItsYouOnline(OauthInstance):
     def getUserInfo(self, accesstoken):
         import jose
         import jose.jwt
+
         jwt = accesstoken
-        headers = {'Authorization': 'bearer %s' % jwt}
+        headers = {"Authorization": "bearer %s" % jwt}
 
         jwtdata = jose.jwt.get_unverified_claims(jwt)
-        scopes = jwtdata['scope']
-        requestedscopes = set(self.scope.split(','))
-        if set(jwtdata['scope']).intersection(
-                requestedscopes) != requestedscopes:
-            msg = 'Failed to get the requested scope for %s' % self.client_id
+        scopes = jwtdata["scope"]
+        requestedscopes = set(self.scope.split(","))
+        if set(jwtdata["scope"]).intersection(requestedscopes) != requestedscopes:
+            msg = "Failed to get the requested scope for %s" % self.client_id
             raise AuthError(msg)
 
-        username = jwtdata['username']
-        userinfourl = self.user_info_url.rstrip('/') + "/%s/info" % username
+        username = jwtdata["username"]
+        userinfourl = self.user_info_url.rstrip("/") + "/%s/info" % username
         userinforesp = requests.get(userinfourl, headers=headers)
         if not userinforesp.ok:
-            msg = 'Failed to get user details'
+            msg = "Failed to get user details"
             raise AuthError(msg)
 
-        groups = ['user']
+        groups = ["user"]
         for scope in scopes:
-            parts = scope.split(':')
-            if len(parts) == 3 and parts[:2] == ['user', 'memberof']:
-                groups.append(parts[-1].split('.')[-1])
+            parts = scope.split(":")
+            if len(parts) == 3 and parts[:2] == ["user", "memberof"]:
+                groups.append(parts[-1].split(".")[-1])
 
         userinfo = userinforesp.json()
-        return UserInfo(
-            userinfo['username'],
-            userinfo['emailaddresses'][0]['emailaddress'],
-            groups)
+        return UserInfo(userinfo["username"], userinfo["emailaddresses"][0]["emailaddress"], groups)

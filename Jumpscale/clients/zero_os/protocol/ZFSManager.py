@@ -5,8 +5,8 @@ import yaml
 import re
 
 
-class ZFSManager():
-    PATH = '/var/cache/router.yaml'
+class ZFSManager:
+    PATH = "/var/cache/router.yaml"
 
     def __init__(self, client):
         self._client = client
@@ -58,7 +58,7 @@ class ZFSManager():
         return yaml.load(buf)
 
     def _valid_hash_range(self, hr):
-        m = re.match(r'^([0-9a-fA-F]+)(?::([0-9a-fA-F]+))$', hr)
+        m = re.match(r"^([0-9a-fA-F]+)(?::([0-9a-fA-F]+))$", hr)
         if m is None:
             raise ValueError('invalid hash range "%s"' % hr)
 
@@ -66,34 +66,30 @@ class ZFSManager():
         end = m.group(2)
 
         if end is not None and len(start) != len(end):
-            raise ValueError('invalid hash range start and end of different length')
+            raise ValueError("invalid hash range start and end of different length")
 
     def _valid_dest(self, dest):
         url = urllib.parse.urlparse(dest)
-        if url.scheme not in ['ardb', 'zdb', 'redis']:
+        if url.scheme not in ["ardb", "zdb", "redis"]:
             raise ValueError('invalid destination address "%s" only zdb, redis and ardb are supported' % dest)
 
     @config.setter
     def config(self, table):
 
-        for name, pool in table['pools'].items():
+        for name, pool in table["pools"].items():
             for hash_range, dest in pool.items():
                 self._valid_hash_range(hash_range)
                 self._valid_dest(dest)
 
-        for lookup in table['lookup']:
-            if lookup not in table['pools']:
+        for lookup in table["lookup"]:
+            if lookup not in table["pools"]:
                 raise ValueError("unknown pool name '%s' in lookup" % lookup)
 
-        for cache in table.get('cache', []):
-            if cache not in table['pools']:
+        for cache in table.get("cache", []):
+            if cache not in table["pools"]:
                 raise ValueError("unknown pool name '%s' in lookup" % lookup)
 
-        final = {
-            'pools': table['pools'],
-            'lookup': table['lookup'],
-            'cache': table.get('cache', []),
-        }
+        final = {"pools": table["pools"], "lookup": table["lookup"], "cache": table.get("cache", [])}
         buf = io.BytesIO(yaml.dump(final).encode())
         self._client.filesystem.upload(self.PATH, buf)
 
@@ -110,12 +106,4 @@ class ZFSManager():
         any entries in the routing table.
         """
 
-        self.config = {
-            'pools': {
-                'local': {
-                    '00:FF': destination,
-                }
-            },
-            'lookup': ['local'],
-            'cache': ['local'],
-        }
+        self.config = {"pools": {"local": {"00:FF": destination}}, "lookup": ["local"], "cache": ["local"]}

@@ -1,9 +1,9 @@
-
 import os
 import os.path
 import re
 import time
 import sys
+
 # import select
 # import threading
 # import queue
@@ -13,7 +13,7 @@ import signal
 from subprocess import Popen
 import select
 
-#for execute
+# for execute
 from fcntl import fcntl, F_GETFL, F_SETFL
 from os import O_NONBLOCK, read
 
@@ -23,21 +23,19 @@ JSBASE = j.application.JSBaseClass
 
 
 class SystemProcess(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.sal.process"
         JSBASE.__init__(self)
-        self._isunix=None
+        self._isunix = None
 
     @property
     def isUnix(self):
-        if self._isunix==None:
-            if 'posix' in sys.builtin_module_names:
+        if self._isunix == None:
+            if "posix" in sys.builtin_module_names:
                 self._isunix = True
             else:
                 self._isunix = False
         return self._isunix
-
 
     def executeWithoutPipe(self, command, die=True, printCommandToStdout=False):
         """
@@ -59,15 +57,25 @@ class SystemProcess(j.application.JSBaseClass):
         exitcode = os.system(command)
 
         if exitcode != 0 and die:
-            self._log_error(
-                "command: [%s]\nexitcode:%s" % (command, exitcode))
-            raise j.exceptions.RuntimeError(
-                "Error during execution!\nCommand: %s\nExitcode: %s" % (command, exitcode))
+            self._log_error("command: [%s]\nexitcode:%s" % (command, exitcode))
+            raise j.exceptions.RuntimeError("Error during execution!\nCommand: %s\nExitcode: %s" % (command, exitcode))
 
         return exitcode
 
-    def execute(self, command, showout=True, useShell=True, cwd=None, timeout=600,die=True, async_=False,
-                env=None,interactive=False, replace=False,args={}):
+    def execute(
+        self,
+        command,
+        showout=True,
+        useShell=True,
+        cwd=None,
+        timeout=600,
+        die=True,
+        async_=False,
+        env=None,
+        interactive=False,
+        replace=False,
+        args={},
+    ):
         """
 
         :param command:
@@ -80,16 +88,33 @@ class SystemProcess(j.application.JSBaseClass):
         :param env: is arguments which will be replaced om the command core.text_replace(... feature)
         :return: (rc,out,err)
         """
-        if args!={} and args is not None:
-            command = j.core.tools.text_replace(command,args=args)
-        return j.core.tools.execute(command=command, showout=showout, useShell=useShell, cwd=cwd,
-                                          timeout=timeout,die=die, async_=async_,
-                                          env=env,interactive=interactive,replace=replace)
+        if args != {} and args is not None:
+            command = j.core.tools.text_replace(command, args=args)
+        return j.core.tools.execute(
+            command=command,
+            showout=showout,
+            useShell=useShell,
+            cwd=cwd,
+            timeout=timeout,
+            die=die,
+            async_=async_,
+            env=env,
+            interactive=interactive,
+            replace=replace,
+        )
 
-
-    def executeAsyncIO(self, command, outMethod="print", errMethod="print", timeout=600,
-                       buffersize=5000000, useShell=True, cwd=None, die=True,
-                       captureOutput=True):
+    def executeAsyncIO(
+        self,
+        command,
+        outMethod="print",
+        errMethod="print",
+        timeout=600,
+        buffersize=5000000,
+        useShell=True,
+        cwd=None,
+        die=True,
+        captureOutput=True,
+    ):
         """
         @outmethod gets a byte string as input, deal with it e.g. print
         same for errMethod
@@ -103,8 +128,9 @@ class SystemProcess(j.application.JSBaseClass):
 
         if cwd is not None:
             if not useShell:
-                raise j.exceptions.Input(message="when using cwd, useshell needs to be used",
-                                         level=1, source="", tags="", msgpub="")
+                raise j.exceptions.Input(
+                    message="when using cwd, useshell needs to be used", level=1, source="", tags="", msgpub=""
+                )
             if "cd %s;" % cwd not in command:
                 command = "cd %s;%s" % (cwd, command)
 
@@ -114,8 +140,10 @@ class SystemProcess(j.application.JSBaseClass):
 
         # if not specified then print to stdout/err
         if outMethod == "print":
+
             def outMethod(x):
                 print("STDOUT: %s" % x.decode("UTF-8").rstrip())
+
             # outMethod = lambda x: sys.stdout.buffer.write(x)  #DOESN't work, don't know why
         if errMethod == "print":
             # errMethod = lambda x: sys.stdout.buffer.write(x)
@@ -135,9 +163,9 @@ class SystemProcess(j.application.JSBaseClass):
 
         async def _stream_subprocess(cmd, stdout_cb, stderr_cb, timeout=1, buffersize=500000, captureOutput=True):
 
-            process = await asyncio.create_subprocess_exec(*cmd,
-                                                           stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE,
-                                                           limit=buffersize)
+            process = await asyncio.create_subprocess_exec(
+                *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE, limit=buffersize
+            )
 
             if captureOutput:
                 resout = []
@@ -148,10 +176,11 @@ class SystemProcess(j.application.JSBaseClass):
 
             rc = 0
 
-            done, pending = await asyncio.wait([
-                _read_stream(process.stdout, stdout_cb, resout),
-                _read_stream(process.stderr, stderr_cb, reserr)
-            ], timeout=timeout, return_when=asyncio.ALL_COMPLETED)
+            done, pending = await asyncio.wait(
+                [_read_stream(process.stdout, stdout_cb, resout), _read_stream(process.stderr, stderr_cb, reserr)],
+                timeout=timeout,
+                return_when=asyncio.ALL_COMPLETED,
+            )
 
             if pending != set():
                 # timeout happened
@@ -177,13 +206,9 @@ class SystemProcess(j.application.JSBaseClass):
 
         rc, resout, reserr = loop.run_until_complete(
             _stream_subprocess(
-                cmds,
-                outMethod,
-                errMethod,
-                timeout=timeout,
-                buffersize=buffersize,
-                captureOutput=captureOutput
-            ))
+                cmds, outMethod, errMethod, timeout=timeout, buffersize=buffersize, captureOutput=captureOutput
+            )
+        )
 
         # TODO: *1 if I close this then later on there is problem, says loop is closed
         # # if loop.is_closed() == False:
@@ -202,11 +227,14 @@ class SystemProcess(j.application.JSBaseClass):
             out = "\n".join([item.rstrip().decode("UTF-8") for item in resout])
             err = "\n".join([item.rstrip().decode("UTF-8") for item in reserr])
             if rc == 124:
-                raise RuntimeError("\nOUT:\n%s\nSTDERR:\n%s\nERROR: Cannot execute (TIMEOUT):'%s'\nreturncode (%s)" %
-                                   (out, err, command, rc))
+                raise RuntimeError(
+                    "\nOUT:\n%s\nSTDERR:\n%s\nERROR: Cannot execute (TIMEOUT):'%s'\nreturncode (%s)"
+                    % (out, err, command, rc)
+                )
             else:
-                raise RuntimeError("\nOUT:\n%s\nSTDERR:\n%s\nERROR: Cannot execute:'%s'\nreturncode (%s)" %
-                                   (out, err, command, rc))
+                raise RuntimeError(
+                    "\nOUT:\n%s\nSTDERR:\n%s\nERROR: Cannot execute:'%s'\nreturncode (%s)" % (out, err, command, rc)
+                )
 
         return rc, resout, reserr
 
@@ -369,12 +397,13 @@ class SystemProcess(j.application.JSBaseClass):
            For windows, the process information is retrieved and it is double checked that the process is python.exe
            or pythonw.exe
         """
-        self._log_info('Checking whether process with PID %d is alive' % pid)
+        self._log_info("Checking whether process with PID %d is alive" % pid)
         if self.isUnix:
             # Unix strategy: send signal SIGCONT to process pid
             # Achilles heal: another process which happens to have the same pid could be running
             # and incorrectly considered as this process
             import signal
+
             try:
                 os.kill(pid, 0)
             except OSError:
@@ -397,8 +426,8 @@ class SystemProcess(j.application.JSBaseClass):
         @param pid: pid of the process to kill
         @param sig: signal. If no signal is specified signal.SIGKILL is used
         """
-        pid=int(pid)
-        self._log_debug('Killing process %d' % pid)
+        pid = int(pid)
+        self._log_debug("Killing process %d" % pid)
         if self.isUnix:
             try:
                 if sig is None:
@@ -407,16 +436,15 @@ class SystemProcess(j.application.JSBaseClass):
                 os.kill(pid, sig)
 
             except OSError as e:
-                raise j.exceptions.RuntimeError(
-                    "Could not kill process with id %s.\n%s" % (pid, e))
+                raise j.exceptions.RuntimeError("Could not kill process with id %s.\n%s" % (pid, e))
 
         elif j.core.platformtype.myplatform.isWindows:
             import win32api
             import win32process
             import win32con
+
             try:
-                handle = win32api.OpenProcess(
-                    win32con.PROCESS_TERMINATE, False, pid)
+                handle = win32api.OpenProcess(win32con.PROCESS_TERMINATE, False, pid)
                 win32process.TerminateProcess(handle, 0)
             except BaseException:
                 raise
@@ -444,9 +472,7 @@ class SystemProcess(j.application.JSBaseClass):
             self._log_info("kill:%s (%s)" % (name, pid))
             self.kill(pid)
         if self.psfind(name):
-            raise RuntimeError(
-                "Could not kill:%s, is still, there check if its not autorestarting." %
-                name)
+            raise RuntimeError("Could not kill:%s, is still, there check if its not autorestarting." % name)
 
     def getPidsByFilterSortable(self, filterstr, sortkey=None):
         """
@@ -471,8 +497,7 @@ class SystemProcess(j.application.JSBaseClass):
 
         """
         if sortkey is not None:
-            cmd = "ps aux --sort={sortkey} | grep '{filterstr}'".format(
-                filterstr=filterstr, sortkey=sortkey)
+            cmd = "ps aux --sort={sortkey} | grep '{filterstr}'".format(filterstr=filterstr, sortkey=sortkey)
         else:
             cmd = "ps ax | grep '{filterstr}'".format(filterstr=filterstr)
         rcode, out, err = j.sal.process.execute(cmd)
@@ -523,7 +548,8 @@ class SystemProcess(j.application.JSBaseClass):
             found = self.getPidsByFilter(filterstr)
         if len(found) != nrtimes:
             raise j.exceptions.RuntimeError(
-                "could not start %s, found %s nr of instances. Needed %s." % (cmd, len(found), nrtimes))
+                "could not start %s, found %s nr of instances. Needed %s." % (cmd, len(found), nrtimes)
+            )
 
     def checkstop(self, cmd, filterstr, retry=1, nrinstances=0):
         """
@@ -545,8 +571,7 @@ class SystemProcess(j.application.JSBaseClass):
             found = self.getPidsByFilter(filterstr)
 
         if len(found) != 0:
-            raise j.exceptions.RuntimeError(
-                "could not stop %s, found %s nr of instances." % (cmd, len(found)))
+            raise j.exceptions.RuntimeError("could not stop %s, found %s nr of instances." % (cmd, len(found)))
 
     def getProcessPid(self, process, match_predicate=None):
         """Get process ID(s) for a given process
@@ -565,22 +590,23 @@ class SystemProcess(j.application.JSBaseClass):
         # default match predicate
         # why aren't we using psutil ??
         def default_predicate(given, target):
-            return given.find(target.strip()) != -1 
+            return given.find(target.strip()) != -1
+
         if match_predicate is None:
             match_predicate = default_predicate
 
         if process is None:
             raise j.exceptions.RuntimeError("process cannot be None")
         if self.isUnix:
-            
+
             # Need to set $COLUMNS such that we can grep full commandline
             # Note: apparently this does not work on solaris
             command = "bash -c 'env COLUMNS=300 ps -ef'"
-            (exitcode, output, err) = j.sal.process.execute(
-                command, die=False, showout=False)
+            (exitcode, output, err) = j.sal.process.execute(command, die=False, showout=False)
             pids = list()
             co = re.compile(
-                "\s*(?P<uid>[a-z]+)\s+(?P<pid>[0-9]+)\s+(?P<ppid>[0-9]+)\s+(?P<cpu>[0-9]+)\s+(?P<stime>\S+)\s+(?P<tty>\S+)\s+(?P<time>\S+)\s+(?P<cmd>.+)")
+                "\s*(?P<uid>[a-z]+)\s+(?P<pid>[0-9]+)\s+(?P<ppid>[0-9]+)\s+(?P<cpu>[0-9]+)\s+(?P<stime>\S+)\s+(?P<tty>\S+)\s+(?P<time>\S+)\s+(?P<cmd>.+)"
+            )
             for line in output.splitlines():
                 match = co.search(line)
                 if not match:
@@ -589,29 +615,29 @@ class SystemProcess(j.application.JSBaseClass):
                 # print "%s"%line
                 # print gd["cmd"]
                 # print process
-                if isinstance(process, int) and gd['pid'] == process:
-                    pids.append(gd['pid'])
-                elif match_predicate(gd['cmd'], process):
-                    pids.append(gd['pid'])
+                if isinstance(process, int) and gd["pid"] == process:
+                    pids.append(gd["pid"])
+                elif match_predicate(gd["cmd"], process):
+                    pids.append(gd["pid"])
             pids = [int(item) for item in pids]
             return pids
         else:
-            raise NotImplementedError(
-                "getProcessPid is only implemented for unix")
+            raise NotImplementedError("getProcessPid is only implemented for unix")
 
     def getMyProcessObject(self):
         return self.getProcessObject(os.getpid())
 
     def getProcessObject(self, pid):
         import psutil
+
         for process in psutil.process_iter():
             if process.pid == pid:
                 return process
-        raise j.exceptions.RuntimeError(
-            "Could not find process with pid:%s" % pid)
+        raise j.exceptions.RuntimeError("Could not find process with pid:%s" % pid)
 
     def getProcessPidsFromUser(self, user):
         import psutil
+
         result = []
         for process in psutil.process_iter():
             if process.username == user:
@@ -624,6 +650,7 @@ class SystemProcess(j.application.JSBaseClass):
 
     def getSimularProcesses(self):
         import psutil
+
         myprocess = self.getMyProcessObject()
         result = []
         for item in psutil.process_iter():
@@ -643,8 +670,7 @@ class SystemProcess(j.application.JSBaseClass):
         @param min: (int) minimal threads that should run.
         @return True if ok
         """
-        self._log_debug(
-            'Checking whether at least %d processes %s are running' % (min, process))
+        self._log_debug("Checking whether at least %d processes %s are running" % (min, process))
         if self.isUnix:
             pids = self.getProcessPid(process)
             if len(pids) >= min:
@@ -663,20 +689,16 @@ class SystemProcess(j.application.JSBaseClass):
         @param process: (str) the process that should have the pid
         @return status: (int) 0 when ok, 1 when not ok.
         """
-        self._log_info(
-            'Checking whether process with PID %d is actually %s' % (pid, process))
+        self._log_info("Checking whether process with PID %d is actually %s" % (pid, process))
         if self.isUnix:
             command = "ps -p %i" % pid
-            (exitcode, output, err) = j.sal.process.execute(
-                command, die=False, showout=False)
+            (exitcode, output, err) = j.sal.process.execute(command, die=False, showout=False)
             i = 0
             for line in output.splitlines():
                 if j.core.platformtype.myplatform.isLinux or j.core.platformtype.myplatform.isESX():
-                    match = re.match(
-                        ".{23}.*(\s|\/)%s(\s|$).*" % process, line)
+                    match = re.match(".{23}.*(\s|\/)%s(\s|$).*" % process, line)
                 elif j.core.platformtype.myplatform.isSolaris():
-                    match = re.match(
-                        ".{22}.*(\s|\/)%s(\s|$).*" % process, line)
+                    match = re.match(".{22}.*(\s|\/)%s(\s|$).*" % process, line)
                 if match:
                     i = i + 1
             if i >= 1:
@@ -747,8 +769,7 @@ class SystemProcess(j.application.JSBaseClass):
             return None
         if j.core.platformtype.myplatform.isLinux:
             command = "netstat -ntulp | grep ':%s '" % port
-            (exitcode, output, err) = j.sal.process.execute(
-                command, die=False, showout=False)
+            (exitcode, output, err) = j.sal.process.execute(command, die=False, showout=False)
 
             # Not found if grep's exitcode  > 0
             if not exitcode == 0:
@@ -763,16 +784,14 @@ class SystemProcess(j.application.JSBaseClass):
             for line in output.splitlines():
                 match = re.match(regex, line)
                 if not match:
-                    raise j.exceptions.RuntimeError(
-                        "Unexpected output from netstat -tanup: [%s]" % line)
+                    raise j.exceptions.RuntimeError("Unexpected output from netstat -tanup: [%s]" % line)
                 pid_of_line = match.groups()[0]
                 if pid == -1:
                     pid = pid_of_line
                 else:
                     if pid != pid_of_line:
 
-                        raise j.exceptions.RuntimeError(
-                            "Found multiple pids listening to port [%s]. Error." % port)
+                        raise j.exceptions.RuntimeError("Found multiple pids listening to port [%s]. Error." % port)
             if pid == -1:
                 # No process found listening on this port
                 return None
@@ -780,25 +799,25 @@ class SystemProcess(j.application.JSBaseClass):
             # Need to set $COLUMNS such that we can grep full commandline
             # Note: apparently this does not work on solaris
             command = "bash -c 'env COLUMNS=300 ps -ef'"
-            (exitcode, output, err) = j.sal.process.execute(
-                command, die=False, showout=False)
+            (exitcode, output, err) = j.sal.process.execute(command, die=False, showout=False)
             co = re.compile(
-                "\s*(?P<uid>[a-z]+)\s+(?P<pid>[0-9]+)\s+(?P<ppid>[0-9]+)\s+(?P<cpu>[0-9]+)\s+(?P<stime>\S+)\s+(?P<tty>\S+)\s+(?P<time>\S+)\s+(?P<cmd>.+)")
+                "\s*(?P<uid>[a-z]+)\s+(?P<pid>[0-9]+)\s+(?P<ppid>[0-9]+)\s+(?P<cpu>[0-9]+)\s+(?P<stime>\S+)\s+(?P<tty>\S+)\s+(?P<time>\S+)\s+(?P<cmd>.+)"
+            )
             for line in output.splitlines():
                 match = co.search(line)
                 if not match:
                     continue
                 gd = match.groupdict()
-                if gd['pid'] == pid:
-                    return gd['cmd'].strip()
+                if gd["pid"] == pid:
+                    return gd["cmd"].strip()
             return None
         else:
             # TODO: needs to be validated on mac & windows
             import psutil
+
             for process in psutil.process_iter():
                 try:
-                    cc = [x for x in process.connections() if x.status ==
-                          psutil.CONN_LISTEN]
+                    cc = [x for x in process.connections() if x.status == psutil.CONN_LISTEN]
                 except Exception as e:
                     if str(e).find("psutil.AccessDenied") == -1:
                         raise j.exceptions.RuntimeError(str(e))
@@ -832,11 +851,11 @@ class SystemProcess(j.application.JSBaseClass):
         return llist
 
     def getEnviron(self, pid):
-        environ = j.sal.fs.readFile('/proc/%s/environ' % pid)
+        environ = j.sal.fs.readFile("/proc/%s/environ" % pid)
         env = dict()
-        for line in environ.split('\0'):
-            if '=' in line:
-                key, value = line.split('=', 1)
+        for line in environ.split("\0"):
+            if "=" in line:
+                key, value = line.split("=", 1)
                 env[key] = value
         return env
 

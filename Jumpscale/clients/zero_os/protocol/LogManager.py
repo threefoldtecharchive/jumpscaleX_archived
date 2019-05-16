@@ -2,21 +2,13 @@ from . import typchk
 from Jumpscale import j
 
 
+class LogManager:
+    _level_chk = typchk.Checker({"level": typchk.Enum("CRITICAL", "ERROR", "WARNING", "NOTICE", "INFO", "DEBUG")})
 
-
-class LogManager():
-    _level_chk = typchk.Checker({
-        'level': typchk.Enum("CRITICAL", "ERROR", "WARNING", "NOTICE", "INFO", "DEBUG"),
-    })
-
-    _subscribe_chk = typchk.Checker({
-        'queue': str,
-        'levels': [int],
-    })
+    _subscribe_chk = typchk.Checker({"queue": str, "levels": [int]})
 
     def __init__(self, client):
         self._client = client
-
 
     def set_level(self, level):
         """
@@ -25,18 +17,16 @@ class LogManager():
 
         :param level: the level to be set can be one of ("CRITICAL", "ERROR", "WARNING", "NOTICE", "INFO", "DEBUG")
         """
-        args = {
-            'level': level,
-        }
+        args = {"level": level}
         self._level_chk.check(args)
 
-        return self._client.json('logger.set_level', args)
+        return self._client.json("logger.set_level", args)
 
     def reopen(self):
         """
         Reopen log file (rotate)
         """
-        return self._client.json('logger.reopen', {})
+        return self._client.json("logger.reopen", {})
 
     def subscribe(self, queue=None, *levels):
         """
@@ -50,14 +40,11 @@ class LogManager():
         :param levels:
         :return: queue name to pull from
         """
-        args = {
-            'queue': queue,
-            'levels': list(levels),
-        }
+        args = {"queue": queue, "levels": list(levels)}
 
         self._subscribe_chk.check(args)
 
-        return self._client.json('logger.subscribe', args)
+        return self._client.json("logger.subscribe", args)
 
     def unsubscribe(self, queue):
         """
@@ -67,4 +54,4 @@ class LogManager():
         :param queue: Queue name as returned from self.subscribe
         :return:
         """
-        return self._client.json('logger.unsubscribe', {'queue': queue})
+        return self._client.json("logger.unsubscribe", {"queue": queue})

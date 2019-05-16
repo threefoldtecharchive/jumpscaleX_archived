@@ -1,9 +1,9 @@
 import pickle
 import time
 
-class Cache(object):
 
-    def __init__(self,j):
+class Cache(object):
+    def __init__(self, j):
         self._cache = {}
         self._j = j
 
@@ -39,7 +39,7 @@ class Cache(object):
         c.reset()
         assert c.exists("something") == False
         c.set("something", "OK")
-        
+
         self.reset()
         assert c.exists("something") == False
 
@@ -66,20 +66,15 @@ class Cache(object):
             if "Cannot get 'somethingElse' from cache" not in str(e):
                 raise RuntimeError("error in test. non expected output")
 
-        
         time.sleep(2)
 
         assert c.get("somethingElse", return2, expire=1) == 2
         # still needs to be 2
         assert c.get("somethingElse", return3, expire=1) == 2
         time.sleep(2)
-        assert c.get("somethingElse", return3,expire=1) == 3  # now needs to be 3
+        assert c.get("somethingElse", return3, expire=1) == 3  # now needs to be 3
 
-        assert c.get(
-            "somethingElse",
-            return2,
-            expire=100,
-            refresh=True) == 2
+        assert c.get("somethingElse", return2, expire=100, refresh=True) == 2
         assert c.exists("somethingElse")
         time.sleep(2)
         assert c.exists("somethingElse")
@@ -93,7 +88,6 @@ class Cache(object):
         js_shell 'j.core.cache.test()'
         """
 
-        
         # make sure its redis
         self._j.clients.redis.core_get()
         self._j.core.db_reset()
@@ -101,7 +95,6 @@ class Cache(object):
         self._testAll(c)
         self._j.tools.tutorial.cache()
         print("CACHE ALL TESTS DONE")
-
 
     def test_without_redis(self):
         """ js_shell 'j.core.cache.test_without_redis()'
@@ -113,16 +106,14 @@ class Cache(object):
         # now stop redis...
         self._j.clients.redis.kill()
         self._j.core.db_reset()
-        
+
         c = self.get("test", expiration=1)
         self._testAll(c)
         # ... and restart it again
         self._j.clients.redis.start()
-        
 
 
 class CacheCategory(object):
-
     def __init__(self, j, id, expiration=3600, reset=False):
         self._j = j
         self.id = id
@@ -141,8 +132,8 @@ class CacheCategory(object):
     def set(self, key, value, expire=None):
         if expire is None:
             expire = self.expiration
-        data=pickle.dumps((self._j.data.time.epoch+expire,value))
-        self.db.set(self._key_get(key),data, ex=expire)
+        data = pickle.dumps((self._j.data.time.epoch + expire, value))
+        self.db.set(self._key_get(key), data, ex=expire)
 
     def exists(self, key):
         return self.db.get(self._key_get(key)) is not None
@@ -167,12 +158,12 @@ class CacheCategory(object):
             # check if key exists then return (only when no refresh)
             res = self.db.get(self._key_get(key))
             if res is not None:
-                expireEpoch,res = pickle.loads(res)
-                if self._j.data.time.epoch>expireEpoch:
+                expireEpoch, res = pickle.loads(res)
+                if self._j.data.time.epoch > expireEpoch:
                     self.delete(key)
                     res = None
                 else:
-                    print("cache hit:%s"%key)
+                    print("cache hit:%s" % key)
                     return res
 
         if expire is None:
@@ -181,15 +172,15 @@ class CacheCategory(object):
         print("key:%s res:%s" % (key, res))
         if method is None:
             raise self._j.exceptions.RuntimeError("Cannot get '%s' from cache,not found & method None" % key)
-        print("cache miss:%s (%s)"%(key,method))
-        nr=0
-        while nr<retry:
+        print("cache miss:%s (%s)" % (key, method))
+        nr = 0
+        while nr < retry:
             try:
                 val = method(**kwargs)
                 break
             except Exception as e:
-                nr+=1
-                if nr==retry:
+                nr += 1
+                if nr == retry:
                     if die:
                         raise e
                     else:
@@ -201,14 +192,12 @@ class CacheCategory(object):
         self.set(key, val, expire=expire)
         return val
 
-
     def reset(self):
         for item in self.list():
             self.delete(item)
 
     def list(self):
-        return [item.decode().split(":")[-1]
-                for item in self.db.keys("cache:%s:*" % self.id)]
+        return [item.decode().split(":")[-1] for item in self.db.keys("cache:%s:*" % self.id)]
 
     def __str__(self):
         res = {}

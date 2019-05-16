@@ -66,23 +66,23 @@ class EmailClient(JSConfigClient):
             server.login(self._username, self._password)
 
         if mimetype is None:
-            if '<html>' in message:
-                mimetype = 'html'
+            if "<html>" in message:
+                mimetype = "html"
             else:
-                mimetype = 'plain'
+                mimetype = "plain"
 
         msg = MIMEText(message, mimetype)
 
-        msg['Subject'] = subject
-        msg['From'] = sender
-        msg['To'] = ','.join(recipients)
+        msg["Subject"] = subject
+        msg["From"] = sender
+        msg["To"] = ",".join(recipients)
 
         if files:
             txtmsg = msg
             msg = MIMEMultipart()
-            msg['Subject'] = subject
-            msg['From'] = sender
-            msg['To'] = ','.join(recipients)
+            msg["Subject"] = subject
+            msg["From"] = sender
+            msg["To"] = ",".join(recipients)
             msg.attach(txtmsg)
             for fl in files:
                 # Guess the content type based on the file's extension.  Encoding
@@ -94,13 +94,13 @@ class EmailClient(JSConfigClient):
                 if ctype is None or encoding is not None:
                     # No guess could be made, or the file is encoded (compressed), so
                     # use a generic bag-of-bits type.
-                    ctype = 'application/octet-stream'
-                maintype, subtype = ctype.split('/', 1)
-                if maintype == 'text':
+                    ctype = "application/octet-stream"
+                maintype, subtype = ctype.split("/", 1)
+                if maintype == "text":
                     attachement = MIMEText(content, _subtype=subtype)
-                elif maintype == 'image':
+                elif maintype == "image":
                     attachement = MIMEImage(content, _subtype=subtype)
-                elif maintype == 'audio':
+                elif maintype == "audio":
                     attachement = MIMEAudio(content, _subtype=subtype)
                 else:
                     attachement = MIMEBase(maintype, subtype)
@@ -108,8 +108,7 @@ class EmailClient(JSConfigClient):
                     # Encode the payload using Base64
                     encoders.encode_base64(attachement)
                 # Set the filename parameter
-                attachement.add_header(
-                    'Content-Disposition', 'attachment', filename=filename)
+                attachement.add_header("Content-Disposition", "attachment", filename=filename)
                 msg.attach(attachement)
         server.sendmail(sender, recipients, msg.as_string())
         server.close()

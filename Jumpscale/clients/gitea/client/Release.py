@@ -10,8 +10,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class Release(object):
     """
     auto-generated. don't touch.
@@ -41,44 +39,50 @@ class Release(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Release'
+        class_name = "Release"
         data = json or kwargs
 
         # set attributes
         data_types = [User]
-        self.author = client_support.set_property('author', data, data_types, False, [], False, False, class_name)
+        self.author = client_support.set_property("author", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.body = client_support.set_property('body', data, data_types, False, [], False, False, class_name)
+        self.body = client_support.set_property("body", data, data_types, False, [], False, False, class_name)
         data_types = [datetime]
         self.created_at = client_support.set_property(
-            'created_at', data, data_types, False, [], False, False, class_name)
+            "created_at", data, data_types, False, [], False, False, class_name
+        )
         data_types = [bool]
-        self.draft = client_support.set_property('draft', data, data_types, False, [], False, False, class_name)
+        self.draft = client_support.set_property("draft", data, data_types, False, [], False, False, class_name)
         data_types = [int]
-        self.id = client_support.set_property('id', data, data_types, False, [], False, False, class_name)
+        self.id = client_support.set_property("id", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.name = client_support.set_property('name', data, data_types, False, [], False, False, class_name)
+        self.name = client_support.set_property("name", data, data_types, False, [], False, False, class_name)
         data_types = [bool]
         self.prerelease = client_support.set_property(
-            'prerelease', data, data_types, False, [], False, False, class_name)
+            "prerelease", data, data_types, False, [], False, False, class_name
+        )
         data_types = [datetime]
         self.published_at = client_support.set_property(
-            'published_at', data, data_types, False, [], False, False, class_name)
+            "published_at", data, data_types, False, [], False, False, class_name
+        )
         data_types = [string_types]
-        self.tag_name = client_support.set_property('tag_name', data, data_types, False, [], False, False, class_name)
+        self.tag_name = client_support.set_property("tag_name", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
         self.tarball_url = client_support.set_property(
-            'tarball_url', data, data_types, False, [], False, False, class_name)
+            "tarball_url", data, data_types, False, [], False, False, class_name
+        )
         data_types = [string_types]
         self.target_commitish = client_support.set_property(
-            'target_commitish', data, data_types, False, [], False, False, class_name)
+            "target_commitish", data, data_types, False, [], False, False, class_name
+        )
         data_types = [string_types]
-        self.url = client_support.set_property('url', data, data_types, False, [], False, False, class_name)
+        self.url = client_support.set_property("url", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
         self.zipball_url = client_support.set_property(
-            'zipball_url', data, data_types, False, [], False, False, class_name)
+            "zipball_url", data, data_types, False, [], False, False, class_name
+        )
 
     def __str__(self):
         return self.as_json(indent=4)

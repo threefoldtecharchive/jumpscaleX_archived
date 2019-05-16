@@ -23,7 +23,7 @@ class BCDBFactory(j.application.JSBaseClass):
 
     def new(self, name, zdbclient=None, reset=False):
 
-        if reset==False and name in self.bcdb_instances:
+        if reset == False and name in self.bcdb_instances:
             return self.bcdb_instances[name]
 
         self._log_debug("new bcdb:%s" % name)
@@ -90,9 +90,7 @@ class BCDBFactory(j.application.JSBaseClass):
 
             cmd = "kosmos 'j.data.bcdb.redis_server_start(%s)'" % args
 
-            cmdcmd = j.tools.startupcmd.get(
-                name="bcdbredis_%s" % port, cmd=cmd, ports=[port]
-            )
+            cmdcmd = j.tools.startupcmd.get(name="bcdbredis_%s" % port, cmd=cmd, ports=[port])
 
             cmdcmd.start()
 

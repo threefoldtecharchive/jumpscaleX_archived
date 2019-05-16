@@ -13,8 +13,18 @@ class RedisConfigFactory(JSConfigBase):
     def _init(self):
         self._tree = None
 
-    def get(self, name=None, id=None, die=True, create_new=True, childclass_name=None, ssl_keyfile=None, ssl_certfile=None, **kwargs):
-        '''Create a new redis config client
+    def get(
+        self,
+        name=None,
+        id=None,
+        die=True,
+        create_new=True,
+        childclass_name=None,
+        ssl_keyfile=None,
+        ssl_certfile=None,
+        **kwargs,
+    ):
+        """Create a new redis config client
 
         :param id: id of the obj to find, is a unique id
         :param name: of the object, can be empty when searching based on id or the search criteria (kwargs)
@@ -28,14 +38,16 @@ class RedisConfigFactory(JSConfigBase):
         :param ssl_certfile: [description], defaults to None
         :type ssl_certfile: [type], optional
         :return: client
-        '''
+        """
         if ssl_keyfile and ssl_certfile:
             # check if its a path, if yes load
-            kwargs['ssl'] = True
+            kwargs["ssl"] = True
             # means path will be used for sslkey at redis client
-            kwargs['sslkey'] = True
+            kwargs["sslkey"] = True
 
-        r = JSConfigBase.get(self, name=name, id=id, die=die, create_new=create_new, childclass_name=childclass_name, **kwargs)
+        r = JSConfigBase.get(
+            self, name=name, id=id, die=die, create_new=create_new, childclass_name=childclass_name, **kwargs
+        )
 
         if ssl_keyfile and ssl_certfile:
             # check if its a path, if yes safe the key paths into config

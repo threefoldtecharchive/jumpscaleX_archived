@@ -6,7 +6,6 @@ JSConfigClient = j.application.JSBaseConfigClass
 
 
 class MySQLClient(JSConfigClient):
-
     def _init(self, cl):
         self.client = cl
 
@@ -16,13 +15,13 @@ class MySQLClient(JSConfigClient):
     def _mysqlTimeToEpoch(self, mysql_time):
         if mysql_time is None:
             return 0
-        mysql_time_struct = time.strptime(mysql_time, '%Y-%m-%d %H:%M:%S')
+        mysql_time_struct = time.strptime(mysql_time, "%Y-%m-%d %H:%M:%S")
         mysql_time_epoch = calendar.timegm(mysql_time_struct)
         return mysql_time_epoch
 
     def _eptochToMysqlTime(self, time_epoch):
         time_struct = time.gmtime(time_epoch)
-        time_formatted = time.strftime('%Y-%m-%d %H:%M:%S', time_struct)
+        time_formatted = time.strftime("%Y-%m-%d %H:%M:%S", time_struct)
         return time_formatted
 
     def deleteRow(self, tablename, whereclause):
@@ -96,8 +95,7 @@ class MySQLClient(JSConfigClient):
                     elif col == "true":
                         col = False
                     else:
-                        raise j.exceptions.RuntimeError(
-                            "Could not decide what value for bool:%s" % col)
+                        raise j.exceptions.RuntimeError("Could not decide what value for bool:%s" % col)
                 elif colname.find("html__") == 0:
                     colname = colname[6:]
                     col = self._html2text(row[colnr])

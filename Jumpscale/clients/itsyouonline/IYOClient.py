@@ -4,7 +4,7 @@ import requests
 try:
     import jose.jwt
 except ImportError:
-    raise RuntimeError('jose not installed ')
+    raise RuntimeError("jose not installed ")
 
 from jose import jwt
 from time import time
@@ -41,9 +41,11 @@ class IYOClient(j.application.JSBaseConfigClass):
         self.reset()
         if self.application_id is "" or self.secret is "":
             self.application_id = j.tools.console.askString(
-                "Please provide itsyouonline application id:\ncan find on https://itsyou.online/#/settings\n")
+                "Please provide itsyouonline application id:\ncan find on https://itsyou.online/#/settings\n"
+            )
             self.secret = j.tools.console.askString(
-                "Please provide itsyouonline secret:\ncan find on https://itsyou.online/#/settings\n")
+                "Please provide itsyouonline secret:\ncan find on https://itsyou.online/#/settings\n"
+            )
             self.save()
 
     @property
@@ -60,7 +62,7 @@ class IYOClient(j.application.JSBaseConfigClass):
             self._api = self.client.api
             if self._lastjwt is None:
                 self.jwt_get()
-            self._api.session.headers.update({"Authorization": 'bearer {}'.format(self._lastjwt)})
+            self._api.session.headers.update({"Authorization": "bearer {}".format(self._lastjwt)})
 
         return self._api
 
@@ -130,23 +132,23 @@ class IYOClient(j.application.JSBaseConfigClass):
         """
         if scope is None:
             scope = ""
-        url = urllib.parse.urljoin(self.baseurl, '/v1/oauth/access_token')
+        url = urllib.parse.urljoin(self.baseurl, "/v1/oauth/access_token")
         if refreshable:
             if scope.find("offline_access") == -1:
-                scope += ', offline_access'
+                scope += ", offline_access"
         params = {
-            'grant_type': 'client_credentials',
-            'client_id': self.application_id,
-            'client_secret': self.secret,
-            'response_type': 'id_token',
-            'scope': scope,
-            'validity': validity or None
+            "grant_type": "client_credentials",
+            "client_id": self.application_id,
+            "client_secret": self.secret,
+            "response_type": "id_token",
+            "scope": scope,
+            "validity": validity or None,
         }
 
         resp = requests.post(url, params=params)
         resp.raise_for_status()
 
-        return resp.content.decode('utf8')
+        return resp.content.decode("utf8")
 
     def reset(self):
         self._client = None

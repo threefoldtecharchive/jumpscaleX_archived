@@ -6,9 +6,7 @@ from . import client_support
 from Jumpscale import j
 
 
-
-
-class APIKeyLabel( ):
+class APIKeyLabel:
     """
     auto-generated. don't touch.
     """
@@ -24,9 +22,9 @@ class APIKeyLabel( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'APIKeyLabel'
+        class_name = "APIKeyLabel"
         data = json or kwargs
 
         # set attributes

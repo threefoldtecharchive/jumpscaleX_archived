@@ -9,6 +9,7 @@ class KubernetesFactory(JSConfigBaseFactory):
     """
     kubernetes client factory each instance can relate to either a config file or a context or both
     """
+
     __jslocation__ = "j.clients.kubernetes"
     _CHILDCLASS = KubernetesMaster
 
@@ -22,12 +23,12 @@ class KubernetesFactory(JSConfigBaseFactory):
         :type path: str
         """
         if not path:
-            directory = '%s/.kube/' % j.dirs.HOMEDIR
+            directory = "%s/.kube/" % j.dirs.HOMEDIR
             j.sal.fs.createDir(directory)
-            path = j.sal.fs.joinPaths(directory, 'config')
+            path = j.sal.fs.joinPaths(directory, "config")
         data = j.data.serializers.yaml.dumps(config)
         j.sal.fs.writeFile(path, data)
-        self._log_info('file saved at %s' % path)
+        self._log_info("file saved at %s" % path)
 
     def test(self):
         """
@@ -40,5 +41,5 @@ class KubernetesFactory(JSConfigBaseFactory):
         kub.list_nodes()
         kub.list_pods()
         kub.list_services()
-        prefab = kub.deploy_ubuntu1604('tester')
-        prefab.core.run('ls')
+        prefab = kub.deploy_ubuntu1604("tester")
+        prefab.core.run("ls")

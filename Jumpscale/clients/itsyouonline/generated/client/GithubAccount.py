@@ -6,9 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class GithubAccount( ):
+class GithubAccount:
     """
     auto-generated. don't touch.
     """
@@ -29,23 +27,24 @@ class GithubAccount( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'GithubAccount'
+        class_name = "GithubAccount"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
         self.avatar_url = client_support.set_property(
-            'avatar_url', data, data_types, False, [], False, True, class_name)
+            "avatar_url", data, data_types, False, [], False, True, class_name
+        )
         data_types = [string_types]
-        self.html_url = client_support.set_property('html_url', data, data_types, False, [], False, True, class_name)
+        self.html_url = client_support.set_property("html_url", data, data_types, False, [], False, True, class_name)
         data_types = [int]
-        self.id = client_support.set_property('id', data, data_types, False, [], False, True, class_name)
+        self.id = client_support.set_property("id", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.login = client_support.set_property('login', data, data_types, False, [], False, True, class_name)
+        self.login = client_support.set_property("login", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.name = client_support.set_property('name', data, data_types, False, [], False, True, class_name)
+        self.name = client_support.set_property("name", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

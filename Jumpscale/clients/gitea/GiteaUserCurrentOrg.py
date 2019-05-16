@@ -10,18 +10,17 @@ JSBASE = j.application.JSBaseClass
 
 
 class GiteaUserCurrentOrg(j.application.JSBaseClass):
-
     def __init__(
-            self,
-            client,
-            user,
-            avatar_url=None,
-            description=None,
-            full_name=None,
-            id=None,
-            location=None,
-            username=None,
-            website=None
+        self,
+        client,
+        user,
+        avatar_url=None,
+        description=None,
+        full_name=None,
+        id=None,
+        location=None,
+        username=None,
+        website=None,
     ):
         JSBASE.__init__(self)
         self.client = client
@@ -38,15 +37,7 @@ class GiteaUserCurrentOrg(j.application.JSBaseClass):
     def data(self):
         d = {}
 
-        for attr in [
-            'id',
-            'avatar_url',
-            'description',
-            'full_name',
-            'location',
-            'username',
-            'website',
-        ]:
+        for attr in ["id", "avatar_url", "description", "full_name", "location", "username", "website"]:
 
             v = getattr(self, attr)
             d[attr] = v
@@ -59,34 +50,34 @@ class GiteaUserCurrentOrg(j.application.JSBaseClass):
         errors = {}
         is_valid = True
 
-        operation = 'create'
+        operation = "create"
 
         if create:
             if self.id:
                 is_valid = False
-                errors['id'] = 'Already existing'
+                errors["id"] = "Already existing"
             else:
                 if not self.user.username:
                     is_valid = False
-                    errors['user'] = {'username':'Missing'}
+                    errors["user"] = {"username": "Missing"}
 
                 if not self.full_name:
                     is_valid = False
-                    errors['full_name'] = 'Missing'
+                    errors["full_name"] = "Missing"
 
                 if not self.username:
                     is_valid = False
-                    errors['username'] = 'Missing'
+                    errors["username"] = "Missing"
         elif update:
-            operation = 'update'
+            operation = "update"
             if not self.id:
                 is_valid = False
-                errors['id'] = 'Missing'
+                errors["id"] = "Missing"
 
         if is_valid:
-            return True, ''
+            return True, ""
 
-        return False, '{0} Error '.format(operation) + json.dumps(errors)
+        return False, "{0} Error ".format(operation) + json.dumps(errors)
 
     def save(self, commit=True):
         is_valid, err = self._validate(create=True)
@@ -131,6 +122,6 @@ class GiteaUserCurrentOrg(j.application.JSBaseClass):
 
     @property
     def teams(self):
-        return  GiteaTeams(self.user.client, self)
+        return GiteaTeams(self.user.client, self)
 
     __str__ = __repr__ = lambda self: json.dumps(self.data)

@@ -3,14 +3,14 @@
 import re
 
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
 
 class HostFile(JSBASE):
-
     def __init__(self):
-        self.__jslocation__ = 'j.sal.hostsfile'
-        self._host_filepath = '/etc/hosts'
+        self.__jslocation__ = "j.sal.hostsfile"
+        self._host_filepath = "/etc/hosts"
         JSBASE.__init__(self)
 
     def ip_remove(self, ip):
@@ -20,12 +20,12 @@ class HostFile(JSBASE):
         """
         # get content of hostsfile
         filecontents = j.sal.fs.readFile(self._host_filepath)
-        search_obj = re.search('^%s\s.*\n' % ip, filecontents, re.MULTILINE)
+        search_obj = re.search("^%s\s.*\n" % ip, filecontents, re.MULTILINE)
         if search_obj:
-            filecontents = filecontents.replace(search_obj.group(0), '')
+            filecontents = filecontents.replace(search_obj.group(0), "")
             j.sal.fs.writeFile(self._host_filepath, filecontents)
         else:
-            self._log_warning('Ip address %s not found in hosts file' % ip)
+            self._log_warning("Ip address %s not found in hosts file" % ip)
 
     def ip_exists(self, ip):
         """Check if ip is in the hostsfile
@@ -36,7 +36,7 @@ class HostFile(JSBASE):
         """
         # get content of hostsfile
         filecontents = j.sal.fs.readFile(self._host_filepath)
-        res = re.search('^%s\s' % ip, filecontents, re.MULTILINE)
+        res = re.search("^%s\s" % ip, filecontents, re.MULTILINE)
         if res:
             return True
         else:
@@ -51,7 +51,7 @@ class HostFile(JSBASE):
         """
         if self.ip_exists(ip):
             filecontents = j.sal.fs.readFile(self._host_filepath)
-            search_obj = re.search('^%s\s.*\n' % ip, filecontents, re.MULTILINE)
+            search_obj = re.search("^%s\s.*\n" % ip, filecontents, re.MULTILINE)
             hostnames = search_obj.group(0).strip().split()
             hostnames.pop(0)
             return hostnames
@@ -68,14 +68,13 @@ class HostFile(JSBASE):
         if isinstance(hostnames, str):
             hostnames = hostnames.split()
         filecontents = j.sal.fs.readFile(self._host_filepath)
-        search_obj = re.search('^%s\s.*\n' % ip, filecontents, re.MULTILINE)
+        search_obj = re.search("^%s\s.*\n" % ip, filecontents, re.MULTILINE)
 
-        hostnames = ' '.join(hostnames)
+        hostnames = " ".join(hostnames)
         if search_obj:
-            filecontents = filecontents.replace(
-                search_obj.group(0), '%s %s\n' % (ip, hostnames))
+            filecontents = filecontents.replace(search_obj.group(0), "%s %s\n" % (ip, hostnames))
         else:
-            filecontents += '%s %s\n' % (ip, hostnames)
+            filecontents += "%s %s\n" % (ip, hostnames)
 
         j.sal.fs.writeFile(self._host_filepath, filecontents)
 
@@ -84,4 +83,4 @@ class HostFile(JSBASE):
         :param name: basename of the file to run, defaults to "".
         :type name: str, optional
         """
-        self._test_run(name=name, obj_key='test_main')
+        self._test_run(name=name, obj_key="test_main")

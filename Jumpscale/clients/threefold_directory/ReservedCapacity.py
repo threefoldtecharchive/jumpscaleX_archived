@@ -28,22 +28,22 @@ class ReservedCapacity(object):
 
     def __init__(self, json=None, **kwargs):
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'ReservedCapacity'
+        class_name = "ReservedCapacity"
         data = json or kwargs
 
         # set attributes
         data_types = [float]
-        self.cru = client_support.set_property('cru', data, data_types, False, [], False, True, class_name)
+        self.cru = client_support.set_property("cru", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.farmer_id = client_support.set_property('farmer_id', data, data_types, False, [], False, False, class_name)
+        self.farmer_id = client_support.set_property("farmer_id", data, data_types, False, [], False, False, class_name)
         data_types = [float]
-        self.hru = client_support.set_property('hru', data, data_types, False, [], False, True, class_name)
+        self.hru = client_support.set_property("hru", data, data_types, False, [], False, True, class_name)
         data_types = [float]
-        self.mru = client_support.set_property('mru', data, data_types, False, [], False, True, class_name)
+        self.mru = client_support.set_property("mru", data, data_types, False, [], False, True, class_name)
         data_types = [float]
-        self.sru = client_support.set_property('sru', data, data_types, False, [], False, True, class_name)
+        self.sru = client_support.set_property("sru", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

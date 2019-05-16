@@ -1,6 +1,7 @@
 import pytest
 from Jumpscale import j
 
+
 @pytest.mark.integration
 def test_main(self=None):
     """test openResty installation

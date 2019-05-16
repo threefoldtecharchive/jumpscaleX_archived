@@ -5,6 +5,7 @@ import time
 # MAYBE WE SHOULD STANDARDISE ON ARCH LINUX & USE SYSTEMDNETWORKING
 JSBASE = j.application.JSBaseClass
 
+
 class Netconfig(j.application.JSBaseClass):
     """
     Helps you to configure the network.
@@ -108,9 +109,9 @@ class Netconfig(j.application.JSBaseClass):
         change hostname
         @param hostname str: new hostname.
         """
-        hostnameFile = j.tools.path.get('/etc/hostname')
+        hostnameFile = j.tools.path.get("/etc/hostname")
         hostnameFile.write_text(hostname, append=False)
-        cmd = 'hostname %s' % hostname
+        cmd = "hostname %s" % hostname
         self._executor.execute(cmd)
 
     def interface_configure_dhcp(self, dev="eth0", apply=True):
@@ -213,25 +214,26 @@ class Netconfig(j.application.JSBaseClass):
             self._executor.execute(cmd)
 
     def proxy_enable(self):
-        maincfg = j.config.getConfig('main')
-        if 'proxy' in maincfg:
+        maincfg = j.config.getConfig("main")
+        if "proxy" in maincfg:
             import os
             import urllib.request
             import urllib.error
             import urllib.parse
-            proxycfg = maincfg['proxy']
-            proxyserver = proxycfg['server']
+
+            proxycfg = maincfg["proxy"]
+            proxyserver = proxycfg["server"]
             params = ""
-            proxyuser = proxycfg.get('user')
+            proxyuser = proxycfg.get("user")
             if proxyuser:
                 params += proxyuser
-                proxypassword = proxycfg.get('password')
+                proxypassword = proxycfg.get("password")
                 if proxypassword:
                     params += ":%s" % proxypassword
                 params += "@"
             params += proxyserver
             if j.core.platformtype.myplatform.isunix:
-                os.environ['http_proxy'] = proxyserver
+                os.environ["http_proxy"] = proxyserver
             proxy_support = urllib.request.ProxyHandler()
             opener = urllib.request.build_opener(proxy_support)
             urllib.request.install_opener(opener)
@@ -296,8 +298,9 @@ class Netconfig(j.application.JSBaseClass):
         self._log_debug("check can reach default gw:%s" % gw)
         if not j.sal.nettools.pingMachine(gw):
             j.events.opserror_critical(
-                "Cannot get to default gw, network configuration did not succeed for %s %s/%s -> %s" %
-                (interface, ipaddr, mask, gw))
+                "Cannot get to default gw, network configuration did not succeed for %s %s/%s -> %s"
+                % (interface, ipaddr, mask, gw)
+            )
         self._log_debug("gw reachable")
 
         self.resetDefaultGateway(gw)
@@ -348,7 +351,8 @@ class Netconfig(j.application.JSBaseClass):
         self._log_debug("check can reach 8.8.8.8")
         if not j.sal.nettools.pingMachine("8.8.8.8"):
             j.events.opserror_critical(
-                "Cannot get to public dns, network configuration did not succeed for %s (dhcp)" % (interface))
+                "Cannot get to public dns, network configuration did not succeed for %s (dhcp)" % (interface)
+            )
         self._log_debug("8.8.8.8 reachable")
         self._log_debug("network config done.")
 
@@ -361,6 +365,7 @@ class Netconfig(j.application.JSBaseClass):
         if ipaddr is None then will look for existing config on interface and use that one to configure the bridge
         """
         import pynetlinux
+
         if ipaddr is None or mask is None or interface is None:
             self._log_debug("get default network config for main interface")
             interface2, ipaddr2 = self.getDefaultIPConfig()
@@ -375,7 +380,8 @@ class Netconfig(j.application.JSBaseClass):
             gw = pynetlinux.route.get_default_gw()
             if not j.sal.nettools.pingMachine(gw, pingtimeout=2):
                 raise j.exceptions.RuntimeError(
-                    "cannot continue to execute on bridgeConfigResetPub, gw was not reachable.")
+                    "cannot continue to execute on bridgeConfigResetPub, gw was not reachable."
+                )
             # this means the default found interface is already brpub, so can leave here
             return
 
@@ -415,6 +421,7 @@ class Netconfig(j.application.JSBaseClass):
 
         try:
             import netaddr
+
             n = netaddr.IPNetwork("%s/%s" % (ipaddr, mask))
             self.removeNetworkFromInterfaces(str(n.network.ipv4()))
 

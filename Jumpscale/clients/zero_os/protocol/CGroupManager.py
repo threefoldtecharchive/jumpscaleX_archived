@@ -3,30 +3,17 @@ from . import typchk
 
 
 class CGroupManager:
-    _subsystem_chk = typchk.Enum('cpuset', 'memory')
+    _subsystem_chk = typchk.Enum("cpuset", "memory")
 
-    _cgroup_chk = typchk.Checker({
-        'subsystem': _subsystem_chk,
-        'name': str,
-    })
+    _cgroup_chk = typchk.Checker({"subsystem": _subsystem_chk, "name": str})
 
-    _task_chk = typchk.Checker({
-        'subsystem': _subsystem_chk,
-        'name': str,
-        'pid': int,
-    })
+    _task_chk = typchk.Checker({"subsystem": _subsystem_chk, "name": str, "pid": int})
 
-    _memory_spec = typchk.Checker({
-        'name': str,
-        'mem': int,
-        'swap': int,
-    })
+    _memory_spec = typchk.Checker({"name": str, "mem": int, "swap": int})
 
-    _cpuset_spec = typchk.Checker({
-        'name': str,
-        'cpus': typchk.Or(typchk.IsNone(), str),
-        'mems': typchk.Or(typchk.IsNone(), str),
-    })
+    _cpuset_spec = typchk.Checker(
+        {"name": str, "cpus": typchk.Or(typchk.IsNone(), str), "mems": typchk.Or(typchk.IsNone(), str)}
+    )
 
     def __init__(self, client):
         self._client = client
@@ -35,7 +22,7 @@ class CGroupManager:
         """
         List all cgroups names grouped by the cgroup subsystem
         """
-        return self._client.json('cgroup.list', {})
+        return self._client.json("cgroup.list", {})
 
     def ensure(self, subsystem, name):
         """
@@ -45,13 +32,10 @@ class CGroupManager:
         :param subsystem: the cgroup subsystem (currently support 'memory', and 'cpuset')
         :param name: name of the cgroup to delete
         """
-        args = {
-            'subsystem': subsystem,
-            'name': name,
-        }
+        args = {"subsystem": subsystem, "name": name}
 
         self._cgroup_chk.check(args)
-        return self._client.json('cgroup.ensure', args)
+        return self._client.json("cgroup.ensure", args)
 
     def remove(self, subsystem, name):
         """
@@ -61,13 +45,10 @@ class CGroupManager:
         :param name: name of the cgroup to delete
         """
 
-        args = {
-            'subsystem': subsystem,
-            'name': name,
-        }
+        args = {"subsystem": subsystem, "name": name}
 
         self._cgroup_chk.check(args)
-        return self._client.json('cgroup.remove', args)
+        return self._client.json("cgroup.remove", args)
 
     def tasks(self, subsystem, name):
         """
@@ -77,13 +58,10 @@ class CGroupManager:
         :param name: name of the cgroup
         """
 
-        args = {
-            'subsystem': subsystem,
-            'name': name,
-        }
+        args = {"subsystem": subsystem, "name": name}
 
         self._cgroup_chk.check(args)
-        return self._client.json('cgroup.tasks', args)
+        return self._client.json("cgroup.tasks", args)
 
     def task_add(self, subsystem, name, pid):
         """
@@ -94,14 +72,10 @@ class CGroupManager:
         :param pid: PID to add
         """
 
-        args = {
-            'subsystem': subsystem,
-            'name': name,
-            'pid': pid,
-        }
+        args = {"subsystem": subsystem, "name": name, "pid": pid}
 
         self._task_chk.check(args)
-        return self._client.json('cgroup.task-add', args)
+        return self._client.json("cgroup.task-add", args)
 
     def task_remove(self, subsystem, name, pid):
         """
@@ -112,14 +86,10 @@ class CGroupManager:
         :param pid: PID to remove
         """
 
-        args = {
-            'subsystem': subsystem,
-            'name': name,
-            'pid': pid,
-        }
+        args = {"subsystem": subsystem, "name": name, "pid": pid}
 
         self._task_chk.check(args)
-        return self._client.json('cgroup.task-remove', args)
+        return self._client.json("cgroup.task-remove", args)
 
     def reset(self, subsystem, name):
         """
@@ -129,13 +99,10 @@ class CGroupManager:
         :param name: name of the cgroup
         """
 
-        args = {
-            'subsystem': subsystem,
-            'name': name,
-        }
+        args = {"subsystem": subsystem, "name": name}
 
         self._cgroup_chk.check(args)
-        return self._client.json('cgroup.reset', args)
+        return self._client.json("cgroup.reset", args)
 
     def memory(self, name, mem=0, swap=0):
         """
@@ -149,14 +116,10 @@ class CGroupManager:
         :return: current memory limitation
         """
 
-        args = {
-            'name': name,
-            'mem': mem,
-            'swap': swap,
-        }
+        args = {"name": name, "mem": mem, "swap": swap}
 
         self._memory_spec.check(args)
-        return self._client.json('cgroup.memory.spec', args)
+        return self._client.json("cgroup.memory.spec", args)
 
     def cpuset(self, name, cpus=None, mems=None):
         """
@@ -170,11 +133,7 @@ class CGroupManager:
         :return: current cpuset
         """
 
-        args = {
-            'name': name,
-            'cpus': cpus,
-            'mems': mems,
-        }
+        args = {"name": name, "cpus": cpus, "mems": mems}
 
         self._cpuset_spec.check(args)
-        return self._client.json('cgroup.cpuset.spec', args)
+        return self._client.json("cgroup.cpuset.spec", args)

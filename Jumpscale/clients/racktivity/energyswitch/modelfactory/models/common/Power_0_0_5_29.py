@@ -5,12 +5,9 @@ import time
 
 
 class Model(Power):
-
     def __init__(self, parent):
         super(Model, self).__init__(parent)
-        self._guidTable.update({
-            50: Value(u"type='TYPE_UNSIGNED_NUMBER'\nsize=2\nlength=2\nunit='%'\nscale=1")
-        })
+        self._guidTable.update({50: Value("type='TYPE_UNSIGNED_NUMBER'\nsize=2\nlength=2\nunit='%'\nscale=1")})
 
         self._pointerGuids = [
             (1, 1),
@@ -50,7 +47,7 @@ class Model(Power):
             (19, 1),
             (20, 1),
             (21, 1),
-            (22, 1)
+            (22, 1),
         ]
 
     # Attribute 'THD' GUID 50 Data type TYPE_UNSIGNED_NUMBER
@@ -59,58 +56,47 @@ class Model(Power):
         guid = 50
         length = 1
         valDef = self._guidTable[guid]
-        data = self._parent.client.getAttribute(
-            moduleID, guid, portnumber, length)
+        data = self._parent.client.getAttribute(moduleID, guid, portnumber, length)
         return self._parent.getObjectFromData(data, valDef, count=length)
 
     def getOscilloscopeTimeData(self, moduleID, portnumber=1):
         Ioffset = 258
-        result = {'voltage': [], 'current': []}
+        result = {"voltage": [], "current": []}
 
         # Get 516 bytes of raw data from device:
-        rawData = self._parent.client.getOscData(
-            module=moduleID, outlet=portnumber, dataType="T")
-        if b'failed' in rawData:
+        rawData = self._parent.client.getOscData(module=moduleID, outlet=portnumber, dataType="T")
+        if b"failed" in rawData:
             time.sleep(0.1)
-            rawData = self._parent.client.getOscData(
-                module=moduleID, outlet=portnumber, dataType="T")
+            rawData = self._parent.client.getOscData(module=moduleID, outlet=portnumber, dataType="T")
 
         if len(rawData) < 516:
             # something is wrong, not enough data
             return (101, rawData)
 
         # Extracting values from raw binary data:
-        voltageCalibration = float(
-            (struct.unpack('<H', rawData[:2]))[0]) / 12800.0
-        voltageValues = struct.unpack('<256b', rawData[2:Ioffset])
+        voltageCalibration = float((struct.unpack("<H", rawData[:2]))[0]) / 12800.0
+        voltageValues = struct.unpack("<256b", rawData[2:Ioffset])
 
         # the current values is returned in miliampers
-        currentCalibration = float(
-            (struct.unpack('<H', rawData[Ioffset:Ioffset + 2]))[0]) / 128.0
-        currentValues = struct.unpack(
-            '<256b', rawData[Ioffset + 2:2 * Ioffset])
+        currentCalibration = float((struct.unpack("<H", rawData[Ioffset : Ioffset + 2]))[0]) / 128.0
+        currentValues = struct.unpack("<256b", rawData[Ioffset + 2 : 2 * Ioffset])
 
         # Calculate the values based on calibration:
         for i in range(256):
-            result['voltage'].append(voltageValues[i] * voltageCalibration)
-            result['current'].append(currentValues[i] * currentCalibration)
+            result["voltage"].append(voltageValues[i] * voltageCalibration)
+            result["current"].append(currentValues[i] * currentCalibration)
 
         return (0, result)
 
     def getOscilloscopeFrequencyData(self, moduleID, portnumber=1, dataType="current"):  # pylint: disable=W0221
-        result = {
-            'current': {'amplitudes': [], 'phases': []},
-            'voltage': {'amplitudes': [], 'phases': []}
-        }
+        result = {"current": {"amplitudes": [], "phases": []}, "voltage": {"amplitudes": [], "phases": []}}
         dataType = "FC" if dataType == "current" else "FV"
         numSamples = 64
 
-        rawData = self._parent.client.getOscData(
-            module=moduleID, outlet=portnumber, dataType=dataType)
-        if b'failed' in rawData:
+        rawData = self._parent.client.getOscData(module=moduleID, outlet=portnumber, dataType=dataType)
+        if b"failed" in rawData:
             time.sleep(0.1)
-            rawData = self._parent.client.getOscData(
-                module=moduleID, outlet=portnumber, dataType=dataType)
+            rawData = self._parent.client.getOscData(module=moduleID, outlet=portnumber, dataType=dataType)
 
         if len(rawData) < 516:
             # something is wrong, not enough data
@@ -118,28 +104,22 @@ class Model(Power):
 
         if dataType == "FC":
             # Calculate the values based on calibration:
-            currentCalibration = float(
-                (struct.unpack('<H', rawData[:2]))[0]) / 4096.0 / 1000
+            currentCalibration = float((struct.unpack("<H", rawData[:2]))[0]) / 4096.0 / 1000
             for i in range(6, 2 + 4 * numSamples, 4):  # do not take DC (0th harmonic)
-                currentAmplitude = struct.unpack('<H', rawData[i:i + 2])[0]
-                result['current']['amplitudes'].append(
-                    currentAmplitude * currentCalibration)
+                currentAmplitude = struct.unpack("<H", rawData[i : i + 2])[0]
+                result["current"]["amplitudes"].append(currentAmplitude * currentCalibration)
                 # if first harmonic is below 0.01 A it makes no sense to read
                 # as on 0 load, there will be useful information
-                if len(result['current']['amplitudes']) == 1 and result['current']['amplitudes'][0] < 0.01:
+                if len(result["current"]["amplitudes"]) == 1 and result["current"]["amplitudes"][0] < 0.01:
                     return (100, None)
-                result['current']['phases'].append(
-                    struct.unpack('<h', rawData[i + 2:i + 4])[0])
+                result["current"]["phases"].append(struct.unpack("<h", rawData[i + 2 : i + 4])[0])
         else:
             length = 256
             VOffset = 2 + length
-            voltageCalibration = float(
-                (struct.unpack('<H', rawData[VOffset:VOffset + 2]))[0]) * 10 / 4096.0 / 1000
+            voltageCalibration = float((struct.unpack("<H", rawData[VOffset : VOffset + 2]))[0]) * 10 / 4096.0 / 1000
             # Calculate the values based on calibration:
             # do not take DC (0th harmonic)
             for i in range(VOffset + 6, VOffset + 4 * numSamples, 4):
-                result['voltage']['amplitudes'].append(struct.unpack(
-                    '<H', rawData[i:i + 2])[0] * voltageCalibration)
-                result['voltage']['phases'].append(
-                    struct.unpack('<h', rawData[i + 2:i + 4])[0])
+                result["voltage"]["amplitudes"].append(struct.unpack("<H", rawData[i : i + 2])[0] * voltageCalibration)
+                result["voltage"]["phases"].append(struct.unpack("<h", rawData[i + 2 : i + 4])[0])
         return (0, result)

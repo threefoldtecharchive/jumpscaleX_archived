@@ -5,6 +5,7 @@ from threading import Lock
 
 import tarantool
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
 
@@ -25,8 +26,7 @@ class Task(j.application.JSBaseClass):
         Don't instantiate it with your bare hands
     """
 
-    def __init__(self, queue, space=0, task_id=0,
-                 tube="", status="", raw_data=None):
+    def __init__(self, queue, space=0, task_id=0, tube="", status="", raw_data=None):
         JSBASE.__init__(self)
         self.task_id = task_id
         self.tube = tube
@@ -88,11 +88,7 @@ class Task(j.application.JSBaseClass):
         :rtype: boolean
         """
         self.modified = True
-        the_tuple = self.tnt.call("queue.done", (
-            str(self.queue.space),
-            str(task_id),
-            self.tube.serialize(data))
-        )
+        the_tuple = self.tnt.call("queue.done", (str(self.queue.space), str(task_id), self.tube.serialize(data)))
         return the_tuple.return_code == 0
 
     def bury(self):
@@ -137,19 +133,16 @@ class Task(j.application.JSBaseClass):
     def data(self):
         if not self.raw_data:
             return None
-        if not hasattr(self, '_decoded_data'):
-            self._decoded_data = self.queue.tube(
-                self.tube).deserialize(self.raw_data)
+        if not hasattr(self, "_decoded_data"):
+            self._decoded_data = self.queue.tube(self.tube).deserialize(self.raw_data)
         return self._decoded_data
 
     def __str__(self):
-        args = (
-            self.task_id, self.tube, self.status, self.space
-        )
+        args = (self.task_id, self.tube, self.status, self.space)
         return "Task (id: {0}, tube:{1}, status: {2}, space:{3})".format(*args)
 
     def __del__(self):
-        if self.status == 'taken' and not self.modified:
+        if self.status == "taken" and not self.modified:
             self.release()
 
     @classmethod
@@ -157,16 +150,9 @@ class Task(j.application.JSBaseClass):
         if the_tuple is None:
             return
         if the_tuple.rowcount < 1:
-            raise Queue.ZeroTupleException('error creating task')
+            raise Queue.ZeroTupleException("error creating task")
         row = the_tuple[0]
-        return cls(
-            queue,
-            space=queue.space,
-            task_id=row[0],
-            tube=row[1],
-            status=row[2],
-            raw_data=row[3],
-        )
+        return cls(queue, space=queue.space, task_id=row[0], tube=row[1], status=row[2], raw_data=row[3])
 
 
 class Tube(j.application.JSBaseClass):
@@ -183,18 +169,12 @@ class Tube(j.application.JSBaseClass):
         JSBASE.__init__(self)
         self.queue = queue
         self.name = name
-        self.opt = {
-            'delay': 0,
-            'ttl': 0,
-            'ttr': 0,
-            'pri': 0,
-            'tube': name
-        }
+        self.opt = {"delay": 0, "ttl": 0, "ttr": 0, "pri": 0, "tube": name}
         self.opt.update(kwargs)
         self._serialize = None
         self._deserialize = None
 
-# ----------------
+    # ----------------
     @property
     def serialize(self):
         """
@@ -206,15 +186,15 @@ class Tube(j.application.JSBaseClass):
 
     @serialize.setter
     def serialize(self, func):
-        if not (hasattr(func, '__call__') or func is None):
-            raise TypeError("func must be Callable "
-                            "or None, but not " + str(type(func)))
+        if not (hasattr(func, "__call__") or func is None):
+            raise TypeError("func must be Callable " "or None, but not " + str(type(func)))
         self._serialize = func
 
     @serialize.deleter
     def serialize(self):
         self._serialize = None
-# ----------------
+
+    # ----------------
 
     @property
     def deserialize(self):
@@ -227,15 +207,15 @@ class Tube(j.application.JSBaseClass):
 
     @deserialize.setter
     def deserialize(self, func):
-        if not (hasattr(func, '__call__') or func is None):
-            raise TypeError("func must be Callable "
-                            "or None, but not " + str(type(func)))
+        if not (hasattr(func, "__call__") or func is None):
+            raise TypeError("func must be Callable " "or None, but not " + str(type(func)))
         self._deserialize = func
 
     @deserialize.deleter
     def deserialize(self):
         self._deserialize = None
-# ----------------
+
+    # ----------------
 
     def update_options(self, **kwargs):
         """
@@ -270,14 +250,17 @@ class Tube(j.application.JSBaseClass):
             opt["delay"] = 0
             method = "queue.%s.urgent" % self.name
 
-        the_tuple = self.queue.tnt.call(method, (
-            str(self.queue.space),
-            str(opt["tube"]),
-            str(opt["delay"]),
-            str(opt["ttl"]),
-            str(opt["ttr"]),
-            str(opt["pri"]),
-            self.serialize(data))
+        the_tuple = self.queue.tnt.call(
+            method,
+            (
+                str(self.queue.space),
+                str(opt["tube"]),
+                str(opt["delay"]),
+                str(opt["ttl"]),
+                str(opt["ttr"]),
+                str(opt["pri"]),
+                self.serialize(data),
+            ),
         )
 
         return Task.from_tuple(self.queue, the_tuple)
@@ -286,7 +269,7 @@ class Tube(j.application.JSBaseClass):
         """
         Same as :meth:`Tube.put() <tarantool_queue.Tube.put>` put, but set highest priority for this task.
         """
-        kwargs['urgent'] = True
+        kwargs["urgent"] = True
         return self.put(data, **dict(self.opt, **kwargs))
 
     def take(self, timeout=0):
@@ -303,7 +286,7 @@ class Tube(j.application.JSBaseClass):
         :type timeout: int or None
         :rtype: `Task` instance or None
         """
-        return self.queue._take(self.opt['tube'], timeout)
+        return self.queue._take(self.opt["tube"], timeout)
 
     def kick(self, count=None):
         """
@@ -312,13 +295,13 @@ class Tube(j.application.JSBaseClass):
 
         :rtype boolean
         """
-        return self.queue._kick(self.opt['tube'], count)
+        return self.queue._kick(self.opt["tube"], count)
 
     def statistics(self):
         """
         See :meth:`Queue.statistics() <tarantool_queue.Queue.statistics>` for more information.
         """
-        return self.queue.statistics(tube=self.opt['tube'])
+        return self.queue.statistics(tube=self.opt["tube"])
 
 
 class Queue(j.application.JSBaseClass):
@@ -370,9 +353,8 @@ class Queue(j.application.JSBaseClass):
     def __init__(self, host="localhost", port=33013, space=0):
         JSBASE.__init__(self)
 
-        if not(host and port):
-            raise Queue.BadConfigException("host and port params "
-                                           "must be not empty")
+        if not (host and port):
+            raise Queue.BadConfigException("host and port params " "must be not empty")
 
         if not isinstance(port, int):
             raise Queue.BadConfigException("port must be int")
@@ -389,7 +371,7 @@ class Queue(j.application.JSBaseClass):
         self._serialize = self.basic_serialize
         self._deserialize = self.basic_deserialize
 
-# ----------------
+    # ----------------
     @property
     def serialize(self):
         """
@@ -401,15 +383,15 @@ class Queue(j.application.JSBaseClass):
 
     @serialize.setter
     def serialize(self, func):
-        if not (hasattr(func, '__call__') or func is None):
-            raise TypeError("func must be Callable "
-                            "or None, but not " + str(type(func)))
+        if not (hasattr(func, "__call__") or func is None):
+            raise TypeError("func must be Callable " "or None, but not " + str(type(func)))
         self._serialize = func
 
     @serialize.deleter
     def serialize(self):
         self._serialize = self.basic_serialize
-# ----------------
+
+    # ----------------
 
     @property
     def deserialize(self):
@@ -422,20 +404,20 @@ class Queue(j.application.JSBaseClass):
 
     @deserialize.setter
     def deserialize(self, func):
-        if not (hasattr(func, '__call__') or func is None):
-            raise TypeError("func must be Callable "
-                            "or None, but not " + str(type(func)))
+        if not (hasattr(func, "__call__") or func is None):
+            raise TypeError("func must be Callable " "or None, but not " + str(type(func)))
         self._deserialize = func
 
     @deserialize.deleter
     def deserialize(self):
         self._deserialize = self.basic_deserialize
-# ----------------
+
+    # ----------------
 
     @property
     def tnt(self):
         with self._instance_lock:
-            if not hasattr(self, '_tnt'):
+            if not hasattr(self, "_tnt"):
                 self._tnt = tarantool.connect(self.host, self.port)
         return self._tnt
 
@@ -454,12 +436,7 @@ class Queue(j.application.JSBaseClass):
         return the_tuple.return_code == 0
 
     def _release(self, task_id, delay=0, ttl=0):
-        the_tuple = self.tnt.call("queue.release", (
-            str(self.space),
-            str(task_id),
-            str(delay),
-            str(ttl)
-        ))
+        the_tuple = self.tnt.call("queue.release", (str(self.space), str(task_id), str(delay), str(ttl)))
         return Task.from_tuple(self, the_tuple)
 
     def _requeue(self, task_id):
@@ -487,9 +464,19 @@ class Queue(j.application.JSBaseClass):
             for index in [6]:
                 row[index] = unpack_long(row[index])
             keys = [
-                'task_id', 'tube', 'status', 'event', 'ipri',
-                'pri', 'cid', 'created', 'ttl', 'ttr', 'cbury',
-                'ctaken', 'now'
+                "task_id",
+                "tube",
+                "status",
+                "event",
+                "ipri",
+                "pri",
+                "cid",
+                "created",
+                "ttl",
+                "ttr",
+                "cbury",
+                "ctaken",
+                "now",
             ]
             return dict(zip(keys, row))
         return None
@@ -568,19 +555,17 @@ class Queue(j.application.JSBaseClass):
         ans = {}
         if stat.rowcount > 0:
             for k, v in dict(zip(stat[0][0::2], stat[0][1::2])).iteritems():
-                k_t = re.split(r'space([^.]*)\.(.*)\.([^.]*)', k)[1:3]
+                k_t = re.split(r"space([^.]*)\.(.*)\.([^.]*)", k)[1:3]
                 task = False
                 if int(k_t[0]) != self.space:
                     continue
-                if k_t[-1] in ('total', 'ready', 'delayed',
-                               'taken', 'buried', 'done'):
-                    k_t = map((lambda x: x[::-1]), k_t[1]
-                              [::-1].split('.', 1))[::-1] + k_t[2:3]
+                if k_t[-1] in ("total", "ready", "delayed", "taken", "buried", "done"):
+                    k_t = map((lambda x: x[::-1]), k_t[1][::-1].split(".", 1))[::-1] + k_t[2:3]
                     task = True
                 if not (k_t[1] in ans):
-                    ans[k_t[1]] = {'tasks': {}}
+                    ans[k_t[1]] = {"tasks": {}}
                 if task:
-                    ans[k_t[1]]['tasks'][k_t[-1]] = v
+                    ans[k_t[1]]["tasks"][k_t[-1]] = v
                 else:
                     ans[k_t[1]][k_t[-1]] = v
         return ans[tube] if tube else ans

@@ -36,15 +36,9 @@ class EtcdClient(JSConfigClient):
         :rtype: Object
         """
         if self._api is None:
-            kwargs = {
-                'host': self.host,
-                'port': self.port,
-            }
+            kwargs = {"host": self.host, "port": self.port}
             if self.user and self.password_:
-                kwargs.update({
-                    'user': self.user,
-                    'password': self.password_
-                })
+                kwargs.update({"user": self.user, "password": self.password_})
             self._api = etcd3.client(**kwargs)
         return self._api
 
@@ -58,14 +52,22 @@ class EtcdClient(JSConfigClient):
     def get(self, key):
         result = self.api.get(key)[0]
         if not result:
-            raise ValueError('Key {} does not exist in etcd'.format(key))
-        return result.decode('utf-8')
+            raise ValueError("Key {} does not exist in etcd".format(key))
+        return result.decode("utf-8")
 
     def delete(self, key):
         return self.api.delete(key)
 
-    def backup(self, file_obj="snapshot.db", dirs="/root", remote="", AWS_ACCESS_KEY_ID="",
-               AWS_SECRET_ACCESS_KEY="", password="rooter", backet="etcd"):
+    def backup(
+        self,
+        file_obj="snapshot.db",
+        dirs="/root",
+        remote="",
+        AWS_ACCESS_KEY_ID="",
+        AWS_SECRET_ACCESS_KEY="",
+        password="rooter",
+        backet="etcd",
+    ):
 
         f_obj = open("{}/{}".format(dirs, file_obj), "wb")
 
@@ -77,10 +79,7 @@ class EtcdClient(JSConfigClient):
                 print("please make sure that restic is installed")
                 return
             j.sal.fs.writeFile("password.txt", password)
-            env = {
-                'AWS_ACCESS_KEY_ID': AWS_ACCESS_KEY_ID,
-                'AWS_SECRET_ACCESS_KEY': AWS_SECRET_ACCESS_KEY
-            }
+            env = {"AWS_ACCESS_KEY_ID": AWS_ACCESS_KEY_ID, "AWS_SECRET_ACCESS_KEY": AWS_SECRET_ACCESS_KEY}
 
             try:
                 j.builder.tools.run("restic -r s3:{}/{} init -p password.txt".format(remote, backet), env=env)
@@ -88,7 +87,8 @@ class EtcdClient(JSConfigClient):
                 warnings.warn("this backet already exist", category=DeprecationWarning)
 
             j.builder.tools.run(
-                "restic -r s3:{}/{} backup {}/{} -p password.txt".format(remote, backet, dirs, file_obj), env=env)
+                "restic -r s3:{}/{} backup {}/{} -p password.txt".format(remote, backet, dirs, file_obj), env=env
+            )
 
             j.sal.fs.remove("password.txt")
         f_obj.close()

@@ -1,4 +1,3 @@
-
 from .APIKeyLabel import APIKeyLabel
 from .Contract import Contract
 from .DnsAddress import DnsAddress
@@ -19,9 +18,7 @@ from .unmarshall_error import UnmarshallError
 from Jumpscale import j
 
 
-
-
-class OrganizationsService():
+class OrganizationsService:
     def __init__(self, client):
         pass
         self.client = client
@@ -37,9 +34,8 @@ class OrganizationsService():
             if resp.status_code == 200:
                 return APIResponse(data=ValidityTime(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -56,12 +52,8 @@ class OrganizationsService():
         return self.client.put(uri, data, headers, query_params, content_type)
 
     def DeleteOrganizationAPIKey(
-            self,
-            label,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, label, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Removes an API key
         It is method for DELETE /organizations/{globalid}/apikeys/{label}
@@ -80,9 +72,8 @@ class OrganizationsService():
             if resp.status_code == 200:
                 return APIResponse(data=OrganizationAPIKey(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -91,13 +82,8 @@ class OrganizationsService():
             raise UnmarshallError(resp, e.message)
 
     def UpdateOrganizationAPIKey(
-            self,
-            data,
-            label,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, label, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Updates the label or other properties of a key.
         It is method for PUT /organizations/{globalid}/apikeys/{label}
@@ -119,9 +105,8 @@ class OrganizationsService():
                     resps.append(APIKeyLabel(elem))
                 return APIResponse(data=resps, response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -130,12 +115,8 @@ class OrganizationsService():
             raise UnmarshallError(resp, e.message)
 
     def CreateNewOrganizationAPIKey(
-            self,
-            data,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Create a new API Key, a secret itself should not be provided, it will be generated serverside.
         It is method for POST /organizations/{globalid}/apikeys
@@ -146,9 +127,8 @@ class OrganizationsService():
             if resp.status_code == 201:
                 return APIResponse(data=OrganizationAPIKey(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -165,12 +145,8 @@ class OrganizationsService():
         return self.client.get(uri, None, headers, query_params, content_type)
 
     def CreateOrganizationContracty(
-            self,
-            data,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Create a new contract.
         It is method for POST /organizations/{globalid}/contracts
@@ -181,9 +157,8 @@ class OrganizationsService():
             if resp.status_code == 201:
                 return APIResponse(data=Contract(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -192,12 +167,8 @@ class OrganizationsService():
             raise UnmarshallError(resp, e.message)
 
     def GetDescriptionWithFallback(
-            self,
-            langkey,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, langkey, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Get the description for an organization for this langkey, try to use the English is there is no description for this langkey
         It is method for GET /organizations/{globalid}/description/{langkey}/withfallback
@@ -208,9 +179,8 @@ class OrganizationsService():
             if resp.status_code == 200:
                 return APIResponse(data=LocalizedInfoText(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -237,9 +207,8 @@ class OrganizationsService():
             if resp.status_code == 200:
                 return APIResponse(data=LocalizedInfoText(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -258,9 +227,8 @@ class OrganizationsService():
             if resp.status_code == 201:
                 return APIResponse(data=LocalizedInfoText(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -279,9 +247,8 @@ class OrganizationsService():
             if resp.status_code == 200:
                 return APIResponse(data=LocalizedInfoText(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -290,12 +257,8 @@ class OrganizationsService():
             raise UnmarshallError(resp, e.message)
 
     def DeleteOrganizationDns(
-            self,
-            dnsname,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, dnsname, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Removes a DNS name associated with an organization
         It is method for DELETE /organizations/{globalid}/dns/{dnsname}
@@ -304,13 +267,8 @@ class OrganizationsService():
         return self.client.delete(uri, None, headers, query_params, content_type)
 
     def UpdateOrganizationDns(
-            self,
-            data,
-            dnsname,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, dnsname, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Updates an existing DNS name associated with an organization
         It is method for PUT /organizations/{globalid}/dns/{dnsname}
@@ -329,9 +287,8 @@ class OrganizationsService():
             if resp.status_code == 201:
                 return APIResponse(data=DnsAddress(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -340,12 +297,8 @@ class OrganizationsService():
             raise UnmarshallError(resp, e.message)
 
     def RemovePendingOrganizationInvitation(
-            self,
-            username,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, username, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Cancel a pending invitation.
         It is method for DELETE /organizations/{globalid}/invitations/{username}
@@ -367,9 +320,8 @@ class OrganizationsService():
                     resps.append(JoinOrganizationInvitation(elem))
                 return APIResponse(data=resps, response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -396,9 +348,8 @@ class OrganizationsService():
             if resp.status_code == 200:
                 return APIResponse(data=OrganizationLogo(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -417,9 +368,8 @@ class OrganizationsService():
             if resp.status_code == 200:
                 return APIResponse(data=OrganizationLogo(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -428,12 +378,8 @@ class OrganizationsService():
             raise UnmarshallError(resp, e.message)
 
     def RemoveOrganizationMember(
-            self,
-            username,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, username, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Remove a member from an organization.
         It is method for DELETE /organizations/{globalid}/members/{username}
@@ -452,9 +398,8 @@ class OrganizationsService():
             if resp.status_code == 201:
                 return APIResponse(data=JoinOrganizationInvitation(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -463,12 +408,8 @@ class OrganizationsService():
             raise UnmarshallError(resp, e.message)
 
     def UpdateOrganizationMemberShip(
-            self,
-            data,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Update an organization membership
         It is method for PUT /organizations/{globalid}/members
@@ -479,9 +420,8 @@ class OrganizationsService():
             if resp.status_code == 200:
                 return APIResponse(data=Organization(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -490,13 +430,8 @@ class OrganizationsService():
             raise UnmarshallError(resp, e.message)
 
     def RejectOrganizationInvite(
-            self,
-            invitingorg,
-            role,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, invitingorg, role, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Reject the invite for one of your organizations
         It is method for DELETE /organizations/{globalid}/organizations/{invitingorg}/roles/{role}
@@ -505,14 +440,8 @@ class OrganizationsService():
         return self.client.delete(uri, None, headers, query_params, content_type)
 
     def AcceptOrganizationInvite(
-            self,
-            data,
-            invitingorg,
-            role,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, invitingorg, role, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Accept the invite for one of your organizations
         It is method for POST /organizations/{globalid}/organizations/{invitingorg}/roles/{role}
@@ -523,9 +452,8 @@ class OrganizationsService():
             if resp.status_code == 201:
                 return APIResponse(data=JoinOrganizationInvitation(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -534,12 +462,8 @@ class OrganizationsService():
             raise UnmarshallError(resp, e.message)
 
     def RemoveIncludeSubOrgsOf(
-            self,
-            orgmember,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, orgmember, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Remove an orgmember or orgowner organization to the includesuborgsof list
         It is method for DELETE /organizations/{globalid}/orgmembers/includesuborgs/{orgmember}
@@ -558,9 +482,8 @@ class OrganizationsService():
             if resp.status_code == 201:
                 return APIResponse(data=Organization(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -585,12 +508,8 @@ class OrganizationsService():
         return self.client.post(uri, data, headers, query_params, content_type)
 
     def UpdateOrganizationOrgMemberShip(
-            self,
-            data,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Update the membership status of an organization
         It is method for PUT /organizations/{globalid}/orgmembers
@@ -601,9 +520,8 @@ class OrganizationsService():
             if resp.status_code == 200:
                 return APIResponse(data=Organization(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -628,12 +546,8 @@ class OrganizationsService():
         return self.client.post(uri, data, headers, query_params, content_type)
 
     def RemoveOrganizationOwner(
-            self,
-            username,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, username, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Remove an owner from organization
         It is method for DELETE /organizations/{globalid}/owners/{username}
@@ -652,9 +566,8 @@ class OrganizationsService():
             if resp.status_code == 201:
                 return APIResponse(data=JoinOrganizationInvitation(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -663,12 +576,8 @@ class OrganizationsService():
             raise UnmarshallError(resp, e.message)
 
     def DeleteOrganizationRegistryEntry(
-            self,
-            key,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, key, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Removes a RegistryEntry from the organization's registry
         It is method for DELETE /organizations/{globalid}/registry/{key}
@@ -677,12 +586,8 @@ class OrganizationsService():
         return self.client.delete(uri, None, headers, query_params, content_type)
 
     def GetOrganizationRegistryEntry(
-            self,
-            key,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, key, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Get a RegistryEntry from the organization's registry.
         It is method for GET /organizations/{globalid}/registry/{key}
@@ -693,9 +598,8 @@ class OrganizationsService():
             if resp.status_code == 200:
                 return APIResponse(data=RegistryEntry(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -717,9 +621,8 @@ class OrganizationsService():
                     resps.append(RegistryEntry(elem))
                 return APIResponse(data=resps, response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -728,12 +631,8 @@ class OrganizationsService():
             raise UnmarshallError(resp, e.message)
 
     def AddOrganizationRegistryEntry(
-            self,
-            data,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Adds a RegistryEntry to the organization's registry, if the key is already used, it is overwritten.
         It is method for POST /organizations/{globalid}/registry
@@ -744,9 +643,8 @@ class OrganizationsService():
             if resp.status_code == 201:
                 return APIResponse(data=RegistryEntry(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -755,12 +653,8 @@ class OrganizationsService():
             raise UnmarshallError(resp, e.message)
 
     def DeleteRequiredScope(
-            self,
-            requiredscope,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, requiredscope, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Deletes a required scope
         It is method for DELETE /organizations/{globalid}/requiredscopes/{requiredscope}
@@ -769,13 +663,8 @@ class OrganizationsService():
         return self.client.delete(uri, None, headers, query_params, content_type)
 
     def UpdateRequiredScope(
-            self,
-            data,
-            requiredscope,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, requiredscope, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Updates a required scope
         It is method for PUT /organizations/{globalid}/requiredscopes/{requiredscope}
@@ -805,9 +694,8 @@ class OrganizationsService():
                     resps.append(OrganizationTreeItem(elem))
                 return APIResponse(data=resps, response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -826,9 +714,8 @@ class OrganizationsService():
             if resp.status_code == 200:
                 return APIResponse(data=IsMember(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -847,9 +734,8 @@ class OrganizationsService():
             if resp.status_code == 200:
                 return APIResponse(data=GetOrganizationUsersResponseBody(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -876,9 +762,8 @@ class OrganizationsService():
             if resp.status_code == 200:
                 return APIResponse(data=Organization(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -887,12 +772,8 @@ class OrganizationsService():
             raise UnmarshallError(resp, e.message)
 
     def CreateNewSubOrganization(
-            self,
-            data,
-            globalid,
-            headers=None,
-            query_params=None,
-            content_type="application/json"):
+        self, data, globalid, headers=None, query_params=None, content_type="application/json"
+    ):
         """
         Create a new suborganization.
         It is method for POST /organizations/{globalid}
@@ -903,9 +784,8 @@ class OrganizationsService():
             if resp.status_code == 201:
                 return APIResponse(data=Organization(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:
@@ -924,9 +804,8 @@ class OrganizationsService():
             if resp.status_code == 201:
                 return APIResponse(data=Organization(resp.json()), response=resp)
 
-            message = 'unknown status code={}'.format(resp.status_code)
-            raise UnhandledAPIError(response=resp, code=resp.status_code,
-                                    message=message)
+            message = "unknown status code={}".format(resp.status_code)
+            raise UnhandledAPIError(response=resp, code=resp.status_code, message=message)
         except ValueError as msg:
             raise UnmarshallError(resp, msg)
         except UnhandledAPIError as uae:

@@ -1,14 +1,11 @@
 from Jumpscale import j
 
 
-
-
 class BuilderTarantool(j.builder.system._BaseClass):
-
     def _init(self):
-        self.git_url = 'https://github.com/tarantool/tarantool.git'
+        self.git_url = "https://github.com/tarantool/tarantool.git"
 
-    def install(self, reset=False, branch='2.1.1'): #branch='1.10.1'
+    def install(self, reset=False, branch="2.1.1"):  # branch='1.10.1'
         """
 
 
@@ -25,8 +22,7 @@ class BuilderTarantool(j.builder.system._BaseClass):
 
         if j.core.platformtype.myplatform.isMac:
             # cmd="brew install tarantool"
-            j.builder.system.package.ensure(
-                "lua,tarantool,luajit,cmake,msgpuck")
+            j.builder.system.package.ensure("lua,tarantool,luajit,cmake,msgpuck")
 
             C = """
             set -ex
@@ -65,59 +61,66 @@ class BuilderTarantool(j.builder.system._BaseClass):
             """
             j.builder.tools.execute(C)
         elif j.core.platformtype.myplatform.isUbuntu:
-            if not self._done_check('dependencies', reset):
+            if not self._done_check("dependencies", reset):
                 # j.builder.system.package.ensure('build-essential,cmake,coreutils,sed,libreadline-dev,'
                 #                                    'libncurses5-dev,libyaml-dev,libssl-dev,libcurl4-openssl-dev,'
                 #                                    'libunwind-dev,python,python-pip,python-setuptools,python-dev,'
                 #                                    'python-msgpack,python-yaml,python-argparse,'
                 #                                    'python-six,python-gevent,luarocks')
 
-                #should be mainly done in j.builder.buildenv.install()
-                j.builder.system.package.ensure('build-essential,cmake,coreutils,sed,libreadline-dev,'
-                                                   'libncurses5-dev,libyaml-dev,libssl-dev,libcurl4-openssl-dev,'
-                                                   'libunwind-dev,luarocks')
+                # should be mainly done in j.builder.buildenv.install()
+                j.builder.system.package.ensure(
+                    "build-essential,cmake,coreutils,sed,libreadline-dev,"
+                    "libncurses5-dev,libyaml-dev,libssl-dev,libcurl4-openssl-dev,"
+                    "libunwind-dev,luarocks"
+                )
 
-                requirements = 'https://raw.githubusercontent.com/tarantool/test-run/master/requirements.txt'
-                download_to = '/tmp/tarantool_requirements.txt'
+                requirements = "https://raw.githubusercontent.com/tarantool/test-run/master/requirements.txt"
+                download_to = "/tmp/tarantool_requirements.txt"
                 j.builder.tools.file_download(requirements, to=download_to, minsizekb=0)
-                cmd = 'pip3 install -r %s' % download_to
+                cmd = "pip3 install -r %s" % download_to
                 j.sal.process.execute(cmd, profile=True)
 
-                self._done_set('dependencies')
+                self._done_set("dependencies")
 
-            tarantool = 'tarantool'
+            tarantool = "tarantool"
             if not self._done_check(tarantool, reset):
-                j.builder.runtimes.build.build(tarantool, self.git_url, branch=branch,
-                                                 pre_build=['git submodule update --init --recursive'],
-                                                 cmake=True, cmake_args=['-DENABLE_DIST=ON'], make=True,
-                                                 make_install=True)
+                j.builder.runtimes.build.build(
+                    tarantool,
+                    self.git_url,
+                    branch=branch,
+                    pre_build=["git submodule update --init --recursive"],
+                    cmake=True,
+                    cmake_args=["-DENABLE_DIST=ON"],
+                    make=True,
+                    make_install=True,
+                )
                 self._done_set(tarantool)
 
-            luajit = 'luajit'
+            luajit = "luajit"
             if not self._done_check(luajit, reset):
-                repo = 'http://luajit.org/git/luajit-2.0.git'
-                post_build = ['ln -sf /usr/local/bin/luajit-2.1.0-beta3 /usr/local/bin/luajit']
-                j.builder.runtimes.build.build(luajit, repo, branch='v2.1', make=True, make_install=True,
-                                                 post_build=post_build)
+                repo = "http://luajit.org/git/luajit-2.0.git"
+                post_build = ["ln -sf /usr/local/bin/luajit-2.1.0-beta3 /usr/local/bin/luajit"]
+                j.builder.runtimes.build.build(
+                    luajit, repo, branch="v2.1", make=True, make_install=True, post_build=post_build
+                )
                 self._done_set(luajit)
 
-            tdb = 'tdb'
+            tdb = "tdb"
             if not self._done_check(tdb, reset):
-                repo = 'https://github.com/Sulverus/tdb'
-                j.builder.runtimes.build.build(tdb, repo,
-                                                 pre_build=['git submodule update --init --recursive'], make=True,
-                                                 make_install=True)
+                repo = "https://github.com/Sulverus/tdb"
+                j.builder.runtimes.build.build(
+                    tdb, repo, pre_build=["git submodule update --init --recursive"], make=True, make_install=True
+                )
                 self._done_set(tdb)
 
-            msgpuck = 'msgpuck'
+            msgpuck = "msgpuck"
             if not self._done_check(msgpuck, reset):
-                repo = 'https://github.com/rtsisyk/msgpuck.git'
+                repo = "https://github.com/rtsisyk/msgpuck.git"
                 j.builder.runtimes.build.build(msgpuck, repo, cmake=True, make=True, make_install=True)
-                self._done_set('msgpuck')
+                self._done_set("msgpuck")
 
-            self._done_set('install')
-
-
+            self._done_set("install")
 
     def install_luarocks_rock(self, name):
         """
@@ -126,15 +129,17 @@ class BuilderTarantool(j.builder.system._BaseClass):
         :return:
         """
 
-        if not self._done_check('install'):
-            raise Exception('Tarantool is not installed')
+        if not self._done_check("install"):
+            raise Exception("Tarantool is not installed")
 
         command = """
             set -ex
             pushd /tmp
             luarocks install {name}
             popd
-            """.format(name=name)
+            """.format(
+            name=name
+        )
         j.builder.tools.execute(command)
 
     def install_tarantool_rock(self, name):
@@ -143,17 +148,19 @@ class BuilderTarantool(j.builder.system._BaseClass):
         :param name: name of the rock to install
         :return:
         """
-        if not self._done_check('install'):
-            raise Exception('Tarantool is not installed')
+        if not self._done_check("install"):
+            raise Exception("Tarantool is not installed")
         command = """
         set -ex
         pushd /tmp
         tarantoolctl rocks install {name}
         popd
-        """.format(name=name)
+        """.format(
+            name=name
+        )
         j.builder.tools.execute(command)
 
-    def start(self, port=3301, passwd='admin007'):
+    def start(self, port=3301, passwd="admin007"):
         """
         Start tarantool in a tmux
         """
@@ -165,17 +172,17 @@ class BuilderTarantool(j.builder.system._BaseClass):
         box.schema.user.passwd('admin','$passwd')
         require('console').start()
         """
-        LUA = LUA.replace('$passwd', passwd)
-        LUA = LUA.replace('$port', str(port))
+        LUA = LUA.replace("$passwd", passwd)
+        LUA = LUA.replace("$port", str(port))
 
-        luapath = tools.replace('{DIR_TEMP}/tarantool.lua')
+        luapath = tools.replace("{DIR_TEMP}/tarantool.lua")
 
-        self._log_info('write lua startup to:%s' % luapath)
+        self._log_info("write lua startup to:%s" % luapath)
 
         tools.file_write(luapath, LUA)
 
-        cmd = 'cd {DIR_TEMP};rm -rf tarantool;mkdir tarantool;cd tarantool;tarantool %s' % luapath
+        cmd = "cd {DIR_TEMP};rm -rf tarantool;mkdir tarantool;cd tarantool;tarantool %s" % luapath
         pm = j.builder.system.processmanager.get()
-        pm.ensure(name='tarantool', cmd=cmd, env={}, path='')
+        pm.ensure(name="tarantool", cmd=cmd, env={}, path="")
 
         # RESULT IS RUNNING TARANTOOL IN TMUX

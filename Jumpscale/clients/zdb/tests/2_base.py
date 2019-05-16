@@ -1,5 +1,7 @@
 from Jumpscale import j
 import os
+
+
 def main(self):
     """
     to run:
@@ -18,7 +20,7 @@ def main(self):
 
     id = cl.set(b"INIT")
     assert id == 0
-    assert cl.get(0)==b"INIT"
+    assert cl.get(0) == b"INIT"
 
     nr = cl.nsinfo["entries"]
     assert nr == 1
@@ -48,7 +50,7 @@ def main(self):
         self._log_debug("%s:%s" % (id, data))
         result[id] = data
 
-    assert {1: b'rss', 2: b'b'} == result
+    assert {1: b"rss", 2: b"b"} == result
 
     assert cl.list(key_start=id2)[0] == id2
 
@@ -79,7 +81,7 @@ def main(self):
 
     c = self.client_admin_get(port=9901)
     c.namespace_new(nsname, secret="1234", maxsize=1000)
-    ns = self.client_get(nsname, secret="1234",port=9901)
+    ns = self.client_get(nsname, secret="1234", port=9901)
     ns.flush()
 
     assert ns.nsinfo["data_limits_bytes"] == 1000
@@ -115,7 +117,7 @@ def main(self):
 
     res = j.tools.timer.stop(nritems)
 
-    assert res>3000
+    assert res > 3000
 
     self._log_info("PERF TEST SEQ OK")
     return "OK"

@@ -5,20 +5,19 @@ JSBASE = j.application.JSBaseClass
 
 
 class GiteaMilestone(j.application.JSBaseClass):
-
     def __init__(
-            self,
-            client,
-            repo,
-            user,
-            id=None,
-            closed_at=None,
-            closed_issues=0,
-            description=None,
-            due_on=None,
-            open_issues=0,
-            state = None,
-            title=None,
+        self,
+        client,
+        repo,
+        user,
+        id=None,
+        closed_at=None,
+        closed_issues=0,
+        description=None,
+        due_on=None,
+        open_issues=0,
+        state=None,
+        title=None,
     ):
         JSBASE.__init__(self)
         self.client = client
@@ -28,7 +27,7 @@ class GiteaMilestone(j.application.JSBaseClass):
         self.closed_at = closed_at
         self.closed_issues = closed_issues
         self.description = description
-        self.due_on=due_on
+        self.due_on = due_on
         self.open_issues = open_issues
         self.title = title
         self.state = state
@@ -36,15 +35,7 @@ class GiteaMilestone(j.application.JSBaseClass):
     @property
     def data(self):
         d = {}
-        for attr in [
-            'id',
-            'closed_at',
-            'closed_issues',
-            'description',
-            'due_on',
-            'open_issues',
-            'title',
-        ]:
+        for attr in ["id", "closed_at", "closed_issues", "description", "due_on", "open_issues", "title"]:
             v = getattr(self, attr)
             d[attr] = v
         return d
@@ -56,32 +47,32 @@ class GiteaMilestone(j.application.JSBaseClass):
         errors = {}
         is_valid = True
 
-        operation = 'create'
+        operation = "create"
 
         if create:
             if self.id:
                 is_valid = False
-                errors['id'] = 'Already existing'
+                errors["id"] = "Already existing"
             else:
                 if not self.title:
                     is_valid = False
-                    errors['title'] = 'Missing'
+                    errors["title"] = "Missing"
 
         elif update:
-            operation = 'update'
+            operation = "update"
             if not self.id:
                 is_valid = False
-                errors['id'] = 'Missing'
+                errors["id"] = "Missing"
         elif delete:
-            operation = 'delete'
+            operation = "delete"
             if not self.id:
                 is_valid = False
-                errors['id'] = 'Missing'
+                errors["id"] = "Missing"
 
         if is_valid:
-            return True, ''
+            return True, ""
 
-        return False, '{0} Error '.format(operation) + json.dumps(errors)
+        return False, "{0} Error ".format(operation) + json.dumps(errors)
 
     def save(self, commit=True):
         is_valid, err = self._validate(create=True)
@@ -90,11 +81,13 @@ class GiteaMilestone(j.application.JSBaseClass):
             return is_valid, err
 
         try:
-            resp = self.client.api.repos.issueCreateMilestone(data=self.data, repo=self.repo.name, owner=self.user.username)
+            resp = self.client.api.repos.issueCreateMilestone(
+                data=self.data, repo=self.repo.name, owner=self.user.username
+            )
             c = resp.json()
             for k, v in c.items():
                 setattr(self, k, v)
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 
@@ -105,10 +98,10 @@ class GiteaMilestone(j.application.JSBaseClass):
             return is_valid, err
 
         try:
-            username = self.user['username'] if type(self.user) == dict else self.user.username
-            repo = self.repo['name'] if type(self.repo) == dict else self.repo.name
+            username = self.user["username"] if type(self.user) == dict else self.user.username
+            repo = self.repo["name"] if type(self.repo) == dict else self.repo.name
             resp = self.client.api.repos.issueEditMilestone(data=self.data, id=str(self.id), repo=repo, owner=username)
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 
@@ -119,10 +112,10 @@ class GiteaMilestone(j.application.JSBaseClass):
             return is_valid, err
 
         try:
-            username = self.user['username'] if type(self.user) == dict else self.user.username
-            repo = self.repo['name'] if type(self.repo) == dict else self.repo.name
+            username = self.user["username"] if type(self.user) == dict else self.user.username
+            repo = self.repo["name"] if type(self.repo) == dict else self.repo.name
             resp = self.client.api.repos.issueDeleteMilestone(id=str(self.id), repo=repo, owner=username)
-            return True, ''
+            return True, ""
         except Exception as e:
             return False, e.response.content
 

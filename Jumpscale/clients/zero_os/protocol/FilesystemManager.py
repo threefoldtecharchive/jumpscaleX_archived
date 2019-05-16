@@ -2,15 +2,11 @@ import base64
 from Jumpscale import j
 
 
-
-
-class FilesystemManager():
-
+class FilesystemManager:
     def __init__(self, client):
         self._client = client
 
-
-    def open(self, file, mode='r', perm=0o0644):
+    def open(self, file, mode="r", perm=0o0644):
         """
         Opens a file on the node
 
@@ -26,13 +22,9 @@ class FilesystemManager():
           'a' append
         :return: a file descriptor
         """
-        args = {
-            'file': file,
-            'mode': mode,
-            'perm': perm,
-        }
+        args = {"file": file, "mode": mode, "perm": perm}
 
-        return self._client.json('filesystem.open', args)
+        return self._client.json("filesystem.open", args)
 
     def exists(self, path):
         """
@@ -41,11 +33,9 @@ class FilesystemManager():
         :param path: path to file/dir
         :return: boolean
         """
-        args = {
-            'path': path,
-        }
+        args = {"path": path}
 
-        return self._client.json('filesystem.exists', args)
+        return self._client.json("filesystem.exists", args)
 
     def list(self, path):
         """
@@ -53,11 +43,9 @@ class FilesystemManager():
         :param path: path to dir
         :return: list of director entries
         """
-        args = {
-            'path': path,
-        }
+        args = {"path": path}
 
-        return self._client.json('filesystem.list', args)
+        return self._client.json("filesystem.list", args)
 
     def mkdir(self, path):
         """
@@ -65,11 +53,9 @@ class FilesystemManager():
         :param path: path to directory to create
         :return:
         """
-        args = {
-            'path': path,
-        }
+        args = {"path": path}
 
-        return self._client.json('filesystem.mkdir', args)
+        return self._client.json("filesystem.mkdir", args)
 
     def remove(self, path):
         """
@@ -78,11 +64,9 @@ class FilesystemManager():
         :param path: path to remove
         :return:
         """
-        args = {
-            'path': path,
-        }
+        args = {"path": path}
 
-        return self._client.json('filesystem.remove', args)
+        return self._client.json("filesystem.remove", args)
 
     def move(self, path, destination):
         """
@@ -92,12 +76,9 @@ class FilesystemManager():
         :param destination: destination
         :return:
         """
-        args = {
-            'path': path,
-            'destination': destination,
-        }
+        args = {"path": path, "destination": destination}
 
-        return self._client.json('filesystem.move', args)
+        return self._client.json("filesystem.move", args)
 
     def chmod(self, path, mode, recursive=False):
         """
@@ -108,13 +89,9 @@ class FilesystemManager():
         :param recursive: apply chmod recursively
         :return:
         """
-        args = {
-            'path': path,
-            'mode': mode,
-            'recursive': recursive,
-        }
+        args = {"path": path, "mode": mode, "recursive": recursive}
 
-        return self._client.json('filesystem.chmod', args)
+        return self._client.json("filesystem.chmod", args)
 
     def chown(self, path, user, group, recursive=False):
         """
@@ -126,14 +103,9 @@ class FilesystemManager():
         :param recursive: apply chown recursively
         :return:
         """
-        args = {
-            'path': path,
-            'user': user,
-            'group': group,
-            'recursive': recursive,
-        }
+        args = {"path": path, "user": user, "group": group, "recursive": recursive}
 
-        return self._client.json('filesystem.chown', args)
+        return self._client.json("filesystem.chown", args)
 
     def read(self, fd):
         """
@@ -142,11 +114,9 @@ class FilesystemManager():
         :param fd: file descriptor
         :return: bytes
         """
-        args = {
-            'fd': fd,
-        }
+        args = {"fd": fd}
 
-        data = self._client.json('filesystem.read', args)
+        data = self._client.json("filesystem.read", args)
         return base64.decodebytes(data.encode())
 
     def write(self, fd, bytes):
@@ -159,12 +129,9 @@ class FilesystemManager():
 
         :note: don't overkill the node with large byte chunks, also for large file upload check the upload method.
         """
-        args = {
-            'fd': fd,
-            'block': base64.encodebytes(bytes).decode(),
-        }
+        args = {"fd": fd, "block": base64.encodebytes(bytes).decode()}
 
-        return self._client.json('filesystem.write', args)
+        return self._client.json("filesystem.write", args)
 
     def close(self, fd):
         """
@@ -172,11 +139,9 @@ class FilesystemManager():
         :param fd: file descriptor
         :return:
         """
-        args = {
-            'fd': fd,
-        }
+        args = {"fd": fd}
 
-        return self._client.json('filesystem.close', args)
+        return self._client.json("filesystem.close", args)
 
     def upload(self, remote, reader):
         """
@@ -186,10 +151,10 @@ class FilesystemManager():
         :return:
         """
 
-        fd = self.open(remote, 'w')
+        fd = self.open(remote, "w")
         while True:
             chunk = reader.read(512 * 1024)
-            if chunk == b'':
+            if chunk == b"":
                 break
             self.write(fd, chunk)
         self.close(fd)
@@ -205,7 +170,7 @@ class FilesystemManager():
         fd = self.open(remote)
         while True:
             chunk = self.read(fd)
-            if chunk == b'':
+            if chunk == b"":
                 break
             writer.write(chunk)
         self.close(fd)
@@ -217,7 +182,7 @@ class FilesystemManager():
         :param local: local file name
         :return:
         """
-        file = open(local, 'rb')
+        file = open(local, "rb")
         try:
             self.upload(remote, file)
         finally:
@@ -230,7 +195,7 @@ class FilesystemManager():
         :param local: local file name
         :return:
         """
-        file = open(local, 'wb')
+        file = open(local, "wb")
         try:
             self.download(remote, file)
         finally:

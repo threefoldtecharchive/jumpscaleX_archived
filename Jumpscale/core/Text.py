@@ -1,27 +1,30 @@
 import time
 import re
 import socket
+
 # import os
 import textwrap
 import unicodedata
 import math
 from unidecode import unidecode
-matchquote = re.compile(r'\'[^\']*\'')
-matchlist = re.compile(r'\[[^\']*\]')
-re_nondigit = re.compile(r'\D')
-re_float = re.compile(r'[0-9]*\.[0-9]+')
-re_digit = re.compile(r'[0-9]*')
+
+matchquote = re.compile(r"\'[^\']*\'")
+matchlist = re.compile(r"\[[^\']*\]")
+re_nondigit = re.compile(r"\D")
+re_float = re.compile(r"[0-9]*\.[0-9]+")
+re_digit = re.compile(r"[0-9]*")
 from builtins import str
 
 try:
     import pygments.lexers
+
     # from pygments.formatters import get_formatter_by_name
     pygmentsObj = True
     import sys
 except BaseException:
     pygmentsObj = False
 
-mascot = '''
+mascot = """
                                                         .,,'
                                                    'c.cool,..',,,,,,,.
                                                   'dxocol:l:;,'......';:,.
@@ -56,24 +59,23 @@ mascot = '''
                                                .;l.................c.
                                                  ;;;;,'..........,;,
                                                     .':ldddoooddl
-'''
+"""
+
 
 class Text(object):
-
-    def __init__(self,j):
+    def __init__(self, j):
         self._j = j
         self.mascot = mascot
 
     def unicodedata(self, text):
-        return unicodedata.normalize('NFKD', text.decode("utf-8")).encode('ascii', 'ignore')
+        return unicodedata.normalize("NFKD", text.decode("utf-8")).encode("ascii", "ignore")
 
     def strip_to_ascii(self, text):
         return "".join([char for char in str(text) if ((ord(char) > 31 and ord(char) < 127) or ord(char) == 10)])
 
     def convert_to_snake_case(self, text):
-        converted_string = re.sub('([^/_.])([A-Z][a-z]+)', r'\1_\2', text)
-        return re.sub('([a-z0-9])([A-Z])', r'\1_\2', converted_string).lower()
-
+        converted_string = re.sub("([^/_.])([A-Z][a-z]+)", r"\1_\2", text)
+        return re.sub("([a-z0-9])([A-Z])", r"\1_\2", converted_string).lower()
 
     def strip_to_ascii_dense(self, text):
         """
@@ -83,27 +85,30 @@ class Text(object):
         remove all the other parts
         
         """
-        text=unidecode(text) #convert to ascii letters
+        text = unidecode(text)  # convert to ascii letters
         # text=self.strip_to_ascii(text) #happens later already
-        text=text.lower()
+        text = text.lower()
+
         def replace(char):
             if char in "-/\\= ;!+()":
                 return "_"
             return char
-        def check(char):                
+
+        def check(char):
             charnr = ord(char)
             if char in "._":
                 return True
-            if charnr>47 and charnr<58:
+            if charnr > 47 and charnr < 58:
                 return True
-            if charnr>96 and charnr<123:
+            if charnr > 96 and charnr < 123:
                 return True
             return False
+
         res = [replace(char) for char in str(text)]
-        res = [char for char in res if check(char)]        
-        text =  "".join(res)
+        res = [char for char in res if check(char)]
+        text = "".join(res)
         while "__" in text:
-            text = text.replace("__","_")
+            text = text.replace("__", "_")
         text = text.rstrip("_")
         return text
 
@@ -129,7 +134,6 @@ class Text(object):
     #         res, line = checknow(line, items)
     #     return line
 
-
     def strToVersionInt(self, versionStr, minDigits=3):
         """
         convert 3.2.1 to 3002001
@@ -149,7 +153,7 @@ class Text(object):
             x += 1
         return y
 
-    def toStr(self, value, codec='utf-8'):
+    def toStr(self, value, codec="utf-8"):
         if isinstance(value, bytes):
             value = value.decode(codec)
         return value
@@ -160,8 +164,17 @@ class Text(object):
         """
         txt = self.toAscii(txt)
         txt = txt.lower().strip().strip(" .-_'")
-        txt = txt.replace("/", "").replace(",", " ").replace("*", "").replace("(", "").replace(
-            ")", "").replace("\"", "").replace("?", "").replace("'", "").replace(":", " ")
+        txt = (
+            txt.replace("/", "")
+            .replace(",", " ")
+            .replace("*", "")
+            .replace("(", "")
+            .replace(")", "")
+            .replace('"', "")
+            .replace("?", "")
+            .replace("'", "")
+            .replace(":", " ")
+        )
         while txt.find("  ") != -1:
             txt = txt.replace("  ", " ")
         if maxlen > 0 and len(txt) > maxlen:
@@ -176,8 +189,8 @@ class Text(object):
                 continue
             out += item
         # out=out.encode('ascii','ignore')
-        out = out.replace('\x0b', "")
-        out = out.replace('\x0c', "")
+        out = out.replace("\x0b", "")
+        out = out.replace("\x0c", "")
         out = out.replace("\r", "")
         out = out.replace("\t", "    ")
 
@@ -186,7 +199,7 @@ class Text(object):
         # out.decode()
         return out
 
-    def indent(self, instr, nspaces=4, wrap=180, strip=True, indentchar=" ",args=None):
+    def indent(self, instr, nspaces=4, wrap=180, strip=True, indentchar=" ", args=None):
         """Indent a string a given number of spaces.
 
         Parameters
@@ -203,9 +216,11 @@ class Text(object):
         str|unicode : string indented by ntabs and nspaces.
 
         """
-        return self._j.core.tools.text_indent(instr, nspaces=nspaces,wrap=wrap,strip=strip, indentchar=indentchar,args=args)
+        return self._j.core.tools.text_indent(
+            instr, nspaces=nspaces, wrap=wrap, strip=strip, indentchar=indentchar, args=args
+        )
 
-    def toUnicode(self, value, codec='utf-8'):
+    def toUnicode(self, value, codec="utf-8"):
         if isinstance(value, str):
             return value.decode(codec)
         elif isinstance(value, str):
@@ -213,9 +228,9 @@ class Text(object):
         else:
             return str(value)
 
-    def strip(self,content, ignorecomments=True,args={},replace=False):
+    def strip(self, content, ignorecomments=True, args={}, replace=False):
         if replace:
-            return self._j.core.tools.text_replace(content=content, ignorecomments=ignorecomments,args=args)
+            return self._j.core.tools.text_replace(content=content, ignorecomments=ignorecomments, args=args)
         else:
             return self._j.core.tools.text_strip(content=content, ignorecomments=ignorecomments)
 
@@ -273,8 +288,7 @@ class Text(object):
             return line
         while len(line) < start:
             line += " "
-        line += "# " + \
-            time.strftime('%Y/%m/%d %H:%M:%S', time.localtime(int(epoch)))
+        line += "# " + time.strftime("%Y/%m/%d %H:%M:%S", time.localtime(int(epoch)))
         return line
 
     def addVal(self, out, name, val, addtimehr=False):
@@ -384,8 +398,7 @@ class Text(object):
                 descr = tags.tagGet("descr")
             else:
                 if name != "":
-                    descr = "Please provide value for %s of type %s" % (
-                        name, ttype)
+                    descr = "Please provide value for %s of type %s" % (name, ttype)
                 else:
                     descr = "Please provide value"
 
@@ -409,35 +422,30 @@ class Text(object):
             else:
                 regex = None
 
-            if len(descr) > 30 and ttype not in ('dict', 'multiline'):
+            if len(descr) > 30 and ttype not in ("dict", "multiline"):
                 self._log_info(descr)
                 descr = ""
 
             # print "type:'%s'"%ttype
             if ttype == "str":
-                result = j.tools.console.askString(
-                    question=descr, defaultparam=default, regex=regex, retry=retry)
+                result = j.tools.console.askString(question=descr, defaultparam=default, regex=regex, retry=retry)
 
             elif ttype == "password":
-                result = j.tools.console.askPassword(
-                    question=descr, confirm=False)
+                result = j.tools.console.askPassword(question=descr, confirm=False)
 
             elif ttype == "list":
-                result = self._j.tools.console.askString(
-                    question=descr, defaultparam=default, regex=regex, retry=retry)
+                result = self._j.tools.console.askString(question=descr, defaultparam=default, regex=regex, retry=retry)
 
             elif ttype == "multiline":
                 result = self._j.tools.console.askMultiline(question=descr)
 
             elif ttype == "float":
-                result = self._j.tools.console.askString(
-                    question=descr, defaultparam=default, regex=None)
+                result = self._j.tools.console.askString(question=descr, defaultparam=default, regex=None)
                 # check getFloat
                 try:
                     result = float(result)
                 except BaseException:
-                    raise self._j.exceptions.Input(
-                        "Please provide float.", "system.self.ask.neededfloat")
+                    raise self._j.exceptions.Input("Please provide float.", "system.self.ask.neededfloat")
                 result = str(result)
 
             elif ttype == "int":
@@ -454,7 +462,8 @@ class Text(object):
                 if not default:
                     default = None
                 result = self._j.tools.console.askInteger(
-                    question=descr, defaultValue=default, minValue=minValue, maxValue=maxValue, retry=retry)
+                    question=descr, defaultValue=default, minValue=minValue, maxValue=maxValue, retry=retry
+                )
 
             elif ttype == "bool":
                 if descr != "":
@@ -470,20 +479,20 @@ class Text(object):
                     dropdownvals = tags.tagGet("dropdownvals")
                 else:
                     raise self._j.exceptions.Input(
-                        "When type is dropdown in ask, then dropdownvals needs to be specified as well.")
-                choicearray = [item.strip()
-                               for item in dropdownvals.split(",")]
-                result = self._j.tools.console.askChoice(
-                    choicearray, descr=descr, sort=True)
-            elif ttype == 'dict':
+                        "When type is dropdown in ask, then dropdownvals needs to be specified as well."
+                    )
+                choicearray = [item.strip() for item in dropdownvals.split(",")]
+                result = self._j.tools.console.askChoice(choicearray, descr=descr, sort=True)
+            elif ttype == "dict":
                 rawresult = self._j.tools.console.askMultiline(question=descr)
                 result = "\n"
                 for line in rawresult.splitlines():
-                    result += "    %s,\n" % line.strip().strip(',')
+                    result += "    %s,\n" % line.strip().strip(",")
 
             else:
                 raise self._j.exceptions.Input(
-                    "Input type:%s is invalid (only: bool,int,str,string,dropdown,list,dict,float)" % ttype)
+                    "Input type:%s is invalid (only: bool,int,str,string,dropdown,list,dict,float)" % ttype
+                )
 
             out += "%s%s\n" % (prefix, result)
 
@@ -540,15 +549,15 @@ class Text(object):
         result is dict with key the name, val is the default val
         if empty like for msg then None
         """
-        args = args.rstrip('):')
+        args = args.rstrip("):")
         amMethodArgs = {}
-        for arg in args.split(','):
-            if '=' in arg:
-                argname, default = arg.split('=', 1)
+        for arg in args.split(","):
+            if "=" in arg:
+                argname, default = arg.split("=", 1)
                 argname = argname.strip()
                 default = default.strip()
-                if default[0] == "\"":
-                    default = default.strip("\"")
+                if default[0] == '"':
+                    default = default.strip('"')
                 elif default[0] == "'":
                     default = default.strip("'")
                 elif default == "[]":
@@ -578,10 +587,10 @@ class Text(object):
 
         """
         # async = False
-        definition = ''
-        if line.find('async') == 0:
+        definition = ""
+        if line.find("async") == 0:
             # async = True
-            line = line[len('async '):]
+            line = line[len("async ") :]
 
         definition, args = line.split("(", 1)
         amName = definition[4:].strip()
@@ -638,8 +647,10 @@ class Text(object):
             ttype, result = self._str2var(self._j.core.text.toStr(string))
         else:
             raise self._j.exceptions.Input(
-                "Could not convert '%s' to basetype, input was %s. Expected string, dict or list." %
-                (string, type(string)), "self.str2var")
+                "Could not convert '%s' to basetype, input was %s. Expected string, dict or list."
+                % (string, type(string)),
+                "self.str2var",
+            )
         return result
 
     def eval(self, code):
@@ -654,7 +665,8 @@ class Text(object):
                 result = eval(item)
             except Exception as e:
                 raise self._j.exceptions.RuntimeError(
-                    "Could not execute code in self._j.core.text.,%s\n%s. Error was:%s" % (item, code, e))
+                    "Could not execute code in self._j.core.text.,%s\n%s. Error was:%s" % (item, code, e)
+                )
             result = self.pythonObjToStr(result, multiline=False).strip()
             code = code.replace(item, result)
         return code
@@ -710,7 +722,7 @@ class Text(object):
                     resout += "    %s,\n" % self.pythonObjToStr1line(item)
                 resout = resout.rstrip().strip(",") + ",\n"
             else:
-                resout = '['
+                resout = "["
                 for item in obj:
                     resout += "%s," % self.pythonObjToStr1line(item)
                 resout = resout.rstrip().strip(",") + "]"
@@ -719,8 +731,7 @@ class Text(object):
 
         elif self._j.data.types.dict.check(obj):
             if not canBeDict:
-                raise self._j.exceptions.RuntimeError(
-                    "subitem cannot be list or dict for:%s" % obj)
+                raise self._j.exceptions.RuntimeError("subitem cannot be list or dict for:%s" % obj)
             if multiline:
                 resout = "\n"
                 keys = sorted(obj.keys())
@@ -728,8 +739,7 @@ class Text(object):
                     val = obj[key]
                     val = self.pythonObjToStr1line(val)
                     # resout+="%s:%s, "%(key,val)
-                    resout += "    %s:%s,\n" % (key,
-                                                self.pythonObjToStr1line(val))
+                    resout += "    %s:%s,\n" % (key, self.pythonObjToStr1line(val))
                 resout = resout.rstrip().rstrip(",") + ",\n"
             else:
                 resout = ""
@@ -742,8 +752,7 @@ class Text(object):
             return resout
 
         else:
-            raise self._j.exceptions.RuntimeError(
-                "Could not convert %s to string" % obj)
+            raise self._j.exceptions.RuntimeError("Could not convert %s to string" % obj)
 
     def replaceQuotes(self, value, replacewith):
         for item in re.findall(matchquote, value):
@@ -761,7 +770,7 @@ class Text(object):
         """
         # value=value.strip("'")
         value2 = value.replace("\\K", ",")
-        value2 = value2.replace("\\Q", "\"")
+        value2 = value2.replace("\\Q", '"')
         value2 = value2.replace("\\S", " ")
         value2 = value2.replace("\\D", ":")
         value2 = value2.replace("\\N", "\n")
@@ -771,8 +780,8 @@ class Text(object):
         #     change = True
         if value2.strip() == "":
             return value2
-        if value2.strip().strip('\'').startswith("[") and value2.strip().strip('\'').endswith("]"):
-            value2 = value2.strip().strip('\'').strip("[]")
+        if value2.strip().strip("'").startswith("[") and value2.strip().strip("'").endswith("]"):
+            value2 = value2.strip().strip("'").strip("[]")
             res = []
             for item in value2.split(","):
                 if item.strip() == "":
@@ -806,7 +815,7 @@ class Text(object):
              \n -> \\N
         """
         value = value.replace("\\K", ",")
-        value = value.replace("\\Q", "\"")
+        value = value.replace("\\Q", '"')
         value = value.replace("\\S", " ")
         value = value.replace("\\D", ":")
         value = value.replace("\\N", "\n")
@@ -873,15 +882,14 @@ class Text(object):
                 return False
             elif text == "":
                 return False
-            elif text.lower() == 'true':
+            elif text.lower() == "true":
                 return True
-            elif text == '1':
+            elif text == "1":
                 return True
             else:
                 return False
         else:
-            raise self._j.exceptions.RuntimeError(
-                "input needs to be None, string, bool or int")
+            raise self._j.exceptions.RuntimeError("input needs to be None, string, bool or int")
 
     # def _dealWithQuote(self, text):
     #     """
@@ -918,7 +926,7 @@ class Text(object):
         text = text.strip(" [")
         text = text.strip(" ]")
 
-        text = text.strip("\"").strip()
+        text = text.strip('"').strip()
 
         if self.strip(text) == "":
             return []
@@ -945,7 +953,6 @@ class Text(object):
                 res.append(item)
         return res
 
-
     def getDict(self, text, ttype=None):
         """
         keys are always treated as string
@@ -959,8 +966,7 @@ class Text(object):
         for item in self.split(","):
             if item.strip() != "":
                 if item.find(":") == -1:
-                    raise self._j.exceptions.RuntimeError(
-                        "Could not find : in %s, cannot get dict out of it." % text)
+                    raise self._j.exceptions.RuntimeError("Could not find : in %s, cannot get dict out of it." % text)
 
                 key, val = item.split(":", 1)
                 if val.find("[") != -1:
@@ -972,7 +978,7 @@ class Text(object):
                 res2[key] = val
         return res2
 
-    def print(self,text, style="vim",lexer="bash"):
+    def print(self, text, style="vim", lexer="bash"):
         """
 
         :param text:
@@ -981,11 +987,8 @@ class Text(object):
         :return:
         """
         text = self.strip(text)
-        formatter = pygments.formatters.Terminal256Formatter(
-            style=pygments.styles.get_style_by_name(style))
+        formatter = pygments.formatters.Terminal256Formatter(style=pygments.styles.get_style_by_name(style))
 
         lexer = pygments.lexers.get_lexer_by_name(lexer)  # , stripall=True)
         colored = pygments.highlight(text, lexer, formatter)
         sys.stdout.write(colored)
-
-

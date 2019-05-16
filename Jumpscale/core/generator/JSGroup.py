@@ -1,17 +1,15 @@
-
-class JSGroup():
+class JSGroup:
     """
     e.g. j.tools
     """
 
-    def __init__(self,md,name):
+    def __init__(self, md, name):
         self._j = md._j
         self.md = md
         self.name = name.lstrip("j.")
         self.jsmodules = []
         if "." in self.name:
             raise RuntimeError("cannot be . in name for jsgroup")
-
 
     # @property
     # def jsmodules(self):
@@ -24,10 +22,9 @@ class JSGroup():
     #             res.append(item)
     #     return res
 
-
     @property
     def jdir(self):
-        return "j.%s"%self.name.lower()
+        return "j.%s" % self.name.lower()
 
     @property
     def markdown(self):

@@ -11,17 +11,18 @@ from ..IO import CoinInput, CoinOutput
 
 from abc import abstractmethod
 
+
 class BotTransactionBaseClass(TransactionBaseClass, SignatureCallbackBase):
-    BOT_FEE_NETWORK_ADDRESS_UPDATE = Currency(value='20 TFT')
-    BOT_FEE_ADDITIONAL_NAME = Currency(value='50 TFT')
-    BOT_FEE_REGISTRATION = Currency(value='90 TFT')
-    BOT_FEE_MONTHLY = Currency(value='10 TFT')
+    BOT_FEE_NETWORK_ADDRESS_UPDATE = Currency(value="20 TFT")
+    BOT_FEE_ADDITIONAL_NAME = Currency(value="50 TFT")
+    BOT_FEE_REGISTRATION = Currency(value="90 TFT")
+    BOT_FEE_MONTHLY = Currency(value="10 TFT")
 
     MAX_NAMES_PER_BOT = 5
     MAX_ADDRESSES_PER_BOT = 10
 
-    SPECIFIER_SENDER = BinaryData(value=b'sender', fixed_size=0)
-    SPECIFIER_RECEIVER = BinaryData(value=b'receiver', fixed_size=0)
+    SPECIFIER_SENDER = BinaryData(value=b"sender", fixed_size=0)
+    SPECIFIER_RECEIVER = BinaryData(value=b"receiver", fixed_size=0)
 
     @staticmethod
     def compute_monthly_bot_fees(months):
@@ -44,10 +45,15 @@ class BotTransactionBaseClass(TransactionBaseClass, SignatureCallbackBase):
         """
         pass
 
+
 class BotMonthsAndFlagsData(j.data.rivine.BaseSiaObjectEncoder, j.data.rivine.BaseRivineObjectEncoder):
     def __init__(self, number_of_months, has_addresses, has_names, has_refund):
         if not isinstance(number_of_months, int) or number_of_months < 0 or number_of_months > 24:
-            raise TypeError("{} ({}) is not a valid number of months, has to be a integer in the [0,24] range".format(number_of_months, type(number_of_months)))
+            raise TypeError(
+                "{} ({}) is not a valid number of months, has to be a integer in the [0,24] range".format(
+                    number_of_months, type(number_of_months)
+                )
+            )
         self._number_of_months = number_of_months
         if not isinstance(has_addresses, bool):
             raise TypeError("has_addresses has to be a bool, not {}".format(type(has_addresses)))
@@ -99,7 +105,7 @@ class BotMonthsAndFlagsData(j.data.rivine.BaseSiaObjectEncoder, j.data.rivine.Ba
 
 
 class TransactionV144(BotTransactionBaseClass):
-    _SPECIFIER = b'bot register tx\0'
+    _SPECIFIER = b"bot register tx\0"
 
     def __init__(self):
         self._addresses = []
@@ -129,7 +135,7 @@ class TransactionV144(BotTransactionBaseClass):
         # if more than one name is defined it also has to be paid
         lnames = len(self._names)
         if lnames > 1:
-            fees += BotTransactionBaseClass.BOT_FEE_ADDITIONAL_NAME * (lnames-1)
+            fees += BotTransactionBaseClass.BOT_FEE_ADDITIONAL_NAME * (lnames - 1)
         # no fee has to be paid for the used network addresses during registration
         # return the total fees
         return fees
@@ -141,6 +147,7 @@ class TransactionV144(BotTransactionBaseClass):
         used as funding for coin outputs, fees and any other kind of coin output.
         """
         return self._coin_inputs
+
     @coin_inputs.setter
     def coin_inputs(self, value):
         self._coin_inputs = []
@@ -163,6 +170,7 @@ class TransactionV144(BotTransactionBaseClass):
         if self._refund_coin_output is None:
             return []
         return [self._refund_coin_output]
+
     @coin_outputs.setter
     def coin_outputs(self, value):
         if isinstance(value, list):
@@ -197,6 +205,7 @@ class TransactionV144(BotTransactionBaseClass):
         Network addresses that will be part of the 3Bot Registration.
         """
         return self._addresses
+
     @addresses.setter
     def addresses(self, value):
         self._addresses = []
@@ -210,16 +219,20 @@ class TransactionV144(BotTransactionBaseClass):
         Add a NetworkAddress that will be added as part of the 3Bot Registration.
         """
         if len(self._addresses) == BotTransactionBaseClass.MAX_ADDRESSES_PER_BOT:
-            raise Exception("a 3Bot can have a maximum of {} addresses, there is no more space for {} ({})".format(
-                BotTransactionBaseClass.MAX_ADDRESSES_PER_BOT, address, type(address)))
+            raise Exception(
+                "a 3Bot can have a maximum of {} addresses, there is no more space for {} ({})".format(
+                    BotTransactionBaseClass.MAX_ADDRESSES_PER_BOT, address, type(address)
+                )
+            )
         self._addresses.append(NetworkAddress(address=address))
-    
+
     @property
     def names(self):
         """
         Bot names that will be part of the 3Bot Registration.
         """
         return self._names
+
     @names.setter
     def names(self, value):
         self._names = []
@@ -233,8 +246,11 @@ class TransactionV144(BotTransactionBaseClass):
         Add a BotName that will be added as part of the 3Bot Registration.
         """
         if len(self._names) == BotTransactionBaseClass.MAX_NAMES_PER_BOT:
-            raise Exception("a 3Bot can have a maximum of {} names, there is no more space for {} ({})".format(
-                BotTransactionBaseClass.MAX_NAMES_PER_BOT, name, type(name)))
+            raise Exception(
+                "a 3Bot can have a maximum of {} names, there is no more space for {} ({})".format(
+                    BotTransactionBaseClass.MAX_NAMES_PER_BOT, name, type(name)
+                )
+            )
         self._names.append(BotName(value=name))
 
     @property
@@ -242,6 +258,7 @@ class TransactionV144(BotTransactionBaseClass):
         if self._transaction_fee is None:
             return Currency()
         return self._transaction_fee
+
     @transaction_fee.setter
     def transaction_fee(self, txfee):
         if txfee is None:
@@ -262,14 +279,17 @@ class TransactionV144(BotTransactionBaseClass):
     @number_of_months.setter
     def number_of_months(self, n):
         if n < 1 or n > 24:
-            raise ValueError("number of months for a 3Bot Registration Transaction has to be in the inclusive range [1,24]")
+            raise ValueError(
+                "number of months for a 3Bot Registration Transaction has to be in the inclusive range [1,24]"
+            )
         self._number_of_months = n
-    
+
     @property
     def signature(self):
         if self._signature is None:
             return ED25519Signature(as_array=True)
         return self._signature
+
     @signature.setter
     def signature(self, value):
         if value is None:
@@ -282,13 +302,18 @@ class TransactionV144(BotTransactionBaseClass):
         if self._public_key is None:
             return PublicKey()
         return self._public_key
+
     @public_key.setter
     def public_key(self, value):
         if value is None:
             self._public_key = None
             return
         if not isinstance(value, PublicKey):
-            raise TypeError("cannot assign value of type {} as BotRegistration's public key (expected type: PublicKey)".format(type(value)))
+            raise TypeError(
+                "cannot assign value of type {} as BotRegistration's public key (expected type: PublicKey)".format(
+                    type(value)
+                )
+            )
         self._public_key = PublicKey(specifier=value.specifier, hash=value.hash)
 
     def signature_add(self, public_key, signature):
@@ -296,8 +321,11 @@ class TransactionV144(BotTransactionBaseClass):
         Implements SignatureCallbackBase.
         """
         if self._public_key.unlockhash != public_key.unlockhash:
-            raise ValueError("given public key ({}) does not equal public key ({})".format(
-                str(self._public_key.unlockhash), str(public_key.unlockhash)))
+            raise ValueError(
+                "given public key ({}) does not equal public key ({})".format(
+                    str(self._public_key.unlockhash), str(public_key.unlockhash)
+                )
+            )
         self.signature = signature
 
     def _signature_hash_input_get(self, *extra_objects):
@@ -331,7 +359,7 @@ class TransactionV144(BotTransactionBaseClass):
         else:
             e.add_int8(1)
             e.add(self._refund_coin_output)
-        
+
         # encode public key
         e.add(self.public_key)
 
@@ -353,25 +381,25 @@ class TransactionV144(BotTransactionBaseClass):
         # encode bot binary encoding prefix (containing length and refund info)
         maf = BotMonthsAndFlagsData(
             number_of_months=self.number_of_months,
-            has_addresses=(addresses_length>0),
-            has_names=(names_length>0),
+            has_addresses=(addresses_length > 0),
+            has_names=(names_length > 0),
             has_refund=(self._refund_coin_output is not None),
         )
         e.add(maf)
         # encode the address and name length
-        e.add_int8(addresses_length | (names_length<< 4))
-        
+        e.add_int8(addresses_length | (names_length << 4))
+
         # encode all addresses and names
         e.add_array(addresses)
         e.add_array(names)
-        
+
         # encode transaction fee and coin inputs
         e.add_all(self.transaction_fee, self.coin_inputs)
 
         # encode refund coin output, if defined
         if maf.has_refund:
             e.add(self._refund_coin_output)
-    
+
         # encode the identification at the end
         e.add_all(self.public_key, self.signature)
 
@@ -379,44 +407,41 @@ class TransactionV144(BotTransactionBaseClass):
         return e.data
 
     def _from_json_data_object(self, data):
-        self._addresses = [NetworkAddress.from_json(address) for address in data.get('addresses', []) or []]
-        self._names = [BotName.from_json(name) for name in data.get('names', []) or []]
-        self._number_of_months = int(data.get('nrofmonths', 0) or 0)
-        if 'txfee' in data:
-            self._transaction_fee = Currency.from_json(data['txfee'])
+        self._addresses = [NetworkAddress.from_json(address) for address in data.get("addresses", []) or []]
+        self._names = [BotName.from_json(name) for name in data.get("names", []) or []]
+        self._number_of_months = int(data.get("nrofmonths", 0) or 0)
+        if "txfee" in data:
+            self._transaction_fee = Currency.from_json(data["txfee"])
         else:
             self._transaction_fee = None
-        self._coin_inputs = [CoinInput.from_json(ci) for ci in data.get('coininputs', []) or []]
-        if 'refundcoinoutput' in data:
-            self._refund_coin_output = CoinOutput.from_json(data['refundcoinoutput'])
+        self._coin_inputs = [CoinInput.from_json(ci) for ci in data.get("coininputs", []) or []]
+        if "refundcoinoutput" in data:
+            self._refund_coin_output = CoinOutput.from_json(data["refundcoinoutput"])
         else:
             self._refund_coin_output = None
-        if 'identification' not in data or data['identification'] in (None, {}):
+        if "identification" not in data or data["identification"] in (None, {}):
             self._public_key = None
             self._signature = None
         else:
-            identification = data['identification']
-            self._public_key = PublicKey.from_json(identification['publickey'])
-            self._signature = ED25519Signature.from_json(identification['signature'], as_array=True)
+            identification = data["identification"]
+            self._public_key = PublicKey.from_json(identification["publickey"])
+            self._signature = ED25519Signature.from_json(identification["signature"], as_array=True)
 
     def _json_data_object(self):
         output = {
-            'nrofmonths': self.number_of_months,
-            'txfee': self.transaction_fee.json(),
-            'coininputs': [ci.json() for ci in self.coin_inputs],
-            'identification': {
-                'publickey': self._public_key.json(),
-                'signature': self._signature.json(),
-            },
+            "nrofmonths": self.number_of_months,
+            "txfee": self.transaction_fee.json(),
+            "coininputs": [ci.json() for ci in self.coin_inputs],
+            "identification": {"publickey": self._public_key.json(), "signature": self._signature.json()},
         }
         addresses = self.addresses
         if len(addresses) > 0:
-            output['addresses'] = [address.json() for address in addresses]
+            output["addresses"] = [address.json() for address in addresses]
         names = self.names
         if len(names) > 0:
-            output['names'] = [name.json() for name in names]
+            output["names"] = [name.json() for name in names]
         if self._refund_coin_output is not None:
-            output['refundcoinoutput'] = self._refund_coin_output.json()
+            output["refundcoinoutput"] = self._refund_coin_output.json()
         return output
 
     def _extra_signature_requests_new(self):
@@ -424,22 +449,25 @@ class TransactionV144(BotTransactionBaseClass):
             # if no parent public key is defined, cannot do anything
             return []
         if self._signature is not None:
-            return [] # nothing to do
+            return []  # nothing to do
         # generate the input hash func
         input_hash_func = InputSignatureHashFactory(self, BotTransactionBaseClass.SPECIFIER_SENDER).signature_hash_new
         # define the input_hash_new generator function,
         # used to create the input hash for creating the signature
         unlockhash = self._public_key.unlockhash
+
         def input_hash_gen(public_key):
             return input_hash_func()
+
         # create the only signature request
         return [SignatureRequest(unlockhash=unlockhash, input_hash_gen=input_hash_gen, callback=self)]
 
     def _extra_is_fulfilled(self):
         return self._signature is not None
 
+
 class TransactionV145(BotTransactionBaseClass):
-    _SPECIFIER = b'bot recupdate tx'
+    _SPECIFIER = b"bot recupdate tx"
 
     def __init__(self):
         self._botid = None
@@ -484,6 +512,7 @@ class TransactionV145(BotTransactionBaseClass):
         if self._botid is None:
             return 0
         return self._botid
+
     @botid.setter
     def botid(self, value):
         if value is None:
@@ -502,6 +531,7 @@ class TransactionV145(BotTransactionBaseClass):
         used as funding for coin outputs, fees and any other kind of coin output.
         """
         return self._coin_inputs
+
     @coin_inputs.setter
     def coin_inputs(self, value):
         self._coin_inputs = []
@@ -524,6 +554,7 @@ class TransactionV145(BotTransactionBaseClass):
         if self._refund_coin_output is None:
             return []
         return [self._refund_coin_output]
+
     @coin_outputs.setter
     def coin_outputs(self, value):
         if isinstance(value, list):
@@ -558,6 +589,7 @@ class TransactionV145(BotTransactionBaseClass):
         Network addresses that will be added to the 3Bot's record.
         """
         return self._addresses_to_add
+
     @addresses_to_add.setter
     def addresses_to_add(self, value):
         self._addresses_to_add = []
@@ -571,16 +603,20 @@ class TransactionV145(BotTransactionBaseClass):
         Add a NetworkAddress that will be added to the 3Bot's record.
         """
         if len(self._addresses_to_add) == BotTransactionBaseClass.MAX_ADDRESSES_PER_BOT:
-            raise Exception("a 3Bot can have a maximum of {} addresses, there is no more space for {} ({})".format(
-                BotTransactionBaseClass.MAX_ADDRESSES_PER_BOT, address, type(address)))
+            raise Exception(
+                "a 3Bot can have a maximum of {} addresses, there is no more space for {} ({})".format(
+                    BotTransactionBaseClass.MAX_ADDRESSES_PER_BOT, address, type(address)
+                )
+            )
         self._addresses_to_add.append(NetworkAddress(address=address))
-    
+
     @property
     def addresses_to_remove(self):
         """
         Network addresses that will be removed from the 3Bot's record.
         """
         return self._addresses_to_remove
+
     @addresses_to_remove.setter
     def addresses_to_remove(self, value):
         self._addresses_to_remove = []
@@ -594,16 +630,20 @@ class TransactionV145(BotTransactionBaseClass):
         Add a NetworkAddress that will be removed from the 3Bot's record.
         """
         if len(self._addresses_to_remove) == BotTransactionBaseClass.MAX_ADDRESSES_PER_BOT:
-            raise Exception("a 3Bot can have a maximum of {} addresses, there is no more space for {} ({})".format(
-                BotTransactionBaseClass.MAX_ADDRESSES_PER_BOT, address, type(address)))
+            raise Exception(
+                "a 3Bot can have a maximum of {} addresses, there is no more space for {} ({})".format(
+                    BotTransactionBaseClass.MAX_ADDRESSES_PER_BOT, address, type(address)
+                )
+            )
         self._addresses_to_remove.append(NetworkAddress(address=address))
-    
+
     @property
     def names_to_add(self):
         """
         Bot names that will added to the 3Bot's record.
         """
         return self._names_to_add
+
     @names_to_add.setter
     def names_to_add(self, value):
         self._names_to_add = []
@@ -617,8 +657,11 @@ class TransactionV145(BotTransactionBaseClass):
         Add a BotName that will be added to the 3Bot's record.
         """
         if len(self._names_to_add) == BotTransactionBaseClass.MAX_NAMES_PER_BOT:
-            raise Exception("a 3Bot can have a maximum of {} names, there is no more space for {} ({})".format(
-                BotTransactionBaseClass.MAX_NAMES_PER_BOT, name, type(name)))
+            raise Exception(
+                "a 3Bot can have a maximum of {} names, there is no more space for {} ({})".format(
+                    BotTransactionBaseClass.MAX_NAMES_PER_BOT, name, type(name)
+                )
+            )
         self._names_to_add.append(BotName(value=name))
 
     @property
@@ -627,6 +670,7 @@ class TransactionV145(BotTransactionBaseClass):
         Bot names that will be removed from the 3Bot's record
         """
         return self._names_to_remove
+
     @names_to_remove.setter
     def names_to_remove(self, value):
         self._names_to_remove = []
@@ -640,8 +684,11 @@ class TransactionV145(BotTransactionBaseClass):
         Add a BotName that will be removed from the 3Bot's record.
         """
         if len(self._names_to_remove) == BotTransactionBaseClass.MAX_NAMES_PER_BOT:
-            raise Exception("a 3Bot can have a maximum of {} names, there is no more space for {} ({})".format(
-                BotTransactionBaseClass.MAX_NAMES_PER_BOT, name, type(name)))
+            raise Exception(
+                "a 3Bot can have a maximum of {} names, there is no more space for {} ({})".format(
+                    BotTransactionBaseClass.MAX_NAMES_PER_BOT, name, type(name)
+                )
+            )
         self._names_to_remove.append(BotName(value=name))
 
     @property
@@ -649,6 +696,7 @@ class TransactionV145(BotTransactionBaseClass):
         if self._transaction_fee is None:
             return Currency()
         return self._transaction_fee
+
     @transaction_fee.setter
     def transaction_fee(self, txfee):
         if txfee is None:
@@ -677,6 +725,7 @@ class TransactionV145(BotTransactionBaseClass):
         if self._signature is None:
             return ED25519Signature(as_array=True)
         return self._signature
+
     @signature.setter
     def signature(self, value):
         if value is None:
@@ -689,13 +738,18 @@ class TransactionV145(BotTransactionBaseClass):
         if self._parent_public_key is None:
             return PublicKey()
         return self._parent_public_key
+
     @parent_public_key.setter
     def parent_public_key(self, value):
         if value is None:
             self._parent_public_key = None
             return
         if not isinstance(value, PublicKey):
-            raise TypeError("cannot assign value of type {} as BotRecordUpdateTransactions's parent public key (expected type: PublicKey)".format(type(value)))
+            raise TypeError(
+                "cannot assign value of type {} as BotRecordUpdateTransactions's parent public key (expected type: PublicKey)".format(
+                    type(value)
+                )
+            )
         self._parent_public_key = PublicKey(specifier=value.specifier, hash=value.hash)
 
     def signature_add(self, public_key, signature):
@@ -703,8 +757,11 @@ class TransactionV145(BotTransactionBaseClass):
         Implements SignatureCallbackBase.
         """
         if self._parent_public_key.unlockhash != public_key.unlockhash:
-            raise ValueError("given public key ({}) does not equal parent public key ({})".format(
-                str(self._parent_public_key.unlockhash), str(public_key.unlockhash)))
+            raise ValueError(
+                "given public key ({}) does not equal parent public key ({})".format(
+                    str(self._parent_public_key.unlockhash), str(public_key.unlockhash)
+                )
+            )
         self.signature = signature
 
     def _signature_hash_input_get(self, *extra_objects):
@@ -768,31 +825,31 @@ class TransactionV145(BotTransactionBaseClass):
         # encode bot binary encoding prefix (containing length and refund info)
         maf = BotMonthsAndFlagsData(
             number_of_months=self.number_of_months,
-            has_addresses=(addresses_to_add_length>0 or addresses_to_remove_length>0),
-            has_names=(names_to_add_length>0 or names_to_remove_length>0),
+            has_addresses=(addresses_to_add_length > 0 or addresses_to_remove_length > 0),
+            has_names=(names_to_add_length > 0 or names_to_remove_length > 0),
             has_refund=(self._refund_coin_output is not None),
         )
         e.add(maf)
 
         # if we have addresses, encode it
         if maf.has_addresses:
-            e.add_int8(addresses_to_add_length | (addresses_to_remove_length<< 4))
+            e.add_int8(addresses_to_add_length | (addresses_to_remove_length << 4))
             e.add_array(addresses_to_add)
             e.add_array(addresses_to_remove)
 
         # if we have names, encode it
         if maf.has_names:
-            e.add_int8(names_to_add_length | (names_to_remove_length<< 4))
+            e.add_int8(names_to_add_length | (names_to_remove_length << 4))
             e.add_array(names_to_add)
             e.add_array(names_to_remove)
-        
+
         # encode transaction fee and coin inputs
         e.add_all(self.transaction_fee, self.coin_inputs)
 
         # encode refund coin output, if defined
         if maf.has_refund:
             e.add(self._refund_coin_output)
-    
+
         # encode the signature at the end
         e.add(self.signature)
 
@@ -800,32 +857,32 @@ class TransactionV145(BotTransactionBaseClass):
         return e.data
 
     def _from_json_data_object(self, data):
-        self._botid = int(data.get('id', 0) or 0)
-        addresses = data.get('addresses', {}) or {}
-        self._addresses_to_add = [NetworkAddress.from_json(address) for address in addresses.get('add', []) or []]
-        self._addresses_to_remove = [NetworkAddress.from_json(address) for address in addresses.get('remove', []) or []]
-        names = data.get('names', {}) or {}
-        self._names_to_add = [BotName.from_json(name) for name in names.get('add', []) or []]
-        self._names_to_remove = [BotName.from_json(name) for name in names.get('remove', []) or []]
-        self._number_of_months = int(data.get('nrofmonths', 0) or 0)
-        if 'txfee' in data:
-            self._transaction_fee = Currency.from_json(data['txfee'])
+        self._botid = int(data.get("id", 0) or 0)
+        addresses = data.get("addresses", {}) or {}
+        self._addresses_to_add = [NetworkAddress.from_json(address) for address in addresses.get("add", []) or []]
+        self._addresses_to_remove = [NetworkAddress.from_json(address) for address in addresses.get("remove", []) or []]
+        names = data.get("names", {}) or {}
+        self._names_to_add = [BotName.from_json(name) for name in names.get("add", []) or []]
+        self._names_to_remove = [BotName.from_json(name) for name in names.get("remove", []) or []]
+        self._number_of_months = int(data.get("nrofmonths", 0) or 0)
+        if "txfee" in data:
+            self._transaction_fee = Currency.from_json(data["txfee"])
         else:
             self._transaction_fee = None
-        self._coin_inputs = [CoinInput.from_json(ci) for ci in data.get('coininputs', []) or []]
-        if 'refundcoinoutput' in data:
-            self._refund_coin_output = CoinOutput.from_json(data['refundcoinoutput'])
+        self._coin_inputs = [CoinInput.from_json(ci) for ci in data.get("coininputs", []) or []]
+        if "refundcoinoutput" in data:
+            self._refund_coin_output = CoinOutput.from_json(data["refundcoinoutput"])
         else:
             self._refund_coin_output = None
-        self._signature = ED25519Signature.from_json(data.get('signature', None) or None)
+        self._signature = ED25519Signature.from_json(data.get("signature", None) or None)
 
     def _json_data_object(self):
         output = {
-            'id': self.botid,
-            'nrofmonths': self.number_of_months,
-            'txfee': self.transaction_fee.json(),
-            'coininputs': [ci.json() for ci in self.coin_inputs],
-            'signature': self.signature.json(),
+            "id": self.botid,
+            "nrofmonths": self.number_of_months,
+            "txfee": self.transaction_fee.json(),
+            "coininputs": [ci.json() for ci in self.coin_inputs],
+            "signature": self.signature.json(),
         }
         # encode addresses
         addresses_to_add = self.addresses_to_add
@@ -833,13 +890,11 @@ class TransactionV145(BotTransactionBaseClass):
         addresses_to_add_length = len(addresses_to_add)
         addresses_to_remove_length = len(addresses_to_remove)
         if addresses_to_add_length > 0:
-            output['addresses'] = {
-                'add': [address.json() for address in addresses_to_add]
-            }
+            output["addresses"] = {"add": [address.json() for address in addresses_to_add]}
         if addresses_to_remove_length > 0:
-            d = output.get('addresses', {})
-            d['remove'] = [address.json() for address in addresses_to_remove]
-            output['addresses'] = d
+            d = output.get("addresses", {})
+            d["remove"] = [address.json() for address in addresses_to_remove]
+            output["addresses"] = d
 
         # encode names
         names_to_add = self.names_to_add
@@ -847,17 +902,15 @@ class TransactionV145(BotTransactionBaseClass):
         names_to_add_length = len(names_to_add)
         names_to_remove_length = len(names_to_remove)
         if names_to_add_length > 0:
-            output['names'] = {
-                'add': [name.json() for name in names_to_add]
-            }
+            output["names"] = {"add": [name.json() for name in names_to_add]}
         if names_to_remove_length > 0:
-            d = output.get('names', {})
-            d['remove'] = [name.json() for name in names_to_remove]
-            output['names'] = d
+            d = output.get("names", {})
+            d["remove"] = [name.json() for name in names_to_remove]
+            output["names"] = d
 
         # encode refund coin output
         if self._refund_coin_output is not None:
-            output['refundcoinoutput'] = self._refund_coin_output.json()
+            output["refundcoinoutput"] = self._refund_coin_output.json()
         return output
 
     def _extra_signature_requests_new(self):
@@ -865,14 +918,16 @@ class TransactionV145(BotTransactionBaseClass):
             # if no parent public key is defined, cannot do anything
             return []
         if self._signature is not None:
-            return [] # nothing to do
+            return []  # nothing to do
         # generate the input hash func
         input_hash_func = InputSignatureHashFactory(self, BotTransactionBaseClass.SPECIFIER_SENDER).signature_hash_new
         # define the input_hash_new generator function,
         # used to create the input hash for creating the signature
         unlockhash = self._parent_public_key.unlockhash
+
         def input_hash_gen(public_key):
             return input_hash_func()
+
         # create the only signature request
         return [SignatureRequest(unlockhash=unlockhash, input_hash_gen=input_hash_gen, callback=self)]
 
@@ -881,7 +936,7 @@ class TransactionV145(BotTransactionBaseClass):
 
 
 class TransactionV146(BotTransactionBaseClass):
-    _SPECIFIER = b'bot nametrans tx'
+    _SPECIFIER = b"bot nametrans tx"
 
     def __init__(self):
         self._sender_botid = None
@@ -913,6 +968,7 @@ class TransactionV146(BotTransactionBaseClass):
         if self._sender_botid is None:
             return 0
         return self._sender_botid
+
     @sender_botid.setter
     def sender_botid(self, value):
         if value is None:
@@ -929,16 +985,21 @@ class TransactionV146(BotTransactionBaseClass):
         if self._receiver_botid is None:
             return 0
         return self._receiver_botid
+
     @receiver_botid.setter
     def receiver_botid(self, value):
         if value is None:
             self._receiver_botid = None
         elif isinstance(value, int):
             if value <= 0:
-                raise ValueError("a (receiver) bot identifier has to be at least equal to 1: {} is invalid".format(value))
+                raise ValueError(
+                    "a (receiver) bot identifier has to be at least equal to 1: {} is invalid".format(value)
+                )
             self._receiver_botid = value
         else:
-            raise TypeError("a (receiver) bot identifier has to be an integer, cannot be of type {}".format(type(value)))
+            raise TypeError(
+                "a (receiver) bot identifier has to be an integer, cannot be of type {}".format(type(value))
+            )
 
     @property
     def coin_inputs(self):
@@ -947,6 +1008,7 @@ class TransactionV146(BotTransactionBaseClass):
         used as funding for coin outputs, fees and any other kind of coin output.
         """
         return self._coin_inputs
+
     @coin_inputs.setter
     def coin_inputs(self, value):
         self._coin_inputs = []
@@ -969,6 +1031,7 @@ class TransactionV146(BotTransactionBaseClass):
         if self._refund_coin_output is None:
             return []
         return [self._refund_coin_output]
+
     @coin_outputs.setter
     def coin_outputs(self, value):
         if isinstance(value, list):
@@ -996,13 +1059,14 @@ class TransactionV146(BotTransactionBaseClass):
         co = CoinOutput(value=value, condition=condition)
         co.id = id
         self._refund_coin_output = co
-    
+
     @property
     def names(self):
         """
         Bot names that will be transfered from the sender- to the receiver 3Bot.
         """
         return self._names
+
     @names.setter
     def names(self, value):
         self._names_to_add = []
@@ -1016,8 +1080,11 @@ class TransactionV146(BotTransactionBaseClass):
         Add a BotName that will be tranfered from the sender- to the receiver 3Bot.
         """
         if len(self._names) == BotTransactionBaseClass.MAX_NAMES_PER_BOT:
-            raise Exception("a 3Bot can have a maximum of {} names, there is no more space for {} ({})".format(
-                BotTransactionBaseClass.MAX_NAMES_PER_BOT, name, type(name)))
+            raise Exception(
+                "a 3Bot can have a maximum of {} names, there is no more space for {} ({})".format(
+                    BotTransactionBaseClass.MAX_NAMES_PER_BOT, name, type(name)
+                )
+            )
         self._names.append(BotName(value=name))
 
     @property
@@ -1025,6 +1092,7 @@ class TransactionV146(BotTransactionBaseClass):
         if self._transaction_fee is None:
             return Currency()
         return self._transaction_fee
+
     @transaction_fee.setter
     def transaction_fee(self, txfee):
         if txfee is None:
@@ -1043,6 +1111,7 @@ class TransactionV146(BotTransactionBaseClass):
         if self._sender_signature is None:
             return ED25519Signature(as_array=True)
         return self._sender_signature
+
     @sender_signature.setter
     def sender_signature(self, value):
         if value is None:
@@ -1055,6 +1124,7 @@ class TransactionV146(BotTransactionBaseClass):
         if self._receiver_signature is None:
             return ED25519Signature(as_array=True)
         return self._receiver_signature
+
     @receiver_signature.setter
     def receiver_signature(self, value):
         if value is None:
@@ -1067,13 +1137,18 @@ class TransactionV146(BotTransactionBaseClass):
         if self._sender_parent_public_key is None:
             return PublicKey()
         return self._sender_parent_public_key
+
     @sender_parent_public_key.setter
     def sender_parent_public_key(self, value):
         if value is None:
             self._sender_parent_public_key = None
             return
         if not isinstance(value, PublicKey):
-            raise TypeError("cannot assign value of type {} as BotNameTransferTransaction's sender parent public key (expected type: PublicKey)".format(type(value)))
+            raise TypeError(
+                "cannot assign value of type {} as BotNameTransferTransaction's sender parent public key (expected type: PublicKey)".format(
+                    type(value)
+                )
+            )
         self._sender_parent_public_key = PublicKey(specifier=value.specifier, hash=value.hash)
 
     @property
@@ -1081,13 +1156,18 @@ class TransactionV146(BotTransactionBaseClass):
         if self._receiver_parent_public_key is None:
             return PublicKey()
         return self._receiver_parent_public_key
+
     @receiver_parent_public_key.setter
     def receiver_parent_public_key(self, value):
         if value is None:
             self._receiver_parent_public_key = None
             return
         if not isinstance(value, PublicKey):
-            raise TypeError("cannot assign value of type {} as BotNameTransferTransaction's receiver parent public key (expected type: PublicKey)".format(type(value)))
+            raise TypeError(
+                "cannot assign value of type {} as BotNameTransferTransaction's receiver parent public key (expected type: PublicKey)".format(
+                    type(value)
+                )
+            )
         self._receiver_parent_public_key = PublicKey(specifier=value.specifier, hash=value.hash)
 
     def signature_add(self, public_key, signature):
@@ -1100,7 +1180,11 @@ class TransactionV146(BotTransactionBaseClass):
         elif unlockhash == self.receiver_parent_public_key.unlockhash:
             self.receiver_signature = signature
         else:
-            raise ValueError("given public key (unlockhash: {}) is not linked to this BotNameTransfer Transaction".format(str(unlockhash)))
+            raise ValueError(
+                "given public key (unlockhash: {}) is not linked to this BotNameTransfer Transaction".format(
+                    str(unlockhash)
+                )
+            )
 
     def _signature_hash_input_get(self, *extra_objects):
         e = j.data.rivine.encoder_rivine_get()
@@ -1170,7 +1254,7 @@ class TransactionV146(BotTransactionBaseClass):
 
         # encode the names
         e.add_array(names)
-        
+
         # encode transaction fee and coin inputs
         e.add_all(self.transaction_fee, self.coin_inputs)
 
@@ -1183,62 +1267,60 @@ class TransactionV146(BotTransactionBaseClass):
 
     def _from_json_data_object(self, data):
         # decode sender info
-        if 'sender' in data:
-            bot_data = data['sender']
-            self._sender_botid = int(bot_data.get('id', 0) or 0)
-            self._sender_signature = ED25519Signature.from_json(bot_data.get('signature', None) or None)
+        if "sender" in data:
+            bot_data = data["sender"]
+            self._sender_botid = int(bot_data.get("id", 0) or 0)
+            self._sender_signature = ED25519Signature.from_json(bot_data.get("signature", None) or None)
         else:
             self._sender_botid = None
             self._sender_signature = None
         # decode receiver info
-        if 'receiver' in data:
-            bot_data = data['receiver']
-            self._receiver_botid = int(bot_data.get('id', 0) or 0)
-            self._receiver_signature = ED25519Signature.from_json(bot_data.get('signature', None) or None)
+        if "receiver" in data:
+            bot_data = data["receiver"]
+            self._receiver_botid = int(bot_data.get("id", 0) or 0)
+            self._receiver_signature = ED25519Signature.from_json(bot_data.get("signature", None) or None)
         else:
             self._receiver_botid = None
             self._receiver_signature = None
         # decode names
-        self._names = [BotName.from_json(name) for name in data.get('names', []) or []]
+        self._names = [BotName.from_json(name) for name in data.get("names", []) or []]
         # decode transaction fee
-        if 'txfee' in data:
-            self._transaction_fee = Currency.from_json(data['txfee'])
+        if "txfee" in data:
+            self._transaction_fee = Currency.from_json(data["txfee"])
         else:
             self._transaction_fee = None
         # decode coin inputs
-        self._coin_inputs = [CoinInput.from_json(ci) for ci in data.get('coininputs', []) or []]
+        self._coin_inputs = [CoinInput.from_json(ci) for ci in data.get("coininputs", []) or []]
         # decode refund coin output
-        if 'refundcoinoutput' in data:
-            self._refund_coin_output = CoinOutput.from_json(data['refundcoinoutput'])
+        if "refundcoinoutput" in data:
+            self._refund_coin_output = CoinOutput.from_json(data["refundcoinoutput"])
         else:
             self._refund_coin_output = None
 
     def _json_data_object(self):
         output = {
-            'sender': {
-                'id': self.sender_botid,
-                'signature': self.sender_signature.json(),
-            },
-            'receiver': {
-                'id': self.receiver_botid,
-                'signature': self.receiver_signature.json(),
-            },
-            'names': [name.json() for name in self.names],
-            'txfee': self.transaction_fee.json(),
-            'coininputs': [ci.json() for ci in self.coin_inputs]
+            "sender": {"id": self.sender_botid, "signature": self.sender_signature.json()},
+            "receiver": {"id": self.receiver_botid, "signature": self.receiver_signature.json()},
+            "names": [name.json() for name in self.names],
+            "txfee": self.transaction_fee.json(),
+            "coininputs": [ci.json() for ci in self.coin_inputs],
         }
         if self._refund_coin_output is not None:
-            output['refundcoinoutput'] = self._refund_coin_output.json()
+            output["refundcoinoutput"] = self._refund_coin_output.json()
         return output
 
     def _extra_signature_requests_new(self):
         requests = []
         # collect, if possible, the sender request
-        request = self._extra_signature_requests_for(self._sender_parent_public_key, self._sender_signature, BotTransactionBaseClass.SPECIFIER_SENDER)
+        request = self._extra_signature_requests_for(
+            self._sender_parent_public_key, self._sender_signature, BotTransactionBaseClass.SPECIFIER_SENDER
+        )
         if request is not None:
             requests.append(request)
         # collect, if possible, the receiver request
-        request = self._extra_signature_requests_for(self._receiver_parent_public_key, self._receiver_signature, BotTransactionBaseClass.SPECIFIER_RECEIVER)
+        request = self._extra_signature_requests_for(
+            self._receiver_parent_public_key, self._receiver_signature, BotTransactionBaseClass.SPECIFIER_RECEIVER
+        )
         if request is not None:
             requests.append(request)
         # return all requests, if any
@@ -1257,9 +1339,8 @@ class TransactionV146(BotTransactionBaseClass):
         unlockhash = public_key.unlockhash
         # create the only signature request
         return SignatureRequest(
-            unlockhash=unlockhash,
-            input_hash_gen=(lambda public_key: factory.signature_hash_new()),
-            callback=self)
+            unlockhash=unlockhash, input_hash_gen=(lambda public_key: factory.signature_hash_new()), callback=self
+        )
 
     def _extra_is_fulfilled(self):
         return self._sender_signature is not None and self._receiver_signature is not None

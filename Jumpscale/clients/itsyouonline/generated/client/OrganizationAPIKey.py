@@ -7,9 +7,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class OrganizationAPIKey( ):
+class OrganizationAPIKey:
     """
     auto-generated. don't touch.
     """
@@ -29,22 +27,24 @@ class OrganizationAPIKey( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'OrganizationAPIKey'
+        class_name = "OrganizationAPIKey"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
         self.callbackURL = client_support.set_property(
-            'callbackURL', data, data_types, False, [], False, False, class_name)
+            "callbackURL", data, data_types, False, [], False, False, class_name
+        )
         data_types = [bool]
         self.clientCredentialsGrantType = client_support.set_property(
-            'clientCredentialsGrantType', data, data_types, False, [], False, False, class_name)
+            "clientCredentialsGrantType", data, data_types, False, [], False, False, class_name
+        )
         data_types = [Label]
-        self.label = client_support.set_property('label', data, data_types, False, [], False, True, class_name)
+        self.label = client_support.set_property("label", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.secret = client_support.set_property('secret', data, data_types, False, [], False, False, class_name)
+        self.secret = client_support.set_property("secret", data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

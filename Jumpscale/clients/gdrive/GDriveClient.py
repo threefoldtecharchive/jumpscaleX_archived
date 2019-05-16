@@ -14,13 +14,15 @@ from google.oauth2 import service_account
 
 from .GDriveFile import *
 
-SCOPES = ['https://www.googleapis.com/auth/drive',
-          'https://www.googleapis.com/auth/drive.file',
-          'https://www.googleapis.com/auth/drive.appdata',
-          'https://www.googleapis.com/auth/drive.scripts',
-          'https://www.googleapis.com/auth/drive.metadata']
+SCOPES = [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/drive.file",
+    "https://www.googleapis.com/auth/drive.appdata",
+    "https://www.googleapis.com/auth/drive.scripts",
+    "https://www.googleapis.com/auth/drive.metadata",
+]
 
-APPLICATION_NAME = 'Google Drive Exporter'
+APPLICATION_NAME = "Google Drive Exporter"
 
 JSConfigClient = j.application.JSBaseConfigClass
 
@@ -56,9 +58,10 @@ class GDriveClient(JSConfigClient):
 
         return self._cache.get("exportFile", method=do, expire=300)
 
-    def exportSlides(self, presentation, destpath="/tmp", staticdir=None, size='MEDIUM'):
+    def exportSlides(self, presentation, destpath="/tmp", staticdir=None, size="MEDIUM"):
         def do():
             from Jumpscale.tools.googleslides.slides2html.downloader import Downloader
+
             # presentation should be the guid
             # should extract the presentation if full path
             os.makedirs(destpath, exist_ok=True)
@@ -70,7 +73,7 @@ class GDriveClient(JSConfigClient):
             slides = [x for x in os.listdir(destpath) if x.endswith(".png") and "_" in x and "background_" not in x]
             for image in slides:
                 imagepath = j.sal.fs.joinPaths(destpath, image)
-                slideimage = image.split("_",maxsplit=1)[1]   # 00_asdsadasda.png remove the leading zeros and _
+                slideimage = image.split("_", maxsplit=1)[1]  # 00_asdsadasda.png remove the leading zeros and _
                 newimagepath = j.sal.fs.joinPaths(presentation_dir, slideimage)
                 j.sal.fs.moveFile(imagepath, newimagepath)
             if staticdir:
@@ -87,4 +90,5 @@ class GDriveClient(JSConfigClient):
             presentations_meta = j.data.serializers.json.load(meta_file)
             meta = presentations_meta[presentation_id]
             return meta
+
         return self._cache.get("get_presentation_meta", method=do, expire=300)

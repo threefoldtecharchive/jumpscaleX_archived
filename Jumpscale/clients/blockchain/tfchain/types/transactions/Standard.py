@@ -5,6 +5,7 @@ from .Base import TransactionBaseClass, TransactionVersion
 from ..IO import CoinInput, CoinOutput, BlockstakeInput, BlockstakeOutput
 from ..PrimitiveTypes import Currency, BinaryData
 
+
 class TransactionV1(TransactionBaseClass):
     def __init__(self):
         self._coin_inputs = []
@@ -12,99 +13,92 @@ class TransactionV1(TransactionBaseClass):
         self._blockstake_inputs = []
         self._blockstake_outputs = []
         self._miner_fees = []
-        self._data = BinaryData(strencoding='base64')
+        self._data = BinaryData(strencoding="base64")
 
         # hidden flag, that indicates if this Txn was a Legacy v0 Txn or not,
         # False by default as we do not wish to produce new legacy Txns, only decode existing ones
         self._legacy = False
 
         super().__init__()
-    
+
     @classmethod
     def legacy_from_json(cls, obj):
         """
         Class method to decode v1 Tx from a legacy v0 Tx.
         """
 
-        tv = obj.get('version', -1)
+        tv = obj.get("version", -1)
         if TransactionVersion.LEGACY != tv:
-            raise ValueError("legacy v0 transaction is expected to be of version {}, not version {}".format(TransactionVersion.LEGACY, tv))
+            raise ValueError(
+                "legacy v0 transaction is expected to be of version {}, not version {}".format(
+                    TransactionVersion.LEGACY, tv
+                )
+            )
         txn = cls()
 
-        if 'data' not in obj:
+        if "data" not in obj:
             raise ValueError("no data object found in Legacy Transaction (v{})".format(TransactionVersion.LEGACY))
-        txn_data = obj['data']
-        if 'coininputs' in txn_data:
-            for legacy_ci_info in (txn_data['coininputs'] or []):
-                unlocker = legacy_ci_info.get('unlocker', {})
+        txn_data = obj["data"]
+        if "coininputs" in txn_data:
+            for legacy_ci_info in txn_data["coininputs"] or []:
+                unlocker = legacy_ci_info.get("unlocker", {})
                 ci_info = {
-                    'parentid': legacy_ci_info.get('parentid', ''),
-                    'fulfillment': {
-                        'type': 1,
-                        'data': {
-                            'publickey': unlocker.get('condition', {}).get('publickey'),
-                            'signature': unlocker.get('fulfillment', {}).get('signature'),
-                        }
-                    }
+                    "parentid": legacy_ci_info.get("parentid", ""),
+                    "fulfillment": {
+                        "type": 1,
+                        "data": {
+                            "publickey": unlocker.get("condition", {}).get("publickey"),
+                            "signature": unlocker.get("fulfillment", {}).get("signature"),
+                        },
+                    },
                 }
                 ci = CoinInput.from_json(ci_info)
                 txn._coin_inputs.append(ci)
-        if 'coinoutputs' in txn_data:
-            for legacy_co_info in (txn_data['coinoutputs'] or []):
+        if "coinoutputs" in txn_data:
+            for legacy_co_info in txn_data["coinoutputs"] or []:
                 co_info = {
-                    'value': legacy_co_info.get('value', '0'),
-                    'condition': {
-                        'type': 1,
-                        'data': {
-                            'unlockhash': legacy_co_info.get('unlockhash', ''),
-                        }
-                    }
+                    "value": legacy_co_info.get("value", "0"),
+                    "condition": {"type": 1, "data": {"unlockhash": legacy_co_info.get("unlockhash", "")}},
                 }
                 co = CoinOutput.from_json(co_info)
                 txn._coin_outputs.append(co)
-        if 'blockstakeinputs' in txn_data:
-            for legacy_bsi_info in (txn_data['blockstakeinputs'] or []):
-                unlocker = legacy_bsi_info.get('unlocker', {})
+        if "blockstakeinputs" in txn_data:
+            for legacy_bsi_info in txn_data["blockstakeinputs"] or []:
+                unlocker = legacy_bsi_info.get("unlocker", {})
                 bsi_info = {
-                    'parentid': legacy_bsi_info.get('parentid', ''),
-                    'fulfillment': {
-                        'type': 1,
-                        'data': {
-                            'publickey': unlocker.get('condition', {}).get('publickey'),
-                            'signature': unlocker.get('fulfillment', {}).get('signature'),
-                        }
-                    }
+                    "parentid": legacy_bsi_info.get("parentid", ""),
+                    "fulfillment": {
+                        "type": 1,
+                        "data": {
+                            "publickey": unlocker.get("condition", {}).get("publickey"),
+                            "signature": unlocker.get("fulfillment", {}).get("signature"),
+                        },
+                    },
                 }
                 bsi = BlockstakeInput.from_json(bsi_info)
                 txn._blockstake_inputs.append(bsi)
-        if 'blockstakeoutputs' in txn_data:
-            for legacy_bso_info in (txn_data['blockstakeoutputs'] or []):
+        if "blockstakeoutputs" in txn_data:
+            for legacy_bso_info in txn_data["blockstakeoutputs"] or []:
                 bso_info = {
-                    'value': legacy_bso_info.get('value', '0'),
-                    'condition': {
-                        'type': 1,
-                        'data': {
-                            'unlockhash': legacy_bso_info.get('unlockhash', ''),
-                        }
-                    }
+                    "value": legacy_bso_info.get("value", "0"),
+                    "condition": {"type": 1, "data": {"unlockhash": legacy_bso_info.get("unlockhash", "")}},
                 }
                 bso = BlockstakeOutput.from_json(bso_info)
                 txn._blockstake_outputs.append(bso)
 
-        if 'minerfees' in txn_data:
-            for miner_fee in (txn_data['minerfees'] or []) :
+        if "minerfees" in txn_data:
+            for miner_fee in txn_data["minerfees"] or []:
                 txn._miner_fees.append(Currency.from_json(miner_fee))
-        if 'arbitrarydata' in txn_data:
-            txn._data = BinaryData.from_json(txn_data.get('arbitrarydata', None) or '', strencoding='base64')
+        if "arbitrarydata" in txn_data:
+            txn._data = BinaryData.from_json(txn_data.get("arbitrarydata", None) or "", strencoding="base64")
 
         txn._legacy = True
         return txn
 
-
     @property
     def version(self):
         return TransactionVersion.STANDARD
-    
+
     @property
     def coin_inputs(self):
         """
@@ -112,6 +106,7 @@ class TransactionV1(TransactionBaseClass):
         used as funding for coin outputs, fees and any other kind of coin output.
         """
         return self._coin_inputs
+
     @coin_inputs.setter
     def coin_inputs(self, value):
         self._coin_inputs = []
@@ -127,6 +122,7 @@ class TransactionV1(TransactionBaseClass):
         funded by the Transaction's coin inputs.
         """
         return self._coin_outputs
+
     @coin_outputs.setter
     def coin_outputs(self, value):
         self._coin_outputs = []
@@ -151,6 +147,7 @@ class TransactionV1(TransactionBaseClass):
         Blockstake inputs of this Transaction.
         """
         return self._blockstake_inputs
+
     @blockstake_inputs.setter
     def blockstake_inputs(self, value):
         self._blockstake_inputs = []
@@ -165,6 +162,7 @@ class TransactionV1(TransactionBaseClass):
         Blockstake outputs of this Transaction.
         """
         return self._blockstake_outputs
+
     @blockstake_outputs.setter
     def blockstake_outputs(self, value):
         self._blockstake_outputs = []
@@ -193,7 +191,7 @@ class TransactionV1(TransactionBaseClass):
         funded by this Transaction's coin inputs.
         """
         return self._miner_fees
-    
+
     @property
     def data(self):
         """
@@ -201,8 +199,9 @@ class TransactionV1(TransactionBaseClass):
         with a max length of 83 bytes.
         """
         if self._data is None:
-            return BinaryData(strencoding='base64')
+            return BinaryData(strencoding="base64")
         return self._data
+
     @data.setter
     def data(self, value):
         if value is None:
@@ -211,11 +210,13 @@ class TransactionV1(TransactionBaseClass):
         if isinstance(value, BinaryData):
             value = value.value
         elif isinstance(value, str):
-            value = value.encode('utf-8')
+            value = value.encode("utf-8")
         if len(value) > 83:
-            raise ValueError("arbitrary data can have a maximum bytes length of 83, {} exceeds this limit".format(len(value)))
-        self._data = BinaryData(value=value, strencoding='base64')
-    
+            raise ValueError(
+                "arbitrary data can have a maximum bytes length of 83, {} exceeds this limit".format(len(value))
+            )
+        self._data = BinaryData(value=value, strencoding="base64")
+
     def _signature_hash_input_get(self, *extra_objects):
         if self._legacy:
             return self._legacy_signature_hash_input_get(*extra_objects)
@@ -255,7 +256,7 @@ class TransactionV1(TransactionBaseClass):
 
         # return the encoded data
         return e.data
-    
+
     def _legacy_signature_hash_input_get(self, *extra_objects):
         e = j.data.rivine.encoder_sia_get()
 
@@ -289,24 +290,23 @@ class TransactionV1(TransactionBaseClass):
 
         # return the encoded data
         return e.data
-        
 
     def _from_json_data_object(self, data):
-        self._coin_inputs = [CoinInput.from_json(ci) for ci in data.get('coininputs', []) or []]
-        self._coin_outputs = [CoinOutput.from_json(co) for co in data.get('coinoutputs', []) or []]
-        self._blockstake_inputs = [BlockstakeInput.from_json(bsi) for bsi in data.get('blockstakeinputs', []) or []]
-        self._blockstake_outputs = [BlockstakeOutput.from_json(bso) for bso in data.get('blockstakeoutputs', []) or []]
-        self._miner_fees = [Currency.from_json(fee) for fee in data.get('minerfees', []) or []]
-        self._data = BinaryData.from_json(data.get('arbitrarydata', None) or '', strencoding='base64')
+        self._coin_inputs = [CoinInput.from_json(ci) for ci in data.get("coininputs", []) or []]
+        self._coin_outputs = [CoinOutput.from_json(co) for co in data.get("coinoutputs", []) or []]
+        self._blockstake_inputs = [BlockstakeInput.from_json(bsi) for bsi in data.get("blockstakeinputs", []) or []]
+        self._blockstake_outputs = [BlockstakeOutput.from_json(bso) for bso in data.get("blockstakeoutputs", []) or []]
+        self._miner_fees = [Currency.from_json(fee) for fee in data.get("minerfees", []) or []]
+        self._data = BinaryData.from_json(data.get("arbitrarydata", None) or "", strencoding="base64")
 
     def _json_data_object(self):
         obj = {
-            'coininputs': [ci.json() for ci in self._coin_inputs],
-            'coinoutputs': [co.json() for co in self._coin_outputs],
-            'blockstakeinputs': [bsi.json() for bsi in self._blockstake_inputs],
-            'blockstakeoutputs': [bso.json() for bso in self._blockstake_outputs],
-            'minerfees': [fee.json() for fee in self._miner_fees],
-            'arbitrarydata': self.data.json(),
+            "coininputs": [ci.json() for ci in self._coin_inputs],
+            "coinoutputs": [co.json() for co in self._coin_outputs],
+            "blockstakeinputs": [bsi.json() for bsi in self._blockstake_inputs],
+            "blockstakeoutputs": [bso.json() for bso in self._blockstake_outputs],
+            "minerfees": [fee.json() for fee in self._miner_fees],
+            "arbitrarydata": self.data.json(),
         }
         keys = list(obj.keys())
         for key in keys:
@@ -317,13 +317,13 @@ class TransactionV1(TransactionBaseClass):
     @property
     def _coin_outputid_specifier(self):
         if self._legacy:
-            return b'coin output\0\0\0\0'
+            return b"coin output\0\0\0\0"
         return super()._coin_outputid_specifier
 
     @property
     def _blockstake_outputid_specifier(self):
         if self._legacy:
-            return b'blstake output\0'
+            return b"blstake output\0"
         return super()._blockstake_outputid_specifier
 
     def binary_encode(self):
@@ -348,7 +348,7 @@ class TransactionV1(TransactionBaseClass):
         encoder.add_int(len(self.coin_inputs))
         for ci in self.coin_inputs:
             encoder.add(ci.parentid)
-            encoder.add_array(bytearray([1])) # FulfillmentTypeSingleSignature
+            encoder.add_array(bytearray([1]))  # FulfillmentTypeSingleSignature
             sub_encoder = j.data.rivine.encoder_sia_get()
             sub_encoder.add(ci.fulfillment.public_key)
             encoder.add_slice(sub_encoder.data)
@@ -361,7 +361,7 @@ class TransactionV1(TransactionBaseClass):
         encoder.add_int(len(self._blockstake_inputs))
         for bsi in self._blockstake_inputs:
             encoder.add(bsi.parentid)
-            encoder.add_array(bytearray([1])) # FulfillmentTypeSingleSignature
+            encoder.add_array(bytearray([1]))  # FulfillmentTypeSingleSignature
             sub_encoder = j.data.rivine.encoder_sia_get()
             sub_encoder.add(bsi.fulfillment.public_key)
             encoder.add_slice(sub_encoder.data)

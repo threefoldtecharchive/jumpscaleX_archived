@@ -1,5 +1,6 @@
 import importlib
 from Jumpscale import j
+
 JSConfigClient = j.application.JSBaseConfigClass
 
 

@@ -42,9 +42,7 @@ class DBSQLite(j.application.JSBaseClass):
         else:
             key = int(key)
             if self.exists(key):
-                self._table_model.update(value=val).where(
-                    self._table_model.id == key
-                ).execute()
+                self._table_model.update(value=val).where(self._table_model.id == key).execute()
             else:
                 self._table_model.create(id=key, value=val)
         v = self.get(key)
@@ -75,9 +73,7 @@ class DBSQLite(j.application.JSBaseClass):
 
     def iterate(self, key_start=None, **kwargs):
         if key_start:
-            items = self._table_model.select().where(
-                getattr(self._table_model, id) >= key_start
-            )
+            items = self._table_model.select().where(getattr(self._table_model, id) >= key_start)
         else:
             items = self._table_model.select()
         for item in items:
@@ -85,4 +81,3 @@ class DBSQLite(j.application.JSBaseClass):
 
     def close(self):
         self.sqlitedb.close()
-

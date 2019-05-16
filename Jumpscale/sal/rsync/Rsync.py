@@ -1,8 +1,9 @@
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
-class RsyncInstance(j.application.JSBaseClass):
 
+
+class RsyncInstance(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
         self.name

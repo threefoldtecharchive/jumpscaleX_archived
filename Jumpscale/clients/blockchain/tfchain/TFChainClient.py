@@ -19,26 +19,23 @@ from .TFChainWallet import WalletBalance, MultiSigWalletBalance
 
 _EXPLORER_NODES = {
     "STD": [
-        'https://explorer.threefoldtoken.com',
-        'https://explorer2.threefoldtoken.com',
-        'https://explorer3.threefoldtoken.com',
-        'https://explorer4.threefoldtoken.com',
+        "https://explorer.threefoldtoken.com",
+        "https://explorer2.threefoldtoken.com",
+        "https://explorer3.threefoldtoken.com",
+        "https://explorer4.threefoldtoken.com",
     ],
-    "TEST": [
-        'https://explorer.testnet.threefoldtoken.com',
-        'https://explorer2.testnet.threefoldtoken.com',
-    ],
-    "DEV": [
-        'http://localhost:23110'
-    ],
+    "TEST": ["https://explorer.testnet.threefoldtoken.com", "https://explorer2.testnet.threefoldtoken.com"],
+    "DEV": ["http://localhost:23110"],
 }
 
-_CHAIN_NETWORK_TYPES = sorted(['STD', 'TEST', 'DEV'])
+_CHAIN_NETWORK_TYPES = sorted(["STD", "TEST", "DEV"])
+
 
 class TFChainClient(j.application.JSBaseConfigParentClass):
     """
     Tfchain client object
     """
+
     _SCHEMATEXT = """
         @url = jumpscale.tfchain.client
         name* = "" (S)
@@ -91,14 +88,14 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         #       only occurs when loaded from a saved instance,
         #       so there must be something going wrong during decoding.
         if isinstance(self.network_type, int):
-            self.network_type = _CHAIN_NETWORK_TYPES[self.network_type-1]
+            self.network_type = _CHAIN_NETWORK_TYPES[self.network_type - 1]
         return self.network_type
 
     @property
     def minimum_miner_fee(self):
         if self.network == "DEV":
-            return j.clients.tfchain.types.currency_new('1')
-        return j.clients.tfchain.types.currency_new('0.1')
+            return j.clients.tfchain.types.currency_new("1")
+        return j.clients.tfchain.types.currency_new("0.1")
 
     def blockchain_info_get(self):
         """
@@ -106,7 +103,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         """
         resp = self.explorer_get(endpoint="/explorer")
         resp = j.data.serializers.json.loads(resp)
-        blockid = Hash.from_json(obj=resp['blockid'])
+        blockid = Hash.from_json(obj=resp["blockid"])
         last_block = self.block_get(blockid)
         return ExplorerBlockchainInfo(last_block=last_block)
 
@@ -124,48 +121,62 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
                 endpoint = "/explorer/blocks/{}".format(int(value))
                 resp = self.explorer_get(endpoint=endpoint)
                 resp = j.data.serializers.json.loads(resp)
-                resp = resp['block']
+                resp = resp["block"]
             else:
                 blockid = self._normalize_id(value)
-                endpoint = "/explorer/hashes/"+blockid
+                endpoint = "/explorer/hashes/" + blockid
                 resp = self.explorer_get(endpoint=endpoint)
                 resp = j.data.serializers.json.loads(resp)
-                if resp['hashtype'] != 'blockid':
-                    raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected hash type 'blockid' not '{}'".format(resp['hashtype']), endpoint, resp)
-                resp = resp['block']
-                if resp['blockid'] != blockid:
-                    raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected block ID '{}' not '{}'".format(blockid, resp['blockid']), endpoint, resp)
+                if resp["hashtype"] != "blockid":
+                    raise j.clients.tfchain.errors.ExplorerInvalidResponse(
+                        "expected hash type 'blockid' not '{}'".format(resp["hashtype"]), endpoint, resp
+                    )
+                resp = resp["block"]
+                if resp["blockid"] != blockid:
+                    raise j.clients.tfchain.errors.ExplorerInvalidResponse(
+                        "expected block ID '{}' not '{}'".format(blockid, resp["blockid"]), endpoint, resp
+                    )
             # parse the transactions
             transactions = []
-            for etxn in resp['transactions']:
+            for etxn in resp["transactions"]:
                 # parse the explorer transaction
                 transaction = self._transaction_from_explorer_transaction(etxn, endpoint=endpoint, resp=resp)
                 # append the transaction to the list of transactions
                 transactions.append(transaction)
-            rawblock = resp['rawblock']
+            rawblock = resp["rawblock"]
             # parse the parent id
-            parentid = Hash.from_json(obj=rawblock['parentid'])
+            parentid = Hash.from_json(obj=rawblock["parentid"])
             # parse the miner payouts
             miner_payouts = []
-            minerpayoutids = resp.get('minerpayoutids', None) or []
-            eminerpayouts = rawblock.get('minerpayouts', None) or []
+            minerpayoutids = resp.get("minerpayoutids", None) or []
+            eminerpayouts = rawblock.get("minerpayouts", None) or []
             if len(eminerpayouts) != len(minerpayoutids):
-                raise j.clients.tfchain.errors.ExplorerInvalidResponse("amount of miner payouts and payout ids are not matching: {} != {}".format(len(eminerpayouts), len(minerpayoutids)), endpoint, resp)
+                raise j.clients.tfchain.errors.ExplorerInvalidResponse(
+                    "amount of miner payouts and payout ids are not matching: {} != {}".format(
+                        len(eminerpayouts), len(minerpayoutids)
+                    ),
+                    endpoint,
+                    resp,
+                )
             for idx, mp in enumerate(eminerpayouts):
                 id = Hash.from_json(minerpayoutids[idx])
-                value = Currency.from_json(mp['value'])
-                unlockhash = UnlockHash.from_json(mp['unlockhash'])
+                value = Currency.from_json(mp["value"])
+                unlockhash = UnlockHash.from_json(mp["unlockhash"])
                 miner_payouts.append(ExplorerMinerPayout(id=id, value=value, unlockhash=unlockhash))
             # get the timestamp and height
-            height = int(resp['height'])
-            timestamp = int(rawblock['timestamp'])
+            height = int(resp["height"])
+            timestamp = int(rawblock["timestamp"])
             # get the block's identifier
-            blockid = Hash.from_json(resp['blockid'])
+            blockid = Hash.from_json(resp["blockid"])
             # return the block, as reported by the explorer
             return ExplorerBlock(
-                id=blockid, parentid=parentid,
-                height=height, timestamp=timestamp,
-                transactions=transactions, miner_payouts=miner_payouts)
+                id=blockid,
+                parentid=parentid,
+                height=height,
+                timestamp=timestamp,
+                transactions=transactions,
+                miner_payouts=miner_payouts,
+            )
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
             raise j.clients.tfchain.errors.ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
@@ -177,15 +188,19 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         @param txid: the identifier (bytes, bytearray, hash or string) that points to the desired transaction
         """
         txid = self._normalize_id(txid)
-        endpoint = "/explorer/hashes/"+txid
+        endpoint = "/explorer/hashes/" + txid
         resp = self.explorer_get(endpoint=endpoint)
         resp = j.data.serializers.json.loads(resp)
         try:
-            if resp['hashtype'] != 'transactionid':
-                raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected hash type 'transactionid' not '{}'".format(resp['hashtype']), endpoint, resp)
-            resp = resp['transaction']
-            if resp['id'] != txid:
-                raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected transaction ID '{}' not '{}'".format(txid, resp['id']), endpoint, resp)
+            if resp["hashtype"] != "transactionid":
+                raise j.clients.tfchain.errors.ExplorerInvalidResponse(
+                    "expected hash type 'transactionid' not '{}'".format(resp["hashtype"]), endpoint, resp
+                )
+            resp = resp["transaction"]
+            if resp["id"] != txid:
+                raise j.clients.tfchain.errors.ExplorerInvalidResponse(
+                    "expected transaction ID '{}' not '{}'".format(txid, resp["id"]), endpoint, resp
+                )
             return self._transaction_from_explorer_transaction(resp, endpoint=endpoint, resp=resp)
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
@@ -203,7 +218,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         resp = self.explorer_post(endpoint=endpoint, data=transaction)
         resp = j.data.serializers.json.loads(resp)
         try:
-            return str(Hash(value=resp['transactionid']))
+            return str(Hash(value=resp["transactionid"]))
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
             raise j.clients.tfchain.errors.ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
@@ -222,31 +237,37 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         @param target: the target wallet to look up transactions for in the explorer, see above for more info
         """
         unlockhash = str(j.clients.tfchain.types.conditions.from_recipient(target).unlockhash)
-        endpoint = "/explorer/hashes/"+unlockhash
+        endpoint = "/explorer/hashes/" + unlockhash
         resp = self.explorer_get(endpoint=endpoint)
         resp = j.data.serializers.json.loads(resp)
         try:
-            if resp['hashtype'] != 'unlockhash':
-                raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected hash type 'unlockhash' not '{}'".format(resp['hashtype']), endpoint, resp)
+            if resp["hashtype"] != "unlockhash":
+                raise j.clients.tfchain.errors.ExplorerInvalidResponse(
+                    "expected hash type 'unlockhash' not '{}'".format(resp["hashtype"]), endpoint, resp
+                )
             # parse the transactions
             transactions = []
-            for etxn in resp['transactions']:
+            for etxn in resp["transactions"]:
                 # parse the explorer transaction
                 transaction = self._transaction_from_explorer_transaction(etxn, endpoint=endpoint, resp=resp)
                 # append the transaction to the list of transactions
                 transactions.append(transaction)
             # collect all multisig addresses
-            multisig_addresses = [UnlockHash.from_json(obj=uh) for uh in resp.get('multisigaddresses', None) or []]
+            multisig_addresses = [UnlockHash.from_json(obj=uh) for uh in resp.get("multisigaddresses", None) or []]
             for addr in multisig_addresses:
                 if addr.type != UnlockHashType.MULTI_SIG:
-                    raise j.clients.tfchain.errors.ExplorerInvalidResponse("invalid unlock hash type {} for MultiSignature Address (expected: 3)".format(addr.type), endpoint, resp)
+                    raise j.clients.tfchain.errors.ExplorerInvalidResponse(
+                        "invalid unlock hash type {} for MultiSignature Address (expected: 3)".format(addr.type),
+                        endpoint,
+                        resp,
+                    )
             erc20_info = None
-            if 'erc20info' in resp:
-                info = resp['erc20info']
+            if "erc20info" in resp:
+                info = resp["erc20info"]
                 erc20_info = ERC20AddressInfo(
-                    address_tft=UnlockHash.from_json(info['tftaddress']),
-                    address_erc20=ERC20Address.from_json(info['erc20address']),
-                    confirmations=int(info['confirmations']),
+                    address_tft=UnlockHash.from_json(info["tftaddress"]),
+                    address_erc20=ERC20Address.from_json(info["erc20address"]),
+                    confirmations=int(info["confirmations"]),
                 )
 
             # sort the transactions by height
@@ -258,7 +279,8 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
                 transactions=transactions,
                 multisig_addresses=multisig_addresses,
                 erc20_info=erc20_info,
-                client=self)
+                client=self,
+            )
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
             raise j.clients.tfchain.errors.ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
@@ -271,7 +293,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
 
         @param id: the identifier (bytes, bytearray, hash or string) that points to the desired coin output
         """
-        return self._output_get(id, expected_hash_type='coinoutputid')
+        return self._output_get(id, expected_hash_type="coinoutputid")
 
     def blockstake_output_get(self, id):
         """
@@ -281,7 +303,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
 
         @param id: the identifier (bytes, bytearray, hash or string) that points to the desired blockstake output
         """
-        return self._output_get(id, expected_hash_type='blockstakeoutputid')
+        return self._output_get(id, expected_hash_type="blockstakeoutputid")
 
     def _output_get(self, id, expected_hash_type):
         """
@@ -292,25 +314,33 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         @param id: the identifier (bytes, bytearray, hash or string) that points to the desired output
         @param expected_hash_type: one of ('coinoutputid', 'blockstakeoutputid')
         """
-        if expected_hash_type not in ('coinoutputid', 'blockstakeoutputid'):
-            raise ValueError("expected hash type should be one of ('coinoutputid', 'blockstakeoutputid'), not {}".format(expected_hash_type))
+        if expected_hash_type not in ("coinoutputid", "blockstakeoutputid"):
+            raise ValueError(
+                "expected hash type should be one of ('coinoutputid', 'blockstakeoutputid'), not {}".format(
+                    expected_hash_type
+                )
+            )
         id = self._normalize_id(id)
-        endpoint = "/explorer/hashes/"+id
+        endpoint = "/explorer/hashes/" + id
         resp = self.explorer_get(endpoint=endpoint)
         resp = j.data.serializers.json.loads(resp)
         try:
-            hash_type = resp['hashtype']
+            hash_type = resp["hashtype"]
             if hash_type != expected_hash_type:
-                raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected hash type '{}', not '{}'".format(expected_hash_type, hash_type), endpoint, resp)
-            tresp = resp['transactions']
+                raise j.clients.tfchain.errors.ExplorerInvalidResponse(
+                    "expected hash type '{}', not '{}'".format(expected_hash_type, hash_type), endpoint, resp
+                )
+            tresp = resp["transactions"]
             lresp = len(tresp)
             if lresp not in (1, 2):
-                raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected one or two transactions to be returned, not {}".format(lresp), endpoint, resp)
+                raise j.clients.tfchain.errors.ExplorerInvalidResponse(
+                    "expected one or two transactions to be returned, not {}".format(lresp), endpoint, resp
+                )
             # parse the transaction(s)
             creation_txn = tresp[0]
             spend_txn = None
             if lresp == 2:
-                if tresp[1]['height'] > creation_txn['height']:
+                if tresp[1]["height"] > creation_txn["height"]:
                     spend_txn = tresp[1]
                 else:
                     spend_txn = creation_txn
@@ -320,56 +350,84 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
                 spend_txn = self._transaction_from_explorer_transaction(spend_txn, endpoint=endpoint, resp=resp)
             # collect the output
             output = None
-            for out in (creation_txn.coin_outputs if hash_type == 'coinoutputid' else creation_txn.blockstake_outputs):
+            for out in creation_txn.coin_outputs if hash_type == "coinoutputid" else creation_txn.blockstake_outputs:
                 if str(out.id) == id:
                     output = out
                     break
             if output is None:
-                raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected output {} to be part of creation Tx, but it wasn't".format(id), endpoint, resp)
+                raise j.clients.tfchain.errors.ExplorerInvalidResponse(
+                    "expected output {} to be part of creation Tx, but it wasn't".format(id), endpoint, resp
+                )
             # return the output and related transaction(s)
             return (output, creation_txn, spend_txn)
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
             raise j.clients.tfchain.errors.ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
 
-    def _transaction_from_explorer_transaction(self, etxn, endpoint="/?", resp=None): # keyword parameters for error handling purposes only
+    def _transaction_from_explorer_transaction(
+        self, etxn, endpoint="/?", resp=None
+    ):  # keyword parameters for error handling purposes only
         if resp is None:
             resp = {}
         # parse the transactions
-        transaction = j.clients.tfchain.types.transactions.from_json(obj=etxn['rawtransaction'], id=etxn['id'])
+        transaction = j.clients.tfchain.types.transactions.from_json(obj=etxn["rawtransaction"], id=etxn["id"])
         # add the parent (coin) outputs
-        coininputoutputs = etxn.get('coininputoutputs', None) or []
+        coininputoutputs = etxn.get("coininputoutputs", None) or []
         if len(transaction.coin_inputs) != len(coininputoutputs):
-            raise j.clients.tfchain.errors.ExplorerInvalidResponse("amount of coin inputs and parent outputs are not matching: {} != {}".format(len(transaction.coin_inputs), len(coininputoutputs)), endpoint, resp)
+            raise j.clients.tfchain.errors.ExplorerInvalidResponse(
+                "amount of coin inputs and parent outputs are not matching: {} != {}".format(
+                    len(transaction.coin_inputs), len(coininputoutputs)
+                ),
+                endpoint,
+                resp,
+            )
         for (idx, co) in enumerate(coininputoutputs):
             co = CoinOutput.from_json(obj=co)
             co.id = transaction.coin_inputs[idx].parentid
             transaction.coin_inputs[idx].parent_output = co
         # add the coin output ids
-        coinoutputids = etxn.get('coinoutputids', None) or []
+        coinoutputids = etxn.get("coinoutputids", None) or []
         if len(transaction.coin_outputs) != len(coinoutputids):
-            raise j.clients.tfchain.errors.ExplorerInvalidResponse("amount of coin outputs and output identifiers are not matching: {} != {}".format(len(transaction.coin_outputs), len(coinoutputids)), endpoint, resp)
+            raise j.clients.tfchain.errors.ExplorerInvalidResponse(
+                "amount of coin outputs and output identifiers are not matching: {} != {}".format(
+                    len(transaction.coin_outputs), len(coinoutputids)
+                ),
+                endpoint,
+                resp,
+            )
         for (idx, id) in enumerate(coinoutputids):
             transaction.coin_outputs[idx].id = Hash.from_json(obj=id)
         # add the parent (blockstake) outputs
-        blockstakeinputoutputs = etxn.get('blockstakeinputoutputs', None) or []
+        blockstakeinputoutputs = etxn.get("blockstakeinputoutputs", None) or []
         if len(transaction.blockstake_inputs) != len(blockstakeinputoutputs):
-            raise j.clients.tfchain.errors.ExplorerInvalidResponse("amount of blockstake inputs and parent outputs are not matching: {} != {}".format(len(transaction.blockstake_inputs), len(blockstakeinputoutputs)), endpoint, resp)
+            raise j.clients.tfchain.errors.ExplorerInvalidResponse(
+                "amount of blockstake inputs and parent outputs are not matching: {} != {}".format(
+                    len(transaction.blockstake_inputs), len(blockstakeinputoutputs)
+                ),
+                endpoint,
+                resp,
+            )
         for (idx, bso) in enumerate(blockstakeinputoutputs):
             bso = BlockstakeOutput.from_json(obj=bso)
             bso.id = transaction.blockstake_inputs[idx].parentid
             transaction.blockstake_inputs[idx].parent_output = bso
         # add the blockstake output ids
-        blockstakeoutputids = etxn.get('blockstakeoutputids', None) or []
+        blockstakeoutputids = etxn.get("blockstakeoutputids", None) or []
         if len(transaction.blockstake_outputs) != len(blockstakeoutputids):
-            raise j.clients.tfchain.errors.ExplorerInvalidResponse("amount of blokstake outputs and output identifiers are not matching: {} != {}".format(len(transaction.blockstake_inputs), len(blockstakeoutputids)), endpoint, resp)
+            raise j.clients.tfchain.errors.ExplorerInvalidResponse(
+                "amount of blokstake outputs and output identifiers are not matching: {} != {}".format(
+                    len(transaction.blockstake_inputs), len(blockstakeoutputids)
+                ),
+                endpoint,
+                resp,
+            )
         for (idx, id) in enumerate(blockstakeoutputids):
             transaction.blockstake_outputs[idx].id = Hash.from_json(obj=id)
         # set the unconfirmed state
-        transaction.unconfirmed = etxn.get('unconfirmed', False)
+        transaction.unconfirmed = etxn.get("unconfirmed", False)
         # set the height of the transaction only if confirmed
         if not transaction.unconfirmed:
-            transaction.height = int(etxn.get('height'))
+            transaction.height = int(etxn.get("height"))
         # return the transaction
         return transaction
 
@@ -407,7 +465,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         return str(Hash(value=id))
 
 
-class ExplorerBlockchainInfo():
+class ExplorerBlockchainInfo:
     def __init__(self, last_block):
         self._last_block = last_block
 
@@ -424,14 +482,14 @@ class ExplorerBlockchainInfo():
         ID of last known block.
         """
         return str(self.last_block.id)
-    
+
     @property
     def height(self):
         """
         Current height of the blockchain.
         """
         return self.last_block.height
-    
+
     @property
     def timestamp(self):
         """
@@ -441,10 +499,11 @@ class ExplorerBlockchainInfo():
 
     def __repr__(self):
         return "Block {} at height {}, published on {}, is the last known block.".format(
-            self.blockid, self.height, j.data.time.epoch2HRDateTime(self.timestamp))
+            self.blockid, self.height, j.data.time.epoch2HRDateTime(self.timestamp)
+        )
 
 
-class ExplorerUnlockhashResult():
+class ExplorerUnlockhashResult:
     def __init__(self, unlockhash, transactions, multisig_addresses, erc20_info, client=None):
         """
         All the info found for a given unlock hash, as reported by an explorer.
@@ -457,14 +516,14 @@ class ExplorerUnlockhashResult():
             raise TypeError("client cannot be set to a value of type {}".format(type(client)))
         self._client = client
         self._erc20_info = erc20_info
-    
+
     @property
     def unlockhash(self):
         """
         Unlock hash looked up.
         """
         return self._unlockhash
-    
+
     @property
     def transactions(self):
         """
@@ -485,7 +544,8 @@ class ExplorerUnlockhashResult():
 
     def __repr__(self):
         return "Found {} transaction(s) and {} multisig address(es) for {}".format(
-            len(self._transactions), len(self._multisig_addresses), str(self._unlockhash))
+            len(self._transactions), len(self._multisig_addresses), str(self._unlockhash)
+        )
 
     def balance(self, info=None):
         """
@@ -512,7 +572,7 @@ class ExplorerUnlockhashResult():
             balance.chain_time = info.timestamp
             balance.chain_blockid = info.blockid
         return balance
-    
+
     def _multisig_balance(self, info):
         balance = None
         # collect the balance
@@ -522,7 +582,11 @@ class ExplorerUnlockhashResult():
                 if str(ci.parent_output.condition.unlockhash) == address:
                     oc = ci.parent_output.condition.unwrap()
                     if not isinstance(oc, ConditionMultiSignature):
-                        raise TypeError("multi signature's output condition cannot be of type {} (expected: ConditionMultiSignature)".format(type(oc)))
+                        raise TypeError(
+                            "multi signature's output condition cannot be of type {} (expected: ConditionMultiSignature)".format(
+                                type(oc)
+                            )
+                        )
                     if balance is None:
                         balance = MultiSigWalletBalance(owners=oc.unlockhashes, signature_count=oc.required_signatures)
                     balance.output_add(ci.parent_output, confirmed=(not txn.unconfirmed), spent=True)
@@ -530,7 +594,11 @@ class ExplorerUnlockhashResult():
                 if str(co.condition.unlockhash) == address:
                     oc = co.condition.unwrap()
                     if not isinstance(oc, ConditionMultiSignature):
-                        raise TypeError("multi signature's output condition cannot be of type {} (expected: ConditionMultiSignature)".format(type(oc)))
+                        raise TypeError(
+                            "multi signature's output condition cannot be of type {} (expected: ConditionMultiSignature)".format(
+                                type(oc)
+                            )
+                        )
                     if balance is None:
                         balance = MultiSigWalletBalance(owners=oc.unlockhashes, signature_count=oc.required_signatures)
                     balance.output_add(co, confirmed=(not txn.unconfirmed), spent=False)
@@ -538,7 +606,7 @@ class ExplorerUnlockhashResult():
                 oc = txn.mint_condition
                 balance = MultiSigWalletBalance(owners=oc.unlockhashes, signature_count=oc.required_signatures)
         if balance is None:
-            return WalletBalance() # return empty balance
+            return WalletBalance()  # return empty balance
         return balance
 
     def _get_info(self, info):
@@ -546,17 +614,21 @@ class ExplorerUnlockhashResult():
             return info
         return self._client.blockchain_info_get()
 
+
 from typing import NamedTuple
+
 
 class ERC20AddressInfo(NamedTuple):
     """
     Contains the information for an ERC20 address (registration).
     """
+
     address_tft: UnlockHash
     address_erc20: ERC20Address
     confirmations: int
 
-class ExplorerBlock():
+
+class ExplorerBlock:
     def __init__(self, id, parentid, height, timestamp, transactions, miner_payouts):
         """
         A Block, registered on a TF blockchain, as reported by an explorer.
@@ -567,7 +639,7 @@ class ExplorerBlock():
         self._timestamp = timestamp
         self._transactions = transactions
         self._miner_payouts = miner_payouts
-    
+
     @property
     def id(self):
         """
@@ -609,13 +681,14 @@ class ExplorerBlock():
         Miner payouts that are included in this block.
         """
         return self._miner_payouts
-    
+
     def __str__(self):
         return str(self.id)
+
     __repr__ = __str__
 
 
-class ExplorerMinerPayout():
+class ExplorerMinerPayout:
     def __init__(self, id, value, unlockhash):
         """
         A single miner payout, as ereported by an explorer.
@@ -644,13 +717,14 @@ class ExplorerMinerPayout():
         Unlock hash that received this miner payout's value.
         """
         return str(self._unlockhash)
-    
+
     def __str__(self):
         return str(self.id)
+
     __repr__ = __str__
 
 
-class TFChainMinterClient():
+class TFChainMinterClient:
     """
     TFChainMinterClient contains all Coin Minting logic.
     """
@@ -672,7 +746,7 @@ class TFChainMinterClient():
             if not isinstance(height, (int, str)):
                 raise TypeError("invalid block height given")
             height = int(height)
-            endpoint += "/%d"%(height)
+            endpoint += "/%d" % (height)
 
         # get the mint condition
         resp = self._client.explorer_get(endpoint=endpoint)
@@ -680,13 +754,13 @@ class TFChainMinterClient():
 
         try:
             # return the decoded mint condition
-            return j.clients.tfchain.types.conditions.from_json(obj=resp['mintcondition'])
+            return j.clients.tfchain.types.conditions.from_json(obj=resp["mintcondition"])
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
             raise j.clients.tfchain.errors.ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
 
 
-class TFChainThreeBotClient():
+class TFChainThreeBotClient:
     """
     TFChainThreeBotClient contains all ThreeBot Logic
     """
@@ -716,7 +790,11 @@ class TFChainThreeBotClient():
                 try:
                     PublicKey.from_json(identifier)
                 except ValueError as exc:
-                    raise ValueError("a 3Bot identifier in string format has to be either a valid BotName or PublicKey, '{}' is neither".format(identifier)) from exc
+                    raise ValueError(
+                        "a 3Bot identifier in string format has to be either a valid BotName or PublicKey, '{}' is neither".format(
+                            identifier
+                        )
+                    ) from exc
         else:
             raise TypeError("identifier of type {} is invalid".format(type(identifier)))
         # identifier is a str at this point
@@ -731,20 +809,20 @@ class TFChainThreeBotClient():
         resp = j.data.serializers.json.loads(resp)
         try:
             # return the fetched record as a named tuple, for easy semi-typed access
-            record = resp['record']
+            record = resp["record"]
             return ThreeBotRecord(
-                identifier=int(record['id']),
-                names=[BotName.from_json(name) for name in record.get('names', []) or []],
-                addresses=[NetworkAddress.from_json(address) for address in record.get('addresses', []) or []],
-                public_key=PublicKey.from_json(record['publickey']),
-                expiration=int(record['expiration']),
+                identifier=int(record["id"]),
+                names=[BotName.from_json(name) for name in record.get("names", []) or []],
+                addresses=[NetworkAddress.from_json(address) for address in record.get("addresses", []) or []],
+                public_key=PublicKey.from_json(record["publickey"]),
+                expiration=int(record["expiration"]),
             )
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
             raise j.clients.tfchain.errors.ExplorerInvalidResponse(str(exc), endpoint, resp) from exc
 
 
-class TFChainERC20Client():
+class TFChainERC20Client:
     """
     TFChainERC20Client contains all ERC20 Logic
     """
@@ -769,22 +847,31 @@ class TFChainERC20Client():
         elif not isinstance(unlockhash, UnlockHash):
             raise TypeError("{} is not a valid type and cannot be used as unlock hash".format(type(unlockhash)))
         if unlockhash.type != UnlockHashType.PUBLIC_KEY:
-            raise TypeError("{} only person wallet addresses cannot be registered as withdrawel addresses: {} is an invalid unlock hash type".format(unlockhash.type))
-    
-        endpoint = "/explorer/hashes/"+str(unlockhash)
+            raise TypeError(
+                "{} only person wallet addresses cannot be registered as withdrawel addresses: {} is an invalid unlock hash type".format(
+                    unlockhash.type
+                )
+            )
+
+        endpoint = "/explorer/hashes/" + str(unlockhash)
         resp = self._client.explorer_get(endpoint=endpoint)
         resp = j.data.serializers.json.loads(resp)
         try:
-            if resp['hashtype'] != 'unlockhash':
-                raise j.clients.tfchain.errors.ExplorerInvalidResponse("expected hash type 'unlockhash' not '{}'".format(resp['hashtype']), endpoint, resp)
+            if resp["hashtype"] != "unlockhash":
+                raise j.clients.tfchain.errors.ExplorerInvalidResponse(
+                    "expected hash type 'unlockhash' not '{}'".format(resp["hashtype"]), endpoint, resp
+                )
             # parse the ERC20 Info
-            if not 'erc20info' in resp:
-                raise j.clients.tfchain.errors.ExplorerNoContent("{} could be found but is not registered as an ERC20 withdraw address".format(str(unlockhash)), endpoint=endpoint)
-            info = resp['erc20info']
+            if not "erc20info" in resp:
+                raise j.clients.tfchain.errors.ExplorerNoContent(
+                    "{} could be found but is not registered as an ERC20 withdraw address".format(str(unlockhash)),
+                    endpoint=endpoint,
+                )
+            info = resp["erc20info"]
             return ERC20AddressInfo(
-                address_tft=UnlockHash.from_json(info['tftaddress']),
-                address_erc20=ERC20Address.from_json(info['erc20address']),
-                confirmations=int(info['confirmations']),
+                address_tft=UnlockHash.from_json(info["tftaddress"]),
+                address_erc20=ERC20Address.from_json(info["erc20address"]),
+                confirmations=int(info["confirmations"]),
             )
         except KeyError as exc:
             # return a KeyError as an invalid Explorer Response
@@ -793,12 +880,14 @@ class TFChainERC20Client():
 
 from typing import NamedTuple
 
+
 class ThreeBotRecord(NamedTuple):
     """
     ThreeBotRecord is a named tuple,
     used to represent a ThreeBot Record as fetched from an explorer,
     as the result of a local function.
     """
+
     identifier: int
     names: list
     addresses: list

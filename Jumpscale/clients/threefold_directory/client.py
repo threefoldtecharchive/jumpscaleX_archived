@@ -19,7 +19,7 @@ class Client:
         return False
 
     def set_auth_header(self, val):
-        ''' set authorization header value'''
+        """ set authorization header value"""
         self.session.headers.update({"Authorization": val})
 
     def _get_headers(self, headers, content_type):
@@ -39,7 +39,7 @@ class Client:
         if content_type == "multipart/form-data":
             # when content type is multipart/formdata remove the content-type header
             # as requests will set this itself with correct boundary
-            headers.pop('Content-Type')
+            headers.pop("Content-Type")
             res = method(uri, files=data, headers=headers, params=params)
         elif data is None:
             res = method(uri, headers=headers, params=params)

@@ -11,8 +11,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class PayloadCommit(object):
     """
     auto-generated. don't touch.
@@ -36,27 +34,28 @@ class PayloadCommit(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'PayloadCommit'
+        class_name = "PayloadCommit"
         data = json or kwargs
 
         # set attributes
         data_types = [PayloadUser]
-        self.author = client_support.set_property('author', data, data_types, False, [], False, False, class_name)
+        self.author = client_support.set_property("author", data, data_types, False, [], False, False, class_name)
         data_types = [PayloadUser]
-        self.committer = client_support.set_property('committer', data, data_types, False, [], False, False, class_name)
+        self.committer = client_support.set_property("committer", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.id = client_support.set_property('id', data, data_types, False, [], False, False, class_name)
+        self.id = client_support.set_property("id", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.message = client_support.set_property('message', data, data_types, False, [], False, False, class_name)
+        self.message = client_support.set_property("message", data, data_types, False, [], False, False, class_name)
         data_types = [datetime]
-        self.timestamp = client_support.set_property('timestamp', data, data_types, False, [], False, False, class_name)
+        self.timestamp = client_support.set_property("timestamp", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.url = client_support.set_property('url', data, data_types, False, [], False, False, class_name)
+        self.url = client_support.set_property("url", data, data_types, False, [], False, False, class_name)
         data_types = [PayloadCommitVerification]
         self.verification = client_support.set_property(
-            'verification', data, data_types, False, [], False, False, class_name)
+            "verification", data, data_types, False, [], False, False, class_name
+        )
 
     def __str__(self):
         return self.as_json(indent=4)

@@ -1,6 +1,7 @@
 import pytest
 from Jumpscale import j
 
+
 @pytest.mark.integration
 def test_main(self=None):
     """test traefik installation
@@ -18,4 +19,3 @@ def test_main(self=None):
     child_process = tmux_pane.process_obj_child
     assert child_process.is_running()
     j.builder.web.traefik.stop(tmux_process.pid)
-

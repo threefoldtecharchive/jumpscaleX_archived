@@ -5,7 +5,7 @@ Public TFChain Errors
 from Jumpscale import j
 
 
-class ErrorTypes():
+class ErrorTypes:
     """
     All TFChain Error types,
     collected as public properties of one class.
@@ -262,8 +262,11 @@ class CurrencyPrecisionOverflow(Exception):
     """
     CurrencyPrecisionOverflow error, caused when the value is too precise
     """
+
     def __init__(self, value):
-        super().__init__("value {} is too precise to be a value, can have only 9 numbers after the decimal point".format(str(value)))
+        super().__init__(
+            "value {} is too precise to be a value, can have only 9 numbers after the decimal point".format(str(value))
+        )
         self._value = value
 
     @property
@@ -281,10 +284,12 @@ class CurrencyPrecisionOverflow(Exception):
         """
         return self._value
 
+
 class CurrencyNegativeValue(Exception):
     """
     CurrencyNegativeValue error, caused when the value is negative
     """
+
     def __init__(self, value):
         super().__init__("currency has to be at least 0, while value {} is negative".format(str(value)))
         self._value = value
@@ -301,12 +306,13 @@ class ExplorerError(Exception):
     """
     Generic Explorer error
     """
+
     def __init__(self, message, endpoint):
         super().__init__("{}: {}".format(endpoint, message))
         if not isinstance(endpoint, str):
             raise TypeError("invalid endpoint, expected it to be of type str not {}".format(type(endpoint)))
         self._endpoint = endpoint
-    
+
     @property
     def endpoint(self):
         """
@@ -320,19 +326,22 @@ class ExplorerNoContent(ExplorerError):
     ExplorerNoContent error
     """
 
+
 class ExplorerServerError(ExplorerError):
     """
     ExplorerServerError error
     """
 
+
 class ExplorerServerPostError(ExplorerError):
     """
     ExplorerServerPostError error
     """
+
     def __init__(self, message, endpoint, data):
         super().__init__(message, endpoint)
         self._data = data
-    
+
     @property
     def data(self):
         """
@@ -340,10 +349,12 @@ class ExplorerServerPostError(ExplorerError):
         """
         return self._data
 
+
 class ExplorerNotAvailable(ExplorerError):
     """
     ExplorerNotAvailable error
     """
+
     def __init__(self, message, endpoint, addresses):
         super().__init__(message, endpoint)
         if not isinstance(addresses, list):
@@ -357,10 +368,12 @@ class ExplorerNotAvailable(ExplorerError):
         """
         return self._addresses
 
+
 class ExplorerInvalidResponse(ExplorerError):
     """
     ExplorerInvalidResponse error
     """
+
     def __init__(self, message, endpoint, response):
         super().__init__(message, endpoint)
         if not isinstance(response, dict):
@@ -387,10 +400,13 @@ class AtomicSwapInsufficientAmountError(Exception):
     triggered when creating a contract with an amount equal or lower than
     minimum fee, which isn't allowed as such a contract cannot be redeemed/refunded.
     """
+
     def __init__(self, amount, minimum_miner_fee):
         super().__init__(
             "atomic swap contract requires an amount higher than the minimum miner fee ({}): {} is an invalid value".format(
-                str(minimum_miner_fee), str(amount)))
+                str(minimum_miner_fee), str(amount)
+            )
+        )
         self._amount = amount
         self._minimum_miner_fee = minimum_miner_fee
 
@@ -414,6 +430,7 @@ class AtomicSwapContractError(Exception):
     AtomicSwapError generic Base error,
     containing the contract that went wrong.
     """
+
     def __init__(self, message, contract):
         super().__init__(message)
         self._contract = contract
@@ -425,19 +442,25 @@ class AtomicSwapContractError(Exception):
         """
         return self._contract
 
+
 class AtomicSwapForbidden(AtomicSwapContractError):
     """
     AtomicSwapForbidden error, caused when a contract was trying
     to be spent by an unautohorized wallet.
     """
 
+
 class AtomicSwapInvalidSecret(AtomicSwapContractError):
     """
     AtomicSwapInvalidSecret error, caused when a wrong secret was used
     as an attempt to redeem an atomic swap contract. 
     """
+
     def __init__(self, contract):
-        super().__init__(message="defined secret does not match the atomic swap's contract secret hash", contract=contract)
+        super().__init__(
+            message="defined secret does not match the atomic swap's contract secret hash", contract=contract
+        )
+
 
 class AtomicSwapContractInvalid(AtomicSwapContractError):
     """
@@ -445,14 +468,18 @@ class AtomicSwapContractInvalid(AtomicSwapContractError):
     invalid during verification.
     """
 
+
 class AtomicSwapContractSpent(AtomicSwapContractError):
     """
     AtomicSwapContractSpent error, caused when
     a callee tried to spend a contract that was already spent.
     """
+
     def __init__(self, contract, transaction):
-        txid = getattr(transaction, 'id', '')
-        super().__init__(message="atomic swap contract has already been spent in transaction {}".format(str(txid)), contract=contract)
+        txid = getattr(transaction, "id", "")
+        super().__init__(
+            message="atomic swap contract has already been spent in transaction {}".format(str(txid)), contract=contract
+        )
         self._transaction = transaction
 
     @property
@@ -462,11 +489,13 @@ class AtomicSwapContractSpent(AtomicSwapContractError):
         """
         return self._transaction
 
+
 class AtomicSwapContractNotFound(Exception):
     """
     AtomicSwapContractNotFound error, caused when
     a callee tried to get an atomic swap contract that could not be found.
     """
+
     def __init__(self, outputid):
         super().__init__("atomic swap contract {} could not be found".format(str(outputid)))
         self._outputid = outputid
@@ -483,6 +512,7 @@ class ThreeBotNotFound(Exception):
     """
     ThreeBotNotFound error, triggered when a 3Bot was not found.
     """
+
     def __init__(self, identifier):
         super().__init__("3Bot {} could not be found".format(identifier))
         self._identifier = identifier
@@ -500,8 +530,11 @@ class ThreeBotInactive(Exception):
     ThreeBotInactive error, triggered when a 3Bot is an active,
     and the operation to be applied to the 3Bot would not change that fact.
     """
+
     def __init__(self, identifier, expiration):
-        super().__init__("3Bot {} is inactive since {}".format(str(identifier), j.data.time.epoch2HRDateTime(expiration)))
+        super().__init__(
+            "3Bot {} is inactive since {}".format(str(identifier), j.data.time.epoch2HRDateTime(expiration))
+        )
         self._identifier = identifier
         self._expiration = expiration
 
@@ -525,6 +558,7 @@ class AddressNotInWallet(Exception):
     AddressNotInWallet error, triggered
     when trying to use an address on a wallet that does not own it
     """
+
     def __init__(self, address):
         super().__init__("address {} is not owned by the used wallet".format(str(address)))
         self._address = address
@@ -542,6 +576,7 @@ class ERC20RegistrationForbidden(Exception):
     ERC20RegistrationForbidden error, triggered
     when trying to register an ERC20 address not owned by the used wallet.
     """
+
     def __init__(self, address):
         super().__init__("address {} is not owned by the used wallet".format(str(address)))
         self._address = address

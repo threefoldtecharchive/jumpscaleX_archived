@@ -6,7 +6,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class GiteaUserCurrentGpgKey(GiteaGpgKey):
-
     def save(self, commit=True):
         is_valid, err = self._validate(create=True)
 
@@ -16,7 +15,7 @@ class GiteaUserCurrentGpgKey(GiteaGpgKey):
 
         try:
             d = self.data
-            d['armored_public_key']=d['public_key']
+            d["armored_public_key"] = d["public_key"]
             resp = self.user.client.api.user.userCurrentPostGPGKey(d)
             pubkey = resp.json()
             for k, v in pubkey.items():

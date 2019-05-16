@@ -11,8 +11,8 @@ JSBASE = j.application.JSBaseClass
 
 
 class Zone(j.application.JSBaseClass):
-    CONFIG_FILES_DIR = j.tools.path.get('/etc/bind/')
-    NON_ZONE_FILES = ['/etc/bind/named.conf.options']
+    CONFIG_FILES_DIR = j.tools.path.get("/etc/bind/")
+    NON_ZONE_FILES = ["/etc/bind/named.conf.options"]
 
     def __init__(self, domain, type, file):
         JSBASE.__init__(self)
@@ -27,31 +27,28 @@ class Zone(j.application.JSBaseClass):
     def getZones():
         configs = []
         zonesfiles = []
-        for configfile in ['named.conf.local', 'named.conf']:
-            configs.append(''.join(os.path.join(
-                Zone.CONFIG_FILES_DIR, configfile)))
+        for configfile in ["named.conf.local", "named.conf"]:
+            configs.append("".join(os.path.join(Zone.CONFIG_FILES_DIR, configfile)))
 
         for file in configs:
             with open(file) as f:
-                for line in re.findall('^include \".*\";$', f.read(), re.M):
-                    path = line.replace('include ', '').replace(
-                        '"', '').replace(';', '')
+                for line in re.findall('^include ".*";$', f.read(), re.M):
+                    path = line.replace("include ", "").replace('"', "").replace(";", "")
                     if path not in Zone.NON_ZONE_FILES:
                         zonesfiles.append(path)
         zones = {}
         for file in zonesfiles:
             with open(file) as f:
-                for match in re.finditer('zone \"(?P<domain>.*)\" \{(?P<data>[^\}]+)', f.read()):
-                    domain = match.group('domain')
-                    data = match.group('data')
+                for match in re.finditer('zone "(?P<domain>.*)" \{(?P<data>[^\}]+)', f.read()):
+                    domain = match.group("domain")
+                    data = match.group("data")
                     domaindata = dict()
                     for fieldm in re.finditer("^\s+(?P<key>\w+)\s+(?P<value>.*);$", data, re.M):
-                        domaindata[fieldm.group('key')] = fieldm.group('value')
+                        domaindata[fieldm.group("key")] = fieldm.group("value")
                     if not domaindata:
                         continue
                     zones[domain] = domaindata
-                    zones[domain]['file'] = zones[
-                        domain]['file'].replace('"', '')
+                    zones[domain]["file"] = zones[domain]["file"].replace('"', "")
         return zones
 
     @staticmethod
@@ -59,13 +56,12 @@ class Zone(j.application.JSBaseClass):
         res = {}
         for k, v in Zone.getZones().items():
             try:
-                zone = dns.zone.from_file(
-                    v['file'], os.path.basename(v['file']), relativize=False)
-                for (name, ttl, rdata) in zone.iterate_rdatas('A'):
-                    key = name.to_text().rstrip('.')
+                zone = dns.zone.from_file(v["file"], os.path.basename(v["file"]), relativize=False)
+                for (name, ttl, rdata) in zone.iterate_rdatas("A"):
+                    key = name.to_text().rstrip(".")
                     val = res.get(key, [])
-                    if not {'ip': rdata.address, 'file': v['file']} in val:
-                        val.append({'ip': rdata.address, 'file': v['file']})
+                    if not {"ip": rdata.address, "file": v["file"]} in val:
+                        val.append({"ip": rdata.address, "file": v["file"]})
                     res[key] = val
             except NoSOA:
                 continue
@@ -76,12 +72,10 @@ class Zone(j.application.JSBaseClass):
         res = {}
         for k, v in Zone.getZones().items():
             try:
-                zone = dns.zone.from_file(
-                    v['file'], os.path.basename(v['file']), relativize=False)
-                for (name, ttl, rdata) in zone.iterate_rdatas('A'):
+                zone = dns.zone.from_file(v["file"], os.path.basename(v["file"]), relativize=False)
+                for (name, ttl, rdata) in zone.iterate_rdatas("A"):
                     value = res.get(rdata.address, [])
-                    value.append(
-                        {'file': v['file'], 'domain': name.to_text().rstrip('.')})
+                    value.append({"file": v["file"], "domain": name.to_text().rstrip(".")})
                     res[rdata.address] = value
             except NoSOA:
                 continue
@@ -89,7 +83,6 @@ class Zone(j.application.JSBaseClass):
 
 
 class BindDNS(DNS):
-
     def __init__(self):
         self.__jslocation__ = "j.sal.bind"
         self.__imports__ = "dnspython3"
@@ -99,7 +92,7 @@ class BindDNS(DNS):
     def zones(self):
         res = []
         for k, v in Zone.getZones().items():
-            z = Zone(k, v['type'], v['file'])
+            z = Zone(k, v["type"], v["file"])
             res.append(z)
         return res
 
@@ -115,27 +108,24 @@ class BindDNS(DNS):
         """
         Start bind9 server.
         """
-        self._log_info('STARTING BIND SERVICE')
-        _, out, _ = j.sal.process.execute(
-            'service bind9 start', showout=True)
+        self._log_info("STARTING BIND SERVICE")
+        _, out, _ = j.sal.process.execute("service bind9 start", showout=True)
         self._log_info(out)
 
     def stop(self):
         """
         Stop bind9 server.
         """
-        self._log_info('STOPPING BIND SERVICE')
-        _, out, _ = j.sal.process.execute(
-            'service bind9 stop', showout=True)
+        self._log_info("STOPPING BIND SERVICE")
+        _, out, _ = j.sal.process.execute("service bind9 stop", showout=True)
         self._log_info(out)
 
     def restart(self):
         """
         Restart bind9 server.
         """
-        self._log_info('RESTSRTING BIND SERVICE')
-        _, out, _ = j.sal.process.execute(
-            'service bind9 restart', showout=True)
+        self._log_info("RESTSRTING BIND SERVICE")
+        _, out, _ = j.sal.process.execute("service bind9 restart", showout=True)
         self._log_info(out)
 
     def updateHostIp(self, host, ip):
@@ -152,14 +142,13 @@ class BindDNS(DNS):
             raise j.exceptions.RuntimeError("Invalid host name")
 
         for r in record:
-            file = r['file']
-            old_ip = r['ip']
-            zone = dns.zone.from_file(
-                file, os.path.basename(file), relativize=False)
+            file = r["file"]
+            old_ip = r["ip"]
+            zone = dns.zone.from_file(file, os.path.basename(file), relativize=False)
             for k, v in zone.items():
                 for dataset in v.rdatasets:
                     for item in dataset.items:
-                        if hasattr(item, 'address') and item.address == old_ip:
+                        if hasattr(item, "address") and item.address == old_ip:
                             item.address = ip
                             zone.to_file(file)
         self.restart()
@@ -183,8 +172,7 @@ class BindDNS(DNS):
 
         record = records[0]
         file = record.file
-        zone = dns.zone.from_file(
-            file, os.path.basename(file), relativize=False)
+        zone = dns.zone.from_file(file, os.path.basename(file), relativize=False)
         node = zone.get_node(host, create=True)
 
         if type == "A":
@@ -215,17 +203,16 @@ class BindDNS(DNS):
 
         @param host string: host
         """
-        host = host.rstrip('.')
+        host = host.rstrip(".")
         map = self.map
         record = map.get(host)
         if not record:
             raise j.exceptions.RuntimeError("Invalid host name")
 
         for r in record:
-            file = r['file']
-            old_ip = r['ip']
-            zone = dns.zone.from_file(
-                file, os.path.basename(file), relativize=False)
+            file = r["file"]
+            old_ip = r["ip"]
+            zone = dns.zone.from_file(file, os.path.basename(file), relativize=False)
             for k, v in zone.nodes.copy().items():
                 if k.to_text() == "%s." % host:
                     zone.delete_node(k)

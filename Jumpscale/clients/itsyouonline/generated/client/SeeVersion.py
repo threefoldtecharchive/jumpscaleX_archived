@@ -6,9 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class SeeVersion( ):
+class SeeVersion:
     """
     auto-generated. don't touch.
     """
@@ -35,40 +33,46 @@ class SeeVersion( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'SeeVersion'
+        class_name = "SeeVersion"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.category = client_support.set_property('category', data, data_types, False, [], False, True, class_name)
+        self.category = client_support.set_property("category", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
         self.content_type = client_support.set_property(
-            'content_type', data, data_types, False, [], False, True, class_name)
+            "content_type", data, data_types, False, [], False, True, class_name
+        )
         data_types = [string_types]
         self.creation_date = client_support.set_property(
-            'creation_date', data, data_types, False, [], False, True, class_name)
+            "creation_date", data, data_types, False, [], False, True, class_name
+        )
         data_types = [string_types]
-        self.end_date = client_support.set_property('end_date', data, data_types, False, [], False, True, class_name)
+        self.end_date = client_support.set_property("end_date", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
         self.keystore_label = client_support.set_property(
-            'keystore_label', data, data_types, False, [], False, True, class_name)
+            "keystore_label", data, data_types, False, [], False, True, class_name
+        )
         data_types = [string_types]
-        self.link = client_support.set_property('link', data, data_types, False, [], False, True, class_name)
+        self.link = client_support.set_property("link", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
         self.markdown_full_description = client_support.set_property(
-            'markdown_full_description', data, data_types, False, [], False, True, class_name)
+            "markdown_full_description", data, data_types, False, [], False, True, class_name
+        )
         data_types = [string_types]
         self.markdown_short_description = client_support.set_property(
-            'markdown_short_description', data, data_types, False, [], False, True, class_name)
+            "markdown_short_description", data, data_types, False, [], False, True, class_name
+        )
         data_types = [string_types]
-        self.signature = client_support.set_property('signature', data, data_types, False, [], False, True, class_name)
+        self.signature = client_support.set_property("signature", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
         self.start_date = client_support.set_property(
-            'start_date', data, data_types, False, [], False, True, class_name)
+            "start_date", data, data_types, False, [], False, True, class_name
+        )
         data_types = [int]
-        self.version = client_support.set_property('version', data, data_types, False, [], False, True, class_name)
+        self.version = client_support.set_property("version", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

@@ -4,9 +4,8 @@ from .GiteaPublicKey import GiteaPublicKey
 
 
 class GiteaUserCurrentPublicKey(GiteaPublicKey):
-
     def save(self, commit=True):
-        
+
         is_valid, err = self._validate(create=True)
 
         if not commit or not is_valid:

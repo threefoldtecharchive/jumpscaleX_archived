@@ -11,13 +11,14 @@ _CONDITION_TYPE_ATOMIC_SWAP = 2
 _CONDITION_TYPE_LOCKTIME = 3
 _CONDITION_TYPE_MULTI_SIG = 4
 
+
 class ConditionFactory(j.application.JSBaseClass):
     """
     Condition Factory class
     """
 
     def from_json(self, obj):
-        ct = obj.get('type', 0)
+        ct = obj.get("type", 0)
         if ct == _CONDITION_TYPE_NIL:
             return ConditionNil.from_json(obj)
         if ct == _CONDITION_TYPE_UNLOCK_HASH:
@@ -55,7 +56,11 @@ class ConditionFactory(j.application.JSBaseClass):
             elif isinstance(recipient, tuple):
                 # multisig wallet with custom x-of-n definition
                 if len(recipient) != 2:
-                    raise ValueError("recipient is expected to be a tupple of 2 values in the form (sigcount,hashes) or (hashes,sigcount), cannot be of length {}".format(len(recipient)))
+                    raise ValueError(
+                        "recipient is expected to be a tupple of 2 values in the form (sigcount,hashes) or (hashes,sigcount), cannot be of length {}".format(
+                            len(recipient)
+                        )
+                    )
                 # allow (sigs,hashes) as well as (hashes,sigs)
                 if isinstance(recipient[0], int):
                     condition = self.multi_signature_new(min_nr_sig=recipient[0], unlockhashes=recipient[1])
@@ -63,14 +68,13 @@ class ConditionFactory(j.application.JSBaseClass):
                     condition = self.multi_signature_new(min_nr_sig=recipient[1], unlockhashes=recipient[0])
             else:
                 raise TypeError("invalid type for recipient parameter: {}", type(recipient))
-        
+
         # if lock is defined, define it as a locktime value
         if lock is not None:
             condition = self.locktime_new(lock=lock, condition=condition)
 
         # return condition
         return condition
-
 
     def nil_new(self):
         """
@@ -90,9 +94,7 @@ class ConditionFactory(j.application.JSBaseClass):
         Create a new AtomicSwap Condition, which can be
         fulfilled by the AtomicSwap Fulfillment.
         """
-        return ConditionAtomicSwap(
-            sender=sender, receiver=receiver,
-            hashed_secret=hashed_secret, lock_time=lock_time)
+        return ConditionAtomicSwap(sender=sender, receiver=receiver, hashed_secret=hashed_secret, lock_time=lock_time)
 
     def locktime_new(self, lock=None, condition=None):
         """
@@ -113,7 +115,6 @@ class ConditionFactory(j.application.JSBaseClass):
         """
         return OutputLock(value=value)
 
-
     def test(self):
         """
         js_shell 'j.clients.tfchain.types.conditions.test()'
@@ -126,82 +127,134 @@ class ConditionFactory(j.application.JSBaseClass):
             if expected != output:
                 msg = "{} != {}".format(expected, output)
                 raise Exception("unexpected encoding result: " + msg)
+
         def test_sia_encoded(obj, expected):
             test_encoded(j.data.rivine.encoder_sia_get(), obj, expected)
+
         def test_rivine_encoded(obj, expected):
             test_encoded(j.data.rivine.encoder_rivine_get(), obj, expected)
-
 
         # Nil conditions are supported
         for n_json in [{}, {"type": 0}, {"type": 0, "data": None}, {"type": 0, "data": {}}]:
             cn = self.from_json(n_json)
             assert cn.json() == {"type": 0}
-            test_sia_encoded(cn, '000000000000000000')
-            test_rivine_encoded(cn, '0000')
-            assert str(cn.unlockhash) == '000000000000000000000000000000000000000000000000000000000000000000000000000000'
+            test_sia_encoded(cn, "000000000000000000")
+            test_rivine_encoded(cn, "0000")
+            assert (
+                str(cn.unlockhash) == "000000000000000000000000000000000000000000000000000000000000000000000000000000"
+            )
 
         # UnlockHash conditions are supported
-        uh_json = {"type":1,"data":{"unlockhash":"000000000000000000000000000000000000000000000000000000000000000000000000000000"}}
+        uh_json = {
+            "type": 1,
+            "data": {"unlockhash": "000000000000000000000000000000000000000000000000000000000000000000000000000000"},
+        }
         cuh = self.from_json(uh_json)
         assert cuh.json() == uh_json
-        test_sia_encoded(cuh, '012100000000000000000000000000000000000000000000000000000000000000000000000000000000')
-        test_rivine_encoded(cuh, '0142000000000000000000000000000000000000000000000000000000000000000000')
-        assert str(cuh.unlockhash) == '000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        test_sia_encoded(cuh, "012100000000000000000000000000000000000000000000000000000000000000000000000000000000")
+        test_rivine_encoded(cuh, "0142000000000000000000000000000000000000000000000000000000000000000000")
+        assert str(cuh.unlockhash) == "000000000000000000000000000000000000000000000000000000000000000000000000000000"
 
         # AtomicSwap conditions are supported
-        as_json = {"type":2,"data":{"sender":"01e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f70b1ccc65e2105","receiver":"01a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc353bdcf54be7d8","hashedsecret":"abc543defabc543defabc543defabc543defabc543defabc543defabc543defa","timelock":1522068743}}
+        as_json = {
+            "type": 2,
+            "data": {
+                "sender": "01e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f70b1ccc65e2105",
+                "receiver": "01a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc353bdcf54be7d8",
+                "hashedsecret": "abc543defabc543defabc543defabc543defabc543defabc543defabc543defa",
+                "timelock": 1522068743,
+            },
+        }
         cas = self.from_json(as_json)
         assert cas.json() == as_json
-        test_sia_encoded(cas, '026a0000000000000001e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35abc543defabc543defabc543defabc543defabc543defabc543defabc543defa07edb85a00000000')
-        test_rivine_encoded(cas, '02d401e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35abc543defabc543defabc543defabc543defabc543defabc543defabc543defa07edb85a00000000')
-        assert str(cas.unlockhash) == '026e18a53ec6e571985ea7ed404a5d51cf03a72240065952034383100738627dbf949046789e30'
+        test_sia_encoded(
+            cas,
+            "026a0000000000000001e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35abc543defabc543defabc543defabc543defabc543defabc543defabc543defa07edb85a00000000",
+        )
+        test_rivine_encoded(
+            cas,
+            "02d401e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35abc543defabc543defabc543defabc543defabc543defabc543defabc543defa07edb85a00000000",
+        )
+        assert str(cas.unlockhash) == "026e18a53ec6e571985ea7ed404a5d51cf03a72240065952034383100738627dbf949046789e30"
 
         # MultiSig conditions are supported
-        ms_json = {"type":4,"data":{"unlockhashes":["01e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f70b1ccc65e2105","01a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc353bdcf54be7d8"],"minimumsignaturecount":2}}
+        ms_json = {
+            "type": 4,
+            "data": {
+                "unlockhashes": [
+                    "01e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f70b1ccc65e2105",
+                    "01a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc353bdcf54be7d8",
+                ],
+                "minimumsignaturecount": 2,
+            },
+        }
         cms = self.from_json(ms_json)
         assert cms.json() == ms_json
-        test_sia_encoded(cms, '0452000000000000000200000000000000020000000000000001e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35')
-        test_rivine_encoded(cms, '049602000000000000000401e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35')
-        assert str(cms.unlockhash) == '0313a5abd192d1bacdd1eb518fc86987d3c3d1cfe3c5bed68ec4a86b93b2f05a89f67b89b07d71'
+        test_sia_encoded(
+            cms,
+            "0452000000000000000200000000000000020000000000000001e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35",
+        )
+        test_rivine_encoded(
+            cms,
+            "049602000000000000000401e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35",
+        )
+        assert str(cms.unlockhash) == "0313a5abd192d1bacdd1eb518fc86987d3c3d1cfe3c5bed68ec4a86b93b2f05a89f67b89b07d71"
 
         # LockTime conditions are supported:
         # - wrapping a nil condition
-        lt_n_json = {"type":3,"data":{"locktime":500000000,"condition":{"type": 0}}}
+        lt_n_json = {"type": 3, "data": {"locktime": 500000000, "condition": {"type": 0}}}
         clt_n = self.from_json(lt_n_json)
         assert clt_n.json() == lt_n_json
-        test_sia_encoded(clt_n, '0309000000000000000065cd1d0000000000')
-        test_rivine_encoded(clt_n, '03120065cd1d0000000000')
-        assert str(clt_n.unlockhash) == '000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        test_sia_encoded(clt_n, "0309000000000000000065cd1d0000000000")
+        test_rivine_encoded(clt_n, "03120065cd1d0000000000")
+        assert str(clt_n.unlockhash) == "000000000000000000000000000000000000000000000000000000000000000000000000000000"
         # - wrapping an unlock hash condition
-        lt_uh_json = {"type":3,"data":{"locktime":500000000,"condition":uh_json}}
+        lt_uh_json = {"type": 3, "data": {"locktime": 500000000, "condition": uh_json}}
         clt_uh = self.from_json(lt_uh_json)
         assert clt_uh.json() == lt_uh_json
-        test_sia_encoded(clt_uh, '032a000000000000000065cd1d0000000001000000000000000000000000000000000000000000000000000000000000000000')
-        test_rivine_encoded(clt_uh, '03540065cd1d0000000001000000000000000000000000000000000000000000000000000000000000000000')
-        assert str(clt_uh.unlockhash) == '000000000000000000000000000000000000000000000000000000000000000000000000000000'
+        test_sia_encoded(
+            clt_uh,
+            "032a000000000000000065cd1d0000000001000000000000000000000000000000000000000000000000000000000000000000",
+        )
+        test_rivine_encoded(
+            clt_uh, "03540065cd1d0000000001000000000000000000000000000000000000000000000000000000000000000000"
+        )
+        assert (
+            str(clt_uh.unlockhash) == "000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        )
         # - wrapping a multi-sig condition
-        lt_ms_json = {"type":3,"data":{"locktime":500000000,"condition":ms_json}}
+        lt_ms_json = {"type": 3, "data": {"locktime": 500000000, "condition": ms_json}}
         clt_ms = self.from_json(lt_ms_json)
         assert clt_ms.json() == lt_ms_json
-        test_sia_encoded(clt_ms, '035b000000000000000065cd1d00000000040200000000000000020000000000000001e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35')
-        test_rivine_encoded(clt_ms, '03a80065cd1d000000000402000000000000000401e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35')
-        assert str(clt_ms.unlockhash) == '0313a5abd192d1bacdd1eb518fc86987d3c3d1cfe3c5bed68ec4a86b93b2f05a89f67b89b07d71'
+        test_sia_encoded(
+            clt_ms,
+            "035b000000000000000065cd1d00000000040200000000000000020000000000000001e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35",
+        )
+        test_rivine_encoded(
+            clt_ms,
+            "03a80065cd1d000000000402000000000000000401e89843e4b8231a01ba18b254d530110364432aafab8206bea72e5a20eaa55f7001a6a6c5584b2bfbd08738996cd7930831f958b9a5ed1595525236e861c1a0dc35",
+        )
+        assert (
+            str(clt_ms.unlockhash) == "0313a5abd192d1bacdd1eb518fc86987d3c3d1cfe3c5bed68ec4a86b93b2f05a89f67b89b07d71"
+        )
 
         # FYI, Where lock times are used, it should be known that these are pretty flexible in definition
-        assert OutputLock().value == 0 
+        assert OutputLock().value == 0
         assert OutputLock(value=0).value == 0
         assert OutputLock(value=1).value == 1
         assert OutputLock(value=1549483822).value == 1549483822
         # if current_timestamp is not defined, the current time is used: int(datetime.now().timestamp)
-        assert OutputLock(value='+7d', current_timestamp=1).value == 604801
-        assert OutputLock(value='+7d12h5s', current_timestamp=1).value == 648006
-        assert OutputLock(value='30/11/2020').value == 1606690800
-        assert OutputLock(value='11/30').value == OutputLock(value='30/11/{}'.format(datetime.now().year)).value # year is optional
-        assert OutputLock(value='30/11/2020 23:59:59').value == 1606777199
-        assert OutputLock(value='30/11/2020 23:59').value == 1606777140 # seconds is optional
+        assert OutputLock(value="+7d", current_timestamp=1).value == 604801
+        assert OutputLock(value="+7d12h5s", current_timestamp=1).value == 648006
+        assert OutputLock(value="30/11/2020").value == 1606690800
+        assert (
+            OutputLock(value="11/30").value == OutputLock(value="30/11/{}".format(datetime.now().year)).value
+        )  # year is optional
+        assert OutputLock(value="30/11/2020 23:59:59").value == 1606777199
+        assert OutputLock(value="30/11/2020 23:59").value == 1606777140  # seconds is optional
 
 
-class OutputLock():
+class OutputLock:
     # as defined by Rivine
     _MIN_TIMESTAMP_VALUE = 500 * 1000 * 1000
 
@@ -242,6 +295,7 @@ class OutputLock():
         if self.is_timestamp:
             return j.data.time.epoch2HRDateTime(self._value)
         return str(self._value)
+
     __repr__ = __str__
 
     @property
@@ -271,14 +325,15 @@ from abc import abstractmethod
 
 from .BaseDataType import BaseDataTypeClass
 
+
 class ConditionBaseClass(BaseDataTypeClass):
     @classmethod
     def from_json(cls, obj):
         ff = cls()
-        ct = obj.get('type', 0)
+        ct = obj.get("type", 0)
         if ff.type != ct:
             raise ValueError("condition is expected to be of type {}, not {}".format(ff.type, ct))
-        ff.from_json_data_object(obj.get('data', {}))
+        ff.from_json_data_object(obj.get("data", {}))
         return ff
 
     @property
@@ -289,7 +344,7 @@ class ConditionBaseClass(BaseDataTypeClass):
     @property
     def lock(self):
         return OutputLock()
-    
+
     @property
     @abstractmethod
     def unlockhash(self):
@@ -314,10 +369,10 @@ class ConditionBaseClass(BaseDataTypeClass):
         pass
 
     def json(self):
-        obj = {'type': self.type}
+        obj = {"type": self.type}
         data = self.json_data_object()
         if data:
-            obj['data'] = data
+            obj["data"] = data
         return obj
 
     @abstractmethod
@@ -336,7 +391,7 @@ class ConditionBaseClass(BaseDataTypeClass):
     @abstractmethod
     def rivine_binary_encode_data(self, encoder):
         pass
-    
+
     def rivine_binary_encode(self, encoder):
         """
         Encode this Condition according to the Rivine Binary Encoding format.
@@ -348,6 +403,7 @@ class ConditionBaseClass(BaseDataTypeClass):
 
 
 from enum import IntEnum
+
 
 class UnlockHashType(IntEnum):
     NIL = 0
@@ -361,7 +417,7 @@ class UnlockHashType(IntEnum):
             obj = int(obj)
         elif not isinstance(obj, int):
             raise TypeError("UnlockHashType is expected to be JSON-encoded as an int, not {}".format(type(obj)))
-        return cls(obj) # int -> enum
+        return cls(obj)  # int -> enum
 
     def json(self):
         return int(self)
@@ -375,9 +431,9 @@ class UnlockHash(BaseDataTypeClass):
 
     _TYPE_SIZE_HEX = 2
     _CHECKSUM_SIZE = 6
-    _CHECKSUM_SIZE_HEX = (_CHECKSUM_SIZE*2)
+    _CHECKSUM_SIZE_HEX = _CHECKSUM_SIZE * 2
     _HASH_SIZE = 32
-    _HASH_SIZE_HEX = (_HASH_SIZE*2)
+    _HASH_SIZE_HEX = _HASH_SIZE * 2
     _TOTAL_SIZE_HEX = _TYPE_SIZE_HEX + _CHECKSUM_SIZE_HEX + _HASH_SIZE_HEX
 
     def __init__(self, type=None, hash=None):
@@ -391,27 +447,34 @@ class UnlockHash(BaseDataTypeClass):
         if not isinstance(obj, str):
             raise TypeError("UnlockHash is expected to be JSON-encoded as an str, not {}".format(type(obj)))
         if len(obj) != UnlockHash._TOTAL_SIZE_HEX:
-            raise ValueError("UnlockHash is expexcted to be of length {} when JSON-encoded, not of length {}".format(UnlockHash._TOTAL_SIZE_HEX, len(obj)))
+            raise ValueError(
+                "UnlockHash is expexcted to be of length {} when JSON-encoded, not of length {}".format(
+                    UnlockHash._TOTAL_SIZE_HEX, len(obj)
+                )
+            )
 
-        t = UnlockHashType(int(obj[:UnlockHash._TYPE_SIZE_HEX]))
-        h = j.clients.tfchain.types.hash_new(value=obj[UnlockHash._TYPE_SIZE_HEX:UnlockHash._TYPE_SIZE_HEX+UnlockHash._HASH_SIZE_HEX])
+        t = UnlockHashType(int(obj[: UnlockHash._TYPE_SIZE_HEX]))
+        h = j.clients.tfchain.types.hash_new(
+            value=obj[UnlockHash._TYPE_SIZE_HEX : UnlockHash._TYPE_SIZE_HEX + UnlockHash._HASH_SIZE_HEX]
+        )
         uh = cls(type=t, hash=h)
-        
+
         if t == UnlockHashType.NIL:
-            expectedNH = b'\x00'*UnlockHash._HASH_SIZE
+            expectedNH = b"\x00" * UnlockHash._HASH_SIZE
             if h.value != expectedNH:
                 raise ValueError("unexpected nil hash {}".format(h.value.hex()))
         else:
-            expected_checksum = uh._checksum()[:UnlockHash._CHECKSUM_SIZE].hex()
-            checksum = obj[-UnlockHash._CHECKSUM_SIZE_HEX:]
+            expected_checksum = uh._checksum()[: UnlockHash._CHECKSUM_SIZE].hex()
+            checksum = obj[-UnlockHash._CHECKSUM_SIZE_HEX :]
             if expected_checksum != checksum:
                 raise ValueError("unexpected checksum {}, expected {}".format(checksum, expected_checksum))
 
         return uh
-    
+
     @property
     def type(self):
         return self._type
+
     @type.setter
     def type(self, value):
         if value == None:
@@ -423,17 +486,18 @@ class UnlockHash(BaseDataTypeClass):
     @property
     def hash(self):
         return self._hash
+
     @hash.setter
     def hash(self, value):
         self._hash.value = value
 
     def __str__(self):
-        checksum = self._checksum()[:UnlockHash._CHECKSUM_SIZE].hex()
+        checksum = self._checksum()[: UnlockHash._CHECKSUM_SIZE].hex()
         return "{}{}{}".format(bytearray([int(self._type)]).hex(), str(self._hash), checksum)
 
     def _checksum(self):
         if self._type == UnlockHashType.NIL:
-            return b'\x00'*UnlockHash._CHECKSUM_SIZE
+            return b"\x00" * UnlockHash._CHECKSUM_SIZE
         e = j.data.rivine.encoder_rivine_get()
         e.add_int8(int(self._type))
         e.add(self._hash)
@@ -446,6 +510,7 @@ class UnlockHash(BaseDataTypeClass):
     def __eq__(self, other):
         other = UnlockHash._op_other_as_unlockhash(other)
         return self.type == other.type and self.hash == other.hash
+
     def __ne__(self, other):
         other = UnlockHash._op_other_as_unlockhash(other)
         return self.type != other.type or self.hash != other.hash
@@ -467,7 +532,7 @@ class UnlockHash(BaseDataTypeClass):
         """
         encoder.add_byte(int(self._type))
         encoder.add(self._hash)
-    
+
     def rivine_binary_encode(self, encoder):
         """
         Encode this unlock hash according to the Rivine Binary Encoding format.
@@ -495,18 +560,19 @@ class ConditionNil(ConditionBaseClass):
 
     def json_data_object(self):
         return None
-    
+
     def sia_binary_encode_data(self, encoder):
-        pass # nothing to do
+        pass  # nothing to do
 
     def rivine_binary_encode_data(self, encoder):
-        pass # nothing to do
+        pass  # nothing to do
 
 
 class ConditionUnlockHash(ConditionBaseClass):
     """
     ConditionUnlockHash class
     """
+
     def __init__(self, unlockhash=None):
         self._unlockhash = None
         self.unlockhash = unlockhash
@@ -520,6 +586,7 @@ class ConditionUnlockHash(ConditionBaseClass):
         if self._unlockhash is None:
             return UnlockHash()
         return self._unlockhash
+
     @unlockhash.setter
     def unlockhash(self, value):
         if value is None:
@@ -531,13 +598,11 @@ class ConditionUnlockHash(ConditionBaseClass):
         self._unlockhash = UnlockHash.from_json(value)
 
     def from_json_data_object(self, data):
-        self.unlockhash = UnlockHash.from_json(data['unlockhash'])
+        self.unlockhash = UnlockHash.from_json(data["unlockhash"])
 
     def json_data_object(self):
-        return {
-            'unlockhash': self.unlockhash.json(),
-        }
-    
+        return {"unlockhash": self.unlockhash.json()}
+
     def sia_binary_encode_data(self, encoder):
         encoder.add(self.unlockhash)
 
@@ -551,8 +616,9 @@ class AtomicSwapSecret(BinaryData):
     """
     Atomic Swap Secret Object, a special type of BinaryData
     """
+
     def __init__(self, value=None):
-        super().__init__(value, fixed_size=AtomicSwapSecret.SIZE, strencoding='hex')
+        super().__init__(value, fixed_size=AtomicSwapSecret.SIZE, strencoding="hex")
 
     @classmethod
     def from_json(cls, obj):
@@ -571,8 +637,9 @@ class AtomicSwapSecretHash(BinaryData):
     """
     Atomic Swap Secret Hash, a special type of BinaryData
     """
+
     def __init__(self, value=None):
-        super().__init__(value, fixed_size=AtomicSwapSecretHash.SIZE, strencoding='hex')
+        super().__init__(value, fixed_size=AtomicSwapSecretHash.SIZE, strencoding="hex")
 
     @classmethod
     def from_json(cls, obj):
@@ -583,7 +650,9 @@ class AtomicSwapSecretHash(BinaryData):
     @classmethod
     def from_secret(cls, secret):
         if not isinstance(secret, AtomicSwapSecret):
-            raise TypeError("secret is expected to be of type AtomicSwapSecret, not to be of type {}".format(type(secret)))
+            raise TypeError(
+                "secret is expected to be of type AtomicSwapSecret, not to be of type {}".format(type(secret))
+            )
         return cls(value=hashlib.sha256(secret.value).digest())
 
 
@@ -591,6 +660,7 @@ class ConditionAtomicSwap(ConditionBaseClass):
     """
     ConditionAtomicSwap class
     """
+
     def __init__(self, sender=None, receiver=None, hashed_secret=None, lock_time=None):
         self._sender = None
         self.sender = sender
@@ -621,6 +691,7 @@ class ConditionAtomicSwap(ConditionBaseClass):
         if self._sender is None:
             return UnlockHash()
         return self._sender
+
     @sender.setter
     def sender(self, value):
         if value is None:
@@ -629,9 +700,13 @@ class ConditionAtomicSwap(ConditionBaseClass):
             if isinstance(value, str):
                 value = UnlockHash.from_json(value)
             elif not isinstance(value, UnlockHash):
-                raise TypeError("Atomic Swap's sender unlock hash has to be of type UnlockHash, not {}".format(type(value)))
+                raise TypeError(
+                    "Atomic Swap's sender unlock hash has to be of type UnlockHash, not {}".format(type(value))
+                )
             if value.type not in (UnlockHashType.PUBLIC_KEY, UnlockHashType.NIL):
-                raise ValueError("Atomic Swap's sender unlock hash type cannot be {} (expected: 0 or 1)".format(value.type))
+                raise ValueError(
+                    "Atomic Swap's sender unlock hash type cannot be {} (expected: 0 or 1)".format(value.type)
+                )
             self._sender = value
 
     @property
@@ -639,6 +714,7 @@ class ConditionAtomicSwap(ConditionBaseClass):
         if self._receiver is None:
             return UnlockHash()
         return self._receiver
+
     @receiver.setter
     def receiver(self, value):
         if value is None:
@@ -647,16 +723,21 @@ class ConditionAtomicSwap(ConditionBaseClass):
             if isinstance(value, str):
                 value = UnlockHash.from_json(value)
             elif not isinstance(value, UnlockHash):
-                raise TypeError("Atomic Swap's receiver unlock hash has to be of type UnlockHash, not {}".format(type(value)))
+                raise TypeError(
+                    "Atomic Swap's receiver unlock hash has to be of type UnlockHash, not {}".format(type(value))
+                )
             if value.type not in (UnlockHashType.PUBLIC_KEY, UnlockHashType.NIL):
-                raise ValueError("Atomic Swap's receiver unlock hash type cannot be {} (expected: 0 or 1)".format(value.type))
+                raise ValueError(
+                    "Atomic Swap's receiver unlock hash type cannot be {} (expected: 0 or 1)".format(value.type)
+                )
             self._receiver = value
-    
+
     @property
     def hashed_secret(self):
         if self._hashed_secret is None:
             return BinaryData()
         return self._hashed_secret
+
     @hashed_secret.setter
     def hashed_secret(self, value):
         if value is None:
@@ -667,6 +748,7 @@ class ConditionAtomicSwap(ConditionBaseClass):
     @property
     def lock_time(self):
         return self._lock_time
+
     @lock_time.setter
     def lock_time(self, value):
         if value is None:
@@ -674,21 +756,25 @@ class ConditionAtomicSwap(ConditionBaseClass):
         else:
             lock = OutputLock(value=value)
             if not lock.is_timestamp:
-                raise TypeError("ConditionAtomicSwap only accepts timestamps as the lock value, not block heights: {} is invalid".format(value))
+                raise TypeError(
+                    "ConditionAtomicSwap only accepts timestamps as the lock value, not block heights: {} is invalid".format(
+                        value
+                    )
+                )
             self._lock_time = lock.value
 
     def from_json_data_object(self, data):
-        self.sender = UnlockHash.from_json(data['sender'])
-        self.receiver = UnlockHash.from_json(data['receiver'])
-        self.hashed_secret = AtomicSwapSecretHash(value=data['hashedsecret'])
-        self.lock_time = int(data['timelock'])
+        self.sender = UnlockHash.from_json(data["sender"])
+        self.receiver = UnlockHash.from_json(data["receiver"])
+        self.hashed_secret = AtomicSwapSecretHash(value=data["hashedsecret"])
+        self.lock_time = int(data["timelock"])
 
     def json_data_object(self):
         return {
-            'sender': self.sender.json(),
-            'receiver': self.receiver.json(),
-            'hashedsecret': self.hashed_secret.json(),
-            'timelock': self.lock_time,
+            "sender": self.sender.json(),
+            "receiver": self.receiver.json(),
+            "hashedsecret": self.hashed_secret.json(),
+            "timelock": self.lock_time,
         }
 
     def sia_binary_encode_data(self, encoder):
@@ -702,6 +788,7 @@ class ConditionLockTime(ConditionBaseClass):
     """
     ConditionLockTime class
     """
+
     def __init__(self, condition=None, lock=None):
         self._condition = None
         self.condition = condition
@@ -721,6 +808,7 @@ class ConditionLockTime(ConditionBaseClass):
         if self._lock is None:
             return OutputLock()
         return self._lock
+
     @lock.setter
     def lock(self, value):
         self._lock = OutputLock(value=value)
@@ -730,30 +818,32 @@ class ConditionLockTime(ConditionBaseClass):
         if self._condition is None:
             return ConditionUnlockHash()
         return self._condition
+
     @condition.setter
     def condition(self, value):
         if value is None:
             self._condition = None
             return
         if not isinstance(value, ConditionBaseClass):
-            raise TypeError("ConditionLockTime's condition is expected to be a subtype of ConditionBaseClass, not of type {}".format(type(value)))
+            raise TypeError(
+                "ConditionLockTime's condition is expected to be a subtype of ConditionBaseClass, not of type {}".format(
+                    type(value)
+                )
+            )
         self._condition = value
 
     def unwrap(self):
         return self.condition
 
     def from_json_data_object(self, data):
-        self.lock = int(data['locktime'])
-        cond = j.clients.tfchain.types.conditions.from_json(obj=data['condition'])
-        if cond.type not in(_CONDITION_TYPE_UNLOCK_HASH, _CONDITION_TYPE_MULTI_SIG, _CONDITION_TYPE_NIL):
+        self.lock = int(data["locktime"])
+        cond = j.clients.tfchain.types.conditions.from_json(obj=data["condition"])
+        if cond.type not in (_CONDITION_TYPE_UNLOCK_HASH, _CONDITION_TYPE_MULTI_SIG, _CONDITION_TYPE_NIL):
             raise ValueError("internal condition of ConditionLockTime cannot be of type {}".format(cond.type))
         self.condition = cond
 
     def json_data_object(self):
-        return {
-            'locktime': self.lock.value,
-            'condition': self.condition.json(),
-        }
+        return {"locktime": self.lock.value, "condition": self.condition.json()}
 
     def sia_binary_encode_data(self, encoder):
         encoder.add(self.lock.value)
@@ -765,10 +855,12 @@ class ConditionLockTime(ConditionBaseClass):
         encoder.add_int8(int(self.condition.type))
         self.condition.rivine_binary_encode_data(encoder)
 
+
 class ConditionMultiSignature(ConditionBaseClass):
     """
     ConditionMultiSignature class
     """
+
     def __init__(self, unlockhashes=None, min_nr_sig=0):
         self._unlockhashes = []
         if unlockhashes:
@@ -794,7 +886,7 @@ class ConditionMultiSignature(ConditionBaseClass):
     @property
     def unlockhashes(self):
         return self._unlockhashes
-        
+
     def add_unlockhash(self, uh):
         if uh is None:
             self._unlockhashes.append(UnlockHash())
@@ -808,27 +900,29 @@ class ConditionMultiSignature(ConditionBaseClass):
     @property
     def required_signatures(self):
         return self._min_nr_sig
+
     @required_signatures.setter
     def required_signatures(self, value):
         if value is None:
             self._min_nr_sig = 0
             return
         if not isinstance(value, int):
-            raise TypeError("ConditionMultiSignature's required signatures value is expected to be of type int, not {}".format(type(value)))
+            raise TypeError(
+                "ConditionMultiSignature's required signatures value is expected to be of type int, not {}".format(
+                    type(value)
+                )
+            )
         self._min_nr_sig = int(value)
 
     def from_json_data_object(self, data):
-        self._min_nr_sig = int(data['minimumsignaturecount'])
+        self._min_nr_sig = int(data["minimumsignaturecount"])
         self._unlockhashes = []
-        for uh in data['unlockhashes']:
+        for uh in data["unlockhashes"]:
             uh = UnlockHash.from_json(uh)
             self._unlockhashes.append(uh)
 
     def json_data_object(self):
-        return {
-            'minimumsignaturecount': self._min_nr_sig,
-            'unlockhashes': [uh.json() for uh in self._unlockhashes],
-        }
+        return {"minimumsignaturecount": self._min_nr_sig, "unlockhashes": [uh.json() for uh in self._unlockhashes]}
 
     def sia_binary_encode_data(self, encoder):
         encoder.add(self._min_nr_sig)
