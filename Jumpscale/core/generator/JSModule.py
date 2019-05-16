@@ -2,6 +2,7 @@ from .JSClass import JSClass
 
 # from .JSGroup import JSGroup
 import os
+import re
 from pathlib import Path
 
 LOCATIONS_ERROR = ["j.errorhandler", "j.core", "j.application", "j.exceptions", "j.logger", "j.application", "j.dirs"]
@@ -143,7 +144,7 @@ class JSModule:
             if line.find("__jslocation__") != -1:
                 if classobj is None:
                     raise RuntimeError("Could not find class in %s while loading jumpscale lib." % path)
-                if line.find("=") != -1 and line.find("#IGNORELOCATION") == -1:
+                if line.find("=") != -1 and line.find("IGNORELOCATION") == -1:
                     location = line.split("=", 1)[1].replace('"', "").replace("'", "").strip()
                     if _check_jlocation(location):
                         if classobj.location != "":
