@@ -32,6 +32,10 @@ def main(self):
         llist3 = "1,2,3" (LF)
         llist4 = "1,2,3" (L)
         """
+        if zdb:
+            cl = j.clients.zdb.client_get(port=9901)
+            cl.flush()
+
         schema = j.core.text.strip(schema)
         self._log_debug("set schema to 'despiegk.test2'")
         redis_cl.set("schemas:despiegk.test2", schema)
@@ -59,22 +63,14 @@ def main(self):
             schema_obj.token_price = "10 EUR"
             return schema_obj
 
-        try:
-            schema_obj = get_obj(1)
-            id = redis_cl.hset("objects:despiegk.test2", 1, schema_obj._json)
-
-        except redis.exceptions.ResponseError as err:
-            raise RuntimeError("should have raise runtime error when trying to write to index 1")
-
-        for i in range(2, 11):
+        for i in range(1, 11):
             print(i)
             o = get_obj(i)
             id = redis_cl.hset("objects:despiegk.test2", "new", o._json)
 
         if zdb:
             self._log_debug("validate list")
-            cl = j.clients.zdb.client_get(port=9901)
-            assert cl.list() == [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+            assert cl.list() == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
         id = int(id.decode())
 
@@ -86,7 +82,7 @@ def main(self):
 
         if zdb:
             self._log_debug("validate list2")
-            assert cl.list() == [0, 2, 3, 4, 6, 7, 8, 9, 10, 11]
+            assert cl.list() == [0, 1, 2, 3, 4, 6, 7, 8, 9, 10]
 
         # the i's are moving around don't know why, is ok I guess (despiegk)
         resp = redis_cl.hget("objects:despiegk.test2", id)
