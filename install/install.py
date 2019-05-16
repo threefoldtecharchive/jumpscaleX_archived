@@ -2,13 +2,13 @@ from importlib import util
 import os
 import subprocess
 import sys
-
+import InstallTools as IT
 BRANCH = "master"
 
 # get current install.py directory
 rootdir = os.path.dirname(os.path.abspath(__file__))
 
-path = os.path.join(rootdir, "InstallTools.py")
+""" path = os.path.join(rootdir, "InstallTools.py")
 
 if not os.path.exists(path):
     cmd = (
@@ -18,7 +18,7 @@ if not os.path.exists(path):
     subprocess.call(cmd, shell=True)
 
 spec = util.spec_from_file_location("IT", path)
-IT = spec.loader.load_module()
+IT = spec.loader.load_module() """
 
 sys.excepthook = IT.my_excepthook
 
