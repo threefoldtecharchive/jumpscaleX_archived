@@ -380,6 +380,8 @@ class Schema(j.application.JSBaseClass):
         return out
 
     def __eq__(self, other):
+        if other is None:
+            return False
         return other._md5 == self._md5
 
     __repr__ = __str__

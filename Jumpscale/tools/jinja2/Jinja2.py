@@ -75,7 +75,13 @@ class Jinja2(j.application.JSBaseClass):
 
         # self._log_debug("template render:%s"%path)
         t = self.template_get(path=path, text=text, reload=reload)
-        txt = t.render(**args)
+
+        try:
+            txt = t.render(**args)
+        except Exception as e:
+            self._log_error("template error in:%s" % path)
+            raise RuntimeError(e)
+
         if dest is None:
             return txt
         else:
@@ -138,7 +144,12 @@ class Jinja2(j.application.JSBaseClass):
         if render:
             BASENAME = j.tools.codeloader._basename(dest)
             # means has not been rendered yet lets do
-            out = t.render(j=j, DIRS=j.dirs, BASENAME=BASENAME, **args)
+            try:
+                out = t.render(j=j, DIRS=j.dirs, BASENAME=BASENAME, **args)
+            except Exception as e:  # THERE NEEDS TO BE A BETTER WAY, WHY DOES ERROR HANDLING NOT WORK HERE
+                self._log_error("template error in:%s" % path)
+                raise RuntimeError(e)
+
             j.sal.fs.writeFile(dest, out)
             if dest_md5 is not None:
                 j.sal.fs.writeFile(dest_md5, md5)  # remember the md5
