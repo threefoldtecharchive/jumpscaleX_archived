@@ -72,7 +72,8 @@ class BCDB(j.application.JSBaseClass):
         self.circle = None
 
         self.models = {}
-
+        self._schema_md5_to_model = {}
+        self._schema_sid_to_md5 = {}
         self._index_schema_class_cache = {}  # cache for the index classes
 
         if reset:

@@ -55,6 +55,7 @@ class BCDBFactory(j.application.JSBaseClass):
     def redis_server_start(
         self,
         name="test",
+        reset=False,
         ipaddr="localhost",
         port=6380,
         background=False,
@@ -99,7 +100,7 @@ class BCDBFactory(j.application.JSBaseClass):
 
             cmdcmd = j.tools.startupcmd.get(name="bcdbredis_%s" % port, cmd=cmd, ports=[port])
 
-            cmdcmd.start()
+            cmdcmd.start(reset=reset)
 
             j.sal.nettools.waitConnectionTest(ipaddr=ipaddr, port=port, timeoutTotal=5)
             r = j.clients.redis.get(ipaddr=ipaddr, port=port, password=secret)

@@ -145,11 +145,11 @@ def main(self):
         c = j.clients.zdb.client_admin_get(port=9901)
         c.reset()  # removes the namespace from zdb, all is gone, need to create again
         c.namespace_new("test", secret="1234")
-        self.redis_server_start(port=6380, background=True)
-        do()
+        self.redis_server_start(port=6380, background=True, zdbclient_port=9901, reset=True)
+        do(zdb=True)
 
     sqlite_test()
-    # zdb_test()
+    zdb_test()
     self._log_debug("TEST OK")
 
     return "OK"
