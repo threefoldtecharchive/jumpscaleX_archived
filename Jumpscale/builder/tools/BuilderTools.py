@@ -186,7 +186,7 @@ class BuilderTools(j.builder.system._BaseClass):
 
         if not (self.file_exists(to) and self.file_exists("%s.downloadok" % to)):
 
-            self.tools.dir_ensure(j.sal.fs.getDirName(to))
+            j.sal.fs.createDir(j.sal.fs.getDirName(to))
 
             if multithread is False:
                 minspeed = 0
@@ -263,7 +263,7 @@ class BuilderTools(j.builder.system._BaseClass):
         if destination == "":
             destination = self.joinpaths("{DIR_TEMP}", base)
         j.sal.fs.remove(destination)
-        self.tools.dir_ensure(destination)
+        j.sal.fs.createDir(destination)
         path = self._replace(path)
         destination = self._replace(destination)
         self.dir_ensure(destination)
@@ -641,7 +641,7 @@ class BuilderTools(j.builder.system._BaseClass):
         If we are not updating the owner / group then this can be done as a single
         ssh call, so use that method, otherwise set owner / group after creation."""
         location = self._replace(location)
-        self.tools.dir_ensure(location)
+        j.sal.fs.createDir(location)
         self.file_attribs(location, mode, owner, group)
 
     def find(
