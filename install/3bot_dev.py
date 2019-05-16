@@ -8,6 +8,7 @@ from urllib.request import urlopen
 
 DEFAULT_BRANCH = "master"
 CONTAINER_BASE_IMAGE = "phusion/baseimage:master"
+# CONTAINER_BASE_IMAGE = "despiegk/3bot:latest"
 CONTAINER_NAME = "3bot"
 
 
@@ -96,8 +97,8 @@ def install_summary(args):
     T += " - location of code path is: %s\n" % args.code_path
     if args.pull:
         T += " - code will be pulled from github\n"
-    if args.wiki:
-        T += " - will install wiki system at end\n"
+    # if args.wiki:
+    #     T += " - will install wiki system at end\n"
     T += " - name of container is: %s\n" % CONTAINER_NAME
     if CONTAINER_NAME in IT.Docker.docker_names():
         if "d" in args:
@@ -222,7 +223,7 @@ if __name__ == "__main__":
     docker_parser.add_argument(
         "-d", help="if set will delete the docker container if it already exists", action="store_true", default=False
     )
-    docker_parser.add_argument("--wiki", "-w", help="also install the wiki system", action="store_true", default=False)
+    # docker_parser.add_argument("--wiki", "-w", help="also install the wiki system", action="store_true", default=False)
     docker_parser.add_argument(
         "--secret",
         default=None,
