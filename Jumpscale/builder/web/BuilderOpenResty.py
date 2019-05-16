@@ -81,7 +81,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
             self.tools.execute(C)
 
     @builder_method()
-    def sandbox(self, zhub_client=None, reset=False):
+    def sandbox(self, reset=False, zhub_client=None, flist_create=False, merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist"):
         '''Copy built bins to dest_path and create flist if create_flist = True
 
         :param dest_path: destination path to copy files into
