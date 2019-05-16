@@ -25,6 +25,7 @@ class SchemaTest(BaseTest):
         #. Try to set parameter with string type, should succeed.
         """
         self.log("Create schema with list of strings parameter, should succeed.")
+
         scm = """
         @url = test.schema
         list_names = (LS)

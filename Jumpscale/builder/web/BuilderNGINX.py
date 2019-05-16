@@ -226,7 +226,11 @@ class BuilderNGINX(j.builder.system._BaseClass):
 
     @builder_method()
     def sandbox(self, zhub_client=None, flist_create=True):
-        """Copy built bins and config files to sandbox specific directory and create flist and upload it to the hub if flist_create is True
+        """
+
+        j.builders.web.nginx.sandbox(
+
+        Copy built bins and config files to sandbox specific directory and create flist and upload it to the hub if flist_create is True
             :param zhub_client: hub instance to upload flist to
             :type zhub_client:str
             :param flist_create: create flist after copying files

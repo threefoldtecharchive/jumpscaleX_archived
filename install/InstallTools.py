@@ -2,6 +2,8 @@ from __future__ import unicode_literals
 import copy
 import getpass
 
+DEFAULTBRANCH = "development-bcdb"
+
 # import socket
 import grp
 import os
@@ -1308,7 +1310,7 @@ class Tools:
         return rc > 0
 
     @staticmethod
-    def code_github_get(repo, account="threefoldtech", branch=["master"], pull=True, reset=False):
+    def code_github_get(repo, account="threefoldtech", branch=[DEFAULTBRANCH], pull=True, reset=False):
         Tools.log("get code:%s:%s (%s)" % (repo, account, branch))
         if MyEnv.sshagent_active_check():
             url = "git@github.com:%s/%s.git"
@@ -2272,7 +2274,7 @@ class UbuntuInstaller:
 
 
 class JumpscaleInstaller:
-    def __init__(self, branch=["development"]):
+    def __init__(self, branch=[DEFAULTBRANCH]):
         MyEnv._init()
         self.account = "threefoldtech"
         self.branch = branch

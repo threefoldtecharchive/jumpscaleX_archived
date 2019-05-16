@@ -21,6 +21,10 @@ class BuilderDigitalME(j.builder.system._BaseClass):
     def _init(self):
         pass
 
+    @property
+    def branch(self):
+        return j.core.installer_jumpscale.branch[0]
+
     @builder_method()
     def build(self, reset=False):
         """
@@ -31,7 +35,7 @@ class BuilderDigitalME(j.builder.system._BaseClass):
         """
         j.builder.runtimes.python.build(reset=reset)
         j.builder.runtimes.lua.build()  # will build openresty & lua & openssl
-        j.clients.git.pullGitRepo(url="https://github.com/threefoldtech/digitalmeX.git", branch="development")
+        j.clients.git.pullGitRepo(url="https://github.com/threefoldtech/digitalmeX.git", branch=self.branch)
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
