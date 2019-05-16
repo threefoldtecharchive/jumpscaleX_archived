@@ -80,7 +80,7 @@ def team(doc, link, order='random', projects=None, contribution_types=None, **kw
         data = filter_on(data, 'project_ids', projects)
     if contribution_types:
         data = filter_on(data, 'contribution_ids', contribution_types)
-        if len(projects) == len(contribution_types):
+        if projects and len(projects) == len(contribution_types):
             # ensure the order of filtration is respected
             # mapping for example projects of [1,2] to contributions types of [1,4]
             # so will show 1:1 (project:contribution_type) and 2:4
