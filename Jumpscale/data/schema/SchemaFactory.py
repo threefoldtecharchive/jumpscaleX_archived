@@ -98,7 +98,7 @@ class SchemaFactory(j.application.JSBaseClass):
         return j.data.hash.md5_string(original_text)
 
     def _urlclean(self, url):
-        return url.lower().strip().strip("'\"").strip()
+        return url.strip().strip("'\"").strip()
 
     def _schema_blocks_get(self, schema_text):
         """
