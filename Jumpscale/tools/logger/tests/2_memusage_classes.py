@@ -2,16 +2,12 @@ from Jumpscale import j
 
 
 class TestClass(j.application.JSBaseClass):
-
-
-
     def _init(self):
-        self._logger #triggers logger
+        self._logger  # triggers logger
 
-    def test_basic_log(self,nr):
+    def test_basic_log(self, nr):
         for i in range(nr):
-            self._log_log("a message",level=20)
-
+            self._log_log("a message", level=20)
 
         j.shell()
 
@@ -28,15 +24,9 @@ def main(self):
 
     """
 
-
     ddict = {}
-    nr=100000
-    j.tools.timer.start("basic test for %s logs"%nr,memory=True)
+    nr = 100000
+    j.tools.timer.start("basic test for %s logs" % nr, memory=True)
     for i in range(nr):
-        ddict[str(i)]=TestClass()
+        ddict[str(i)] = TestClass()
     j.tools.timer.stop(nr)
-
-
-
-
-

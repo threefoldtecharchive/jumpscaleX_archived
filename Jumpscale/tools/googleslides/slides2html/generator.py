@@ -23,5 +23,5 @@ class Generator:
         # if not self.slides_as_images:
         #     raise RuntimeError("need to run self.save_slides_to_dir first.")
         template = Template(revealjs_template)
-        title = slides_infos[0]['title']
+        title = slides_infos[0]["title"]
         return template.render(slidesinfos=slides_infos, presentation_title=title)

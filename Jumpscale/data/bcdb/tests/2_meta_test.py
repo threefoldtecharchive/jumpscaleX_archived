@@ -20,11 +20,13 @@ def main(self):
 
     print(bcdb.meta)
 
-    schema = j.core.text.strip("""
+    schema = j.core.text.strip(
+        """
     @url = jumpscale.schema.test.a
     category*= ""
     data = ""
-    """)
+    """
+    )
     s = j.data.schema.get(schema)
 
     bcdb.meta.schema_set(s)
@@ -36,17 +38,16 @@ def main(self):
     assert "jumpscale.schema.test.a" in j.data.schema.schemas
     assert "jumpscale.bcdb.group" in j.data.schema.schemas
 
-
     cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9901, secret="1234")
     cl1.flush(meta=bcdb.meta)  # remove the data
 
     redis = cl1.redis
-    data = redis.get(b'\x00\x00\x00\x00')
+    data = redis.get(b"\x00\x00\x00\x00")
     assert len(data) > 100
 
     # now completely remove the db, is fully empty
     cl1.flush()
-    assert redis.get(b'\x00\x00\x00\x00')==None
+    assert redis.get(b"\x00\x00\x00\x00") == None
     cl1 = j.clients.zdb.client_get(nsname="test", addr="localhost", port=9901, secret="1234")
     assert cl1.get(key=0) is None
 
@@ -54,12 +55,11 @@ def main(self):
 
     assert bcdb.meta.data.schemas == []
 
-    assert redis.get(b'\x00\x00\x00\x00')==None
-    assert redis.set("",value=data) == b'\x00\x00\x00\x00'
+    assert redis.get(b"\x00\x00\x00\x00") == None
+    assert redis.set("", value=data) == b"\x00\x00\x00\x00"
     bcdb.meta.reset()  # make sure we reload from data
 
     assert "jumpscale.schema.test.a" in j.data.schema.schemas
     assert "jumpscale.bcdb.group" in j.data.schema.schemas
 
-
-    return("OK")
+    return "OK"

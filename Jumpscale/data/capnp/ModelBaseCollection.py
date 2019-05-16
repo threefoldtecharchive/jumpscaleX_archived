@@ -59,11 +59,12 @@ class ModelBaseCollection(j.application.JSBaseClass):
                     # is text
                     self._listConstructors[field.proto.name] = getInt
                 else:
-                    subTypeName = str(field.schema.elementType).split(':')[-1][:-1].split('.')[-1]
+                    subTypeName = str(field.schema.elementType).split(":")[-1][:-1].split(".")[-1]
                     # subTypeName = str(field.schema.elementType).split(".")[-1].split(">")[0]
                     try:
                         self._listConstructors[field.proto.name] = eval(
-                            "self._capnp_schema.%s.new_message" % subTypeName)
+                            "self._capnp_schema.%s.new_message" % subTypeName
+                        )
                     except BaseException:
                         continue
 
@@ -131,10 +132,7 @@ class ModelBaseCollection(j.application.JSBaseClass):
                     raise j.exceptions.Input(message="Could not find key:%s for model:%s" % (key, self.category))
         else:
 
-            model = self.modelBaseClass(
-                key=key,
-                new=autoCreate,
-                collection=self)
+            model = self.modelBaseClass(key=key, new=autoCreate, collection=self)
         return model
 
     def list(self, **kwargs):

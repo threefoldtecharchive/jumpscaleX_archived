@@ -47,8 +47,8 @@ class NestedSchemaTest(BaseTest):
 
         self.log("Set data to schema parameters, should succeed.")
         name = self.random_string()
-        mobile_number = '{}'.format(random.randint(1000000000, 2000000000))
-        home_number = '{}'.format(random.randint(500000000, 900000000))
+        mobile_number = "{}".format(random.randint(1000000000, 2000000000))
+        home_number = "{}".format(random.randint(500000000, 900000000))
         country = self.random_string()
         city = self.random_string()
         street = self.random_string()
@@ -116,8 +116,8 @@ class NestedSchemaTest(BaseTest):
 
         self.log("Set data to schema parameters, should succeed.")
         name = self.random_string()
-        mobile_number = '{}'.format(random.randint(1000000000, 2000000000))
-        home_number = '{}'.format(random.randint(500000000, 900000000))
+        mobile_number = "{}".format(random.randint(1000000000, 2000000000))
+        home_number = "{}".format(random.randint(500000000, 900000000))
         country = self.random_string()
         city = self.random_string()
         street = self.random_string()

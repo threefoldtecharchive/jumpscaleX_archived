@@ -1,4 +1,4 @@
-__author__ = 'delandtj'
+__author__ = "delandtj"
 
 from netaddr import *
 from .netclasses import *
@@ -11,7 +11,6 @@ command_name = sys.argv[0]
 
 
 class NetLayout(j.application.JSBaseClass):
-
     def __init__(self):
         self.interfaces = get_all_ifaces()
         self.nicdetail = {}
@@ -25,19 +24,19 @@ class NetLayout(j.application.JSBaseClass):
         self.load()
 
     def is_phys(self, interface):
-        if 'PHYS' in self.nicdetail[interface]['detail']:
+        if "PHYS" in self.nicdetail[interface]["detail"]:
             return True
         return False
 
     def has_ip(self, interface, ipnetobj):
-        for i in self.nicdetail[interface]['ipaddr']:
+        for i in self.nicdetail[interface]["ipaddr"]:
             if ipnetobj.ip == i.ip:
                 return True
         return False
 
     def exist_ip(self, ipobj):
         for interface in self.nicdetail:
-            if self.nicdetail[interface]['ipaddr'].ip == ipobj.ip:
+            if self.nicdetail[interface]["ipaddr"].ip == ipobj.ip:
                 return True
         return False
 
@@ -48,8 +47,7 @@ class NetLayout(j.application.JSBaseClass):
 
 
 class VXNet(j.application.JSBaseClass):
-
-    def __init__(self, netid, backend='vxbackend'):
+    def __init__(self, netid, backend="vxbackend"):
         self.netid = NetID(netid)
         self.ipv6 = None
         self.ipv4 = None
@@ -66,7 +64,7 @@ class VXNet(j.application.JSBaseClass):
             # IP in Namespace
             vxlan = VXlan(self.netid, self.backend)
             if vxlan.name in self.existing.nicdetail:
-                send_to_syslog('VXLan %s exists, not creating' % vxlan.name)
+                send_to_syslog("VXLan %s exists, not creating" % vxlan.name)
             else:
                 vxlan.create()
                 vxlan.no6()
@@ -74,7 +72,7 @@ class VXNet(j.application.JSBaseClass):
             bridge = VXBridge(self.netid)
             self.bridge = bridge
             if bridge.name in self.existing.nicdetail:
-                send_to_syslog('Bridge %s exists, not creating' % bridge.name)
+                send_to_syslog("Bridge %s exists, not creating" % bridge.name)
             else:
                 bridge.create()
                 bridge.no6()
@@ -82,7 +80,7 @@ class VXNet(j.application.JSBaseClass):
 
             namespace = VXNameSpace(self.netid)
             if namespace.name in self.existing.nicdetail:
-                send_to_syslog('NameSpace %s exists, not creating' % namespace.name)
+                send_to_syslog("NameSpace %s exists, not creating" % namespace.name)
             else:
                 namespace.create()
             veth = VethPair(self.netid)

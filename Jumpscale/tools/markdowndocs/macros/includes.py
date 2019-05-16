@@ -1,7 +1,6 @@
-
 def includes(doc, path, title=3, **args):
 
-    j=doc.docsite._j
+    j = doc.docsite._j
 
     spath = j.sal.fs.processPathForDoubleDots(j.sal.fs.joinPaths(j.sal.fs.getDirName(doc.path), path))
     if not j.sal.fs.exists(spath, followlinks=True):

@@ -1,15 +1,15 @@
 import os
 import re
 from Jumpscale import j
+
 KEYP = re.compile(r"(\w+(\.\w+)*)\s*=\s*(.*)", re.DOTALL)
 
-DEFAULTLOCALE = 'en'
+DEFAULTLOCALE = "en"
 
 JSBASE = j.application.JSBaseClass
 
 
 class Domain(j.application.JSBaseClass):
-
     def __init__(self, key):
         JSBASE.__init__(self)
         self._value_ = None
@@ -41,7 +41,6 @@ class Domain(j.application.JSBaseClass):
 
 
 class Localizer(j.application.JSBaseClass):
-
     def __init__(self, tdirs):
         JSBASE.__init__(self)
         self.__domains = self.__load(tdirs)
@@ -76,8 +75,7 @@ class Localizer(j.application.JSBaseClass):
                     line = line.rstrip("\\")
                     m = re.match(KEYP, line)
                     if not m:
-                        raise j.exceptions.RuntimeError(
-                            "Invalid line at '%s:%d'" % (path, l))
+                        raise j.exceptions.RuntimeError("Invalid line at '%s:%d'" % (path, l))
                     k = m.group(1)
                     v = m.group(3)
 
@@ -96,5 +94,5 @@ class Localizer(j.application.JSBaseClass):
             return self.__domains[DEFAULTLOCALE]
         else:
             raise j.exceptions.RuntimeError(
-                "Can't find locale '%s' or the default '%s' locale" %
-                (locale, DEFAULTLOCALE))
+                "Can't find locale '%s' or the default '%s' locale" % (locale, DEFAULTLOCALE)
+            )

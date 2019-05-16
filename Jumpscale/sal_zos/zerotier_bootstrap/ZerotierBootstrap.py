@@ -17,7 +17,7 @@ class ZTBootstrap:
             resp = self._zt.network.getNetwork(nwid)
             resp.raise_for_status()
             nw = resp.json()
-            nw['config']['routes'] = [{'target': self._cidr, 'via': None}]
+            nw["config"]["routes"] = [{"target": self._cidr, "via": None}]
             self._zt.network.updateNetwork(nw, nwid).raise_for_status()
 
     def list_join_request(self):
@@ -29,7 +29,7 @@ class ZTBootstrap:
 
         requests = []
         for member in resp.json():
-            if not member['online'] or member['config']['authorized']:
+            if not member["online"] or member["config"]["authorized"]:
                 continue
             requests.append(member)
 
@@ -44,16 +44,16 @@ class ZTBootstrap:
         """
         if ip is None:
             ip = self._find_free_ip(nwid)
-        member['config']['authorized'] = True
-        member['config']['ipAssignments'] = [ip]
-        resp = self._zt.network.updateMember(member, member['nodeId'], nwid)
+        member["config"]["authorized"] = True
+        member["config"]["ipAssignments"] = [ip]
+        resp = self._zt.network.updateMember(member, member["nodeId"], nwid)
         resp.raise_for_status()
         return ip
 
     def unauthorize_member(self, nwid, member):
-        member['config']['authorized'] = False
-        member['config']['ipAssignments'] = []
-        resp = self._zt.network.updateMember(member, member['nodeId'], nwid)
+        member["config"]["authorized"] = False
+        member["config"]["ipAssignments"] = []
+        resp = self._zt.network.updateMember(member, member["nodeId"], nwid)
         resp.raise_for_status()
 
     def _find_free_ip(self, nwid):
@@ -63,18 +63,19 @@ class ZTBootstrap:
 
         all_ips = list(netaddr.IPNetwork(self._cidr))
         for member in resp.json():
-            for addr in member['config']['ipAssignments']:
+            for addr in member["config"]["ipAssignments"]:
                 all_ips.remove(netaddr.IPAddress(addr))
         if len(all_ips) <= 0:
             raise RuntimeError("No more free ip in the range %s" % self._cidr)
         return str(all_ips[0])
 
 
-if __name__ == '__main__':
-    token = '4gE9Cfqw2vFFzCPC1BYaj2mbSpNScxJx'
-    bootstap_nwid = '17d709436c993670'
-    grid_nwid = 'a09acf02336ce8b5'
+if __name__ == "__main__":
+    token = "4gE9Cfqw2vFFzCPC1BYaj2mbSpNScxJx"
+    bootstap_nwid = "17d709436c993670"
+    grid_nwid = "a09acf02336ce8b5"
 
-    zt = ZTBootstrap(token, bootstap_nwid, grid_nwid, '192.168.10.0/24')
+    zt = ZTBootstrap(token, bootstap_nwid, grid_nwid, "192.168.10.0/24")
     from IPython import embed
+
     embed()

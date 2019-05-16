@@ -33,18 +33,19 @@ def main(self):
 
     assert schema_object.property_llist.default.value == []
     assert schema_object.property_llist2.default.value == []
-    assert schema_object.property_llist3.default.value == [1.0,2.0,3.0]
-    #works with & without value
-    assert schema_object.property_llist3.default == [1.0,2.0,3.0]
-    assert schema_object.property_llist4.default == [1,2,3]
-    assert schema_object.property_llist5.default == [1,2,3]
-    assert schema_object.property_llist6.default == [1,2,3]
+    assert schema_object.property_llist3.default.value == [1.0, 2.0, 3.0]
+    # works with & without value
+    assert schema_object.property_llist3.default == [1.0, 2.0, 3.0]
+    assert schema_object.property_llist4.default == [1, 2, 3]
+    assert schema_object.property_llist5.default == [1, 2, 3]
+    assert schema_object.property_llist6.default == [1, 2, 3]
 
     ll = schema_object.property_llist3.jumpscaletype.default_get()
-    assert ll.value == [1.0,2.0,3.0]
+    assert ll.value == [1.0, 2.0, 3.0]
 
-    assert schema_object.property_llist3.js_typelocation == "j.data.types._types['list_281be192c3ea134b85dd0c368d7d1b36']"
-
+    assert (
+        schema_object.property_llist3.js_typelocation == "j.data.types._types['list_281be192c3ea134b85dd0c368d7d1b36']"
+    )
 
     o = schema_object.get()
 
@@ -54,7 +55,7 @@ def main(self):
     assert o.description == ""
     assert o.description2 == ""
 
-    assert o.llist3 == [1.0,2.0,3.0]
+    assert o.llist3 == [1.0, 2.0, 3.0]
 
     o.llist2.append("yes")
     o.llist2.append("no")
@@ -65,13 +66,12 @@ def main(self):
     o.nr = 1
     o.description = "something"
 
-    assert o.llist2 == ["yes","no"]
+    assert o.llist2 == ["yes", "no"]
     assert o.description == "something"
     assert o.llist3 == [1.0, 2.0, 3.0, 1.2]
     assert o.U == 1.1
     o.U = "1.1"
     assert o.U == 1.1
-
 
     schema = """
         @url = despiegk.test2
@@ -89,9 +89,9 @@ def main(self):
 
     j.data.schema.get(schema_text=schema)
 
-    s=j.data.schema.schemas['despiegk.test2']
-    e = s.properties[0] #is the enumerator
-    assert e.js_typelocation != 'j.data.types.enum' #should not the default location
+    s = j.data.schema.schemas["despiegk.test2"]
+    e = s.properties[0]  # is the enumerator
+    assert e.js_typelocation != "j.data.types.enum"  # should not the default location
 
     schema_object1 = j.data.schema.get(url="despiegk.test2")
     schema_object2 = j.data.schema.get(url="despiegk.test3")
@@ -104,41 +104,39 @@ def main(self):
     assert "5" in o1.llist2
     assert "6" in o1.llist2
 
-    c= o1._cobj
-    c2= o1._cobj
+    c = o1._cobj
+    c2 = o1._cobj
 
-    assert c.llist2[0] == '5'
-    assert c2.llist2[0] == '5'
+    assert c.llist2[0] == "5"
+    assert c2.llist2[0] == "5"
 
     dd = o1._ddict
 
     assert dd["enum"] == 1
-    assert dd["llist2"][1] == '6'
+    assert dd["llist2"][1] == "6"
     assert dd["nr"] == 4
-
 
     o2.llist.append("1")
 
-    assert o1.enum == 'RED'
+    assert o1.enum == "RED"
     assert o1._cobj.enum == 1
 
     o1.enum = 2
-    assert o1.enum == 'GREEN'
+    assert o1.enum == "GREEN"
     assert o1._cobj.enum == 2
     o1.enum = "  green"
-    assert o1.enum == 'GREEN'
-    assert o1.enum == ' GREEN'
-    assert o1.enum == ' Green'
+    assert o1.enum == "GREEN"
+    assert o1.enum == " GREEN"
+    assert o1.enum == " Green"
 
     assert o1._ddict_hr["enum"] == "GREEN"
 
     assert o1._cobj.nr == 4
-    assert o1._cobj.llist2[0] == '5'
-
+    assert o1._cobj.llist2[0] == "5"
 
     assert o1._data.find(b"GREEN") == -1  # needs to be stored as int
     assert len(o1._data) <= 30
-    x = len(o1._data)+0
+    x = len(o1._data) + 0
 
     o1.enum = 4
     assert o1.enum == "ZHISISAVERYLONGONENEEDITTOTESTLETSDOSOMEMORE"
@@ -173,4 +171,4 @@ def main(self):
 
     self._log_info("TEST DONE BASE")
 
-    return ("OK")
+    return "OK"

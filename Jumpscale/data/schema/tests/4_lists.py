@@ -83,16 +83,14 @@ def main(self):
     }
 
     schema_test._ddict
-    assert schema_test._ddict["cmds"]==[{"name": "aname", "comment": "test", "nr": 10}]
+    assert schema_test._ddict["cmds"] == [{"name": "aname", "comment": "test", "nr": 10}]
 
     w = schema_test._ddict["cmds"][0]
 
-    assert isinstance(w,dict)
-
+    assert isinstance(w, dict)
 
     schema_test._data
     schema_test._json
-
 
     schema_test2 = schema_object.get(capnpbin=schema_test._data)
 
@@ -108,8 +106,6 @@ def main(self):
     except Exception as e:
         assert str(e).find("object readonly, cannot set") != -1
 
-
-
     self._log_info("TEST DONE LIST")
 
-    return ("OK")
+    return "OK"

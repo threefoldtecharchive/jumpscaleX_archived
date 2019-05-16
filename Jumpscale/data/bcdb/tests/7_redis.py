@@ -79,9 +79,7 @@ def main(self):
             id = redis_cl.hset("objects:despiegk.test2", 1, schema_obj._json)
 
         except redis.exceptions.ResponseError as err:
-            raise RuntimeError(
-                "should have raise runtime error when trying to write to index 1"
-            )
+            raise RuntimeError("should have raise runtime error when trying to write to index 1")
 
         for i in range(2, 11):
             print(i)
@@ -130,9 +128,7 @@ def main(self):
         try:
             redis_cl.hset("objects:despiegk.test2", 25, o._json)
         except Exception as e:
-            assert (
-                str(e).find("cannot update object with id:25, it does not exist") != -1
-            )
+            assert str(e).find("cannot update object with id:25, it does not exist") != -1
             # should not be able to set because the id does not exist
 
     def check_after_restart():

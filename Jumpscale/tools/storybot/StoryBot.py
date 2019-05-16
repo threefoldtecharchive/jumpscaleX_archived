@@ -10,7 +10,7 @@ from .utils import _extend_stories
 import gevent
 from Jumpscale import j
 
-TEMPLATE =  """
+TEMPLATE = """
 github_token_ = ""
 github_repos = ""
 gitea_api_url = "https://docs.grid.tf/api/v1"
@@ -20,6 +20,7 @@ gitea_repos = ""
 """
 
 JSConfigBase = j.application.JSBaseClass
+
 
 class StoryBot(JSConfigBase):
     """
@@ -31,11 +32,9 @@ class StoryBot(JSConfigBase):
     def __init__(self, instance, data=None, parent=None, interactive=False):
         """StoryBot constructor
         """
-        JSConfigBase.__init__(self, instance=instance,
-                                    data=data,
-                                    parent=parent,
-                                    template=TEMPLATE,
-                                    interactive=interactive)
+        JSConfigBase.__init__(
+            self, instance=instance, data=data, parent=parent, template=TEMPLATE, interactive=interactive
+        )
 
     @property
     def github_repos(self):
@@ -55,7 +54,7 @@ class StoryBot(JSConfigBase):
             [str] -- List of Github repositories
         """
         return [item.strip() for item in self.config.data["github_repos"].split(",")]
-    
+
     def add_github_repos(self, repos=""):
         """Add new Github repositories to the configuration
         
@@ -80,7 +79,7 @@ class StoryBot(JSConfigBase):
             repos str -- comma seperated string of repositories (default: "")
         """
         repos_list = [x.strip() for x in repos.split(",")]
-        new_list  = self.github_repos_list
+        new_list = self.github_repos_list
 
         for repo_to_remove in repos_list:
             # loop till all items are removed, just to make sure doubles are removed
@@ -138,7 +137,7 @@ class StoryBot(JSConfigBase):
             repos str -- comma seperated string of repositories (default: "")
         """
         repos_list = [x.strip() for x in repos.split(",")]
-        new_list  = self.gitea_repos_list
+        new_list = self.gitea_repos_list
 
         for repo_to_remove in repos_list:
             # loop till all items are removed, just to make sure doubles are removed
@@ -213,8 +212,8 @@ class StoryBot(JSConfigBase):
         for gl in gls:
             stories = _extend_stories(stories, gl.value)
         end = time.time()
-        self._log_debug("Fetching stories took %ss" % (end-start))
-        
+        self._log_debug("Fetching stories took %ss" % (end - start))
+
         if not stories:
             self._log_debug("No stories were found, skipping linking task to stories")
             return
@@ -233,7 +232,7 @@ class StoryBot(JSConfigBase):
         for gl in gls:
             tasks.extend(gl.value)
         end = time.time()
-        self._log_debug("Linking stories took %ss" % (end-start))
+        self._log_debug("Linking stories took %ss" % (end - start))
         self._log_debug("Found tasks: %s", tasks)
 
         if check_broken_urls:
@@ -250,4 +249,4 @@ class StoryBot(JSConfigBase):
             gevent.joinall(gls)
             end = time.time()
             self._log_info("Done checking lists for broken urls")
-            self._log_debug("Checking lists for broken urls took %ss" % (end-start))
+            self._log_debug("Checking lists for broken urls took %ss" % (end - start))

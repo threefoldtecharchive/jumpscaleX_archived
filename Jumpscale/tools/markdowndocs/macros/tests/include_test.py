@@ -6,7 +6,8 @@ import pytest
 
 markdowndocs_client = j.tools.markdowndocs
 doc = markdowndocs_client.load(
-    "https://github.com/threefoldtech/jumpscaleX/tree/development/docs/tools/wiki/docsites/examples/docs/", name="test")
+    "https://github.com/threefoldtech/jumpscaleX/tree/development/docs/tools/wiki/docsites/examples/docs/", name="test"
+)
 test_doc = doc.doc_get("test")
 
 
@@ -49,8 +50,7 @@ def test_include_headers_modify(doc=test_doc):
 
 def test_include_from_other_repo(doc=test_doc):
     markdowndocs_client = j.tools.markdowndocs
-    docsite = markdowndocs_client.load(
-        "https://github.com/abom/test_custom_md/tree/master", name="newdocsite")
+    docsite = markdowndocs_client.load("https://github.com/abom/test_custom_md/tree/master", name="newdocsite")
     data = include.include(doc=test_doc, docsite_name="newdocsite", link="test_src.md")
     assert "[b] (test.md)" in data
     assert "## head" not in data

@@ -4,6 +4,7 @@ JSBASE = j.application.JSBaseClass
 
 from .IPPoolManager import IPPoolsManager
 
+
 class IPPoolManagerFactory(JSBASE):
     __jslocation__ = "j.sal_zos.ippoolmanager"
 
@@ -15,4 +16,3 @@ class IPPoolManagerFactory(JSBASE):
             the sal layer 
         """
         return IPPoolsManager(pools)
-

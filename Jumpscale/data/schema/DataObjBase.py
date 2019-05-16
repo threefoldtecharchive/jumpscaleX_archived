@@ -52,9 +52,7 @@ class DataObjBase:
             if j.data.types.string.check(data):
                 data = j.data.serializers.json.loads(data)
             if not isinstance(data, dict):
-                raise j.exceptions.Input(
-                    "_load_from_data when string needs to be dict as json"
-                )
+                raise j.exceptions.Input("_load_from_data when string needs to be dict as json")
             self._data_update(data=data)
 
     def Edit(self):
@@ -134,11 +132,7 @@ class DataObjBase:
                         model = getattr(mm, "{}".format(prop.name))
                         if self.id != mm.id:
                             if model == getattr(self, "{}".format(prop.name)):
-                                raise RuntimeError(
-                                    "cannot save , {} should be unique".format(
-                                        prop.name
-                                    )
-                                )
+                                raise RuntimeError("cannot save , {} should be unique".format(prop.name))
             if self._changed:
                 o = self._model._set(self)
                 self.id = o.id

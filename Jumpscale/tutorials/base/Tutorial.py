@@ -1,5 +1,5 @@
-
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
 
@@ -11,7 +11,6 @@ class Tutorial(j.application.JSBaseClass):
         self.__jslocation__ = "j.tutorials.base"
         JSBASE.__init__(self)
 
-
     def cache(self):
         """
         js_shell 'j.tutorials.base.cache()'
@@ -22,9 +21,8 @@ class Tutorial(j.application.JSBaseClass):
         :return: result the name given
 
         """
-        assert self._example_run("tutorials/cache/example",name="aname") == "aname"
+        assert self._example_run("tutorials/cache/example", name="aname") == "aname"
         self._example_run("tutorials/cache/example_class")
-
 
     def baseclass(self):
         """
@@ -34,5 +32,4 @@ class Tutorial(j.application.JSBaseClass):
 
 
         """
-        self._example_run("tutorials/baseclass/example",obj_key="dothis",name="aname") == "aname"
-
+        self._example_run("tutorials/baseclass/example", obj_key="dothis", name="aname") == "aname"

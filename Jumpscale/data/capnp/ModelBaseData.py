@@ -1,11 +1,11 @@
 from Jumpscale import j
+
 # from collections import OrderedDict
 
 from .ModelBase import ModelBase
 
 
 class ModelBaseData(ModelBase):
-
     def __init__(self, key="", new=False, collection=None):
         super().__init__(key=key, new=new, collection=collection)
         self._data_schema = None

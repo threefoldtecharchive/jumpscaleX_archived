@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 from pprint import pprint as print
 
@@ -6,15 +5,14 @@ JSBASE = j.application.JSBaseClass
 
 
 class IndexFile(j.application.JSBaseClass):
-
     def __init__(self, path, nrbytes=4):
         j.sal.fs.createDir(j.sal.fs.getDirName(path))
         self._path = path
         self._nrbytes = nrbytes
         if j.sal.fs.exists(path):
-            self._f = open(path, mode='rb+')
+            self._f = open(path, mode="rb+")
         else:
-            self._f = open(path, mode='wb+')
+            self._f = open(path, mode="wb+")
         JSBASE.__init__(self)
 
     def __delete__(self):
@@ -50,7 +48,7 @@ class IndexFile(j.application.JSBaseClass):
 
     def _encode(self, item):
         if isinstance(item, str):
-            item = item.encode('utf-8')
+            item = item.encode("utf-8")
         return item
 
     def get(self, id):
@@ -73,7 +71,7 @@ class IndexFile(j.application.JSBaseClass):
         self._f.seek(self._offset(id))
         self._f.write(data)
 
-    def iterate(self, method, start=None, end=None,result=None):
+    def iterate(self, method, start=None, end=None, result=None):
         """walk over the indexfile and apply method as follows
 
         call for each item:
@@ -93,7 +91,7 @@ class IndexFile(j.application.JSBaseClass):
         if start is not None:
             id = start
         else:
-            id=0
+            id = 0
 
         self._f.seek(self._offset(id))
 
@@ -108,11 +106,13 @@ class IndexFile(j.application.JSBaseClass):
 
         return result
 
-    def list(self,start=None, end=None):
+    def list(self, start=None, end=None):
         result = {}
-        def do(id,data,result):
+
+        def do(id, data, result):
             # print("id:%s:%s"%(id,data))
-            result[id]=data
+            result[id] = data
             return result
+
         result = self.iterate(do, start=start, end=end, result={})
         return result

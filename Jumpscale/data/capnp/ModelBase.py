@@ -5,7 +5,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class ModelBase(j.application.JSBaseClass):
-
     def __init__(self, key="", new=False, collection=None):
 
         self._propnames = []
@@ -34,11 +33,11 @@ class ModelBase(j.application.JSBaseClass):
                 self.load(key=key)
                 self._key = key
             else:
-                raise j.exceptions.Input(message="Cannot find object:%s!%s" % (
-                    self.collection.category, key))
+                raise j.exceptions.Input(message="Cannot find object:%s!%s" % (self.collection.category, key))
         else:
-            raise j.exceptions.Input(message="key cannot be empty when no new obj is asked for.",
-                                     level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(
+                message="key cannot be empty when no new obj is asked for.", level=1, source="", tags="", msgpub=""
+            )
 
     @property
     def key(self):
@@ -125,7 +124,7 @@ class ModelBase(j.application.JSBaseClass):
             # no need to store when in mem because we are the object which does not have to be serialized
             # so this one stores when not mem
             buff = self.dbobj.to_bytes()
-            if hasattr(self.dbobj, 'clear_write_flag'):
+            if hasattr(self.dbobj, "clear_write_flag"):
                 self.dbobj.clear_write_flag()
             self.collection._db.set(self.key, buff)
         self.index()
@@ -133,7 +132,7 @@ class ModelBase(j.application.JSBaseClass):
     def to_dict(self):
         self.reSerialize()
         d = self.dbobj.to_dict()
-        d['key'] = self.key
+        d["key"] = self.key
         return d
 
     @property
@@ -166,7 +165,7 @@ class ModelBase(j.application.JSBaseClass):
         if not isinstance(keys, list):
             keys = [keys]
         self._listAddRemoveItem(name)
-        existing = self.__dict__['list_%s' % name]
+        existing = self.__dict__["list_%s" % name]
         for idx, item in enumerate(existing):
             match = True
             for key in keys:
@@ -220,7 +219,7 @@ class ModelBase(j.application.JSBaseClass):
         else:
             try:
                 self.__dict__["list_%s" % name] = [item.copy() for item in prop]
-            except BaseException:                # means is not an object can be e.g. a string
+            except BaseException:  # means is not an object can be e.g. a string
                 self.__dict__["list_%s" % name] = [item for item in prop]
 
         # empty the dbobj list

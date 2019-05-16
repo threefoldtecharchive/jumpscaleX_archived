@@ -3,7 +3,6 @@ import traceback
 import sys
 
 
-
 def schema():
     j.data.schema.test()
     j.data.types.test()
@@ -15,6 +14,7 @@ def bcdb():
     # j.servers.zdb.test(build=True)
     # j.clients.zdb.test()
     j.data.bcdb.test()
+
 
 def servers():
     j.tools.tmux.kill()
@@ -34,7 +34,3 @@ bcdb()
 
 # ssh()
 # servers()
-
-
-
-

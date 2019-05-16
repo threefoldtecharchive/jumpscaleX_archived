@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 import re
 import random
@@ -9,8 +8,7 @@ JSBASE = j.application.JSBaseClass
 
 
 class Synonym(j.application.JSBaseClass):
-
-    def __init__(self, name='', replaceWith='', simpleSearch="", replaceExclude=''):
+    def __init__(self, name="", replaceWith="", simpleSearch="", replaceExclude=""):
         """
         @param name: Name of the sysnoym
         @param replaceWith: The replacement of simpleSearch
@@ -34,7 +32,7 @@ class Synonym(j.application.JSBaseClass):
                 bracketMatchStart = ""
                 bracketMatchStop = ""
             self.regexFind = r"(?i)%s\b%s\b%s" % (bracketMatchStart, search.lower(), bracketMatchStop)
-            #self.regexFind=r"%s\b%s\b%s" % (bracketMatchStart,search.lower(),bracketMatchStop)
+            # self.regexFind=r"%s\b%s\b%s" % (bracketMatchStart,search.lower(),bracketMatchStop)
             self.regexFindForReplace = self.regexFind
 
     def setRegexSearch(self, regexFind, regexFindForReplace):
@@ -52,7 +50,8 @@ class Synonym(j.application.JSBaseClass):
             regexFind=self.regexFind,
             regexFindsubsetToReplace=self.regexFindForReplace,
             replaceWith=self.replaceWith,
-            text=text)
+            text=text,
+        )
         if self.replaceExclude:
             # Remove the markers and put the original def tags back
             text = self._replaceMarkersWithDefs(text)
@@ -71,8 +70,7 @@ class Synonym(j.application.JSBaseClass):
             mark = "$$MARKER$$%s$$" % random.randint(0, 1000)
             self._markers[mark] = match
             match = re.escape(match)
-            text = j.data.regex.replace(
-                regexFind=match, regexFindsubsetToReplace=match, replaceWith=mark, text=text)
+            text = j.data.regex.replace(regexFind=match, regexFindsubsetToReplace=match, replaceWith=mark, text=text)
         return text
 
     def _replaceMarkersWithDefs(self, text):
@@ -82,12 +80,18 @@ class Synonym(j.application.JSBaseClass):
         for marker, replacement in list(self._markers.items()):
             marker = re.escape(marker)
             text = j.data.regex.replace(
-                regexFind=marker, regexFindsubsetToReplace=marker, replaceWith=replacement, text=text)
+                regexFind=marker, regexFindsubsetToReplace=marker, replaceWith=replacement, text=text
+            )
         return text
 
     def __str__(self):
         out = "name:%s simple:%s regex:%s regereplace:%s replacewith:%s\n" % (
-            self.name, self.simpleSearch, self.regexFind, self.regexFindForReplace, self.replaceWith)
+            self.name,
+            self.simpleSearch,
+            self.regexFind,
+            self.regexFindForReplace,
+            self.replaceWith,
+        )
         return out
 
     def __repr__(self):
@@ -95,7 +99,6 @@ class Synonym(j.application.JSBaseClass):
 
 
 class ReplaceTool(j.application.JSBaseClass):
-
     def __init__(self):
         JSBASE.__init__(self)
         self.synonyms = []  # array Synonym()
@@ -104,8 +107,9 @@ class ReplaceTool(j.application.JSBaseClass):
         for syn in self.synonyms:
             self._log_debug(syn)
 
-    def synonymAdd(self, name='', simpleSearch='', regexFind='', regexFindForReplace='',
-                   replaceWith='', replaceExclude=''):
+    def synonymAdd(
+        self, name="", simpleSearch="", regexFind="", regexFindForReplace="", replaceWith="", replaceExclude=""
+    ):
         """
         Adds a new synonym to this replacer
         @param name: Synonym name (optional)
@@ -147,7 +151,8 @@ class ReplaceTool(j.application.JSBaseClass):
                     splitted = line.split("'")
                     if len(splitted) != 4:
                         raise j.exceptions.RuntimeError(
-                            "syntax error in synonym line (has to be 2 'regex' statements" % line)
+                            "syntax error in synonym line (has to be 2 'regex' statements" % line
+                        )
                     syn = Synonym(replaceWith=splitted[2])
                     syn.setRegexSearch(regexFind=splitted[0], regexFindForReplace=splitted[1])
                 else:
@@ -185,20 +190,20 @@ class ReplaceTool(j.application.JSBaseClass):
             text = syn.replace(text)
         return text
 
-    def replace_in_dir(self,path, recursive=False, filter=None):
-        for item in j.sal.fs.listFilesInDir(path=path,recursive=recursive,filter=filter,followSymlinks=True):
+    def replace_in_dir(self, path, recursive=False, filter=None):
+        for item in j.sal.fs.listFilesInDir(path=path, recursive=recursive, filter=filter, followSymlinks=True):
             try:
-                C=j.sal.fs.readFile(item)
+                C = j.sal.fs.readFile(item)
             except Exception as e:
                 if "codec can't" not in str(e):
                     raise RuntimeError(e)
-                C=""
-            if C=="":
+                C = ""
+            if C == "":
                 continue
-            C2=self.replace(C)
-            if C!=C2:
+            C2 = self.replace(C)
+            if C != C2:
                 self._log_debug("replaced %s in dir for: %s" % (item, path))
-                j.sal.fs.writeFile(item,C2)
+                j.sal.fs.writeFile(item, C2)
 
     # def replaceInConfluence(self, text):
     #     """

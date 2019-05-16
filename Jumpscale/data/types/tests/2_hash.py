@@ -11,6 +11,6 @@ def main(self):
     e = j.data.types.get("h")
 
     assert e.default_get() == (0, 0)
-    assert e.clean("1:2") == (1,2)
+    assert e.clean("1:2") == (1, 2)
 
-    return ("OK")
+    return "OK"

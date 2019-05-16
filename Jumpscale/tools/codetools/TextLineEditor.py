@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 
 # TODO: P2 S4 :eduard TextLineEditor tool does not work any more, is a
@@ -30,13 +29,14 @@ class TextLineEditor(j.application.JSBaseClass):
         return list(self._higestblocknr.keys())
 
     def matchBlocks(
-            self,
-            blockname,
-            blockStartPatterns=['.*'],
-            blockStartPatternsNegative=[],
-            blockStopPatterns=[],
-            blockStopPatternsNegative=[],
-            blockfilter=""):
+        self,
+        blockname,
+        blockStartPatterns=[".*"],
+        blockStartPatternsNegative=[],
+        blockStopPatterns=[],
+        blockStopPatternsNegative=[],
+        blockfilter="",
+    ):
         """
         walk over blocks which are marked as matched and split blocks in more blocks depending criteria
         can be usefull to do this multiple times (sort of iterative) e.g. find class and then in class remove comments
@@ -48,10 +48,15 @@ class TextLineEditor(j.application.JSBaseClass):
         """
 
         # check types of input
-        if type(blockStartPatterns).__name__ != 'list' or type(blockStartPatternsNegative).__name__ != 'list' or type(
-                blockStopPatterns).__name__ != 'list' or type(blockStopPatternsNegative).__name__ != 'list':
+        if (
+            type(blockStartPatterns).__name__ != "list"
+            or type(blockStartPatternsNegative).__name__ != "list"
+            or type(blockStopPatterns).__name__ != "list"
+            or type(blockStopPatternsNegative).__name__ != "list"
+        ):
             raise j.exceptions.RuntimeError(
-                "Blockstartpatterns,blockStartPatternsNegative,blockStopPatterns,blockStopPatternsNegative has to be of type list")
+                "Blockstartpatterns,blockStartPatternsNegative,blockStopPatterns,blockStopPatternsNegative has to be of type list"
+            )
 
         state = "scan"
         lines = self.lines
@@ -68,8 +73,11 @@ class TextLineEditor(j.application.JSBaseClass):
                     self._processLine(lineObject, blockname)  # add last line
                 return
 
-            if state == "foundblock" and j.data.regex.matchMultiple(
-                    blockStopPatterns, line) and not j.data.regex.matchMultiple(blockStopPatternsNegative, line):
+            if (
+                state == "foundblock"
+                and j.data.regex.matchMultiple(blockStopPatterns, line)
+                and not j.data.regex.matchMultiple(blockStopPatternsNegative, line)
+            ):
                 # found end of block
                 state = "scan"  # can continue to scan for next line
                 self._processLine(lineObject, blockname)
@@ -79,7 +87,8 @@ class TextLineEditor(j.application.JSBaseClass):
                 self._processLine(lineObject, blockname)  # add last line
 
             if j.data.regex.matchMultiple(blockStartPatterns, line) and not j.data.regex.matchMultiple(
-                    blockStartPatternsNegative, line):
+                blockStartPatternsNegative, line
+            ):
                 # found beginning of block
                 state = "foundblock"
                 self._processLine(lineObject, blockname, next=True)
@@ -87,8 +96,9 @@ class TextLineEditor(j.application.JSBaseClass):
     def _processLine(self, lineObject, blockname, next=False):
         if lineObject.block == blockname:
             j.errorhandler.raiseBug(
-                message="Cannot find block with name %s in block which has already same name" %
-                blo, category="lineeditor")
+                message="Cannot find block with name %s in block which has already same name" % blo,
+                category="lineeditor",
+            )
         lineObject.block = blockname
         if next:
             lineObject.blocknr = self.getNextBlockNr(blockname)
@@ -146,7 +156,8 @@ class TextLineEditor(j.application.JSBaseClass):
         block = [line for line in self.lines if (line.block == blockname and line.blocknr == blocknr)]
         if len(block) == 0:
             raise j.exceptions.RuntimeError(
-                "Cannot find block from text with blockname %s and blocknr %s" % (blockname, blocknr))
+                "Cannot find block from text with blockname %s and blocknr %s" % (blockname, blocknr)
+            )
         return str.join(block)
 
     def replaceBlock(self, blockname, text, blocknr=1):
@@ -222,7 +233,6 @@ class TextLineEditor(j.application.JSBaseClass):
 
 
 class LTLine(j.application.JSBaseClass):
-
     def __init__(self, line, blockname="", blocknr=0):
         """
         @param no blockname means ignore

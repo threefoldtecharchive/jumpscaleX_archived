@@ -1,9 +1,8 @@
-
 from Jumpscale import j
+
 # import html
 
 from data.capnp.ModelBase import ModelBase
-
 
 
 class IssueModel(ModelBase):
@@ -24,35 +23,36 @@ class IssueModel(ModelBase):
                     toremove.append(label)
                     label = label[5:]
                     if label not in [
-                        'unknown',
-                        'alert',
-                        'bug',
-                        'doc',
-                        'feature',
-                        'incident',
-                        'question',
-                        'request',
-                        'story',
-                            'task']:
-                        label = 'unknown'
+                        "unknown",
+                        "alert",
+                        "bug",
+                        "doc",
+                        "feature",
+                        "incident",
+                        "question",
+                        "request",
+                        "story",
+                        "task",
+                    ]:
+                        label = "unknown"
                         toremove.pop()
                     self.dbobj.type = label
                 elif label.startswith("priority_"):
                     toremove.append(label)
                     label = label[9:]
-                    if label not in ['minor', 'normal', 'major', 'critical']:
-                        label = 'normal'
+                    if label not in ["minor", "normal", "major", "critical"]:
+                        label = "normal"
                         toremove.pop()
                     self.dbobj.priority = label
                 elif label.startswith("state_"):
                     toremove.append(label)
                     label = label[6:]
-                    if label not in ['new', 'inprogress', 'resolved', 'wontfix', 'question', 'closed']:
-                        label = 'new'
+                    if label not in ["new", "inprogress", "resolved", "wontfix", "question", "closed"]:
+                        label = "new"
                         toremove.pop()
                     self.dbobj.state = label
             if self.dbobj.isClosed:
-                self.dbobj.state = 'closed'
+                self.dbobj.state = "closed"
             self.initSubItem("labels")
             for item in toremove:
                 self.list_labels.pop(self.list_labels.index(item))

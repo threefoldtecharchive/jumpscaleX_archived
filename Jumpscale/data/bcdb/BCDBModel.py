@@ -9,15 +9,7 @@ JSBASE = j.application.JSBaseClass
 
 
 class BCDBModel(j.application.JSBaseClass):
-    def __init__(
-        self,
-        bcdb,
-        schema=None,
-        url=None,
-        cache_expiration=3600,
-        custom=False,
-        reset=False,
-    ):
+    def __init__(self, bcdb, schema=None, url=None, cache_expiration=3600, custom=False, reset=False):
         """
 
         delivers interface how to deal with data in 1 schema
@@ -56,9 +48,7 @@ class BCDBModel(j.application.JSBaseClass):
 
         self.readonly = False
 
-        self.autosave = (
-            False
-        )  # if set it will make sure data is automatically set from object
+        self.autosave = False  # if set it will make sure data is automatically set from object
 
         #
 
@@ -81,10 +71,7 @@ class BCDBModel(j.application.JSBaseClass):
 
         self._ids_file_path = "%s/ids.data" % (self._data_dir)
 
-        if (
-            not j.sal.fs.exists(self._ids_file_path)
-            or j.sal.fs.fileSize(self._ids_file_path) == 0
-        ):
+        if not j.sal.fs.exists(self._ids_file_path) or j.sal.fs.fileSize(self._ids_file_path) == 0:
             j.sal.fs.touch(self._ids_file_path)
             self._ids_last = 0
         else:
@@ -122,13 +109,7 @@ class BCDBModel(j.application.JSBaseClass):
         model = self
         kosmosinstance = self._kosmosinstance
         for method in self._triggers:
-            method(
-                model,
-                obj,
-                kosmosinstance=kosmosinstance,
-                action=action,
-                propertyname=propertyname,
-            )
+            method(model, obj, kosmosinstance=kosmosinstance, action=action, propertyname=propertyname)
 
     def cache_reset(self):
         self.obj_cache = {}
@@ -232,9 +213,7 @@ class BCDBModel(j.application.JSBaseClass):
                 obj_id = data["id"]
             obj = self.schema.get(data)
         else:
-            raise RuntimeError(
-                "Cannot find data type, str,bin,obj or ddict is only supported"
-            )
+            raise RuntimeError("Cannot find data type, str,bin,obj or ddict is only supported")
         obj.id = obj_id  # do not forget
         return self._set(obj)
 
@@ -256,9 +235,7 @@ class BCDBModel(j.application.JSBaseClass):
         data = j.data.serializers.msgpack.dumps(ids)
         hash = self._index_key_redis_get(key)
         self._log_debug("set key:%s (id:%s)" % (key, obj_id))
-        j.clients.credis_core.hset(
-            self._redis_prefix + b":" + hash[0:2], hash[2:], data
-        )
+        j.clients.credis_core.hset(self._redis_prefix + b":" + hash[0:2], hash[2:], data)
 
     def _index_key_delete(self, property_name, val, obj_id):
 
@@ -275,9 +252,7 @@ class BCDBModel(j.application.JSBaseClass):
             data = j.data.serializers.msgpack.dumps(ids)
             hash = self._index_key_redis_get(key)
             self._log_debug("set key:%s (id:%s)" % (key, obj_id))
-            j.clients.credis_core.hdel(
-                self._redis_prefix + b":" + hash[0:2], hash[2:], data
-            )
+            j.clients.credis_core.hdel(self._redis_prefix + b":" + hash[0:2], hash[2:], data)
 
     def _index_keys_destroy(self):
         for key in j.clients.credis_core.keys(self._redis_prefix + b"*"):
@@ -422,10 +397,7 @@ class BCDBModel(j.application.JSBaseClass):
                         self.zdbclient.set(data, key=obj.id)
                     except Exception as e:
                         if str(e).find("only update authorized") != -1:
-                            raise RuntimeError(
-                                "cannot update object:%s\n with id:%s, does not exist"
-                                % (obj, obj.id)
-                            )
+                            raise RuntimeError("cannot update object:%s\n with id:%s, does not exist" % (obj, obj.id))
                         raise
 
         if index:
@@ -547,9 +519,7 @@ class BCDBModel(j.application.JSBaseClass):
             else:
                 return None
 
-        obj = self.bcdb._unserialize(
-            obj_id, data, return_as_capnp=return_as_capnp, model=self
-        )
+        obj = self.bcdb._unserialize(obj_id, data, return_as_capnp=return_as_capnp, model=self)
         # self.obj_cache[obj_id] = (j.data.time.epoch, obj)  #FOR NOW NO CACHE, UNSAFE
 
         self.triggers_call(obj=obj, action="get")
@@ -587,10 +557,7 @@ class BCDBModel(j.application.JSBaseClass):
                 o = self.get(obj_id)
             except Exception as e:
                 if str(e).find("could not find obj") != -1:
-                    self._log_warning(
-                        "warning: could not find object with id:%s in %s"
-                        % (obj_id, self)
-                    )
+                    self._log_warning("warning: could not find object with id:%s in %s" % (obj_id, self))
                     continue
                 else:
                     raise e

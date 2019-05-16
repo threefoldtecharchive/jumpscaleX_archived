@@ -4,24 +4,24 @@ from functools import partial
 from Jumpscale.tools.markdowndocs.Link import CustomLink, GithubLinker
 
 
-def with_code_block(content, _type=''):
+def with_code_block(content, _type=""):
     if not _type:
         return content
-    return '\n'.join(('```%s' % _type, content, '```'))
+    return "\n".join(("```%s" % _type, content, "```"))
 
 
 def update_header_level(line, level):
     current_level = 0
     for c in line:
-        if c == ' ':
+        if c == " ":
             continue
-        if c != '#':
+        if c != "#":
             break
         current_level += 1
 
     if current_level:
         new_level = current_level + level
-        return '%s%s' % ('#' * new_level, line[current_level:])
+        return "%s%s" % ("#" * new_level, line[current_level:])
     return line
 
 
@@ -33,7 +33,7 @@ def get_by_marker(lines, marker):
     for line in lines:
         if marker.findall(line):
             found = not found
-            matched.append(marker.sub('', line))
+            matched.append(marker.sub("", line))
             continue
 
         if not found:
@@ -43,20 +43,20 @@ def get_by_marker(lines, marker):
     return matched
 
 
-DOCSTRING_RE = re.compile(r'(?:\'\'\'|\"\"\")([\w\W]*?)(?:\'\'\'|\"\"\")', re.MULTILINE)
+DOCSTRING_RE = re.compile(r"(?:\'\'\'|\"\"\")([\w\W]*?)(?:\'\'\'|\"\"\")", re.MULTILINE)
 
 
 def get_docstrings(content):
-    return '\n\n'.join(DOCSTRING_RE.findall(content))
+    return "\n\n".join(DOCSTRING_RE.findall(content))
 
 
 def process_content(content, marker, doc_only, header_levels_modify, ignore):
     def should_skip(line):
         return not any([re.findall(pattern, line.strip()) for pattern in ignore])
 
-    lines = content.split('\n')
+    lines = content.split("\n")
     if marker:
-        marker = '!!%s!!' % marker
+        marker = "!!%s!!" % marker
         lines = get_by_marker(lines, marker)
 
     lines = filter(should_skip, lines)
@@ -65,15 +65,23 @@ def process_content(content, marker, doc_only, header_levels_modify, ignore):
     if header_levels_modify:
         lines = map(update_header, lines)
 
-    new_content = '\n'.join(lines)
+    new_content = "\n".join(lines)
     if doc_only:
         return get_docstrings(new_content)
     return new_content
 
 
 def include(
-        doc, link, docsite_name=None, doc_only=False, remarks_skip=False, header_levels_modify=0, ignore=None,
-        codeblock_type=None, **kwargs):
+    doc,
+    link,
+    docsite_name=None,
+    doc_only=False,
+    remarks_skip=False,
+    header_levels_modify=0,
+    ignore=None,
+    codeblock_type=None,
+    **kwargs,
+):
     """include other documents or files
 
     :param doc: curent document (that include was called from)
@@ -112,7 +120,7 @@ def include(
             # get a new link and docsite
             new_link = GithubLinker.to_custom_link(repo)
             # to match any path, start with root `/`
-            url = GithubLinker(new_link.account, new_link.repo).tree('/')
+            url = GithubLinker(new_link.account, new_link.repo).tree("/")
             docsite = j.tools.markdowndocs.load(url, name=new_link.repo)
             custom_link.path = new_link.path
 
@@ -124,11 +132,15 @@ def include(
     if not ignore:
         ignore = []
     if remarks_skip:
-        ignore.append(r'^\#')
+        ignore.append(r"^\#")
 
     if custom_link.marker or ignore or doc_only or header_levels_modify:
         content = process_content(
-            content, marker=custom_link.marker, doc_only=doc_only,
-            header_levels_modify=header_levels_modify, ignore=ignore)
+            content,
+            marker=custom_link.marker,
+            doc_only=doc_only,
+            header_levels_modify=header_levels_modify,
+            ignore=ignore,
+        )
 
     return with_code_block(content, _type=codeblock_type)

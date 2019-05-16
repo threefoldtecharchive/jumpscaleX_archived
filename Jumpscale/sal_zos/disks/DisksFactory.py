@@ -15,4 +15,3 @@ class DisksFactory(JSBASE):
             the sal layer 
         """
         return Disks(node)
-

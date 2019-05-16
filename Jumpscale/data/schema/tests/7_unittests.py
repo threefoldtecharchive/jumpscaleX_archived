@@ -7,5 +7,5 @@ def main(self):
 
     kosmos 'j.data.schema.test(name="unittests")' --debug
     """
-    #todo:*1 call the unit tests
+    # todo:*1 call the unit tests
     pass

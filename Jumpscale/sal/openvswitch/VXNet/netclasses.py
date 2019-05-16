@@ -1,4 +1,4 @@
-__author__ = 'delandtj'
+__author__ = "delandtj"
 
 from .utils import *
 from Jumpscale import j
@@ -7,15 +7,15 @@ JSBASE = j.application.JSBaseClass
 
 
 class VXlan(j.application.JSBaseClass):
-
-    def __init__(self, oid, backend='vxbackend'):
+    def __init__(self, oid, backend="vxbackend"):
         def bytes(num):
             return num >> 8, num & 0xFF
+
         JSBASE.__init__(self)
-        self.multicastaddr = '239.0.%s.%s' % bytes(oid.oid)
+        self.multicastaddr = "239.0.%s.%s" % bytes(oid.oid)
         self.id = oid
         self.backend = backend
-        self.name = 'vx-' + oid.tostring()
+        self.name = "vx-" + oid.tostring()
 
     def create(self):
         createVXlan(self.name, self.id.oid, self.multicastaddr, self.backend)
@@ -31,7 +31,6 @@ class VXlan(j.application.JSBaseClass):
 
 
 class Bridge(j.application.JSBaseClass):
-
     def __init__(self, name):
         self.name = name
         JSBASE.__init__(self)
@@ -50,15 +49,13 @@ class Bridge(j.application.JSBaseClass):
 
 
 class VXBridge(Bridge):
-
     def __init__(self, oid):
         assert isinstance(oid.tostring, object)
-        self.name = 'space_' + oid.tostring()
+        self.name = "space_" + oid.tostring()
         Bridge.__init__(name=self.name)
 
 
 class BondBridge(j.application.JSBaseClass):
-
     def __init__(self, name, interfaces, bondname=None, trunks=None):
         JSBASE.__init__(self)
         self.name = name
@@ -78,7 +75,6 @@ class BondBridge(j.application.JSBaseClass):
 
 
 class NameSpace(j.application.JSBaseClass):
-
     def __init__(self, name):
         JSBASE.__init__(self)
         self.name = name
@@ -94,14 +90,12 @@ class NameSpace(j.application.JSBaseClass):
 
 
 class VXNameSpace(NameSpace):
-
     def __init__(self, oid):
-        self.name = 'ns-' + oid.tostring()
+        self.name = "ns-" + oid.tostring()
         NameSpace.__init__(name=self.name)
 
 
 class NetID(j.application.JSBaseClass):
-
     def __init__(self, oid):
         JSBASE.__init__(self)
         if isinstance(oid, str):
@@ -111,16 +105,15 @@ class NetID(j.application.JSBaseClass):
 
     def tostring(self):
         # netidstring = str(hex(self.netid,16))[2:]
-        oidstring = '%04x' % self.oid
+        oidstring = "%04x" % self.oid
         return oidstring
 
 
 class VethPair(j.application.JSBaseClass):
-
     def __init__(self, oid):
         JSBASE.__init__(self)
-        self.left = 'veth-left-%s' % oid.tostring()
-        self.right = 'veth-right-%s' % oid.tostring()
+        self.left = "veth-left-%s" % oid.tostring()
+        self.right = "veth-right-%s" % oid.tostring()
 
     def create(self):
         createVethPair(self.left, self.right)

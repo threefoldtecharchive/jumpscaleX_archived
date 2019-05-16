@@ -2,14 +2,13 @@ from Jumpscale import j
 
 from .ZOS import ZOS
 
+
 class ZOSVB(ZOS):
-
-    def __init__(self, zosclient,name):
-        ZOS.__init__(self,zosclient=zosclient,name=name)
+    def __init__(self, zosclient, name):
+        ZOS.__init__(self, zosclient=zosclient, name=name)
         self._zos_private_address = None
-        self.zos_private_address #make sure we know the private addr
-        self._type = 'vbox'
-
+        self.zos_private_address  # make sure we know the private addr
+        self._type = "vbox"
 
     @property
     def zos_private_address(self):
@@ -25,12 +24,12 @@ class ZOSVB(ZOS):
             else:
                 # assume vboxnet0 use an 192.168.0.0/16 address
                 for nic in self.zosclient.client.info.nic():
-                    if len(nic['addrs']) == 0:
+                    if len(nic["addrs"]) == 0:
                         continue
-                    if nic['addrs'][0]['addr'].startswith("127.0.0.1"):
-                        self._zos_private_address = nic['addrs'][0]['addr'].split('/')[0]
+                    if nic["addrs"][0]["addr"].startswith("127.0.0.1"):
+                        self._zos_private_address = nic["addrs"][0]["addr"].split("/")[0]
                         if not j.sal.nettools.pingMachine(self._zos_private_address):
-                            raise RuntimeError("could not reach private addr:%s of VB ZOS"%self._zos_private_address)
+                            raise RuntimeError("could not reach private addr:%s of VB ZOS" % self._zos_private_address)
                         self.address_private = self._zos_private_address
                         self.save()
                         return self._zos_private_address
@@ -39,9 +38,9 @@ class ZOSVB(ZOS):
 
     def _get_free_port(self):
         port = 4001
-        while j.sal.nettools.checkListenPort(port)==True:
-            self._log_debug("check for free tcp port:%s"%port)
-            port+=1
+        while j.sal.nettools.checkListenPort(port) == True:
+            self._log_debug("check for free tcp port:%s" % port)
+            port += 1
         return port
 
     @property

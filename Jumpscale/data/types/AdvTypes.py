@@ -14,17 +14,17 @@ from .TypeBaseClasses import *
 
 
 class Guid(String):
-    '''
+    """
     Generic GUID type
     stored as binary internally
-    '''
+    """
 
-    NAME =  'guid'
+    NAME = "guid"
 
-    def __init__(self,default=None):
+    def __init__(self, default=None):
         self.BASETYPE = "string"
         self._default = default
-    
+
     def clean(self, value):
         if value is None:
             return self.default_get()
@@ -38,7 +38,7 @@ class Guid(String):
             val = UUID(value, version=4)
         except (ValueError, AttributeError):
             return False
-        return val.hex == value.replace('-', '')
+        return val.hex == value.replace("-", "")
 
     def default_get(self):
         if self._default:
@@ -59,20 +59,21 @@ class Guid(String):
 class Email(String):
     """
     """
-    NAME =  'email'
+
+    NAME = "email"
 
     def __init__(self, default=None):
         self.BASETYPE = "string"
-        self._RE = re.compile('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
+        self._RE = re.compile("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
         self._default = default
 
     def check(self, value):
-        '''
+        """
         Check whether provided value is a valid tel nr
-        '''
+        """
         if not j.data.types.string.check(value):
             return False
-        if value.strip()=="":
+        if value.strip() == "":
             return True
         return self._RE.fullmatch(value) is not None
 
@@ -82,9 +83,9 @@ class Email(String):
         return ""
 
     def clean(self, v):
-        if isinstance(v,Email):
+        if isinstance(v, Email):
             return v
-        if v is None or v == 'None':
+        if v is None or v == "None":
             return self.default_get()
         v = j.data.types.string.clean(v)
         if not self.check(v):
@@ -94,8 +95,9 @@ class Email(String):
 
 
 class Path(String):
-    '''Generic path type'''
-    NAME =  'path'
+    """Generic path type"""
+
+    NAME = "path"
 
     def __init__(self, default=None):
         self.BASETYPE = "string"
@@ -103,9 +105,9 @@ class Path(String):
         self._default = default
 
     def check(self, value):
-        '''
+        """
         Check whether provided value is a valid
-        '''
+        """
         return self._RE.fullmatch(value) is not None
 
     def default_get(self):
@@ -113,17 +115,19 @@ class Path(String):
 
 
 class Url(String):
-    '''Generic url type'''
-    NAME =  'url,u'
+    """Generic url type"""
 
-    def __init__(self,default=None):
+    NAME = "url,u"
+
+    def __init__(self, default=None):
         self.BASETYPE = "string"
         self._RE = re.compile(
-            "(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,}")
+            "(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9]\.[^\s]{2,}"
+        )
         self._default = default
 
     def clean(self, value):
-        if value is None or value == 'None':
+        if value is None or value == "None":
             return self.default_get()
         if not self.check(value):
             raise ValueError("invalid url :%s" % value)
@@ -131,9 +135,9 @@ class Url(String):
             return value
 
     def check(self, value):
-        '''
+        """
         Check whether provided value is a valid
-        '''
+        """
         return self._RE.fullmatch(value) is not None
 
 
@@ -144,23 +148,24 @@ class Tel(String):
     the. & , and spaces will not be remembered
     and x stands for phone number extension
     """
-    NAME =  'tel,mobile'
+
+    NAME = "tel,mobile"
 
     def __init__(self, default=None):
         self.BASETYPE = "string"
-        self._RE = re.compile('^\+?[0-9]{6,15}(?:x[0-9]+)?$')
+        self._RE = re.compile("^\+?[0-9]{6,15}(?:x[0-9]+)?$")
         self._default = default
 
     def check(self, value):
-        '''
+        """
         Check whether provided value is a valid
-        '''
+        """
         if not value:
             return True
         return self._RE.fullmatch(value) is not None
 
     def clean(self, v):
-        if v is None or v =='None':
+        if v is None or v == "None":
             return self.default_get()
         v = j.data.types.string.clean(v)
         v = v.replace(".", "")
@@ -178,35 +183,39 @@ class Tel(String):
             self._default = None
         return self._default
 
+
 class IPRange(String):
     """
     """
-    NAME =  'iprange'
+
+    NAME = "iprange"
 
     def __init__(self, default=None):
         self.BASETYPE = "string"
-        self._RE = re.compile('[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2}')
+        self._RE = re.compile("[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/[0-9]{1,2}")
         self._default = default
 
     def check(self, value):
-        '''
+        """
         Check whether provided value is a valid
-        '''
+        """
         return self._RE.fullmatch(value) is not None
 
     def clean(self, value):
-        if value is None or value == 'None':
+        if value is None or value == "None":
             return self.default_get()
         if not self.check(value):
             raise ValueError("invalid ip range %s" % value)
         else:
             return value
 
-class IPPort(Integer):
-    '''Generic IP port type'''
-    NAME =  'ipport,tcpport'
 
-    def __init__(self,default=None):
+class IPPort(Integer):
+    """Generic IP port type"""
+
+    NAME = "ipport,tcpport"
+
+    def __init__(self, default=None):
         self.BASETYPE = "int"
         self.NOCHECK = True
         # j.shell()
@@ -217,20 +226,19 @@ class IPPort(Integer):
             self._default = 65535
         return self._default
 
-
     def possible(self, value):
-        '''
+        """
         Check if the value is a valid port
         We just check if the value a single port or a range
         Values must be between 0 and 65535
-        '''
+        """
         try:
             if 0 < int(value) <= 65535:
                 return True
-        except :
+        except:
             pass
         return False
-    
+
     def clean(self, value):
         if not value:
             return self.default_get()
@@ -249,15 +257,13 @@ class IPPort(Integer):
 
 
 class NumericObject(TypeBaseObjClassNumeric):
-
-
     @property
     def _string(self):
         return self._typebase.bytes2str(self._data)
 
     @property
     def _python_code(self):
-        return "'%s'"%self._string
+        return "'%s'" % self._string
 
     @property
     def usd(self):
@@ -268,23 +274,22 @@ class NumericObject(TypeBaseObjClassNumeric):
         return self._typebase.bytes2cur(self._data)
 
     @value.setter
-    def value(self,val):
+    def value(self, val):
         self._data = self._typebase.toData(val)
 
     @property
     def currency_code(self):
-        curcode ,val = self._typebase.bytes2cur(self._data, return_currency_code=True)
+        curcode, val = self._typebase.bytes2cur(self._data, return_currency_code=True)
         return curcode
 
-    def value_currency(self,curcode="usd"):
-        return self._typebase.bytes2cur( self._data, curcode=curcode)
+    def value_currency(self, curcode="usd"):
+        return self._typebase.bytes2cur(self._data, curcode=curcode)
 
     def __str__(self):
         if self._data:
-            return "numeric (%s): %s"%(self.value_currency,self._string)
+            return "numeric (%s): %s" % (self.value_currency, self._string)
         else:
             return "numeric: NOTSET"
-
 
 
 class Numeric(TypeBaseObjFactory):
@@ -296,18 +301,18 @@ class Numeric(TypeBaseObjFactory):
     will return int as jumpscale basic implementation
 
     """
-    NAME =  'numeric,n'
 
-    def __init__(self,default=None):
+    NAME = "numeric,n"
+
+    def __init__(self, default=None):
         TypeBaseObjFactory.__init__(self)
         self.BASETYPE = "bytes"
         self.NOCHECK = True
         self._default = default
 
+    def bytes2cur(self, bindata, curcode="usd", roundnr=None, return_currency_code=False):
 
-    def bytes2cur(self, bindata, curcode="usd", roundnr=None,return_currency_code=False):
-
-        if bindata in [b'',None]:
+        if bindata in [b"", None]:
             return 0
 
         if len(bindata) not in [6, 10]:
@@ -351,7 +356,7 @@ class Numeric(TypeBaseObjFactory):
             val = round(val, roundnr)
 
         if return_currency_code:
-            return curcode0,val
+            return curcode0, val
         else:
             return val
 
@@ -414,9 +419,9 @@ class Numeric(TypeBaseObjFactory):
     def getCur(self, value):
         value = value.lower()
         for cur2 in list(j.clients.currencylayer.cur2usd.keys()):
-                # print(cur2)
+            # print(cur2)
             if value.find(cur2) != -1:
-                    # print("FOUND:%s"%cur2)
+                # print("FOUND:%s"%cur2)
                 value = value.lower().replace(cur2, "").strip()
                 return value, cur2
         cur2 = "usd"
@@ -530,22 +535,23 @@ class Numeric(TypeBaseObjFactory):
             return struct.pack("B", ttype) + struct.pack("B", curcat) + struct.pack("I", value)
 
     def clean(self, data=None):
-        if isinstance(data,NumericObject):
+        if isinstance(data, NumericObject):
             return data
-        if data is None or data == 'None' or data == b"" or data == "":
+        if data is None or data == "None" or data == b"" or data == "":
             return self.default_get()
-        if isinstance(data,float) or isinstance(data,int):
+        if isinstance(data, float) or isinstance(data, int):
             data = str(data)
-        if isinstance(data,str):
+        if isinstance(data, str):
             data = self.str2bytes(data)
-        if isinstance(data,bytes):
-            return NumericObject(self,data)
+        if isinstance(data, bytes):
+            return NumericObject(self, data)
         else:
             raise RuntimeError("was not able to clean numeric : %s" % data)
 
-    def toData(self,data):
+    def toData(self, data):
         data = self.clean(data)
         return data._data
+
     #     # print("num:clean:%s"%data)
     #     if j.data.types.string.check(data):
     #         data = j.data.types.string.clean(data)
@@ -568,10 +574,11 @@ class Numeric(TypeBaseObjFactory):
 
 
 class DateTime(Integer):
-    '''
+    """
     internal representation is an epoch (int)
-    '''
-    NAME =  'datetime,t'
+    """
+
+    NAME = "datetime,t"
 
     def __init__(self, default=None):
 
@@ -619,6 +626,7 @@ class DateTime(Integer):
         """
         if v is None:
             return self.default_get()
+
         def date_process(dd):
             if "/" not in dd:
                 raise j.exceptions.Input("date needs to have:/, now:%s" % v)
@@ -636,7 +644,9 @@ class DateTime(Integer):
                 elif len(s2) == 4 and (len(s1) == 2 or len(s1) == 1) and (len(s0) == 2 or len(s0) == 1):
                     # year at end
                     dfstr = "%d/%m/%Y"
-                elif (len(s2) == 2 or len(s2) == 1) and (len(s1) == 2 or len(s1) == 1) and (len(s0) == 2 or len(s0) == 1):
+                elif (
+                    (len(s2) == 2 or len(s2) == 1) and (len(s1) == 2 or len(s1) == 1) and (len(s0) == 2 or len(s0) == 1)
+                ):
                     # year at start but small
                     dfstr = "%y/%m/%d"
                 else:
@@ -661,13 +671,13 @@ class DateTime(Integer):
                 else:
                     fstr = "%H:%M:%S"
             return (v, fstr)
-        
+
         if v is None:
-            v=0
+            v = 0
 
         if j.data.types.string.check(v):
-            v=v.replace("'","").replace("\"","").strip()
-            if v.strip() in ["0", "",0]:
+            v = v.replace("'", "").replace('"', "").strip()
+            if v.strip() in ["0", "", 0]:
                 return 0
 
             if "+" in v or "-" in v:
@@ -702,10 +712,11 @@ class DateTime(Integer):
 
 
 class Date(DateTime):
-    '''
+    """
     internal representation is an epoch (int)
-    '''
-    NAME =  'date,d'
+    """
+
+    NAME = "date,d"
 
     def __init__(self, default=None):
 
@@ -732,15 +743,15 @@ class Date(DateTime):
         """
         if v is None:
             return self.default_get()
-        if isinstance(v,str):
-            v=v.replace("'","").replace("\"","").strip()
-        if v in [0,"0",None,""]:
+        if isinstance(v, str):
+            v = v.replace("'", "").replace('"', "").strip()
+        if v in [0, "0", None, ""]:
             return 0
         # am sure there are better ways how to do this but goes to beginning of day
-        v2 = DateTime.clean(self,v)
+        v2 = DateTime.clean(self, v)
         dt = datetime.fromtimestamp(v2)
-        dt2 = datetime(dt.year,dt.month,dt.day,0,0)
-        return int(dt2.strftime('%s'))
+        dt2 = datetime(dt.year, dt.month, dt.day, 0, 0)
+        return int(dt2.strftime("%s"))
 
     def toString(self, val, local=True):
         val = self.clean(val)
@@ -750,18 +761,20 @@ class Date(DateTime):
 
 
 class Duration(String):
-    '''
+    """
     internal representation is an int (seconds)
-    '''
-    NAME = 'duration'
+    """
+
+    NAME = "duration"
 
     def __init__(self, default=None):
         # inspired by https://stackoverflow.com/a/51916936
-        self._RE = re.compile(r'^((?P<days>[\.\d]+?)d)?((?P<hours>[\.\d]+?)h)?((?P<minutes>[\.\d]+?)m)?((?P<seconds>[\.\d]+?)s)?$')
+        self._RE = re.compile(
+            r"^((?P<days>[\.\d]+?)d)?((?P<hours>[\.\d]+?)h)?((?P<minutes>[\.\d]+?)m)?((?P<seconds>[\.\d]+?)s)?$"
+        )
         self.BASETYPE = "int"
         self.NOCHECK = True
         self._default = default
-
 
     def get_default(self):
         return 0
@@ -773,10 +786,10 @@ class Duration(String):
         return self.clean(value)
 
     def check(self, value):
-        '''
+        """
         Check whether provided value is a valid duration representation
         be carefull is SLOW
-        '''
+        """
         try:
             self.clean(value)
             return True
@@ -790,13 +803,15 @@ class Duration(String):
         val = self.clean(val)
         if val == 0:
             return ""
-        days = val//86400
-        hours = (val - days*86400)//3600
-        minutes = (val - days*86400 - hours*3600)//60
-        seconds = val - days*86400 - hours*3600 - minutes*60
+        days = val // 86400
+        hours = (val - days * 86400) // 3600
+        minutes = (val - days * 86400 - hours * 3600) // 60
+        seconds = val - days * 86400 - hours * 3600 - minutes * 60
         return reduce(
-            (lambda r, p: r+str(p[0])+p[1] if p[0] > 0 else r),
-            [(days, "d"), (hours, "h"), (minutes, "m"), (seconds, "s")], "")
+            (lambda r, p: r + str(p[0]) + p[1] if p[0] > 0 else r),
+            [(days, "d"), (hours, "h"), (minutes, "m"), (seconds, "s")],
+            "",
+        )
 
     def toHR(self, v):
         return self.toString(v)
@@ -815,15 +830,19 @@ class Duration(String):
 
         will return seconds
         """
-        if v in [0,"0",None,""]:
+        if v in [0, "0", None, ""]:
             return 0
         if j.data.types.string.check(v):
-            v = v.replace("'","").replace("\"","").strip()
+            v = v.replace("'", "").replace('"', "").strip()
             if v.isdigit():
-                return int(v) # shortcut for when string is an integer
+                return int(v)  # shortcut for when string is an integer
             parts = self._RE.match(v)
             if parts is None:
-                raise ValueError("Could not parse any time information from '{}'.  Examples of valid strings: '8h', '2d8h5m20s', '2m4s'".format(v))
+                raise ValueError(
+                    "Could not parse any time information from '{}'.  Examples of valid strings: '8h', '2d8h5m20s', '2m4s'".format(
+                        v
+                    )
+                )
             time_params = {name: float(param) for name, param in parts.groupdict().items() if param}
             return int(timedelta(**time_params).total_seconds())
         elif j.data.types.int.check(v):
@@ -833,4 +852,3 @@ class Duration(String):
 
     def capnp_schema_get(self, name, nr):
         return "%s @%s :UInt32;" % (name, nr)
-

@@ -7,11 +7,11 @@ import docker
 import time
 from urllib import parse
 import copy
+
 JSBASE = j.application.JSBaseClass
 
 
 class Docker(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.sal.docker"
         self.__imports__ = "docker"
@@ -21,15 +21,21 @@ class Docker(j.application.JSBaseClass):
         self._containers = None
         self._names = []
 
-        if 'DOCKER_HOST' not in os.environ or os.environ['DOCKER_HOST'] == "":
-            self.base_url = 'unix://var/run/docker.sock'
+        if "DOCKER_HOST" not in os.environ or os.environ["DOCKER_HOST"] == "":
+            self.base_url = "unix://var/run/docker.sock"
         else:
-            self.base_url = os.environ['DOCKER_HOST']
+            self.base_url = os.environ["DOCKER_HOST"]
         self.client = docker.APIClient(base_url=self.base_url)
 
     def _node_set(self, name, sshclient):
-        j.tools.nodemgr.set(name, sshclient=sshclient.instance, selected=False,
-                            cat="docker", clienttype="j.sal.docker", description="deployment on docker")
+        j.tools.nodemgr.set(
+            name,
+            sshclient=sshclient.instance,
+            selected=False,
+            cat="docker",
+            clienttype="j.sal.docker",
+            description="deployment on docker",
+        )
 
     @property
     def containers(self):
@@ -41,7 +47,7 @@ class Docker(j.application.JSBaseClass):
 
         self._containers = []
         for obj in self.client.containers():
-            self._containers.append(Container(obj,self.client))
+            self._containers.append(Container(obj, self.client))
         return self._containers
 
     @property
@@ -53,8 +59,8 @@ class Docker(j.application.JSBaseClass):
         """
 
         u = parse.urlparse(self.base_url)
-        if u.scheme == 'unix':
-            return 'localhost'
+        if u.scheme == "unix":
+            return "localhost"
         else:
             return u.hostname
 
@@ -71,7 +77,7 @@ class Docker(j.application.JSBaseClass):
             if container.isRunning():
                 res.append(container.name)
         return res
-    
+
     @property
     def containers_names(self):
         """lists only container names
@@ -104,7 +110,7 @@ class Docker(j.application.JSBaseClass):
 
     @property
     def basepath(self):
-        self._basepath = '/mnt/data/docker'
+        self._basepath = "/mnt/data/docker"
         return self._basepath
 
     def _getChildren(self, pid, children):
@@ -115,15 +121,13 @@ class Docker(j.application.JSBaseClass):
         return children
 
     def _get_rootpath(self, name):
-        rootpath = j.sal.fs.joinPaths(
-            self.basepath, '%s%s' % (self._prefix, name), 'rootfs')
+        rootpath = j.sal.fs.joinPaths(self.basepath, "%s%s" % (self._prefix, name), "rootfs")
         return rootpath
 
     def _getMachinePath(self, machinename, append=""):
         if machinename == "":
             raise j.exceptions.RuntimeError("Cannot be empty")
-        base = j.sal.fs.joinPaths(self.basepath, '%s%s' %
-                                  (self._prefix, machinename))
+        base = j.sal.fs.joinPaths(self.basepath, "%s%s" % (self._prefix, machinename))
         if append != "":
             base = j.sal.fs.joinPaths(base, append)
         return base
@@ -137,8 +141,7 @@ class Docker(j.application.JSBaseClass):
 
         res = []
         for item in self.containers:
-            res.append([item.name,item.image ,
-                        item.ssh_port,item.status])
+            res.append([item.name, item.image, item.ssh_port, item.status])
 
         return res
 
@@ -162,8 +165,7 @@ class Docker(j.application.JSBaseClass):
             if container.name == name:
                 return container
         if die:
-            raise j.exceptions.RuntimeError(
-                "Container with name %s doesn't exists" % name)
+            raise j.exceptions.RuntimeError("Container with name %s doesn't exists" % name)
         else:
             return None
 
@@ -187,51 +189,50 @@ class Docker(j.application.JSBaseClass):
             if container.id == id:
                 return container
         if die:
-            raise j.exceptions.RuntimeError(
-                "Container with name %s doesn't exists" % name)
+            raise j.exceptions.RuntimeError("Container with name %s doesn't exists" % name)
         else:
             return None
 
     def _init_aysfs(self, fs, dockname):
         if fs.isUnique():
             if not fs.isRunning():
-                self._log_info('starting unique aysfs: %s' % fs.getName())
+                self._log_info("starting unique aysfs: %s" % fs.getName())
                 fs.start()
 
             else:
-                self._log_info(
-                    'skipping aysfs: %s (unique running)' % fs.getName())
+                self._log_info("skipping aysfs: %s (unique running)" % fs.getName())
 
         else:
-            fs.setName('%s-%s' % (dockname, fs.getName()))
+            fs.setName("%s-%s" % (dockname, fs.getName()))
             if fs.isRunning():
                 fs.stop()
 
-            self._log_info('starting aysfs: %s' % fs.getName())
+            self._log_info("starting aysfs: %s" % fs.getName())
             fs.start()
 
     def create(
-            self,
-            name="",
-            ports="",
-            vols="",
-            volsro="",
-            stdout=True,
-            base="phusion/baseimage",
-            nameserver=["8.8.8.8"],
-            replace=True,
-            cpu=None,
-            mem=0,
-            myinit=True,
-            sharecode=False,
-            sshkey=None,
-            setrootrndpasswd=True,
-            rootpasswd="",
-            aysfs=[],
-            detach=False,
-            privileged=False,
-            getIfExists=True,
-            command=""):
+        self,
+        name="",
+        ports="",
+        vols="",
+        volsro="",
+        stdout=True,
+        base="phusion/baseimage",
+        nameserver=["8.8.8.8"],
+        replace=True,
+        cpu=None,
+        mem=0,
+        myinit=True,
+        sharecode=False,
+        sshkey=None,
+        setrootrndpasswd=True,
+        rootpasswd="",
+        aysfs=[],
+        detach=False,
+        privileged=False,
+        getIfExists=True,
+        command="",
+    ):
         """
         Creates a new container.
         j.sal.docker.create(...)
@@ -253,8 +254,7 @@ class Docker(j.application.JSBaseClass):
                 if getIfExists:
                     return self.container_get(name=name)
                 else:
-                    j.events.opserror_critical(
-                        "Cannot create machine with name %s, because it does already exists.")
+                    j.events.opserror_critical("Cannot create machine with name %s, because it does already exists.")
         else:
             if self.exists(name):
                 self._log_info("remove existing container %s" % name)
@@ -347,7 +347,7 @@ class Docker(j.application.JSBaseClass):
             self.pull(base)
 
         if command == "" and (base.startswith("jumpscale/ubuntu1604") or myinit is True):
-            command = "sh -c \" /sbin/my_init -- bash -l\""
+            command = 'sh -c " /sbin/my_init -- bash -l"'
         else:
             command = None
         self._log_info(("install docker with name '%s'" % name))
@@ -357,8 +357,8 @@ class Docker(j.application.JSBaseClass):
             self._log_info(volskeys)
             self._log_info(binds)
 
-        hostname = name.replace('_', '-')
-        
+        hostname = name.replace("_", "-")
+
         for k, v in portsdict.items():
             if isinstance(k, tuple) and len(k) == 2:
                 portsdict["%s/%s" % (k[0], k[1])] = v
@@ -374,7 +374,8 @@ class Docker(j.application.JSBaseClass):
             dns=nameserver,
             dns_search=None,
             volumes_from=None,
-            network_mode=None)
+            network_mode=None,
+        )
         res = self.client.create_container(
             image=base,
             command=command,
@@ -383,8 +384,7 @@ class Docker(j.application.JSBaseClass):
             detach=detach,
             stdin_open=False,
             tty=True,
-            ports=list(
-                portsdict.keys()),
+            ports=list(portsdict.keys()),
             environment=None,
             volumes=volskeys,
             network_disabled=False,
@@ -396,13 +396,13 @@ class Docker(j.application.JSBaseClass):
             mac_address=None,
             labels=None,
             stop_signal=None,
-            networking_config=None, 
-            healthcheck=None, 
-            stop_timeout=None, 
-            runtime=None)
+            networking_config=None,
+            healthcheck=None,
+            stop_timeout=None,
+            runtime=None,
+        )
         if res["Warnings"] is not None:
-            raise j.exceptions.RuntimeError(
-                "Could not create docker, res:'%s'" % res)
+            raise j.exceptions.RuntimeError("Could not create docker, res:'%s'" % res)
 
         id = res["Id"]
 
@@ -410,10 +410,10 @@ class Docker(j.application.JSBaseClass):
 
         container = self.container_get_by_id(id)
 
-        if sshkey: #sshkey can be name or instance
+        if sshkey:  # sshkey can be name or instance
             if setrootrndpasswd:
-                if rootpasswd is None or rootpasswd == '':
-                    rootpasswd = 'tf1234'
+                if rootpasswd is None or rootpasswd == "":
+                    rootpasswd = "tf1234"
             ex = j.tools.executor.getLocalDocker(name)
             ex.execute("apt-get update")
             ex.execute("apt-get install sudo")
@@ -427,7 +427,7 @@ class Docker(j.application.JSBaseClass):
             # Make sure docker is ready for executor
             end_time = time.time() + 60
             while time.time() < end_time:
-                rc, _, _ = container.executor.execute('ls /', die=False, showout=False)
+                rc, _, _ = container.executor.execute("ls /", die=False, showout=False)
                 if rc:
                     time.sleep(0.1)
                 break
@@ -444,9 +444,9 @@ class Docker(j.application.JSBaseClass):
 
         images = []
         for item in self.client.images():
-            if item['RepoTags'] is None:
+            if item["RepoTags"] is None:
                 continue
-            tags = str(item['RepoTags'][0])
+            tags = str(item["RepoTags"][0])
             tags = tags.replace(":latest", "")
             images.append(tags)
         return images
@@ -503,7 +503,7 @@ class Docker(j.application.JSBaseClass):
         j.sal.process.execute("systemctl stop docker")
 
         if j.sal.fs.exists(path="/var/lib/docker/btrfs/subvolumes"):
-            j.sal.btrfs.subvolumesDelete('/var/lib/docker/btrfs/subvolumes')
+            j.sal.btrfs.subvolumesDelete("/var/lib/docker/btrfs/subvolumes")
 
         if j.sal.fs.exists(path="/var/lib/docker/volumes"):
             for item in j.sal.fs.listDirsInDir("/var/lib/docker/volumes"):
@@ -557,16 +557,16 @@ class Docker(j.application.JSBaseClass):
         out = []
         for l in client.push(image, stream=True):
             line = j.data.serializers.json.loads(l)
-            id = line['id'] if 'id' in line else ''
+            id = line["id"] if "id" in line else ""
             s = "%s " % id
-            if 'status' in line:
-                s += line['status']
-            if 'progress' in line:
-                detail = line['progressDetail']
-                progress = line['progress']
+            if "status" in line:
+                s += line["status"]
+            if "progress" in line:
+                detail = line["progressDetail"]
+                progress = line["progress"]
                 s += " %50s " % progress
-            if 'error' in line:
-                message = line['errorDetail']['message']
+            if "error" in line:
+                message = line["errorDetail"]["message"]
                 raise j.exceptions.RuntimeError(message)
             if output:
                 self._log_info(s)
@@ -589,8 +589,8 @@ class Docker(j.application.JSBaseClass):
             nocache = True
         for l in self.client.build(path=path, tag=tag, nocache=nocache):
             line = j.data.serializers.json.loads(l)
-            if 'stream' in line:
-                line = line['stream'].strip()
+            if "stream" in line:
+                line = line["stream"].strip()
                 if output:
                     self._log_info(line)
                 out.append(line)

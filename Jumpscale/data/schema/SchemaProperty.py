@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
@@ -15,9 +14,9 @@ class SchemaProperty(j.application.JSBaseClass):
         # self.pointer_type = None  #if the property links to another object
         self.nr = 0
         self._default = None
-        self.index = False # as used in sqlite
-        self.index_key = False # is for indexing the keys
-        self.unique =  False # to check if type is unique or not
+        self.index = False  # as used in sqlite
+        self.index_key = False  # is for indexing the keys
+        self.unique = False  # to check if type is unique or not
         if self.name in ["schema"]:
             raise RuntimeError("cannot have property name:%s" % self.name)
 
@@ -47,15 +46,13 @@ class SchemaProperty(j.application.JSBaseClass):
 
     @property
     def js_typelocation(self):
-        return  self.jumpscaletype._jsx_location
-
+        return self.jumpscaletype._jsx_location
 
     def __str__(self):
         if not self.jumpscaletype.NAME == "list":
             out = "prop:%-25s %s" % (self.name, self.jumpscaletype.NAME)
         else:
             out = "prop:%-25s %s" % (self.name, self.jumpscaletype)
-
 
         # if self.pointer_type:
         #     out += " !%s" % self.pointer_type

@@ -5,8 +5,6 @@ from ..disks.Disks import StorageType
 from Jumpscale import j
 
 
-
-
 class Zerodbs(DynamicCollection):
     def __init__(self, node):
         self.node = node
@@ -34,13 +32,13 @@ class Zerodbs(DynamicCollection):
         """
         zdbs = []
         for container in self.node.containers.list():
-            if container.name.startswith('zerodb_'):
-                zdb = Zerodb(node=self.node, name=container.name.lstrip('zerodb_'), node_port=None)
+            if container.name.startswith("zerodb_"):
+                zdb = Zerodb(node=self.node, name=container.name.lstrip("zerodb_"), node_port=None)
                 zdb.load_from_reality(container)
                 zdbs.append(zdb)
         return zdbs
 
-    def create(self, name, node_port, path=None, mode='user', sync=False, admin=''):
+    def create(self, name, node_port, path=None, mode="user", sync=False, admin=""):
         """
         Create zerodb object
 
@@ -95,7 +93,8 @@ class Zerodbs(DynamicCollection):
             name = j.data.idgenerator.generateGUID()
             j.tools.logger._log_info("create storage pool %s on %s", name, device)
             sp = self.node.storagepools.create(
-                name, device=device, metadata_profile='single', data_profile='single', overwrite=True)
+                name, device=device, metadata_profile="single", data_profile="single", overwrite=True
+            )
             storagepools.append(sp)
 
         # make sure we don't use storage pool reserved for something else
@@ -130,10 +129,10 @@ class Zerodbs(DynamicCollection):
         # sort less used pool firt
         storagepools.sort(key=lambda sp: sp.size - sp.total_quota(), reverse=True)
         if not storagepools:
-            return ''
+            return ""
 
         storagepool = storagepools[0]
-        fs = storagepool.create('zdb_{}'.format(zdb_name), size * GiB)
+        fs = storagepool.create("zdb_{}".format(zdb_name), size * GiB)
         return fs.path
 
 
@@ -142,6 +141,7 @@ def reserved_storagepool(storagepool):
     function used to filter out storage pool that should not be used for zdb installation
     """
     from ..node.Node import ZOS_CACHE
+
     if storagepool.name == ZOS_CACHE:
         return False
     return True
@@ -155,7 +155,6 @@ def _zdb_friendly(disk):
         j.tools.logger._log_info("skipping unsupported disk type %s" % disk.type)
         return False
     # this check is there to be able to test with a qemu setup. Not needed if you start qemu with --nodefaults
-    if disk.model in ['QEMU HARDDISK   ', 'QEMU DVD-ROM    '] or disk.transport == 'usb':
+    if disk.model in ["QEMU HARDDISK   ", "QEMU DVD-ROM    "] or disk.transport == "usb":
         return False
     return True
-

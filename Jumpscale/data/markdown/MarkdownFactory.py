@@ -11,11 +11,11 @@ import copy
 
 from .MarkdownDocument import *
 from .MarkdownComponents import *
+
 JSBASE = j.application.JSBaseClass
 
 
 class MarkdownFactory(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.data.markdown"
         JSBASE.__init__(self)
@@ -23,7 +23,6 @@ class MarkdownFactory(j.application.JSBaseClass):
     @property
     def _path(self):
         return j.sal.fs.getDirName(os.path.abspath(__file__))
-
 
     def document_get(self, content="", path=""):
         """
@@ -41,19 +40,22 @@ class MarkdownFactory(j.application.JSBaseClass):
     #     raise RuntimeError()
     #     #use prefab to install components required to get pdf generation to work
 
-
     def test(self):
-        '''
+        """
         js_shell 'j.data.markdown.test()'
-        '''
+        """
         from .tests.test1 import test
+
         test()
         from .tests.test2 import test
+
         test()
         from .tests.test3 import test
+
         test()
         from .tests.test4 import test
+
         test()
         from .tests.test5 import test
-        test()
 
+        test()

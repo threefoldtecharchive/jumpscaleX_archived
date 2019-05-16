@@ -35,11 +35,12 @@ discarded. [1]_
 import time
 from heapq import heappush, heappop, heapify
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
 __version__ = "0.2"
-__all__ = ['CacheKeyError', 'LRUCache', 'DEFAULT_SIZE']
-__docformat__ = 'reStructuredText en'
+__all__ = ["CacheKeyError", "LRUCache", "DEFAULT_SIZE"]
+__docformat__ = "reStructuredText en"
 
 DEFAULT_SIZE = 16
 """Default size of a new LRUCache object, if no 'size' argument is given."""
@@ -51,12 +52,12 @@ class CacheKeyError(KeyError, JSBASE):
     When a cache record is accessed which no longer exists (or never did),
     this error is raised. To avoid it, you may want to check for the existence
     of a cache record before reading or deleting it."""
+
     def __init__(self):
         JSBASE.__init__(self)
 
 
 class LRUCache(j.application.JSBaseClass):
-
     class __Node:
         """Record of a cached value. Not for public consumption."""
 
@@ -71,9 +72,7 @@ class LRUCache(j.application.JSBaseClass):
             return cmp(self.atime, other.atime)
 
         def __repr__(self):
-            return "<%s %s => %s (%s)>" % \
-                   (self.__class__, self.key, self.obj,
-                    time.asctime(time.localtime(self.atime)))
+            return "<%s %s => %s (%s)>" % (self.__class__, self.key, self.obj, time.asctime(time.localtime(self.atime)))
 
     def __init__(self, size=DEFAULT_SIZE):
         # Check arguments
@@ -141,7 +140,7 @@ class LRUCache(j.application.JSBaseClass):
     def __setattr__(self, name, value):
         object.__setattr__(self, name, value)
         # automagically shrink heap on resize
-        if name == 'size':
+        if name == "size":
             while len(self.__heap) > value:
                 lru = heappop(self.__heap)
                 del self.__dict[lru.key]
@@ -171,7 +170,7 @@ if __name__ == "__main__":
     print(cache)
     cache.size = 10
     print(cache)
-    cache[46] = '46'
+    cache[46] = "46"
     print(cache)
     print((len(cache)))
     for c in cache:

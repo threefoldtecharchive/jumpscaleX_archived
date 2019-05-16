@@ -2,7 +2,8 @@ from .utils import _find_second, _check_broken_links
 
 from Jumpscale import j
 
-class Task():
+
+class Task:
     """Represents a task
     """
 
@@ -74,9 +75,9 @@ class Task():
             int -- line index of item in body
         """
 
-        lines = body.splitlines()[start_i: end_i + 1 if end_i != -1 else None]
+        lines = body.splitlines()[start_i : end_i + 1 if end_i != -1 else None]
         for i, line in enumerate(lines, start=start_i):
-            if i > end_i and not end_i < 0 :
+            if i > end_i and not end_i < 0:
                 break
             # check if list item
             if not line.startswith("- ["):
@@ -108,6 +109,7 @@ class Task():
             self._update_func(new_body)
             self._body = new_body
 
+
 def _desc_in_line(line):
     """Returns task description from provided list line
     String is empty when description was not found
@@ -122,6 +124,6 @@ def _desc_in_line(line):
     end_i = _find_second(line, "]")
 
     if start_i != -1 and end_i != -1:
-        return line[start_i:end_i - 1].strip()
-    
+        return line[start_i : end_i - 1].strip()
+
     return ""

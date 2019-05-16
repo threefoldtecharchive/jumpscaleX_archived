@@ -4,10 +4,10 @@ from flask import Blueprint
 from . import handlers
 
 
-api_api = Blueprint('api_api', __name__)
+api_api = Blueprint("api_api", __name__)
 
 
-@api_api.route('/api/farmers', methods=['GET'])
+@api_api.route("/api/farmers", methods=["GET"])
 def ListFarmers():
     """
     List Farmers
@@ -16,7 +16,7 @@ def ListFarmers():
     return handlers.ListFarmersHandler()
 
 
-@api_api.route('/api/farmers/<iyo_organization>', methods=['GET'])
+@api_api.route("/api/farmers/<iyo_organization>", methods=["GET"])
 def GetFarmer(iyo_organization):
     """
     Get detail about a farmer
@@ -25,7 +25,7 @@ def GetFarmer(iyo_organization):
     return handlers.GetFarmerHandler(iyo_organization)
 
 
-@api_api.route('/api/nodes', methods=['GET'])
+@api_api.route("/api/nodes", methods=["GET"])
 def ListCapacity():
     """
     List all the nodes capacity
@@ -34,7 +34,7 @@ def ListCapacity():
     return handlers.ListCapacityHandler()
 
 
-@api_api.route('/api/nodes', methods=['POST'])
+@api_api.route("/api/nodes", methods=["POST"])
 def RegisterCapacity():
     """
     Register a node capacity
@@ -43,7 +43,7 @@ def RegisterCapacity():
     return handlers.RegisterCapacityHandler()
 
 
-@api_api.route('/api/nodes/<node_id>', methods=['GET'])
+@api_api.route("/api/nodes/<node_id>", methods=["GET"])
 def GetCapacity(node_id):
     """
     Get detail about capacity of a node
@@ -52,7 +52,7 @@ def GetCapacity(node_id):
     return handlers.GetCapacityHandler(node_id)
 
 
-@api_api.route('/api/nodes/<node_id>/reserved', methods=['PUT'])
+@api_api.route("/api/nodes/<node_id>/reserved", methods=["PUT"])
 def UpdateReservedCapacity(node_id):
     """
     Mark some capacity on a node to be reserved
@@ -61,7 +61,7 @@ def UpdateReservedCapacity(node_id):
     return handlers.UpdateReservedCapacityHandler(node_id)
 
 
-@api_api.route('/api/nodes/<node_id>/actual', methods=['PUT'])
+@api_api.route("/api/nodes/<node_id>/actual", methods=["PUT"])
 def UpdateActualUsedCapacity(node_id):
     """
     Set the actual usage of the capacity of a node
@@ -70,7 +70,7 @@ def UpdateActualUsedCapacity(node_id):
     return handlers.UpdateActualUsedCapacityHandler(node_id)
 
 
-@api_api.route('/api/farmer_create', methods=['GET'])
+@api_api.route("/api/farmer_create", methods=["GET"])
 def RegisterFarmer():
     """
     Register a farmer
@@ -79,7 +79,7 @@ def RegisterFarmer():
     return handlers.RegisterFarmerHandler()
 
 
-@api_api.route('/api/farmer_update', methods=['GET'])
+@api_api.route("/api/farmer_update", methods=["GET"])
 def UpdateFarmer():
     """
     Update a farmer

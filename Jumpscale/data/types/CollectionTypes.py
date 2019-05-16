@@ -1,4 +1,4 @@
-'''Definition of several collection types (list, dict, set,...)'''
+"""Definition of several collection types (list, dict, set,...)"""
 
 from Jumpscale import j
 
@@ -10,21 +10,20 @@ from .TypeBaseClasses import *
 
 
 class YAML(StringMultiLine):
-    '''Generic dictionary type'''
+    """Generic dictionary type"""
 
-    NAME =  'yaml'
+    NAME = "yaml"
 
-    def __init__(self,default=None):
+    def __init__(self, default=None):
 
-        self.BASETYPE = 'string'
+        self.BASETYPE = "string"
         self.NOCHECK = True
         if not default:
             default = {}
         self._default = default
 
-
     def possible(self, value):
-        '''Check whether provided value is a dict'''
+        """Check whether provided value is a dict"""
         if not isinstance(value, str):
             return False
         try:
@@ -57,10 +56,10 @@ class YAML(StringMultiLine):
 
 class JSON(StringMultiLine):
 
-    NAME =  'json'
+    NAME = "json"
 
-    def __init__(self,default=None):
-        self.BASETYPE = 'string'
+    def __init__(self, default=None):
+        self.BASETYPE = "string"
         self.NOCHECK = True
         if not default:
             default = {}
@@ -96,19 +95,19 @@ class JSON(StringMultiLine):
 
 
 class Dictionary(TypeBaseClass):
-    '''Generic dictionary type'''
+    """Generic dictionary type"""
 
-    NAME =  'dict'
+    NAME = "dict"
 
     def __init__(self, default=None):
 
-        self.BASETYPE = 'dict'
+        self.BASETYPE = "dict"
         if not default:
             default = {}
         self._default = default
 
     def check(self, value):
-        '''Check whether provided value is a dict'''
+        """Check whether provided value is a dict"""
         return isinstance(value, dict)
 
     def fromString(self, s):
@@ -133,8 +132,8 @@ class Dictionary(TypeBaseClass):
         if v is None:
             return self._default_get()
         if j.data.types.bytes.check(v):
-            if v==b'':
-                v={}
+            if v == b"":
+                v = {}
             else:
                 v = j.data.serializers.msgpack.loads(v)
         elif j.data.types.string.check(v):
@@ -165,16 +164,17 @@ class Dictionary(TypeBaseClass):
 
 class Hash(TypeBaseClass):
 
-    '''
+    """
     hash is 2 value list, represented as 2 times 4 bytes
-    '''
-    NAME =  'hash,h'
+    """
+
+    NAME = "hash,h"
     CUSTOM = False
 
-    def __init__(self,default=None):
-        self.BASETYPE = 'string'
+    def __init__(self, default=None):
+        self.BASETYPE = "string"
         if not default:
-            default = (0,0)
+            default = (0, 0)
         self._default = default
 
     def fromString(self, s):
@@ -204,6 +204,7 @@ class Hash(TypeBaseClass):
         """
         if value is None:
             return self._default_get()
+
         def bytesToInt(val):
             if j.data.types.bytes.check(val):
                 if len(val) is not 4:
@@ -228,9 +229,7 @@ class Hash(TypeBaseClass):
 
         elif j.data.types.string.check(value):
             if ":" not in value:
-                raise RuntimeError(
-                    "when string, needs to have : inside %s" %
-                    value)
+                raise RuntimeError("when string, needs to have : inside %s" % value)
             v0, v1 = value.split(":")
             v0 = int(v0)
             v1 = int(v1)
@@ -256,6 +255,7 @@ class Hash(TypeBaseClass):
 
     def capnp_schema_get(self, name, nr):
         return "%s @%s :Data;" % (name, nr)
+
 
 # TODO: why do we have a set, from our perspective a set & list should be same for novice users
 

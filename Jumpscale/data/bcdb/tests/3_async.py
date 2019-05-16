@@ -46,4 +46,4 @@ def main(self):
 
     self._log_info("TEST DONE")
 
-    return ("OK")
+    return "OK"

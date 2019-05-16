@@ -7,11 +7,11 @@ from ipaddress import AddressValueError, NetmaskValueError
 
 
 class IPAddress(String):
-    '''
+    """
     ipaddress can be v4 or v6
-    '''
+    """
 
-    NAME = 'ipaddr , ipaddress'
+    NAME = "ipaddr , ipaddress"
 
     def __init__(self, default=None):
         self.BASETYPE = "string"

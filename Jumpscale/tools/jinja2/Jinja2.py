@@ -83,8 +83,7 @@ class Jinja2(j.application.JSBaseClass):
             j.sal.fs.createDir(j.sal.fs.getDirName(dest))
             j.sal.fs.writeFile(dest, txt)
 
-    def code_python_render(self, obj_key=None, path=None, text=None, dest=None,
-                           objForHash=None, name=None, **args):
+    def code_python_render(self, obj_key=None, path=None, text=None, dest=None, objForHash=None, name=None, **args):
         """
 
         :param obj_key:  is name of function or class we need to evaluate when the code get's loaded
@@ -107,11 +106,12 @@ class Jinja2(j.application.JSBaseClass):
         t = self.template_get(path=path, text=text)
 
         if objForHash:
-            tohash = j.data.serializers.msgpack.dumps(objForHash)+t.md5.encode()
+            tohash = j.data.serializers.msgpack.dumps(objForHash) + t.md5.encode()
         else:
-            name_for_hash = name or ''
-            tohash = j.data.serializers.msgpack.dumps(
-                str(args))+name_for_hash.encode()+t.md5.encode()  # make sure we have unique identifier
+            name_for_hash = name or ""
+            tohash = (
+                j.data.serializers.msgpack.dumps(str(args)) + name_for_hash.encode() + t.md5.encode()
+            )  # make sure we have unique identifier
         md5 = j.data.hash.md5_string(tohash)
 
         if md5 in self._hash_to_codeobj:
@@ -169,19 +169,51 @@ class Jinja2(j.application.JSBaseClass):
             j.sal.fs.writeFile(path, C)
         return C
 
-    def dir_render(self, path, dest=None, recursive=True, filter=None, minmtime=None, maxmtime=None, depth=None,
-                   exclude=[], followSymlinks=False, listSymlinks=False, **args):
+    def dir_render(
+        self,
+        path,
+        dest=None,
+        recursive=True,
+        filter=None,
+        minmtime=None,
+        maxmtime=None,
+        depth=None,
+        exclude=[],
+        followSymlinks=False,
+        listSymlinks=False,
+        **args,
+    ):
 
         if exclude == []:
-            exclude = ['*.egg-info', '*.pyc', '*.bak', '*__pycache__*']
+            exclude = ["*.egg-info", "*.pyc", "*.bak", "*__pycache__*"]
 
-        for item in j.sal.fs.listFilesInDir(path=path, recursive=recursive, filter=filter,
-                                            minmtime=minmtime, maxmtime=maxmtime, depth=depth, exclude=exclude, followSymlinks=followSymlinks, listSymlinks=listSymlinks):
+        for item in j.sal.fs.listFilesInDir(
+            path=path,
+            recursive=recursive,
+            filter=filter,
+            minmtime=minmtime,
+            maxmtime=maxmtime,
+            depth=depth,
+            exclude=exclude,
+            followSymlinks=followSymlinks,
+            listSymlinks=listSymlinks,
+        ):
             if j.sal.fs.getBaseName(path).startswith("_") or "__py" in path:
                 continue
             self.file_render(item, **args)
 
-    def copy_dir_render(self, src, dest, overwriteFiles=False, filter=None, ignoredir=[], ignorefiles=[], reset=False, render=True, **args):
+    def copy_dir_render(
+        self,
+        src,
+        dest,
+        overwriteFiles=False,
+        filter=None,
+        ignoredir=[],
+        ignorefiles=[],
+        reset=False,
+        render=True,
+        **args,
+    ):
         """
         copy dir from src to dest
         use ignoredir & ignorefiles while copying
@@ -196,17 +228,27 @@ class Jinja2(j.application.JSBaseClass):
 
         """
         if ignoredir == []:
-            ignoredir = ['.egg-info', '.dist-info']
+            ignoredir = [".egg-info", ".dist-info"]
         if ignorefiles == []:
-            ignorefiles = ['.egg-info', '.pyc', '.bak']
+            ignorefiles = [".egg-info", ".pyc", ".bak"]
 
         if reset:
             j.sal.fs.remove(dest)
 
         j.sal.fs.createDir(dest)
 
-        j.sal.fs.copyDirTree(src, dest, keepsymlinks=False, overwriteFiles=overwriteFiles, ignoredir=ignoredir,
-                             ignorefiles=ignorefiles, rsync=True, recursive=True, rsyncdelete=True, createdir=False)
+        j.sal.fs.copyDirTree(
+            src,
+            dest,
+            keepsymlinks=False,
+            overwriteFiles=overwriteFiles,
+            ignoredir=ignoredir,
+            ignorefiles=ignorefiles,
+            rsync=True,
+            recursive=True,
+            rsyncdelete=True,
+            createdir=False,
+        )
 
         if render:
             self.dir_render(path=dest, filter=filter, **args)
@@ -218,7 +260,8 @@ class Jinja2(j.application.JSBaseClass):
         raise RuntimeError("need to go to jumpscaleX something, also tests are really not tests, need to be better")
 
         src = j.clients.git.getContentPathFromURLorPath(
-            "https://github.com/threefoldtech/jumpscale_lib/tree/development/apps/example")
+            "https://github.com/threefoldtech/jumpscale_lib/tree/development/apps/example"
+        )
         dest = j.sal.fs.getTmpDirPath("jumpscale/jinja2test")
         self._log_info("copy templates to:%s" % dest)
         j.tools.jinja2.copy_dir_render(src, dest, j=j, name="aname")
@@ -229,7 +272,7 @@ class Jinja2(j.application.JSBaseClass):
         """
         js_shell 'j.tools.jinja2.test_performance()'
         """
-        path = j.sal.fs.getDirName(os.path.abspath(__file__))+"/test_class.py"
+        path = j.sal.fs.getDirName(os.path.abspath(__file__)) + "/test_class.py"
         j.tools.timer.start("jinja_code")
         nr = 1000
         obj = self.code_python_render(obj_key="MyClass", path=path, reload=True, name="name:%s" % 1)
@@ -241,8 +284,9 @@ class Jinja2(j.application.JSBaseClass):
         j.tools.timer.start("jinja_code2")  # here we open class which has already been rendered
         nr = 1000
         for x in range(nr):
-            obj = self.code_python_render(obj_key="MyClass", path=path, reload=False,
-                                          name="name:%s" % 1)  # now use same
+            obj = self.code_python_render(
+                obj_key="MyClass", path=path, reload=False, name="name:%s" % 1
+            )  # now use same
         res = j.tools.timer.stop(nr)
         assert res > 5000
 

@@ -4,7 +4,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class SerializerBase(j.application.JSBaseClass):
-
     def dump(self, filepath, obj):
         data = self.dumps(obj)
         j.sal.fs.writeFile(filepath, data)
@@ -16,10 +15,9 @@ class SerializerBase(j.application.JSBaseClass):
         except Exception as e:
             error = "error:%s\n" % e
             error += "\could not parse:\n%s\n" % b
-            error += '\npath:%s\n' % path
+            error += "\npath:%s\n" % path
             raise j.exceptions.Input(message=error)
         return r
-
 
 
 # class SerializerHalt(j.application.JSBaseClass):

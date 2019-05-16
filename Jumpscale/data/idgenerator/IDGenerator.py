@@ -1,10 +1,11 @@
-
 from Jumpscale import j
 import random
+
 # import sys
 import string
 
 JSBASE = j.application.JSBaseClass
+
 
 class IDGenerator(j.application.JSBaseClass):
     """
@@ -61,6 +62,7 @@ class IDGenerator(j.application.JSBaseClass):
         how to use:  j.data.idgenerator.generateGUID()
         """
         import uuid
+
         return str(uuid.uuid4())
 
     def generateXCharID(self, x):

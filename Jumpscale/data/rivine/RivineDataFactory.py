@@ -3,6 +3,7 @@ from Jumpscale import j
 from .RivineBinaryEncoder import RivineBinaryEncoder, RivineBinaryObjectEncoderBase
 from .SiaBinaryEncoder import SiaBinaryEncoder, SiaBinaryObjectEncoderBase
 
+
 class RivineDataFactory(j.application.JSBaseClass):
     """
     Tools to encode binary data for rivine
@@ -34,7 +35,7 @@ class RivineDataFactory(j.application.JSBaseClass):
         e.add_all(*values)
         return e.data
 
-    def test(self, name=''):
+    def test(self, name=""):
         """
         js_shell 'j.data.rivine.test()'
         :return:

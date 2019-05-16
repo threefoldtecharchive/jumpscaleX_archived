@@ -26,20 +26,22 @@ class Farmer(object):
 
     def __init__(self, json=None, **kwargs):
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Farmer'
+        class_name = "Farmer"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
         self.iyo_organization = client_support.set_property(
-            'iyo_organization', data, data_types, False, [], False, True, class_name)
+            "iyo_organization", data, data_types, False, [], False, True, class_name
+        )
         data_types = [string_types]
-        self.name = client_support.set_property('name', data, data_types, False, [], False, True, class_name)
+        self.name = client_support.set_property("name", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
         self.wallet_addresses = client_support.set_property(
-            'wallet_addresses', data, data_types, False, [], True, True, class_name)
+            "wallet_addresses", data, data_types, False, [], True, True, class_name
+        )
 
     def __str__(self):
         return self.as_json(indent=4)

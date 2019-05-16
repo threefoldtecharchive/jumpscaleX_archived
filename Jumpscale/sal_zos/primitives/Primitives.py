@@ -2,8 +2,8 @@ from Jumpscale import j
 from ..vm.ZOS_VM import ZOS_VM, IpxeVM, ZDBDisk
 
 
-BASEFLIST = 'https://hub.grid.tf/tf-bootable/{}.flist'
-ZEROOSFLIST = 'https://hub.grid.tf/tf-autobuilder/{}.flist'
+BASEFLIST = "https://hub.grid.tf/tf-bootable/{}.flist"
+ZEROOSFLIST = "https://hub.grid.tf/tf-autobuilder/{}.flist"
 
 
 class Primitives:
@@ -21,21 +21,21 @@ class Primitives:
 
                       eg: ubuntu:16.04, zero-os:master
         """
-        templatename, _, version = type_.partition(':')
-        kwargs = {'name': name, 'node': self.node}
-        if templatename == 'zero-os':
-            version = version or 'development'
-            flistname = '{}-{}'.format(templatename, version)
-            kwargs['flist'] = ZEROOSFLIST.format(flistname)
-        elif templatename == 'ubuntu':
-            version = version or 'lts'
-            flistname = '{}:{}'.format(templatename, version)
-            kwargs['flist'] = BASEFLIST.format(flistname)
+        templatename, _, version = type_.partition(":")
+        kwargs = {"name": name, "node": self.node}
+        if templatename == "zero-os":
+            version = version or "development"
+            flistname = "{}-{}".format(templatename, version)
+            kwargs["flist"] = ZEROOSFLIST.format(flistname)
+        elif templatename == "ubuntu":
+            version = version or "lts"
+            flistname = "{}:{}".format(templatename, version)
+            kwargs["flist"] = BASEFLIST.format(flistname)
         else:
-            raise RuntimeError('Invalid VM type {}'.format(type_))
+            raise RuntimeError("Invalid VM type {}".format(type_))
         return ZOS_VM(**kwargs)
 
-    def create_disk(self, name, zdb, mountpoint=None, filesystem='ext4', size=10, label=None):
+    def create_disk(self, name, zdb, mountpoint=None, filesystem="ext4", size=10, label=None):
         """
         Create a disk on zdb and create filesystem
 
@@ -84,7 +84,7 @@ class Primitives:
         """
         self.node.hypervisor.get(name).destroy()
 
-    def create_zerodb(self, name, node_port, path=None, mode='user', sync=False, admin=''):
+    def create_zerodb(self, name, node_port, path=None, mode="user", sync=False, admin=""):
         """
         Create zerodb object
 
@@ -142,20 +142,19 @@ class Primitives:
         :return: primitive object
         :rtype: mixed
         """
-        if type_ == 'gateway':
-            gw = self.create_gateway(data['hostname'])
+        if type_ == "gateway":
+            gw = self.create_gateway(data["hostname"])
             gw.from_dict(data)
             return gw
-        elif type_ == 'vm':
-            if data.get('ipxeUrl'):
-                vm = IpxeVM(self.node, data['name'])
+        elif type_ == "vm":
+            if data.get("ipxeUrl"):
+                vm = IpxeVM(self.node, data["name"])
             else:
-                vm = ZOS_VM(self.node, data['name'])
+                vm = ZOS_VM(self.node, data["name"])
             vm.from_dict(data)
             return vm
-        elif type_ == 'zerodb':
-            zdb = self.create_zerodb(data['name'], node_port=None)
+        elif type_ == "zerodb":
+            zdb = self.create_zerodb(data["name"], node_port=None)
             zdb.from_dict(data)
             return zdb
-        raise RuntimeError('Unkown type {}, supported types are gateway, vm and zerodb'.format(type_))
-
+        raise RuntimeError("Unkown type {}, supported types are gateway, vm and zerodb".format(type_))

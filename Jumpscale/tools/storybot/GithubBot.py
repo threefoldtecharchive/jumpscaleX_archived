@@ -6,6 +6,7 @@ from .utils import _index_story, _parse_body, _repoowner_reponame
 
 from Jumpscale import j
 
+
 class GithubBot:
     """Github specific bot for Storybot
     """
@@ -56,10 +57,10 @@ class GithubBot:
         # If wildcard reponame, fetch all repos from repoowner
         gls = []
         for r in repos:
-             repoowner, reponame = _repoowner_reponame(r, self.username)
-             if reponame == "*":
-                 # fetch all repos from repoowner
-                 gls.append(gevent.spawn(self._get_all_repos_user, repoowner))
+            repoowner, reponame = _repoowner_reponame(r, self.username)
+            if reponame == "*":
+                # fetch all repos from repoowner
+                gls.append(gevent.spawn(self._get_all_repos_user, repoowner))
 
         gevent.joinall(gls)
 
@@ -130,7 +131,7 @@ class GithubBot:
         self._log_debug("checking repo '%s'" % repo)
         stories = []
         repoowner, reponame = _repoowner_reponame(repo, self.username)
-         # skip wildcard repos
+        # skip wildcard repos
         if reponame == "*":
             return stories
 
@@ -148,7 +149,7 @@ class GithubBot:
             page = issues.get_page(i)
             self._log_debug("Issue page: %s" % i)
             if len(page) == 0:
-                self._log_debug("page %s is empty" % i)                    
+                self._log_debug("page %s is empty" % i)
                 break
             i += 1
 
@@ -163,21 +164,24 @@ class GithubBot:
                     # get story title
                     start_i = title.rfind("(")
                     if start_i == -1:
-                        self._log_error("issue title of %s has a closeing bracket, but no opening bracket", iss.html_url)
+                        self._log_error(
+                            "issue title of %s has a closeing bracket, but no opening bracket", iss.html_url
+                        )
                         continue
-                    story_title = title[start_i + 1:-1]
+                    story_title = title[start_i + 1 : -1]
                     story_desc = title[:start_i].strip()
-                    stories.append(Story(
-                        title=story_title,
-                        url=iss.html_url,
-                        description=story_desc,
-                        state=iss.state,
-                        update_func=self._update_iss_func(iss),
-                        body=iss.body,
-                    ))
+                    stories.append(
+                        Story(
+                            title=story_title,
+                            url=iss.html_url,
+                            description=story_desc,
+                            state=iss.state,
+                            update_func=self._update_iss_func(iss),
+                            body=iss.body,
+                        )
+                    )
 
         return stories
-
 
     def find_tasks_and_link(self, stories=None):
         """Loop over all provided repos and see if there are any issues related to provided stories.
@@ -225,7 +229,7 @@ class GithubBot:
         self._log_debug("Repo: %s" % repo)
         tasks = []
         repoowner, reponame = _repoowner_reponame(repo, self.username)
-         # skip wildcard repos
+        # skip wildcard repos
         if reponame == "*":
             return tasks
 
@@ -244,7 +248,7 @@ class GithubBot:
             if len(page) == 0:
                 self._log_debug("page %s is empty" % i)
                 break
-            i+=1
+            i += 1
 
             for iss in page:
                 title = iss.title
@@ -272,9 +276,14 @@ class GithubBot:
 
                     # update story with task
                     self._log_debug("Parsing story issue body")
-                    desc = title[end_i +1 :].strip()
-                    task = Task(url=iss.html_url, description=desc, state=iss.state,body=body,
-                        update_func=self._update_iss_func(iss))
+                    desc = title[end_i + 1 :].strip()
+                    task = Task(
+                        url=iss.html_url,
+                        description=desc,
+                        state=iss.state,
+                        body=body,
+                        update_func=self._update_iss_func(iss),
+                    )
                     try:
                         story.update_list(task)
                     except RuntimeError as err:
@@ -286,7 +295,7 @@ class GithubBot:
                         tasks.append(task)
 
         return tasks
-    
+
     def _update_iss_func(self, issue):
         """Returns a function that can update a task issue with provided body
         
@@ -296,6 +305,7 @@ class GithubBot:
         Returns:
             [type] -- [description]
         """
+
         def updater(body):
             issue.edit(body=body)
 

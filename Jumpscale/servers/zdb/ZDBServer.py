@@ -4,9 +4,8 @@ JSBASE = j.application.JSBaseClass
 import socket
 
 
-#DO NEVER USE CONFIG MANAGEMENT CLASSES
+# DO NEVER USE CONFIG MANAGEMENT CLASSES
 class ZDBServer(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.servers.zdb"
         JSBASE.__init__(self)
@@ -20,23 +19,20 @@ class ZDBServer(j.application.JSBaseClass):
         self.mode = mode
         self.adminsecret = adminsecret
 
-
-
     def isrunning(self):
-        idir =  "%s/index/"%(self.datadir)
-        ddir =  "%s/data/"%(self.datadir)
+        idir = "%s/index/" % (self.datadir)
+        ddir = "%s/data/" % (self.datadir)
         if not j.sal.fs.exists(idir):
             return False
         if not j.sal.fs.exists(ddir):
             return False
-        if not j.sal.nettools.tcpPortConnectionTest(self.addr,self.port):
+        if not j.sal.nettools.tcpPortConnectionTest(self.addr, self.port):
             return False
         try:
-            cl=self.client_admin_get()
+            cl = self.client_admin_get()
             return cl.ping()
         except Exception as e:
             j.shell()
-
 
     def start(self, destroydata=False):
         """
@@ -50,13 +46,12 @@ class ZDBServer(j.application.JSBaseClass):
         if not destroydata and j.sal.nettools.tcpPortConnectionTest(self.addr, self.port):
             r = j.clients.redis.get(ipaddr=self.addr, port=self.port)
             r.ping()
-            return()
+            return ()
 
         if destroydata:
             self.destroy()
 
         self.startupcmd.start()
-
 
         self._log_info("waiting for zdb server to start on (%s:%s)" % (self.addr, self.port))
 
@@ -64,27 +59,32 @@ class ZDBServer(j.application.JSBaseClass):
         if res is False:
             raise RuntimeError("could not start zdb:'%s' (%s:%s)" % (self.name, self.addr, self.port))
 
-        self.client_admin_get() #should also do a test, so we know if we can't connect
+        self.client_admin_get()  # should also do a test, so we know if we can't connect
 
     def stop(self):
         self._log_info("stop zdb")
         self.startupcmd.stop()
 
-
     @property
     def startupcmd(self):
 
-        idir =  "%s/index/"%(self.datadir)
-        ddir =  "%s/data/"%(self.datadir)
+        idir = "%s/index/" % (self.datadir)
+        ddir = "%s/data/" % (self.datadir)
         j.sal.fs.createDir(idir)
         j.sal.fs.createDir(ddir)
 
         # zdb doesn't understand hostname
         addr = socket.gethostbyname(self.addr)
 
-
-        cmd="zdb --listen %s --port %s --index %s --data %s --mode %s --admin %s --protect"%(addr,self.port,idir,ddir,self.mode,self.adminsecret)
-        return j.tools.startupcmd.get(name="zdb",cmd=cmd,path="/tmp",ports=[self.port])
+        cmd = "zdb --listen %s --port %s --index %s --data %s --mode %s --admin %s --protect" % (
+            addr,
+            self.port,
+            idir,
+            ddir,
+            self.mode,
+            self.adminsecret,
+        )
+        return j.tools.startupcmd.get(name="zdb", cmd=cmd, path="/tmp", ports=[self.port])
 
         # tmux_window = "digitalme"
         # tmux_panel = "p13"
@@ -95,8 +95,6 @@ class ZDBServer(j.application.JSBaseClass):
         #             cmd=cmd,path="/tmp",ports=[self.port],
         #             process_strings = ["wwwww:"])
 
-
-
     def destroy(self):
         self.stop()
         self._log_info("destroy zdb")
@@ -105,16 +103,13 @@ class ZDBServer(j.application.JSBaseClass):
 
     @property
     def datadir(self):
-        return "/sandbox/var/zdb/%s/"%self.name
+        return "/sandbox/var/zdb/%s/" % self.name
 
-    def client_admin_get(self,name="test"):
+    def client_admin_get(self, name="test"):
         """
 
         """
-        cl = j.clients.zdb.client_admin_get(addr=self.addr,
-                                            port=self.port,
-                                            secret=self.adminsecret,
-                                            mode=self.mode)
+        cl = j.clients.zdb.client_admin_get(addr=self.addr, port=self.port, secret=self.adminsecret, mode=self.mode)
         return cl
 
     def client_get(self, nsname="default", secret="1234"):
@@ -122,7 +117,7 @@ class ZDBServer(j.application.JSBaseClass):
         get client to zdb
 
         """
-        cl = j.clients.zdb.client_get( nsname=nsname, addr=self.addr, port=self.port, secret=secret, mode=self.mode)
+        cl = j.clients.zdb.client_get(nsname=nsname, addr=self.addr, port=self.port, secret=secret, mode=self.mode)
 
         assert cl.ping()
 
@@ -151,22 +146,22 @@ class ZDBServer(j.application.JSBaseClass):
 
         cla = self.client_admin_get()
         if destroydata:
-            j.clients.redis._cache_clear() #make sure all redis connections gone
+            j.clients.redis._cache_clear()  # make sure all redis connections gone
 
         for ns in namespaces:
             if not cla.namespace_exists(ns):
-                cla.namespace_new(ns,secret=namespaces_secret)
+                cla.namespace_new(ns, secret=namespaces_secret)
             else:
                 if destroydata:
                     cla.namespace_delete(ns)
-                    cla.namespace_new(ns,secret=namespaces_secret)
+                    cla.namespace_new(ns, secret=namespaces_secret)
 
         if destroydata:
-            j.clients.redis._cache_clear() #make sure all redis connections gone
+            j.clients.redis._cache_clear()  # make sure all redis connections gone
 
         return self.client_admin_get()
 
-    def build(self,reset=True):
+    def build(self, reset=True):
         """
         kosmos 'j.servers.zdb.build()'
         """

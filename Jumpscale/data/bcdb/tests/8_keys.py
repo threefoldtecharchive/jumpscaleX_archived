@@ -91,9 +91,7 @@ def main(self):
 
     m3 = bcdb.model_get_from_schema(SCHEMA2)
 
-    assert (
-        m3.schema.sid == m.schema.sid + 1
-    )  # its a new model so the sid should be 1 higher
+    assert m3.schema.sid == m.schema.sid + 1  # its a new model so the sid should be 1 higher
 
     SCHEMA3 = """
     @url = threefoldtoken.wallet.test2
@@ -132,17 +130,13 @@ def main(self):
     data = bcdb._hset_index_key_get(schema=m3.schema, returndata=True)
     redisid = data[bcdb.name][m3.schema.url]
     rkey = bcdb._hset_index_key_get(schema=m3.schema)
-    assert rkey.decode().endswith(
-        str(redisid)
-    )  # check that the raw info is same as the info from function
+    assert rkey.decode().endswith(str(redisid))  # check that the raw info is same as the info from function
 
     assert len(j.clients.credis_core.keys(rkey + b":*")) == 3
 
     assert len(m3.get_all()) == 1
 
-    assert [i for i in m3.id_iterator] == [
-        m3.get_all()[0].id
-    ]  # should only be the 1 id in there
+    assert [i for i in m3.id_iterator] == [m3.get_all()[0].id]  # should only be the 1 id in there
 
     assert len(m.get_all()) == 2
 
@@ -204,4 +198,3 @@ def main(self):
 
     self._log_info("TEST DONE")
     return "OK"
-

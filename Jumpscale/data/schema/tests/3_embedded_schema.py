@@ -8,8 +8,6 @@ def main(self):
     kosmos 'j.data.schema.test(name="embedded_schema")'
     """
 
-
-
     schema = """
         @url = jumpscale.schema.test3.a
         cmds = (LO) !jumpscale.schema.test3.b
@@ -24,52 +22,50 @@ def main(self):
     so = j.data.schema.get(url="jumpscale.schema.test3.a")
     o = so.new()
 
-    cmd=o.cmds.new()
+    cmd = o.cmds.new()
     cmd.name = "a"
 
     assert o.cmds[0].name == "a"
 
-    assert o.cmds[0]._ddict == {'name': 'a', 'comment': '', 'schemacode': ''}
+    assert o.cmds[0]._ddict == {"name": "a", "comment": "", "schemacode": ""}
 
-    assert len(o.cmds)==1
+    assert len(o.cmds) == 1
 
     data = o._data
 
-    #to make sure after serialization is still ok
+    # to make sure after serialization is still ok
     assert o.cmds[0].name == "a"
 
-    assert o.cmds[0]._ddict == {'name': 'a', 'comment': '', 'schemacode': ''}
+    assert o.cmds[0]._ddict == {"name": "a", "comment": "", "schemacode": ""}
 
-    assert len(o.cmds)==1
+    assert len(o.cmds) == 1
 
     o2 = so.get(capnpbin=data)
 
     assert o2.cmds[0].name == "a"
 
-    assert o2.cmds[0]._ddict == {'name': 'a', 'comment': '', 'schemacode': ''}
+    assert o2.cmds[0]._ddict == {"name": "a", "comment": "", "schemacode": ""}
 
-    assert len(o2.cmds)==1
+    assert len(o2.cmds) == 1
 
     o3 = so.get(data=o._ddict)
 
-
     assert o3.cmds[0].name == "a"
 
-    assert o3.cmds[0]._ddict == {'name': 'a', 'comment': '', 'schemacode': ''}
+    assert o3.cmds[0]._ddict == {"name": "a", "comment": "", "schemacode": ""}
 
-    assert len(o3.cmds)==1
+    assert len(o3.cmds) == 1
 
     print(o)
 
-    cmd=o.cmds.new()
+    cmd = o.cmds.new()
     cmd.name = "cc"
 
-    assert len(o.cmds)==2
+    assert len(o.cmds) == 2
     assert o.cmds[1].name == "cc"
 
+    # more deep embedded (2 levels)
 
-    #more deep embedded (2 levels)
-    
     schema = """
         @url = jumpscale.schema.test3.cmd
         name = ""
@@ -116,4 +112,4 @@ def main(self):
 
     self._log_info("TEST DONE SCHEMAEMBED")
 
-    return ("OK")
+    return "OK"

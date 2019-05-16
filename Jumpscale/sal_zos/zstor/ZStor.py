@@ -4,11 +4,12 @@ import time
 logging.basicConfig(level=logging.INFO)
 
 
-
-class ZeroStor():
+class ZeroStor:
     """zerostor server"""
 
-    def __init__(self, name, container, bind='0.0.0.0:8080', data_dir='/mnt/data', meta_dir='/mnt/metadata', max_size_msg=64):
+    def __init__(
+        self, name, container, bind="0.0.0.0:8080", data_dir="/mnt/data", meta_dir="/mnt/metadata", max_size_msg=64
+    ):
 
         self.name = name
         self.container = container
@@ -27,9 +28,9 @@ class ZeroStor():
         if not is_running:
             return
 
-        j.tools.logger._log_debug('stop %s', self)
+        j.tools.logger._log_debug("stop %s", self)
 
-        self.container.client.job.kill(job['cmd']['id'])
+        self.container.client.job.kill(job["cmd"]["id"])
 
         # wait for StorageEngine to stop
         start = time.time()
@@ -49,7 +50,9 @@ class ZeroStor():
             --meta "{metadir}" \
             --max-msg-size {msgsize} \
             --async-write \
-            '.format(bind=self.bind, datadir=self.data_dir, metadir=self.meta_dir, msgsize=self.max_size_msg)
+            '.format(
+            bind=self.bind, datadir=self.data_dir, metadir=self.meta_dir, msgsize=self.max_size_msg
+        )
         self.container.client.system(cmd, id=self._job_id)
         start = time.time()
         while start + 15 > time.time():
@@ -57,7 +60,7 @@ class ZeroStor():
                 break
             time.sleep(1)
         else:
-            raise RuntimeError('Failed to start zerostor server: {}'.format(self.name))
+            raise RuntimeError("Failed to start zerostor server: {}".format(self.name))
 
     def is_running(self):
         return self.container.is_job_running(self._job_id)

@@ -28,10 +28,7 @@ class Schema(j.application.JSBaseClass):
                 # will remove the version from the url
                 self.url_noversion = ".".join(self.url.split(".")[:-1])
                 if self.url_noversion in j.data.schema.schemas_versionless:
-                    if (
-                        j.data.schema.schemas_versionless[self.url_noversion].version
-                        < self.version + 1
-                    ):
+                    if j.data.schema.schemas_versionless[self.url_noversion].version < self.version + 1:
                         # version itself can be replaced as well, there could be an update
                         j.data.schema.schemas_versionless[self.url_noversion] = self
                 else:
@@ -117,9 +114,7 @@ class Schema(j.application.JSBaseClass):
             propname = propname.strip()
             if ":" in propname:
                 self._error_raise(
-                    "Aliases no longer supported in names, remove  ':' in name '%s'"
-                    % propname,
-                    schema=text,
+                    "Aliases no longer supported in names, remove  ':' in name '%s'" % propname, schema=text
                 )
             line = line.strip()
 
@@ -151,18 +146,11 @@ class Schema(j.application.JSBaseClass):
                 p.unique = True
 
             if name in ["id"]:
-                self._error_raise(
-                    "do not use 'id' in your schema, is reserved for system.",
-                    schema=text,
-                )
+                self._error_raise("do not use 'id' in your schema, is reserved for system.", schema=text)
 
             if "(" in line:
-                line_proptype = (
-                    line.split("(")[1].split(")")[0].strip().lower()
-                )  # in between the ()
-                self._log_debug(
-                    "line:%s; lineproptype:'%s'" % (line_original, line_proptype)
-                )
+                line_proptype = line.split("(")[1].split(")")[0].strip().lower()  # in between the ()
+                self._log_debug("line:%s; lineproptype:'%s'" % (line_original, line_proptype))
                 line_wo_proptype = line.split("(")[0].strip()  # before the (
 
                 if pointer_type:
@@ -206,8 +194,7 @@ class Schema(j.application.JSBaseClass):
                 continue
             if "=" not in line:
                 raise j.exceptions.Input(
-                    "did not find =, need to be there to define field, line=%s\ntext:%s"
-                    % (line, text)
+                    "did not find =, need to be there to define field, line=%s\ntext:%s" % (line, text)
                 )
 
             p = process(line)
@@ -252,9 +239,7 @@ class Schema(j.application.JSBaseClass):
     def _capnp_schema_text(self):
         tpath = "%s/templates/schema.capnp" % self._path
         # j.shell()
-        _capnp_schema_text = j.tools.jinja2.template_render(
-            path=tpath, reload=False, obj=self, objForHash=self._md5
-        )
+        _capnp_schema_text = j.tools.jinja2.template_render(path=tpath, reload=False, obj=self, objForHash=self._md5)
         return _capnp_schema_text
 
     @property
@@ -265,17 +250,11 @@ class Schema(j.application.JSBaseClass):
                 raise RuntimeError("md5 cannot be None")
 
             for prop in self.properties:
-                self._log_debug(
-                    "prop for obj gen: %s:%s" % (prop, prop.js_typelocation)
-                )
+                self._log_debug("prop for obj gen: %s:%s" % (prop, prop.js_typelocation))
 
             tpath = "%s/templates/template_obj.py" % self._path
             self._obj_class = j.tools.jinja2.code_python_render(
-                name="schema_%s" % self.key,
-                obj_key="ModelOBJ",
-                path=tpath,
-                obj=self,
-                objForHash=self._md5,
+                name="schema_%s" % self.key, obj_key="ModelOBJ", path=tpath, obj=self, objForHash=self._md5
             )
 
         return self._obj_class

@@ -3,6 +3,7 @@ import sys
 from .Schema import *
 from Jumpscale import j
 from .DataObjBase import DataObjBase
+
 JSBASE = j.application.JSBaseClass
 
 

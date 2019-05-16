@@ -46,9 +46,7 @@ class BCDBMeta(j.application.JSBaseClass):
                 self._data = self._schema.get(capnpbin=data)
 
             if self._data.name != self.bcdb.name:
-                raise RuntimeError(
-                    "name given to bcdb does not correspond with name in the metadata stor"
-                )
+                raise RuntimeError("name given to bcdb does not correspond with name in the metadata stor")
 
             for s in self._data.schemas:
                 self.url2sid[s.url] = s.sid
@@ -112,9 +110,7 @@ class BCDBMeta(j.application.JSBaseClass):
     def model_get_from_id(self, schema_id, bcdb=None):
         if schema_id not in self.sid2model:
             if bcdb is None:
-                raise RuntimeError(
-                    "need to specify bcdb when getting model from schema:%s" % schema_id
-                )
+                raise RuntimeError("need to specify bcdb when getting model from schema:%s" % schema_id)
             schema = self.schema_get_from_id(schema_id)
             self.sid2model[schema_id] = bcdb.model_get_from_schema(schema=schema)
             self.bcdb.models[schema.url] = self.sid2model[schema_id]

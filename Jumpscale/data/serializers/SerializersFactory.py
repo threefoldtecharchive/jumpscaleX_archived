@@ -24,6 +24,7 @@ class SerializersFactory(j.application.JSBaseClass):
     def yaml(self):
         if self.__class__._yaml is None:
             from .SerializerYAML import SerializerYAML
+
             self.__class__._yaml = SerializerYAML()
         return self.__class__._yaml
 
@@ -31,6 +32,7 @@ class SerializersFactory(j.application.JSBaseClass):
     def int(self):
         if self.__class__._int is None:
             from .SerializerInt import SerializerInt
+
             self.__class__._int = SerializerInt()
         return self.__class__._int
 
@@ -38,6 +40,7 @@ class SerializersFactory(j.application.JSBaseClass):
     def crc(self):
         if self.__class__._crc is None:
             from .SerializerCRC import SerializerCRC
+
             self.__class__._crc = SerializerCRC()
         return self.__class__._crc
 
@@ -45,6 +48,7 @@ class SerializersFactory(j.application.JSBaseClass):
     def base(self):
         if self.__class__._base is None:
             from .SerializerBase import SerializerBase
+
             self.__class__._base = SerializerBase()
         return self.__class__._base
 
@@ -52,6 +56,7 @@ class SerializersFactory(j.application.JSBaseClass):
     def toml(self):
         if self.__class__._toml is None:
             from .SerializerTOML import SerializerTOML
+
             self.__class__._toml = SerializerTOML()
         return self.__class__._toml
 
@@ -59,6 +64,7 @@ class SerializersFactory(j.application.JSBaseClass):
     def lzma(self):
         if self.__class__._lzma is None:
             from .SerializerLZMA import SerializerLZMA
+
             self.__class__._lzma = SerializerLZMA()
         return self.__class__._lzma
 
@@ -66,6 +72,7 @@ class SerializersFactory(j.application.JSBaseClass):
     def base64(self):
         if self.__class__._base64 is None:
             from .SerializerBase64 import SerializerBase64
+
             self.__class__._base64 = SerializerBase64()
         return self.__class__._base64
 
@@ -73,6 +80,7 @@ class SerializersFactory(j.application.JSBaseClass):
     def json(self):
         if self.__class__._json is None:
             from .SerializerUJson import SerializerUJson
+
             self.__class__._json = SerializerUJson()
         return self.__class__._json
 
@@ -80,6 +88,7 @@ class SerializersFactory(j.application.JSBaseClass):
     def pickle(self):
         if self.__class__._pickle is None:
             from .SerializerPickle import SerializerPickle
+
             self.__class__._pickle = SerializerPickle()
         return self.__class__._pickle
 
@@ -87,6 +96,7 @@ class SerializersFactory(j.application.JSBaseClass):
     def blowfish(self):
         if self.__class__._blowfish is None:
             from .SerializerBlowfish import SerializerBlowfish
+
             self.__class__._blowfish = SerializerBlowfish()
         return self.__class__._blowfish
 
@@ -94,6 +104,7 @@ class SerializersFactory(j.application.JSBaseClass):
     def dict(self):
         if self.__class__._dict is None:
             from .SerializerDict import SerializerDict
+
             self.__class__._dict = SerializerDict()
         return self.__class__._dict
 
@@ -101,6 +112,7 @@ class SerializersFactory(j.application.JSBaseClass):
     def blosc(self):
         if self.__class__._blosc is None:
             from .SerializerBlosc import SerializerBlosc
+
             self.__class__._blosc = SerializerBlosc()
         return self.__class__._blosc
 
@@ -108,6 +120,7 @@ class SerializersFactory(j.application.JSBaseClass):
     def msgpack(self):
         if self.__class__._msgpack is None:
             from .SerializerMSGPack import SerializerMSGPack
+
             self.__class__._msgpack = SerializerMSGPack()
         return self.__class__._msgpack
 
@@ -115,14 +128,14 @@ class SerializersFactory(j.application.JSBaseClass):
     def snappy(self):
         if self.__class__._snappy is None:
             from .SerializerSnappy import SerializerSnappy
+
             self.__class__._snappy = SerializerSnappy()
         return self.__class__._snappy
-
 
     @property
     def dumper(self):
         if self.__class__._dumper is None:
             from .PrettyYAMLDumper import PrettyYAMLDumper
+
             self.__class__._dumper = PrettyYAMLDumper()
         return self.__class__._dumper
-

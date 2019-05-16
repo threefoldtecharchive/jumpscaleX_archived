@@ -101,9 +101,7 @@ class BCDB(j.application.JSBaseClass):
 
     def redis_server_start(self, port=6380, secret="123456"):
 
-        self.redis_server = RedisServer(
-            bcdb=self, port=port, secret=secret, addr="0.0.0.0"
-        )
+        self.redis_server = RedisServer(bcdb=self, port=port, secret=secret, addr="0.0.0.0")
         self.redis_server.init()
         self.redis_server.start()
 
@@ -255,9 +253,7 @@ class BCDB(j.application.JSBaseClass):
         else:
             self._log_debug("model get from schema:%s" % schema.url)
             if not isinstance(schema, j.data.schema.SCHEMA_CLASS):
-                raise RuntimeError(
-                    "schema needs to be of type: j.data.schema.SCHEMA_CLASS"
-                )
+                raise RuntimeError("schema needs to be of type: j.data.schema.SCHEMA_CLASS")
             schema_text = schema.text
 
         r = self.meta.model_get_from_md5(j.data.hash.md5_string(schema_text), die=False)
@@ -308,13 +304,7 @@ class BCDB(j.application.JSBaseClass):
             imodel.include_schema = True
             tpath = "%s/templates/BCDBModelIndexClass.py" % j.data.bcdb._path
             myclass = j.tools.jinja2.code_python_render(
-                path=tpath,
-                objForHash=schema._md5,
-                reload=True,
-                dest=dest,
-                schema=schema,
-                bcdb=self,
-                index=imodel,
+                path=tpath, objForHash=schema._md5, reload=True, dest=dest, schema=schema, bcdb=self, index=imodel
             )
 
             self._index_schema_class_cache[schema.key] = myclass
@@ -351,16 +341,12 @@ class BCDB(j.application.JSBaseClass):
             raise RuntimeError("path: %s needs to be dir, to load models from" % path)
 
         pyfiles_base = []
-        for fpath in j.sal.fs.listFilesInDir(
-            path, recursive=True, filter="*.py", followSymlinks=True
-        ):
+        for fpath in j.sal.fs.listFilesInDir(path, recursive=True, filter="*.py", followSymlinks=True):
             pyfile_base = j.tools.codeloader._basename(fpath)
             if pyfile_base.find("_index") == -1:
                 pyfiles_base.append(pyfile_base)
 
-        tocheck = j.sal.fs.listFilesInDir(
-            path, recursive=True, filter="*.toml", followSymlinks=True
-        )
+        tocheck = j.sal.fs.listFilesInDir(path, recursive=True, filter="*.toml", followSymlinks=True)
         for schemapath in tocheck:
 
             bname = j.sal.fs.getBaseName(schemapath)[:-5]
@@ -412,9 +398,7 @@ class BCDB(j.application.JSBaseClass):
             obj.acl_id = acl_id
             obj._model = model
             if model.readonly:
-                obj.readonly = (
-                    True
-                )  # means we fetched from DB, we need to make sure cannot be changed
+                obj.readonly = True  # means we fetched from DB, we need to make sure cannot be changed
             return obj
 
     def obj_get(self, id):
@@ -441,9 +425,7 @@ class BCDB(j.application.JSBaseClass):
         """
         if self.zdbclient:
             db = self.zdbclient
-            for key, data in db.iterate(
-                key_start=key_start, reverse=reverse, keyonly=keyonly
-            ):
+            for key, data in db.iterate(key_start=key_start, reverse=reverse, keyonly=keyonly):
                 if key == 0:  # skip first metadata entry
                     continue
                 if keyonly:

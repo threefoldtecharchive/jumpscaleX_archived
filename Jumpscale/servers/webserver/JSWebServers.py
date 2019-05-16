@@ -11,7 +11,6 @@ class JSWebServers(JSConfigBase):
         JSConfigBase.__init__(self, JSWebServer)
         self.latest = None
 
-
     def get(self, port):
         """
         will return server which can be attached in a gevent_servers_rack
@@ -58,13 +57,13 @@ class JSWebServers(JSConfigBase):
             js_web start -i $instance -d    
             """
             cmd = cmd.replace("$instance", instance)
-            j.tools.tmux.execute(cmd, session='main', window=instance, pane='main', session_reset=False,
-                                 window_reset=True)
+            j.tools.tmux.execute(
+                cmd, session="main", window=instance, pane="main", session_reset=False, window_reset=True
+            )
 
             host = s.config.data["host"]
             port = s.config.data["port"]
             print("webserver running on http://%s:%s/" % (host, port))
-
 
     def test(self, name="", start=True):
         """
@@ -75,4 +74,3 @@ class JSWebServers(JSConfigBase):
         """
 
         self._test_run(name=name)
-
