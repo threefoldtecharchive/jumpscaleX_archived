@@ -25,7 +25,8 @@ curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/inst
 
 ```bash
 #create directory, make sure your user has full access to this director (can be a manual step)
-mkdir -p /sandbox/code/github/threefoldtech; cd /sandbox/code/github/threefoldtech;
+mkdir -p /sandbox/code/github/threefoldtech
+cd /sandbox/code/github/threefoldtech;
 #if you have a permission denied add sudo at the beginning of the command
 # then do a sudo chown -R $USER:$USER /sandbox
 git clone git@github.com:threefoldtech/jumpscaleX.git; cd jumpscaleX;
@@ -34,7 +35,8 @@ git clone git@github.com:threefoldtech/jumpscaleX.git; cd jumpscaleX;
 #git pull
 
 #link the installer from tmp to the source directory, makes it easy for the rest of this tutorial
-rm -f /tmp/install.py; rm -f /tmp/InstallTools.py;
+rm -f /tmp/install.py
+rm -f /tmp/InstallTools.py;
 ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py /tmp/install.py;
 ln -s /sandbox/code/github/threefoldtech/jumpscaleX/install/InstallTools.py /tmp/InstallTools.py
 ```
@@ -77,17 +79,6 @@ python3 /tmp/install.py -3 -codepath=/sandbox/code
 
 - make sure /sandbox has been created (sudo was probably required and then you need to give yourself permission)
 - in 'share' in docker preferences you need to add /sandbox otherwise you will get
-<<<<<<< HEAD
-
-```bash
-docker: Error response from daemon: Mounts denied:
-The path /sandbox/code
-is not shared from OS X and is not known to Docker.
-You can configure shared paths from Docker -> Preferences... -> File Sharing.
-See https://docs.docker.com/docker-for-mac/osxfs/#namespaces for more info.
-```
-=======
->>>>>>> b6ebd05d28208a665775e82d264a7b89edfc8f25
 
 ```bash
 docker: Error response from daemon: Mounts denied:
@@ -97,9 +88,7 @@ You can configure shared paths from Docker -> Preferences... -> File Sharing.
 See https://docs.docker.com/docker-for-mac/osxfs/#namespaces for more info.
 ```
 
-### Without Docker  (not recommended)
-
-### Ubuntu
+### Ubuntu (without docker)
 
 ```bash
 #interactive
@@ -122,7 +111,7 @@ curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development/inst
 ```
 
 
-### OSX 
+### OSX (without docker)
 
 required steps:
 
