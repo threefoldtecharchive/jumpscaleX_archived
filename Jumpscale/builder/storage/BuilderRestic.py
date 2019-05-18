@@ -2,12 +2,13 @@ from Jumpscale import j
 
 builder_method = j.builder.system.builder_method
 
+
 class BuilderRestic(j.builder.system._BaseClass):
 
-    NAME = 'restic'
+    NAME = "restic"
 
     def _init(self):
-        self.DIR_BUILD = self._replace('{DIR_VAR}/build/restic')
+        self.DIR_BUILD = self._replace("{DIR_VAR}/build/restic")
         self.tools.dir_ensure(self.DIR_BUILD)
 
     @builder_method()
@@ -17,14 +18,16 @@ class BuilderRestic(j.builder.system._BaseClass):
         j.builder.runtimes.golang.install()
 
         # clone the repo
-        C = '''
+        C = """
         cd {}
         git clone --depth 1 https://github.com/restic/restic.git
-        '''.format(self.DIR_BUILD)
+        """.format(
+            self.DIR_BUILD
+        )
         self._execute(C, timeout=1200)
 
         # build binaries
-        build_cmd = 'cd {dir}/restic; go run build.go -k -v; make'.format(dir=self.DIR_BUILD)
+        build_cmd = "cd {dir}/restic; go run build.go -k -v; make".format(dir=self.DIR_BUILD)
         self._execute(build_cmd, timeout=1000)
 
     @builder_method()
@@ -32,19 +35,19 @@ class BuilderRestic(j.builder.system._BaseClass):
         """
         download, install, move files to appropriate places, and create relavent configs
         """
-        self._copy('{DIR_BUILD}/restic/restic', '{DIR_BIN}' )
+        self._copy("{DIR_BUILD}/restic/restic", "{DIR_BIN}")
 
     @property
     def startup_cmds(self):
-        cmd = '/sandbox/bin/restic'
-        cmds = [j.tools.startupcmd.get(name='restic', cmd=cmd)]
+        cmd = "/sandbox/bin/restic"
+        cmds = [j.tools.startupcmd.get(name="restic", cmd=cmd)]
         return cmds
 
     @builder_method()
-    def sandbox(self, zhub_client=None, flist_create=True, merge_base_flist=''):
-        bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, 'sandbox', 'bin')
+    def sandbox(self, zhub_client=None, flist_create=True, merge_base_flist=""):
+        bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "bin")
         self.tools.dir_ensure(bin_dest)
-        self._copy('{DIR_BIN}/restic', bin_dest)
+        self._copy("{DIR_BIN}/restic", bin_dest)
 
     @builder_method()
     def clean(self):
@@ -58,12 +61,12 @@ class BuilderRestic(j.builder.system._BaseClass):
     def reset(self):
         super().reset()
         self.clean()
-    
+
     @builder_method()
     def test(self):
-        return_code, _, _ = self._execute('restic version')
+        return_code, _, _ = self._execute("restic version")
         assert return_code == 0
-        print('TEST OK')
+        print("TEST OK")
 
 
 # class ResticRepository:

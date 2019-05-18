@@ -3,13 +3,7 @@ from Jumpscale import j
 
 
 class BuilderNet(j.builder.system._BaseClass):
-
-
-    def __init(self):
-
-
-
-        def tcpport_check(self, port, prefix=""):
+    def tcpport_check(self, port, prefix=""):
         res = []
         for item in self.info_get(prefix):
             if item["localport"] == port:
@@ -39,11 +33,12 @@ class BuilderNet(j.builder.system._BaseClass):
         """
         result = []
         if "linux" in j.core.platformtype.myplatform.platformtypes:
-            cmdlinux = 'netstat -lntp'
+            cmdlinux = "netstat -lntp"
             _, out, _ = j.sal.process.execute(cmdlinux, showout=False)
             # to troubleshoot https://regex101.com/#python
             p = re.compile(
-                u"tcp *(?P<receive>[0-9]*) *(?P<send>[0-9]*) *(?P<local>[0-9*.]*):(?P<localport>[0-9*]*) *(?P<remote>[0-9.*]*):(?P<remoteport>[0-9*]*) *(?P<state>[A-Z]*) *(?P<pid>[0-9]*)/(?P<process>\w*)")
+                "tcp *(?P<receive>[0-9]*) *(?P<send>[0-9]*) *(?P<local>[0-9*.]*):(?P<localport>[0-9*]*) *(?P<remote>[0-9.*]*):(?P<remoteport>[0-9*]*) *(?P<state>[A-Z]*) *(?P<pid>[0-9]*)/(?P<process>\w*)"
+            )
             for line in out.split("\n"):
                 res = re.search(p, line)
                 if res is not None:
@@ -55,7 +50,8 @@ class BuilderNet(j.builder.system._BaseClass):
                         result.append(d)
             # now tcp6
             p = re.compile(
-                u"tcp6 *(?P<receive>[0-9]*) *(?P<send>[0-9]*) *(?P<local>[0-9*.:]*):(?P<localport>[0-9*]*) *(?P<remote>[0-9.*:]*):(?P<remoteport>[0-9*]*) *(?P<state>[A-Z]*) *(?P<pid>[0-9]*)/(?P<process>\w*)")
+                "tcp6 *(?P<receive>[0-9]*) *(?P<send>[0-9]*) *(?P<local>[0-9*.:]*):(?P<localport>[0-9*]*) *(?P<remote>[0-9.*:]*):(?P<remoteport>[0-9*]*) *(?P<state>[A-Z]*) *(?P<pid>[0-9]*)/(?P<process>\w*)"
+            )
             for line in out.split("\n"):
                 res = re.search(p, line)
                 if res is not None:
@@ -75,8 +71,19 @@ class BuilderNet(j.builder.system._BaseClass):
             d = {}
             for line in out.split("\n"):
                 if line.startswith("p"):
-                    d = {'local': '', 'localport': 0, 'pid': 0, 'process': '', 'receive': 0, 'receivebytes': 0,
-                         'remote': '', 'remoteport': 0, 'send': 0, 'sendbytes': 0, 'parentpid': 0}
+                    d = {
+                        "local": "",
+                        "localport": 0,
+                        "pid": 0,
+                        "process": "",
+                        "receive": 0,
+                        "receivebytes": 0,
+                        "remote": "",
+                        "remoteport": 0,
+                        "send": 0,
+                        "sendbytes": 0,
+                        "parentpid": 0,
+                    }
                     d["pid"] = int(line[1:])
                 if line.startswith("R"):
                     d["parentpid"] = int(line[1:])

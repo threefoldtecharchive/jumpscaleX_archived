@@ -33,11 +33,13 @@ An RFC 2821 smtp proxy server port from Python Standrad Library for Gevent usage
 # - handle error codes from the backend smtpd
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 from collections import UserDict
 
 from gevent import socket, monkey, Timeout
+
 monkey.patch_all(thread=False)
 from gevent.server import StreamServer
 
@@ -47,44 +49,59 @@ from ssl import CERT_NONE
 
 from .channel import SMTPChannel
 
-__all__ = ["SMTPServer", "DebuggingServer", "PureProxy", 'SSLSettings']
+__all__ = ["SMTPServer", "DebuggingServer", "PureProxy", "SSLSettings"]
+
 
 class ConnectionTimeout(Exception):
     pass
 
-NEWLINE = '\n'
-EMPTYSTRING = ''
-COMMASPACE = ', '
+
+NEWLINE = "\n"
+EMPTYSTRING = ""
+COMMASPACE = ", "
+
 
 class SSLSettings(UserDict):
     """SSL settings object"""
-    def __init__(self, keyfile=None, certfile=None,
-                 ssl_version='PROTOCOL_SSLv23', ca_certs=None,
-                 do_handshake_on_connect=True, cert_reqs=CERT_NONE,
-                 suppress_ragged_eofs=True, ciphers=None, **kwargs):
+
+    def __init__(
+        self,
+        keyfile=None,
+        certfile=None,
+        ssl_version="PROTOCOL_SSLv23",
+        ca_certs=None,
+        do_handshake_on_connect=True,
+        cert_reqs=CERT_NONE,
+        suppress_ragged_eofs=True,
+        ciphers=None,
+        **kwargs,
+    ):
         """settings of SSL
 
         :param keyfile: SSL key file path usally end with ".key"
         :param certfile: SSL cert file path usally end with ".crt"
         """
-        UserDict.__init__(self) 
-        self.data.update(dict(keyfile = keyfile,
-                                certfile = certfile,
-                                server_side = True,
-                                ssl_version = getattr(ssl, ssl_version, ssl.PROTOCOL_SSLv23),
-                                ca_certs = ca_certs,
-                                do_handshake_on_connect = do_handshake_on_connect,
-                                cert_reqs=cert_reqs,
-                                suppress_ragged_eofs = suppress_ragged_eofs,
-                                ciphers = ciphers))
+        UserDict.__init__(self)
+        self.data.update(
+            dict(
+                keyfile=keyfile,
+                certfile=certfile,
+                server_side=True,
+                ssl_version=getattr(ssl, ssl_version, ssl.PROTOCOL_SSLv23),
+                ca_certs=ca_certs,
+                do_handshake_on_connect=do_handshake_on_connect,
+                cert_reqs=cert_reqs,
+                suppress_ragged_eofs=suppress_ragged_eofs,
+                ciphers=ciphers,
+            )
+        )
 
 
 class SMTPServer(StreamServer):
     """Abstrcted SMTP server
     """
 
-    def __init__(self, localaddr=None, remoteaddr=None, 
-                 timeout=60, data_size_limit=10240000, **kwargs):
+    def __init__(self, localaddr=None, remoteaddr=None, timeout=60, data_size_limit=10240000, **kwargs):
         """Initialize SMTP Server
 
         :param localaddr: tuple pair that start server, like `('127.0.0.1', 25)`
@@ -96,30 +113,30 @@ class SMTPServer(StreamServer):
 
         self.relay = bool(remoteaddr)
         self.remoteaddr = remoteaddr
-        
+
         self.localaddr = localaddr
 
         if not self.localaddr:
-            self.localaddr = ('127.0.0.1', 25)
-        
+            self.localaddr = ("127.0.0.1", 25)
+
         self.ssl = None
-        
+
         self.timeout = int(timeout)
 
         self.data_size_limit = int(data_size_limit)
 
-        if 'keyfile' in kwargs:
+        if "keyfile" in kwargs:
             self.ssl = SSLSettings(**kwargs)
 
         super(SMTPServer, self).__init__(self.localaddr, self.handle)
 
     def handle(self, sock, addr):
 
-        logger.debug('Incomming connection %s:%s', *addr[:2])
+        logger.debug("Incomming connection %s:%s", *addr[:2])
 
         if self.relay and not addr[0] in self.remoteaddr:
-            logger.debug('Not in remoteaddr', *addr[:2])
-            return 
+            logger.debug("Not in remoteaddr", *addr[:2])
+            return
         try:
             with Timeout(self.timeout, ConnectionTimeout):
                 sc = SMTPChannel(self, sock, addr, self.data_size_limit)
@@ -127,13 +144,14 @@ class SMTPServer(StreamServer):
                     sc.handle_read()
 
         except ConnectionTimeout:
-            logger.warn('%s:%s Timeouted', *addr[:2])
+            logger.warn("%s:%s Timeouted", *addr[:2])
             try:
                 sc.smtp_TIMEOUT()
             except Exception as err:
                 logger.debug(err)
         except Exception as err:
             import traceback
+
             traceback.print_exc()
             logger.error(err)
 
@@ -156,7 +174,7 @@ class SMTPServer(StreamServer):
 
         """
         raise NotImplementedError
-    
+
     # API that handle rcpt
     def process_rcpt(self, address):
         """Override this abstract method to handle rcpt from the client
@@ -168,38 +186,40 @@ class SMTPServer(StreamServer):
         """
         pass
 
+
 class DebuggingServer(SMTPServer):
     # Do something with the gathered message
     def process_message(self, peer, mailfrom, rcpttos, data):
         inheaders = 1
-        lines = data.split('\n')
-        print('---------- MESSAGE FOLLOWS ----------')
+        lines = data.split("\n")
+        print("---------- MESSAGE FOLLOWS ----------")
         for line in lines:
             # headers first
             if inheaders and not line:
-                print('X-Peer:', peer[0])
+                print("X-Peer:", peer[0])
                 inheaders = 0
             print(line)
-        print('------------ END MESSAGE ------------')
+        print("------------ END MESSAGE ------------")
 
 
 class PureProxy(SMTPServer):
     def process_message(self, peer, mailfrom, rcpttos, data):
-        lines = data.split('\n')
+        lines = data.split("\n")
         # Look for the last header
         i = 0
         for line in lines:
             if not line:
                 break
             i += 1
-        lines.insert(i, 'X-Peer: %s' % peer[0])
+        lines.insert(i, "X-Peer: %s" % peer[0])
         data = NEWLINE.join(lines)
         refused = self._deliver(mailfrom, rcpttos, data)
         # TBD: what to do with refused addresses?
-        logger.debug('we got some refusals: %s', refused)
+        logger.debug("we got some refusals: %s", refused)
 
     def _deliver(self, mailfrom, rcpttos, data):
         import smtplib
+
         refused = {}
         try:
             s = smtplib.SMTP()
@@ -209,16 +229,15 @@ class PureProxy(SMTPServer):
             finally:
                 s.quit()
         except smtplib.SMTPRecipientsRefused as e:
-            logger.debug('got SMTPRecipientsRefused')
+            logger.debug("got SMTPRecipientsRefused")
             refused = e.recipients
         except (socket.error, smtplib.SMTPException) as e:
-            logger.debug('got %s', e.__class__)
+            logger.debug("got %s", e.__class__)
             # All recipients were refused.  If the exception had an associated
             # error code, use it.  Otherwise,fake it with a non-triggering
             # exception code.
-            errcode = getattr(e, 'smtp_code', -1)
-            errmsg = getattr(e, 'smtp_error', 'ignore')
+            errcode = getattr(e, "smtp_code", -1)
+            errmsg = getattr(e, "smtp_error", "ignore")
             for r in rcpttos:
                 refused[r] = (errcode, errmsg)
         return refused
-

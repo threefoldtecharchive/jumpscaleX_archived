@@ -1,11 +1,7 @@
-
 from Jumpscale import j
 
 
-
-
 class BuilderFW(j.builder.system._BaseClass):
-
     def _init(self):
         self._fw_enabled = None
         self._fw_type = None
@@ -14,28 +10,31 @@ class BuilderFW(j.builder.system._BaseClass):
     def fw_type(self):
         if self._fw_type is None:
             if j.core.platformtype.myplatform.isMac:
-                raise j.exceptions.Input(message="cannot enable fw, mac  not supported ",
-                                         level=1, source="", tags="", msgpub="")
+                raise j.exceptions.Input(
+                    message="cannot enable fw, mac  not supported ", level=1, source="", tags="", msgpub=""
+                )
 
-                if #j.builder.sandbox.cmd_path_get("nft", die=False) is not False:
+                if self.tools.command_check("nft") is not False:
                     self._fw_type = "nft"
                 else:
                     raise NotImplemented("only support nft for now")
 
         return self._fw_type
 
-    def allowIncoming(self, port, protocol='tcp'):
+    def allowIncoming(self, port, protocol="tcp"):
         """as alternative on ufw"""
         if j.core.platformtype.myplatform.isMac:
             return
         j.sal.process.execute(
-            "nft add rule filter input {protocol} dport {port} log accept".format(protocol=protocl, port=port))
+            "nft add rule filter input {protocol} dport {port} log accept".format(protocol=protocl, port=port)
+        )
 
     def denyIncoming(self, port):
         if j.core.platformtype.myplatform.isMac:
             return
         j.sal.process.execute(
-            "nft add rule filter input {protocol} dport {port} log reject".format(protocol=protocl, port=port))
+            "nft add rule filter input {protocol} dport {port} log reject".format(protocol=protocl, port=port)
+        )
 
     def flush(self, permanent=False):
         j.sal.process.execute("nft flush ruleset")
@@ -56,7 +55,8 @@ class BuilderFW(j.builder.system._BaseClass):
                 level=1,
                 source="",
                 tags="",
-                msgpub="")
+                msgpub="",
+            )
         rc, currentruleset, err = j.sal.process.execute("nft list ruleset")
         if ruleset in currentruleset:
             return

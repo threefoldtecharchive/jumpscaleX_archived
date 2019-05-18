@@ -6,7 +6,10 @@ import pytest
 
 markdowndocs_client = j.tools.markdowndocs
 doc = markdowndocs_client.load(
-    "https://github.com/threefoldtech/jumpscaleX/tree/development/docs/tools/wiki/docsites/examples/docs/", name="test", pull=False)
+    "https://github.com/threefoldtech/jumpscaleX/tree/development/docs/tools/wiki/docsites/examples/docs/",
+    name="test",
+    pull=False,
+)
 test_doc = doc.doc_get("test")
 
 

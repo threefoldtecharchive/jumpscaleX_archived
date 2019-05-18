@@ -33,10 +33,16 @@ class BuilderEtcd(BuilderGolangTools):
     def startup_cmds(self):
         return [j.tools.startupcmd.get(name=self.NAME, cmd=self.NAME)]
 
-
     @builder_method()
-    def sandbox(self, reset=False, zhub_client=None, flist_create=False, merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist"):
-        '''Copy built bins to dest_path and create flist if create_flist = True
+    def sandbox(
+        self,
+        reset=False,
+        zhub_client=None,
+        flist_create=False,
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+    ):
+        '''
+        Copy built bins to dest_path and create flist if create_flist = True
         :param dest_path: destination path to copy files into
         :type dest_path: str
         :param sandbox_dir: path to sandbox
@@ -63,7 +69,7 @@ class BuilderEtcd(BuilderGolangTools):
         for bin in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
             j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
-
+        '''
 
     def client_get(self, name):
         """

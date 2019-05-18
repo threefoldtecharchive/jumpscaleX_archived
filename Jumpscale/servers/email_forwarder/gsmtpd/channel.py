@@ -2,15 +2,16 @@
 # encoding: utf-8
 
 import logging
+
 logger = logging.getLogger(__name__)
 from gevent import monkey, socket, ssl
 
 import errno
 from asynchat import find_prefix_at_end
 
-NEWLINE = '\n'
-EMPTYSTRING = ''
-COMMASPACE = ', '
+NEWLINE = "\n"
+EMPTYSTRING = ""
+COMMASPACE = ", "
 
 monkey.patch_all(thread=False)
 
@@ -19,6 +20,7 @@ class SMTPChannel(object):
     """
     Port from stdlib smtpd used by Gevent
     """
+
     COMMAND = 0
     DATA = 1
 
@@ -31,13 +33,13 @@ class SMTPChannel(object):
         self.seen_greeting = 0
         self.mailfrom = None
         self.rcpttos = []
-        self.data = ''
+        self.data = ""
         self.fqdn = socket.getfqdn()
         self.ac_in_buffer_size = 4096
 
-        self.ac_in_buffer = ''
+        self.ac_in_buffer = ""
         self.closed = False
-        self.data_size_limit = data_size_limit # in byte
+        self.data_size_limit = data_size_limit  # in byte
         self.current_size = 0
         self.tls = False
         try:
@@ -50,14 +52,14 @@ class SMTPChannel(object):
             if err[0] != errno.ENOTCONN:
                 raise
             return
-        self.push('220 %s GSMTPD at your service' % self.fqdn)
-        self.terminator = '\r\n'
-        logger.debug('SMTP channel initialized')
+        self.push("220 %s GSMTPD at your service" % self.fqdn)
+        self.terminator = "\r\n"
+        logger.debug("SMTP channel initialized")
 
     # Overrides base class for convenience
     def push(self, msg):
-        logger.debug('PUSH %s' % msg)
-        msg = msg + '\r\n'
+        logger.debug("PUSH %s" % msg)
+        msg = msg + "\r\n"
         self.conn.sendall(msg.encode("utf-8"))
 
     # Implementation of base class abstract method
@@ -65,7 +67,7 @@ class SMTPChannel(object):
         self.line.append(data)
         self.current_size += len(data)
         if self.current_size > self.data_size_limit:
-            self.push('452 Command has been aborted because mail too big')
+            self.push("452 Command has been aborted because mail too big")
             self.close_when_done()
 
     # Implementation of base class abstract method
@@ -74,18 +76,18 @@ class SMTPChannel(object):
         self.line = []
         if self.state == self.COMMAND:
             if not line:
-                self.push('500 Error: bad syntax')
+                self.push("500 Error: bad syntax")
                 return
             method = None
-            i = line.find(' ')
+            i = line.find(" ")
             if i < 0:
                 command = line.upper().strip()
                 arg = None
             else:
                 command = line[:i].upper()
-                arg = line[i+1:].strip()
-            method = getattr(self, 'smtp_' + command, None)
-            logger.debug('%s:%s', command, arg)
+                arg = line[i + 1 :].strip()
+            method = getattr(self, "smtp_" + command, None)
+            logger.debug("%s:%s", command, arg)
             if not method:
                 self.push('502 Error: command "%s" not implemented' % command)
                 return
@@ -93,78 +95,75 @@ class SMTPChannel(object):
             return
         else:
             if self.state != self.DATA:
-                self.push('451 Internal confusion')
+                self.push("451 Internal confusion")
                 return
             # Remove extraneous carriage returns and de-transparency according
             # to RFC 821, Section 4.5.2.
             data = []
-            for text in line.split('\r\n'):
-                if text and text[0] == '.':
+            for text in line.split("\r\n"):
+                if text and text[0] == ".":
                     data.append(text[1:])
                 else:
                     data.append(text)
             self.data = NEWLINE.join(data)
-            status = self.server.process_message(self.peer,
-                                                   self.mailfrom,
-                                                   self.rcpttos,
-                                                   self.data)
+            status = self.server.process_message(self.peer, self.mailfrom, self.rcpttos, self.data)
             self.rcpttos = []
             self.mailfrom = None
             self.state = self.COMMAND
-            self.terminator = '\r\n'
+            self.terminator = "\r\n"
             if not status:
-                self.push('250 Ok')
+                self.push("250 Ok")
             else:
                 self.push(status)
-    
+
     # SMTP and ESMTP commands
     def smtp_HELO(self, arg):
         if not arg:
-            self.push('501 Syntax: HELO hostname')
+            self.push("501 Syntax: HELO hostname")
             return
         if self.seen_greeting:
-            self.push('503 Duplicate HELO/EHLO')
+            self.push("503 Duplicate HELO/EHLO")
         else:
             self.seen_greeting = arg
-            self.push('250 %s' % self.fqdn)
+            self.push("250 %s" % self.fqdn)
 
     def smtp_EHLO(self, arg):
         if not arg:
-            self.push('501 Syntax: EHLO hostname')
+            self.push("501 Syntax: EHLO hostname")
             return
         if self.seen_greeting:
-            self.push('503 Duplicate HELO/EHLO')
+            self.push("503 Duplicate HELO/EHLO")
         else:
             self.seen_greeting = arg
             self.extended_smtp = True
             if self.tls:
-                self.push('250-%s on TLS' % self.fqdn)
+                self.push("250-%s on TLS" % self.fqdn)
             else:
-                self.push('250-%s on plain' % self.fqdn)
+                self.push("250-%s on plain" % self.fqdn)
 
             try:
                 if self.server.ssl and not self.tls:
-                    self.push('250-STARTTLS')
+                    self.push("250-STARTTLS")
             except AttributeError:
                 pass
 
             if self.data_size_limit:
-                self.push('250-SIZE %s' % self.data_size_limit)
-            self.push('250 HELP')
-    
+                self.push("250-SIZE %s" % self.data_size_limit)
+            self.push("250 HELP")
+
     def smtp_NOOP(self, arg):
         if arg:
-            self.push('501 Syntax: NOOP')
+            self.push("501 Syntax: NOOP")
         else:
-            self.push('250 Ok')
+            self.push("250 Ok")
 
     def smtp_QUIT(self, arg=""):
         # args is ignored
-        self.push('221 Bye')
+        self.push("221 Bye")
         self.close_when_done()
 
     def smtp_TIMEOUT(self, arg=""):
-        self.push('421 2.0.0 Bye')
+        self.push("421 2.0.0 Bye")
         self.close_when_done()
 
     # factored
@@ -175,70 +174,70 @@ class SMTPChannel(object):
             address = arg[keylen:].strip()
             if not address:
                 pass
-            elif address[0] == '<' and address[-1] == '>' and address != '<>':
+            elif address[0] == "<" and address[-1] == ">" and address != "<>":
                 # Addresses can be in the form <person@dom.com> but watch out
                 # for null address, e.g. <>
                 address = address[1:-1]
         return address
 
     def smtp_MAIL(self, arg):
-        address = self.getaddr('FROM:', arg) if arg else None
+        address = self.getaddr("FROM:", arg) if arg else None
         if not address:
-            self.push('501 Syntax: MAIL FROM:<address>')
+            self.push("501 Syntax: MAIL FROM:<address>")
             return
         if self.mailfrom:
-            self.push('503 Error: nested MAIL command')
+            self.push("503 Error: nested MAIL command")
             return
         self.mailfrom = address
-        self.push('250 Ok')
+        self.push("250 Ok")
 
     def smtp_RCPT(self, arg):
         if not self.mailfrom:
-            self.push('503 Error: need MAIL command')
+            self.push("503 Error: need MAIL command")
             return
-        address = self.getaddr('TO:', arg) if arg else None
+        address = self.getaddr("TO:", arg) if arg else None
         if not address:
-            self.push('501 Syntax: RCPT TO: <address>')
+            self.push("501 Syntax: RCPT TO: <address>")
             return
-        
+
         result = self.server.process_rcpt(address)
         if not result:
             self.rcpttos.append(address)
-            self.push('250 Ok')
+            self.push("250 Ok")
         else:
             self.push(result)
 
     def smtp_RSET(self, arg):
         if arg:
-            self.push('501 Syntax: RSET')
+            self.push("501 Syntax: RSET")
             return
         # Resets the sender, recipients, and data, but not the greeting
         self.mailfrom = None
         self.rcpttos = []
-        self.data = ''
+        self.data = ""
         self.state = self.COMMAND
-        self.push('250 Ok')
+        self.push("250 Ok")
 
     def smtp_DATA(self, arg):
         if not self.rcpttos:
-            self.push('503 Error: need RCPT command')
+            self.push("503 Error: need RCPT command")
             return
         if arg:
-            self.push('501 Syntax: DATA')
+            self.push("501 Syntax: DATA")
             return
         self.state = self.DATA
-        self.terminator = '\r\n.\r\n'
-        self.push('354 End data with <CR><LF>.<CR><LF>')
+        self.terminator = "\r\n.\r\n"
+        self.push("354 End data with <CR><LF>.<CR><LF>")
 
     def smtp_STARTTLS(self, arg):
 
         if arg:
-            self.push('501 Syntax: STARTTLS')
+            self.push("501 Syntax: STARTTLS")
             return
-        self.push('220 Ready to start TLS')
-        
+        self.push("220 Ready to start TLS")
+
         if self.data:
-            self.push('500 Too late to changed')
+            self.push("500 Too late to changed")
             return
 
         try:
@@ -250,18 +249,18 @@ class SMTPChannel(object):
             self.tls = True
         except Exception as err:
             logger.error(err, exc_info=True)
-            self.push('503 certificate is FAILED')
+            self.push("503 certificate is FAILED")
             self.close_when_done()
-    
+
     def smtp_HELP(self, arg):
 
         if arg:
-            if arg == 'ME':
-                self.push('504 Go to https://github.com/34nm/gsmtpd/issues for help')
+            if arg == "ME":
+                self.push("504 Go to https://github.com/34nm/gsmtpd/issues for help")
             else:
-                self.push('501 Syntax: HELP')
+                self.push("501 Syntax: HELP")
         else:
-            self.push('214 SMTP server is running...go to website for further help')
+            self.push("214 SMTP server is running...go to website for further help")
 
     def handle_read(self):
         try:
@@ -286,16 +285,16 @@ class SMTPChannel(object):
             if not self.terminator:
                 # no terminator, collect it all
                 self.collect_incoming_data(self.ac_in_buffer)
-                self.ac_in_buffer = ''
+                self.ac_in_buffer = ""
             elif isinstance(self.terminator, int):
                 # numeric terminator
                 n = self.terminator
                 if lb < n:
                     self.collect_incoming_data(self.ac_in_buffer)
-                    self.ac_in_buffer = ''
+                    self.ac_in_buffer = ""
                     self.terminator = self.terminator - lb
                 else:
-                    self.collect_incoming_data (self.ac_in_buffer[:n])
+                    self.collect_incoming_data(self.ac_in_buffer[:n])
                     self.ac_in_buffer = self.ac_in_buffer[n:]
                     self.terminator = 0
                     self.found_terminator()
@@ -313,8 +312,8 @@ class SMTPChannel(object):
                     # we found the terminator
                     if index > 0:
                         # don't bother reporting the empty string (source of subtle bugs)
-                        self.collect_incoming_data (self.ac_in_buffer[:index])
-                    self.ac_in_buffer = self.ac_in_buffer[index+terminator_len:]
+                        self.collect_incoming_data(self.ac_in_buffer[:index])
+                    self.ac_in_buffer = self.ac_in_buffer[index + terminator_len :]
                     # This does the Right Thing if the terminator is changed here.
                     self.found_terminator()
                 else:
@@ -323,20 +322,20 @@ class SMTPChannel(object):
                     if index:
                         if index != lb:
                             # we found a prefix, collect up to the prefix
-                            self.collect_incoming_data (self.ac_in_buffer[:-index])
+                            self.collect_incoming_data(self.ac_in_buffer[:-index])
                             self.ac_in_buffer = self.ac_in_buffer[-index:]
                         break
                     else:
                         # no prefix, collect it all
                         self.collect_incoming_data(self.ac_in_buffer)
-                        self.ac_in_buffer = ''
-        
+                        self.ac_in_buffer = ""
+
     def handle_error(self):
         self.close_when_done()
 
     def close_when_done(self):
 
         if not self.conn.closed:
-            logger.debug('CLOSED %s' % self.conn)
+            logger.debug("CLOSED %s" % self.conn)
             self.conn.close()
         self.closed = True

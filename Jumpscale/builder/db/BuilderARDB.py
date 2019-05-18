@@ -1,9 +1,8 @@
 from Jumpscale import j
 
 
-
 class BuilderARDB(j.builder.system._BaseClass):
-    NAME = 'ardb'
+    NAME = "ardb"
 
     def reset(self):
         app.reset(self)
@@ -15,34 +14,12 @@ class BuilderARDB(j.builder.system._BaseClass):
         self.CODEDIRARDB = self._replace("{DIR_CODE}/github/yinqiwen/ardb")
         self.BUILDDIRARDB = self._replace("{DIR_VAR}/build/ardb/")
 
-    def build(self, destpath="", reset=False):
-        """
-        @param destpath, if '' then will be {DIR_TEMP}/build/openssl
-        """
-        if self._done_check("build", reset):
-            return
-
-        if #j.builder.sandbox.cmd_path_get('ardb-server', die=False) and not reset:
-            return
-
-        if reset:
-            j.sal.process.execute("rm -rf %s" % self.BUILDDIR)
-
-        # not needed to build separately is done in ardb automatically
-        # self.buildForestDB(reset=reset)
-
-        self.buildARDB(reset=reset)
-        self._done_set("build")
-
     def buildForestDB(self, reset=False):
 
         if self._done_check("buildforestdb", reset):
             return
 
-        j.builder.system.package.ensure(["git-core",
-                                                 "cmake",
-                                                 "libsnappy-dev",
-                                                 "g++"])
+        j.builder.system.package.ensure(["git-core", "cmake", "libsnappy-dev", "g++"])
 
         url = "git@github.com:couchbase/forestdb.git"
         cpath = j.clients.git.pullGitRepo(url, tag="v1.2", reset=reset)
@@ -65,7 +42,29 @@ class BuilderARDB(j.builder.system._BaseClass):
         j.sal.process.execute(self._replace(C))
         self._done_set("buildforestdb")
 
-    def build(self, reset=False, storageEngine="forestdb"):
+    def build(self, destpath="", reset=False):
+        """
+        @param destpath, if '' then will be {DIR_TEMP}/build/openssl
+        j.builder.db.ardb.build()
+        """
+        j.shell()
+        if self._done_check("build", reset):
+            return
+
+        if self.tools.command_check("ardb-server") and not reset:
+            return
+
+        if reset:
+            j.sal.process.execute("rm -rf %s" % self.BUILDDIR)
+
+        # not needed to build separately is done in ardb automatically
+        # self.buildForestDB(reset=reset)
+
+        self.buildARDB(reset=reset)
+        self._done_set("build")
+
+    # TODO: which one is it ??? 2 builders
+    def build2(self, reset=False, storageEngine="forestdb"):
         """
         kosmos 'j.builder.db.ardb.build()'
 
@@ -95,8 +94,7 @@ class BuilderARDB(j.builder.system._BaseClass):
         j.builder.system.package.ensure(packages)
 
         url = "https://github.com/yinqiwen/ardb.git"
-        cpath = j.clients.git.pullGitRepo(
-            url, tag="v0.9.3", reset=reset, ssh=False)
+        cpath = j.clients.git.pullGitRepo(url, tag="v0.9.3", reset=reset, ssh=False)
         self._log_info(cpath)
 
         assert cpath.rstrip("/") == self.CODEDIRARDB.rstrip("/")
@@ -116,7 +114,7 @@ class BuilderARDB(j.builder.system._BaseClass):
 
         self._done_set("buildardb")
 
-    def install(self, name='main', host='localhost', port=16379, datadir=None, reset=False, start=True):
+    def install(self, name="main", host="localhost", port=16379, datadir=None, reset=False, start=True):
         """
         as backend use ForestDB
         """
@@ -125,13 +123,12 @@ class BuilderARDB(j.builder.system._BaseClass):
         self.buildARDB()
         j.core.tools.dir_ensure("{DIR_BIN}")
         j.core.tools.dir_ensure("$CFGDIR")
-        if not j.builder.tools.file_exists('{DIR_BIN}/ardb-server'):
-            j.builder.tools.file_copy("{DIR_VAR}/build/ardb/ardb-server",
-                                "{DIR_BIN}/ardb-server")
+        if not j.builder.tools.file_exists("{DIR_BIN}/ardb-server"):
+            j.builder.tools.file_copy("{DIR_VAR}/build/ardb/ardb-server", "{DIR_BIN}/ardb-server")
 
-        #j.builder.sandbox.profile_default.path_add('{DIR_BIN}')
+        # self.tools.profile.path_add('{DIR_BIN}')
 
-        if datadir is None or datadir == '':
+        if datadir is None or datadir == "":
             datadir = self._replace("{DIR_VAR}/data/ardb/{}".format(name))
         j.core.tools.dir_ensure(datadir)
 
@@ -139,8 +136,7 @@ class BuilderARDB(j.builder.system._BaseClass):
         # config = config.replace("redis-compatible-version  2.8.0", "redis-compatible-version  3.5.2")
         config = j.core.tools.file_text_read("{DIR_VAR}/build/ardb/ardb.conf")
         config = config.replace("${ARDB_HOME}", datadir)
-        config = config.replace(
-            "0.0.0.0:16379", '{host}:{port}'.format(host=host, port=port))
+        config = config.replace("0.0.0.0:16379", "{host}:{port}".format(host=host, port=port))
 
         cfg_path = "$CFGDIR/ardb/{}/ardb.conf".format(name)
         j.builder.tools.file_write(cfg_path, config)
@@ -150,7 +146,7 @@ class BuilderARDB(j.builder.system._BaseClass):
         if start:
             self.start(name=name, reset=reset)
 
-    def start(self, name='main', reset=False):
+    def start(self, name="main", reset=False):
         if not reset and self._done_get("start-%s" % name):
             return
 
@@ -162,7 +158,7 @@ class BuilderARDB(j.builder.system._BaseClass):
 
         self._done_set("start-%s" % name)
 
-    def stop(self, name='main'):
+    def stop(self, name="main"):
         pm = j.builder.system.processmanager.get()
         pm.stop("ardb-server-{}".format(name))
 
@@ -173,8 +169,8 @@ class BuilderARDB(j.builder.system._BaseClass):
         """
         do some test through normal redis client
         """
-        if j.builder.executor.type == 'local':
-            addr = 'localhost'
+        if j.builder.executor.type == "local":
+            addr = "localhost"
         else:
             addr = j.builder.executor.addr
 

@@ -86,10 +86,15 @@ class BuilderTraefik(j.builder.system._BaseClass):
         self.stop()
         print("TEST OK")
 
-
     @builder_method()
-    def sandbox(self, reset=False, zhub_client=None, flist_create=False, merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist"):
-        '''Copy built bins to dest_path and create flist if create_flist = True
+    def sandbox(
+        self,
+        reset=False,
+        zhub_client=None,
+        flist_create=False,
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+    ):
+        """Copy built bins to dest_path and create flist if create_flist = True
 
         :param dest_path: destination path to copy files into
         :type dest_path: str
@@ -99,20 +104,19 @@ class BuilderTraefik(j.builder.system._BaseClass):
         :type create_flist:bool
         :param zhub_client: hub instance to upload flist tos
         :type zhub_client:str
-        '''
+        """
         dest_path = self.DIR_SANDBOX
         j.builder.web.openresty.sandbox(reset=reset)
 
-        bins = ['traefik']
+        bins = ["traefik"]
         for bin_name in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
             dir_dest = self.tools.joinpaths(dest_path, j.core.dirs.BINDIR[1:])
             self.tools.dir_ensure(dir_dest)
             self._copy(dir_src, dir_dest)
 
-        lib_dest = self.tools.joinpaths(dest_path, 'sandbox/lib')
+        lib_dest = self.tools.joinpaths(dest_path, "sandbox/lib")
         self.tools.dir_ensure(lib_dest)
         for bin in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
             j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
-

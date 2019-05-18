@@ -3,6 +3,7 @@ from Jumpscale import j
 from .BuilderEtcd import BuilderEtcd
 from .BuilderMariadb import BuilderMariadb
 from .BuilderZdb import BuilderZdb
+from .BuilderARDB import BuilderARDB
 
 from .BuilderCockroachDB import BuilderCockroachDB
 from .BuilderTIDB import BuilderTIDB
@@ -22,3 +23,4 @@ class BuildDBFactory(j.builder.system._BaseFactoryClass):
         self.cockroachdb = BuilderCockroachDB()
         self.tidb = BuilderTIDB()
         self.postgres = BuilderPostgresql()
+        self.ardb = BuilderARDB()

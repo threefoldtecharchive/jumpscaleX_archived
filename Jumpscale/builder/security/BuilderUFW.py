@@ -1,11 +1,7 @@
-
 from Jumpscale import j
 
 
-
-
 class BuilderUFW(j.builder.system._BaseClass):
-
     def _init(self):
         self._ufw_allow = {}
         self._ufw_deny = {}
@@ -14,31 +10,32 @@ class BuilderUFW(j.builder.system._BaseClass):
     @property
     def ufw_enabled(self):
         if j.core.platformtype.myplatform.isMac:
-            return  False        
+            return False
         if not self._ufw_enabled:
             if not j.core.platformtype.myplatform.isMac:
-                if #j.builder.sandbox.cmd_path_get("nft", die=False) is not False:
+                if self.tools.command_check("nft") is not False:
                     self._ufw_enabled = False
                     self._log_info("cannot use ufw, nft installed")
-                if #j.builder.sandbox.cmd_path_get("ufw", die=False) is False:
+                if self.tools.command_check("ufw") is False:
                     j.builder.system.package.ensure("ufw")
-                    #j.builder.sandbox.cmd_path_get("ufw")
+                    self.tools.command_check("ufw")
                 self._ufw_enabled = "inactive" not in j.sal.process.execute("ufw status")[1]
         return self._ufw_enabled
 
     def ufw_enable(self):
         if not self.ufw_enabled:
             if not j.core.platformtype.myplatform.isMac:
-                if #j.builder.sandbox.cmd_path_get("nft", die=False) is not False:
+                if self.tools.command_check("nft", die=False) is not False:
                     self._fw_enabled = False
                     raise j.exceptions.RuntimeError("Cannot use ufw, nft installed")
-                if self.executor.type != 'local':
+                if self.executor.type != "local":
                     j.sal.process.execute("ufw allow %s" % self.executor.port)
-                j.sal.process.execute("echo \"y\" | ufw enable")
+                j.sal.process.execute('echo "y" | ufw enable')
                 self._fw_enabled = True
                 return True
-            raise j.exceptions.Input(message="cannot enable ufw, not supported or ",
-                                     level=1, source="", tags="", msgpub="")
+            raise j.exceptions.Input(
+                message="cannot enable ufw, not supported or ", level=1, source="", tags="", msgpub=""
+            )
         return True
 
     @property
@@ -69,19 +66,19 @@ class BuilderUFW(j.builder.system._BaseClass):
                 ip = line.split(" ", 1)[0]
                 self._ufw_deny[ip] = "*"
 
-    def allowIncoming(self, port, protocol='tcp'):
-        if self.ufw_enabled==False:
-            return 
+    def allowIncoming(self, port, protocol="tcp"):
+        if self.ufw_enabled == False:
+            return
         j.sal.process.execute("ufw allow %s/%s" % (port, protocol))
 
     def denyIncoming(self, port):
-        if self.ufw_enabled==False:
-            return 
+        if self.ufw_enabled == False:
+            return
         j.sal.process.execute("ufw deny %s" % port)
 
     def flush(self):
-        if self.ufw_enabled==False:
-            return          
+        if self.ufw_enabled == False:
+            return
         C = """
         ufw disable
         iptables --flush
@@ -94,8 +91,8 @@ class BuilderUFW(j.builder.system._BaseClass):
         j.sal.process.execute(C)
 
     def show(self):
-        if self.ufw_enabled==False:
-            return                 
+        if self.ufw_enabled == False:
+            return
         a = self.ufw_rules_allow
         b = self.ufw_rules_deny
         self._log_info("ALLOW")

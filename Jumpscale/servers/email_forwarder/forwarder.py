@@ -5,7 +5,6 @@ from .gsmtpd.server import SMTPServer
 import smtplib
 
 
-
 class MailForwarder(SMTPServer):
     """The class accepts a configuration in the form
     {
@@ -57,16 +56,12 @@ class MailForwarder(SMTPServer):
         self._logger = logger
         super(MailForwarder, self).__init__((self._addr_host, self._addr_port))
 
-    
     def add_forward_config(self, destination_domain, source_domains):
         """Adds a new forward configuration
         """
         self._forwarding_config.update({destination_domain: source_domains})
         self._inverted_config = self._invert_config()
 
-
-        
-    
     def process_message(self, peer, mailfrom, rcpttos, data, **kwargs):
         """Called by smtpd.SMTPServer when there's a message received.
         
@@ -92,11 +87,8 @@ class MailForwarder(SMTPServer):
             try:
                 self._deliver(mailfrom, rcpttos, data)
             except Exception as e:
-                self._logger.error("Failed to forward email. Error: {}".format(
-                    str(e)
-                ))
+                self._logger.error("Failed to forward email. Error: {}".format(str(e)))
                 raise
-    
 
     def _deliver(self, mailfrom, rcpttos, data):
         try:
@@ -108,12 +100,10 @@ class MailForwarder(SMTPServer):
             cl.sendemail(mailfrom, rcpttos, data)
             cl.close()
         except Exception as e:
-            self._logger.error("Errors while sending email to via {}. Error: {}".format(
-                self._relay_config["host"],
-                str(e)
-            ))
+            self._logger.error(
+                "Errors while sending email to via {}. Error: {}".format(self._relay_config["host"], str(e))
+            )
             raise
-
 
     def _process_addresses(self, rcpttos):
         result = []
@@ -125,7 +115,7 @@ class MailForwarder(SMTPServer):
             else:
                 self._logger.warn("Address {} does not match any of the configured doamins".format(address))
         return result
-    
+
     def _invert_config(self):
         result = {}
         for k, v in self._forwarding_config.items():
