@@ -12,15 +12,15 @@ path = os.path.join(rootdir, "InstallTools.py")
 
 if not os.path.exists(path):
     cmd = (
-        "cd %s;rm -f InstallTools.py;curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/%s/install/InstallTools.py?$RANDOM > InstallTools.py"
+        "cd %s;rm -f InstallTools.py;curl \
+        https://raw.githubusercontent.com/threefoldtech/jumpscaleX/%s/install/InstallTools.py?$RANDOM \
+        > InstallTools.py"
         % (rootdir, BRANCH)
     )
     subprocess.call(cmd, shell=True)
 
 spec = util.spec_from_file_location("IT", path)
 IT = spec.loader.load_module()
-
-IT.MyEnv._init()
 
 sys.excepthook = IT.my_excepthook
 
@@ -95,8 +95,12 @@ def ui():
     if "h" in args or args == {}:
         help()
 
-    if "reset" in args:
-        IT.Tools.shell()
+    if "3" in args:
+        readonly = True
+    else:
+        readonly = False
+
+    IT.MyEnv.init(basedir=None, config={}, readonly=True, codepath=args["codepath"])
 
     if "incontainer" not in args:
 
@@ -313,7 +317,7 @@ if "1" in args or "2" in args:
 
     force = False
     if "r" in args:
-    # remove the state
+        # remove the state
         IT.MyEnv.state_reset()
         args["pull"] = True
         force = True
@@ -321,7 +325,7 @@ if "1" in args or "2" in args:
     if "2" in args:
         raise RuntimeError("sandboxed not supported yet")
         sandboxed = True
-else:
+    else:
         sandboxed = False
 
     installer = IT.JumpscaleInstaller(branch=args["branch"])
@@ -335,14 +339,13 @@ else:
         gitpull=args["pull"],
     )
 
-    if "w" in args:
-        if "1" in args:
+    # if "w" in args:
+    #     if "1" in args:
 
-            # in system need to install the lua env
-            IT.Tools.execute(
-                "source /sandbox/env.sh;kosmos 'j.builder.runtimes.lua.install(reset=True)'", showout=False
-            )
-        print("Jumpscale X installed successfully")
+    #         #in system need to install the lua env
+    #         IT.Tools.execute("source %s/env.sh;kosmos 'j.builder.runtimes.lua.install(reset=True)'"%SANDBOX, showout=False)
+    #     IT.Tools.execute("source %s/env.sh;js_shell 'j.tools.markdowndocs.test()'"%SANDBOX, showout=False)
+    #     print("Jumpscale X installed successfully")
 
 elif "3" in args:
 
@@ -350,57 +353,18 @@ elif "3" in args:
         IT.Tools.execute("docker rm -f %s" % args["name"])
         args["container_exists"] = False
 
-    cmd = """
-
-    docker run --name {NAME} \
-    --hostname {NAME} \
-    -d \
-    -p {PORT}:22 {PORTRANGE} \
-    --device=/dev/net/tun \
-    --cap-add=NET_ADMIN --cap-add=SYS_ADMIN \
-    --cap-add=DAC_OVERRIDE --cap-add=DAC_READ_SEARCH \
-    -v {CODEDIR}:/sandbox/code {IMAGE}
-    """
-    print(" - Docker machine gets created: ")
     if "image" not in args:
         args["image"] = "phusion/baseimage:master"
+        if "hub" in args:
+            args["image"] = "despiegk/3bot"
     if not args["container_exists"]:
         if "port" not in args:
             args["port"] = 8022
-        IT.Tools.execute(
-            cmd,
-            args={
-                "CODEDIR": args["codepath"],
-                "NAME": args["name"],
-                "PORT": args["port"],
-                "PORTRANGE": args["portrange_txt"],
-                "IMAGE": args["image"],
-            },
-            interactive=True,
-        )
 
-        print(" - Docker machine OK")
-        print(" - Start SSH server")
-    else:
-        print(" - Docker machine was already there.")
-        if "default" not in docker_running():
-            IT.Tools.execute("docker start %s" % args["name"])
-            if not "default" in docker_running():
-                print("could not start container:%s" % args["name"])
-                sys.exit(1)
-            IT.Tools.shell()
-
-    SSHKEYS = IT.Tools.execute("ssh-add -L", die=False, showout=False)[1]
-    if SSHKEYS.strip() != "":
-        dexec('echo "%s" > /root/.ssh/authorized_keys' % SSHKEYS)
-
-    dexec("/usr/bin/ssh-keygen -A")
-    dexec("/etc/init.d/ssh start")
-    dexec("rm -f /etc/service/sshd/down")
-    print(" - Upgrade ubuntu")
-    dexec("apt update; apt upgrade -y; apt install mc git -y")
-
-    IT.Tools.execute("rm -f ~/.ssh/known_hosts")  # rather dirty hack
+    # docker installer
+    di = IT.Docker(
+        name="default", delete=False, portrange=1, image=args["image"], sshkey=None, baseinstall=True, cmd=None
+    )
 
     # for now only support for insystem
     args_txt = "-1"
@@ -413,14 +377,12 @@ elif "3" in args:
         if item in args:
             args_txt += " --%s='%s'" % (item, args[item])
 
-    IT.MyEnv.config["DIR_BASE"] = args["codepath"].replace("/code", "")
-
     # add install from a specific branch
     install = IT.JumpscaleInstaller(branch=args["branch"])
 
     def getbranch():
-        cmd = "cd {}/github/threefoldtech/jumpscaleX; git branch | grep \* | cut -d ' ' -f2".format(args["codepath"])
-        rc, stdout, err = IT.Tools.execute(cmd)
+        cmd = "cd {}/github/threefoldtech/jumpscaleX; git branch | grep r\* | cut -d ' ' -f2".format(args["codepath"])
+        _, stdout, _ = IT.Tools.execute(cmd)
         return stdout.strip()
 
     # check if already code exists and checkout the argument branch
@@ -441,11 +403,11 @@ elif "3" in args:
     else:
         print("no local code at {}".format(args["codepath"]))
 
-    install.repos_get()
+    install.repos_get(pull=False)
 
     cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py %s" % args_txt
     print(" - Installing jumpscaleX ")
-    sshexec(cmd)
+    di.sshexec(cmd)
 
     # dirpath = os.path.dirname(inspect.getfile(IT))
     #
@@ -467,12 +429,14 @@ elif "3" in args:
     # ssh root@localhost -A -p {port} 'source /sandbox/env.sh;kosmos'
     #
     # """
-    print(IT.Tools.text_replace(k, args=args))
+    print(k.format(port=di.port))
 
 
 """
 #TO TEST:
 python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py
+#OR
+python3 ~/code/github/threefoldtech/jumpscaleX/install/install.py
 """
 
 
