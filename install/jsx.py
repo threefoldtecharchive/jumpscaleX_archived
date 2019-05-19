@@ -32,10 +32,12 @@ def load_install_tools():
     return IT
 
 
+# DO NOT DO THIS IN ANY OTHER WAY !!!
 IT = load_install_tools()
 
 
 def install_ui(args):
+    IT.Tools.shell()
     if not IT.MyEnv.sshagent_active_check():
         T = """
         Did not find an SSH key in ssh-agent, is it ok to continue without?
@@ -94,7 +96,8 @@ def install_summary(args):
     if IT.MyEnv.sshagent_active_check():
         T += " - sshkey used will be: %s\n" % args.secret
 
-    T += " - location of code path is: %s\n" % args.code_path
+    if args.code_path:
+        T += " - location of code path is: %s\n" % args.code_path
     if args.pull:
         T += " - code will be pulled from github\n"
     if args.wiki:
@@ -140,51 +143,72 @@ def install(args):
     docker.jumpscale_install(secret=args.secret, private_key=args.private_key)
 
 
+def docker_get(existcheck=True):
+    docker = IT.Docker(name=CONTAINER_NAME, delete=False, portrange=1)
+    if existcheck and CONTAINER_NAME not in docker.docker_names():
+        print("container does not exists. please install first")
+        sys.exit(1)
+    return docker
+
+
 def import_container(args):
-    if not IT.Tools.exists(args.input):
-        print("could not find import file:%s" % args.input)
-        sys.exit(1)
-
-    if not args.input.endswith(".tar"):
-        print("export file needs to end with .tar")
-        sys.exit(1)
-
-    print("import docker:%s to %s, will take a while" % (CONTAINER_NAME, args.input))
-    IT.Tools.execute("docker import %s local/imported" % (args.input))
-    docker = IT.Docker(
-        name=CONTAINER_NAME,
-        delete=True,
-        portrange=args.port_range,
-        sshkey=args.secret,
-        image="local/imported",
-        cmd="/sbin/my_init",
-    )
+    docker = docker_get(existcheck=False)
+    docker.import_(path=args.input)
 
 
 def export_container(args):
-    docker = IT.Docker(name=CONTAINER_NAME, delete=False, portrange=1)
-    if CONTAINER_NAME not in docker.docker_names():
-        print("container does not exists. please install first")
-        sys.exit(1)
-
-    if not args.output.endswith(".tar"):
-        print("export file needs to end with .tar")
-        sys.exit(1)
-
-    print("export docker:%s to %s, will take a while" % (CONTAINER_NAME, args.output))
-    IT.Tools.execute("docker export %s -o %s" % (CONTAINER_NAME, args.output))
+    docker = docker_get()
+    docker.export(path=args.output)
 
 
 def stop_container(args):
-    IT.Tools.execute("docker stop %s" % CONTAINER_NAME)
+    docker = docker_get(existcheck=False)
+    docker.stop()
 
 
-def connect(args):
+def start_container(args):
+    docker = docker_get(existcheck=False)
+    docker.start()
+
+
+def delete_container(args):
+    docker = docker_get(existcheck=False)
+    docker.delete()
+
+
+def reset_container(args):
+    docker = docker_get()
+    docker.reset()
+
+
+def kosmos(args):
     docker = IT.Docker(name=CONTAINER_NAME, delete=False, portrange=1)
     if CONTAINER_NAME not in docker.docker_names():
         print("container does not exists. please install first")
         sys.exit(1)
-    os.execv(shutil.which("ssh"), ["ssh", "root@localhost", "-A", "-p", str(docker.port)])
+    os.execv(
+        shutil.which("ssh"),
+        [
+            "ssh",
+            "root@localhost",
+            "-A",
+            "-t",
+            "-oStrictHostKeyChecking=no",
+            "-p",
+            str(docker.port),
+            "source /sandbox/env.sh;kosmos",
+        ],
+    )
+
+
+def shell(args):
+    docker = IT.Docker(name=CONTAINER_NAME, delete=False, portrange=1)
+    if CONTAINER_NAME not in docker.docker_names():
+        print("container does not exists. please install first")
+        sys.exit(1)
+    os.execv(
+        shutil.which("ssh"), ["ssh", "root@localhost", "-A", "-t", "-oStrictHostKeyChecking=no", "-p", str(docker.port)]
+    )
 
 
 if __name__ == "__main__":
@@ -192,7 +216,7 @@ if __name__ == "__main__":
     parser.add_argument("--debug", help="launch the debugger if something goes wrong")
     parser.add_argument(
         "--code-path",
-        default=DEFAULT_CODEPATH,
+        default=None,
         type=str,
         help="path where the github code will be checked out, default /sandbox/code if it exists otherwise ~/code",
     )
@@ -261,15 +285,17 @@ if __name__ == "__main__":
     )
     parser_install.set_defaults(func=install)
 
+    ##EXPORT
     parser_export = subparsers.add_parser("export", help="export the 3bot container to a tar archive")
     parser_export.add_argument(
         "--output", "-o", help="export the container to a file pointed by --output", default="/tmp/3bot.tar"
     )
     parser_export.set_defaults(func=export_container)
 
+    ##IMPORT
     parser_import = subparsers.add_parser(
         "import",
-        help="re-create a 3bot container from an archive created wit the export command",
+        help="re-create a 3bot container from an archive created with the export command",
         parents=[docker_parser],
     )
     parser_import.add_argument(
@@ -277,11 +303,28 @@ if __name__ == "__main__":
     )
     parser_import.set_defaults(func=import_container)
 
+    ##STOP START DELETE RESET
     parser_stop = subparsers.add_parser("stop", help="stop the 3bot container")
     parser_stop.set_defaults(func=stop_container)
 
-    parser_connect = subparsers.add_parser("connect", help="ssh into the container", parents=[docker_parser])
-    parser_connect.set_defaults(func=connect)
+    parser_start = subparsers.add_parser("start", help="start the 3bot container")
+    parser_start.set_defaults(func=start_container)
+
+    parser_delete = subparsers.add_parser("delete", help="delete the 3bot container")
+    parser_delete.set_defaults(func=delete_container)
+
+    parser_reset = subparsers.add_parser("resetall", help="reset the 3bot container (delete all images & containers")
+    parser_reset.set_defaults(func=reset_container)
+
+    ##KOSMOS
+    parser_connect = subparsers.add_parser(
+        "kosmos", help="get kosmos shell (runs in container)", parents=[docker_parser]
+    )
+    parser_connect.set_defaults(func=kosmos)
+
+    ##SHELL
+    parser_connect = subparsers.add_parser("shell", help="ssh into the container", parents=[docker_parser])
+    parser_connect.set_defaults(func=shell)
 
     args = parser.parse_args()
 
@@ -289,6 +332,7 @@ if __name__ == "__main__":
 
     if "func" not in args:
         print("please specify a command e.g. install, if you need more help use -h")
+        print("example to install:   jsx install -s -y -c")
         sys.exit(1)
 
     args.func(args)

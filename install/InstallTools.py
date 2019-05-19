@@ -1762,7 +1762,6 @@ class MyEnv:
     @staticmethod
     def sshagent_key_get():
         """
-        check if the ssh agent is active
         :return:
         """
         if not MyEnv.sshagent_active_check():
@@ -2442,9 +2441,7 @@ class JumpscaleInstaller:
 
 
 class Docker:
-    def __init__(
-        self, name="default", delete=False, portrange=1, image="despiegk/3bot", sshkey=None, baseinstall=True, cmd=None
-    ):
+    def __init__(self, name="default", delete=False, portrange=1, image="despiegk/3bot"):
         """
         if you want to start from scratch use: "phusion/baseimage:master"
 
@@ -2458,8 +2455,7 @@ class Docker:
         MyEnv._init()
         self.name = name
 
-        if not sshkey:
-            sshkey = MyEnv.sshagent_key_get()
+        sshkey = MyEnv.sshagent_key_get()
 
         if MyEnv.platform() == "linux" and not Tools.cmd_installed("docker"):
             UbuntuInstaller.docker_install()
@@ -2468,18 +2464,27 @@ class Docker:
             print("Could not find Docker installed")
             sys.exit(1)
 
-        container_exists = name in self.docker_names()
+        self.container_exists = name in self.docker_names()
 
-        if container_exists and delete:
-            Tools.execute("docker rm -f %s" % name)
-            container_exists = False
+        if self.container_exists and delete:
+            self.delete()
 
-        a = 8000 + int(portrange) * 10
-        b = 8004 + int(portrange) * 10
+        self.portrange = portrange
+
+    def install(self, baseinstall=True, cmd=None):
+        """
+
+        :param baseinstall: is yes will upgrade the ubuntu
+        :param cmd: execute additional command after start
+        :return:
+        """
+
+        a = 8000 + int(self.portrange) * 10
+        b = 8004 + int(self.portrange) * 10
         portrange_txt = "%s-%s:8000-8004" % (a, b)
         portrange_txt += " -p %s:9999/udp" % (a + 9)  # udp port for wireguard
 
-        port = 9000 + int(portrange) * 100 + 22
+        port = 9000 + int(self.portrange) * 100 + 22
         self.port = port
 
         args = {}
@@ -2488,14 +2493,17 @@ class Docker:
         args["PORT"] = port
         args["IMAGE"] = image
 
-        if not container_exists:
+        if not self.container_exists:
+            Tools.shell()
             run_cmd = """
             docker run --name={NAME} --hostname={NAME} -d \
             -p {PORT}:22 {PORTRANGE} \
             --device=/dev/net/tun \
             --cap-add=NET_ADMIN --cap-add=SYS_ADMIN \
             --cap-add=DAC_OVERRIDE --cap-add=DAC_READ_SEARCH \
-            -v {DIR_CODE}:/sandbox/code {IMAGE}
+            -v {DIR_CODE}:/sandbox/code \
+            -v {DIR_BASE}/var/sandbox_var:/sandbox/var \
+            {IMAGE}
             """
             if cmd:
                 run_cmd = run_cmd.strip() + " %s\n" % cmd
@@ -2572,6 +2580,50 @@ class Docker:
         ].split("\n")
         names = [i.strip("\"'") for i in names if i.strip() != ""]
         return names
+
+    def stop(self):
+        Tools.shell()
+        Tools.execute("docker stop %s" % self.name)
+
+    def start(self):
+        Tools.execute("docker start %s" % self.name)
+
+    def delete(self):
+        Tools.execute("docker rm -f %s" % self.name)
+        self.container_exists = False
+
+    def reset(self):
+        self.delete()
+        Tools.shell()
+
+    def import_(self, path="/tmp/3bot.tar"):
+        Tools.shell()
+
+        if not IT.Tools.exists(args.input):
+            print("could not find import file:%s" % args.input)
+            sys.exit(1)
+
+        if not args.input.endswith(".tar"):
+            print("export file needs to end with .tar")
+            sys.exit(1)
+
+        print("import docker:%s to %s, will take a while" % (CONTAINER_NAME, args.input))
+        IT.Tools.execute("docker import %s local/imported" % (args.input))
+        docker = IT.Docker(
+            name=CONTAINER_NAME,
+            delete=True,
+            portrange=self.port_range,
+            sshkey=args.secret,
+            image="local/imported",
+            cmd="/sbin/my_init",
+        )
+
+    def export(self, path="/tmp/3bot.tar"):
+        if not path.endswith(".tar"):
+            print("export file needs to end with .tar")
+            sys.exit(1)
+        print("export docker:%s to %s, will take a while" % (CONTAINER_NAME, args.output))
+        Tools.execute("docker export %s -o %s" % (CONTAINER_NAME, args.output))
 
     def jumpscale_install(self, secret="1234", private_key="", redo=False, wiki=False):
 
