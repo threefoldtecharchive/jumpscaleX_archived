@@ -1676,7 +1676,7 @@ class MyEnv:
                 if Tools.exists("/sandbox/code"):
                     config["DIR_CODE"] = "/sandbox/code"
                 else:
-                config["DIR_CODE"] = "%s/code" % dir_home
+                    config["DIR_CODE"] = "%s/code" % dir_home
             else:
                 config["DIR_CODE"] = "%s/code" % config["DIR_BASE"]
         if not "DIR_BIN" in config:
