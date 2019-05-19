@@ -2,25 +2,25 @@ from importlib import util
 import os
 import subprocess
 import sys
-import InstallTools as IT
 
 BRANCH = "development"
 
 # get current install.py directory
 rootdir = os.path.dirname(os.path.abspath(__file__))
 
-""" path = os.path.join(rootdir, "InstallTools.py")
+path = os.path.join(rootdir, "InstallTools.py")
 
 if not os.path.exists(path):
     cmd = (
         "cd %s;rm -f InstallTools.py;curl \
         https://raw.githubusercontent.com/threefoldtech/jumpscaleX/%s/install/InstallTools.py?$RANDOM \
-        > InstallTools.py" % (rootdir, BRANCH)
+        > InstallTools.py"
+        % (rootdir, BRANCH)
     )
     subprocess.call(cmd, shell=True)
 
 spec = util.spec_from_file_location("IT", path)
-IT = spec.loader.load_module() """
+IT = spec.loader.load_module()
 
 sys.excepthook = IT.my_excepthook
 
@@ -96,9 +96,11 @@ def ui():
         help()
 
     if "3" in args:
-        IT.MyEnv.init(basedir=None, config={}, readonly=True, codepath=args["codepath"])
+        readonly = True
     else:
-        IT.MyEnv.init(basedir=None, config={}, readonly=False, codepath=args["codepath"])
+        readonly = False
+
+    IT.MyEnv.init(basedir=None, config={}, readonly=True, codepath=args["codepath"])
 
     if "incontainer" not in args:
 
