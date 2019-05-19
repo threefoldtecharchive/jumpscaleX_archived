@@ -322,7 +322,8 @@ class BuilderBaseClass(BaseClass):
             showout=showout,
         )
 
-    def _copy(self, src, dst, deletefirst=False, ignoredir=None, ignorefiles=None, deleteafter=False, keepsymlink=True):
+    def _copy(self, src, dst, deletefirst=False, ignoredir=None, ignorefiles=None, deleteafter=False, keepsymlink=True,
+              overwrite=True):
         """
 
         :param src:
@@ -349,7 +350,7 @@ class BuilderBaseClass(BaseClass):
                 createdir=True,
             )
         else:
-            j.builder.tools.file_copy(src, dst, recursive=False, overwrite=True)
+            j.builder.tools.file_copy(src, dst, recursive=False, overwrite=overwrite)
 
     def _write(self, path, txt):
         """
