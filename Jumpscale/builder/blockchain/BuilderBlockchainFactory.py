@@ -18,3 +18,7 @@ class BuilderBlockchainFactory(j.builder.system._BaseFactoryClass):
         from .BuilderBitcoin import BuilderBitcoin
 
         self.bitcoin = BuilderBitcoin()
+
+        from .BuilderRipple import BuilderRipple
+
+        self.ripple = BuilderRipple()
