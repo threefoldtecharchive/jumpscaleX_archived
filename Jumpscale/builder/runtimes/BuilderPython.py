@@ -227,7 +227,7 @@ class BuilderPython(j.builder.system._BaseClass):
         # self.pip_package_install(['cython', 'setuptools', 'pycapnp'])  #DOES NOT WORK YET
 
         # list comes from /sandbox/code/github/threefoldtech/jumpscale_core/install/InstallTools.py
-        self.pip_package_install(j.core.installer_ubuntu.pips_list(0))
+        self.pip_package_install(j.core.installer_base.pips_list(0))
 
         if not self.tools.isMac:
             # TODO: implement zerostor builder and use it
@@ -501,57 +501,3 @@ class BuilderPython(j.builder.system._BaseClass):
         assert self._execute('{DIR_BUILD}/bin/python3 -c "import ssl"')[0] == 0
 
         print("TEST OK")
-
-    #
-    #
-    # def pip_ensure(self):
-    #
-    #     tmpdir = j.core.tools.text_replace("{DIR_TEMP}")
-    #     cmd1 = """
-    #         #important remove olf pkg_resources, will conflict with new pip
-    #         rm -rf /usr/lib/python3/dist-packages/pkg_resources
-    #         cd %s/
-    #         rm -rf get-pip.py
-    #         """ % tmpdir
-    #     self.tools.execute_bash(cmd1)
-    #     #TODO: this does not seem to work everywhere, lets check on Ubuntu 1804 & OSX
-    #     cmd2 = "cd %s/ && curl https://bootstrap.pypa.io/get-pip.py >  get-pip.py" % tmpdir
-    #     self._execute(cmd2)
-    #     cmd3 = "python3 %s/get-pip.py" % tmpdir
-    #     self._execute(cmd3)
-    #
-
-    #
-    # def pip_package_install(self, package=None, upgrade=True,reset=False):
-    #     '''
-    #     The "package" argument, defines the name of the package that will be installed.
-    #
-    #     package can be list or comma separated list of packages as well
-    #
-    #     '''
-    #     self.ensure()
-    #     packages = j.core.text.getList(package, "str")
-    #
-    #     cmd = ""
-    #
-    #     todo = []
-    #     for package in packages:
-    #         if reset or not self._done_get("pip_%s" % package):
-    #             todo.append(package)
-    #             if self.tools.isArch:
-    #                 if package in ["credis", "blosc", "psycopg2"]:
-    #                     continue
-    #
-    #             if self.tools.isCygwin and package in ["psycopg2", "psutil", "zmq"]:
-    #                 continue
-    #
-    #             cmd += "pip3 install %s" % package
-    #             if upgrade:
-    #                 cmd += " --upgrade"
-    #             cmd += "\n"
-    #
-    #     if len(todo) > 0:
-    #         j.sal.process.execute(cmd)
-    #
-    #     for package in todo:
-    #         self._done_set("pip_%s" % package)
