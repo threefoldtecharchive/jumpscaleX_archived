@@ -3,22 +3,25 @@ import os
 import subprocess
 import sys
 import InstallTools as IT
+
 BRANCH = "master"
 
 # get current install.py directory
 rootdir = os.path.dirname(os.path.abspath(__file__))
 
-""" path = os.path.join(rootdir, "InstallTools.py")
+path = os.path.join(rootdir, "InstallTools.py")
 
 if not os.path.exists(path):
     cmd = (
-        "cd %s;rm -f InstallTools.py;curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/%s/install/InstallTools.py?$RANDOM > InstallTools.py"
+        "cd %s;rm -f InstallTools.py;curl \
+        https://raw.githubusercontent.com/threefoldtech/jumpscaleX/%s/install/InstallTools.py?$RANDOM \
+        > InstallTools.py"
         % (rootdir, BRANCH)
     )
     subprocess.call(cmd, shell=True)
 
 spec = util.spec_from_file_location("IT", path)
-IT = spec.loader.load_module() """
+IT = spec.loader.load_module()
 
 sys.excepthook = IT.my_excepthook
 
@@ -94,9 +97,11 @@ def ui():
         help()
 
     if "3" in args:
-        IT.MyEnv.init(basedir=None, config={}, readonly=True, codepath=args["codepath"])
+        readonly = True
     else:
-        IT.MyEnv.init(basedir=None, config={}, readonly=False, codepath=args["codepath"])
+        readonly = False
+
+    IT.MyEnv.init(basedir=None, config={}, readonly=True, codepath=args["codepath"])
 
     if "incontainer" not in args:
 
@@ -345,7 +350,73 @@ if "1" in args or "2" in args:
 
 elif "3" in args:
 
-    j.shell()
+    if args["container_exists"] and "d" in args:
+        IT.Tools.execute("docker rm -f %s" % args["name"])
+        args["container_exists"] = False
+
+    if "image" not in args:
+        args["image"] = "phusion/baseimage:master"
+        if "hub" in args:
+            args["image"] = "despiegk/3bot"
+    if not args["container_exists"]:
+        if "port" not in args:
+            args["port"] = 8022
+
+    # docker installer
+    di = IT.Docker(
+        name="default", delete=False, portrange=1, image=args["image"], sshkey=None, baseinstall=True, cmd=None
+    )
+
+    # for now only support for insystem
+    args_txt = "-1"
+    for item in ["r", "p", "w"]:
+        if item in args:
+            args_txt += " -%s" % item
+    args_txt += " -y"
+    # args_txt+=" -c"
+    for item in ["codepath", "secret", "private_key", "debug"]:
+        if item in args:
+            args_txt += " --%s='%s'" % (item, args[item])
+
+    # add install from a specific branch
+    install = IT.JumpscaleInstaller(branch=args["branch"])
+
+    def getbranch():
+        cmd = "cd {}/github/threefoldtech/jumpscaleX; git branch | grep r\* | cut -d ' ' -f2".format(args["codepath"])
+        _, stdout, _ = IT.Tools.execute(cmd)
+        return stdout.strip()
+
+    # check if already code exists and checkout the argument branch
+    if os.path.exists("{}/github/threefoldtech/jumpscaleX".format(args["codepath"])):
+        if getbranch() != args["branch"]:
+            print("found JS on machine, Checking out branch {}...".format(args["branch"]))
+            IT.Tools.execute(
+                """cd {}/github/threefoldtech/jumpscaleX
+                        git remote set-branches origin '*'
+                        git fetch -v
+                        git checkout {} -f
+                        git pull""".format(
+                    args["codepath"], args["branch"]
+                )
+            )
+
+        print("On {} branch".format(args["branch"]))
+    else:
+        print("no local code at {}".format(args["codepath"]))
+
+    install.repos_get(pull=False)
+
+    cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py %s" % args_txt
+    print(" - Installing jumpscaleX ")
+    di.sshexec(cmd)
+
+    # dirpath = os.path.dirname(inspect.getfile(IT))
+    #
+    # for item in ["install.py","InstallTools.py"]:
+    #     src1 = "%s/%s"%(dirpath,item)
+    #     cmd = "scp -P %s %s root@localhost:/tmp/" %(args["port"],src1)
+    #     IT.Tools.execute(cmd)
+    # cmd = "cd /tmp;python3 install.py -1 -y"
 
     k = """
 
@@ -359,8 +430,7 @@ elif "3" in args:
     # ssh root@localhost -A -p {port} 'source /sandbox/env.sh;kosmos'
     #
     # """
-    print(IT.Tools.text_replace(k, args=args))
-
+    print(k.format(port=di.port))
 
 """
 #TO TEST:
