@@ -1,5 +1,6 @@
 from .GoogleCompute import GoogleCompute
 from Jumpscale import j
+
 JSBASE = j.application.JSFactoryBaseClass
 
 

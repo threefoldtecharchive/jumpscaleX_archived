@@ -1,5 +1,5 @@
 
-latex="""
+latex = '''
 \documentclass{article}
 
     \usepackage{listings}
@@ -35,4 +35,4 @@ latex="""
     import pylatex.config as cf
     \end{lstlisting}
     \end{document}
-"""
+'''

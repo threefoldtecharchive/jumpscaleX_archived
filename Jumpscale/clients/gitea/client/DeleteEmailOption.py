@@ -8,8 +8,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class DeleteEmailOption(object):
     """
     auto-generated. don't touch.
@@ -27,14 +25,14 @@ class DeleteEmailOption(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'DeleteEmailOption'
+        class_name = "DeleteEmailOption"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.emails = client_support.set_property('emails', data, data_types, False, [], True, False, class_name)
+        self.emails = client_support.set_property("emails", data, data_types, False, [], True, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

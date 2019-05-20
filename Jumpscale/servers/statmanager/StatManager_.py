@@ -1,9 +1,9 @@
-
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
-class StatManager(j.application.JSBaseClass):
 
+class StatManager(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
         self.inited = False
@@ -210,7 +210,8 @@ class StatManager(j.application.JSBaseClass):
                 epoch = now
             else:
                 j.errorhandler.raiseMonitoringError(
-                    "Line '%s' not well constructed, cannot process monitoring stat info", id)
+                    "Line '%s' not well constructed, cannot process monitoring stat info", id
+                )
                 continue
             id = str(id.lower())
             if value.find(".") != -1:

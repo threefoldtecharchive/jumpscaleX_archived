@@ -2,26 +2,25 @@ from Jumpscale import j
 from .GiteaRepo import GiteaRepo
 
 default_labels = [
-    {'color': '#e11d21', 'name': 'priority_critical'},
-    {'color': '#f6c6c7', 'name': 'priority_major'},
-    {'color': '#f6c6c7', 'name': 'priority_minor'},
-    {'color': '#d4c5f9', 'name': 'process_duplicate'},
-    {'color': '#d4c5f9', 'name': 'process_wontfix'},
-    {'color': '#bfe5bf', 'name': 'state_inprogress'},
-    {'color': '#bfe5bf', 'name': 'state_question'},
-    {'color': '#bfe5bf', 'name': 'state_verification'},
-    {'color': '#fef2c0', 'name': 'type_bug'},
-    {'color': '#fef2c0', 'name': 'type_task'},
-    {'color': '#fef2c0', 'name': 'type_story'},
-    {'color': '#fef2c0', 'name': 'type_feature'},
-    {'color': '#fef2c0', 'name': 'type_question'}
+    {"color": "#e11d21", "name": "priority_critical"},
+    {"color": "#f6c6c7", "name": "priority_major"},
+    {"color": "#f6c6c7", "name": "priority_minor"},
+    {"color": "#d4c5f9", "name": "process_duplicate"},
+    {"color": "#d4c5f9", "name": "process_wontfix"},
+    {"color": "#bfe5bf", "name": "state_inprogress"},
+    {"color": "#bfe5bf", "name": "state_question"},
+    {"color": "#bfe5bf", "name": "state_verification"},
+    {"color": "#fef2c0", "name": "type_bug"},
+    {"color": "#fef2c0", "name": "type_task"},
+    {"color": "#fef2c0", "name": "type_story"},
+    {"color": "#fef2c0", "name": "type_feature"},
+    {"color": "#fef2c0", "name": "type_question"},
 ]
 
 JSBASE = j.application.JSBaseClass
 
 
 class GiteaOrg(j.application.JSBaseClass):
-
     def __init__(self, client, name):
         JSBASE.__init__(self)
         self.name = name
@@ -38,6 +37,7 @@ class GiteaOrg(j.application.JSBaseClass):
             for item in self.client.api.orgs.orgListRepos(self.name)[0]:
                 res[item.name] = item
             return res
+
         return self._cache.get("orgs", method=do, refresh=refresh, expire=60)
 
     def repos_list(self, refresh=False):
@@ -81,11 +81,11 @@ class GiteaOrg(j.application.JSBaseClass):
 
         self._log_info("repo:new:%s" % name)
         if name in self._repos_get().keys():
-            self._log_debug("no need to create repo on gitea, exists:%s"%name)
+            self._log_debug("no need to create repo on gitea, exists:%s" % name)
             return self._repos_get()[name]
         else:
 
-            data = {'name': name}
+            data = {"name": name}
             return self.client.api.org.createOrgRepo(data, org=self.name)
 
     def labels_milestones_add(self, labels=default_labels, remove_old=False):

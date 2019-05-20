@@ -40,8 +40,9 @@ class ExecutorBase(j.application.JSBaseClass):
 
         """
 
-        return j.core.tools.text_strip(content=content, ignorecomments=ignorecomments, args=args,
-                                       args_replace=args_replace, executor=self)
+        return j.core.tools.text_strip(
+            content=content, ignorecomments=ignorecomments, args=args, args_replace=args_replace, executor=self
+        )
 
     def replace(self, content, args=None):
         """
@@ -137,14 +138,7 @@ class ExecutorBase(j.application.JSBaseClass):
         out = "\n".join(out.split("\n")[:-1]).rstrip() + "\n"
         return out
 
-    def commands_transform(
-            self,
-            cmds,
-            die=True,
-            checkok=False,
-            env={},
-            sudo=False,
-            shell=False):
+    def commands_transform(self, cmds, die=True, checkok=False, env={}, sudo=False, shell=False):
         # print ("TRANSF:%s"%cmds)
 
         if sudo or shell:
@@ -182,8 +176,8 @@ class ExecutorBase(j.application.JSBaseClass):
         cmds = "%s\n%s" % (pre, cmds)
 
         if checkok and multicommand:
-            if not cmds.endswith('\n'):
-                cmds += '\n'
+            if not cmds.endswith("\n"):
+                cmds += "\n"
             cmds += "echo '**OK**'"
 
         if "\n" in cmds:
@@ -203,15 +197,7 @@ class ExecutorBase(j.application.JSBaseClass):
         raise NotImplemented()
 
     # interface to implement by child classes
-    def execute(
-            self,
-            cmds,
-            die=True,
-            checkok=None,
-            showout=True,
-            timeout=0,
-            env={},
-            sudo=False):
+    def execute(self, cmds, die=True, checkok=None, showout=True, timeout=0, env={}, sudo=False):
         raise NotImplementedError()
 
     def executeRaw(self, cmd, die=True, showout=False):
@@ -219,11 +205,12 @@ class ExecutorBase(j.application.JSBaseClass):
 
     @property
     def isDebug(self):
-        return self.state.configGetFromDict(
-            "system", "debug") == "1" or self.state.configGetFromDict(
-            "system", "debug") == 1 or self.state.configGetFromDict(
-            "system", "debug") or self.state.configGetFromDict(
-            "system", "debug") == "true"
+        return (
+            self.state.configGetFromDict("system", "debug") == "1"
+            or self.state.configGetFromDict("system", "debug") == 1
+            or self.state.configGetFromDict("system", "debug")
+            or self.state.configGetFromDict("system", "debug") == "true"
+        )
 
     @property
     def isContainer(self):
@@ -295,7 +282,7 @@ class ExecutorBase(j.application.JSBaseClass):
             export
             echo --TEXT--
             """
-            C = j.core.text.strip(C,args=self.__dict__)
+            C = j.core.text.strip(C, args=self.__dict__)
 
             rc, out, err = self.execute(C, showout=False, sudo=False, replace=False)
             res = {}
@@ -319,7 +306,7 @@ class ExecutorBase(j.application.JSBaseClass):
                 if "=" in line:
                     varname, val = line.split("=", 1)
                     varname = varname.strip().lower()
-                    val = str(val).strip().strip("\"")
+                    val = str(val).strip().strip('"')
                     if val.lower() in ["1", "true"]:
                         val = True
                     elif val.lower() in ["0", "false"]:
@@ -345,7 +332,7 @@ class ExecutorBase(j.application.JSBaseClass):
                     continue
                 if "=" in line:
                     pname, pval = line.split("=", 1)
-                    pval = pval.strip("'").strip("\"")
+                    pval = pval.strip("'").strip('"')
                     envdict[pname.strip()] = pval.strip()
 
             res["env"] = envdict
@@ -413,30 +400,26 @@ class ExecutorBase(j.application.JSBaseClass):
     def sudo_cmd(self, command):
 
         if "\n" in command:
-            raise RuntimeError(
-                "cannot do sudo when multiline script:%s" %
-                command)
+            raise RuntimeError("cannot do sudo when multiline script:%s" % command)
 
-        if hasattr(self, 'sshclient'):
-            login = self.sshclient.config.data['login']
-            passwd = self.sshclient.config.data['passwd_']
+        if hasattr(self, "sshclient"):
+            login = self.sshclient.config.data["login"]
+            passwd = self.sshclient.config.data["passwd_"]
         else:
-            login = getattr(self, 'login', '')
-            passwd = getattr(self, 'passwd', '')
+            login = getattr(self, "login", "")
+            passwd = getattr(self, "passwd", "")
 
         if "darwin" in self.platformtype.osname:
             return command
-        if login == 'root':
+        if login == "root":
             return command
 
-        passwd = passwd or "\'\'"
+        passwd = passwd or "''"
 
-        cmd = 'echo %s | sudo -H -SE -p \'\' bash -c "%s"' % (
-            passwd, command.replace('"', '\\"'))
+        cmd = "echo %s | sudo -H -SE -p '' bash -c \"%s\"" % (passwd, command.replace('"', '\\"'))
         return cmd
 
-    def file_write(self, path, content, mode=None, owner=None, group=None,
-                   append=False, sudo=False, showout=True):
+    def file_write(self, path, content, mode=None, owner=None, group=None, append=False, sudo=False, showout=True):
         """
         @param append if append then will add to file
 
@@ -450,12 +433,11 @@ class ExecutorBase(j.application.JSBaseClass):
         if len(content) > 100000:
             # when contents are too big, bash will crash
             temp = j.sal.fs.getTempFileName()
-            j.sal.fs.writeFile(filename=temp, contents=content,
-                               append=False)
+            j.sal.fs.writeFile(filename=temp, contents=content, append=False)
             self.upload(temp, path, showout=showout)
             j.sal.fs.remove(temp)
         else:
-            content2 = content.encode('utf-8')
+            content2 = content.encode("utf-8")
             # sig = hashlib.md5(content2).hexdigest()
             parent = j.sal.fs.getParent(path)
             cmd = "set -e;mkdir -p %s\n" % parent
@@ -471,11 +453,11 @@ class ExecutorBase(j.application.JSBaseClass):
                 cmd += "> %s\n" % path
 
             if mode:
-                cmd += 'chmod %s %s\n' % (mode, path)
+                cmd += "chmod %s %s\n" % (mode, path)
             if owner:
-                cmd += 'chown %s %s\n' % (owner, path)
+                cmd += "chown %s %s\n" % (owner, path)
             if group:
-                cmd += 'chgrp %s %s\n' % (group, path)
+                cmd += "chgrp %s %s\n" % (group, path)
 
             # if sig != self.file_md5(location):
             if sudo and self.type == "ssh":

@@ -51,8 +51,7 @@ class TextFileEditor(j.application.JSBaseClass):
         if excludes == "":
             excludes = []  # match none
         for line in self.content.split("\n"):
-            if j.data.regex.matchMultiple(
-                    includes, line) and not j.data.regex.matchMultiple(excludes, line):
+            if j.data.regex.matchMultiple(includes, line) and not j.data.regex.matchMultiple(excludes, line):
                 result.append(line)
                 linenrfound = linenr
                 linefound = line
@@ -60,11 +59,10 @@ class TextFileEditor(j.application.JSBaseClass):
 
         if len(result) == 0:
             raise j.exceptions.RuntimeError(
-                "Could not find a line matching %s and not matching %s in file %s" %
-                (includes, excludes, self.filepath))
+                "Could not find a line matching %s and not matching %s in file %s" % (includes, excludes, self.filepath)
+            )
         if len(result) > 1:
-            raise j.exceptions.RuntimeError(
-                "Found more than 1 line matching %s" % (includes, self.filepath))
+            raise j.exceptions.RuntimeError("Found more than 1 line matching %s" % (includes, self.filepath))
         return [linenrfound, linefound]
 
     def replaceLinesFromFunction(self, replaceFunction, argument, includes="", excludes=""):
@@ -78,8 +76,7 @@ class TextFileEditor(j.application.JSBaseClass):
 
         """
         # TODO: add good logging statements everywhere   (id:49)
-        self.content = j.data.regex.replaceLines(
-            replaceFunction, argument, self.content, includes, excludes)
+        self.content = j.data.regex.replaceLines(replaceFunction, argument, self.content, includes, excludes)
         self.save()
 
     def replace1LineFromFunction(self, replaceFunction, argument, includes="", excludes=""):
@@ -87,10 +84,8 @@ class TextFileEditor(j.application.JSBaseClass):
         same as with replaceLinesFromFunction, but only 1 line will be matched
 
         """
-        self.find1Line(
-            includes, excludes)  # make sure only 1 line can match otherwise error will be raised
-        self.replaceLinesFromFunction(
-            replaceFunction, argument, includes, excludes)
+        self.find1Line(includes, excludes)  # make sure only 1 line can match otherwise error will be raised
+        self.replaceLinesFromFunction(replaceFunction, argument, includes, excludes)
         self.save()
 
     def replace1Line(self, newcontent, includes="", excludes=""):
@@ -100,8 +95,7 @@ class TextFileEditor(j.application.JSBaseClass):
         both are arrays
         replace matching lines with new content
         """
-        self.find1Line(
-            includes, excludes)  # make sure only 1 line can match otherwise error will be raised
+        self.find1Line(includes, excludes)  # make sure only 1 line can match otherwise error will be raised
         self.replaceLines(newcontent, includes, excludes)
         self.save()
 
@@ -112,8 +106,10 @@ class TextFileEditor(j.application.JSBaseClass):
         both are arrays
         replace matching lines with new content
         """
+
         def replfunc(newline, line):
             return newcontent
+
         self.replaceLinesFromFunction(replfunc, newcontent, includes, excludes)
         self.save()
 
@@ -155,15 +151,12 @@ class TextFileEditor(j.application.JSBaseClass):
         """
         content = content.strip()
         lineEditor = self.getTextLineEditor()
-        lineEditor.matchBlocks("main", ["### %s" % sectionName], [], [
-                               "###END %s" % sectionName], [])
+        lineEditor.matchBlocks("main", ["### %s" % sectionName], [], ["###END %s" % sectionName], [])
 
         if not lineEditor.existsBlock("main"):
-            lineEditor.addBlock("main", "### %s\n%s\n###END %s\n" %
-                                (sectionName, content, sectionName))
+            lineEditor.addBlock("main", "### %s\n%s\n###END %s\n" % (sectionName, content, sectionName))
         else:
-            lineEditor.replaceBlock("main", "### %s\n%s\n###END %s\n" % (
-                sectionName, content, sectionName))
+            lineEditor.replaceBlock("main", "### %s\n%s\n###END %s\n" % (sectionName, content, sectionName))
 
         lineEditor.save()
         self.content = j.sal.fs.readFile(self.filepath)
@@ -175,8 +168,7 @@ class TextFileEditor(j.application.JSBaseClass):
         delete that part
         """
         lineEditor = self.getTextLineEditor()
-        lineEditor.matchBlocks("main", ["### %s" % sectionName], [], [
-                               "###END %s" % sectionName], [])
+        lineEditor.matchBlocks("main", ["### %s" % sectionName], [], ["###END %s" % sectionName], [])
         lineEditor.deleteBlock("main")
         lineEditor.save()
         self.content = j.sal.fs.readFile(self.filepath)
@@ -191,8 +183,7 @@ class TextFileEditor(j.application.JSBaseClass):
         @param regexFindsubsetToReplace: The subset within regexFind that you want to replace
         @param replacewith: The replacement
         """
-        self.content = j.data.regex.replace(
-            regexFind, regexFindsubsetToReplace, replaceWith, self.content)
+        self.content = j.data.regex.replace(regexFind, regexFindsubsetToReplace, replaceWith, self.content)
         self.save()
 
     def replaceNonRegex(self, tofind, replaceWith):
@@ -211,13 +202,15 @@ class TextFileEditor(j.application.JSBaseClass):
         for line in self.content.split("\n"):
             if reset and done is False and line.find(tofind) != -1 and ignoreRegex is not None:
                 # found right line
-                line = j.data.regex.replace(
-                    ignoreRegex, ignoreRegex, "", line).rstrip()
+                line = j.data.regex.replace(ignoreRegex, ignoreRegex, "", line).rstrip()
                 line = line + add
                 self._log_debug(("CH:%s" % line))
                 done = True
-            if done is False and line.find(tofind) != -1 and  \
-               (ignoreRegex is not None and not j.data.regex.match(ignoreRegex, line)):
+            if (
+                done is False
+                and line.find(tofind) != -1
+                and (ignoreRegex is not None and not j.data.regex.match(ignoreRegex, line))
+            ):
                 # found line we can change
                 line = line.replace(tofind, tofind + add)
                 done = True
@@ -236,6 +229,5 @@ class TextFileEditor(j.application.JSBaseClass):
         if filepath is None:
             filepath = self.filepath
         if filepath is None:
-            raise j.exceptions.RuntimeError(
-                "Cannot write the textfile because path is None")
+            raise j.exceptions.RuntimeError("Cannot write the textfile because path is None")
         j.sal.fs.writeFile(filepath, self.content)

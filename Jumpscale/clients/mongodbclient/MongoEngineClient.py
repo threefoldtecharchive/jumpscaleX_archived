@@ -1,5 +1,6 @@
 from Jumpscale import j
 from mongoengine import connect
+
 JSConfigClient = j.application.JSBaseConfigClass
 
 
@@ -24,5 +25,5 @@ class MongoEngineClient(JSConfigClient):
         data = self.data
         for key, value in data._ddict.items():
             if value != "":
-                kwargs[key.rstrip('_')] = value
+                kwargs[key.rstrip("_")] = value
         connect(**kwargs)

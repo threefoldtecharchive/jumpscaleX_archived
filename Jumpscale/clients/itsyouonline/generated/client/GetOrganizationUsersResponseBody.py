@@ -6,9 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class GetOrganizationUsersResponseBody( ):
+class GetOrganizationUsersResponseBody:
     """
     auto-generated. don't touch.
     """
@@ -26,17 +24,18 @@ class GetOrganizationUsersResponseBody( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'GetOrganizationUsersResponseBody'
+        class_name = "GetOrganizationUsersResponseBody"
         data = json or kwargs
 
         # set attributes
         data_types = [bool]
         self.haseditpermissions = client_support.set_property(
-            'haseditpermissions', data, data_types, False, [], False, True, class_name)
+            "haseditpermissions", data, data_types, False, [], False, True, class_name
+        )
         data_types = [OrganizationUser]
-        self.users = client_support.set_property('users', data, data_types, False, [], True, True, class_name)
+        self.users = client_support.set_property("users", data, data_types, False, [], True, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

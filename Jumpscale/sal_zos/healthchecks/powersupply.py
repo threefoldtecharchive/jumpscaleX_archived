@@ -9,8 +9,8 @@ Result will be shown in the "Hardware" section of the Grid Portal / Status Overv
 
 class PowerSupply(IPMIHealthCheck):
     def __init__(self, node):
-        resource = '/nodes/{}'.format(node.name)
-        super().__init__(id='pw-supply', name='Power Supply', category="Hardware", resource=resource)
+        resource = "/nodes/{}".format(node.name)
+        super().__init__(id="pw-supply", name="Power Supply", category="Hardware", resource=resource)
         self.node = node
         self.ps_errmsgs = [
             "Power Supply AC lost",
@@ -19,7 +19,8 @@ class PowerSupply(IPMIHealthCheck):
             "AC lost or out-of-range",
             "AC out-of-range, but present",
             "Config Erro",
-            "Power Supply Inactive"]
+            "Power Supply Inactive",
+        ]
 
     def run(self, container):
         ps_errmsgs = [x.lower() for x in self.ps_errmsgs if x.strip()]
@@ -59,11 +60,14 @@ class PowerSupply(IPMIHealthCheck):
                     id_ = id_.strip("Status").strip("_").strip()  # clean the power supply name.
                     if linehaserrmsg(line):
                         if psu_redun_in_out and is_fully_redundant:
-                            self.add_message(id=id_, status='SKIPPED', text="Power redundancy problem on %s (%s)" % (id_, presence))
+                            self.add_message(
+                                id=id_, status="SKIPPED", text="Power redundancy problem on %s (%s)" % (id_, presence)
+                            )
                         else:
-                            self.add_message(id=id_, status='WARNING', text="Power redundancy problem on %s (%s)" % (id_, presence))
+                            self.add_message(
+                                id=id_, status="WARNING", text="Power redundancy problem on %s (%s)" % (id_, presence)
+                            )
                     else:
-                        self.add_message(id=id_, status='OK', text="Power supply %s is OK" % id_)
+                        self.add_message(id=id_, status="OK", text="Power supply %s is OK" % id_)
         else:
-            self.add_message(id="SKIPPED", status='SKIPPED', text="No data for Power Supplies")
-
+            self.add_message(id="SKIPPED", status="SKIPPED", text="No data for Power Supplies")

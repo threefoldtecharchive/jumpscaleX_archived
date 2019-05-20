@@ -12,7 +12,7 @@ class BuilderEtcd(BuilderGolangTools):
 
     def profile_builder_set(self):
         super().profile_builder_set()
-        self.profile.env_set('GO111MODULE', 'on')
+        self.profile.env_set("GO111MODULE", "on")
 
     @builder_method()
     def build(self):
@@ -21,8 +21,8 @@ class BuilderEtcd(BuilderGolangTools):
         """
         j.builder.runtimes.golang.install()
         # https://github.com/etcd-io/etcd/blob/master/Documentation/dl_build.md#build-the-latest-version
-        self.get('go.etcd.io/etcd')
-        self.get('go.etcd.io/etcd/etcdctl')
+        self.get("go.etcd.io/etcd")
+        self.get("go.etcd.io/etcd/etcdctl")
 
     @builder_method()
     def install(self):
@@ -33,9 +33,18 @@ class BuilderEtcd(BuilderGolangTools):
     def startup_cmds(self):
         return [j.tools.startupcmd.get(name=self.NAME, cmd=self.NAME)]
 
-    def sandbox(self, create_flist=False, zhub_instance=None):
-        """Copy built bins to dest_path and create flist if create_flist = True
-
+    @builder_method()
+    def sandbox(
+        self,
+        reset=False,
+        zhub_client=None,
+        flist_create=False,
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+    ):
+        '''
+        Copy built bins to dest_path and create flist if create_flist = True
+        :param dest_path: destination path to copy files into
+        :type dest_path: str
         :param sandbox_dir: path to sandbox
         :type sandbox_dir: str
         :param reset: reset sandbox file transfer
@@ -45,9 +54,7 @@ class BuilderEtcd(BuilderGolangTools):
         :type zhub_instance:str
         """
         self.install()
-        bin_dest = j.sal.fs.joinPaths(
-            "/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX)
-        )
+        bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX))
         self.tools.dir_ensure(bin_dest)
         etcd_bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
         etcdctl_bin_path = self.tools.joinpaths("{DIR_BIN}", "etcdctl")
@@ -57,7 +64,12 @@ class BuilderEtcd(BuilderGolangTools):
         if create_flist:
             self.flist_create(bin_dest, zhub_instance)
 
-        self._done_set("sandbox")
+        lib_dest = self.tools.joinpaths(dest_path, 'sandbox/lib')
+        self.tools.dir_ensure(lib_dest)
+        for bin in bins:
+            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
+            j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
+        '''
 
     def client_get(self, name):
         """
@@ -105,28 +117,18 @@ class BuilderEtcd(BuilderGolangTools):
         tarfile = "/tmp/etcd-3.3.4.tar.gz"
         bin_dir = j.sal.fs.joinPaths(build_dir, "bin")
         j.core.tools.dir_ensure(bin_dir)
-        j.builder.tools.file_copy(
-            j.sal.fs.joinPaths(j.core.dirs.BINDIR, "etcd"), bin_dir
-        )
-        j.builder.tools.file_copy(
-            j.sal.fs.joinPaths(j.core.dirs.BINDIR, "etcdctl"), bin_dir
-        )
+        j.builder.tools.file_copy(j.sal.fs.joinPaths(j.core.dirs.BINDIR, "etcd"), bin_dir)
+        j.builder.tools.file_copy(j.sal.fs.joinPaths(j.core.dirs.BINDIR, "etcdctl"), bin_dir)
 
         j.sal.process.execute("tar czf {} -C {} .".format(tarfile, build_dir))
 
         if hub_instance:
             if not j.clients.zerohub.exists(hub_instance):
-                raise j.exceptions.Input(
-                    "hub instance %s does not exists, can't upload to the hub"
-                    % hub_instance
-                )
+                raise j.exceptions.Input("hub instance %s does not exists, can't upload to the hub" % hub_instance)
             hub = j.clients.zerohub.get(hub_instance)
             hub.authentificate()
             self._log_info("uploading flist to the hub")
             hub.upload(tarfile)
-            self._log_info(
-                "uploaded at https://hub.grid.tech/%s/etcd-3.3.4.flist",
-                hub.config.data["username"],
-            )
+            self._log_info("uploaded at https://hub.grid.tech/%s/etcd-3.3.4.flist", hub.config.data["username"])
 
         return tarfile

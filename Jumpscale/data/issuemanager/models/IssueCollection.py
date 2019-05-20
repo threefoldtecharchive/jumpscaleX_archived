@@ -82,7 +82,7 @@ class IssueCollection(ModelBaseCollection):
         """
 
         if "gitHostRefs" in args:
-            args["gitHostRefs"] = ["%s_%s_%s" % (item["name"], item["id"], item['url']) for item in args["gitHostRefs"]]
+            args["gitHostRefs"] = ["%s_%s_%s" % (item["name"], item["id"], item["url"]) for item in args["gitHostRefs"]]
 
         args = self._arraysFromArgsToString(["assignees", "labels", "gitHostRefs"], args)
 
@@ -97,11 +97,8 @@ class IssueCollection(ModelBaseCollection):
 
     def getFromGitHostID(self, git_host_name, git_host_id, git_host_url, createNew=True):
         return j.clients.gogs._getFromGitHostID(
-            self,
-            git_host_name=git_host_name,
-            git_host_id=git_host_id,
-            git_host_url=git_host_url,
-            createNew=createNew)
+            self, git_host_name=git_host_name, git_host_id=git_host_id, git_host_url=git_host_url, createNew=createNew
+        )
 
     def list(self, **kwargs):
         """
@@ -119,7 +116,7 @@ class IssueCollection(ModelBaseCollection):
             for key, val in kwargs.items():
                 if not hasattr(self.index, key):
                     raise RuntimeError('%s model has no field "%s"' % (self.index._meta.name, key))
-                field = (getattr(self.index, key))
+                field = getattr(self.index, key)
                 if isinstance(val, list):  # get range in list
                     clauses.append(field.between(val[0], val[1]))
                 elif isinstance(field, peewee.BooleanField) or isinstance(val, bool):
@@ -131,11 +128,11 @@ class IssueCollection(ModelBaseCollection):
                     clauses.append(field.contains(val))
 
             res = [
-                item.key for item in self.index.select().where(
-                    peewee.reduce(
-                        operator.and_,
-                        clauses)).order_by(
-                    self.index.modTime.desc())]
+                item.key
+                for item in self.index.select()
+                .where(peewee.reduce(operator.and_, clauses))
+                .order_by(self.index.modTime.desc())
+            ]
         else:
             res = [item.key for item in self.index.select().order_by(self.index.modTime.desc())]
 

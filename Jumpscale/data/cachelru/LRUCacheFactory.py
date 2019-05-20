@@ -1,11 +1,11 @@
 from .LRUCache import LRUCache
 from .RWCache import RWCache
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
 
 class LRUCacheFactory(j.application.JSBaseClass):
-
     def __init__(self):
         self.__jslocation__ = "j.data.cachelru"
         JSBASE.__init__(self)

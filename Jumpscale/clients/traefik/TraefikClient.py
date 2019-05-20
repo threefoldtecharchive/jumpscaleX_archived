@@ -5,8 +5,7 @@ from Jumpscale import j
 
 from . import encoding
 from .error import ProxyNameConflictError
-from .types import (Backend, BackendServer, Frontend, FrontendRule,
-                    LoadBalanceMethod, RoutingKind)
+from .types import Backend, BackendServer, Frontend, FrontendRule, LoadBalanceMethod, RoutingKind
 
 JSConfigBase = j.application.JSBaseConfigClass
 
@@ -32,7 +31,7 @@ class TraefikClient(JSConfigBase):
         return self._etcd_client
 
     def proxy_create(self, name):
-        '''
+        """
         create a new reverse proxy
 
         :param name: name of your proxy, it needs to be unique inside the etcd cluster
@@ -40,7 +39,7 @@ class TraefikClient(JSConfigBase):
         :raises ProxyNameConflictError: Proxy name already exists
         :return: reverse proxy
         :rtype: Object
-        '''
+        """
         if name in self.proxies:
             raise ProxyNameConflictError("a proxy named %s already exists")
 
@@ -130,7 +129,6 @@ class Proxy:
 
 
 class ProxyMap(MutableMapping):
-
     def __init__(self, traefik):
         super().__init__()
         self._traefik = traefik
@@ -145,8 +143,7 @@ class ProxyMap(MutableMapping):
 
     def _load_proxy(self, name):
         proxy = Proxy(self._traefik.etcd_client, name)
-        proxy.frontend = encoding.frontend_load(
-            self._traefik.etcd_client, name)
+        proxy.frontend = encoding.frontend_load(self._traefik.etcd_client, name)
         proxy.backend = encoding.backend_load(self._traefik.etcd_client, name)
         self._proxies[name] = proxy
         return proxy
@@ -156,7 +153,7 @@ class ProxyMap(MutableMapping):
 
     def __getitem__(self, key):
         if not isinstance(key, str):
-            raise TypeError('index should be a str, not %s' % type(key))
+            raise TypeError("index should be a str, not %s" % type(key))
 
         if key not in self._names:
             raise IndexError()
@@ -177,7 +174,7 @@ class ProxyMap(MutableMapping):
 
     def __delitem__(self, key):
         if not isinstance(key, str):
-            raise TypeError('index should be a string, not %s' % type(key))
+            raise TypeError("index should be a string, not %s" % type(key))
 
         if key not in self._names:
             raise KeyError()

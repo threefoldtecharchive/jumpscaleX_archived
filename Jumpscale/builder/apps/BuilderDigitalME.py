@@ -14,11 +14,16 @@ class BuilderDigitalME(j.builder.system._BaseClass):
         - in self.test_zos() start the created flist & do the network tests for the openresty
 
     """
+
     NAME = "digitalme"
 
     @builder_method()
     def _init(self):
         pass
+
+    @property
+    def branch(self):
+        return j.core.installer_jumpscale.branch[0]
 
     @builder_method()
     def build(self, reset=False):
@@ -30,14 +35,14 @@ class BuilderDigitalME(j.builder.system._BaseClass):
         """
         j.builder.runtimes.python.build(reset=reset)
         j.builder.runtimes.lua.build()  # will build openresty & lua & openssl
-        j.clients.git.pullGitRepo(url="https://github.com/threefoldtech/digitalmeX.git", branch="development")
+        j.clients.git.pullGitRepo(url="https://github.com/threefoldtech/digitalmeX.git", branch=self.branch)
 
     @builder_method()
     def sandbox(self, reset=False, zhub_client=None, flist_create=False):
         j.builder.runtimes.python.sandbox(reset=reset)
         j.builder.runtimes.lua.sandbox(reset=reset)
         j.tools.sandboxer.copyTo(j.builder.runtimes.python.DIR_SANDBOX, "{}/sandbox".format(self.DIR_SANDBOX))
-        j.tools.sandboxer.copyTo(j.builder.runtimes.lua.DIR_SANDBOX,  self.DIR_SANDBOX)
+        j.tools.sandboxer.copyTo(j.builder.runtimes.lua.DIR_SANDBOX, self.DIR_SANDBOX)
         git_repo_path = "/sandbox/code/github/threefoldtech/digitalmeX"
         j.tools.sandboxer.copyTo(git_repo_path, j.sal.fs.joinPaths(self.DIR_SANDBOX, git_repo_path[1:]))
 
@@ -45,7 +50,6 @@ class BuilderDigitalME(j.builder.system._BaseClass):
     def startup_cmds(self):
         cmd = j.tools.startupcmd.get("openresty", "openresty", cmd_stop="openresty -s stop", path="/sandbox/bin")
         return [cmd]
-
 
     def gslides(self):
         """
@@ -73,5 +77,3 @@ class BuilderDigitalME(j.builder.system._BaseClass):
         container_client = zos_client.cotainer.client(container_id)
         assert container_client.ping()
         # TODO: find a way to check if openresty started on the container
-
-

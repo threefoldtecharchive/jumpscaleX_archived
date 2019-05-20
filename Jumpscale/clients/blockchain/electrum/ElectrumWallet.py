@@ -13,7 +13,8 @@ from electrum.commands import Commands
 from electrum.storage import WalletStorage
 from electrum.simple_config import SimpleConfig
 
-EXECLUDED_COMMANDS = ['create', 'commands', 'restore', 'dumpprivkeys']
+EXECLUDED_COMMANDS = ["create", "commands", "restore", "dumpprivkeys"]
+
 
 class ElectrumWallet:
     """
@@ -37,21 +38,21 @@ class ElectrumWallet:
         """
         self._name = name
         self._config = config
-        self._config['testnet'] = bool(self._config['testnet'])
-        if self._config['testnet'] is True:
+        self._config["testnet"] = bool(self._config["testnet"])
+        if self._config["testnet"] is True:
             constants.set_testnet()
 
-        self._config['verbos'] = False
+        self._config["verbos"] = False
         self._electrum_config = SimpleConfig(self._config)
-        self._wallet_path = os.path.join(self._electrum_config.path, 'wallets', self._name)
+        self._wallet_path = os.path.join(self._electrum_config.path, "wallets", self._name)
         self._storage = WalletStorage(path=self._wallet_path)
         if not self._storage.file_exists():
-            self._electrum_config.set_key('default_wallet_path', self._wallet_path)
-            k = keystore.from_seed(self._config['seed'], self._config['passphrase'], False)
-            k.update_password(None, self._config['password'])
-            self._storage.put('keystore', k.dump())
-            self._storage.put('wallet_type', 'standard')
-            self._storage.put('use_encryption', bool(self._config['password']))
+            self._electrum_config.set_key("default_wallet_path", self._wallet_path)
+            k = keystore.from_seed(self._config["seed"], self._config["passphrase"], False)
+            k.update_password(None, self._config["password"])
+            self._storage.put("keystore", k.dump())
+            self._storage.put("wallet_type", "standard")
+            self._storage.put("use_encryption", bool(self._config["password"]))
             self._storage.write()
             self._wallet = Wallet(self._storage)
             # self._server = daemon.get_server(self._electrum_config)
@@ -66,17 +67,14 @@ class ElectrumWallet:
             self._network = None
             self._wallet = self._wallet = Wallet(self._storage)
 
-        self._commands = Commands(config=self._electrum_config,
-                                  wallet=self._wallet,
-                                  network=self._network)
+        self._commands = Commands(config=self._electrum_config, wallet=self._wallet, network=self._network)
 
         self._init_commands()
-
 
     def _init_commands(self):
         """
         Scans the electrum commands class and binds all its methods to this class
         """
-        execlude_cmd = lambda item: (not item[0].startswith('_')) and item[0] not in EXECLUDED_COMMANDS
+        execlude_cmd = lambda item: (not item[0].startswith("_")) and item[0] not in EXECLUDED_COMMANDS
         for name, func in filter(execlude_cmd, inspect.getmembers(self._commands, inspect.ismethod)):
             setattr(self, name, func)

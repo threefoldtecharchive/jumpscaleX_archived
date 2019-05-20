@@ -8,13 +8,12 @@ JSBASE = j.application.JSBaseClass
 
 
 class Issue(Base):
-
     def __init__(self, repo, ddict={}, githubObj=None):
         Base.__init__(self)
         self.repo = repo
         self._ddict = ddict
         self._githubObj = githubObj
-        self._comments = ddict.get('comments', None)
+        self._comments = ddict.get("comments", None)
         if githubObj is not None:
             self.load()
 
@@ -33,7 +32,7 @@ class Issue(Base):
             # no dict yet, fetch from github
             self.load()
         # we lazy load the comments. so it's only loaded when accesses
-        self._ddict['comments'] = self.comments
+        self._ddict["comments"] = self.comments
         return self._ddict
 
     @property
@@ -43,20 +42,17 @@ class Issue(Base):
 
         with self._lock:
             if self._comments is None:
-                self._log_debug(
-                    "Loading comments for issue: %s" % self.number)
+                self._log_debug("Loading comments for issue: %s" % self.number)
                 self._comments = []
                 for comment in self.api.get_comments():
                     obj = {}
-                    user = self.repo.client.getUserLogin(
-                        githubObj=comment.user)
+                    user = self.repo.client.getUserLogin(githubObj=comment.user)
                     obj["user"] = user
                     obj["url"] = comment.url
                     obj["id"] = comment.id
                     obj["body"] = comment.body
-                    obj['user_id'] = comment.user.id
-                    obj["time"] = j.data.time.any2HRDateTime(
-                        [comment.last_modified, comment.created_at])
+                    obj["user_id"] = comment.user.id
+                    obj["time"] = j.data.time.any2HRDateTime([comment.last_modified, comment.created_at])
                     self._comments.append(obj)
         return self._comments
 
@@ -70,8 +66,7 @@ class Issue(Base):
                 obj["url"] = comment.url
                 obj["id"] = comment.id
                 obj["body"] = comment.body
-                obj["time"] = j.data.time.any2HRDateTime(
-                    [comment.last_modified, comment.created_at])
+                obj["time"] = j.data.time.any2HRDateTime([comment.last_modified, comment.created_at])
                 self._comments.append(obj)
         return self._comments
 
@@ -95,9 +90,9 @@ class Issue(Base):
     def body(self, val):
         self._ddict["body"] = val
         try:
-            self.api.edit(body=self._ddict['body'])
+            self.api.edit(body=self._ddict["body"])
         except Exception as e:
-            self._log_error('Failed to update the issue body: %s' % e)
+            self._log_error("Failed to update the issue body: %s" % e)
 
     @property
     def time(self):
@@ -141,13 +136,13 @@ class Issue(Base):
     def state(self):
         states = []
         if not self.isOpen:
-            return 'closed'
+            return "closed"
 
         for label in self.labels:
             if label.startswith("state"):
                 states.append(label)
         if len(states) == 1:
-            return states[0][len("state"):].strip("_")
+            return states[0][len("state") :].strip("_")
         elif len(states) > 1:
             self.state = "question"
         else:
@@ -159,7 +154,7 @@ class Issue(Base):
 
     @property
     def isOpen(self):
-        return self._ddict['open']
+        return self._ddict["open"]
 
     @property
     def type(self):
@@ -199,7 +194,7 @@ class Issue(Base):
             if label.startswith("process"):
                 items.append(label)
         if len(items) == 1:
-            return items[0][len("process"):].strip("_")
+            return items[0][len("process") :].strip("_")
         else:
             return ""
 
@@ -208,11 +203,11 @@ class Issue(Base):
         return self._setLabels(val, "process")
 
     def _setLabels(self, val, category):
-        if val is None or val == '':
+        if val is None or val == "":
             return
 
         if val.startswith(category):
-            _, _, val = val.partition('_')
+            _, _, val = val.partition("_")
 
         val = val.strip("_")
         val = val.lower()
@@ -223,8 +218,9 @@ class Issue(Base):
             self.repo.labelnames.sort()
             llist = ",".join(self.repo.labelnames)
             raise j.exceptions.Input(
-                "Label needs to be in list:%s (is understood labels in this repo on github), now is: '%s'" %
-                (llist, val))
+                "Label needs to be in list:%s (is understood labels in this repo on github), now is: '%s'"
+                % (llist, val)
+            )
 
         # make sure there is only 1
         labels2set = self.labels
@@ -257,9 +253,7 @@ class Issue(Base):
                     newlabels.append(label)
 
         if labels != newlabels:
-            self._log_info(
-                "change label:%s for %s" %
-                (labels, self.api.title))
+            self._log_info("change label:%s for %s" % (labels, self.api.title))
             labels2set = [self.repo.getLabel(item) for item in newlabels]
             self.api.set_labels(*labels2set)
             labels = newlabels
@@ -268,20 +262,17 @@ class Issue(Base):
         self._ddict["id"] = self.api.id
         self._ddict["url"] = self.api.html_url
         self._ddict["number"] = self.api.number
-        self._ddict['open'] = self.api.state == 'open'
+        self._ddict["open"] = self.api.state == "open"
 
-        self._ddict["assignee"] = self.repo.client.getUserLogin(
-            githubObj=self.api.assignee)
+        self._ddict["assignee"] = self.repo.client.getUserLogin(githubObj=self.api.assignee)
         self._ddict["state"] = self.api.state
         self._ddict["title"] = self.api.title
 
         self._ddict["body"] = self.api.body
 
-        self._ddict["time"] = j.data.time.any2HRDateTime(
-            [self.api.last_modified, self.api.created_at])
+        self._ddict["time"] = j.data.time.any2HRDateTime([self.api.last_modified, self.api.created_at])
 
-        self._log_debug("LOAD:%s %s" %
-                          (self.repo.fullname, self._ddict["title"]))
+        self._log_debug("LOAD:%s %s" % (self.repo.fullname, self._ddict["title"]))
 
         if self.api.milestone is None:
             self._ddict["milestone"] = ""
@@ -298,7 +289,7 @@ class Issue(Base):
                     if line.startswith("!! "):
                         todo.append(line.strip().strip("!! "))
             for comment in self.comments:
-                for line in comment['body'].split("\n"):
+                for line in comment["body"].split("\n"):
                     if line.startswith("!! "):
                         todo.append(line.strip().strip("!! "))
             self._todo = todo
@@ -306,7 +297,7 @@ class Issue(Base):
 
     @property
     def isTask(self):
-        if self.type == 'task' or self.title.lower().endswith('task'):
+        if self.type == "task" or self.title.lower().endswith("task"):
             return True
         return False
 

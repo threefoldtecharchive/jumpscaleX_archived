@@ -8,8 +8,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class EditIssueOption(object):
     """
     auto-generated. don't touch.
@@ -31,22 +29,22 @@ class EditIssueOption(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'EditIssueOption'
+        class_name = "EditIssueOption"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.assignee = client_support.set_property('assignee', data, data_types, False, [], False, False, class_name)
+        self.assignee = client_support.set_property("assignee", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.body = client_support.set_property('body', data, data_types, False, [], False, False, class_name)
+        self.body = client_support.set_property("body", data, data_types, False, [], False, False, class_name)
         data_types = [int]
-        self.milestone = client_support.set_property('milestone', data, data_types, False, [], False, False, class_name)
+        self.milestone = client_support.set_property("milestone", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.state = client_support.set_property('state', data, data_types, False, [], False, False, class_name)
+        self.state = client_support.set_property("state", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.title = client_support.set_property('title', data, data_types, False, [], False, False, class_name)
+        self.title = client_support.set_property("title", data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

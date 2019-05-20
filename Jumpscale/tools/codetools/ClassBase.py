@@ -1,21 +1,23 @@
 from Jumpscale import j
 
 JSBASE = j.application.JSBaseClass
+
+
 class ClassBase(j.application.JSBaseClass):
     """
     implement def _obj2dict to overrule serialization, output needs to be dict, reverse is _dict2obj
     """
 
     # def classCodePrint(self):
-    #"""
+    # """
     # print info like source code of class
-    #"""
+    # """
     # j.tools.code.classInfoPrint(self)
 
     # def classCodeEdit(self):
-    #"""
+    # """
     # edit this source code in Geany
-    #"""
+    # """
     # j.tools.code.classEditGeany(self)
 
     def __init__(self):
@@ -34,7 +36,6 @@ class ClassBase(j.application.JSBaseClass):
 
 
 class JSModelBase(ClassBase):
-
     def __init__(self):
         ClassBase.__init__(self)
 
@@ -43,7 +44,6 @@ class JSModelBase(ClassBase):
 
 
 class JSRootModelBase(JSModelBase):
-
     def __init__(self):
         JSModelBase.__init__(self)
 

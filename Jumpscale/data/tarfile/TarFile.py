@@ -1,4 +1,4 @@
-'''The TarFile class provides convenience methods to work with tar archives'''
+"""The TarFile class provides convenience methods to work with tar archives"""
 
 from Jumpscale import j
 import tarfile
@@ -10,9 +10,9 @@ JSBASE = j.application.JSBaseClass
 
 
 class TarFileFactory(j.application.JSBaseClass):
-    READ = 'r'
-    WRITE = 'w'
-    APPEND = 'a'
+    READ = "r"
+    WRITE = "w"
+    APPEND = "a"
 
     def __init__(self):
         self.__jslocation__ = "j.tools.tarfile"
@@ -23,16 +23,16 @@ class TarFileFactory(j.application.JSBaseClass):
 
 
 class TarFile(j.application.JSBaseClass):
-    '''Handle tar files'''
+    """Handle tar files"""
 
     def __init__(self, path, mode=TarFileFactory.READ):
-        '''Create a new TarFile object
+        """Create a new TarFile object
 
         @param path: Path to target tar file
         @type path: string
         @prarm mode: mode to perform on the tar file
         @type mode: TarFilemode
-        '''
+        """
         JSBASE.__init__(self)
         if not j.data.types.path.check(path):
             raise ValueError('Provided string "%s" is not a valid path' % path)
@@ -44,13 +44,13 @@ class TarFile(j.application.JSBaseClass):
             if not tarfile.is_tarfile(path):
                 raise ValueError('Provided path "%s" is not a valid tar archive' % path)
 
-            self._tar = tarfile.open(path, 'r')
+            self._tar = tarfile.open(path, "r")
 
         elif mode is TarFileFactory.WRITE:
-            self._tar = tarfile.open(path, 'w')
+            self._tar = tarfile.open(path, "w")
 
         else:
-            raise ValueError('Invalid mode')
+            raise ValueError("Invalid mode")
 
         self.path = path
         self.mode = mode
@@ -78,7 +78,7 @@ class TarFile(j.application.JSBaseClass):
         return self._tar.getmember(name)
 
     def extract(self, destination_path, files=None):
-        '''Extract all or some files from the archive to destination_path
+        """Extract all or some files from the archive to destination_path
 
         The files argument can be a list of names (relative from the root of
         the archive) to extract. If no file list is provided, all files
@@ -88,12 +88,12 @@ class TarFile(j.application.JSBaseClass):
         @type destination_path: string
         @param files: Filenames to extract
         @type files: iterable
-        '''
+        """
         if self.mode is not TarFileFactory.READ:
-            raise j.exceptions.RuntimeError('Can only extract archives opened for reading')
+            raise j.exceptions.RuntimeError("Can only extract archives opened for reading")
 
         if not j.data.types.path.check(destination_path):
-            raise ValueError('Not a valid folder name provided')
+            raise ValueError("Not a valid folder name provided")
 
         if not j.sal.fs.exists(destination_path):
             raise ValueError('Destination folder "%s" does not exist' % destination_path)
@@ -111,5 +111,5 @@ class TarFile(j.application.JSBaseClass):
             self._tar.extractall(destination_path)
 
     def close(self):
-        '''Close the backing tar file'''
+        """Close the backing tar file"""
         self._tar.close()

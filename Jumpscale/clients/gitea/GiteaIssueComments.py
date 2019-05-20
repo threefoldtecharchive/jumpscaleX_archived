@@ -36,7 +36,9 @@ class GiteaIssueComments(j.application.JSBaseClass):
 
     def search(self, updated_since=None):
         result = []
-        items = self.client.api.repos.issueGetComments(str(self.issue.id), self.repo.name, self.user.username, updated_since).json()
+        items = self.client.api.repos.issueGetComments(
+            str(self.issue.id), self.repo.name, self.user.username, updated_since
+        ).json()
         for item in items:
             c = self.new()
             for k, v in item.items():
@@ -49,4 +51,3 @@ class GiteaIssueComments(j.application.JSBaseClass):
         return self
 
     __str__ = __repr__ = lambda self: "Gitea Issue comments Iterator for repo: {0}".format(self.repo.name)
-

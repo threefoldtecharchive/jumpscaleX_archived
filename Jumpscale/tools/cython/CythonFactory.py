@@ -1,4 +1,5 @@
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
 import time
@@ -8,6 +9,8 @@ import sys
 import pyximport
 
 JSBASE = j.application.JSBaseClass
+
+
 class CythonFactory(j.application.JSBaseClass):
     """
     example:
@@ -40,6 +43,7 @@ class CythonFactory(j.application.JSBaseClass):
 
     def test(self):
         import helloworld
+
         helloworld.echo()
         # helloworld.spam(10, bytearray("this is a test: int:\n".encode()))
         # helloworld.spam(10, b"this is a test: int:\n")

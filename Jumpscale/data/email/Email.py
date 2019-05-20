@@ -5,8 +5,9 @@ from .Sender import Sender
 from .utils import get_msg_path, get_json_msg
 
 JSBASE = j.application.JSBaseClass
-class EmailTool(j.application.JSBaseClass):
 
+
+class EmailTool(j.application.JSBaseClass):
     def __init__(self):
         self.__jslocation__ = "j.tools.email"
         JSBASE.__init__(self)
@@ -18,7 +19,7 @@ class EmailTool(j.application.JSBaseClass):
         :return: list
 
         """
-        return j.core.db.lrange('mails.queue', -1 * n, -1)
+        return j.core.db.lrange("mails.queue", -1 * n, -1)
 
     def getLast(self, num=100):
         """
@@ -30,7 +31,7 @@ class EmailTool(j.application.JSBaseClass):
         messages = []
         keys = self._get_lastest_keys()
         for k in keys:
-            m = Message(k, j.core.db.hmget('mails', key))
+            m = Message(k, j.core.db.hmget("mails", key))
             messages.append(m)
 
         return messages
@@ -41,7 +42,7 @@ class EmailTool(j.application.JSBaseClass):
 
         :returns a key
         """
-        return j.core.db.lpop('mails.queue', n)
+        return j.core.db.lpop("mails.queue", n)
 
     def pop(self):
         """
@@ -54,7 +55,7 @@ class EmailTool(j.application.JSBaseClass):
         msg = get_json_msg(k)  # get message path
         return Message(k, msg)
 
-    def getSender(self, username, password, host='smtp.mandrillapp.com', port=587):
+    def getSender(self, username, password, host="smtp.mandrillapp.com", port=587):
         return Sender.Sender(username, password, host, port)
 
     def getDefaultSender(self):
@@ -63,7 +64,7 @@ class EmailTool(j.application.JSBaseClass):
 
         :return: Sender instance
         """
-        #BAD SHOULD NOT BE DONE LIKE THIS !
-        
+        # BAD SHOULD NOT BE DONE LIKE THIS !
+
         # cfg = j.data.serializers.yaml.load(j.sal.fs.joinPaths(j.dirs.JSCFGDIR, 'smtp.yaml'))
         # return self.getSender(cfg['username'], cfg['password'], cfg['host'], cfg['port'])

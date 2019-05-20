@@ -34,4 +34,5 @@ class InfluxClient(JSConfigClient, influxdb.InfluxDBClient):
             verify_ssl=self.verify_ssl,
             timeout=self.timeout or None,
             use_udp=self.use_udp,
-            udp_port=self.udp_port)
+            udp_port=self.udp_port,
+        )

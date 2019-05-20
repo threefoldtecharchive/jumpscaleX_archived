@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 
 from functools import reduce
@@ -30,10 +29,12 @@ _MAX_RIVINE_TRANSACTION_INPUTS = 99
 # * add support for transaction listing (need to work this out)
 #
 
+
 class TFChainWallet(j.application.JSBaseConfigClass):
     """
     Tfchain Wallet object
     """
+
     _SCHEMATEXT = """
         @url = jumpscale.tfchain.wallet
         name* = "" (S)
@@ -48,7 +49,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # the primary address is kept as a seperate property,
         # as we hint the user into using this primary address as much as possible,
         # to keep things simple
-        self._primary_address = ''
+        self._primary_address = ""
 
         # when during scanning we find a used key,
         # it might happen that one or more keys prior the used keys are not used,
@@ -69,7 +70,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # generate the primary address
         self._primary_address = str(self._key_pair_new().unlockhash)
         # generate the other addresses
-        for _ in range(keys_to_generate-1):
+        for _ in range(keys_to_generate - 1):
             self._key_pair_new()
 
         # add sub-apis
@@ -122,7 +123,6 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         """
         return self._capacity
 
-
     @property
     def client(self):
         """
@@ -156,7 +156,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         The addresses owned and used by this wallet.
         """
         # key scan first
-        scanned_new_keys = self._key_scan()
+        _ = self._key_scan()
         # than list all addresses
         return list(self._key_pairs.keys())
 
@@ -182,7 +182,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         The balance "sheet" of the wallet.
         """
         # key scan first
-        scanned_new_keys = self._key_scan()
+        _ = self._key_scan()
 
         # first get chain info
         info = self.client.blockchain_info_get()
@@ -201,8 +201,8 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                 for address in result.multisig_addresses:
                     multisig_addresses.append(str(address))
             except j.clients.tfchain.errors.ExplorerNoContent:
-                 # ignore this exception as it simply means
-                 # the address has no activity yet on the chain
+                # ignore this exception as it simply means
+                # the address has no activity yet on the chain
                 pass
 
         # collect info for all multisig addresses
@@ -213,8 +213,8 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                 uh_balance = result.balance(info=info)
                 balance = balance.balance_add(uh_balance)
             except j.clients.tfchain.errors.ExplorerNoContent:
-                 # ignore this exception as it simply means
-                 # the address has no activity yet on the chain
+                # ignore this exception as it simply means
+                # the address has no activity yet on the chain
                 pass
         # ensure info is defined for wallet, even if no content
         balance.chain_blockid = info.blockid
@@ -238,7 +238,9 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             transactions.update(result.transactions)
 
         # sort all transactions
-        transactions = sorted(transactions, key=(lambda txn: sys.maxsize if txn.height < 0 else txn.height), reverse=True)
+        transactions = sorted(
+            transactions, key=(lambda txn: sys.maxsize if txn.height < 0 else txn.height), reverse=True
+        )
 
         # return all transactions
         return transactions
@@ -286,7 +288,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                 else:
                     self._unused_key_pairs.append(pair)
             # remove the unused pairs that came after the last known index
-            self._unused_key_pairs = self._unused_key_pairs[:-count+last_index]
+            self._unused_key_pairs = self._unused_key_pairs[: -count + last_index]
             # update the new key count
             self.key_count += last_index + 1
 
@@ -352,10 +354,10 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # fund amount
         balance = self.balance
         miner_fee = self.client.minimum_miner_fee
-        inputs, remainder, suggested_refund = balance.fund(amount+miner_fee, source=source)
+        inputs, remainder, suggested_refund = balance.fund(amount + miner_fee, source=source)
 
         # define the refund condition
-        if refund is None: # automatically choose a refund condition if none is given
+        if refund is None:  # automatically choose a refund condition if none is given
             if suggested_refund is None:
                 refund = j.clients.tfchain.types.conditions.unlockhash_new(unlockhash=self.address)
             else:
@@ -394,7 +396,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                 signature = key_pair.sign(input_hash)
                 request.signature_fulfill(public_key=key_pair.public_key, signature=signature)
             except KeyError:
-                pass # this is acceptable due to how we directly try the key_pair_get method
+                pass  # this is acceptable due to how we directly try the key_pair_get method
 
         # txn should be fulfilled now
         submit = txn.is_fulfilled()
@@ -414,6 +416,15 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             # and return the created/submitted transaction for optional user consumption
 
         return TransactionSendResult(txn, submit)
+
+    def coin_transaction_builder_new(self):
+        """
+        Create a transaction builder that can be used to
+        add multiple outputs, in a chained manner, and send them all at once.
+
+        ERC20 coin outputs are not supported in the Coin Transaction Builder.
+        """
+        return CoinTransactionBuilder(self)
 
     def transaction_sign(self, txn, submit=True):
         """
@@ -479,11 +490,11 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                 request.signature_fulfill(public_key=key_pair.public_key, signature=signature)
                 signature_count += 1
             except KeyError:
-                pass # this is acceptable due to how we directly try the key_pair_get method
+                pass  # this is acceptable due to how we directly try the key_pair_get method
 
         # check if fulfilled, and if so, we'll submit unless the callee does not want that
         is_fulfilled = txn.is_fulfilled()
-        submit = (submit and is_fulfilled)
+        submit = submit and is_fulfilled
         if submit:
             txn.id = self._transaction_put(transaction=txn)
             addresses = self.addresses + balance.addresses_multisig
@@ -498,7 +509,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
                     balance.output_add(co, confirmed=False, spent=False)
 
         # return up-to-date Txn, as well as if we signed and submitted
-        return TransactionSignResult(txn, (signature_count>0), submit)
+        return TransactionSignResult(txn, (signature_count > 0), submit)
 
     def address_new(self):
         """
@@ -527,7 +538,7 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         if not isinstance(unlockhash, (str, UnlockHash)):
             raise TypeError("unlockhash cannot be of type {}".format(type(unlockhash)))
         unlockhash = str(unlockhash)
-        if unlockhash[:2] == '00':
+        if unlockhash[:2] == "00":
             key = self._key_pairs.get(self.address)
         else:
             key = self._key_pairs.get(unlockhash)
@@ -557,14 +568,14 @@ class TFChainWallet(j.application.JSBaseConfigClass):
         # otherwise create a new one
         e = j.data.rivine.encoder_sia_get()
         e.add_array(self.seed_entropy)
-        e.add(self.key_count+offset)
+        e.add(self.key_count + offset)
         seed_hash = bytes.fromhex(j.data.hash.blake2_string(e.data))
         private_key = SigningKey(seed_hash)
         public_key = private_key.get_verifying_key()
 
         key_pair = SpendableKey(
-            public_key = j.clients.tfchain.types.public_key_new(hash=public_key.to_bytes()),
-            private_key = private_key)
+            public_key=j.clients.tfchain.types.public_key_new(hash=public_key.to_bytes()), private_key=private_key
+        )
 
         # if we wish to integrate (mostly when we're not scanning),
         # we also add it to our wallets known key pairs
@@ -588,12 +599,14 @@ class TFChainWallet(j.application.JSBaseConfigClass):
             raise KeyError("wallet already contains a key pair for unlock hash {}".format(addr))
         self._key_pairs[addr] = key_pair
         if add_count:
-            self.key_count += 1+offset
+            self.key_count += 1 + offset
+
 
 from .types.ConditionTypes import ConditionMultiSignature
 from .types.FulfillmentTypes import FulfillmentMultiSignature, PublicKeySignaturePair
 
-class TFChainMinter():
+
+class TFChainMinter:
     """
     TFChainMinter contains all Coin Minting logic.
     """
@@ -653,7 +666,7 @@ class TFChainMinter():
                 signature = key_pair.sign(input_hash)
                 request.signature_fulfill(public_key=key_pair.public_key, signature=signature)
             except KeyError:
-                pass # this is acceptable due to how we directly try the key_pair_get method
+                pass  # this is acceptable due to how we directly try the key_pair_get method
 
         submit = txn.is_fulfilled()
         if submit:
@@ -732,7 +745,7 @@ class TFChainMinter():
                 signature = key_pair.sign(input_hash)
                 request.signature_fulfill(public_key=key_pair.public_key, signature=signature)
             except KeyError:
-                pass # this is acceptable due to how we directly try the key_pair_get method
+                pass  # this is acceptable due to how we directly try the key_pair_get method
 
         submit = txn.is_fulfilled()
         if submit:
@@ -773,7 +786,8 @@ class TFChainMinter():
 from .types.ConditionTypes import ConditionAtomicSwap, OutputLock, AtomicSwapSecret, AtomicSwapSecretHash
 from .types.FulfillmentTypes import FulfillmentAtomicSwap
 
-class TFChainAtomicSwap():
+
+class TFChainAtomicSwap:
     """
     TFChainAtomicSwap contains all Atomic Swap logic.
     """
@@ -783,7 +797,7 @@ class TFChainAtomicSwap():
             raise TypeError("wallet is expected to be a TFChainWallet")
         self._wallet = wallet
 
-    def initiate(self, participator, amount, refund_time='+48h', source=None, refund=None, data=None, submit=True):
+    def initiate(self, participator, amount, refund_time="+48h", source=None, refund=None, data=None, submit=True):
         """
         Initiate an atomic swap contract, targeted at the specified address,
         with the given amount. By default a 48 hours duration (starting from last block time)
@@ -819,17 +833,29 @@ class TFChainAtomicSwap():
 
         # create the contract
         result = self._create_contract(
-            recipient=participator, amount=amount, refund_time=refund_time,
-            source=source, refund=refund, data=data, secret_hash=secret_hash,
-            submit=submit)
+            recipient=participator,
+            amount=amount,
+            refund_time=refund_time,
+            source=source,
+            refund=refund,
+            data=data,
+            secret_hash=secret_hash,
+            submit=submit,
+        )
 
         # return the contract, transaction, submission status as well as secret
         return AtomicSwapInitiationResult(
-            AtomicSwapContract(coinoutput=result.transaction.coin_outputs[0], unspent=True,
-                current_timestamp=self._chain_time),
-            secret, result.transaction, result.submitted)
+            AtomicSwapContract(
+                coinoutput=result.transaction.coin_outputs[0], unspent=True, current_timestamp=self._chain_time
+            ),
+            secret,
+            result.transaction,
+            result.submitted,
+        )
 
-    def participate(self, initiator, amount, secret_hash, refund_time='+24h', source=None, refund=None, data=None, submit=True):
+    def participate(
+        self, initiator, amount, secret_hash, refund_time="+24h", source=None, refund=None, data=None, submit=True
+    ):
         """
         Initiate an atomic swap contract, targeted at the specified address,
         with the given amount. By default a 24 hours duration (starting from last block time)
@@ -859,13 +885,26 @@ class TFChainAtomicSwap():
 
         # create the contract and return the contract, transaction and submission status
         result = self._create_contract(
-            recipient=initiator, amount=amount, refund_time=refund_time, source=source,
-            refund=refund, data=data, secret_hash=secret_hash, submit=submit)
+            recipient=initiator,
+            amount=amount,
+            refund_time=refund_time,
+            source=source,
+            refund=refund,
+            data=data,
+            secret_hash=secret_hash,
+            submit=submit,
+        )
         return AtomicSwapParticipationResult(
-            AtomicSwapContract(coinoutput=result.transaction.coin_outputs[0], unspent=True, current_timestamp=self._chain_time),
-            result.transaction, result.submitted)
+            AtomicSwapContract(
+                coinoutput=result.transaction.coin_outputs[0], unspent=True, current_timestamp=self._chain_time
+            ),
+            result.transaction,
+            result.submitted,
+        )
 
-    def verify(self, outputid, amount=None, secret_hash=None, min_refund_time=None, sender=False, receiver=False, contract=None):
+    def verify(
+        self, outputid, amount=None, secret_hash=None, min_refund_time=None, sender=False, receiver=False, contract=None
+    ):
         """
         Verify the status and content of the Atomic Swap Contract linked to the given outputid.
         An exception is returned if the contract does not exist, has already been spent
@@ -894,27 +933,37 @@ class TFChainAtomicSwap():
             if spend_txn is not None:
                 # if a spend transaction exists,
                 # it means the contract was already spend, and can therefore no longer be redeemed
-                raise j.clients.tfchain.errors.AtomicSwapContractSpent(contract=AtomicSwapContract(
-                    coinoutput=co, unspent=False, current_timestamp=self._chain_time), transaction=spend_txn)
+                raise j.clients.tfchain.errors.AtomicSwapContractSpent(
+                    contract=AtomicSwapContract(coinoutput=co, unspent=False, current_timestamp=self._chain_time),
+                    transaction=spend_txn,
+                )
 
             # create the unspent contract
             contract = AtomicSwapContract(coinoutput=co, unspent=True, current_timestamp=self._chain_time)
         elif not isinstance(contract, AtomicSwapContract):
-            raise TypeError("contract was expected to be an AtomicSwapContract, not to be of type {}".format(type(contract)))
+            raise TypeError(
+                "contract was expected to be an AtomicSwapContract, not to be of type {}".format(type(contract))
+            )
         else:
             # verify the outputid is the same
             if contract.outputid != outputid:
                 raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
-                    message="output identifier is expected to be {}, not {}".format(str(outputid), str(contract.outputid)),
-                    contract=contract)
+                    message="output identifier is expected to be {}, not {}".format(
+                        str(outputid), str(contract.outputid)
+                    ),
+                    contract=contract,
+                )
 
         # if amount is given verify it
         if amount is not None:
             amount = Currency(value=amount)
             if amount != contract.amount:
                 raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
-                    message="amount is expected to be {}, not {}".format(amount.str(with_unit=True), contract.amount.str(with_unit=True)),
-                    contract=contract)
+                    message="amount is expected to be {}, not {}".format(
+                        amount.str(with_unit=True), contract.amount.str(with_unit=True)
+                    ),
+                    contract=contract,
+                )
 
         # if secret hash is given verify it
         if secret_hash is not None:
@@ -922,8 +971,11 @@ class TFChainAtomicSwap():
             secret_hash = AtomicSwapSecretHash(value=secret_hash)
             if secret_hash != contract.secret_hash:
                 raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
-                    message="secret_hash is expected to be {}, not {}".format(str(secret_hash), str(contract.secret_hash)),
-                    contract=contract)
+                    message="secret_hash is expected to be {}, not {}".format(
+                        str(secret_hash), str(contract.secret_hash)
+                    ),
+                    contract=contract,
+                )
 
         # if min_refund_time is given verify it
         if min_refund_time is not None:
@@ -931,8 +983,12 @@ class TFChainAtomicSwap():
             if isinstance(min_refund_time, str):
                 min_refund_time = OutputLock(value=min_refund_time, current_timestamp=chain_time).value
             elif not isinstance(min_refund_time, int):
-                raise TypeError("expected minimum refund time to be an integer or string, not to be of type {}".format(type(min_refund_time)))
-            min_duration = max(0, min_refund_time-chain_time)
+                raise TypeError(
+                    "expected minimum refund time to be an integer or string, not to be of type {}".format(
+                        type(min_refund_time)
+                    )
+                )
+            min_duration = max(0, min_refund_time - chain_time)
             chain_time = self._chain_time
             if chain_time >= contract.refund_timestamp:
                 duration = 0
@@ -942,28 +998,36 @@ class TFChainAtomicSwap():
                 if duration != 0:
                     raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
                         message="contract cannot be refunded yet while it was expected to be possible already",
-                        contract=contract)
+                        contract=contract,
+                    )
             elif duration < min_duration:
                 if duration == 0:
                     raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
                         message="contract was expected to be non-refundable for at least {} more, but it can be refunded already since {}".format(
-                            j.data.types.duration.toString(min_duration), j.data.time.epoch2HRDateTime(contract.refund_timestamp)),
-                        contract=contract)
+                            j.data.types.duration.toString(min_duration),
+                            j.data.time.epoch2HRDateTime(contract.refund_timestamp),
+                        ),
+                        contract=contract,
+                    )
                 elif duration < min_duration:
                     raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
                         message="contract was expected to be available for redemption for at least {}, but it is only available for {}".format(
-                            j.data.types.duration.toString(min_duration), j.data.types.duration.toString(duration)),
-                        contract=contract)
+                            j.data.types.duration.toString(min_duration), j.data.types.duration.toString(duration)
+                        ),
+                        contract=contract,
+                    )
 
         # if expected to be authorized to be the sender, verify this
         if sender and contract.sender not in self._wallet.addresses:
             raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
-                message="wallet not registered as sender of this contract", contract=contract)
+                message="wallet not registered as sender of this contract", contract=contract
+            )
 
         # if expected to be authorized to be the receiver, verify this
         if receiver and contract.receiver not in self._wallet.addresses:
             raise j.clients.tfchain.errors.AtomicSwapContractInvalid(
-                message="wallet not registered as receiver of this contract", contract=contract)
+                message="wallet not registered as receiver of this contract", contract=contract
+            )
 
         # return the contract for further optional consumption,
         # according to our validations it is valid
@@ -988,7 +1052,9 @@ class TFChainAtomicSwap():
         except j.clients.tfchain.errors.ExplorerNoContent as exc:
             raise j.clients.tfchain.errors.AtomicSwapContractNotFound(outputid=outputid) from exc
         # generate the contract
-        contract = AtomicSwapContract(coinoutput=co, unspent=False, current_timestamp=self._chain_time) # either it is spent already or we'll spend it
+        contract = AtomicSwapContract(
+            coinoutput=co, unspent=False, current_timestamp=self._chain_time
+        )  # either it is spent already or we'll spend it
         # check if the contract hasn't been spent already
         if spend_txn is not None:
             # if a spend transaction exists,
@@ -1000,7 +1066,10 @@ class TFChainAtomicSwap():
 
         # ensure this wallet is authorized to be the receiver
         if contract.receiver not in self._wallet.addresses:
-            raise j.clients.tfchain.errors.AtomicSwapForbidden(message="unauthorized to redeem: wallet does not contain receiver address {}".format(contract.receiver), contract=contract)
+            raise j.clients.tfchain.errors.AtomicSwapForbidden(
+                message="unauthorized to redeem: wallet does not contain receiver address {}".format(contract.receiver),
+                contract=contract,
+            )
 
         # create the fulfillment
         fulfillment = j.clients.tfchain.types.fulfillments.atomic_swap_new(secret=secret)
@@ -1026,7 +1095,9 @@ class TFChainAtomicSwap():
         except j.clients.tfchain.errors.ExplorerNoContent as exc:
             raise j.clients.tfchain.errors.AtomicSwapContractNotFound(outputid=outputid) from exc
         # generate the contract
-        contract = AtomicSwapContract(coinoutput=co, unspent=False, current_timestamp=self._chain_time) # either it is spent already or we'll spend it
+        contract = AtomicSwapContract(
+            coinoutput=co, unspent=False, current_timestamp=self._chain_time
+        )  # either it is spent already or we'll spend it
         # check if the contract hasn't been spent already
         if spend_txn is not None:
             # if a spend transaction exists,
@@ -1036,19 +1107,24 @@ class TFChainAtomicSwap():
         time = self._chain_time
         if time < contract.refund_timestamp:
             raise j.clients.tfchain.errors.AtomicSwapForbidden(
-                message="unauthorized to refund: contract can only be refunded since {}".format(j.data.time.epoch2HRDateTime(contract.refund_timestamp)),
-                contract=contract)
+                message="unauthorized to refund: contract can only be refunded since {}".format(
+                    j.data.time.epoch2HRDateTime(contract.refund_timestamp)
+                ),
+                contract=contract,
+            )
 
         # ensure this wallet is authorized to be the sender (refunder)
         if contract.sender not in self._wallet.addresses:
-            raise j.clients.tfchain.errors.AtomicSwapForbidden(message="unauthorized to refund: wallet does not contain sender address {}".format(contract.sender), contract=contract)
+            raise j.clients.tfchain.errors.AtomicSwapForbidden(
+                message="unauthorized to refund: wallet does not contain sender address {}".format(contract.sender),
+                contract=contract,
+            )
 
         # create the fulfillment
         fulfillment = j.clients.tfchain.types.fulfillments.atomic_swap_new()
 
         # create, sign and submit the transaction
         return self._claim_contract(contract=contract, as_sender=True, fulfillment=fulfillment, data=data)
-
 
     def _create_contract(self, recipient, amount, refund_time, source, refund, data, secret_hash, submit):
         """
@@ -1070,7 +1146,7 @@ class TFChainAtomicSwap():
 
         # define the coin inputs
         balance = self._wallet.balance
-        inputs, remainder, suggested_refund = balance.fund(amount+miner_fee, source=source)
+        inputs, remainder, suggested_refund = balance.fund(amount + miner_fee, source=source)
 
         # define the refund
         if refund is not None:
@@ -1097,11 +1173,14 @@ class TFChainAtomicSwap():
             chain_time = self._chain_time
             refund_time = OutputLock(value=refund_time, current_timestamp=chain_time).value
         elif not isinstance(refund_time, int):
-            raise TypeError("expected refund time to be an integer or string, not to be of type {}".format(type(refund_time)))
+            raise TypeError(
+                "expected refund time to be an integer or string, not to be of type {}".format(type(refund_time))
+            )
 
         # define the atomic swap contract and add it as a coin output
         asc = j.clients.tfchain.types.conditions.atomic_swap_new(
-            sender=sender, receiver=recipient, hashed_secret=secret_hash, lock_time=refund_time)
+            sender=sender, receiver=recipient, hashed_secret=secret_hash, lock_time=refund_time
+        )
         txn.coin_output_add(condition=asc, value=amount)
 
         # optionally add a refund coin output
@@ -1121,7 +1200,7 @@ class TFChainAtomicSwap():
                 signature = key_pair.sign(input_hash)
                 request.signature_fulfill(public_key=key_pair.public_key, signature=signature)
             except KeyError:
-                pass # this is acceptable due to how we directly try the key_pair_get method
+                pass  # this is acceptable due to how we directly try the key_pair_get method
 
         # assign all coin output ID's for atomic swap contracts,
         # as we always care about the contract's output ID and
@@ -1157,8 +1236,11 @@ class TFChainAtomicSwap():
         txn.coin_input_add(parentid=contract.outputid, fulfillment=fulfillment, parent_output=contract.coin_output)
         # and the coin output
         txn.coin_output_add(
-            condition=j.clients.tfchain.types.conditions.unlockhash_new(contract.sender if as_sender else contract.receiver),
-            value=contract.amount-miner_fee)
+            condition=j.clients.tfchain.types.conditions.unlockhash_new(
+                contract.sender if as_sender else contract.receiver
+            ),
+            value=contract.amount - miner_fee,
+        )
 
         # get all signature requests
         sig_requests = txn.signature_requests_new()
@@ -1173,7 +1255,7 @@ class TFChainAtomicSwap():
                 signature = key_pair.sign(input_hash)
                 request.signature_fulfill(public_key=key_pair.public_key, signature=signature)
             except KeyError:
-                pass # this is acceptable due to how we directly try the key_pair_get method
+                pass  # this is acceptable due to how we directly try the key_pair_get method
 
         # submit if possible
         submit = txn.is_fulfilled()
@@ -1225,7 +1307,7 @@ class TFChainAtomicSwap():
         return self._wallet.client.transaction_put(transaction=transaction)
 
 
-class TFChainThreeBot():
+class TFChainThreeBot:
     """
     TFChainThreeBot contains all ThreeBot logic.
     """
@@ -1276,13 +1358,27 @@ class TFChainThreeBot():
                 raise TypeError("key index is to be of type int, not type {}".format(type(key_index)))
             addresses = self._wallet.addresses
             if key_index < 0 or key_index >= len(addresses):
-                raise ValueError("key index {} is OOB, index cannot be negative, and can be maximum {}".format(key_index, len(addresses)-1))
+                raise ValueError(
+                    "key index {} is OOB, index cannot be negative, and can be maximum {}".format(
+                        key_index, len(addresses) - 1
+                    )
+                )
             txn.public_key = self._wallet.key_pair_get(unlockhash=addresses[key_index]).public_key
 
         # sign, submit, update Balance and return result
         return self._sign_and_submit_txn(txn, balance)
 
-    def record_update(self, identifier, months=0, names_to_add=None, names_to_remove=None, addresses_to_add=None, addresses_to_remove=None, source=None, refund=None):
+    def record_update(
+        self,
+        identifier,
+        months=0,
+        names_to_add=None,
+        names_to_remove=None,
+        addresses_to_add=None,
+        addresses_to_remove=None,
+        source=None,
+        refund=None,
+    ):
         """
         Update the record of an existing 3Bot, for which this Wallet is authorized to make such changes.
         Names and addresses can be added and removed. Removal of data is always for free, adding data costs money.
@@ -1300,7 +1396,11 @@ class TFChainThreeBot():
         @param source: one or multiple addresses/unlockhashes from which to fund this coin send transaction, by default all personal wallet addresses are used, only known addresses can be used
         @param refund: optional refund address, by default is uses the source if it specifies a single address otherwise it uses the default wallet address (recipient type, with None being the exception in its interpretation)
         """
-        if months < 1 and not reduce((lambda r, v: r or (v is not None)), [names_to_add, names_to_remove, addresses_to_add, addresses_to_remove], False):
+        if months < 1 and not reduce(
+            (lambda r, v: r or (v is not None)),
+            [names_to_add, names_to_remove, addresses_to_add, addresses_to_remove],
+            False,
+        ):
             raise ValueError("extra months is to be given or one name/address is to be added/removed, none is defined")
 
         # create the txn and fill the easiest properties already
@@ -1373,7 +1473,6 @@ class TFChainThreeBot():
         # submitted as well
         return self._sign_and_submit_txn(txn, balance)
 
-
     def _fund_txn(self, txn, source, refund):
         """
         common fund/refund/inputs/fees logic for all 3Bot Transactions
@@ -1382,7 +1481,7 @@ class TFChainThreeBot():
         miner_fee = self._minium_miner_fee
         bot_fee = txn.required_bot_fees
         balance = self._wallet.balance
-        inputs, remainder, suggested_refund = balance.fund(miner_fee+bot_fee, source=source)
+        inputs, remainder, suggested_refund = balance.fund(miner_fee + bot_fee, source=source)
 
         # add the coin inputs
         txn.coin_inputs = inputs
@@ -1390,7 +1489,7 @@ class TFChainThreeBot():
         # add refund coin output if needed
         if remainder > 0:
             # define the refund condition
-            if refund is None: # automatically choose a refund condition if none is given
+            if refund is None:  # automatically choose a refund condition if none is given
                 if suggested_refund is None:
                     refund = j.clients.tfchain.types.conditions.unlockhash_new(unlockhash=self._wallet.address)
                 else:
@@ -1422,7 +1521,7 @@ class TFChainThreeBot():
                 signature = key_pair.sign(input_hash)
                 request.signature_fulfill(public_key=key_pair.public_key, signature=signature)
             except KeyError:
-                pass # this is acceptable due to how we directly try the key_pair_get method
+                pass  # this is acceptable due to how we directly try the key_pair_get method
 
         # txn should be fulfilled now
         submit = txn.is_fulfilled()
@@ -1466,7 +1565,7 @@ class TFChainThreeBot():
         return info.timestamp
 
 
-class TFChainERC20():
+class TFChainERC20:
     """
     TFChainERC20 contains all ERC20 (wallet) logic.
     """
@@ -1535,11 +1634,18 @@ class TFChainERC20():
         elif isinstance(value, int) and not isinstance(value, bool):
             addresses = self._wallet.addresses
             if value < 0 or value >= len(addresses):
-                raise ValueError("address index {} is not a valid index for this wallet, has to be in the inclusive range of [0, {}]".format(
-                    value, len(addresses)-1))
+                raise ValueError(
+                    "address index {} is not a valid index for this wallet, has to be in the inclusive range of [0, {}]".format(
+                        value, len(addresses) - 1
+                    )
+                )
             public_key = self._wallet.key_pair_get(unlockhash=addresses[value]).public_key
         else:
-            raise ValueError("value has to be a str, UnlockHash or int, cannot identify an address using value {} (type: {})".format(value, type(value)))
+            raise ValueError(
+                "value has to be a str, UnlockHash or int, cannot identify an address using value {} (type: {})".format(
+                    value, type(value)
+                )
+            )
 
         # create transaction
         txn = j.clients.tfchain.types.transactions.erc20_address_registration_new()
@@ -1574,11 +1680,18 @@ class TFChainERC20():
         elif isinstance(value, int) and not isinstance(value, bool):
             addresses = self._wallet.addresses
             if value < 0 or value >= len(addresses):
-                raise ValueError("address index {} is not a valid index for this wallet, has to be in the inclusive range of [0, {}]".format(
-                    value, len(addresses)-1))
+                raise ValueError(
+                    "address index {} is not a valid index for this wallet, has to be in the inclusive range of [0, {}]".format(
+                        value, len(addresses) - 1
+                    )
+                )
             public_key = self._wallet.key_pair_get(unlockhash=addresses[value]).public_key
         else:
-            raise ValueError("value has to be a str, UnlockHash or int, cannot identify an address using value {} (type: {})".format(value, type(value)))
+            raise ValueError(
+                "value has to be a str, UnlockHash or int, cannot identify an address using value {} (type: {})".format(
+                    value, type(value)
+                )
+            )
 
         # look up the wallet address and return it
         return self._wallet.client.erc20.address_get(unlockhash=public_key.unlockhash)
@@ -1610,7 +1723,7 @@ class TFChainERC20():
         # get the fees, and fund the transaction
         miner_fee = self._minium_miner_fee
         balance = self._wallet.balance
-        inputs, remainder, suggested_refund = balance.fund(miner_fee+amount, source=source)
+        inputs, remainder, suggested_refund = balance.fund(miner_fee + amount, source=source)
 
         # add the coin inputs
         txn.coin_inputs = inputs
@@ -1618,7 +1731,7 @@ class TFChainERC20():
         # add refund coin output if needed
         if remainder > 0:
             # define the refund condition
-            if refund is None: # automatically choose a refund condition if none is given
+            if refund is None:  # automatically choose a refund condition if none is given
                 if suggested_refund is None:
                     refund = j.clients.tfchain.types.conditions.unlockhash_new(unlockhash=self._wallet.address)
                 else:
@@ -1651,7 +1764,7 @@ class TFChainERC20():
                 signature = key_pair.sign(input_hash)
                 request.signature_fulfill(public_key=key_pair.public_key, signature=signature)
             except KeyError:
-                pass # this is acceptable due to how we directly try the key_pair_get method
+                pass  # this is acceptable due to how we directly try the key_pair_get method
 
         # txn should be fulfilled now
         submit = txn.is_fulfilled()
@@ -1690,43 +1803,52 @@ class TFChainERC20():
 
 from typing import NamedTuple
 
+
 class TransactionSendResult(NamedTuple):
     """
     TransactionSendResult is a named tuple,
     used as the result for a generic transaction send call.
     """
+
     transaction: TransactionBaseClass
     submitted: bool
+
 
 class TransactionSignResult(NamedTuple):
     """
     TransactionSignResult is a named tuple,
     used as the result for a transaction sign call.
     """
+
     transaction: TransactionBaseClass
     signed: bool
     submitted: bool
+
 
 class AtomicSwapInitiationResult(NamedTuple):
     """
     AtomicSwapInitiationResult is a named tuple,
     used as the result for an atomic swap initiation call.
     """
+
     contract: AtomicSwapContract
     secret: AtomicSwapSecret
     transaction: TransactionBaseClass
     submitted: bool
+
 
 class AtomicSwapParticipationResult(NamedTuple):
     """
     AtomicSwapParticipationResult is a named tuple,
     used as the result for an atomic swap participation call.
     """
+
     contract: AtomicSwapContract
     transaction: TransactionBaseClass
     submitted: bool
 
-class SpendableKey():
+
+class SpendableKey:
     """
     SpendableKey defines a PublicPrivate key pair as useable
     by a TFChain wallet.
@@ -1791,6 +1913,7 @@ class WalletBalance(object):
         Blockchain block ID, as defined by the last known block.
         """
         return self._chain_blockid
+
     @chain_blockid.setter
     def chain_blockid(self, value):
         """
@@ -1812,6 +1935,7 @@ class WalletBalance(object):
         Blockchain time, as defined by the last known block.
         """
         return self._chain_time
+
     @chain_time.setter
     def chain_time(self, value):
         """
@@ -1828,6 +1952,7 @@ class WalletBalance(object):
         Blockchain height, as defined by the last known block.
         """
         return self._chain_height
+
     @chain_height.setter
     def chain_height(self, value):
         """
@@ -1852,22 +1977,28 @@ class WalletBalance(object):
         Spent (coin) outputs.
         """
         return self._outputs_spent
+
     @property
     def outputs_unconfirmed(self):
         """
         Unconfirmed (coin) outputs, available for spending or locked.
         """
         return self._outputs_unconfirmed
+
     @property
     def outputs_unconfirmed_available(self):
         """
         Unconfirmed (coin) outputs, available for spending.
         """
         if self.chain_time > 0 and self.chain_height > 0:
-            return [co for co in self._outputs_unconfirmed.values()
-                if not co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)]
+            return [
+                co
+                for co in self._outputs_unconfirmed.values()
+                if not co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)
+            ]
         else:
             return list(self._outputs_unconfirmed.values())
+
     @property
     def outputs_unconfirmed_spent(self):
         """
@@ -1881,8 +2012,11 @@ class WalletBalance(object):
         Total available (coin) outputs.
         """
         if self.chain_time > 0 and self.chain_height > 0:
-            return [co for co in self._outputs.values()
-                if not co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)]
+            return [
+                co
+                for co in self._outputs.values()
+                if not co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)
+            ]
         else:
             return list(self._outputs.values())
 
@@ -1899,10 +2033,18 @@ class WalletBalance(object):
         Total available coins that are locked.
         """
         if self.chain_time > 0 and self.chain_height > 0:
-            return sum([co.value for co in self._outputs.values()
-                if co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)]) or Currency()
+            return (
+                sum(
+                    [
+                        co.value
+                        for co in self._outputs.values()
+                        if co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)
+                    ]
+                )
+                or Currency()
+            )
         else:
-            return Currency(value=0) # impossible to know for sure without a complete context
+            return Currency(value=0)  # impossible to know for sure without a complete context
 
     @property
     def unconfirmed(self):
@@ -1910,8 +2052,16 @@ class WalletBalance(object):
         Total unconfirmed coins, available for spending.
         """
         if self.chain_time > 0 and self.chain_height > 0:
-            return sum([co.value for co in self._outputs_unconfirmed.values()
-                if not co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)]) or Currency()
+            return (
+                sum(
+                    [
+                        co.value
+                        for co in self._outputs_unconfirmed.values()
+                        if not co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)
+                    ]
+                )
+                or Currency()
+            )
         else:
             return sum([co.value for co in self._outputs_unconfirmed.values()])
 
@@ -1921,16 +2071,24 @@ class WalletBalance(object):
         Total unconfirmed coins that are locked, and thus not available for spending.
         """
         if self.chain_time > 0 and self.chain_height > 0:
-            return sum([co.value for co in self._outputs_unconfirmed.values()
-                if co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)]) or Currency()
+            return (
+                sum(
+                    [
+                        co.value
+                        for co in self._outputs_unconfirmed.values()
+                        if co.condition.lock.locked_check(time=self.chain_time, height=self.chain_height)
+                    ]
+                )
+                or Currency()
+            )
         else:
-            return Currency(value=0) # impossible to know for sure without a complete context
+            return Currency(value=0)  # impossible to know for sure without a complete context
 
     def output_add(self, output, confirmed=True, spent=False):
         """
         Add an output to the Wallet's balance.
         """
-        if confirmed: # confirmed outputs
+        if confirmed:  # confirmed outputs
             if spent:
                 self._outputs_spent[output.id] = output
                 # delete from other output lists if prior registered
@@ -1941,7 +2099,7 @@ class WalletBalance(object):
                 self._outputs[output.id] = output
                 # delete from other output lists if prior registered
                 self._outputs_unconfirmed.pop(output.id, None)
-        elif output.id not in self._outputs_spent: # unconfirmed outputs
+        elif output.id not in self._outputs_spent:  # unconfirmed outputs
             if spent:
                 self._outputs_unconfirmed_spent[output.id] = output
                 # delete from other output lists if prior registered
@@ -1993,7 +2151,7 @@ class WalletBalance(object):
             self.chain_height = other.chain_height
             self.chain_blockid = other.chain_blockid
         # merge the outputs
-        for attr in ['_outputs', '_outputs_spent', '_outputs_unconfirmed', '_outputs_unconfirmed_spent']:
+        for attr in ["_outputs", "_outputs_spent", "_outputs_unconfirmed", "_outputs_unconfirmed_spent"]:
             d = getattr(self, attr, {})
             for id, output in getattr(other, attr, {}).items():
                 d[id] = output
@@ -2041,7 +2199,7 @@ class WalletBalance(object):
             # select maximum _MAX_RIVINE_TRANSACTION_INPUTS outputs
             n = min(len(outputs), _MAX_RIVINE_TRANSACTION_INPUTS)
             used_outputs = outputs[:n]
-            outputs = outputs[n:] # and update our output list, so we do not double spend
+            outputs = outputs[n:]  # and update our output list, so we do not double spend
             # compute amount, minus minimum fee and add our only output
             amount = sum([co.value for co in used_outputs]) - miner_fee
             txn.coin_output_add(condition=recipient, value=amount)
@@ -2055,12 +2213,16 @@ class WalletBalance(object):
 
     def _human_readable_balance(self):
         # report confirmed coins
-        result = "{} available and {} locked".format(self.available.str(with_unit=True), self.locked.str(with_unit=True))
+        result = "{} available and {} locked".format(
+            self.available.str(with_unit=True), self.locked.str(with_unit=True)
+        )
         # optionally report unconfirmed coins
         unconfirmed = self.unconfirmed
         unconfirmed_locked = self.unconfirmed_locked
         if unconfirmed > 0 or unconfirmed_locked > 0:
-            result += "\nUnconfirmed: {} available {} locked".format(unconfirmed.str(with_unit=True), unconfirmed_locked.str(with_unit=True))
+            result += "\nUnconfirmed: {} available {} locked".format(
+                unconfirmed.str(with_unit=True), unconfirmed_locked.str(with_unit=True)
+            )
         unconfirmed_spent = Currency(value=sum([co.value for co in self._outputs_unconfirmed_spent.values()]))
         if unconfirmed_spent > 0:
             result += "\nUnconfirmed Balance Deduction: -{}".format(unconfirmed_spent.str(with_unit=True))
@@ -2071,13 +2233,17 @@ class WalletBalance(object):
         # report chain context
         result = ""
         if self.chain_height > 0 and self.chain_time > 0:
-            result += "wallet balance on height {} at {}\n".format(self.chain_height, j.data.time.epoch2HRDateTime(self.chain_time))
+            result += "wallet balance on height {} at {}\n".format(
+                self.chain_height, j.data.time.epoch2HRDateTime(self.chain_time)
+            )
         else:
             result += "wallet balance at an unknown time\n"
         # report context + balance
         return result + self._human_readable_balance()
 
+
 from .types.ConditionTypes import ConditionMultiSignature
+
 
 class MultiSigWalletBalance(WalletBalance):
     def __init__(self, owners, signature_count):
@@ -2085,11 +2251,21 @@ class MultiSigWalletBalance(WalletBalance):
         Creates a personal multi signature wallet.
         """
         if not isinstance(signature_count, int):
-            raise TypeError("signature count of a MultiSigWallet is expected to be of type int, not {}".format(type(signature_count)))
+            raise TypeError(
+                "signature count of a MultiSigWallet is expected to be of type int, not {}".format(
+                    type(signature_count)
+                )
+            )
         if signature_count < 1:
-            raise ValueError("signature count of a MultiSigWallet has to be at least 1, cannot be {}".format(signature_count))
+            raise ValueError(
+                "signature count of a MultiSigWallet has to be at least 1, cannot be {}".format(signature_count)
+            )
         if len(owners) < signature_count:
-            raise ValueError("the amount of owners ({}) cannot be lower than the specified signature count ({})".format(len(owners), signature_count))
+            raise ValueError(
+                "the amount of owners ({}) cannot be lower than the specified signature count ({})".format(
+                    len(owners), signature_count
+                )
+            )
         self._owners = owners
         self._signature_count = signature_count
         super().__init__()
@@ -2137,9 +2313,10 @@ class MultiSigWalletBalance(WalletBalance):
 
     def _human_readable_balance(self):
         result = "MultiSignature ({}-of-{}) Wallet {}:\n".format(self.signature_count, len(self.owners), self.address)
-        result += "Owners: " + ", ".join(self.owners) +"\n"
+        result += "Owners: " + ", ".join(self.owners) + "\n"
         result += super()._human_readable_balance()
         return result
+
 
 class WalletsBalance(WalletBalance):
     def __init__(self):
@@ -2171,11 +2348,15 @@ class WalletsBalance(WalletBalance):
         """
         oc = output.condition.unwrap()
         if not isinstance(oc, ConditionMultiSignature):
-            raise TypeError("multi signature's output condition cannot be of type {} (expected: ConditionMultiSignature)".format(type(oc)))
+            raise TypeError(
+                "multi signature's output condition cannot be of type {} (expected: ConditionMultiSignature)".format(
+                    type(oc)
+                )
+            )
         if not address in self._wallets:
             self._wallets[address] = MultiSigWalletBalance(
-                owners=output.condition.unlockhashes,
-                signature_count=output.condition.required_signatures)
+                owners=output.condition.unlockhashes, signature_count=output.condition.required_signatures
+            )
         self._wallets[address].output_add(output, confirmed=confirmed, spent=spent)
 
     def output_add(self, output, confirmed=True, spent=False):
@@ -2208,7 +2389,7 @@ class WalletsBalance(WalletBalance):
         if b != self:
             raise Exception("BUG: instance shouldn't have changed, please fix or report")
         if not isinstance(other, WalletsBalance):
-            return b # return as nothing else can be merged
+            return b  # return as nothing else can be merged
         # merge all the multi-signature wallets
         for addr, balance in other._wallets.items():
             b._merge_multisig_wallet_balance(addr, balance)
@@ -2227,7 +2408,7 @@ class WalletsBalance(WalletBalance):
     def __repr__(self):
         result = super().__repr__()
         for wallet in self.wallets.values():
-            if wallet.active: # only display active wallets in the Human (shell) Representation
+            if wallet.active:  # only display active wallets in the Human (shell) Representation
                 result += "\n\n" + wallet._human_readable_balance()
         return result
 
@@ -2271,8 +2452,9 @@ class WalletsBalance(WalletBalance):
                     addr = str(source[0])
                     if addr in self.wallets:
                         wallet = self.wallets[addr]
-                        refund = j.clients.tfchain.types.conditions.multi_signature_new(min_nr_sig=wallet.signature_count, unlockhashes=wallet.owners)
-
+                        refund = j.clients.tfchain.types.conditions.multi_signature_new(
+                            min_nr_sig=wallet.signature_count, unlockhashes=wallet.owners
+                        )
 
         # ensure at least one address is defined
         if len(addresses) == 0 and len(ms_addresses) == 0:
@@ -2281,24 +2463,28 @@ class WalletsBalance(WalletBalance):
         # if personal addresses are given, try to use these first
         # as these are the easiest kind to deal with
         if len(addresses) == 0:
-            outputs, collected = ([], Currency()) # start with nothing
+            outputs, collected = ([], Currency())  # start with nothing
         else:
             outputs, collected = self._fund_individual(amount, addresses)
 
         if collected >= amount:
             # if we already have sufficient, we stop now
-            return ([CoinInput.from_coin_output(co) for co in outputs], collected-amount, refund)
+            return ([CoinInput.from_coin_output(co) for co in outputs], collected - amount, refund)
 
         if len(ms_addresses) == 0:
             # if no ms_addresses were defined,
-            raise j.clients.tfchain.errors.InsufficientFunds("not enough funds available in the individual wallet to fund the requested amount")
+            raise j.clients.tfchain.errors.InsufficientFunds(
+                "not enough funds available in the individual wallet to fund the requested amount"
+            )
         # otherwise keep going for multisig addresses
         outputs, collected = self._fund_multisig(amount, ms_addresses, outputs=outputs, collected=collected)
 
         # if we still didn't manage to fund enough, there is nothing we can do
         if collected < amount:
-            raise j.clients.tfchain.errors.InsufficientFunds("not enough funds available in the wallets to fund the requested amount")
-        return ([CoinInput.from_coin_output(co) for co in outputs], collected-amount, refund)
+            raise j.clients.tfchain.errors.InsufficientFunds(
+                "not enough funds available in the wallets to fund the requested amount"
+            )
+        return ([CoinInput.from_coin_output(co) for co in outputs], collected - amount, refund)
 
     def _fund_individual(self, amount, addresses):
         outputs_available = [co for co in self.outputs_available if co.condition.unlockhash in addresses]
@@ -2345,7 +2531,7 @@ class WalletsBalance(WalletBalance):
             collected = Currency()
         for address, wallet in self.wallets.items():
             if UnlockHash.from_json(address) not in addresses:
-                continue # nothing to do here
+                continue  # nothing to do here
 
             outputs_available = wallet.outputs_available
             outputs_available.sort(key=lambda co: co.value)
@@ -2381,3 +2567,110 @@ class WalletsBalance(WalletBalance):
                     return outputs, collected
         # we return whatever we have collected, no matter if it is sufficient
         return outputs, collected
+
+
+class CoinTransactionBuilder:
+    def __init__(self, wallet):
+        self._txn = j.clients.tfchain.types.transactions.new()
+        self._wallet = wallet
+
+    def output_add(self, recipient, amount, lock=None):
+        """
+        Add an output to the transaction, returning the transaction
+        itself to allow for chaining.
+
+        The recipient is one of:
+            - None: recipient is the Free-For-All wallet
+            - str (or unlockhash): recipient is a personal wallet
+            - list: recipient is a MultiSig wallet where all owners (specified as a list of addresses) have to sign
+            - tuple (addresses, sigcount): recipient is a sigcount-of-addresscount MultiSig wallet
+            - an ERC20 address (str/ERC20Address), amount will be send to this ERC20 address
+
+        The amount can be a str or an int:
+            - when it is an int, you are defining the amount in the smallest unit (that is 1 == 0.000000001 TFT)
+            - when defining as a str you can use the following space-stripped and case-insentive formats:
+                - '123456789': same as when defining the amount as an int
+                - '123.456': define the amount in TFT (that is '123.456' == 123.456 TFT == 123456000000)
+                - '123456 TFT': define the amount in TFT (that is '123456 TFT' == 123456 TFT == 123456000000000)
+                - '123.456 TFT': define the amount in TFT (that is '123.456 TFT' == 123.456 TFT == 123456000000)
+
+        @param recipient: see explanation above
+        @param amount: int or str that defines the amount of TFT to set, see explanation above
+        @param lock: optional lock that can be used to lock the sent amount to a specific time or block height, see explation above
+        """
+        if self._txn is None:
+            raise RuntimeError("coin transaction builder is already consumed")
+
+        amount = Currency(value=amount)
+        if amount <= 0:
+            raise ValueError("no amount is defined to be sent")
+        recipient = j.clients.tfchain.types.conditions.from_recipient(recipient, lock=lock)
+        self._txn.coin_output_add(value=amount, condition=recipient)
+        return self
+
+    def send(self, source=None, refund=None, data=None):
+        txn = self._txn
+        self._txn = None
+
+        # fund amount
+        amount = sum([co.value for co in txn.coin_outputs])
+        balance = self._wallet.balance
+        miner_fee = self._wallet.client.minimum_miner_fee
+        inputs, remainder, suggested_refund = balance.fund(amount + miner_fee, source=source)
+
+        # define the refund condition
+        if refund is None:  # automatically choose a refund condition if none is given
+            if suggested_refund is None:
+                refund = j.clients.tfchain.types.conditions.unlockhash_new(unlockhash=self._wallet.address)
+            else:
+                refund = suggested_refund
+        else:
+            # use the given refund condition (defined as a recipient)
+            refund = j.clients.tfchain.types.conditions.from_recipient(refund)
+
+        # add refund coin output if needed
+        if remainder > 0:
+            txn.coin_output_add(value=remainder, condition=refund)
+        # add the miner fee
+        txn.miner_fee_add(miner_fee)
+
+        # add the coin inputs
+        txn.coin_inputs = inputs
+
+        # if there is data to be added, add it as well
+        if data:
+            txn.data = data
+
+        # generate the signature requests
+        sig_requests = txn.signature_requests_new()
+        if len(sig_requests) == 0:
+            raise Exception("BUG: sig requests should not be empty at this point, please fix or report as an issue")
+
+        # fulfill the signature requests that we can fulfill
+        for request in sig_requests:
+            try:
+                key_pair = self._wallet.key_pair_get(request.wallet_address)
+                input_hash = request.input_hash_new(public_key=key_pair.public_key)
+                signature = key_pair.sign(input_hash)
+                request.signature_fulfill(public_key=key_pair.public_key, signature=signature)
+            except KeyError:
+                pass  # this is acceptable due to how we directly try the key_pair_get method
+
+        # txn should be fulfilled now
+        submit = txn.is_fulfilled()
+        if submit:
+            # submit the transaction
+            txn.id = self._wallet._transaction_put(transaction=txn)
+
+            # update balance
+            for ci in txn.coin_inputs:
+                balance.output_add(ci.parent_output, confirmed=False, spent=True)
+            addresses = self._wallet.addresses + balance.addresses_multisig
+            for idx, co in enumerate(txn.coin_outputs):
+                if str(co.condition.unlockhash) in addresses:
+                    # add the id to the coin_output, so we can track it has been spent
+                    co.id = txn.coin_outputid_new(idx)
+                    balance.output_add(co, confirmed=False, spent=False)
+            # and return the created/submitted transaction for optional user consumption
+
+        return TransactionSendResult(txn, submit)

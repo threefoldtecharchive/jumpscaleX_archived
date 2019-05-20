@@ -43,8 +43,8 @@ class GiteaUsers(j.application.JSBaseClass):
     def search(self, query, limit=None):
         users = []
         resp = self.client.api.users.userSearch(limit=limit, q=query).json()
-        for user in resp['data']:
-            if user['username'] == self.current.username:
+        for user in resp["data"]:
+            if user["username"] == self.current.username:
                 new = GiteaUserCurrent(self.client)
             else:
                 new = self.new()
@@ -58,13 +58,13 @@ class GiteaUsers(j.application.JSBaseClass):
             self.client.api.users.userCheckFollowing(follower, followee)
         except Exception as e:
             if e.response.status_code == 404:
-                self._log_debug('follower or followee not found')
+                self._log_debug("follower or followee not found")
             else:
                 self._log_debug(e.response.content)
             return False
         return True
 
     def __repr__(self):
-        return '<Users>'
+        return "<Users>"
 
     __str__ = __repr__

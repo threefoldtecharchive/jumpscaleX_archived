@@ -1,9 +1,7 @@
-
 from Jumpscale import j
 
 
 class ZeroStorClient:
-
     def __init__(self, *kwargs):
         pass
 
@@ -43,5 +41,5 @@ class ZeroStorClient:
 
     def testPerformance(self):
 
-        #... do some performance test
+        # ... do some performance test
         raise NotImplementedError()

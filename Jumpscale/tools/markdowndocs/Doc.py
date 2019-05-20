@@ -63,17 +63,17 @@ class Doc(j.application.JSBaseClass):
             self.register_sonic()
 
     def chunks(self, txt, length):
-        for i in range(0,len(txt), length):
+        for i in range(0, len(txt), length):
             if i + length > len(txt):
                 yield txt[i:]
             else:
-                yield txt[i: i+length]
+                yield txt[i : i + length]
 
     def register_sonic(self):
-        text = self.markdown_source.replace('\n', ' ').strip()
+        text = self.markdown_source.replace("\n", " ").strip()
         if not text:
             return
-        if ' ' in self.name:
+        if " " in self.name:
             print("file {} can't be indexed it contains space in the file name")
             return
         for chunck in self.chunks(text, int(self.sonic_client._client_ingest.bufsize) // 2):
@@ -244,9 +244,10 @@ class Doc(j.application.JSBaseClass):
     @property
     def markdown_clean(self):
         # remove the code blocks (comments are already gone)
-        print('markdown_clean')
+        print("markdown_clean")
         from IPython import embed
-        embed(colors='Linux')
+
+        embed(colors="Linux")
         return None
 
     @property
@@ -311,8 +312,9 @@ class Doc(j.application.JSBaseClass):
         if "(" in methodcode:
             methodcode = methodcode.split("(", 1)[1]
             methodcode = methodcode.rstrip(", )")  # remove end )
-            args = [item.strip().strip("\"").strip("'").strip()
-                    for item in methodcode.split(",") if item.find("=") == -1]
+            args = [
+                item.strip().strip('"').strip("'").strip() for item in methodcode.split(",") if item.find("=") == -1
+            ]
         else:
             args = []
         return args
@@ -417,7 +419,7 @@ class Doc(j.application.JSBaseClass):
                 link.link_source = link.filename
                 md = link.replace_in_txt(md)
 
-        dest = j.sal.fs.joinPaths(self.docsite.outpath, self.path_dir_rel, self.name)+".md"
+        dest = j.sal.fs.joinPaths(self.docsite.outpath, self.path_dir_rel, self.name) + ".md"
         j.sal.fs.writeFile(dest, md)
 
     def _link_exists(self, link):

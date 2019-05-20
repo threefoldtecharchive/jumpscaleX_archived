@@ -7,9 +7,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class BankAccount( ):
+class BankAccount:
     """
     auto-generated. don't touch.
     """
@@ -29,20 +27,20 @@ class BankAccount( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'BankAccount'
+        class_name = "BankAccount"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.bic = client_support.set_property('bic', data, data_types, False, [], False, True, class_name)
+        self.bic = client_support.set_property("bic", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.country = client_support.set_property('country', data, data_types, False, [], False, True, class_name)
+        self.country = client_support.set_property("country", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.iban = client_support.set_property('iban', data, data_types, False, [], False, True, class_name)
+        self.iban = client_support.set_property("iban", data, data_types, False, [], False, True, class_name)
         data_types = [Label]
-        self.label = client_support.set_property('label', data, data_types, False, [], False, True, class_name)
+        self.label = client_support.set_property("label", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

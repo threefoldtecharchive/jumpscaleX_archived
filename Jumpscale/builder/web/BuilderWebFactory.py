@@ -7,7 +7,6 @@ class BuilderWebFactory(j.builder.system._BaseFactoryClass):
 
     def _init(self):
 
-
         from .BuilderNGINX import BuilderNGINX
         from .BuilderTraefik import BuilderTraefik
         from .BuilderOpenResty import BuilderOpenResty
@@ -22,4 +21,4 @@ class BuilderWebFactory(j.builder.system._BaseFactoryClass):
         self.filemanager = BuilderCaddyFilemanager()
         self.lapis = BuilderLapis()
 
-        #TODO:*1
+        # TODO:*1

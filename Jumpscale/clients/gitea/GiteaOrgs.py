@@ -35,7 +35,7 @@ class GiteaOrgs(j.application.JSBaseClass):
         if self.position < len(self._items):
             item = self._items[self.position]
             self.position += 1
-            org = self.get(item['username'], fetch=False)
+            org = self.get(item["username"], fetch=False)
             for k, v in item.items():
                 setattr(org, k, v)
             return org
@@ -50,7 +50,7 @@ class GiteaOrgs(j.application.JSBaseClass):
             self._items = self.client.api.users.orgListUserOrgs(username=self.user.username).json()
         return self
 
-    def __repr__ (self):
+    def __repr__(self):
         return "<Organizations Iterator for user: {0}>".format(self.user.username)
 
     __str__ = __repr__

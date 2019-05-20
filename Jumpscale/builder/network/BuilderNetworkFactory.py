@@ -14,6 +14,7 @@ class BuilderNetworkFactory(j.builder.system._BaseFactoryClass):
     def zerotier(self):
         if self._zerotier is None:
             from .BuilderZerotier import BuilderZerotier
+
             self._zerotier = BuilderZerotier()
         return self._zerotier
 
@@ -21,5 +22,6 @@ class BuilderNetworkFactory(j.builder.system._BaseFactoryClass):
     def coredns(self):
         if self._coredns is None:
             from .BuilderCoreDns import BuilderCoreDns
+
             self._coredns = BuilderCoreDns()
         return self._coredns

@@ -6,17 +6,17 @@ import nacl.utils
 import nacl.hash
 import nacl.encoding
 import hashlib
+
 # from .AgentWithKeyname import AgentWithName
 import binascii
 from nacl.exceptions import BadSignatureError
 import sys
+
 JSBASE = j.application.JSBaseClass
 print = j.tools.console.echo
 
 
 class NACL(j.application.JSBaseClass):
-
-
     def _init2(self, name=None):
         assert name is not None
         self.name = name
@@ -32,8 +32,7 @@ class NACL(j.application.JSBaseClass):
 
     @property
     def _path_encryptor_for_secret(self):
-        return  j.core.tools.text_replace("{DIR_VAR}/logs/myprocess_%s.log"%self.name)
-
+        return j.core.tools.text_replace("{DIR_VAR}/logs/myprocess_%s.log" % self.name)
 
     def _ask_privkey_words(self):
         """
@@ -50,7 +49,7 @@ class NACL(j.application.JSBaseClass):
             print("\nThe private key:\n\n")
             self._keys_generate()
             j.tools.console.echo("{RED}")
-            print("{BLUE}"+self.words+"{RESET}\n")
+            print("{BLUE}" + self.words + "{RESET}\n")
             print("\n{RED}ITS IMPORTANT TO STORE THIS KEY IN A SAFE PLACE{RESET}")
             if not j.tools.console.askYesNo("Did you write the words down and store them in safe place?"):
                 j.sal.fs.remove(self._path_privatekey)
@@ -62,25 +61,24 @@ class NACL(j.application.JSBaseClass):
 
         j.tools.console.clear_screen()
 
-        word3=self.words.split(" ")[2]
+        word3 = self.words.split(" ")[2]
 
         word3_to_check = j.tools.console.askString("give the 3e word of the private key string")
 
         if not word3 == word3_to_check:
-            self._error_raise ("the control word was not correct, please restart the procedure.")
-
+            self._error_raise("the control word was not correct, please restart the procedure.")
 
     @property
     def words(self):
         """
         e.g.
-        js_shell 'print(j.data.nacl.default.words)'
+        kosmos 'print(j.data.nacl.default.words)'
         """
         assert self.privkey is not None
         privkey = self.privkey.encode()
         return j.data.encryption.mnemonic.to_mnemonic(privkey)
 
-    def _keys_generate(self,words=None):
+    def _keys_generate(self, words=None):
         """
         Generate private key (strong) & store in chosen path encrypted using the local secret
         """
@@ -98,7 +96,7 @@ class NACL(j.application.JSBaseClass):
 
         self._load_privatekey()
 
-    def configure(self,privkey_words=None,secret=None,sshagent_use=None, interactive=False, generate=False):
+    def configure(self, privkey_words=None, secret=None, sshagent_use=None, interactive=False, generate=False):
         """
 
         secret is used to encrypt/decrypt the private key when stored on local filesystem
@@ -120,12 +118,12 @@ class NACL(j.application.JSBaseClass):
 
         j.application.interactive = j.application.interactive or interactive
 
-        #create dir where the secret will be to encrypt the secret
+        # create dir where the secret will be to encrypt the secret
         j.sal.fs.createDir(j.core.tools.text_replace("{DIR_VAR}/logs"))
 
         j.sal.fs.remove(self._path_encryptor_for_secret)
 
-        redis_key="secret_%s"%self.name
+        redis_key = "secret_%s" % self.name
 
         if j.core.db is None:
             j.clients.redis.core_get()
@@ -137,28 +135,29 @@ class NACL(j.application.JSBaseClass):
 
         if sshagent_use is False:
             if secret is None:
-                secret = j.tools.console.askPassword("Provide a strong secret which will be used to encrypt/decrypt your private key")
+                secret = j.tools.console.askPassword(
+                    "Provide a strong secret which will be used to encrypt/decrypt your private key"
+                )
                 if secret.strip() in [""]:
                     self._error_raise("Secret cannot be empty")
                 secret = self._hash(secret)
-            #will create a dummy file with a random key which will encrypt the secret
+            # will create a dummy file with a random key which will encrypt the secret
             key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
-            j.sal.fs.writeFile(self._path_encryptor_for_secret,key)
+            j.sal.fs.writeFile(self._path_encryptor_for_secret, key)
             self._box = nacl.secret.SecretBox(key)
             if isinstance(secret, str):
                 secret = secret.encode()
             r = self._box.encrypt(secret)
-            j.core.db.set(redis_key,r)
+            j.core.db.set(redis_key, r)
 
-        #create path where the files for nacl will be
+        # create path where the files for nacl will be
         j.sal.fs.createDir(self._path)
-
 
         self.load(die=False)
 
         if self.privkey is None:
             if j.application.interactive:
-                #means we did not find a priv key yet
+                # means we did not find a priv key yet
                 self._ask_privkey_words()
             elif generate:
                 self._keys_generate()
@@ -166,21 +165,18 @@ class NACL(j.application.JSBaseClass):
             self.load(die=False)
 
         if self.privkey is None:
-            #none of the methods worked
+            # none of the methods worked
             self._error_raise("could not generate/load a private key, please use 'kosmos --init' to fix.")
 
-
-    def _error_raise(self,msg):
-        msg = "## There is an issue in the Jumpscale encryption layer. ##\n%s"%msg
+    def _error_raise(self, msg):
+        msg = "## There is an issue in the Jumpscale encryption layer. ##\n%s" % msg
         if j.application.interactive:
-            print (msg)
+            print(msg)
             sys.exit(1)
         else:
             raise RuntimeError(msg)
 
-
-
-    def load(self,die=True):
+    def load(self, die=True):
         """
         will load private key from filesystem
         if not possible will exit to shell
@@ -190,12 +186,12 @@ class NACL(j.application.JSBaseClass):
         self.privkey = None
 
         if j.sal.fs.exists(self._path_encryptor_for_secret):
-            #means will not use ssh-agent
-            #get secret from redis which is encrypted there
-            #use a local file to decrypt the key, so at least its not non encrypted in the redis
-            redis_key="secret_%s"%self.name
-            key = j.sal.fs.readFile(self._path_encryptor_for_secret,binary=True)
-            sb=nacl.secret.SecretBox(key)
+            # means will not use ssh-agent
+            # get secret from redis which is encrypted there
+            # use a local file to decrypt the key, so at least its not non encrypted in the redis
+            redis_key = "secret_%s" % self.name
+            key = j.sal.fs.readFile(self._path_encryptor_for_secret, binary=True)
+            sb = nacl.secret.SecretBox(key)
             try:
                 r = j.core.db.get(redis_key)
             except AttributeError:
@@ -204,17 +200,19 @@ class NACL(j.application.JSBaseClass):
                 self._error_raise("cannot find secret in memory, please use 'kosmos --init' to fix.")
             secret = sb.decrypt(r)
         else:
-            #need to find an ssh agent now and only 1 key
+            # need to find an ssh agent now and only 1 key
             if j.clients.sshagent.available_1key_check():
-                key = j.clients.sshagent.sign("nacl_could_be_anything",hash=True)
+                key = j.clients.sshagent.sign("nacl_could_be_anything", hash=True)
             else:
                 if die:
-                    self._error_raise("could not find secret key from sshagent, ssh-agent not active, if active need 1 ssh key loaded!")
+                    self._error_raise(
+                        "could not find secret key from sshagent, ssh-agent not active, if active need 1 ssh key loaded!"
+                    )
                 else:
                     return False
 
         try:
-            self._box = nacl.secret.SecretBox(key)  #used to decrypt the private key
+            self._box = nacl.secret.SecretBox(key)  # used to decrypt the private key
         except nacl.exceptions.CryptoError as e:
             if die:
                 self._error_raise("could not use the secret key, maybe wrong one, please use 'kosmos --init' to fix.")
@@ -223,7 +221,7 @@ class NACL(j.application.JSBaseClass):
 
         return self._load_privatekey(die=die)
 
-    def _load_privatekey(self,die=True):
+    def _load_privatekey(self, die=True):
 
         if not j.sal.fs.exists(self._path_privatekey):
             if die:
@@ -236,7 +234,9 @@ class NACL(j.application.JSBaseClass):
             priv_key_decrypted = self.decryptSymmetric(priv_key)
         except nacl.exceptions.CryptoError as e:
             if die:
-                self._error_raise("could not decrypt the private key, maybe wrong one, please use 'kosmos --init' to fix.")
+                self._error_raise(
+                    "could not decrypt the private key, maybe wrong one, please use 'kosmos --init' to fix."
+                )
             else:
                 return False
 
@@ -250,7 +250,7 @@ class NACL(j.application.JSBaseClass):
             self.load()
         return self._box
 
-    def _hash(self,data):
+    def _hash(self, data):
         m = hashlib.sha256()
         if not j.data.types.bytes.check(data):
             data = data.encode()
@@ -261,11 +261,10 @@ class NACL(j.application.JSBaseClass):
     def pubkey(self):
         return self.privkey.public_key
 
-
     @property
     def signingkey(self):
         if self._signingkey == "":
-            encrypted_key = self.file_read_hex(self.path_signaturekey)
+            encrypted_key = self._file_read_hex(self._path_privatekey)
             key = self.decryptSymmetric(encrypted_key)
             self._signingkey = nacl.signing.SigningKey(key)
         return self._signingkey
@@ -290,7 +289,7 @@ class NACL(j.application.JSBaseClass):
         m.update(self.tobytes(data))
         return m.digest()[0:8]
 
-    def ssh_hash(self,data):
+    def ssh_hash(self, data):
         """
         uses sshagent to sign the payload & then hash result with md5
         :return:
@@ -339,8 +338,6 @@ class NACL(j.application.JSBaseClass):
         if hex:
             data = self._hex_to_bin(data)
         return unseal_box.decrypt(data)
-
-
 
     def sign(self, data):
         """
@@ -400,6 +397,6 @@ class NACL(j.application.JSBaseClass):
         return content
 
     def __str__(self):
-        return "nacl:%s"%self.name
+        return "nacl:%s" % self.name
 
     __repr__ = __str__

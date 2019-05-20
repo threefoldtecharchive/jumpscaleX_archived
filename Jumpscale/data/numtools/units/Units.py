@@ -7,18 +7,20 @@
 """
 
 # each power goes up another suffix.  BASE^0: no suffix. BASE^1: K BASE^2: M
-order = ['', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y']
+order = ["", "K", "M", "G", "T", "P", "E", "Z", "Y"]
+
 
 class Sizes:
     """ converts numbers to power-of-10^3 representations.
         less than 1000: 1000.
         less than 1000000: divide by 1000, return "K" as the suffix.  etc.
     """
-    _BASE = 1000.
+
+    _BASE = 1000.0
 
     __jslocation__ = "j.data_units.sizes"
 
-    def toSize(self, value, input='', output='K'):
+    def toSize(self, value, input="", output="K"):
         """
         Convert value in other measurement
         """
@@ -27,7 +29,7 @@ class Sizes:
         factor = input - output
         return value * (self._BASE ** factor)
 
-    def converToBestUnit(self, value, input=''):
+    def converToBestUnit(self, value, input=""):
         divider = len(str(int(self._BASE))) - 1
         output = (len(str(value)) - 2) / divider
         output += order.index(input)
@@ -42,6 +44,7 @@ class Sizes:
 class Bytes(Sizes):
     """ converts numbers to power-of-2^2 representations (1024^0, 1024^1 ...)
     """
-    _BASE = 1024.
+
+    _BASE = 1024.0
 
     __jslocation__ = "j.data_units.bytes"

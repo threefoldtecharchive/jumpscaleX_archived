@@ -10,6 +10,7 @@ JSConfigs = j.application.JSBaseConfigsClass
 class MySQLFactory(JSConfigs):
     """
     """
+
     __jslocation__ = "j.clients.mysql"
 
     def _init(self):
@@ -21,6 +22,5 @@ class MySQLFactory(JSConfigs):
     def getClient(self, ipaddr, port, login, passwd, dbname):
         key = "%s_%s_%s_%s_%s" % (ipaddr, port, login, passwd, dbname)
         if key not in self.clients:
-            self.clients[key] = mysql.connector.connect(
-                ipaddr, login, passwd, dbname, port=port)
+            self.clients[key] = mysql.connector.connect(ipaddr, login, passwd, dbname, port=port)
         return MySQLClient(self.clients[key])

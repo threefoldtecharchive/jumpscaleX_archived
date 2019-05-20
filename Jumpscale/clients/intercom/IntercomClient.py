@@ -2,8 +2,9 @@ from intercom.client import Client
 from Jumpscale import j
 from intercom.errors import HttpError
 import intercom
+
 intercom.HttpError = HttpError
-intercom.__version__ = '3.1.0'
+intercom.__version__ = "3.1.0"
 
 
 JSConfigClient = j.application.JSBaseConfigClass
@@ -31,18 +32,14 @@ class IntercomClient(JSConfigClient):
         :param user_id: id of user who will receive the message
         :type user_id: str
         """
-        self.api.messages.create(**{
-            "message_type": "inapp",
-            "body": body,
-            "from": {
-                "type": "admin",
-                "id": admin_id
-            },
-            "to": {
-                "type": "user",
-                "id": user_id
+        self.api.messages.create(
+            **{
+                "message_type": "inapp",
+                "body": body,
+                "from": {"type": "admin", "id": admin_id},
+                "to": {"type": "user", "id": user_id},
             }
-        })
+        )
 
     def send_mail_message(self, subject, body, template, admin_id, user_id):
         """
@@ -59,20 +56,16 @@ class IntercomClient(JSConfigClient):
         :param user_id: id of user who will receive the message
         :param user_id:str
         """
-        self.api.messages.create(**{
-            "message_type": "email",
-            "subject": subject,
-            "body": body,
-            "template": template,
-            "from": {
-                "type": "admin",
-                "id": admin_id
-            },
-            "to": {
-                "type": "user",
-                "id": user_id
+        self.api.messages.create(
+            **{
+                "message_type": "email",
+                "subject": subject,
+                "body": body,
+                "template": template,
+                "from": {"type": "admin", "id": admin_id},
+                "to": {"type": "user", "id": user_id},
             }
-        })
+        )
 
     def get_user(self, email):
         user = self.api.users.find(email=email)

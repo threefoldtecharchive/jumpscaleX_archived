@@ -1,4 +1,5 @@
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
 
@@ -42,8 +43,7 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
                         return
                     else:
                         destpart = changedfile.split("code/", 1)[-1]
-                        dest = j.sal.fs.joinPaths(
-                            node.prefab.core.dir_paths['CODEDIR'], destpart)
+                        dest = j.sal.fs.joinPaths(node.prefab.core.dir_paths["CODEDIR"], destpart)
                     e = ""
                     if action == "copy":
                         self._log_debug("copy: %s %s:%s" % (changedfile, node, dest))
@@ -65,7 +65,8 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
                                 # raise RuntimeError(e)
                     else:
                         raise j.exceptions.RuntimeError(
-                            "action not understood in filesystemhandler on sync:%s" % action)
+                            "action not understood in filesystemhandler on sync:%s" % action
+                        )
 
                 if error:
                     try:

@@ -15,7 +15,7 @@ class PacketNetFactory(JSConfigBaseFactory):
     def test(self):
         """
         do:
-        js_shell 'j.clients.packetnet.test()'
+        kosmos 'j.clients.packetnet.test()'
         """
         client = self.get()
         self._log_debug(client.servers_list())

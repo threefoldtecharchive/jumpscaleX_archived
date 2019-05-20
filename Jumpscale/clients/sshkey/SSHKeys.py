@@ -31,7 +31,7 @@ class SSHKeys(j.application.JSBaseConfigsClass):
             j.sal.fs.writeFile(path, out)
 
     def test(self):
-        '''
+        """
         -Generates key manually first
         -j.clients.sshkey.get(name="test",path="~/.ssh/test_key")
         -checks self.pubkey, self.privkey
@@ -44,28 +44,28 @@ class SSHKeys(j.application.JSBaseConfigsClass):
         -checks is_loaded is False
         -loads keys to agent         -->check is_loaded is True
         -unloads sshkeys from agent  --> check is_loaded is False
-        '''
+        """
         path = j.core.tools.text_replace("{DIR_HOME}/.ssh/test_key")
 
         sshkey_client = j.clients.sshkey.get(name="test_key", path=path)
         sshkey_client.generate()
         assert sshkey_client.path == path
         assert sshkey_client.privkey.strip() == j.sal.fs.readFile(path).strip()
-        assert sshkey_client.pubkey.strip() == j.sal.fs.readFile('%s.pub' % (path)).strip()
+        assert sshkey_client.pubkey.strip() == j.sal.fs.readFile("%s.pub" % (path)).strip()
 
         sshkey_client.delete_from_sshdir()
         assert not j.sal.fs.exists(path=path)
-        assert not j.sal.fs.exists(path=path+".pub")
+        assert not j.sal.fs.exists(path=path + ".pub")
 
         sshkey_client.write_to_sshdir()
         assert sshkey_client.privkey.strip() == j.sal.fs.readFile(path).strip()
-        assert sshkey_client.pubkey.strip() == j.sal.fs.readFile('%s.pub' % (path)).strip()
+        assert sshkey_client.pubkey.strip() == j.sal.fs.readFile("%s.pub" % (path)).strip()
 
         old_pubkey = sshkey_client.pubkey
         old_privkey = sshkey_client.privkey
         sshkey_client.generate(reset=True)
         assert sshkey_client.privkey == j.sal.fs.readFile(path).strip()
-        assert sshkey_client.pubkey == j.sal.fs.readFile('%s.pub' % (path)).strip()
+        assert sshkey_client.pubkey == j.sal.fs.readFile("%s.pub" % (path)).strip()
         assert sshkey_client.privkey != old_privkey
         assert sshkey_client.pubkey != old_pubkey
         sshkey_client.save()
@@ -79,6 +79,5 @@ class SSHKeys(j.application.JSBaseConfigsClass):
         # Clean up after test
         sshkey_client.delete_from_sshdir()
         sshkey_client.delete()
-
 
         print("TEST FOR SSHKEYS OK")

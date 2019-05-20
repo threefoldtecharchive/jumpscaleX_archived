@@ -13,7 +13,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         self.go_runtime = j.builder.runtimes.golang
 
     @builder_method()
-    def install(self , reset=True):
+    def install(self, reset=True):
         """
 
         kosmos 'j.builder.web.traefik.install()'
@@ -27,9 +27,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         # only check for linux for now
         arch = self.go_runtime.current_arch
         if j.core.platformtype.myplatform.isLinux:
-            download_url = self.URL.format(
-                version=self.VERSION, platform="linux", arch=arch
-            )
+            download_url = self.URL.format(version=self.VERSION, platform="linux", arch=arch)
         else:
             raise j.exceptions.RuntimeError("platform not supported")
 
@@ -89,25 +87,36 @@ class BuilderTraefik(j.builder.system._BaseClass):
         print("TEST OK")
 
     @builder_method()
-    def sandbox(self):
-
+    def sandbox(
+        self,
+        reset=False,
+        zhub_client=None,
+        flist_create=False,
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+    ):
         """Copy built bins to dest_path and create flist if create_flist = True
 
         :param dest_path: destination path to copy files into
         :type dest_path: str
         :param sandbox_dir: path to sandbox
         :type sandbox_dir: str
-        :param reset: reset sandbox file transfer
-        :type reset: bool
         :param create_flist: create flist after copying files
         :type create_flist:bool
-        :param zhub_instance: hub instance to upload flist to
-        :type zhub_instance:str
+        :param zhub_client: hub instance to upload flist tos
+        :type zhub_client:str
         """
-        self.install()
-        bin_dest = j.sal.fs.joinPaths(
-            "/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX)
-        )
-        self.tools.dir_ensure(bin_dest)
-        traefik_bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
-        self.tools.file_copy(traefik_bin_path, bin_dest)
+        dest_path = self.DIR_SANDBOX
+        j.builder.web.openresty.sandbox(reset=reset)
+
+        bins = ["traefik"]
+        for bin_name in bins:
+            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
+            dir_dest = self.tools.joinpaths(dest_path, j.core.dirs.BINDIR[1:])
+            self.tools.dir_ensure(dir_dest)
+            self._copy(dir_src, dir_dest)
+
+        lib_dest = self.tools.joinpaths(dest_path, "sandbox/lib")
+        self.tools.dir_ensure(lib_dest)
+        for bin in bins:
+            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
+            j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)

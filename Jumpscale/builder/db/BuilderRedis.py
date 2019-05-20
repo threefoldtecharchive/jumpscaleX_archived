@@ -1,5 +1,6 @@
 from Jumpscale import j
 from random import randint
+
 builder_method = j.builder.system.builder_method
 
 
@@ -24,8 +25,6 @@ class BuilderRedis(j.builder.system._BaseClass):
             cd redis-stable
             make
 
-            rm -f /usr/local/bin/redis-server
-            rm -f /usr/local/bin/redis-cli
             """
             self._execute(C)
 
@@ -39,29 +38,46 @@ class BuilderRedis(j.builder.system._BaseClass):
         :return:
         """
         self.build()
-        j.builder.tools.file_copy('{DIR_TEMP}/build/redis/redis-stable/src/redis-server', '{DIR_BIN}', overwrite=True)
-        j.builder.tools.file_copy('{DIR_TEMP}/build/redis/redis-stable/src/redis-cli', '{DIR_BIN}', overwrite=True)
-        j.builder.tools.dir_remove('{DIR_BASE}/apps/redis')
+        self._copy("{DIR_TEMP}/build/redis/redis-stable/src/redis-server", "{DIR_BIN}", overwrite=False)
+        self._copy("{DIR_TEMP}/build/redis/redis-stable/src/redis-cli", "{DIR_BIN}", overwrite=False)
+        j.builder.tools.dir_remove("{DIR_BASE}/apps/redis")
 
     @property
     def startup_cmds(self):
-        cmds = [j.tools.startupcmd.get(name="redis_server", cmd='redis-server --port {}'.format(randint(6000, 7000)))]
+        cmds = [j.tools.startupcmd.get(name="redis_server", cmd="redis-server --port {}".format(randint(6000, 7000)))]
         return cmds
-  
+
     @builder_method()
-    def sandbox(self, reset=False, zhub_client=None, flist_create=False):
-        bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox/bin".format(self.DIR_SANDBOX))
-        self.tools.dir_ensure(bin_dest)
+    def sandbox(
+        self,
+        reset=False,
+        zhub_client=None,
+        flist_create=False,
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+    ):
+        """Copy built bins to dest_path and create flist if create_flist = True
 
-        bins = ['redis-server', 'redis-cli']
-        for bin in bins:
-            bin_path = self.tools.joinpaths("{DIR_BIN}", bin)
-            self.tools.file_copy(bin_path, bin_dest)
+        :param dest_path: destination path to copy files into
+        :type dest_path: str
+        :param sandbox_dir: path to sandbox
+        :type sandbox_dir: str
+        :param create_flist: create flist after copying files
+        :type create_flist:bool
+        :param zhub_client: hub instance to upload flist tos
+        :type zhub_client:str
+        """
+        dest_path = self.DIR_SANDBOX
+        j.builder.web.openresty.sandbox(reset=reset)
 
+        bins = ["redis-server", "redis-cli"]
+        for bin_name in bins:
+            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
+            dir_dest = self.tools.joinpaths(dest_path, j.core.dirs.BINDIR[1:])
+            self.tools.dir_ensure(dir_dest)
+            self._copy(dir_src, dir_dest)
 
-        lib_dest = self.tools.joinpaths(self.DIR_SANDBOX, 'sandbox/bin')
+        lib_dest = self.tools.joinpaths(dest_path, "sandbox/lib")
         self.tools.dir_ensure(lib_dest)
         for bin in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
             j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
-

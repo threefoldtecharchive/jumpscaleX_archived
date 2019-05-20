@@ -9,8 +9,9 @@ from ..ERC20 import ERC20Address, ERC20Hash
 from ..IO import CoinInput, CoinOutput
 from ..CryptoTypes import PublicKey
 
+
 class TransactionV208(TransactionBaseClass):
-    _SPECIFIER = b'erc20 convert tx'
+    _SPECIFIER = b"erc20 convert tx"
 
     def __init__(self):
         self._address = None
@@ -30,6 +31,7 @@ class TransactionV208(TransactionBaseClass):
         if self._address is None:
             return ERC20Address()
         return self._address
+
     @address.setter
     def address(self, value):
         if value is None:
@@ -42,6 +44,7 @@ class TransactionV208(TransactionBaseClass):
         if self._value is None:
             return Currency()
         return self._value
+
     @value.setter
     def value(self, value):
         if value is None:
@@ -56,6 +59,7 @@ class TransactionV208(TransactionBaseClass):
         used as funding for coin outputs, fees and any other kind of coin output.
         """
         return self._coin_inputs
+
     @coin_inputs.setter
     def coin_inputs(self, value):
         self._coin_inputs = []
@@ -78,6 +82,7 @@ class TransactionV208(TransactionBaseClass):
         if self._refund_coin_output is None:
             return []
         return [self._refund_coin_output]
+
     @coin_outputs.setter
     def coin_outputs(self, value):
         if isinstance(value, list):
@@ -111,6 +116,7 @@ class TransactionV208(TransactionBaseClass):
         if self._transaction_fee is None:
             return Currency()
         return self._transaction_fee
+
     @transaction_fee.setter
     def transaction_fee(self, txfee):
         if txfee is None:
@@ -164,12 +170,7 @@ class TransactionV208(TransactionBaseClass):
     def _binary_encode_data(self):
         e = j.data.rivine.encoder_rivine_get()
         # encode all easy properties
-        e.add_all(
-            self.address,
-            self.value,
-            self.transaction_fee,
-            self.coin_inputs
-        )
+        e.add_all(self.address, self.value, self.transaction_fee, self.coin_inputs)
         # encode the only "pointer" property
         if self._refund_coin_output is None:
             e.add_int8(0)
@@ -182,42 +183,42 @@ class TransactionV208(TransactionBaseClass):
 
     def _from_json_data_object(self, data):
         # decode address
-        if 'address' in data:
-            self._address = ERC20Address.from_json(data['address'])
+        if "address" in data:
+            self._address = ERC20Address.from_json(data["address"])
         else:
             self._address = None
         # decode value
-        if 'value' in data:
-            self._value = Currency.from_json(data['value'])
+        if "value" in data:
+            self._value = Currency.from_json(data["value"])
         else:
             self._value = None
         # decode transaction fee
-        if 'txfee' in data:
-            self._transaction_fee = Currency.from_json(data['txfee'])
+        if "txfee" in data:
+            self._transaction_fee = Currency.from_json(data["txfee"])
         else:
             self._transaction_fee = None
         # decode coin inputs
-        self._coin_inputs = [CoinInput.from_json(ci) for ci in data.get('coininputs', []) or []]
+        self._coin_inputs = [CoinInput.from_json(ci) for ci in data.get("coininputs", []) or []]
         # decode refund coin output (if it exists)
-        if 'refundcoinoutput' in data:
-            self._refund_coin_output = CoinOutput.from_json(data['refundcoinoutput'])
+        if "refundcoinoutput" in data:
+            self._refund_coin_output = CoinOutput.from_json(data["refundcoinoutput"])
         else:
             self._refund_coin_output = None
 
     def _json_data_object(self):
         output = {
-            'address': self.address.json(),
-            'value': self.value.json(),
-            'coininputs': [ci.json() for ci in self.coin_inputs],
-            'txfee': self.transaction_fee.json(),
+            "address": self.address.json(),
+            "value": self.value.json(),
+            "coininputs": [ci.json() for ci in self.coin_inputs],
+            "txfee": self.transaction_fee.json(),
         }
         if self._refund_coin_output is not None:
-            output['refundcoinoutput'] = self._refund_coin_output.json()
+            output["refundcoinoutput"] = self._refund_coin_output.json()
         return output
 
 
 class TransactionV209(TransactionBaseClass):
-    _SPECIFIER = b'erc20 coingen tx'
+    _SPECIFIER = b"erc20 coingen tx"
 
     def __init__(self):
         self._address = None
@@ -237,6 +238,7 @@ class TransactionV209(TransactionBaseClass):
         if self._address is None:
             return UnlockHash()
         return self._address
+
     @address.setter
     def address(self, value):
         if value is None:
@@ -252,6 +254,7 @@ class TransactionV209(TransactionBaseClass):
         if self._value is None:
             return Currency()
         return self._value
+
     @value.setter
     def value(self, value):
         if value is None:
@@ -264,6 +267,7 @@ class TransactionV209(TransactionBaseClass):
         if self._blockid is None:
             return ERC20Hash()
         return self._blockid
+
     @blockid.setter
     def blockid(self, value):
         if value is None:
@@ -276,6 +280,7 @@ class TransactionV209(TransactionBaseClass):
         if self._transaction_fee is None:
             return Currency()
         return self._transaction_fee
+
     @transaction_fee.setter
     def transaction_fee(self, txfee):
         if txfee is None:
@@ -294,6 +299,7 @@ class TransactionV209(TransactionBaseClass):
         if self._transactionid is None:
             return ERC20Hash()
         return self._transactionid
+
     @transactionid.setter
     def transactionid(self, value):
         if value is None:
@@ -340,59 +346,53 @@ class TransactionV209(TransactionBaseClass):
     def _binary_encode_data(self):
         e = j.data.rivine.encoder_rivine_get()
         # encode all properties
-        e.add_all(
-            self.address,
-            self.value,
-            self.transaction_fee,
-            self.blockid,
-            self.transactionid,
-        )
+        e.add_all(self.address, self.value, self.transaction_fee, self.blockid, self.transactionid)
 
         # return encoded data
         return e.data
 
     def _from_json_data_object(self, data):
         # decode address
-        if 'address' in data:
-            self._address = UnlockHash.from_json(data['address'])
+        if "address" in data:
+            self._address = UnlockHash.from_json(data["address"])
         else:
             self._address = None
         # decode value
-        if 'value' in data:
-            self._value = Currency.from_json(data['value'])
+        if "value" in data:
+            self._value = Currency.from_json(data["value"])
         else:
             self._value = None
         # decode transaction fee
-        if 'txfee' in data:
-            self._transaction_fee = Currency.from_json(data['txfee'])
+        if "txfee" in data:
+            self._transaction_fee = Currency.from_json(data["txfee"])
         else:
             self._transaction_fee = None
         # decode blockid
-        if 'blockid' in data:
-            self._blockid = ERC20Hash.from_json(data['blockid'])
+        if "blockid" in data:
+            self._blockid = ERC20Hash.from_json(data["blockid"])
         else:
             self._blockid = None
         # decode transactionid
-        if 'txid' in data:
-            self._transactionid = ERC20Hash.from_json(data['txid'])
+        if "txid" in data:
+            self._transactionid = ERC20Hash.from_json(data["txid"])
         else:
             self._transactionid = None
 
     def _json_data_object(self):
         return {
-            'address': self.address.json(),
-            'value': self.value.json(),
-            'txfee': self.transaction_fee.json(),
-            'blockid': self.blockid.json(),
-            'txid': self.transactionid.json(),
+            "address": self.address.json(),
+            "value": self.value.json(),
+            "txfee": self.transaction_fee.json(),
+            "blockid": self.blockid.json(),
+            "txid": self.transactionid.json(),
         }
 
 
 class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
-    _SPECIFIER = b'erc20 addrreg tx'
+    _SPECIFIER = b"erc20 addrreg tx"
 
-    HARDCODED_REGISTRATION_FEE = '10 TFT'
-    SPECIFIER_REGISTRATION_SIGNATURE= BinaryData(value=b'registration', fixed_size=0)
+    HARDCODED_REGISTRATION_FEE = "10 TFT"
+    SPECIFIER_REGISTRATION_SIGNATURE = BinaryData(value=b"registration", fixed_size=0)
 
     def __init__(self):
         self._public_key = None
@@ -413,13 +413,18 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
         if self._public_key is None:
             return PublicKey()
         return self._public_key
+
     @public_key.setter
     def public_key(self, value):
         if value is None:
             self._public_key = None
             return
         if not isinstance(value, PublicKey):
-            raise TypeError("cannot assign value of type {} as BotRegistration's public key (expected type: PublicKey)".format(type(value)))
+            raise TypeError(
+                "cannot assign value of type {} as BotRegistration's public key (expected type: PublicKey)".format(
+                    type(value)
+                )
+            )
         self._public_key = PublicKey(specifier=value.specifier, hash=value.hash)
 
     @property
@@ -427,6 +432,7 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
         if self._signature is None:
             return ED25519Signature(as_array=True)
         return self._signature
+
     @signature.setter
     def signature(self, value):
         if value is None:
@@ -441,6 +447,7 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
         used as funding for coin outputs, fees and any other kind of coin output.
         """
         return self._coin_inputs
+
     @coin_inputs.setter
     def coin_inputs(self, value):
         self._coin_inputs = []
@@ -463,6 +470,7 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
         if self._refund_coin_output is None:
             return []
         return [self._refund_coin_output]
+
     @coin_outputs.setter
     def coin_outputs(self, value):
         if isinstance(value, list):
@@ -494,19 +502,24 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
     @property
     def registration_fee(self):
         return self._registration_fee
+
     @registration_fee.setter
     def registration_fee(self, txfee):
         if txfee is not None:
             fee = Currency(value=txfee)
             if fee != self._registration_fee:
-                raise ValueError("registration fee is hardcoded at {}, cannot be set to {}".format(
-                    fee.str(with_unit=True), self._registration_fee.str(with_unit=True)))
+                raise ValueError(
+                    "registration fee is hardcoded at {}, cannot be set to {}".format(
+                        fee.str(with_unit=True), self._registration_fee.str(with_unit=True)
+                    )
+                )
 
     @property
     def transaction_fee(self):
         if self._transaction_fee is None:
             return Currency()
         return self._transaction_fee
+
     @transaction_fee.setter
     def transaction_fee(self, txfee):
         if txfee is None:
@@ -525,8 +538,11 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
         Implements SignatureCallbackBase.
         """
         if self._public_key.unlockhash != public_key.unlockhash:
-            raise ValueError("given public key ({}) does not equal public key ({})".format(
-                str(self._public_key.unlockhash), str(public_key.unlockhash)))
+            raise ValueError(
+                "given public key ({}) does not equal public key ({})".format(
+                    str(self._public_key.unlockhash), str(public_key.unlockhash)
+                )
+            )
         self.signature = signature
 
     def _signature_hash_input_get(self, *extra_objects):
@@ -569,13 +585,7 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
     def _binary_encode_data(self):
         e = j.data.rivine.encoder_rivine_get()
         # encode all easy properties
-        e.add_all(
-            self.public_key,
-            self.signature,
-            self.registration_fee,
-            self.transaction_fee,
-            self.coin_inputs
-        )
+        e.add_all(self.public_key, self.signature, self.registration_fee, self.transaction_fee, self.coin_inputs)
         # encode the only "pointer" property
         if self._refund_coin_output is None:
             e.add_int8(0)
@@ -588,30 +598,30 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
 
     def _from_json_data_object(self, data):
         # decode public key
-        if 'pubkey' in data:
-            self._public_key = PublicKey.from_json(data['pubkey'])
+        if "pubkey" in data:
+            self._public_key = PublicKey.from_json(data["pubkey"])
         else:
             self._public_key = None
         # decode signature
-        if 'signature' in data:
-            self._signature = ED25519Signature.from_json(data['signature'])
+        if "signature" in data:
+            self._signature = ED25519Signature.from_json(data["signature"])
         else:
             self._signature = None
         # decode registration fee
-        if 'regfee' in data:
-            self.registration_fee = Currency.from_json(data['regfee'])
+        if "regfee" in data:
+            self.registration_fee = Currency.from_json(data["regfee"])
         else:
             self.registration_fee = None
         # decode transaction fee
-        if 'txfee' in data:
-            self._transaction_fee = Currency.from_json(data['txfee'])
+        if "txfee" in data:
+            self._transaction_fee = Currency.from_json(data["txfee"])
         else:
             self._transaction_fee = None
         # decode coin inputs
-        self._coin_inputs = [CoinInput.from_json(ci) for ci in data.get('coininputs', []) or []]
+        self._coin_inputs = [CoinInput.from_json(ci) for ci in data.get("coininputs", []) or []]
         # decode refund coin output (if it exists)
-        if 'refundcoinoutput' in data:
-            self._refund_coin_output = CoinOutput.from_json(data['refundcoinoutput'])
+        if "refundcoinoutput" in data:
+            self._refund_coin_output = CoinOutput.from_json(data["refundcoinoutput"])
         else:
             self._refund_coin_output = None
 
@@ -619,16 +629,16 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
         tftaddress = self.public_key.unlockhash
         erc20address = ERC20Address.from_unlockhash(tftaddress)
         output = {
-            'pubkey': self.public_key.json(),
-            'tftaddress': tftaddress.json(),
-            'erc20address': erc20address.json(),
-            'signature': self.signature.json(),
-            'regfee': self.registration_fee.json(),
-            'txfee': self.transaction_fee.json(),
-            'coininputs': [ci.json() for ci in self.coin_inputs],
+            "pubkey": self.public_key.json(),
+            "tftaddress": tftaddress.json(),
+            "erc20address": erc20address.json(),
+            "signature": self.signature.json(),
+            "regfee": self.registration_fee.json(),
+            "txfee": self.transaction_fee.json(),
+            "coininputs": [ci.json() for ci in self.coin_inputs],
         }
         if self._refund_coin_output is not None:
-            output['refundcoinoutput'] = self._refund_coin_output.json()
+            output["refundcoinoutput"] = self._refund_coin_output.json()
         return output
 
     def _extra_signature_requests_new(self):
@@ -636,14 +646,18 @@ class TransactionV210(TransactionBaseClass, SignatureCallbackBase):
             # if no parent public key is defined, cannot do anything
             return []
         if self._signature is not None:
-            return [] # nothing to do
+            return []  # nothing to do
         # generate the input hash func
-        input_hash_func = InputSignatureHashFactory(self, TransactionV210.SPECIFIER_REGISTRATION_SIGNATURE).signature_hash_new
+        input_hash_func = InputSignatureHashFactory(
+            self, TransactionV210.SPECIFIER_REGISTRATION_SIGNATURE
+        ).signature_hash_new
         # define the input_hash_new generator function,
         # used to create the input hash for creating the signature
         unlockhash = self._public_key.unlockhash
+
         def input_hash_gen(public_key):
             return input_hash_func()
+
         # create the only signature request
         return [SignatureRequest(unlockhash=unlockhash, input_hash_gen=input_hash_gen, callback=self)]
 

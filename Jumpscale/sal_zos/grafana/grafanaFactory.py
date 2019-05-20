@@ -1,13 +1,14 @@
 from Jumpscale import j
+
 # import Jumpscale.baselib.remote
 
 JSBASE = j.application.JSBaseClass
 
 from .grafana import Grafana
 
+
 class GrafanaFactory(JSBASE):
     __jslocation__ = "j.sal_zos.grafana"
-
 
     def get(self, container, ip, port, url):
         """
@@ -17,4 +18,3 @@ class GrafanaFactory(JSBASE):
             the sal layer 
         """
         return Grafana(container, ip, port, url)
-

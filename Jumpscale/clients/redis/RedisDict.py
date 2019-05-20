@@ -1,5 +1,4 @@
 class RedisDict(dict):
-
     def __init__(self, client, key):
         self._key = key
         self._client = client

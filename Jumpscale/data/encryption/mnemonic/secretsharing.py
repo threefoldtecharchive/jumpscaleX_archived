@@ -31,7 +31,7 @@ def random_polynomial(degree, intercept, upper_bound):
     """ Generates a random polynomial with positive coefficients.
     """
     if degree < 0:
-        raise ValueError('Degree must be a non-negative number.')
+        raise ValueError("Degree must be a non-negative number.")
     coefficients = [intercept]
     for i in range(degree):
         random_coeff = randint(0, upper_bound - 1)
@@ -49,7 +49,7 @@ def get_polynomial_points(coefficients, num_points, prime):
         y = coefficients[0]
         # calculate each term and add it to y, using modular math
         for i in range(1, len(coefficients)):
-            exponentiation = (x**i) % prime
+            exponentiation = (x ** i) % prime
             term = (coefficients[i] * exponentiation) % prime
             y = (y + term) % prime
         # add the point to the list of points

@@ -6,9 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class OrganizationTreeItem():
+class OrganizationTreeItem:
     """
     auto-generated. don't touch.
     """
@@ -26,16 +24,16 @@ class OrganizationTreeItem():
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'OrganizationTreeItem'
+        class_name = "OrganizationTreeItem"
         data = json or kwargs
 
         # set attributes
         data_types = [OrganizationTreeItem]
-        self.children = client_support.set_property('children', data, data_types, False, [], True, True, class_name)
+        self.children = client_support.set_property("children", data, data_types, False, [], True, True, class_name)
         data_types = [string_types]
-        self.globalid = client_support.set_property('globalid', data, data_types, False, [], False, True, class_name)
+        self.globalid = client_support.set_property("globalid", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

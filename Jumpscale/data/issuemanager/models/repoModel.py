@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 
 from data.capnp.ModelBase import ModelBase

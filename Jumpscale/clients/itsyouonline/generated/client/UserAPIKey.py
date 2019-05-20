@@ -7,9 +7,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class UserAPIKey( ):
+class UserAPIKey:
     """
     auto-generated. don't touch.
     """
@@ -30,23 +28,24 @@ class UserAPIKey( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'UserAPIKey'
+        class_name = "UserAPIKey"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.apikey = client_support.set_property('apikey', data, data_types, False, [], False, True, class_name)
+        self.apikey = client_support.set_property("apikey", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
         self.applicationid = client_support.set_property(
-            'applicationid', data, data_types, False, [], False, True, class_name)
+            "applicationid", data, data_types, False, [], False, True, class_name
+        )
         data_types = [Label]
-        self.label = client_support.set_property('label', data, data_types, False, [], False, True, class_name)
+        self.label = client_support.set_property("label", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.scopes = client_support.set_property('scopes', data, data_types, False, [], True, True, class_name)
+        self.scopes = client_support.set_property("scopes", data, data_types, False, [], True, True, class_name)
         data_types = [string_types]
-        self.username = client_support.set_property('username', data, data_types, False, [], False, True, class_name)
+        self.username = client_support.set_property("username", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

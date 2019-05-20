@@ -4,8 +4,6 @@ import types
 
 
 class JSBaseConfig(JSBaseDataObj):
-
-
     def __init__(self, data=None, parent=None, topclass=True, **kwargs):
         """
         :param data, is a jsobject as result of jsX schema's
@@ -16,11 +14,11 @@ class JSBaseConfig(JSBaseDataObj):
 
         """
 
-        JSBaseDataObj.__init__(self,data=data, parent=parent, topclass=False,**kwargs)
+        JSBaseDataObj.__init__(self, data=data, parent=parent, topclass=False, **kwargs)
 
         self._isnew = False
 
-        assert parent not in [None,""]
+        assert parent not in [None, ""]
 
         self._model = self._parent._model
         self._model._kosmosinstance = self
@@ -32,7 +30,6 @@ class JSBaseConfig(JSBaseDataObj):
             self._init2(**kwargs)
             self._init()
 
-
     def delete(self):
         self._model.delete(self.data)
         if self._parent:
@@ -40,7 +37,6 @@ class JSBaseConfig(JSBaseDataObj):
 
     def save(self):
         self.data.save()
-
 
     def _properties_model(self):
         return self._model.schema.propertynames

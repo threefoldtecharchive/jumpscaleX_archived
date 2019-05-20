@@ -8,9 +8,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class Notification( ):
+class Notification:
     """
     auto-generated. don't touch.
     """
@@ -30,23 +28,26 @@ class Notification( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Notification'
+        class_name = "Notification"
         data = json or kwargs
 
         # set attributes
         data_types = [JoinOrganizationInvitation]
-        self.approvals = client_support.set_property('approvals', data, data_types, False, [], True, True, class_name)
+        self.approvals = client_support.set_property("approvals", data, data_types, False, [], True, True, class_name)
         data_types = [ContractSigningRequest]
         self.contractRequests = client_support.set_property(
-            'contractRequests', data, data_types, False, [], True, True, class_name)
+            "contractRequests", data, data_types, False, [], True, True, class_name
+        )
         data_types = [JoinOrganizationInvitation]
         self.invitations = client_support.set_property(
-            'invitations', data, data_types, False, [], True, True, class_name)
+            "invitations", data, data_types, False, [], True, True, class_name
+        )
         data_types = [MissingScopes]
         self.missingscopes = client_support.set_property(
-            'missingscopes', data, data_types, False, [], True, True, class_name)
+            "missingscopes", data, data_types, False, [], True, True, class_name
+        )
 
     def __str__(self):
         return self.as_json(indent=4)

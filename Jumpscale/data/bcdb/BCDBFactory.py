@@ -1,6 +1,7 @@
 from Jumpscale import j
 
 from .BCDB import BCDB
+from .BCDBModel import BCDBModel
 import os
 import sys
 import redis
@@ -21,9 +22,15 @@ class BCDBFactory(j.application.JSBaseClass):
 
         j.clients.redis.core_get()  # just to make sure the redis got started
 
+        j.data.schema.add_from_path("%s/models_system/meta.toml" % self._dirpath)
+
+    @property
+    def _BCDBModelClass(self):
+        return BCDBModel
+
     def new(self, name, zdbclient=None, reset=False):
 
-        if reset==False and name in self.bcdb_instances:
+        if reset == False and name in self.bcdb_instances:
             return self.bcdb_instances[name]
 
         self._log_debug("new bcdb:%s" % name)
@@ -48,6 +55,7 @@ class BCDBFactory(j.application.JSBaseClass):
     def redis_server_start(
         self,
         name="test",
+        reset=False,
         ipaddr="localhost",
         port=6380,
         background=False,
@@ -68,9 +76,9 @@ class BCDBFactory(j.application.JSBaseClass):
 
         trick: use RDM to investigate (Redis Desktop Manager) to investigate DB.
 
-        js_shell "j.data.bcdb.redis_server_start(background=True)"
+        kosmos "j.data.bcdb.redis_server_start(background=True)"
 
-        js_shell "j.data.bcdb.redis_server_start(background=False,zdbclient_addr=None)"
+        kosmos "j.data.bcdb.redis_server_start(background=False,zdbclient_addr=None)"
 
 
         :return:
@@ -90,11 +98,9 @@ class BCDBFactory(j.application.JSBaseClass):
 
             cmd = "kosmos 'j.data.bcdb.redis_server_start(%s)'" % args
 
-            cmdcmd = j.tools.startupcmd.get(
-                name="bcdbredis_%s" % port, cmd=cmd, ports=[port]
-            )
+            cmdcmd = j.tools.startupcmd.get(name="bcdbredis_%s" % port, cmd=cmd, ports=[port])
 
-            cmdcmd.start()
+            cmdcmd.start(reset=reset)
 
             j.sal.nettools.waitConnectionTest(ipaddr=ipaddr, port=port, timeoutTotal=5)
             r = j.clients.redis.get(ipaddr=ipaddr, port=port, password=secret)
@@ -145,10 +151,8 @@ class BCDBFactory(j.application.JSBaseClass):
         U = 0.0
         pool_type = "managed,unmanaged" (E)
         """
-
         if self.latest != None:
             self.latest.stop()
-
         if sqlitestor:
             bcdb = j.data.bcdb.new(name="test", zdbclient=None)
             assert j.data.bcdb.latest.zdbclient == None
@@ -159,50 +163,20 @@ class BCDBFactory(j.application.JSBaseClass):
             zdbclient = zdbclient_admin.namespace_new("test", secret="1234")
             bcdb = j.data.bcdb.new(name="test", zdbclient=zdbclient)
 
-        schemaobj = j.data.schema.get(schema)
+        schemaobj = j.data.schema.get_from_text(schema)
         bcdb.model_get_from_schema(schemaobj)
 
         self._log_debug("bcdb already exists")
 
-        model = bcdb.model_get("despiegk.test")
+        model = bcdb.model_get_from_url("despiegk.test")
 
         return bcdb, model
-
-    def migrate(self, base_url, second_url, bcdb="system", **kwargs):
-        bcdb_instance = self.get(bcdb)
-        j.data.bcdb.latest.get_all()
-        base_model = bcdb_instance.model_get(base_url)
-        second_model = bcdb_instance.model_get(second_url)
-        # create new meta with new migration
-
-        for model_s in second_model.get_all():
-            overwrite = False
-            for model_b in base_model.get_all():
-                if model_b.name == model_s.name:
-                    overwrite = True
-                    if kwargs.items():
-                        for key, val in kwargs.items():
-                            second = getattr(model_s, "{}".format(val))
-                            setattr(model_b, key, second)
-
-                    model_b.save()
-                    model_s.delete()
-                    # overwtite
-            if not overwrite:
-                m = base_model.new()
-                for prop in base_model.schema.properties:
-
-                    if hasattr(model_s, "{}".format(prop.name)):
-                        setattr(m, prop.name, getattr(model_s, "{}".format(prop.name)))
-                m.save()
-                model_s.delete()
-                # create new one
 
     def test(self, name=""):
         """
         following will run all tests
 
-        js_shell 'j.data.bcdb.test()'
+        kosmos 'j.data.bcdb.test()'
 
 
         """

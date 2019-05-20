@@ -9,15 +9,7 @@ JSBASE = j.application.JSBaseClass
 
 
 class BCDBModel(j.application.JSBaseClass):
-    def __init__(
-        self,
-        bcdb,
-        schema=None,
-        url=None,
-        cache_expiration=3600,
-        custom=False,
-        reset=False,
-    ):
+    def __init__(self, bcdb, schema=None, namespaceid=None, reset=False):
         """
 
         delivers interface how to deal with data in 1 schema
@@ -34,14 +26,17 @@ class BCDBModel(j.application.JSBaseClass):
 
         JSBASE.__init__(self)
 
+        bcdb, schema, namespaceid, reset = self._init_load(bcdb, schema, namespaceid, reset)
+
         self._kosmosinstance = None
+        self.namespaceid = namespaceid
 
         if bcdb is None:
             raise RuntimeError("bcdb should be set")
 
         self.bcdb = bcdb
         self.__redis_prefix = None
-        self.cache_expiration = cache_expiration
+        # self.cache_expiration = 3600
 
         self.schema = schema
 
@@ -56,35 +51,29 @@ class BCDBModel(j.application.JSBaseClass):
 
         self.readonly = False
 
-        self.autosave = (
-            False
-        )  # if set it will make sure data is automatically set from object
-
-        #
+        self.autosave = False  # if set it will make sure data is automatically set from object
 
         self._triggers = []
 
-        self.custom = custom
+        # self._md5_check_debug = {}  # is a debug test for hash collissions
+
+        # self.custom = custom
         self._init_()
         if reset:
             self.reset()
 
-    def _init_(self):
+    def _init_load(self, bcdb, schema, namespaceid, reset):
+        return bcdb, schema, namespaceid, reset
 
-        self._data_dir = j.sal.fs.joinPaths(self.bcdb._data_dir, self.key)
-        j.sal.fs.createDir(self._data_dir)
+    def _init_idfile(self):
+        """
+        we keep track of id's per namespace and per model, this to allow easy enumeration
+        :return:
+        """
 
-        if self.cache_expiration > 0:
-            self.obj_cache = {}
-        else:
-            self.obj_cache = None
-
+        # next one always happens
         self._ids_file_path = "%s/ids.data" % (self._data_dir)
-
-        if (
-            not j.sal.fs.exists(self._ids_file_path)
-            or j.sal.fs.fileSize(self._ids_file_path) == 0
-        ):
+        if not j.sal.fs.exists(self._ids_file_path) or j.sal.fs.fileSize(self._ids_file_path) == 0:
             j.sal.fs.touch(self._ids_file_path)
             self._ids_last = 0
         else:
@@ -95,13 +84,48 @@ class BCDBModel(j.application.JSBaseClass):
             f.seek(llen - 4, 0)
             bindata = f.read(4)
             self._ids_last = struct.unpack(b"<I", bindata)[0]
+            f.close()
 
-        self.schema = self.bcdb.meta.schema_set(self.schema)
+        if self.namespaceid:
+            self._ids_file_path_ns = "%s/ids_%s.data" % (self._data_dir, self.namespace_name)
+            if not j.sal.fs.exists(self._ids_file_path_ns) or j.sal.fs.fileSize(self._ids_file_path_ns) == 0:
+                j.sal.fs.touch(self._ids_file_path_ns)
+            else:
+                llen = j.sal.fs.fileSize(self._ids_file_path_ns)
+                # make sure the len is multiplication of 4 bytes
+                assert float(llen / 4) == llen / 4
+                f = open(self._ids_file_path_ns, "rb")
+                f.seek(llen - 4, 0)
+                bindata = f.read(4)
+                f.close()
+                assert self._ids_last == struct.unpack(b"<I", bindata)[0]  # needs to be same
 
-        # load all objects in redis
-        for obj in self.get_all():
-            self._index_key_set("name", obj.name, obj.id)
+    @property
+    def namespace_name(self):
+        if self.namespaceid:
+            return self.namespace.name
+        else:
+            raise RuntimeError("namespace object does not exist yet")
+
+    @property
+    def namespace(self):
+        if self.namespaceid:
+            j.shell()
+
+    def _init_(self):
+
+        self._data_dir = j.sal.fs.joinPaths(self.bcdb._data_dir, self.key)
+        j.sal.fs.createDir(self._data_dir)
+
+        # if self.cache_expiration > 0:
+        #     self.obj_cache = {}
+        # else:
+        #     self.obj_cache = None
+
+        self._init_idfile()
         self._init_index()  # goal is to be overruled by users
+
+        # DO NOT REBUILD THE INDEX HERE, if the redis is e.g. lost then we need to rebuild all
 
     def trigger_add(self, method):
         """
@@ -122,13 +146,7 @@ class BCDBModel(j.application.JSBaseClass):
         model = self
         kosmosinstance = self._kosmosinstance
         for method in self._triggers:
-            method(
-                model,
-                obj,
-                kosmosinstance=kosmosinstance,
-                action=action,
-                propertyname=propertyname,
-            )
+            method(model, obj, kosmosinstance=kosmosinstance, action=action, propertyname=propertyname)
 
     def cache_reset(self):
         self.obj_cache = {}
@@ -184,14 +202,14 @@ class BCDBModel(j.application.JSBaseClass):
 
     @queue_method
     def delete(self, obj):
-        if not hasattr(obj, "_JSOBJ"):
+        if not isinstance(obj, j.data.schema.DataObjBase):
             obj = self.get(obj)
         self.triggers_call(obj=obj, action="delete")
         if obj.id is not None:
             self.index_keys_delete(obj)
             self._delete2(obj.id)
-            if obj.id in self.obj_cache:
-                self.obj_cache.pop(obj.id)
+            # if obj.id in self.obj_cache:
+            #     self.obj_cache.pop(obj.id)
             if self.index:
                 self.index_delete(obj.id)
             self.id_delete(obj.id)
@@ -203,8 +221,8 @@ class BCDBModel(j.application.JSBaseClass):
             self.zdbclient.delete(obj_id)
 
     def check(self, obj):
-        if not hasattr(obj, "_JSOBJ"):
-            raise RuntimeError("argument needs to be a bcdb obj")
+        if not isinstance(obj, j.data.schema.DataObjBase):
+            raise RuntimeError("argument needs to be a jsx data obj")
 
     @queue_method
     def set_dynamic(self, data, obj_id=None):
@@ -220,10 +238,10 @@ class BCDBModel(j.application.JSBaseClass):
                 obj_id = data["id"]
             obj = self.schema.get(data)
         elif j.data.types.bytes.check(data):
-            obj = self.schema.get(capnpbin=data)
+            obj = self.schema.get(data=data)
             if obj_id is None:
                 raise RuntimeError("objid cannot be None")
-        elif getattr(data, "_JSOBJ", None):
+        elif isinstance(data, j.data.schema.DataObjBase):
             obj = data
             if obj_id is None and obj.id is not None:
                 obj_id = obj.id
@@ -232,9 +250,7 @@ class BCDBModel(j.application.JSBaseClass):
                 obj_id = data["id"]
             obj = self.schema.get(data)
         else:
-            raise RuntimeError(
-                "Cannot find data type, str,bin,obj or ddict is only supported"
-            )
+            raise RuntimeError("Cannot find data type, str,bin,obj or ddict is only supported")
         obj.id = obj_id  # do not forget
         return self._set(obj)
 
@@ -254,11 +270,9 @@ class BCDBModel(j.application.JSBaseClass):
         if obj_id not in ids:
             ids.append(obj_id)
         data = j.data.serializers.msgpack.dumps(ids)
-        hash = self._index_key_redis_get(key)
+        hash = self._index_key_redis_get(key)  # this to have a smaller key to store in mem
         self._log_debug("set key:%s (id:%s)" % (key, obj_id))
-        j.clients.credis_core.hset(
-            self._redis_prefix + b":" + hash[0:2], hash[2:], data
-        )
+        j.clients.credis_core.hset(self._redis_prefix + b":" + hash[0:2], hash[2:], data)
 
     def _index_key_delete(self, property_name, val, obj_id):
 
@@ -275,9 +289,7 @@ class BCDBModel(j.application.JSBaseClass):
             data = j.data.serializers.msgpack.dumps(ids)
             hash = self._index_key_redis_get(key)
             self._log_debug("set key:%s (id:%s)" % (key, obj_id))
-            j.clients.credis_core.hdel(
-                self._redis_prefix + b":" + hash[0:2], hash[2:], data
-            )
+            j.clients.credis_core.hset(self._redis_prefix + b":" + hash[0:2], hash[2:], data)
 
     def _index_keys_destroy(self):
         for key in j.clients.credis_core.keys(self._redis_prefix + b"*"):
@@ -315,6 +327,13 @@ class BCDBModel(j.application.JSBaseClass):
                 ids = [x for x in ids if x in ids_prev]
             ids_prev = ids
 
+        def check2(obj, args):
+            dd = obj._ddict
+            for propname, val in args.items():
+                if dd[propname] != val:
+                    return False
+            return True
+
         res = []
         for id_ in ids:
             res2 = self.get(id_, die=None)
@@ -322,11 +341,12 @@ class BCDBModel(j.application.JSBaseClass):
                 if delete_if_not_found:
                     for key, val in args.items():
                         self._index_key_delete(key, val, id_)
-                else:
-                    raise RuntimeError(
-                        "backend data store out of sync with key index in redis (redis has it, backend not)"
-                    )
-            res.append(res2)
+            else:
+                # we now need to check if there was no false positive
+                if check2(res2, args):
+                    res.append(res2)
+                # else:
+                #     self._log_warning("index system produced false positive")
 
         return res
 
@@ -350,10 +370,14 @@ class BCDBModel(j.application.JSBaseClass):
         :param key:
         :return:
         """
-        # schema id needs to be in to make sure itd different key per schema
-        key2 = j.core.text.strip_to_ascii_dense(key) + str(self.schema.sid)
+        # schema id needs to be in to make sure its different key per schema
+        # key2 = j.core.text.strip_to_ascii_dense(key) + str(self.schema._md5)
+        key2 = key + str(self.schema._md5)
         # can do 900k per second
         hash = blake2b(str(key2).encode(), digest_size=10).digest()
+        # if hash in self._md5_check_debug and self._md5_check_debug[hash] != key2:
+        #     # hash collission
+        #     j.shell()
         return hash
 
     @queue_method_results
@@ -375,7 +399,7 @@ class BCDBModel(j.application.JSBaseClass):
                     # need to save the acl
                     obj.acl.save()
                 else:
-                    acl2 = obj.model.bcdb.acl.get(obj.acl.id)
+                    acl2 = obj._model.bcdb.acl.get(obj.acl.id)
                     if acl2 is None:
                         # means is not in db
                         obj.acl.save()
@@ -422,10 +446,7 @@ class BCDBModel(j.application.JSBaseClass):
                         self.zdbclient.set(data, key=obj.id)
                     except Exception as e:
                         if str(e).find("only update authorized") != -1:
-                            raise RuntimeError(
-                                "cannot update object:%s\n with id:%s, does not exist"
-                                % (obj, obj.id)
-                            )
+                            raise RuntimeError("cannot update object:%s\n with id:%s, does not exist" % (obj, obj.id))
                         raise
 
         if index:
@@ -433,8 +454,12 @@ class BCDBModel(j.application.JSBaseClass):
             self.index_keys_set(obj)
 
             if obj.id > self._ids_last:
+                # this allows us to know which objects are in a specific model namespace, otherwise we cannot iterate
                 bin_id = struct.pack("<I", obj.id)
                 j.sal.fs.writeFile(self._ids_file_path, bin_id, append=True)
+                if self.namespaceid:
+                    j.sal.fs.writeFile(self._ids_file_path_ns, bin_id, append=True)
+
                 self._ids_last = obj.id
 
         self.triggers_call(obj=obj, action="set_post")
@@ -450,8 +475,12 @@ class BCDBModel(j.application.JSBaseClass):
         ```
         :return:
         """
+        if self.namespaceid:
+            path = self._ids_file_path_ns
+        else:
+            path = self._ids_file_path
         # print("idspath:%s"%self._ids_file_path)
-        with open(self._ids_file_path, "rb") as f:
+        with open(path, "rb") as f:
             while True:
                 chunk = f.read(4)
                 if chunk:
@@ -483,14 +512,13 @@ class BCDBModel(j.application.JSBaseClass):
         """
         return ddict
 
-    def new(self, data=None, capnpbin=None):
-        if data:
+    def new(self, data=None):
+        if data and isinstance(data, dict):
             data = self._dict_process_in(data)
-        if data or capnpbin:
-            obj = self.schema.get(data=data, capnpbin=capnpbin, model=self)
+        if data:
+            obj = self.schema.get(data=data, model=self)
         else:
-            obj = self.schema.new()
-            obj._model = self
+            obj = self.schema.new(model=self)
         obj = self._methods_add(obj)
         self.triggers_call(obj=obj, action="new")
         return obj
@@ -525,16 +553,16 @@ class BCDBModel(j.application.JSBaseClass):
         if obj_id in [None, 0, "0", b"0"]:
             raise RuntimeError("id cannot be None or 0")
 
-        if self.obj_cache is not None and usecache:
-            # print("use cache")
-            if obj_id in self.obj_cache:
-                epoch, obj = self.obj_cache[obj_id]
-                if j.data.time.epoch > self._cache_expiration + epoch:
-                    self.obj_cache.pop(obj_id)
-                    # print("dirty cache")
-                else:
-                    # print("cache hit")
-                    return obj
+        # if self.obj_cache is not None and usecache:
+        #     # print("use cache")
+        #     if obj_id in self.obj_cache:
+        #         epoch, obj = self.obj_cache[obj_id]
+        #         if j.data.time.epoch > self._cache_expiration + epoch:
+        #             self.obj_cache.pop(obj_id)
+        #             # print("dirty cache")
+        #         else:
+        #             # print("cache hit")
+        #             return obj
 
         if not self.zdbclient:
             data = self.bcdb.sqlclient.get(key=obj_id)
@@ -547,9 +575,7 @@ class BCDBModel(j.application.JSBaseClass):
             else:
                 return None
 
-        obj = self.bcdb._unserialize(
-            obj_id, data, return_as_capnp=return_as_capnp, model=self
-        )
+        obj = self.bcdb._unserialize(obj_id, data, return_as_capnp=return_as_capnp, model=self)
         # self.obj_cache[obj_id] = (j.data.time.epoch, obj)  #FOR NOW NO CACHE, UNSAFE
 
         self.triggers_call(obj=obj, action="get")
@@ -587,10 +613,7 @@ class BCDBModel(j.application.JSBaseClass):
                 o = self.get(obj_id)
             except Exception as e:
                 if str(e).find("could not find obj") != -1:
-                    self._log_warning(
-                        "warning: could not find object with id:%s in %s"
-                        % (obj_id, self)
-                    )
+                    self._log_warning("warning: could not find object with id:%s in %s" % (obj_id, self))
                     continue
                 else:
                     raise e

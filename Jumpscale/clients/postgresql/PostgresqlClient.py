@@ -23,41 +23,42 @@ class PostgresClient(JSConfigClient):
     """
 
     def _init(self):
-        self.client = psycopg2.connect("dbname='%s' user='%s' host='%s' password='%s' port='%s'" % (
-            self.dbname, self.login, self.ipaddr, self.passwd, self.port))
+        self.client = psycopg2.connect(
+            "dbname='%s' user='%s' host='%s' password='%s' port='%s'"
+            % (self.dbname, self.login, self.ipaddr, self.passwd, self.port)
+        )
         self.cursor = None
 
     def cursor_get(self):
-        '''Get client dict cursor
+        """Get client dict cursor
         :return : clients
         :rtype : dict cursor
-        '''
+        """
         self.cursor = self.client.cursor()
 
     def execute(self, sql):
-        '''Execute sql code
+        """Execute sql code
         :param sql: sql code to be executed
         :type sql: str
         :return: psycopg2 client
         :rtype: dict cursor
-        '''
+        """
         if self.cursor is None:
             self.cursor_get()
         return self.cursor.execute(sql)
 
     def SQL_alchemy_client_get(self):
-        ''' usage
+        """ usage
         base,session=client.initsqlalchemy()
         session.add(base.classes.address(email_address="foo@bar.com", user=(base.classes.user(name="foo")))
         session.commit()
         
         :return: Base, session
-        '''
+        """
         Base = automap_base()
 
         # engine, suppose it has two models 'user' and 'address' set up
-        engine = create_engine(
-            "postgresql://%(login)s:%(passwd)s@%(ipaddr)s:%(port)s/%(dbname)s" % self.__dict__)
+        engine = create_engine("postgresql://%(login)s:%(passwd)s@%(ipaddr)s:%(port)s/%(dbname)s" % self.__dict__)
 
         # reflect the models
         Base.prepare(engine, reflect=True)
@@ -67,20 +68,22 @@ class PostgresClient(JSConfigClient):
         return Base, session
 
     def dump(self, path, tables_ignore=[]):
-        '''Dump data from db to path/_shcema.sql
+        """Dump data from db to path/_shcema.sql
 
         :param path: path
         :type path: str
         :param tables_ignore: tables to be ignored and its records are not considered, defaults to []
         :type tables_ignore: list, optional
-        '''
+        """
         args = copy.copy(self.__dict__)
         j.sal.fs.createDir(path)
         base, session = self.initsqlalchemy()
 
         args["path"] = "%s/_schema.sql" % (path)
-        cmd = "cd /opt/postgresql/bin;./pg_dump -U %(login)s -h %(ipaddr)s -p %(port)s -s -O -d %(dbname)s -w > %(path)s" % (
-            args)
+        cmd = (
+            "cd /opt/postgresql/bin;./pg_dump -U %(login)s -h %(ipaddr)s -p %(port)s -s -O -d %(dbname)s -w > %(path)s"
+            % (args)
+        )
         j.sal.process.execute(cmd, showout=False)
 
         for name, obj in list(base.classes.items()):
@@ -90,12 +93,14 @@ class PostgresClient(JSConfigClient):
             args["table"] = name
             args["path"] = "%s/%s.sql" % (path, name)
             # --quote-all-identifiers
-            cmd = "cd /opt/postgresql/bin;./pg_dump -U %(login)s -h %(ipaddr)s -p %(port)s -t %(table)s -a -b --column-inserts -d %(dbname)s -w > %(path)s" % (
-                args)
+            cmd = (
+                "cd /opt/postgresql/bin;./pg_dump -U %(login)s -h %(ipaddr)s -p %(port)s -t %(table)s -a -b --column-inserts -d %(dbname)s -w > %(path)s"
+                % (args)
+            )
             j.sal.process.execute(cmd, showout=False)
 
     def restore(self, path, tables=[], schema=True):
-        '''Restore db
+        """Restore db
 
         :param path: path to import from
         :type path: str
@@ -104,28 +109,32 @@ class PostgresClient(JSConfigClient):
         :param schema: schema exists, defaults to True
         :type schema: bool, optional
         :raises j.exceptions.Input: Path to import from not found
-        '''
+        """
         if not j.sal.fs.exists(path=path):
-            raise j.exceptions.Input(
-                "cannot find path %s to import from." % path)
+            raise j.exceptions.Input("cannot find path %s to import from." % path)
         args = copy.copy(self.__dict__)
         if schema:
             args["base"] = path
             # cmd="cd /opt/postgresql/bin;./pg_restore -1 -e -s -U %(login)s -h %(ipaddr)s -p %(port)s %(base)s/_schema.sql"%(args)
-            cmd = "cd /opt/postgresql/bin;./psql -U %(login)s -h %(ipaddr)s -p %(port)s -d %(dbname)s < %(base)s/_schema.sql" % (
-                args)
+            cmd = (
+                "cd /opt/postgresql/bin;./psql -U %(login)s -h %(ipaddr)s -p %(port)s -d %(dbname)s < %(base)s/_schema.sql"
+                % (args)
+            )
             j.sal.process.execute(cmd, showout=False)
 
-        for item in j.sal.fs.listFilesInDir(path, recursive=False, filter="*.sql",
-                                            followSymlinks=True, listSymlinks=True):
+        for item in j.sal.fs.listFilesInDir(
+            path, recursive=False, filter="*.sql", followSymlinks=True, listSymlinks=True
+        ):
             name = j.sal.fs.getBaseName(item).replace(".sql", "")
             if name.find("_") == 0:
                 continue
             if name in tables or tables == []:
                 args["path"] = item
                 # cmd="cd /opt/postgresql/bin;./pg_restore -1 -e -U %(login)s -h %(ipaddr)s -p %(port)s %(path)s"%(args)
-                cmd = "cd /opt/postgresql/bin;./psql -1 -U %(login)s -h %(ipaddr)s -p %(port)s -d %(dbname)s < %(path)s" % (
-                    args)
+                cmd = (
+                    "cd /opt/postgresql/bin;./psql -1 -U %(login)s -h %(ipaddr)s -p %(port)s -d %(dbname)s < %(path)s"
+                    % (args)
+                )
                 j.sal.process.execute(cmd, showout=False)
 
     def exportToYAML(self, path):

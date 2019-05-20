@@ -1,4 +1,4 @@
-'''Definition of several collection types (list, dict, set,...)'''
+"""Definition of several collection types (list, dict, set,...)"""
 
 from Jumpscale import j
 
@@ -10,7 +10,7 @@ from .TypeBaseClasses import *
 
 
 class YAML(String):
-    '''Generic dictionary type'''
+    """Generic dictionary type"""
 
     NAME = "yaml"
 
@@ -21,7 +21,6 @@ class YAML(String):
         if not default:
             default = {}
         self._default = default
-
 
     def possible(self, value):
         """Check whether provided value is a dict"""
@@ -133,8 +132,8 @@ class Dictionary(TypeBaseClass):
         if v is None:
             return self._default_get()
         if j.data.types.bytes.check(v):
-            if v==b'':
-                v={}
+            if v == b"":
+                v = {}
             else:
                 v = j.data.serializers.msgpack.loads(v)
         elif j.data.types.string.check(v):
@@ -165,16 +164,17 @@ class Dictionary(TypeBaseClass):
 
 class Hash(TypeBaseClass):
 
-    '''
+    """
     hash is 2 value list, represented as 2 times 4 bytes
-    '''
-    NAME =  'hash,h'
+    """
+
+    NAME = "hash,h"
     CUSTOM = False
 
-    def __init__(self,default=None):
-        self.BASETYPE = 'string'
+    def __init__(self, default=None):
+        self.BASETYPE = "string"
         if not default:
-            default = (0,0)
+            default = (0, 0)
         self._default = default
 
     def fromString(self, s):
@@ -229,9 +229,7 @@ class Hash(TypeBaseClass):
 
         elif j.data.types.string.check(value):
             if ":" not in value:
-                raise RuntimeError(
-                    "when string, needs to have : inside %s" %
-                    value)
+                raise RuntimeError("when string, needs to have : inside %s" % value)
             v0, v1 = value.split(":")
             v0 = int(v0)
             v1 = int(v1)
@@ -257,6 +255,7 @@ class Hash(TypeBaseClass):
 
     def capnp_schema_get(self, name, nr):
         return "%s @%s :Data;" % (name, nr)
+
 
 # TODO: why do we have a set, from our perspective a set & list should be same for novice users
 

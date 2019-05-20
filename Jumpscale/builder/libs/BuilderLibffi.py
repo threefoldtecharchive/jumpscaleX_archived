@@ -1,54 +1,43 @@
 from Jumpscale import j
 
-
+builder_method = j.builder.system.builder_method
 
 
 class BuilderLibffi(j.builder.system._BaseClass):
+    NAME = "libffi"
 
     def _init(self):
-        self.BUILDDIRL = j.core.tools.text_replace("{DIR_VAR}/build/libffi")
-        self.CODEDIRL = j.core.tools.text_replace("{DIR_VAR}/build/code/libffi")
+        self.LIBFFI_URL = "https://github.com/libffi/libffi"
+        self.INSTALL_DIR = self.DIR_SANDBOX + "/sandbox"
+        self.tools.dir_ensure(self.INSTALL_DIR)
+        self.CODEDIR = self._replace("{DIR_TEMP}/libffi")
 
-    def reset(self):
-        base.reset(self)
-        j.sal.fs.remove(self.BUILDDIRL)
-        j.sal.fs.remove(self.CODEDIRL)
+    @builder_method()
+    def build(self):
+        self.system.package.ensure("autoconf")
+        self.system.package.ensure("libtool")
+        j.clients.git.pullGitRepo(url=self.LIBFFI_URL, dest=self.CODEDIR, depth=1)
+        cmd = """
+        cd {}
+        set -ex
+        ./autogen.sh
+        ./configure  --prefix={} --disable-docs
+        make
+        make install
+        """.format(
+            self.CODEDIR, self.INSTALL_DIR
+        )
+        self._execute(cmd)
 
-    def build(self, reset=False):
-        """
-        js_shell 'j.builder.libs.libffi.build(reset=True)'
-        """
-        if reset:
-            self.reset()
+    @builder_method()
+    def install(self):
+        self._copy(self.INSTALL_DIR, "/sandbox")
 
-        if self._done_get("build") and not reset:
-            return
-
-        j.builder.system.package.mdupdate()
-        j.core.tools.dir_ensure(self.BUILDDIRL)
-        if not j.core.platformtype.myplatform.isMac:
-            j.builder.system.package.ensure('dh-autoreconf')
-        url = "https://github.com/libffi/libffi.git"
-        j.clients.git.pullGitRepo(url, reset=False,dest=self.CODEDIRL, ssh=False)
-
-        if not self._done_get("compile") or reset:
-            C = """
-            set -ex
-            mkdir -p {DIR_VAR}/build/
-            cd {CODEDIRL}
-            ./autogen.sh
-            ./configure  --prefix={DIR_VAR}/build/ --disable-docs
-            make
-            make install
-            """
-            j.sal.fs.writeFile("%s/mycompile_all.sh" % self.CODEDIRL, j.core.tools.text_replace(C))
-            self._log_info("compile libffi")
-            self._log_debug(C)
-            j.sal.process.execute("sh %s/mycompile_all.sh" % self.CODEDIRL)            
-            self._done_set("compile")
-            self._log_info("BUILD DONE")
-        else:
-            self._log_info("NO NEED TO BUILD")
-
-        self._log_info("BUILD COMPLETED OK")
-        self._done_set("build")
+    @builder_method()
+    def sandbox(
+        self,
+        zhub_client=None,
+        flist_create=True,
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+    ):
+        pass

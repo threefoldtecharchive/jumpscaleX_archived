@@ -1,4 +1,5 @@
 from Jumpscale import j
+
 # import Jumpscale.baselib.remote
 
 JSBASE = j.application.JSBaseClass
@@ -9,7 +10,7 @@ from ..zerodb.zerodb import Zerodb
 class ZerodbFactory(JSBASE):
     __jslocation__ = "j.sal_zos.zerodb"
 
-    def get(self, node, name, node_port, path=None, mode='user', sync=False, admin=''):
+    def get(self, node, name, node_port, path=None, mode="user", sync=False, admin=""):
         """
         Get sal for Zerobd
 

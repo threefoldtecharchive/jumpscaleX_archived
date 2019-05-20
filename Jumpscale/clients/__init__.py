@@ -1,2 +1,2 @@
 class Clients(object):
-    __jslocation__ = 'j.clients'
+    __jslocation__ = "j.clients"

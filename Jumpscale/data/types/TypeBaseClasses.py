@@ -1,22 +1,21 @@
-
 from Jumpscale import j
 
 
-class TypeBaseObjClass():
+class TypeBaseObjClass:
 
     BASETYPE = "OBJ"
-    __slots__ = ['_typebase', '_value']
+    __slots__ = ["_typebase", "_value"]
 
-    def __init__(self,typebase,value=None):
+    def __init__(self, typebase, value=None):
 
-        self._typebase = typebase  #is the factory for this object
+        self._typebase = typebase  # is the factory for this object
 
         if value is None:
             self._data = None
         else:
             self._data_from_init_val(value)
 
-    def _data_from_init_val(self,value):
+    def _data_from_init_val(self, value):
         """
         convert init value to raw type inside this object
         :return:
@@ -24,7 +23,7 @@ class TypeBaseObjClass():
         self._data = value
 
     def _capnp_schema_get(self, name, nr):
-        return self._typebase.capnp_schema_get(name,nr)
+        return self._typebase.capnp_schema_get(name, nr)
 
     @property
     def _string(self):
@@ -43,14 +42,14 @@ class TypeBaseObjClass():
         raise j.exceptions.NotImplemented()
 
     @value.setter
-    def value(self,val):
+    def value(self, val):
         self._data = self._typebase.toData(val)
 
     def __str__(self):
         if self._data:
-            return "%s: %s"%(self._typebase.__class__.NAME, self._string)
+            return "%s: %s" % (self._typebase.__class__.NAME, self._string)
         else:
-            return "%s: NOTSET"%(self._typebase.__class__.NAME)
+            return "%s: NOTSET" % (self._typebase.__class__.NAME)
 
     __repr__ = __str__
 
@@ -62,7 +61,6 @@ class TypeBaseObjClassNumeric(TypeBaseObjClass):
     @property
     def value(self):
         raise j.exceptions.NotImplemented()
-
 
     # def __hash__(self):
     #     return hash(self.value)
@@ -78,7 +76,7 @@ class TypeBaseObjClassNumeric(TypeBaseObjClass):
     def __bool__(self):
         return self._data is not None
 
-    def _other_convert(self,other):
+    def _other_convert(self, other):
         return self._typebase.clean(other)
 
     def __add__(self, other):
@@ -131,15 +129,15 @@ class TypeBaseObjClassNumeric(TypeBaseObjClass):
     def __int__(self):
         return int(self.value)
 
-
     __rshift__ = __lshift__
     __and__ = __lshift__
     __xor__ = __lshift__
     __or__ = __lshift__
 
-class TypeBaseClass(): #!!TYPEBASECLASS!!
 
-    #CUSTOM = False #if custom will create new instance depending specification in default
+class TypeBaseClass:  #!!TYPEBASECLASS!!
+
+    # CUSTOM = False #if custom will create new instance depending specification in default
 
     def __init__(self):
         self.BASETYPE = None
@@ -153,12 +151,11 @@ class TypeBaseClass(): #!!TYPEBASECLASS!!
     def toHR(self, v):
         return self.toString(v)
 
-    def toDict(self,v):
+    def toDict(self, v):
         raise NotImplemented()
 
-    def toDictHR(self,v):
+    def toDictHR(self, v):
         raise NotImplemented()
-
 
     def toData(self, v):
         """
@@ -167,18 +164,18 @@ class TypeBaseClass(): #!!TYPEBASECLASS!!
         :return:
         """
         o = self.clean(v)
-        if isinstance(o,TypeBaseObjClass):
+        if isinstance(o, TypeBaseObjClass):
             data = o._dictdata
         else:
             data = o
         return data
 
     def check(self, value):
-        '''
+        """
         - if there is a specific implementation e.g. string, float, enumeration, it will check if the input is that implementation
         - if not strict implementation or we cannot know e.g. an address will return None
-        '''
-        if hasattr(self,"NOCHECK") and self.NOCHECK is True:
+        """
+        if hasattr(self, "NOCHECK") and self.NOCHECK is True:
             return RuntimeError("check cannot be used")
         raise RuntimeError("not implemented")
 
@@ -222,15 +219,14 @@ class TypeBaseClass(): #!!TYPEBASECLASS!!
     def capnp_schema_get(self, name, nr):
         return "%s @%s :Text;" % (name, nr)
 
+
 #!!TYPEBASECLASS!!
 
+
 class TypeBaseObjFactory(TypeBaseClass):
-
-
     def __init__(self):
         self.NAME = self.__class__.NAME
         self.BASETYPE = None
-
 
     def capnp_schema_get(self, name, nr):
         """
@@ -238,7 +234,7 @@ class TypeBaseObjFactory(TypeBaseClass):
         return "%s @%s :Data;" % (name, nr)
 
     def check(self, value):
-        if isinstance(value,TypeBaseObjClass):
+        if isinstance(value, TypeBaseObjClass):
             return True
 
     def fromString(self, txt):
@@ -265,4 +261,3 @@ class TypeBaseObjFactory(TypeBaseClass):
 
     def clean(self, v):
         raise j.exceptions.NotImplemented()
-

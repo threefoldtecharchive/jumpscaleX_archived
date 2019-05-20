@@ -2,6 +2,7 @@ from Jumpscale import j
 
 ##ERRORS
 
+
 class IntegerOutOfRange(Exception):
     """
     IntegerOutOfRange error
@@ -13,6 +14,7 @@ class SliceLengthOutOfRange(Exception):
     SliceLengthOutOfRange error
     """
 
+
 _INT_1BYTE_UPPERLIMIT = pow(2, 8) - 1
 _INT_2BYTE_UPPERLIMIT = pow(2, 16) - 1
 _INT_3BYTE_UPPERLIMIT = pow(2, 24) - 1
@@ -20,6 +22,7 @@ _INT_4BYTE_UPPERLIMIT = pow(2, 32) - 1
 _INT_8BYTE_UPPERLIMIT = pow(2, 64) - 1
 
 from abc import ABC, abstractmethod
+
 
 class RivineBinaryObjectEncoderBase(ABC):
     @abstractmethod
@@ -31,6 +34,7 @@ class RivineBinaryObjectEncoderBase(ABC):
         encoded according to the rivbin encoding specification.
         """
         pass
+
 
 class RivineBinaryEncoder(j.application.JSBaseClass):
     """
@@ -92,7 +96,7 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
                 pass
             raise ValueError("cannot rivbin-encode value with unsupported type {}".format(type(value)))
 
-    def _check_int_type(self,value, limit):
+    def _check_int_type(self, value, limit):
         if not isinstance(value, int):
             raise TypeError("value is not an integer")
         if value < 0:
@@ -100,7 +104,7 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
         if value > limit:
             raise IntegerOutOfRange("integer {} is out of upper range of {}".format(value, limit))
 
-    def add_int8(self,value):
+    def add_int8(self, value):
         """
         Encode an uin8/int8 as a single byte, using little-endianness,
         as specified by the rivbin encoding specification.
@@ -108,9 +112,9 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
         @param value: int value that fits in a single byte
         """
         self._check_int_type(value, _INT_1BYTE_UPPERLIMIT)
-        self._data += value.to_bytes(1, byteorder='little')
+        self._data += value.to_bytes(1, byteorder="little")
 
-    def add_int16(self,value):
+    def add_int16(self, value):
         """
         Encode an uin16/int16 as two bytes, using little-endianness,
         as specified by the rivbin encoding specification.
@@ -118,9 +122,9 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
         @param value: int value that fits in two bytes
         """
         self._check_int_type(value, _INT_2BYTE_UPPERLIMIT)
-        self._data += value.to_bytes(2, byteorder='little')
+        self._data += value.to_bytes(2, byteorder="little")
 
-    def add_int24(self,value):
+    def add_int24(self, value):
         """
         Encode an uin24/int24 as three bytes, using little-endianness,
         as specified by the rivbin encoding specification.
@@ -128,9 +132,9 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
         @param value: int value that fits in three bytes
         """
         self._check_int_type(value, _INT_3BYTE_UPPERLIMIT)
-        self._data += value.to_bytes(3, byteorder='little')
+        self._data += value.to_bytes(3, byteorder="little")
 
-    def add_int32(self,value):
+    def add_int32(self, value):
         """
         Encode an uin32/int32 as four bytes, using little-endianness,
         as specified by the rivbin encoding specification.
@@ -138,9 +142,9 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
         @param value: int value that fits in four bytes
         """
         self._check_int_type(value, _INT_4BYTE_UPPERLIMIT)
-        self._data += value.to_bytes(4, byteorder='little')
+        self._data += value.to_bytes(4, byteorder="little")
 
-    def add_int64(self,value):
+    def add_int64(self, value):
         """
         Encode an uint64/int64 as three bytes, using little-endianness,
         as specified by the rivbin encoding specification.
@@ -148,9 +152,9 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
         @param value: int value that fits in eight bytes
         """
         self._check_int_type(value, _INT_8BYTE_UPPERLIMIT)
-        self._data += value.to_bytes(8, byteorder='little')
+        self._data += value.to_bytes(8, byteorder="little")
 
-    def add_array(self,value):
+    def add_array(self, value):
         """
         Encode an iterateble value as an array,
         as specified by the rivbin encoding specification.
@@ -158,7 +162,7 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
         @param value: the iterateble object to be rivbin-encoded as an array
         """
         if isinstance(value, str):
-            self._data += value.encode('utf-8')
+            self._data += value.encode("utf-8")
         elif isinstance(value, (bytes, bytearray)):
             self._data += value
         else:
@@ -168,8 +172,7 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
             except TypeError:
                 raise TypeError("value cannot be encoded as an array")
 
-
-    def add_slice(self,value):
+    def add_slice(self, value):
         """
         Encode an iterateble value as a slice,
         as specified by the rivbin encoding specification.
@@ -178,7 +181,7 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
         """
         if isinstance(value, str):
             self._add_slice_length(len(value))
-            self._data += value.encode('utf-8')
+            self._data += value.encode("utf-8")
         elif isinstance(value, (bytes, bytearray)):
             self._add_slice_length(len(value))
             self._data += value
@@ -189,7 +192,7 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
             self._add_slice_length(length)
             self.add_array(value)
 
-    def _add_slice_length(self,length):
+    def _add_slice_length(self, length):
         """
         Encodes the length of the slice
         """
@@ -203,7 +206,7 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
             self.add_int32(7 | length << 3)
         else:
             raise SliceLengthOutOfRange("slice length {} is out of range".format(length))
-    
+
     def add_byte(self, value):
         """
         Add an encoded iterateble value as a single byte.
@@ -214,14 +217,14 @@ class RivineBinaryEncoder(j.application.JSBaseClass):
             self.add_int8(int(value))
         else:
             if isinstance(value, str):
-                value = value.encode('utf-8')
+                value = value.encode("utf-8")
             elif not isinstance(value, (bytes, bytearray)):
                 raise ValueError("value of type {} cannot be added as a single byte".format(type(value)))
             if len(value) != 1:
                 raise ValueError("a single byte has to be accepted, amount of bytes given: {}".format(len(value)))
             self._data += value
 
-    def add_all(self,*values):
+    def add_all(self, *values):
         """
         Encode values, one by one, as specified by the rivbin encoding specification,
         automatically matching each value's type with a matching rivbin type.

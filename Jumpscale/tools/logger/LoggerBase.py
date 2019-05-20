@@ -2,6 +2,7 @@ from Jumpscale import j
 
 import inspect
 import os
+
 try:
     import ujson as json
 except:
@@ -53,15 +54,15 @@ class LoggerBase(j.application.JSBaseConfigClass):
 
         """
 
-    def _init(self,**kwargs):
+    def _init(self, **kwargs):
         self._reset()
         self._model.trigger_add(self._data_update_prop)
 
     @staticmethod
-    def _data_update_prop(model,obj,kosmosinstance=None, action=None, propertyname=None):
-        self = kosmosinstance  #this way code is same and can manipulate self like in other methods
+    def _data_update_prop(model, obj, kosmosinstance=None, action=None, propertyname=None):
+        self = kosmosinstance  # this way code is same and can manipulate self like in other methods
         if propertyname:
-            #this way we know that all will be reloaded
+            # this way we know that all will be reloaded
             # print("reset")
             self._reset()
 
@@ -75,7 +76,7 @@ class LoggerBase(j.application.JSBaseConfigClass):
         :return:
         """
         print("INITLOG")
-        #put as std arguments, faster decision (NEEDS TO STAY!)
+        # put as std arguments, faster decision (NEEDS TO STAY!)
         if self.redis:
             self._redis = True
         else:
@@ -86,25 +87,21 @@ class LoggerBase(j.application.JSBaseConfigClass):
             self._stdout = False
 
         if self._redis:
-            print ("REDIS LUA LOADED")
+            print("REDIS LUA LOADED")
             _dirpath = os.path.dirname(inspect.getfile(self.__class__))
 
-            lua_path = "%s/log.lua"%_dirpath
+            lua_path = "%s/log.lua" % _dirpath
 
-            self._script = self._redis_client.storedprocedure_register("log",0,lua_path)
+            self._script = self._redis_client.storedprocedure_register("log", 0, lua_path)
 
+        self._inited = True
 
-        self._inited=True
-
-
-
-    def _process(self,logdict):
+    def _process(self, logdict):
 
         if not self._inited:
             self._init_at_log()
 
         if self._redis:
-
 
             record3 = json.dumps(logdict)
 
@@ -113,22 +110,18 @@ class LoggerBase(j.application.JSBaseConfigClass):
             # self._redis_client.storedprocedure_execute("log",record3)
             # self.redis_client.storedprocedure_debug("log","'%s'"%record3)
 
-        if self._stdout and level>14:
+        if self._stdout and level > 14:
             self._process_stdout(logdict)
 
-
-    def _process_stdout(self,logrecord):
-        #can be overruled but default its done by installtools
-
-
-
+    def _process_stdout(self, logrecord):
+        # can be overruled but default its done by installtools
+        pass
 
     @property
     def _redis_client(self):
         if self._redis_client_ is None:
-            self._redis_client_ = j.clients.redis.get(ipaddr=self.redis_addr,
-                                                      port=self.redis_port,
-                                                      password = self.redis_secret
-                                                      )
+            self._redis_client_ = j.clients.redis.get(
+                ipaddr=self.redis_addr, port=self.redis_port, password=self.redis_secret
+            )
 
         return self._redis_client_

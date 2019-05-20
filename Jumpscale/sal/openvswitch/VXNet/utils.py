@@ -1,4 +1,4 @@
-__author__ = 'delandtj'
+__author__ = "delandtj"
 from Jumpscale import j
 import os
 import os.path
@@ -28,8 +28,9 @@ def send_to_syslog(msg):
 def doexec(args):
     """Execute a subprocess, then return its return code, stdout and stderr"""
     send_to_syslog(args)
-    proc = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, close_fds=True, bufsize=-1)
+    proc = subprocess.Popen(
+        args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True, bufsize=-1
+    )
     rc = proc.wait()
     # rc = proc.communicate()
     stdout = proc.stdout
@@ -40,14 +41,15 @@ def doexec(args):
 def dobigexec(args):
     """Execute a subprocess, then return its return code, stdout and stderr"""
     send_to_syslog(args)
-    proc = subprocess.Popen(args, stdin=None, stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE, close_fds=True, bufsize=-1)
+    proc = subprocess.Popen(
+        args, stdin=None, stdout=subprocess.PIPE, stderr=subprocess.PIPE, close_fds=True, bufsize=-1
+    )
     rc = proc.communicate()
     return rc
 
 
 def get_all_namespaces():
-    cmd = '%s netns ls' % ip
+    cmd = "%s netns ls" % ip
     r, s, e = doexec(cmd.split())
     return [line.strip() for line in s.readlines()]
 
@@ -57,7 +59,7 @@ def get_all_ifaces():
     List of network interfaces
     @rtype : dict
     """
-    netpath = '/sys/class/net'
+    netpath = "/sys/class/net"
     ifaces = {}
     for i in os.listdir(netpath):
         addresspath = os.path.join(netpath, i, "address")
@@ -69,7 +71,7 @@ def get_all_ifaces():
 
 
 def get_all_bridges():
-    cmd = '%s list-br' % vsctl
+    cmd = "%s list-br" % vsctl
     r, s, e = doexec(cmd.split())
     l = [line.strip() for line in s.readlines()]
     return l
@@ -85,35 +87,37 @@ def limit_interface_rate(limit, interface, burst):
     r, s, e = doexec(cmd.split())
     if r:
         raise j.exception.RuntimeError(
-            "Problem with setting rate on interface: %s , problem was : %s " % (interface, e))
+            "Problem with setting rate on interface: %s , problem was : %s " % (interface, e)
+        )
     cmd = "%s set interface %s ingress_policing_burst=%s"
     r, s, e = doexec(cmd.split())
     if r:
         raise j.exception.RuntimeError(
-            "Problem with setting burst on interface: %s , problem was : %s " % (interface, e))
+            "Problem with setting burst on interface: %s , problem was : %s " % (interface, e)
+        )
 
 
 def createBridge(name):
-    cmd = '%s --may-exist add-br %s' % (vsctl, name)
+    cmd = "%s --may-exist add-br %s" % (vsctl, name)
     r, s, e = doexec(cmd.split())
     if r:
         raise j.exceptions.RuntimeError("Problem with creation of bridge %s, err was: %s" % (name, e))
     if name == "public":
-        cmd = '%s set Bridge %s stp_enable=true' % (vsctl, name)
+        cmd = "%s set Bridge %s stp_enable=true" % (vsctl, name)
         r, s, e = doexec(cmd.split())
         if r:
             raise j.exceptions.RuntimeError("Problem setting STP on bridge %s, err was: %s" % (name, e))
 
 
 def destroyBridge(name):
-    cmd = '%s --if-exists del-br %s' % (vsctl, name)
+    cmd = "%s --if-exists del-br %s" % (vsctl, name)
     r, s, e = doexec(cmd.split())
     if r:
         raise j.exceptions.RuntimeError("Problem with destruction of bridge %s, err was: %s" % (name, e))
 
 
 def listBridgePorts(name):
-    cmd = '%s list-ports %s' % (vsctl, name)
+    cmd = "%s list-ports %s" % (vsctl, name)
     r, s, e = doexec(cmd.split())
     if r:
         raise j.exception.RuntimeError("Problem with listing of bridge %s's ports , err was: %s " % (name, e))
@@ -121,15 +125,26 @@ def listBridgePorts(name):
 
 
 def VlanPatch(parentbridge, vlanbridge, vlanid):
-    parentpatchport = '%s-%s' % (vlanbridge, str(vlanid))
-    bridgepatchport = '%s-%s' % (parentbridge, str(vlanid))
-    cmd = '%s add-port %s %s tag=%s -- set Interface %s type=patch options:peer=%s' % (
-        vsctl, parentbridge, parentpatchport, vlanid, parentpatchport, bridgepatchport)
+    parentpatchport = "%s-%s" % (vlanbridge, str(vlanid))
+    bridgepatchport = "%s-%s" % (parentbridge, str(vlanid))
+    cmd = "%s add-port %s %s tag=%s -- set Interface %s type=patch options:peer=%s" % (
+        vsctl,
+        parentbridge,
+        parentpatchport,
+        vlanid,
+        parentpatchport,
+        bridgepatchport,
+    )
     r, s, e = doexec(cmd.split())
     if r:
         raise j.exceptions.RuntimeError("Add extra vlan pair failed %s" % (e.readlines()))
-    cmd = '%s add-port %s %s -- set Interface %s type=patch options:peer=%s' % (
-        vsctl, vlanbridge, bridgepatchport, bridgepatchport, parentpatchport)
+    cmd = "%s add-port %s %s -- set Interface %s type=patch options:peer=%s" % (
+        vsctl,
+        vlanbridge,
+        bridgepatchport,
+        bridgepatchport,
+        parentpatchport,
+    )
     r, s, e = doexec(cmd.split())
     if r:
         raise j.exceptions.RuntimeError("Add extra vlan pair failed %s" % (e.readlines()))
@@ -153,48 +168,50 @@ def addVlanPatch(parbr, vlbr, id, mtu=None):
         r, s, e = doexec(brcreate.split())
     if not port_exists(vlbr, brport):
         addport = "{0} add-port {1} {3} -- set Interface {3} type=patch options:peer={2}".format(
-            vsctl, vlbr, parport, brport)
+            vsctl, vlbr, parport, brport
+        )
         r, s, e = doexec(addport.split())
     if not port_exists(parbr, parport):
         c = "{4} add-port {0} {2} tag={3!s} -- set Interface {2} type=patch options:peer={1}".format(
-            parbr, brport, parport, id, vsctl)
+            parbr, brport, parport, id, vsctl
+        )
         r, s, e = doexec(c.split())
     if mtu:
-        ip_link_set(vlbr, 'mtu {0}'.format(mtu))
+        ip_link_set(vlbr, "mtu {0}".format(mtu))
 
 
 def createNameSpace(name):
     if name not in get_all_namespaces():
-        cmd = '%s netns add %s' % (ip, name)
+        cmd = "%s netns add %s" % (ip, name)
         r, s, e = doexec(cmd.split())
     else:
-        send_to_syslog('Namespace %s already exists, not creating' % name)
+        send_to_syslog("Namespace %s already exists, not creating" % name)
 
 
 def destroyNameSpace(name):
     if name in get_all_namespaces():
-        cmd = '%s netns delete %s' % (ip, name)
+        cmd = "%s netns delete %s" % (ip, name)
         r, s, e = doexec(cmd.split())
     else:
-        send_to_syslog('Namespace %s doesn\'t exist, nothing done ' % name)
+        send_to_syslog("Namespace %s doesn't exist, nothing done " % name)
 
 
 def createVethPair(left, right):
-    cmd = '%s link add %s type veth peer name %s' % (ip, left, right)
+    cmd = "%s link add %s type veth peer name %s" % (ip, left, right)
     allifaces = get_all_ifaces()
     if left in allifaces or right in allifaces:
         # one of them already exists
         send_to_syslog("Problem with creation of vet pair %s, %s :one of them exists" % (left, right))
     r, s, e = doexec(cmd.split())
     # wait for it to come up
-    time.sleep(.2)
-    ip_link_set(left, 'up')
-    ip_link_set(right, 'up')  # when sent into namespace, it'll be down again
+    time.sleep(0.2)
+    ip_link_set(left, "up")
+    ip_link_set(right, "up")  # when sent into namespace, it'll be down again
     disable_ipv6(left)  # not right, as it can be used in a namespace
 
 
 def destroyVethPair(left):
-    cmd = '%s link del %s ' % (ip, left)
+    cmd = "%s link del %s " % (ip, left)
     r, s, e = doexec(cmd.split())
     if r:
         raise j.exceptions.RuntimeError("Problem with destruction of Veth pair %s, err was: %s" % (left, e))
@@ -208,17 +225,17 @@ def createVXlan(vxname, vxid, multicast, vxbackend):
     # 0000-fe99 for customer vxlans, ff00-ffff for environments
     MTU of VXLAN = 1500
     """
-    cmd = 'ip link add %s type vxlan id %s group %s ttl 60 dev %s' % (vxname, vxid, multicast, vxbackend)
+    cmd = "ip link add %s type vxlan id %s group %s ttl 60 dev %s" % (vxname, vxid, multicast, vxbackend)
     r, s, e = doexec(cmd.split())
     disable_ipv6(vxname)
     setMTU(vxname, 1500)
-    ip_link_set(vxname, 'up')
+    ip_link_set(vxname, "up")
     if r:
         send_to_syslog("Problem with creation of vxlan %s, err was: %s" % (vxname, e.readlines()))
 
 
 def destroyVXlan(name):
-    cmd = '%s link del %s ' % (ip, name)
+    cmd = "%s link del %s " % (ip, name)
     r, s, e = doexec(cmd.split())
     if r:
         send_to_syslog("Problem with destruction of Veth pair %s, err was: %s" % (name, e.readlines()))
@@ -231,12 +248,12 @@ def addIPv4(interface, ipobj, namespace=None):
     # if ip existst on interface, we assume all ok
 
     if namespace is not None:
-        cmd = '%s netns exec %s ip addr add %s/%s dev %s' % (ip, namespace, ipv4addr, netmask, interface)
+        cmd = "%s netns exec %s ip addr add %s/%s dev %s" % (ip, namespace, ipv4addr, netmask, interface)
     else:
-        cmd = '%s addr add %s/%s dev %s' % (ip, ipv4addr, netmask, interface)
+        cmd = "%s addr add %s/%s dev %s" % (ip, ipv4addr, netmask, interface)
     r, s, e = doexec(cmd.split())
     if r:
-        send_to_syslog('Could not add IP %s to interface %s ' % (ipv4addr, interface))
+        send_to_syslog("Could not add IP %s to interface %s " % (ipv4addr, interface))
     return r, e
 
 
@@ -246,35 +263,35 @@ def addIPv6(interface, ipobj, namespace=None):
     # if ip existst on interface, we assume all ok
 
     if namespace is not None and namespace in allnamespaces:
-        cmd = '%s netns exec %s ip addr add %s/%s dev %s' % (ip, namespace, ipv6addr, netmask, interface)
+        cmd = "%s netns exec %s ip addr add %s/%s dev %s" % (ip, namespace, ipv6addr, netmask, interface)
     else:
-        cmd = '%s addr add %s/%s dev %s' % (ip, ipv6addr, netmask, interface)
+        cmd = "%s addr add %s/%s dev %s" % (ip, ipv6addr, netmask, interface)
     r, s, e = doexec(cmd.split())
     if r:
-        send_to_syslog('Could not add IP %s to interface %s ' % (ipv6addr, interface))
+        send_to_syslog("Could not add IP %s to interface %s " % (ipv6addr, interface))
     return r, e
 
 
 def connectIfToBridge(bridge, interfaces):
     for interface in interfaces:
-        cmd = '%s --if-exists del-port %s %s' % (vsctl, bridge, interface)
+        cmd = "%s --if-exists del-port %s %s" % (vsctl, bridge, interface)
         r, s, e = doexec(cmd.split())
-        cmd = '%s --may-exist add-port %s %s' % (vsctl, bridge, interface)
+        cmd = "%s --may-exist add-port %s %s" % (vsctl, bridge, interface)
         r, s, e = doexec(cmd.split())
         if r:
-            raise j.exceptions.RuntimeError('Error adding port %s to bridge %s' % (interface, bridge))
+            raise j.exceptions.RuntimeError("Error adding port %s to bridge %s" % (interface, bridge))
 
 
 def removeIfFromBridge(bridge, interfaces):
     for interface in interfaces:
-        cmd = '%s --if-exists del-port %s %s' % (vsctl, bridge, interface)
+        cmd = "%s --if-exists del-port %s %s" % (vsctl, bridge, interface)
         r, s, e = doexec(cmd.split())
         if r:
-            raise j.exceptions.RuntimeError('Error adding port %s to bridge %s' % (interface, bridge))
+            raise j.exceptions.RuntimeError("Error adding port %s to bridge %s" % (interface, bridge))
 
 
 def connectIfToNameSpace(nsname, interface):
-    cmd = '%s link set %s netns %s' % (ip, interface, nsname)
+    cmd = "%s link set %s netns %s" % (ip, interface, nsname)
     r, s, e = doexec(cmd.split())
     if r:
         raise j.exceptions.RuntimeError("Error moving %s to namespace %s" % (interface, nsname))
@@ -282,15 +299,15 @@ def connectIfToNameSpace(nsname, interface):
 
 def disable_ipv6(interface):
     if interface in get_all_ifaces():
-        cmd = 'sysctl -w net.ipv6.conf.%s.disable_ipv6=1' % interface
+        cmd = "sysctl -w net.ipv6.conf.%s.disable_ipv6=1" % interface
         r, s, e = doexec(cmd.split())
 
 
 def setMTU(interface, mtu):
-    cmd = 'ip link set %s mtu %s' % (interface, mtu)
+    cmd = "ip link set %s mtu %s" % (interface, mtu)
     r, s, e = doexec(cmd.split())
     if r:
-        raise j.exceptions.RuntimeError('Could not set %s to MTU %s' % (interface, mtu))
+        raise j.exceptions.RuntimeError("Could not set %s to MTU %s" % (interface, mtu))
 
 
 def addBond(bridge, bondname, iflist, lacp="active", lacp_time="fast", mode="balance-tcp", trunks=None):
@@ -307,9 +324,9 @@ def addBond(bridge, bondname, iflist, lacp="active", lacp_time="fast", mode="bal
     :param trunks: allowed VLANS (list or tuple)
     """
 
-    intf = re.split('\W+', iflist)
+    intf = re.split("\W+", iflist)
     if isinstance(trunks, str):
-        tr = re.split('\W+', trunks)
+        tr = re.split("\W+", trunks)
     buildup = "add-bond %s %s " % (bridge, bondname) + " ".join(e for e in list(set(intf))) + " lacp=%s " % lacp
     buildup = buildup + " -- set Port %s bond_mode=%s bond_fake_iface=false " % (bondname, mode)
     buildup = buildup + "other_config:lacp-time=%s bond_updelay=2000 bond_downdelay=400 " % lacp_time

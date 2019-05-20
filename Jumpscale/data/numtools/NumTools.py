@@ -2,6 +2,7 @@ from Jumpscale import j
 import numpy
 import struct
 import math
+
 JSBASE = j.application.JSBaseClass
 
 
@@ -76,9 +77,7 @@ class NumTools(j.application.JSBaseClass):
             tointerpolate = [0.0 for item in tointerpolate]
 
         for xpos in range(len(tointerpolate)):
-            if not tointerpolate[xpos] is None \
-                and not j.data.types.int.check(
-                    tointerpolate[xpos]):
+            if not tointerpolate[xpos] is None and not j.data.types.int.check(tointerpolate[xpos]):
                 isint = False
             if tointerpolate[xpos] is None:
                 x.append(xpos)
@@ -130,8 +129,7 @@ class NumTools(j.application.JSBaseClass):
         nrX = len(data[key1][key2])
 
         for x in range(nrX):
-            for key in list(
-                    data.keys()):  # the keys we want to ignore (collapse)
+            for key in list(data.keys()):  # the keys we want to ignore (collapse)
                 datasub = data[key]
                 for keysub in list(datasub.keys()):
                     if keysub not in result:
@@ -175,7 +173,7 @@ class NumTools(j.application.JSBaseClass):
         else:
             raise RuntimeError("bits need to be an integer")
 
-        while(len(bits)) < 8:
+        while (len(bits)) < 8:
             bits = "0%s" % bits
 
         return bits
@@ -274,19 +272,16 @@ class NumTools(j.application.JSBaseClass):
 
     def test(self):
         """
-        js_shell 'j.tools.numtools.test()'
+        kosmos 'j.tools.numtools.test()'
         """
         assert self.text2val("10k") == 10000.0
 
-        assert (1 / self.currencies["egp"]
-                ) * 10000000 == self.text2val("10 m egp")
-        assert (1 / self.currencies["egp"]
-                ) * 10000000 == self.text2val("10m egp")
-        assert (1 / self.currencies["egp"]
-                ) * 10000000 == self.text2val("10mEGP")
+        assert (1 / self.currencies["egp"]) * 10000000 == self.text2val("10 m egp")
+        assert (1 / self.currencies["egp"]) * 10000000 == self.text2val("10m egp")
+        assert (1 / self.currencies["egp"]) * 10000000 == self.text2val("10mEGP")
 
-        assert self.int_to_bitstring(10) == '00001010'
-        assert self.bitstring8_to_int('00001010') == 10
+        assert self.int_to_bitstring(10) == "00001010"
+        assert self.bitstring8_to_int("00001010") == 10
 
         assert self.bitstring_set_bit("00000000", 7) == 128
         assert self.bitstring_set_bit("00000000", 0) == 1

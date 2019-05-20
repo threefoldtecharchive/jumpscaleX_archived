@@ -31,6 +31,7 @@ class Startable:
             if not self.started:
                 self.start()
             return fn(self, *args, **kwargs)
+
         return fn2
 
     @staticmethod
@@ -39,6 +40,7 @@ class Startable:
             if not self.installed:
                 self.install()
             return fn(self, *args, **kwargs)
+
         return fn2
 
 
@@ -47,8 +49,17 @@ class MongoInstance(Startable):
     This class represents a mongo instance
     """
 
-    def __init__(self, prefab, addr=None, private_port=27021, public_port=None,
-                 type_="shard", replica='', configdb='', dbdir=None):
+    def __init__(
+        self,
+        prefab,
+        addr=None,
+        private_port=27021,
+        public_port=None,
+        type_="shard",
+        replica="",
+        configdb="",
+        dbdir=None,
+    ):
         super().__init__()
         self.prefab = prefab
         if not addr:
@@ -91,7 +102,7 @@ class MongoInstance(Startable):
             args += " --replSet %s" % (self.replica)
         if self.configdb:
             args += " --configdb %s" % (self.configdb)
-        return '{DIR_BIN}/' + cmd + args
+        return "{DIR_BIN}/" + cmd + args
 
     @Startable.ensure_installed
     def _start(self):
@@ -105,16 +116,16 @@ class MongoInstance(Startable):
     def execute(self, cmd):
         for i in range(5):
             rc, out, err = j.sal.process.execute(
-                "LC_ALL=C {DIR_BIN}/mongo --port %s --eval '%s'" %
-                (self.private_port, cmd.replace(
-                    "\\", "\\\\").replace(
-                    "'", "\\'")), die=False)
-            if not rc and out.find('errmsg') == -1:
-                self._log_info('command executed %s' % (cmd))
+                "LC_ALL=C {DIR_BIN}/mongo --port %s --eval '%s'"
+                % (self.private_port, cmd.replace("\\", "\\\\").replace("'", "\\'")),
+                die=False,
+            )
+            if not rc and out.find("errmsg") == -1:
+                self._log_info("command executed %s" % (cmd))
                 break
             sleep(5)
         else:
-            self._log_info('cannot execute command %s' % (cmd))
+            self._log_info("cannot execute command %s" % (cmd))
         return rc, out
 
     def __repr__(self):
@@ -144,7 +155,7 @@ class MongoSInstance(Startable):
 
     @Startable.ensure_started
     def add_shard(self, replica):
-        self.nodes[0].execute("sh.addShard( \"%s\" )" % (replica))
+        self.nodes[0].execute('sh.addShard( "%s" )' % (replica))
 
     def add_shards(self, replicas):
         return [self.add_shard(i) for i in replicas]
@@ -203,8 +214,7 @@ class MongoReplica(Startable):
 
     def _prepare_json_all(self):
         reprs = [repr(i) for i in self.all]
-        return ", ".join(["{ _id: %s, host: \"%s\" , priority: %f}" % (i, k, 1.0 / (i + 1))
-                          for i, k in enumerate(reprs)])
+        return ", ".join(['{ _id: %s, host: "%s" , priority: %f}' % (i, k, 1.0 / (i + 1)) for i, k in enumerate(reprs)])
 
     def _prepare_init(self):
         cfg = "configsvr: true,version:1," if self.configsvr else ""
@@ -248,11 +258,7 @@ class MongoConfigSvr(Startable):
     __str__ = __repr__
 
 
-
-
-
 class BuilderMongoCluster(j.builder.system._BaseClass):
-
     def mongoCluster(self, shards_nodes, config_nodes, mongos_nodes, shards_replica_set_counts=1):
         """
         shards_nodes: a list of executors of the shards
@@ -261,17 +267,16 @@ class BuilderMongoCluster(j.builder.system._BaseClass):
         shards_replica_set_count: the number of nodes in a replica set in the shards
         you can find more info here https://docs.mongodb.com/manual/tutorial/deploy-shard-cluster/
         """
+
         def construct_dict(node):
-            return {
-                'executor': node,
-                'private_port': 27017,
-                'public_port': 27017,
-                'dbdir': None
-            }
-        return self._mongoCluster(map(construct_dict, shards_nodes),
-                                  map(construct_dict, config_nodes),
-                                  map(construct_dict, mongos_nodes),
-                                  shards_replica_set_counts)
+            return {"executor": node, "private_port": 27017, "public_port": 27017, "dbdir": None}
+
+        return self._mongoCluster(
+            map(construct_dict, shards_nodes),
+            map(construct_dict, config_nodes),
+            map(construct_dict, mongos_nodes),
+            shards_replica_set_counts,
+        )
 
     def _mongoCluster(self, shards_nodes, config_nodes, mongos_nodes, shards_replica_set_counts=1, unique=""):
         args = []
@@ -280,21 +285,22 @@ class BuilderMongoCluster(j.builder.system._BaseClass):
             for k in i:
                 prefabs.append(
                     MongoInstance(
-                        j.tools.prefab.get(
-                            k['executor']),
-                        addr=k.get(
-                            'addr',
-                            None),
-                        private_port=k['private_port'],
-                        public_port=k.get('public_port'),
-                        dbdir=k.get('dbdir')))
+                        j.tools.prefab.get(k["executor"]),
+                        addr=k.get("addr", None),
+                        private_port=k["private_port"],
+                        public_port=k.get("public_port"),
+                        dbdir=k.get("dbdir"),
+                    )
+                )
             args.append(prefabs)
-        return self.__mongoCluster(args[0], args[1], args[2],
-                                   shards_replica_set_counts=shards_replica_set_counts, unique=unique)
+        return self.__mongoCluster(
+            args[0], args[1], args[2], shards_replica_set_counts=shards_replica_set_counts, unique=unique
+        )
 
     def __mongoCluster(self, shards_css, config_css, mongos_css, shards_replica_set_counts=1, unique=""):
-        shards_replicas = [shards_css[i:i + shards_replica_set_counts]
-                           for i in range(0, len(shards_css), shards_replica_set_counts)]
+        shards_replicas = [
+            shards_css[i : i + shards_replica_set_counts] for i in range(0, len(shards_css), shards_replica_set_counts)
+        ]
         shards = [MongoReplica(i, name="%s_sh_%d" % (unique, num)) for num, i in enumerate(shards_replicas)]
         cfg = MongoConfigSvr(config_css, name="%s_cfg" % (unique))
         cluster = MongoCluster(mongos_css, cfg, shards)
@@ -323,8 +329,8 @@ class BuilderMongoCluster(j.builder.system._BaseClass):
         numbers = numbers or (len(executors) - 2, 1, 1, 1)
 
         return self.mongoCluster(
-            executors[:numbers[0]],
-            executors[numbers[0]:numbers[0] + numbers[1]],
-            executors[numbers[0] + numbers[1]:numbers[0] + numbers[1] + numbers[2]],
-            numbers[3]
+            executors[: numbers[0]],
+            executors[numbers[0] : numbers[0] + numbers[1]],
+            executors[numbers[0] + numbers[1] : numbers[0] + numbers[1] + numbers[2]],
+            numbers[3],
         )

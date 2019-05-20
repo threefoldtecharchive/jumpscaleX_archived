@@ -10,6 +10,7 @@ class TelegramBot(JSConfigClient):
     You can use this client to run your telegram bots and use Jumpscale config manager
     it exposes updater, bot and and dispatcher to be used by your bot
     """
+
     _SCHEMATEXT = """
     @url = jumpscale.telegramBot.client
     name* = "" (S)
@@ -21,7 +22,6 @@ class TelegramBot(JSConfigClient):
         self._bot = None
         self._dispatcher = None
         self._command_handler = None
-
 
     @property
     def updater(self):
@@ -49,4 +49,3 @@ class TelegramBot(JSConfigClient):
 
     def start_polling(self):
         self.updater.start_polling()
-

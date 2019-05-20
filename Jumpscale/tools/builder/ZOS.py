@@ -1,5 +1,3 @@
-
-
 class ZOS(j.application.JSBaseConfigClass):
 
     _SCHEMATEXT = """
@@ -16,11 +14,11 @@ class ZOS(j.application.JSBaseConfigClass):
         self.zosclient = zosclient
         if zosclient.client._Client__redis is None:
             zosclient.ping()  # otherwise the redis client does not work
-        self._zostype = 'zerotier'
+        self._zostype = "zerotier"
 
-
-    def container_get(self,name="builder",flist=""):
+    def container_get(self, name="builder", flist=""):
         from .ZOSContainer import ZOSContainer
+
         zc = ZOSContainer(zos=self, name=name)
         if flist is not "":
             zc.flist = flist
@@ -33,6 +31,5 @@ class ZOS(j.application.JSBaseConfigClass):
     __str__ = __repr__
 
 
-
-#rsync -e "ssh -p1027"  -rav --delete ~/code/github/threefoldtech/ root@192.168.56.101:/root/code/github/threefoldtech/
-#rsync -e "ssh"  -rav --delete ~/code/github/threefoldtech/ root@10.244.172.242:/root/code/github/threefoldtech/
+# rsync -e "ssh -p1027"  -rav --delete ~/code/github/threefoldtech/ root@192.168.56.101:/root/code/github/threefoldtech/
+# rsync -e "ssh"  -rav --delete ~/code/github/threefoldtech/ root@10.244.172.242:/root/code/github/threefoldtech/

@@ -1,12 +1,8 @@
-
 from Jumpscale import j
 import os
 import time
 
 import socket
-
-
-
 
 
 class BuilderVRouter(j.builder.system._BaseClass):
@@ -41,16 +37,16 @@ class BuilderVRouter(j.builder.system._BaseClass):
         self.proxy()
 
     def prepare(self):
-        j.builder.system.package.ensure('inetutils-ping')
-        j.builder.system.package.ensure('nftables')
+        j.builder.system.package.ensure("inetutils-ping")
+        j.builder.system.package.ensure("nftables")
         self.check()
         j.builder.systemservices.fw.flush(permanent=True)
 
         # will make sure jumpscale has been installed (&base)
         j.builder.development.js8.install()
 
-        dest = j.core.tools.text_replace('{DIR_CODE}/github/threefoldtech/jumpscale_smartproxy')
-       j.clients.git.pullGitRepo("git@github.com:despiegk/smartproxy.git", dest=dest)
+        dest = self._replace("{DIR_CODE}/github/threefoldtech/jumpscale_smartproxy")
+        j.clients.git.pullGitRepo("git@github.com:despiegk/smartproxy.git", dest=dest)
 
         j.builder.tools.upload("{DIR_CODE}/github/threefoldtech/jumpscale_smartproxy")
         C = """
@@ -111,14 +107,15 @@ class BuilderVRouter(j.builder.system._BaseClass):
 
         if ipaddr not in j.builder.system.net.getInfo("br0")["ip"]:
             raise j.exceptions.RuntimeError(
-                "could not set bridge, something went wrong, could not find ip addr:%s" % ipaddr)
+                "could not set bridge, something went wrong, could not find ip addr:%s" % ipaddr
+            )
 
     def dnsServer(self):
         self.check()
         j.builder.system.tmux.createSession("ovsrouter", ["dns"], returnifexists=True, killifexists=False)
         j.builder.system.process.kill("dns-server")
         cmd = "jspython /opt/dnsmasq-alt/dns-server.py"
-        j.builder.system.tmux.executeInScreen('ovsrouter', 'dns', cmd)
+        j.builder.system.tmux.executeInScreen("ovsrouter", "dns", cmd)
 
     @property
     def wirelessInterfaceNonDefGW(self):
@@ -133,7 +130,8 @@ class BuilderVRouter(j.builder.system._BaseClass):
                 level=1,
                 source="",
                 tags="",
-                msgpub="")
+                msgpub="",
+            )
         return interfaces[0]
 
     @property
@@ -143,7 +141,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         default: 192.168.86.0/24
         and will go to 87... when not available
         """
-        return ("192.168.86")
+        return "192.168.86"
         # for i in range(100, 150):
         #     iprange = "192.168.%s" % i
         #     for item in j.builder.system.net.ips:
@@ -183,7 +181,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         j.sal.process.execute(C)
 
         cmd = "dhcpd -f"
-        j.builder.system.tmux.executeInScreen('ovsrouter', 'dhcpd', cmd)
+        j.builder.system.tmux.executeInScreen("ovsrouter", "dhcpd", cmd)
 
     def hostap(self):
         self.check()
@@ -252,7 +250,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         j.sal.fs.writeFile(configdest, C)
 
         cmd = "/opt/netpoc/hostapd-2.5/hostapd/hostapd %s" % configdest
-        j.builder.system.tmux.executeInScreen('ovsrouter', 'ap', cmd)
+        j.builder.system.tmux.executeInScreen("ovsrouter", "ap", cmd)
 
     def firewall(self):
         path = "{DIR_CODE}/github/threefoldtech/jumpscale_smartproxy/nftables.conf"
@@ -269,7 +267,7 @@ class BuilderVRouter(j.builder.system._BaseClass):
         """
 
         cmd = "python3 mitmproxy_start.py -T -d -d -p 8443 -s /opt/dnsmasq-alt/http-filter.py"
-        j.builder.system.tmux.executeInScreen('ovsrouter', 'proxy', cmd)
+        j.builder.system.tmux.executeInScreen("ovsrouter", "proxy", cmd)
 
     #
     # def accesspointAllInOne(self, passphrase, name="", dns="8.8.8.8", interface="wlan0"):
@@ -316,6 +314,6 @@ class BuilderVRouter(j.builder.system._BaseClass):
     #     pm.ensure("ap", cmd2, descr="accesspoint for local admin", systemdunit=START1)
 
     def __str__(self):
-        return "prefab.vrouter:%s:%s" % (getattr(self.executor, 'addr', 'local'), getattr(self.executor, 'port', ''))
+        return "prefab.vrouter:%s:%s" % (getattr(self.executor, "addr", "local"), getattr(self.executor, "port", ""))
 
     __repr__ = __str__

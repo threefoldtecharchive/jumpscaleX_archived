@@ -6,9 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class RequiredScope( ):
+class RequiredScope:
     """
     auto-generated. don't touch.
     """
@@ -26,17 +24,18 @@ class RequiredScope( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'RequiredScope'
+        class_name = "RequiredScope"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
         self.accessscopes = client_support.set_property(
-            'accessscopes', data, data_types, False, [], True, True, class_name)
+            "accessscopes", data, data_types, False, [], True, True, class_name
+        )
         data_types = [string_types]
-        self.scope = client_support.set_property('scope', data, data_types, False, [], False, True, class_name)
+        self.scope = client_support.set_property("scope", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

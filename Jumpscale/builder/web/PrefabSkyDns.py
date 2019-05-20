@@ -1,9 +1,7 @@
 from Jumpscale import j
 
 
-
 class BuilderSkyDns(j.builder.system._BaseClass):
-
     def build(self, start=True, install=True):
         if self.isInstalled():
             return
@@ -16,13 +14,13 @@ class BuilderSkyDns(j.builder.system._BaseClass):
         """
         download , install, move files to appropriate places, and create relavent configs
         """
-        j.builder.tools.file_copy(j.builder.tools.joinpaths('{DIR_BASE}/go', 'bin', 'skydns'), '{DIR_BIN}')
-        #j.builder.sandbox.path_add(j.core.tools.text_replace("{DIR_BIN}"))
+        j.builder.tools.file_copy(j.builder.tools.joinpaths("{DIR_BASE}/go", "bin", "skydns"), "{DIR_BIN}")
+        # j.builder.sandbox.path_add(self._replace("{DIR_BIN}"))
 
         if start:
             self.start()
 
     def start(self):
-        cmd = #j.builder.sandbox.cmd_path_get("skydns")
+        cmd = self.tools.command_check("skydns")
         pm = j.builder.system.processmanager.get()
         pm.ensure("skydns", cmd + " -addr 0.0.0.0:53")

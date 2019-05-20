@@ -1,4 +1,5 @@
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
 
@@ -7,39 +8,39 @@ from watchdog.observers import Observer
 
 
 class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
-    def __init__(self,syncer):
+    def __init__(self, syncer):
         JSBASE.__init__(self)
         self.syncer = syncer
         self.paths = syncer.paths
 
-        self.sync_paths_src=[]
-        self.sync_paths_dest=[]
+        self.sync_paths_src = []
+        self.sync_paths_dest = []
         for source in self.syncer._get_paths():
             if not j.data.types.list.check(source):
-                dest=source
+                dest = source
             else:
-                source,dest=source #get list to 2 separate ones
+                source, dest = source  # get list to 2 separate ones
             if ":" in source:
                 raise RuntimeError("cannot have : in source")
             self.sync_paths_src.append(j.builder.tools.replace(source))
             self.sync_paths_dest.append(j.builder.tools.replace(dest))
         self._logger_enable()
 
-    def path_dest_get(self,src):
-        nr=0
+    def path_dest_get(self, src):
+        nr = 0
         for item in self.sync_paths_src:
             dest = self.sync_paths_dest[nr]
             if src.startswith(item):
-                dest = j.sal.fs.joinPaths(dest,j.sal.fs.pathRemoveDirPart(src,item))
+                dest = j.sal.fs.joinPaths(dest, j.sal.fs.pathRemoveDirPart(src, item))
                 return dest
-            nr+=1
-        raise RuntimeError("did not find:%s"%src)
+            nr += 1
+        raise RuntimeError("did not find:%s" % src)
 
     def handler(self, event, action="copy"):
         # self._log_debug("%s:%s" % (event, action))
-        ftp =  self.syncer.ssh_client.sftp
+        ftp = self.syncer.ssh_client.sftp
         changedfile = event.src_path
-        if event.src_path.endswith((".swp",".swx")):
+        if event.src_path.endswith((".swp", ".swx")):
             return
         elif event.is_directory:
             if changedfile.find("/.git") != -1:
@@ -74,16 +75,16 @@ class MyFileSystemEventHandler(FileSystemEventHandler, JSBASE):
                     self._log_debug("copy: %s:%s" % (changedfile, dest))
                     print("copy: %s:%s" % (changedfile, dest))
                     try:
-                        self.syncer.ssh_client.copy_file(changedfile,dest)
+                        self.syncer.ssh_client.copy_file(changedfile, dest)
                     except Exception as e:
-                        self._log_error("Couldn't sync file: %s:%s" % (changedfile,dest))
+                        self._log_error("Couldn't sync file: %s:%s" % (changedfile, dest))
                         self._log_error("** ERROR IN COPY, WILL SYNC ALL")
                         self._log_error(str(e))
                         error = True
                 elif action == "delete":
                     self._log_debug("delete: %s:%s" % (changedfile, dest))
                     try:
-                        cmd = 'rm %s' % dest
+                        cmd = "rm %s" % dest
                         self.syncer.ssh_client.exec_command(cmd)
                     except Exception as e:
                         self._log_error("Couldn't remove file: %s" % (dest))

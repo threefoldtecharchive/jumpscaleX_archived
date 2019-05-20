@@ -3,9 +3,9 @@ from Jumpscale import j
 
 
 class ECODumper(Dumper.BaseDumper):
-    QUEUE = 'queues:eco'
+    QUEUE = "queues:eco"
 
-    def __init__(self, cidr='127.0.0.1', ports=[7777]):
+    def __init__(self, cidr="127.0.0.1", ports=[7777]):
         super(ECODumper, self).__init__(cidr, ports=ports)
 
     def dump(self, redis):
@@ -41,9 +41,23 @@ class ECODumper(Dumper.BaseDumper):
             obj = j.data.serializers.json.loads(data)
 
             eco = j.data.models_system.Errorcondition()
-            eco.guid = obj['key']
-            for key in ('errormessage', 'errormessagepub', 'code', 'funcname', 'funcfilename', 'closetime',
-                        'occurrences', 'lasttime', 'backtrace', 'level', 'type', 'tags', 'gid', 'nid'):
+            eco.guid = obj["key"]
+            for key in (
+                "errormessage",
+                "errormessagepub",
+                "code",
+                "funcname",
+                "funcfilename",
+                "closetime",
+                "occurrences",
+                "lasttime",
+                "backtrace",
+                "level",
+                "type",
+                "tags",
+                "gid",
+                "nid",
+            ):
                 setattr(eco, key, obj.get(key))
 
             eco.save()

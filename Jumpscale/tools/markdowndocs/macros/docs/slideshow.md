@@ -3,7 +3,7 @@ you can use this macro to include slides from different presentations into your 
 
 # Prerequisites 
 In order to use this macro you must make sure that Gdrive package is working, check the
-[docs here](https://github.com/threefoldtech/digitalmeX/blob/development/packages/gdrive/README.md)
+[docs here](https://github.com/threefoldtech/digitalmeX/blob/master/packages/gdrive/README.md)
 
 # Example
 ```

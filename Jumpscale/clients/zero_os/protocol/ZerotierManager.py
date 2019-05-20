@@ -2,16 +2,11 @@ from . import typchk
 from Jumpscale import j
 
 
-
-
-class ZerotierManager():
-    _network_chk = typchk.Checker({
-        'network': str,
-    })
+class ZerotierManager:
+    _network_chk = typchk.Checker({"network": str})
 
     def __init__(self, client):
         self._client = client
-
 
     def join(self, network):
         """
@@ -20,13 +15,13 @@ class ZerotierManager():
         :param network: network id to join
         :return:
         """
-        args = {'network': network}
+        args = {"network": network}
         self._network_chk.check(args)
-        response = self._client.raw('zerotier.join', args)
+        response = self._client.raw("zerotier.join", args)
         result = response.get()
 
-        if result.state != 'SUCCESS':
-            raise RuntimeError('failed to join zerotier network: %s' % result.stderr)
+        if result.state != "SUCCESS":
+            raise RuntimeError("failed to join zerotier network: %s" % result.stderr)
 
     def leave(self, network):
         """
@@ -35,13 +30,13 @@ class ZerotierManager():
         :param network: network id to leave
         :return:
         """
-        args = {'network': network}
+        args = {"network": network}
         self._network_chk.check(args)
-        response = self._client.raw('zerotier.leave', args)
+        response = self._client.raw("zerotier.leave", args)
         result = response.get()
 
-        if result.state != 'SUCCESS':
-            raise RuntimeError('failed to leave zerotier network:%s\nsterr:\n%s', (network,result.stderr))
+        if result.state != "SUCCESS":
+            raise RuntimeError("failed to leave zerotier network:%s\nsterr:\n%s", (network, result.stderr))
 
     def list(self):
         """
@@ -49,7 +44,7 @@ class ZerotierManager():
 
         :return: list of joined networks with their info
         """
-        return self._client.json('zerotier.list', {})
+        return self._client.json("zerotier.list", {})
 
     def info(self):
         """
@@ -57,4 +52,4 @@ class ZerotierManager():
 
         :return: dict of zerotier statusinfo
         """
-        return self._client.json('zerotier.info', {})
+        return self._client.json("zerotier.info", {})

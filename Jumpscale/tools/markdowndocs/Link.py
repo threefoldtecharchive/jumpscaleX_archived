@@ -10,9 +10,18 @@ JSBASE = j.application.JSBaseClass
 
 # Some links that needs to be skipped from verifying because the crawling is forbidden
 SKIPPED_LINKS = [
-    't.me', 'chat.grid.tf', 'linkedin.com', 'docs.grid.tf', 'btc-alpha',
-    'kraken.com', 'bitoasis.net', 'cex.io',  'itsyou.online', 'skype:',
-    'medium.com', "mailto:"
+    "t.me",
+    "chat.grid.tf",
+    "linkedin.com",
+    "docs.grid.tf",
+    "btc-alpha",
+    "kraken.com",
+    "bitoasis.net",
+    "cex.io",
+    "itsyou.online",
+    "skype:",
+    "medium.com",
+    "mailto:",
 ]
 
 
@@ -30,9 +39,10 @@ class CustomLink:
     http://github.com/account/repo/tree/master/docs/readme.md
     """
 
-    URL_RE = re.compile(r'^(http|https)\:\/\/', re.IGNORECASE)
-    REFERENCE_RE = re.compile(r'^\#(\d+)$')
-    REPO_PATH_RE = re.compile(r'''
+    URL_RE = re.compile(r"^(http|https)\:\/\/", re.IGNORECASE)
+    REFERENCE_RE = re.compile(r"^\#(\d+)$")
+    REPO_PATH_RE = re.compile(
+        r"""
         ^                   # start of the line/string
         (?:                 # non-capturing group
             (.*?)           # match any char -> repo
@@ -48,7 +58,9 @@ class CustomLink:
             \!\s*?
             (\w+)           # any marker (part) like !A
         )?$                 # optional
-    ''', re.X)
+    """,
+        re.X,
+    )
 
     def __init__(self, link, **kwargs):
         self.link = link.strip()
@@ -70,8 +82,8 @@ class CustomLink:
         :return: a tuple of (account, other_part), account can be None
         :rtype: tuple
         """
-        if self.link.count(':') == 2:
-            account, _, other_part = self.link.partition(':')
+        if self.link.count(":") == 2:
+            account, _, other_part = self.link.partition(":")
             return account, other_part
         return None, self.link
 
@@ -117,21 +129,21 @@ class CustomLink:
 
     @classmethod
     def test(cls):
-        l = CustomLink('threefoldtech:jumpscaleX(dev):#124')
-        assert l.account == 'threefoldtech'
-        assert l.repo == 'jumpscaleX'
-        assert l.branch == 'dev'
-        assert l.path == '#124'
+        l = CustomLink("threefoldtech:jumpscaleX(dev):#124")
+        assert l.account == "threefoldtech"
+        assert l.repo == "jumpscaleX"
+        assert l.branch == "dev"
+        assert l.path == "#124"
 
-        l = CustomLink('jumpscaleX(dev):docs/test.md')
-        assert l.repo == 'jumpscaleX'
-        assert l.branch == 'dev'
-        assert l.path == 'docs/test.md'
+        l = CustomLink("jumpscaleX(dev):docs/test.md")
+        assert l.repo == "jumpscaleX"
+        assert l.branch == "dev"
+        assert l.path == "docs/test.md"
 
-        l = CustomLink('docs/test.md')
+        l = CustomLink("docs/test.md")
         assert not l.account
         assert not l.repo
-        assert l.path == 'docs/test.md'
+        assert l.path == "docs/test.md"
 
 
 class Linker:
@@ -141,7 +153,7 @@ class Linker:
     TREE = None
 
     def remove_slash(self, arg):
-        return arg.lstrip('/')
+        return arg.lstrip("/")
 
     def join(self, *args):
         if self.HOST:
@@ -156,7 +168,7 @@ class Linker:
     def pull_request(self, _id):
         raise NotImplementedError
 
-    def tree(self, path, branch='master'):
+    def tree(self, path, branch="master"):
         pass
 
     def to_custom_link(self):
@@ -164,12 +176,13 @@ class Linker:
 
 
 class GithubLinker(Linker):
-    HOST = 'http://github.com'
-    ISSUE = 'issues/{id}'
-    PULL_REQUEST = 'pull/{id}'
-    TREE = 'tree/{branch}'
+    HOST = "http://github.com"
+    ISSUE = "issues/{id}"
+    PULL_REQUEST = "pull/{id}"
+    TREE = "tree/{branch}"
 
-    GITHUB_LINK_RE = re.compile(r'''
+    GITHUB_LINK_RE = re.compile(
+        r"""
         (?:http|https)\:\/\/github\.com                 # https://github.com/
         (?:\/([^\/]+))                                  # account
         (?:\/([^\/]+))                                  # repo
@@ -183,7 +196,9 @@ class GithubLinker(Linker):
                 (.*?)$
             )?
         )?
-    ''', re.X | re.IGNORECASE)
+    """,
+        re.X | re.IGNORECASE,
+    )
 
     def __init__(self, account, repo):
         self.account = account
@@ -200,27 +215,27 @@ class GithubLinker(Linker):
 
     def tree(self, path, branch=None):
         if not branch:
-            branch = 'master'
+            branch = "master"
         return self.join(self.TREE.format(branch=branch), path)
 
     @classmethod
     def to_custom_link(cls, url):
         match = cls.GITHUB_LINK_RE.match(url)
         if not match:
-            raise ValueError('not a valid github url')
+            raise ValueError("not a valid github url")
 
         account, repo, branch, path = match.groups()
-        link = '%s:%s' % (account, repo)
+        link = "%s:%s" % (account, repo)
         if branch:
-            link += '(%s)' % branch
+            link += "(%s)" % branch
         if not path:
-            path = ''
-        link += ':%s' % path
+            path = ""
+        link += ":%s" % path
         return CustomLink(link)
 
 
 class Link(j.application.JSBaseClass):
-    LINK_MARKDOWN_PATTERN = r'''
+    LINK_MARKDOWN_PATTERN = r"""
         \!?                         # match optiona !
         \[                          # start of descirption [
             (
@@ -238,7 +253,7 @@ class Link(j.application.JSBaseClass):
                 [^\(\)]*?           # anything other than ( or )
             )??                     # optional
         \)                          # end of link
-    '''
+    """
     LINK_MARKDOWN_RE = re.compile(LINK_MARKDOWN_PATTERN, re.X)
 
     def __init__(self, doc, source):
@@ -270,15 +285,15 @@ class Link(j.application.JSBaseClass):
 
     def remove_quotes(self, s):
         if s:
-            return s.replace('"', '').replace("'", '')
-        return ''
+            return s.replace('"', "").replace("'", "")
+        return ""
 
     def parse_markdown(self, link_markdown):
         match = self.LINK_MARKDOWN_RE.match(link_markdown)
         if match:
             match = match.groups()
             return map(self.remove_quotes, match)
-        raise ValueError('not a link markdown')
+        raise ValueError("not a link markdown")
 
     def get_docsite(self, external_link, name):
         url = urlparse(external_link)
@@ -288,7 +303,7 @@ class Link(j.application.JSBaseClass):
             parent_dir = external_link
         else:
             parent_path = j.sal.fs.getDirName(path)
-            parent_dir = Linker().join('https://', url.hostname, parent_path)
+            parent_dir = Linker().join("https://", url.hostname, parent_path)
 
         new_docsite = j.tools.markdowndocs.load(parent_dir, name=name)
         new_docsite.write()
@@ -327,8 +342,10 @@ class Link(j.application.JSBaseClass):
                 self.filename = self._clean(j.sal.fs.getBaseName(link_source))
 
                 if not self.extension in ["png", "jpg", "jpeg", "mov", "mp4", "mp3", "docx"]:
-                    self.extension = "jpeg"  # to support url's like https://images.unsplash.com/photo-1533157961145-8cb586c448e1?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4e252bcd55caa8958985866ad15ec954&auto=format&fit=crop&w=1534&q=80
-                    self.filename = self.filename + '.jpeg'
+                    self.extension = (
+                        "jpeg"
+                    )  # to support url's like https://images.unsplash.com/photo-1533157961145-8cb586c448e1?ixlib=rb-0.3.5&ixid=eyJhcHBfaWQiOjEyMDd9&s=4e252bcd55caa8958985866ad15ec954&auto=format&fit=crop&w=1534&q=80
+                    self.filename = self.filename + ".jpeg"
 
                 if j.sal.fs.getFileExtension(self.filename) != self.extension:
                     j.shell()
@@ -363,7 +380,7 @@ class Link(j.application.JSBaseClass):
                 name = self.link_source
 
             self.filename = self._clean(name)  # cleanly normalized name but extension still part of it
-            #e.g. balance_inspiration_motivation_life_scene_wander_big.jpg
+            # e.g. balance_inspiration_motivation_life_scene_wander_big.jpg
             if self.filename.strip() == "":
                 return self.error("filename is empty")
 
@@ -428,6 +445,7 @@ class Link(j.application.JSBaseClass):
                 self.error("link not alive:%s" % self.link_source_original)
                 return False
             return True
+
         res = self._cache.get(self.link_source, method=do, expire=3600)
         if res is not True:
             self.error(res)

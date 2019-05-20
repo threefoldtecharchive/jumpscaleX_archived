@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 
 def _prepare_device(node, devicename):
     j.tools.logger._log_debug("prepare device %s", devicename)
-    ss = devicename.split('/')
+    ss = devicename.split("/")
     if len(ss) < 3:
         raise RuntimeError("bad device name: {}".format(devicename))
     name = ss[2]
@@ -22,7 +22,7 @@ def _prepare_device(node, devicename):
     if disk is None:
         raise ValueError("device {} not found".format(name))
 
-    node.client.system('parted -s /dev/{} mklabel gpt mkpart primary 1m 100%'.format(name)).get()
+    node.client.system("parted -s /dev/{} mklabel gpt mkpart primary 1m 100%".format(name)).get()
     now = time.time()
     # check partitions is ready and writable
     while now + 60 > time.time():
@@ -31,8 +31,9 @@ def _prepare_device(node, devicename):
             if len(disk.partitions) > 0:
                 partition = disk.partitions[0]
                 resp = node.client.bash(
-                    'test -b {0} && dd if={0} of=/dev/null bs=4k count=1024'.format(partition.devicename)).get()
-                if resp.state == 'SUCCESS':
+                    "test -b {0} && dd if={0} of=/dev/null bs=4k count=1024".format(partition.devicename)
+                ).get()
+                if resp.state == "SUCCESS":
                     return partition
         except:
             time.sleep(1)
@@ -42,7 +43,6 @@ def _prepare_device(node, devicename):
 
 
 class StoragePools:
-
     def __init__(self, node):
         self.node = node
 
@@ -59,12 +59,12 @@ class StoragePools:
         storagepools = []
         btrfs_list = self.client.btrfs.list()
         for btrfs in btrfs_list:
-            if btrfs['label'].startswith('sp_'):
-                name = btrfs['label'].split('_', 1)[1]
-                if not btrfs['devices']:
+            if btrfs["label"].startswith("sp_"):
+                name = btrfs["label"].split("_", 1)[1]
+                if not btrfs["devices"]:
                     continue
-                device = btrfs['devices'][0]['path']
-                if (fs_uuid and btrfs['uuid'] == fs_uuid) or not fs_uuid:
+                device = btrfs["devices"][0]["path"]
+                if (fs_uuid and btrfs["uuid"] == fs_uuid) or not fs_uuid:
                     storagepools.append(StoragePool(self.node, name, device))
         return storagepools
 
@@ -78,7 +78,7 @@ class StoragePools:
         if not isinstance(device, str):
             raise ValueError("device must be a string not %s" % type(device))
 
-        label = 'sp_{}'.format(name)
+        label = "sp_{}".format(name)
         j.tools.logger._log_debug("create storagepool %s", label)
 
         part = _prepare_device(self.node, device)
@@ -89,7 +89,6 @@ class StoragePools:
 
 
 class StoragePool(Mountable):
-
     def __init__(self, node, name, device):
         self.node = node
         self.device = device
@@ -112,11 +111,11 @@ class StoragePool(Mountable):
 
     @property
     def devicename(self):
-        return 'UUID={}'.format(self.uuid)
+        return "UUID={}".format(self.uuid)
 
     def mount(self, target=None):
         if target is None:
-            target = os.path.join('/mnt/storagepools/{}'.format(self.name))
+            target = os.path.join("/mnt/storagepools/{}".format(self.name))
         return super().mount(target)
 
     def delete(self, zero=True):
@@ -142,7 +141,8 @@ class StoragePool(Mountable):
             self.client.disk.rmpart(disk.name, 1)
             if zero:
                 self.client.bash(
-                    'test -b /dev/{0} && dd if=/dev/zero bs=1M count=500 of=/dev/{0}'.format(diskpath)).get()
+                    "test -b /dev/{0} && dd if=/dev/zero bs=1M count=500 of=/dev/{0}".format(diskpath)
+                ).get()
         return
 
     @property
@@ -150,8 +150,8 @@ class StoragePool(Mountable):
         mounts = self.node.list_mounts()
         for mount in mounts:
             if mount.device == self.device:
-                options = mount.options.split(',')
-                if 'subvol=/' in options:
+                options = mount.options.split(",")
+                if "subvol=/" in options:
                     return mount.mountpoint
 
     @property
@@ -174,12 +174,12 @@ class StoragePool(Mountable):
     @property
     def info(self):
         for fs in self.client.btrfs.list():
-            if fs['label'] == 'sp_{}'.format(self.name):
+            if fs["label"] == "sp_{}".format(self.name):
                 return fs
         return None
 
     def total_quota(self):
-        return sum([subvol['Quota'] for subvol in self.raw_list()])
+        return sum([subvol["Quota"] for subvol in self.raw_list()])
 
     def raw_list(self):
         mountpoint = self._get_mountpoint()
@@ -187,44 +187,40 @@ class StoragePool(Mountable):
 
     def get_device_and_status(self):
         disks = self.client.disk.list()
-        pool_status = 'healthy'
+        pool_status = "healthy"
         info = None
         for disk in disks:
-            disk_name = "/dev/%s" % disk['kname']
-            for part in disk.get('children', []) or []:
-                if self.uuid == part['uuid']:
+            disk_name = "/dev/%s" % disk["kname"]
+            for part in disk.get("children", []) or []:
+                if self.uuid == part["uuid"]:
                     info = part
                     break
             if not info:
                 continue
 
-            status = 'healthy'
-            if info['subsystems'] != 'block:virtio:pci':
+            status = "healthy"
+            if info["subsystems"] != "block:virtio:pci":
                 result = self.client.bash("smartctl -H %s > /dev/null ;echo $?" % disk_name).get()
                 exit_status = int(result.stdout)
 
                 if exit_status & 1 << 0:
                     status = "unknown"
-                    pool_status = 'degraded'
+                    pool_status = "degraded"
                 if (exit_status & 1 << 2) or (exit_status & 1 << 3):
-                    status = 'degraded'
-                    pool_status = 'degraded'
+                    status = "degraded"
+                    pool_status = "degraded"
 
-            device = {
-                'device': self.device,
-                'partUUID': info['partuuid'] or '' if info else '',
-                'status': status,
-            }
+            device = {"device": self.device, "partUUID": info["partuuid"] or "" if info else "", "status": status}
 
             return device, pool_status
-        raise RuntimeError('Failed to find device {}'.format(self.device))
+        raise RuntimeError("Failed to find device {}".format(self.device))
 
     def list(self):
         subvolumes = []
         for subvol in self.raw_list():
-            path = subvol['Path']
-            type_, _, name = path.partition('/')
-            if type_ == 'filesystems':
+            path = subvol["Path"]
+            type_, _, name = path.partition("/")
+            if type_ == "filesystems":
                 subvolumes.append(FileSystem(name, self))
         return subvolumes
 
@@ -252,7 +248,7 @@ class StoragePool(Mountable):
         """
         j.tools.logger._log_debug("Create filesystem %s on %s", name, self)
         mountpoint = self._get_mountpoint()
-        fspath = os.path.join(mountpoint, 'filesystems')
+        fspath = os.path.join(mountpoint, "filesystems")
         self.client.filesystem.mkdir(fspath)
         subvolpath = os.path.join(fspath, name)
         self.client.btrfs.subvol_create(subvolpath)
@@ -265,15 +261,15 @@ class StoragePool(Mountable):
         total = 0
         fs = self.info
         if fs:
-            for device in fs['devices']:
-                total += device['size']
+            for device in fs["devices"]:
+                total += device["size"]
         return total
 
     @property
     def uuid(self):
         fs = self.info
         if fs:
-            return fs['uuid']
+            return fs["uuid"]
         return None
 
     @property
@@ -281,23 +277,22 @@ class StoragePool(Mountable):
         total = 0
         fs = self.info
         if fs:
-            for device in fs['devices']:
-                total += device['used']
+            for device in fs["devices"]:
+                total += device["used"]
         return total
 
     def __repr__(self):
         return "StoragePool <{}>".format(self.name)
 
 
-class FileSystem():
-
+class FileSystem:
     def __init__(self, name, pool):
 
         self.name = name
         self.pool = pool
         self.subvolume = "filesystems/{}".format(name)
         self.path = os.path.join(self.pool.mountpoint, self.subvolume)
-        self.snapshotspath = os.path.join(self.pool.mountpoint, 'snapshots', self.name)
+        self.snapshotspath = os.path.join(self.pool.mountpoint, "snapshots", self.name)
 
     @property
     def client(self):
@@ -307,7 +302,7 @@ class FileSystem():
         """
         Delete filesystem
         """
-        paths = [fs['Path'] for fs in self.client.btrfs.subvol_list(self.path)]
+        paths = [fs["Path"] for fs in self.client.btrfs.subvol_list(self.path)]
         paths.sort(reverse=True)
         for path in paths:
             rpath = os.path.join(self.path, os.path.relpath(path, self.subvolume))
@@ -334,8 +329,8 @@ class FileSystem():
         snapshots = []
         if self.client.filesystem.exists(self.snapshotspath):
             for fileentry in self.client.filesystem.list(self.snapshotspath):
-                if fileentry['is_dir']:
-                    snapshots.append(Snapshot(fileentry['name'], self))
+                if fileentry["is_dir"]:
+                    snapshots.append(Snapshot(fileentry["name"], self))
         return snapshots
 
     def exists(self, name):
@@ -360,8 +355,7 @@ class FileSystem():
         return "FileSystem <{}: {!r}>".format(self.name, self.pool)
 
 
-class Snapshot():
-
+class Snapshot:
     def __init__(self, name, filesystem):
 
         self.filesystem = filesystem

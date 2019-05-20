@@ -1,41 +1,93 @@
 from Jumpscale import j
 
+JSBASE = j.builder.system._BaseClass
+builder_method = j.builder.system.builder_method
 
 
-
-class BuilderRipple(j.builder.system._BaseClass):
+class BuilderRipple(JSBASE):
     NAME = "rippled"
 
-    def build(self, reset=False):
+    @builder_method()
+    def build(self):
         """Get/Build the binaries of ripple
         Keyword Arguments:
             reset {bool} -- reset the build process (default: {False})
+            # rfer to: https://ripple.com/build/rippled-setup/#installing-rippled
         """
+        # Prerequisites build tools
+        self.system.package.mdupdate()
+        self.system.package.install(["git", "pkg-config", "protobuf-compiler", "libprotobuf-dev", "libssl-dev wget"])
 
-        if self._done_get('build') and reset is False:
-            return
-        
-        # rfer to: https://ripple.com/build/rippled-setup/#installing-rippled
-    
-        j.builder.system.package.ensure(['yum-utils', 'alien'])
-        cmds = """
-        rpm -Uvh https://mirrors.ripple.com/ripple-repo-el7.rpm
-        yumdownloader --enablerepo=ripple-stable --releasever=el7 rippled
-        rpm --import https://mirrors.ripple.com/rpm/RPM-GPG-KEY-ripple-release && rpm -K rippled*.rpm
-        alien -i --scripts rippled*.rpm && rm rippled*.rpm
+        # install cmake
+        j.builder.libs.cmake.install()
 
+        # rippled requires Boost to be compiled
+        boost_build_cmd = """
+            cd {DIR_BUILD}
+            wget https://dl.bintray.com/boostorg/release/1.67.0/source/boost_1_67_0.tar.gz
+            tar xvzf boost_1_67_0.tar.gz
+            cd boost_1_67_0
+            ./bootstrap.sh
+            ./b2 -j 4
         """
-        j.sal.process.execute(cmds)
+        self._execute(boost_build_cmd, timeout=2000)
 
-        self._done_set('build')
-
-    def install(self, reset=False):
-        if self._done_get('install') and reset is False:
-            return
-
-        cmds = """
-        cp /opt/ripple/bin/rippled {DIR_BIN}/
+        # clone and build ripple
+        ripple_build_cmd = """
+            cd {DIR_BUILD}
+            # git clone https://github.com/ripple/rippled.git
+            cd rippled
+            # git checkout master
+            # mkdir my_build
+            cd my_build
+            export BOOST_ROOT={DIR_BUILD}/boost_1_67_0
+            cmake .. -DCMAKE_BUILD_TYPE=Release
+            cmake --build .
         """
-        j.sal.process.execute(cmds)
+        self._execute(ripple_build_cmd, timeout=3000)
 
-        self._done_set('install')
+        # ripple configuration
+        config_cmd = """
+            mkdir -p ~/.config/ripple
+            cd {DIR_BUILD}/rippled/
+            cp cfg/rippled-example.cfg ~/.config/ripple/rippled.cfg
+            cp cfg/validators-example.txt ~/.config/ripple/validators.txt
+        """
+        self._execute(config_cmd)
+
+    @builder_method()
+    def install(self):
+        # copy bins to DIR_BIN
+        self._copy("{DIR_BUILD}/rippled/my_build/rippled", "{DIR_BIN}")
+
+    @builder_method()
+    def sandbox(self, zhub_client=None, flist_create=True, merge_base_flist=""):
+        # copy bins to DIR_BIN
+        bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "bin")
+        self.tools.dir_ensure(bin_dest)
+        self._copy("{DIR_BIN}/rippled", bin_dest)
+
+    @builder_method()
+    def clean(self):
+        self._remove(self.DIR_BUILD)
+
+    @property
+    def startup_cmds(self):
+        cmd = "/sandbox/bin/{}".format(self.NAME)
+        cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
+        return cmds
+
+    @builder_method()
+    def reset(self):
+        super().reset()
+        self.clean()
+
+    @builder_method()
+    def stop(self):
+        j.sal.process.killProcessByName(self.NAME)
+
+    @builder_method()
+    def test(self):
+        return_code, _, _ = self._execute("rippled -u")
+        assert return_code == 0
+        print("TEST OK")

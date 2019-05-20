@@ -14,9 +14,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class User( ):
+class User:
     """
     auto-generated. don't touch.
     """
@@ -44,40 +42,44 @@ class User( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'User'
+        class_name = "User"
         data = json or kwargs
 
         # set attributes
         data_types = [Address]
-        self.addresses = client_support.set_property('addresses', data, data_types, False, [], True, True, class_name)
+        self.addresses = client_support.set_property("addresses", data, data_types, False, [], True, True, class_name)
         data_types = [BankAccount]
         self.bankaccounts = client_support.set_property(
-            'bankaccounts', data, data_types, False, [], True, True, class_name)
+            "bankaccounts", data, data_types, False, [], True, True, class_name
+        )
         data_types = [DigitalAssetAddress]
         self.digitalwallet = client_support.set_property(
-            'digitalwallet', data, data_types, False, [], True, True, class_name)
+            "digitalwallet", data, data_types, False, [], True, True, class_name
+        )
         data_types = [EmailAddress]
         self.emailaddresses = client_support.set_property(
-            'emailaddresses', data, data_types, False, [], True, True, class_name)
+            "emailaddresses", data, data_types, False, [], True, True, class_name
+        )
         data_types = [datetime]
-        self.expire = client_support.set_property('expire', data, data_types, False, [], False, False, class_name)
+        self.expire = client_support.set_property("expire", data, data_types, False, [], False, False, class_name)
         data_types = [FacebookAccount]
-        self.facebook = client_support.set_property('facebook', data, data_types, False, [], False, False, class_name)
+        self.facebook = client_support.set_property("facebook", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.firstname = client_support.set_property('firstname', data, data_types, False, [], False, True, class_name)
+        self.firstname = client_support.set_property("firstname", data, data_types, False, [], False, True, class_name)
         data_types = [GithubAccount]
-        self.github = client_support.set_property('github', data, data_types, False, [], False, False, class_name)
+        self.github = client_support.set_property("github", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.lastname = client_support.set_property('lastname', data, data_types, False, [], False, True, class_name)
+        self.lastname = client_support.set_property("lastname", data, data_types, False, [], False, True, class_name)
         data_types = [Phonenumber]
         self.phonenumbers = client_support.set_property(
-            'phonenumbers', data, data_types, False, [], True, True, class_name)
+            "phonenumbers", data, data_types, False, [], True, True, class_name
+        )
         data_types = [string_types]
-        self.publicKeys = client_support.set_property('publicKeys', data, data_types, False, [], True, True, class_name)
+        self.publicKeys = client_support.set_property("publicKeys", data, data_types, False, [], True, True, class_name)
         data_types = [string_types]
-        self.username = client_support.set_property('username', data, data_types, False, [], False, True, class_name)
+        self.username = client_support.set_property("username", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

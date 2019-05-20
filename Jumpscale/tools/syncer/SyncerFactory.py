@@ -17,7 +17,7 @@ class SyncerFactory(j.application.JSBaseConfigsClass):
 
     def test(self):
         """
-        js_shell 'j.tools.syncer.test()'
+        kosmos 'j.tools.syncer.test()'
         :return:
         """
         cl = j.clients.ssh.get(name="builder", addr="10.102.133.88", port=1053)

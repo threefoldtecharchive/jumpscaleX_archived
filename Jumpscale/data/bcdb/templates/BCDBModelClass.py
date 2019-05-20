@@ -6,10 +6,10 @@ SCHEMA="""
 """
 
 bcdb = j.data.bcdb.latest
-schema = j.data.schema.get(SCHEMA)
+schema = j.data.schema.get_from_text(SCHEMA)
 
 Index_CLASS = bcdb._BCDBModelIndexClass_generate(schema,__file__)
-MODEL_CLASS = bcdb._BCDBModelClass
+MODEL_CLASS = j.data.bcdb._BCDBModelClass
 
 
 class {{BASENAME}}(Index_CLASS,MODEL_CLASS):

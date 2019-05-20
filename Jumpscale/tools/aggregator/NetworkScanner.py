@@ -6,16 +6,16 @@ JSBASE = j.application.JSBaseClass
 
 
 class NetworkScanner(j.application.JSBaseClass):
-    COMMAND = 'nmap -n --disable-arp-ping -send-ip -Pn -sS -p{ports} -oX - {cidr}'
+    COMMAND = "nmap -n --disable-arp-ping -send-ip -Pn -sS -p{ports} -oX - {cidr}"
 
     def __init__(self, cidr, ports=[80]):
         JSBASE.__init__(self)
-        code, _, _ = j.sal.process.execute('which nmap', showout=False, die=False)
+        code, _, _ = j.sal.process.execute("which nmap", showout=False, die=False)
         if code != 0:
-            self._log_info('nmap not found, installing...')
-            j.builder.system.package.install('nmap')
+            self._log_info("nmap not found, installing...")
+            j.builder.system.package.install("nmap")
 
-        self._ports = ','.join([str(port) for port in ports])
+        self._ports = ",".join([str(port) for port in ports])
         self._cidr = cidr
 
     def scan(self):
@@ -24,13 +24,13 @@ class NetworkScanner(j.application.JSBaseClass):
         cmd = self.COMMAND.format(ports=self._ports, cidr=self._cidr)
         code, output, err = j.sal.process.execute(cmd, showout=False, die=False)
         if code != 0:
-            raise j.exceptions.RuntimeError('nmap scan failed')
+            raise j.exceptions.RuntimeError("nmap scan failed")
 
         dom = ElementTree.fromstring(output)
         hosts = {}
-        for host in dom.findall('host'):
-            address = host.find('address').attrib['addr']
-            for port in host.findall('ports/port'):
-                if port.find('state').attrib['state'] == 'open':
-                    hosts.setdefault(address, []).append(int(port.attrib['portid']))
+        for host in dom.findall("host"):
+            address = host.find("address").attrib["addr"]
+            for port in host.findall("ports/port"):
+                if port.find("state").attrib["state"] == "open":
+                    hosts.setdefault(address, []).append(int(port.attrib["portid"]))
         return hosts

@@ -1,10 +1,9 @@
 from Jumpscale import j
 from .TypeBaseClasses import *
 
+
 class EnumerationObj(TypeBaseObjClass):
-
-
-    def _data_from_init_val(self,value):
+    def _data_from_init_val(self, value):
         """
         convert init value to raw type inside this object
         :return:
@@ -18,9 +17,9 @@ class EnumerationObj(TypeBaseObjClass):
             if value_str not in self._typebase.values:
                 self._data = 0
                 raise RuntimeError("could not find enum:'%s' in '%s'" % (value, self.__repr__()))
-            value_id = self._typebase.values.index(value_str)+1
+            value_id = self._typebase.values.index(value_str) + 1
         elif isinstance(value, int):
-            if value > len(self._typebase.values)+1:
+            if value > len(self._typebase.values) + 1:
                 self._data = 0
                 raise RuntimeError("could not find enum id:%s in '%s', too high" % (value, self.__repr__()))
             value_id = value
@@ -29,24 +28,22 @@ class EnumerationObj(TypeBaseObjClass):
 
         self._data = value_id
 
-
-
     @property
     def _string(self):
         if self._data is 0:
             return "UNKNOWN"
-        return self._typebase.values[self._data-1]
+        return self._typebase.values[self._data - 1]
 
     @property
     def _python_code(self):
-        return "'%s'"%self._string
+        return "'%s'" % self._string
 
     @property
     def value(self):
         return self._data
 
     @value.setter
-    def value(self,val):
+    def value(self, val):
         obj = self._typebase.clean(val)
         self._data = obj._data
 
@@ -60,34 +57,36 @@ class EnumerationObj(TypeBaseObjClass):
         return other.value == self.value
 
     def __dir__(self):
-        res=[] #"_string","_python_code","value"
+        res = []  # "_string","_python_code","value"
         for item in self._typebase.values:
             res.append(item)
         return res
 
     def __getattr__(self, item):
         if item in self._typebase.values:
-            self._data = self._typebase.values.index(item)+1
+            self._data = self._typebase.values.index(item) + 1
             return self
         return self.__getattribute__(item)
 
+
 class Enumeration(TypeBaseObjFactory):
 
-    '''
+    """
     Generic string type
     stored in capnp as int
 
     0 is unknown (nill)
     1 is the default
 
-    '''
-    NAME =  'enum,enumeration,e'
+    """
+
+    NAME = "enum,enumeration,e"
     CUSTOM = True
-    __slots__ = ['values', '_default', "_jsx_location"]
+    __slots__ = ["values", "_default", "_jsx_location"]
 
     def __init__(self, default=None):
 
-        values = default #here the default is used to create custom instance
+        values = default  # here the default is used to create custom instance
         if not default:
             raise RuntimeError("enumeration needs default arg to be given e.g. red,blue,... ")
 
@@ -103,13 +102,10 @@ class Enumeration(TypeBaseObjFactory):
 
         self._default = 1
 
-
-
     def capnp_schema_get(self, name, nr):
         return "%s @%s :UInt8;" % (name, nr)
 
-
-    def toData(self,value):
+    def toData(self, value):
         o = self.clean(value)
         return o._data
 
@@ -120,19 +116,19 @@ class Enumeration(TypeBaseObjFactory):
         """
         if value is None:
             return self.default_get()
-        if isinstance(value,EnumerationObj):
+        if isinstance(value, EnumerationObj):
             return value
-        return EnumerationObj(self,value)
+        return EnumerationObj(self, value)
 
     def __dir__(self):
-        res=["clean","default_get","toData","capnp_schema_get"]
+        res = ["clean", "default_get", "toData", "capnp_schema_get"]
         for item in self.values:
             res.append(item)
         return res
 
     def __getattr__(self, item):
         if item in self.values:
-            data = self.values.index(item)+1
+            data = self.values.index(item) + 1
             return self.clean(data)
         return self.__getattribute__(item)
 

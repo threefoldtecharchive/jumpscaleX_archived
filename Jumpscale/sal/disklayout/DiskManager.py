@@ -25,7 +25,7 @@ class DiskManager(j.application.JSBaseClass):
         return self._executor.prefab
 
     def _loadconfig(self, path):
-        path = path + '/.partition_config.yaml'
+        path = path + "/.partition_config.yaml"
         if self.prefab.core.file_exists(path):
             yaml = self.prefab.core.file_read(path)
             return j.data.serializers.yaml.loads(yaml)
@@ -57,26 +57,29 @@ class DiskManager(j.application.JSBaseClass):
         disk = None
 
         for blk in blks:
-            name = blk['NAME']
-            if blk['TYPE'] == 'disk':
-                disk = disks.DiskInfo(name=name, size=blk['SIZE'], mountpoint=blk[
-                                      'MOUNTPOINT'], fstype=blk['FSTYPE'], uuid=blk['UUID'], executor=self._executor)
+            name = blk["NAME"]
+            if blk["TYPE"] == "disk":
+                disk = disks.DiskInfo(
+                    name=name,
+                    size=blk["SIZE"],
+                    mountpoint=blk["MOUNTPOINT"],
+                    fstype=blk["FSTYPE"],
+                    uuid=blk["UUID"],
+                    executor=self._executor,
+                )
                 devices.append(disk)
-            elif blk['TYPE'] == 'part':
+            elif blk["TYPE"] == "part":
                 if disk is None:
-                    raise Exception(
-                        ('Partition "%s" does not have a parent disk' %
-                            blk['NAME'])
-                    )
+                    raise Exception(('Partition "%s" does not have a parent disk' % blk["NAME"]))
                 part = disks.PartitionInfo(
                     name=name,
-                    size=blk['SIZE'],
-                    uuid=blk['UUID'],
-                    fstype=blk['FSTYPE'],
-                    mountpoint=blk['MOUNTPOINT'],
-                    label=blk['PARTLABEL'],
+                    size=blk["SIZE"],
+                    uuid=blk["UUID"],
+                    fstype=blk["FSTYPE"],
+                    mountpoint=blk["MOUNTPOINT"],
+                    label=blk["PARTLABEL"],
                     device=disk,
-                    executor=self._executor
+                    executor=self._executor,
                 )
                 disk.partitions.append(part)
             else:
@@ -92,15 +95,14 @@ class DiskManager(j.application.JSBaseClass):
         devices = self._loaddisks(blks)
         for disk in devices:
             for partition in disk.partitions:
-                if partition.fstype == 'swap' or\
-                        not disks.isValidFS(partition.fstype):
+                if partition.fstype == "swap" or not disks.isValidFS(partition.fstype):
                     continue
                 config = {}
                 if partition.mountpoint != "" and partition.mountpoint is not None:
                     # partition is already mounted, no need to remount it
                     config = self._loadconfig(partition.mountpoint)
                 elif partition.fstype:
-                    with mount.Mount(partition.name, options='ro', executor=self._executor) as mnt:
+                    with mount.Mount(partition.name, options="ro", executor=self._executor) as mnt:
                         config = self._loadconfig(mnt.path)
                 partition.config = config
                 self._log_debug("found partition: %s:%s" % (disk, partition))
@@ -137,14 +139,14 @@ class DiskManager(j.application.JSBaseClass):
 
     def filesystemStat(self, path):
         data = self._executor.execute("df --output='source,size,used,avail' '%s' | tail -1" % path, showout=False)
-        out = ' '.join(data[1].replace('K', '').split())
+        out = " ".join(data[1].replace("K", "").split())
 
-        fields = out.split(' ')
+        fields = out.split(" ")
         values = {
-            'root': fields[0],
-            'size': int(fields[1]) * 1024,
-            'used': int(fields[2]) * 1024,
-            'free': int(fields[3]) * 1024,
+            "root": fields[0],
+            "size": int(fields[1]) * 1024,
+            "used": int(fields[2]) * 1024,
+            "free": int(fields[3]) * 1024,
         }
 
         return values

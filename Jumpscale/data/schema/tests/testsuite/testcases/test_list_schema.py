@@ -25,6 +25,7 @@ class SchemaTest(BaseTest):
         #. Try to set parameter with string type, should succeed.
         """
         self.log("Create schema with list of strings parameter, should succeed.")
+
         scm = """
         @url = test.schema
         list_names = (LS)
@@ -43,7 +44,7 @@ class SchemaTest(BaseTest):
         schema_obj.list_names.append(value)
         self.assertEqual(schema_obj.list_names, list_names)
         self.log("schema list %s" % schema_obj.list_str)
-        self.assertEqual(schema_obj.list_str, ['test', 'example'])
+        self.assertEqual(schema_obj.list_str, ["test", "example"])
 
     def test002_validate_list_of_integers(self):
         """
@@ -148,7 +149,7 @@ class SchemaTest(BaseTest):
         self.assertEqual(schema_obj.list_check, [False, False])
 
         self.log("Try to set parameter[P1] with True value, should be True.")
-        schema_obj.list_check = [1, 'yes', 'y', 'true', True, 'f']
+        schema_obj.list_check = [1, "yes", "y", "true", True, "f"]
         check = [True, True, True, True, True, False]
         self.assertEqual(schema_obj.list_check, check)
         self.log("schema list %s" % schema_obj.list_bool)
@@ -184,16 +185,16 @@ class SchemaTest(BaseTest):
             schema_obj.mobile_list.append(random.uniform(1, 100))
 
         self.log("Try to set parameter with mobile type, should succeed.")
-        mobile_list = ['{}'.format(random.randint(100000, 1000000)), '{}'.format(random.randint(100000, 1000000))]
+        mobile_list = ["{}".format(random.randint(100000, 1000000)), "{}".format(random.randint(100000, 1000000))]
         schema_obj.mobile_list = mobile_list
         self.assertEqual(schema_obj.mobile_list, mobile_list)
 
-        value = '{}'.format(random.randint(100000, 1000000))
+        value = "{}".format(random.randint(100000, 1000000))
         mobile_list.append(value)
         schema_obj.mobile_list.append(value)
         self.assertEqual(schema_obj.mobile_list, mobile_list)
         self.log("schema list %s" % schema_obj.list_tel)
-        self.assertEqual(schema_obj.list_tel, ['4644564464', '+45687941', '468716420'])
+        self.assertEqual(schema_obj.list_tel, ["4644564464", "+45687941", "468716420"])
 
     def test006_validate_list_of_emails(self):
         """
@@ -217,19 +218,19 @@ class SchemaTest(BaseTest):
 
         self.log("Try to set parameter with non email type, should fail.")
         with self.assertRaises(Exception):
-            schema_obj.email_list = [random.uniform(1, 100), 'test.example@domain.com']
+            schema_obj.email_list = [random.uniform(1, 100), "test.example@domain.com"]
 
         with self.assertRaises(Exception):
             schema_obj.email_list.append(random.uniform(1, 100))
 
         self.log("Try to set parameter with email type, should succeed.")
-        email_list = ['test.example@domain.com', "test.example2@domain.com"]
+        email_list = ["test.example@domain.com", "test.example2@domain.com"]
         schema_obj.email_list = email_list
         self.log("schema list %s" % schema_obj.list_emails)
         self.assertEqual(schema_obj.email_list, email_list)
         self.assertEqual(schema_obj.list_emails, email_list)
 
-        value = 'test.example1@domain.com'
+        value = "test.example1@domain.com"
         email_list.append(value)
         schema_obj.email_list.append(value)
         self.log("schema list %s" % schema_obj.email_list)
@@ -300,11 +301,11 @@ class SchemaTest(BaseTest):
             schema_obj.ip_list.append(random.uniform(1, 100))
 
         self.log("Try to set parameter with ipaddr type, should succeed.")
-        ip_list = ['10.15.{}.1'.format(random.randint(0, 255)), '192.168.{}.1'.format(random.randint(0, 255))]
+        ip_list = ["10.15.{}.1".format(random.randint(0, 255)), "192.168.{}.1".format(random.randint(0, 255))]
         schema_obj.ip_list = ip_list
         self.assertEqual(schema_obj.ip_list, ip_list)
 
-        value = '127.0.{}.1'.format(random.randint(0, 255))
+        value = "127.0.{}.1".format(random.randint(0, 255))
         ip_list.append(value)
         schema_obj.ip_list.append(value)
         self.log("schema list %s" % schema_obj.ip_list)
@@ -332,22 +333,22 @@ class SchemaTest(BaseTest):
 
         self.log("Try to set parameter with non iprange type, should fail.")
         with self.assertRaises(Exception):
-            schema_obj.range_list = [self.random_string(), '10.15.{}.1/24'.format(random.randint(0, 255))]
+            schema_obj.range_list = [self.random_string(), "10.15.{}.1/24".format(random.randint(0, 255))]
 
         with self.assertRaises(Exception):
             schema_obj.range_list.append(random.uniform(1, 100))
 
         self.log("Try to set parameter with iprange type, should succeed.")
-        range_list = ['10.15.{}.1/24'.format(random.randint(0, 255)), '10.15.{}.1/24'.format(random.randint(0, 255))]
+        range_list = ["10.15.{}.1/24".format(random.randint(0, 255)), "10.15.{}.1/24".format(random.randint(0, 255))]
         schema_obj.range_list = range_list
         self.assertEqual(schema_obj.range_list, range_list)
 
-        value = '127.0.{}.1/16'.format(random.randint(0, 255))
+        value = "127.0.{}.1/16".format(random.randint(0, 255))
         range_list.append(value)
         schema_obj.range_list.append(value)
         self.assertEqual(schema_obj.range_list, range_list)
         self.log("schema list %s" % schema_obj.list_ranges)
-        self.assertEqual(schema_obj.list_ranges, ['127.0.0.1/24', "192.168.1.1/16"])
+        self.assertEqual(schema_obj.list_ranges, ["127.0.0.1/24", "192.168.1.1/16"])
 
     def test010_validate_list_of_dates(self):
         """
@@ -371,7 +372,7 @@ class SchemaTest(BaseTest):
 
         self.log("Try to set parameter with non date type, should fail.")
         with self.assertRaises(Exception):
-            schema_obj.date_list = [self.random_string(), '01/08/2018 8am:30']
+            schema_obj.date_list = [self.random_string(), "01/08/2018 8am:30"]
 
         with self.assertRaises(Exception):
             schema_obj.date_list.append(self.random_string())
@@ -382,17 +383,19 @@ class SchemaTest(BaseTest):
         day = random.randint(1, 28)
         hour_12 = random.randint(1, 11)
         minutes = random.randint(0, 59)
-        am_or_pm = random.choice(['am', 'pm'])
-        hours = hour_12 if am_or_pm == 'am' else hour_12 + 12
+        am_or_pm = random.choice(["am", "pm"])
+        hours = hour_12 if am_or_pm == "am" else hour_12 + 12
         date_1 = random.randint(1, 100)
 
         date_list = [
-            date_1, '{}/{:02}/{:02} {:02}{}:{:02}'.format(datetime.now().year, month, day, hour_12, am_or_pm, minutes)]
+            date_1,
+            "{}/{:02}/{:02} {:02}{}:{:02}".format(datetime.now().year, month, day, hour_12, am_or_pm, minutes),
+        ]
         schema_obj.date_list = date_list
         self.assertEqual(schema_obj.date_list, date_list)
 
-        value = '{}/{:02}/{:02} {:02}{}:{:02}'.format(year, month, day, hour_12, am_or_pm, minutes)
-        
+        value = "{}/{:02}/{:02} {:02}{}:{:02}".format(year, month, day, hour_12, am_or_pm, minutes)
+
         schema_obj.date_list.append(value)
         date_list.append(value)
         self.assertEqual(schema_obj.date_list, date_list)
@@ -427,14 +430,14 @@ class SchemaTest(BaseTest):
             schema_obj.percent_list.append(self.random_string())
 
         self.log("Try to set parameter with percent type, should succeed.")
-        percent_list = [random.randint(0, 1), random.uniform(0, 1), '{}'.format(random.uniform(0, 1))]
+        percent_list = [random.randint(0, 1), random.uniform(0, 1), "{}".format(random.uniform(0, 1))]
         check_list = [percent_list[0], percent_list[1], float(percent_list[2])]
         schema_obj.percent_list = percent_list
         self.assertEqual(schema_obj.percent_list, check_list)
 
         value = random.uniform(0, 1)
-        check_list.append(value/100)
-        schema_obj.percent_list.append('{}%'.format(value))
+        check_list.append(value / 100)
+        schema_obj.percent_list.append("{}%".format(value))
         self.assertEqual(schema_obj.percent_list, check_list)
         self.log("schema list %s" % schema_obj.list_percents)
         self.assertEqual(schema_obj.list_percents, [0, 1, 0.95, 0.01, 0.0054])
@@ -461,19 +464,19 @@ class SchemaTest(BaseTest):
         # j.shell()
         self.log("Try to set parameter with non url type, should fail.")
         with self.assertRaises(Exception):
-            schema_obj.url_list = [random.uniform(1, 100), 'test.example.com/home']
+            schema_obj.url_list = [random.uniform(1, 100), "test.example.com/home"]
 
         with self.assertRaises(Exception):
             schema_obj.url_list.append(self.random_string())
 
         self.log("Try to set parameter with url type, should succeed.")
-        url_list = ['test.example.com/home', "test.example.com/login"]
+        url_list = ["test.example.com/home", "test.example.com/login"]
         schema_obj.url_list = url_list
         self.log("schema list %s" % schema_obj.list_urls)
         self.assertEqual(schema_obj.url_list, url_list)
         self.assertEqual(schema_obj.list_urls, url_list)
 
-        value = 'test.example.com/settings'
+        value = "test.example.com/settings"
         url_list.append(value)
         schema_obj.url_list.append(value)
         self.assertEqual(schema_obj.url_list, url_list)
@@ -504,7 +507,7 @@ class SchemaTest(BaseTest):
             schema_obj.curr_list = [random.uniform(1, 100), self.random_string()]
 
         self.log("Try to set parameter with numeric type, should succeed.")
-        curr_list = [random.randint(1, 100), random.uniform(1, 100), '{} usd'.format(random.randint(1, 100))]
+        curr_list = [random.randint(1, 100), random.uniform(1, 100), "{} usd".format(random.randint(1, 100))]
         schema_obj.curr_list = curr_list
         # self.assertEqual(schema_obj.curr_list, curr_list)
         # self.assertEqual(schema_obj.list_numerics, curr_list)
@@ -540,8 +543,9 @@ class SchemaTest(BaseTest):
         schema_obj.guid_list = guid_list
         self.assertEqual(schema_obj.guid_list, guid_list)
         self.log("schema list %s" % schema_obj.list_guids)
-        self.assertEqual(schema_obj.list_guids, [
-                         'bebe8b34-b12e-4fda-b00c-99979452b7bd', '84b022bd-2b00-4b62-8539-4ec07887bbe4'])
+        self.assertEqual(
+            schema_obj.list_guids, ["bebe8b34-b12e-4fda-b00c-99979452b7bd", "84b022bd-2b00-4b62-8539-4ec07887bbe4"]
+        )
 
         value = str(uuid4())
         guid_list.append(value)
@@ -652,7 +656,7 @@ class SchemaTest(BaseTest):
         schema_obj.bin_list = bin_list
         self.assertEqual(schema_obj.bin_list, bin_list)
         self.log("schema list %s" % schema_obj.list_bin)
-        self.assertEqual(schema_obj.list_bin, ['test', 'ZXhhbXBsZQ=='])
+        self.assertEqual(schema_obj.list_bin, ["test", "ZXhhbXBsZQ=="])
 
         value = self.random_string().encode()
         bin_list.append(value)

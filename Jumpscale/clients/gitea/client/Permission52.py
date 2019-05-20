@@ -7,9 +7,6 @@ Auto-generated class for Permission52
 from . import client_support
 
 
-
-
-
 class Permission52(object):
     """
     auto-generated. don't touch.
@@ -29,18 +26,18 @@ class Permission52(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Permission52'
+        class_name = "Permission52"
         data = json or kwargs
 
         # set attributes
         data_types = [bool]
-        self.admin = client_support.set_property('admin', data, data_types, False, [], False, False, class_name)
+        self.admin = client_support.set_property("admin", data, data_types, False, [], False, False, class_name)
         data_types = [bool]
-        self.pull = client_support.set_property('pull', data, data_types, False, [], False, False, class_name)
+        self.pull = client_support.set_property("pull", data, data_types, False, [], False, False, class_name)
         data_types = [bool]
-        self.push = client_support.set_property('push', data, data_types, False, [], False, False, class_name)
+        self.push = client_support.set_property("push", data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

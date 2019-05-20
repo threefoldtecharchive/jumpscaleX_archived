@@ -7,39 +7,39 @@ from gevent.event import Event
 
 # import inspect
 
-skip_for_debug=False
+skip_for_debug = False
+
 
 def action(func):
     def wrapper_action(*args, **kwargs):
-        self=args[0]
-        args=args[1:]
+        self = args[0]
+        args = args[1:]
         self._log_debug(str(func))
         if self._running is None:
             self.service_manage()
-        name= func.__name__
+        name = func.__name__
         if skip_for_debug or "noqueue" in kwargs:
             if "noqueue" in kwargs:
                 kwargs.pop("noqueue")
-            res = func(*args,**kwargs)
+            res = func(*args, **kwargs)
             return res
         else:
-            event=Event()
-            action=self._action_new(name=name,args=args,kwargs=kwargs)
-            self.action_queue.put((func,args,kwargs,event,action.id))
-            event.wait(1000.0) #will wait for processing
+            event = Event()
+            action = self._action_new(name=name, args=args, kwargs=kwargs)
+            self.action_queue.put((func, args, kwargs, event, action.id))
+            event.wait(1000.0)  # will wait for processing
             res = j.data.serializers.msgpack.loads(action.result)
             self._log_debug("METHOD EXECUTED OK")
             return action
+
     return wrapper_action
 
 
 class JSBaseService(j.application.JSBaseClass):
 
-
     _MODEL = None
 
-
-    def __init__(self,id=None,key=None,servicepool=None,**kwargs):
+    def __init__(self, id=None, key=None, servicepool=None, **kwargs):
 
         j.application.JSBaseClass.__init__(self)
 
@@ -48,7 +48,7 @@ class JSBaseService(j.application.JSBaseClass):
 
         self.actions = {}
         self._state = None
-        self._state_last_save_hash = None #to see when there is change
+        self._state_last_save_hash = None  # to see when there is change
         self._data = None
         self._id = id
         self._key = None
@@ -59,29 +59,26 @@ class JSBaseService(j.application.JSBaseClass):
             self._init()
             self._init2(**kwargs)
 
-
-
         if id is None and (key is not None or servicepool is not None):
             if servicepool is not None and key is None:
                 self.error_bug_raise("servicepool cannot be None when key is also None, key needs to be specified")
-            #need to instantiate, because data given which needs to be remembered
+            # need to instantiate, because data given which needs to be remembered
             if servicepool is not None:
-                key = "%s__%s"%(servicepool,key)
+                key = "%s__%s" % (servicepool, key)
             else:
-                if key.find('__')!=-1:
+                if key.find("__") != -1:
                     self.error_bug_raise("__ should not be in keyname")
 
             self._key = key
 
-        self.data  #will fetch the key
+        self.data  # will fetch the key
 
-        self._redis_key_state = self.key.encode()+b":state"
+        self._redis_key_state = self.key.encode() + b":state"
         self._redis_key_actions_now = b"actions:last"
-
 
         self._running = None
 
-    def _action_new(self,name,args,kwargs):
+    def _action_new(self, name, args, kwargs):
 
         args2 = j.data.serializers.msgpack.dumps(args)
         kwargs2 = j.data.serializers.msgpack.dumps(kwargs)
@@ -98,15 +95,15 @@ class JSBaseService(j.application.JSBaseClass):
 
         return data
 
-    def _action_key(self,action_id):
-        key="a:%s"%(int(action_id/1000))
-        return (key.encode(),str(action_id).encode())
+    def _action_key(self, action_id):
+        key = "a:%s" % (int(action_id / 1000))
+        return (key.encode(), str(action_id).encode())
 
-    def _action_get(self,action_id):
-        hkey,key=self._action_key(action_id)
-        r = j.clients.credis_core.hget(hkey,key)
+    def _action_get(self, action_id):
+        hkey, key = self._action_key(action_id)
+        r = j.clients.credis_core.hget(hkey, key)
         if r is None:
-            raise RuntimeError("cannot find action with id:%s"%action_id)
+            raise RuntimeError("cannot find action with id:%s" % action_id)
         res = j.world.system._schema_service_action.schema.get(data=r)
         return res
 
@@ -121,7 +118,6 @@ class JSBaseService(j.application.JSBaseClass):
     @property
     def _model(self):
         return self.__class__._MODEL
-
 
     @property
     def id(self):
@@ -146,7 +142,6 @@ class JSBaseService(j.application.JSBaseClass):
 
         return self._data
 
-
     @property
     def state(self):
 
@@ -159,7 +154,6 @@ class JSBaseService(j.application.JSBaseClass):
                 j.shell()
 
         return self._state
-
 
     def data_save(self):
         self.data.save()
@@ -195,68 +189,65 @@ class JSBaseService(j.application.JSBaseClass):
             #         if mkey.startswith("action_"):
             #             self._stateobj_get(mkey) #make sure the action object exists
 
-
-
     def _main(self):
-        self._log_info("%s:mainloop started"%self)
-        #make sure communication is only 1 way
-        #TODO: put metadata
+        self._log_info("%s:mainloop started" % self)
+        # make sure communication is only 1 way
+        # TODO: put metadata
         while True:
-            func,args,kwargs,event,action_id=self.action_queue.get()
-            a=self.actions[action_id]
-            self._log_info("action execute:\n%s"%a)
+            func, args, kwargs, event, action_id = self.action_queue.get()
+            a = self.actions[action_id]
+            self._log_info("action execute:\n%s" % a)
             a.time_start = j.data.time.epoch
-            res = func(self,*args,**kwargs)
-            print("main res:%s"%res)
-            a.result= j.data.serializers.msgpack.dumps(res)
+            res = func(self, *args, **kwargs)
+            print("main res:%s" % res)
+            a.result = j.data.serializers.msgpack.dumps(res)
             a.save()
             event.set()
 
-    def _stateobj_get(self,key):
+    def _stateobj_get(self, key):
         for item in self.data.stateobj.actions:
-            if item.key==key:
+            if item.key == key:
                 return item
         a = self.data.stateobj.actions.new()
         a.key = key
 
-
-    def _coordinator_action_ask(self,key):
-        arg=None
-        cmd = [key,arg]
+    def _coordinator_action_ask(self, key):
+        arg = None
+        cmd = [key, arg]
         self.q_in.put(cmd)
-        rc,res = self.q_out.get()
-        return rc,res
+        rc, res = self.q_out.get()
+        return rc, res
 
     @property
     def _instance(self):
         return self.data.instance
 
-#
-#
-# class ServiceBase(ActorBase):
-#
-#     def __init__(self,coordinator,key,instance,data):
-#         data.key = key
-#         data.instance = instance
-#         self.__key = None
-#         ActorBase.__init__(self, coordinator=coordinator, data=data)
-#         self.init()
-#
-#     def init(self):
-#         pass
-#
-#
-#     @property
-#     def _key(self):
-#         if self.__key == None:
-#             self.__key ="%s_%s"%(j.core.text.strip_to_ascii_dense(self.key),j.core.text.strip_to_ascii_dense(self.instance))
-#         return self.__key
-#
-#
+    #
+    #
+    # class ServiceBase(ActorBase):
+    #
+    #     def __init__(self,coordinator,key,instance,data):
+    #         data.key = key
+    #         data.instance = instance
+    #         self.__key = None
+    #         ActorBase.__init__(self, coordinator=coordinator, data=data)
+    #         self.init()
+    #
+    #     def init(self):
+    #         pass
+    #
+    #
+    #     @property
+    #     def _key(self):
+    #         if self.__key == None:
+    #             self.__key ="%s_%s"%(j.core.text.strip_to_ascii_dense(self.key),j.core.text.strip_to_ascii_dense(self.instance))
+    #         return self.__key
+    #
+    #
     def __str__(self):
-        out = "service:%s (%s)\n\n"%(self.key,self.id)
-        out+= str(self.data)
-        out+="\n"
+        out = "service:%s (%s)\n\n" % (self.key, self.id)
+        out += str(self.data)
+        out += "\n"
         return out
 
     __repr__ = __str__

@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 import time
 import libtmux as tmuxp
@@ -8,8 +7,8 @@ JSBASE = j.application.JSBaseClass
 
 from .Pane import Pane
 
-class Window(j.application.JSBaseClass):
 
+class Window(j.application.JSBaseClass):
     def __init__(self, session, window):
         JSBASE.__init__(self)
         self.name = window.get("window_name")
@@ -19,7 +18,7 @@ class Window(j.application.JSBaseClass):
         self.id = window.get("window_id")
 
     def reload(self):
-        self._panes=[]
+        self._panes = []
 
     @property
     def panes(self):
@@ -42,7 +41,7 @@ class Window(j.application.JSBaseClass):
                 return True
         return False
 
-    def pane_get(self, name, killothers=False, reset=False , clear=False):
+    def pane_get(self, name, killothers=False, reset=False, clear=False):
         """
 
         :param pane:name of the pane
@@ -51,9 +50,10 @@ class Window(j.application.JSBaseClass):
         :param clear: will clear (send command clear), only works if no cmd working yet
         :return:
         """
+
         def get_name(name):
-            if name.find("__")!=-1:
-                name,ext = name.split("__",1)
+            if name.find("__") != -1:
+                name, ext = name.split("__", 1)
             return name
 
         if len(self.panes) == 1:
@@ -69,7 +69,7 @@ class Window(j.application.JSBaseClass):
             if pane.name == name or get_name(pane.name) == name:
                 if killothers:
                     for pane2 in self.panes:
-                        if pane2.name != name and  get_name(pane.name) != name:
+                        if pane2.name != name and get_name(pane.name) != name:
                             pane2.kill()
                 if reset:
                     pane.kill()
@@ -78,8 +78,7 @@ class Window(j.application.JSBaseClass):
                         pane.clear()
 
                 return pane
-        raise j.exceptions.RuntimeError(
-            "Could not find pane:%s.%s" % (self.name, name))
+        raise j.exceptions.RuntimeError("Could not find pane:%s.%s" % (self.name, name))
 
     def select(self):
         self.mgmt.select_window()
@@ -96,7 +95,6 @@ class Window(j.application.JSBaseClass):
             pass
 
     def __repr__(self):
-        return ("window:%s:%s" % (self.id, self.name))
+        return "window:%s:%s" % (self.id, self.name)
 
     __str__ = __repr__
-

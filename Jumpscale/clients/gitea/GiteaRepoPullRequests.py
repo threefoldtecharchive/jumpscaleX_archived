@@ -23,7 +23,9 @@ class GiteaRepoPullRequests(j.application.JSBaseClass):
 
         o = self.new()
         if fetch:
-            resp = self.client.api.repos.repoGetPullRequest(repo=self.repo.name, owner=self.user.username, index=str(id)).json()
+            resp = self.client.api.repos.repoGetPullRequest(
+                repo=self.repo.name, owner=self.user.username, index=str(id)
+            ).json()
             for k, v in resp.items():
                 setattr(o, k, v)
         o.user = self.user
@@ -49,4 +51,3 @@ class GiteaRepoPullRequests(j.application.JSBaseClass):
         return self
 
     __str__ = __repr__ = lambda self: "Gitea PR Iterator for Repo: {0}".format(self.repo.name)
-

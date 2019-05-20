@@ -26,7 +26,7 @@ there are unique id's for each currency, see above link
 ## examples
 
 ```bash
-js_shell 'j.tools.numtools.test()'
+kosmos 'j.tools.numtools.test()'
 ```
 
 ```python

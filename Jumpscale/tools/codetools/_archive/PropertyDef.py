@@ -1,11 +1,21 @@
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
 
 class PropertyDef(j.application.JSBaseClass):
-
-    def __init__(self, classDef, name="", defaultVal="", type="", comments="",
-                 isArray=False, isDict=False, dictKey="", decorators=None):
+    def __init__(
+        self,
+        classDef,
+        name="",
+        defaultVal="",
+        type="",
+        comments="",
+        isArray=False,
+        isDict=False,
+        dictKey="",
+        decorators=None,
+    ):
         JSBASE.__init__(self)
         if name.startswith("__"):
             self.name = name[2:]

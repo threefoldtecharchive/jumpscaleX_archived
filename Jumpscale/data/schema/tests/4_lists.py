@@ -19,7 +19,12 @@ def main(self):
         comment = ""        
         nr = 0
         """
-    j.data.schema.get(schema0)
+    schemasub = j.data.schema.get_from_text(schema0)
+    schemasub2 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.cmd")  # now get based on url
+    assert schemasub2._md5 == schemasub._md5  # check we get the same schema back
+    assert j.data.schema.get_from_md5(md5=schemasub._md5)._md5 == schemasub._md5
+
+    assert schemasub2._md5 == j.data.schema._md5(schema0)
 
     schema1 = """
         @url = jumpscale.myjobs.job
@@ -38,7 +43,26 @@ def main(self):
         cmd = (O) !jumpscale.schema.test3.cmd
         
         """
-    schema_object = j.data.schema.get(schema1)
+
+    schema_object = j.data.schema.get_from_text(schema1)
+    schema_object2 = j.data.schema.get_from_url_latest(url="jumpscale.myjobs.job")  # now get based on url
+    assert schema_object2._md5 == schema_object._md5  # check we get the same schema back
+    assert j.data.schema.get_from_md5(md5=schema_object2._md5)._md5 == schema_object2._md5
+    assert schema_object2._md5 == j.data.schema._md5(schema1)
+
+    assert j.data.schema.url_to_md5["jumpscale.schema.test3.cmd"][-1] == schemasub2._md5
+
+    s5 = j.data.schema.get_from_url_latest(url="jumpscale.schema.test3.cmd")
+    assert s5._md5 == schemasub._md5
+
+    q = schema_object.new()
+    assert q.cmds._child_type_._schema._md5 == schemasub._md5
+
+    qq = q.cmds.new()
+
+    # check that the subschema corresponds to the right one
+    assert qq._schema._md5 == schemasub._md5
+
     schema_test = schema_object.new()
     schema_test.return_queues = ["a", "b"]
     assert schema_test.return_queues.pylist() == ["a", "b"]
@@ -83,18 +107,17 @@ def main(self):
     }
 
     schema_test._ddict
-    assert schema_test._ddict["cmds"]==[{"name": "aname", "comment": "test", "nr": 10}]
+
+    assert schema_test._ddict["cmds"] == [{"name": "aname", "comment": "test", "nr": 10}]
 
     w = schema_test._ddict["cmds"][0]
 
-    assert isinstance(w,dict)
-
+    assert isinstance(w, dict)
 
     schema_test._data
     schema_test._json
 
-
-    schema_test2 = schema_object.get(capnpbin=schema_test._data)
+    schema_test2 = schema_object.get(data=schema_test._data)
 
     assert schema_test._ddict == schema_test1
     assert schema_test._data == schema_test2._data
@@ -108,8 +131,6 @@ def main(self):
     except Exception as e:
         assert str(e).find("object readonly, cannot set") != -1
 
-
-
     self._log_info("TEST DONE LIST")
 
-    return ("OK")
+    return "OK"

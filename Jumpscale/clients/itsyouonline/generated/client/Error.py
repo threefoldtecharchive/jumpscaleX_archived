@@ -6,9 +6,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class Error( ):
+class Error:
     """
     auto-generated. don't touch.
     """
@@ -25,14 +23,14 @@ class Error( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Error'
+        class_name = "Error"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.error = client_support.set_property('error', data, data_types, False, [], False, True, class_name)
+        self.error = client_support.set_property("error", data, data_types, False, [], False, True, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

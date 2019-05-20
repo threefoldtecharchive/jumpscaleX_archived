@@ -5,21 +5,22 @@ from clients.gitea.GiteaCommit import GiteaCommit
 
 JSBASE = j.application.JSBaseClass
 
+
 class GiteaCommits(j.application.JSBaseClass):
     def __init__(
-            self,
-            client,
-            repo,
-            user,
-            context=None,
-            created_at=None,
-            creator=None,
-            description=None,
-            id=None,
-            status=None,
-            target_url=None,
-            updated_at=None,
-            url=None
+        self,
+        client,
+        repo,
+        user,
+        context=None,
+        created_at=None,
+        creator=None,
+        description=None,
+        id=None,
+        status=None,
+        target_url=None,
+        updated_at=None,
+        url=None,
     ):
         self.user = user
         self.client = client
@@ -45,5 +46,4 @@ class GiteaCommits(j.application.JSBaseClass):
             result.append(o)
         return result
 
-    __str__ = __repr__ = lambda self: 'Commits Object for repo %s' % self.repo.name
-
+    __str__ = __repr__ = lambda self: "Commits Object for repo %s" % self.repo.name

@@ -5,24 +5,24 @@ from Jumpscale import j
 from Jumpscale.tools.markdowndocs.Link import CustomLink, GithubLinker, Link
 
 
-def with_code_block(content, _type=''):
+def with_code_block(content, _type=""):
     if not _type:
         return content
-    return '\n'.join(('```%s' % _type, content, '```'))
+    return "\n".join(("```%s" % _type, content, "```"))
 
 
 def update_header_level(line, level):
     current_level = 0
     for c in line:
-        if c == ' ':
+        if c == " ":
             continue
-        if c != '#':
+        if c != "#":
             break
         current_level += 1
 
     if current_level:
         new_level = current_level + level
-        return '%s%s' % ('#' * new_level, line[current_level:])
+        return "%s%s" % ("#" * new_level, line[current_level:])
     return line
 
 
@@ -34,7 +34,7 @@ def get_by_marker(lines, marker):
     for line in lines:
         if marker.findall(line):
             found = not found
-            matched.append(marker.sub('', line))
+            matched.append(marker.sub("", line))
             continue
 
         if not found:
@@ -44,16 +44,16 @@ def get_by_marker(lines, marker):
     return matched
 
 
-DOCSTRING_RE = re.compile(r'(?:\'\'\'|\"\"\")([\w\W]*?)(?:\'\'\'|\"\"\")', re.MULTILINE)
+DOCSTRING_RE = re.compile(r"(?:\'\'\'|\"\"\")([\w\W]*?)(?:\'\'\'|\"\"\")", re.MULTILINE)
 
 
 def get_docstrings(content):
-    return '\n\n'.join(DOCSTRING_RE.findall(content))
+    return "\n\n".join(DOCSTRING_RE.findall(content))
 
 
 def append_docs_to_path(path):
-    if not path.endswith('/docs'):
-        path = j.sal.fs.joinPaths(path, 'docs')
+    if not path.endswith("/docs"):
+        path = j.sal.fs.joinPaths(path, "docs")
     return path
 
 
@@ -62,7 +62,7 @@ def get_abs_path(*paths):
 
 
 def exapnd_doc_path(docs_root_dir, doc_dir, path):
-    if path.startswith('/'):
+    if path.startswith("/"):
         # if it's an absolute path, get full path from docs_root
         paths = docs_root_dir, path[1:]
     else:
@@ -91,7 +91,7 @@ def copy_links(main_doc, included_docs_root, included_doc_path, links):
         included_doc_dir = included_doc_path
 
     for _, source in links:
-        if source.lower().strip().startswith('http'):
+        if source.lower().strip().startswith("http"):
             continue
         # source is either absolute (from docs_root) or relative to doc_path
         # so we get the real path of such source
@@ -107,9 +107,9 @@ def process_content(content, marker, doc_only, header_levels_modify, ignore):
     def should_skip(line):
         return not any([re.findall(pattern, line.strip()) for pattern in ignore])
 
-    lines = content.split('\n')
+    lines = content.split("\n")
     if marker:
-        marker = '!!%s!!' % marker
+        marker = "!!%s!!" % marker
         lines = get_by_marker(lines, marker)
 
     lines = filter(should_skip, lines)
@@ -118,15 +118,23 @@ def process_content(content, marker, doc_only, header_levels_modify, ignore):
     if header_levels_modify:
         lines = map(update_header, lines)
 
-    new_content = '\n'.join(lines)
+    new_content = "\n".join(lines)
     if doc_only:
         return get_docstrings(new_content)
     return new_content
 
 
 def include(
-        doc, link, docsite_name=None, doc_only=False, remarks_skip=False, header_levels_modify=0, ignore=None,
-        codeblock_type=None, **kwargs):
+    doc,
+    link,
+    docsite_name=None,
+    doc_only=False,
+    remarks_skip=False,
+    header_levels_modify=0,
+    ignore=None,
+    codeblock_type=None,
+    **kwargs,
+):
     """include other documents or files
 
     :param doc: curent document (that include was called from)
@@ -165,7 +173,7 @@ def include(
             # get a new link and docsite
             new_link = GithubLinker.to_custom_link(repo)
             # to match any path, start with root `/`
-            url = GithubLinker(new_link.account, new_link.repo).tree('/')
+            url = GithubLinker(new_link.account, new_link.repo).tree("/")
             docsite = j.tools.markdowndocs.load(url, name=new_link.repo)
             custom_link.path = new_link.path
 
@@ -180,14 +188,18 @@ def include(
     if not ignore:
         ignore = []
     if remarks_skip:
-        ignore.append(r'^\#')
+        ignore.append(r"^\#")
 
     if custom_link.marker or ignore or doc_only or header_levels_modify:
         content = process_content(
-            content, marker=custom_link.marker, doc_only=doc_only,
-            header_levels_modify=header_levels_modify, ignore=ignore)
+            content,
+            marker=custom_link.marker,
+            doc_only=doc_only,
+            header_levels_modify=header_levels_modify,
+            ignore=ignore,
+        )
 
-    if not custom_link.path.lower().strip().endswith('_sidebar.md'):
+    if not custom_link.path.lower().strip().endswith("_sidebar.md"):
         all_links = Link.LINK_MARKDOWN_RE.findall(content)
         copy_links(doc, docsite.path, full_path, all_links)
 

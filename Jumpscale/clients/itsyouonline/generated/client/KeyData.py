@@ -7,9 +7,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class KeyData( ):
+class KeyData:
     """
     auto-generated. don't touch.
     """
@@ -28,18 +26,18 @@ class KeyData( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'KeyData'
+        class_name = "KeyData"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.algorithm = client_support.set_property('algorithm', data, data_types, False, [], False, True, class_name)
+        self.algorithm = client_support.set_property("algorithm", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.comment = client_support.set_property('comment', data, data_types, False, [], False, False, class_name)
+        self.comment = client_support.set_property("comment", data, data_types, False, [], False, False, class_name)
         data_types = [datetime]
-        self.timestamp = client_support.set_property('timestamp', data, data_types, False, [], False, False, class_name)
+        self.timestamp = client_support.set_property("timestamp", data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

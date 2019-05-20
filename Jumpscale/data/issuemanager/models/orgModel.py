@@ -1,7 +1,7 @@
-
 from Jumpscale import j
 
 from data.capnp.ModelBase import ModelBase
+
 
 class OrgModel(ModelBase):
     """
@@ -31,10 +31,7 @@ class OrgModel(ModelBase):
     def memberAdd(self, userKey, access):
         """
         """
-        obj = j.data.capnp.getMemoryObj(
-            schema=self._capnp_schema.Member,
-            userKey=userKey,
-            access=access)
+        obj = j.data.capnp.getMemoryObj(schema=self._capnp_schema.Member, userKey=userKey, access=access)
 
         self.dbobj.members.append(obj)
         self.save()

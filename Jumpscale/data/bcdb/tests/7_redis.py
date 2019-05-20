@@ -10,22 +10,7 @@ def main(self):
 
     kosmos 'j.data.bcdb.test(name="redis")'
 
-    use a bcdb which is using sqlite
-
-    REQUIREMENTS:
-
-    ```
-    apt-get install python3.6-dev
-    mkdir -p /root/opt/bin
-    kosmos 'j.servers.zdb.build()'
-    pip3 install pycapnp peewee cryptocompare
-
-    ```
-
-
     """
-
-    # TODO: need to use prefab to check the prerequisites are installed if not DO
 
     def do(zdb=False):
 
@@ -47,6 +32,10 @@ def main(self):
         llist3 = "1,2,3" (LF)
         llist4 = "1,2,3" (L)
         """
+        if zdb:
+            cl = j.clients.zdb.client_get(port=9901)
+            cl.flush()
+
         schema = j.core.text.strip(schema)
         self._log_debug("set schema to 'despiegk.test2'")
         redis_cl.set("schemas:despiegk.test2", schema)
@@ -63,7 +52,7 @@ def main(self):
         self._log_debug("there should be 0 objects")
         assert redis_cl.hlen("objects:despiegk.test2") == 0
 
-        schema = j.data.schema.get(schema)
+        schema = j.data.schema.get_from_text(schema)
 
         self._log_debug("add objects")
 
@@ -74,24 +63,14 @@ def main(self):
             schema_obj.token_price = "10 EUR"
             return schema_obj
 
-        try:
-            schema_obj = get_obj(1)
-            id = redis_cl.hset("objects:despiegk.test2", 1, schema_obj._json)
-
-        except redis.exceptions.ResponseError as err:
-            raise RuntimeError(
-                "should have raise runtime error when trying to write to index 1"
-            )
-
-        for i in range(2, 11):
+        for i in range(1, 11):
             print(i)
             o = get_obj(i)
             id = redis_cl.hset("objects:despiegk.test2", "new", o._json)
 
         if zdb:
             self._log_debug("validate list")
-            cl = j.clients.zdb.client_get(port=9901)
-            assert cl.list() == [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+            assert cl.list() == [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 
         id = int(id.decode())
 
@@ -103,7 +82,7 @@ def main(self):
 
         if zdb:
             self._log_debug("validate list2")
-            assert cl.list() == [0, 2, 3, 4, 6, 7, 8, 9, 10, 11]
+            assert cl.list() == [0, 1, 2, 3, 4, 6, 7, 8, 9, 10]
 
         # the i's are moving around don't know why, is ok I guess (despiegk)
         resp = redis_cl.hget("objects:despiegk.test2", id)
@@ -130,9 +109,7 @@ def main(self):
         try:
             redis_cl.hset("objects:despiegk.test2", 25, o._json)
         except Exception as e:
-            assert (
-                str(e).find("cannot update object with id:25, it does not exist") != -1
-            )
+            assert str(e).find("cannot update object with id:25, it does not exist") != -1
             # should not be able to set because the id does not exist
 
     def check_after_restart():
@@ -155,7 +132,7 @@ def main(self):
         # SQLITE BACKEND
         self.redis_server_start(port=6380, background=True, zdbclient_addr=None)
         do()
-        # restart redis lets see if schema's are there autoloaded
+        # restart redis server lets see if schema's are there autoloaded
         self.redis_server_start(port=6380, background=True, zdbclient_addr=None)
         check_after_restart()
 
@@ -164,11 +141,11 @@ def main(self):
         c = j.clients.zdb.client_admin_get(port=9901)
         c.reset()  # removes the namespace from zdb, all is gone, need to create again
         c.namespace_new("test", secret="1234")
-        self.redis_server_start(port=6380, background=True)
+        self.redis_server_start(port=6380, background=True, zdbclient_port=9901, reset=True)
+        do(zdb=True)
 
     sqlite_test()
     zdb_test()
-    do()
     self._log_debug("TEST OK")
 
     return "OK"

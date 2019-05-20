@@ -7,9 +7,7 @@ from Jumpscale import j
 from . import client_support
 
 
-
-
-class Company( ):
+class Company:
     """
     auto-generated. don't touch.
     """
@@ -31,25 +29,26 @@ class Company( ):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Company'
+        class_name = "Company"
         data = json or kwargs
 
         # set attributes
         data_types = [datetime]
-        self.expire = client_support.set_property('expire', data, data_types, False, [], False, False, class_name)
+        self.expire = client_support.set_property("expire", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.globalid = client_support.set_property('globalid', data, data_types, False, [], False, True, class_name)
+        self.globalid = client_support.set_property("globalid", data, data_types, False, [], False, True, class_name)
         data_types = [string_types]
-        self.info = client_support.set_property('info', data, data_types, False, [], True, False, class_name)
+        self.info = client_support.set_property("info", data, data_types, False, [], True, False, class_name)
         data_types = [string_types]
         self.organizations = client_support.set_property(
-            'organizations', data, data_types, False, [], True, False, class_name)
+            "organizations", data, data_types, False, [], True, False, class_name
+        )
         data_types = [string_types]
-        self.publicKeys = client_support.set_property('publicKeys', data, data_types, False, [], True, True, class_name)
+        self.publicKeys = client_support.set_property("publicKeys", data, data_types, False, [], True, True, class_name)
         data_types = [string_types]
-        self.taxnr = client_support.set_property('taxnr', data, data_types, False, [], False, False, class_name)
+        self.taxnr = client_support.set_property("taxnr", data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

@@ -1,4 +1,3 @@
-
 import time
 from heapq import heappush, heappop, heapify
 
@@ -6,14 +5,14 @@ from Jumpscale import j
 from .LRUCache import LRUCache
 
 from operator import itemgetter, attrgetter
+
 JSBASE = j.application.JSBaseClass
 
-class RWCache(j.application.JSBaseClass):
 
+class RWCache(j.application.JSBaseClass):
     def __init__(self, nrItemsReadCache, maxNrItemsWriteCache=50, maxTimeWriteCache=2000, writermethod=None):
         self.cacheR = j.tools.cachelru.getRCache(nrItemsReadCache)
-        self.cacheW = WCache(maxNrItemsWriteCache,
-                             writermethod, maxTimeWriteCache)
+        self.cacheW = WCache(maxNrItemsWriteCache, writermethod, maxTimeWriteCache)
         JSBASE.__init__(self)
 
     def set(self, key, obj):
@@ -26,7 +25,6 @@ class RWCache(j.application.JSBaseClass):
 
 # based on LRUCache but modified for different purpose (write through cache)
 class WCache:
-
     class __Node:
         """Record of a cached value. Not for public consumption."""
 
@@ -40,9 +38,7 @@ class WCache:
             return cmp(self.atime, other.atime)
 
         def __repr__(self):
-            return "<%s %s => %s (%s)>" % \
-                   (self.__class__, self.key, self.obj,
-                    time.asctime(time.localtime(self.wtime)))
+            return "<%s %s => %s (%s)>" % (self.__class__, self.key, self.obj, time.asctime(time.localtime(self.wtime)))
 
     def __init__(self, size=5000, writermethod=None, maxtime=1):
         """

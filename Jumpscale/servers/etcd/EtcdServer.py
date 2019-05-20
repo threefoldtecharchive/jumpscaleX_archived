@@ -2,7 +2,7 @@ from Jumpscale import j
 
 
 class EtcdServer(j.application.JSBaseClass):
-    __jslocation__ = 'j.servers.etcd'
+    __jslocation__ = "j.servers.etcd"
 
     def start(self, config_file=None):
         """start etcd
@@ -12,10 +12,10 @@ class EtcdServer(j.application.JSBaseClass):
         :return: tmux pane
         :rtype: tmux.Pane
         """
-        cmd = j.sal.fs.joinPaths(j.core.dirs.BINDIR, 'etcd')
+        cmd = j.sal.fs.joinPaths(j.core.dirs.BINDIR, "etcd")
         if config_file:
-            cmd += ' --config-file %s' % config_file
-        return j.tools.tmux.execute(cmd, window='etcd', pane='etcd', reset=True)
+            cmd += " --config-file %s" % config_file
+        return j.tools.tmux.execute(cmd, window="etcd", pane="etcd", reset=True)
 
     def stop(self, pid=None, sig=None):
         """Stops etcd process
@@ -28,5 +28,5 @@ class EtcdServer(j.application.JSBaseClass):
         if pid:
             j.sal.process.kill(pid, sig)
         else:
-            full_path = j.sal.fs.joinPaths(j.core.dirs.BINDIR, 'etcd')
+            full_path = j.sal.fs.joinPaths(j.core.dirs.BINDIR, "etcd")
             j.sal.process.killProcessByName(full_path, sig)

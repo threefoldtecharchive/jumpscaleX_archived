@@ -9,6 +9,7 @@ from .SerializerBase import SerializerBase
 ## random binary data we deal with in nonces of tfchain.
 ## Feel free however to rename my added encode/decode function, should the naming not be clear enough.
 
+
 class SerializerBase64(SerializerBase):
     def __init__(self):
         SerializerBase.__init__(self)

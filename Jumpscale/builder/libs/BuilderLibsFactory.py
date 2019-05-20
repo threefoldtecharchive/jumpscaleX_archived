@@ -1,5 +1,6 @@
 from Jumpscale import j
 
+
 class BuilderLibsFactory(j.builder.system._BaseFactoryClass):
 
     __jslocation__ = "j.builder.libs"
@@ -8,10 +9,9 @@ class BuilderLibsFactory(j.builder.system._BaseFactoryClass):
 
         from .BuilderOpenSSL import BuilderOpenSSL
         from .BuilderCapnp import BuilderCapnp
+        from .BuilderCmake import BuilderCmake
+
         self.openssl = BuilderOpenSSL()
         self.capnp = BuilderCapnp()
-        #TODO:*1
-
-
-
-
+        self.cmake = BuilderCmake()
+        # TODO:*1

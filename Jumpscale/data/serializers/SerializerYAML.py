@@ -20,12 +20,7 @@ class SerializerYAML(SerializerBase):
         SerializerBase.__init__(self)
 
     def dumps(self, obj):
-        return yaml.dump(
-            obj,
-            default_flow_style=False,
-            default_style='',
-            indent=4,
-            line_break="\n")
+        return yaml.dump(obj, default_flow_style=False, default_style="", indent=4, line_break="\n")
 
     def loads(self, s):
         # out=cStringIO.StringIO(s)
@@ -41,7 +36,7 @@ class SerializerYAML(SerializerBase):
             s = j.sal.fs.readFile(path)
         except Exception as e:
             error = "error:%s\n" % e
-            error += '\npath:%s\n' % path
+            error += "\npath:%s\n" % path
             raise j.exceptions.Input(message=error)
 
         try:
@@ -55,28 +50,27 @@ class SerializerYAML(SerializerBase):
         """
         load a yaml stream and keep the order
         """
+
         class OrderedLoader(Loader):
             pass
 
         def construct_mapping(loader, node):
             loader.flatten_mapping(node)
             return object_pairs_hook(loader.construct_pairs(node))
-        OrderedLoader.add_constructor(
-            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-            construct_mapping)
+
+        OrderedLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping)
         return yaml.load(stream, OrderedLoader)
 
     def ordered_dump(self, data, stream=None, Dumper=yaml.Dumper, **kwds):
         """
         dump a yaml stream with keeping the order
         """
+
         class OrderedDumper(Dumper):
             pass
 
         def _dict_representer(dumper, data):
-            return dumper.represent_mapping(
-                yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-                data.items())
+            return dumper.represent_mapping(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, data.items())
 
         OrderedDumper.add_representer(OrderedDict, _dict_representer)
         return yaml.dump(data, stream, OrderedDumper, **kwds)
@@ -84,6 +78,7 @@ class SerializerYAML(SerializerBase):
     def test(self):
         ddict = j.data.serializers.toml.loads(testtoml)
         # TODO:*3 write some test
+
 
 # from Jumpscale import j
 

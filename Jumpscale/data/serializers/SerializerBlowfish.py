@@ -1,8 +1,8 @@
 from .SerializerBase import SerializerBase
 from Jumpscale import j
 
-class SerializerBlowfish(SerializerBase):
 
+class SerializerBlowfish(SerializerBase):
     def __init__(self,):
         SerializerBase.__init__(self)
         self.encrkey = ""
@@ -12,8 +12,9 @@ class SerializerBlowfish(SerializerBase):
         if self.encrkey != encrkey:
             from Crypto.Cipher import Blowfish
             from random import randrange
+
             self.randrange = randrange
-            self.c = Blowfish.new(encrkey,mode=Blowfish.MODE_ECB)
+            self.c = Blowfish.new(encrkey, mode=Blowfish.MODE_ECB)
             self.encrkey = encrkey
 
     def dumps(self, obj, encrkey):

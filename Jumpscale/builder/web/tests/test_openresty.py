@@ -1,12 +1,13 @@
 import pytest
 from Jumpscale import j
 
+
 @pytest.mark.integration
 def test_main(self=None):
     """test openResty installation
 
     to run:
-    js_shell 'j.builder.web.openresty._test(name="openResty")'
+    kosmos 'j.builder.web.openresty._test(name="openResty")'
     """
 
     if not j.sal.process.checkInstalled(j.builder.web.openresty.NAME):

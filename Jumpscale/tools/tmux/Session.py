@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 import time
 import libtmux as tmuxp
@@ -9,8 +8,8 @@ JSBASE = j.application.JSBaseClass
 # from .Pane import Pane
 from .Window import Window
 
-class Session(j.application.JSBaseClass):
 
+class Session(j.application.JSBaseClass):
     def __init__(self, session):
         JSBASE.__init__(self)
         self.id = session.get("session_id")
@@ -72,7 +71,6 @@ class Session(j.application.JSBaseClass):
             window.kill()
 
     def __repr__(self):
-        return ("session:%s:%s" % (self.id, self.name))
+        return "session:%s:%s" % (self.id, self.name)
 
     __str__ = __repr__
-

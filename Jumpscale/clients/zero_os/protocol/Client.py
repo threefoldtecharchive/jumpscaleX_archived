@@ -28,16 +28,18 @@ from .PowerManager import PowerManager
 
 
 class Client(BaseClient):
-    _raw_chk = typchk.Checker({
-        'id': str,
-        'command': str,
-        'arguments': typchk.Any(),
-        'queue': typchk.Or(str, typchk.IsNone()),
-        'max_time': typchk.Or(int, typchk.IsNone()),
-        'stream': bool,
-        'tags': typchk.Or([str], typchk.IsNone()),
-        'recurring_period': typchk.Or(int, typchk.IsNone()),
-    })
+    _raw_chk = typchk.Checker(
+        {
+            "id": str,
+            "command": str,
+            "arguments": typchk.Any(),
+            "queue": typchk.Or(str, typchk.IsNone()),
+            "max_time": typchk.Or(int, typchk.IsNone()),
+            "stream": bool,
+            "tags": typchk.Or([str], typchk.IsNone()),
+            "recurring_period": typchk.Or(int, typchk.IsNone()),
+        }
+    )
 
     def __init__(self, host, port=6379, unixsocket=None, password=None, db=0, ssl=True, timeout=120):
         self.host = host
@@ -100,20 +102,24 @@ class Client(BaseClient):
                 timeout = self.timeout
                 socket_timeout = (timeout + 5) if timeout else 15
                 socket_keepalive_options = dict()
-                if hasattr(socket, 'TCP_KEEPIDLE'):
+                if hasattr(socket, "TCP_KEEPIDLE"):
                     socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
-                if hasattr(socket, 'TCP_KEEPINTVL'):
+                if hasattr(socket, "TCP_KEEPINTVL"):
                     socket_keepalive_options[socket.TCP_KEEPINTVL] = 1
-                if hasattr(socket, 'TCP_KEEPIDLE'):
+                if hasattr(socket, "TCP_KEEPIDLE"):
                     socket_keepalive_options[socket.TCP_KEEPIDLE] = 1
 
-                self.__redis = redis.Redis(host=self.host,
-                                           port=self.port,
-                                           password=self.password,
-                                           db=self.db, ssl=self.ssl,
-                                           ssl_cert_reqs=None,
-                                           socket_timeout=socket_timeout,
-                                           socket_keepalive=True, socket_keepalive_options=socket_keepalive_options)
+                self.__redis = redis.Redis(
+                    host=self.host,
+                    port=self.port,
+                    password=self.password,
+                    db=self.db,
+                    ssl=self.ssl,
+                    ssl_cert_reqs=None,
+                    socket_timeout=socket_timeout,
+                    socket_keepalive=True,
+                    socket_keepalive_options=socket_keepalive_options,
+                )
 
         return self.__redis
 
@@ -227,7 +233,9 @@ class Client(BaseClient):
         """
         return self._cgroup
 
-    def raw(self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None, recurring_period=None):
+    def raw(
+        self, command, arguments, queue=None, max_time=None, stream=False, tags=None, id=None, recurring_period=None
+    ):
         """
         Implements the low level command call, this needs to build the command structure
         and push it on the correct queue.
@@ -248,21 +256,21 @@ class Client(BaseClient):
             id = str(uuid.uuid4())
 
         payload = {
-            'id': id,
-            'command': command,
-            'arguments': arguments,
-            'queue': queue,
-            'max_time': max_time,
-            'stream': stream,
-            'tags': tags,
-            'recurring_period': recurring_period,
+            "id": id,
+            "command": command,
+            "arguments": arguments,
+            "queue": queue,
+            "max_time": max_time,
+            "stream": stream,
+            "tags": tags,
+            "recurring_period": recurring_period,
         }
 
         self._raw_chk.check(payload)
-        flag = 'result:{}:flag'.format(id)
-        self._redis.rpush('core:default', json.dumps(payload))
+        flag = "result:{}:flag".format(id)
+        self._redis.rpush("core:default", json.dumps(payload))
         if self._redis.brpoplpush(flag, flag, DEFAULT_TIMEOUT) is None:
-            TimeoutError('failed to queue job {}'.format(id))
+            TimeoutError("failed to queue job {}".format(id))
 
         return Response(self, id)
 

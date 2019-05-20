@@ -5,4 +5,4 @@ import os
 cwd = os.path.dirname(os.path.abspath(__file__))
 for path in j.sal.fs.listFilesInDir(cwd, filter="*.schema"):
     content = j.sal.fs.readFile(path)
-    j.data.schema.get(content)
+    j.data.schema.get_from_text(content)

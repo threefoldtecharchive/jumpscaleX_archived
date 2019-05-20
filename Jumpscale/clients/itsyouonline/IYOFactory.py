@@ -11,11 +11,13 @@ DEFAULT_BASE_URL = "https://itsyou.online/api"
 
 
 class IYOFactory(j.application.JSBaseConfigsClass):
-    __jslocation__ = 'j.clients.itsyouonline'
+    __jslocation__ = "j.clients.itsyouonline"
     _CHILDCLASS = IYOClient
 
     def _init(self):
-        self.raml_spec = "https://raw.githubusercontent.com/itsyouonline/identityserver/master/specifications/api/itsyouonline.raml"
+        self.raml_spec = (
+            "https://raw.githubusercontent.com/itsyouonline/identityserver/master/specifications/api/itsyouonline.raml"
+        )
         self._default = None
 
     @property
@@ -35,26 +37,26 @@ class IYOFactory(j.application.JSBaseConfigsClass):
         """
         claims = jwt.get_unverified_claims(jwt_token)
 
-        if not claims['refresh_token']:
+        if not claims["refresh_token"]:
             if die:
                 raise RuntimeError("jwt token can't be refreshed, no refresh token claim found")
             else:
                 return
 
-        headers = {'Authorization': 'bearer %s' % jwt_token}
-        params = {'validity': validity}
-        resp = requests.get('https://itsyou.online/v1/oauth/jwt/refresh', headers=headers, params=params)
+        headers = {"Authorization": "bearer %s" % jwt_token}
+        params = {"validity": validity}
+        resp = requests.get("https://itsyou.online/v1/oauth/jwt/refresh", headers=headers, params=params)
         resp.raise_for_status()
-        return resp.content.decode('utf8')
+        return resp.content.decode("utf8")
 
     def jwt_expire_timestamp(self, jwt_token):
         claims = jwt.get_unverified_claims(jwt_token)
-        return claims['exp']
+        return claims["exp"]
 
     def test(self):
         """
         do:
-        js_shell 'j.clients.itsyouonline.test()'
+        kosmos 'j.clients.itsyouonline.test()'
         """
 
         client = j.clients.itsyouonline.get(name="test")
@@ -63,8 +65,19 @@ class IYOFactory(j.application.JSBaseConfigsClass):
         self._log_debug("Creating a test organization")
         test_globa_id = "test_org"
         client.api.organizations.CreateNewOrganization(
-            {"globalid": test_globa_id, "owners": [jwt.username], "dns": [], "includes": [], "includesuborgsof": [],
-             "members": [], "orgmemmbers": [], "orgowners": [], "publicKeys": [], "requiredscopes": []})
+            {
+                "globalid": test_globa_id,
+                "owners": [jwt.username],
+                "dns": [],
+                "includes": [],
+                "includesuborgsof": [],
+                "members": [],
+                "orgmemmbers": [],
+                "orgowners": [],
+                "publicKeys": [],
+                "requiredscopes": [],
+            }
+        )
         self._log_debug("getting the test organization details")
         org = client.api.organizations.GetOrganization(test_globa_id)
         assert org.data.globalid == test_globa_id
@@ -80,8 +93,9 @@ class IYOFactory(j.application.JSBaseConfigsClass):
 
         # Create a new API key (is really a developer way though)
         from requests.exceptions import HTTPError
+
         try:
-            key = client.api.users.AddApiKey({"label": 'test'}, username).data
+            key = client.api.users.AddApiKey({"label": "test"}, username).data
             self._log_debug("create new API key: ")
             self._log_debug("label: %s" % key.label)
             self._log_debug("app ID %s" % key.applicationid)
@@ -94,13 +108,13 @@ class IYOFactory(j.application.JSBaseConfigsClass):
                 raise err
 
         key_labels = [k.label for k in client.api.users.ListAPIKeys(username).data]
-        assert 'test' in key_labels
+        assert "test" in key_labels
 
         self._log_debug("delete api key")
-        client.api.users.DeleteAPIkey('test', username)
+        client.api.users.DeleteAPIkey("test", username)
 
         key_labels = [k.label for k in client.api.users.ListAPIKeys(username).data]
-        assert 'test' not in key_labels
+        assert "test" not in key_labels
 
     def test_jwt(self):
         client = j.clients.itsyouonline.get(name="test")

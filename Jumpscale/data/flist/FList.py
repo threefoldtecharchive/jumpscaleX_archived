@@ -22,9 +22,6 @@ from .models import DirCollection
 from path import Path
 
 
-
-
-
 class FList:
     """
     FList (sometime "plist") files contains a plain/text representation of
@@ -76,13 +73,7 @@ class FList:
 
     """
 
-    def __init__(
-            self,
-            namespace="",
-            rootpath="",
-            dirCollection=None,
-            aciCollection=None,
-            userGroupCollection=None):
+    def __init__(self, namespace="", rootpath="", dirCollection=None, aciCollection=None, userGroupCollection=None):
         self.namespace = namespace
         self.dirCollection = dirCollection
         self.aciCollection = aciCollection
@@ -105,11 +96,10 @@ class FList:
         @param fpath is full path
         """
         if not fpath.startswith(self.rootpath):
-            m = "fpath:%s needs to start with rootpath:%s" % (
-                fpath, self.rootpath)
+            m = "fpath:%s needs to start with rootpath:%s" % (fpath, self.rootpath)
             raise j.exceptions.Input(message=m)
 
-        relPath = fpath[len(self.rootpath):].strip("/")
+        relPath = fpath[len(self.rootpath) :].strip("/")
         toHash = self.namespace + relPath
         bl = pyblake2.blake2b(toHash.encode(), 32)
         binhash = bl.digest()
@@ -236,7 +226,7 @@ class FList:
                 dbobj = ddir.dbobj.contents[counter]
                 self._setMetadata(dbobj, stat, fname)
 
-                dbobj.attributes.file = dbobj.attributes.init('file')
+                dbobj.attributes.file = dbobj.attributes.init("file")
                 dbobj.attributes.file.blockSize = 128  # FIXME ?
 
                 counter += 1
@@ -246,7 +236,7 @@ class FList:
                 dbobj = ddir.dbobj.contents[counter]
                 self._setMetadata(dbobj, stat, fname)
 
-                dbobj.attributes.link = dbobj.attributes.init('link')
+                dbobj.attributes.link = dbobj.attributes.init("link")
                 dbobj.attributes.link.target = destlink
 
                 counter += 1
@@ -254,7 +244,7 @@ class FList:
             # process special files
             for fname, stat in sspecials:
                 dbobj = ddir.dbobj.contents[counter]
-                dbobj.attributes.special = dbobj.attributes.init('special')
+                dbobj.attributes.special = dbobj.attributes.init("special")
 
                 # testing special files type
                 if S_ISSOCK(stat.st_mode):
@@ -273,7 +263,7 @@ class FList:
                     dbobj.attributes.special.type = "unknown"
 
                 if S_ISBLK(stat.st_mode) or S_ISCHR(stat.st_mode):
-                    id = '%d,%d' % (os.major(stat.st_rdev), os.minor(stat.st_rdev))
+                    id = "%d,%d" % (os.major(stat.st_rdev), os.minor(stat.st_rdev))
                     dbobj.attributes.special.data = id
 
                 self._setMetadata(dbobj, stat, fname)
@@ -283,7 +273,7 @@ class FList:
             for dirRelPathFull in dirs2:
                 absDirPathFull = os.path.join(self.rootpath, dirRelPathFull)
                 dbobj = ddir.dbobj.contents[counter]
-                dbobj.attributes.dir = dbobj.attributes.init('dir')
+                dbobj.attributes.dir = dbobj.attributes.init("dir")
                 counter += 1
 
                 dir_sub_relpath, dir_sub_key = self.path2key(absDirPathFull)
@@ -330,16 +320,17 @@ class FList:
         dbobj.aclkey = aci.key
 
     def walk(
-            self,
-            dirFunction=None,
-            fileFunction=None,
-            specialFunction=None,
-            linkFunction=None,
-            args={},
-            currentDirKey="",
-            dirRegex=[],
-            fileRegex=[],
-            types="DFLS"):
+        self,
+        dirFunction=None,
+        fileFunction=None,
+        specialFunction=None,
+        linkFunction=None,
+        args={},
+        currentDirKey="",
+        dirRegex=[],
+        fileRegex=[],
+        types="DFLS",
+    ):
         """
 
         @param types: D=Dir, F=File, L=Links, S=Special
@@ -466,7 +457,7 @@ class FList:
                     currentDirKey=key,
                     dirRegex=dirRegex,
                     fileRegex=fileRegex,
-                    types=types
+                    types=types,
                 )
 
         if not valid(ddir.dbobj.location, dirRegex):
@@ -520,15 +511,10 @@ class FList:
             args=result,
             dirRegex=dirRegex,
             fileRegex=fileRegex,
-            types=types
+            types=types,
         )
 
-        return (
-            result["size"],
-            result["nrfiles"],
-            result["nrdirs"],
-            result["nrlinks"],
-            result["nrspecial"])
+        return (result["size"], result["nrfiles"], result["nrdirs"], result["nrlinks"], result["nrspecial"])
 
     def pprint(self, dirRegex=[], fileRegex=[], types="DFLS"):
         def procDir(dirobj, type, name, args, key):
@@ -552,7 +538,7 @@ class FList:
             args=result,
             dirRegex=dirRegex,
             fileRegex=fileRegex,
-            types=types
+            types=types,
         )
 
     def dumps(self, dirRegex=[], fileRegex=[], types="DFLS"):
@@ -567,14 +553,14 @@ class FList:
             item = [
                 "%s/%s" % (dirobj.dbobj.location, name),  # Path
                 "",  # To be filled later                 # Hash
-                "%d" % subobj.size,                      # Size
-                x.dbobj.uname,                           # User (permissions)
-                x.dbobj.gname,                           # Group (permissions)
-                x.modeInOctFormat,                       # Permission mode
+                "%d" % subobj.size,  # Size
+                x.dbobj.uname,  # User (permissions)
+                x.dbobj.gname,  # Group (permissions)
+                x.modeInOctFormat,  # Permission mode
                 "",  # To be filled later                 # File type
-                "%d" % subobj.creationTime,              # Creation Timestamp
-                "%d" % subobj.modificationTime,          # Modification Timestamp
-                ""  # To be filled later                 # Extended attributes
+                "%d" % subobj.creationTime,  # Creation Timestamp
+                "%d" % subobj.modificationTime,  # Modification Timestamp
+                "",  # To be filled later                 # Extended attributes
             ]
 
             return item
@@ -621,7 +607,7 @@ class FList:
                     item[6] = "5"
 
                 stat = os.stat("%s/%s" % (self.rootpath, item[0]), follow_symlinks=False)
-                item[9] = '%d,%d' % (os.major(stat.st_rdev), os.minor(stat.st_rdev))
+                item[9] = "%d,%d" % (os.major(stat.st_rdev), os.minor(stat.st_rdev))
 
             if objtype == "fifopipe":
                 item[6] = "6"
@@ -631,18 +617,13 @@ class FList:
         self._log_debug("Building old flist format")
         result = []
         self.walk(
-            dirFunction=procDir,
-            fileFunction=procFile,
-            specialFunction=procSpecial,
-            linkFunction=procLink,
-            args=result
+            dirFunction=procDir, fileFunction=procFile, specialFunction=procSpecial, linkFunction=procLink, args=result
         )
 
         return "\n".join(result) + "\n"
 
     def upload(self, host="127.0.0.1", port=16379):
-        raise RuntimeError(
-            "Upload is not supported anymore, please check 'populate' method")
+        raise RuntimeError("Upload is not supported anymore, please check 'populate' method")
 
     def _dummy(self, **kwargs):
         pass
@@ -654,13 +635,13 @@ class FList:
             - example: j.clients.redis.get(ipaddr=<ipaddr>, port=<port>, ardb_patch=True))
         """
         import g8storclient
+
         self.populate()
 
         self.dirCollection._db.rocksdb.compact_range()
 
         def procFile(dirobj, type, name, subobj, args):
-            fullpath = "%s/%s/%s" % (self.rootpath,
-                                     dirobj.dbobj.location, name)
+            fullpath = "%s/%s/%s" % (self.rootpath, dirobj.dbobj.location, name)
             self._log_info("[+] uploading: %s" % fullpath)
             hashs = g8storclient.encrypt(fullpath)
 
@@ -668,8 +649,8 @@ class FList:
                 return
 
             for hash in hashs:
-                if not backend.exists(hash['hash']):
-                    backend.set(hash['hash'], hash['data'])
+                if not backend.exists(hash["hash"]):
+                    backend.set(hash["hash"], hash["data"])
 
         result = []
         self.walk(
@@ -677,7 +658,7 @@ class FList:
             fileFunction=procFile,
             specialFunction=self._dummy,
             linkFunction=self._dummy,
-            args=result
+            args=result,
         )
 
     def populate(self):
@@ -687,8 +668,7 @@ class FList:
             pass
 
         def procFile(dirobj, type, name, subobj, args):
-            fullpath = "%s/%s/%s" % (self.rootpath,
-                                     dirobj.dbobj.location, name)
+            fullpath = "%s/%s/%s" % (self.rootpath, dirobj.dbobj.location, name)
             self._log_debug("[+] populating: %s" % fullpath)
             hashs = g8storclient.encrypt(fullpath)
 
@@ -696,7 +676,7 @@ class FList:
                 return
 
             for index, _ in enumerate(hashs):
-                hashs[index].pop('data', None)
+                hashs[index].pop("data", None)
 
             subobj.attributes.file.blocks = hashs
             dirobj.save()
@@ -710,14 +690,10 @@ class FList:
         self._log_debug("Populating")
         result = []
         self.walk(
-            dirFunction=procDir,
-            fileFunction=procFile,
-            specialFunction=procSpecial,
-            linkFunction=procLink,
-            args=result
+            dirFunction=procDir, fileFunction=procFile, specialFunction=procSpecial, linkFunction=procLink, args=result
         )
 
-    def populate_missing_chunks(self, hubdirect_instance='main'):
+    def populate_missing_chunks(self, hubdirect_instance="main"):
         import g8storclient
 
         directclient = j.clients.hubdirect.get(hubdirect_instance)
@@ -734,18 +710,17 @@ class FList:
 
                 # keeping a way to find the chunk back from it's hash
                 for id, chunk in enumerate(data):
-                    bykeys[chunk['hash']] = {'file': f, 'index': id}
+                    bykeys[chunk["hash"]] = {"file": f, "index": id}
 
         # exists_post now wants binary keys
         # we know we are dealing with strings hash, let's simply encode them
         # before
         for file in all_files:
             for id, chunk in enumerate(all_files[file]):
-                all_files[file][id]['bhash'] = chunk['hash'].encode('utf-8')
+                all_files[file][id]["bhash"] = chunk["hash"].encode("utf-8")
 
         for path, chunks in all_files.items():
-            res = directclient.api.exists.exists_post(
-                set([chunk['bhash'] for chunk in chunks]))
+            res = directclient.api.exists.exists_post(set([chunk["bhash"] for chunk in chunks]))
             keys = res.json()
 
             # let's adding all missing keys
@@ -763,18 +738,18 @@ class FList:
         for bhash in to_upload:
             # we will upload all theses chunks, we decode them because we know
             # theses are string hashs
-            hash = base64.b64decode(bhash).decode('utf-8')
+            hash = base64.b64decode(bhash).decode("utf-8")
 
             if not bykeys.get(hash):
                 raise RuntimeError("Key not indexed, this should not happend")
 
-            filename = bykeys[hash]['file']
-            chunkindex = bykeys[hash]['index']
+            filename = bykeys[hash]["file"]
+            chunkindex = bykeys[hash]["index"]
 
             chunk = all_files[filename][chunkindex]
-            payload = base64.b64encode(chunk['data'])
+            payload = base64.b64encode(chunk["data"])
 
-            upload += (('files[]', (bhash, payload)),)
+            upload += (("files[]", (bhash, payload)),)
 
             currentsize += len(payload)
 
@@ -801,11 +776,7 @@ class FList:
         self._log_debug("Uploading")
         result = []
         self.walk(
-            dirFunction=procDir,
-            fileFunction=procFile,
-            specialFunction=procSpecial,
-            linkFunction=procLink,
-            args=result
+            dirFunction=procDir, fileFunction=procFile, specialFunction=procSpecial, linkFunction=procLink, args=result
         )
 
     def destroy(self):

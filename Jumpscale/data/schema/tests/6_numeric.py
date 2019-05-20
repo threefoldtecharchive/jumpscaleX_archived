@@ -12,14 +12,13 @@ def main(self):
         token_price = "10 USD" (N)
         """
 
-    schema_object = j.data.schema.get(schema_text=schema)
+    schema_object = j.data.schema.get_from_text(schema_text=schema)
 
     assert schema_object.url == "despiegk.test"
     print(schema_object)
     schema_test = schema_object.get()
 
     schema_test.token_price = "10 USD"
-
 
     usd2usd = schema_test.token_price.usd  # convert USD-to-USD... same value
     assert usd2usd == 10
@@ -41,7 +40,5 @@ def main(self):
     eur2usd = schema_test.token_price.usd
     assert eur2usd * cureur == 10
 
-
     schema_test.token_price = "10 EUR"
     assert schema_test.token_price.currency_code == "eur"
-

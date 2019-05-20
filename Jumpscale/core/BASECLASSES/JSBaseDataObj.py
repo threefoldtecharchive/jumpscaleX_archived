@@ -4,7 +4,6 @@ import types
 
 
 class JSBaseDataObj(JSBase):
-
     def __init__(self, data=None, parent=None, topclass=True, **kwargs):
         """
         :param kwargs: will be updated in the self.data object
@@ -20,7 +19,7 @@ class JSBaseDataObj(JSBase):
         self._isnew = False
 
         if data:
-            if not hasattr(data, "_JSOBJ"):
+            if not isinstance(data, j.data.schema.DataObjBase):
                 raise RuntimeError("data should be a jsobj")
             self.data = data
         else:
@@ -41,7 +40,7 @@ class JSBaseDataObj(JSBase):
     @property
     def _schema(self):
         if self._schema_ is None:
-            self._schema_ = j.data.schema.get(self.__class__._SCHEMATEXT)
+            self._schema_ = j.data.schema.get_from_text(self.__class__._SCHEMATEXT)
         return self._schema_
 
     def _class_init(self):
@@ -63,13 +62,13 @@ class JSBaseDataObj(JSBase):
         # always needs to be last
         JSBase._init2(self, **kwargs)
 
-    def _obj_cache_reset(self):
-        """
-        puts the object back to its basic state
-        :return:
-        """
-        JSBase._obj_cache_reset(self)
-        self.__dict__["_data"] = None
+    # def _obj_cache_reset(self):
+    #     """
+    #     puts the object back to its basic state
+    #     :return:
+    #     """
+    #     JSBase._obj_cache_reset(self)
+    #     self.__dict__["_data"] = None
 
     @property
     def _id(self):
@@ -100,8 +99,9 @@ class JSBaseDataObj(JSBase):
         j.core.tools.file_edit(path)
         data_out = j.sal.fs.readFile(path)
         if data_in != data_out:
-            self._log_debug("'%s' instance '%s' has been edited (changed)" %
-                            (self._parent.__jslocation__, self.data.name))
+            self._log_debug(
+                "'%s' instance '%s' has been edited (changed)" % (self._parent.__jslocation__, self.data.name)
+            )
             data2 = j.data.serializers.toml.loads(data_out)
             self.data.data_update(data2)
         j.sal.fs.remove(path)

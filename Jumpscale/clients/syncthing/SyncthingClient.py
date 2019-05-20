@@ -32,7 +32,7 @@ class SyncthingClient(JSConfigClient):
         self.rootpasswd = self.rootpasswd_
         self.port = self.port
         # TODO: need to be https
-        self.syncthing_url = 'http://%s:%s/rest' % (self.addr, self.port)
+        self.syncthing_url = "http://%s:%s/rest" % (self.addr, self.port)
         self.syncthing_apikey = self.apikey
         self._config = None
 
@@ -42,8 +42,7 @@ class SyncthingClient(JSConfigClient):
         if self.addr == "localhost":
             return j.sal.process.execute(content=cmds, die=die)
         else:
-            executor = j.tools.prefab.get(
-                j.tools.executor.getSSHBased(addr=self.addr, port=self.sshport))
+            executor = j.tools.prefab.get(j.tools.executor.getSSHBased(addr=self.addr, port=self.sshport))
             return executor.prefab.core.execute_bash(content=cmds, die=die)
 
     def install(self, name=""):
@@ -95,11 +94,9 @@ class SyncthingClient(JSConfigClient):
         C = C.replace("$apikey", self.syncthing_apikey)
         res = self.executeBashScript(C)
 
-        self._log_debug("check if we can find syncthing on right port: %s:%s" %
-                           (self.addr, self.port))
+        self._log_debug("check if we can find syncthing on right port: %s:%s" % (self.addr, self.port))
         if j.sal.nettools.waitConnectionTest(self.addr, self.port, timeout=10) is False:
-            raise j.exceptions.RuntimeError(
-                "Could not find syncthing on %s:%s, tcp port test" % (self.addr, self.port))
+            raise j.exceptions.RuntimeError("Could not find syncthing on %s:%s, tcp port test" % (self.addr, self.port))
 
             self._log_debug(self.status_get())
 
@@ -163,7 +160,7 @@ class SyncthingClient(JSConfigClient):
                     res.append(folder)
             self._config["folders"] = res
             if len(res) != x:
-                self._log_debug('deleted folder:%s' % name)
+                self._log_debug("deleted folder:%s" % name)
                 # self.config_set()
 
     def config_delete_device(self, name):
@@ -177,24 +174,24 @@ class SyncthingClient(JSConfigClient):
                     res.append(folder)
             self._config["devices"] = res
             if len(res) != x:
-                self._log_debug('deleted devices:%s' % name)
+                self._log_debug("deleted devices:%s" % name)
                 # self.config_set()
 
     def config_delete_all_folders(self):
         config = self.config_get()
         # remove the folder
         self._config["folders"] = []
-        self._log_debug('deleted all folder')
+        self._log_debug("deleted all folder")
         # self.config_set()
 
     def config_delete_all_devices(self):
         config = self.config_get()
         # remove the folder
         self._config["devices"] = []
-        self._log_debug('deleted all devices')
+        self._log_debug("deleted all devices")
         # self.config_set()
 
-    def config_add_device(self, name, deviceid, replace=True, introducer=False, compression='always'):
+    def config_add_device(self, name, deviceid, replace=True, introducer=False, compression="always"):
         self._log_debug("add device:%s" % name)
         name = name.lower()
         config = self.config_get()
@@ -207,15 +204,16 @@ class SyncthingClient(JSConfigClient):
                         res.append(device)
                 self._config["devices"] = res
             else:
-                raise j.exceptions.RuntimeError(
-                    "Cannot add device %s, exists" % name)
+                raise j.exceptions.RuntimeError("Cannot add device %s, exists" % name)
 
-        device = {'addresses': ['dynamic'],
-                  'certName': '',
-                  'compression': compression,
-                  'deviceID': deviceid,
-                  'introducer': introducer,
-                  'name': name}
+        device = {
+            "addresses": ["dynamic"],
+            "certName": "",
+            "compression": compression,
+            "deviceID": deviceid,
+            "introducer": introducer,
+            "name": name,
+        }
 
         config["devices"].append(device)
 
@@ -224,8 +222,9 @@ class SyncthingClient(JSConfigClient):
         # self.config_set()
         return device
 
-    def config_add_folder(self, name, path, replace=True, ignorePerms=False,
-                          readOnly=False, rescanIntervalS=10, devices=[]):
+    def config_add_folder(
+        self, name, path, replace=True, ignorePerms=False, readOnly=False, rescanIntervalS=10, devices=[]
+    ):
         name = name.lower()
         config = self.config_get()
         if self.config_exists_folder(name):
@@ -237,30 +236,31 @@ class SyncthingClient(JSConfigClient):
                         res.append(folder)
                 self._config["folders"] = res
             else:
-                raise j.exceptions.RuntimeError(
-                    "Cannot add folder %s, exists" % name)
+                raise j.exceptions.RuntimeError("Cannot add folder %s, exists" % name)
 
         if self.id_get() not in devices:
             devices.append(self.id_get())
 
         if devices != []:
-            devices = [{'deviceID': item} for item in devices]
+            devices = [{"deviceID": item} for item in devices]
 
-        folder = {'autoNormalize': False,
-                  'copiers': 0,
-                  'devices': devices,
-                  'hashers': 0,
-                  'id': name,
-                  'ignoreDelete': False,
-                  'ignorePerms': ignorePerms,
-                  'invalid': '',
-                  'minDiskFreePct': 5,
-                  'order': 'random',
-                  'path': path,
-                  'pullers': 0,
-                  'readOnly': readOnly,
-                  'rescanIntervalS': rescanIntervalS,
-                  'versioning': {'params': {}, 'type': ''}}
+        folder = {
+            "autoNormalize": False,
+            "copiers": 0,
+            "devices": devices,
+            "hashers": 0,
+            "id": name,
+            "ignoreDelete": False,
+            "ignorePerms": ignorePerms,
+            "invalid": "",
+            "minDiskFreePct": 5,
+            "order": "random",
+            "path": path,
+            "pullers": 0,
+            "readOnly": readOnly,
+            "rescanIntervalS": rescanIntervalS,
+            "versioning": {"params": {}, "type": ""},
+        }
         config["folders"].append(folder)
 
         self._log_debug("folder set:%s" % name)
@@ -278,10 +278,13 @@ class SyncthingClient(JSConfigClient):
         endpoint = endpoint.strip("/")
         endpoint = "/%s" % endpoint
 
-        url = '%s%s' % (self.syncthing_url, endpoint)
+        url = "%s%s" % (self.syncthing_url, endpoint)
 
-        headers = {'Content-Type': 'application/json',
-                   'User-Agent': 'Syncthing Python client', 'X-API-Key': self.syncthing_apikey}
+        headers = {
+            "Content-Type": "application/json",
+            "User-Agent": "Syncthing Python client",
+            "X-API-Key": self.syncthing_apikey,
+        }
 
         if request_body:
             keys = list(request_body.keys())
@@ -289,10 +292,10 @@ class SyncthingClient(JSConfigClient):
             key = keys[0]
             keys.remove(key)
 
-            url += '?%s=%s' % (key, request_body[key])
+            url += "?%s=%s" % (key, request_body[key])
 
             for key in keys:
-                url += '&%s=%s' % (key, request_body[key])
+                url += "&%s=%s" % (key, request_body[key])
 
         timeout = 10
         start = time.time()
@@ -303,12 +306,10 @@ class SyncthingClient(JSConfigClient):
                 if get:
                     r = requests.get(url, headers=headers, timeout=2)
                 else:
-                    r = requests.post(url, headers=headers,
-                                      json=data, timeout=2)
+                    r = requests.post(url, headers=headers, json=data, timeout=2)
                 ok = True
             except Exception as e:
-                self._log_warning(
-                    "Warning, Error in API call, will retry:\n%s" % e)
+                self._log_warning("Warning, Error in API call, will retry:\n%s" % e)
                 self._log_warning("retry API CALL %s" % url)
                 time.sleep(0.2)
 
@@ -318,7 +319,7 @@ class SyncthingClient(JSConfigClient):
             self._log_error(request_body)
             raise j.exceptions.RuntimeError("Error in rest call: %s" % r)
 
-        if get and endpoint != '/system/version':
+        if get and endpoint != "/system/version":
             return r.json()
 
         self._log_debug("OK")

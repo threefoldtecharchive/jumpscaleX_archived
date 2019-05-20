@@ -1,5 +1,6 @@
 from Jumpscale import j
 from .GraphiteClient import GraphiteClient
+
 JSConfigs = j.application.JSBaseConfigsClass
 
 

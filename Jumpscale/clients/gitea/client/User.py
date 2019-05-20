@@ -8,8 +8,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class User(object):
     """
     auto-generated. don't touch.
@@ -31,23 +29,24 @@ class User(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'User'
+        class_name = "User"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
         self.avatar_url = client_support.set_property(
-            'avatar_url', data, data_types, False, [], False, False, class_name)
+            "avatar_url", data, data_types, False, [], False, False, class_name
+        )
         data_types = [string_types]
-        self.email = client_support.set_property('email', data, data_types, False, [], False, False, class_name)
+        self.email = client_support.set_property("email", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.full_name = client_support.set_property('full_name', data, data_types, False, [], False, False, class_name)
+        self.full_name = client_support.set_property("full_name", data, data_types, False, [], False, False, class_name)
         data_types = [int]
-        self.id = client_support.set_property('id', data, data_types, False, [], False, False, class_name)
+        self.id = client_support.set_property("id", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.login = client_support.set_property('login', data, data_types, False, [], False, False, class_name)
+        self.login = client_support.set_property("login", data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

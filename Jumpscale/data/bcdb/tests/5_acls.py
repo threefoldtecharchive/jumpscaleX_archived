@@ -5,18 +5,18 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.bcdb.test(name="acls")'
+    kosmos 'j.data.bcdb.test(name="acls")'
 
     test around acls
 
     """
+    return  # needs to be done later
 
     schema = """
     @url = despiegk.test5.acl
     name = "" 
     an_id = 0
     """
-
 
     def do(bcdb):
 
@@ -64,7 +64,7 @@ def main(self):
         # means we have indeed the index for acl == 2
         assert len(bcdb.acl.get_all()) == 1
 
-        assert a.acl.hash == '328cce44fbfa164e1858a8796fc79226'
+        assert a.acl.hash == "4743dd07a7b22c2d80b884ebb7437ff8"
 
         self._log_debug("MODIFY RIGHTS")
         a.acl.rights_set(userids=[1], rights="r")
@@ -72,7 +72,7 @@ def main(self):
         assert a.acl.readonly
 
         assert len(bcdb.acl.get_all()) == 2  # there needs to be a new acl
-        assert a.acl.hash == 'd387cf9026cff59df5e6c2f6435cf470'
+        assert a.acl.hash == "6c91e0d74f2ee7f42a7e0c0bf697d647"
 
         assert a.acl.rights_check(1, "r") is True
         assert a.acl.rights_check(1, "d") is False
@@ -85,18 +85,12 @@ def main(self):
         assert a.acl.rights_check(1, "d") is False
         a.save()
 
-        j.shell()
-
         # NEED TO DO TESTS WITH GROUPS
 
     zdbclient_admin = j.servers.zdb.client_admin_get()
     zdbclient = zdbclient_admin.namespace_new("test", secret="1234")
     zdbclient.flush()  # empty
     bcdb = j.data.bcdb.new(name="test", zdbclient=zdbclient, reset=True)
-
-    return
-
-    #TODO:#1
 
     do(bcdb)
     bcdb.reset()

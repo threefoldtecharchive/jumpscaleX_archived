@@ -7,21 +7,23 @@ import base64
 import hashlib
 from nacl.public import PrivateKey, SealedBox
 import fakeredis
+
 JSBASE = j.application.JSBaseClass
 
-class NACLFactory(j.application.JSBaseClass):
 
+class NACLFactory(j.application.JSBaseClass):
     def __init__(self):
         JSBASE.__init__(self)
         self.__jslocation__ = "j.data.nacl"
         self._default = None
 
-        #check there is core redis
-        if isinstance(j.core.db,fakeredis.FakeStrictRedis):
+        # check there is core redis
+        if isinstance(j.core.db, fakeredis.FakeStrictRedis):
             j.clients.redis.core_get()
 
-    def configure(self,name="default",privkey_words=None,secret=None,sshagent_use=None,
-                  interactive=False, generate=False):
+    def configure(
+        self, name="default", privkey_words=None, secret=None, sshagent_use=None, interactive=False, generate=False
+    ):
         """
         secret is used to encrypt/decrypt the private key when stored on local filesystem
         privkey_words is used to put the private key back
@@ -37,16 +39,20 @@ class NACLFactory(j.application.JSBaseClass):
         :return: None
 
         """
-        n=self.get(name=name,load=False)
-        n.configure(privkey_words=privkey_words,secret=secret,sshagent_use=sshagent_use,
-                    interactive=interactive, generate=generate)
+        n = self.get(name=name, load=False)
+        n.configure(
+            privkey_words=privkey_words,
+            secret=secret,
+            sshagent_use=sshagent_use,
+            interactive=interactive,
+            generate=generate,
+        )
         return n
 
-
-    def get(self, name="default",load=True):
+    def get(self, name="default", load=True):
         """
         """
-        n=NACL(name=name)
+        n = NACL(name=name)
         if load:
             n.load()
         return n
@@ -57,10 +63,9 @@ class NACLFactory(j.application.JSBaseClass):
             self._default = self.get()
         return self._default
 
-
     def test(self):
         """
-        js_shell 'j.data.nacl.test()'
+        kosmos 'j.data.nacl.test()'
         """
 
         cl = self.default  # get's the default location & generate's keys
@@ -111,10 +116,11 @@ class NACLFactory(j.application.JSBaseClass):
         assert b == b"something"
 
         self._log_info("TEST OK")
+        print("TEST OK")
 
     def test_perf(self):
         """
-        js_shell 'j.data.nacl.test_perf()'
+        kosmos 'j.data.nacl.test_perf()'
         """
 
         cl = self.default  # get's the default location & generate's keys

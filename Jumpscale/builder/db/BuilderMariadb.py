@@ -2,28 +2,22 @@ from Jumpscale import j
 import time
 
 
-
-
-
 class BuilderMariadb(j.builder.system._BaseClass):
-    NAME = 'mariadb'
-    PORT = '3306'
+    NAME = "mariadb"
+    PORT = "3306"
 
     def _init(self):
-        self.dirs = {
-            "/data/db": "/data/db",
-            "/var/run/mysqld": "/var/run/mysqld"
-        }
+        self.dirs = {"/data/db": "/data/db", "/var/run/mysqld": "/var/run/mysqld"}
         self.start_cmd = """
                 chown -R mysql.mysql /data/db/
                 chown -R mysql.mysql /var/run/mysqld
                 /usr/sbin/mysqld --basedir=/usr --datadir=/data/db \
                 --plugin-dir=/usr/lib/mysql/plugin --log-error=/dev/log/mysql/error.log \
                 --pid-file=/var/run/mysqld/mysqld.pid \
-                --socket=/var/run/mysqld/mysqld.sock --port={}""".format(self.PORT)
-        self.new_files = {
-            "/tmp/mysql_start.sh": self.start_cmd
-        }
+                --socket=/var/run/mysqld/mysqld.sock --port={}""".format(
+            self.PORT
+        )
+        self.new_files = {"/tmp/mysql_start.sh": self.start_cmd}
 
     def install(self, start=False, reset=False):
         """install and configure mariadb
@@ -51,8 +45,9 @@ class BuilderMariadb(j.builder.system._BaseClass):
             try:
                 self.start()
             except Exception:
-                self._log_debug("MySql didn't started, maybe it's "
-                        "already running or the port 3306 is used by other service")
+                self._log_debug(
+                    "MySql didn't started, maybe it's " "already running or the port 3306 is used by other service"
+                )
 
     def start(self):
         """Start mariadb
@@ -62,7 +57,7 @@ class BuilderMariadb(j.builder.system._BaseClass):
     def init(self):
         """Initialize the data directory
         """
-        cmd = 'mysql_install_db'
+        cmd = "mysql_install_db"
         j.sal.process.execute(cmd)
 
     def db_export(self, dbname, targetdir):
@@ -73,9 +68,8 @@ class BuilderMariadb(j.builder.system._BaseClass):
             target_dir    {string} -- dir to which db will be exported to
         """
 
-        target = j.sal.fs.joinPaths(
-            targetdir, 'datadump-' + str(int(time.time())) + '.sql')
-        cmd = 'mysqldump {} > {}'.format(dbname, target)
+        target = j.sal.fs.joinPaths(targetdir, "datadump-" + str(int(time.time())) + ".sql")
+        cmd = "mysqldump {} > {}".format(dbname, target)
         j.sal.process.execute(cmd)
 
     def db_import(self, dbname, sqlfile):
@@ -86,11 +80,10 @@ class BuilderMariadb(j.builder.system._BaseClass):
             sqlfile  {string} -- sqlfile path to be imported
         """
         self._create_db(dbname)
-        cmd = 'mysql {dbname} < {sqlfile}'.format(
-            dbname=dbname, sqlfile=sqlfile)
+        cmd = "mysql {dbname} < {sqlfile}".format(dbname=dbname, sqlfile=sqlfile)
         j.sal.process.execute(cmd)
 
-    def user_create(self, username, password=''):
+    def user_create(self, username, password=""):
         """creates user with no rights
 
         Arguments:
@@ -102,7 +95,7 @@ class BuilderMariadb(j.builder.system._BaseClass):
         cmd = 'echo "CREATE USER {username}@localhost {password}"| mysql'.format(username=username, password=password)
         j.sal.process.execute(cmd, die=False)
 
-    def admin_create(self, username, password=''):
+    def admin_create(self, username, password=""):
         """creates user with all rights
 
         Arguments:
@@ -111,8 +104,9 @@ class BuilderMariadb(j.builder.system._BaseClass):
         """
 
         self.user_create(username, password=password)
-        cmd = 'echo "GRANT ALL PRIVILEGES ON *.* TO \'{username}\'@\'localhost\' WITH GRANT OPTION;" | mysql'.format(
-            username=username)
+        cmd = "echo \"GRANT ALL PRIVILEGES ON *.* TO '{username}'@'localhost' WITH GRANT OPTION;\" | mysql".format(
+            username=username
+        )
         j.sal.process.execute(cmd, die=False)
 
     def sql_execute(self, dbname, sql):
@@ -123,7 +117,7 @@ class BuilderMariadb(j.builder.system._BaseClass):
             sql    {string} -- sql query to be run
         """
         if not dbname:
-            dbname = ''
+            dbname = ""
         cmd = 'mysql -e "{}" {}'.format(sql, dbname)
         j.sal.process.execute(cmd)
 
@@ -134,7 +128,8 @@ class BuilderMariadb(j.builder.system._BaseClass):
         """
 
         cmd = 'echo "GRANT ALL PRIVILEGES ON {dbname}.* TO {username}@localhost WITH GRANT OPTION;" | mysql'.format(
-            dbname=dbname, username=username)
+            dbname=dbname, username=username
+        )
         j.sal.process.execute(cmd, die=False)
 
     def _create_db(self, dbname):

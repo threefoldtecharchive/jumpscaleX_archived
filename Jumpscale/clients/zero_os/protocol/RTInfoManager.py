@@ -1,16 +1,10 @@
 from . import typchk
 
-class RTInfoManager:
-    _rtinfo_start_params_chk = typchk.Checker({
-        'host': str,
-        'port': int,
-        'disks': [str]
-    })
 
-    _rtinfo_stop_params_chk = typchk.Checker({
-        'host': str,
-        'port': int,
-    })
+class RTInfoManager:
+    _rtinfo_start_params_chk = typchk.Checker({"host": str, "port": int, "disks": [str]})
+
+    _rtinfo_stop_params_chk = typchk.Checker({"host": str, "port": int})
 
     def __init__(self, client):
         self._client = client
@@ -25,11 +19,7 @@ class RTInfoManager:
         """
         disks = [] if disks is None else disks
 
-        args = {
-            "host": host,
-            "port": port,
-            "disks": disks
-        }
+        args = {"host": host, "port": port, "disks": disks}
         self._rtinfo_start_params_chk.check(args)
 
         return self._client.json("rtinfo.start", args)
@@ -41,10 +31,7 @@ class RTInfoManager:
         :param port: int rtinfod client port
         """
 
-        args = {
-            "host": host,
-            "port": port,
-        }
+        args = {"host": host, "port": port}
         self._rtinfo_stop_params_chk.check(args)
 
         return self._client.json("rtinfo.stop", args)
@@ -54,4 +41,3 @@ class RTInfoManager:
         List running rtinfo clients
         """
         return self._client.json("rtinfo.list", {})
-

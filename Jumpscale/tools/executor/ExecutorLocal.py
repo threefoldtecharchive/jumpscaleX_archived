@@ -1,4 +1,5 @@
 from Jumpscale import j
+
 JSBASE = j.application.JSBaseClass
 
 from .ExecutorBase import ExecutorBase
@@ -17,37 +18,28 @@ class ExecutorLocal(ExecutorBase):
     def _init(self):
         self._cache_expiration = 3600
         self.type = "local"
-        self._id = 'localhost'
+        self._id = "localhost"
 
     def exists(self, path):
         return j.sal.fs.exists(path)
 
-
-
-    def execute(
-            self,cmd,
-            die=True,
-            showout=False,
-            timeout=1000,
-            env=None,
-            sudo=False,
-            replace=True):
+    def execute(self, cmd, die=True, showout=False, timeout=1000, env=None, sudo=False, replace=True):
         """
         @RETURN rc, out, err
         """
         if replace:
             if env is None:
-                env={}
+                env = {}
             env.update(self.env)
-            assert self.env!={}
-            cmd = self.replace(cmd,args=env)
+            assert self.env != {}
+            cmd = self.replace(cmd, args=env)
 
         if sudo:
             raise RuntimeError("sudo not supported")
 
         # self._log_debug(cmd)
 
-        rc, out, err = j.sal.process.execute(cmd, die=die, showout=showout, timeout=timeout,replace=replace)
+        rc, out, err = j.sal.process.execute(cmd, die=die, showout=showout, timeout=timeout, replace=replace)
 
         return rc, out, err
 
@@ -58,7 +50,7 @@ class ExecutorLocal(ExecutorBase):
     #     cmds = self.commands_transform(cmds, die, checkok=checkok)
     #     return j.sal.process.executeWithoutPipe(cmds)
 
-    def upload(self, source, dest, dest_prefix="", ignoredir=None,ignorefiles=None, recursive=True):
+    def upload(self, source, dest, dest_prefix="", ignoredir=None, ignorefiles=None, recursive=True):
         """
 
         :param source:
@@ -70,7 +62,7 @@ class ExecutorLocal(ExecutorBase):
         :param ignorefiles: the following are always in, no need to specify: ["*.egg-info","*.pyc","*.bak"]
         :return:
         """
-        if source==dest:
+        if source == dest:
             raise RuntimeError()
         if dest_prefix != "":
             dest = j.sal.fs.joinPaths(dest_prefix, dest)
@@ -85,7 +77,8 @@ class ExecutorLocal(ExecutorBase):
                 ignorefiles=ignorefiles,
                 rsync=True,
                 ssh=False,
-                recursive=recursive)
+                recursive=recursive,
+            )
         else:
             j.sal.fs.copyFile(source, dest, overwriteFile=True)
         self._cache.reset()
@@ -103,18 +96,16 @@ class ExecutorLocal(ExecutorBase):
                 keepsymlinks=True,
                 deletefirst=False,
                 overwriteFiles=True,
-                ignoredir=[
-                    ".egg-info",
-                    ".dist-info"],
+                ignoredir=[".egg-info", ".dist-info"],
                 ignorefiles=[".egg-info"],
                 rsync=True,
-                ssh=False)
+                ssh=False,
+            )
 
     def file_read(self, path):
         return j.sal.fs.readFile(path)
 
-    def file_write(self, path, content, mode=None, owner=None,
-                   group=None, append=False, sudo=False,showout=True):
+    def file_write(self, path, content, mode=None, owner=None, group=None, append=False, sudo=False, showout=True):
         j.sal.fs.createDir(j.sal.fs.getDirName(path))
         j.sal.fs.writeFile(path, content, append=append)
         if owner is not None or group is not None:
@@ -122,13 +113,13 @@ class ExecutorLocal(ExecutorBase):
         if mode is not None:
             j.sal.fs.chmod(path, mode)
 
-
     @property
     def state_on_system(self):
         """
         is dict of all relevant param's on system
         """
         if self._state_on_system == None:
+
             def getenv():
                 res = {}
                 for key, val in os.environ.items():
@@ -140,8 +131,9 @@ class ExecutorLocal(ExecutorBase):
             # print ("INFO: stateonsystem for local")
             res = {}
             res["env"] = getenv()
-            res["uname"] = subprocess.Popen("uname -mnprs", stdout=subprocess.PIPE,
-                                            shell=True).stdout.read().decode().strip()
+            res["uname"] = (
+                subprocess.Popen("uname -mnprs", stdout=subprocess.PIPE, shell=True).stdout.read().decode().strip()
+            )
             res["hostname"] = socket.gethostname()
 
             if "darwin" in sys.platform.lower():

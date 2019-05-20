@@ -5,10 +5,7 @@ import requests
 from Jumpscale import j
 
 
-
-
 class Capacity:
-
     def __init__(self, node):
         self._node = node
 
@@ -34,12 +31,12 @@ class Capacity:
             storage_pools=self._node.storagepools.list(),
             total_cpu_nr=total_report.CRU,
             used_cpu=self._node.client.aggregator.query("machine.CPU.percent"),
-            used_memory=self._node.client.info.mem()['used']
+            used_memory=self._node.client.info.mem()["used"],
         )
 
     def node_parameters(self):
         params = []
-        checking = ['development', 'debug', 'support']
+        checking = ["development", "debug", "support"]
 
         for check in checking:
             if self._node.kernel_args.get(check) is not None:
@@ -48,16 +45,16 @@ class Capacity:
         return params
 
     def directory(self):
-        if 'staging' in self._node.kernel_args:
+        if "staging" in self._node.kernel_args:
             # return a staging directory object
-            data = {'base_uri': 'https://staging.capacity.threefoldtoken.com'}
-            return j.clients.threefold_directory.get('staging', data=data, interactive=False)
+            data = {"base_uri": "https://staging.capacity.threefoldtoken.com"}
+            return j.clients.threefold_directory.get("staging", data=data, interactive=False)
 
         # return production directory
         return j.clients.threefold_directory.get(interactive=False)
 
     def register(self):
-        farmer_id = self._node.kernel_args.get('farmer_id')
+        farmer_id = self._node.kernel_args.get("farmer_id")
         if not farmer_id:
             return False
 
@@ -78,14 +75,14 @@ class Capacity:
             robot_address=robot_address,
             os_version=os_version,
             parameters=parameters,
-            uptime=int(self._node.uptime())
+            uptime=int(self._node.uptime()),
         )
-        data['farmer_id'] = farmer_id
+        data["farmer_id"] = farmer_id
 
-        if 'private' in self._node.kernel_args:
-            data['robot_address'] = 'private'
-        elif not data['robot_address']:
-            raise RuntimeError('Can not register a node without robot_address')
+        if "private" in self._node.kernel_args:
+            data["robot_address"] = "private"
+        elif not data["robot_address"]:
+            raise RuntimeError("Can not register a node without robot_address")
 
         client = self.directory()
 
@@ -95,18 +92,13 @@ class Capacity:
             j.tools.logger._log_error("error pusing total capacity to the directory: %s" % err.response.content)
 
     def update_reality(self):
-        farmer_id = self._node.kernel_args.get('farmer_id')
+        farmer_id = self._node.kernel_args.get("farmer_id")
         if not farmer_id:
             return False
 
         report = self.reality_report()
         data = dict(
-            node_id=self._node.name,
-            farmer_id=farmer_id,
-            cru=report.CRU,
-            mru=report.MRU,
-            hru=report.HRU,
-            sru=report.SRU,
+            node_id=self._node.name, farmer_id=farmer_id, cru=report.CRU, mru=report.MRU, hru=report.HRU, sru=report.SRU
         )
 
         client = self.directory()
@@ -115,22 +107,16 @@ class Capacity:
         resp.raise_for_status()
 
     def update_reserved(self, vms, vdisks, gateways):
-        farmer_id = self._node.kernel_args.get('farmer_id')
+        farmer_id = self._node.kernel_args.get("farmer_id")
         if not farmer_id:
             return False
 
         report = j.tools.capacity.reservation_parser.get_report(vms, vdisks, gateways)
         data = dict(
-            node_id=self._node.name,
-            farmer_id=farmer_id,
-            cru=report.CRU,
-            mru=report.MRU,
-            hru=report.HRU,
-            sru=report.SRU,
+            node_id=self._node.name, farmer_id=farmer_id, cru=report.CRU, mru=report.MRU, hru=report.HRU, sru=report.SRU
         )
 
         client = self.directory()
 
         resp = client.api.UpdateReservedCapacity(data=data, node_id=self._node.name)
         resp.raise_for_status()
-

@@ -23,11 +23,11 @@ class GiteaTeams(j.application.JSBaseClass):
         o.id = id
         if fetch:
             resp = self.client.api.teams.orgGetTeam(id=str(id)).json()
-            config = resp.pop('config')
+            config = resp.pop("config")
             for k, v in resp.items():
                 setattr(o, k, v)
-            o.url = config['url']
-            o.content_type = config['content_type']
+            o.url = config["url"]
+            o.content_type = config["content_type"]
         return o
 
     def __next__(self):
@@ -48,4 +48,3 @@ class GiteaTeams(j.application.JSBaseClass):
         return self
 
     __str__ = __repr__ = lambda self: "Gitea Teams Iterator for organization: {0}".format(self.organization.username)
-

@@ -34,10 +34,8 @@ class GiteaOrgRepos(j.application.JSBaseClass):
             self.position = 0
             raise StopIteration()
 
-
     def __iter__(self):
         self._items = self.user.client.api.orgs.orgListRepos().json()
         return self
 
     __str__ = __repr__ = lambda self: "Gitea Repos Iterator for organization: {0}".format(self.organization.username)
-

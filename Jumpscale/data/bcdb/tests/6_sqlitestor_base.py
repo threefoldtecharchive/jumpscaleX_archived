@@ -5,7 +5,7 @@ def main(self):
     """
     to run:
 
-    js_shell 'j.data.bcdb.test(name="sqlitestor_base")'
+    kosmos 'j.data.bcdb.test(name="sqlitestor_base")'
 
     use a bcdb which is using sqlite
 
@@ -22,8 +22,7 @@ def main(self):
         j.sal.fs.remove(item)
 
     bcdb.models_add(mpath)
-
-    model = bcdb.model_get("jumpscale.bcdb.test.house")
+    model = bcdb.model_get_from_url("jumpscale.bcdb.test.house")
     assert model.get_all() == []
 
     assert model.bcdb.zdbclient is None
@@ -58,21 +57,9 @@ def main(self):
 
     assert model_obj.id == 2
 
-    model.get(1)._ddict == {
-        "name": "",
-        "active": False,
-        "cost": b"\x00\x97\x0b\x00\x00\x00",
-        "room": [],
-        "id": 2,
-    }
+    model.get(1)._ddict == {"name": "", "active": False, "cost": b"\x00\x97\x0b\x00\x00\x00", "room": [], "id": 2}
 
-    model.get(2)._ddict == {
-        "name": "",
-        "active": False,
-        "cost": b"\x00\x97\x0c\x00\x00\x00",
-        "room": [],
-        "id": 2,
-    }
+    model.get(2)._ddict == {"name": "", "active": False, "cost": b"\x00\x97\x0c\x00\x00\x00", "room": [], "id": 2}
 
     # assert model.index.select().first().cost == 11.0  # is always in usd
 

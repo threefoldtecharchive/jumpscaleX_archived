@@ -4,9 +4,6 @@ from watchdog.observers import Observer
 from .MyFileSystemEventHandler import MyFileSystemEventHandler
 
 
-
-
-
 class Syncer(j.application.JSBaseConfigClass):
     """
     make sure there is an ssh client first, can be done by
@@ -25,6 +22,7 @@ class Syncer(j.application.JSBaseConfigClass):
         paths = "{DIR_CODE}/github/threefoldtech/jumpscaleX,{DIR_CODE}/github/threefoldtech/digitalmeX"
 
     """
+
     _SCHEMATEXT = """
         @url = jumpscale.syncer.1
         name* = "" (S)
@@ -34,7 +32,7 @@ class Syncer(j.application.JSBaseConfigClass):
         t = ""  (S)  
         """
 
-    def _init2(self,sshclient_name=None,ssh_client=None,**kwargs):
+    def _init2(self, sshclient_name=None, ssh_client=None, **kwargs):
 
         if ssh_client:
             self.ssh_client = ssh_client
@@ -47,19 +45,17 @@ class Syncer(j.application.JSBaseConfigClass):
         self._executor = None
 
         # self.paths = []
-        if self.paths==[]:
+        if self.paths == []:
             self.paths.append("{DIR_CODE}/github/threefoldtech/jumpscaleX")
             self.paths.append("{DIR_CODE}/github/threefoldtech/digitalmeX")
             self.save()
 
         self._log_debug(self)
 
-
     def delete(self):
         for item in j.clients.ssh.find(name=self.sshclient_name):
             item.delete()
         j.application.JSBaseConfigClass.delete(self)
-
 
     @property
     def executor(self):
@@ -72,26 +68,26 @@ class Syncer(j.application.JSBaseConfigClass):
 
         :return: [[src,dest],...]
         """
-        res=[]
+        res = []
         for item in self.paths:
 
-            if not item.startswith("/") and not item.startswith("{") :
-                item=j.sal.fs.getcwd()+"/"+item
-            item = item.replace("//","/")
+            if not item.startswith("/") and not item.startswith("{"):
+                item = j.sal.fs.getcwd() + "/" + item
+            item = item.replace("//", "/")
 
             items = item.split(":")
-            if len(items)==1:
+            if len(items) == 1:
                 src = items[0]
                 dst = src
-            elif len(items)==2:
+            elif len(items) == 2:
                 src = items[0]
                 dst = items[1]
             else:
                 raise RuntimeError("can only have 2 parts")
-            src= j.core.tools.text_replace(src)
+            src = j.core.tools.text_replace(src)
             if "{" in dst:
                 dst = self.executor.replace(dst)
-            res.append((src,dst))
+            res.append((src, dst))
         return res
 
     def sync(self, monitor=True):
@@ -103,11 +99,18 @@ class Syncer(j.application.JSBaseConfigClass):
         """
 
         for item in self._get_paths():
-            source,dest = item
-            self._log_info("upload:%s to %s"%(source,dest))
+            source, dest = item
+            self._log_info("upload:%s to %s" % (source, dest))
             for i in range(2):
-                self.executor.upload(source, dest, recursive=True, createdir=True,
-                                 rsyncdelete=True, ignoredir=self.IGNOREDIR, ignorefiles=None)
+                self.executor.upload(
+                    source,
+                    dest,
+                    recursive=True,
+                    createdir=True,
+                    rsyncdelete=True,
+                    ignoredir=self.IGNOREDIR,
+                    ignorefiles=None,
+                )
 
         if monitor:
             self._monitor()
@@ -118,14 +121,14 @@ class Syncer(j.application.JSBaseConfigClass):
 
         paths is [path1, path2,...] or [["/src",'/dest'],["/src2",'/dest2']]
 
-        js_shell 'j.tools.develop.monitor()'
+        kosmos 'j.tools.develop.monitor()'
 
         """
 
-        event_handler = MyFileSystemEventHandler( syncer=self)
+        event_handler = MyFileSystemEventHandler(syncer=self)
         observer = Observer()
         for item in self._get_paths():
-            source,dest = item
+            source, dest = item
             self._log_info("monitor:%s" % source)
             observer.schedule(event_handler, source, recursive=True)
         observer.start()

@@ -2,11 +2,12 @@ from Jumpscale import j
 import pytest
 from Jumpscale.data.rivine.SiaBinaryEncoder import IntegerOutOfRange
 
+
 def main(self):
     """
     to run:
 
-    js_shell 'j.data.rivine.test(name="sia_limits")'
+    kosmos 'j.data.rivine.test(name="sia_limits")'
     """
     e = j.data.rivine.encoder_sia_get()
 

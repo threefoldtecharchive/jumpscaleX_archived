@@ -8,8 +8,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class Label(object):
     """
     auto-generated. don't touch.
@@ -30,20 +28,20 @@ class Label(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'Label'
+        class_name = "Label"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.color = client_support.set_property('color', data, data_types, False, [], False, False, class_name)
+        self.color = client_support.set_property("color", data, data_types, False, [], False, False, class_name)
         data_types = [int]
-        self.id = client_support.set_property('id', data, data_types, False, [], False, False, class_name)
+        self.id = client_support.set_property("id", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.name = client_support.set_property('name', data, data_types, False, [], False, False, class_name)
+        self.name = client_support.set_property("name", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
-        self.url = client_support.set_property('url', data, data_types, False, [], False, False, class_name)
+        self.url = client_support.set_property("url", data, data_types, False, [], False, False, class_name)
 
     def __str__(self):
         return self.as_json(indent=4)

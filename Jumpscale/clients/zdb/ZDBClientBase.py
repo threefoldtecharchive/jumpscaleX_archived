@@ -1,4 +1,3 @@
-
 from Jumpscale import j
 import redis
 
@@ -6,7 +5,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class ZDBClientBase(j.application.JSBaseClass):
-
     def __init__(self, addr="localhost", port=9900, mode="seq", secret="", nsname="test", admin=False):
         """ is connection to ZDB
 
@@ -16,7 +14,7 @@ class ZDBClientBase(j.application.JSBaseClass):
         """
         JSBASE.__init__(self)
         if admin:
-            nsname="default"
+            nsname = "default"
         self.admin = admin
         self.addr = addr
         self.port = int(port)
@@ -24,34 +22,29 @@ class ZDBClientBase(j.application.JSBaseClass):
         self.secret = secret
         self.type = "ZDB"
 
-
-        self.redis = _patch_redis_client(j.clients.redis.get(ipaddr=addr, port=port, fromcache=False,  ping=False))
+        self.redis = _patch_redis_client(j.clients.redis.get(ipaddr=addr, port=port, fromcache=False, ping=False))
 
         self.nsname = nsname.lower().strip()
 
         self._logger_enable()
 
-
-
         if not admin:
-        #     #only passwd in admin mode !
-        #     self.redis = _patch_redis_client(j.clients.redis.get(ipaddr=addr, port=port, fromcache=False,
-        #                                                                 password=self.admin_secret,ping=False))
-        # else:
+            #     #only passwd in admin mode !
+            #     self.redis = _patch_redis_client(j.clients.redis.get(ipaddr=addr, port=port, fromcache=False,
+            #                                                                 password=self.admin_secret,ping=False))
+            # else:
 
-
-            if self.nsname in ["default","system"]:
+            if self.nsname in ["default", "system"]:
                 raise RuntimeError("a non admin namespace cannot be default or system")
 
-            #DO NOT AUTOMATICALLY CREATE THE NAMESPACE !!!!!
-            #only go inside namespace if not in admin mode
+            # DO NOT AUTOMATICALLY CREATE THE NAMESPACE !!!!!
+            # only go inside namespace if not in admin mode
             if self.secret is "":
                 self._log_debug("select namespace:%s with NO secret" % (self.nsname))
                 self.redis.execute_command("SELECT", self.nsname)
             else:
                 self._log_debug("select namespace:%s with a secret" % (self.nsname))
                 self.redis.execute_command("SELECT", self.nsname, self.secret)
-
 
         assert self.ping()
 
@@ -63,7 +56,7 @@ class ZDBClientBase(j.application.JSBaseClass):
 
     def set(self, data, key=None):
         if key is None:
-            key = ''
+            key = ""
         return self.redis.execute_command("SET", key, data)
 
     def get(self, key):
@@ -77,7 +70,7 @@ class ZDBClientBase(j.application.JSBaseClass):
             raise ValueError("key must be provided")
         self.redis.execute_command("DEL", key)
 
-    def flush(self,meta=None):
+    def flush(self, meta=None):
         """
         will remove all data from the database DANGEROUS !!!!
         :return:
@@ -85,12 +78,12 @@ class ZDBClientBase(j.application.JSBaseClass):
         if meta:
             data = meta._data
             self.redis.execute_command("FLUSH")
-            #recreate the metadata table
+            # recreate the metadata table
             meta.reset()
-            #copy the old data back
-            meta._data=data
-            #now make sure its back in the db
-            meta.save()
+            # copy the old data back
+            meta._data = data
+            # now make sure its back in the db
+            meta._save()
         else:
             self.redis.execute_command("FLUSH")
 
@@ -154,7 +147,7 @@ class ZDBClientBase(j.application.JSBaseClass):
                 # format of the response
                 # see https://github.com/threefoldtech/0-db/tree/development#scan
             except redis.ResponseError as e:
-                if e.args[0] == 'No more data':
+                if e.args[0] == "No more data":
                     return
                 raise e
 
@@ -173,10 +166,7 @@ class ZDBClientBase(j.application.JSBaseClass):
         :return: return the number of entries in the namespace
         :rtype: int
         """
-        return self.nsinfo['entries']
-
-
-
+        return self.nsinfo["entries"]
 
     def ping(self):
         """
@@ -185,20 +175,20 @@ class ZDBClientBase(j.application.JSBaseClass):
         """
         return self.redis.ping()
 
+
 def _patch_redis_client(redis):
     # don't auto parse response for set, it's not 100% redis compatible
     # 0-db does return a key after in set
-    for cmd in ['SET', 'DEL']:
+    for cmd in ["SET", "DEL"]:
         if cmd in redis.response_callbacks:
             del redis.response_callbacks[cmd]
     return redis
 
+
 def _parse_nsinfo(raw):
     def empty(line):
         line = line.strip()
-        if len(line) <= 0 or \
-                line[0] == "#" or \
-                ":" not in line:
+        if len(line) <= 0 or line[0] == "#" or ":" not in line:
             return False
         return True
 

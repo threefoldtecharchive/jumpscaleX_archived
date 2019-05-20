@@ -4,19 +4,20 @@ import os
 import re
 
 
-EXPORTS_FILE = j.tools.path.get('/etc/exports')
+EXPORTS_FILE = j.tools.path.get("/etc/exports")
 
 EXPORT_OPT_REGEXT = re.compile('^(?:([\w/]+)|"([\w\s/]+)")\s+(.+)$')
-CLIENT_OPT_REGEXT = re.compile('\s*([^\(]+)\(([^\)]+)\)')
+CLIENT_OPT_REGEXT = re.compile("\s*([^\(]+)\(([^\)]+)\)")
 JSBASE = j.application.JSBaseClass
 
+
 class NFSError(Exception):
-    def __init__(self, message=''):
+    def __init__(self, message=""):
         super().__init__(message)
 
 
 class NFSExport(JSBASE):
-    def __init__(self, path=''):
+    def __init__(self, path=""):
         JSBASE.__init__(self)
         self._path = j.tools.path.get(path)
         self._clients = []
@@ -35,7 +36,7 @@ class NFSExport(JSBASE):
         """
         return self._clients
 
-    def client_add(self, name='*', options='rw,sync'):
+    def client_add(self, name="*", options="rw,sync"):
         """Add client to access shared directory
         
         :param name: client like:
@@ -54,10 +55,10 @@ class NFSExport(JSBASE):
         """
         for client in self.clients:
             if client[0] == name:
-                raise NFSError('client {} is already added'.format(name))
+                raise NFSError("client {} is already added".format(name))
 
-        name = name.replace(' ', '')
-        options = options.replace(' ', '')
+        name = name.replace(" ", "")
+        options = options.replace(" ", "")
 
         self._clients.append((name, options))
 
@@ -67,21 +68,21 @@ class NFSExport(JSBASE):
         :param name: hostname
         :type name: str
         """
-        name = name.replace(' ', '')
+        name = name.replace(" ", "")
         for i in range(len(self._clients) - 1, -1, -1):
             if self._clients[i][0] == name:
                 self._clients.pop(i)
                 break
         else:
-            raise NFSError('Client {} is not found'.format(name))
+            raise NFSError("Client {} is not found".format(name))
 
     def __str__(self):
         buf = list()
-        buf.append('%s' % self._path)
+        buf.append("%s" % self._path)
         for client in self._clients:
-            buf.append(' %s(%s)' % client)
+            buf.append(" %s(%s)" % client)
 
-        return ''.join(buf)
+        return "".join(buf)
 
     def __repr__(self):
         return str(self)
@@ -90,7 +91,7 @@ class NFSExport(JSBASE):
 class NFS(JSBASE):
     def __init__(self):
         self._exports = None
-        self.__jslocation__ = 'j.sal.nfs'
+        self.__jslocation__ = "j.sal.nfs"
         JSBASE.__init__(self)
 
     def _load(self):
@@ -100,16 +101,16 @@ class NFS(JSBASE):
             lineparts = []
             for linepart in content.split(os.linesep):
                 linepart = linepart.strip()
-                if linepart == '' or linepart.startswith('#'):
+                if linepart == "" or linepart.startswith("#"):
                     continue
 
                 lineparts.append(linepart)
 
-                if linepart.endswith('\\'):
+                if linepart.endswith("\\"):
                     lineparts.append(linepart)
                     continue
 
-                line = ' '.join(lineparts)
+                line = " ".join(lineparts)
                 lineparts = []
 
                 match = EXPORT_OPT_REGEXT.match(line)
@@ -146,7 +147,7 @@ class NFS(JSBASE):
         """
         for export in self.exports:
             if export.path == path:
-                raise NFSError('Path {} is already added'.format(path))
+                raise NFSError("Path {} is already added".format(path))
 
         export = NFSExport(path)
         self.exports.append(export)
@@ -164,7 +165,7 @@ class NFS(JSBASE):
                 self.exports.pop(i)
                 break
         else:
-            raise NFSError('Path {} is not found'.format(path))
+            raise NFSError("Path {} is not found".format(path))
 
     def erase(self):
         """Delete all shared directories
@@ -178,9 +179,11 @@ class NFS(JSBASE):
         for export in self.exports:
             buf.append(export.__str__())
 
-        EXPORTS_FILE.write_text('\n'.join(buf))
+        EXPORTS_FILE.write_text("\n".join(buf))
         EXPORTS_FILE.chmod(644)
-        response = run('service nfs-kernel-server reload', shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE)
+        response = run(
+            "service nfs-kernel-server reload", shell=True, universal_newlines=True, stdout=PIPE, stderr=PIPE
+        )
         if response.stderr:
             raise NFSError(response.stderr.strip())
         return response.stdout.strip()
@@ -191,5 +194,4 @@ class NFS(JSBASE):
         :param name: basename of the file to run, defaults to "".
         :type name: str, optional
         """
-        self._test_run(name=name, obj_key='main')
-        
+        self._test_run(name=name, obj_key="main")

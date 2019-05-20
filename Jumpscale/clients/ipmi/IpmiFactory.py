@@ -10,5 +10,6 @@ class IpmiFactory(JSConfigBaseFactory):
 
     Before using the ipmi client, make sure to install requirements.txt included in this directory
     """
+
     __jslocation__ = "j.clients.ipmi"
     _CHILDCLASS = Ipmi

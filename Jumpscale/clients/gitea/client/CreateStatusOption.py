@@ -8,8 +8,6 @@ from six import string_types
 from . import client_support
 
 
-
-
 class CreateStatusOption(object):
     """
     auto-generated. don't touch.
@@ -30,22 +28,24 @@ class CreateStatusOption(object):
     def __init__(self, json=None, **kwargs):
         pass
         if json is None and not kwargs:
-            raise ValueError('No data or kwargs present')
+            raise ValueError("No data or kwargs present")
 
-        class_name = 'CreateStatusOption'
+        class_name = "CreateStatusOption"
         data = json or kwargs
 
         # set attributes
         data_types = [string_types]
-        self.context = client_support.set_property('context', data, data_types, False, [], False, False, class_name)
+        self.context = client_support.set_property("context", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
         self.description = client_support.set_property(
-            'description', data, data_types, False, [], False, False, class_name)
+            "description", data, data_types, False, [], False, False, class_name
+        )
         data_types = [string_types]
-        self.state = client_support.set_property('state', data, data_types, False, [], False, False, class_name)
+        self.state = client_support.set_property("state", data, data_types, False, [], False, False, class_name)
         data_types = [string_types]
         self.target_url = client_support.set_property(
-            'target_url', data, data_types, False, [], False, False, class_name)
+            "target_url", data, data_types, False, [], False, False, class_name
+        )
 
     def __str__(self):
         return self.as_json(indent=4)

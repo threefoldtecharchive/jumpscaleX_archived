@@ -6,7 +6,6 @@ JSBASE = j.application.JSBaseClass
 
 
 class GiteaRepo(j.application.JSBaseClass):
-
     def __init__(self, org, name, data):
         JSBASE.__init__(self)
         self.name = data.name
@@ -46,7 +45,7 @@ class GiteaRepo(j.application.JSBaseClass):
 
         if remove_old:
             labels_on_repo = [item.name for item in repo_labels]
-            labels_default = [item['name'] for item in labels_default]
+            labels_default = [item["name"] for item in labels_default]
             for label in labels_on_repo:
                 if label not in labels_default:
                     self.client.api.repos.issueDeleteLabel(get_label_id(label), self.name, self.owner)
@@ -69,7 +68,7 @@ class GiteaRepo(j.application.JSBaseClass):
 
         def deadline_get(year_month_day):
             year, month, day = year_month_day.split("-")
-            return '%s-%s-%sT23:59:00Z' % (year, str(month).zfill(2), str(day).zfill(2))
+            return "%s-%s-%sT23:59:00Z" % (year, str(month).zfill(2), str(day).zfill(2))
 
         def milestone_get(title, deadline):
             deadline = deadline_get(deadline)
@@ -101,7 +100,6 @@ class GiteaRepo(j.application.JSBaseClass):
         :rtype: list
         """
 
-
         today = datetime.today()
         thismonth = today.month
         months = [i for i in range(thismonth, thismonth + 5)]
@@ -117,7 +115,7 @@ class GiteaRepo(j.application.JSBaseClass):
             month_name = calendar.month_name[month].lower()[0:3]
             # weeks = c.monthdayscalendar(year, month)
 
-            due_on = '%s-%s-%s' % (lastdate.year, str(lastdate.month).zfill(2), str(lastdate.day).zfill(2))
+            due_on = "%s-%s-%s" % (lastdate.year, str(lastdate.month).zfill(2), str(lastdate.day).zfill(2))
             milestones.append((month_name, due_on))
 
             # if month == thismonth:
@@ -142,10 +140,10 @@ class GiteaRepo(j.application.JSBaseClass):
 
         # Add quarter milestone
         for quarter in range(1, 5):
-            title = 'Q%s' % quarter
+            title = "Q%s" % quarter
             quarter_month = quarter * 3
             last_day = calendar.monthrange(year, quarter_month)[1]
-            due_on = '%s-%s-%s' % (year, str(quarter_month).zfill(2), last_day)
+            due_on = "%s-%s-%s" % (year, str(quarter_month).zfill(2), last_day)
             milestones.append((title, due_on))
 
         return milestones

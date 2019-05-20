@@ -48,11 +48,9 @@ def main(self):
 
     tt.clean("'0'") == 0
 
-
     print("test j.data.types.date.datetime() ok")
 
     tt = j.data.types.date
-
 
     c = """
     11/30
@@ -83,7 +81,6 @@ def main(self):
 
     print("test j.data.types.date.test() ok")
 
-
     # tt._log_info("TEST DONE")
 
-    return ("OK")
+    return "OK"

@@ -24,22 +24,15 @@ class TLS(JSBASE):
         }]
         :rtype: list
         """
-        country = j.tools.console.askString('Country', 'AE')
-        location = j.tools.console.askString('Location', 'Dubai')
-        organisation = j.tools.console.askString('Organisation', 'GreenITGlobe')
-        org_unit = j.tools.console.askString('Organisation Unit', '0-complexity')
-        state = j.tools.console.askString('State', 'Dubai')
-        common_name = j.tools.console.askString('common_name')
-        return [{
-            'C': country,
-            'L': location,
-            'O': organisation,
-            'OU': org_unit,
-            'ST': state,
-            'CN': common_name
-        }]
+        country = j.tools.console.askString("Country", "AE")
+        location = j.tools.console.askString("Location", "Dubai")
+        organisation = j.tools.console.askString("Organisation", "GreenITGlobe")
+        org_unit = j.tools.console.askString("Organisation Unit", "0-complexity")
+        state = j.tools.console.askString("State", "Dubai")
+        common_name = j.tools.console.askString("common_name")
+        return [{"C": country, "L": location, "O": organisation, "OU": org_unit, "ST": state, "CN": common_name}]
 
-    def ca_create(self, subjects, key_algo='rsa', key_size=4096):
+    def ca_create(self, subjects, key_algo="rsa", key_size=4096):
         """Generate a Root CA.
 
         :param subjects: list of dicts containing valid csr names. It can be created with subjects_ask method.
@@ -52,21 +45,22 @@ class TLS(JSBASE):
         :rtype: set
         """
         csr = self._csr_get(subjects, None, key_algo, key_size)
-        ca_csr_path = self.cwd.joinpath('ca-csr.json')
-        ca_cert_path = self.cwd.joinpath('root-ca')
+        ca_csr_path = self.cwd.joinpath("ca-csr.json")
+        ca_cert_path = self.cwd.joinpath("root-ca")
         ca_csr_path.write_text(j.data.serializers.json.dumps(csr, indent=4))
 
         subprocess.run(
-            'cfssl gencert -initca %s | cfssljson -bare %s' % (ca_csr_path, ca_cert_path), shell=True, check=True)
+            "cfssl gencert -initca %s | cfssljson -bare %s" % (ca_csr_path, ca_cert_path), shell=True, check=True
+        )
 
-        cert_path = ca_cert_path + '.pem'
-        key_path = ca_cert_path + '-key.pem'
-        output = 'certificate generated at %s and key at %s' % (cert_path, key_path)
+        cert_path = ca_cert_path + ".pem"
+        key_path = ca_cert_path + "-key.pem"
+        output = "certificate generated at %s and key at %s" % (cert_path, key_path)
         self._log_debug(output)
 
         return (cert_path, key_path)
 
-    def csr_create(self, name, subjects, hosts, key_algo='rsa', key_size=2048):
+    def csr_create(self, name, subjects, hosts, key_algo="rsa", key_size=2048):
         """Create csr file and key
 
         :param name: name to indentify the csr
@@ -83,15 +77,15 @@ class TLS(JSBASE):
         :rtype: set
         """
         csr = self._csr_get(subjects, hosts, key_algo, key_size)
-        csr_json_path = self.cwd.joinpath('%s.json' % name)
+        csr_json_path = self.cwd.joinpath("%s.json" % name)
         csr_json_path.write_text(j.data.serializers.json.dumps(csr, indent=4))
 
         output_path = self.cwd.joinpath(name)
-        subprocess.run('cfssl genkey %s | cfssljson -bare %s' % (csr_json_path, output_path), shell=True, check=True)
+        subprocess.run("cfssl genkey %s | cfssljson -bare %s" % (csr_json_path, output_path), shell=True, check=True)
 
-        csr_path = self.cwd.joinpath('%s.csr' % name)
-        key_path = self.cwd.joinpath('%s-key.pem' % name)
-        output = 'certificate signing request generated at %s and key at %s' % (csr_path, key_path)
+        csr_path = self.cwd.joinpath("%s.csr" % name)
+        key_path = self.cwd.joinpath("%s-key.pem" % name)
+        output = "certificate signing request generated at %s and key at %s" % (csr_path, key_path)
         self._log_debug(output)
 
         return (csr_path, key_path)
@@ -108,21 +102,23 @@ class TLS(JSBASE):
         :return: the signed certificate
         :rtype: str
         """
-        base = j.tools.path.get(csr.rstrip('/')).basename()
-        name = base.split('.')[0]
+        base = j.tools.path.get(csr.rstrip("/")).basename()
+        name = base.split(".")[0]
 
         output_path = self.cwd.joinpath(name)
         subprocess.run(
-            'cfssl sign -ca %s -ca-key %s %s | cfssljson -bare %s' % (ca, ca_key, csr, output_path),
-            shell=True, check=True)
-        cert_path = self.cwd.joinpath('%s.pem' % name)
-        output = 'certificate created at %s' % cert_path
+            "cfssl sign -ca %s -ca-key %s %s | cfssljson -bare %s" % (ca, ca_key, csr, output_path),
+            shell=True,
+            check=True,
+        )
+        cert_path = self.cwd.joinpath("%s.pem" % name)
+        output = "certificate created at %s" % cert_path
 
         self._log_debug(output)
 
         return cert_path
 
-    def signedcertificate_create(self, name, subjects, hosts, ca, ca_key, key_algo='rsa', key_size=2048):
+    def signedcertificate_create(self, name, subjects, hosts, ca, ca_key, key_algo="rsa", key_size=2048):
         """
         signedcertificate_create is a helper that create a CSR and sign it with the given CA in one operation.
 
@@ -144,23 +140,25 @@ class TLS(JSBASE):
         return (path_to_csr, path_to_key)
         """
         csr = self._csr_get(subjects, hosts, key_algo, key_size)
-        csr_json_path = self.cwd.joinpath('%s.json' % name)
+        csr_json_path = self.cwd.joinpath("%s.json" % name)
         csr_json_path.write_text(j.data.serializers.json.dumps(csr, indent=4))
 
         output_path = self.cwd.joinpath(name)
         subprocess.run(
-            'cfssl gencert -ca %s -ca-key %s %s | cfssljson -bare %s' % (ca, ca_key, csr_json_path, output_path),
-            shell=True, check=True)
+            "cfssl gencert -ca %s -ca-key %s %s | cfssljson -bare %s" % (ca, ca_key, csr_json_path, output_path),
+            shell=True,
+            check=True,
+        )
 
-        cert_path = self.cwd.joinpath('%s.pem' % name)
-        key_path = self.cwd.joinpath('%s-key.pem' % name)
+        cert_path = self.cwd.joinpath("%s.pem" % name)
+        key_path = self.cwd.joinpath("%s-key.pem" % name)
 
-        output = 'certificate generated at %s and key at %s' % (cert_path, key_path)
+        output = "certificate generated at %s and key at %s" % (cert_path, key_path)
         self._log_debug(output)
 
         return (cert_path, key_path)
 
-    def _csr_get(self, subjects, hosts=None, key_algo='rsa', key_size=2048):
+    def _csr_get(self, subjects, hosts=None, key_algo="rsa", key_size=2048):
         """Helper function that returns the dict used for csr json
 
         :param subjects: list of dicts containing valid csr names. It can be created with subjects_ask method.
@@ -177,26 +175,23 @@ class TLS(JSBASE):
         if not isinstance(subjects, list):
             subjects = [subjects]
 
-        common_name = ''
+        common_name = ""
         for s in subjects:
-            common_name += '%s,' % s['CN']
-            del s['CN']
-        common_name = common_name.rstrip(',')
+            common_name += "%s," % s["CN"]
+            del s["CN"]
+        common_name = common_name.rstrip(",")
 
         return {
-            'hosts': hosts if hosts else [],
-            'CN': common_name,
-            'key': {
-                'algo': key_algo,
-                'size': key_size,
-            },
-            'names': subjects
+            "hosts": hosts if hosts else [],
+            "CN": common_name,
+            "key": {"algo": key_algo, "size": key_size},
+            "names": subjects,
         }
 
-    def _test(self, name=''):
+    def _test(self, name=""):
         """Run tests under tests
 
         :param name: basename of the file to run, defaults to ''.
         :type name: str, optional
         """
-        self._test_run(name=name, obj_key='test_main')
+        self._test_run(name=name, obj_key="test_main")

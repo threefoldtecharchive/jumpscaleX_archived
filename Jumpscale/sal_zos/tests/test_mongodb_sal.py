@@ -14,14 +14,14 @@ import re
 import pytest
 from Jumpscale import j
 
-FLIST = 'https://hub.gig.tech/ekaterina_evdokimova_1/ubuntu-16.04-mongodb.flist'
+FLIST = "https://hub.gig.tech/ekaterina_evdokimova_1/ubuntu-16.04-mongodb.flist"
 
 
-def error_check(result, message=''):
+def error_check(result, message=""):
     """ Raise error if call wasn't successfull """
 
-    if result.state != 'SUCCESS':
-        err = '{}: {} \n {}'.format(message, result.stderr, result.data)
+    if result.state != "SUCCESS":
+        err = "{}: {} \n {}".format(message, result.stderr, result.data)
         raise RuntimeError(err)
 
 
@@ -30,14 +30,8 @@ def get_node(ip):
 
     :param ip: IP addres of Zero-os node
     """
-    node_id = 'local'
-    j.clients.zos.get(
-        instance=node_id,
-            data={
-                    "host": ip,
-                    "port": 6379,
-                    }
-            )
+    node_id = "local"
+    j.clients.zos.get(instance=node_id, data={"host": ip, "port": 6379})
     j.clients.zero_os.sal.get_node(instance=node_id)
     return j.clients.zos.sal.get_node(node_id)
 
@@ -46,15 +40,18 @@ def create_container(name, node):
     # determine parent interface for macvlan
     candidates = list()
     for route in node.client.ip.route.list():
-        if route['gw']:
+        if route["gw"]:
             candidates.append(route)
     if not candidates:
         raise RuntimeError("Could not find interface for macvlan parent")
     elif len(candidates) > 1:
-        raise RuntimeError("Found multiple eligible interfaces for macvlan parent: %s" %
-                           ", ".join(c['dev'] for c in candidates))
-    parent_if = candidates[0]['dev']
-    return node.containers.create(name, flist=FLIST, nics=[{'type': 'macvlan', 'id': parent_if, 'name': 'stoffel', 'config': {'dhcp': True}}])
+        raise RuntimeError(
+            "Found multiple eligible interfaces for macvlan parent: %s" % ", ".join(c["dev"] for c in candidates)
+        )
+    parent_if = candidates[0]["dev"]
+    return node.containers.create(
+        name, flist=FLIST, nics=[{"type": "macvlan", "id": parent_if, "name": "stoffel", "config": {"dhcp": True}}]
+    )
 
 
 def get_mongod_shard_config(shard, port):
@@ -66,6 +63,7 @@ def get_mongod_shard_config(shard, port):
     roles = re.findall(r'"stateStr" : "\w+"', result.stdout)
     return dict(zip(names, roles))
 
+
 @pytest.mark.skip(reason="not a unit-test")
 def test_deploy_cluster(node_ip, cluster_id):
     """ Test case covers mongodb cluster deployment, connection to mongos,
@@ -76,17 +74,17 @@ def test_deploy_cluster(node_ip, cluster_id):
     shards = []
 
     # create storagepool
-    storagepool = 'zos-cache'
+    storagepool = "zos-cache"
     sp = node.storagepools.get(storagepool)
 
-    config_replica = 'confReplica{}'.format(cluster_id)
-    shard_replica = 'shardReplica{}'.format(cluster_id)
+    config_replica = "confReplica{}".format(cluster_id)
+    shard_replica = "shardReplica{}".format(cluster_id)
     config_port = 27018
     shard_port = 27019
 
     # deploy 3 instances of each replica set
     for idx in range(shard_nr):
-        container_name = 'mongo-shard-{}-{}'.format(cluster_id, idx)
+        container_name = "mongo-shard-{}-{}".format(cluster_id, idx)
 
         # ensure filesystem
         sp = node.storagepools.get(storagepool)
@@ -96,23 +94,15 @@ def test_deploy_cluster(node_ip, cluster_id):
             fs = sp.create(container_name)
 
         shard = j.clients.zos.sal.get_mongodb(
-            name='mongodb',
+            name="mongodb",
             node=node,
             container_name=container_name,
             shard_port=shard_port,
             config_port=config_port,
             shard_replica_set=shard_replica,
             config_replica_set=config_replica,
-            shard_mount={
-                    'storagepool': storagepool,
-                    'fs': container_name,
-                    'dir': '/mongo/db',
-                },
-            config_mount={
-                    'storagepool': storagepool,
-                    'fs': container_name,
-                    'dir': '/mongo/configdb',
-                },
+            shard_mount={"storagepool": storagepool, "fs": container_name, "dir": "/mongo/db"},
+            config_mount={"storagepool": storagepool, "fs": container_name, "dir": "/mongo/configdb"},
         )
 
         shard.start(log_to_file=True)
@@ -122,12 +112,12 @@ def test_deploy_cluster(node_ip, cluster_id):
 
     # init replica sets
     hosts = [shards[0].ip, shards[1].ip]
-    config_hosts = ['{}:{}'.format(host, config_port) for host in hosts]
-    shard_hosts = ['{}:{}'.format(host, shard_port) for host in hosts]
+    config_hosts = ["{}:{}".format(host, config_port) for host in hosts]
+    shard_hosts = ["{}:{}".format(host, shard_port) for host in hosts]
     shard.init_replica_sets(config_hosts, shard_hosts)
 
     # deploy container with mongos
-    router_container_name = 'mongo-router'
+    router_container_name = "mongo-router"
     route_port = 27010
     container = create_container(router_container_name, node)
 
@@ -144,7 +134,7 @@ def test_deploy_cluster(node_ip, cluster_id):
                 raise
 
     # create collection
-    test_collection = 'testCollection'
+    test_collection = "testCollection"
     cmd = """mongo --host {}:{} --eval 'db.createCollection("{}")'""".format(router.ip, route_port, test_collection)
     result = container.client.bash(cmd).get()
     error_check(result)
@@ -172,13 +162,13 @@ def test_deploy_cluster(node_ip, cluster_id):
     start = time.time()
     timeout = 100
     primary_is_up = False
-    while time.time() < start+timeout and not primary_is_up:
+    while time.time() < start + timeout and not primary_is_up:
         time.sleep(1)
         new_shard_members = get_mongod_shard_config(shard, shard_port)
         for member in new_shard_members:
-            if new_shard_members[member].find('PRIMARY') != -1:
+            if new_shard_members[member].find("PRIMARY") != -1:
                 primary_is_up = True
-                print('time to reassign PRYMARY {} sec'.format(time.time()-start))
+                print("time to reassign PRYMARY {} sec".format(time.time() - start))
                 break
 
     assert len(new_shard_members) == 2
@@ -186,12 +176,12 @@ def test_deploy_cluster(node_ip, cluster_id):
 
     start = time.time()
     primary_is_up = False
-    while time.time() < start+timeout and not primary_is_up:
+    while time.time() < start + timeout and not primary_is_up:
         time.sleep(1)
         new_config_members = get_mongod_shard_config(shard, config_port)
         for member in new_config_members:
-            if new_shard_members[member].find('PRIMARY') != -1:
-                print('time to reassign PRYMARY {} sec'.format(time.time()-start))
+            if new_shard_members[member].find("PRIMARY") != -1:
+                print("time to reassign PRYMARY {} sec".format(time.time() - start))
                 primary_is_up = True
                 break
 
@@ -212,7 +202,8 @@ def test_deploy_cluster(node_ip, cluster_id):
         shard.destroy()
     router.destroy()
 
-    print('test was completed successfully')
+    print("test was completed successfully")
+
 
 if __name__ == "__main__":
-    test_deploy_cluster('192.168.122.89', cluster_id='32')
+    test_deploy_cluster("192.168.122.89", cluster_id="32")

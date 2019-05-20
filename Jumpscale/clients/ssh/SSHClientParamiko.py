@@ -8,8 +8,7 @@ import socket
 import time
 import os
 from Jumpscale import j
-from paramiko.ssh_exception import (AuthenticationException,
-                                    BadHostKeyException, SSHException, BadAuthenticationType)
+from paramiko.ssh_exception import AuthenticationException, BadHostKeyException, SSHException, BadAuthenticationType
 from .SSHClientBase import SSHClientBase
 from .StreamReader import StreamReader
 
@@ -49,7 +48,6 @@ class SSHClientParamiko(SSHClientBase):
             self._connect()
         return self._client_
 
-
     @property
     def sftp(self):
         if self._ftp is None:
@@ -61,15 +59,12 @@ class SSHClientParamiko(SSHClientBase):
 
         return self._ftp
 
-
     def _parent_paths_split(self, file_path, sep=None):
         sep = os.path.sep if sep is None else sep
         try:
-            destination = sep.join(
-                [_dir for _dir in file_path.split(os.path.sep)
-                 if _dir][:-1])
+            destination = sep.join([_dir for _dir in file_path.split(os.path.sep) if _dir][:-1])
         except IndexError:
-            destination = ''
+            destination = ""
         if file_path.startswith(sep) or not destination:
             destination = sep + destination
         return destination
@@ -101,18 +96,21 @@ class SSHClientParamiko(SSHClientBase):
         """
         if os.path.isdir(local_file):
             raise ValueError("Local file cannot be a dir")
-        destination = self._parent_paths_split(remote_file, sep='/')
+        destination = self._parent_paths_split(remote_file, sep="/")
         self.mkdir(destination)
         self.sftp.chdir()
         try:
             self.sftp.put(local_file, remote_file)
         except Exception as error:
-            self._log_error("Error occured copying file %s to remote destination "
-                              "%s:%s - %s",
-                              local_file, self.host, remote_file, error)
+            self._log_error(
+                "Error occured copying file %s to remote destination " "%s:%s - %s",
+                local_file,
+                self.host,
+                remote_file,
+                error,
+            )
             raise error
-        self._log_debug("Copied local file %s to remote destination %s",
-                         local_file, remote_file)
+        self._log_debug("Copied local file %s to remote destination %s", local_file, remote_file)
 
     @property
     def _transport(self):
@@ -131,9 +129,11 @@ class SSHClientParamiko(SSHClientBase):
         self._log_debug("Test sync ssh connection to %s:%s:%s" % (self.addr, self.port, self.login))
 
         if j.sal.nettools.waitConnectionTest(self.addr, self.port, self.timeout) is False:
-            self._log_error("Cannot connect to ssh server %s:%s with login:%s and using sshkey:%s" %
-                              (self.addr, self.port, self.login, self.sshkey_name))
-            raise RuntimeError("Could not connect to addr:'%s' port:'%s'"%(self.addr,self.port))
+            self._log_error(
+                "Cannot connect to ssh server %s:%s with login:%s and using sshkey:%s"
+                % (self.addr, self.port, self.login, self.sshkey_name)
+            )
+            raise RuntimeError("Could not connect to addr:'%s' port:'%s'" % (self.addr, self.port))
 
         # self.pkey = None
         # if self.key_filename is not None and self.key_filename != '':
@@ -158,7 +158,7 @@ class SSHClientParamiko(SSHClientBase):
                 self._log_debug("connect with username :%s" % self.login)
                 self._log_debug("connect with password :%s" % self.passwd)
                 # self._log_debug("connect with pkey :%s" % self.pkey)
-                self._log_debug("connect with allow_agent :%s" %self.allow_agent)
+                self._log_debug("connect with allow_agent :%s" % self.allow_agent)
                 self._log_debug("connect with look_for_keys :%s" % self._look_for_keys)
                 self._log_debug("Timeout is : %s " % self.timeout)
                 self._client_.connect(
@@ -170,14 +170,14 @@ class SSHClientParamiko(SSHClientBase):
                     allow_agent=self.allow_agent,
                     look_for_keys=self._look_for_keys,
                     timeout=2.0,
-                    banner_timeout=3.0)
+                    banner_timeout=3.0,
+                )
                 self._log_info("connection ok")
                 return self._client_
             except BadAuthenticationType as e:
                 raise e
             except (BadHostKeyException, AuthenticationException) as e:
-                self._log_error(
-                    "Authentification error. Aborting connection : %s" % str(e))
+                self._log_error("Authentification error. Aborting connection : %s" % str(e))
                 self._log_error(str(e))
                 raise j.exceptions.RuntimeError(str(e))
 
@@ -194,9 +194,7 @@ class SSHClientParamiko(SSHClientBase):
                 msg = "Could not connect to ssh on %s@%s:%s. Error was: %s" % (self.login, self.addr, self.port, e)
                 raise j.exceptions.RuntimeError(msg)
 
-
-        raise j.exceptions.RuntimeError(
-                'Impossible to create SSH connection to %s:%s' % (self.addr, self.port))
+        raise j.exceptions.RuntimeError("Impossible to create SSH connection to %s:%s" % (self.addr, self.port))
 
     def execute(self, cmd, showout=True, die=True, timeout=None):
         """
@@ -216,13 +214,13 @@ class SSHClientParamiko(SSHClientBase):
         ch.shutdown_write()
         # create file like object for stdout and stderr to read output of
         # command
-        stdout = ch.makefile('r')
-        stderr = ch.makefile_stderr('r')
+        stdout = ch.makefile("r")
+        stderr = ch.makefile_stderr("r")
 
         # Start stream reader thread that will read strout and strerr
         inp = queue.Queue()
-        outReader = StreamReader(stdout, ch, inp, 'O')
-        errReader = StreamReader(stderr, ch, inp, 'E')
+        outReader = StreamReader(stdout, ch, inp, "O")
+        errReader = StreamReader(stderr, ch, inp, "E")
         outReader.start()
         errReader.start()
 
@@ -234,18 +232,18 @@ class SSHClientParamiko(SSHClientBase):
         while out_eof is False or err_eof is False:
             try:
                 chan, line = inp.get(block=True, timeout=1.0)
-                if chan == 'T':
-                    if line == 'O':
+                if chan == "T":
+                    if line == "O":
                         out_eof = True
-                    elif line == 'E':
+                    elif line == "E":
                         err_eof = True
                     continue
                 line = j.core.text.toAscii(line)
-                if chan == 'O':
+                if chan == "O":
                     if showout:
                         self._log_debug(line.rstrip())
                     out.write(line)
-                elif chan == 'E':
+                elif chan == "E":
                     if showout:
                         self._log_error(line.rstrip())
                     err.write(line)
@@ -271,12 +269,10 @@ class SSHClientParamiko(SSHClientBase):
 
         if rc and die:
             raise j.exceptions.RuntimeError(
-                "Cannot execute (ssh):\n%s\noutput:\n%serrors:\n%s" % (cmd, out.getvalue(), err.getvalue()))
+                "Cannot execute (ssh):\n%s\noutput:\n%serrors:\n%s" % (cmd, out.getvalue(), err.getvalue())
+            )
 
         return rc, out.getvalue(), err.getvalue()
-
-
-
 
     # def SSHAuthorizeKey(
     #         self,

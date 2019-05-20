@@ -11,12 +11,12 @@ class BaseTest(TestCase):
 
     def SetUp(self):
         pass
-    
+
     def tearDown(self):
         pass
-    
+
     def log(self, msg):
         j.core.tools.log(msg, level=20)
 
     def random_string(self):
-        return 's' + str(uuid4()).replace('-', '')[:10]
+        return "s" + str(uuid4()).replace("-", "")[:10]

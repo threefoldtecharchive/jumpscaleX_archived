@@ -4,7 +4,6 @@ from .JSBase import JSBase
 
 
 class JSBaseConfigs(JSBase):
-
     def __init__(self, parent=None, topclass=True, **kwargs):
         self._children = {}
 
@@ -50,15 +49,11 @@ class JSBaseConfigs(JSBase):
         :param childclass_name, if different typen of childclass, specify its name
         :return: the service
         """
-        kl = self._childclass_selector(**kwargs)
         data = self._model.new(data=kwargs)
-        for model in self._model.get_all():
-            if(model.name == name):
-                raise RuntimeError("can't create , this name already exist")
         data.name = name
-        self._children[name] = kl(parent=self, data=data, **kwargs)
-        self._children[name]._isnew = True
-        return self._children[name]
+        r = self._childclass_create(name=name, data=data, kwargs=kwargs)
+        r._isnew = True
+        return r
 
     def get(self, name="main", id=None, die=True, create_new=True, **kwargs):
         """
@@ -71,6 +66,7 @@ class JSBaseConfigs(JSBase):
         :return: the service
         """
         self._log_debug("get child:'%s' with id:%s from '%s'" % (name, id, self._name), data=kwargs)
+
         if name is not None and name in self._children:
             return self._children[name]
         new = False
@@ -82,46 +78,46 @@ class JSBaseConfigs(JSBase):
 
             if len(res) < 1:
                 if create_new:
-                    new = True
-                    kwargs["name"] = name
-                    data = self._model.new(data=kwargs)
+                    return self.new(name=name, **kwargs)
                 else:
                     if not die:
                         return
                     return self._error_input_raise(
-                        "Did not find instance for:%s, name searched for:%s" % (self.__class__._location, name))
+                        "Did not find instance for:%s, name searched for:%s" % (self.__class__._location, name)
+                    )
 
             elif len(res) > 1:
                 return self._error_input_raise(
-                    "Found more than 1 service for :%s, name searched for:%s" % (self.__class__._location, name))
+                    "Found more than 1 service for :%s, name searched for:%s" % (self.__class__._location, name)
+                )
             else:
                 data = res[0]
                 if kwargs:
                     data._data_update(data=kwargs)
         else:
-            if kwargs=={}:
+            if kwargs == {}:
                 raise RuntimeError("kwargs need to be specified is name is not.")
             res = self.findData(**kwargs)
             if len(res) < 1:
-                if create_new:
-                    data = self._model.new(data=kwargs)
-                    new = True
-                else:
-                    return self._error_input_raise(
-                        "Did not find instances for :%s, search criteria:\n%s" % (self.__class__._location, kwargs))
+                return self._error_input_raise(
+                    "Did not find instances for :%s, search criteria:\n%s" % (self.__class__._location, kwargs)
+                )
 
             elif len(res) > 1:
                 return self._error_input_raise(
-                    "Found more than 1 service for :%s, search criteria:\n%s" % (self.__class__._location, kwargs))
+                    "Found more than 1 service for :%s, search criteria:\n%s" % (self.__class__._location, kwargs)
+                )
             else:
                 data = res[0]
 
-        kl = self._childclass_selector(**kwargs)
+        return self._childclass_create(name=name, data=data, kwargs=kwargs)
 
+    def _childclass_create(self, name, data, kwargs):
+        if name not in kwargs:
+            kl = self._childclass_selector(name=name, **kwargs)
+        else:
+            kl = self._childclass_selector(**kwargs)
         self._children[name] = kl(data=data, parent=self, **kwargs)
-        if new:
-            self._children[name]._isnew = True
-
         return self._children[name]
 
     def reset(self):
@@ -159,14 +155,16 @@ class JSBaseConfigs(JSBase):
         if len(kwargs) > 0:
             propnames = [i for i in kwargs.keys()]
             propnames_keys_in_schema = [
-                item.name for item in self._model.schema.properties_index_keys if item.name in propnames]
+                item.name for item in self._model.schema.properties_index_keys if item.name in propnames
+            ]
             if len(propnames_keys_in_schema) > 0:
                 # we can try to find this config
                 return self._model.get_from_keys(**kwargs)
             else:
                 raise RuntimeError(
-                    "cannot find obj with kwargs:\n%s\n in %s\nbecause kwargs do not match, is there * in schema" %
-                    (kwargs, self))
+                    "cannot find obj with kwargs:\n%s\n in %s\nbecause kwargs do not match, is there * in schema"
+                    % (kwargs, self)
+                )
             return []
         else:
             return self._model.get_all()
@@ -213,8 +211,6 @@ class JSBaseConfigs(JSBase):
         if r is None:
             r = self.new(name=name)
         return r
-
-
 
     def __setattr__(self, key, value):
         self.__dict__[key] = value

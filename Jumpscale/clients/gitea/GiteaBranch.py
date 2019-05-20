@@ -6,17 +6,17 @@ JSBASE = j.application.JSBaseClass
 
 class GiteaBranch(j.application.JSBaseClass):
     def __init__(
-            self,
-            client,
-            repo,
-            name=None,
-            commit=None,
-            committer=None,
-            id=None,
-            url=None,
-            message=None,
-            timestamp=None,
-            verification=None
+        self,
+        client,
+        repo,
+        name=None,
+        commit=None,
+        committer=None,
+        id=None,
+        url=None,
+        message=None,
+        timestamp=None,
+        verification=None,
     ):
         self.client = client
         self.repo = repo
@@ -24,7 +24,7 @@ class GiteaBranch(j.application.JSBaseClass):
         self.commit = commit
         self.committer = committer
         self.id = id
-        self.message=message
+        self.message = message
         self.url = url
         self.timestamp = timestamp
         self.verification = verification
@@ -35,16 +35,7 @@ class GiteaBranch(j.application.JSBaseClass):
     def data(self):
         d = {}
 
-        for attr in [
-            'id',
-            'name',
-            'commit',
-            'committer',
-            'message',
-            'timestamp',
-            'verification',
-            'url'
-        ]:
+        for attr in ["id", "name", "commit", "committer", "message", "timestamp", "verification", "url"]:
             v = getattr(self, attr)
             d[attr] = v
         return d

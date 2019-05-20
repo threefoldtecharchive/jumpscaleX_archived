@@ -17,11 +17,11 @@ username = claims.get("username", None)
 
 def do_pkgsandbox_and_push(prefabpkg, flistname="cryptosandbox", bins=None):
     prefab = prefabpkg.prefab
-    DATA_DIR = '/tmp/pkgsandbox'
+    DATA_DIR = "/tmp/pkgsandbox"
     prefab.core.dir_remove(DATA_DIR)
-    if prefabpkg.NAME == 'tfchain':
-        prefabpkg.build(tag=os.environ.get('{}_TAG'.format(prefabpkg.NAME.upper())), reset=True)
-        prefabpkg.install(tag=os.environ.get('{}_TAG'.format(prefabpkg.NAME.upper())), reset=True)
+    if prefabpkg.NAME == "tfchain":
+        prefabpkg.build(tag=os.environ.get("{}_TAG".format(prefabpkg.NAME.upper())), reset=True)
+        prefabpkg.install(tag=os.environ.get("{}_TAG".format(prefabpkg.NAME.upper())), reset=True)
     else:
         prefabpkg.build()
         prefabpkg.install()
@@ -29,22 +29,25 @@ def do_pkgsandbox_and_push(prefabpkg, flistname="cryptosandbox", bins=None):
     for b in bins:
         j.tools.sandboxer.sandbox_chroot(b, DATA_DIR)
 
-    prefab.core.execute_bash('cd {} && tar -czf /tmp/{}.tar.gz .'.format(DATA_DIR, flistname))
+    prefab.core.execute_bash("cd {} && tar -czf /tmp/{}.tar.gz .".format(DATA_DIR, flistname))
     prefab.core.execute_bash(
-        '''curl -b 'caddyoauth={}' -F file=@/tmp/{}.tar.gz https://hub.gig.tech/api/flist/me/upload'''.format(
-            iyo_client.jwt, flistname)
+        """curl -b 'caddyoauth={}' -F file=@/tmp/{}.tar.gz https://hub.gig.tech/api/flist/me/upload""".format(
+            iyo_client.jwt, flistname
+        )
     )
     prefab.core.execute_bash(
-        '''curl -b 'caddyoauth={}' -F file=@/tmp/{}.tar.gz http://192.168.20.132:8080/api/flist/me/upload'''.format(
-            iyo_client.jwt, flistname)
+        """curl -b 'caddyoauth={}' -F file=@/tmp/{}.tar.gz http://192.168.20.132:8080/api/flist/me/upload""".format(
+            iyo_client.jwt, flistname
+        )
     )
     return "{}/{}.flist".format(username, flistname)
 
 
 def merge(client, target, sources):
-    url = '{}/flist/me/merge/{}'.format(client.api.base_url, target)
-    resp = client.api.post(uri=url, data=json.dumps(sources), headers=None,
-                           params=None, content_type='application/json')
+    url = "{}/flist/me/merge/{}".format(client.api.base_url, target)
+    resp = client.api.post(
+        uri=url, data=json.dumps(sources), headers=None, params=None, content_type="application/json"
+    )
     if resp.status_code != 200:
         raise RuntimeError("Failed to merge flists {}".format(sources))
     return "{}/{}".format(username, target)
@@ -57,20 +60,21 @@ if __name__ == "__main__":
         tfchainbins = ["/opt/bin/tfchaind", "/opt/bin/tfchainc"]
         ethbins = ["/opt/bin/geth"]
         atomicswapbins = ["/opt/bin/btcatomicswap"]
-        electrumbins = ['/opt/bin/electrum']
+        electrumbins = ["/opt/bin/electrum"]
 
         btcflist = do_pkgsandbox_and_push(prefab.blockchain.bitcoin, flistname="bitcoinflist", bins=bitcoinbins)
         tfchainflist = do_pkgsandbox_and_push(prefab.blockchain.tfchain, flistname="tfchainflist", bins=tfchainbins)
         ethereumflist = do_pkgsandbox_and_push(prefab.blockchain.ethereum, flistname="ethereumflist", bins=ethbins)
-        atomicswapflist = do_pkgsandbox_and_push(prefab.blockchain.atomicswap,
-                                                 flistname="atomicswapflist", bins=atomicswapbins)
+        atomicswapflist = do_pkgsandbox_and_push(
+            prefab.blockchain.atomicswap, flistname="atomicswapflist", bins=atomicswapbins
+        )
         cryptosources = [btcflist, tfchainflist, ethereumflist, atomicswapflist]
 
-        cryptosandboxtarget = 'cryptosandbox.flist'
+        cryptosandboxtarget = "cryptosandbox.flist"
 
-        zhub_data = {'token_': iyo_client.jwt_get(), 'username': username, 'url': 'https://hub.gig.tech/api'}
+        zhub_data = {"token_": iyo_client.jwt_get(), "username": username, "url": "https://hub.gig.tech/api"}
         zhub_client = j.clients.zhub.get(instance="mainbe", data=zhub_data)
-        if hasattr(zhub_client, 'authentificate'):
+        if hasattr(zhub_client, "authentificate"):
             zhub_client.authentificate()
         else:
             zhub_client.authenticate()
@@ -85,9 +89,9 @@ if __name__ == "__main__":
         print("https://hub.gig.tech/{}".format(ubuntucryptoflist))
 
         # try to do localhub
-        zhub_dataeg = {'token_': iyo_client.jwt_get(), 'username': username, 'url': 'http://192.168.20.132:8080/api'}
+        zhub_dataeg = {"token_": iyo_client.jwt_get(), "username": username, "url": "http://192.168.20.132:8080/api"}
         zhub_clienteg = j.clients.zhub.get(instance="maineg", data=zhub_dataeg)
-        if hasattr(zhub_client, 'authentificate'):
+        if hasattr(zhub_client, "authentificate"):
             zhub_client.authentificate()
         else:
             zhub_client.authenticate()
@@ -96,5 +100,5 @@ if __name__ == "__main__":
         merge(zhub_clienteg, ubuntucryptotarget, ubuntucryptosources)
     except Exception:
         import IPython
-        IPython.embed()
 
+        IPython.embed()

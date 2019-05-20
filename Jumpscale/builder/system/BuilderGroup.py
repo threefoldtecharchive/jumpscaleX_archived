@@ -1,11 +1,7 @@
-
 from Jumpscale import j
 
 
-
-
 class BuilderGroup(j.builder.system._BaseClass):
-
     def create(self, name, gid=None):
         """Creates a group with the given name, and optionally given gid."""
         options = []
@@ -24,11 +20,10 @@ class BuilderGroup(j.builder.system._BaseClass):
         _, data, _ = j.sal.process.execute("getent group | egrep '^%s:' ; true" % (name), die=False)
         if len(data.split(":")) == 4:
             name, _, gid, members = data.split(":", 4)
-            return dict(name=name, gid=gid,
-                        members=tuple(m.strip() for m in members.split(",")))
+            return dict(name=name, gid=gid, members=tuple(m.strip() for m in members.split(",")))
         elif len(data.split(":")) == 3:
             name, _, gid = data.split(":", 3)
-            return dict(name=name, gid=gid, members=(''))
+            return dict(name=name, gid=gid, members=(""))
         else:
             return None
 
@@ -71,7 +66,10 @@ class BuilderGroup(j.builder.system._BaseClass):
         assert self.check(group), "Group does not exist: %s" % (group)
         if self.user_check(group, user):
             cmd = "getent group | egrep -v '^%s:' | grep '%s' | awk -F':' '{print $1}' | grep -v %s; true" % (
-                group, user, user)
+                group,
+                user,
+                user,
+            )
             _, out, _ = j.sal.process.execute(cmd)
             for_user = out.splitlines()
             if for_user:
@@ -87,7 +85,7 @@ class BuilderGroup(j.builder.system._BaseClass):
         assert self.check(group), "Group does not exist: %s" % (group)
         _, members_of_group, _ = j.sal.process.execute("getent group %s | awk -F':' '{print $4}'" % group)
         members = members_of_group.split(",")
-        members = [member.split(':')[0] for member in members]
+        members = [member.split(":")[0] for member in members]
         is_primary_group = any(self.user_check(group=group, user=member) for member in members)
         if wipe:
             if len(members_of_group):
