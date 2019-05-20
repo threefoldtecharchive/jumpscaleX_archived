@@ -197,8 +197,16 @@ class NACL(j.application.JSBaseClass):
             except AttributeError:
                 r = None
             if r is None:
-                self._error_raise("cannot find secret in memory, please use 'kosmos --init' to fix.")
-            secret = sb.decrypt(r)
+                secret = j.tools.console.askPassword(
+                    "Provide the secret used to encrypt/decrypt your private key. If not available, please use kosmos --init"
+                )
+                if secret.strip() in [""]:
+                    self._error_raise("Secret cannot be empty")
+                secret = self._hash(secret)
+                if isinstance(secret, str):
+                    secret = secret.encode()
+                r = sb.encrypt(secret)
+                j.core.db.set(redis_key, r)
         else:
             # need to find an ssh agent now and only 1 key
             if j.clients.sshagent.available_1key_check():
