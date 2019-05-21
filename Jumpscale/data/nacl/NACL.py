@@ -66,6 +66,7 @@ class NACL(j.application.JSBaseClass):
         word3_to_check = j.tools.console.askString("give the 3e word of the private key string")
 
         if not word3 == word3_to_check:
+            j.sal.fs.remove(self._path_privatekey)
             self._error_raise("the control word was not correct, please restart the procedure.")
 
     @property
