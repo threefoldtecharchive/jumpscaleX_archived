@@ -8,7 +8,7 @@ import sys
 from importlib import util
 from urllib.request import urlopen
 
-DEFAULT_BRANCH = "development"
+DEFAULT_BRANCH = "development_installer"
 
 # CONTAINER_BASE_IMAGE = "phusion/baseimage:master"
 # CONTAINER_BASE_IMAGE = "despiegk/3bot:latest"
@@ -90,14 +90,23 @@ def configure(
         sshagent_use=sshagent_use,
         debug_configure=debug,
         interactive=interactive,
-        privatekey=privatekey,
         secret=secret,
     )
-    if privatekey:
-        # how jumpscale need to be available otherwise cannot do
+    #  jumpscale need to be available otherwise cannot do
+    j = False
+    try:
         from Jumpscale import j
+    except Exception as e:
+        pass
 
-        j.shell()
+    if not j and privatekey:
+        print(
+            "cannot load jumpscale, \
+            can only configure private key when jumpscale is installed locally use jsx install..."
+        )
+        sys.exit(1)
+    if j:
+        j.data.nacl.configure(privkey_words=privatekey, secret=None, sshagent_use=None, generate=True)
 
 
 ### INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT

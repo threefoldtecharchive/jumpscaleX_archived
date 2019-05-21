@@ -1986,28 +1986,28 @@ class MyEnv:
         MyEnv.config_file_path = os.path.join(configdir, "jumpscale_config.toml")
         MyEnv.state_file_path = os.path.join(configdir, "jumpscale_done.toml")
 
-        MyEnv._config_load()
+        if Tools.exists(MyEnv.config_file_path):
+            MyEnv._config_load()
 
-        MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE", []) if i.strip().strip("''") != ""]
-        MyEnv.log_excludes = [i for i in MyEnv.config.get("LOGGER_EXCLUDE", []) if i.strip().strip("''") != ""]
-        MyEnv.log_loglevel = MyEnv.config.get("LOGGER_LEVEL", 100)
-        MyEnv.log_console = MyEnv.config.get("LOGGER_CONSOLE", True)
-        MyEnv.log_redis = MyEnv.config.get("LOGGER_REDIS", False)
-        MyEnv.debug = MyEnv.config.get("DEBUG", False)
-        MyEnv.interactive = MyEnv.config.get("INTERACTIVE", True)
+            MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE", []) if i.strip().strip("''") != ""]
+            MyEnv.log_excludes = [i for i in MyEnv.config.get("LOGGER_EXCLUDE", []) if i.strip().strip("''") != ""]
+            MyEnv.log_loglevel = MyEnv.config.get("LOGGER_LEVEL", 100)
+            MyEnv.log_console = MyEnv.config.get("LOGGER_CONSOLE", True)
+            MyEnv.log_redis = MyEnv.config.get("LOGGER_REDIS", False)
+            MyEnv.debug = MyEnv.config.get("DEBUG", False)
+            MyEnv.interactive = MyEnv.config.get("INTERACTIVE", True)
 
-        if os.path.exists(os.path.join(MyEnv.config["DIR_BASE"], "bin", "python3.6")):
-            MyEnv.sandbox_python_active = True
-        else:
-            MyEnv.sandbox_python_active = False
+            if os.path.exists(os.path.join(MyEnv.config["DIR_BASE"], "bin", "python3.6")):
+                MyEnv.sandbox_python_active = True
+            else:
+                MyEnv.sandbox_python_active = False
 
-        MyEnv._state_load()
+            MyEnv._state_load()
 
-        if MyEnv.config["SSH_AGENT"]:
-            # check if sshagent is loaded
-            MyEnv.sshagent = SSHAgent()
+            if MyEnv.config["SSH_AGENT"]:
+                MyEnv.sshagent = SSHAgent()
 
-        MyEnv.__init = True
+            MyEnv.__init = True
 
     @staticmethod
     def config_edit():

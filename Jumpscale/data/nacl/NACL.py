@@ -22,8 +22,6 @@ class NACL:
     def __init__(self, name="default"):
         self.name = name
         self._box = None
-        self._redis_key = "secret_%s" % self.name
-        self._redis = j.core.db
         self.__init = False
 
     def _init(self):
@@ -123,11 +121,11 @@ class NACL:
 
         self.privkey = None
 
-        if self.redis:
-            self.redis.delete(redis_key)
+        j.shell()
+        w
 
-        if j.application.interactive and sshagent_use is None:
-            sshagent_use = Tools.ask_yes_no("do you want to use ssh-agent for secret key in jumpscale?")
+        if sshagent_use is None:
+            j.shell()
 
         if sshagent_use is False:
             if passphrase is None:
