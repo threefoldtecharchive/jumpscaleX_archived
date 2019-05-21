@@ -14,25 +14,32 @@ import sys
 
 JSBASE = j.application.JSBaseClass
 print = j.tools.console.echo
+Tools = j.core.tools
+MyEnv = j.core.myenv
 
 
-class NACL(j.application.JSBaseClass):
-    def _init2(self, name=None):
-        assert name is not None
+class NACL:
+    def __init__(self, name="default"):
         self.name = name
         self._box = None
+        self._redis_key = "secret_%s" % self.name
+        self._redis = j.core.db
+        self.__init = False
+
+    def _init(self):
+        if not self.__init:
+            if not Tools.exists(self._path):
+                Tools.dir_ensure(self._path)
+
+        self.__init = True
 
     @property
     def _path(self):
-        return "/sandbox/cfg/nacl/%s" % self.name
+        return "%s/keys/%s" % (MyEnv.config["DIR_CFG"], self.name)
 
     @property
     def _path_privatekey(self):
         return "%s/key.priv" % (self._path)
-
-    @property
-    def _path_encryptor_for_secret(self):
-        return j.core.tools.text_replace("{DIR_VAR}/logs/myprocess_%s.log" % self.name)
 
     def _ask_privkey_words(self):
         """
@@ -44,26 +51,26 @@ class NACL(j.application.JSBaseClass):
         There is no private key on your system yet.
         We will generate one for you or you can provide words of your secret key.
         """
-        if j.tools.console.askYesNo("Ok to generate private key (Y or 1 for yes, otherwise provide words)?"):
+        if Tools.ask_yes_no("Ok to generate private key (Y or 1 for yes, otherwise provide words)?"):
             print("\nWe have generated a private key for you.")
             print("\nThe private key:\n\n")
             self._keys_generate()
-            j.tools.console.echo("{RED}")
+            print("{RED}")
             print("{BLUE}" + self.words + "{RESET}\n")
             print("\n{RED}ITS IMPORTANT TO STORE THIS KEY IN A SAFE PLACE{RESET}")
-            if not j.tools.console.askYesNo("Did you write the words down and store them in safe place?"):
+            if not Tools.ask_yes_no("Did you write the words down and store them in safe place?"):
                 j.sal.fs.remove(self._path_privatekey)
                 print("WE HAVE REMOVED THE KEY, need to restart this procedure.")
                 sys.exit(1)
         else:
-            words = j.tools.console.askString("Provide words of private key")
+            words = Tools.ask_string("Provide words of private key")
             self._keys_generate(words=words)
 
-        j.tools.console.clear_screen()
+        j.console.clear_screen()
 
         word3 = self.words.split(" ")[2]
 
-        word3_to_check = j.tools.console.askString("give the 3e word of the private key string")
+        word3_to_check = Tools.ask_string("give the 3e word of the private key string")
 
         if not word3 == word3_to_check:
             self._error_raise("the control word was not correct, please restart the procedure.")
@@ -96,7 +103,7 @@ class NACL(j.application.JSBaseClass):
 
         self._load_privatekey()
 
-    def configure(self, privkey_words=None, secret=None, sshagent_use=None, interactive=False, generate=False):
+    def configure(self, privkey_words=None, secret=None, sshagent_use=None, generate=True):
         """
 
         secret is used to encrypt/decrypt the private key when stored on local filesystem
@@ -112,46 +119,26 @@ class NACL(j.application.JSBaseClass):
 
         :return: None
         """
-        self._log_debug("NACL uses path:'%s'" % self._path)
+        Tools.log("NACL uses path:'%s'" % self._path)
 
         self.privkey = None
 
-        j.application.interactive = j.application.interactive or interactive
-
-        # create dir where the secret will be to encrypt the secret
-        j.sal.fs.createDir(j.core.tools.text_replace("{DIR_VAR}/logs"))
-
-        j.sal.fs.remove(self._path_encryptor_for_secret)
-
-        redis_key = "secret_%s" % self.name
-
-        if j.core.db is None:
-            j.clients.redis.core_get()
-
-        j.core.db.delete(redis_key)
+        if self.redis:
+            self.redis.delete(redis_key)
 
         if j.application.interactive and sshagent_use is None:
-            sshagent_use = j.tools.console.askYesNo("do you want to use ssh-agent for secret key in jumpscale?")
+            sshagent_use = Tools.ask_yes_no("do you want to use ssh-agent for secret key in jumpscale?")
 
         if sshagent_use is False:
-            if secret is None:
-                secret = j.tools.console.askPassword(
-                    "Provide a strong secret which will be used to encrypt/decrypt your private key"
+            if passphrase is None:
+                passphrase = j.tools.console.askPassword(
+                    "Provide a passphrase which will be used to encrypt/decrypt your private key"
                 )
-                if secret.strip() in [""]:
-                    self._error_raise("Secret cannot be empty")
-                secret = self._hash(secret)
-            # will create a dummy file with a random key which will encrypt the secret
-            key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
-            j.sal.fs.writeFile(self._path_encryptor_for_secret, key)
-            self._box = nacl.secret.SecretBox(key)
-            if isinstance(secret, str):
-                secret = secret.encode()
-            r = self._box.encrypt(secret)
-            j.core.db.set(redis_key, r)
-
-        # create path where the files for nacl will be
-        j.sal.fs.createDir(self._path)
+                if passphrase.strip() in [""]:
+                    self._error_raise("passphrase cannot be empty")
+                passphrase_hash = self._hash(passphrase)
+            if self.redis:
+                self.redis.set(redis_key, passphrase_hash)  # hash of the passphrase is stored if redis core exists
 
         self.load(die=False)
 
@@ -161,6 +148,8 @@ class NACL(j.application.JSBaseClass):
                 self._ask_privkey_words()
             elif generate:
                 self._keys_generate()
+            else:
+                self._error_raise("cannot generate private key, was not allowed")
 
             self.load(die=False)
 
@@ -169,31 +158,25 @@ class NACL(j.application.JSBaseClass):
             self._error_raise("could not generate/load a private key, please use 'kosmos --init' to fix.")
 
     def _error_raise(self, msg):
-        msg = "## There is an issue in the Jumpscale encryption layer. ##\n%s" % msg
-        if j.application.interactive:
-            print(msg)
-            sys.exit(1)
-        else:
-            raise RuntimeError(msg)
+        raise RuntimeError(msg)
 
     def load(self, die=True):
         """
         will load private key from filesystem
         if not possible will exit to shell
         """
-
+        self._init()
         self._signingkey = ""
         self.privkey = None
 
-        if j.sal.fs.exists(self._path_encryptor_for_secret):
-            # means will not use ssh-agent
-            # get secret from redis which is encrypted there
-            # use a local file to decrypt the key, so at least its not non encrypted in the redis
+        j.shell()
+
+        if self.redis:
             redis_key = "secret_%s" % self.name
             key = j.sal.fs.readFile(self._path_encryptor_for_secret, binary=True)
             sb = nacl.secret.SecretBox(key)
             try:
-                r = j.core.db.get(redis_key)
+                r = self.redis.get(redis_key)
             except AttributeError:
                 r = None
             if r is None:

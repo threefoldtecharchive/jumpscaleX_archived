@@ -32,6 +32,9 @@ class SSHKeys(j.application.JSBaseConfigsClass):
 
     def test(self):
         """
+
+        kosmos 'j.clients.sshkey.test()'
+
         -Generates key manually first
         -j.clients.sshkey.get(name="test",path="~/.ssh/test_key")
         -checks self.pubkey, self.privkey

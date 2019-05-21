@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import copy
 import getpass
 
-DEFAULTBRANCH = "development-bcdb"
+DEFAULTBRANCH = "development"
 
 # import socket
 import grp
@@ -15,6 +15,7 @@ import subprocess
 import sys
 import textwrap
 import time
+import re
 from fcntl import F_GETFL, F_SETFL, fcntl
 from os import O_NONBLOCK, read
 from pathlib import Path
@@ -741,7 +742,7 @@ class Tools:
     def text_replace(content, args=None, executor=None, ignorecomments=False, text_strip=True):
         """
 
-        j.core.tools.text_replace
+        Tools.text_replace
 
         args will be substitued to .format(...) string function https://docs.python.org/3/library/string.html#formatspec
         MyEnv.config will also be given to the format function
@@ -912,6 +913,15 @@ class Tools:
         if log:
             Tools.log(content, level=15, stdout=False)
         print(content, end=end)
+
+    @staticmethod
+    def text_md5(txt):
+        import hashlib
+
+        if isinstance(s, str):
+            s = s.encode("utf-8")
+        impl = hashlib.new("md5", data=s)
+        return impl.hexdigest()
 
     @staticmethod
     def text_indent(content, nspaces=4, wrap=180, strip=True, indentchar=" ", args=None):
@@ -1202,7 +1212,33 @@ class Tools:
     #
 
     @staticmethod
+    def process_pids_get_by_filter(filterstr):
+        cmd = "ps ax | grep '%s'" % filterstr
+        rcode, out, err = Tools.execute(cmd)
+        # print out
+        found = []
+        for line in out.split("\n"):
+            if line.find("grep") != -1 or line.strip() == "":
+                continue
+            if line.strip() != "":
+                if line.find(filterstr) != -1:
+                    line = line.strip()
+                    # print "found pidline:%s"%line
+                    found.append(int(line.split(" ")[0]))
+        return found
+
+    @staticmethod
+    def process_kill_by_pid(pid):
+        Tools.execute("kill -9 %s" % pid)
+
+    @staticmethod
+    def process_kill_by_by_filter(filterstr):
+        for pid in Tools.process_pids_get_by_filter(filterstr):
+            Tools.process_kill_by_pid(pid)
+
+    @staticmethod
     def ask_choices(msg, choices=[], default=None):
+        Tools._check_interactive()
         msg = Tools.text_strip(msg)
         print(msg)
         if "\n" in msg:
@@ -1224,10 +1260,66 @@ class Tools:
         :param msg: the msg to show when asking for y or no
         :return: will return True if yes
         """
+        Tools._check_interactive()
         return Tools.ask_choices(msg, "y,n", default=default) in ["y", ""]
 
     @staticmethod
+    def _check_interactive():
+        if not MyEnv.interactive:
+            raise j.exceptions.Input("Cannot use console in a non interactive mode.", "console.noninteractive")
+
+    @staticmethod
+    def ask_password(question="give secret", confirm=True, regex=None, retry=-1, validate=None):
+        """Present a password input question to the user
+
+        @param question: Password prompt message
+        @param confirm: Ask to confirm the password
+        @type confirm: bool
+        @param regex: Regex to match in the response
+        @param retry: Integer counter to retry ask for respone on the question
+        @param validate: Function to validate provided value
+
+        @returns: Password provided by the user
+        @rtype: string
+        """
+        Tools._check_interactive()
+
+        import getpass
+
+        startquestion = question
+        if question.endswith(": "):
+            question = question[:-2]
+        question += ": "
+        value = None
+        failed = True
+        retryCount = retry
+        while retryCount != 0:
+            response = getpass.getpass(question)
+            if (not regex or re.match(regex, response)) and (not validate or validate(response)):
+                if value == response or not confirm:
+                    return response
+                elif not value:
+                    failed = False
+                    value = response
+                    question = "%s (confirm): " % (startquestion)
+                else:
+                    value = None
+                    failed = True
+                    question = "%s: " % (startquestion)
+            if failed:
+                print("Invalid password!")
+                retryCount = retryCount - 1
+        raise j.exceptions.Input(
+            (
+                "Console.askPassword() failed: tried %s times but user didn't fill out a value that matches '%s'."
+                % (retry, regex)
+            ),
+            "console.ask_password",
+        )
+
+    @staticmethod
     def ask_string(msg, default=None):
+        Tools._check_interactive()
         msg = Tools.text_strip(msg)
         print(msg)
         if "\n" in msg:
@@ -1573,7 +1665,6 @@ LOGFORMATBASE = (
 
 class MyEnv:
 
-    _sshagent_active = None
     readonly = False  # if readonly will not manipulate local filesystem appart from /tmp
     sandbox_python_active = False  # means we have a sandboxed environment where python3 works in
     sandbox_lua_active = False  # same for lua
@@ -1582,6 +1673,9 @@ class MyEnv:
     state = None
     __init = False
     debug = False
+
+    sshagent = None
+    interactive = False
 
     appname = "installer"
 
@@ -1638,22 +1732,50 @@ class MyEnv:
             raise RuntimeError("Your platform is not supported")
 
     @staticmethod
-    def config_default_get(config={}):
-
-        if "DIR_BASE" not in config:
-            config["DIR_BASE"] = "/sandbox"
-
+    def _homedir_get():
         if "HOMEDIR" in os.environ:
             dir_home = os.environ["HOMEDIR"]
         elif "HOME" in os.environ:
             dir_home = os.environ["HOME"]
         else:
             dir_home = "/root"
-        config["DIR_HOME"] = dir_home
-        config["USEGIT"] = True
-        config["DEBUG"] = False
+        return dir_home
 
-        config["SSH_AGENT"] = False
+    @staticmethod
+    def _basedir_get():
+        if MyEnv.readonly:
+            return "/tmp/jumpscale"
+        if Tools.exists("/sandbox"):
+            return "/sandbox"
+        p = "%s/sandbox" % MyEnv._homedir_get()
+        if not Tools.exists(p):
+            Tools.dir_ensure(p)
+        return p
+
+    @staticmethod
+    def _cfgdir_get():
+        if MyEnv.readonly:
+            return "/tmp/jumpscale/cfg"
+        return "%s/cfg" % MyEnv._basedir_get()
+
+    @staticmethod
+    def config_default_get(config={}):
+
+        if "DIR_BASE" not in config:
+            config["DIR_BASE"] = MyEnv._basedir_get()
+
+        if "DIR_HOME" not in config:
+            config["DIR_HOME"] = MyEnv._homedir_get()
+
+        if not "DIR_CFG" in config:
+            config["DIR_CFG"] = MyEnv._cfgdir_get()
+
+        config["USEGIT"] = True
+        config["READONLY"] = False
+        config["DEBUG"] = False
+        config["INTERACTIVE"] = True
+
+        config["SSH_AGENT"] = True
         config["SSH_KEY_DEFAULT"] = ""
 
         config["LOGGER_INCLUDE"] = ["*"]
@@ -1672,13 +1794,10 @@ class MyEnv:
         if not "DIR_VAR" in config:
             config["DIR_VAR"] = "%s/var" % config["DIR_BASE"]
         if not "DIR_CODE" in config:
-            if MyEnv.readonly:
-                if Tools.exists("/sandbox/code"):
-                    config["DIR_CODE"] = "/sandbox/code"
-                else:
-                    config["DIR_CODE"] = "%s/code" % dir_home
-            else:
+            if Tools.exists("%s/code" % config["DIR_BASE"]):
                 config["DIR_CODE"] = "%s/code" % config["DIR_BASE"]
+            else:
+                config["DIR_CODE"] = "%s/code" % config["DIR_HOME"]
         if not "DIR_BIN" in config:
             config["DIR_BIN"] = "%s/bin" % config["DIR_BASE"]
         if not "DIR_APPS" in config:
@@ -1691,32 +1810,105 @@ class MyEnv:
         if not MyEnv.__init:
             raise RuntimeError("myenv should have been inited by system")
 
+    def configure_help():
+        C = """
+        Configuration for JSX initialisation:
+        
+        --basedir=                      default ~/sandbox or /sandbox whatever exists first
+        --configdir=                    default $BASEDIR/cfg
+        --codepath=                     default $BASEDIR/code
+
+        --sshkey=                       key to use for ssh-agent if any
+        --sshagent-no                   default is to use the sshagent, if you want to disable use this flag
+
+        --readonly                      default is false
+        --interactive-no                default is interactive, means will ask questions
+        --debug_configure               default debug_configure is False, will configure in debug mode
+        """
+        return Tools.text_strip(C)
+
     @staticmethod
-    def init(basedir=None, config={}, readonly=None, codepath=None, force=False):
-        if MyEnv.__init and not force:
-            return
+    def configure(
+        configdir=None,
+        basedir=None,
+        config={},
+        readonly=None,
+        codepath=None,
+        sshkey=None,
+        sshagent_use=None,
+        debug_configure=None,
+        privatekey=None,
+        secret=None,
+        interactive=True,
+    ):
+        """
 
-        if readonly is not None:
-            MyEnv.readonly = readonly
+        the args of the command line will also be parsed, will check for
 
-        if basedir is None:
-            if Tools.exists("/sandbox"):
-                basedir = "/sandbox"
+        --basedir=                      default ~/sandbox or /sandbox whatever exists first
+        --configdir=                    default $BASEDIR/cfg
+        --codepath=                     default $BASEDIR/code
+
+        --sshkey=                       key to use for ssh-agent if any
+        --sshagent-no                   default is to use the sshagent, if you want to disable use this flag
+
+        --readonly                      default is false
+        --interactive-no                default is interactive, means will ask questions
+        --debug_configure               default debug_configure is False, will configure in debug mode
+
+        :param configdir: is the directory where all configuration & keys will be stored
+        :param basedir: the root of the sandbox
+        :param config: configuration arguments which go in the config file
+        :param readonly: specific mode of operation where minimal changes will be done while using JSX
+        :param codepath: std $sandboxdir/code
+        :param sshkey: name of the sshkey to use if there are more than 1 in ssh-agent
+        :param sshagent_use: needs to be True if sshkey used
+        :return:
+        """
+
+        args = Tools.cmd_args_get()
+
+        if configdir is None and "configdir" in args:
+            configdir = args["configdir"]
+        if codepath is None and "codepath" in args:
+            codepath = args["codepath"]
+        if basedir is None and "basedir" in args:
+            basedir = args["basedir"]
+        if sshkey is None and "sshkey" in args:
+            sshkey = args["sshkey"]
+
+        if readonly is None and "readonly" in args:
+            readonly = True
+        if interactive is True and "interactive-no" in args:
+            interactive = False
+        if sshagent_use is None and "sshagent-no" in args:
+            sshagent_use = False
+        else:
+            sshagent_use = True
+        if debug_configure is None and "debug_configure" in args:
+            debug_configure = True
+
+        if not configdir:
+            if "DIR_CFG" in config:
+                configdir = config["DIR_CFG"]
+            elif "JSX_DIR_CFG" in os.environ:
+                configdir = os.environ["JSX_DIR_CFG"]
             else:
-                # means we did not find a sandbox dir so have to go in readonly mode
-                MyEnv.readonly = True
+                configdir = MyEnv._cfgdir_get()
+        config["DIR_CFG"] = configdir
 
-        installpath = os.path.dirname(inspect.getfile(os.path))
-        # MEI means we are pyexe BaseInstaller
-        if installpath.find("/_MEI") != -1 or installpath.endswith("dist/install"):
-            MyEnv.readonly = True
+        # installpath = os.path.dirname(inspect.getfile(os.path))
+        # # MEI means we are pyexe BaseInstaller
+        # if installpath.find("/_MEI") != -1 or installpath.endswith("dist/install"):
+        #     pass  # dont need yet but keep here
 
-        if not "DIR_BASE" in config:
-            config["DIR_BASE"] = basedir
-        if MyEnv.readonly:
-            config["DIR_BASE"] = "/tmp/jumpscale"
-        if not "DIR_CFG" in config:
-            config["DIR_CFG"] = "%s/cfg" % config["DIR_BASE"]
+        if not basedir:
+            if "DIR_BASE" in config:
+                basedir = config["DIR_BASE"]
+            else:
+                basedir = MyEnv._basedir_get()
+
+        config["DIR_BASE"] = basedir
 
         MyEnv.config_file_path = os.path.join(config["DIR_CFG"], "jumpscale_config.toml")
         MyEnv.state_file_path = os.path.join(config["DIR_CFG"], "jumpscale_done.toml")
@@ -1724,14 +1916,83 @@ class MyEnv:
         if codepath is not None:
             config["DIR_CODE"] = codepath
 
-        if MyEnv.readonly:
+        if not os.path.exists(MyEnv.config_file_path):
             MyEnv.config = MyEnv.config_default_get(config=config)
         else:
-            if os.path.exists(MyEnv.config_file_path):
-                MyEnv._config_load(config=config)
+            MyEnv._config_load()
+
+        if readonly:
+            MyEnv.config["READONLY"] = readonly
+        if sshagent_use:
+            MyEnv.config["SSH_AGENT"] = sshagent_use
+        if sshkey:
+            MyEnv.config["SSH_KEY_DEFAULT"] = sshkey
+        if debug_configure:
+            MyEnv.config["DEBUG"] = debug_configure
+
+        for key, val in config.items():
+            MyEnv.config[key] = val
+
+        # defaults are now set, lets now configure the system
+
+        if secret is None:
+            if interactive:
+                secret = IT.Tools.ask_password("provide secret to use for secret", default=None)
+            if not sshagent_use:
+                print("need to specify a secret because ssh-agent is not used")
+                sys.exit(1)
+
+        if sshagent_use:
+            MyEnv.sshagent = SSHAgent()
+            MyEnv.sshagent.default_key_get(secret=secret)
+
+        else:
+
+            MyEnv.config["SECRET"] = Tools.text_md5(secret)
+
+        if not sshagent_use:
+            T = """
+            Is it ok to continue without SSH-Agent, are you sure?
+            It's recommended to have a SSH key as used on github loaded in your ssh-agent
+            If the SSH key is not found, repositories will be cloned using https
+    
+            if you never used an ssh-agent or github, just say "y"
+    
+            """
+            print(IT.Tools.text_strip(T))
+            if interactive:
+                if not IT.Tools.ask_yes_no("OK to continue?"):
+                    sys.exit(1)
             else:
-                MyEnv.config = MyEnv.config_default_get(config=config)
-                MyEnv.config_save()
+                sys.exit(1)
+
+        MyEnv.config_save()
+
+    @staticmethod
+    def init(configdir=None):
+        """
+
+        :param configdir: default /sandbox/cfg, then ~/sandbox/cfg if not exists
+        :return:
+        """
+        if MyEnv.__init:
+            return
+
+        args = Tools.cmd_args_get()
+
+        if not configdir:
+            if "JSX_DIR_CFG" in os.environ:
+                configdir = os.environ["JSX_DIR_CFG"]
+            else:
+                if configdir is None and "configdir" in args:
+                    configdir = args["configdir"]
+                else:
+                    configdir = MyEnv._cfgdir_get()
+
+        MyEnv.config_file_path = os.path.join(configdir, "jumpscale_config.toml")
+        MyEnv.state_file_path = os.path.join(configdir, "jumpscale_done.toml")
+
+        MyEnv._config_load()
 
         MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE", []) if i.strip().strip("''") != ""]
         MyEnv.log_excludes = [i for i in MyEnv.config.get("LOGGER_EXCLUDE", []) if i.strip().strip("''") != ""]
@@ -1739,6 +2000,7 @@ class MyEnv:
         MyEnv.log_console = MyEnv.config.get("LOGGER_CONSOLE", True)
         MyEnv.log_redis = MyEnv.config.get("LOGGER_REDIS", False)
         MyEnv.debug = MyEnv.config.get("DEBUG", False)
+        MyEnv.interactive = MyEnv.config.get("INTERACTIVE", True)
 
         if os.path.exists(os.path.join(MyEnv.config["DIR_BASE"], "bin", "python3.6")):
             MyEnv.sandbox_python_active = True
@@ -1747,27 +2009,11 @@ class MyEnv:
 
         MyEnv._state_load()
 
+        if MyEnv.config["SSH_AGENT"]:
+            # check if sshagent is loaded
+            MyEnv.sshagent = SSHAgent()
+
         MyEnv.__init = True
-
-    @staticmethod
-    def sshagent_active_check():
-        """
-        check if the ssh agent is active
-        :return:
-        """
-        if MyEnv._sshagent_active is None:
-            MyEnv._sshagent_active = len(Tools.execute("ssh-add -L", die=False, showout=False)[1]) > 40
-        return MyEnv._sshagent_active
-
-    @staticmethod
-    def sshagent_key_get():
-        """
-        :return:
-        """
-        if not MyEnv.sshagent_active_check():
-            print("need ssh-agent loaded to be able to find ssh-key to use")
-            sys.exit(1)
-        return Tools.execute("ssh-add -L", die=False, showout=False)[1].strip().split(" ")[-2].strip()
 
     @staticmethod
     def config_edit():
@@ -1775,23 +2021,18 @@ class MyEnv:
         edits the configuration file which is in {DIR_BASE}/cfg/jumpscale_config.toml
         {DIR_BASE} normally is /sandbox
         """
-        if MyEnv.readonly:
-            raise RuntimeError("config cannot be saved in BaseInstaller only mode")
         Tools.file_edit(MyEnv.config_file_path)
 
     @staticmethod
-    def _config_load(config={}):
+    def _config_load():
         """
-        loads the configuration file which is in {DIR_BASE}/cfg/jumpscale_config.toml
+        loads the configuration file which default is in {DIR_BASE}/cfg/jumpscale_config.toml
         {DIR_BASE} normally is /sandbox
         """
         MyEnv.config = Tools.config_load(MyEnv.config_file_path)
-        MyEnv.config.update(config)
 
     @staticmethod
     def config_save():
-        if MyEnv.readonly:
-            return
         Tools.config_save(MyEnv.config_file_path, MyEnv.config)
 
     @staticmethod
@@ -2315,7 +2556,7 @@ class JumpscaleInstaller:
         mkdir -p /sandbox/var/log
         kosmos 'j.core.installer_jumpscale.remove_old_parts()'
         kosmos --instruct=/tmp/instructions.toml
-        kosmos 'j.tools.console.echo("JumpscaleX IS OK.")'
+        kosmos 'Tools.pprint("JumpscaleX IS OK.")'
         """
 
         if private_key_words is None:
@@ -2455,7 +2696,7 @@ class Docker:
         MyEnv._init()
         self.name = name
 
-        sshkey = MyEnv.sshagent_key_get()
+        sshkey = MyEnv.sshagent_sshkey_pub_get()
 
         if MyEnv.platform() == "linux" and not Tools.cmd_installed("docker"):
             UbuntuInstaller.docker_install()
@@ -2678,3 +2919,338 @@ class Docker:
         args = {}
         args["port"] = self.port
         print(Tools.text_replace(k, args=args))
+
+
+class SSHAgentKeyError(Exception):
+    pass
+
+
+class SSHAgent:
+    def __init__(self):
+        self._inited = False
+        self._default_key = None
+        self.autostart = True
+        self.reset()
+
+    @property
+    def ssh_socket_path(self):
+
+        if "SSH_AUTH_SOCK" in os.environ:
+            return os.environ["SSH_AUTH_SOCK"]
+
+        socketpath = Tools.text_replace("{DIR_VAR}/sshagent_socket")
+        os.environ["SSH_AUTH_SOCK"] = socketpath
+        return socketpath
+
+    def _key_name_get(self, name):
+        if not name:
+            if MyEnv.config["SSH_KEY_DEFAULT"]:
+                name = MyEnv.config["SSH_KEY_DEFAULT"]
+            elif MyEnv.interactive:
+                name = Tools.ask_string("give name for your sshkey")
+            else:
+                name = "default"
+        return name
+
+    def key_generate(self, name=None, passphrase=None, reset=False):
+        """
+        Generate ssh key
+
+        :param reset: if True, then delete old ssh key from dir, defaults to False
+        :type reset: bool, optional
+        """
+        Tools.log("generate ssh key")
+        name = self._key_name_get(name)
+
+        if not passphrase:
+            if MyEnv.config["interactive"]:
+                passphrase = Tools.ask_password(
+                    "passphrase for ssh key to generate, \
+                        press enter to skip and not use a passphrase"
+                )
+
+        path = Tools.text_replace("{DIR_HOME}/.ssh/%s" % name)
+        Tools.Ensure("{DIR_HOME}/.ssh")
+
+        if reset:
+            Tools.delete("%s" % path)
+            Tools.delete("%s.pub" % path)
+
+        if not Tools.exists(path) or reset:
+            if passphrase:
+                cmd = 'ssh-keygen -t rsa -f {} -N "{}"'.format(path, passphrase)
+            else:
+                cmd = "ssh-keygen -t rsa -f {}".format(path)
+            Tools.execute(cmd, timeout=10)
+
+            Tools.log("load generated sshkey: %s" % path)
+        Tools.shell()
+
+    @property
+    def key_default(self):
+        """
+
+        kosmos 'print(j.clients.sshagent.key_default)'
+
+        checks if it can find the default key for ssh-agent, if not will ask
+        :return:
+        """
+
+        def ask_key(key_names):
+            if len(key_names) == 1:
+                if MyEnv.interactive:
+                    if not Tools.ask_yes_no("Ok to use key: '%s' as your default key?" % self.key_names[0]):
+                        return None
+                name = key_names[0]
+            elif len(key_names) == 0:
+                print(
+                    "Cannot find a possible ssh-key, please load your possible keys in your ssh-agent or have in your homedir/.ssh"
+                )
+                sys.exit(1)
+            else:
+                name = Tools.ask_choices("Which is your default sshkey to use", key_names)
+            return name
+
+        self._keys  # will fetch the keys if not possible will show error
+
+        sshkey = MyEnv.config["SSH_KEY_DEFAULT"]
+
+        if not sshkey:
+            if len(self.key_names) > 0:
+                sshkey = ask_key(self.key_names)
+        if not sshkey:
+            hdir = Tools.text_replace("{DIR_HOME}/.ssh")
+            if not Tools.exists(hdir):
+                print("cannot find home dir:%s" % hdir)
+                sys.exit(1)
+            choices = []
+            for item in os.listdir(hdir):
+                item2 = item.lower()
+                if not (
+                    item.startswith(".")
+                    or item2.endswith(".pub")
+                    or item2.endswith(".backup")
+                    or item2.endswith(".toml")
+                    or item2.endswith(".backup")
+                    or item in ["known_hosts"]
+                ):
+                    choices.append(item)
+            sshkey = ask_key(choices)
+
+        if not sshkey in self.key_names:
+            self.key_load(name=sshkey)
+            assert sshkey in self.key_names
+
+        if MyEnv.config["SSH_KEY_DEFAULT"] != sshkey:
+            MyEnv.config["SSH_KEY_DEFAULT"] = sshkey
+            MyEnv.config_save()
+
+        return sshkey
+
+    def key_load(self, path=None, name=None, passphrase=None, duration=3600 * 24):
+        """
+        load the key on path
+
+        :param path: path for ssh-key, can be left empty then we get the default name which will become path
+        :param name: is the name of key which is in ~/.ssh/$name, can be left empty then will be default
+        :param passphrase: passphrase for ssh-key, defaults to ""
+        :type passphrase: str
+        :param duration: duration, defaults to 3600*24
+        :type duration: int, optional
+        :raises RuntimeError: Path to load sshkey on couldn't be found
+        :return: name,path
+        """
+
+        if name:
+            path = Tools.text_replace("{DIR_HOME}/.ssh/%s" % name)
+        elif path:
+            name = os.path.basename(path)
+        else:
+            name = self._key_name_get(name)
+            path = Tools.text_replace("{DIR_HOME}/.ssh/%s" % name)
+
+        if name in self.key_names:
+            return
+
+        if not Tools.exists(path):
+            raise RuntimeError("Cannot find path:%sfor sshkey (private key)" % path)
+
+        Tools.log("load ssh key: %s" % path)
+        os.chmod(path, 0o600)
+
+        if passphrase:
+            Tools.log("load with passphrase")
+            C = """
+                cd /tmp
+                echo "exec cat" > ap-cat.sh
+                chmod a+x ap-cat.sh
+                export DISPLAY=1
+                echo {passphrase} | SSH_ASKPASS=./ap-cat.sh ssh-add -t {duration} {path}
+                """.format(
+                path=path, passphrase=passphrase, duration=duration
+            )
+            rc, out, err = Tools.execute(C, showout=True, die=False)
+            if rc > 0:
+                Tools.delete("/tmp/ap-cat.sh")
+                print("Could not load sshkey with passphrase (%s)" % path)
+                sys.exit(1)
+        else:
+            # load without passphrase
+            cmd = "ssh-add -t %s %s " % (duration, path)
+            rc, out, err = Tools.execute(cmd, showout=True, die=False)
+            if rc > 0:
+                print("Could not load sshkey without passphrase (%s)" % path)
+                sys.exit(1)
+
+        return name, path
+
+    @property
+    def _keys(self):
+        """
+        """
+        if self.__keys is None:
+            return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=1)
+            if return_code:
+                if return_code == 1 and out.find("The agent has no identities") != -1:
+                    self.__keys = []
+                    return []
+                else:
+                    # Remove old socket if can't connect
+                    if Tools.exists(self.ssh_socket_path):
+                        Tools.delete(self.ssh_socket_path)
+                        # did not work first time, lets try again
+                        return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=1)
+
+            if return_code and self.autostart:
+                # ok still issue, lets try to start the ssh-agent if that could be done
+                self.start()
+                return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=1)
+
+            if return_code:
+                return_code, _, _ = Tools.execute("ssh-add", showout=False, die=False, timeout=1)
+                if out.find("Error connecting to agent: No such file or directory"):
+                    raise SSHAgentKeyError("Error connecting to agent: No such file or directory")
+                else:
+                    raise SSHAgentKeyError("Unknown error in ssh-agent, cannot find")
+
+            keys = [line.split() for line in out.splitlines() if len(line.split()) == 3]
+            self.__keys = list(map(lambda key: [key[2], " ".join(key[0:2])], keys))
+
+        return self.__keys
+
+    def reset(self):
+        self.__keys = None
+
+    @property
+    def available(self):
+        """
+        Check if agent available (does not mean that the sshkey has been loaded, just checks the sshagent is there)
+        :return: True if agent is available, False otherwise
+        :rtype: bool
+        """
+        try:
+            self._keys
+        except SSHAgentKeyError:
+            return False
+
+    def keys_list(self, key_included=False):
+        """
+        kosmos 'print(j.clients.sshkey.keys_list())'
+        list ssh keys from the agent
+
+        :param key_included: defaults to False
+        :type key_included: bool, optional
+        :raises RuntimeError: Error during listing of keys
+        :return: list of paths
+        :rtype: list
+        """
+        if key_included:
+            return self._keys
+        else:
+            return [i[0] for i in self._keys]
+
+    @property
+    def key_names(self):
+
+        return [os.path.basename(i[0]) for i in self._keys]
+
+    @property
+    def key_paths(self):
+
+        return [i[0] for i in self._keys]
+
+    def profile_js_configure(self):
+        """
+        kosmos 'j.clients.sshkey.profile_js_configure()'
+        """
+
+        bashprofile_path = os.path.expanduser("~/.profile")
+        if not Tools.exists(bashprofile_path):
+            Tools.execute("touch %s" % bashprofile_path)
+
+        content = j.sal.fs.readFile(bashprofile_path)
+        out = ""
+        for line in content.split("\n"):
+            if line.find("#JSSSHAGENT") != -1:
+                continue
+            if line.find("SSH_AUTH_SOCK") != -1:
+                continue
+
+            out += "%s\n" % line
+
+        out += "export SSH_AUTH_SOCK=%s" % self.ssh_socket_path
+        out = out.replace("\n\n\n", "\n\n")
+        out = out.replace("\n\n\n", "\n\n")
+        j.sal.fs.writeFile(bashprofile_path, out)
+
+    def start(self):
+        """
+
+        start ssh-agent, kills other agents if more than one are found
+
+        :raises RuntimeError: Couldn't start ssh-agent
+        :raises RuntimeError: ssh-agent was not started while there was no error
+        :raises RuntimeError: Could not find pid items in ssh-add -l
+        """
+
+        socketpath = self.ssh_socket_path
+
+        Tools.process_kill_by_by_filter("ssh-agent")
+
+        Tools.delete(socketpath)
+
+        if not Tools.exists(socketpath):
+            Tools.log("start ssh agent")
+            rc, out, err = Tools.execute("ssh-agent -a %s" % socketpath, die=False, showout=False, timeout=20)
+            if rc > 0:
+                raise RuntimeError("Could not start ssh-agent, \nstdout:%s\nstderr:%s\n" % (out, err))
+            else:
+                if not Tools.exists(socketpath):
+                    err_msg = "Serious bug, ssh-agent not started while there was no error, " "should never get here"
+                    raise RuntimeError(err_msg)
+
+                # get pid from out of ssh-agent being started
+                piditems = [item for item in out.split("\n") if item.find("pid") != -1]
+
+                # print(piditems)
+                if len(piditems) < 1:
+                    Tools.log("results was: %s", out)
+                    raise RuntimeError("Cannot find items in ssh-add -l")
+
+                # pid = int(piditems[-1].split(" ")[-1].strip("; "))
+                # socket_path = j.sal.fs.joinPaths("/tmp", "ssh-agent-pid")
+                # j.sal.fs.writeFile(socket_path, str(pid))
+
+            return
+
+        j.clients.sshkey._sshagent = None
+
+    def kill(self):
+        """
+        Kill all agents if more than one is found
+
+        """
+        Tools.process_kill_by_by_filter("ssh-agent")
+        Tools.delete(self.ssh_socket_path)
+        # Tools.delete("/tmp", "ssh-agent-pid"))
+        self.reset()

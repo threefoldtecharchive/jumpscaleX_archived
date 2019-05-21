@@ -38,7 +38,7 @@ class Application(object):
 
         self._systempid = None
 
-        self.interactive = False
+        self.interactive = self._j.core.myenv.interactive
 
         self.schemas = None
 

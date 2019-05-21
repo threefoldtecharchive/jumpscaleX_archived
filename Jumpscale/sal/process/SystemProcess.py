@@ -516,20 +516,7 @@ class SystemProcess(j.application.JSBaseClass):
         return found
 
     def getPidsByFilter(self, filterstr):
-        cmd = "ps ax | grep '%s'" % filterstr
-        rcode, out, err = j.sal.process.execute(cmd)
-        # print out
-        found = []
-        for line in out.split("\n"):
-            if line.find("grep") != -1 or line.strip() == "":
-                continue
-            if line.strip() != "":
-                if line.find(filterstr) != -1:
-                    line = line.strip()
-                    # print "found pidline:%s"%line
-
-                    found.append(int(line.split(" ")[0]))
-        return found
+        return j.tools.process_pids_get_by_filter(filterstr)
 
     def checkstart(self, cmd, filterstr, nrtimes=1, retry=1):
         """

@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 from Jumpscale import *
+
 j.tools.bash.get().profile.locale_check()
 import os
-os.environ["LC_ALL"] = 'en_US.UTF-8'
+
+os.environ["LC_ALL"] = "en_US.UTF-8"
 
 print(j.core.text.mascot)
 
@@ -11,13 +13,14 @@ print(j.core.text.mascot)
 import os
 import sys
 from Jumpscale import j
+
 j.tools.bash.get().profile.locale_check()
 import click
 
 
 j.application.start("jscode")
 
-ACTIONS = ('get', 'commit', 'push', 'update', 'status', 'list', 'init')
+ACTIONS = ("get", "commit", "push", "update", "status", "list", "init")
 
 
 def _repo_info(name, accounts):
@@ -60,7 +63,7 @@ def _search_repos(accounts, name, interactive=True):
 
 def _status_action(repos):
     print("\n\n STATUS:")
-    print("{: ^20} {: ^20} {: ^20} {: ^20}".format('account', 'reponame', 'branch', 'added:modified:deleted'))
+    print("{: ^20} {: ^20} {: ^20} {: ^20}".format("account", "reponame", "branch", "added:modified:deleted"))
     # print("\n\nSTATUS: account reponame                  " +
     #       "branch added:modified:deleted   insyncwithremote?   localrev       remoterev")
     print("=" * 88)
@@ -68,40 +71,46 @@ def _status_action(repos):
         _, account, name, branch, _, basedir = repo
         git = j.clients.git.get(basedir=basedir)
         mod = git.getModifiedFiles()
-        status = 'Y' if mod['N'] else 'N'
-        status += ':Y' if mod['M'] else ':N'
-        status += ':Y' if mod['D'] else ':N'
+        status = "Y" if mod["N"] else "N"
+        status += ":Y" if mod["M"] else ":N"
+        status += ":Y" if mod["D"] else ":N"
         print("{: ^20} {: ^20} {: ^20} {: ^20}".format(account, name, branch, status))
 
 
 @click.command()
-@click.argument('action', type=click.Choice(ACTIONS))
-@click.option('--name', '-n', help='name or partial name of repo, can also be comma separated, if not specified then will ask, if \'*\' then all.')
-@click.option('--url', help='url')
-@click.option('--message', '-m', help='commit message', default="new")
-@click.option('--branch', '-b', help='branch')
-@click.option('--accounts', '-a', help='comma separated list of accounts, if not specified then will ask, if \'*\' then all.')
-@click.option('--update', '-u', help='update merge before doing push or commit')
-@click.option('--force', '-f', help='auto answer yes on every question', is_flag=True, type=bool, default=False)
-@click.option('--deletechanges', '-d', help='will delete all changes when doing update')
-@click.option('--onlychanges', '-o',  help='will only do an action where modified files are found')
+@click.argument("action", type=click.Choice(ACTIONS))
+@click.option(
+    "--name",
+    "-n",
+    help="name or partial name of repo, can also be comma separated, if not specified then will ask, if '*' then all.",
+)
+@click.option("--url", help="url")
+@click.option("--message", "-m", help="commit message", default="new")
+@click.option("--branch", "-b", help="branch")
+@click.option(
+    "--accounts", "-a", help="comma separated list of accounts, if not specified then will ask, if '*' then all."
+)
+@click.option("--update", "-u", help="update merge before doing push or commit")
+@click.option("--force", "-f", help="auto answer yes on every question", is_flag=True, type=bool, default=False)
+@click.option("--deletechanges", "-d", help="will delete all changes when doing update")
+@click.option("--onlychanges", "-o", help="will only do an action where modified files are found")
 def jscode(action, name, url, message, branch, accounts, update, force=False, deletechanges=False, onlychanges=False):
     """Wrapper to git to do operations on multiple repositories"""
     if force is None:
         force = False
-    if branch is not None and action in ['status']:
-        raise j.exceptions.RuntimeError(
-            "Cannot specify branch when asking status")
+    if branch is not None and action in ["status"]:
+        raise j.exceptions.RuntimeError("Cannot specify branch when asking status")
 
     accounts = j.data.types.list.fromString(accounts)
 
     if name is None:
-        if action == 'init':
+        if action == "init":
             _init_action()
 
         if url is not None:
-            repository_host, repository_type, repository_account, repository_name, dest, repository_url, port = \
-                j.clients.git.getGitRepoArgs(url)
+            repository_host, repository_type, repository_account, repository_name, dest, repository_url, port = j.clients.git.getGitRepoArgs(
+                url
+            )
             if not j.sal.fs.exists(dest):
                 repository_url = j.clients.git.rewriteGitRepoUrl(repository_url)[-2]
                 j.clients.git.pullGitRepo(url=repository_url, branch=branch)
@@ -113,11 +122,11 @@ def jscode(action, name, url, message, branch, accounts, update, force=False, de
 
     repos = _search_repos(accounts, name, interactive=not force)
 
-    if name is not None and len(repos) == 0:    
+    if name is not None and len(repos) == 0:
         print("did not find any repo")
         sys.exit(1)
 
-    if action == 'status':
+    if action == "status":
         return _status_action(repos)
 
     if action == "list":
@@ -141,12 +150,11 @@ def jscode(action, name, url, message, branch, accounts, update, force=False, de
             continue
 
         nrmods = 0
-        if action in ['status', 'commit', 'update', 'push', 'get']:
+        if action in ["status", "commit", "update", "push", "get"]:
 
             mods = client.getModifiedFiles()
 
-            nrmods = len(mods["D"]) + len(mods["M"]) + \
-                len(mods["N"]) + len(mods["R"])
+            nrmods = len(mods["D"]) + len(mods["M"]) + len(mods["N"]) + len(mods["R"])
 
             # if onlychanges and nrmods == 0:
             #     if action != 'update' and action != 'update':
@@ -166,11 +174,12 @@ def jscode(action, name, url, message, branch, accounts, update, force=False, de
             if nrmods > 0:
                 reposync = "N"
 
-            print("%-15s %-25s %-10s n%-3s:m%-3s:d%-3s:r%-6s" %
-                  (account, reponame, client.branchName, len(mods["N"]), len(mods["M"]), len(mods["D"]),
-                   len(mods["R"])))
+            print(
+                "%-15s %-25s %-10s n%-3s:m%-3s:d%-3s:r%-6s"
+                % (account, reponame, client.branchName, len(mods["N"]), len(mods["M"]), len(mods["D"]), len(mods["R"]))
+            )
 
-        if action in ['commit', 'update', 'push', 'get']:
+        if action in ["commit", "update", "push", "get"]:
             # if nrmods == 0:
             #     print("no need to commit is in sync")
             #     continue
@@ -182,7 +191,7 @@ def jscode(action, name, url, message, branch, accounts, update, force=False, de
                         for subitem in item:
                             print(("    - %s" % (subitem)))
 
-        if action in ['commit', 'update', 'push', 'get']:
+        if action in ["commit", "update", "push", "get"]:
             if nrmods > 0:
                 if message is None:
                     message = j.tools.console.askString("commit message")
@@ -192,7 +201,7 @@ def jscode(action, name, url, message, branch, accounts, update, force=False, de
                 print("ADD/REMOVE/COMMIT")
                 client.commit(message=message, addremove=True)
 
-        if update or action in ['commit', 'update', 'push', 'get']:
+        if update or action in ["commit", "update", "push", "get"]:
             print("PULL")
             j.clients.git.pullGitRepo(url=client.remoteUrl)
 
@@ -206,6 +215,5 @@ jscode()
 j.application.stop()
 
 
-#EXAMPLE
-#js_code push -m "sandbox" -a threefoldtech -n jump* -f;js_code push -m "sandbox" -a threefoldtech -n digital* -f
-
+# EXAMPLE
+# js_code push -m "sandbox" -a threefoldtech -n jump* -f;js_code push -m "sandbox" -a threefoldtech -n digital* -f

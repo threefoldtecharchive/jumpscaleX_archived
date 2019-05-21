@@ -1,3 +1,5 @@
+import click
+
 import argparse
 import inspect
 import os
@@ -6,10 +8,10 @@ import sys
 from importlib import util
 from urllib.request import urlopen
 
-DEFAULT_BRANCH = "master"
-CONTAINER_BASE_IMAGE = "phusion/baseimage:master"
+DEFAULT_BRANCH = "development"
+
+# CONTAINER_BASE_IMAGE = "phusion/baseimage:master"
 # CONTAINER_BASE_IMAGE = "despiegk/3bot:latest"
-CONTAINER_NAME = "3bot"
 
 
 def load_install_tools():
@@ -32,24 +34,141 @@ def load_install_tools():
     return IT
 
 
-# DO NOT DO THIS IN ANY OTHER WAY !!!
-IT = load_install_tools()
+@click.group()
+def cli():
+    pass
 
 
-def install_ui(args):
+### INIT OF JUMPSCALE ENVIRONMENT
+@click.command()
+@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+@click.option(
+    "--codepath",
+    default=None,
+    help="path where the github code will be checked out, default /sandbox/code if it exists otherwise ~/sandbox/code",
+)
+@click.option(
+    "--basedir",
+    default=None,
+    help="path where JSX will be installed default /sandbox if it exists otherwise ~/sandbox/code",
+)
+@click.option("--sshagent_use", default=True, is_flag=True, type=bool, help="do you want to use an ssh-agent")
+@click.option(
+    "--sshkey", default=None, is_flag=True, type=bool, help="if more than 1 ssh-key in ssh-agent, specify here"
+)
+@click.option("--debug", default=False, is_flag=True, type=bool, help="do you want to put kosmos in debug mode?")
+@click.option(
+    "-i",
+    "--interactive",
+    default=True,
+    is_flag=True,
+    type=bool,
+    help="if non interactive then JSX will not ask question but throw error if not in interactive mode.",
+)
+@click.option(
+    "--privatekey",
+    default=False,
+    help="24 words, use '' around the private key if secret specified and private_key not then will ask in -y mode will autogenerate",
+)
+@click.option(
+    "-s", "--secret", default=None, help="secret for the private key (to keep secret), default will get from ssh-key"
+)
+def configure(
+    basedir=None,
+    configdir=None,
+    codepath=None,
+    debug=False,
+    sshkey=None,
+    sshagent_use=True,
+    interactive=True,
+    privatekey=None,
+    secret=None,
+):
+    """
+    initialize 3bot (JSX) environment
+    """
+
+    IT.MyEnv.configure(
+        configdir=configdir,
+        basedir=basedir,
+        readonly=None,
+        codepath=codepath,
+        sshkey=sshkey,
+        sshagent_use=sshagent_use,
+        debug_configure=debug,
+        interactive=interactive,
+        privatekey=privatekey,
+        secret=secret,
+    )
+
     IT.Tools.shell()
-    if not IT.MyEnv.sshagent_active_check():
-        T = """
-        Did not find an SSH key in ssh-agent, is it ok to continue without?
-        It's recommended to have a SSH key as used on github loaded in your ssh-agent
-        If the SSH key is not found, repositories will be cloned using https
 
-        if you never used an ssh-agent or github, just say "y"
 
-        """
-        if args.y is False:
-            if not IT.Tools.ask_yes_no("OK to continue?"):
-                sys.exit(1)
+### INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
+@click.command()
+@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+@click.option("-n", "--name", default="3bot", help="name of container")
+@click.option(
+    "-i", "--interactive", is_flag=True, type=bool, default=True, help="will ask questions in interactive way"
+)
+@click.option(
+    "-s",
+    "--scratch",
+    is_flag=True,
+    type=bool,
+    default=True,
+    help="from scratch, means will start from empty ubuntu and re-install everything",
+)
+@click.option(
+    "-d",
+    "--delete",
+    is_flag=True,
+    type=bool,
+    default=True,
+    help="if set will delete the docker container if it already exists",
+)
+@click.option("-w", "--wiki", is_flag=True, type=bool, default=False, help="also install the wiki system")
+@click.option("--portrange", default=1, help="portrange, leave empty unless you know what you do.")
+@click.option(
+    "--image",
+    default=None,
+    help="select the container image to use to create the container, leave empty unless you know what you do (-:",
+)
+@click.option(
+    "-b", "--branch", default=None, help="jumpscale branch. default 'master' or 'development' for unstable release"
+)
+@click.option(
+    "--pull",
+    default=False,
+    is_flag=True,
+    type=bool,
+    help="pull code from git, if not specified will only pull if code directory does not exist yet",
+)
+@click.option(
+    "-r",
+    "--reinstall",
+    is_flag=True,
+    type=bool,
+    default=True,
+    help="reinstall, basically means will try to re-do everything without removing the data",
+)
+def container(
+    name="3bot",
+    configdir=None,
+    scratch=False,
+    delete=True,
+    wiki=False,
+    portrange=1,
+    image="despiegk/3bot",
+    branch=None,
+    reinstall=False,
+    interactive=True,
+    pull=False,
+):
+    """
+    create the 3bot container and install jumpcale inside
+    if interactive is True then will ask questions, otherwise will go for the defaults or configured arguments
+    """
 
     if not args.s and not args.y and not args.r:
         if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
@@ -68,7 +187,7 @@ def install_ui(args):
 
     if not args.secret:
         if args.y:
-            args.secret = IT.MyEnv.sshagent_key_get() if IT.MyEnv.sshagent_active_check() else "1234"
+            args.secret = IT.MyEnv.sshagent_sshkey_pub_get() if IT.MyEnv.sshagent_active_check() else "1234"
         else:
             if IT.MyEnv.sshagent_active_check():
                 args.secret = IT.Tools.ask_string(
@@ -82,110 +201,163 @@ def install_ui(args):
         args.private_key = IT.Tools.ask_string(
             "please provide 24 words of the private key, or just press 'ENTER' for autogeneration."
         )
-
-
-def install_summary(args):
-    T = """
-
-    Jumpscale X Installer
-    ---------------------
-
-    """
-    T = IT.Tools.text_replace(T)
-
-    if IT.MyEnv.sshagent_active_check():
-        T += " - sshkey used will be: %s\n" % args.secret
-
-    if args.code_path:
-        T += " - location of code path is: %s\n" % args.code_path
-    if args.pull:
-        T += " - code will be pulled from github\n"
-    if args.wiki:
-        T += " - will install wiki system at end\n"
-    T += " - name of container is: %s\n" % CONTAINER_NAME
-    if CONTAINER_NAME in IT.Docker.docker_names():
-        if "d" in args:
-            T += " - will remove the docker, and recreate\n"
-        else:
-            T += " - will keep the docker container and install inside\n"
-
-    T += " - will use docker image: '%s'\n" % args.image
-
-    # portrange = args["portrange"]
-
-    # a = 8000+int(portrange)*10
-    # b = 8004+int(portrange)*10
-    # portrange_txt = "%s-%s:8000-8004" % (a, b)
-    # port = 9000+int(portrange)*100 + 22
-
-    # T += " - will map ssh port to: '%s'\n" % port
-    # T += " - will map portrange '%s' (8000-8004) always in container.\n" % portrange_txt
-
-    if args.debug:
-        IT.MyEnv.debug = True
-        T += " - runs in debug mode (means will use debugger when error).\n"
-
-    T += "\n"
-    print(T)
-
-    if args.c or not args.y:
-        if not IT.Tools.ask_yes_no("Ok to continue?"):
-            sys.exit(1)
-
-
-def install(args):
-    install_ui(args)
     install_summary(args)
-
-    docker = IT.Docker(
-        name=CONTAINER_NAME, delete=args.d, portrange=args.port_range, sshkey=args.secret, image=args.image
-    )
-    docker.jumpscale_install(secret=args.secret, private_key=args.private_key)
+    docker = IT.Docker(name=name, delete=delete, portrange=portrange, image=image)
+    docker.install()
 
 
-def docker_get(existcheck=True):
-    docker = IT.Docker(name=CONTAINER_NAME, delete=False, portrange=1)
+def docker_get(name="3bot", existcheck=True, portrange=1, delete=False):
+    docker = IT.Docker(name=name, delete=delete, portrange=portrange)
     if existcheck and CONTAINER_NAME not in docker.docker_names():
         print("container does not exists. please install first")
         sys.exit(1)
     return docker
 
 
-def import_container(args):
+### INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
+@click.command()
+@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+@click.option(
+    "-i", "--interactive", is_flag=True, type=bool, default=True, help="will ask questions in interactive way"
+)
+@click.option("-w", "--wiki", is_flag=True, type=bool, default=False, help="also install the wiki system")
+@click.option(
+    "-b", "--branch", default=None, help="jumpscale branch. default 'master' or 'development' for unstable release"
+)
+@click.option(
+    "--pull",
+    default=False,
+    is_flag=True,
+    type=bool,
+    help="pull code from git, if not specified will only pull if code directory does not exist yet",
+)
+@click.option(
+    "-r",
+    "--reinstall",
+    is_flag=True,
+    type=bool,
+    default=True,
+    help="reinstall, basically means will try to re-do everything without removing the data",
+)
+def install(configdir=None, wiki=False, branch=None, reinstall=False, interactive=True, pull=False):
+    """
+    install jumpscale in the local system (only supported for Ubuntu 18.04+ and mac OSX, use container install method otherwise.
+    if interactive is True then will ask questions, otherwise will go for the defaults or configured arguments
+    """
+    if reinstall:
+        # remove the state
+        IT.MyEnv.state_reset()
+        pull = True
+        force = True
+    else:
+        force = False
+
+    installer = IT.JumpscaleInstaller(branch=branch)
+    installer.install(config={}, sandboxed=False, force=force, gitpull=pull)
+    if wiki:
+        Tools.shell()
+        IT.Tools.execute("source %s/env.sh;kosmos 'j.tools.markdowndocs.test()'" % SANDBOX, showout=False)
+    print("Jumpscale X installed successfully")
+
+
+def docker_get(name="3bot", existcheck=True, portrange=1, delete=False):
+    docker = IT.Docker(name=name, delete=delete, portrange=portrange)
+    if existcheck and CONTAINER_NAME not in docker.docker_names():
+        print("container does not exists. please install first")
+        sys.exit(1)
+    return docker
+
+
+@click.command(name="import")
+@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+@click.option("-n", "--name", default="3bot", help="name of container")
+@click.option("-p", "--path", default="/tmp/3bot.tar", help="image location")
+def import_(name="3bot", path="/tmp/3bot.tar", configdir=None):
+    """
+    import container from image file, if not specified will be /tmp/3bot.tar
+    :param args:
+    :return:
+    """
     docker = docker_get(existcheck=False)
     docker.import_(path=args.input)
 
 
-def export_container(args):
-    docker = docker_get()
+@click.command()
+@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+@click.option("-n", "--name", default="3bot", help="name of container")
+@click.option("-p", "--path", default="/tmp/3bot.tar", help="image location")
+def export(name="3bot", path="/tmp/3bot.tar", configdir=None):
+    """
+    export the 3bot to image file, if not specified will be /tmp/3bot.tar
+    :param name:
+    :param path:
+    :return:
+    """
+    docker = docker_get(name=name)
     docker.export(path=args.output)
 
 
-def stop_container(args):
-    docker = docker_get(existcheck=False)
+@click.command()
+@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+@click.option("-n", "--name", default="3bot", help="name of container")
+def stop(name="3bot", configdir=None):
+    """
+    stop the 3bot container
+    :param name:
+    :return:
+    """
+    docker = docker_get(name=name, existcheck=False)
     docker.stop()
 
 
-def start_container(args):
-    docker = docker_get(existcheck=False)
+@click.command()
+@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+@click.option("-n", "--name", default="3bot", help="name of container")
+def start(name="3bot", configdir=None):
+    """
+    start the 3bot container
+    :param name:
+    :return:
+    """
+    docker = docker_get(name=name, existcheck=False)
     docker.start()
 
 
-def delete_container(args):
-    docker = docker_get(existcheck=False)
+@click.command()
+@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+@click.option("-n", "--name", default="3bot", help="name of container")
+def delete(name="3bot", configdir=None):
+    """
+    delete the 3bot container
+    :param name:
+    :return:
+    """
+    docker = docker_get(name=name, existcheck=False)
     docker.delete()
 
 
-def reset_container(args):
-    docker = docker_get()
-    docker.reset()
+@click.command()
+@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+def reset(configdir=None):
+    """
+    remove all docker containers as well as current configuration of the JSX environment
+    :param name:
+    :return:
+    """
+    Tools.shell()
 
 
-def kosmos(args):
-    docker = IT.Docker(name=CONTAINER_NAME, delete=False, portrange=1)
-    if CONTAINER_NAME not in docker.docker_names():
-        print("container does not exists. please install first")
-        sys.exit(1)
+@click.command()
+@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+@click.option("-n", "--name", default="3bot", help="name of container")
+# @click.option("-t", "--target", default="auto", help="auto,local,container, default is auto will try container first")
+def kosmos(name="3bot", target="auto", configdir=None):
+    """
+    open a kosmos shell, if container is running will use the container, if installed locally will use local kosmos
+    :param name: name of container if not the default
+    :return:
+    """
+    docker = docker_get(name=name)
     os.execv(
         shutil.which("ssh"),
         [
@@ -201,138 +373,55 @@ def kosmos(args):
     )
 
 
-def shell(args):
-    docker = IT.Docker(name=CONTAINER_NAME, delete=False, portrange=1)
-    if CONTAINER_NAME not in docker.docker_names():
-        print("container does not exists. please install first")
-        sys.exit(1)
+@click.command()
+@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+@click.option("-n", "--name", default="3bot", help="name of container")
+def shell(name="3bot", configdir=None):
+    """
+    open a  shell to the container for 3bot
+    :param name: name of container if not the default
+    :return:
+    """
+
+    docker = docker_get(name=name)
     os.execv(
         shutil.which("ssh"), ["ssh", "root@localhost", "-A", "-t", "-oStrictHostKeyChecking=no", "-p", str(docker.port)]
     )
 
 
+@click.command()
+def generate():
+    """
+    generate the loader file, important to do when new modules added
+    """
+    j.sal.fs.remove("{DIR_VAR}/codegen")
+    j.sal.fs.remove("{DIR_VAR}/cmds")
+    from Jumpscale.core.generator.JSGenerator import JSGenerator
+    from Jumpscale import j
+
+    g = JSGenerator(j)
+    g.generate(methods_find=True)
+    g.report()
+
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="3bot development environment based on docker")
-    parser.add_argument("--debug", help="launch the debugger if something goes wrong")
-    parser.add_argument(
-        "--code-path",
-        default=None,
-        type=str,
-        help="path where the github code will be checked out, default /sandbox/code if it exists otherwise ~/code",
-    )
-    subparsers = parser.add_subparsers()
 
-    docker_parser = argparse.ArgumentParser(add_help=False)
-    docker_parser.add_argument(
-        "-y", help="answer yes on every question (for unattended installs)", action="store_true", default=False
-    )
-    docker_parser.add_argument(
-        "-c",
-        help="will confirm all filled in questions at the end (useful when using -y)",
-        action="store_true",
-        default=False,
-    )
-    docker_parser.add_argument(
-        "-s",
-        help="from scratch, means will start from empty ubuntu and re-install everything",
-        action="store_true",
-        default=False,
-    )
-    docker_parser.add_argument(
-        "-r",
-        help="reinstall, basically means will try to re-do everything without removing the data",
-        action="store_true",
-        default=False,
-    )
-    docker_parser.add_argument(
-        "-d", help="if set will delete the docker container if it already exists", action="store_true", default=False
-    )
-    docker_parser.add_argument("--wiki", "-w", help="also install the wiki system", action="store_true", default=False)
-    docker_parser.add_argument(
-        "--secret",
-        default=None,
-        type=str,
-        help="if you use 'SSH' then a secret will be derived from the SSH-Agent (only if only 1 ssh key loaded",
-    )
-    docker_parser.add_argument(
-        "--private-key",
-        default="",
-        type=str,
-        help="24 words, use '' around the private key if secret specified and private_key not then will ask in -y mode will autogenerate",
-    )
-    docker_parser.add_argument(
-        "--pull",
-        default=False,
-        action="store_true",
-        help="pull code from git, if not specified will only pull if code directory does not exist yet",
-    )
-    docker_parser.add_argument(
-        "--branch",
-        default=DEFAULT_BRANCH,
-        type=str,
-        help="jumpscale branch. default 'master' or 'development' for unstable release",
-    )
-    docker_parser.add_argument(
-        "--image",
-        default=CONTAINER_BASE_IMAGE,
-        type=str,
-        help="select the container image to use to create the container",
-    )
-    docker_parser.add_argument("--port-range", default=1, type=int)
+    cli.add_command(configure)
+    cli.add_command(install)
+    cli.add_command(container)
+    cli.add_command(stop)
+    cli.add_command(start)
+    cli.add_command(delete)
+    cli.add_command(reset)
+    cli.add_command(export)
+    cli.add_command(import_)
+    cli.add_command(shell)
+    cli.add_command(kosmos)
+    cli.add_command(generate)
 
-    parser_install = subparsers.add_parser(
-        "install", help="create the 3bot container and install jumpcale inside", parents=[docker_parser]
-    )
-    parser_install.set_defaults(func=install)
+    # DO NOT DO THIS IN ANY OTHER WAY !!!
+    IT = load_install_tools()
 
-    ##EXPORT
-    parser_export = subparsers.add_parser("export", help="export the 3bot container to a tar archive")
-    parser_export.add_argument(
-        "--output", "-o", help="export the container to a file pointed by --output", default="/tmp/3bot.tar"
-    )
-    parser_export.set_defaults(func=export_container)
+    IT.MyEnv.init()  # will take into consideration the --configdir
 
-    ##IMPORT
-    parser_import = subparsers.add_parser(
-        "import",
-        help="re-create a 3bot container from an archive created with the export command",
-        parents=[docker_parser],
-    )
-    parser_import.add_argument(
-        "--input", "-i", help="import a container from the tar pointed by --import", default="/tmp/3bot.tar"
-    )
-    parser_import.set_defaults(func=import_container)
-
-    ##STOP START DELETE RESET
-    parser_stop = subparsers.add_parser("stop", help="stop the 3bot container")
-    parser_stop.set_defaults(func=stop_container)
-
-    parser_start = subparsers.add_parser("start", help="start the 3bot container")
-    parser_start.set_defaults(func=start_container)
-
-    parser_delete = subparsers.add_parser("delete", help="delete the 3bot container")
-    parser_delete.set_defaults(func=delete_container)
-
-    parser_reset = subparsers.add_parser("resetall", help="reset the 3bot container (delete all images & containers")
-    parser_reset.set_defaults(func=reset_container)
-
-    ##KOSMOS
-    parser_connect = subparsers.add_parser(
-        "kosmos", help="get kosmos shell (runs in container)", parents=[docker_parser]
-    )
-    parser_connect.set_defaults(func=kosmos)
-
-    ##SHELL
-    parser_connect = subparsers.add_parser("shell", help="ssh into the container", parents=[docker_parser])
-    parser_connect.set_defaults(func=shell)
-
-    args = parser.parse_args()
-
-    IT.MyEnv.init(basedir=None, config={}, readonly=True, codepath=args.code_path)
-
-    if "func" not in args:
-        print("please specify a command e.g. install, if you need more help use -h")
-        print("example to install:   jsx install -s -y -c")
-        sys.exit(1)
-
-    args.func(args)
+    cli()
