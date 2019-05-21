@@ -10,8 +10,6 @@ def main(self):
     use a bcdb which is using sqlite
 
     """
-    j.data.bcdb.latest.zdbclient = None
-
     bcdb, _ = self._load_test_model(reset=True, sqlitestor=True)
 
     mpath = self._dirpath + "/tests/models"
