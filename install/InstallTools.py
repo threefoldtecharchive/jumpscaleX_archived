@@ -1816,7 +1816,7 @@ class MyEnv:
         
         --basedir=                      default ~/sandbox or /sandbox whatever exists first
         --configdir=                    default $BASEDIR/cfg
-        --codepath=                     default $BASEDIR/code
+        --codedir=                     default $BASEDIR/code
 
         --sshkey=                       key to use for ssh-agent if any
         --sshagent-no                   default is to use the sshagent, if you want to disable use this flag
@@ -1831,13 +1831,12 @@ class MyEnv:
     def configure(
         configdir=None,
         basedir=None,
+        codedir=None,
         config={},
         readonly=None,
-        codepath=None,
         sshkey=None,
         sshagent_use=None,
         debug_configure=None,
-        privatekey=None,
         secret=None,
         interactive=True,
     ):
@@ -1847,7 +1846,7 @@ class MyEnv:
 
         --basedir=                      default ~/sandbox or /sandbox whatever exists first
         --configdir=                    default $BASEDIR/cfg
-        --codepath=                     default $BASEDIR/code
+        --codedir=                     default $BASEDIR/code
 
         --sshkey=                       key to use for ssh-agent if any
         --sshagent-no                   default is to use the sshagent, if you want to disable use this flag
@@ -1860,7 +1859,7 @@ class MyEnv:
         :param basedir: the root of the sandbox
         :param config: configuration arguments which go in the config file
         :param readonly: specific mode of operation where minimal changes will be done while using JSX
-        :param codepath: std $sandboxdir/code
+        :param codedir: std $sandboxdir/code
         :param sshkey: name of the sshkey to use if there are more than 1 in ssh-agent
         :param sshagent_use: needs to be True if sshkey used
         :return:
@@ -1870,8 +1869,8 @@ class MyEnv:
 
         if configdir is None and "configdir" in args:
             configdir = args["configdir"]
-        if codepath is None and "codepath" in args:
-            codepath = args["codepath"]
+        if codedir is None and "codedir" in args:
+            codedir = args["codedir"]
         if basedir is None and "basedir" in args:
             basedir = args["basedir"]
         if sshkey is None and "sshkey" in args:
@@ -1879,7 +1878,8 @@ class MyEnv:
 
         if readonly is None and "readonly" in args:
             readonly = True
-        if interactive is True and "interactive-no" in args:
+
+        if interactive and "interactive-no" in args:
             interactive = False
         if sshagent_use is None and "sshagent-no" in args:
             sshagent_use = False
@@ -1913,8 +1913,8 @@ class MyEnv:
         MyEnv.config_file_path = os.path.join(config["DIR_CFG"], "jumpscale_config.toml")
         MyEnv.state_file_path = os.path.join(config["DIR_CFG"], "jumpscale_done.toml")
 
-        if codepath is not None:
-            config["DIR_CODE"] = codepath
+        if codedir is not None:
+            config["DIR_CODE"] = codedir
 
         if not os.path.exists(MyEnv.config_file_path):
             MyEnv.config = MyEnv.config_default_get(config=config)
@@ -1933,24 +1933,7 @@ class MyEnv:
         for key, val in config.items():
             MyEnv.config[key] = val
 
-        # defaults are now set, lets now configure the system
-
-        if secret is None:
-            if interactive:
-                secret = IT.Tools.ask_password("provide secret to use for secret", default=None)
-            if not sshagent_use:
-                print("need to specify a secret because ssh-agent is not used")
-                sys.exit(1)
-
-        if sshagent_use:
-            MyEnv.sshagent = SSHAgent()
-            MyEnv.sshagent.default_key_get(secret=secret)
-
-        else:
-
-            MyEnv.config["SECRET"] = Tools.text_md5(secret)
-
-        if not sshagent_use:
+        if not sshagent_use and interactive:  # just a warning when interactive
             T = """
             Is it ok to continue without SSH-Agent, are you sure?
             It's recommended to have a SSH key as used on github loaded in your ssh-agent
@@ -1963,8 +1946,19 @@ class MyEnv:
             if interactive:
                 if not IT.Tools.ask_yes_no("OK to continue?"):
                     sys.exit(1)
-            else:
-                sys.exit(1)
+
+        # defaults are now set, lets now configure the system
+        if sshagent_use:
+            MyEnv.sshagent = SSHAgent()
+            MyEnv.sshagent.key_default
+        else:
+            if secret is None:
+                if interactive:
+                    secret = Tools.ask_password("provide secret to use for secret")
+                else:
+                    print("NEED TO SPECIFY SECRET WHEN SSHAGENT NOT USED")
+                    sys.exit(1)
+                MyEnv.config["SECRET"] = Tools.text_md5(secret)
 
         MyEnv.config_save()
 

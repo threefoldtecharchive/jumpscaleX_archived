@@ -39,11 +39,11 @@ def cli():
     pass
 
 
-### INIT OF JUMPSCALE ENVIRONMENT
+### CONFIGURATION (INIT) OF JUMPSCALE ENVIRONMENT
 @click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option(
-    "--codepath",
+    "--codedir",
     default=None,
     help="path where the github code will be checked out, default /sandbox/code if it exists otherwise ~/sandbox/code",
 )
@@ -52,19 +52,12 @@ def cli():
     default=None,
     help="path where JSX will be installed default /sandbox if it exists otherwise ~/sandbox/code",
 )
-@click.option("--sshagent_use", default=True, is_flag=True, type=bool, help="do you want to use an ssh-agent")
+@click.option("--no_sshagent", is_flag=True, help="do you want to use an ssh-agent")
 @click.option(
     "--sshkey", default=None, is_flag=True, type=bool, help="if more than 1 ssh-key in ssh-agent, specify here"
 )
-@click.option("--debug", default=False, is_flag=True, type=bool, help="do you want to put kosmos in debug mode?")
-@click.option(
-    "-i",
-    "--interactive",
-    default=True,
-    is_flag=True,
-    type=bool,
-    help="if non interactive then JSX will not ask question but throw error if not in interactive mode.",
-)
+@click.option("--debug", is_flag=True, help="do you want to put kosmos in debug mode?")
+@click.option("-i", "--interactive", is_flag=True, help="will ask questions in interactive way, otherwise auto values")
 @click.option(
     "--privatekey",
     default=False,
@@ -76,23 +69,23 @@ def cli():
 def configure(
     basedir=None,
     configdir=None,
-    codepath=None,
+    codedir=None,
     debug=False,
     sshkey=None,
-    sshagent_use=True,
-    interactive=True,
+    no_sshagent=False,
+    interactive=False,
     privatekey=None,
     secret=None,
 ):
     """
     initialize 3bot (JSX) environment
     """
-
+    sshagent_use = not no_sshagent
     IT.MyEnv.configure(
         configdir=configdir,
         basedir=basedir,
         readonly=None,
-        codepath=codepath,
+        codedir=codedir,
         sshkey=sshkey,
         sshagent_use=sshagent_use,
         debug_configure=debug,
@@ -100,34 +93,23 @@ def configure(
         privatekey=privatekey,
         secret=secret,
     )
+    if privatekey:
+        # how jumpscale need to be available otherwise cannot do
+        from Jumpscale import j
 
-    IT.Tools.shell()
+        j.shell()
 
 
 ### INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
 @click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
+@click.option("-i", "--interactive", is_flag=True, help="will ask questions in interactive way, otherwise auto values")
 @click.option(
-    "-i", "--interactive", is_flag=True, type=bool, default=True, help="will ask questions in interactive way"
+    "-s", "--scratch", is_flag=True, help="from scratch, means will start from empty ubuntu and re-install everything"
 )
-@click.option(
-    "-s",
-    "--scratch",
-    is_flag=True,
-    type=bool,
-    default=True,
-    help="from scratch, means will start from empty ubuntu and re-install everything",
-)
-@click.option(
-    "-d",
-    "--delete",
-    is_flag=True,
-    type=bool,
-    default=True,
-    help="if set will delete the docker container if it already exists",
-)
-@click.option("-w", "--wiki", is_flag=True, type=bool, default=False, help="also install the wiki system")
+@click.option("-d", "--delete", is_flag=True, help="if set will delete the docker container if it already exists")
+@click.option("-w", "--wiki", is_flag=True, help="also install the wiki system")
 @click.option("--portrange", default=1, help="portrange, leave empty unless you know what you do.")
 @click.option(
     "--image",
@@ -139,17 +121,13 @@ def configure(
 )
 @click.option(
     "--pull",
-    default=False,
     is_flag=True,
-    type=bool,
     help="pull code from git, if not specified will only pull if code directory does not exist yet",
 )
 @click.option(
     "-r",
     "--reinstall",
     is_flag=True,
-    type=bool,
-    default=True,
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
 def container(
@@ -162,7 +140,7 @@ def container(
     image="despiegk/3bot",
     branch=None,
     reinstall=False,
-    interactive=True,
+    interactive=False,
     pull=False,
 ):
     """
