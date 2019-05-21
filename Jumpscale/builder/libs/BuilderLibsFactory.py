@@ -11,9 +11,12 @@ class BuilderLibsFactory(j.builder.system._BaseFactoryClass):
         from .BuilderCapnp import BuilderCapnp
         from .BuilderCmake import BuilderCmake
         from .BuilderBrotli import BuilderBrotli
+        from .BuilderLibffi import BuilderLibffi
 
         self.openssl = BuilderOpenSSL()
         self.capnp = BuilderCapnp()
         self.cmake = BuilderCmake()
         self.brotli = BuilderBrotli()
-        # TODO:*1
+        self.libffi = BuilderLibffi()
+
+

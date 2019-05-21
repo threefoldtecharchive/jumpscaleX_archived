@@ -9,9 +9,17 @@ class BuilderLibs(j.builder.system._BaseClass):
 
     def _init(self):
 
-        from .BuilderOpenSSL import BuilderOpenSSL
+        from .BuilderOpenSSL import BuilderOpenSSL 
 
         self.openssl = BuilderOpenSSL()
         from .BuilderCapnp import BuilderCapnp
 
         self.capnp = BuilderCapnp()
+        from .BuilderLibffi import BuilderLibffi
+
+        self.libffi = BuilderLibffi()
+        from .BuilderCmake import BuilderCmake
+
+        self.cmake = BuilderCmake()
+
+
