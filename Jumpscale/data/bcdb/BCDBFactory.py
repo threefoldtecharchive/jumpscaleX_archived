@@ -154,7 +154,7 @@ class BCDBFactory(j.application.JSBaseClass):
         if self.latest != None:
             self.latest.stop()
         if sqlitestor:
-            bcdb = j.data.bcdb.new(name="test", zdbclient=None)
+            bcdb = j.data.bcdb.new(name="test", zdbclient=None, reset=reset)
             assert j.data.bcdb.latest.zdbclient == None
             if reset:
                 bcdb.reset()  # empty
