@@ -16,6 +16,7 @@ class BuilderDocker(j.builder.system._BaseClass):
                     wget -qO- https://get.docker.com/ | sh
                     """
                     self._execute(C)
+                    j.builder.system.package.ensure("module-init-tools, aufs-tools")
                 return
             j.builder.system.package.ensure(
                 "apt-transport-https,linux-modules-extra-$(uname -r),linux-image-extra-virtual,software-properties-common"
@@ -72,3 +73,20 @@ class BuilderDocker(j.builder.system._BaseClass):
         assert self.running()
 
         self._log_info("TEST SUCCESS: docker daemon is running")
+
+    @builder_method()
+    def sandbox(
+        self,
+        reset=False,
+        zhub_client=None,
+        flist_create=False,
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+    ):
+
+        dest_path = self.DIR_SANDBOX
+        bins = ["docker", "dockerd", "dockerd-ce", "docker-init", "docker-proxy"]
+        for bin_name in bins:
+            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
+            dir_dest = self.tools.joinpaths(dest_path, j.core.dirs.BINDIR[1:])
+            self.tools.dir_ensure(dir_dest)
+            self._copy(dir_src, dir_dest)
