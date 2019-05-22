@@ -37,12 +37,6 @@ class BuilderRestic(j.builder.system._BaseClass):
         """
         self._copy("{DIR_BUILD}/restic/restic", "{DIR_BIN}")
 
-    @property
-    def startup_cmds(self):
-        cmd = "/sandbox/bin/restic"
-        cmds = [j.tools.startupcmd.get(name="restic", cmd=cmd)]
-        return cmds
-
     @builder_method()
     def sandbox(
         self,
@@ -76,10 +70,6 @@ class BuilderRestic(j.builder.system._BaseClass):
     @builder_method()
     def clean(self):
         self._remove(self.DIR_BUILD)
-
-    @builder_method()
-    def stop(self):
-        j.sal.process.killProcessByName(self.NAME)
 
     @builder_method()
     def reset(self):
