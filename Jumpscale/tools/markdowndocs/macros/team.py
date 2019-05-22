@@ -69,7 +69,7 @@ def team(doc, link, order="random", projects=None, contribution_types=None, **kw
             if basename.startswith("publicinfo") and extname == "toml":
                 person_data.update(j.data.serializers.toml.load(filepath))
             elif extname in ("png", "jpg", "jpeg"):
-                person_data["avatar"] = "%s/%s" % (doc.path_dir_rel, basename)
+                person_data["avatar"] = j.sal.fs.joinPaths(doc.path_dir_rel, basename)
                 dest = j.sal.fs.joinPaths(doc.docsite.outpath, doc.path_dir_rel, basename)
                 j.sal.fs.copyFile(filepath, dest, createDirIfNeeded=True)
 
