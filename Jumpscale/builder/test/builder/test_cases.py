@@ -186,9 +186,6 @@ class TestCases(BaseTest):
         j.builder.libs.install.build(reset=True)
         j.builder.libs.libffi.install()
         try:
-            j.sal.process.execute('which libtoolize')
+            j.sal.process.execute("which libtoolize")
         except:
-            self.assertTrue(False) 
-
-
-    
+            self.assertTrue(False)
