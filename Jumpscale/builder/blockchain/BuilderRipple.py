@@ -16,7 +16,17 @@ class BuilderRipple(JSBASE):
         """
         # Prerequisites build tools
         self.system.package.mdupdate()
-        self.system.package.install(["git", "pkg-config", "protobuf-compiler", "libprotobuf-dev", "libssl-dev wget"])
+        self.system.package.install(
+            [
+                "git",
+                "pkg-config",
+                "protobuf-compiler",
+                "libprotobuf-dev",
+                "libssl-dev wget",
+                "python-dev",
+                "python3-dev",
+            ]
+        )
 
         # install cmake
         j.builder.libs.cmake.install()
@@ -28,23 +38,25 @@ class BuilderRipple(JSBASE):
             tar xvzf boost_1_67_0.tar.gz
             cd boost_1_67_0
             ./bootstrap.sh
-            ./b2 -j 4
+            ./b2 -j 4 -q
+            export BOOST_ROOT={DIR_BUILD}/boost_1_67_0
+            echo "finished"
         """
-        self._execute(boost_build_cmd, timeout=2000)
+        self._execute(boost_build_cmd, timeout=5000)
 
         # clone and build ripple
         ripple_build_cmd = """
             cd {DIR_BUILD}
-            # git clone https://github.com/ripple/rippled.git
+            git clone https://github.com/ripple/rippled.git
             cd rippled
-            # git checkout master
-            # mkdir my_build
+            git checkout master
+            mkdir my_build
             cd my_build
             export BOOST_ROOT={DIR_BUILD}/boost_1_67_0
             cmake .. -DCMAKE_BUILD_TYPE=Release
             cmake --build .
         """
-        self._execute(ripple_build_cmd, timeout=3000)
+        self._execute(ripple_build_cmd, timeout=4000)
 
         # ripple configuration
         config_cmd = """
