@@ -183,9 +183,17 @@ class TestCases(BaseTest):
             self.assertTrue(False)
 
     def test022_libffi(self):
-        j.builder.libs.install.build(reset=True)
+        j.builder.libs.libffi.build(reset=True)
         j.builder.libs.libffi.install()
         try:
             j.sal.process.execute("which libtoolize")
+        except:
+            self.assertTrue(False)
+
+    def test023_brotli(self):
+        j.builder.libs.brotli.build(reset=True)
+        j.builder.libs.brotli.install()
+        try:
+            j.sal.process.execute("which brotli")
         except:
             self.assertTrue(False)
