@@ -166,9 +166,7 @@ class TestCases(BaseTest):
         time.sleep(10)
         self.assertEqual(0, len(j.sal.process.getProcessPid("syncthing")))
 
-    # def test020_caddyfilemanager(self):
-
-    def test021_freeflow(self):
+    def test020_freeflow(self):
         j.builder.apps.freeflow.build(reset=True)
         j.builder.apps.freeflow.install(reset=True)
         j.builder.apps.freeflow.start()
@@ -176,10 +174,21 @@ class TestCases(BaseTest):
         j.builder.apps.freeflow.stop()
         self.assertEqual(0, len(j.sal.process.getProcessPid("apache2")))
 
-    def test022_cmake(self):
+    def test021_cmake(self):
         j.builder.libs.cmake.build(reset=True)
         j.builder.libs.cmake.install()
         try:
             j.sal.process.execute("which cmake")
         except:
             self.assertTrue(False)
+
+    def test022_libffi(self):
+        j.builder.libs.install.build(reset=True)
+        j.builder.libs.libffi.install()
+        try:
+            j.sal.process.execute('which libtoolize')
+        except:
+            self.assertTrue(False) 
+
+
+    
