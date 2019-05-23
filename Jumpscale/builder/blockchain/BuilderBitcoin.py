@@ -13,7 +13,6 @@ class BuilderBitcoin(j.builder.system._BaseClass):
     @builder_method()
     def build(self):
 
-
         j.builder.buildenv.install()
         self.profile_builder_select()
 
@@ -51,7 +50,7 @@ class BuilderBitcoin(j.builder.system._BaseClass):
         ' - build & link berkly db libs with source code to activate wallet
         ' - executing installation scripts
         """
-        #j.clients.git.pullGitRepo(url="https://github.com/bitcoin/bitcoin.git", branch=self.branch)
+        # j.clients.git.pullGitRepo(url="https://github.com/bitcoin/bitcoin.git", branch=self.branch)
         clone_bitcoin_script = """
                     cd {DIR_BUILD}
                     git clone https://github.com/bitcoin/bitcoin.git --branch 0.18
@@ -90,8 +89,8 @@ class BuilderBitcoin(j.builder.system._BaseClass):
     @builder_method()
     def sandbox(
         self,
-        zhub_client=None, 
-        flist_create=True, 
+        zhub_client=None,
+        flist_create=True,
         merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
     ):
         """Copy built bins to dest_path and reate flist if create_flist = True
@@ -109,7 +108,7 @@ class BuilderBitcoin(j.builder.system._BaseClass):
         """
         dest_path = self.DIR_SANDBOX
         self.profile_sandbox_select()
-        bins = ["bitcoind", "bitcoin-cli", "bitcoin-wallet", "bitcoin-tx"], 
+        bins = (["bitcoind", "bitcoin-cli", "bitcoin-wallet", "bitcoin-tx"],)
         for bin_name in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
             dir_dest = self.tools.joinpaths(dest_path, j.core.dirs.BINDIR[1:])
@@ -120,7 +119,6 @@ class BuilderBitcoin(j.builder.system._BaseClass):
         for bin in bins:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
             j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
-
 
     @property
     def startup_cmds(self):
@@ -141,7 +139,8 @@ class BuilderBitcoin(j.builder.system._BaseClass):
     @builder_method()
     def reset(self):
         super().reset()
-        self.clean()    
+        self.clean()
+
     """
     testing running daemon
     add tests to bitcoin

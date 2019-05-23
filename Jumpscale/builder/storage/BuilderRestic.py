@@ -46,8 +46,8 @@ class BuilderRestic(j.builder.system._BaseClass):
     @builder_method()
     def sandbox(
         self,
-        zhub_client=None, 
-        flist_create=True, 
+        zhub_client=None,
+        flist_create=True,
         merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
     ):
         """Copy built bins to dest_path and reate flist if create_flist = True
@@ -68,7 +68,7 @@ class BuilderRestic(j.builder.system._BaseClass):
         dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, "restic")
         dir_dest = self.tools.joinpaths(dest_path, j.core.dirs.BINDIR[1:])
         self.tools.dir_ensure(dir_dest)
-        self._copy(dir_src, dir_dest)        
+        self._copy(dir_src, dir_dest)
         lib_dest = self.tools.joinpaths(dest_path, "sandbox/lib")
         self.tools.dir_ensure(lib_dest)
         j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
