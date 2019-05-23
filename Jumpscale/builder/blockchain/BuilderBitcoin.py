@@ -8,10 +8,11 @@ class BuilderBitcoin(j.builder.system._BaseClass):
 
     def _init(self):
         self.DIR_BUILD = self._replace("{DIR_VAR}/build/bitcoin")
-        self.tools.dir_ensure(self.DIR_BUILD)
+        j.sal.fs.createDir(self.DIR_BUILD)
 
     @builder_method()
     def build(self):
+
 
         j.builder.buildenv.install()
         self.profile_builder_select()
@@ -50,6 +51,7 @@ class BuilderBitcoin(j.builder.system._BaseClass):
         ' - build & link berkly db libs with source code to activate wallet
         ' - executing installation scripts
         """
+        #j.clients.git.pullGitRepo(url="https://github.com/bitcoin/bitcoin.git", branch=self.branch)
         clone_bitcoin_script = """
                     cd {DIR_BUILD}
                     git clone https://github.com/bitcoin/bitcoin.git --branch 0.18
@@ -73,31 +75,52 @@ class BuilderBitcoin(j.builder.system._BaseClass):
         ./autogen.sh
         ./configure LDFLAGS="-L{DIR_BUILD}/bitcoin/lib/" CPPFLAGS="-I{DIR_BUILD}/bitcoin/include/"
         make
+        make install
         """
-        self._execute(script, timeout=1000)
+        self._execute(script)
 
     @builder_method()
     def install(self):
         # bitcoin bins
-        self.tools.dir_ensure("{DIR_BIN}")
-        bin_src_path = self._replace("{DIR_BUILD}/bitcoin/src/")
-        bin_dest_path = self._replace("{DIR_BIN}")
-
-        self.tools.file_copy(bin_src_path + "bitcoind", bin_dest_path)
-        self.tools.file_copy(bin_src_path + "bitcoin-cli", bin_dest_path)
-        self.tools.file_copy(bin_src_path + "bitcoin-wallet", bin_dest_path)
+        self._copy("{DIR_BUILD}/bitcoin/src/bitcoind", "{DIR_BIN}")
+        self._copy("{DIR_BUILD}/bitcoin/src/bitcoin-cli", "{DIR_BIN}")
+        self._copy("{DIR_BUILD}/bitcoin/src/bitcoin-wallet", "{DIR_BIN}")
+        self._copy("{DIR_BUILD}/bitcoin/src/bitcoin-tx", "{DIR_BIN}")
 
     @builder_method()
-    def sandbox(self, zhub_client=None):
+    def sandbox(
+        self,
+        zhub_client=None, 
+        flist_create=True, 
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+    ):
+        """Copy built bins to dest_path and reate flist if create_flist = True
+
+        :param dest_path: destination path to copy files into
+        :type dest_path: str
+        :param sandbox_dir: path to sandbox
+        :type sandbox_dir: str
+        :param reset: reset sandbox file transfer
+        :type reset: bool
+        :param create_flist: create flist after copying files
+        :type flist_create:bool
+        :param zhub_instance: hub instance to upload flist to
+        :type zhub_instance:str
+        """
+        dest_path = self.DIR_SANDBOX
         self.profile_sandbox_select()
+        bins = ["bitcoind", "bitcoin-cli", "bitcoin-wallet", "bitcoin-tx"], 
+        for bin_name in bins:
+            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin_name)
+            dir_dest = self.tools.joinpaths(dest_path, j.core.dirs.BINDIR[1:])
+            self.tools.dir_ensure(dir_dest)
+            self._copy(dir_src, dir_dest)
+        lib_dest = self.tools.joinpaths(dest_path, "sandbox/lib")
+        self.tools.dir_ensure(lib_dest)
+        for bin in bins:
+            dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
+            j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
 
-        self.tools.dir_ensure("{DIR_SANDBOX}")
-        bin_src_path = self._replace("{DIR_BIN}")
-        bin_dest_path = self._replace("{DIR_SANDBOX}")
-
-        self.tools.file_copy(bin_src_path + "bitcoind", bin_dest_path)
-        self.tools.file_copy(bin_src_path + "bitcoin-cli", bin_dest_path)
-        self.tools.file_copy(bin_src_path + "bitcoin-wallet", bin_dest_path)
 
     @property
     def startup_cmds(self):
@@ -118,8 +141,7 @@ class BuilderBitcoin(j.builder.system._BaseClass):
     @builder_method()
     def reset(self):
         super().reset()
-        self.clean()
-
+        self.clean()    
     """
     testing running daemon
     add tests to bitcoin
