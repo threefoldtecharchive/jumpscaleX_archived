@@ -278,8 +278,6 @@ class BuilderBaseClass(BaseClass):
             if key.upper() == key:
                 args[key] = item
         res = j.core.tools.text_replace(content=txt, args=args, text_strip=True)
-        if res.find("{") != -1:
-            raise RuntimeError("replace was not complete, still { inside, '%s'" % res)
         return res
 
     def _execute(self, cmd, die=True, args={}, timeout=600, replace=True, showout=True, interactive=False):
