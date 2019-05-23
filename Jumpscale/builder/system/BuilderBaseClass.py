@@ -7,6 +7,7 @@ BaseClass = j.application.JSBaseClass
 
 
 class builder_method(object):
+
     def __init__(self, **kwargs_):
         if "log" in kwargs_:
             self.log = j.data.types.bool.clean(kwargs_["log"])
@@ -62,36 +63,49 @@ class builder_method(object):
         kwargs = {key: value for key, value in kwargs.items() if key in arg_names}
         return func(**kwargs)
 
+    def already_done(self, func, builder, key, reset):
+        """ Check if this method was already done or not
+
+        *Note* if you pass reset=True to any method it will be executed again
+        :param func: the function called
+        :param builder: the builder used
+        :param kwargs: kwargs passed to the method (use get_all_as_keyword_arguments to get anything passed to the
+        method as kwargs)
+        :return: True means it was already done and you don't need to redo, False means not done before or reset=True
+        """
+
+        reset = j.data.types.bool.clean(reset)
+        if reset is True:
+            builder._done_reset()
+            builder.reset()
+            return False
+
+        if self.done_check and builder._done_check(key, reset):
+            return True
+        else:
+            return False
+
     def __call__(self, func):
         def wrapper_action(builder, *args, **kwargs):
             name = func.__name__
             kwargs = self.get_all_as_keyword_arguments(func, args, kwargs)
-
-            if self.log:
-                builder._log_debug("do once:%s" % name)
-
-            if "reset" in kwargs:
-                reset = j.data.types.bool.clean(kwargs["reset"])
-            else:
-                reset = False
-
             kwargs_without_reset = {key: value for key, value in kwargs.items() if key != "reset"}
             done_key = name + "_" + j.data.hash.md5_string(str(kwargs_without_reset))
+            reset = kwargs.get("reset", False)
 
-            if self.done_check and builder._done_check(done_key, reset):
-                builder._log_debug("action:%s() no need to do, was already done" % done_key)
-                return
+            if self.already_done(func, builder, done_key, reset):
+                return builder.ALREADY_DONE_VALUE
 
-            if reset:
-                builder._done_reset()
-                builder.reset()
-
+            # Make sure to call _init before any method
             if name is not "_init":
                 builder._init()
+
             if name == "build":
                 builder.profile_builder_select()
+
             if name == "install":
                 builder.build()
+
             if name == "sandbox":
                 builder.profile_sandbox_select()
                 builder.install()
@@ -110,8 +124,7 @@ class builder_method(object):
             if name == "sandbox" and kwargs.get("flist_create", False):
                 res = builder._flist_create(kwargs["zhub_client"], kwargs.get("merge_base_flist"))
 
-            if self.done_check:
-                builder._done_set(done_key)
+            builder._done_set(done_key)
 
             if name == "build":
                 builder.profile_sandbox_select()
@@ -128,6 +141,7 @@ class BuilderBaseClass(BaseClass):
     """
     doc in /sandbox/code/github/threefoldtech/jumpscaleX/docs/Internals/builders/Builders.md
     """
+    ALREADY_DONE_VALUE = "ALREADY DONE"
 
     def __init__(self):
         if hasattr(self.__class__, "NAME"):
