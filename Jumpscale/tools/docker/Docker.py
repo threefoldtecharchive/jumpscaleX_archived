@@ -74,7 +74,7 @@ class Docker(j.application.JSBaseClass):
 
         res = []
         for container in self.containers:
-            if container.isRunning():
+            if container.is_running():
                 res.append(container.name)
         return res
 

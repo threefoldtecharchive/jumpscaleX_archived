@@ -22,7 +22,7 @@ class Container(j.application.JSBaseClass):
         JSBASE.__init__(self)
 
         self.obj = obj
-        self.name = obj["Names"][0]
+        self.name = obj["Names"][0][1::] # remove the forward slash that docker adds to the name
         self.id = obj["Id"]
 
         self._ssh_port = None
@@ -38,7 +38,7 @@ class Container(j.application.JSBaseClass):
 
     @property
     def image(self):
-        return self.info["Config"]["Image"]
+        return self.info["Image"]
 
     @property
     def sshclient(self):
@@ -65,7 +65,7 @@ class Container(j.application.JSBaseClass):
 
     @property
     def status(self):
-        return self.info["State"]["Status"]
+        return self.info["Status"]
 
     def prefab(self):
         if self._prefab is None:
@@ -115,12 +115,10 @@ class Container(j.application.JSBaseClass):
         if self.is_running() is False:
             raise j.exceptions.RuntimeError("docker %s is not running cannot get pub port." % self)
 
-        if not self.info["Ports"] is None:
+        if self.info["Ports"] is not None:
             for port in self.info["Ports"]:
                 if port["PrivatePort"] == private_port:
                     return port["PublicPort"]
-
-        raise j.exceptions.Input("cannot find publicport for ssh?")
 
     def ssh_authorize(self, sshkeyname, password):
         home = j.builder.bash.home
