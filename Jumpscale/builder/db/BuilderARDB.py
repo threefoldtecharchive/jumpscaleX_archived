@@ -1,180 +1,136 @@
 from Jumpscale import j
 
+builder_method = j.builder.system.builder_method
+
 
 class BuilderARDB(j.builder.system._BaseClass):
-    NAME = "ardb"
-
-    def reset(self):
-        app.reset(self)
-        self._init()
+    NAME = "ardb-server"
 
     def _init(self):
-        self.BUILDDIRFDB = self._replace("{DIR_VAR}/build/forestdb/")
-        self.CODEDIRFDB = self._replace("{DIR_CODE}/github/couchbase/forestdb")
-        self.CODEDIRARDB = self._replace("{DIR_CODE}/github/yinqiwen/ardb")
-        self.BUILDDIRARDB = self._replace("{DIR_VAR}/build/ardb/")
+        # forest db (backend engine) paths
+        self.CODE_DIR_FDB = self._replace("{DIR_BUILD}/github/couchbase/forestdb")
+        self.BUILD_DIR_FDB = self._replace("{DIR_BUILD}/forestdb/")
+        # ardb build paths
+        self.CODE_DIR_ARDB = self._replace("{DIR_BUILD}/github/yinqiwen/ardb")
+        self.BUILD_DIR_ARDB = self._replace("{DIR_BUILD}/ardb/")
 
-    def buildForestDB(self, reset=False):
+    @builder_method()
+    def build(self):
+        """
+        kosmos 'j.builder.db.ardb.build()'
+        """
+        # build_forest_db
+        self.build_forest_db()
 
-        if self._done_check("buildforestdb", reset):
-            return
+        # Default packages needed
+        packages = ["wget", "bzip2", "git", "libbz2-dev", "unzip"]
 
-        j.builder.system.package.ensure(["git-core", "cmake", "libsnappy-dev", "g++"])
+        # Install dependancies
+        self.system.package.install(packages)
+
+        url = "https://github.com/yinqiwen/ardb.git"
+        j.clients.git.pullGitRepo(url=url, tag="v0.9.3", dest=self.CODE_DIR_ARDB, depth=1)
+
+        storageEngine = "forestdb"
+        C = """
+            set -ex
+            cd {CODE_DIR_ARDB}
+            # cp {BUILD_DIR_ARDB}/FDB/libforestdb* .
+            storage_engine=$storageEngine make
+            rm -rf {BUILD_DIR_ARDB}/ARDB/
+            mkdir -p {BUILD_DIR_ARDB}/ARDB
+            cp src/ardb-server {BUILD_DIR_ARDB}/ARDB/
+            cp ardb.conf {BUILD_DIR_ARDB}/ARDB/
+            """.format(
+            CODE_DIR_ARDB=self.CODE_DIR_ARDB, BUILD_DIR_ARDB=self.BUILD_DIR_ARDB
+        )
+        C = C.replace("$storageEngine", storageEngine)
+        self._execute(self._replace(C))
+
+    # build forest_db as backend
+    def build_forest_db(self):
+
+        j.builder.libs.cmake.install()
+        self.system.package.mdupdate()
+        self.system.package.install(["git-core", "libsnappy-dev", "g++", "libaio-dev"])
 
         url = "git@github.com:couchbase/forestdb.git"
-        cpath = j.clients.git.pullGitRepo(url, tag="v1.2", reset=reset)
-
-        assert cpath.rstrip("/") == self.CODEDIRFDB.rstrip("/")
+        j.clients.git.pullGitRepo(url=url, dest=self.CODE_DIR_FDB, tag="v1.2", depth=1)
 
         C = """
             set -ex
-            cd {DIR_CODE}FDB
+            cd {CODE_DIR_FDB}
             mkdir build
             cd build
             cmake ../
             make all
-            rm -rf {DIR_VAR}/build/FDB/
-            mkdir -p {DIR_VAR}/build/FDB
-            cp forestdb_dump* {DIR_VAR}/build/FDB/
-            cp forestdb_hexamine* {DIR_VAR}/build/FDB/
-            cp libforestdb* {DIR_VAR}/build/FDB/
-            """
-        j.sal.process.execute(self._replace(C))
-        self._done_set("buildforestdb")
+            rm -rf {BUILD_DIR_FDB}/FDB/
+            mkdir -p {BUILD_DIR_FDB}/FDB
+            cp forestdb_dump* {BUILD_DIR_FDB}/FDB/
+            cp forestdb_hexamine* {BUILD_DIR_FDB}/FDB/
+            cp libforestdb* {BUILD_DIR_FDB}/FDB/
+            """.format(
+            CODE_DIR_FDB=self.CODE_DIR_FDB, BUILD_DIR_FDB=self.BUILD_DIR_FDB
+        )
+        self._execute(C)
 
-    def build(self, destpath="", reset=False):
-        """
-        @param destpath, if '' then will be {DIR_TEMP}/build/openssl
-        j.builder.db.ardb.build()
-        """
-        j.shell()
-        if self._done_check("build", reset):
-            return
-
-        if self.tools.command_check("ardb-server") and not reset:
-            return
-
-        if reset:
-            j.sal.process.execute("rm -rf %s" % self.BUILDDIR)
-
-        # not needed to build separately is done in ardb automatically
-        # self.buildForestDB(reset=reset)
-
-        self.buildARDB(reset=reset)
-        self._done_set("build")
-
-    # TODO: which one is it ??? 2 builders
-    def build2(self, reset=False, storageEngine="forestdb"):
-        """
-        kosmos 'j.builder.db.ardb.build()'
-
-        @param storageEngine rocksdb or forestdb
-        """
-        if self._done_check("buildardb", reset):
-            return
-
-        # Default packages needed
-        packages = ["wget", "bzip2"]
-
-        if j.builder.platformtype.isMac:
-            storageEngine = "rocksdb"
-            # ForestDB
-            packages += ["git", "cmake", "libsnappy-dev", "gcc48"]
-            # j.builder.system.package.ensure("boost")
-        else:
-            # ForestDB
-            packages += ["git", "cmake", "libsnappy-dev", "g++"]
-            # RocksDB
-            packages += ["libbz2-dev"]
-
-        # PerconaFT
-        packages += ["unzip"]
-
-        # Install dependancies
-        j.builder.system.package.ensure(packages)
-
-        url = "https://github.com/yinqiwen/ardb.git"
-        cpath = j.clients.git.pullGitRepo(url, tag="v0.9.3", reset=reset, ssh=False)
-        self._log_info(cpath)
-
-        assert cpath.rstrip("/") == self.CODEDIRARDB.rstrip("/")
-
-        C = """
-            set -ex
-            cd {DIR_CODE}ARDB
-            # cp {DIR_VAR}/build/FDB/libforestdb* .
-            storage_engine=$storageEngine make
-            rm -rf {DIR_VAR}/build/ARDB/
-            mkdir -p {DIR_VAR}/build/ARDB
-            cp src/ardb-server {DIR_VAR}/build/ARDB/
-            cp ardb.conf {DIR_VAR}/build/ARDB/
-            """
-        C = C.replace("$storageEngine", storageEngine)
-        j.sal.process.execute(self._replace(C))
-
-        self._done_set("buildardb")
-
-    def install(self, name="main", host="localhost", port=16379, datadir=None, reset=False, start=True):
+    @builder_method()
+    def install(self,):
         """
         as backend use ForestDB
         """
-        if self._done_check("install-%s" % name, reset):
-            return
-        self.buildARDB()
-        j.core.tools.dir_ensure("{DIR_BIN}")
-        j.core.tools.dir_ensure("$CFGDIR")
-        if not j.builder.tools.file_exists("{DIR_BIN}/ardb-server"):
-            j.builder.tools.file_copy("{DIR_VAR}/build/ardb/ardb-server", "{DIR_BIN}/ardb-server")
+        self.tools.dir_ensure("{DIR_BIN}")
+        self._copy("{BUILD_DIR_ARDB}/ARDB/ardb-server", "{DIR_BIN}/ardb-server")
 
-        # self.tools.profile.path_add('{DIR_BIN}')
+    @builder_method()
+    def sandbox(
+        self,
+        zhub_client=None,
+        flist_create=True,
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+    ):
+        """Copy built bins to dest_path and reate flist if create_flist = True
 
-        if datadir is None or datadir == "":
-            datadir = self._replace("{DIR_VAR}/data/ardb/{}".format(name))
-        j.core.tools.dir_ensure(datadir)
+        :param reset: reset sandbox file transfer
+        :type reset: bool
+        :type flist_create:bool
+        :param zhub_instance: hub instance to upload flist to
+        :type zhub_instance:str
+        """
+        bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "bin")
+        self.tools.dir_ensure(bin_dest)
+        self._copy("{DIR_BIN}/ardb-server", bin_dest)
 
-        # config = config.replace("redis-compatible-mode     no", "redis-compatible-mode     yes")
-        # config = config.replace("redis-compatible-version  2.8.0", "redis-compatible-version  3.5.2")
-        config = j.core.tools.file_text_read("{DIR_VAR}/build/ardb/ardb.conf")
-        config = config.replace("${ARDB_HOME}", datadir)
-        config = config.replace("0.0.0.0:16379", "{host}:{port}".format(host=host, port=port))
-
-        cfg_path = "$CFGDIR/ardb/{}/ardb.conf".format(name)
-        j.builder.tools.file_write(cfg_path, config)
-
-        self._done_set("install-%s" % name)
-
-        if start:
-            self.start(name=name, reset=reset)
-
-    def start(self, name="main", reset=False):
-        if not reset and self._done_get("start-%s" % name):
-            return
-
-        cfg_path = "$CFGDIR/ardb/{}/ardb.conf".format(name)
-        cmd = "{DIR_BIN}/ardb-server {}".format(cfg_path)
-        pm = j.builder.system.processmanager.get()
-        pm.ensure(name="ardb-server-{}".format(name), cmd=cmd, env={}, path="")
-        # self.test(port=port)
-
-        self._done_set("start-%s" % name)
-
-    def stop(self, name="main"):
-        pm = j.builder.system.processmanager.get()
-        pm.stop("ardb-server-{}".format(name))
-
-    def getClient(self):
-        pass
-
-    def test(self, port):
+    @builder_method()
+    def test(self):
         """
         do some test through normal redis client
         """
-        if j.builder.executor.type == "local":
-            addr = "localhost"
-        else:
-            addr = j.builder.executor.addr
-
-        r = j.clients.redis.get(ipaddr=addr, port=port)
+        j.builder.db.ardb.start()
+        r = j.clients.redis.get(ipaddr="0.0.0.0", port=16379)
         r.set("test", "test")
         assert r.get("test") == b"test"
         r.delete("test")
+        j.builder.db.ardb.stop()
+        print("TEST OK")
+
+    @property
+    def startup_cmds(self):
+        cmds = j.tools.startupcmd.get(name=self.NAME, cmd=self.NAME)
+        return [cmds]
+
+    @builder_method()
+    def stop(self):
+        j.sal.process.killProcessByName(self.NAME)
+
+    @builder_method()
+    def clean(self):
+        self._remove(self.CODE_DIR_FDB)
+        self._remove(self.BUILD_DIR_FDB)
+        self._remove(self.CODE_DIR_ARDB)
+        self._remove(self.BUILD_DIR_ARDB)
+
+    @builder_method()
+    def reset(self):
+        super().reset()
+        self.clean()
