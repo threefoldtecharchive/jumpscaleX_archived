@@ -14,6 +14,7 @@ class BuildDBFactory(j.builder.system._BaseFactoryClass):
         self._tidb = None
         self._postgres = None
         self._zdb = None
+        self._influxdb = None
 
     @property
     def etcd(self):
@@ -78,3 +79,11 @@ class BuildDBFactory(j.builder.system._BaseFactoryClass):
 
             self._ardb = BuilderARDB()
         return self._ardb
+
+    @property
+    def influxdb(self):
+        if self._influxdb is None:
+            from .BuilderInfluxdb import BuilderInfluxdb
+
+            self._influxdb = BuilderInfluxdb()
+        return self._influxdb

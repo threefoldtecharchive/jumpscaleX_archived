@@ -76,7 +76,7 @@ class BuilderBitcoin(j.builder.system._BaseClass):
         make
         make install
         """
-        self._execute(script)
+        self._execute(script, timeout=1000)
 
     @builder_method()
     def install(self):
