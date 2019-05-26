@@ -1,5 +1,6 @@
 from Jumpscale.sal.bash.Profile import Profile
 from Jumpscale import j
+from functools import wraps
 import inspect
 import os
 
@@ -85,6 +86,7 @@ class builder_method(object):
             return False
 
     def __call__(self, func):
+        @wraps(func)
         def wrapper_action(builder, *args, **kwargs):
             name = func.__name__
             kwargs = self.get_all_as_keyword_arguments(func, args, kwargs)
