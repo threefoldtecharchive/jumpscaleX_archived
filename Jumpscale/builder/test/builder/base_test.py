@@ -40,5 +40,3 @@ class BaseTest(TestCase):
         self.builder._flist_create.assert_not_called()
         assert self.builder.sandbox(zhub_client, flist_create=True)
         self.builder._flist_create.assert_called()
-
-

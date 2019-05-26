@@ -7,7 +7,6 @@ BaseClass = j.application.JSBaseClass
 
 
 class builder_method(object):
-
     def __init__(self, **kwargs_):
         if "log" in kwargs_:
             self.log = j.data.types.bool.clean(kwargs_["log"])
@@ -141,6 +140,7 @@ class BuilderBaseClass(BaseClass):
     """
     doc in /sandbox/code/github/threefoldtech/jumpscaleX/docs/Internals/builders/Builders.md
     """
+
     ALREADY_DONE_VALUE = "ALREADY DONE"
 
     def __init__(self):
