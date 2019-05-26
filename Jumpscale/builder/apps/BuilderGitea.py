@@ -95,14 +95,22 @@ class BuilderGitea(BuilderGolangTools):
         if "gitea" not in out:
             self._execute("sudo -u postgres {DIR_BIN}/psql -c 'create database gitea;'")
 
+        cfg = """
+        {{\\"Provider\\":\\"itsyou.online\\",\\"ClientID\\":\\"%s\\",\\"ClientSecret\\":\\"%s\\",\\"OpenIDConnectAutoDiscoveryURL\\":\\"\\",\\"CustomURLMapping\\":null}}
+        """ % (
+            org_client_id,
+            org_client_secret,
+        )
+
         cmd = """
         "INSERT INTO login_source (type, name, is_actived, cfg, created_unix, updated_unix)
         VALUES (6, 'Itsyou.online', TRUE,
-                '{{\\"Provider\\":\\"itsyou.online\\",\\"ClientID\\":\\"%s\\",\\"ClientSecret\\":\\"%s\\",\\"OpenIDConnectAutoDiscoveryURL\\":\\"\\",\\"CustomURLMapping\\":null}}',
+                '{cfg}',
                 extract('epoch' from CURRENT_TIMESTAMP) , extract('epoch' from CURRENT_TIMESTAMP))
-        ON CONFLICT (name) DO NOTHING;"
-        """
-        cmd = cmd % (org_client_id, org_client_secret)
+        ON CONFLICT (name) DO UPDATE set cfg = '{cfg}';"
+        """.format(
+            cfg=cfg
+        )
         cmd = cmd.replace("\n", " ").replace("\r", " ").replace("\t", " ")
         self._execute("sudo -u postgres {DIR_BIN}/psql gitea -c %s" % cmd)
 
