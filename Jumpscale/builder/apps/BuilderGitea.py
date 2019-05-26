@@ -14,8 +14,8 @@ class BuilderGitea(BuilderGolangTools):
         # set needed paths
         self.GITEAPATH = self._replace("{DIR_GO_PATH}/src/code.gitea.io/gitea")
         self.CUSTOM_PATH = "%s/custom" % self.GITEAPATH
-        self.CODEDIR = self.GITEAPATH
-        self.INIPATH = "%s/conf/app.ini" % self.CUSTOM_PATH
+        # app.ini will be bundled with the binary
+        self.INIPATH = "%s/custom/conf/app.ini" % self.DIR_GO_PATH_BIN
 
     @builder_method()
     def build(self):
@@ -78,8 +78,6 @@ class BuilderGitea(BuilderGolangTools):
         LEVEL     = Info
         """
 
-        self.tools.dir_ensure(self._replace("{CUSTOM_PATH}/conf"))
-
         config = textwrap.dedent(config)
         self._write(self.INIPATH, config)
 
@@ -100,8 +98,9 @@ class BuilderGitea(BuilderGolangTools):
         cmd = """
         "INSERT INTO login_source (type, name, is_actived, cfg, created_unix, updated_unix)
         VALUES (6, 'Itsyou.online', TRUE,
-        '{{\\"Provider\\":\\"itsyou.online\\",\\"ClientID\\":\\"%s\\",\\"ClientSecret\\":\\"%s\\",\\"OpenIDConnectAutoDiscoveryURL\\":\\"\\",\\"CustomURLMapping\\":null}}',
-        extract('epoch' from CURRENT_TIMESTAMP) , extract('epoch' from CURRENT_TIMESTAMP));"
+                '{{\\"Provider\\":\\"itsyou.online\\",\\"ClientID\\":\\"%s\\",\\"ClientSecret\\":\\"%s\\",\\"OpenIDConnectAutoDiscoveryURL\\":\\"\\",\\"CustomURLMapping\\":null}}',
+                extract('epoch' from CURRENT_TIMESTAMP) , extract('epoch' from CURRENT_TIMESTAMP))
+        ON CONFLICT (name) DO NOTHING;"
         """
         cmd = cmd % (org_client_id, org_client_secret)
         cmd = cmd.replace("\n", " ").replace("\r", " ").replace("\t", " ")
@@ -109,7 +108,8 @@ class BuilderGitea(BuilderGolangTools):
 
     @builder_method()
     def install(self):
-        self._copy("{DIR_GO_PATH}/bin/gitea", "{DIR_BIN}/gitea")
+        # copy the binary with bundled assets using bindata to $GOPATH/bin
+        self._copy("{GITEAPATH}/gitea", "{DIR_GO_PATH}/bin/gitea")
 
     @property
     def startup_cmds(self):
