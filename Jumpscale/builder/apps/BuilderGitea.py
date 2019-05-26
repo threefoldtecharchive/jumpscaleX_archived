@@ -19,11 +19,7 @@ class BuilderGitea(BuilderGolangTools):
 
     @builder_method()
     def build(self):
-        """Build Gitea with itsyou.online config
-
-        Keyword Arguments:
-            reset {bool} -- force build if True (default: {False})
-        """
+        """Build Gitea with itsyou.online authentication"""
         self._installDeps()
         self.get("code.gitea.io/gitea", install=False)
 
@@ -33,9 +29,10 @@ class BuilderGitea(BuilderGolangTools):
             self._execute(
                 """cd {GITEAPATH}
                 git remote add gigforks https://github.com/gigforks/gitea
-                git fetch gigforks && git checkout gigforks/iyo_integration
-            """
+                """
             )
+
+        self._execute("cd {GITEAPATH} && git fetch gigforks && git checkout gigforks/iyo_integration")
 
         # gitea-custom is needed to replace the default gitea custom
         j.clients.git.pullGitRepo("https://github.com/incubaid/gitea-custom.git", branch="master")
@@ -43,10 +40,6 @@ class BuilderGitea(BuilderGolangTools):
             self.tools.dir_remove(self.CUSTOM_PATH)
 
         self.tools.file_link(source="/sandbox/code/github/incubaid/gitea-custom", destination=self.CUSTOM_PATH)
-
-        # configure
-        self.tools.dir_ensure(self._replace("{CUSTOM_PATH}/conf"))
-        self._configure()
 
         # build gitea (will be stored in self.GITEAPATH/gitea)
         self._execute('cd {GITEAPATH} && TAGS="bindata" make generate build')
@@ -63,10 +56,9 @@ class BuilderGitea(BuilderGolangTools):
         j.builder.runtimes.golang.install()
         j.builder.db.postgres.install()
 
-    def _configure(self):
-        """Configure gitea
-        Configure: db, iyo
-        """
+    @builder_method()
+    def configure(self, org_client_id, org_client_secret):
+        """Configure gitea, db, iyo"""
 
         # Configure Database
         config = """
@@ -85,37 +77,41 @@ class BuilderGitea(BuilderGolangTools):
         MODE      = file
         LEVEL     = Info
         """
+
+        self.tools.dir_ensure(self._replace("{CUSTOM_PATH}/conf"))
+
         config = textwrap.dedent(config)
         self._write(self.INIPATH, config)
 
-    @builder_method()
-    def install(self, org_client_id, org_client_secret):
-        """Build Gitea with itsyou.online config
+        try:
+            j.sal.process.killProcessByName("postgres")
+            j.sal.process.killProcessByName("gitea")
+            self.stop()
+        except j.exceptions.RuntimeError:
+            # not started
+            pass
 
-        Same as build but exists for standarization sake
+        self.start()
 
-        Keyword Arguments:
-            reset {bool} -- force build if True (default: {False})
-        """
-        j.sal.process.killProcessByName("postgres")
-        j.builder.db.postgres.start()
-        self._execute("sudo -u postgres {DIR_BIN}/psql -c 'create database gitea;'")
-
-        self._execute("sudo -u postgres {DIR_BIN}/psql gitea -c")
+        _, out, _ = self._execute("sudo -u postgres {DIR_BIN}/psql -l")
+        if "gitea" not in out:
+            self._execute("sudo -u postgres {DIR_BIN}/psql -c 'create database gitea;'")
 
         cmd = """
         "INSERT INTO login_source (type, name, is_actived, cfg, created_unix, updated_unix)
         VALUES (6, 'Itsyou.online', TRUE,
-        '{\\"Provider\\":\\"itsyou.online\\",\\"ClientID\\":\\"%s\\",\\"ClientSecret\\":\\"%s\\",\\"OpenIDConnectAutoDiscoveryURL\\":\\"\\",\\"CustomURLMapping\\":null}',
+        '{{\\"Provider\\":\\"itsyou.online\\",\\"ClientID\\":\\"%s\\",\\"ClientSecret\\":\\"%s\\",\\"OpenIDConnectAutoDiscoveryURL\\":\\"\\",\\"CustomURLMapping\\":null}}',
         extract('epoch' from CURRENT_TIMESTAMP) , extract('epoch' from CURRENT_TIMESTAMP));"
         """
         cmd = cmd % (org_client_id, org_client_secret)
         cmd = cmd.replace("\n", " ").replace("\r", " ").replace("\t", " ")
-        self._execute(cmd)
+        self._execute("sudo -u postgres {DIR_BIN}/psql gitea -c %s" % cmd)
 
-        self.tools.file_link(self._replace("{GITEAPATH}/gitea"), self.DIR_BIN)
+    @builder_method()
+    def install(self):
+        self._copy("{DIR_GO_PATH}/bin/gitea", "{DIR_BIN}/gitea")
 
     @property
     def startup_cmds(self):
         cmd = j.tools.startupcmd.get("gitea", "gitea web", path="/sandbox/bin")
-        return [cmd]
+        return j.builder.db.postgres.startup_cmds + [cmd]
