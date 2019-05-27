@@ -27,6 +27,14 @@ class builder_method(object):
 
     @staticmethod
     def get_default_zhub_client(kwargs):
+        """Gets the zhub client to be used to upload the flist
+        this will depend on two parameters (zhub_client and flist_create)
+        - if zerohub instance provided it will be used
+        - if no zhub instance but flist_create = True will try to use the main zhub instance
+        :param kwargs: kwargs passed to the builder method
+        :return: zhub_client to be used
+        :raises: RuntimeError if no zhub instance provided and the main instance is not configured
+        """
         # only use "main" client, because should be generic usable
         zhub_client = kwargs.get("zhub_client")
         if not zhub_client and kwargs.get("flist_create"):
@@ -40,6 +48,11 @@ class builder_method(object):
 
     @staticmethod
     def get_argument_names(func):
+        """Gets the args of a function ordered
+
+        :param func: a method to get parameters from
+        :return: list of args names
+        """
         argspec = inspect.getargspec(func)
         args = argspec.args
         if argspec.varargs:
@@ -49,6 +62,13 @@ class builder_method(object):
         return args
 
     def get_all_as_keyword_arguments(self, func, args, kwargs):
+        """Converts all passed parameters to dict
+        we needed this because we need a unified way to deal with the parameters passed to the method
+        :param func: a function to get the arguments data from
+        :param args: the passed args
+        :param kwargs: the passed kwargs
+        :return: dict of args and kwargs as if it was all kwargs
+        """
         arg_names = self.get_argument_names(func)
         if "self" in arg_names:
             arg_names.remove("self")
@@ -97,6 +117,16 @@ class builder_method(object):
     def __call__(self, func):
         @wraps(func)
         def wrapper_action(builder, *args, **kwargs):
+            """The main wrapper method for the decorator, it will do:
+            1- check if the method is going to be executed or it's already done before
+            2- make sure that the previous method were executed in the correct order
+            3- choose the correct env file for the action
+            4- prepare any needed parameters AKA zerohub client in case of creating a flist
+            :param builder: the builder self
+            :param args: args passed to the method
+            :param kwargs: kwargs passed to the method
+            :return: if the method was already done it will return BuilderBase.ALREADY_DONE_VALUE
+            """
             name = func.__name__
             kwargs = self.get_all_as_keyword_arguments(func, args, kwargs)
             kwargs_without_reset = {key: value for key, value in kwargs.items() if key != "reset"}
