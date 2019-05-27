@@ -1,17 +1,20 @@
 from Jumpscale import j
-from unittest import TestCase
 from unittest.mock import MagicMock
+from Jumpscale.builder.test.builder.base_test import BaseTest
 
 
-class BuilderBaseTest(TestCase):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class BuilderBaseTest(BaseTest):
+    def __init__(self):
+        BaseTest.__init__(self)
+        self.builder = None
 
     def setUp(self):
+        BaseTest.setUp(self)
         self.builder = j.builder.system.dummy
 
     def tearDown(self):
         self.builder._done_reset()
+        BaseTest.tearDown(self)
 
     def test_init_before_methods(self):
         self.builder.build()
@@ -40,5 +43,3 @@ class BuilderBaseTest(TestCase):
         self.builder._flist_create.assert_not_called()
         assert self.builder.sandbox(zhub_client, flist_create=True)
         self.builder._flist_create.assert_called()
-
-

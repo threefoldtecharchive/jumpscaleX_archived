@@ -8,6 +8,13 @@ BaseClass = j.application.JSBaseClass
 
 
 class builder_method(object):
+    """A Decorator to be used in all builder methods
+    this will provide:
+    1- State check to make sure not to do one action multiple times
+    2- Making sure that actions are done in the correct order, for instance it will make sure that build is done before
+       installation
+    """
+
     def __init__(self, **kwargs_):
         if "log" in kwargs_:
             self.log = j.data.types.bool.clean(kwargs_["log"])
@@ -18,7 +25,8 @@ class builder_method(object):
         else:
             self.done_check = True
 
-    def get_default_zhub_client(self, kwargs):
+    @staticmethod
+    def get_default_zhub_client(kwargs):
         # only use "main" client, because should be generic usable
         zhub_client = kwargs.get("zhub_client")
         if not zhub_client and kwargs.get("flist_create"):
@@ -30,7 +38,8 @@ class builder_method(object):
             zhub_client.list(username=zhub_client.username)
         return zhub_client
 
-    def get_argument_names(self, func):
+    @staticmethod
+    def get_argument_names(func):
         argspec = inspect.getargspec(func)
         args = argspec.args
         if argspec.varargs:
