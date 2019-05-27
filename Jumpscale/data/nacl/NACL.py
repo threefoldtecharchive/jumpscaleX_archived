@@ -62,12 +62,17 @@ class NACL(j.application.JSBaseClass):
         j.tools.console.clear_screen()
 
         word3 = self.words.split(" ")[2]
+        self.word3_check(word3)
 
-        word3_to_check = j.tools.console.askString("give the 3e word of the private key string")
-
-        if not word3 == word3_to_check:
+    def word3_check(self, word3):
+        try:
+            word3_to_check = j.tools.console.askString("give the 3e word of the private key string")
+            if not word3 == word3_to_check:
+                print("the control word was not correct, please try again")
+                return self.word3_check(word3)
+        except KeyboardInterrupt:
             j.sal.fs.remove(self._path_privatekey)
-            self._error_raise("the control word was not correct, please restart the procedure.")
+            print("WE HAVE REMOVED THE KEY, need to restart this procedure.")
 
     @property
     def words(self):
