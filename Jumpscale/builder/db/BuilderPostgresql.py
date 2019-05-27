@@ -59,14 +59,14 @@ class BuilderPostgresql(j.builder.system._BaseClass):
 
     @property
     def startup_cmds(self):
-        pg_ctl = self._replace("sudo -u postgres {DIR_BIN}/pg_ctl %s -D  {DATA_DIR}")
+        pg_ctl = self._replace("sudo -u postgres {DIR_BIN}/pg_ctl %s -D {DATA_DIR}")
         cmd_start = pg_ctl % "start"
         cmd_stop = pg_ctl % "stop"
         cmd = j.tools.startupcmd.get("postgres", cmd_start, cmd_stop, path="/sandbox/bin")
         return [cmd]
 
     def test(self):
-        pass
+        self.start()
 
     @builder_method()
     def sandbox(self):
@@ -82,5 +82,4 @@ class BuilderPostgresql(j.builder.system._BaseClass):
         )
 
         bins_dir = self._replace("{PACKAGE_DIR}/bin")
-        libs_dir = self._replace("{PACKAGE_DIR}/lib")
-        j.tools.sandboxer.libs_sandbox(bins_dir, libs_dir, exclude_sys_libs=False)
+        j.tools.sandboxer.libs_clone_under(bins_dir, self.DIR_SANDBOX)

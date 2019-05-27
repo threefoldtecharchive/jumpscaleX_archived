@@ -123,3 +123,16 @@ class BuilderGitea(BuilderGolangTools):
     def startup_cmds(self):
         cmd = j.tools.startupcmd.get("gitea", "gitea web", path="/sandbox/bin")
         return j.builder.db.postgres.startup_cmds + [cmd]
+
+    @builder_method()
+    def sandbox(self):
+        j.builder.db.postgres.sandbox()
+
+        # add certs
+        dir_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "etc/ssl/certs/")
+        self.tools.dir_ensure(dir_dest)
+        self._copy("/etc/ssl/certs", dir_dest)
+
+        # gitea bin
+        self.tools.dir_ensure("{DIR_SANDBOX}/sandbox/bin")
+        self._copy("{DIR_GO_PATH}/bin/gitea", "{DIR_SANDBOX}/sandbox/bin/gitea")
