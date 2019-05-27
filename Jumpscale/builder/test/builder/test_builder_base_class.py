@@ -4,8 +4,8 @@ from Jumpscale.builder.test.builder.base_test import BaseTest
 
 
 class BuilderBaseTest(BaseTest):
-    def __init__(self):
-        BaseTest.__init__(self)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.builder = None
 
     def setUp(self):

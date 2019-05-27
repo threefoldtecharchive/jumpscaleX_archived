@@ -197,3 +197,11 @@ class TestCases(BaseTest):
             j.sal.process.execute("which brotli")
         except:
             self.assertTrue(False)
+
+    def test024_ardb(self):
+        j.builder.db.ardb.build(reset=True)
+        j.builder.db.ardb.install()
+        j.builder.db.ardb.start()
+        self.assertTrue(j.sal.process.getProcessPid("ardb"))
+        j.builder.db.ardb.stop()
+        self.assertFalse(j.sal.process.getProcessPid("ardb"))
