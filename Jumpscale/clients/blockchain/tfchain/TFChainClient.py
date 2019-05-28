@@ -40,7 +40,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
         @url = jumpscale.tfchain.client
         name* = "" (S)
         network_type = "STD,TEST,DEV" (E)
-        explorer_nodes = (LO) !jumpscale.tfchain.explorer
+        explorer_nodes = (LS)
         """
 
     _CHILDCLASSES = [TFChainWalletFactory]
@@ -110,7 +110,7 @@ class TFChainClient(j.application.JSBaseConfigParentClass):
     def block_get(self, value):
         """
         Get a block from an available explorer Node.
-        
+
         @param value: the identifier or height that points to the desired block
         """
         endpoint = "/explorer/?"
