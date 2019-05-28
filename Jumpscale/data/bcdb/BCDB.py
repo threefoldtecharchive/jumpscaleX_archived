@@ -52,6 +52,106 @@ class BCDB(j.application.JSBaseClass):
 
         j.data.nacl.default
 
+    def export(self, path=None, encrypt=True):
+        if not path:
+            j.shell()
+        for o in self.meta.data.schemas:
+            m = self.model_get_from_sid(o.sid)
+            dpath = "%s/%s__%s" % (path, m.schema.url, m.schema._md5)
+            j.sal.fs.createDir(dpath)
+            dpath_file = "%s/meta.schema" % (dpath)
+            j.sal.fs.writeFile(dpath_file, m.schema.text)
+            for obj in m.iterate():
+                json = obj._json
+                if encrypt:
+                    ext = ".encr"
+                    json = j.data.nacl.default.encryptSymmetric(json)
+                else:
+                    ext = ""
+                if "name" in obj._ddict:
+                    dpath_file = "%s/%s__%s.json%s" % (dpath, obj.name, obj.id, ext)
+                else:
+                    dpath_file = "%s/%s.json%s" % (dpath, obj.id, ext)
+                j.sal.fs.writeFile(dpath_file, json)
+
+    def import_(self, path=None, reset=True):
+        if not path:
+            j.shell()
+        if reset:
+            self.reset()
+            if self.zdbclient:
+                assert self.zdbclient.list() == [0]
+
+        data = {}
+        models = {}
+        max = 0
+        # first load all schemas
+        for schema_id in j.sal.fs.listDirsInDir(path, False, dirNameOnly=True):
+            url, md5 = schema_id.split("__")
+            schema_path = "%s/%s" % (path, schema_id)
+            schema_text = j.sal.fs.readFile("%s/meta.schema" % schema_path)
+            schema = j.data.schema.add_from_text(schema_text)[0]
+            model = self.model_get_from_schema(schema)
+            models[md5] = model
+        # now load the data
+        for schema_id in j.sal.fs.listDirsInDir(path, False, dirNameOnly=True):
+            schema_path = "%s/%s" % (path, schema_id)
+            url, md5 = schema_id.split("__")
+            print("MD5: %s" % md5)
+            model = models[md5]
+            assert model.schema._md5 == md5
+            for item in j.sal.fs.listFilesInDir(schema_path, False):
+                if j.sal.fs.getFileExtension(item) == "encr":
+                    self._log("encr:%s" % item)
+                    encr = True
+                elif j.sal.fs.getFileExtension(item) == "json":
+                    self._log("json:%s" % item)
+                    encr = False
+                else:
+                    self._log("skip:%s" % item)
+                    continue
+                base = j.sal.fs.getBaseName(item)
+                if base.find("__") != -1:
+                    obj_id = int(base.split("__")[1].split(".")[0])
+                else:
+                    obj_id = int(base.split(".")[0])
+                if obj_id in data:
+                    raise RuntimeError("id's need to be unique, cannot import")
+                json = j.sal.fs.readFile(item, binary=encr)
+                if encr:
+                    json = j.data.nacl.default.decryptSymmetric(json)
+                data[obj_id] = (md5, json)
+                if obj_id > max:
+                    max = obj_id
+
+        if self.zdbclient:
+            assert self.zdbclient.nsinfo["mode"] == "sequential"
+            assert self.zdbclient.nsinfo["entries"] == 1
+            lastid = 1
+
+        # have to import it in the exact same order
+        for i in range(1, max + 1):
+            self._log("import: %s" % json)
+            if self.zdbclient:
+                if self.zdbclient.get(key=i - 1) is None:
+                    obj = model.new()
+                    obj.id = None
+                    obj.save()
+            if i in data:
+                md5, json = data[i]
+                model = models[md5]
+                if self.zdbclient.get(key=i) is None:
+                    # does not exist yet
+                    obj = model.new(data=json)
+                    if self.zdbclient:
+                        obj.id = None
+                else:
+                    obj = model.get(obj.id)
+                    # means it exists, need to update
+                    j.shell()
+                obj.save()
+                assert obj.id == i
+
     @property
     def sqlclient(self):
         if self._sqlclient is None:

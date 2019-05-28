@@ -21,8 +21,8 @@ MyEnv = j.core.myenv
 class NACL:
     def __init__(self, name="default"):
         self.name = name
-        self._box = None
         self.__init = False
+        self.reset()
 
     def _init(self):
         if not self.__init:
@@ -30,6 +30,9 @@ class NACL:
                 Tools.dir_ensure(self._path)
 
         self.__init = True
+
+    def reset(self):
+        self._box = None
 
     @property
     def _path(self):
@@ -60,18 +63,19 @@ class NACL:
                 j.sal.fs.remove(self._path_privatekey)
                 print("WE HAVE REMOVED THE KEY, need to restart this procedure.")
                 sys.exit(1)
+            j.tools.console.clear_screen()
+
+            word3 = self.words.split(" ")[2]
+
+            word3_to_check = Tools.ask_string("give the 3e word of the private key string")
+
+            if not word3 == word3_to_check:
+                self._error_raise("the control word was not correct, please restart the procedure.")
+
         else:
             words = Tools.ask_string("Provide words of private key")
+            words = words.strip()
             self._keys_generate(words=words)
-
-        j.console.clear_screen()
-
-        word3 = self.words.split(" ")[2]
-
-        word3_to_check = Tools.ask_string("give the 3e word of the private key string")
-
-        if not word3 == word3_to_check:
-            self._error_raise("the control word was not correct, please restart the procedure.")
 
     @property
     def words(self):
@@ -101,7 +105,7 @@ class NACL:
 
         self._load_privatekey()
 
-    def configure(self, privkey_words=None, secret=None, sshagent_use=None, generate=True):
+    def configure(self, privkey_words=None, sshagent_use=None, interactive=None, generate=True):
         """
 
         secret is used to encrypt/decrypt the private key when stored on local filesystem
@@ -110,8 +114,6 @@ class NACL:
         will ask for the details of the configuration
         :param: sshagent_use is True, will derive the secret from the private key of the ssh-agent if only 1 ssh key loaded
                                 secret needs to be None at that point
-        :param: secret only used when sshagent not used, will be stored encrypted in redis
-                sha256 is used on the secret as specified above before storing/encrypting/decrypting the private key
 
         :param: generate if True and interactive is False then will autogenerate a key
 
@@ -121,39 +123,27 @@ class NACL:
 
         self.privkey = None
 
-        j.shell()
-        w
+        if interactive is None:
+            interactive = j.application.interactive
 
-        if sshagent_use is None:
-            j.shell()
-
-        if sshagent_use is False:
-            if passphrase is None:
-                passphrase = j.tools.console.askPassword(
-                    "Provide a passphrase which will be used to encrypt/decrypt your private key"
-                )
-                if passphrase.strip() in [""]:
-                    self._error_raise("passphrase cannot be empty")
-                passphrase_hash = self._hash(passphrase)
-            if self.redis:
-                self.redis.set(redis_key, passphrase_hash)  # hash of the passphrase is stored if redis core exists
+        if sshagent_use:
+            raise RuntimeError("does not work yet")
 
         self.load(die=False)
 
         if self.privkey is None:
-            if j.application.interactive:
-                # means we did not find a priv key yet
-                self._ask_privkey_words()
-            elif generate:
-                self._keys_generate()
+            if privkey_words:
+                self._keys_generate(words=privkey_words)
             else:
-                self._error_raise("cannot generate private key, was not allowed")
+                if interactive:
+                    # means we did not find a priv key yet
+                    self._ask_privkey_words()
+                elif generate:
+                    self._keys_generate()
+                else:
+                    self._error_raise("cannot generate private key, was not allowed")
 
-            self.load(die=False)
-
-        if self.privkey is None:
-            # none of the methods worked
-            self._error_raise("could not generate/load a private key, please use 'kosmos --init' to fix.")
+            self.load(die=True)
 
     def _error_raise(self, msg):
         raise RuntimeError(msg)
@@ -167,30 +157,15 @@ class NACL:
         self._signingkey = ""
         self.privkey = None
 
-        j.shell()
-
-        if self.redis:
-            redis_key = "secret_%s" % self.name
-            key = j.sal.fs.readFile(self._path_encryptor_for_secret, binary=True)
-            sb = nacl.secret.SecretBox(key)
-            try:
-                r = self.redis.get(redis_key)
-            except AttributeError:
-                r = None
-            if r is None:
-                self._error_raise("cannot find secret in memory, please use 'kosmos --init' to fix.")
-            secret = sb.decrypt(r)
+        if False and j.core.myenv.config["SSH_KEY_DEFAULT"]:
+            # TODO: ERROR, ssh-agent does not work for signing, can't figure out which key to use
+            # here have shortcutted it to not use the ssh-agent but would be nice if it works
+            # see also: https://github.com/threefoldtech/jumpscaleX/issues/561
+            j.core.myenv.sshagent.key_default  # will make sure the default sshkey is loaded
+            key = j.clients.sshagent.sign("nacl_could_be_anything", hash=True)
         else:
-            # need to find an ssh agent now and only 1 key
-            if j.clients.sshagent.available_1key_check():
-                key = j.clients.sshagent.sign("nacl_could_be_anything", hash=True)
-            else:
-                if die:
-                    self._error_raise(
-                        "could not find secret key from sshagent, ssh-agent not active, if active need 1 ssh key loaded!"
-                    )
-                else:
-                    return False
+            key = j.core.myenv.config["SECRET"]  # is the hex of sha256 hash, need to go to binary
+            key = binascii.unhexlify(key)
 
         try:
             self._box = nacl.secret.SecretBox(key)  # used to decrypt the private key

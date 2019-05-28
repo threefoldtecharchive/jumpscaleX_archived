@@ -1880,6 +1880,7 @@ class MyEnv:
             readonly = True
 
         if interactive and "interactive-no" in args:
+            print("INTERACTIVENO FOUNDIN ARGS")
             interactive = False
         if sshagent_use is None and "sshagent-no" in args:
             sshagent_use = False
@@ -1923,6 +1924,8 @@ class MyEnv:
 
         if readonly:
             MyEnv.config["READONLY"] = readonly
+        if interactive:
+            MyEnv.config["INTERACTIVE"] = readonly
         if sshagent_use:
             MyEnv.config["SSH_AGENT"] = sshagent_use
         if sshkey:
@@ -1948,17 +1951,30 @@ class MyEnv:
                     sys.exit(1)
 
         # defaults are now set, lets now configure the system
-        if sshagent_use:
+        if False and sshagent_use:
+            # TODO: this is an error SSH_agent does not work because cannot identify which private key to use
+            # see also: https://github.com/threefoldtech/jumpscaleX/issues/561
             MyEnv.sshagent = SSHAgent()
             MyEnv.sshagent.key_default
         else:
             if secret is None:
-                if interactive:
-                    secret = Tools.ask_password("provide secret to use for secret")
-                else:
-                    print("NEED TO SPECIFY SECRET WHEN SSHAGENT NOT USED")
-                    sys.exit(1)
-                MyEnv.config["SECRET"] = Tools.text_md5(secret)
+                if not MyEnv.config["SECRET"]:
+                    if interactive:
+                        secret = Tools.ask_password("provide secret to use for secret")
+                    else:
+                        print("NEED TO SPECIFY SECRET WHEN SSHAGENT NOT USED")
+                        sys.exit(1)
+
+            if secret:
+                secret = secret.encode()
+
+                import hashlib
+
+                m = hashlib.sha256()
+                m.update(secret)
+
+                MyEnv.config["SECRET"] = m.hexdigest()
+                # is same as what is used to read from ssh-agent in SSHAgent client
 
         MyEnv.config_save()
 
@@ -2984,7 +3000,7 @@ class SSHAgent:
     def key_default(self):
         """
 
-        kosmos 'print(j.clients.sshagent.key_default)'
+        kosmos 'print(j.core.myenv.sshagent.key_default)'
 
         checks if it can find the default key for ssh-agent, if not will ask
         :return:
@@ -3096,6 +3112,8 @@ class SSHAgent:
                 print("Could not load sshkey without passphrase (%s)" % path)
                 sys.exit(1)
 
+        self.reset()
+
         return name, path
 
     @property
@@ -3119,9 +3137,12 @@ class SSHAgent:
                 # ok still issue, lets try to start the ssh-agent if that could be done
                 self.start()
                 return_code, out, err = Tools.execute("ssh-add -L", showout=False, die=False, timeout=1)
+                if return_code == 1 and out.find("The agent has no identities") != -1:
+                    self.__keys = []
+                    return []
 
             if return_code:
-                return_code, _, _ = Tools.execute("ssh-add", showout=False, die=False, timeout=1)
+                return_code, out, err = Tools.execute("ssh-add", showout=False, die=False, timeout=1)
                 if out.find("Error connecting to agent: No such file or directory"):
                     raise SSHAgentKeyError("Error connecting to agent: No such file or directory")
                 else:
@@ -3237,7 +3258,7 @@ class SSHAgent:
 
             return
 
-        j.clients.sshkey._sshagent = None
+        self.reset()
 
     def kill(self):
         """

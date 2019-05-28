@@ -31,31 +31,31 @@ class SSHAgent(j.application.JSBaseClass):
         else:
             raise RuntimeError("cannot use sshagent, maybe not initted?")
 
-    @property
-    def _key_default_or_none(self):
-        """
-        see if we can find the default sshkey using sshagent
-
-        j.clients.sshagent.key_default_or_none
-
-        :raises RuntimeError: sshkey not found in sshagent
-        :raises RuntimeError: more than one sshkey is found in sshagent
-        :return: j.clients.sshkey.new() ...
-        :rtype: sshkey object or None
-        """
-        if not self._default_key:
-
-            for path, key in self.keys_list(True):
-                name = j.sal.fs.getBaseName(path).lower()
-                if name == MyEnv.config["SSH_KEY_DEFAULT"]:
-                    if Tools.exists(path):
-                        self._default_key = j.clients.sshkey.get(name=name, pubkey=key)
-                    else:
-                        self._default_key = j.clients.sshkey.get(name=name, pubkey=key, path=path)
-
-                    return self._default_key
-            return None
-        return self._default_key
+    # @property
+    # def _key_default_or_none(self):
+    #     """
+    #     see if we can find the default sshkey using sshagent
+    #
+    #     j.clients.sshagent.key_default_or_none
+    #
+    #     :raises RuntimeError: sshkey not found in sshagent
+    #     :raises RuntimeError: more than one sshkey is found in sshagent
+    #     :return: j.clients.sshkey.new() ...
+    #     :rtype: sshkey object or None
+    #     """
+    #     if not self._default_key:
+    #
+    #         for path, key in self.keys_list(True):
+    #             name = j.sal.fs.getBaseName(path).lower()
+    #             if name == MyEnv.config["SSH_KEY_DEFAULT"]:
+    #                 if Tools.exists(path):
+    #                     self._default_key = j.clients.sshkey.get(name=name, pubkey=key)
+    #                 else:
+    #                     self._default_key = j.clients.sshkey.get(name=name, pubkey=key, path=path)
+    #
+    #                 return self._default_key
+    #         return None
+    #     return self._default_key
 
     def key_path_get(self, keyname="", die=True):
         """
@@ -76,24 +76,18 @@ class SSHAgent(j.application.JSBaseClass):
         if die:
             raise RuntimeError("Did not find key with name:%s, check its loaded in ssh-agent with ssh-add -l" % keyname)
 
-    def key_pub_get(self, keyname, die=True):
+    def key_pub_get(self, keyname=None):
         """
         Returns Content of public key that is loaded in the agent
 
-        :param keyname: name of key loaded to agent to get content from
+        :param keyname: name of key loaded to agent to get content from, if not specified is default
         :type keyname: str
-        :param die: Raise error if True,else do nothing, defaults to True
-        :type die: bool, optional
         :raises RuntimeError: Key not found with given keyname
         :return: Content of public key
         :rtype: str
         """
-        keyname = j.sal.fs.getBaseName(keyname)
-        for name, pubkey in self.keys_list(True):
-            if name.endswith(keyname):
-                return pubkey
-        if die:
-            raise RuntimeError("Did not find key with name:%s, check its loaded in ssh-agent with ssh-add -l" % keyname)
+        key = self._paramiko_key_get(keyname)
+        j.shell()
 
     def _paramiko_keys_get(self):
         import paramiko.agent
@@ -101,21 +95,32 @@ class SSHAgent(j.application.JSBaseClass):
         a = paramiko.agent.Agent()
         return [key for key in a.get_keys()]
 
-    def sign(self, data, hash=True):
+    def _paramiko_key_get(self, keyname=None):
+        if not keyname:
+            keyname = j.core.myenv.sshagent.key_default
+        for key in self._paramiko_keys_get():
+            # ISSUE, is always the same name, there is no way how to figure out which sshkey to use?
+            if key.name == keyname:
+                # maybe we can get this to work using comparing of the public keys?
+                return key
+
+        raise RuntimeError("could not find key:%s" % keyname)
+
+    def sign(self, data, keyname=None, hash=True):
         """
         will sign the data with the ssh-agent loaded
         :param data: the data to sign
         :param hash, if True, will use
+        :param keyname is the name of the key to use to sign, if not specified will be the default key
         :return:
         """
         if not j.data.types.bytes.check(data):
             data = data.encode()
         self._init()
-        assert self.available_1key_check() == True
         import hashlib
 
+        key = self._paramiko_key_get(keyname)
         data_sha1 = hashlib.sha1(data).digest()
-        key = self._paramiko_keys_get()[0]
         res = key.sign_ssh_data(data_sha1)
         if hash:
             m = hashlib.sha256()

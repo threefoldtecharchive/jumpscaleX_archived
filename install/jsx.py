@@ -57,7 +57,7 @@ def cli():
     "--sshkey", default=None, is_flag=True, type=bool, help="if more than 1 ssh-key in ssh-agent, specify here"
 )
 @click.option("--debug", is_flag=True, help="do you want to put kosmos in debug mode?")
-@click.option("-i", "--interactive", is_flag=True, help="will ask questions in interactive way, otherwise auto values")
+@click.option("--no_interactive", is_flag=True, help="default is interactive")
 @click.option(
     "--privatekey",
     default=False,
@@ -73,13 +73,14 @@ def configure(
     debug=False,
     sshkey=None,
     no_sshagent=False,
-    interactive=False,
+    no_interactive=False,
     privatekey=None,
     secret=None,
 ):
     """
     initialize 3bot (JSX) environment
     """
+    interactive = not no_interactive
     sshagent_use = not no_sshagent
     IT.MyEnv.configure(
         configdir=configdir,
@@ -92,21 +93,23 @@ def configure(
         interactive=interactive,
         secret=secret,
     )
-    #  jumpscale need to be available otherwise cannot do
-    j = False
-    try:
-        from Jumpscale import j
-    except Exception as e:
-        pass
 
-    if not j and privatekey:
-        print(
-            "cannot load jumpscale, \
-            can only configure private key when jumpscale is installed locally use jsx install..."
-        )
-        sys.exit(1)
-    if j:
-        j.data.nacl.configure(privkey_words=privatekey, secret=None, sshagent_use=None, generate=True)
+    # NOT NEEDED FOR NOW
+    #  jumpscale need to be available otherwise cannot do
+    # j = False
+    # try:
+    #     from Jumpscale import j
+    # except Exception as e:
+    #     pass
+    #
+    # if not j and privatekey:
+    #     print(
+    #         "cannot load jumpscale, \
+    #         can only configure private key when jumpscale is installed locally use jsx install..."
+    #     )
+    #     sys.exit(1)
+    # if j:
+    #     j.data.nacl.configure(privkey_words=privatekey, secret=None, sshagent_use=None, generate=True)
 
 
 ### INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
@@ -139,6 +142,7 @@ def configure(
     is_flag=True,
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
+@click.option("--no_interactive", is_flag=True, help="default is interactive")
 def container(
     name="3bot",
     configdir=None,
@@ -149,14 +153,15 @@ def container(
     image="despiegk/3bot",
     branch=None,
     reinstall=False,
-    interactive=False,
+    no_interactive=False,
     pull=False,
 ):
     """
     create the 3bot container and install jumpcale inside
     if interactive is True then will ask questions, otherwise will go for the defaults or configured arguments
     """
-
+    interactive = not no_interactive
+    IT.Tools.shell()
     if not args.s and not args.y and not args.r:
         if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
             args.r = True
@@ -204,9 +209,6 @@ def docker_get(name="3bot", existcheck=True, portrange=1, delete=False):
 ### INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
 @click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
-@click.option(
-    "-i", "--interactive", is_flag=True, type=bool, default=True, help="will ask questions in interactive way"
-)
 @click.option("-w", "--wiki", is_flag=True, type=bool, default=False, help="also install the wiki system")
 @click.option(
     "-b", "--branch", default=None, help="jumpscale branch. default 'master' or 'development' for unstable release"
@@ -226,7 +228,7 @@ def docker_get(name="3bot", existcheck=True, portrange=1, delete=False):
     default=True,
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
-def install(configdir=None, wiki=False, branch=None, reinstall=False, interactive=True, pull=False):
+def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False):
     """
     install jumpscale in the local system (only supported for Ubuntu 18.04+ and mac OSX, use container install method otherwise.
     if interactive is True then will ask questions, otherwise will go for the defaults or configured arguments
