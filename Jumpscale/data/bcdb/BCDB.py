@@ -147,7 +147,7 @@ class BCDB(j.application.JSBaseClass):
                         obj.id = None
                 else:
                     obj = model.get(obj.id)
-                    # means it exists, need to update
+                    # means it exists, need to update, need to check if data is different only save if y
                     j.shell()
                 obj.save()
                 assert obj.id == i

@@ -73,8 +73,10 @@ def main(self):
 
     export_import(False)
     # test we can update data, so we overwrite
-    export_import(False, export=True)
-    # export_import(True)
+    export_import(False, export=False)
+
+    # now test with encryption
+    export_import(True)
 
     # now get other BCDB with sqlite & import & do checks #TODO:*1
 
