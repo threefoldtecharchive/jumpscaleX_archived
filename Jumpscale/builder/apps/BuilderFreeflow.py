@@ -1,12 +1,10 @@
 from Jumpscale import j
 import textwrap
-
 builder_method = j.builder.system.builder_method
 
-
 class BuilderFreeflow(j.builder.system._BaseClass):
-    NAME = "freeflow"
 
+    NAME = "freeflow"
     @builder_method()
     def install(self, reset=False, humhub_version="1.3.13"):
         if self._done_check("install") and reset is False:
@@ -15,11 +13,10 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         self.HUMHUB_PATH = "/var/www/html/humhub"
         self.profile.env_set("DEBIAN_FRONTEND", "noninteractive")
         j.builder.system.package.install(["lamp-server^"])
-        # j.builder.system.package._apt_wait_free()
+        j.builder.system.package._apt_wait_free()
         j.builder.system.package.install(
             ["php-curl", "php-gd", "php-mbstring", "php-intl", "php-zip", "php-ldap", "php-apcu", "php-sqlite3"]
         )
-
         j.builder.tools.file_download(
             "https://www.humhub.org/en/download/package/humhub-{0}.tar.gz".format(self.HUMHUB_VERSION),
             "/var/www/html/humhub-{0}.tar.gz".format(self.HUMHUB_VERSION),
@@ -27,7 +24,6 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         j.builder.tools.file_expand(
             "/var/www/html/humhub-{0}.tar.gz".format(self.HUMHUB_VERSION), self.HUMHUB_PATH, removeTopDir=True
         )
-
         sql_init_script = """
         /etc/init.d/mysql start
         mysql -e "CREATE DATABASE humhub CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
@@ -119,20 +115,23 @@ class BuilderFreeflow(j.builder.system._BaseClass):
             # import ipdb; ipdb.set_trace()
             print(self._flist_create(zhub_client))
 
-    @property
-    def startup_cmds(self):
+    def stop(self):
+        stop_script = """
+        /etc/init.d/apache2 stop
+        /etc/init.d/mysql stop
+        """
+        j.builder.tools.execute(stop_script)
+
+    def start(self):
         start_script = """
         if [ ! -f /etc/apache2/conf-available/fqdn.conf ]; then
         echo "ServerName localhost"  > /etc/apache2/conf-available/fqdn.conf
         a2enconf fqdn
         fi
+        /etc/init.d/mysql start
+        /etc/init.d/apache2 start
         """
         j.builder.tools.execute(start_script)
-        sql = j.tools.startupcmd.get("mysql-server", "mysqld", path="/usr/sbin")
-        apache2 = j.tools.startupcmd.get(
-            "apache2-server", "apachectl -DFOREGROUND", cmd_stop="apachectl stop", path="/usr/sbin"
-        )
-        return [sql, apache2]
 
     def test(self):
         self.stop()
