@@ -223,7 +223,7 @@ class BuilderPython(j.builder.system._BaseClass):
 
         self.profile_builder_select()
 
-        j.builder.libs.capnp.install()
+        j.builder.libs.capnp.install(reset=True)
         # self.pip_package_install(['cython', 'setuptools', 'pycapnp'])  #DOES NOT WORK YET
 
         # list comes from /sandbox/code/github/threefoldtech/jumpscale_core/install/InstallTools.py
