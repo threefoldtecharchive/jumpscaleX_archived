@@ -242,9 +242,9 @@ def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False
         force = False
 
     installer = IT.JumpscaleInstaller(branch=branch)
-    installer.install(config={}, sandboxed=False, force=force, gitpull=pull)
+    installer.install(sandboxed=False, force=force, gitpull=pull)
     if wiki:
-        Tools.shell()
+        IT.Tools.shell()
         IT.Tools.execute("source %s/env.sh;kosmos 'j.tools.markdowndocs.test()'" % SANDBOX, showout=False)
     print("Jumpscale X installed successfully")
 

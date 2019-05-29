@@ -1404,7 +1404,7 @@ class Tools:
     @staticmethod
     def code_github_get(repo, account="threefoldtech", branch=[DEFAULTBRANCH], pull=True, reset=False):
         Tools.log("get code:%s:%s (%s)" % (repo, account, branch))
-        if MyEnv.sshagent_active_check():
+        if MyEnv.config["SSH_AGENT"]:
             url = "git@github.com:%s/%s.git"
         else:
             url = "https://github.com/%s/%s.git"
@@ -1911,6 +1911,23 @@ class MyEnv:
 
         config["DIR_BASE"] = basedir
 
+        if not os.path.exists(basedir):
+            script = """
+            set -ex
+            cd /
+            sudo mkdir -p {DIR_BASE}/cfg
+            sudo chown -R {USERNAME}:{GROUPNAME} {DIR_BASE}
+            mkdir -p /usr/local/EGG-INFO
+            sudo chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
+            """
+            args = {}
+            args["DIR_BASE"] = basedir
+            args["USERNAME"] = getpass.getuser()
+            st = os.stat(MyEnv.config["DIR_HOME"])
+            gid = st.st_gid
+            args["GROUPNAME"] = grp.getgrgid(gid)[0]
+            Tools.execute(script, interactive=True, args=args)
+
         MyEnv.config_file_path = os.path.join(config["DIR_CFG"], "jumpscale_config.toml")
         MyEnv.state_file_path = os.path.join(config["DIR_CFG"], "jumpscale_done.toml")
 
@@ -2108,26 +2125,9 @@ class MyEnv:
 
 class BaseInstaller:
     @staticmethod
-    def install(basedir="/sandbox", config={}, sandboxed=False, force=False):
+    def install(configdir=None, force=False, sandboxed=False):
 
-        if not os.path.exists(basedir):
-            script = """
-            set -ex
-            cd /
-            sudo mkdir -p {DIR_BASE}/cfg
-            sudo chown -R {USERNAME}:{GROUPNAME} {DIR_BASE}
-            mkdir -p /usr/local/EGG-INFO
-            sudo chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
-            """
-            args = {}
-            args["DIR_BASE"] = basedir
-            args["USERNAME"] = getpass.getuser()
-            st = os.stat(MyEnv.config["DIR_HOME"])
-            gid = st.st_gid
-            args["GROUPNAME"] = grp.getgrgid(gid)[0]
-            Tools.execute(script, interactive=True, args=args)
-
-        MyEnv.init(basedir=basedir, config=config, readonly=False, force=True)
+        MyEnv.init(configdir=configdir)
 
         if force:
             MyEnv.state_delete("install")
@@ -2150,10 +2150,6 @@ class BaseInstaller:
                 OSXInstaller.base()
         else:
             raise RuntimeError("only OSX and Linux Ubuntu supported.")
-
-        installed = Tools.cmd_installed("git") and Tools.cmd_installed("ssh-agent")
-        MyEnv.config["SSH_AGENT"] = installed
-        MyEnv.config_save()
 
         # BASHPROFILE
         if sandboxed:
@@ -2197,6 +2193,8 @@ class BaseInstaller:
         else:
 
             # install the sandbox
+
+            raise RuntimeError("not done yet")
 
             script = """
             cd {DIR_BASE}
@@ -2533,20 +2531,11 @@ class JumpscaleInstaller:
         self.branch = branch
         self._jumpscale_repos = [("jumpscaleX", "Jumpscale"), ("digitalmeX", "DigitalMe")]
 
-    def install(
-        self,
-        basedir="/sandbox",
-        config={},
-        sandboxed=False,
-        force=False,
-        secret="1234",
-        private_key_words=None,
-        gitpull=False,
-    ):
+    def install(self, sandboxed=False, force=False, gitpull=False):
 
         MyEnv.check_platform()
 
-        BaseInstaller.install(basedir=basedir, config=config, sandboxed=sandboxed, force=force)
+        BaseInstaller.install(sandboxed=sandboxed, force=force)
 
         Tools.file_touch(os.path.join(MyEnv.config["DIR_BASE"], "lib/jumpscale/__init__.py"))
 
@@ -2565,40 +2554,9 @@ class JumpscaleInstaller:
         mkdir -p /sandbox/openresty/nginx/logs
         mkdir -p /sandbox/var/log
         kosmos 'j.core.installer_jumpscale.remove_old_parts()'
-        kosmos --instruct=/tmp/instructions.toml
+        # kosmos --instruct=/tmp/instructions.toml
         kosmos 'Tools.pprint("JumpscaleX IS OK.")'
         """
-
-        if private_key_words is None:
-            private_key_words = ""  # will make sure it gets generated
-
-        if secret.lower().strip() == "ssh":
-            C = """
-            [[instruction]]
-            instruction_method = "j.data.nacl.configure"
-            name = "default"
-            sshagent_use = true
-            privkey_words = "{WORDS}"
-            generate = true
-            """
-        else:
-            C = """
-            [[instruction]]
-            instruction_method = "j.data.nacl.configure"
-            name = "default"
-            sshagent_use = false
-            secret = "{SECRET}"
-            privkey_words = "{WORDS}"
-            generate = true
-            """
-        kwargs = {}
-        kwargs["WORDS"] = private_key_words
-        kwargs["SECRET"] = secret
-
-        C = Tools.text_strip(C, args=kwargs, replace=True)
-
-        Tools.file_write("/tmp/instructions.toml", C)
-        Tools.execute(script)
 
     def remove_old_parts(self):
         tofind = ["DigitalMe", "Jumpscale", "ZeroRobot"]
