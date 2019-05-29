@@ -2,7 +2,6 @@ from importlib import util
 import os
 import subprocess
 import sys
-import InstallTools as IT
 
 BRANCH = "master"
 
