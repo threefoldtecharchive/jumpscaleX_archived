@@ -183,8 +183,15 @@ def container(
     """
     create the 3bot container and install jumpcale inside
     if interactive is True then will ask questions, otherwise will go for the defaults or configured arguments
+
+    if you want to configure other arguments use 'jsx configure ... '
+
+
     """
     interactive = not no_interactive
+    
+    _configure(configdir=configdir)
+
     IT.Tools.shell()
     if not args.s and not args.y and not args.r:
         if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
@@ -257,7 +264,7 @@ def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False
 
     """
 
-    _configure(configdir=configdir)
+    _configure(configdir=configdir,basedir="/sandbox")
 
     if reinstall:
         # remove the state

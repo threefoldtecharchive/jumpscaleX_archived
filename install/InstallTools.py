@@ -1756,11 +1756,9 @@ class MyEnv:
     def _basedir_get():
         if MyEnv.readonly:
             return "/tmp/jumpscale"
-        return "/sandbox"
-        #FOR FUTURE: goal is that JSX supports more directories
-        # if Tools.exists("/sandbox"):
-        #     return "/sandbox"
-        # p = "%s/sandbox" % MyEnv._homedir_get()
+        if Tools.exists("/sandbox"):
+            return "/sandbox"
+        p = "%s/sandbox" % MyEnv._homedir_get()
         if not Tools.exists(p):
             Tools.dir_ensure(p)
         return p
@@ -1926,6 +1924,22 @@ class MyEnv:
 
         config["DIR_BASE"] = basedir
 
+        if basedir == "/sandbox" and not os.path.exists(basedir):
+            script = """
+            set -ex
+            cd /
+            sudo mkdir -p {DIR_BASE}/cfg
+            sudo chown -R {USERNAME}:{GROUPNAME} {DIR_BASE}
+            mkdir -p /usr/local/EGG-INFO
+            sudo chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
+            """
+            args = {}
+            args["DIR_BASE"] = basedir
+            args["USERNAME"] = getpass.getuser()
+            st = os.stat(MyEnv.config["DIR_HOME"])
+            gid = st.st_gid
+            args["GROUPNAME"] = grp.getgrgid(gid)[0]
+            Tools.execute(script, interactive=True, args=args)
 
 
         MyEnv.config_file_path = os.path.join(config["DIR_CFG"], "jumpscale_config.toml")
@@ -1994,22 +2008,7 @@ class MyEnv:
                 MyEnv.config["SECRET"] = m.hexdigest()
                 # is same as what is used to read from ssh-agent in SSHAgent client
 
-        if not os.path.exists(basedir):
-            script = """
-            set -ex
-            cd /
-            sudo mkdir -p {DIR_BASE}/cfg
-            sudo chown -R {USERNAME}:{GROUPNAME} {DIR_BASE}
-            mkdir -p /usr/local/EGG-INFO
-            sudo chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
-            """
-            args = {}
-            args["DIR_BASE"] = basedir
-            args["USERNAME"] = getpass.getuser()
-            st = os.stat(MyEnv.config["DIR_HOME"])
-            gid = st.st_gid
-            args["GROUPNAME"] = grp.getgrgid(gid)[0]
-            Tools.execute(script, interactive=True, args=args)
+
 
         MyEnv.config_save()
 
