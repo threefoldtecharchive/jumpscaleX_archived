@@ -74,12 +74,37 @@ def configure(
     sshkey=None,
     no_sshagent=False,
     no_interactive=False,
-    privatekey=None,
+    privatekey_words=None,
     secret=None,
 ):
     """
     initialize 3bot (JSX) environment
     """
+
+    return _configure(
+        basedir=basedir,
+        configdir=configdir,
+        codedir=codedir,
+        debug=debug,
+        sshkey=sshkey,
+        no_sshagent=no_sshagent,
+        no_interactive=no_interactive,
+        privatekey_words=privatekey_words,
+        secret=secret,
+    )
+
+
+def _configure(
+    basedir=None,
+    configdir=None,
+    codedir=None,
+    debug=False,
+    sshkey=None,
+    no_sshagent=False,
+    no_interactive=False,
+    privatekey_words=None,
+    secret=None,
+):
     interactive = not no_interactive
     sshagent_use = not no_sshagent
     IT.MyEnv.configure(
@@ -94,22 +119,21 @@ def configure(
         secret=secret,
     )
 
-    # NOT NEEDED FOR NOW
-    #  jumpscale need to be available otherwise cannot do
-    # j = False
-    # try:
-    #     from Jumpscale import j
-    # except Exception as e:
-    #     pass
-    #
-    # if not j and privatekey:
-    #     print(
-    #         "cannot load jumpscale, \
-    #         can only configure private key when jumpscale is installed locally use jsx install..."
-    #     )
-    #     sys.exit(1)
-    # if j:
-    #     j.data.nacl.configure(privkey_words=privatekey, secret=None, sshagent_use=None, generate=True)
+    # jumpscale need to be available otherwise cannot do
+    j = False
+    try:
+        from Jumpscale import j
+    except Exception as e:
+        pass
+
+    if not j and privatekey_words:
+        print(
+            "cannot load jumpscale, \
+            can only configure private key when jumpscale is installed locally use jsx install..."
+        )
+        sys.exit(1)
+    if j:
+        j.data.nacl.configure(privkey_words=privatekey_words)
 
 
 ### INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
@@ -209,30 +233,32 @@ def docker_get(name="3bot", existcheck=True, portrange=1, delete=False):
 ### INSTALL OF JUMPSCALE IN CONTAINER ENVIRONMENT
 @click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
-@click.option("-w", "--wiki", is_flag=True, type=bool, default=False, help="also install the wiki system")
+@click.option("-w", "--wiki", is_flag=True, help="also install the wiki system")
 @click.option(
     "-b", "--branch", default=None, help="jumpscale branch. default 'master' or 'development' for unstable release"
 )
 @click.option(
     "--pull",
-    default=False,
     is_flag=True,
-    type=bool,
     help="pull code from git, if not specified will only pull if code directory does not exist yet",
 )
 @click.option(
     "-r",
     "--reinstall",
     is_flag=True,
-    type=bool,
-    default=True,
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
 def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False):
     """
     install jumpscale in the local system (only supported for Ubuntu 18.04+ and mac OSX, use container install method otherwise.
     if interactive is True then will ask questions, otherwise will go for the defaults or configured arguments
+
+    if you want to configure other arguments use 'jsx configure ... '
+
     """
+
+    _configure(configdir=configdir)
+
     if reinstall:
         # remove the state
         IT.MyEnv.state_reset()
