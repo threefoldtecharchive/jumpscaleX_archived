@@ -41,16 +41,16 @@ def cli():
 
 ### CONFIGURATION (INIT) OF JUMPSCALE ENVIRONMENT
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg")
+@click.option("--configdir", default=None, help="default /sandbox/cfg if /sandbox exists otherwise ~/sandbox")
 @click.option(
     "--codedir",
     default=None,
-    help="path where the github code will be checked out, default /sandbox/code",
+    help="path where the github code will be checked out, default sandbox/code",
 )
 @click.option(
     "--basedir",
     default=None,
-    help="path where JSX will be installed default /sandbox",
+    help="path where JSX will be installed default /sandbox if /sandbox exists otherwise ~/sandbox",
 )
 @click.option("--no_sshagent", is_flag=True, help="do you want to use an ssh-agent")
 @click.option(
@@ -193,14 +193,8 @@ def container(
     _configure(configdir=configdir)
 
     IT.Tools.shell()
-    if not args.s and not args.y and not args.r:
-        if IT.Tools.ask_yes_no("\nDo you want to redo the full install? (means redo pip's ...)"):
-            args.r = True
-
-        if CONTAINER_NAME in IT.Docker.docker_names() and args.d is False and args.y is False:
-            args.d = IT.Tools.ask_yes_no(
-                "docker:%s exists, ok to remove? Will otherwise keep and install inside." % CONTAINER_NAME
-            )
+    if reinstall:
+        if name in IT.Docker.docker_names() and delete:
 
     if args.pull is None:
         if args.y is False:
