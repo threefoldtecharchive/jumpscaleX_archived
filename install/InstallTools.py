@@ -2569,6 +2569,7 @@ class JumpscaleInstaller:
         mkdir -p /sandbox/openresty/nginx/logs
         mkdir -p /sandbox/var/log
         kosmos 'j.core.installer_jumpscale.remove_old_parts()'
+        kosmos 'j.data.nacl.configure(generate=True,interactive=False)'
         # kosmos --instruct=/tmp/instructions.toml
         kosmos 'Tools.pprint("JumpscaleX IS OK.")'
         """
