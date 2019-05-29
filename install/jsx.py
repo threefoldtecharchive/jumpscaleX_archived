@@ -74,7 +74,7 @@ def configure(
     sshkey=None,
     no_sshagent=False,
     no_interactive=False,
-    privatekey_words=None,
+    privatekey=None,
     secret=None,
 ):
     """
@@ -89,7 +89,7 @@ def configure(
         sshkey=sshkey,
         no_sshagent=no_sshagent,
         no_interactive=no_interactive,
-        privatekey_words=privatekey_words,
+        privatekey_words=privatekey,
         secret=secret,
     )
 
@@ -140,7 +140,6 @@ def _configure(
 @click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
-@click.option("-i", "--interactive", is_flag=True, help="will ask questions in interactive way, otherwise auto values")
 @click.option(
     "-s", "--scratch", is_flag=True, help="from scratch, means will start from empty ubuntu and re-install everything"
 )
@@ -174,7 +173,7 @@ def container(
     delete=True,
     wiki=False,
     portrange=1,
-    image="despiegk/3bot",
+    image=None,
     branch=None,
     reinstall=False,
     no_interactive=False,
@@ -192,35 +191,16 @@ def container(
     
     _configure(configdir=configdir)
 
-    IT.Tools.shell()
-    if reinstall:
-        if name in IT.Docker.docker_names() and delete:
+    if scratch:
+        image="phusion/baseimage"
+    if not image:
+        image = "despiegk/3bot"
 
-    if args.pull is None:
-        if args.y is False:
-            args.pull = IT.Tools.ask_yes_no("Do you want to pull code changes from git?")
-        else:
-            args.pull = False  # default is not pull
-
-    if not args.secret:
-        if args.y:
-            args.secret = IT.MyEnv.sshagent_sshkey_pub_get() if IT.MyEnv.sshagent_active_check() else "1234"
-        else:
-            if IT.MyEnv.sshagent_active_check():
-                args.secret = IT.Tools.ask_string(
-                    "Optional: provide secret to use for passphrase, if ok to use SSH-Agent just press 'ENTER'",
-                    default="SSH",
-                )
-            else:
-                args.secret = IT.Tools.ask_string("please provide secret passphrase for the BCDB.", default="1234")
-
-    if not args.private_key and not args.y:
-        args.private_key = IT.Tools.ask_string(
-            "please provide 24 words of the private key, or just press 'ENTER' for autogeneration."
-        )
-    install_summary(args)
     docker = IT.Docker(name=name, delete=delete, portrange=portrange, image=image)
+
     docker.install()
+
+    jumpscale_install(branch=branch,redo=reinstall,pull=pull,wiki=wiki)
 
 
 def docker_get(name="3bot", existcheck=True, portrange=1, delete=False):
@@ -276,12 +256,6 @@ def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False
     print("Jumpscale X installed successfully")
 
 
-def docker_get(name="3bot", existcheck=True, portrange=1, delete=False):
-    docker = IT.Docker(name=name, delete=delete, portrange=portrange)
-    if existcheck and CONTAINER_NAME not in docker.docker_names():
-        print("container does not exists. please install first")
-        sys.exit(1)
-    return docker
 
 
 @click.command(name="import")

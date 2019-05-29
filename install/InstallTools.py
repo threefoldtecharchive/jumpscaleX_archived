@@ -60,7 +60,10 @@ class InputError(Exception):
 
 
 def my_excepthook(exception_type, exception_obj, tb):
-    Tools.log(msg=exception_obj, tb=tb, level=40)
+    try:
+        Tools.log(msg=exception_obj, tb=tb, level=40)
+    except:
+        print(exception_obj)
     if MyEnv.debug and traceback and pudb:
         # exception_type, exception_obj, tb = sys.exc_info()
         pudb.post_mortem(tb)
@@ -856,8 +859,6 @@ class Tools:
             logdict["context"] = ""
 
         p = print
-        if MyEnv.config.get("log_printer") and MyEnv.config["DEBUG"]:
-            p = MyEnv.config["log_printer"]
 
         msg = Tools.text_replace(LOGFORMAT, args=logdict)
         msg = Tools.text_replace(msg, args=logdict)
@@ -1781,11 +1782,16 @@ class MyEnv:
         if not "DIR_CFG" in config:
             config["DIR_CFG"] = MyEnv._cfgdir_get()
 
-        config["USEGIT"] = True
-        config["READONLY"] = False
-        config["DEBUG"] = False
-        config["INTERACTIVE"] = True
-        config["SECRET"] = ""
+        if not "USEGIT" in config:
+            config["USEGIT"] = True
+        if not "READONLY" in config:
+            config["READONLY"] = False
+        if not "DEBUG" in config:
+            config["DEBUG"] = False
+        if not "INTERACTIVE" in config:
+            config["INTERACTIVE"] = True
+        if not "SECRET" in config:
+            config["SECRET"] = ""
 
         config["SSH_AGENT"] = True
         config["SSH_KEY_DEFAULT"] = ""
@@ -1823,22 +1829,22 @@ class MyEnv:
         if not MyEnv.__init:
             raise RuntimeError("myenv should have been inited by system")
 
-    def configure_help():
-        C = """
-        Configuration for JSX initialisation:
-        
-        --basedir=                      default ~/sandbox or /sandbox whatever exists first
-        --configdir=                    default $BASEDIR/cfg
-        --codedir=                     default $BASEDIR/code
-
-        --sshkey=                       key to use for ssh-agent if any
-        --sshagent-no                   default is to use the sshagent, if you want to disable use this flag
-
-        --readonly                      default is false
-        --interactive-no                default is interactive, means will ask questions
-        --debug_configure               default debug_configure is False, will configure in debug mode
-        """
-        return Tools.text_strip(C)
+    # def configure_help():
+    #     C = """
+    #     Configuration for JSX initialisation:
+    #
+    #     --basedir=                      default ~/sandbox or /sandbox whatever exists first
+    #     --configdir=                    default $BASEDIR/cfg
+    #     --codedir=                     default $BASEDIR/code
+    #
+    #     --sshkey=                       key to use for ssh-agent if any
+    #     --sshagent-no                   default is to use the sshagent, if you want to disable use this flag
+    #
+    #     --readonly                      default is false
+    #     --no_interactive                default is interactive, means will ask questions
+    #     --debug_configure               default debug_configure is False, will configure in debug mode
+    #     """
+    #     return Tools.text_strip(C)
 
     @staticmethod
     def configure(
@@ -1862,10 +1868,10 @@ class MyEnv:
         --codedir=                     default $BASEDIR/code
 
         --sshkey=                       key to use for ssh-agent if any
-        --sshagent-no                   default is to use the sshagent, if you want to disable use this flag
+        --no_sshagent                  default is to use the sshagent, if you want to disable use this flag
 
         --readonly                      default is false
-        --interactive-no                default is interactive, means will ask questions
+        --no_interactive                default is interactive, means will ask questions
         --debug_configure               default debug_configure is False, will configure in debug mode
 
         :param configdir: is the directory where all configuration & keys will be stored
@@ -1877,6 +1883,8 @@ class MyEnv:
         :param sshagent_use: needs to be True if sshkey used
         :return:
         """
+        if interactive not in [True, False]:
+            raise RuntimeError("interactive is True or False")
         MyEnv.interactive = interactive
         args = Tools.cmd_args_get()
 
@@ -1892,10 +1900,9 @@ class MyEnv:
         if readonly is None and "readonly" in args:
             readonly = True
 
-        if interactive and "interactive-no" in args:
-            print("INTERACTIVENO FOUNDIN ARGS")
+        if interactive and "no_interactive" in args:
             interactive = False
-        if sshagent_use is None and "sshagent-no" in args:
+        if sshagent_use is None and "no_sshagent" in args:
             sshagent_use = False
         else:
             sshagent_use = True
@@ -1957,7 +1964,7 @@ class MyEnv:
         if readonly:
             MyEnv.config["READONLY"] = readonly
         if interactive:
-            MyEnv.config["INTERACTIVE"] = readonly
+            MyEnv.config["INTERACTIVE"] = interactive
         if sshagent_use:
             MyEnv.config["SSH_AGENT"] = sshagent_use
         if sshkey:
@@ -2011,6 +2018,7 @@ class MyEnv:
 
 
         MyEnv.config_save()
+        MyEnv.init(configdir=configdir)
 
     @staticmethod
     def init(configdir=None):
@@ -2399,6 +2407,7 @@ class OSXInstaller:
     def do_all():
         MyEnv._init()
         Tools.log("installing OSX version")
+        OSXInstaller.base()
         pass
 
     @staticmethod
@@ -2553,6 +2562,9 @@ class JumpscaleInstaller:
 
         MyEnv.check_platform()
 
+        if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
+            MyEnv.sshagent.key_default #means we will load ssh-agent and help user to load it properly
+
         BaseInstaller.install(sandboxed=sandboxed, force=force)
 
         Tools.file_touch(os.path.join(MyEnv.config["DIR_BASE"], "lib/jumpscale/__init__.py"))
@@ -2680,7 +2692,7 @@ class Docker:
         MyEnv._init()
         self.name = name
 
-        sshkey = MyEnv.sshagent_sshkey_pub_get()
+        self.image = image
 
         if MyEnv.platform() == "linux" and not Tools.cmd_installed("docker"):
             UbuntuInstaller.docker_install()
@@ -2696,6 +2708,9 @@ class Docker:
 
         self.portrange = portrange
 
+        if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
+            MyEnv.sshagent.key_default #means we will load ssh-agent and help user to load it properly
+
     def install(self, baseinstall=True, cmd=None):
         """
 
@@ -2707,19 +2722,18 @@ class Docker:
         a = 8000 + int(self.portrange) * 10
         b = 8004 + int(self.portrange) * 10
         portrange_txt = "%s-%s:8000-8004" % (a, b)
-        portrange_txt += " -p %s:9999/udp" % (a + 9)  # udp port for wireguard
+        # portrange_txt += " -p %s:9999/udp" % (a + 9)  # udp port for wireguard
 
         port = 9000 + int(self.portrange) * 100 + 22
         self.port = port
 
         args = {}
-        args["NAME"] = name
+        args["NAME"] = self.name
         args["PORTRANGE"] = "-p %s" % portrange_txt
         args["PORT"] = port
-        args["IMAGE"] = image
+        args["IMAGE"] = self.image
 
         if not self.container_exists:
-            Tools.shell()
             run_cmd = """
             docker run --name={NAME} --hostname={NAME} -d \
             -p {PORT}:22 {PORTRANGE} \
@@ -2730,8 +2744,9 @@ class Docker:
             -v {DIR_BASE}/var/sandbox_var:/sandbox/var \
             {IMAGE}
             """
-            if cmd:
-                run_cmd = run_cmd.strip() + " %s\n" % cmd
+            if not cmd:
+                cmd = "bash"
+            run_cmd = run_cmd.strip() + " %s\n" % cmd
             # /sbin/my_init
             print(" - Docker machine gets created: ")
             Tools.execute(run_cmd, args=args, interactive=True)
@@ -2850,31 +2865,32 @@ class Docker:
         print("export docker:%s to %s, will take a while" % (CONTAINER_NAME, args.output))
         Tools.execute("docker export %s -o %s" % (CONTAINER_NAME, args.output))
 
-    def jumpscale_install(self, secret="1234", private_key="", redo=False, wiki=False):
+    def jumpscale_install(self, secret=None, privatekey=None, redo=False, wiki=False,pull=False):
+
+        Tools.shell()
 
         args_txt = ""
         args_txt += " --secret='%s'" % secret
         if private_key:
-            args_txt += " --private_key='%s'" % private_key
+            args_txt += " --privatekey='%s'" % privatekey
         if redo:
             args_txt += " -r"
         if wiki:
             args_txt += " -w"
-        args_txt += " -y"
+        if pull:
+            args_txt += " --pull"
 
-        # args_txt+=" -c"
-        # args_txt+=" --debug"
 
         dirpath = os.path.dirname(inspect.getfile(Tools))
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
-            cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py "
+            cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/jsx.py install"
         else:
             print("copy installer over from where I install from")
-            for item in ["install.py", "InstallTools.py"]:
+            for item in ["jsx.py", "InstallTools.py"]:
                 src1 = "%s/%s" % (dirpath, item)
                 cmd = "scp -P %s %s root@localhost:/tmp/" % (self.port, src1)
                 Tools.execute(cmd)
-            cmd = "cd /tmp;python3 install.py "
+            cmd = "cd /tmp;python3 jsx.py install"
         cmd += args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec(cmd)
