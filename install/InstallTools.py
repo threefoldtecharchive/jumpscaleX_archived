@@ -2571,8 +2571,9 @@ class JumpscaleInstaller:
         kosmos 'j.core.installer_jumpscale.remove_old_parts()'
         kosmos 'j.data.nacl.configure(generate=True,interactive=False)'
         # kosmos --instruct=/tmp/instructions.toml
-        kosmos 'Tools.pprint("JumpscaleX IS OK.")'
+        kosmos 'j.core.tools.pprint("JumpscaleX init step for nacl (encryption) OK.")'
         """
+        Tools.execute(script)
 
     def remove_old_parts(self):
         tofind = ["DigitalMe", "Jumpscale", "ZeroRobot"]
