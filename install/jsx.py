@@ -41,16 +41,16 @@ def cli():
 
 ### CONFIGURATION (INIT) OF JUMPSCALE ENVIRONMENT
 @click.command()
-@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+@click.option("--configdir", default=None, help="default /sandbox/cfg")
 @click.option(
     "--codedir",
     default=None,
-    help="path where the github code will be checked out, default /sandbox/code if it exists otherwise ~/sandbox/code",
+    help="path where the github code will be checked out, default /sandbox/code",
 )
 @click.option(
     "--basedir",
     default=None,
-    help="path where JSX will be installed default /sandbox if it exists otherwise ~/sandbox/code",
+    help="path where JSX will be installed default /sandbox",
 )
 @click.option("--no_sshagent", is_flag=True, help="do you want to use an ssh-agent")
 @click.option(
@@ -93,7 +93,7 @@ def configure(
         secret=secret,
     )
 
-
+#have to do like this, did not manage to call the click enabled function (don't know why)
 def _configure(
     basedir=None,
     configdir=None,

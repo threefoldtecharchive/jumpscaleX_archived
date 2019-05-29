@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import copy
 import getpass
 
-DEFAULTBRANCH = "development"
+DEFAULTBRANCH = ["development_installer","development"]
 
 # import socket
 import grp
@@ -1266,7 +1266,7 @@ class Tools:
     @staticmethod
     def _check_interactive():
         if not MyEnv.interactive:
-            raise j.exceptions.Input("Cannot use console in a non interactive mode.", "console.noninteractive")
+            raise RuntimeError("Cannot use console in a non interactive mode.", "console.noninteractive")
 
     @staticmethod
     def ask_password(question="give secret", confirm=True, regex=None, retry=-1, validate=None):
@@ -1309,7 +1309,7 @@ class Tools:
             if failed:
                 print("Invalid password!")
                 retryCount = retryCount - 1
-        raise j.exceptions.Input(
+        raise RuntimeError(
             (
                 "Console.askPassword() failed: tried %s times but user didn't fill out a value that matches '%s'."
                 % (retry, regex)
@@ -1402,7 +1402,16 @@ class Tools:
         return rc > 0
 
     @staticmethod
-    def code_github_get(repo, account="threefoldtech", branch=[DEFAULTBRANCH], pull=True, reset=False):
+    def code_github_get(repo, account="threefoldtech", branch=None, pull=True, reset=False):
+        """
+
+        :param repo:
+        :param account:
+        :param branch: is list of branches
+        :param pull:
+        :param reset:
+        :return:
+        """
         Tools.log("get code:%s:%s (%s)" % (repo, account, branch))
         if MyEnv.config["SSH_AGENT"]:
             url = "git@github.com:%s/%s.git"
@@ -1421,10 +1430,18 @@ class Tools:
         args["REPO_DIR"] = REPO_DIR
         args["URL"] = repo_url
         args["NAME"] = repo
-        if isinstance(branch, (list, set)):
-            args["BRANCH"] = branch[0]
+
+        if branch is None:
+            branch = ["development","master"]
+        elif isinstance(branch, str):
+            if "," in branch:
+                branch = [branch.strip() for branch in branch.split(",")]
+        elif isinstance(branch, (set,list)):
+            branch = [branch.strip() for branch in branch]
         else:
-            args["BRANCH"] = branch
+            raise RuntimeError("branch should be a string or list, now %s"%branch)
+
+        args["BRANCH"] = branch[0]
 
         if "GITPULL" in os.environ:
             pull = str(os.environ["GITPULL"]) == "1"
@@ -1439,7 +1456,7 @@ class Tools:
 
             C = ""
 
-            if exists == False:
+            if exists is False:
                 C = """
                 set -e
                 mkdir -p {ACCOUNT_DIR}
@@ -1451,15 +1468,15 @@ class Tools:
                 git clone  --depth 1 {URL} -b {BRANCH}
                 cd {NAME}
                 """
-                try:
-                    Tools.execute(C, args=args, showout=False)
-                except Exception as e:
+                rc,_,_=Tools.execute(C, args=args, die=False,showout=False)
+                if rc>0:
                     C = """
-                        cd {ACCOUNT_DIR}
-                        git clone  --depth 1 {URL}
-                        cd {NAME}
-                        """
-                    Tools.execute(C, args=args, showout=False)
+                    cd {ACCOUNT_DIR}
+                    git clone {URL}
+                    cd {NAME}
+                    """
+                    rc,_,_=Tools.execute(C, args=args, die=True,showout=False)
+
 
             else:
                 if pull:
@@ -1502,32 +1519,26 @@ class Tools:
                 Tools.log("Found branch: %s" % current_branch)
                 return current_branch
 
-            if pull or exists is False:
-
+            def checkoutbranch(args,branch):
+                args["BRANCH"]=branch
                 current_branch = getbranch(args=args)
+                if current_branch != branch:
+                    script = """
+                    set -ex
+                    cd {REPO_DIR}
+                    git checkout {BRANCH} -f
+                    """
+                    rc, out, err = Tools.execute(script, die=False, args=args, showout=True, interactive=False)
+                    if rc>0:
+                        return False
+                    assert getbranch(args=args) == branch
+                return True
 
-                ok = False
-                for branch_item in branch:
-                    if ok:
-                        continue
+            for branch_item in branch:
+                if checkoutbranch(args,branch_item):
+                    return
 
-                    branch_item = branch_item.strip()
-
-                    if current_branch != branch_item:
-                        script = """
-                        set -ex
-                        cd {REPO_DIR}
-                        git checkout {BRANCH} -f
-                        exit 999
-                        """
-                        args["BRANCH"] = branch_item
-                        rc, out, err = Tools.execute(script, die=False, args=args, showout=True, interactive=False)
-                        if rc == 999 or rc == 231:
-                            ok = True
-                    else:
-                        ok = True
-
-                getbranch(args=args)
+            raise RuntimeError("Could not checkout branch:%s on %s"%(branch,args["REPO_DIR"]))
 
         else:
             Tools.log("get code [zip]: %s" % repo)
@@ -1745,9 +1756,11 @@ class MyEnv:
     def _basedir_get():
         if MyEnv.readonly:
             return "/tmp/jumpscale"
-        if Tools.exists("/sandbox"):
-            return "/sandbox"
-        p = "%s/sandbox" % MyEnv._homedir_get()
+        return "/sandbox"
+        #FOR FUTURE: goal is that JSX supports more directories
+        # if Tools.exists("/sandbox"):
+        #     return "/sandbox"
+        # p = "%s/sandbox" % MyEnv._homedir_get()
         if not Tools.exists(p):
             Tools.dir_ensure(p)
         return p
@@ -1774,6 +1787,7 @@ class MyEnv:
         config["READONLY"] = False
         config["DEBUG"] = False
         config["INTERACTIVE"] = True
+        config["SECRET"] = ""
 
         config["SSH_AGENT"] = True
         config["SSH_KEY_DEFAULT"] = ""
@@ -1794,10 +1808,11 @@ class MyEnv:
         if not "DIR_VAR" in config:
             config["DIR_VAR"] = "%s/var" % config["DIR_BASE"]
         if not "DIR_CODE" in config:
-            if Tools.exists("%s/code" % config["DIR_BASE"]):
-                config["DIR_CODE"] = "%s/code" % config["DIR_BASE"]
-            else:
-                config["DIR_CODE"] = "%s/code" % config["DIR_HOME"]
+            config["DIR_CODE"] = "%s/code" % config["DIR_BASE"]
+            # if Tools.exists("%s/code" % config["DIR_BASE"]):
+            #     config["DIR_CODE"] = "%s/code" % config["DIR_BASE"]
+            # else:
+            #     config["DIR_CODE"] = "%s/code" % config["DIR_HOME"]
         if not "DIR_BIN" in config:
             config["DIR_BIN"] = "%s/bin" % config["DIR_BASE"]
         if not "DIR_APPS" in config:
@@ -1864,7 +1879,7 @@ class MyEnv:
         :param sshagent_use: needs to be True if sshkey used
         :return:
         """
-
+        MyEnv.interactive = interactive
         args = Tools.cmd_args_get()
 
         if configdir is None and "configdir" in args:
@@ -1911,28 +1926,14 @@ class MyEnv:
 
         config["DIR_BASE"] = basedir
 
-        if not os.path.exists(basedir):
-            script = """
-            set -ex
-            cd /
-            sudo mkdir -p {DIR_BASE}/cfg
-            sudo chown -R {USERNAME}:{GROUPNAME} {DIR_BASE}
-            mkdir -p /usr/local/EGG-INFO
-            sudo chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
-            """
-            args = {}
-            args["DIR_BASE"] = basedir
-            args["USERNAME"] = getpass.getuser()
-            st = os.stat(MyEnv.config["DIR_HOME"])
-            gid = st.st_gid
-            args["GROUPNAME"] = grp.getgrgid(gid)[0]
-            Tools.execute(script, interactive=True, args=args)
+
 
         MyEnv.config_file_path = os.path.join(config["DIR_CFG"], "jumpscale_config.toml")
         MyEnv.state_file_path = os.path.join(config["DIR_CFG"], "jumpscale_done.toml")
 
         if codedir is not None:
             config["DIR_CODE"] = codedir
+
 
         if not os.path.exists(MyEnv.config_file_path):
             MyEnv.config = MyEnv.config_default_get(config=config)
@@ -1962,9 +1963,9 @@ class MyEnv:
             if you never used an ssh-agent or github, just say "y"
     
             """
-            print(IT.Tools.text_strip(T))
+            print(Tools.text_strip(T))
             if interactive:
-                if not IT.Tools.ask_yes_no("OK to continue?"):
+                if not Tools.ask_yes_no("OK to continue?"):
                     sys.exit(1)
 
         # defaults are now set, lets now configure the system
@@ -1977,7 +1978,7 @@ class MyEnv:
             if secret is None:
                 if not MyEnv.config["SECRET"]:
                     if interactive:
-                        secret = Tools.ask_password("provide secret to use for secret")
+                        secret = Tools.ask_password("provide secret to use for encrypting private key")
                     else:
                         print("NEED TO SPECIFY SECRET WHEN SSHAGENT NOT USED")
                         sys.exit(1)
@@ -1992,6 +1993,23 @@ class MyEnv:
 
                 MyEnv.config["SECRET"] = m.hexdigest()
                 # is same as what is used to read from ssh-agent in SSHAgent client
+
+        if not os.path.exists(basedir):
+            script = """
+            set -ex
+            cd /
+            sudo mkdir -p {DIR_BASE}/cfg
+            sudo chown -R {USERNAME}:{GROUPNAME} {DIR_BASE}
+            mkdir -p /usr/local/EGG-INFO
+            sudo chown -R {USERNAME}:{GROUPNAME} /usr/local/EGG-INFO
+            """
+            args = {}
+            args["DIR_BASE"] = basedir
+            args["USERNAME"] = getpass.getuser()
+            st = os.stat(MyEnv.config["DIR_HOME"])
+            gid = st.st_gid
+            args["GROUPNAME"] = grp.getgrgid(gid)[0]
+            Tools.execute(script, interactive=True, args=args)
 
         MyEnv.config_save()
 
@@ -2525,8 +2543,9 @@ class UbuntuInstaller:
 
 
 class JumpscaleInstaller:
-    def __init__(self, branch=[DEFAULTBRANCH]):
-        MyEnv._init()
+    def __init__(self, branch=None):
+        if not branch:
+            branch = DEFAULTBRANCH
         self.account = "threefoldtech"
         self.branch = branch
         self._jumpscale_repos = [("jumpscaleX", "Jumpscale"), ("digitalmeX", "DigitalMe")]
@@ -2538,10 +2557,6 @@ class JumpscaleInstaller:
         BaseInstaller.install(sandboxed=sandboxed, force=force)
 
         Tools.file_touch(os.path.join(MyEnv.config["DIR_BASE"], "lib/jumpscale/__init__.py"))
-
-        if self.branch:
-            # TODO: need to check if ok
-            self.branch = [i.strip() for i in self.branch.split(",") if i.strip() != ""]
 
         self.repos_get(pull=gitpull)
         self.repos_link()
@@ -2808,7 +2823,7 @@ class Docker:
     def import_(self, path="/tmp/3bot.tar"):
         Tools.shell()
 
-        if not IT.Tools.exists(args.input):
+        if not Tools.exists(args.input):
             print("could not find import file:%s" % args.input)
             sys.exit(1)
 
@@ -2817,7 +2832,7 @@ class Docker:
             sys.exit(1)
 
         print("import docker:%s to %s, will take a while" % (CONTAINER_NAME, args.input))
-        IT.Tools.execute("docker import %s local/imported" % (args.input))
+        Tools.execute("docker import %s local/imported" % (args.input))
         docker = IT.Docker(
             name=CONTAINER_NAME,
             delete=True,
