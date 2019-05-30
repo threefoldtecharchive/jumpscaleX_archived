@@ -1974,12 +1974,16 @@ class MyEnv:
         else:
             MyEnv._config_load()
 
-
-        MyEnv.config["READONLY"] = readonly
-        MyEnv.config["INTERACTIVE"] = interactive
-        MyEnv.config["SSH_AGENT"] = sshagent_use
-        MyEnv.config["SSH_KEY_DEFAULT"] = sshkey
-        MyEnv.config["DEBUG"] = debug_configure
+        if readonly:
+            MyEnv.config["READONLY"] = readonly
+        if interactive:
+            MyEnv.config["INTERACTIVE"] = interactive
+        if sshagent_use:
+            MyEnv.config["SSH_AGENT"] = sshagent_use
+        if sshkey:
+            MyEnv.config["SSH_KEY_DEFAULT"] = sshkey
+        if debug_configure:
+            MyEnv.config["DEBUG"] = debug_configure
 
         for key, val in config.items():
             MyEnv.config[key] = val
