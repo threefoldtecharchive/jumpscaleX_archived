@@ -1,59 +1,30 @@
 from Jumpscale import j
 
+builder_method = j.builder.system.builder_method
+
 
 class BuilderNodeJS(j.builder.system._BaseClass):
     NAME = "nodejs"
 
     def _init(self):
-        self._bowerDir = ""
+        self._version = "6.9.5"
 
     @property
     def npm(self):
-        return self._replace("{DIR_BASE}/node/bin/npm")
+        return self._replace("{DIR_BASE}/%s/bin/npm" % self.NAME)
 
     @property
     def NODE_PATH(self):
-        return self._replace("{DIR_BASE}/node/lib/node_modules")
+        return self._replace("{DIR_BASE}/%s/lib/node_modules" % self.NAME)
 
-    def bowerInstall(self, name):
-        """
-        @param name can be a list or string
-        """
-        if self._bowerDir == "":
-            self.install()
-            j.core.tools.dir_ensure("{DIR_TEMP}/bower")
-            self._bowerDir = self._replace("{DIR_TEMP}/bower")
-        if j.data.types.list.check(name):
-            for item in name:
-                self.bowerInstall(item)
-        else:
-            self._log_info("bower install %s" % name)
-            j.sal.process.execute("cd %s;bower --allow-root install  %s" % (self._bowerDir, name), profile=True)
-
-    def isInstalled(self):
-        rc, out, err = j.sal.process.execute("npm version", die=False, showout=False)
-        if rc > 0:
-            return False
-        installedDict = j.data.serializers.yaml.loads(out)
-        if "npm" not in installedDict or "node" not in installedDict:
-            return False
-        if j.core.text.strToVersionInt(installedDict["npm"]) < 5000000:
-            self._log_info("npm too low version, need to install.")
-            return False
-        if j.core.text.strToVersionInt(installedDict["node"]) < 7000000:
-            self._log_info("node too low version, need to install.")
-            return False
-
-        if self._done_get("install") is False:
-            return False
-        return True
+    @property
+    def path(self):
+        return self._replace("{DIR_BASE}/%s" % self.NAME)
 
     def phantomjs(self, reset=False):
         """
         headless browser used for automation
         """
-        if self._done_get("phantomjs") and reset is False:
-            return
         if j.core.platformtype.myplatform.isUbuntu:
 
             url = "https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2"
@@ -72,17 +43,12 @@ class BuilderNodeJS(j.builder.system._BaseClass):
         else:
             raise RuntimeError("phantomjs only supported don ubuntu or osx")
 
-        self._done_set("phantomjs")
-
-    def npm_install(self, name, global_=True, reset=False):
+    def npm_install(self, name, global_=True):
         """
         @PARAM cmdname is the optional cmd name which will be used to put in path of the env (as alias to the name)
         """
         self._log_info("npm install:%s" % name)
         key = "npm_%s" % name
-        if self._done_get(key) and not reset:
-            return
-
         if global_:
             if j.core.platformtype.myplatform.isMac:
                 sudo = "sudo "
@@ -94,71 +60,59 @@ class BuilderNodeJS(j.builder.system._BaseClass):
 
         j.sal.process.execute(cmd)
 
-        # cmdpath = "%s/nodejs_modules/node_modules/%s/bin/%s" % (
-        #     j.dirs.VARDIR, name, name)
-
-        # from IPython import embed
-        # embed(colors='Linux')
-
-        # if j.sal.fs.exists(srcCmd):
-        #     j.sal.fs.chmod(srcCmd, 0o770)
-        #     j.sal.fs.symlink(srcCmd, "/usr/local/bin/%s" %
-        #                      name, overwriteTarget=True)
-        #     j.sal.fs.chmod(srcCmd, 0o770)
-
-        # if j.sal.fs.exists(cmdpath):
-        #     j.sal.fs.symlink(cmdpath, "/usr/local/bin/%s" %
-        #                      name, overwriteTarget=True)
-
-        self._done_set(key)
-
-    def install(self, reset=False):
-        """
-        """
-        if self.isInstalled() and not reset:
-            return
-
-        j.builder.tools.file_unlink("{DIR_BIN}/node")
-        j.builder.tools.dir_remove("{DIR_BASE}/apps/npm")
-
-        # version = "7.7.1"
-        version = "8.4.0"
-
-        if reset is False and j.builder.tools.file_exists("{DIR_BIN}/npm"):
-            return
-
+    @builder_method()
+    def build(self):
+        j.builder.tools.dir_remove(self.DIR_BUILD)
         if j.core.platformtype.myplatform.isMac:
-            url = "https://nodejs.org/dist/v%s/node-v%s-darwin-x64.tar.gz" % (version, version)
+            url = "https://nodejs.org/dist/v%s/node-v%s-darwin-x64.tar.gz" % (self._version, self._version)
         elif j.core.platformtype.myplatform.isUbuntu:
-            url = "https://nodejs.org/dist/v%s/node-v%s-linux-x64.tar.gz" % (version, version)
-
+            url = "https://nodejs.org/dist/v%s/node-v%s-linux-x64.tar.gz" % (self._version, self._version)
         else:
             raise j.exceptions.Input(message="only support ubuntu & mac")
 
-        cdest = j.builder.tools.file_download(url, expand=True, overwrite=False, to="{DIR_TEMP}/node")
+        j.builder.tools.file_download(
+            url, expand=True, overwrite=False, to=self.DIR_BUILD, removeTopDir=True, keepsymlinks=True
+        )
 
-        j.builder.tools.execute("rm -rf {DIR_BASE}/node;mv %s {DIR_BASE}/node" % (cdest))
+    @builder_method()
+    def install(self, reset=False):
 
-        # if j.core.platformtype.myplatform.isMac:
-        #     j.builder.tools.execute('mv {DIR_BASE}/node/%s/* {DIR_BASE}/node' %
-        #                   j.sal.fs.getBaseName(url.strip('.tar.gz')))
+        j.builder.tools.execute("rm -rf %s;cp -r %s %s" % (self.path, self.DIR_BUILD, self.path))
+        j.builder.tools.file_link("%s/bin/node" % self.path, "{DIR_BIN}/node")
+        j.builder.tools.file_link("%s/bin/npm" % self.path, "{DIR_BIN}/npm")
 
-        rc, out, err = j.sal.process.execute("npm -v", profile=True)
-        if out != "5.3.0":  # 4.1.2
-            # needs to be this version because is part of the package which was downloaded
-            # j.sal.process.execute("npm install npm@4.1.2 -g", profile=True)
+        rc, out, err = j.sal.process.execute("npm -v")
+        if out.replace("\n", "") != "3.10.10":
             raise RuntimeError("npm version error")
 
-        rc, initmodulepath, err = j.sal.process.execute("npm config get init-module", profile=True)
+        rc, initmodulepath, err = j.sal.process.execute("npm config get init-module")
         j.builder.tools.file_unlink(initmodulepath)
-        j.sal.process.execute("npm config set global true -g", profile=True)
-        j.sal.process.execute(self._replace("npm config set init-module {DIR_BASE}/node/.npm-init.js -g"), profile=True)
-        j.sal.process.execute(self._replace("npm config set init-cache {DIR_BASE}/node/.npm -g"), profile=True)
-        j.sal.process.execute("npm config set global true ", profile=True)
-        j.sal.process.execute(self._replace("npm config set init-module {DIR_BASE}/node/.npm-init.js "), profile=True)
-        j.sal.process.execute(self._replace("npm config set init-cache {DIR_BASE}/node/.npm "), profile=True)
-        j.sal.process.execute("npm install -g bower", profile=True, shell=True)
+        j.sal.process.execute("npm config set global true -g")
+        j.sal.process.execute(self._replace("npm config set init-module %s/.npm-init.js -g" % self.path))
+        j.sal.process.execute(self._replace("npm config set init-cache %s/.npm -g" % self.path))
+        j.sal.process.execute("npm config set global true ")
+        j.sal.process.execute(self._replace("npm config set init-module %s/.npm-init.js" % self.path))
+        j.sal.process.execute(self._replace("npm config set init-cache %s/.npm" % self.path))
+        j.sal.process.execute("npm install -g parcel-bundler")
 
-        # j.sal.process.execute("npm install npm@latest -g", profile=True)
+    @builder_method()
+    def sandbox(
+        self,
+        reset=False,
+        zhub_client=None,
+        flist_create=False,
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+    ):
+        self.tools.dir_ensure(self.DIR_SANDBOX)
+        self._copy(self.path, "%s/%s/%s" % (self.DIR_SANDBOX, j.core.dirs.BASEDIR[1:], self.NAME))
 
-        self._done_set("install")
+        bin_dest = self.tools.joinpaths(self.DIR_SANDBOX, j.core.dirs.BINDIR[1:])
+        self.tools.dir_ensure(bin_dest)
+
+        self._copy(self.tools.joinpaths(j.core.dirs.BINDIR, "node"), bin_dest)
+        self._copy(self.tools.joinpaths(j.core.dirs.BINDIR, "npm"), bin_dest)
+
+    @builder_method()
+    def test(self):
+        rc, out, err = j.sal.process.execute("npm -v")
+        assert out.replace("\n", "") == "3.10.10"

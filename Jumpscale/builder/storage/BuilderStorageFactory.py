@@ -9,7 +9,7 @@ class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
         self._syncthing = None
         self._minio = None
         self._restic = None
-        self._s3cality = None
+        self._s3scality = None
 
     @property
     def syncthing(self):
@@ -36,9 +36,9 @@ class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
         return self._restic
 
     @property
-    def s3cality(self):
-        if self._s3cality is None:
+    def s3scality(self):
+        if self._s3scality is None:
             from .BuilderS3Scality import BuilderS3Scality
 
-            self._s3cality = BuilderS3Scality()
-        return self._s3cality
+            self._s3scality = BuilderS3Scality()
+        return self._s3scality

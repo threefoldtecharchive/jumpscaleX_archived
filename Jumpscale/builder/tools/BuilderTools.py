@@ -150,6 +150,7 @@ class BuilderTools(j.builder.system._BaseClass):
         minsizekb=40,
         removeTopDir=False,
         deletedest=False,
+        keepsymlinks=False,
     ):
         """
         download from url
@@ -236,11 +237,11 @@ class BuilderTools(j.builder.system._BaseClass):
                 raise j.exceptions.RuntimeError("not implemented yet")
 
         if expand:
-            return self.file_expand(to, destination, removeTopDir=removeTopDir)
+            return self.file_expand(to, destination, removeTopDir=removeTopDir, keepsymlinks=keepsymlinks)
 
         return to
 
-    def file_expand(self, path, destination="", removeTopDir=False):
+    def file_expand(self, path, destination="", removeTopDir=False, keepsymlinks=False):
         self._log_info("file_expand:%s" % path)
         path = self._replace(path)
         base = j.sal.fs.getBaseName(path)
@@ -292,7 +293,7 @@ class BuilderTools(j.builder.system._BaseClass):
         if removeTopDir:
             res = self.find(destination, recursive=False, type="d")
             if len(res) == 1:
-                self.copyTree(res[0], destination)
+                self.copyTree(res[0], destination, keepsymlinks=keepsymlinks)
                 self.dir_remove(res[0])
 
         if self.dir_exists(self.joinpaths(destination, base)):
@@ -530,6 +531,7 @@ class BuilderTools(j.builder.system._BaseClass):
         if self.file_exists(destination) and (not self.file_is_link(destination)):
             raise Exception("Destination already exists and is not a link: %s" % (destination))
         self.file_attribs(destination, mode, owner, group)
+        j.sal.fs.symlink(source, destination)
 
     def replace(self, text, args={}):
         text = self._replace(text, args=args)

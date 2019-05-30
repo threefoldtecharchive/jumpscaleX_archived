@@ -13,6 +13,7 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
         self._golang = None
         self._nimlang = None
         self._rust = None
+        self._nodejs = None
 
     @property
     def python(self):
@@ -61,3 +62,11 @@ class BuilderRuntimesFactory(j.application.JSBaseClass):
 
             self._rust = BuilderRust()
         return self._rust
+
+    @property
+    def nodejs(self):
+        if self._nodejs is None:
+            from .BuilderNodeJS import BuilderNodeJS
+
+            self._nodejs = BuilderNodeJS()
+        return self._nodejs
