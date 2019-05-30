@@ -14,7 +14,7 @@ def main(self):
     c.namespace_new("test", secret="1234")
 
     cl = self.client_get(nsname="test", addr="localhost", port=9901, secret="1234")
-
+    cl.flush()
     nr = cl.nsinfo["entries"]
     assert nr == 0
 
@@ -70,7 +70,6 @@ def main(self):
             actual = cl.get(k)
             if expected != actual:
                 j.shell()
-                wac
             assert expected == actual
 
     dumpdata(self)  # is in default namespace
@@ -108,7 +107,7 @@ def main(self):
 
     c.namespace_new(nsname + "2", secret="1234")
 
-    nritems = 10000
+    nritems = 1000
     j.tools.timer.start("zdb")
 
     self._log_debug("perftest for 10.000 records, should get above 5k per sec, +10k expected")

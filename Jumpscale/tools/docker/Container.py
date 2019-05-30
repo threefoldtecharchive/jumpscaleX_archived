@@ -22,7 +22,7 @@ class Container(j.application.JSBaseClass):
         JSBASE.__init__(self)
 
         self.obj = obj
-        self.name = obj["Names"][0][1::] # remove the forward slash that docker adds to the name
+        self.name = obj["Names"][0][1::]  # remove the forward slash that docker adds to the name
         self.id = obj["Id"]
 
         self._ssh_port = None

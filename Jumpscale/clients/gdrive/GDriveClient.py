@@ -28,7 +28,7 @@ JSConfigClient = j.application.JSBaseConfigClass
 
 class GDriveClient(JSConfigClient):
     _SCHEMATEXT = """
-    @url =  jumpscale.sonic.client
+    @url =  jumpscale.gdrive.client
     name* = "" (S)
     credfile = "" (S)
     """

@@ -38,6 +38,6 @@ class Dep(j.application.JSBaseClass):
                 j.sal.fs.copyFile(self.path, dest)
 
     def __str__(self):
-        return "%-40s %s" % (self.name, self.path)
+        return "Dep(name=%s, path=%s)" % (self.name, self.path)
 
     __repr__ = __str__

@@ -55,9 +55,6 @@ class Unique(BaseTest):
 
         self.log("Create another object and try to use same name for first one, should fail")
         schema_obj2 = self.model.new()
-        schema_obj2.name = name
-        with self.assertRaises(Exception):
-            schema_obj2.save()
         schema_obj2.name = self.random_string()
 
         self.log("On the second object, try to use same test var for first one, should fail")

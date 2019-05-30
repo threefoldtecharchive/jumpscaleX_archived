@@ -48,52 +48,42 @@ class SSHAgent(j.application.JSBaseClass):
 
     def check(self):
         def get_key_list():
-            return_code, out, err = j.sal.process.execute("ssh-add -L", showout=False, die=False, timeout=1)
-            if return_code:
-                if return_code == 1 and out.find("The agent has no identities") != -1:
-                    return 0, ""
-                else:
-                    # Remove old socket if can't connect
-                    if j.sal.fs.exists(self.ssh_socket_path):
-                        j.sal.fs.remove(self.ssh_socket_path)
-                        return get_key_list()
+            """
+            : get_key_list: loads ssh_key if failed:
+            : 1- ssh-agent is down, start it
+            : 2- socket is broken, remove it
+            : 3- ssh-key is not added, add the default key in id_rsa
+            """
+            return_code, out, _ = j.sal.process.execute("ssh-add -L", showout=False, die=False, timeout=1)
+
+            if return_code == 2:
+                # Remove old socket if can't connect and start ssh-agent
+                self.kill(socketpath=self.ssh_socket_path)
+                self._start()
+
+            if return_code == 1 and out.find("The agent has no identities") == 0:
+                return_code, _, _ = j.sal.process.execute("ssh-add", showout=False, die=False, timeout=1)
+
             return return_code, out
 
-        if self._inited is False:
-            self._available = True
-            if not j.sal.fs.exists(self.ssh_socket_path):
-                self._available = False
+        self._available = True
+        if not j.sal.fs.exists(self.ssh_socket_path):
+            self._available = False
 
-            return_code, out = get_key_list()
-            if return_code:
-                self._start()
-            # only try once
-            return_code, out = get_key_list()
+        _, out = get_key_list()
+        keys = [line.split() for line in out.splitlines() if len(line.split()) == 3]
+        self._keys = list(map(lambda key: [key[2], " ".join(key[0:2])], keys))
+        # get key_names loaded
+        key_names = [j.sal.fs.getBaseName(i[0]) for i in self._keys]
 
-            if not return_code:
-                return_code, _, _ = j.sal.process.execute("ssh-add", showout=False, die=False, timeout=1)
-            else:
-                if out.find("Error connecting to agent: No such file or directory"):
-                    raise RuntimeError("Error connecting to agent: No such file or directory")
+        if "SSH_KEY_DEFAULT" not in j.core.myenv.config:
+            j.core.myenv.config["SSH_KEY_DEFAULT"] = ""
 
-            keys = [line.split() for line in out.splitlines() if len(line.split()) == 3]
-            self._keys = list(map(lambda key: [key[2], " ".join(key[0:2])], keys))
-            # get key_names loaded
-            key_names = [j.sal.fs.getBaseName(i[0]) for i in self._keys]
+        if j.core.myenv.config["SSH_KEY_DEFAULT"] == "" and len(key_names) == 1:
+            j.core.myenv.config["SSH_KEY_DEFAULT"] = key_names[0]
+            j.core.myenv.config_save()
 
-            if "SSH_KEY_DEFAULT" not in j.core.myenv.config:
-                j.core.myenv.config["SSH_KEY_DEFAULT"] = ""
-
-            if j.core.myenv.config["SSH_KEY_DEFAULT"] == "" and len(key_names) == 1:
-                j.core.myenv.config["SSH_KEY_DEFAULT"] = key_names[0]
-                j.core.myenv.config_save()
-
-            self._inited = True
-        else:
-            return_code, out = get_key_list()
-            if not return_code and out.find("Error connecting to agent: No such file or directory") == -1:
-                self._inited = False
-                self.check()
+        self._inited = True
 
     def reset(self):
         self._default_key = None
@@ -414,7 +404,7 @@ class SSHAgent(j.application.JSBaseClass):
         """
         if not self.available():
             return False
-        return len(self.keys_list()) == 1
+        return len(self._keys) == 1
 
     def kill(self, socketpath=None):
         """

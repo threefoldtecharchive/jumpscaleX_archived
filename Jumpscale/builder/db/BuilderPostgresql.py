@@ -55,12 +55,39 @@ class BuilderPostgresql(j.builder.system._BaseClass):
             sudo -u postgres {DIR_BIN}/initdb -D {DATA_DIR} -E utf8 --locale=en_US.UTF-8
         """
         )
-
         self._execute(c)
 
     @property
     def startup_cmds(self):
-        cmd = j.tools.startupcmd.get(
-            "postgres", self._replace("sudo -u postgres {DIR_BIN}/postgres -D {DATA_DIR}"), path="/sandbox/bin"
-        )
+        pg_ctl = self._replace("sudo -u postgres {DIR_BIN}/pg_ctl %s -D {DATA_DIR}")
+        cmd_start = pg_ctl % "start"
+        cmd_stop = pg_ctl % "stop"
+        cmd = j.tools.startupcmd.get("postgres", cmd_start, cmd_stop, ports=[5432], path="/sandbox/bin")
         return [cmd]
+
+    def test(self):
+        if self.running():
+            self.stop()
+
+        self.start()
+        _, response, _ = self._execute("pg_isready", showout=False)
+        assert "accepting connections" in response
+
+        self.stop()
+        print("TEST OK")
+
+    @builder_method()
+    def sandbox(self):
+        self.PACKAGE_DIR = self._replace("{DIR_SANDBOX}/sandbox")
+        self.tools.dir_ensure(self.PACKAGE_DIR)
+        # data dir
+        self.tools.dir_ensure("%s/apps/psql/data" % self.PACKAGE_DIR)
+        self._execute(
+            """
+            cd {DOWNLOAD_DIR}/postgresql-9.6.13
+            make install DESTDIR={DIR_SANDBOX}
+            """
+        )
+
+        bins_dir = self._replace("{PACKAGE_DIR}/bin")
+        j.tools.sandboxer.libs_clone_under(bins_dir, self.DIR_SANDBOX)
