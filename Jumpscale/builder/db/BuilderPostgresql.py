@@ -91,3 +91,8 @@ class BuilderPostgresql(j.builder.system._BaseClass):
 
         bins_dir = self._replace("{PACKAGE_DIR}/bin")
         j.tools.sandboxer.libs_clone_under(bins_dir, self.DIR_SANDBOX)
+
+        # startup.toml
+        templates_dir = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates")
+        startup_path = self._replace("{DIR_SANDBOX}/.startup.toml")
+        self._copy(self.tools.joinpaths(templates_dir, "postgres_startup.toml"), startup_path)
