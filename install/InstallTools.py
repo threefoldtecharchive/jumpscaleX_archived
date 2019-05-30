@@ -2842,7 +2842,8 @@ class DockerContainer:
                 "LOGGER_REDIS",
                 "SECRET",
             ]:
-                CONFIG[i] = MyEnv.config[i]
+                if i in MyEnv.config:
+                    CONFIG[i] = MyEnv.config[i]
             Tools.config_save(ddir + "/cfg/jumpscale_config.toml", CONFIG)
             shutil.copytree(Tools.text_replace("{DIR_BASE}/cfg/keys"), ddir + "/cfg/keys")
 
