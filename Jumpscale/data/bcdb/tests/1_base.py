@@ -32,6 +32,11 @@ def main(self):
             model_obj.email = "info%s@something.com" % i
             model_obj2 = model._set(model_obj)
 
+        j.shell()
+        from pudb import set_trace
+
+        set_trace()
+
         model_obj3 = model.get(model_obj2.id)
         assert model_obj3.id == model_obj2.id
 

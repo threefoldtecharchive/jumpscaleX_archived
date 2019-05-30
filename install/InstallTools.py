@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 import copy
 import getpass
 
-DEFAULTBRANCH = ["development_installer","development"]
+DEFAULTBRANCH = ["development_installer", "development"]
 
 # import socket
 import grp
@@ -633,7 +633,8 @@ class Tools:
                     echo deb http://mirror.unix-solutions.be/ubuntu/ bionic main universe multiverse restricted >> /etc/apt/sources.list
                 fi
                 apt-get update
-                apt-get install -y python3-pip locales
+                apt-get install -y python3-pip 
+                apt-get install -y locales
                 apt-get install -y curl rsync
                 apt-get install -y unzip
                 pip3 install ipython
@@ -1433,14 +1434,14 @@ class Tools:
         args["NAME"] = repo
 
         if branch is None:
-            branch = ["development","master"]
+            branch = ["development", "master"]
         elif isinstance(branch, str):
             if "," in branch:
                 branch = [branch.strip() for branch in branch.split(",")]
-        elif isinstance(branch, (set,list)):
+        elif isinstance(branch, (set, list)):
             branch = [branch.strip() for branch in branch]
         else:
-            raise RuntimeError("branch should be a string or list, now %s"%branch)
+            raise RuntimeError("branch should be a string or list, now %s" % branch)
 
         args["BRANCH"] = branch[0]
 
@@ -1469,15 +1470,14 @@ class Tools:
                 git clone  --depth 1 {URL} -b {BRANCH}
                 cd {NAME}
                 """
-                rc,_,_=Tools.execute(C, args=args, die=False,showout=False)
-                if rc>0:
+                rc, _, _ = Tools.execute(C, args=args, die=False, showout=False)
+                if rc > 0:
                     C = """
                     cd {ACCOUNT_DIR}
                     git clone {URL}
                     cd {NAME}
                     """
-                    rc,_,_=Tools.execute(C, args=args, die=True,showout=False)
-
+                    rc, _, _ = Tools.execute(C, args=args, die=True, showout=False)
 
             else:
                 if pull:
@@ -1520,8 +1520,8 @@ class Tools:
                 Tools.log("Found branch: %s" % current_branch)
                 return current_branch
 
-            def checkoutbranch(args,branch):
-                args["BRANCH"]=branch
+            def checkoutbranch(args, branch):
+                args["BRANCH"] = branch
                 current_branch = getbranch(args=args)
                 if current_branch != branch:
                     script = """
@@ -1530,16 +1530,16 @@ class Tools:
                     git checkout {BRANCH} -f
                     """
                     rc, out, err = Tools.execute(script, die=False, args=args, showout=True, interactive=False)
-                    if rc>0:
+                    if rc > 0:
                         return False
                     assert getbranch(args=args) == branch
                 return True
 
             for branch_item in branch:
-                if checkoutbranch(args,branch_item):
+                if checkoutbranch(args, branch_item):
                     return
 
-            raise RuntimeError("Could not checkout branch:%s on %s"%(branch,args["REPO_DIR"]))
+            raise RuntimeError("Could not checkout branch:%s on %s" % (branch, args["REPO_DIR"]))
 
         else:
             Tools.log("get code [zip]: %s" % repo)
@@ -1948,13 +1948,11 @@ class MyEnv:
             args["GROUPNAME"] = grp.getgrgid(gid)[0]
             Tools.execute(script, interactive=True, args=args)
 
-
         MyEnv.config_file_path = os.path.join(config["DIR_CFG"], "jumpscale_config.toml")
         MyEnv.state_file_path = os.path.join(config["DIR_CFG"], "jumpscale_done.toml")
 
         if codedir is not None:
             config["DIR_CODE"] = codedir
-
 
         if not os.path.exists(MyEnv.config_file_path):
             MyEnv.config = MyEnv.config_default_get(config=config)
@@ -1997,7 +1995,7 @@ class MyEnv:
             MyEnv.sshagent.key_default
         else:
             if secret is None:
-                if not MyEnv.config["SECRET"]:
+                if "SECRET" not in MyEnv.config or not MyEnv.config["SECRET"]:
                     if interactive:
                         secret = Tools.ask_password("provide secret to use for encrypting private key")
                     else:
@@ -2014,8 +2012,6 @@ class MyEnv:
 
                 MyEnv.config["SECRET"] = m.hexdigest()
                 # is same as what is used to read from ssh-agent in SSHAgent client
-
-
 
         MyEnv.config_save()
         MyEnv.init(configdir=configdir)
@@ -2485,8 +2481,11 @@ class UbuntuInstaller:
 
         Tools.log("installing base system")
 
+        Tools.shell()
+
         script = """
-        apt-get install -y python3-pip locales
+        apt-get install python3-pip -y
+        apt-get install locales -y
         pip3 install ipython
         """
         Tools.execute(script, interactive=True)
@@ -2563,7 +2562,7 @@ class JumpscaleInstaller:
         MyEnv.check_platform()
 
         if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
-            MyEnv.sshagent.key_default #means we will load ssh-agent and help user to load it properly
+            MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
 
         BaseInstaller.install(sandboxed=sandboxed, force=force)
 
@@ -2677,39 +2676,108 @@ class JumpscaleInstaller:
 #     MyEnv._colored_traceback = None
 
 
-class Docker:
+class DockerFactory:
+
+    __init = False
+    _dockers = {}
+
+    @staticmethod
+    def _init():
+        if not DockerFactory.__init:
+            rc, out, _ = Tools.execute("cat /proc/1/cgroup", die=False, showout=False)
+            if rc == 0 and out.find("/docker/") != -1:
+                print("Cannot continue, trying to use docker tools while we are already in a docker")
+                sys.exit(1)
+
+            MyEnv._init()
+
+            if MyEnv.platform() == "linux" and not Tools.cmd_installed("docker"):
+                UbuntuInstaller.docker_install()
+
+            if not Tools.cmd_installed("docker"):
+                print("Could not find Docker installed")
+                sys.exit(1)
+
+    @staticmethod
+    def container_get(name, portrange=1, image="despiegk/3bot"):
+        if name in DockerFactory._dockers:
+            return DockerFactory._dockers[name]
+        else:
+            return DockerContainer(name=name, portrange=portrange, image=image)
+
+    @staticmethod
+    def containers_running():
+        names = Tools.execute("docker ps --format='{{json .Names}}'", showout=False, replace=False)[1].split("\n")
+        names = [i.strip("\"'") for i in names if i.strip() != ""]
+        return names
+
+    @staticmethod
+    def containers_names():
+        names = Tools.execute("docker container ls -a --format='{{json .Names}}'", showout=False, replace=False)[
+            1
+        ].split("\n")
+        names = [i.strip("\"'") for i in names if i.strip() != ""]
+        return names
+
+    @staticmethod
+    def image_names():
+        names = Tools.execute("docker images --format='{{.Repository}}:{{.Tag}}'", showout=False, replace=False)[
+            1
+        ].split("\n")
+        names = [i.strip("\"'") for i in names if i.strip() != ""]
+        return names
+
+    @staticmethod
+    def image_remove(name):
+
+        for name_find in DockerFactory.image_names():
+            if name_find.find(name) != -1:
+                Tools.log("remove container:%s" % name_find)
+                Tools.execute("docker rmi -f %s" % name)
+
+    @staticmethod
+    def reset(images=True):
+        """
+        will stop/remove all containers
+        if images==True will also stop/remove all images
+        :return:
+        """
+        for name in DockerFactory.containers_names():
+            d = DockerFactory.container_get(name)
+            d.delete()
+
+        # will get all images based on id
+        names = Tools.execute("docker images --format='{{.ID}}'", showout=False, replace=False)[1].split("\n")
+        for image_id in names:
+            if image_id:
+                Tools.execute("docker rmi -f %s" % image_id)
+
+
+class DockerContainer:
     def __init__(self, name="default", delete=False, portrange=1, image="despiegk/3bot"):
         """
         if you want to start from scratch use: "phusion/baseimage:master"
 
         if codedir not specified will use /sandbox/code if exists otherwise ~/code
         """
-        rc, out, _ = Tools.execute("cat /proc/1/cgroup", die=False, showout=False)
-        if rc == 0 and out.find("/docker/") != -1:
-            print("Cannot continue, trying to use docker tools while we are already in a docker")
-            sys.exit(1)
-
-        MyEnv._init()
         self.name = name
 
         self.image = image
 
-        if MyEnv.platform() == "linux" and not Tools.cmd_installed("docker"):
-            UbuntuInstaller.docker_install()
+        DockerFactory._init()
+        DockerFactory._dockers[name] = self
 
-        if not Tools.cmd_installed("docker"):
-            print("Could not find Docker installed")
-            sys.exit(1)
-
-        self.container_exists = name in self.docker_names()
+        self.container_exists = name in DockerFactory.containers_names()
 
         if self.container_exists and delete:
             self.delete()
 
         self.portrange = portrange
+        port = 9000 + int(self.portrange) * 100 + 22
+        self.port = port
 
         if "SSH_Agent" in MyEnv.config and MyEnv.config["SSH_Agent"]:
-            MyEnv.sshagent.key_default #means we will load ssh-agent and help user to load it properly
+            MyEnv.sshagent.key_default  # means we will load ssh-agent and help user to load it properly
 
     def install(self, baseinstall=True, cmd=None):
         """
@@ -2724,13 +2792,10 @@ class Docker:
         portrange_txt = "%s-%s:8000-8004" % (a, b)
         # portrange_txt += " -p %s:9999/udp" % (a + 9)  # udp port for wireguard
 
-        port = 9000 + int(self.portrange) * 100 + 22
-        self.port = port
-
         args = {}
         args["NAME"] = self.name
         args["PORTRANGE"] = "-p %s" % portrange_txt
-        args["PORT"] = port
+        args["PORT"] = self.port
         args["IMAGE"] = self.image
 
         if not self.container_exists:
@@ -2745,7 +2810,10 @@ class Docker:
             {IMAGE}
             """
             if not cmd:
-                cmd = "bash"
+                if self.image.find("phusion/baseimage") == -1:
+                    cmd = "/sbin/my_init"
+                else:
+                    cmd = ""
             run_cmd = run_cmd.strip() + " %s\n" % cmd
             # /sbin/my_init
             print(" - Docker machine gets created: ")
@@ -2754,9 +2822,9 @@ class Docker:
             print(" - Docker machine OK")
             print(" - Start SSH server")
         else:
-            if name not in self.docker_running():
-                Tools.execute("docker start %s" % name)
-                if not name in self.docker_running():
+            if self.name not in DockerFactory.containers_running():
+                Tools.execute("docker start %s" % self.name)
+                if not self.name in DockerFactory.containers_running():
                     print("could not start container:%s" % name)
                     sys.exit(1)
                 self.dexec("rm -f /root/.BASEINSTALL_OK")
@@ -2799,79 +2867,59 @@ class Docker:
         cmd2 = "ssh -oStrictHostKeyChecking=no -t root@localhost -A -p %s '%s'" % (self.port, cmd)
         Tools.execute(cmd2, interactive=True, showout=False, replace=False, asfile=True)
 
-    @staticmethod
-    def docker_running():
-        names = Tools.execute("docker ps --format='{{json .Names}}'", showout=False, replace=False)[1].split("\n")
-        names = [i.strip("\"'") for i in names if i.strip() != ""]
-        return names
-
-    @staticmethod
-    def docker_names():
-        names = Tools.execute("docker container ls -a --format='{{json .Names}}'", showout=False, replace=False)[
-            1
-        ].split("\n")
-        names = [i.strip("\"'") for i in names if i.strip() != ""]
-        return names
-
-    @staticmethod
-    def image_names():
-        names = Tools.execute("docker images --format='{{.Repository}}:{{.Tag}}'", showout=False, replace=False)[
-            1
-        ].split("\n")
-        names = [i.strip("\"'") for i in names if i.strip() != ""]
-        return names
-
     def stop(self):
-        Tools.shell()
-        Tools.execute("docker stop %s" % self.name)
+        if self.name in DockerFactory.containers_running():
+            Tools.execute("docker stop %s" % self.name, showout=False)
 
     def start(self):
-        Tools.execute("docker start %s" % self.name)
+        if not self.name in DockerFactory.containers_names():
+            print("ERROR: cannot find docker with name:%s, cannot start" % self.name)
+            sys.exit(1)
+        if not self.name in DockerFactory.containers_running():
+            Tools.execute("docker start %s" % self.name, showout=False)
+        assert self.name in DockerFactory.containers_running()
+
+    def restart(self):
+        self.stop()
+        self.start()
 
     def delete(self):
+        self.stop()
         Tools.execute("docker rm -f %s" % self.name)
         self.container_exists = False
 
-    def reset(self):
-        self.delete()
-        Tools.shell()
+    def import_(self, path="/tmp/3bot.tar", imagename="despiegk/3bot", start=True):
 
-    def import_(self, path="/tmp/3bot.tar"):
-        Tools.shell()
-
-        if not Tools.exists(args.input):
-            print("could not find import file:%s" % args.input)
+        if not Tools.exists(path):
+            print("could not find import file:%s" % path)
             sys.exit(1)
 
-        if not args.input.endswith(".tar"):
+        if not path.endswith(".tar"):
             print("export file needs to end with .tar")
             sys.exit(1)
+        self.stop()
+        DockerFactory.image_remove(imagename)
 
-        print("import docker:%s to %s, will take a while" % (CONTAINER_NAME, args.input))
-        Tools.execute("docker import %s local/imported" % (args.input))
-        docker = IT.Docker(
-            name=CONTAINER_NAME,
-            delete=True,
-            portrange=self.port_range,
-            sshkey=args.secret,
-            image="local/imported",
-            cmd="/sbin/my_init",
-        )
+        print("import docker:%s to %s, will take a while" % (path, self.name))
+        Tools.execute("docker import %s %s" % (path, imagename))
+        if start:
+            self.image = imagename
+            self.install(baseinstall=False)
+            self.start()
 
     def export(self, path="/tmp/3bot.tar"):
         if not path.endswith(".tar"):
             print("export file needs to end with .tar")
             sys.exit(1)
-        print("export docker:%s to %s, will take a while" % (CONTAINER_NAME, args.output))
-        Tools.execute("docker export %s -o %s" % (CONTAINER_NAME, args.output))
+        print("export docker:%s to %s, will take a while" % (self.name, path))
+        Tools.execute("docker export %s -o %s" % (self.name, path))
 
-    def jumpscale_install(self, secret=None, privatekey=None, redo=False, wiki=False,pull=False):
-
-        Tools.shell()
+    def jumpscale_install(self, secret=None, privatekey=None, redo=False, wiki=False, pull=False, branch=None):
 
         args_txt = ""
-        args_txt += " --secret='%s'" % secret
-        if private_key:
+        if secret:
+            args_txt += " --secret='%s'" % secret
+        if privatekey:
             args_txt += " --privatekey='%s'" % privatekey
         if redo:
             args_txt += " -r"
@@ -2879,7 +2927,8 @@ class Docker:
             args_txt += " -w"
         if pull:
             args_txt += " --pull"
-
+        if branch:
+            args_txt += " --branch %s" % branch
 
         dirpath = os.path.dirname(inspect.getfile(Tools))
         if dirpath.startswith(MyEnv.config["DIR_CODE"]):
@@ -2893,6 +2942,7 @@ class Docker:
             cmd = "cd /tmp;python3 jsx.py install"
         cmd += args_txt
         print(" - Installing jumpscaleX ")
+        self.sshexec("apt install python3-click -y")
         self.sshexec(cmd)
 
         cmd = """
