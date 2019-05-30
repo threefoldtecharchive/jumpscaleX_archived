@@ -62,7 +62,7 @@ class BuilderPostgresql(j.builder.system._BaseClass):
         pg_ctl = self._replace("sudo -u postgres {DIR_BIN}/pg_ctl %s -D {DATA_DIR}")
         cmd_start = pg_ctl % "start"
         cmd_stop = pg_ctl % "stop"
-        cmd = j.tools.startupcmd.get("postgres", cmd_start, cmd_stop, path="/sandbox/bin")
+        cmd = j.tools.startupcmd.get("postgres", cmd_start, cmd_stop, ports=[5432], path="/sandbox/bin")
         return [cmd]
 
     def test(self):
