@@ -223,6 +223,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
 @click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-w", "--wiki", is_flag=True, help="also install the wiki system")
+@click.option("--no_sshagent", is_flag=True, help="do you want to use an ssh-agent")
 @click.option(
     "-b", "--branch", default=None, help="jumpscale branch. default 'master' or 'development' for unstable release"
 )
@@ -237,7 +238,7 @@ def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
     is_flag=True,
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
-def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False):
+def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False, no_sshagent=False):
     """
     install jumpscale in the local system (only supported for Ubuntu 18.04+ and mac OSX, use container install method otherwise.
     if interactive is True then will ask questions, otherwise will go for the defaults or configured arguments
@@ -246,7 +247,7 @@ def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False
 
     """
 
-    _configure(configdir=configdir, basedir="/sandbox")
+    _configure(configdir=configdir, basedir="/sandbox", no_sshagent=no_sshagent)
 
     if reinstall:
         # remove the state

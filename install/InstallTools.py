@@ -1902,7 +1902,7 @@ class MyEnv:
 
         if interactive and "no_interactive" in args:
             interactive = False
-        if sshagent_use is None and "no_sshagent" in args:
+        if sshagent_use is None or ("no_sshagent" in args and sshagent_use is False):
             sshagent_use = False
         else:
             sshagent_use = True
@@ -1959,16 +1959,12 @@ class MyEnv:
         else:
             MyEnv._config_load()
 
-        if readonly:
-            MyEnv.config["READONLY"] = readonly
-        if interactive:
-            MyEnv.config["INTERACTIVE"] = interactive
-        if sshagent_use:
-            MyEnv.config["SSH_AGENT"] = sshagent_use
-        if sshkey:
-            MyEnv.config["SSH_KEY_DEFAULT"] = sshkey
-        if debug_configure:
-            MyEnv.config["DEBUG"] = debug_configure
+
+        MyEnv.config["READONLY"] = readonly
+        MyEnv.config["INTERACTIVE"] = interactive
+        MyEnv.config["SSH_AGENT"] = sshagent_use
+        MyEnv.config["SSH_KEY_DEFAULT"] = sshkey
+        MyEnv.config["DEBUG"] = debug_configure
 
         for key, val in config.items():
             MyEnv.config[key] = val
@@ -2480,8 +2476,6 @@ class UbuntuInstaller:
             return
 
         Tools.log("installing base system")
-
-        Tools.shell()
 
         script = """
         apt-get install python3-pip -y
