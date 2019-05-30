@@ -35,9 +35,11 @@ def get_object(tbc, locals_=None, globals_=None, walkback=False):
     """
 
     j = KosmosShellConfig.j
+    j.application._in_autocomplete = True
 
     try:
         obj = eval(tbc)
+        j.application._in_autocomplete = False
         return obj
     except Exception as e:
         # print(e)
@@ -78,8 +80,10 @@ def get_object(tbc, locals_=None, globals_=None, walkback=False):
         tbc3 = ".".join(tbc.split(".")[1:])
         try:
             obj2 = eval("obj.%s" % tbc3)
+            j.application._in_autocomplete = False
             return obj2
         except:
+            j.application._in_autocomplete = False
             return
     return obj
 

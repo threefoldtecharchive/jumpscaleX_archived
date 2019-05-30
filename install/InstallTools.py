@@ -553,6 +553,21 @@ class Tools:
         os.makedirs(path)
 
     @staticmethod
+    def link(src, dest, chmod=None):
+        """
+
+        :param src: is where the link goes to
+        :param dest: is where he link will be
+        :param chmod e.g. 770
+        :return:
+        """
+        src = Tools.text_replace(src)
+        dest = Tools.text_replace(dest)
+        Tools.execute("ln -s {} {}".format(src, dest))
+        if chmod:
+            Tools.execute("chmod %s %s" % (chmod, dest))
+
+    @staticmethod
     def delete(path):
         """Remove a File/Dir/...
         @param path: string (File path required to be removed)
@@ -2656,14 +2671,13 @@ class JumpscaleInstaller:
             Tools.execute(script, args=args)
 
     def cmds_link(self):
-
         _, _, _, _, loc = Tools._code_location_get(repo="jumpscaleX", account=self.account)
         for src in os.listdir("%s/cmds" % loc):
             src2 = os.path.join(loc, "cmds", src)
             dest = "%s/bin/%s" % (MyEnv.config["DIR_BASE"], src)
             if not os.path.exists(dest):
-                Tools.execute("ln -s {} {}".format(src2, dest))
-                Tools.execute("chmod 770 {}".format(dest))
+                Tools.link(src2, dest, chmod=770)
+        Tools.link("%s/install/jsx.py" % loc, "{DIR_BASE}/bin/jsx", chmod=770)
         Tools.execute("cd /sandbox;source env.sh;js_init generate")
 
 
@@ -2797,6 +2811,24 @@ class DockerContainer:
         args["PORTRANGE"] = "-p %s" % portrange_txt
         args["PORT"] = self.port
         args["IMAGE"] = self.image
+        ddir = Tools.text_replace("{DIR_BASE}/var/containers/{NAME}", args=args)
+        if not Tools.exists(ddir):
+            Tools.dir_ensure(ddir + "/cfg")
+            Tools.dir_ensure(ddir + "/var")
+            CONFIG = {}
+            for i in [
+                "USEGIT",
+                "DEBUG",
+                "LOGGER_INCLUDE",
+                "LOGGER_EXCLUDE",
+                "LOGGER_LEVEL",
+                "LOGGER_CONSOLE",
+                "LOGGER_REDIS",
+                "SECRET",
+            ]:
+                CONFIG[i] = MyEnv.config[i]
+            Tools.config_save(ddir + "/cfg/jumpscale_config.toml", CONFIG)
+            shutil.copytree(Tools.text_replace("{DIR_BASE}/cfg/keys"), ddir + "/cfg/keys")
 
         if not self.container_exists:
             run_cmd = """
@@ -2806,7 +2838,9 @@ class DockerContainer:
             --cap-add=NET_ADMIN --cap-add=SYS_ADMIN \
             --cap-add=DAC_OVERRIDE --cap-add=DAC_READ_SEARCH \
             -v {DIR_CODE}:/sandbox/code \
-            -v {DIR_BASE}/var/sandbox_var:/sandbox/var \
+            -v {DIR_BASE}/var/containers/{NAME}/var:/sandbox/var \
+            -v {DIR_BASE}/var/containers/{NAME}/cfg:/sandbox/cfg \
+            -v {DIR_BASE}/var/containers/shared:/sandbox/myhost \
             {IMAGE}
             """
             if not cmd:
@@ -2818,6 +2852,7 @@ class DockerContainer:
             # /sbin/my_init
             print(" - Docker machine gets created: ")
             Tools.execute(run_cmd, args=args, interactive=True)
+
             self.dexec("rm -f /root/.BASEINSTALL_OK")
             print(" - Docker machine OK")
             print(" - Start SSH server")
