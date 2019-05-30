@@ -1,10 +1,13 @@
 from Jumpscale import j
 import textwrap
+
 builder_method = j.builder.system.builder_method
+
 
 class BuilderFreeflow(j.builder.system._BaseClass):
 
     NAME = "freeflow"
+
     @builder_method()
     def install(self, reset=False, humhub_version="1.3.13"):
         if self._done_check("install") and reset is False:

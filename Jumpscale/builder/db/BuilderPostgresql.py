@@ -66,7 +66,15 @@ class BuilderPostgresql(j.builder.system._BaseClass):
         return [cmd]
 
     def test(self):
+        if self.running():
+            self.stop()
+
         self.start()
+        _, response, _ = self._execute("pg_isready", showout=False)
+        assert "accepting connections" in response
+
+        self.stop()
+        print("TEST OK")
 
     @builder_method()
     def sandbox(self):
