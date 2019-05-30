@@ -563,6 +563,7 @@ class Tools:
         """
         src = Tools.text_replace(src)
         dest = Tools.text_replace(dest)
+        Tools.execute("rm -f %s" % dest)
         Tools.execute("ln -s {} {}".format(src, dest))
         if chmod:
             Tools.execute("chmod %s %s" % (chmod, dest))
@@ -1974,6 +1975,10 @@ class MyEnv:
         else:
             MyEnv._config_load()
 
+        if not "DIR_TEMP" in MyEnv.config:
+            config.update(MyEnv.config)
+            MyEnv.config = MyEnv.config_default_get(config=config)
+
         if readonly:
             MyEnv.config["READONLY"] = readonly
         if interactive:
@@ -2057,6 +2062,8 @@ class MyEnv:
 
         if Tools.exists(MyEnv.config_file_path):
             MyEnv._config_load()
+            if not "DIR_BASE" in MyEnv.config:
+                return
 
             MyEnv.log_includes = [i for i in MyEnv.config.get("LOGGER_INCLUDE", []) if i.strip().strip("''") != ""]
             MyEnv.log_excludes = [i for i in MyEnv.config.get("LOGGER_EXCLUDE", []) if i.strip().strip("''") != ""]
@@ -2692,6 +2699,17 @@ class DockerFactory:
 
     __init = False
     _dockers = {}
+
+    @staticmethod
+    def indocker():
+        """
+        will check if we are in a docker
+        :return:
+        """
+        rc, out, _ = Tools.execute("cat /proc/1/cgroup", die=False, showout=False)
+        if rc == 0 and out.find("/docker/") != -1:
+            return True
+        return False
 
     @staticmethod
     def _init():

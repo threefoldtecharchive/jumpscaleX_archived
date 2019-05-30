@@ -21,8 +21,10 @@ DEFAULT_BRANCH = "development_installer"
 
 def load_install_tools():
     # get current install.py directory
-    rootdir = os.path.dirname(os.path.abspath(__file__))
-    path = os.path.join(rootdir, "InstallTools.py")
+    path = "/sandbox/code/github/threefoldtech/jumpscaleX/install/InstallTools.py"
+    if not os.path.exists(path):
+        rootdir = os.path.dirname(os.path.abspath(__file__))
+        path = os.path.join(rootdir, "InstallTools.py")
 
     if not os.path.exists(path):
         os.chdir(rootdir)
@@ -37,6 +39,18 @@ def load_install_tools():
     IT = spec.loader.load_module()
     sys.excepthook = IT.my_excepthook
     return IT
+
+
+def jumpscale_get(die=True):
+    # jumpscale need to be available otherwise cannot do
+    try:
+        from Jumpscale import j
+    except Exception as e:
+        if die:
+            print("ERROR: cannot use jumpscale yet, has not been installed")
+            sys.exit(1)
+        return None
+    return j
 
 
 @click.group()
@@ -120,13 +134,7 @@ def _configure(
         interactive=interactive,
         secret=secret,
     )
-
-    # jumpscale need to be available otherwise cannot do
-    j = False
-    try:
-        from Jumpscale import j
-    except Exception as e:
-        pass
+    j = jumpscale_get(die=False)
 
     if not j and privatekey_words:
         print(
@@ -134,6 +142,7 @@ def _configure(
             can only configure private key when jumpscale is installed locally use jsx install..."
         )
         sys.exit(1)
+
     if j:
         j.data.nacl.configure(privkey_words=privatekey_words)
 
@@ -383,25 +392,13 @@ def container_kosmos(name="3bot", configdir=None):
 @click.option("-n", "--name", default="3bot", help="name of container")
 @click.option("-t", "--target", default="auto", help="auto,local,container, default is auto will try container first")
 def kosmos(name="3bot", target="auto", configdir=None):
-    """
-    open a kosmos shell, if container is running will use the container, if installed locally will use local kosmos
-    :param name: name of container if not the default
-    :return:
-    """
-    docker = container_get(name=name)
-    os.execv(
-        shutil.which("ssh"),
-        [
-            "ssh",
-            "root@localhost",
-            "-A",
-            "-t",
-            "-oStrictHostKeyChecking=no",
-            "-p",
-            str(docker.port),
-            "source /sandbox/env.sh;kosmos",
-        ],
-    )
+    j = jumpscale_get(die=True)
+    j.application.interactive = True
+    n = j.data.nacl.get(load=False)  # important to make sure private key is loaded
+    if n.load(die=False) is False:
+        n.configure()
+    j.application.bcdb_system  # needed to make sure we have bcdb running, needed for code completion
+    j.shell(loc=False, locals_=locals(), globals_=globals())
 
 
 @click.command()
@@ -425,6 +422,7 @@ def generate():
     """
     generate the loader file, important to do when new modules added
     """
+    j = jumpscale_get(die=True)
     j.sal.fs.remove("{DIR_VAR}/codegen")
     j.sal.fs.remove("{DIR_VAR}/cmds")
     from Jumpscale.core.generator.JSGenerator import JSGenerator
@@ -433,27 +431,30 @@ def generate():
     g = JSGenerator(j)
     g.generate(methods_find=True)
     g.report()
+    print("OK ALL DONE, GOOD LUCK (-:")
 
 
 if __name__ == "__main__":
 
     cli.add_command(configure)
     cli.add_command(install)
-    cli.add_command(container_install)
-    cli.add_command(container_stop)
-    cli.add_command(container_start)
-    cli.add_command(container_delete)
-    cli.add_command(containers_reset)
-    cli.add_command(container_export)
-    cli.add_command(container_import)
-    cli.add_command(container_shell)
     cli.add_command(kosmos)
     cli.add_command(generate)
-    cli.add_command(container_kosmos)
 
     # DO NOT DO THIS IN ANY OTHER WAY !!!
     IT = load_install_tools()
 
     IT.MyEnv.init()  # will take into consideration the --configdir
+
+    if not IT.DockerFactory.indocker():
+        cli.add_command(container_kosmos)
+        cli.add_command(container_install)
+        cli.add_command(container_stop)
+        cli.add_command(container_start)
+        cli.add_command(container_delete)
+        cli.add_command(containers_reset)
+        cli.add_command(container_export)
+        cli.add_command(container_import)
+        cli.add_command(container_shell)
 
     cli()
