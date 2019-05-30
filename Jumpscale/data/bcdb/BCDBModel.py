@@ -515,6 +515,8 @@ class BCDBModel(j.application.JSBaseClass):
     def new(self, data=None):
         if data and isinstance(data, dict):
             data = self._dict_process_in(data)
+        elif j.data.types.json.check(str(data)):
+            data = j.data.serializers.json.loads(data)
         if data:
             obj = self.schema.get(data=data, model=self)
         else:
