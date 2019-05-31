@@ -26,14 +26,15 @@ def load_install_tools():
         rootdir = os.path.dirname(os.path.abspath(__file__))
         path = os.path.join(rootdir, "InstallTools.py")
 
-    if not os.path.exists(path):
-        os.chdir(rootdir)
-        url = "https://raw.githubusercontent.com/threefoldtech/jumpscaleX/%s/install/InstallTools.py" % DEFAULT_BRANCH
-        with urlopen(url) as resp:
-            if resp.status != 200:
-                raise RuntimeError("fail to download InstallTools.py")
-            with open(path, "w+") as f:
-                f.write(resp.read().decode("utf-8"))
+        if not os.path.exists(path) or path.find("/code/") == -1:
+            url = (
+                "https://raw.githubusercontent.com/threefoldtech/jumpscaleX/%s/install/InstallTools.py" % DEFAULT_BRANCH
+            )
+            with urlopen(url) as resp:
+                if resp.status != 200:
+                    raise RuntimeError("fail to download InstallTools.py")
+                with open(path, "w+") as f:
+                    f.write(resp.read().decode("utf-8"))
 
     spec = util.spec_from_file_location("IT", path)
     IT = spec.loader.load_module()
