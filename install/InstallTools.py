@@ -3212,7 +3212,7 @@ class DockerContainer:
             print("copy installer over from where I install from")
             for item in ["jsx.py", "InstallTools.py"]:
                 src1 = "%s/%s" % (dirpath, item)
-                cmd = "scp -P %s %s root@localhost:/tmp/" % (self.port, src1)
+                cmd = "scp -P %s %s root@localhost:/tmp/" % (self.config.sshport, src1)
                 Tools.execute(cmd)
             cmd = "cd /tmp;python3 jsx.py install"
         cmd += args_txt
