@@ -16,8 +16,8 @@ class BuilderTools(j.builder.system._BaseClass):
 
         self._cd = "/tmp"
 
-    def _replace(self, txt):
-        return j.core.tools.text_replace(txt)
+    def _replace(self, txt, args={}):
+        return j.core.tools.text_replace(txt, args=args)
 
     def shell_safe(self, path):
         SHELL_ESCAPE = " '\";`|"

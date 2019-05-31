@@ -169,7 +169,7 @@ def ui():
         if "name" not in args:
             args["name"] = "default"
 
-        container_exists = args["name"] in IT.Docker.docker_names()
+        container_exists = args["name"] in IT.Docker.containers_names()
         args["container_exists"] = container_exists
 
         if "name" not in args:

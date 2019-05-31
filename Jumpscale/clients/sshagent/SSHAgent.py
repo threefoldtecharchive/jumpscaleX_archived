@@ -23,7 +23,7 @@ class SSHAgent(j.application.JSBaseClass):
             self.keys_list = MyEnv.sshagent.keys_list
             self.key_names = MyEnv.sshagent.key_names
             self.key_paths = MyEnv.sshagent.key_paths
-            self.key_default = MyEnv.sshagent.key_default
+            self.key_default_name = MyEnv.sshagent.key_default
             self.profile_js_configure = MyEnv.sshagent.profile_js_configure
             self.kill = MyEnv.sshagent.kill
             self.start = MyEnv.sshagent.start
@@ -31,31 +31,32 @@ class SSHAgent(j.application.JSBaseClass):
         else:
             raise RuntimeError("cannot use sshagent, maybe not initted?")
 
-    # @property
-    # def _key_default_or_none(self):
-    #     """
-    #     see if we can find the default sshkey using sshagent
-    #
-    #     j.clients.sshagent.key_default_or_none
-    #
-    #     :raises RuntimeError: sshkey not found in sshagent
-    #     :raises RuntimeError: more than one sshkey is found in sshagent
-    #     :return: j.clients.sshkey.new() ...
-    #     :rtype: sshkey object or None
-    #     """
-    #     if not self._default_key:
-    #
-    #         for path, key in self.keys_list(True):
-    #             name = j.sal.fs.getBaseName(path).lower()
-    #             if name == MyEnv.config["SSH_KEY_DEFAULT"]:
-    #                 if Tools.exists(path):
-    #                     self._default_key = j.clients.sshkey.get(name=name, pubkey=key)
-    #                 else:
-    #                     self._default_key = j.clients.sshkey.get(name=name, pubkey=key, path=path)
-    #
-    #                 return self._default_key
-    #         return None
-    #     return self._default_key
+    @property
+    def key_default(self):
+        """
+        see if we can find the default sshkey using sshagent
+
+        j.clients.sshagent.key_default
+
+        :raises RuntimeError: sshkey not found in sshagent
+        :raises RuntimeError: more than one sshkey is found in sshagent
+        :return: j.clients.sshkey.new() ...
+        :rtype: sshkey object or None
+        """
+        if not self._default_key:
+            raise RuntimeError("not implemented yet")
+            self._default_key = j.clients.sshkey.get(name=self.key_default_name, pubkey=key)
+            # for path, key in self.keys_list(True):
+            #     name = j.sal.fs.getBaseName(path).lower()
+            #     if name == MyEnv.config["SSH_KEY_DEFAULT"]:
+            #         if Tools.exists(path):
+            #             self._default_key = j.clients.sshkey.get(name=self.key_default_name, pubkey=key)
+            #         else:
+            #             self._default_key = j.clients.sshkey.get(name=self.key_default_name, pubkey=key, path=path)
+            #
+            #         return self._default_key
+            # return None
+        return self._default_key
 
     def key_path_get(self, keyname="", die=True):
         """

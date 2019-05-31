@@ -34,8 +34,6 @@ def get_object(tbc, locals_=None, globals_=None, walkback=False):
     :return:
     """
 
-    j = KosmosShellConfig.j
-
     try:
         obj = eval(tbc)
         return obj
@@ -79,7 +77,7 @@ def get_object(tbc, locals_=None, globals_=None, walkback=False):
         try:
             obj2 = eval("obj.%s" % tbc3)
             return obj2
-        except:
+        except Exception as e:
             return
     return obj
 
@@ -131,6 +129,8 @@ def get_completions(self, document, complete_event):
 
     :rtype: `Completion` generator
     """
+    j = KosmosShellConfig.j
+    j.application._in_autocomplete = True
 
     def colored_completions(names, color):
         for name in names:
@@ -158,6 +158,8 @@ def get_completions(self, document, complete_event):
             # try dir()
             members = sorted(dir(obj), key=sort_members_key)
             yield from colored_completions(members, "ansigray")
+
+    j.application._in_autocomplete = False
 
 
 def get_doc_string(tbc):
@@ -413,11 +415,14 @@ def ptconfig(repl):
         try:
             _, _, prefix = get_current_line(document)
         except ValueError:
+            print("error in custom get completion")
+            j.application._in_autocomplete = False
             return
 
         completions = list(get_completions(self, document, complete_event))
         if not completions:
             completions = old_get_completions(self, document, complete_event)
+        # j.application._in_autocomplete = False
         yield from filter_completions_on_prefix(completions, prefix)
 
     repl._completer.__class__.get_completions = custom_get_completions

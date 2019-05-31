@@ -1,7 +1,12 @@
+#!/usr/bin/env python3
+import os
+
+os.environ["LC_ALL"] = "en_US.UTF-8"
 import click
 
 import argparse
 import inspect
+import time
 import os
 import shutil
 import sys
@@ -16,8 +21,10 @@ DEFAULT_BRANCH = "development_installer"
 
 def load_install_tools():
     # get current install.py directory
-    rootdir = os.path.dirname(os.path.abspath(__file__))
-    path = os.path.join(rootdir, "InstallTools.py")
+    path = "/sandbox/code/github/threefoldtech/jumpscaleX/install/InstallTools.py"
+    if not os.path.exists(path):
+        rootdir = os.path.dirname(os.path.abspath(__file__))
+        path = os.path.join(rootdir, "InstallTools.py")
 
     if not os.path.exists(path):
         os.chdir(rootdir)
@@ -34,6 +41,18 @@ def load_install_tools():
     return IT
 
 
+def jumpscale_get(die=True):
+    # jumpscale need to be available otherwise cannot do
+    try:
+        from Jumpscale import j
+    except Exception as e:
+        if die:
+            print("ERROR: cannot use jumpscale yet, has not been installed")
+            sys.exit(1)
+        return None
+    return j
+
+
 @click.group()
 def cli():
     pass
@@ -42,22 +61,18 @@ def cli():
 ### CONFIGURATION (INIT) OF JUMPSCALE ENVIRONMENT
 @click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if /sandbox exists otherwise ~/sandbox")
-@click.option(
-    "--codedir",
-    default=None,
-    help="path where the github code will be checked out, default sandbox/code",
-)
+@click.option("--codedir", default=None, help="path where the github code will be checked out, default sandbox/code")
 @click.option(
     "--basedir",
     default=None,
     help="path where JSX will be installed default /sandbox if /sandbox exists otherwise ~/sandbox",
 )
-@click.option("--no_sshagent", is_flag=True, help="do you want to use an ssh-agent")
+@click.option("--no-sshagent", is_flag=True, help="do you want to use an ssh-agent")
 @click.option(
     "--sshkey", default=None, is_flag=True, type=bool, help="if more than 1 ssh-key in ssh-agent, specify here"
 )
 @click.option("--debug", is_flag=True, help="do you want to put kosmos in debug mode?")
-@click.option("--no_interactive", is_flag=True, help="default is interactive")
+@click.option("--no-interactive", is_flag=True, help="default is interactive")
 @click.option(
     "--privatekey",
     default=False,
@@ -93,7 +108,8 @@ def configure(
         secret=secret,
     )
 
-#have to do like this, did not manage to call the click enabled function (don't know why)
+
+# have to do like this, did not manage to call the click enabled function (don't know why)
 def _configure(
     basedir=None,
     configdir=None,
@@ -118,13 +134,7 @@ def _configure(
         interactive=interactive,
         secret=secret,
     )
-
-    # jumpscale need to be available otherwise cannot do
-    j = False
-    try:
-        from Jumpscale import j
-    except Exception as e:
-        pass
+    j = jumpscale_get(die=False)
 
     if not j and privatekey_words:
         print(
@@ -132,6 +142,7 @@ def _configure(
             can only configure private key when jumpscale is installed locally use jsx install..."
         )
         sys.exit(1)
+
     if j:
         j.data.nacl.configure(privkey_words=privatekey_words)
 
@@ -166,7 +177,7 @@ def _configure(
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
 @click.option("--no_interactive", is_flag=True, help="default is interactive")
-def container(
+def container_install(
     name="3bot",
     configdir=None,
     scratch=False,
@@ -188,26 +199,33 @@ def container(
 
     """
     interactive = not no_interactive
-    
+
     _configure(configdir=configdir)
 
     if scratch:
-        image="phusion/baseimage"
+        image = "phusion/baseimage"
     if not image:
         image = "despiegk/3bot"
 
-    docker = IT.Docker(name=name, delete=delete, portrange=portrange, image=image)
+    docker = IT.DockerContainer(name=name, delete=delete, portrange=portrange, image=image)
 
     docker.install()
 
-    jumpscale_install(branch=branch,redo=reinstall,pull=pull,wiki=wiki)
+    docker.jumpscale_install(branch=branch, redo=reinstall, pull=pull, wiki=wiki)
 
 
-def docker_get(name="3bot", existcheck=True, portrange=1, delete=False):
-    docker = IT.Docker(name=name, delete=delete, portrange=portrange)
-    if existcheck and CONTAINER_NAME not in docker.docker_names():
-        print("container does not exists. please install first")
-        sys.exit(1)
+def container_get(name="3bot", existcheck=True, portrange=1, delete=False):
+    docker = IT.DockerContainer(name=name, delete=delete, portrange=portrange)
+    if existcheck:
+        if name not in IT.DockerFactory.containers_running():
+            # means is not running yet
+            if name not in IT.DockerFactory.containers_names():
+                docker.install()
+                docker.jumpscale_install()
+                # needs to stay because will make sure that the config is done properly in relation to your shared folders from the host
+            else:
+                docker.start()
+                time.sleep(1)
     return docker
 
 
@@ -215,6 +233,7 @@ def docker_get(name="3bot", existcheck=True, portrange=1, delete=False):
 @click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-w", "--wiki", is_flag=True, help="also install the wiki system")
+@click.option("--no_sshagent", is_flag=True, help="do you want to use an ssh-agent")
 @click.option(
     "-b", "--branch", default=None, help="jumpscale branch. default 'master' or 'development' for unstable release"
 )
@@ -229,7 +248,7 @@ def docker_get(name="3bot", existcheck=True, portrange=1, delete=False):
     is_flag=True,
     help="reinstall, basically means will try to re-do everything without removing the data",
 )
-def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False):
+def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False, no_sshagent=False):
     """
     install jumpscale in the local system (only supported for Ubuntu 18.04+ and mac OSX, use container install method otherwise.
     if interactive is True then will ask questions, otherwise will go for the defaults or configured arguments
@@ -238,14 +257,11 @@ def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False
 
     """
 
-    _configure(configdir=configdir,basedir="/sandbox")
-
-    IT.MyEnv.sshagent.key_default
-
+    _configure(configdir=configdir, basedir="/sandbox", no_sshagent=no_sshagent)
+    SANDBOX = IT.MyEnv.config["DIR_BASE"]
     if reinstall:
         # remove the state
         IT.MyEnv.state_reset()
-        pull = True
         force = True
     else:
         force = False
@@ -258,98 +274,121 @@ def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False
     print("Jumpscale X installed successfully")
 
 
-
-
-@click.command(name="import")
+@click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
-@click.option("-p", "--path", default="/tmp/3bot.tar", help="image location")
-def import_(name="3bot", path="/tmp/3bot.tar", configdir=None):
+@click.option("-i", "--imagename", default="despiegk/3bot", help="name of image where we will import to")
+@click.option("-p", "--path", default=None, help="image location")
+@click.option("--no-start", is_flag=True, help="container will start auto")
+def container_import(name="3bot", path=None, configdir=None, imagename="despiegk/3bot", no_start=False):
     """
     import container from image file, if not specified will be /tmp/3bot.tar
     :param args:
     :return:
     """
-    docker = docker_get(existcheck=False)
-    docker.import_(path=args.input)
+    start = not no_start
+    docker = container_get(existcheck=False)
+    docker.import_(path=path, imagename=imagename, start=start)
 
 
 @click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
-@click.option("-p", "--path", default="/tmp/3bot.tar", help="image location")
-def export(name="3bot", path="/tmp/3bot.tar", configdir=None):
+@click.option("-p", "--path", default=None, help="image location")
+@click.option("--no-overwrite", is_flag=True, help="std container will overwrite the existing one")
+@click.option("--skip-if-exists", is_flag=True, help="std container will overwrite the existing one")
+def container_export(name="3bot", path=None, configdir=None, no_overwrite=False, skip_if_exists=False):
     """
     export the 3bot to image file, if not specified will be /tmp/3bot.tar
     :param name:
     :param path:
     :return:
     """
-    docker = docker_get(name=name)
-    docker.export(path=args.output)
+    overwrite = not no_overwrite
+    _configure(configdir=configdir)
+    docker = container_get(name=name)
+    docker.export(path=path, skip_if_exists=skip_if_exists, overwrite=overwrite)
 
 
 @click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
-def stop(name="3bot", configdir=None):
+def container_clean(name="3bot", configdir=None):
+    """
+    starts from an export, if not there will do the export first
+    :param name:
+    :param path:
+    :return:
+    """
+    _configure(configdir=configdir)
+    docker = container_get(name=name)
+    docker.clean()
+
+
+@click.command()
+@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+@click.option("-n", "--name", default="3bot", help="name of container")
+def container_stop(name="3bot", configdir=None):
     """
     stop the 3bot container
     :param name:
     :return:
     """
-    docker = docker_get(name=name, existcheck=False)
+    _configure(configdir=configdir)
+    docker = container_get(name=name, existcheck=False)
     docker.stop()
 
 
 @click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
-def start(name="3bot", configdir=None):
+def container_start(name="3bot", configdir=None):
     """
     start the 3bot container
     :param name:
     :return:
     """
-    docker = docker_get(name=name, existcheck=False)
+    _configure(configdir=configdir)
+    docker = container_get(name=name, existcheck=False)
     docker.start()
 
 
 @click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
-def delete(name="3bot", configdir=None):
+def container_delete(name="3bot", configdir=None):
     """
     delete the 3bot container
     :param name:
     :return:
     """
-    docker = docker_get(name=name, existcheck=False)
+    _configure(configdir=configdir)
+    docker = container_get(name=name, existcheck=False)
     docker.delete()
 
 
 @click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
-def reset(configdir=None):
+def containers_reset(configdir=None):
     """
-    remove all docker containers as well as current configuration of the JSX environment
+    remove all docker containers
     :param name:
     :return:
     """
-    Tools.shell()
+    _configure(configdir=configdir)
+    IT.DockerFactory.reset()
 
 
 @click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
-# @click.option("-t", "--target", default="auto", help="auto,local,container, default is auto will try container first")
-def kosmos(name="3bot", target="auto", configdir=None):
+def container_kosmos(name="3bot", configdir=None):
     """
-    open a kosmos shell, if container is running will use the container, if installed locally will use local kosmos
-    :param name: name of container if not the default
+    open a kosmos shell in container
+    :param name: name of container if not the default =  3bot
     :return:
     """
-    docker = docker_get(name=name)
+    docker = container_get(name=name)
     os.execv(
         shutil.which("ssh"),
         [
@@ -359,7 +398,7 @@ def kosmos(name="3bot", target="auto", configdir=None):
             "-t",
             "-oStrictHostKeyChecking=no",
             "-p",
-            str(docker.port),
+            str(docker.config.sshport),
             "source /sandbox/env.sh;kosmos",
         ],
     )
@@ -368,16 +407,31 @@ def kosmos(name="3bot", target="auto", configdir=None):
 @click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
-def shell(name="3bot", configdir=None):
+@click.option("-t", "--target", default="auto", help="auto,local,container, default is auto will try container first")
+def kosmos(name="3bot", target="auto", configdir=None):
+    j = jumpscale_get(die=True)
+    j.application.interactive = True
+    n = j.data.nacl.get(load=False)  # important to make sure private key is loaded
+    if n.load(die=False) is False:
+        n.configure()
+    j.application.bcdb_system  # needed to make sure we have bcdb running, needed for code completion
+    j.shell(loc=False, locals_=locals(), globals_=globals())
+
+
+@click.command()
+@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+@click.option("-n", "--name", default="3bot", help="name of container")
+def container_shell(name="3bot", configdir=None):
     """
     open a  shell to the container for 3bot
     :param name: name of container if not the default
     :return:
     """
 
-    docker = docker_get(name=name)
+    docker = container_get(name=name)
     os.execv(
-        shutil.which("ssh"), ["ssh", "root@localhost", "-A", "-t", "-oStrictHostKeyChecking=no", "-p", str(docker.port)]
+        shutil.which("ssh"),
+        ["ssh", "root@localhost", "-A", "-t", "-oStrictHostKeyChecking=no", "-p", str(docker.config.sshport)],
     )
 
 
@@ -386,6 +440,7 @@ def generate():
     """
     generate the loader file, important to do when new modules added
     """
+    j = jumpscale_get(die=True)
     j.sal.fs.remove("{DIR_VAR}/codegen")
     j.sal.fs.remove("{DIR_VAR}/cmds")
     from Jumpscale.core.generator.JSGenerator import JSGenerator
@@ -394,20 +449,13 @@ def generate():
     g = JSGenerator(j)
     g.generate(methods_find=True)
     g.report()
+    print("OK ALL DONE, GOOD LUCK (-:")
 
 
 if __name__ == "__main__":
 
     cli.add_command(configure)
     cli.add_command(install)
-    cli.add_command(container)
-    cli.add_command(stop)
-    cli.add_command(start)
-    cli.add_command(delete)
-    cli.add_command(reset)
-    cli.add_command(export)
-    cli.add_command(import_)
-    cli.add_command(shell)
     cli.add_command(kosmos)
     cli.add_command(generate)
 
@@ -415,5 +463,17 @@ if __name__ == "__main__":
     IT = load_install_tools()
 
     IT.MyEnv.init()  # will take into consideration the --configdir
+
+    if not IT.DockerFactory.indocker():
+        cli.add_command(container_kosmos)
+        cli.add_command(container_install)
+        cli.add_command(container_stop)
+        cli.add_command(container_start)
+        cli.add_command(container_delete)
+        cli.add_command(containers_reset)
+        cli.add_command(container_export)
+        cli.add_command(container_import)
+        cli.add_command(container_shell)
+        cli.add_command(container_clean)
 
     cli()
