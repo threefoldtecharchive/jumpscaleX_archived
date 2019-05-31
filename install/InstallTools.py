@@ -2905,7 +2905,7 @@ class DockerContainer:
         :return:
         """
         imagename = "temp/temp"
-        self.export(path=path, skip_if_exists=False)  # need to re-export to make sure
+        self.export(skip_if_exists=False)  # need to re-export to make sure
         tempcontainer = DockerContainer("temp", delete=True, portrange=2)
 
         tempcontainer.import_(
@@ -2929,9 +2929,9 @@ class DockerContainer:
         rm -rf /var/mail
         mkdir -p /var/mail
         rm -rf /tmp
-        chmod -R 0777 /tmp
-        rm -rf /var/backups
         mkdir -p /tmp
+        chmod -R 0777 /tmp
+        rm -rf /var/backups        
         find . -name "*.bak" -exec rm -rf {} \;
         apt-get clean
         apt-get autoremove --purge
@@ -3099,7 +3099,11 @@ class DockerContainer:
         if items != []:
             items.sort()
             last = items[-1]
-            version = int(last.replace(".tar", ""))
+            try:
+                version = int(last.replace(".tar", ""))
+            except:
+                Tools.delete("%s/%s" % (dpath, last))
+                return self.export_last_image_path
         else:
             return None
         path = "%s/exports/%s.tar" % (self._path, version)
@@ -3158,6 +3162,7 @@ class DockerContainer:
         :return:
         """
         version = None
+        self.export_last_image_path  # to have auto fix for badly expored files
         if not path:
             dpath = "%s/exports/" % self._path
             if not Tools.exists(dpath):

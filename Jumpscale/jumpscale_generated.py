@@ -1268,12 +1268,12 @@ class group_builder(JSGroup):
         
         self._systemtools = None
         self._tools = None
+        self._virtualization = None
         self._web = None
         self._network = None
         self._runtimes = None
         self.__template = None
         self._storage = None
-        self._libs = None
         self._libs = None
         self._blockchain = None
         self._system = None
@@ -1296,6 +1296,12 @@ class group_builder(JSGroup):
             from Jumpscale.builder.tools.BuilderTools import BuilderTools
             self._tools =  BuilderTools()
         return self._tools
+    @property
+    def virtualization(self):
+        if self._virtualization is None:
+            from Jumpscale.builder.virtualization.BuilderVirtualizationFactory import BuilderAppsFactory
+            self._virtualization =  BuilderAppsFactory()
+        return self._virtualization
     @property
     def web(self):
         if self._web is None:
@@ -1326,12 +1332,6 @@ class group_builder(JSGroup):
             from Jumpscale.builder.storage.BuilderStorageFactory import BuilderAppsFactory
             self._storage =  BuilderAppsFactory()
         return self._storage
-    @property
-    def libs(self):
-        if self._libs is None:
-            from Jumpscale.builder.libs.BuilderLibs import BuilderLibs
-            self._libs =  BuilderLibs()
-        return self._libs
     @property
     def libs(self):
         if self._libs is None:
