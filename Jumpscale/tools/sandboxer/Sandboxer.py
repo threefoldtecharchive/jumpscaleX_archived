@@ -190,6 +190,23 @@ class Sandboxer(j.application.JSBaseClass):
             result = self._ldd(path, result=dict(), done=list(), exclude_sys_libs=exclude_sys_libs)
         return result
 
+    def libs_walk(self, path, dest, callback, recursive=True, exclude_sys_libs=True):
+        """
+        walk libs and apply callback to them
+        """
+        j.sal.fs.createDir(dest)
+
+        if j.sal.fs.isDir(path):
+            # do all files in dir
+            for item in j.sal.fs.listFilesInDir(path, recursive=recursive, followSymlinks=True, listSymlinks=False):
+                if (j.sal.fs.isFile(item) and j.sal.fs.isExecutable(item)) or j.sal.fs.getFileExtension(item) == "so":
+                    self.libs_walk(item, dest, callback, recursive=False, exclude_sys_libs=exclude_sys_libs)
+        else:
+            if (j.sal.fs.isFile(path) and j.sal.fs.isExecutable(path)) or j.sal.fs.getFileExtension(path) == "so":
+                result = self._libs_find(path, exclude_sys_libs=exclude_sys_libs)
+                for _, deb in list(result.items()):
+                    callback(deb)
+
     def libs_sandbox(self, path, dest=None, recursive=True, exclude_sys_libs=True):
         """
 
@@ -206,22 +223,24 @@ class Sandboxer(j.application.JSBaseClass):
 
         self._log_info("lib sandbox:%s" % path)
 
-        j.sal.fs.createDir(dest)
+        def callback(dep):
+            dep.copyTo(dest)
 
-        if j.sal.fs.isDir(path):
-            # do all files in dir
-            for item in j.sal.fs.listFilesInDir(path, recursive=recursive, followSymlinks=True, listSymlinks=False):
-                if (j.sal.fs.isFile(item) and j.sal.fs.isExecutable(item)) or j.sal.fs.getFileExtension(item) == "so":
-                    self.libs_sandbox(item, dest, recursive=False)
-            # if recursive:
-            #     for item in j.sal.fs.listFilesAndDirsInDir(path, recursive=False):
-            #         self.libs_sandbox(item, dest, recursive)
+        self.libs_walk(path, dest, callback, recursive, exclude_sys_libs)
 
-        else:
-            if (j.sal.fs.isFile(path) and j.sal.fs.isExecutable(path)) or j.sal.fs.getFileExtension(path) == "so":
-                result = self._libs_find(path, exclude_sys_libs=exclude_sys_libs)
-                for _, deb in list(result.items()):
-                    deb.copyTo(dest)
+    def libs_clone_under(self, path, dest, recursive=True):
+        self._log_info("lib clone to:%s" % dest)
+
+        def callback(dep):
+            dep_path = dep.path
+            if dep_path.startswith("/"):
+                dep_path = dep_path[1:]
+            dest_path = j.sal.fs.joinPaths(dest, dep_path)
+            j.sal.fs.createDir(j.sal.fs.getDirName(dest_path))
+            if not j.sal.fs.exists(dest_path):
+                j.sal.fs.copyFile(dep.path, dest_path)
+
+        self.libs_walk(path, dest, callback, recursive, exclude_sys_libs=False)
 
     def copyTo(self, path, dest, excludeFileRegex=[], excludeDirRegex=[], excludeFiltersExt=["pyc", "bak"]):
 

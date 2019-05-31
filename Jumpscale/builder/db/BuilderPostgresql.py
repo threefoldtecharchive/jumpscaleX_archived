@@ -1,122 +1,98 @@
 from Jumpscale import j
 
+builder_method = j.builder.system.builder_method
+
 
 class BuilderPostgresql(j.builder.system._BaseClass):
     NAME = "psql"
 
     def _init(self):
-        self.passwd = "postgres"
-        self.dbdir = "{DIR_VAR}/postgresqldb"
+        self.DOWNLOAD_DIR = self.tools.joinpaths(self.DIR_BUILD, "build")
+        self.DATA_DIR = self._replace("{DIR_BASE}/apps/psql/data")
 
-    def build(self, beta=False, reset=False):
-        """
-        beta is 2 for 10 release
-        """
-        if self._done_check("build", reset):
-            return
-
-        if beta:
-            postgres_url = "https://ftp.postgresql.org/pub/source/v10beta2/postgresql-10beta3.tar.bz2"
-        else:
-            postgres_url = "https://ftp.postgresql.org/pub/source/v9.6.3/postgresql-9.6.3.tar.gz"
-        j.builder.tools.file_download(postgres_url, overwrite=False, to=self.DIR_BUILD, expand=True, removeTopDir=True)
-        j.core.tools.dir_ensure("{DIR_BASE}/apps/pgsql")
-        j.core.tools.dir_ensure("{DIR_BIN}")
-        j.core.tools.dir_ensure("$LIBDIR/postgres")
+    @builder_method()
+    def build(self):
+        postgres_url = "https://ftp.postgresql.org/pub/source/v9.6.13/postgresql-9.6.13.tar.gz"
+        j.builder.tools.file_download(postgres_url, to=self.DOWNLOAD_DIR, overwrite=False, expand=True)
         j.builder.system.package.ensure(["build-essential", "zlib1g-dev", "libreadline-dev"])
+
         cmd = self._replace(
             """
-            cd {DIR_BUILD}
-            ./configure --prefix={DIR_BASE}/apps/pgsql --bindir={DIR_BIN} --sysconfdir={DIR_CFG} --libdir=$LIBDIR/postgres --datarootdir={DIR_BASE}/apps/pgsql/share
+            cd {DOWNLOAD_DIR}/postgresql-9.6.13
+            ./configure --prefix={DIR_BASE}
             make
         """
         )
         self._execute(cmd)
-        self._done_set("build")
 
     def _group_exists(self, groupname):
-        return groupname in j.core.tools.file_text_read("/etc/group")
+        return groupname in self._read("/etc/group")
 
-    def install(self, reset=False, start=False, port=5432, beta=False):
-        if self._done_check("install", reset):
-            return
-        self.build(beta=beta, reset=reset)
+    @builder_method()
+    def install(self, port=5432):
         cmd = self._replace(
             """
-            cd {DIR_BUILD}
-            make install with-pgport={port}
-        """,
-            port=port,
+            cd {DOWNLOAD_DIR}/postgresql-9.6.13
+            make install
+        """
         )
-        j.core.tools.dir_ensure(self.dbdir)
         self._execute(cmd)
+
         if not self._group_exists("postgres"):
             self._execute(
-                'adduser --system --quiet --home $LIBDIR/postgres --no-create-home \
+                'adduser --system --quiet --home {DIR_BASE} --no-create-home \
         --shell /bin/bash --group --gecos "PostgreSQL administrator" postgres'
             )
+
+        self._remove(self.DATA_DIR)
+
         c = self._replace(
             """
-            cd {DIR_BASE}/apps/pgsql
-            mkdir -p data
+            cd {DIR_BASE}
             mkdir -p log
-            chown -R postgres {DIR_BASE}/apps/pgsql/
-            chown -R postgres {postgresdbdir}
-            sudo -u postgres {DIR_BIN}/initdb -D {postgresdbdir} --no-locale
-            echo "\nlocal   all             postgres                                md5\n" >> {postgresdbdir}/pg_hba.conf
-        """,
-            postgresdbdir=self.dbdir,
+            mkdir -p {DATA_DIR}
+            chown -R postgres {DATA_DIR}
+            sudo -u postgres {DIR_BIN}/initdb -D {DATA_DIR} -E utf8 --locale=en_US.UTF-8
+        """
         )
-
-        # NOTE pg_hba.conf uses the default trust configurations.
         self._execute(c)
-        if start:
-            self.start()
 
-    def configure(self, passwd, dbdir=None):
-        """
-        # TODO
-        if dbdir none then {DIR_VAR}/postgresqldb/
-        """
-        if dbdir is not None:
-            self.dbdir = dbdir
-        self.passwd = passwd
+    @property
+    def startup_cmds(self):
+        pg_ctl = self._replace("sudo -u postgres {DIR_BIN}/pg_ctl %s -D {DATA_DIR}")
+        cmd_start = pg_ctl % "start"
+        cmd_stop = pg_ctl % "stop"
+        cmd = j.tools.startupcmd.get("postgres", cmd_start, cmd_stop, ports=[5432], path="/sandbox/bin")
+        return [cmd]
 
-    def start(self):
-        """
-        Starts postgresql database server and changes the postgres user's password to password set in configure method or using the default `postgres` password
-        """
-        cmd = """
-        chown postgres {DIR_BASE}/apps/pgsql/log/
-        """
+    def test(self):
+        if self.running():
+            self.stop()
 
-        self._execute(cmd)
+        self.start()
+        _, response, _ = self._execute("pg_isready", showout=False)
+        assert "accepting connections" in response
 
-        cmdpostgres = self._replace("sudo -u postgres {DIR_BIN}/postgres -D {postgresdbdir}", postgresdbdir=self.dbdir)
-        pm = j.builder.system.processmanager.get()
-        pm.ensure(name="postgres", cmd=cmdpostgres, env={}, path="", autostart=True)
+        self.stop()
+        print("TEST OK")
 
-        # make sure postgres is ready
-        import time
-
-        timeout = time.time() + 10
-        while True:
-            rc, out, err = self._execute("sudo -H -u postgres {DIR_BIN}/pg_isready", die=False)
-            if time.time() > timeout:
-                raise j.exceptions.Timeout("Postgres isn't ready")
-            if rc == 0:
-                break
-            time.sleep(2)
-
-        # change password
-        cmd = self._replace(
+    @builder_method()
+    def sandbox(self):
+        self.PACKAGE_DIR = self._replace("{DIR_SANDBOX}/sandbox")
+        self.tools.dir_ensure(self.PACKAGE_DIR)
+        # data dir
+        self.tools.dir_ensure("%s/apps/psql/data" % self.PACKAGE_DIR)
+        self._execute(
             """
-            sudo -u postgres {DIR_BIN}/psql -c "ALTER USER postgres WITH PASSWORD '{passwd}'";
-        """,
-            passwd=self.passwd,
+            cd {DOWNLOAD_DIR}/postgresql-9.6.13
+            make install DESTDIR={DIR_SANDBOX}
+            """
         )
-        self._execute(cmd)
-        print("user: {}, password: {}".format("postgres", self.passwd))
 
-    def stop(self):
-        j.builder.system.process.kill("postgres")
+        bins_dir = self._replace("{PACKAGE_DIR}/bin")
+        j.tools.sandboxer.libs_clone_under(bins_dir, self.DIR_SANDBOX)
+
+        # startup.toml
+        templates_dir = self.tools.joinpaths(j.sal.fs.getDirName(__file__), "templates")
+        startup_path = self._replace("{DIR_SANDBOX}/.startup.toml")
+        self._copy(self.tools.joinpaths(templates_dir, "postgres_startup.toml"), startup_path)

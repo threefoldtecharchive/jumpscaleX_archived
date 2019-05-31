@@ -1,45 +1,132 @@
 from Jumpscale import j
 
+builder_method = j.builder.system.builder_method
+
 
 class BuilderBrotli(j.builder.system._BaseClass):
-
     NAME = "brotli"
 
     def _init(self):
-        self.src_dir = "{DIR_TEMP}/brotli"
+        self.src_dir = self.DIR_BUILD + "/code/"
 
-    def build(self, reset=False):
-        if reset is False and (self.isInstalled() or self._done_get("build")):
-            return
-        cmake = j.builder.libs.cmake
-        if not cmake.isInstalled():
-            cmake.install()
-        git_url = "https://github.com/google/brotli.git"
-        j.clients.git.pullGitRepo(git_url, dest=self.src_dir, branch="master", depth=1, ssh=False)
-        cmd = """
+    @builder_method()
+    def build(self):
+
+        # install cmake
+        j.builder.libs.cmake.install()
+
+        # build from source code
+        src_url = "https://github.com/google/brotli.git"
+        j.clients.git.pullGitRepo(src_url, dest=self.src_dir, branch="master", depth=1, ssh=False)
+        build_cmd = """
         cd {}
         mkdir out && cd out
-        ../configure-cmake
-        make
-        make test
+        cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./installed ..
+        cmake --build . --config Release --target install
         """.format(
             self.src_dir
         )
-        cmd = self._replace(cmd)
-        j.sal.process.execute(cmd)
-        self._done_set("build")
+        self._execute(build_cmd)
 
-    def install(self, reset=False):
-        if reset is False and self.isInstalled():
-            self._log_info("Brotli already installed")
-            return
-        if not self._done_get("build"):
-            self.build()
-        cmd = """
-        cd {}/out
-        make install
+    @builder_method()
+    def install(self):
+        # install bins
+        build_src = j.sal.fs.joinPaths(self.src_dir, "out", "installed")
+        bin_src = j.sal.fs.joinPaths(build_src, "bin")
+        lib_src = j.sal.fs.joinPaths(build_src, "lib")
+        include_src = j.sal.fs.joinPaths(build_src, "include")
+
+        self._copy(bin_src + "/brotli", "/sandbox/bin/")
+
+        # install libs
+        libs = [
+            "libbrotlicommon.so",
+            "libbrotlidec.so",
+            "libbrotlienc.so",
+            "libbrotlicommon.so.1",
+            "libbrotlidec.so.1",
+            "libbrotlienc.so.1",
+            "libbrotlicommon.so.1.0.7",
+            "libbrotlienc.so.1.0.7",
+            "libbrotlidec.so.1.0.7",
+        ]
+        for lib in libs:
+            self._copy(lib_src + "/" + lib, "/sandbox/lib/")
+
+        # copy includes
+        self._copy(include_src, "/sandbox/include/")
+
+    @builder_method()
+    def sandbox(self, zhub_client=None, flist_create=True, merge_base_flist=""):
+        bin_src = "/sandbox/bin/brotli"
+        lib_src = "/sandbox/lib/"
+        include_src = "/sandbox/include/brotli"
+
+        bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "bin")
+        lib_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "lib")
+        include_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "include", "brotli")
+
+        self.tools.dir_ensure(bin_dest)
+        self.tools.dir_ensure(lib_dest)
+        self.tools.dir_ensure(include_dest)
+
+        self._copy(bin_src, bin_dest)
+
+        # install libs
+        libs = [
+            "libbrotlicommon.so",
+            "libbrotlidec.so",
+            "libbrotlienc.so",
+            "libbrotlicommon.so.1",
+            "libbrotlidec.so.1",
+            "libbrotlienc.so.1",
+            "libbrotlicommon.so.1.0.7",
+            "libbrotlienc.so.1.0.7",
+            "libbrotlidec.so.1.0.7",
+        ]
+        for lib in libs:
+            self._copy(lib_src + lib, lib_dest)
+
+        # copy includes
+        self._copy(include_src, include_dest)
+
+    @builder_method()
+    def clean(self):
+        C = """
+        set -ex
+        rm -rf {}
         """.format(
-            self.src_dir
+            self.DIR_BUILD
         )
-        j.sal.process.execute(cmd)
-        j.builder.system.python_pip.install("brotli>=0.5.2")
+        self._execute(C)
+
+    @builder_method()
+    def reset(self):
+        super().reset()
+        self.clean()
+
+    @builder_method()
+    def test(self):
+        cmd_create = """
+        cd /tmp/
+        echo test a file > mybrotli
+        md5sum mybrotli
+        """
+        _, md5_src, _ = self._execute(cmd_create)
+
+        cmd_compressed = """
+        cd /tmp/
+        brotli mybrotli
+        brotli -d mybrotli.br -o debrotli
+        md5sum debrotli
+        """
+        _, md5_out, _ = self._execute(cmd_compressed)
+
+        cmd_clean = """
+        cd /tmp/
+        rm mybrotli debrotli mybrotli.br
+        """
+        self._execute(cmd_clean)
+        assert md5_src.split()[0] == md5_out.split()[0]
+
+        print("TEST OK")

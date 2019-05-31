@@ -1,8 +1,5 @@
 from Jumpscale import j
-from random import randint
 from unittest import TestCase
-import requests
-from pytest_testconfig import config
 
 
 class BaseTest(TestCase):

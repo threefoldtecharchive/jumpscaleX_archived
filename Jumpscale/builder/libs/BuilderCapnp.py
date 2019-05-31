@@ -82,20 +82,10 @@ class BuilderCapnp(JSBASE):
     def clean(self):
         self._remove(self.DIR_BUILD)
 
-    @property
-    def startup_cmds(self):
-        cmd = "/sandbox/bin/capnp"
-        cmds = [j.tools.startupcmd.get(name="capnp", cmd=cmd)]
-        return cmds
-
     @builder_method()
     def reset(self):
         super().reset()
         self.clean()
-
-    @builder_method()
-    def stop(self):
-        j.sal.process.killProcessByName(self.NAME)
 
     @builder_method()
     def sandbox(self, zhub_client=None, flist_create=True, merge_base_flist=""):
