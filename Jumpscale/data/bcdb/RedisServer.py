@@ -343,12 +343,12 @@ class RedisServer(j.application.JSBaseClass):
     def hlen(self, response, key):
         cat, url, _, model = self._split(key)
 
-        if cat != "objects":
-            response.error("category %s not valid" % cat)
+        if cat == "schemas" or model == "":
+            response.encode(0)
             return
 
-        if url == "" or cat == "schemas" or model == "":
-            response.encode(0)
+        if cat != "objects":
+            response.error("category %s not valid" % cat)
             return
         response.encode(len(model.get_all()))
         return
@@ -377,6 +377,11 @@ class RedisServer(j.application.JSBaseClass):
         cat, url, _, model = self._split(key)
         objs = model.get_all()
         res = []
+        if cat == "schemas":
+            res.append(self.bcdb.models[url].schema.sid)
+            res.append(self.bcdb.models[url].schema.text)
+            response._array(["0", res])
+            return
 
         for obj in objs:
             res.append(obj.id)
