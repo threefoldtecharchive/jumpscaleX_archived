@@ -7,7 +7,7 @@
 - only tested on Ubuntu & OSX
 
 ```bash
-python3 /tmp/jsx.py container_install
+python3 /tmp/jsx.py container-install
 ```
 will install in docker, delete if exists and starting from already created docker image (is faster)
 
@@ -28,7 +28,7 @@ brew install curl python3 git rsync
 
 ```bash
 #to get container kosmos shell (JSX)
-python3 /tmp/jsx.py container_kosmos
+python3 /tmp/jsx.py container-kosmos
 #to get shell of the ubuntu base os underneath in the container
-python3 /tmp/jsx.py container_shell
+python3 /tmp/jsx.py container-shell
 ``` 

@@ -6,9 +6,9 @@
 curl https://raw.githubusercontent.com/threefoldtech/jumpscaleX/development_installer/install/jsx.py?$RANDOM > /tmp/jsx
 chmod 777 /tmp/jsx
 #install
-/tmp/jsx container_install
+/tmp/jsx container-install
 #get first time your kosmos shell
-/tmp/jsx container_kosmos
+/tmp/jsx container-kosmos
 #get more help of jsx command
 /tmp/jsx --help
 ```
@@ -19,9 +19,9 @@ before you can do this you need to make sure that docker has been installed on y
 
 ```bash
 #to get container kosmos shell (JSX)
-python3 /tmp/jsx.py container_kosmos
+python3 /tmp/jsx.py container-kosmos
 #to get shell of the ubuntu base os underneath in the container
-python3 /tmp/jsx.py container_shell
+python3 /tmp/jsx.py container-shell
 ``` 
 
 ## OSX requirements
