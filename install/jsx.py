@@ -258,11 +258,10 @@ def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False
     """
 
     _configure(configdir=configdir, basedir="/sandbox", no_sshagent=no_sshagent)
-
+    SANDBOX = IT.MyEnv.config["DIR_BASE"]
     if reinstall:
         # remove the state
         IT.MyEnv.state_reset()
-        pull = True
         force = True
     else:
         force = False
@@ -279,9 +278,9 @@ def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
 @click.option("-i", "--imagename", default="despiegk/3bot", help="name of image where we will import to")
-@click.option("-p", "--path", default="/tmp/3bot.tar", help="image location")
+@click.option("-p", "--path", default=None, help="image location")
 @click.option("--no-start", is_flag=True, help="container will start auto")
-def container_import(name="3bot", path="/tmp/3bot.tar", configdir=None, imagename="despiegk/3bot", no_start=False):
+def container_import(name="3bot", path=None, configdir=None, imagename="despiegk/3bot", no_start=False):
     """
     import container from image file, if not specified will be /tmp/3bot.tar
     :param args:
@@ -295,17 +294,35 @@ def container_import(name="3bot", path="/tmp/3bot.tar", configdir=None, imagenam
 @click.command()
 @click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
 @click.option("-n", "--name", default="3bot", help="name of container")
-@click.option("-p", "--path", default="/tmp/3bot.tar", help="image location")
-def container_export(name="3bot", path="/tmp/3bot.tar", configdir=None):
+@click.option("-p", "--path", default=None, help="image location")
+@click.option("--no-overwrite", is_flag=True, help="std container will overwrite the existing one")
+@click.option("--skip-if-exists", is_flag=True, help="std container will overwrite the existing one")
+def container_export(name="3bot", path=None, configdir=None, no_overwrite=False, skip_if_exists=False):
     """
     export the 3bot to image file, if not specified will be /tmp/3bot.tar
     :param name:
     :param path:
     :return:
     """
+    overwrite = not no_overwrite
     _configure(configdir=configdir)
     docker = container_get(name=name)
-    docker.export(path=path)
+    docker.export(path=path, skip_if_exists=skip_if_exists, overwrite=overwrite)
+
+
+@click.command()
+@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+@click.option("-n", "--name", default="3bot", help="name of container")
+def container_clean(name="3bot", configdir=None):
+    """
+    starts from an export, if not there will do the export first
+    :param name:
+    :param path:
+    :return:
+    """
+    _configure(configdir=configdir)
+    docker = container_get(name=name)
+    docker.clean()
 
 
 @click.command()
@@ -381,7 +398,7 @@ def container_kosmos(name="3bot", configdir=None):
             "-t",
             "-oStrictHostKeyChecking=no",
             "-p",
-            str(docker.port),
+            str(docker.config.sshport),
             "source /sandbox/env.sh;kosmos",
         ],
     )
@@ -413,7 +430,8 @@ def container_shell(name="3bot", configdir=None):
 
     docker = container_get(name=name)
     os.execv(
-        shutil.which("ssh"), ["ssh", "root@localhost", "-A", "-t", "-oStrictHostKeyChecking=no", "-p", str(docker.port)]
+        shutil.which("ssh"),
+        ["ssh", "root@localhost", "-A", "-t", "-oStrictHostKeyChecking=no", "-p", str(docker.config.sshport)],
     )
 
 
@@ -456,5 +474,6 @@ if __name__ == "__main__":
         cli.add_command(container_export)
         cli.add_command(container_import)
         cli.add_command(container_shell)
+        cli.add_command(container_clean)
 
     cli()

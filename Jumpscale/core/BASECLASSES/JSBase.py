@@ -352,6 +352,8 @@ class JSBase:
         - DEBUG 	10
 
         """
+        if j.application._in_autocomplete == 2:
+            raise RuntimeError("s")
         if j.application._in_autocomplete:
             return None
 
