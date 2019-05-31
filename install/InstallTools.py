@@ -2745,8 +2745,7 @@ class Docker:
             {IMAGE}
             """
             if not cmd:
-                cmd = "bash"
-            run_cmd = run_cmd.strip() + " %s\n" % cmd
+                run_cmd = run_cmd.strip() + " %s\n" % cmd
             # /sbin/my_init
             print(" - Docker machine gets created: ")
             Tools.execute(run_cmd, args=args, interactive=True)

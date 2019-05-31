@@ -71,7 +71,9 @@ def main(self):
 
         assert obj._schema == obj2._schema
 
-    export_import(False)
+    export_import()
+    return "OK"
+
     # test we can update data, so we overwrite
     export_import(False, export=False)
 

@@ -33,6 +33,7 @@ def main(self):
             model_obj2 = model._set(model_obj)
 
         model_obj3 = model.get(model_obj2.id)
+
         assert model_obj3.id == model_obj2.id
 
         assert model_obj3._ddict == model_obj2._ddict

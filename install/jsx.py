@@ -240,6 +240,8 @@ def install(configdir=None, wiki=False, branch=None, reinstall=False, pull=False
 
     _configure(configdir=configdir,basedir="/sandbox")
 
+    IT.MyEnv.sshagent.key_default
+
     if reinstall:
         # remove the state
         IT.MyEnv.state_reset()
