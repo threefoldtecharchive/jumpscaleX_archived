@@ -194,11 +194,11 @@ class BuilderGolang(BuilderGolangTools):
 
         """
         # only check for linux for now
-        if j.core.platformtype.myplatform.isLinux:
+        if j.core.platformtype.myplatform.platform_is_linux:
             download_url = self.DOWNLOAD_URL.format(
                 version=self.STABLE_VERSION, platform="linux", arch=self.current_arch
             )
-        elif j.core.platformtype.myplatform.isMac:
+        elif j.core.platformtype.myplatform.platform_is_osx:
             download_url = self.DOWNLOAD_URL.format(
                 version=self.STABLE_VERSION, platform="darwin", arch=self.current_arch
             )

@@ -8,7 +8,7 @@ class BuilderOpenSSL(j.builder.system._BaseClass):
     NAME = "openssl"
 
     def __init__(self):
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             self.TARGET = "darwin64-x86_64-cc"
         else:
             self.TARGET = "linux-generic64"

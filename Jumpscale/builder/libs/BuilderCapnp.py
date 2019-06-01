@@ -18,7 +18,7 @@ class BuilderCapnp(JSBASE):
         """
 
         # j.builder.buildenv.install()
-        if self.tools.isUbuntu:
+        if self.tools.platform_is_ubuntu:
             j.builder.system.package.ensure("g++")
 
         # build tools
@@ -44,7 +44,7 @@ class BuilderCapnp(JSBASE):
 
         kosmos 'j.builder.libs.capnp.install()'
         """
-        if self.tools.isUbuntu:
+        if self.tools.platform_is_ubuntu:
             j.builder.system.package.ensure("g++")
         # j.builder.runtimes.python.pip_package_install(['cython', 'setuptools', 'pycapnp'])
         bins = ["capnp", "capnp-afl-testcase", "capnpc-c++", "capnp-test", "capnpc-capnp", "capnp-evolution-test"]

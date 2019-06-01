@@ -17,7 +17,7 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
         gives a creator of a factory the ability to change the type of child to be returned
         :return:
         """
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             return SSHClientParamiko
         else:
             return SSHClient

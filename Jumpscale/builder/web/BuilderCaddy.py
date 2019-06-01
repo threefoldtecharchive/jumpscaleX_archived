@@ -107,7 +107,7 @@ class BuilderCaddy(BuilderGolangTools):
         :type plugins: list, optional
         :raises j.exceptions.RuntimeError: if platform is not supported
         """
-        if not j.core.platformtype.myplatform.isUbuntu:
+        if not j.core.platformtype.myplatform.platform_is_ubuntu:
             raise j.exceptions.RuntimeError("only ubuntu supported")
 
         # install go runtime

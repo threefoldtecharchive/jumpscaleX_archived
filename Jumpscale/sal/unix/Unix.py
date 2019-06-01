@@ -76,7 +76,7 @@ class UnixSystem(j.application.JSBaseClass):
         mem = 0
         cpumhz = 0
         nrcpu = 0
-        if j.core.platformtype.myplatform.isLinux or j.core.platformtype.myplatform.isESX():
+        if j.core.platformtype.myplatform.platform_is_linux or j.core.platformtype.myplatform.isESX():
             memcontent = j.sal.fs.readFile("/proc/meminfo")
             match = re.search("^MemTotal\:\s+(\d+)\s+kB$", memcontent, re.MULTILINE)
             if match:
@@ -158,7 +158,7 @@ class UnixSystem(j.application.JSBaseClass):
             raise ValueError("This function only supports following intervals: " + str(allowedIntervals))
 
         # Construct timing options
-        if j.core.platformtype.myplatform.isLinux:
+        if j.core.platformtype.myplatform.platform_is_linux:
             crontabFilePath = "/etc/crontab"
             crontabItem = "*/" + str(interval)
         else:
@@ -175,7 +175,7 @@ class UnixSystem(j.application.JSBaseClass):
             crontabOptions = crontabOptions + " "
         crontabOptions = crontabOptions + crontabItem + " "
         crontabOptions = crontabOptions + "* " * (5 - unitPlace)
-        if j.core.platformtype.myplatform.isLinux:
+        if j.core.platformtype.myplatform.platform_is_linux:
             # The Vixie cron (for Linux) has an extra option: username of running process.
             crontabOptions = crontabOptions + "root    "
 
@@ -204,7 +204,7 @@ class UnixSystem(j.application.JSBaseClass):
 
         # Backup old crontab file and write modifications new crontab file.
         j.sal.fs.copyFile(crontabFilePath, crontabFilePath + ".backup")  # Create backup
-        if j.core.platformtype.myplatform.isLinux:
+        if j.core.platformtype.myplatform.platform_is_linux:
             # On Linux, we edit the system-wide crontab of Vixie Cron, so don't have
             # to run the "crontab" command to be sure changes have effect.
             j.sal.fs.writeFile(crontabFilePath, "\n".join(crontabLines) + "\n")

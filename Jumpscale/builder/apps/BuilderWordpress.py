@@ -201,10 +201,10 @@ class BuilderWordpress(j.builder.system._BaseClass):
         j.builder.db.mariadb.db_export(dbname, backup_path)
         # get wordpress files
         j.core.tools.dir_ensure(backup_path + path)
-        j.builder.tools.copyTree(path, backup_path + path)
+        j.builder.tools.dir_copy(path, backup_path + path)
         # get get cfgs
         j.core.tools.dir_ensure(backup_path + cfg_path)
-        j.builder.tools.copyTree(cfg_path, backup_path + cfg_path)
+        j.builder.tools.dir_copy(cfg_path, backup_path + cfg_path)
 
         backup_tar_name = "/tmp/backup_{}.tar.gz".format(str(time.time()))
 

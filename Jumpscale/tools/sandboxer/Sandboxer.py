@@ -184,7 +184,7 @@ class Sandboxer(j.application.JSBaseClass):
         not needed to use manually, is basically ldd
         """
         self._log_info("find deb:%s" % path)
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             result = self._otool(path, result=dict(), done=list(), exclude_sys_libs=exclude_sys_libs)
         else:
             result = self._ldd(path, result=dict(), done=list(), exclude_sys_libs=exclude_sys_libs)

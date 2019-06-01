@@ -9,7 +9,6 @@ class SSHKeys(j.application.JSBaseConfigsClass):
     _CHILDCLASS = SSHKey
 
     def _init(self):
-        # self._sshagent = None
         self.SSHKey = SSHKey  # is the child class, can have more than 1
 
     @property

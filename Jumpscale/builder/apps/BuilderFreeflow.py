@@ -81,14 +81,14 @@ class BuilderFreeflow(j.builder.system._BaseClass):
         for mysqlshare in self.share:
             share_dest = j.sal.fs.joinPaths(dest_path, "sandbox/share/mysql")
             j.builder.tools.dir_ensure(share_dest)
-            self.tools.copyTree(mysqlshare, share_dest)
+            self.tools.dir_copy(mysqlshare, share_dest)
 
         apache_dir = ["/etc/apache2", "/usr/lib/apache2", "/etc/php", "/usr/lib/php", "/var/lib/php"]
         for dir in apache_dir:
             relative_dir = dir.strip("/")
             dest_dir = j.sal.fs.joinPaths(dest_path, "sandbox", relative_dir)
             j.builder.tools.dir_ensure(dest_dir)
-            self.tools.copyTree(dir, dest_dir, keepsymlinks=True)
+            self.tools.dir_copy(dir, dest_dir, keepsymlinks=True)
 
         copy_php_share_script = """
         mkdir -p /tmp/package/freeflow/sandbox/usr/share/php

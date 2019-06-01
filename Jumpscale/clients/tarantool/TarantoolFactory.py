@@ -24,7 +24,7 @@ class TarantoolFactory(JSConfigBaseFactory):
     def _init(self):
         self.__imports__ = "tarantool"
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             self.cfgdir = "/usr/local/etc/tarantool/instances.enabled"
         else:
             self.cfgdir = "/etc/tarantool/instances.enabled"

@@ -9,7 +9,7 @@ class BuilderDocker(j.builder.system._BaseClass):
     NAME = "docker"
 
     def build(self, branch=None):
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             if not branch:
                 if not self.tools.command_check("docker"):
                     C = """
@@ -41,7 +41,7 @@ class BuilderDocker(j.builder.system._BaseClass):
                 j.builder.system.package.mdupdate(reset=True)
                 j.builder.system.package.ensure("docker-engine")
 
-        elif j.core.platformtype.myplatform.isArch:
+        elif j.core.platformtype.myplatform.platform_is_arch:
             j.builder.system.package.ensure("docker")
 
     @builder_method()

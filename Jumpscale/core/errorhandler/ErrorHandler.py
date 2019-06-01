@@ -183,7 +183,7 @@ class ErrorHandler:
         if False and self._j.application.interactive:
 
             editor = None
-            if self._j.core.platformtype.myplatform.isLinux:
+            if self._j.core.platformtype.myplatform.platform_is_linux:
                 # j.tools.console.echo("THIS ONLY WORKS WHEN GEDIT IS INSTALLED")
                 editor = findEditorLinux()
             elif self._j.core.platformtype.myplatform.isWindows:

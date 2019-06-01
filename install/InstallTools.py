@@ -2874,6 +2874,8 @@ class DockerContainer:
 
         self.container_exists = name in DockerFactory.containers_names()
 
+        self._wireguard = None
+
         if delete:
             if self.container_exists:
                 self.delete()
@@ -3005,9 +3007,12 @@ class DockerContainer:
 
             args["MOUNTS"] = Tools.text_replace(MOUNTS.strip(), args=args)
             args["CMD"] = self.config.startupcmd
-
+            if self.name == "3bot":
+                args["UDP"] = "-p 7777:7777/udp"
+            else:
+                args["UDP"] = ""  # for now only name 3bot does it
             run_cmd = (
-                "docker run --name={NAME} --hostname={NAME} -d -p {PORT}:22 {PORTRANGE} \
+                "docker run --name={NAME} --hostname={NAME} -d -p {PORT}:22 {UDP} {PORTRANGE} \
             --device=/dev/net/tun --cap-add=NET_ADMIN --cap-add=SYS_ADMIN --cap-add=DAC_OVERRIDE \
             --cap-add=DAC_READ_SEARCH {MOUNTS} {IMAGE} {CMD}".strip()
                 .replace("  ", " ")
@@ -3243,6 +3248,12 @@ class DockerContainer:
         args = {}
         args["port"] = self.config.sshport
         print(Tools.text_replace(k, args=args))
+
+    @property
+    def wireguard(self):
+        if not self._wireguard:
+            self._wireguard = WireGuard(container=self)
+        return self._wireguard
 
 
 class SSHAgentKeyError(Exception):
@@ -3481,6 +3492,7 @@ class SSHAgent:
             self._keys
         except SSHAgentKeyError:
             return False
+        return True
 
     def keys_list(self, key_included=False):
         """
@@ -3583,3 +3595,88 @@ class SSHAgent:
         Tools.delete(self.ssh_socket_path)
         # Tools.delete("/tmp", "ssh-agent-pid"))
         self.reset()
+
+
+class WireGuard:
+    def __init__(self, container=None):
+        self.container = container
+        self._install()
+
+    def _install(self):
+        if not Tools.cmd_installed("wg"):
+            if MyEnv.platform() == "linux":
+                C = """
+                add-apt-repository ppa:wireguard/wireguard
+                apt-get update
+                apt-get install wireguard -y
+                """
+                Tools.execute(C)
+            elif MyEnv.platform() == "darwin":
+                C = "brew install wireguard-tools bash"
+                Tools.execute(C)
+
+    def server_start(self):
+        if MyEnv.platform() == "linux":
+            if not Tools.exists("/sandbox/cfg/wireguard.toml"):
+                print("- GENERATE WIREGUARD KEY")
+                rc, out, err = Tools.execute("wg genkey", showout=False)
+                privkey = out.strip()
+                rc, out2, err = Tools.execute("echo %s | wg pubkey" % privkey, showout=False)
+                pubkey = out2.strip()
+                time.sleep(0.1)
+                rc, out3, err = Tools.execute("wg genkey", showout=False)
+                privkey2 = out3.strip()
+                rc, out4, err = Tools.execute("echo %s | wg pubkey" % privkey2, showout=False)
+                pubkey2 = out4.strip()
+
+                config = {}
+                config["WIREGUARD_SERVER_PUBKEY"] = pubkey
+                config["WIREGUARD_SERVER_PRIVKEY"] = privkey
+                config["WIREGUARD_CLIENT_PUBKEY"] = pubkey2
+                config["WIREGUARD_CLIENT_PRIVKEY"] = privkey2
+                config["WIREGUARD_PORT"] = 7777
+                Tools.config_save("/sandbox/cfg/wireguard.toml", config)
+
+            config = Tools.config_load("/sandbox/cfg/wireguard.toml")
+
+            C = """
+            [Interface] 
+            Address = 10.10.10.1/24 
+            SaveConfig = true 
+            PrivateKey = {WIREGUARD_SERVER_PRIVKEY}
+            ListenPort = {WIREGUARD_PORT}
+            
+            [Peer] 
+            PublicKey = {WIREGUARD_CLIENT_PUBKEY} 
+            AllowedIPs = 10.10.10.0/24
+            """
+            path = "/tmp/wg0.conf"
+            Tools.file_write(path, Tools.text_replace(C, args=config))
+            rc, out, err = Tools.execute("ip link del dev wg0", showout=False, die=False)
+            cmd = "wg-quick up %s" % path
+            Tools.execute(cmd)
+        else:
+            raise RuntimeError("cannot start server only supported on linux ")
+
+    def connect(self):
+        config_container = Tools.config_load("/sandbox/var/containers/%s/cfg/wireguard.toml" % self.container.name)
+        C = """
+        [Interface] 
+        Address = 10.10.10.2/24 
+        PrivateKey = {WIREGUARD_CLIENT_PRIVKEY}
+        
+        [Peer] 
+        PublicKey = {WIREGUARD_SERVER_PUBKEY} 
+        Endpoint = localhost:{WIREGUARD_PORT}
+        AllowedIPs = 10.10.10.0/24 
+        PersistentKeepalive = 25
+        """
+        path = "/tmp/wg0.conf"
+        if MyEnv.platform() == "linux":
+            Tools.file_write(path, Tools.text_replace(C, args=config_container))
+            rc, out, err = Tools.execute("ip link del dev wg0", showout=False, die=False)
+            cmd = "/usr/local/bin/bash /usr/local/bin/wg-quick %s" % path
+            Tools.execute(cmd)
+            Tools.shell()
+        else:
+            print("WIREGUARD CONFIFURATION:\n\n%s" % Tools.text_replace(C, args=config_container))

@@ -63,7 +63,7 @@ class BuilderCaddyFilemanager(j.builder.system._BaseClass):
         # copy /etc/ssl/cert
         certs = self.tools.joinpaths(dest_path, "etc", "ssl", "certs")
         self.tools.dir_ensure(certs)
-        self.tools.copyTree(source="/etc/ssl/certs", dest=certs)
+        self.tools.dir_copy(source="/etc/ssl/certs", dest=certs)
         if flist_create:
             print(self._flist_create(zhub_client=zhub_client))
         self._done_set("sandbox")

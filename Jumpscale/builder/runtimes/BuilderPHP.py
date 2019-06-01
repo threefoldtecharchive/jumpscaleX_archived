@@ -31,7 +31,7 @@ class BuilderPHP(j.builder.system._BaseClass):
         """
         j.tools.bash.get().profile.locale_check()
 
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             pkgs = "libxml2-dev libpng-dev libcurl4-openssl-dev libzip-dev zlibc zlib1g zlib1g-dev \
             libmysqld-dev libmysqlclient-dev re2c bison bzip2 build-essential libaprutil1-dev libapr1-dev \
             openssl pkg-config libssl-dev file"

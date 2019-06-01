@@ -33,6 +33,7 @@ def get_object(tbc, locals_=None, globals_=None, walkback=False):
     :param walkback:
     :return:
     """
+    j = KosmosShellConfig.j
 
     try:
         obj = eval(tbc)

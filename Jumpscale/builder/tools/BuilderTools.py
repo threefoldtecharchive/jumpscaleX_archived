@@ -73,7 +73,7 @@ class BuilderTools(j.builder.system._BaseClass):
     #
     # =============================================================================
 
-    def copyTree(
+    def dir_copy(
         self,
         source,
         dest,
@@ -270,7 +270,7 @@ class BuilderTools(j.builder.system._BaseClass):
         if path.endswith(".tar.gz") or path.endswith(".tgz"):
             cmd = "tar -C %s -xzf %s" % (destination, path)
         elif path.endswith(".xz"):
-            if self.isMac:
+            if self.platform_is_osx:
                 j.builder.system.package.ensure("xz")
             else:
                 j.builder.system.package.ensure("xz-utils")
@@ -292,7 +292,7 @@ class BuilderTools(j.builder.system._BaseClass):
         if removeTopDir:
             res = self.find(destination, recursive=False, type="d")
             if len(res) == 1:
-                self.copyTree(res[0], destination)
+                self.dir_copy(res[0], destination)
                 self.dir_remove(res[0])
 
         if self.dir_exists(self.joinpaths(destination, base)):
@@ -369,7 +369,7 @@ class BuilderTools(j.builder.system._BaseClass):
         location = self._replace(location)
         location = location.replace("//", "/")
         if self.file_exists(location):
-            if self.isMac:
+            if self.platform_is_osx:
                 fs_check = self.execute("stat -f %s %s" % ('"%a %u %g"', location), showout=False)[1]
             else:
                 fs_check = self.execute("stat %s %s" % (location, '--format="%a %U %G"'), showout=False)[1]
@@ -402,7 +402,7 @@ class BuilderTools(j.builder.system._BaseClass):
         if val == self.hostname:
             return
         val = val.strip()
-        if self.isMac:
+        if self.platform_is_osx:
             hostfile = "/private/etc/hostname"
             self.file_write(hostfile, val)
         else:
@@ -424,7 +424,7 @@ class BuilderTools(j.builder.system._BaseClass):
     @property
     def hostfile(self):
         def get():
-            if self.isMac:
+            if self.platform_is_osx:
                 hostfile = "/private/etc/hosts"
             else:
                 hostfile = "/etc/hosts"
@@ -434,7 +434,7 @@ class BuilderTools(j.builder.system._BaseClass):
 
     @hostfile.setter
     def hostfile(self, val):
-        if self.isMac:
+        if self.platform_is_osx:
             hostfile = "/private/etc/hosts"
             self.file_write(hostfile)
         else:
@@ -568,7 +568,7 @@ class BuilderTools(j.builder.system._BaseClass):
     #
     # =============================================================================
 
-    def getNetworkInfoGenerator(self):
+    def networkinfo_iterator(self):
         from Jumpscale.tools.nettools.NetTools import parseBlock, IPBLOCKS, IPMAC, IPIP, IPNAME
 
         exitcode, output, err = self.execute("ip a", showout=False)
@@ -577,10 +577,10 @@ class BuilderTools(j.builder.system._BaseClass):
             yield parseBlock(block)
 
     @property
-    def networking_info(self):
+    def networkinfo(self):
         from Jumpscale.tools.nettools.NetTools import getNetworkInfo
 
-        if not self._networking_info:
+        if not self._networkinfo:
             all_info = list()
             for device in getNetworkInfo():
                 all_info.append(device)
@@ -840,25 +840,25 @@ class BuilderTools(j.builder.system._BaseClass):
     #         "Command was not installed, check for errors: %s" % (command)
 
     @property
-    def isUbuntu(self):
+    def platform_is_ubuntu(self):
         return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("ubuntu") != -1
 
     @property
-    def isLinux(self):
+    def platform_is_linux(self):
         return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("linux") != -1
 
     @property
-    def isAlpine(self):
+    def platform_is_alpine(self):
         return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("alpine") != -1
 
     @property
-    def isArch(self):
+    def platform_is_arch(self):
         return False
 
     @property
-    def isMac(self):
+    def platform_is_osx(self):
         return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("darwin") != -1
 
     @property
-    def isCygwin(self):
+    def platform_is_cygwin(self):
         return str(j.core.platformtype.getParents(j.core.platformtype.myplatform)).find("cygwin") != -1

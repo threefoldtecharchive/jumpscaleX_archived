@@ -95,6 +95,7 @@ class BuilderGitea(BuilderGolangTools):
         if "gitea" not in out:
             self._execute("sudo -u postgres {DIR_BIN}/psql -c 'create database gitea;'")
 
+        # TODO:*3 would have been cleaner to use std postgresql client & do the query, this is super cumbersome
         cfg = """
         {{\\"Provider\\":\\"itsyou.online\\",\\"ClientID\\":\\"%s\\",\\"ClientSecret\\":\\"%s\\",\\"OpenIDConnectAutoDiscoveryURL\\":\\"\\",\\"CustomURLMapping\\":null}}
         """ % (

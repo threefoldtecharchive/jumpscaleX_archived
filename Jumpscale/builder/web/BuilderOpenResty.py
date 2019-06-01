@@ -15,7 +15,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         kosmos 'j.builder.web.openresty.build()'
         :return:
         """
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             j.builder.system.package.mdupdate()
             j.builder.system.package.ensure("build-essential libpcre3-dev libssl-dev zlib1g-dev")
             url = "https://openresty.org/download/openresty-1.13.6.2.tar.gz"
@@ -135,7 +135,7 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         for dir_src, dir_dest in dirs.items():
             dir_dest = self.tools.joinpaths(self.DIR_SANDBOX, dir_dest)
             self.tools.dir_ensure(dir_dest)
-            self.tools.copyTree(dir_src, dir_dest)
+            self.tools.dir_copy(dir_src, dir_dest)
 
         for dir_dest in new_dirs:
             dir_dest = self.tools.joinpaths(self.DIR_SANDBOX, self.tools.path_relative(dir_dest))
@@ -182,9 +182,9 @@ class BuilderOpenResty(j.builder.system._BaseClass):
         """
         self.build(reset=reset)
 
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             CODE_SB_BIN = j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_ubuntu.git")
-        elif j.core.platformtype.myplatform.isMac:
+        elif j.core.platformtype.myplatform.platform_is_osx:
             CODE_SB_BIN = j.clients.git.getContentPathFromURLorPath("git@github.com:threefoldtech/sandbox_osx.git")
         else:
             raise RuntimeError("only ubuntu & osx support")

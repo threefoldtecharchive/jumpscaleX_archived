@@ -437,10 +437,49 @@ def container_shell(name="3bot", configdir=None):
 
 
 @click.command()
+@click.option("-n", "--name", default="3bot", help="name of container")
+@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+def wireguard(name="3bot", configdir=None):
+    """
+    jsx wireguard
+    enable wireguard, can be on host or server
+    :return:
+    """
+    if not IT.DockerFactory.indocker():
+        docker = container_get(name=name)
+        # remotely execute wireguard
+        docker.sshexec("source /sandbox/env.sh;jsx wireguard")
+    wg = IT.WireGuard()
+
+    if IT.DockerFactory.indocker():
+        wg.server_start()
+    else:
+        docker.wireguard.connect()
+
+
+@click.command()
+@click.option("--configdir", default=None, help="default /sandbox/cfg if it exists otherwise ~/sandbox/cfg")
+@click.option("--url", default="3bot", help="git url e.g. https://github.com/myfreeflow/kosmos")
+def modules_install(configdir=None, url=None):
+    """
+    install jumpscale module in local system
+    :return:
+    """
+    from Jumpscale import j
+
+    path = j.clients.git.getContentPathFromURLorPath(url)
+    _generate(path=path)
+
+
+@click.command()
 def generate():
     """
     generate the loader file, important to do when new modules added
     """
+    _generate()
+
+
+def _generate(path=None):
     j = jumpscale_get(die=True)
     j.sal.fs.remove("{DIR_VAR}/codegen")
     j.sal.fs.remove("{DIR_VAR}/cmds")
@@ -448,6 +487,10 @@ def generate():
     from Jumpscale import j
 
     g = JSGenerator(j)
+
+    if path:
+        # means we need to link
+        g.lib_link(path)
     g.generate(methods_find=True)
     g.report()
     print("OK ALL DONE, GOOD LUCK (-:")
@@ -459,6 +502,8 @@ if __name__ == "__main__":
     cli.add_command(install)
     cli.add_command(kosmos)
     cli.add_command(generate)
+    cli.add_command(wireguard)
+    cli.add_command(modules_install)
 
     # DO NOT DO THIS IN ANY OTHER WAY !!!
     IT = load_install_tools()

@@ -26,7 +26,7 @@ class BuilderTraefik(j.builder.system._BaseClass):
         # get the prebuilt binary, as the building needs docker...etc
         # only check for linux for now
         arch = self.go_runtime.current_arch
-        if j.core.platformtype.myplatform.isLinux:
+        if j.core.platformtype.myplatform.platform_is_linux:
             download_url = self.URL.format(version=self.VERSION, platform="linux", arch=arch)
         else:
             raise j.exceptions.RuntimeError("platform not supported")

@@ -24,14 +24,14 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
 
         j.builder.system.package.mdupdate()
 
-        # if not j.core.platformtype.myplatform.isMac and not j.builder.tools.isCygwin:
+        # if not j.core.platformtype.myplatform.platform_is_osx and not j.builder.tools.platform_is_cygwin:
         #     j.builder.system.package.ensure("fuse")
 
-        if j.builder.tools.isArch:
+        if j.builder.tools.platform_is_arch:
             # is for wireless auto start capability
             j.builder.system.package.ensure("wpa_actiond,redis-server")
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             C = ""
         else:
             C = "sudo net-tools python3 python3-distutils python3-psutil"
@@ -67,7 +67,7 @@ class BuildEnv(j.builder.system._BaseFactoryClass):
         """
         C = j.core.text.strip(C)
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
 
             if not self._done_get("xcode_install"):
                 j.sal.process.execute("xcode-select --install", die=False, showout=True)

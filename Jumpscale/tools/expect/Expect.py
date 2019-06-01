@@ -17,7 +17,7 @@ else:
     import fcntl
 
 
-if j.core.platformtype.myplatform.isLinux:
+if j.core.platformtype.myplatform.platform_is_linux:
     try:
         from pexpect import pxssh
     except ImportError as e:
@@ -31,7 +31,7 @@ if j.core.platformtype.myplatform.isUnix:
         import pexpect
     except ImportError as e:
         print("did not find pexpect")
-        j.core.platformtype.myplatform.isLinux
+        j.core.platformtype.myplatform.platform_is_linux
         try:
             j.sal.ubuntu.apt_install("python-pexpect")
         except BaseException:
@@ -342,7 +342,7 @@ class Expect(j.application.JSBaseClass):
 
     #     If that still fails then we return False.
     #     """
-    #     if not j.core.platformtype.myplatform.isLinux:
+    #     if not j.core.platformtype.myplatform.platform_is_linux:
     #         raise j.exceptions.RuntimeError('pexpect/pxssh not supported on this platform')
 
     #     if not self._pxssh.login(ip, login, password, login_timeout=login_timeout):
@@ -378,7 +378,7 @@ class Expect(j.application.JSBaseClass):
                 before = self._cleanStr(before)
                 return str(before), ""
 
-        elif j.core.platformtype.myplatform.isLinux and not self.pexpect:
+        elif j.core.platformtype.myplatform.platform_is_linux and not self.pexpect:
 
             return str(self._pxssh).before, ""
 
@@ -555,7 +555,7 @@ class Expect(j.application.JSBaseClass):
                 if sent is None:
                     raise Exception("ERROR: Data sent is none")
                 data = buffer(data, sent)
-            elif j.core.platformtype.myplatform.isLinux:
+            elif j.core.platformtype.myplatform.platform_is_linux:
                 self._pxssh.sendline(data)
 
     # def read(self):

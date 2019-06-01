@@ -24,6 +24,19 @@ class JSGenerator:
                 return False
         return True
 
+    def lib_link(self, path):
+        """
+        look for ".jumpscalemodules" and link the parent directory to the JSX lib dir
+        :param path:
+        :return:
+        """
+        j = self._j
+        # can use j here because will never be used in first step
+        for path in j.sal.fs.listFilesInDir(path, True, filter=".jumpscalemodules"):
+            dpath = j.sal.fs.getDirName(path)
+            target = j.core.tools.text_replace("{DIR_BASE}/lib/jumpscale/%s" % j.sal.fs.getBaseName(dpath))
+            j.sal.fs.symlink(dpath, target, True)
+
     def generate(self, methods_find=False, action_method=None, action_args={}, path=None):
         """
         walk over all found jumpscale libraries
@@ -31,6 +44,7 @@ class JSGenerator:
         :param reset:
         :return:
         """
+
         self.md = Metadata(self._j)
 
         # find the directory in which we have all repo's of threefoldtech

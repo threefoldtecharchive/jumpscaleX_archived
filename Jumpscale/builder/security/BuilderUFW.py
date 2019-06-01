@@ -9,10 +9,10 @@ class BuilderUFW(j.builder.system._BaseClass):
 
     @property
     def ufw_enabled(self):
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             return False
         if not self._ufw_enabled:
-            if not j.core.platformtype.myplatform.isMac:
+            if not j.core.platformtype.myplatform.platform_is_osx:
                 if self.tools.command_check("nft") is not False:
                     self._ufw_enabled = False
                     self._log_info("cannot use ufw, nft installed")
@@ -24,7 +24,7 @@ class BuilderUFW(j.builder.system._BaseClass):
 
     def ufw_enable(self):
         if not self.ufw_enabled:
-            if not j.core.platformtype.myplatform.isMac:
+            if not j.core.platformtype.myplatform.platform_is_osx:
                 if self.tools.command_check("nft", die=False) is not False:
                     self._fw_enabled = False
                     raise j.exceptions.RuntimeError("Cannot use ufw, nft installed")

@@ -29,11 +29,11 @@ class BuilderZerotier(j.builder.system._BaseClass):
         :return: 
         """
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             raise RuntimeError("not supported yet")
 
             # j.sal.process.execute("xcode-select --install", die=False, showout=True)
-        # elif j.core.platformtype.myplatform.isUbuntu:
+        # elif j.core.platformtype.myplatform.platform_is_ubuntu:
 
         j.builder.system.package.ensure("gcc")
         j.builder.system.package.ensure("g++")
@@ -53,7 +53,7 @@ class BuilderZerotier(j.builder.system._BaseClass):
 
         # cmd = "cd {code} &&  make one".format(code=codedir, build=self.DIR_BUILD)
         # j.sal.process.execute(cmd)
-        # if j.core.platformtype.myplatform.isMac:
+        # if j.core.platformtype.myplatform.platform_is_osx:
         #     cmd = "cd {code} && make install-mac-tap".format(code=codedir, build=self.DIR_BUILD)
         #     bindir = '{DIR_BIN}'
         #     j.core.tools.dir_ensure(bindir)

@@ -682,7 +682,7 @@ class SystemProcess(j.application.JSBaseClass):
             (exitcode, output, err) = j.sal.process.execute(command, die=False, showout=False)
             i = 0
             for line in output.splitlines():
-                if j.core.platformtype.myplatform.isLinux or j.core.platformtype.myplatform.isESX():
+                if j.core.platformtype.myplatform.platform_is_linux or j.core.platformtype.myplatform.isESX():
                     match = re.match(".{23}.*(\s|\/)%s(\s|$).*" % process, line)
                 elif j.core.platformtype.myplatform.isSolaris():
                     match = re.match(".{22}.*(\s|\/)%s(\s|$).*" % process, line)
@@ -754,7 +754,7 @@ class SystemProcess(j.application.JSBaseClass):
         """
         if port == 0:
             return None
-        if j.core.platformtype.myplatform.isLinux:
+        if j.core.platformtype.myplatform.platform_is_linux:
             command = "netstat -ntulp | grep ':%s '" % port
             (exitcode, output, err) = j.sal.process.execute(command, die=False, showout=False)
 

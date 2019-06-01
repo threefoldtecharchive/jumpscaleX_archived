@@ -49,7 +49,7 @@ _init_action()
 def _search_repos(accounts, name, interactive=True):
     repos = j.clients.git.find(accounts, name, interactive=interactive, returnGitClient=True)
     _repos = [(r.type, r.account, r.name, r.branchName, r, r.BASEDIR) for r in repos]
-    # if j.core.platformtype.myplatform.isLinux:
+    # if j.core.platformtype.myplatform.platform_is_linux:
     #     C = """
     #     Host *
     #        StrictHostKeyChecking no

@@ -54,7 +54,7 @@ class BuilderNodeJS(j.builder.system._BaseClass):
         """
         if self._done_get("phantomjs") and reset is False:
             return
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
 
             url = "https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2"
             cdest = j.builder.tools.file_download(
@@ -66,7 +66,7 @@ class BuilderNodeJS(j.builder.system._BaseClass):
 
             j.builder.system.package.ensure("libfontconfig")
 
-        elif j.core.platformtype.myplatform.isMac:
+        elif j.core.platformtype.myplatform.platform_is_osx:
             j.builder.system.package.ensure("phantomjs")
 
         else:
@@ -84,7 +84,7 @@ class BuilderNodeJS(j.builder.system._BaseClass):
             return
 
         if global_:
-            if j.core.platformtype.myplatform.isMac:
+            if j.core.platformtype.myplatform.platform_is_osx:
                 sudo = "sudo "
             else:
                 sudo = ""
@@ -127,9 +127,9 @@ class BuilderNodeJS(j.builder.system._BaseClass):
         if reset is False and j.builder.tools.file_exists("{DIR_BIN}/npm"):
             return
 
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             url = "https://nodejs.org/dist/v%s/node-v%s-darwin-x64.tar.gz" % (version, version)
-        elif j.core.platformtype.myplatform.isUbuntu:
+        elif j.core.platformtype.myplatform.platform_is_ubuntu:
             url = "https://nodejs.org/dist/v%s/node-v%s-linux-x64.tar.gz" % (version, version)
 
         else:
@@ -139,7 +139,7 @@ class BuilderNodeJS(j.builder.system._BaseClass):
 
         j.builder.tools.execute("rm -rf {DIR_BASE}/node;mv %s {DIR_BASE}/node" % (cdest))
 
-        # if j.core.platformtype.myplatform.isMac:
+        # if j.core.platformtype.myplatform.platform_is_osx:
         #     j.builder.tools.execute('mv {DIR_BASE}/node/%s/* {DIR_BASE}/node' %
         #                   j.sal.fs.getBaseName(url.strip('.tar.gz')))
 

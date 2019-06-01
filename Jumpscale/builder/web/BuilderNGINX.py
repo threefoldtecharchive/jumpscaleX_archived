@@ -148,7 +148,7 @@ class BuilderNGINX(j.builder.system._BaseClass):
         """
         j.tools.bash.get().profile.locale_check()
 
-        if self.tools.isUbuntu:
+        if self.tools.platform_is_ubuntu:
             self.system.package.mdupdate()
             self.system.package.install(
                 ["build-essential", "libpcre3-dev", "libssl-dev", "zlibc", "zlib1g", "zlib1g-dev"]

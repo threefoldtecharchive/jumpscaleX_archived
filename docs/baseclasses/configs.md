@@ -20,7 +20,7 @@ class SSHClientFactory(j.application.JSBaseConfigsClass):
 
     def _childclass_selector(self,**kwargs):
         #EXAMPLE WHERE WE CHOOSE OTHER CHILD DEPENDING ENVIRONMENT
-        if j.core.platformtype.myplatform.isMac:
+        if j.core.platformtype.myplatform.platform_is_osx:
             return SSHClientParamiko
         else:
             return SSHClient

@@ -46,7 +46,7 @@ class GitFactory(j.application.JSBaseClass):
 
         url = url.strip()
         if ssh == "auto" or ssh == "first":
-            ssh = j.clients.sshagent.available()
+            ssh = j.clients.sshagent.available
         elif ssh or ssh is False:
             pass
         else:

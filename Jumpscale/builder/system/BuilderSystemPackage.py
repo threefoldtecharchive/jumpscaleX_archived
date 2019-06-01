@@ -41,14 +41,14 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
     #     key = "upgrade_%s" % package
     #     if self._done_check(key, reset):
     #         return
-    #     if j.core.platformtype.myplatform.isUbuntu:
+    #     if j.core.platformtype.myplatform.platform_is_ubuntu:
     #         if package is None:
     #             return self._apt_get("-q --yes update")
     #         else:
     #             if type(package) in (list, tuple):
     #                 package = " ".join(package)
     #             return self._apt_get(' upgrade ' + package)
-    #     elif j.builder.tools.isAlpine:
+    #     elif j.builder.tools.platform_is_alpine:
     #         j.builder.tools.execute("apk update")
     #         j.builder.tools.execute("apk upgrade")
     #     else:
@@ -62,15 +62,15 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
         update metadata of system
         """
         self._log_info("packages mdupdate")
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             j.sal.process.execute("apt-get update")
-        elif j.builder.tools.isAlpine:
+        elif j.builder.tools.platform_is_alpine:
             j.builder.tools.execute("apk update")
-        elif j.core.platformtype.myplatform.isMac:
+        elif j.core.platformtype.myplatform.platform_is_osx:
             location = j.builder.tools.command_location("brew")
             # j.sal.process.execute("run chown root %s" % location)
             j.sal.process.execute("brew update")
-        elif j.builder.tools.isArch:
+        elif j.builder.tools.platform_is_arch:
             j.sal.process.execute("pacman -Syy")
 
     @builder_method()
@@ -80,21 +80,21 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
         """
         self.mdupdate()
         self._log_info("packages upgrade")
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             if distupgrade:
                 raise NotImplementedError()
                 # return self._apt_get("dist-upgrade")
             else:
                 self._apt_get("upgrade -y")
-        # elif j.builder.tools.isArch:
+        # elif j.builder.tools.platform_is_arch:
         #     j.sal.process.execute(
         #         "pacman -Syu --noconfirm;pacman -Sc --noconfirm")
-        elif j.core.platformtype.myplatform.isMac:
+        elif j.core.platformtype.myplatform.platform_is_osx:
             j.sal.process.execute("brew upgrade")
-        elif j.builder.tools.isAlpine:
+        elif j.builder.tools.platform_is_alpine:
             j.builder.tools.execute("apk update")
             j.builder.tools.execute("apk upgrade")
-        elif j.builder.tools.isCygwin:
+        elif j.builder.tools.platform_is_cygwin:
             return  # no such functionality in apt-cyg
         else:
             raise j.exceptions.RuntimeError("could not upgrade, platform not supported")
@@ -110,13 +110,13 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
             package = packages[0]
 
             self._log_info("package install :%s" % package)
-            if j.core.platformtype.myplatform.isUbuntu:
+            if j.core.platformtype.myplatform.platform_is_ubuntu:
                 cmd = "%s install %s -y" % (CMD_APT_GET, package)
 
-            elif j.builder.tools.isAlpine:
+            elif j.builder.tools.platform_is_alpine:
                 cmd = "apk add %s" % package
 
-            elif j.builder.tools.isArch:
+            elif j.builder.tools.platform_is_arch:
                 if package.startswith("python3"):
                     package = "extra/python"
 
@@ -127,7 +127,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
 
                 cmd = "pacman -S %s  --noconfirm\n" % package
 
-            elif j.core.platformtype.myplatform.isMac:
+            elif j.core.platformtype.myplatform.platform_is_osx:
                 for unsupported in [
                     "libpython3.4-dev",
                     "python3.4-dev",
@@ -151,7 +151,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
 
                 cmd = "brew install %s || brew upgrade  %s\n" % (package, package)
 
-            elif j.builder.tools.isCygwin:
+            elif j.builder.tools.platform_is_cygwin:
                 if package in ["run", "net-tools"]:
                     return
 
@@ -185,7 +185,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
 
             package = packages[0]
 
-            if j.core.platformtype.myplatform.isUbuntu:
+            if j.core.platformtype.myplatform.platform_is_ubuntu:
 
                 if package is not None:
                     return self._apt_get("-y --purge remove %s" % package)
@@ -208,7 +208,7 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
                 """
                 j.sal.process.execute(C)
 
-            # elif j.builder.tools.isArch:
+            # elif j.builder.tools.platform_is_arch:
             #     cmd = "pacman -Sc"
             #     if agressive:
             #         cmd += "c"
@@ -216,14 +216,14 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
             #     if agressive:
             #         j.sal.process.execute("pacman -Qdttq", showout=False)
 
-            elif j.core.platformtype.myplatform.isMac:
+            elif j.core.platformtype.myplatform.platform_is_osx:
                 if package:
                     j.sal.process.execute("brew cleanup %s" % package)
                     j.sal.process.execute("brew remove %s" % package)
                 else:
                     j.sal.process.execute("brew cleanup")
 
-            elif j.builder.tools.isCygwin:
+            elif j.builder.tools.platform_is_cygwin:
                 if package:
                     j.sal.process.execute("apt-cyg remove %s" % package)
                 else:
@@ -238,9 +238,9 @@ class BuilderSystemPackage(j.builder.system._BaseClass):
 
     @builder_method()
     def remove(self, package, autoclean=False):
-        if j.core.platformtype.myplatform.isUbuntu:
+        if j.core.platformtype.myplatform.platform_is_ubuntu:
             self._apt_get("remove " + package)
             if autoclean:
                 self._apt_get("autoclean")
-        elif j.core.platformtype.myplatform.isMac:
+        elif j.core.platformtype.myplatform.platform_is_osx:
             j.sal.process.execute("brew remove %s 2>&1 > /dev/null|echo " "" % package)
