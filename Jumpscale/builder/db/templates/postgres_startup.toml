@@ -1,0 +1,10 @@
+[startup.postgres]
+name = "core.system"
+
+[startup.postgres.args]
+name = "/sandbox/bin/pg_ctl"
+args = ["start", "-D", "/sandbox/apps/psql/data"]
+
+[startup.postgres.args.env]
+LD_LIBRARY_PATH = "/sandbox/lib"
+
