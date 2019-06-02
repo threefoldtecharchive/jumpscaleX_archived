@@ -72,17 +72,3 @@ class BuilderS3Scality(j.builder.system._BaseClass):
         assert self.running()
 
         self._log_info("TEST SUCCESS: scality is running")
-
-    @builder_method()
-    def sandbox(
-        self,
-        reset=False,
-        zhub_client=None,
-        flist_create=False,
-        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
-    ):
-        j.builder.runtimes.python.sandbox(reset=reset)
-        j.builder.tools.copyTree(j.builder.runtimes.python.DIR_SANDBOX, self.DIR_SANDBOX)
-        j.builder.runtimes.nodejs.sandbox(reset=reset)
-        j.builder.tools.copyTree(j.builder.runtimes.nodejs.DIR_SANDBOX, self.DIR_SANDBOX, keepsymlinks=True)
-        self._copy(self.path, "%s/%s/%s" % (self.DIR_SANDBOX, j.core.dirs.BASEDIR[1:], self.NAME))
