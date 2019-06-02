@@ -5,11 +5,12 @@ import re
 import struct
 import builtins
 from .PrimitiveTypes import String, Integer
+from functools import reduce
 import copy
 import time
 from uuid import UUID
 from Jumpscale import j
-from datetime import datetime
+from datetime import datetime, timedelta
 from .TypeBaseClasses import *
 
 
