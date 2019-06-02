@@ -205,3 +205,19 @@ class TestCases(BaseTest):
         self.assertTrue(j.sal.process.getProcessPid("ardb"))
         j.builder.db.ardb.stop()
         self.assertFalse(j.sal.process.getProcessPid("ardb"))
+
+    def test025_postgres(self):
+        j.builder.db.postgres.build(reset=True)
+        j.builder.db.postgres.install()
+        j.builder.db.postgres.start()
+        self.assertTrue(j.sal.process.getProcessPid("postgres"))
+        j.builder.db.postgres.stop()
+        self.assertFalse(j.sal.process.getProcessPid("postgres"))
+
+    def test026_influx(self):
+        j.builder.db.influxdb.build(reset=True)
+        j.builder.db.influxdb.install()
+        j.builder.db.influxdb.start()
+        self.assertTrue(j.sal.process.getProcessPid("influx"))
+        j.builder.db.influxdb.stop()
+        self.assertFalse(j.sal.process.getProcessPid("influx"))
