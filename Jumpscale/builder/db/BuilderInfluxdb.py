@@ -23,6 +23,7 @@ class BuilderInfluxdb(BuilderGolangTools):
         cmd = """
         cd {DIR_BUILD}
         mkdir -p github && cd github
+        rm -rf influxdb
         git clone --depth 1 https://github.com/influxdata/influxdb
         cd influxdb
         go get ./...
@@ -64,7 +65,8 @@ class BuilderInfluxdb(BuilderGolangTools):
             j.tools.sandboxer.libs_sandbox(dir_src, lib_dest)
 
     def clean(self):
-        self._remove(self.DIR_BUILD)
+        code_dir = j.sal.fs.joinPaths(self.DIR_BUILD, "github")
+        self._remove(code_dir)
 
     @builder_method()
     def reset(self):

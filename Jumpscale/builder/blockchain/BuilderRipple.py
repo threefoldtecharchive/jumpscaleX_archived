@@ -47,6 +47,7 @@ class BuilderRipple(JSBASE):
         # clone and build ripple
         ripple_build_cmd = """
             cd {DIR_BUILD}
+            rm -rf rippled
             git clone https://github.com/ripple/rippled.git
             cd rippled
             git checkout master
@@ -81,7 +82,8 @@ class BuilderRipple(JSBASE):
 
     @builder_method()
     def clean(self):
-        self._remove(self.DIR_BUILD)
+        code_dir = j.sal.fs.joinPaths(self.DIR_BUILD, "rippled")
+        self._remove(code_dir)
 
     @property
     def startup_cmds(self):

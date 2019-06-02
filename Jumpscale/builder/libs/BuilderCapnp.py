@@ -28,6 +28,7 @@ class BuilderCapnp(JSBASE):
         # build from source
         install_cmd = """
         cd {DIR_BUILD}
+        rm -rf capnproto
         git clone --depth 1 https://github.com/sandstorm-io/capnproto.git
         cd capnproto/c++
         autoreconf -i
@@ -80,7 +81,8 @@ class BuilderCapnp(JSBASE):
 
     @builder_method()
     def clean(self):
-        self._remove(self.DIR_BUILD)
+        code_dir = j.sal.fs.joinPaths(self.DIR_BUILD, "capnproto")
+        self._remove(code_dir)
 
     @builder_method()
     def reset(self):
