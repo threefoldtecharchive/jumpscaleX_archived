@@ -2,18 +2,19 @@ from Jumpscale import j
 import textwrap
 from copy import deepcopy
 
+builder_method = j.builder.system.builder_method
 
 compileconfig = {}
 compileconfig["enable_mbstring"] = True
-compileconfig["enable_zip"] = True
-compileconfig["with_gd"] = True
+compileconfig["with_zip"] = True
+compileconfig["enable_gd"] = True
 compileconfig["with_curl"] = True  # apt-get install libcurl4-openssl-dev libzip-dev
-compileconfig["with_libzip"] = True
+compileconfig["with_libzip"] = False
 compileconfig["with_zlib"] = True
 compileconfig["with_openssl"] = True
 compileconfig["enable_fpm"] = True
-compileconfig["prefix"] = "{DIR_APPS}/php"
-compileconfig["exec_prefix"] = "{DIR_APPS}/php"
+compileconfig["prefix"] = "/sandbox"
+compileconfig["exec_prefix"] = "/sandbox"
 compileconfig["with_mysqli"] = True
 compileconfig["with_pdo_mysql"] = True
 compileconfig["with_mysql_sock"] = "/var/run/mysqld/mysqld.sock"
@@ -23,69 +24,80 @@ class BuilderPHP(j.builder.system._BaseClass):
 
     NAME = "php-fpm"
 
-    def build(self, install=False, **config):
+    @builder_method()
+    def build(self, **config):
         """
         kosmos 'j.builder.runtimes.php.build()'
         :param config:
         :return:
         """
-        j.tools.bash.get().profile.locale_check()
+        # install required packages
+        pkgs = "curl libxml2-dev libpng-dev libcurl4-openssl-dev libzip-dev zlibc zlib1g zlib1g-dev \
+        libmysqld-dev libmysqlclient-dev re2c bison bzip2 build-essential libaprutil1-dev libapr1-dev \
+        openssl pkg-config libssl-dev file libreadline7 libreadline-dev libzip4 autoconf libtool libsqlite3-dev"
+        self.system.package.install(pkgs)
 
-        if j.core.platformtype.myplatform.isUbuntu:
-            pkgs = "libxml2-dev libpng-dev libcurl4-openssl-dev libzip-dev zlibc zlib1g zlib1g-dev \
-            libmysqld-dev libmysqlclient-dev re2c bison bzip2 build-essential libaprutil1-dev libapr1-dev \
-            openssl pkg-config libssl-dev file"
-            j.sal.ubuntu.apt_update()
-            j.sal.ubuntu.apt_install(pkgs, update_md=False)
+        # install oniguruma
+        C = """
+        cd {DIR_BUILD}
+        rm -rf oniguruma
+        git clone https://github.com/kkos/oniguruma.git --depth 1
+        cd oniguruma
+        autoreconf -vfi
+        ./configure --prefix=/sandbox
+        make
+        make install
+        """
+        self._execute(C)
 
-            C = """
-            set -x
-            rm -f {DIR_TEMP}/php-7.3.0.tar.bz*
-            cd {DIR_TEMP} && [ ! -f {DIR_TEMP}/php-7.3.0.tar.bz2 ] && wget http://be2.php.net/distributions/php-7.3.0.tar.bz2
-            cd {DIR_TEMP} && tar xvjf {DIR_TEMP}/php-7.3.0.tar.bz2
-            mv {DIR_TEMP}/php-7.3.0/ {DIR_TEMP}/php
+        # clone php-src repo
+        C = """
+        cd {DIR_BUILD}
+        rm -rf php-src
+        git clone https://github.com/php/php-src.git --depth 1
+        """
+        self._execute(C)
+
+        # configure arguments
+        compileconfig["with_apxs2"] = self._replace("{DIR_APPS}/apache2/bin/apxs")
+        buildconfig = deepcopy(compileconfig)
+        buildconfig.update(config)  # should be defaultconfig.update(config) instead of overriding the explicit ones.
+
+        # check for apxs2 binary if it's valid.
+        apxs = buildconfig["with_apxs2"]
+        if not self.tools.exists(apxs):
+            buildconfig.pop("with_apxs2")
+
+        args_string = ""
+        for k, v in buildconfig.items():
+            k = k.replace("_", "-")
+            if v is True:
+                args_string += " --{k}".format(k=k)
+            else:
+                args_string += " --{k}={v}".format(k=k, v=v)
+        args_string = self._replace(args_string)
+
+        # build php
+        C = (
             """
+        cd {DIR_BUILD}/php-src
+        ./buildconf
+        export PKG_CONFIG_PATH=/sandbox/lib/pkgconfig/
+        ./configure %s
+        make
+        """
+            % args_string
+        )
+        self._execute(C, timeout=1000)
 
-            C = self._replace(C)
-            j.sal.process.execute(C)
-
-            compileconfig["with_apxs2"] = self._replace("{DIR_APPS}/apache2/bin/apxs")
-            buildconfig = deepcopy(compileconfig)
-            buildconfig.update(
-                config
-            )  # should be defaultconfig.update(config) instead of overriding the explicit ones.
-
-            # check for apxs2 binary if it's valid.
-            apxs = buildconfig["with_apxs2"]
-            if not j.core.tools.exists(apxs):
-                buildconfig.pop("with_apxs2")
-
-            args_string = ""
-            for k, v in buildconfig.items():
-                k = k.replace("_", "-")
-                if v is True:
-                    args_string += " --{k}".format(k=k)
-                else:
-                    args_string += " --{k}={v}".format(k=k, v=v)
-            args_string = self._replace(args_string)
-            C = """cd {DIR_TEMP}/php && ./configure %s""" % args_string
-            C = self._replace(C)
-            j.sal.process.execute(C)
-
-            C = """cd {DIR_TEMP}/php && make"""
-            C = self._replace(C)
-            j.sal.process.execute(C)
-        else:
-            raise j.exceptions.NotImplemented(message="only ubuntu supported for building php")
-        if install is True:
-            self.install()
         # check if we need an php accelerator: https://en.wikipedia.org/wiki/List_of_PHP_accelerators
 
-    def install(self, start=False):
-        fpmdefaultconf = """\
-        include={DIR_APPS}/php/etc/php-fpm.d/*.conf
+    @builder_method()
+    def install(self):
+        fpm_default_conf = """\
+        include=/sandbox/etc/php-fpm.d/*.conf
         """
-        fpmwwwconf = """\
+        fpm_www_conf = """\
         ;nobody Start a new pool named 'www'.
         [www]
 
@@ -104,26 +116,21 @@ class BuilderPHP(j.builder.system._BaseClass):
         pm.min_spare_servers = 1
         pm.max_spare_servers = 3
         """
-        fpmdefaultconf = textwrap.dedent(fpmdefaultconf)
-        fpmwwwconf = textwrap.dedent(fpmwwwconf)
+        fpm_default_conf = textwrap.dedent(fpm_default_conf)
+        fpm_www_conf = textwrap.dedent(fpm_www_conf)
         # make sure to save that configuration file ending with .conf under php/etc/php-fpm.d/www.conf
-        C = """
-        cd {DIR_TEMP}/php && make install
-        """
-        C = self._replace(C)
-        j.sal.process.execute(C)
+        self._execute("cd {DIR_BUILD}/php-src && make install")
 
-        j.core.tools.dir_ensure(self._replace("{DIR_APPS}/php/etc/php-fpm.d"))
+        self.tools.dir_ensure(self._replace("{/sandbox/etc/php-fpm.d"))
+        fpm_default_conf = self._replace(fpm_default_conf)
+        fpm_www_conf = self._replace(fpm_www_conf)
+        self._write(path="/sandbox/etc/php-fpm.conf", txt=fpm_default_conf)
+        self._write(path="/sandbox/etc/php-fpm.d/www.conf", txt=fpm_www_conf)
 
-        fpmdefaultconf = self._replace(fpmdefaultconf)
-        fpmwwwconf = self._replace(fpmwwwconf)
-        j.sal.fs.writeFile("{DIR_APPS}/php/etc/php-fpm.conf", contents=fpmdefaultconf)
-        j.sal.fs.writeFile("{DIR_APPS}/php/etc/php-fpm.d/www.conf", contents=fpmwwwconf)
-
-        php_tmp_path = self._replace("{DIR_TEMP}/php")
-        php_app_path = self._replace("{DIR_APPS}/php")
-        j.sal.fs.copyFile(
-            j.sal.fs.joinPaths(php_tmp_path, "php.ini-development"), j.sal.fs.joinPaths(php_app_path, "php.ini")
+        php_tmp_path = self._replace("{DIR_BUILD}/php-src")
+        php_app_path = self._replace("/sandbox")
+        self._copy(
+            self.tools.joinpaths(php_tmp_path, "php.ini-development"), self.tools.joinpaths(php_app_path, "php.ini")
         )
 
         # It is important that we prevent Nginx from passing requests to the PHP-FPM backend if the file does not exists,
@@ -134,26 +141,16 @@ class BuilderPHP(j.builder.system._BaseClass):
         """.format(
             php_app_path=php_app_path
         )
-        j.sal.process.execute(C)
+        self._execute(C)
 
-        # copy binaries
-        C = """
-        set +x
-        cp {DIR_APPS}/php/bin/* {DIR_BIN}
-        cp {DIR_APPS}/php/sbin/* {DIR_BIN}
-        """
-        C = self._replace(C)
-        j.sal.process.execute(C)
-
-        if start:
-            self.start()
-
-    def start(self):
-        phpfpmcmd = "%s -F -y {DIR_APPS}/php/etc/php-fpm.conf" % self.NAME  # foreground
-        phpfpmcmd = self._replace(phpfpmcmd)
-        j.tools.tmux.execute(phpfpmcmd, window=self.NAME, pane=self.NAME, reset=True)
+    @property
+    def startup_cmds(self):
+        cmd = "/sandbox/sbin/php-fpm -F -y /sandbox/etc/php-fpm.conf"  # foreground
+        cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
+        return cmds
 
     def stop(self):
+        super().stop()
         j.sal.process.killProcessByName(self.NAME)
 
     def _test(self, name=""):
