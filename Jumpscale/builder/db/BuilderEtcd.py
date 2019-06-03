@@ -41,7 +41,7 @@ class BuilderEtcd(BuilderGolangTools):
         flist_create=False,
         merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
     ):
-        '''
+        """
         Copy built bins to dest_path and create flist if create_flist = True
         :param dest_path: destination path to copy files into
         :type dest_path: str
@@ -53,23 +53,18 @@ class BuilderEtcd(BuilderGolangTools):
         :param zhub_instance: hub instance to upload flist to
         :type zhub_instance:str
         """
-        self.install()
-        bin_dest = j.sal.fs.joinPaths("/sandbox/var/build", "{}/sandbox".format(self.DIR_SANDBOX))
+        bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "bin")
         self.tools.dir_ensure(bin_dest)
-        etcd_bin_path = self.tools.joinpaths("{DIR_BIN}", self.NAME)
-        etcdctl_bin_path = self.tools.joinpaths("{DIR_BIN}", "etcdctl")
+        etcd_bin_path = self.tools.joinpaths(self._replace("{DIR_BIN}"), self.NAME)
+        etcdctl_bin_path = self.tools.joinpaths(self._replace("{DIR_BIN}"), "etcdctl")
         self.tools.file_copy(etcd_bin_path, bin_dest)
         self.tools.file_copy(etcdctl_bin_path, bin_dest)
 
-        if create_flist:
-            self.flist_create(bin_dest, zhub_instance)
-
-        lib_dest = self.tools.joinpaths(dest_path, 'sandbox/lib')
+        lib_dest = self.tools.joinpaths(self.DIR_SANDBOX, "sandbox/lib")
         self.tools.dir_ensure(lib_dest)
-        for bin in bins:
+        for bin in [self.NAME, "etcdctl"]:
             dir_src = self.tools.joinpaths(j.core.dirs.BINDIR, bin)
             j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
-        '''
 
     def client_get(self, name):
         """

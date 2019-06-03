@@ -43,7 +43,7 @@ class BuilderZeroStor(BuilderGolangTools):
         j.builder.runtimes.golang.install()
         self.get("github.com/threefoldtech/0-stor/cmd/zstor")
 
-        # Make
+        # make to generate bin
         cmd = "cd {}/src/github.com/threefoldtech/0-stor && make".format(self.DIR_GO_PATH)
         j.sal.process.execute(cmd)
 
@@ -52,8 +52,11 @@ class BuilderZeroStor(BuilderGolangTools):
         """
         Installs zstor
         """
-        self._copy("{}/src/github.com/threefoldtech/0-stor/bin".format(self.DIR_GO_PATH), "{DIR_BIN}")
+        # dependencies
+        j.builder.db.etcd.install()
+        j.builder.db.zdb.install()
 
+        self._copy("{}/src/github.com/threefoldtech/0-stor/bin".format(self.DIR_GO_PATH), "{DIR_BIN}")
         j.sal.fs.writeFile(filename="/sandbox/cfg/zstor.yaml", contents=CONFIG_TEMPLATE)
 
     @property
@@ -65,8 +68,10 @@ class BuilderZeroStor(BuilderGolangTools):
         self.tools.dir_ensure(self.datadir)
 
         cmd = "zstor --config /sandbox/cfg/zstor.yaml daemon --listen 127.0.0.1:8000"
+        cmd_zdb = j.builder.db.zdb.startup_cmds
+        cmd_etcd = j.builder.db.etcd.startup_cmds
         cmds = [j.tools.startupcmd.get(name=self.NAME, cmd=cmd)]
-        return cmds
+        return cmd_zdb + cmd_etcd + cmds
 
     @builder_method()
     def clean(self):
@@ -81,12 +86,33 @@ class BuilderZeroStor(BuilderGolangTools):
         """
         Copy required bin files to be used to sandbox
         """
+        # Copy zstor bins
         bin_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "bin")
         self.tools.dir_ensure(bin_dest)
         bin_path = j.sal.fs.joinPaths(self._replace("{DIR_BIN}"), self.NAME)
         bin_bench_path = j.sal.fs.joinPaths(self._replace("{DIR_BIN}"), "zstorbench")
         self._copy(bin_path, bin_dest)
         self._copy(bin_bench_path, bin_dest)
+
+        # Copy zdb bin and lib
+        j.builder.db.zdb.sandbox()
+        bin_src = self.tools.joinpaths(j.builder.db.zdb.DIR_SANDBOX, "sandbox/bin")
+        self._copy(bin_src, bin_dest)
+
+        lib_src = self.tools.joinpaths(j.builder.db.zdb.DIR_SANDBOX, "sandbox/lib")
+        lib_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "lib")
+        self.tools.dir_ensure(lib_dest)
+        j.tools.sandboxer.libs_sandbox(lib_src, lib_dest, exclude_sys_libs=False)
+
+        # Copy etcd bin and lib
+        j.builder.db.etcd.sandbox()
+        bin_src = self.tools.joinpaths(j.builder.db.etcd.DIR_SANDBOX, "sandbox/bin")
+        self._copy(bin_src, bin_dest)
+
+        lib_src = self.tools.joinpaths(j.builder.db.etcd.DIR_SANDBOX, "sandbox/lib")
+        lib_dest = j.sal.fs.joinPaths(self.DIR_SANDBOX, "sandbox", "lib")
+        self.tools.dir_ensure(lib_dest)
+        j.tools.sandboxer.libs_sandbox(lib_src, lib_dest, exclude_sys_libs=False)
 
     @builder_method()
     def test(self):
