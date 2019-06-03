@@ -98,7 +98,12 @@ class Capacity:
 
         report = self.reality_report()
         data = dict(
-            node_id=self._node.node_id, farmer_id=farmer_id, cru=report.CRU, mru=report.MRU, hru=report.HRU, sru=report.SRU
+            node_id=self._node.node_id,
+            farmer_id=farmer_id,
+            cru=report.CRU,
+            mru=report.MRU,
+            hru=report.HRU,
+            sru=report.SRU,
         )
 
         client = self.directory()
@@ -113,7 +118,12 @@ class Capacity:
 
         report = j.tools.capacity.reservation_parser.get_report(vms, vdisks, gateways)
         data = dict(
-            node_id=self._node.node_id, farmer_id=farmer_id, cru=report.CRU, mru=report.MRU, hru=report.HRU, sru=report.SRU
+            node_id=self._node.node_id,
+            farmer_id=farmer_id,
+            cru=report.CRU,
+            mru=report.MRU,
+            hru=report.HRU,
+            sru=report.SRU,
         )
 
         client = self.directory()

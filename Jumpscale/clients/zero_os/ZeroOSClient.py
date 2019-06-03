@@ -39,5 +39,5 @@ class ZeroOSClient(j.application.JSBaseConfigClass, Node):
 
         # force re-creation of the redis client
         # when the config is changed
-        if key in ['host','port','password','unixsocket']:
+        if key in ["host", "port", "password", "unixsocket"]:
             self.client._redis = None
