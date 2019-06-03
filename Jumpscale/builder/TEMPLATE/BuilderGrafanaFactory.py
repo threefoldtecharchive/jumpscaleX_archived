@@ -4,7 +4,7 @@ from .GrafanaComponent import GrafanaComponent
 
 class GrafanaFactory(j.builder.system._BaseFactoryClass):
 
-    __jslocation__ = "j.builder._template"
+    __jslocation__ = "j.builders._template"
     _CHILDCLASS = GrafanaComponent
 
     def build(self):

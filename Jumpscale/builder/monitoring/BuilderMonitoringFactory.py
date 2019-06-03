@@ -3,7 +3,7 @@ from Jumpscale import j
 
 class BuilderMonitoringFactory(j.builder.system._BaseFactoryClass):
 
-    __jslocation__ = "j.builder.monitoring"
+    __jslocation__ = "j.builders.monitoring"
 
     def _init(self):
 

@@ -3,7 +3,7 @@ from Jumpscale import j
 
 class BuilderNetworkFactory(j.builder.system._BaseFactoryClass):
 
-    __jslocation__ = "j.builder.network"
+    __jslocation__ = "j.builders.network"
 
     def _init(self):
 

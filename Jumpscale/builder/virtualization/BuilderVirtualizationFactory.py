@@ -3,7 +3,7 @@ from Jumpscale import j
 
 class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
 
-    __jslocation__ = "j.builder.virtualization"
+    __jslocation__ = "j.builders.virtualization"
 
     def _init(self):
         self._docker = None

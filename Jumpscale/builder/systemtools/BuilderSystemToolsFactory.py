@@ -5,7 +5,7 @@ from .BuildersTFMUX import BuildersTFMUX
 
 class BuilderSystemToolsFactory(j.builder.system._BaseFactoryClass):
 
-    __jslocation__ = "j.builder.systemtools"
+    __jslocation__ = "j.builders.systemtools"
 
     def _init(self):
         self.rsync = BuilderRsync()

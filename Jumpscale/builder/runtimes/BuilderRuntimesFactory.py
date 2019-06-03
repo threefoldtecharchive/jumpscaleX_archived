@@ -3,7 +3,7 @@ from Jumpscale import j
 
 class BuilderRuntimesFactory(j.application.JSBaseClass):
 
-    __jslocation__ = "j.builder.runtimes"
+    __jslocation__ = "j.builders.runtimes"
 
     def _init(self):
         #

@@ -3,7 +3,7 @@ from Jumpscale import j
 
 class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
 
-    __jslocation__ = "j.builder.storage"
+    __jslocation__ = "j.builders.storage"
 
     def _init(self):
         self._syncthing = None

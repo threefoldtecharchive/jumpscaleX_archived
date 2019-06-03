@@ -3,7 +3,7 @@ from Jumpscale import j
 
 class BuildEnv(j.builder.system._BaseFactoryClass):
 
-    __jslocation__ = "j.builder.buildenv"
+    __jslocation__ = "j.builders.buildenv"
 
     def install(self, reset=False, upgrade=True):
 

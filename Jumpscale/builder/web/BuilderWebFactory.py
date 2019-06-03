@@ -3,7 +3,7 @@ from Jumpscale import j
 
 class BuilderWebFactory(j.builder.system._BaseFactoryClass):
 
-    __jslocation__ = "j.builder.web"
+    __jslocation__ = "j.builders.web"
 
     def _init(self):
 

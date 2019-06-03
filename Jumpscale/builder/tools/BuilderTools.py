@@ -10,7 +10,7 @@ from .BuilderToolsLib import *
 
 class BuilderTools(j.builder.system._BaseClass):
 
-    __jslocation__ = "j.builder.tools"
+    __jslocation__ = "j.builders.tools"
 
     def _init(self):
 
