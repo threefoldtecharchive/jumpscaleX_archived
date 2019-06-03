@@ -153,6 +153,65 @@ class BuilderPHP(j.builder.system._BaseClass):
         super().stop()
         j.sal.process.killProcessByName(self.NAME)
 
+    @builder_method()
+    def sandbox(
+        self,
+        zhub_client=None,
+        flist_create=True,
+        merge_base_flist="tf-autobuilder/threefoldtech-jumpscaleX-development.flist",
+    ):
+        # bins
+        bins = ["phar", "phar.phar", "php", "php-cgi", "php-config", "phpdbg", "phpize"]
+        for bin_name in bins:
+            dir_src = self.tools.joinpaths(j.dirs.BINDIR, bin_name)
+            dir_dest = self.tools.joinpaths(self.DIR_SANDBOX, j.dirs.BINDIR[1:])
+            self.tools.dir_ensure(dir_dest)
+            self._copy(dir_src, dir_dest)
+
+        # sbin
+        sbin_src = "/sandbox/sbin/php-fpm"
+        sbin_dest = self.tools.joinpaths(self.DIR_SANDBOX, sbin_src[1:])
+        self._copy(sbin_src, sbin_dest)
+
+        # libs
+        lib_dest = self.tools.joinpaths(self.DIR_SANDBOX, "sandbox/lib")
+        self.tools.dir_ensure(lib_dest)
+        for bin in bins:
+            dir_src = self.tools.joinpaths(j.dirs.BINDIR, bin)
+            j.tools.sandboxer.libs_sandbox(dir_src, lib_dest, exclude_sys_libs=False)
+
+        # libs
+        libs_src = "/sandbox/lib/php"
+        libs_dest = self.tools.joinpaths(self.DIR_SANDBOX, libs_src[1:])
+        self.tools.dir_ensure(libs_dest)
+        self._copy(libs_src, libs_dest)
+
+        # include
+        include_src = "/sandbox/include/php"
+        include_dest = self.tools.joinpaths(self.DIR_SANDBOX, include_src[1:])
+        self.tools.dir_ensure(include_dest)
+        self._copy(include_src, include_dest)
+
+        # php
+        php_src = "/sandbox/php"
+        php_dest = self.tools.joinpaths(self.DIR_SANDBOX, php_src[1:])
+        self.tools.dir_ensure(php_dest)
+        self._copy(php_src, php_dest)
+
+        # configs
+        default_conf = "/sandbox/etc/php-fpm.conf"
+        fpm_www_conf = "/sandbox/etc/php-fpm.d/www.conf"
+        default_conf_dest = self.tools.joinpaths(self.DIR_SANDBOX, "sandbox/etc/")
+        www_conf_dest = self.tools.joinpaths(self.DIR_SANDBOX, "sandbox/etc/php-fpm.d")
+        self.tools.dir_ensure(www_conf_dest)
+        self._copy(default_conf, default_conf_dest)
+        self._copy(fpm_www_conf, www_conf_dest)
+
+        # php.ini
+        phpini_src = "/sandbox/php.ini"
+        phpini_dest = self.tools.joinpaths(self.DIR_SANDBOX, phpini_src[1:])
+        self._copy(phpini_src, phpini_dest)
+
     def _test(self, name=""):
         """Run tests under tests directory
 
