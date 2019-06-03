@@ -10,12 +10,12 @@ Monitors if a network bond (if there is one) has both (or more) interfaces prope
 
 class NetworkBond(HealthCheckRun):
     def __init__(self, node):
-        resource = "/nodes/{}".format(node.name)
+        resource = "/nodes/{}".format(node.node_id)
         super().__init__("network-bond", "Network Bond Check", "Hardware", resource)
         self.node = node
 
     def run(self):
-        ovs = "{}_ovs".format(self.node.name)
+        ovs = "{}_ovs".format(self.node.node_id)
         try:
             container = self.node.containers.get(ovs)
         except LookupError:

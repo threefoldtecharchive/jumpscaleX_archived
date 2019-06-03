@@ -8,7 +8,7 @@ Monitors if threads has high number of threads per hyperthread
 
 class Threads(HealthCheckRun):
     def __init__(self, node):
-        resource = "/nodes/{}".format(node.name)
+        resource = "/nodes/{}".format(node.node_id)
         super().__init__(id="threads", name="Node thread per hyperthread", category="System Load", resource=resource)
         self.node = node
 

@@ -9,7 +9,7 @@ Result will be shown in the "Hardware" section of the Grid Portal / Status Overv
 
 class PowerSupply(IPMIHealthCheck):
     def __init__(self, node):
-        resource = "/nodes/{}".format(node.name)
+        resource = "/nodes/{}".format(node.node_id)
         super().__init__(id="pw-supply", name="Power Supply", category="Hardware", resource=resource)
         self.node = node
         self.ps_errmsgs = [

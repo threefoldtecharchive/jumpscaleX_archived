@@ -9,7 +9,7 @@ Check the bandwith consumption of the network
 class NetworkLoad(HealthCheckRun):
     def __init__(self, node):
         self.node = node
-        resource = "/nodes/{}".format(node.name)
+        resource = "/nodes/{}".format(node.node_id)
         super().__init__(id="network-load", name="Network Load Check", category="Hardware", resource=resource)
 
     def run(self):

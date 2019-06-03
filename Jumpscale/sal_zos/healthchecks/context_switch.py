@@ -10,7 +10,7 @@ Monitors CPU context switching
 
 class ContextSwitch(HealthCheckRun):
     def __init__(self, node, warn=600000, error=1000000):
-        super().__init__("context-switch", "Context Switch", "Hardware", "/nodes/{}".format(node.name))
+        super().__init__("context-switch", "Context Switch", "Hardware", "/nodes/{}".format(node.node_id))
         self.node = node
         self._warn = warn
         self._error = error
