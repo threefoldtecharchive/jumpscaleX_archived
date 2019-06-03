@@ -2443,12 +2443,13 @@ class JumpscaleInstaller:
 
 class Docker:
     def __init__(
-        self, name="default", delete=False, portrange=1, image="despiegk/3bot", sshkey=None, baseinstall=True, cmd=None
+        self, name="default", delete=False, portrange=1, image="phusion/baseimage:master", sshkey=None, baseinstall=True, cmd=None
     ):
         """
         if you want to start from scratch use: "phusion/baseimage:master"
 
         if codedir not specified will use /sandbox/code if exists otherwise ~/code
+        # despiegk/3bot needs some work
         """
         rc, out, _ = Tools.execute("cat /proc/1/cgroup", die=False, showout=False)
         if rc == 0 and out.find("/docker/") != -1:
@@ -2535,6 +2536,8 @@ class Docker:
             Tools.execute("rm -f ~/.ssh/known_hosts")  # dirty hack
 
             self.dexec("touch /root/.BASEINSTALL_OK")
+        
+        self.jumpscale_install()
 
     def dexec(self, cmd, interactive=False):
         if "'" in cmd:
@@ -2588,16 +2591,16 @@ class Docker:
         # args_txt+=" -c"
         # args_txt+=" --debug"
 
-        """ dirpath = os.path.dirname(inspect.getfile(Tools))
-        if dirpath.startswith(MyEnv.config["DIR_CODE"]): """
-        cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py "
-        """ else:
+        dirpath = os.path.dirname(inspect.getfile(Tools))
+        if dirpath.startswith(MyEnv.config["DIR_CODE"]):
+            cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py "
+        else:
             print("copy installer over from where I install from")
             for item in ["install.py", "InstallTools.py"]:
                 src1 = "%s/%s" % (dirpath, item)
                 cmd = "scp -P %s %s root@localhost:/tmp/" % (self.port, src1)
                 Tools.execute(cmd)
-            cmd = "cd /tmp;python3 install.py " """
+            cmd = "cd /tmp;python3 install.py "
         cmd += args_txt
         print(" - Installing jumpscaleX ")
         self.sshexec(cmd)

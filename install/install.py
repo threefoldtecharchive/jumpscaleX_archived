@@ -84,7 +84,7 @@ def ui():
     args = IT.Tools.cmd_args_get()
 
     if not "codepath" in args:
-        args["codepath"] = None
+        args["codepath"] = "/sandbox/code"
 
     if not "branch" in args:
         args["branch"] = BRANCH
@@ -349,66 +349,8 @@ if "1" in args or "2" in args:
 
 elif "3" in args:
 
-    if args["container_exists"] and "d" in args:
-        IT.Tools.execute("docker rm -f %s" % args["name"])
-        args["container_exists"] = False
-
-    if "image" not in args:
-        args["image"] = "phusion/baseimage:master"
-        if "hub" in args:
-            args["image"] = "despiegk/3bot"
-    if not args["container_exists"]:
-        if "port" not in args:
-            args["port"] = 8022
-
     # docker installer
-    di = IT.Docker(
-        name="default", delete=False, portrange=1, image=args["image"], sshkey=None, baseinstall=True, cmd=None
-    )
-
-    # for now only support for insystem
-    args_txt = "-1"
-    for item in ["r", "p", "w"]:
-        if item in args:
-            args_txt += " -%s" % item
-    args_txt += " -y"
-    # args_txt+=" -c"
-    for item in ["codepath", "secret", "private_key", "debug"]:
-        if item in args:
-            args_txt += " --%s='%s'" % (item, args[item])
-
-    # add install from a specific branch
-    install = IT.JumpscaleInstaller(branch=args["branch"])
-
-    def getbranch():
-        cmd = "cd {}/github/threefoldtech/jumpscaleX; git branch | grep r\* | cut -d ' ' -f2".format(args["codepath"])
-        _, stdout, _ = IT.Tools.execute(cmd)
-        return stdout.strip()
-
-    # check if already code exists and checkout the argument branch
-    if os.path.exists("{}/github/threefoldtech/jumpscaleX".format(args["codepath"])):
-        if getbranch() != args["branch"]:
-            print("found JS on machine, Checking out branch {}...".format(args["branch"]))
-            IT.Tools.execute(
-                """cd {}/github/threefoldtech/jumpscaleX
-                        git remote set-branches origin '*'
-                        git fetch -v
-                        git checkout {} -f
-                        git pull""".format(
-                    args["codepath"], args["branch"]
-                )
-            )
-
-        print("On {} branch".format(args["branch"]))
-    else:
-        print("no local code at {}".format(args["codepath"]))
-
-    install.repos_get(pull=False)
-
-    cmd = "python3 /sandbox/code/github/threefoldtech/jumpscaleX/install/install.py %s" % args_txt
-    print(" - Installing jumpscaleX ")
-    di.sshexec(cmd)
-
+    di = IT.Docker()
     # dirpath = os.path.dirname(inspect.getfile(IT))
     #
     # for item in ["install.py","InstallTools.py"]:
@@ -417,19 +359,19 @@ elif "3" in args:
     #     IT.Tools.execute(cmd)
     # cmd = "cd /tmp;python3 install.py -1 -y"
 
-    k = """
+    # k = """
 
-    install succesfull:
+    # install succesfull:
 
-    # to login to the docker using ssh use (if std port)
-    ssh root@localhost -A -p {port}
-    """
-    #
-    # # or for kosmos shell
-    # ssh root@localhost -A -p {port} 'source /sandbox/env.sh;kosmos'
-    #
+    # # to login to the docker using ssh use (if std port)
+    # ssh root@localhost -A -p {port}
     # """
-    print(k.format(port=di.port))
+    # #
+    # # # or for kosmos shell
+    # # ssh root@localhost -A -p {port} 'source /sandbox/env.sh;kosmos'
+    # #
+    # # """
+    # print(k.format(port=di.port))
 
 """
 #TO TEST:
