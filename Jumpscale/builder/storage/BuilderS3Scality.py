@@ -13,8 +13,8 @@ class BuilderS3Scality(j.builder.system._BaseClass):
 
     @builder_method()
     def build(self, reset=False):
-        # j.builder.runtimes.python.build(reset=reset)
-        # j.builder.runtimes.nodejs.build(reset=reset)
+        j.builder.runtimes.python.build(reset=reset)
+        j.builder.runtimes.nodejs.build(reset=reset)
 
         path = "%s/%s" % (self.DIR_BUILD, self.NAME)
         j.builder.tools.dir_remove(path, recursive=True)
@@ -22,8 +22,8 @@ class BuilderS3Scality(j.builder.system._BaseClass):
 
     @builder_method()
     def install(self, reset=False, storage="{DIR_VAR}/scality/data/", meta="{DIR_VAR}/scality/meta/"):
-        # j.builder.runtimes.python.install(reset=reset)
-        # j.builder.runtimes.nodejs.install(reset=reset)
+        j.builder.runtimes.python.install(reset=reset)
+        j.builder.runtimes.nodejs.install(reset=reset)
         j.builder.runtimes.nodejs.npm_install("npm-run-all")
         j.builder.system.package.mdupdate()
         j.builder.system.package.ensure("build-essential,g++")
