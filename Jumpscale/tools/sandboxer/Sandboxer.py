@@ -93,7 +93,7 @@ class Sandboxer(j.application.JSBaseClass):
         def do():
             return self._ldd(path, exclude_sys_libs)
 
-        return self._cache.get("ldd_%s" % path, method=do)
+        return self._cache.get("ldd_%s_%s" % (path, exclude_sys_libs), method=do)
 
     def _otool(self, path, result=dict(), done=list(), exclude_sys_libs=True):
         """
