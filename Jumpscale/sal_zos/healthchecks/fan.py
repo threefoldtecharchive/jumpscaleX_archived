@@ -10,7 +10,7 @@ Result will be shown in the "Hardware" section of the Grid Portal / Status Overv
 class Fan(IPMIHealthCheck):
     def __init__(self, node):
         self.node = node
-        resource = "/nodes/{}".format(node.name)
+        resource = "/nodes/{}".format(node.node_id)
         super().__init__(id="fan", name="Fan", category="Hardware", resource=resource)
 
     def run(self, container):
