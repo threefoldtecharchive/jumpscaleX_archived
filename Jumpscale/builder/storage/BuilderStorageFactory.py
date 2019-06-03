@@ -10,6 +10,7 @@ class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
         self._minio = None
         self._restic = None
         self._s3cality = None
+        self._zstor = None
 
     @property
     def syncthing(self):
@@ -42,3 +43,11 @@ class BuilderAppsFactory(j.builder.system._BaseFactoryClass):
 
             self._s3cality = BuilderS3Scality()
         return self._s3cality
+
+    @property
+    def zstor(self):
+        if self._zstor is None:
+            from .BuilderZeroStor import BuilderZeroStor
+
+            self._zstor = BuilderZeroStor()
+        return self._zstor
